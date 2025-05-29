@@ -865,6 +865,7 @@
     react-dom "^18.2.0"
     react-redux "^9.1.0"
     react-router-dom "^6.22.0"
+    typescript "^5.3.3"
 
 "@sovren/shared@*", "@sovren/shared@file:/Users/fp/Desktop/Sovren/packages/shared":
   version "0.1.0"
