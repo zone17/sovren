@@ -17,7 +17,7 @@
     "type-check": "npm run type-check --workspaces",
     "feature-flags": "npm run feature-flags --workspace=@sovren/backend",
     "clean": "npm run clean --workspaces",
-    "prepare": "husky install"
+    "prepare": "husky install || true"
   },
   "dependencies": {
     "eslint-config-prettier": "^10.1.5",
