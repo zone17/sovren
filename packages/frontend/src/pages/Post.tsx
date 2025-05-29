@@ -25,9 +25,9 @@ const Post: React.FC = () => {
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">{post.title}</h1>
           <div className="mt-4 flex items-center text-sm text-gray-500">
-            <span>By {post.authorId}</span>
+            <span>By {post.author_id}</span>
             <span className="mx-2">•</span>
-            <time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleDateString()}</time>
+            <time dateTime={post.created_at}>{new Date(post.created_at).toLocaleDateString()}</time>
           </div>
         </header>
 
