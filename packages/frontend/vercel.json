@@ -1,17 +1,8 @@
 {
   "version": 2,
-  "name": "sovren",
-  "framework": "vite",
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
   "installCommand": "cd ../.. && npm ci && cd packages/frontend",
-  "devCommand": "npm run dev",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -42,18 +33,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node@18.x"
-    }
-  }
+  ]
 } 
