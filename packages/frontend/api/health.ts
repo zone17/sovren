@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { prisma } from '../lib/database';
+import { supabase } from '../lib/database';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -7,8 +7,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Test database connection
-    await prisma.$connect();
+    // Test database connection with a simple query
+    const { data, error } = await supabase
+      .from('users')
+      .select('count(*)')
+      .limit(1)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned, which is OK
+      throw error;
+    }
     
     return res.status(200).json({
       status: 'ok',
@@ -25,7 +33,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       database: 'disconnected',
       error: 'Database connection failed'
     });
-  } finally {
-    await prisma.$disconnect();
   }
 } 
