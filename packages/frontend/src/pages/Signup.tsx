@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../store';
 import Layout from '../components/Layout';
 import Button from '../components/Button';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
     name: '',
     email: '',

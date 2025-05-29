@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Post } from '@sovren/shared';
-import type { PostState } from '../types';
+import type { Post, PostState } from '../../types';
 
 const initialState: PostState = {
   posts: [],

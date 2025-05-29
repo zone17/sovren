@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { FeatureFlags } from '@sovren/shared/src/featureFlags';
+
+// Simple feature flags interface
+interface FeatureFlags {
+  enablePayments: boolean;
+  enableAIRecommendations: boolean;
+  enableNostrIntegration: boolean;
+  enableExperimentalUI: boolean;
+}
 
 export function useFeatureFlags(): {
   flags: FeatureFlags | null;
