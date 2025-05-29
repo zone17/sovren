@@ -1,65 +1,379 @@
-name: CI
+name: 🚀 CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main, develop]
+  schedule:
+    # Run security audit daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+# Concurrency control - cancel previous runs on new pushes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Environment variables used across all jobs
+env:
+  NODE_VERSION: '18.x'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  test:
+  # ===============================================
+  # 📋 CONTINUOUS INTEGRATION PIPELINE
+  # ===============================================
+  
+  # Job 1: Code Quality & Security Analysis
+  code-quality:
+    name: 🔍 Code Quality & Security
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    outputs:
+      coverage: ${{ steps.coverage.outputs.coverage }}
+      security-score: ${{ steps.security.outputs.score }}
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for better analysis
+          fetch-depth: 0
+      
+      - name: 🔧 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: |
+          npm ci --prefer-offline --no-audit
+          echo "Dependencies installed successfully" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🔍 ESLint Analysis
+        run: |
+          npm run lint > eslint-report.txt 2>&1 || true
+          echo "## 🔍 ESLint Report" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          head -20 eslint-report.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          npm run lint
+      
+      - name: 🎨 Prettier Format Check
+        run: |
+          npm run format:check
+          echo "✅ Code formatting is consistent" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🔒 Security Audit
+        id: security
+        run: |
+          npm audit --audit-level high
+          AUDIT_RESULT=$?
+          echo "score=$AUDIT_RESULT" >> $GITHUB_OUTPUT
+          echo "## 🔒 Security Audit Results" >> $GITHUB_STEP_SUMMARY
+          if [ $AUDIT_RESULT -eq 0 ]; then
+            echo "✅ No high-severity vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Security vulnerabilities detected - see logs" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📊 Type Checking
+        run: |
+          npm run type-check
+          echo "✅ TypeScript compilation successful" >> $GITHUB_STEP_SUMMARY
 
+  # Job 2: Comprehensive Testing Suite
+  test-suite:
+    name: 🧪 Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
     strategy:
       matrix:
-        node-version: [18.x]
-
+        node-version: ['18.x', '20.x']
+        test-type: ['unit', 'integration']
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sovren_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run linting
-      run: npm run lint
-    
-    - name: Run tests
-      run: npm run test
-    
-    - name: Build
-      run: npm run build
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🗄️ Setup test database
+        run: |
+          cd packages/backend
+          npx prisma migrate deploy
+          npx prisma db seed
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sovren_test
+      
+      - name: 🧪 Run ${{ matrix.test-type }} tests
+        run: |
+          if [ "${{ matrix.test-type }}" = "unit" ]; then
+            npm run test:ci
+          else
+            npm run test:integration
+          fi
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sovren_test
+          NODE_ENV: test
+      
+      - name: 📊 Upload test coverage
+        if: matrix.node-version == '18.x' && matrix.test-type == 'unit'
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
 
-  deploy:
-    needs: test
+  # Job 3: Performance & Bundle Analysis
+  performance:
+    name: ⚡ Performance Analysis
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 15
     
     steps:
-    - uses: actions/checkout@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🏗️ Build application
+        run: |
+          npm run build
+          echo "✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📦 Bundle size analysis
+        run: |
+          cd packages/frontend
+          npx bundlesize
+          echo "## 📦 Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "Frontend bundle analyzed for size limits" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 🔍 Lighthouse CI
+        if: github.event_name == 'pull_request'
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          configPath: './.lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  # ===============================================
+  # 🚀 CONTINUOUS DEPLOYMENT PIPELINE
+  # ===============================================
+  
+  # Job 4: Deploy Preview (Pull Requests)
+  deploy-preview:
+    name: 🔍 Deploy Preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+    needs: [code-quality, test-suite]
     
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18.x'
-        cache: 'npm'
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🏗️ Build application
+        run: npm run build
+      
+      - name: 🚀 Deploy to Vercel Preview
+        id: deploy-preview
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./packages/frontend
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+      
+      - name: 💬 Comment Preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚀 Preview Deployment\n\n✅ Your preview deployment is ready!\n\n🔗 **Preview URL:** ${{ steps.deploy-preview.outputs.preview-url }}\n\n📊 **Performance:** Run Lighthouse audit after deployment\n🔍 **Testing:** Verify all features work correctly\n📱 **Mobile:** Test on mobile devices`
+            })
+
+  # Job 5: Deploy Staging (Develop Branch)
+  deploy-staging:
+    name: 🏗️ Deploy Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    needs: [code-quality, test-suite, performance]
+    environment:
+      name: staging
+      url: https://staging.sovren.dev
     
-    - name: Install dependencies
-      run: npm ci
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          NODE_ENV: staging
+      
+      - name: 🚀 Deploy to Staging
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./packages/frontend
+          vercel-args: '--prod'
+          alias-domains: staging.sovren.dev
+
+  # Job 6: Deploy Production (Main Branch)
+  deploy-production:
+    name: 🌟 Deploy Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [code-quality, test-suite, performance]
+    environment:
+      name: production
+      url: https://sovren.dev
     
-    - name: Build
-      run: npm run build
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: 🚀 Deploy to Production
+        id: deploy-production
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./packages/frontend
+          vercel-args: '--prod'
+      
+      - name: ✅ Post-deployment health check
+        run: |
+          sleep 30
+          curl -f https://sovren.dev/api/v1/health || exit 1
+          echo "✅ Production health check passed" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📊 Post-deployment Lighthouse audit
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            https://sovren.dev
+          configPath: './.lighthouserc.json'
+          uploadArtifacts: true
+      
+      - name: 🎉 Deployment success notification
+        uses: 8398a7/action-slack@v3
+        if: success()
+        with:
+          status: success
+          text: '🚀 Sovren successfully deployed to production!'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Job 7: Security Monitoring (Scheduled)
+  security-monitoring:
+    name: 🛡️ Security Monitoring
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    timeout-minutes: 10
     
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: ./
-        vercel-args: '--prod' 
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🔍 Security audit
+        run: |
+          npm audit --audit-level high
+          echo "## 🛡️ Daily Security Audit" >> $GITHUB_STEP_SUMMARY
+          echo "$(date): Security audit completed" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📊 Dependency check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'sovren'
+          path: '.'
+          format: 'ALL'
+      
+      - name: 📤 Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: reports/ 

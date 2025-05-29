@@ -1,0 +1,329 @@
+name: 📊 Performance Monitoring
+
+on:
+  schedule:
+    # Run performance tests every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  NODE_VERSION: '18.x'
+
+jobs:
+  # ===============================================
+  # ⚡ PERFORMANCE TESTING SUITE
+  # ===============================================
+  
+  lighthouse-audit:
+    name: 🔍 Lighthouse Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    strategy:
+      matrix:
+        url:
+          - ${{ github.event.inputs.environment == 'staging' && 'https://staging.sovren.dev' || 'https://sovren.dev' }}
+        device: ['desktop', 'mobile']
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🔍 Run Lighthouse audit
+        uses: treosh/lighthouse-ci-action@v10
+        id: lighthouse
+        with:
+          urls: ${{ matrix.url }}
+          configPath: './.lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          budgetPath: '.lighthouseBudget.json'
+          runs: 3
+      
+      - name: 📊 Format Lighthouse results
+        run: |
+          echo "## 🔍 Lighthouse Results - ${{ matrix.device }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ matrix.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Device:** ${{ matrix.device }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Core Web Vitals:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance: ${{ steps.lighthouse.outputs.scores.performance }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Accessibility: ${{ steps.lighthouse.outputs.scores.accessibility }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Best Practices: ${{ steps.lighthouse.outputs.scores.best-practices }}" >> $GITHUB_STEP_SUMMARY
+          echo "- SEO: ${{ steps.lighthouse.outputs.scores.seo }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[📊 Full Report](${{ steps.lighthouse.outputs.links.report }})" >> $GITHUB_STEP_SUMMARY
+
+  # ===============================================
+  # 🏋️ LOAD TESTING
+  # ===============================================
+  
+  load-testing:
+    name: 🏋️ Load Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install K6
+        run: |
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      
+      - name: 🏗️ Create load test script
+        run: |
+          cat > load-test.js << 'EOF'
+          import http from 'k6/http';
+          import { check, sleep } from 'k6';
+          import { Rate, Trend } from 'k6/metrics';
+          
+          export let errorRate = new Rate('errors');
+          export let responseTime = new Trend('response_time');
+          
+          export let options = {
+            stages: [
+              { duration: '2m', target: 10 },
+              { duration: '5m', target: 10 },
+              { duration: '2m', target: 20 },
+              { duration: '5m', target: 20 },
+              { duration: '2m', target: 0 },
+            ],
+            thresholds: {
+              errors: ['rate<0.1'],
+              response_time: ['p(95)<500'],
+              http_req_duration: ['p(99)<1000'],
+            },
+          };
+          
+          const BASE_URL = '${{ github.event.inputs.environment == 'staging' && 'https://staging.sovren.dev' || 'https://sovren.dev' }}';
+          
+          export default function () {
+            let responses = http.batch([
+              ['GET', `${BASE_URL}/`],
+              ['GET', `${BASE_URL}/api/v1/health`],
+              ['GET', `${BASE_URL}/api/v1/feature-flags`],
+            ]);
+            
+            responses.forEach((response) => {
+              check(response, {
+                'status is 200': (r) => r.status === 200,
+                'response time < 500ms': (r) => r.timings.duration < 500,
+              }) || errorRate.add(1);
+              
+              responseTime.add(response.timings.duration);
+            });
+            
+            sleep(1);
+          }
+          EOF
+      
+      - name: 🏋️ Run load test
+        run: |
+          k6 run --out json=load-test-results.json load-test.js
+          echo "## 🏋️ Load Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ github.event.inputs.environment == 'staging' && 'https://staging.sovren.dev' || 'https://sovren.dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Duration:** 16 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "**Max VUs:** 20" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📊 Process load test results
+        run: |
+          # Parse and display key metrics from the JSON output
+          if [ -f load-test-results.json ]; then
+            echo "Load test completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "Results saved to artifacts" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Load test failed to generate results" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+      
+      - name: 📤 Upload load test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: load-test-results.json
+
+  # ===============================================
+  # 📦 BUNDLE SIZE MONITORING
+  # ===============================================
+  
+  bundle-analysis:
+    name: 📦 Bundle Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🏗️ Build application
+        run: npm run build
+      
+      - name: 📊 Analyze bundle size
+        run: |
+          cd packages/frontend
+          
+          # Get bundle sizes
+          MAIN_JS_SIZE=$(du -h dist/assets/*.js | sort -hr | head -1 | cut -f1)
+          MAIN_CSS_SIZE=$(du -h dist/assets/*.css | sort -hr | head -1 | cut -f1)
+          TOTAL_SIZE=$(du -sh dist | cut -f1)
+          
+          echo "## 📦 Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Bundle Sizes:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Main JS: $MAIN_JS_SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "- Main CSS: $MAIN_CSS_SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "- Total: $TOTAL_SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if bundles exceed thresholds
+          JS_SIZE_BYTES=$(stat -c%s dist/assets/*.js | sort -nr | head -1)
+          if [ $JS_SIZE_BYTES -gt 250000 ]; then
+            echo "⚠️ **Warning:** Main JS bundle exceeds 250KB" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Main JS bundle size is within limits" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📊 Generate bundle report
+        run: |
+          cd packages/frontend
+          npx webpack-bundle-analyzer dist/assets/*.js --report bundle-report.html --mode static --no-open
+          echo "Bundle analysis report generated" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📤 Upload bundle report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: packages/frontend/bundle-report.html
+
+  # ===============================================
+  # 🔍 ACCESSIBILITY TESTING
+  # ===============================================
+  
+  accessibility-testing:
+    name: ♿ Accessibility Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install Pa11y
+        run: npm install -g pa11y pa11y-ci
+      
+      - name: ♿ Run accessibility tests
+        run: |
+          TARGET_URL="${{ github.event.inputs.environment == 'staging' && 'https://staging.sovren.dev' || 'https://sovren.dev' }}"
+          
+          echo "## ♿ Accessibility Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** $TARGET_URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run Pa11y tests
+          if pa11y $TARGET_URL --reporter json > accessibility-results.json; then
+            echo "✅ No accessibility issues found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Accessibility issues detected - see artifacts" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📤 Upload accessibility results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-results
+          path: accessibility-results.json
+
+  # ===============================================
+  # 📈 MONITORING SUMMARY
+  # ===============================================
+  
+  monitoring-summary:
+    name: 📈 Monitoring Summary
+    runs-on: ubuntu-latest
+    needs: [lighthouse-audit, load-testing, bundle-analysis, accessibility-testing]
+    if: always()
+    timeout-minutes: 5
+    
+    steps:
+      - name: 📊 Create monitoring summary
+        run: |
+          echo "## 📈 Performance Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Results:**" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 Lighthouse: ${{ needs.lighthouse-audit.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏋️ Load Testing: ${{ needs.load-testing.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 Bundle Analysis: ${{ needs.bundle-analysis.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ♿ Accessibility: ${{ needs.accessibility-testing.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall health check
+          if [[ "${{ needs.lighthouse-audit.result }}" == "success" && 
+                "${{ needs.load-testing.result }}" == "success" && 
+                "${{ needs.bundle-analysis.result }}" == "success" && 
+                "${{ needs.accessibility-testing.result }}" == "success" ]]; then
+            echo "🎉 **Overall Status:** All performance tests passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Overall Status:** Some performance issues detected" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: 📢 Performance notification
+        uses: 8398a7/action-slack@v3
+        if: failure()
+        with:
+          status: failure
+          text: |
+            📊 Performance monitoring detected issues!
+            
+            🎯 Environment: ${{ github.event.inputs.environment || 'production' }}
+            📅 Date: $(date)
+            🔗 Check GitHub Actions for details
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }} 

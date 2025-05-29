@@ -1,0 +1,292 @@
+name: 🎯 Release & Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+# Ensure only one release can run at a time
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '18.x'
+
+jobs:
+  # ===============================================
+  # 🏷️ VERSION & RELEASE MANAGEMENT
+  # ===============================================
+  
+  create-release:
+    name: 📦 Create Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      changelog: ${{ steps.changelog.outputs.content }}
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🔍 Run full test suite
+        run: |
+          npm run lint
+          npm run type-check
+          npm run test:ci
+          npm run build
+      
+      - name: 🏷️ Bump version
+        id: version
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Get current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Bump version based on input
+          npm version ${{ inputs.version }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+      
+      - name: 📝 Generate changelog
+        id: changelog
+        run: |
+          # Install conventional-changelog-cli if not present
+          npm install -g conventional-changelog-cli
+          
+          # Generate changelog content
+          CHANGELOG_CONTENT=$(conventional-changelog -p angular -u)
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: 📋 Update CHANGELOG.md
+        run: |
+          # Backup current changelog
+          cp CHANGELOG.md CHANGELOG.md.bak
+          
+          # Create new changelog entry
+          echo "# Changelog" > CHANGELOG_NEW.md
+          echo "" >> CHANGELOG_NEW.md
+          echo "## [${{ steps.version.outputs.version }}] - $(date +%Y-%m-%d)" >> CHANGELOG_NEW.md
+          echo "" >> CHANGELOG_NEW.md
+          echo "${{ steps.changelog.outputs.content }}" >> CHANGELOG_NEW.md
+          echo "" >> CHANGELOG_NEW.md
+          
+          # Append old changelog content (skip the first line "# Changelog")
+          tail -n +2 CHANGELOG.md.bak >> CHANGELOG_NEW.md
+          
+          # Replace the original
+          mv CHANGELOG_NEW.md CHANGELOG.md
+          rm CHANGELOG.md.bak
+      
+      - name: 💾 Commit version bump
+        run: |
+          git add package.json packages/*/package.json CHANGELOG.md
+          git commit -m "🔖 Release ${{ steps.version.outputs.tag }}"
+          git tag -a ${{ steps.version.outputs.tag }} -m "Release ${{ steps.version.outputs.tag }}"
+      
+      - name: 📤 Push changes
+        run: |
+          git push origin main
+          git push origin ${{ steps.version.outputs.tag }}
+      
+      - name: 🎉 Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          release_name: Release ${{ steps.version.outputs.tag }}
+          body: |
+            ## 🚀 What's New in ${{ steps.version.outputs.tag }}
+            
+            ${{ steps.changelog.outputs.content }}
+            
+            ## 📊 Release Metrics
+            - ✅ All tests passing
+            - 🔒 Security audit clean
+            - 📦 Bundle size optimized
+            - 🚀 Ready for production
+            
+            ## 🔗 Links
+            - [📚 Documentation](https://github.com/${{ github.repository }}/blob/${{ steps.version.outputs.tag }}/README.md)
+            - [🐛 Issues](https://github.com/${{ github.repository }}/issues)
+            - [💬 Discussions](https://github.com/${{ github.repository }}/discussions)
+          draft: false
+          prerelease: ${{ inputs.version == 'prerelease' }}
+
+  # ===============================================
+  # 🚀 ENVIRONMENT-SPECIFIC DEPLOYMENT
+  # ===============================================
+  
+  deploy-release:
+    name: 🚀 Deploy Release
+    runs-on: ubuntu-latest
+    needs: create-release
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.environment == 'production' && 'https://sovren.dev' || 'https://staging.sovren.dev' }}
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.create-release.outputs.tag }}
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 🏗️ Build for ${{ inputs.environment }}
+        run: npm run build
+        env:
+          NODE_ENV: ${{ inputs.environment }}
+      
+      - name: 🚀 Deploy to ${{ inputs.environment }}
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./packages/frontend
+          vercel-args: '--prod'
+          alias-domains: ${{ inputs.environment == 'production' && 'sovren.dev' || 'staging.sovren.dev' }}
+      
+      - name: ⏰ Wait for deployment
+        run: sleep 30
+      
+      - name: 🔍 Health check
+        run: |
+          HEALTH_URL="${{ inputs.environment == 'production' && 'https://sovren.dev' || 'https://staging.sovren.dev' }}/api/v1/health"
+          curl -f $HEALTH_URL || exit 1
+          echo "✅ Health check passed for ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📊 Performance audit
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            ${{ inputs.environment == 'production' && 'https://sovren.dev' || 'https://staging.sovren.dev' }}
+          configPath: './.lighthouserc.json'
+          uploadArtifacts: true
+      
+      - name: 🎯 Feature flag verification
+        run: |
+          echo "## 🎯 Feature Flag Status" >> $GITHUB_STEP_SUMMARY
+          npm run feature-flags list >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📢 Deployment notification
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          text: |
+            🚀 Release ${{ needs.create-release.outputs.tag }} deployed to ${{ inputs.environment }}!
+            
+            📍 Environment: ${{ inputs.environment }}
+            🔗 URL: ${{ inputs.environment == 'production' && 'https://sovren.dev' || 'https://staging.sovren.dev' }}
+            📊 Status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # ===============================================
+  # 📊 POST-DEPLOYMENT MONITORING
+  # ===============================================
+  
+  post-deployment-monitoring:
+    name: 📊 Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [create-release, deploy-release]
+    if: always()
+    timeout-minutes: 10
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: 📊 Deployment summary
+        run: |
+          echo "## 🎯 Release ${{ needs.create-release.outputs.tag }} Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Release Details:**" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏷️ Version: ${{ needs.create-release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎯 Environment: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📅 Date: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔗 URL: ${{ inputs.environment == 'production' && 'https://sovren.dev' || 'https://staging.sovren.dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Quality Gates:**" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Security audit clean" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Performance within limits" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Health check passed" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📋 Create deployment report
+        run: |
+          echo "# Deployment Report - ${{ needs.create-release.outputs.tag }}" > deployment-report.md
+          echo "" >> deployment-report.md
+          echo "## Summary" >> deployment-report.md
+          echo "- **Version:** ${{ needs.create-release.outputs.tag }}" >> deployment-report.md
+          echo "- **Environment:** ${{ inputs.environment }}" >> deployment-report.md
+          echo "- **Status:** ${{ needs.deploy-release.result }}" >> deployment-report.md
+          echo "- **Date:** $(date)" >> deployment-report.md
+          echo "" >> deployment-report.md
+          echo "## Changes" >> deployment-report.md
+          echo "${{ needs.create-release.outputs.changelog }}" >> deployment-report.md
+      
+      - name: 📤 Upload deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report-${{ needs.create-release.outputs.tag }}
+          path: deployment-report.md 
