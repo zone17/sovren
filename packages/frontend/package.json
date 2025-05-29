@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npx tsc && vite build",
     "vercel-build": "npm run build",
     "preview": "vite preview",
     "test": "jest",
@@ -13,7 +13,7 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --ext ts,tsx --fix",
-    "type-check": "tsc --noEmit",
+    "type-check": "npx tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
