@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '../components/Layout';
 import Button from '../components/Button';
+import Layout from '../components/Layout';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Signup: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -22,7 +22,7 @@ const Signup: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError(null);
 
@@ -37,6 +37,9 @@ const Signup: React.FC = () => {
       // TODO: Implement signup logic
       // const response = await signupUser(formData);
       // dispatch(setUser(response.user));
+
+      // Simulate async operation for now
+      await new Promise((resolve) => setTimeout(resolve, 100));
       navigate('/profile');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -65,7 +68,12 @@ const Signup: React.FC = () => {
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form
+              className="space-y-6"
+              onSubmit={(e) => {
+                void handleSubmit(e);
+              }}
+            >
               {error && (
                 <div className="rounded-md bg-red-50 p-4">
                   <div className="flex">

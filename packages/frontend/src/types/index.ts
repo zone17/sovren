@@ -52,4 +52,4 @@ export interface PaymentState {
   currentPayment: Payment | null;
   loading: boolean;
   error: string | null;
-} 
+}

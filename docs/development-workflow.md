@@ -7,6 +7,7 @@ This guide explains the **complete development workflow** for Sovren, designed t
 ## 🎯 Workflow Philosophy
 
 ### Core Principles
+
 1. **Quality First**: Every change must improve or maintain quality
 2. **Test-Driven Development**: Write tests before implementation
 3. **Continuous Integration**: Integrate frequently, fail fast
@@ -26,16 +27,13 @@ cd sovren
 npm install
 
 # 3. Setup environment variables
-cp packages/backend/.env.example packages/backend/.env
-# Edit .env with your local configuration
+cp packages/frontend/.env.example packages/frontend/.env.local
+# Edit .env.local with your Supabase configuration
 
-# 4. Setup database
-cd packages/backend
-npx prisma migrate dev
-npx prisma db seed
+# 4. Start development server
+npm run dev
 
 # 5. Verify setup
-cd ../..
 npm test
 npm run lint
 npm run type-check
@@ -44,6 +42,7 @@ npm run type-check
 ### Development Tools Setup
 
 #### Required IDE Extensions
+
 - **ESLint**: Real-time code quality feedback
 - **Prettier**: Automatic code formatting
 - **TypeScript**: Enhanced type checking
@@ -51,6 +50,7 @@ npm run type-check
 - **GitLens**: Git history and blame
 
 #### Recommended IDE Settings (VS Code)
+
 ```json
 {
   "editor.formatOnSave": true,
@@ -68,6 +68,7 @@ npm run type-check
 ### 1. Feature Development Process
 
 #### Step 1: Create Feature Branch
+
 ```bash
 # Create feature branch from main
 git checkout main
@@ -81,6 +82,7 @@ git checkout -b feature/[JIRA-123]-add-payment-integration
 ```
 
 #### Step 2: Plan Implementation
+
 1. **Review requirements** and acceptance criteria
 2. **Design feature flag** for the change
 3. **Plan test strategy** (unit, integration, e2e)
@@ -88,6 +90,7 @@ git checkout -b feature/[JIRA-123]-add-payment-integration
 5. **Update documentation** outline
 
 #### Step 3: Test-Driven Development
+
 ```bash
 # Write failing tests first
 npm run test:watch
@@ -97,10 +100,10 @@ describe('PaymentIntegration', () => {
   describe('when processing payment', () => {
     it('should create invoice successfully', () => {
       // Arrange
-      // Act  
+      // Act
       // Assert
     });
-    
+
     it('should handle payment failures gracefully', () => {
       // Test error scenarios
     });
@@ -109,18 +112,20 @@ describe('PaymentIntegration', () => {
 ```
 
 #### Step 4: Implement Feature
+
 ```bash
 # Implement minimal code to pass tests
 npm run dev
 
 # Continuous feedback loop:
 # 1. Write test (Red)
-# 2. Write minimal code (Green) 
+# 2. Write minimal code (Green)
 # 3. Refactor (Blue)
 # 4. Repeat
 ```
 
 #### Step 5: Feature Flag Implementation
+
 ```bash
 # Add feature flag
 npm run feature-flags set enablePaymentIntegration false
@@ -130,11 +135,11 @@ import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 const PaymentComponent = () => {
   const { enablePaymentIntegration } = useFeatureFlags();
-  
+
   if (!enablePaymentIntegration) {
     return <LegacyPaymentComponent />;
   }
-  
+
   return <NewPaymentComponent />;
 };
 ```
@@ -142,6 +147,7 @@ const PaymentComponent = () => {
 ### 2. Quality Assurance Process
 
 #### Continuous Quality Checks
+
 ```bash
 # Run before each commit
 npm run lint:fix        # Fix linting issues
@@ -152,6 +158,7 @@ npm run build          # Build verification
 ```
 
 #### Code Review Checklist
+
 - [ ] **Functionality**: Does it work as expected?
 - [ ] **Tests**: Are there comprehensive tests?
 - [ ] **Performance**: Any performance impact?
@@ -163,6 +170,7 @@ npm run build          # Build verification
 ### 3. Pull Request Process
 
 #### Creating Pull Request
+
 ```bash
 # Push feature branch
 git push origin feature/[JIRA-123]-add-payment-integration
@@ -172,14 +180,18 @@ gh pr create --template .github/pull_request_template.md
 ```
 
 #### PR Template Checklist
+
 ```markdown
 ## 🎯 What does this PR do?
+
 Brief description of changes and motivation.
 
 ## 🧪 How to test?
+
 Step-by-step testing instructions.
 
 ## 📋 Checklist
+
 - [ ] Tests added/updated
 - [ ] Documentation updated
 - [ ] Feature flag implemented
@@ -188,11 +200,14 @@ Step-by-step testing instructions.
 - [ ] Accessibility verified
 
 ## 🔗 Related Issues
+
 Closes #123
 ```
 
 #### Automated PR Checks
+
 The CI pipeline automatically runs:
+
 - ✅ **Linting** and formatting validation
 - ✅ **Type checking** across all packages
 - ✅ **Test suite** with coverage reporting
@@ -203,6 +218,7 @@ The CI pipeline automatically runs:
 ### 4. Review Process
 
 #### For Reviewers
+
 1. **Checkout branch** and test locally
 2. **Review code quality** and architecture
 3. **Verify tests** cover edge cases
@@ -211,6 +227,7 @@ The CI pipeline automatically runs:
 6. **Approve or request changes**
 
 #### For Authors
+
 1. **Address feedback** promptly
 2. **Update tests** if needed
 3. **Improve documentation**
@@ -219,6 +236,7 @@ The CI pipeline automatically runs:
 ### 5. Deployment Process
 
 #### Merge to Develop (Staging)
+
 ```bash
 # After PR approval
 git checkout develop
@@ -233,6 +251,7 @@ git push origin develop
 ```
 
 #### Testing in Staging
+
 1. **Verify deployment** at `https://staging.sovren.dev`
 2. **Test feature flag** toggle
 3. **Run manual tests** on actual environment
@@ -240,6 +259,7 @@ git push origin develop
 5. **Cross-browser testing**
 
 #### Production Deployment
+
 ```bash
 # Create production PR
 git checkout main
@@ -253,7 +273,7 @@ gh pr create --title "Release [version]" --body "Production deployment"
 
 # After approval and merge:
 # ✅ Production CI pipeline
-# 🚀 Production deployment  
+# 🚀 Production deployment
 # 📊 Health checks
 # 🔍 Performance monitoring
 ```
@@ -261,6 +281,7 @@ gh pr create --title "Release [version]" --body "Production deployment"
 ## 🛠️ Development Commands
 
 ### Daily Development
+
 ```bash
 # Start development environment
 npm run dev              # Frontend + Backend
@@ -281,6 +302,7 @@ npm run type-check       # TypeScript validation
 ```
 
 ### Advanced Commands
+
 ```bash
 # Feature Flags
 npm run feature-flags list               # List all flags
@@ -302,13 +324,15 @@ npm run lighthouse         # Performance audit
 ## 🧪 Testing Strategy
 
 ### Test Pyramid
+
 ```
            🔺 E2E Tests (Few)
-         🔻🔻 Integration Tests (Some)  
+         🔻🔻 Integration Tests (Some)
        🔻🔻🔻🔻 Unit Tests (Many)
 ```
 
 #### Unit Tests (80% of tests)
+
 - **Purpose**: Test individual functions/components
 - **Tools**: Jest, React Testing Library
 - **Location**: `*.test.ts` files next to source
@@ -321,7 +345,7 @@ describe('calculatePaymentAmount', () => {
     const result = calculatePaymentAmount(100, 0.1);
     expect(result).toBe(110);
   });
-  
+
   it('should handle zero tax rate', () => {
     const result = calculatePaymentAmount(100, 0);
     expect(result).toBe(100);
@@ -330,32 +354,35 @@ describe('calculatePaymentAmount', () => {
 ```
 
 #### Integration Tests (15% of tests)
+
 - **Purpose**: Test component interactions
 - **Tools**: Jest, Supertest
 - **Location**: `*.integration.test.ts`
 - **Coverage**: Critical user flows
 
 ```typescript
-// Example integration test  
+// Example integration test
 describe('Payment API', () => {
   it('should create payment invoice', async () => {
     const response = await request(app)
       .post('/api/v1/payments/invoice')
       .send({ amount: 100, currency: 'USD' })
       .expect(201);
-      
+
     expect(response.body.data.amount).toBe(100);
   });
 });
 ```
 
 #### E2E Tests (5% of tests)
+
 - **Purpose**: Test complete user journeys
 - **Tools**: Playwright (future implementation)
 - **Location**: `e2e/` directory
 - **Coverage**: Critical business flows
 
 ### Testing Best Practices
+
 1. **Arrange-Act-Assert** pattern
 2. **Test behavior, not implementation**
 3. **Use descriptive test names**
@@ -370,6 +397,7 @@ describe('Payment API', () => {
 #### Common Problems & Solutions
 
 **Tests Failing Locally**
+
 ```bash
 # Clear Jest cache
 npm run test -- --clearCache
@@ -381,6 +409,7 @@ npm run test
 ```
 
 **TypeScript Errors**
+
 ```bash
 # Restart TypeScript server in IDE
 # Check tsconfig.json paths
@@ -388,6 +417,7 @@ npm run type-check
 ```
 
 **Build Failures**
+
 ```bash
 # Clear build cache
 npm run clean
@@ -396,6 +426,7 @@ npm run build
 ```
 
 **Database Issues**
+
 ```bash
 cd packages/backend
 npx prisma migrate reset
@@ -406,18 +437,21 @@ npx prisma db seed
 ### CI/CD Debugging
 
 #### Build Pipeline Failures
+
 1. **Check GitHub Actions** logs
 2. **Review changed files** for issues
 3. **Run locally** with same Node version
 4. **Check environment variables**
 
 #### Deployment Issues
+
 1. **Verify Vercel** configuration
 2. **Check feature flags** status
 3. **Review environment** differences
 4. **Check health endpoints**
 
 ### Performance Debugging
+
 ```bash
 # Profile bundle size
 npm run build
@@ -434,6 +468,7 @@ npm run dev
 ## 📊 Monitoring & Observability
 
 ### Local Monitoring
+
 ```bash
 # Check application health
 curl http://localhost:3001/api/v1/health
@@ -447,12 +482,14 @@ open coverage/lcov-report/index.html
 ```
 
 ### Production Monitoring
+
 - **Application Performance**: Response times, error rates
 - **Infrastructure**: Server resources, database performance
 - **User Experience**: Core Web Vitals, conversion rates
 - **Security**: Vulnerability scans, audit logs
 
 ### Alerting
+
 - **Critical**: Production failures, security issues
 - **Warning**: Performance degradation, test failures
 - **Info**: Deployments, feature flag changes
@@ -460,13 +497,14 @@ open coverage/lcov-report/index.html
 ## 🎓 Best Practices
 
 ### Code Quality
+
 ```typescript
 // ✅ Good: Descriptive names, single responsibility
 const calculateTotalWithTax = (subtotal: number, taxRate: number): number => {
   return subtotal * (1 + taxRate);
 };
 
-// ❌ Bad: Unclear naming, multiple responsibilities  
+// ❌ Bad: Unclear naming, multiple responsibilities
 const calc = (a: any, b: any): any => {
   // Does too many things
   return a * b + someOtherCalculation();
@@ -474,12 +512,13 @@ const calc = (a: any, b: any): any => {
 ```
 
 ### Git Workflow
+
 ```bash
 # ✅ Good: Descriptive commit messages
 git commit -m "feat(payments): add Lightning Network invoice generation
 
 - Implement invoice creation API endpoint
-- Add payment validation logic  
+- Add payment validation logic
 - Include comprehensive error handling
 - Update API documentation
 
@@ -490,16 +529,17 @@ git commit -m "fix stuff"
 ```
 
 ### Feature Flags
+
 ```typescript
 // ✅ Good: Graceful degradation
 const PaymentForm = () => {
   const { enableLightningPayments } = useFeatureFlags();
-  
+
   return (
     <form>
       {/* Existing payment methods */}
       <CreditCardForm />
-      
+
       {/* New payment method behind flag */}
       {enableLightningPayments && <LightningPaymentForm />}
     </form>
@@ -509,16 +549,17 @@ const PaymentForm = () => {
 // ❌ Bad: Breaking changes without fallback
 const PaymentForm = () => {
   const { enableLightningPayments } = useFeatureFlags();
-  
+
   if (enableLightningPayments) {
     return <LightningPaymentForm />;
   }
-  
+
   throw new Error('Payment method not available'); // Breaks user experience
 };
 ```
 
 ### Performance
+
 ```typescript
 // ✅ Good: Optimized React components
 const UserList = React.memo(({ users }: { users: User[] }) => {
@@ -526,7 +567,7 @@ const UserList = React.memo(({ users }: { users: User[] }) => {
     () => users.sort((a, b) => a.name.localeCompare(b.name)),
     [users]
   );
-  
+
   return (
     <ul>
       {sortedUsers.map(user => (
@@ -539,7 +580,7 @@ const UserList = React.memo(({ users }: { users: User[] }) => {
 // ❌ Bad: Unnecessary re-renders
 const UserList = ({ users }: { users: User[] }) => {
   const sortedUsers = users.sort((a, b) => a.name.localeCompare(b.name)); // Runs every render
-  
+
   return (
     <ul>
       {sortedUsers.map(user => (
@@ -555,6 +596,7 @@ const UserList = ({ users }: { users: User[] }) => {
 ## 🚨 Emergency Procedures
 
 ### Hotfix Process
+
 ```bash
 # 1. Create hotfix branch from main
 git checkout main
@@ -577,6 +619,7 @@ gh pr create --title "HOTFIX: Critical security vulnerability" \
 ```
 
 ### Rollback Process
+
 ```bash
 # Option 1: Revert commit
 git revert [commit-hash]
@@ -592,18 +635,21 @@ vercel rollback [deployment-url]
 ## 📞 Getting Help
 
 ### Internal Resources
+
 - **Documentation**: Check `/docs` directory first
 - **Team Chat**: #engineering Slack channel
 - **Code Review**: Create draft PR for early feedback
 - **Pair Programming**: Schedule with team members
 
 ### External Resources
+
 - **React**: [Official Documentation](https://react.dev/)
 - **TypeScript**: [Handbook](https://www.typescriptlang.org/docs/)
 - **Jest**: [Testing Framework](https://jestjs.io/docs/getting-started)
 - **Prisma**: [Database Toolkit](https://www.prisma.io/docs/)
 
 ### Escalation Path
+
 1. **Level 1**: Check documentation and search issues
 2. **Level 2**: Ask in team Slack channel
 3. **Level 3**: Create GitHub issue with detailed description
@@ -615,23 +661,26 @@ vercel rollback [deployment-url]
 ## 📈 Continuous Improvement
 
 ### Team Retrospectives
+
 - **Weekly**: Process improvements
 - **Monthly**: Tool and workflow optimization
 - **Quarterly**: Architecture and strategy review
 
 ### Metrics Tracking
+
 - **Code Quality**: Test coverage, linting scores
 - **Performance**: Build times, deployment frequency
 - **Developer Experience**: Time to first PR, debugging time
 
 ### Knowledge Sharing
+
 - **Tech Talks**: Weekly internal presentations
 - **Documentation**: Keep docs updated with learnings
 - **Code Reviews**: Teaching moments and best practices
 
 ---
 
-*This workflow guide is a living document. Please suggest improvements through PRs or GitHub issues.*
+_This workflow guide is a living document. Please suggest improvements through PRs or GitHub issues._
 
-**Last Updated**: $(date)  
-**Next Review**: Monthly team retrospective 
+**Last Updated**: $(date)
+**Next Review**: Monthly team retrospective

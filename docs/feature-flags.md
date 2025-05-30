@@ -1,36 +1,22 @@
-# Feature Flag System Documentation
+# Feature Flags Implementation Guide
 
 ## Overview
 
-The feature flag system provides a type-safe, file-based solution for managing feature toggles in the Sovren platform. It includes a backend API, CLI tool, and frontend integration.
+Feature flags are implemented as a comprehensive system that allows safe deployment and testing of new features. The implementation consists of:
+
+1. **Shared Type Definitions** (`packages/shared/src/featureFlags.ts`)
+2. **Frontend Hook** (`packages/frontend/src/hooks/useFeatureFlags.ts`)
+3. **Environment Configuration** (`.env` files)
 
 ## Architecture
 
-### Components
-
-1. **Shared Types** (`@sovren/shared/src/featureFlags.ts`)
-
-   - Type definitions using Zod
-   - Default flag values
-   - Type-safe validation
-
-2. **Backend Service** (`packages/backend/src/featureFlags/`)
-
-   - File-based storage with locking
-   - Automatic backups
-   - Audit logging
-   - Rate-limited admin API
-
-3. **CLI Tool** (`packages/backend/src/featureFlags/cli.ts`)
-
-   - List current flags
-   - Update flag values
-   - Manage backups
-
-4. **Frontend Integration** (`packages/frontend/src/hooks/useFeatureFlags.ts`)
-   - React hook for flag consumption
-   - Type-safe flag access
-   - Automatic updates
+```
+packages/
+├── shared/src/featureFlags.ts       # Type definitions & validation
+└── frontend/
+    ├── src/hooks/useFeatureFlags.ts # React hook for flag consumption
+    └── .env                         # Environment configuration
+```
 
 ## Type Safety & Validation
 
@@ -54,160 +40,81 @@ Add new flags in `@sovren/shared/src/featureFlags.ts`:
 export const featureFlagSchema = z.object({
   enablePayments: z.boolean().default(false),
   enableAIRecommendations: z.boolean().default(false),
+  enableNostrIntegration: z.boolean().default(true),
+  enableExperimentalUI: z.boolean().default(false),
   // Add new flags here
 });
 ```
 
-### Backend API
+### Environment Configuration
 
-1. **Get Flags**
+Configure flags in your environment files:
 
-   ```bash
-   GET /api/feature-flags
-   ```
-
-   Returns all current flag values.
-
-2. **Update Flags** (Admin only)
-
-   ```bash
-   POST /api/feature-flags
-   Headers:
-     x-admin-token: <your-admin-token>
-   Body:
-     {
-       "flags": {
-         "enablePayments": true
-       }
-     }
-   ```
-
-3. **Cleanup Backups** (Admin only)
-   ```bash
-   POST /api/feature-flags/cleanup
-   Headers:
-     x-admin-token: <your-admin-token>
-   Body:
-     {
-       "maxAgeDays": 7
-     }
-   ```
-
-### CLI Tool
-
-1. **List Flags**
-
-   ```bash
-   npm run feature-flags list
-   ```
-
-2. **Update Flags**
-
-   ```bash
-   npm run feature-flags set enablePayments=true enableAIRecommendations=false
-   ```
-
-3. **Cleanup Backups**
-   ```bash
-   npm run feature-flags cleanup --days 7
-   ```
+```env
+# .env.local (development)
+VITE_FEATURE_FLAGS_ENABLED=true
+VITE_ENABLE_PAYMENTS=false
+VITE_ENABLE_AI_RECOMMENDATIONS=false
+VITE_ENABLE_NOSTR_INTEGRATION=true
+VITE_ENABLE_EXPERIMENTAL_UI=true
+```
 
 ### Frontend Usage
 
 ```typescript
-import { useFeatureFlags } from '@sovren/frontend/src/hooks/useFeatureFlags';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 function MyComponent() {
-  const { flags, loading, error } = useFeatureFlags();
+  const flags = useFeatureFlags();
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-
-  return flags.enablePayments ? <PaymentButton /> : null;
+  return (
+    <>
+      {flags.enablePayments && <PaymentButton />}
+      {flags.enableAIRecommendations && <AIRecommendations />}
+      {flags.enableNostrIntegration && <NostrLogin />}
+      {flags.enableExperimentalUI && <ExperimentalFeatures />}
+    </>
+  );
 }
 ```
-
-## Security
-
-- Admin endpoints require `FEATURE_FLAG_ADMIN_TOKEN`
-- Rate limiting: 100 requests per 15 minutes per IP
-- File locking prevents concurrent writes
-- Automatic backups with cleanup
-
-## Backup System
-
-- Automatic backups on every flag change
-- Timestamped backup files
-- Configurable retention period
-- Manual cleanup via API or CLI
 
 ## Development
 
 ### Adding New Flags
 
 1. Add flag to schema in `@sovren/shared/src/featureFlags.ts`
-2. Update tests in `packages/backend/src/routes/featureFlags.test.ts`
-3. Update documentation
+2. Update tests in `packages/shared/src/featureFlags.test.ts`
+3. Add environment variable to `.env.example`
+4. Update documentation in this file
 
 ### Testing
 
 ```bash
 # Run all tests
-npm run test
+npm test
 
 # Run feature flag tests only
-npm run test -- -t "Feature Flags"
+npm test -- packages/shared/src/featureFlags.test.ts
 ```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Flag not updating**
-
-   - Check admin token
-   - Verify file permissions
-   - Check for lock file
-
-2. **Backup issues**
-
-   - Verify backup directory exists
-   - Check disk space
-   - Review cleanup settings
-
-3. **API errors**
-
-   - Check rate limits
-   - Verify token
-   - Review server logs
-
-4. **Linter or test failures**
-   - Run `npm run lint` and `npm run test` in the affected package
-   - Fix all reported issues before merging
-   - Ensure all new code uses Zod for validation
 
 ## Best Practices
 
 1. **Flag Naming**
-
-   - Use descriptive names
-   - Follow camelCase
-   - Prefix with feature area
+   - Use descriptive names (enablePayments, enableAIRecommendations)
+   - Follow camelCase convention
+   - Prefix with feature area for complex systems
 
 2. **Default Values**
-
-   - Set safe defaults
-   - Document in schema
-   - Consider environment
+   - Set safe defaults (usually false for new features)
+   - Document purpose in schema comments
+   - Consider impact on different environments
 
 3. **Testing & Validation**
+   - Test both enabled and disabled states
+   - Include comprehensive unit tests
+   - Use TypeScript for type safety
 
-   - Test both states
-   - Include in CI/CD
-   - Monitor usage
-   - Use Zod for all dynamic data validation
-
-4. **Maintenance**
-   - Regular cleanup
-   - Monitor logs
-   - Review usage
+4. **Environment Management**
+   - Use different values for development vs production
+   - Document required environment variables
+   - Provide sensible defaults

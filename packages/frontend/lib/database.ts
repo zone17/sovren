@@ -7,8 +7,8 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 });
 
 // Database types (you can generate these from Supabase CLI later)
@@ -52,4 +52,4 @@ export interface FeatureFlag {
   enabled: boolean;
   created_at: string;
   updated_at: string;
-} 
+}

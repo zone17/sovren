@@ -1,6 +1,0 @@
-{
-  "enablePayments": false,
-  "enableAIRecommendations": false,
-  "enableNostrIntegration": true,
-  "enableExperimentalUI": false
-}

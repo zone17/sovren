@@ -11,6 +11,9 @@
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --ext ts,tsx --fix",
     "type-check": "npx --package=typescript tsc --noEmit",
@@ -21,7 +24,7 @@
     "@supabase/supabase-js": "^2.49.8",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "@vercel/node": "^3.0.0",
+    "@vercel/node": "^5.2.0",
     "@vitejs/plugin-react": "^4.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -32,25 +35,33 @@
     "vite": "^5.4.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.4.2",
-    "@testing-library/react": "^14.2.1",
-    "@testing-library/user-event": "^14.5.2",
+    "@axe-core/react": "^4.10.1",
+    "@playwright/test": "^1.52.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^29.5.14",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^10.1.5",
+    "eslint-import-resolver-typescript": "^4.4.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-prettier": "^5.4.0",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.12",
     "jest": "^29.7.0",
+    "jest-axe": "^10.0.0",
     "jest-environment-jsdom": "^29.7.0",
+    "playwright": "^1.52.0",
     "prettier": "^3.2.5"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.12.0",
+    "@rollup/rollup-darwin-arm64": "^4.12.0",
     "@rollup/rollup-darwin-x64": "^4.12.0",
-    "@rollup/rollup-darwin-arm64": "^4.12.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.12.0"
   },
   "jest": {
     "preset": "ts-jest",
@@ -58,7 +69,7 @@
     "setupFilesAfterEnv": [
       "<rootDir>/src/setupTests.ts"
     ],
-    "moduleNameMapping": {
+    "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },
     "transform": {
@@ -69,6 +80,11 @@
       "tsx",
       "js",
       "jsx"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/e2e/",
+      "<rootDir>/playwright-report/",
+      "<rootDir>/test-results/"
     ],
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx}",

@@ -7,23 +7,27 @@ Sovren implements a cutting-edge CI/CD pipeline designed for **zero-downtime dep
 ## 🏗️ Architecture Principles
 
 ### 1. **Shift-Left Everything**
+
 - Security scanning in development
 - Performance testing in CI/CD
 - Quality gates before deployment
 - Early feedback loops
 
 ### 2. **Multi-Environment Strategy**
+
 - **Development**: Feature branches with preview deployments
 - **Staging**: Integration testing environment
 - **Production**: Live user environment
 
 ### 3. **Quality Gates**
+
 - All tests must pass (100% coverage thresholds)
 - Security audit clean
 - Performance within budgets
 - Accessibility compliance
 
 ### 4. **Automation First**
+
 - Zero manual intervention required
 - Automated rollbacks on failure
 - Self-healing deployments
@@ -39,15 +43,15 @@ graph TD
     B -->|Feature Branch| C[CI Pipeline]
     B -->|Develop Branch| D[CI + Staging Deploy]
     B -->|Main Branch| E[CI + Production Deploy]
-    
+
     C --> F[Preview Deployment]
     D --> G[Staging Environment]
     E --> H[Production Environment]
-    
+
     F --> I[Automated Testing]
     G --> I
     H --> I
-    
+
     I --> J[Performance Monitoring]
     J --> K[Health Checks]
     K --> L[Notification]
@@ -58,6 +62,7 @@ graph TD
 ### 1. **Main CI/CD Pipeline** (`.github/workflows/ci.yml`)
 
 **Triggers:**
+
 - Push to `main` or `develop` branches
 - Pull requests to `main` or `develop`
 - Daily security audit (scheduled)
@@ -65,6 +70,7 @@ graph TD
 **Jobs:**
 
 #### 🔍 **Code Quality & Security Analysis**
+
 ```yaml
 - ESLint analysis with detailed reporting
 - Prettier format checking
@@ -74,6 +80,7 @@ graph TD
 ```
 
 #### 🧪 **Comprehensive Testing Suite**
+
 ```yaml
 - Matrix testing (Node 18.x, 20.x)
 - Unit tests + Integration tests
@@ -83,6 +90,7 @@ graph TD
 ```
 
 #### ⚡ **Performance & Bundle Analysis**
+
 ```yaml
 - Application build verification
 - Bundle size analysis
@@ -91,6 +99,7 @@ graph TD
 ```
 
 #### 🚀 **Environment-Specific Deployments**
+
 ```yaml
 - Preview deployments (Pull Requests)
 - Staging deployment (develop branch)
@@ -99,6 +108,7 @@ graph TD
 ```
 
 #### 🛡️ **Security Monitoring**
+
 ```yaml
 - Daily security audits
 - Dependency vulnerability checks
@@ -111,6 +121,7 @@ graph TD
 **Purpose:** Automated semantic versioning and release management
 
 **Features:**
+
 - Manual trigger with version type selection
 - Automatic CHANGELOG.md generation
 - Git tagging and GitHub releases
@@ -118,6 +129,7 @@ graph TD
 - Post-deployment verification
 
 **Process:**
+
 1. Run full test suite
 2. Bump version (semantic versioning)
 3. Generate changelog
@@ -136,24 +148,28 @@ graph TD
 **Components:**
 
 #### 🔍 **Lighthouse Audits**
+
 - Desktop and mobile testing
 - Core Web Vitals monitoring
 - Performance budget enforcement
 - Accessibility scoring
 
 #### 🏋️ **Load Testing (K6)**
+
 - Realistic user load simulation
 - Performance threshold validation
 - Scalability testing
 - Response time monitoring
 
 #### 📦 **Bundle Analysis**
+
 - JavaScript bundle size tracking
 - CSS optimization monitoring
 - Asset optimization verification
 - Bundle budget alerts
 
 #### ♿ **Accessibility Testing**
+
 - Pa11y automated testing
 - WCAG compliance verification
 - Screen reader compatibility
@@ -173,6 +189,7 @@ Security Gates:
 ```
 
 ### Security Automation
+
 - **Daily security audits** (scheduled)
 - **Vulnerability database updates**
 - **Automated dependency updates** (Dependabot)
@@ -201,12 +218,14 @@ Monitoring Stack:
 ### Alerting Strategy
 
 **Critical Alerts** (Immediate Response):
+
 - Production deployment failures
 - Security vulnerabilities detected
 - Performance degradation >50%
 - Service downtime
 
 **Warning Alerts** (Next Business Day):
+
 - Test failures in staging
 - Performance degradation <50%
 - Bundle size increases
@@ -228,18 +247,21 @@ Deployment Process:
 ### Environment Management
 
 #### **Development Environment**
+
 - **Purpose**: Feature development and testing
 - **Deployment**: Automatic on feature branch push
 - **URL**: `https://pr-<number>.sovren.dev`
 - **Lifetime**: Until PR closure
 
 #### **Staging Environment**
+
 - **Purpose**: Integration testing and QA
 - **Deployment**: Automatic on develop branch
 - **URL**: `https://staging.sovren.dev`
 - **Features**: Production-like data and configuration
 
 #### **Production Environment**
+
 - **Purpose**: Live user traffic
 - **Deployment**: Automatic on main branch
 - **URL**: `https://sovren.dev`
@@ -260,6 +282,7 @@ npm run feature-flags backup
 ```
 
 ### Deployment Safety
+
 - **Feature flags verified** before deployment
 - **Automatic backup** before changes
 - **Rollback capability** for failed deployments
@@ -268,18 +291,21 @@ npm run feature-flags backup
 ## 📊 Quality Metrics & KPIs
 
 ### Development Metrics
+
 - **Test Coverage**: 80%+ across all packages
 - **Build Time**: <5 minutes for full pipeline
 - **Deployment Frequency**: Multiple per day
 - **Lead Time**: <2 hours from commit to production
 
 ### Performance Metrics
+
 - **Core Web Vitals**: 90+ Lighthouse score
 - **Bundle Size**: <250KB main JavaScript
 - **API Response Time**: <200ms p95
 - **Uptime**: 99.9% SLA
 
 ### Security Metrics
+
 - **Vulnerability Remediation**: <24 hours
 - **Security Audit Frequency**: Daily
 - **Dependency Updates**: Weekly
@@ -303,6 +329,7 @@ npm run feature-flags dev
 ```
 
 ### IDE Integration
+
 - **ESLint** real-time linting
 - **Prettier** auto-formatting
 - **TypeScript** strict type checking
@@ -321,6 +348,7 @@ Rollback Triggers:
 ```
 
 ### Incident Response Flow
+
 1. **Automated detection** (monitoring alerts)
 2. **Immediate rollback** (if criteria met)
 3. **Notification** (Slack, email, PagerDuty)
@@ -346,6 +374,7 @@ ANALYTICS_KEY=<analytics-tracking-key>
 ```
 
 ### Secrets Management
+
 - **GitHub Secrets** for CI/CD credentials
 - **Vercel Environment Variables** for runtime config
 - **Rotation policy** for sensitive credentials
@@ -370,6 +399,7 @@ Monthly Tasks:
 ```
 
 ### Version Management
+
 - **Semantic versioning** (semver)
 - **Automated changelog** generation
 - **Release notes** with feature highlights
@@ -380,6 +410,7 @@ Monthly Tasks:
 ### Common Operations
 
 #### **Manual Deployment**
+
 ```bash
 # Trigger release workflow
 gh workflow run release.yml \
@@ -388,6 +419,7 @@ gh workflow run release.yml \
 ```
 
 #### **Rollback Deployment**
+
 ```bash
 # Revert to previous version
 git revert <commit-hash>
@@ -395,6 +427,7 @@ git push origin main
 ```
 
 #### **Emergency Hotfix**
+
 ```bash
 # Create hotfix branch
 git checkout -b hotfix/critical-fix main
@@ -403,6 +436,7 @@ git checkout -b hotfix/critical-fix main
 ```
 
 #### **Performance Investigation**
+
 ```bash
 # Run performance audit
 gh workflow run performance.yml \
@@ -416,18 +450,21 @@ npm run bundle-analyzer
 ### Troubleshooting Guide
 
 #### **Build Failures**
+
 1. Check test results in GitHub Actions
 2. Review ESLint/TypeScript errors
 3. Verify dependency compatibility
 4. Check environment variable configuration
 
 #### **Deployment Failures**
+
 1. Verify Vercel token and project configuration
 2. Check for breaking changes in dependencies
 3. Review environment-specific settings
 4. Validate feature flag configuration
 
 #### **Performance Issues**
+
 1. Run Lighthouse audit manually
 2. Check bundle size changes
 3. Review database query performance
@@ -436,24 +473,28 @@ npm run bundle-analyzer
 ## 🎓 Best Practices for Engineers
 
 ### Code Quality
+
 - **Write tests first** (TDD approach)
 - **Keep functions small** and focused
 - **Use TypeScript strictly** (no `any` types)
 - **Document complex logic** with comments
 
 ### Git Workflow
+
 - **Feature branches** for all development
 - **Descriptive commit messages** (conventional commits)
 - **Small, focused PRs** for easier review
 - **Squash merge** to keep history clean
 
 ### CI/CD Interaction
+
 - **Monitor build status** before and after PR
 - **Review deployment logs** for issues
 - **Use feature flags** for risky changes
 - **Test in staging** before production
 
 ### Performance Awareness
+
 - **Monitor bundle size** impacts
 - **Test on slow networks** and devices
 - **Use React DevTools** Profiler
@@ -470,5 +511,5 @@ npm run bundle-analyzer
 
 ---
 
-*Last updated: $(date)*  
-*Next review: Quarterly or when major changes are made* 
+_Last updated: $(date)_  
+_Next review: Quarterly or when major changes are made_

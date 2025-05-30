@@ -42,7 +42,13 @@ export const PaymentSchema = z.object({
 export type Payment = z.infer<typeof PaymentSchema>;
 
 // API Response types
-export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T): z.ZodObject<any> =>
+export const ApiResponseSchema = <T extends z.ZodType>(
+  dataSchema: T
+): z.ZodObject<{
+  success: z.ZodBoolean;
+  data: z.ZodOptional<T>;
+  error: z.ZodOptional<z.ZodString>;
+}> =>
   z.object({
     success: z.boolean(),
     data: dataSchema.optional(),

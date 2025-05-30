@@ -1,35 +1,53 @@
 import '@testing-library/jest-dom';
 
+// Properly typed global interface extensions
+declare global {
+  interface Window {
+    IntersectionObserver: typeof IntersectionObserver;
+    ResizeObserver: typeof ResizeObserver;
+  }
+
+  interface Global {
+    IntersectionObserver: typeof IntersectionObserver;
+    ResizeObserver: typeof ResizeObserver;
+    scrollTo: jest.MockedFunction<typeof window.scrollTo>;
+  }
+}
+
 // Mock IntersectionObserver
-(global as any).IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
-};
+(window as unknown as { IntersectionObserver: unknown }).IntersectionObserver = jest
+  .fn()
+  .mockImplementation(() => ({
+    disconnect: jest.fn(),
+    observe: jest.fn(),
+    unobserve: jest.fn(),
+  }));
 
 // Mock ResizeObserver
-(global as any).ResizeObserver = class ResizeObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
-};
+(window as unknown as { ResizeObserver: unknown }).ResizeObserver = jest
+  .fn()
+  .mockImplementation(() => ({
+    disconnect: jest.fn(),
+    observe: jest.fn(),
+    unobserve: jest.fn(),
+  }));
 
 // Mock window.matchMedia
+const mockMatchMedia = jest.fn().mockImplementation((query: string) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: jest.fn(), // deprecated
+  removeListener: jest.fn(), // deprecated
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  dispatchEvent: jest.fn(),
+}));
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
+  value: mockMatchMedia,
 });
 
 // Mock window.scrollTo
-(global as any).scrollTo = jest.fn();
+(window as unknown as { scrollTo: unknown }).scrollTo = jest.fn();

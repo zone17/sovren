@@ -3,13 +3,15 @@
 ## Overview
 
 Deploy the complete Sovren application on Vercel using:
+
 - **Frontend**: React/Vite static site
-- **Backend**: Serverless API functions  
+- **Backend**: Serverless API functions
 - **Database**: External PostgreSQL (Neon/PlanetScale)
 
 ## 🎯 Why Vercel Full-Stack?
 
 ### ✅ **Advantages**
+
 - **Single platform** - easier management
 - **Cost-effective** - free tier available
 - **Automatic scaling** - serverless functions
@@ -19,6 +21,7 @@ Deploy the complete Sovren application on Vercel using:
 - **Built-in analytics** and monitoring
 
 ### 💰 **Cost Comparison**
+
 ```
 Vercel Full-Stack:
 ├── Hobby Plan: FREE (perfect for MVP)
@@ -28,7 +31,7 @@ Vercel Full-Stack:
 
 vs Railway + Vercel:
 ├── Railway: $20/month
-├── Vercel: $20/month  
+├── Vercel: $20/month
 └── Total: $40/month
 ```
 
@@ -55,6 +58,7 @@ packages/backend/src/
 ### Step 1: Database Setup (Neon PostgreSQL)
 
 1. **Create Neon Account** (free tier)
+
    ```bash
    # Go to https://neon.tech
    # Create account and new project
@@ -62,12 +66,13 @@ packages/backend/src/
    ```
 
 2. **Update Prisma Configuration**
+
    ```bash
    cd packages/backend
-   
+
    # Update DATABASE_URL in .env
    DATABASE_URL="postgresql://user:pass@ep-xxx.neon.tech/sovren?sslmode=require"
-   
+
    # Run migrations
    npx prisma migrate deploy
    npx prisma generate
@@ -83,6 +88,7 @@ mkdir -p api/{auth,users,payments}
 ```
 
 **Example API Function** (`api/health.ts`):
+
 ```typescript
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
@@ -94,12 +100,13 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.0.0',
   });
 }
 ```
 
 **Dynamic API Routes** (`api/users/[...users].ts`):
+
 ```typescript
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PrismaClient } from '@prisma/client';
@@ -109,7 +116,7 @@ const prisma = new PrismaClient();
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { users } = req.query;
   const path = Array.isArray(users) ? users : [];
-  
+
   try {
     switch (req.method) {
       case 'GET':
@@ -120,18 +127,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } else {
           // GET /api/users/[id] - get specific user
           const user = await prisma.user.findUnique({
-            where: { id: path[0] }
+            where: { id: path[0] },
           });
           return res.status(200).json({ data: user });
         }
-        
+
       case 'POST':
         // POST /api/users - create user
         const newUser = await prisma.user.create({
-          data: req.body
+          data: req.body,
         });
         return res.status(201).json({ data: newUser });
-        
+
       default:
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -145,6 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 ### Step 3: Update Package Configuration
 
 **Update `packages/frontend/package.json`**:
+
 ```json
 {
   "dependencies": {
@@ -159,6 +167,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 ```
 
 **Update `packages/frontend/vercel.json`**:
+
 ```json
 {
   "version": 2,
@@ -187,7 +196,7 @@ In **Vercel Dashboard** → Project → Settings → Environment Variables:
 # Database
 DATABASE_URL=postgresql://user:pass@ep-xxx.neon.tech/sovren?sslmode=require
 
-# Authentication  
+# Authentication
 JWT_SECRET=your-super-secure-jwt-secret-here
 
 # Application
@@ -213,6 +222,7 @@ cp packages/backend/src/utils/* packages/frontend/lib/utils/
 ```
 
 **Database utility** (`lib/database.ts`):
+
 ```typescript
 import { PrismaClient } from '@prisma/client';
 
@@ -230,6 +240,7 @@ if (process.env.NODE_ENV !== 'production') {
 ### Step 6: Update CI/CD Pipeline
 
 **Simplified `.github/workflows/ci.yml`**:
+
 ```yaml
 name: 🚀 Vercel Full-Stack CI/CD
 
@@ -243,28 +254,28 @@ jobs:
   build-and-test:
     name: 🧪 Build & Test
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
+
       - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18.x'
           cache: 'npm'
-      
+
       - name: 📦 Install dependencies
         run: npm ci
-      
+
       - name: 🔍 Lint and type check
         run: |
           npm run lint
           npm run type-check
-      
+
       - name: 🧪 Run tests
         run: npm run test:ci
-      
+
       - name: 🏗️ Build application
         run: npm run build
 
@@ -273,11 +284,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-    
+
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
+
       - name: 🚀 Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
@@ -291,6 +302,7 @@ jobs:
 ## 🔗 Frontend API Integration
 
 **Update API calls in React components**:
+
 ```typescript
 // Before (separate backend)
 const API_BASE = process.env.VITE_API_URL || 'http://localhost:3001';
@@ -305,6 +317,7 @@ const response = await fetch(`${API_BASE}/users`);
 ## 🚀 Deployment Process
 
 ### Initial Setup
+
 ```bash
 # 1. Setup Neon database
 # 2. Configure environment variables in Vercel
@@ -315,13 +328,15 @@ vercel --prod
 ```
 
 ### Automatic Deployments
+
 - **Push to `main`** → Production deployment
-- **Push to `develop`** → Preview deployment  
+- **Push to `develop`** → Preview deployment
 - **Pull requests** → Preview deployment with unique URL
 
 ## 📊 Monitoring & Debugging
 
 ### Vercel Function Logs
+
 ```bash
 # View function logs
 vercel logs --follow
@@ -331,6 +346,7 @@ vercel logs api/users
 ```
 
 ### Database Monitoring
+
 - **Neon Dashboard** for database metrics
 - **Vercel Analytics** for function performance
 - **Vercel Functions** tab for execution logs
@@ -338,6 +354,7 @@ vercel logs api/users
 ## 🛡️ Security Best Practices
 
 ### API Security
+
 ```typescript
 // Rate limiting middleware
 import rateLimit from './lib/utils/rateLimit';
@@ -345,18 +362,19 @@ import rateLimit from './lib/utils/rateLimit';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Apply rate limiting
   await rateLimit(req, res);
-  
+
   // Authentication check
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  
+
   // Your API logic here
 }
 ```
 
 ### Environment Security
+
 - Use Vercel's encrypted environment variables
 - Rotate secrets regularly
 - Separate staging/production environments
@@ -380,4 +398,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 ---
 
-**Result**: Single-platform, cost-effective full-stack deployment on Vercel! 🎉 
+**Result**: Single-platform, cost-effective full-stack deployment on Vercel! 🎉

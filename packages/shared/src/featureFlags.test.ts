@@ -1,10 +1,4 @@
-import { z } from 'zod';
-import {
-  featureFlagSchema,
-  type FeatureFlags,
-  parseFeatureFlags,
-  defaultFeatureFlags,
-} from './featureFlags';
+import { defaultFeatureFlags, featureFlagSchema, parseFeatureFlags } from './featureFlags';
 
 describe('Feature Flags', () => {
   describe('featureFlagSchema', () => {
