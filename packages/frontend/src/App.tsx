@@ -1,9 +1,7 @@
 import React, { Suspense } from 'react';
-import { Provider } from 'react-redux';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ErrorBoundary from './monitoring/ErrorBoundary';
-import { store } from './store';
 
 // Lazy load components for optimal performance
 const Home = React.lazy(() => import('./pages/Home'));
@@ -15,37 +13,33 @@ const MonitoringDashboard = React.lazy(() => import('./components/MonitoringDash
 
 function App(): React.ReactElement {
   return (
-    <Provider store={store}>
-      <Router>
-        <ErrorBoundary>
-          <Layout>
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center min-h-screen">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-                </div>
-              }
-            >
-              {/* @ts-ignore - React Router v6 TypeScript compatibility issue */}
-              <Routes>
-                {/* @ts-ignore */}
-                <Route path="/" element={<Home />} />
-                {/* @ts-ignore */}
-                <Route path="/login" element={<Login />} />
-                {/* @ts-ignore */}
-                <Route path="/signup" element={<Signup />} />
-                {/* @ts-ignore */}
-                <Route path="/profile" element={<Profile />} />
-                {/* @ts-ignore */}
-                <Route path="/post/:id" element={<Post />} />
-                {/* @ts-ignore */}
-                <Route path="/monitoring" element={<MonitoringDashboard />} />
-              </Routes>
-            </Suspense>
-          </Layout>
-        </ErrorBoundary>
-      </Router>
-    </Provider>
+    <ErrorBoundary>
+      <Layout>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+          }
+        >
+          {/* @ts-ignore - React Router v6 TypeScript compatibility issue */}
+          <Routes>
+            {/* @ts-ignore */}
+            <Route path="/" element={<Home />} />
+            {/* @ts-ignore */}
+            <Route path="/login" element={<Login />} />
+            {/* @ts-ignore */}
+            <Route path="/signup" element={<Signup />} />
+            {/* @ts-ignore */}
+            <Route path="/profile" element={<Profile />} />
+            {/* @ts-ignore */}
+            <Route path="/post/:id" element={<Post />} />
+            {/* @ts-ignore */}
+            <Route path="/monitoring" element={<MonitoringDashboard />} />
+          </Routes>
+        </Suspense>
+      </Layout>
+    </ErrorBoundary>
   );
 }
 
