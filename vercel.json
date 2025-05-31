@@ -1,19 +1,18 @@
 {
   "version": 2,
-  "name": "sovren",
-  "builds": [
-    {
-      "src": "packages/frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+  "buildCommand": "cd packages/frontend && npm run build",
+  "outputDirectory": "packages/frontend/dist",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "functions": {
+    "packages/frontend/api/**/*.ts": {
+      "runtime": "nodejs18.x"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://api.sovren.dev/$1"
+      "dest": "/api/$1"
     },
     {
       "handle": "filesystem"
@@ -52,10 +51,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
   }
 }
