@@ -466,9 +466,50 @@ class PerformanceMonitor {
     value: number
   ): 'good' | 'needs-improvement' | 'poor' {
     const thresholds = PERFORMANCE_THRESHOLDS[metricName];
+
+    // Handle case where threshold doesn't exist
+    if (!thresholds) {
+      console.warn(`No threshold defined for metric: ${metricName}`);
+      // Fallback to generic thresholds for unknown metrics
+      if (value <= 500) return 'good';
+      if (value <= 2000) return 'needs-improvement';
+      return 'poor';
+    }
+
     if (value <= thresholds.good) return 'good';
     if (value <= thresholds.poor) return 'needs-improvement';
     return 'poor';
+  }
+
+  // Safe rating method that handles unknown metric names
+  private getSafeRating(metricName: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+    // Check if the metric name exists in our thresholds
+    if (metricName in PERFORMANCE_THRESHOLDS) {
+      return this.getRating(metricName as keyof typeof PERFORMANCE_THRESHOLDS, value);
+    }
+
+    // For unknown metrics, use intelligent fallback based on metric type
+    if (metricName.includes('CLS') || metricName.includes('SHIFT')) {
+      // Layout shift metrics (0-1 scale)
+      if (value <= 0.1) return 'good';
+      if (value <= 0.25) return 'needs-improvement';
+      return 'poor';
+    } else if (metricName.includes('API') || metricName.includes('RESPONSE')) {
+      // API response time metrics
+      if (value <= 1000) return 'good';
+      if (value <= 3000) return 'needs-improvement';
+      return 'poor';
+    } else if (metricName.includes('RENDER') || metricName.includes('COMPONENT')) {
+      // Component render metrics
+      if (value <= 100) return 'good';
+      if (value <= 500) return 'needs-improvement';
+      return 'poor';
+    } else {
+      // Generic time-based metrics
+      if (value <= 500) return 'good';
+      if (value <= 2000) return 'needs-improvement';
+      return 'poor';
+    }
   }
 
   // Enhanced public API for custom measurements
@@ -551,7 +592,7 @@ class PerformanceMonitor {
     // Calculate averages and trends
     Object.entries(metricGroups).forEach(([name, metrics]) => {
       const avgValue = metrics.reduce((sum, m) => sum + m.value, 0) / metrics.length;
-      const avgRating = this.getRating(name as keyof typeof PERFORMANCE_THRESHOLDS, avgValue);
+      const avgRating = this.getSafeRating(name, avgValue);
 
       // Calculate trend (last 5 vs previous 5)
       let trend = 'stable';
