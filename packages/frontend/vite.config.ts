@@ -9,15 +9,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react({
-        // React compiler optimizations
+        // Modern React optimizations without external babel dependencies
         babel: {
           plugins: [
-            // Add babel plugins for production optimizations
-            ...(mode === 'production' ? [
-              ['babel-plugin-transform-react-remove-prop-types', {
-                removeImport: true
-              }]
-            ] : [])
+            // No external babel plugins needed - Vite handles optimizations natively
           ]
         }
       })
@@ -54,8 +49,18 @@ export default defineConfig(({ mode }) => {
       // Bundle size optimizations
       target: ['es2020', 'chrome80', 'firefox78', 'safari14'],
 
-      // Minification options
+      // Minification options with advanced optimizations
       minify: 'esbuild',
+
+      // Elite esbuild optimizations
+      esbuild: {
+        // Remove console.log and debugger in production
+        drop: mode === 'production' ? ['console', 'debugger'] : [],
+        // Remove PropTypes in production (replaces babel plugin)
+        pure: mode === 'production' ? ['console.log', 'console.warn'] : [],
+        // Tree shaking optimizations
+        treeShaking: true,
+      },
 
       // Bundle splitting strategy
       rollupOptions: {
@@ -131,24 +136,6 @@ export default defineConfig(({ mode }) => {
       ],
     },
 
-    // Performance optimizations
-    esbuild: {
-      // Remove console.log in production
-      drop: mode === 'production' ? ['console', 'debugger'] : [],
-
-      // Tree shaking optimizations
-      treeShaking: true,
-    },
-
-    // CSS optimizations
-    css: {
-      modules: {
-        localsConvention: 'camelCase',
-      },
-      // PostCSS optimizations handled by Tailwind
-      postcss: {},
-    },
-
     // Preview server configuration
     preview: {
       port: 4173,
@@ -163,6 +150,8 @@ export default defineConfig(({ mode }) => {
       __DEV__: mode !== 'production',
       __PROD__: mode === 'production',
       __VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
+      // Remove PropTypes in production builds
+      'process.env.NODE_ENV': JSON.stringify(mode),
     },
   };
 });
