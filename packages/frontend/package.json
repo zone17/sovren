@@ -27,6 +27,7 @@
     "audit": "echo '�� SOVREN - LEGENDARY AI ENGINEERING STATUS ACHIEVED! 🎉' && echo '' && echo '🤖 PHASE 3: CUTTING-EDGE AI & MACHINE LEARNING:' && echo '✅ Predictive User Behavior: Netflix-style churn and conversion prediction' && echo '✅ Performance Forecasting: Google-level time series analytics' && echo '✅ Real-time Anomaly Detection: Enterprise anomaly identification' && echo '✅ Feature Usage Optimization: Stripe-style feature analysis' && echo '✅ AI Recommendation Engine: Real-time personalization system' && echo '✅ Advanced ML Models: 89-94% accuracy across all models' && echo '✅ AI Dashboard: Elite visualization with confidence scoring' && echo '✅ Browser-native ML: Sub-100ms prediction latency' && echo '' && echo '🚀 CUTTING-EDGE MONITORING & OBSERVABILITY:' && echo '✅ Sentry v8 SDK: Session replay, user feedback, profiling' && echo '✅ Core Web Vitals v4: INP, LCP, CLS with attribution' && echo '✅ Real User Monitoring: Session tracking & interaction analysis' && echo '✅ Advanced Performance APIs: Element timing, layout shifts' && echo '✅ Error Boundaries: Auto-retry with exponential backoff' && echo '✅ Monitoring Dashboard: Real-time metrics visualization' && echo '✅ Memory & Resource Monitoring: Chrome DevTools integration' && echo '✅ Custom Performance Measurement: User timing API' && echo '' && echo '📊 DEVELOPMENT EXCELLENCE:' && echo '✅ 185 tests passing (11 test suites)' && echo '✅ Elite differentiated coverage standards by code type' && echo '✅ Zero ESLint violations' && echo '✅ Zero security vulnerabilities' && echo '✅ React 18.3.1 + Router v6 + TypeScript 5.3' && echo '✅ Vite build optimization (14 chunks, <250kB)' && echo '' && echo '🎯 AI/ML CAPABILITIES:' && echo '• User Behavior Prediction (89% accuracy)' && echo '• Performance Forecasting (94% accuracy)' && echo '• Feature Analysis (87% accuracy)' && echo '• Real-time Anomaly Detection' && echo '• Intelligent Recommendation Engine' && echo '• Predictive Caching Optimization' && echo '• A/B Test Intelligence & Bayesian Analysis' && echo '• Multi-modal Prediction (Behavioral + Performance)' && echo '' && echo '🏆 INDUSTRY COMPARISON:' && echo '• Real-time Prediction: ✅ (Google Analytics: ❌)' && echo '• Client-side ML: ✅ (Netflix: ❌, Stripe: ❌)' && echo '• Performance Forecasting: ✅ (Industry First!)' && echo '• Actionable Intelligence: ✅ (Most competitors: ❌)' && echo '' && echo '🎯 STATUS: LEGENDARY AI ENGINEERING - EXCEEDS INDUSTRY LEADERS!'"
   },
   "dependencies": {
+    "@babel/core": "^7.27.4",
     "@noble/secp256k1": "^2.2.3",
     "@reduxjs/toolkit": "^2.1.0",
     "@scure/bip32": "^1.7.0",
@@ -36,6 +37,7 @@
     "@types/nodemailer": "^6.4.17",
     "@vercel/node": "^5.2.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "nodemailer": "^7.0.3",
     "nostr-tools": "^2.13.1",
     "react": "^18.3.1",
@@ -53,7 +55,6 @@
   },
   "devDependencies": {
     "@axe-core/react": "^4.10.1",
-    "@babel/core": "^7.27.4",
     "@babel/preset-env": "^7.27.2",
     "@babel/preset-react": "^7.27.1",
     "@playwright/test": "^1.52.0",
@@ -68,7 +69,6 @@
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "babel-jest": "^30.0.0-beta.3",
-    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "compression": "^1.7.4",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^10.1.5",
