@@ -1,8 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Button from '../components/Button';
 import Layout from '../components/Layout';
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Layout>
       <div className="text-center">
@@ -10,24 +13,29 @@ const Home: React.FC = () => {
           Welcome to Sovren
         </h1>
         <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-          The platform for creators to monetize their content using Bitcoin and Nostr.
+          Decentralized Creator Monetization Platform
+        </p>
+        <p className="mt-2 max-w-2xl mx-auto text-base text-gray-500">
+          Empower creators with NOSTR protocol for true ownership and freedom
         </p>
         <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
           <div className="rounded-md shadow">
-            <Link
-              to="/signup"
-              className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
+            <Button
+              onClick={() => navigate('/signup')}
+              variant="primary"
+              className="w-full flex items-center justify-center px-8 py-3 md:py-4 md:text-lg md:px-10"
             >
               Get Started
-            </Link>
+            </Button>
           </div>
           <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-            <Link
-              to="/about"
-              className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+            <Button
+              onClick={() => navigate('/about')}
+              variant="outline"
+              className="w-full flex items-center justify-center px-8 py-3 md:py-4 md:text-lg md:px-10"
             >
               Learn More
-            </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -49,16 +57,16 @@ const Home: React.FC = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
                       />
                     </svg>
                   </span>
                 </div>
                 <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">
-                  Create Content
+                  Lightning Fast Payments
                 </h3>
                 <p className="mt-5 text-base text-gray-500">
-                  Share your thoughts, ideas, and expertise with your audience.
+                  Instant payments via Bitcoin Lightning Network for seamless transactions
                 </p>
               </div>
             </div>
@@ -79,14 +87,16 @@ const Home: React.FC = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
                       />
                     </svg>
                   </span>
                 </div>
-                <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Monetize</h3>
+                <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">
+                  Decentralized Identity
+                </h3>
                 <p className="mt-5 text-base text-gray-500">
-                  Earn Bitcoin for your content through direct payments and subscriptions.
+                  Your identity, your control with NOSTR protocol and cryptographic keys
                 </p>
               </div>
             </div>
@@ -107,16 +117,16 @@ const Home: React.FC = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                       />
                     </svg>
                   </span>
                 </div>
                 <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">
-                  Build Community
+                  Creator Freedom
                 </h3>
                 <p className="mt-5 text-base text-gray-500">
-                  Connect with your audience and other creators through Nostr.
+                  No platform fees, no censorship, complete ownership of your content and audience
                 </p>
               </div>
             </div>

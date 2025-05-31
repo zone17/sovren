@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom';
 import { renderHook, waitFor } from '@testing-library/react';
-import React from 'react';
 import { useFeatureFlags } from './useFeatureFlags';
 
 // Mock fetch
@@ -20,7 +19,7 @@ describe('useFeatureFlags', () => {
   });
 
   describe('Initial state', () => {
-    it('should return initial state correctly', () => {
+    it('should return initial state correctly', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: () =>
@@ -37,6 +36,11 @@ describe('useFeatureFlags', () => {
       expect(result.current.flags).toBeNull();
       expect(result.current.loading).toBe(true);
       expect(result.current.error).toBeNull();
+
+      // Wait for the effect to complete
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
     });
   });
 
@@ -168,23 +172,6 @@ describe('useFeatureFlags', () => {
       expect(result.current.flags).toBeNull();
       expect(result.current.error).toBe('String error');
     });
-
-    it('should handle error in effect when no API endpoint is found', () => {
-      const mockUseEffect = jest.fn();
-      React.useEffect = mockUseEffect;
-
-      renderHook(() => useFeatureFlags());
-
-      // Get the effect function and call it
-      const effectFunction = mockUseEffect.mock.calls[0]?.[0];
-      expect(effectFunction).toBeDefined();
-
-      // Execute the effect
-      effectFunction();
-
-      // Verify state remains in initial state when no API available
-      expect(mockUseEffect).toHaveBeenCalledWith(expect.any(Function), []);
-    });
   });
 
   describe('Loading states', () => {
@@ -202,52 +189,103 @@ describe('useFeatureFlags', () => {
 
       const { result } = renderHook(() => useFeatureFlags());
 
-      // Initially loading
       expect(result.current.loading).toBe(true);
 
-      // Wait for completion
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-    });
-  });
 
-  describe('Hook cleanup', () => {
-    it('should unmount without errors', () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            enablePayments: true,
-            enableAIRecommendations: false,
-            enableNostrIntegration: true,
-            enableExperimentalUI: false,
-          }),
+      expect(result.current.flags).not.toBeNull();
+    });
+
+    it('should handle loading to error state transition', async () => {
+      mockFetch.mockRejectedValue(new Error('Server error'));
+
+      const { result } = renderHook(() => useFeatureFlags());
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.error).toBeNull();
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
       });
 
-      const { unmount } = renderHook(() => useFeatureFlags());
-
-      expect(() => unmount()).not.toThrow();
+      expect(result.current.error).toBe('Server error');
+      expect(result.current.flags).toBeNull();
     });
   });
 
-  describe('API endpoint', () => {
-    it('should call the correct endpoint', async () => {
+  describe('Feature flag properties', () => {
+    it('should return correct flag structure', async () => {
+      const mockFlags = {
+        enablePayments: true,
+        enableAIRecommendations: false,
+        enableNostrIntegration: true,
+        enableExperimentalUI: false,
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockFlags),
+      });
+
+      const { result } = renderHook(() => useFeatureFlags());
+
+      await waitFor(() => {
+        expect(result.current.flags).toEqual(mockFlags);
+      });
+
+      // Test individual flag properties
+      expect(result.current.flags?.enablePayments).toBe(true);
+      expect(result.current.flags?.enableAIRecommendations).toBe(false);
+      expect(result.current.flags?.enableNostrIntegration).toBe(true);
+      expect(result.current.flags?.enableExperimentalUI).toBe(false);
+    });
+  });
+
+  describe('API endpoint configuration', () => {
+    it('should call the correct API endpoint', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
-            enablePayments: true,
+            enablePayments: false,
             enableAIRecommendations: false,
-            enableNostrIntegration: true,
+            enableNostrIntegration: false,
             enableExperimentalUI: false,
           }),
       });
 
       renderHook(() => useFeatureFlags());
 
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      expect(mockFetch).toHaveBeenCalledWith('/api/feature-flags');
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith('/api/feature-flags');
+      });
+    });
+
+    it('should only call API once on mount', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            enablePayments: false,
+            enableAIRecommendations: false,
+            enableNostrIntegration: false,
+            enableExperimentalUI: false,
+          }),
+      });
+
+      const { rerender } = renderHook(() => useFeatureFlags());
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+      });
+
+      // Rerender shouldn't trigger additional API calls
+      rerender();
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });

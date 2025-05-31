@@ -1,5 +1,18 @@
 import '@testing-library/jest-dom';
 
+// Elite testing: Mock import.meta for Jest compatibility
+Object.defineProperty(globalThis, 'import', {
+  value: {
+    meta: {
+      env: {
+        DEV: false,
+        NODE_ENV: 'test',
+        MODE: 'test',
+      },
+    },
+  },
+});
+
 // Properly typed global interface extensions
 declare global {
   interface Window {

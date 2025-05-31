@@ -1,0 +1,53 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 🚀 Sovren Pre-Push Quality Gate
+# Final protection before code reaches remote repository
+
+echo "🛡️  Running pre-push quality verification..."
+
+# 1. Ensure we're not pushing to main/master without proper review
+protected_branch='main'
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [[ "$current_branch" == "$protected_branch" ]]; then
+  echo "⚠️  Pushing directly to $protected_branch branch"
+  echo "💡 Consider using feature branches and pull requests for better code review"
+fi
+
+# 2. Final test suite run (faster than pre-commit for iterative development)
+echo "🧪 Running final test verification..."
+npm run test:ci -- --passWithNoTests
+if [ $? -ne 0 ]; then
+  echo "❌ Final test suite failed! Cannot push."
+  exit 1
+fi
+
+# 3. Verify no TODO/FIXME comments in production code
+echo "🔍 Checking for development markers..."
+todo_count=$(git diff --cached --name-only | xargs grep -l "TODO\|FIXME\|XXX\|HACK" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$todo_count" -gt 0 ]; then
+  echo "⚠️  Found TODO/FIXME markers in staged files:"
+  git diff --cached --name-only | xargs grep -n "TODO\|FIXME\|XXX\|HACK" 2>/dev/null || true
+  echo ""
+  echo "💡 Consider resolving these before pushing to maintain code quality"
+fi
+
+# 4. Check for console.log statements in production code
+echo "🔍 Checking for debug statements..."
+debug_count=$(git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' | xargs grep -l "console\." 2>/dev/null | wc -l | tr -d ' ')
+if [ "$debug_count" -gt 0 ]; then
+  echo "⚠️  Found console statements in staged files:"
+  git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' | xargs grep -n "console\." 2>/dev/null || true
+  echo ""
+  echo "💡 Consider removing debug statements before pushing"
+fi
+
+# 5. Verify docs are up to date if package.json changed
+if git diff --cached --name-only | grep -q "package\.json"; then
+  echo "📚 Package.json changed - verifying documentation is current..."
+  echo "💡 Remember to update DEVELOPER_GUIDE.md if dependencies changed"
+fi
+
+echo "✅ Pre-push verification complete"
+echo "🎯 Code ready for remote repository"

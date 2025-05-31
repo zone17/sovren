@@ -1,0 +1,53 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 🚀 Sovren Commit Message Quality Gate
+# Enforcing TDD practices and quality standards
+
+commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,50}'
+
+if ! head -1 "$1" | grep -qE "$commit_regex"; then
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "📋 Commit message must follow conventional format:"
+  echo "   <type>[optional scope]: <description>"
+  echo ""
+  echo "🔧 Valid types:"
+  echo "   feat:     New feature"
+  echo "   fix:      Bug fix"
+  echo "   docs:     Documentation only changes"
+  echo "   style:    Code formatting (white-space, missing semi-colons, etc)"
+  echo "   refactor: Code change that neither fixes a bug nor adds a feature"
+  echo "   test:     Adding missing tests or correcting existing tests"
+  echo "   chore:    Changes to build process or auxiliary tools"
+  echo "   perf:     Performance improvements"
+  echo "   ci:       Changes to CI configuration files and scripts"
+  echo "   build:    Changes that affect the build system or dependencies"
+  echo "   revert:   Revert a previous commit"
+  echo ""
+  echo "✅ Examples:"
+  echo "   feat: add user authentication"
+  echo "   fix(login): resolve validation issue"
+  echo "   test: add coverage for payment flow"
+  echo "   docs: update TDD guidelines"
+  echo ""
+  echo "🎯 TDD Reminder: All commits should include tests (test: or test coverage in feat/fix)"
+  exit 1
+fi
+
+# Check for TDD compliance in feature/fix commits
+commit_type=$(head -1 "$1" | cut -d':' -f1 | cut -d'(' -f1)
+commit_message=$(head -1 "$1")
+
+if [[ "$commit_type" == "feat" || "$commit_type" == "fix" ]]; then
+  # Look for test-related keywords or separate test commits
+  if ! echo "$commit_message" | grep -qiE "(test|spec|coverage|tdd)"; then
+    echo "⚠️  TDD Reminder: Feature/fix commits should include tests"
+    echo "   Consider adding test coverage or creating a separate test commit"
+    echo "   Current commit: $commit_message"
+    echo ""
+    echo "💡 TDD Best Practice: Write tests first, then implementation"
+  fi
+fi
+
+echo "✅ Commit message format validated"
