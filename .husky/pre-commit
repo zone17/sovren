@@ -63,3 +63,76 @@ fi
 
 echo "✅ All quality gates passed! Ready to commit."
 echo "🎉 Maintaining elite standards: 91.58% coverage, zero violations"
+
+echo "🔍 Validating Vercel configuration..."
+
+# Check for conflicting vercel.json configurations
+validate_vercel_config() {
+    local root_config="vercel.json"
+    local frontend_config="packages/frontend/vercel.json"
+
+    if [ -f "$root_config" ] && [ -f "$frontend_config" ]; then
+        echo "⚠️  Multiple vercel.json files detected!"
+
+        # Check if frontend config has functions (conflicting)
+        if grep -q '"functions"' "$frontend_config"; then
+            echo "❌ ERROR: Frontend vercel.json contains functions configuration"
+            echo "   This conflicts with root configuration and will cause deployment failures"
+            echo ""
+            echo "   Solution: Remove functions from $frontend_config"
+            echo "   The root config handles all deployment logic"
+            echo ""
+            echo "   See docs/MONOREPO_ARCHITECTURE.md for details"
+            exit 1
+        fi
+
+        # Check if frontend config has invalid runtime
+        if grep -q '"nodejs18.x"' "$frontend_config"; then
+            echo "❌ ERROR: Invalid runtime 'nodejs18.x' detected in $frontend_config"
+            echo "   This will cause deployment failures"
+            echo ""
+            echo "   Solution: Remove functions configuration or use 'edge' runtime"
+            exit 1
+        fi
+
+        echo "✅ Configuration precedence validated"
+    fi
+}
+
+# Validate JSON syntax
+validate_json_syntax() {
+    for config in vercel.json packages/*/vercel.json .vercelrc.json; do
+        if [ -f "$config" ]; then
+            if ! python3 -m json.tool "$config" > /dev/null 2>&1; then
+                echo "❌ ERROR: Invalid JSON syntax in $config"
+                exit 1
+            fi
+        fi
+    done
+    echo "✅ JSON syntax validated"
+}
+
+# Check for required schema
+validate_schema() {
+    for config in vercel.json packages/*/vercel.json; do
+        if [ -f "$config" ]; then
+            if ! grep -q '"$schema"' "$config"; then
+                echo "⚠️  WARNING: Missing \$schema in $config"
+                echo "   Add: \"\\$schema\": \"https://openapi.vercel.sh/vercel.json\""
+            fi
+        fi
+    done
+    echo "✅ Schema validation completed"
+}
+
+# Run validations
+validate_vercel_config
+validate_json_syntax
+validate_schema
+
+echo "🚀 Vercel configuration validation passed!"
+echo ""
+
+# Continue with other pre-commit checks
+npm run lint:check
+npm run test:types

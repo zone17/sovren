@@ -1,0 +1,45 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "name": "sovren-monorepo-config",
+  "description": "Vercel monorepo configuration governance - prevents conflicting vercel.json files",
+  "version": 2,
+  "monorepo": {
+    "type": "yarn-workspaces",
+    "projectMapping": {
+      "packages/frontend": {
+        "name": "sovren-frontend",
+        "framework": "vite",
+        "buildCommand": "npm run build",
+        "outputDirectory": "dist",
+        "rootDirectory": "packages/frontend"
+      }
+    },
+    "globalSettings": {
+      "installCommand": "npm ci",
+      "nodeVersion": "18.x",
+      "regions": ["iad1"],
+      "cleanUrls": true,
+      "trailingSlash": false
+    },
+    "deploymentStrategy": "single-project-mode"
+  },
+  "governance": {
+    "configFiles": {
+      "allowed": ["vercel.json", "packages/*/vercel.json"],
+      "precedence": "project-level-overrides-root",
+      "conflicts": {
+        "resolution": "fail-fast",
+        "message": "Multiple vercel.json files detected. Use .vercelrc.json for monorepo governance."
+      }
+    },
+    "environmentVariables": {
+      "scope": "project-level",
+      "inheritance": "disabled"
+    },
+    "functions": {
+      "runtime": "edge",
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}
