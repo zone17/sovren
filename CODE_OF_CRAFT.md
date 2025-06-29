@@ -1,0 +1,105 @@
+# 🧠 The 10 Commandments of Elite Engineering Excellence
+
+_Inspired by the principles of Uncle Bob, John Carmack, and Linus Torvalds_
+
+Welcome to the codebase. By contributing here, you agree to uphold the following commandments—not just as rules, but as a **craftsmanship standard**. These are the pillars that define elite, production-grade, and scalable software development.
+
+---
+
+## 🧾 1. Code is for Humans First, Machines Second
+
+> Write code that is easy to read, understand, and maintain.
+> **✅ Do:** Use intention-revealing names, short functions, clear logic, and Mermaid diagrams for visual clarity.
+> **🚫 Don't:** Obfuscate logic with clever hacks or unexplained magic.
+
+---
+
+## 🔁 2. Duplication is the Root of All Evil
+
+> Follow the DRY (Don't Repeat Yourself) principle.
+> **✅ Do:** Extract shared logic, centralize common workflows.
+> **🚫 Don't:** Copy-paste code without extracting meaning.
+
+---
+
+## ⚔️ 3. Simplicity Over Cleverness
+
+> Complexity kills maintainability and velocity.
+> **✅ Do:** Use the simplest solution that works.
+> **🚫 Don't:** Introduce clever abstractions without real need.
+
+---
+
+## 🧪 4. Tests Are Non-Negotiable
+
+> All code must be covered by meaningful automated tests.
+> **✅ Do:** Use TDD/BDD where appropriate. Cover edge cases.
+> **🚫 Don't:** Ship without coverage. No PR merges without tests.
+
+---
+
+## 🔐 5. Assume Nothing. Validate Everything.
+
+> Untested code is broken code.
+> **✅ Do:** Add logs, observability, and validation layers.
+> **🚫 Don't:** Assume "it works on my machine" is good enough.
+
+---
+
+## 🧱 6. Favor Modularity and Clear Contracts
+
+> Build composable, swappable parts that talk via APIs/interfaces.
+> **✅ Do:** Write clear, versioned interfaces.
+> **🚫 Don't:** Couple systems with shared state or hidden dependencies.
+
+---
+
+## 📜 7. Interfaces Are Law
+
+> Code to contracts, not to behavior.
+> **✅ Do:** Use OpenAPI, TypeScript interfaces, or formal specs.
+> **🚫 Don't:** Build before the contract is agreed upon.
+
+---
+
+## 🧹 8. Leave Code Better Than You Found It
+
+> Ruthless refactoring is a form of respect.
+> **✅ Do:** Clean up, simplify, or modularize as you go.
+> **🚫 Don't:** Leave bad code behind "just to ship."
+
+---
+
+## ⚙️ 9. Automate All The Things
+
+> Repetition is a sign to script.
+> **✅ Do:** Automate builds, tests, linting, deployments, rollback.
+> **🚫 Don't:** Rely on manual steps for production systems.
+
+---
+
+## 🛡️ 10. Protect the Integrity of the Codebase
+
+> Code that enters must be elite-grade.
+> **✅ Do:** Review critically. Enforce gates. Reject mediocrity.
+> **🚫 Don't:** Merge regressions, skip peer review, or accept sloppiness.
+
+---
+
+## 📊 11. Visualize Architecture and Workflows
+
+> Visual representation is essential for understanding complex systems.
+> **✅ Do:** Create Mermaid diagrams for all user stories, architecture, and workflows.
+> **🚫 Don't:** Submit implementations without required diagrams or visual documentation.
+
+---
+
+## 💡 Bonus Mantra:
+
+**"Slow is smooth. Smooth is fast."**
+Quality leads to velocity. Rushed code = rework.
+
+---
+
+By living these principles, we don't just build software—we build trust, excellence, and freedom.
+Welcome to the elite tier.
