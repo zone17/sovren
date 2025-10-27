@@ -1,0 +1,140 @@
+sequenceDiagram
+    participant User as User Browser
+    participant Dashboard as Dashboard UI
+    participant Hooks as React Hooks
+    participant Services as Frontend Services
+    participant API as Backend API
+    participant GitHub as GitHub Actions API
+    participant Health as Health Endpoints
+    participant WS as WebSocket Server
+    participant DB as Database
+
+    Note over User,DB: Initial Dashboard Load
+
+    User->>Dashboard: Navigate to /dashboard/deployments
+    Dashboard->>Hooks: Mount components
+    Hooks->>Services: Fetch initial data
+
+    par Parallel Data Fetching
+        Services->>API: GET /api/deployments/status
+        API->>GitHub: GET /repos/{owner}/{repo}/actions/runs
+        GitHub-->>API: Workflow runs data
+        API->>DB: Query deployment history
+        DB-->>API: Historical data
+        API-->>Services: Current deployment status
+        Services-->>Hooks: Update state
+    and
+        Services->>API: GET /api/health-checks/status
+        API->>Health: GET /health, /ready, /live, /detailed
+        Health-->>API: Health check results
+        API-->>Services: Aggregated health status
+        Services-->>Hooks: Update health state
+    and
+        Services->>API: GET /api/smoke-tests/results
+        API->>GitHub: GET /repos/{owner}/{repo}/actions/runs/{id}/jobs
+        GitHub-->>API: Job details with test results
+        API-->>Services: Smoke test results
+        Services-->>Hooks: Update test state
+    and
+        Services->>API: GET /api/metrics/deployments
+        API->>DB: Query metrics (last 30 days)
+        DB-->>API: Aggregated metrics
+        API-->>Services: Deployment analytics
+        Services-->>Hooks: Update metrics state
+    end
+
+    Hooks-->>Dashboard: Render complete dashboard
+    Dashboard-->>User: Display deployment status
+
+    Note over User,DB: Real-time Updates via WebSocket
+
+    Services->>WS: Connect to /ws/deployments
+    WS-->>Services: Connection established
+    Services->>WS: Subscribe to deployment:95c2fe1
+
+    loop Real-time Monitoring (every 5-10s)
+        GitHub->>WS: Workflow status update (webhook)
+        WS->>DB: Store deployment event
+        WS-->>Services: Broadcast deployment update
+        Services-->>Hooks: Update state
+        Hooks-->>Dashboard: Re-render affected components
+        Dashboard-->>User: Live status update
+
+        Health->>WS: Health check result (polling)
+        WS-->>Services: Broadcast health update
+        Services-->>Hooks: Update health state
+        Hooks-->>Dashboard: Update health indicators
+        Dashboard-->>User: Live health status
+    end
+
+    Note over User,DB: User Actions - Emergency Rollback
+
+    User->>Dashboard: Click "Emergency Rollback"
+    Dashboard->>Dashboard: Show confirmation dialog
+    User->>Dashboard: Confirm rollback
+    Dashboard->>Services: triggerRollback(environment, commitSha)
+    Services->>API: POST /api/deployments/rollback
+    API->>GitHub: POST /repos/{owner}/{repo}/actions/workflows/{id}/dispatches
+    GitHub-->>API: Workflow triggered
+    API-->>Services: Rollback initiated
+    Services-->>Hooks: Update state (status: rolling_back)
+    Hooks-->>Dashboard: Show rollback progress
+
+    loop Rollback Monitoring
+        GitHub->>WS: Rollback workflow updates
+        WS-->>Services: Broadcast rollback progress
+        Services-->>Hooks: Update progress state
+        Hooks-->>Dashboard: Update progress bar
+        Dashboard-->>User: Live rollback status
+    end
+
+    GitHub->>WS: Rollback complete
+    WS-->>Services: Broadcast completion
+    Services-->>Hooks: Final state update
+    Hooks-->>Dashboard: Show success message
+    Dashboard-->>User: "Rollback completed in 1m 45s"
+
+    Note over User,DB: Deployment History & Details
+
+    User->>Dashboard: Click deployment "95c2fe1"
+    Dashboard->>Services: fetchDeploymentDetails(95c2fe1)
+    Services->>API: GET /api/deployments/95c2fe1
+
+    par Fetch Detailed Information
+        API->>GitHub: GET /repos/{owner}/{repo}/actions/runs/{runId}
+        GitHub-->>API: Complete run details
+    and
+        API->>GitHub: GET /repos/{owner}/{repo}/actions/runs/{runId}/jobs
+        GitHub-->>API: All jobs with steps
+    and
+        API->>DB: Query deployment metrics, logs, events
+        DB-->>API: Complete deployment record
+    end
+
+    API-->>Services: Detailed deployment data
+    Services-->>Hooks: Update detail state
+    Hooks-->>Dashboard: Render detail view
+    Dashboard-->>User: Show complete deployment details
+
+    Note over User,DB: Error Troubleshooting
+
+    User->>Dashboard: Click "View Error Logs"
+    Dashboard->>Services: fetchErrorLogs(jobId)
+    Services->>API: GET /api/github/jobs/{jobId}/logs
+    API->>GitHub: GET /repos/{owner}/{repo}/actions/jobs/{jobId}/logs
+    GitHub-->>API: Complete job logs
+    API->>API: Parse logs, extract errors
+    API->>API: Categorize errors, suggest fixes
+    API-->>Services: Formatted error data with remediation
+    Services-->>Hooks: Update error state
+    Hooks-->>Dashboard: Render error panel
+    Dashboard-->>User: Show errors with suggested fixes
+
+    Note over User,DB: Cleanup & Disconnect
+
+    User->>Dashboard: Navigate away
+    Dashboard->>Hooks: Unmount components
+    Hooks->>Services: Cleanup subscriptions
+    Services->>WS: Unsubscribe from deployment:95c2fe1
+    Services->>WS: Disconnect
+    WS-->>Services: Connection closed

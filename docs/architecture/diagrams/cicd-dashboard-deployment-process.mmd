@@ -1,0 +1,145 @@
+stateDiagram-v2
+    [*] --> Idle: Dashboard Loaded
+
+    Idle --> FetchingData: Initial Load
+    FetchingData --> DisplayingData: Data Fetched
+    DisplayingData --> MonitoringDeployment: Deployment Detected
+
+    MonitoringDeployment --> QualityGatesStage: Stage: Quality Gates
+    QualityGatesStage --> QualityGatesPassed: All Checks Pass
+    QualityGatesStage --> QualityGatesFailed: Checks Failed
+
+    QualityGatesFailed --> DisplayingError: Show Error Details
+    DisplayingError --> AwaitingUserAction: Suggest Remediation
+
+    QualityGatesPassed --> DockerBuildStage: Stage: Docker Build
+    DockerBuildStage --> DockerBuildComplete: Build Success
+    DockerBuildStage --> DockerBuildFailed: Build Failed
+
+    DockerBuildFailed --> DisplayingError
+
+    DockerBuildComplete --> DeploymentStage: Stage: Staging Deploy
+    DeploymentStage --> HealthChecking: Deployment Complete
+    HealthChecking --> HealthChecksPassed: All Healthy
+    HealthChecking --> HealthChecksFailed: Health Check Failed
+
+    HealthChecksFailed --> AutoRollback: Trigger Automatic Rollback
+    AutoRollback --> RollbackInProgress: Rolling Back...
+    RollbackInProgress --> RollbackComplete: Rollback Success
+    RollbackComplete --> DisplayingError
+
+    HealthChecksPassed --> SmokeTestStage: Stage: Smoke Tests
+    SmokeTestStage --> SmokeTestsRunning: Running 28 Tests
+    SmokeTestsRunning --> SmokeTestsPassed: 28/28 Passed
+    SmokeTestsRunning --> SmokeTestsFailed: Tests Failed
+
+    SmokeTestsFailed --> AutoRollback
+
+    SmokeTestsPassed --> TrafficShiftStage: Stage: Traffic Shift
+    TrafficShiftStage --> TrafficShift10: 10% Traffic
+    TrafficShift10 --> MonitoringMetrics: Monitor Error Rate
+    MonitoringMetrics --> MetricsHealthy: Error Rate < 5%
+    MonitoringMetrics --> MetricsUnhealthy: Error Rate >= 5%
+
+    MetricsUnhealthy --> AutoRollback
+
+    MetricsHealthy --> TrafficShift50: 50% Traffic
+    TrafficShift50 --> MonitoringMetrics50: Monitor Metrics
+    MonitoringMetrics50 --> Metrics50Healthy: Healthy
+    MonitoringMetrics50 --> Metrics50Unhealthy: Unhealthy
+
+    Metrics50Unhealthy --> AutoRollback
+
+    Metrics50Healthy --> TrafficShift100: 100% Traffic
+    TrafficShift100 --> FinalValidation: Final Validation
+    FinalValidation --> DeploymentSuccess: All Checks Pass
+    FinalValidation --> ValidationFailed: Validation Failed
+
+    ValidationFailed --> AutoRollback
+
+    DeploymentSuccess --> CollectingMetrics: Update Metrics
+    CollectingMetrics --> NotifyingTeam: Send Slack Notification
+    NotifyingTeam --> DisplayingSuccess: Show Success Status
+    DisplayingSuccess --> MonitoringProduction: Continuous Monitoring
+
+    MonitoringProduction --> MonitoringProduction: Health Checks Every 30s
+    MonitoringProduction --> ProductionIssue: Issue Detected
+    ProductionIssue --> AwaitingUserAction: Alert Team
+
+    AwaitingUserAction --> ManualRollback: User Triggers Rollback
+    ManualRollback --> RollbackInProgress
+
+    AwaitingUserAction --> RetryDeployment: User Retries
+    RetryDeployment --> QualityGatesStage
+
+    AwaitingUserAction --> InvestigatingIssue: View Logs & Errors
+    InvestigatingIssue --> AwaitingUserAction: User Decides Next Action
+
+    DisplayingSuccess --> Idle: No Active Deployment
+    RollbackComplete --> Idle: Deployment Rolled Back
+
+    note right of QualityGatesStage
+        Runs:
+        - ESLint checks
+        - TypeScript type checking
+        - Unit tests
+        - Security scans
+        - Circular dependency check
+        Duration: ~5-7 minutes
+    end note
+
+    note right of DockerBuildStage
+        Runs:
+        - Multi-stage Docker build
+        - Multi-arch (amd64, arm64)
+        - Trivy security scan
+        - Image signing (Cosign)
+        - SBOM generation
+        - Push to GHCR
+        Duration: ~3-5 minutes
+    end note
+
+    note right of DeploymentStage
+        Runs:
+        - Blue-green deployment
+        - Database migrations
+        - Service startup
+        - Initial health checks
+        Duration: ~3-5 minutes
+    end note
+
+    note right of SmokeTestStage
+        Runs:
+        - 28 automated smoke tests
+        - API endpoint tests
+        - Database connectivity
+        - Cache functionality
+        - Auth flow
+        Duration: ~2-3 minutes
+    end note
+
+    note right of TrafficShiftStage
+        Progressive shift:
+        - 10% → wait 2 min → validate
+        - 50% → wait 2 min → validate
+        - 100% → final validation
+        Duration: ~5-7 minutes
+    end note
+
+    note left of AutoRollback
+        Automatic rollback triggers:
+        - Health check failures (3 consecutive)
+        - Error rate > 5% (2 min)
+        - Response time P95 > 1000ms
+        - Smoke test failures
+        Rollback time: < 2 minutes
+    end note
+
+    note left of ManualRollback
+        Manual rollback actions:
+        - Emergency rollback button
+        - Requires confirmation
+        - One-click execution
+        - Real-time progress
+        Rollback time: < 2 minutes
+    end note

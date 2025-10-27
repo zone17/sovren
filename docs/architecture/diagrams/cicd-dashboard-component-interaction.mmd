@@ -1,0 +1,120 @@
+graph LR
+    subgraph "Dashboard Page"
+        Page[DeploymentDashboard]
+    end
+
+    subgraph "Layout Components"
+        Page --> Header[DashboardHeader]
+        Page --> MainGrid[Dashboard Grid Layout]
+
+        Header --> RefreshBtn[Refresh Button]
+        Header --> EnvSelector[Environment Selector]
+        Header --> ConnectionStatus[Connection Status Indicator]
+    end
+
+    subgraph "Status & Monitoring Panels"
+        MainGrid --> StatusPanel[DeploymentStatusPanel]
+        MainGrid --> HealthPanel[HealthCheckMonitor]
+        MainGrid --> WorkflowViz[WorkflowVisualizer]
+
+        StatusPanel --> CurrentDeploy[Current Deployment Card]
+        StatusPanel --> ProgressBar[Deployment Progress Bar]
+        StatusPanel --> StageIndicators[Stage Indicators]
+
+        HealthPanel --> HealthCard[Health Endpoint Card x4]
+        HealthPanel --> HealthChart[Health History Chart]
+        HealthPanel --> AlertBadge[Health Alert Badge]
+
+        WorkflowViz --> StageTimeline[Stage Timeline]
+        WorkflowViz --> StageDetails[Stage Detail View]
+    end
+
+    subgraph "Test & Metrics Panels"
+        MainGrid --> SmokePanel[SmokeTestResults]
+        MainGrid --> MetricsPanel[DeploymentMetrics]
+
+        SmokePanel --> TestList[Test Results List]
+        SmokePanel --> TestProgress[Test Progress Indicator]
+        SmokePanel --> FailedTests[Failed Test Details]
+
+        MetricsPanel --> MetricCards[Metric Cards]
+        MetricsPanel --> Charts[Analytics Charts]
+        MetricsPanel --> Trends[Trend Indicators]
+    end
+
+    subgraph "Actions & History Panels"
+        MainGrid --> ActionsPanel[Actions Panel]
+        MainGrid --> ErrorPanel[ErrorTrackingPanel]
+        MainGrid --> HistoryPanel[DeploymentTimeline]
+
+        ActionsPanel --> RollbackBtn[Emergency Rollback]
+        ActionsPanel --> RetryBtn[Retry Deployment]
+        ActionsPanel --> ViewLogsBtn[View Full Logs]
+
+        ErrorPanel --> ErrorList[Error Log List]
+        ErrorPanel --> ErrorDetails[Error Detail View]
+        ErrorPanel --> RemediationSteps[Suggested Fixes]
+
+        HistoryPanel --> DeploymentList[Deployment History List]
+        HistoryPanel --> DeploymentCard[Deployment Card x20]
+        HistoryPanel --> FilterControls[Filter Controls]
+    end
+
+    subgraph "Shared State Management"
+        StatusPanel -.->|useDeploymentStatus| DeploymentState[Deployment State]
+        WorkflowViz -.->|useDeploymentStatus| DeploymentState
+        HistoryPanel -.->|useDeploymentStatus| DeploymentState
+
+        HealthPanel -.->|useHealthChecks| HealthState[Health State]
+        HealthCard -.->|useHealthChecks| HealthState
+
+        SmokePanel -.->|useSmokeTests| SmokeState[Smoke Test State]
+        TestList -.->|useSmokeTests| SmokeState
+
+        MetricsPanel -.->|useDeploymentMetrics| MetricsState[Metrics State]
+        Charts -.->|useDeploymentMetrics| MetricsState
+
+        ErrorPanel -.->|useErrorLogs| ErrorState[Error State]
+
+        DeploymentState -.->|useRealtimeUpdates| RealtimeConnection[WebSocket Connection]
+        HealthState -.->|useRealtimeUpdates| RealtimeConnection
+        SmokeState -.->|useRealtimeUpdates| RealtimeConnection
+        MetricsState -.->|useRealtimeUpdates| RealtimeConnection
+    end
+
+    subgraph "UI Interactions"
+        RefreshBtn -->|onClick| DeploymentState
+        EnvSelector -->|onChange| DeploymentState
+        RollbackBtn -->|onClick| RollbackModal[Rollback Confirmation Modal]
+        RollbackModal -->|onConfirm| DeploymentState
+        RetryBtn -->|onClick| DeploymentState
+        ViewLogsBtn -->|onClick| LogsModal[Logs Modal]
+        DeploymentCard -->|onClick| DetailView[Deployment Detail Modal]
+        FailedTests -->|onClick| TestDetailModal[Test Detail Modal]
+        ErrorDetails -->|onClick| ErrorDetailModal[Error Detail Modal]
+    end
+
+    subgraph "Service Layer Integration"
+        DeploymentState -->|githubActionsService| GHService[GitHub Actions Service]
+        HealthState -->|healthCheckService| HealthService[Health Check Service]
+        SmokeState -->|githubActionsService| GHService
+        MetricsState -->|deploymentMetricsService| MetricsService[Metrics Service]
+        ErrorState -->|githubActionsService| GHService
+        RealtimeConnection -->|realtimeService| RTService[Real-time Service]
+    end
+
+    classDef page fill:#1e293b,stroke:#334155,color:#fff
+    classDef layout fill:#475569,stroke:#64748b,color:#fff
+    classDef panel fill:#0ea5e9,stroke:#0284c7,color:#fff
+    classDef component fill:#10b981,stroke:#059669,color:#fff
+    classDef state fill:#f59e0b,stroke:#d97706,color:#000
+    classDef service fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    classDef interaction fill:#ec4899,stroke:#db2777,color:#fff
+
+    class Page page
+    class Header,MainGrid layout
+    class StatusPanel,HealthPanel,WorkflowViz,SmokePanel,MetricsPanel,ActionsPanel,ErrorPanel,HistoryPanel panel
+    class CurrentDeploy,ProgressBar,StageIndicators,HealthCard,HealthChart,AlertBadge,StageTimeline,StageDetails,TestList,TestProgress,FailedTests,MetricCards,Charts,Trends,RollbackBtn,RetryBtn,ViewLogsBtn,ErrorList,ErrorDetails,RemediationSteps,DeploymentList,DeploymentCard,FilterControls,RefreshBtn,EnvSelector,ConnectionStatus component
+    class DeploymentState,HealthState,SmokeState,MetricsState,ErrorState,RealtimeConnection state
+    class GHService,HealthService,MetricsService,RTService service
+    class RollbackModal,LogsModal,DetailView,TestDetailModal,ErrorDetailModal interaction

@@ -1,0 +1,111 @@
+graph TB
+    subgraph "Frontend - React Dashboard"
+        UI[Dashboard UI Layer]
+        UI --> StatusPanel[Deployment Status Panel]
+        UI --> HealthMonitor[Health Check Monitor]
+        UI --> SmokeTests[Smoke Test Results]
+        UI --> Metrics[Deployment Metrics]
+        UI --> ErrorPanel[Error Tracking Panel]
+        UI --> RollbackUI[Rollback Controls]
+        UI --> Timeline[Deployment Timeline]
+
+        StatusPanel --> DeploymentHook[useDeploymentStatus Hook]
+        HealthMonitor --> HealthHook[useHealthChecks Hook]
+        SmokeTests --> SmokeHook[useSmokeTests Hook]
+        Metrics --> MetricsHook[useDeploymentMetrics Hook]
+
+        DeploymentHook --> RealtimeHook[useRealtimeUpdates Hook]
+        HealthHook --> RealtimeHook
+        SmokeHook --> RealtimeHook
+        MetricsHook --> RealtimeHook
+    end
+
+    subgraph "Services Layer"
+        GHService[GitHub Actions Service]
+        HealthService[Health Check Service]
+        MetricsService[Deployment Metrics Service]
+        RealtimeService[Real-time Service WebSocket/SSE]
+
+        DeploymentHook --> GHService
+        DeploymentHook --> RealtimeService
+        HealthHook --> HealthService
+        HealthHook --> RealtimeService
+        SmokeHook --> GHService
+        SmokeHook --> RealtimeService
+        MetricsHook --> MetricsService
+        MetricsHook --> RealtimeService
+    end
+
+    subgraph "Backend API"
+        API[Express API Server]
+        API --> DeployAPI[/api/deployments]
+        API --> HealthAPI[/api/health-checks]
+        API --> SmokeAPI[/api/smoke-tests]
+        API --> MetricsAPI[/api/metrics]
+        API --> GHAPI[/api/github]
+        API --> WSEndpoint[/ws/deployments WebSocket]
+
+        DeployAPI --> DeployController[Deployment Controller]
+        HealthAPI --> HealthController[Health Check Controller]
+        SmokeAPI --> SmokeController[Smoke Test Controller]
+        MetricsAPI --> MetricsController[Metrics Controller]
+        GHAPI --> GHController[GitHub Controller]
+
+        DeployController --> DeployService[Deployment Service]
+        HealthController --> HealthServiceBE[Health Check Service]
+        SmokeController --> SmokeServiceBE[Smoke Test Service]
+        MetricsController --> MetricsServiceBE[Metrics Service]
+        GHController --> OctokitClient[Octokit GitHub Client]
+    end
+
+    subgraph "External APIs"
+        GitHubAPI[GitHub Actions REST API]
+        StagingHealth[Staging Health Endpoints]
+        ProdHealth[Production Health Endpoints]
+
+        OctokitClient --> GitHubAPI
+        HealthServiceBE --> StagingHealth
+        HealthServiceBE --> ProdHealth
+    end
+
+    subgraph "Data Storage"
+        Redis[(Redis Cache)]
+        DB[(PostgreSQL)]
+
+        DeployService --> DB
+        DeployService --> Redis
+        MetricsServiceBE --> DB
+        HealthServiceBE --> Redis
+    end
+
+    subgraph "Real-time Communication"
+        WSServer[WebSocket Server]
+        SSEServer[SSE Server Fallback]
+
+        WSEndpoint --> WSServer
+        WSEndpoint --> SSEServer
+
+        WSServer --> RealtimeService
+        SSEServer --> RealtimeService
+    end
+
+    GitHubAPI --> |Webhook Events| WebhookHandler[GitHub Webhook Handler]
+    WebhookHandler --> WSServer
+    WebhookHandler --> DB
+
+    GHService --> API
+    HealthService --> API
+    MetricsService --> API
+    RealtimeService --> WSEndpoint
+
+    classDef frontend fill:#4f46e5,stroke:#4338ca,color:#fff
+    classDef service fill:#059669,stroke:#047857,color:#fff
+    classDef backend fill:#dc2626,stroke:#b91c1c,color:#fff
+    classDef external fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef storage fill:#8b5cf6,stroke:#7c3aed,color:#fff
+
+    class UI,StatusPanel,HealthMonitor,SmokeTests,Metrics,ErrorPanel,RollbackUI,Timeline frontend
+    class GHService,HealthService,MetricsService,RealtimeService,DeploymentHook,HealthHook,SmokeHook,MetricsHook,RealtimeHook service
+    class API,DeployAPI,HealthAPI,SmokeAPI,MetricsAPI,GHAPI,WSEndpoint,DeployController,HealthController,SmokeController,MetricsController,GHController,DeployService,HealthServiceBE,SmokeServiceBE,MetricsServiceBE,OctokitClient,WSServer,SSEServer,WebhookHandler backend
+    class GitHubAPI,StagingHealth,ProdHealth external
+    class Redis,DB storage
