@@ -1,0 +1,43 @@
+sequenceDiagram
+    participant User
+    participant FilterBuilder
+    participant NostrFilterBuilder
+    participant CommonFilters
+    participant ValidationService
+    participant Parent
+
+    User->>FilterBuilder: Select preset
+    FilterBuilder->>CommonFilters: Get preset filter
+    CommonFilters-->>FilterBuilder: Return filter config
+    FilterBuilder->>NostrFilterBuilder: Build filter
+    NostrFilterBuilder-->>FilterBuilder: Return NostrFilter
+    FilterBuilder->>ValidationService: Validate filter
+    ValidationService-->>FilterBuilder: Validation result
+    FilterBuilder-->>User: Update UI with filter
+
+    User->>FilterBuilder: Modify filter field
+    FilterBuilder->>NostrFilterBuilder: Update field
+    NostrFilterBuilder->>ValidationService: Validate on change
+    ValidationService-->>FilterBuilder: Real-time validation
+    FilterBuilder-->>User: Show validation feedback
+
+    User->>FilterBuilder: Export filter
+    FilterBuilder->>NostrFilterBuilder: Build final filter
+    NostrFilterBuilder-->>FilterBuilder: NostrFilter object
+    FilterBuilder->>Parent: onFilterChange callback
+    Parent-->>FilterBuilder: Acknowledge
+
+    User->>FilterBuilder: Save as template
+    FilterBuilder->>FilterBuilder: Store in LocalStorage
+    FilterBuilder-->>User: Template saved
+
+    User->>FilterBuilder: Import filter JSON
+    FilterBuilder->>ValidationService: Validate imported filter
+    alt Valid filter
+        ValidationService-->>FilterBuilder: Valid
+        FilterBuilder->>NostrFilterBuilder: Load filter
+        FilterBuilder-->>User: Filter loaded
+    else Invalid filter
+        ValidationService-->>FilterBuilder: Invalid
+        FilterBuilder-->>User: Show error
+    end

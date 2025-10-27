@@ -1,0 +1,59 @@
+graph TD
+    A[Start: Load Profile] --> B{Profile in Cache?}
+    B -->|Yes| C[Load from Cache]
+    B -->|No| D[Fetch from Relays]
+
+    C --> E[Display Profile]
+    D --> F{Events Found?}
+    F -->|Yes| G[Parse Kind 0 Event]
+    F -->|No| H[Show Empty Profile]
+
+    G --> I[Cache Profile Data]
+    I --> E
+    H --> E
+
+    E --> J[Verify NIP-05]
+    J --> K{Valid?}
+    K -->|Yes| L[Show Verification Badge]
+    K -->|No| M[No Badge]
+
+    L --> N[Display Complete Profile]
+    M --> N
+
+    N --> O{User Action}
+    O -->|Edit| P[Switch to Edit Mode]
+    O -->|Follow| Q[Publish Kind 3 Event]
+    O -->|Tip| R[Show Lightning Invoice]
+    O -->|Share| S[Generate NIP-19 Link]
+    O -->|Block/Mute| T[Update Contacts List]
+
+    P --> U[Load Form with Current Data]
+    U --> V{User Edits}
+    V -->|Save| W[Validate Fields]
+    V -->|Cancel| N
+    V -->|Preview| X[Show Preview]
+
+    W --> Y{Valid?}
+    Y -->|Yes| Z[Create Kind 0 Event]
+    Y -->|No| AA[Show Validation Errors]
+    AA --> V
+
+    Z --> AB[Sign Event]
+    AB --> AC[Publish to Relays]
+    AC --> AD{Published?}
+    AD -->|Yes| AE[Update Cache]
+    AD -->|No| AF[Show Error]
+
+    AE --> AG[Switch to View Mode]
+    AF --> V
+
+    X --> V
+    AG --> N
+    Q --> N
+    R --> N
+    S --> N
+    T --> N
+
+    style A fill:#4F46E5,stroke:#333,stroke-width:2px,color:#fff
+    style N fill:#10B981,stroke:#333,stroke-width:2px,color:#fff
+    style AC fill:#F59E0B,stroke:#333,stroke-width:2px,color:#000

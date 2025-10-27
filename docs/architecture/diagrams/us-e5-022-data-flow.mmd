@@ -1,0 +1,52 @@
+sequenceDiagram
+    participant Client
+    participant Service as UserRelationshipService
+    participant Graph as RelationshipGraph
+    participant Cache as CacheService
+    participant EventBus as Event Bus
+    participant Store as RelationshipStore
+
+    Note over Client,Store: Follow User Flow
+
+    Client->>Service: follow(userId, targetUserId)
+
+    Service->>Service: validateUserIds()
+    Service->>Service: checkRateLimit()
+
+    Service->>Store: findRelationship()
+    alt Already Following
+        Store-->>Service: Existing Relationship
+        Service-->>Client: Return Existing (Idempotent)
+    else Not Following
+        Service->>Service: validateRelationship()
+        Service->>Service: checkPrivacySettings()
+
+        Service->>Store: create Relationship
+        Store-->>Service: New Relationship
+
+        Service->>Graph: addFollow()
+        Graph-->>Service: Updated Graph
+
+        Service->>Cache: invalidate(patterns)
+        Cache-->>Service: Cache Cleared
+
+        Service->>EventBus: emit('user.followed')
+        EventBus-->>Service: Event Published
+
+        Service-->>Client: Return Relationship
+    end
+
+    Note over Client,Store: Block User Flow (with Cascade)
+
+    Client->>Service: block(userId, targetUserId)
+
+    Service->>Service: validateUserIds()
+    Service->>Service: checkRateLimit()
+
+    Service->>Service: unfollow(both directions)
+    Service->>Store: create Block Relationship
+    Service->>Graph: addBlock()
+    Service->>Cache: invalidate(patterns)
+    Service->>EventBus: emit('user.blocked')
+
+    Service-->>Client: Return Block Relationship

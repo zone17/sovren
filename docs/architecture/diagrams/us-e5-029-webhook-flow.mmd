@@ -1,0 +1,78 @@
+sequenceDiagram
+    participant Domain as Domain Event
+    participant EventBus as EventBus
+    participant WS as WebhookService
+    participant Filter as Event Filter
+    participant Subs as Subscriptions
+    participant Queue as Job Queue
+    participant Delivery as Delivery Engine
+    participant Sig as Signature
+    participant HTTP as HTTP Client
+    participant EP as Customer Endpoint
+    participant Audit as AuditLog
+
+    %% Event occurs
+    Domain->>EventBus: Publish Event (payment.succeeded)
+    EventBus->>WS: Notify Subscribers
+
+    %% Filter and match
+    WS->>Filter: Check Event Type
+    Filter->>Subs: Find Matching Endpoints
+
+    loop For Each Subscription
+        Subs->>WS: Matched Endpoint
+
+        %% Rate limiting check
+        WS->>WS: Check Rate Limit
+        alt Rate Limit Exceeded
+            WS->>Audit: Log Rate Limit Hit
+            WS->>WS: Queue for Later
+        else Rate Limit OK
+            %% Circuit breaker check
+            WS->>WS: Check Circuit Breaker
+            alt Circuit Open
+                WS->>Audit: Log Circuit Open
+                WS->>WS: Skip Delivery
+            else Circuit Closed
+                %% Prepare delivery
+                WS->>Queue: Enqueue Delivery Job
+                Queue->>Delivery: Process Job
+
+                %% Create payload
+                Delivery->>Delivery: Build Payload
+                Delivery->>Sig: Generate HMAC-SHA256
+
+                %% Deliver
+                Delivery->>HTTP: POST Request
+                Note over HTTP,EP: Headers:<br/>X-Webhook-Signature<br/>X-Webhook-ID<br/>X-Webhook-Timestamp<br/>X-Webhook-Event-Type
+                HTTP->>EP: Deliver Webhook
+
+                alt Success (2xx)
+                    EP-->>HTTP: 200 OK
+                    HTTP-->>Delivery: Success
+                    Delivery->>Audit: Log Success
+                    Delivery->>WS: Update Status
+                    WS->>WS: Reset Retry Count
+                    WS->>WS: Close Circuit if Open
+                else Failure (5xx, timeout)
+                    EP-->>HTTP: 500 Error
+                    HTTP-->>Delivery: Failure
+                    Delivery->>Audit: Log Failure
+                    Delivery->>WS: Schedule Retry
+                    WS->>WS: Increment Failure Count
+                    WS->>WS: Check Circuit Threshold
+                    alt Max Retries Exceeded
+                        WS->>WS: Move to DLQ
+                        WS->>Audit: Log DLQ Move
+                        WS->>WS: Open Circuit
+                    else Retry Available
+                        WS->>Queue: Schedule Next Retry
+                        Note over Queue: Exponential Backoff:<br/>1m, 5m, 30m, 2h, 6h
+                    end
+                end
+            end
+        end
+    end
+
+    %% Final audit
+    WS->>Audit: Log Delivery Batch Complete

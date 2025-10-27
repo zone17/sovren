@@ -1,0 +1,64 @@
+graph TB
+    subgraph "Client Layer"
+        Client[API Client]
+    end
+
+    subgraph "CurrencyService"
+        CS[Currency Service]
+        ProviderManager[Provider Manager]
+        RateCache[Rate Cache Layer]
+        Formatter[Currency Formatter]
+    end
+
+    subgraph "Exchange Rate Providers"
+        CoinGecko[CoinGecko Provider<br/>Primary]
+        Kraken[Kraken Provider<br/>Secondary]
+        Fallback[Fallback Provider<br/>Manual Rates]
+
+        ProviderManager --> CoinGecko
+        ProviderManager --> Kraken
+        ProviderManager --> Fallback
+    end
+
+    subgraph "Dependencies"
+        EventBus[Event Bus]
+        Logger[Logger Service]
+        Cache[Cache Service]
+    end
+
+    subgraph "Data Storage"
+        HistoricalRates[(Historical Rate Storage)]
+        ManualRates[(Manual Rate Storage)]
+    end
+
+    subgraph "External APIs"
+        CoinGeckoAPI[CoinGecko API<br/>api.coingecko.com]
+        KrakenAPI[Kraken API<br/>api.kraken.com]
+    end
+
+    Client -->|convert| CS
+    Client -->|getRate| CS
+    Client -->|format| CS
+
+    CS --> ProviderManager
+    CS --> RateCache
+    CS --> Formatter
+
+    CS -->|emit rate updates| EventBus
+    CS -->|log operations| Logger
+    CS -->|cache rates| Cache
+
+    RateCache --> HistoricalRates
+    Fallback --> ManualRates
+
+    CoinGecko -.->|fetch rates| CoinGeckoAPI
+    Kraken -.->|fetch rates| KrakenAPI
+
+    EventBus -->|notify| RateSubscribers[Rate Update Subscribers]
+
+    style CS fill:#4a9eff,stroke:#2171d9,stroke-width:3px
+    style ProviderManager fill:#ff9f40,stroke:#ff7700,stroke-width:2px
+    style RateCache fill:#9f40ff,stroke:#7700ff,stroke-width:2px
+    style CoinGecko fill:#6bff6b,stroke:#00cc00,stroke-width:2px
+    style Kraken fill:#6bff6b,stroke:#00cc00,stroke-width:2px
+    style Fallback fill:#ffff6b,stroke:#cccc00,stroke-width:2px

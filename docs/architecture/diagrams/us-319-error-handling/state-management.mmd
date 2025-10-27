@@ -1,0 +1,49 @@
+stateDiagram-v2
+    [*] --> Idle: Component Mounted
+
+    Idle --> OperationStarted: User Action
+    OperationStarted --> Processing: Service Call
+
+    Processing --> Success: Operation Succeeds
+    Processing --> RecoverableError: Recoverable Failure
+    Processing --> CriticalError: Critical Failure
+
+    Success --> Idle: Update UI
+
+    RecoverableError --> ShowingError: Display Error
+    ShowingError --> WaitingUserAction: Show Toast + Retry
+
+    WaitingUserAction --> Retrying: User Clicks Retry
+    WaitingUserAction --> ErrorDismissed: User Dismisses
+    WaitingUserAction --> ErrorDismissed: Auto-dismiss Timeout
+
+    Retrying --> Processing: Retry Service Call
+    ErrorDismissed --> Idle: Clear Error State
+
+    CriticalError --> ErrorBoundaryActive: Boundary Catches
+    ErrorBoundaryActive --> ShowingFallback: Display Fallback UI
+    ShowingFallback --> Recovering: User Clicks Recover
+    ShowingFallback --> [*]: User Reloads Page
+
+    Recovering --> Idle: Reset Component State
+
+    note right of RecoverableError
+        Connection timeouts
+        Network errors
+        Validation failures
+        Publish failures
+    end note
+
+    note right of CriticalError
+        Unhandled exceptions
+        Component crashes
+        Fatal service errors
+    end note
+
+    note right of ShowingError
+        Error Classification:
+        - Severity level
+        - Error code
+        - Troubleshooting hints
+        - Retry capability
+    end note

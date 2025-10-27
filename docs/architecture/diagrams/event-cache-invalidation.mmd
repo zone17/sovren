@@ -1,0 +1,93 @@
+graph TD
+    A[Cache Invalidation Triggers] --> B{Trigger Type}
+
+    B -->|1. Manual Pattern| C[invalidate(pattern)]
+    B -->|2. Event Publish| D[invalidateOnPublish(event)]
+    B -->|3. TTL Expiration| E[isExpired() check]
+    B -->|4. Memory Limit| F[LRU Eviction]
+
+    C --> G{Parse Pattern}
+    G -->|pubkey:abc| H[Invalidate all events<br/>from pubkey 'abc']
+    G -->|pubkey:*| I[Invalidate ALL events]
+    G -->|kind:1| J[Invalidate all events<br/>of kind 1]
+    G -->|kind:*| I
+    G -->|tag:p:value| K[Invalidate events with<br/>p-tag = 'value']
+    G -->|tag:t:*| L[Invalidate all events<br/>with t-tag]
+    G -->|all:*| I
+
+    D --> M{Analyze Event}
+    M -->|Kind 0<br/>Profile Metadata| N[Replaceable Event Logic]
+    M -->|Kind 3<br/>Contact List| N
+    M -->|Kind 10000-19999<br/>Replaceable| N
+    M -->|Has e-tags<br/>References| O[Delete Referenced Events]
+    M -->|Other| P[No invalidation needed]
+
+    N --> Q[Generate Patterns]
+    Q --> R[Pattern: pubkey:{author}]
+    Q --> S[Pattern: kind:{kind}]
+    R --> T[Execute Invalidation]
+    S --> T
+
+    O --> U{For each e-tag}
+    U --> V[Extract event ID]
+    V --> W[Delete event by ID]
+    W --> X[Remove from indexes]
+
+    E --> Y{Check Expiration}
+    Y -->|now > expiresAt| Z[Mark as expired]
+    Y -->|expiresAt = undefined| AA[Never expires]
+    Y -->|now <= expiresAt| AB[Still valid]
+
+    Z --> AC[Delete from memory]
+    AC --> AD[Delete from IndexedDB]
+    AD --> AE[Update stats.expirations]
+
+    F --> AF{Memory Check}
+    AF -->|size >= maxMemoryEvents| AG[Find LRU Entry]
+    AF -->|bytes >= maxMemoryBytes| AG
+    AF -->|Within limits| AH[No eviction]
+
+    AG --> AI[Identify oldest access time]
+    AI --> AJ[Delete LRU event]
+    AJ --> AK[Update access order]
+    AK --> AL[Update stats.evictions]
+
+    H --> T
+    I --> T
+    J --> T
+    K --> T
+    L --> T
+
+    T --> AM[Batch Delete Events]
+    AM --> AN[Update Memory Cache]
+    AM --> AO[Update IndexedDB]
+    AM --> AP[Update Indexes]
+    AP --> AQ[Update Statistics]
+
+    subgraph "Invalidation Strategies"
+        AR[Strategy 1: Pattern-Based<br/>Flexible wildcard matching]
+        AS[Strategy 2: Event-Driven<br/>Automatic on publish]
+        AT[Strategy 3: Time-Based<br/>TTL expiration]
+        AU[Strategy 4: Memory-Based<br/>LRU eviction]
+    end
+
+    subgraph "Affected Components"
+        AV[Memory Cache]
+        AW[IndexedDB]
+        AX[Pubkey Index]
+        AY[Kind Index]
+        AZ[Tag Index]
+    end
+
+    subgraph "Performance Metrics"
+        BA[Track invalidation count]
+        BB[Track eviction count]
+        BC[Track expiration count]
+        BD[Update hit/miss rate]
+    end
+
+    style C fill:#2196F3,stroke:#1565C0,color:#fff
+    style D fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style E fill:#FF9800,stroke:#E65100,color:#fff
+    style F fill:#F44336,stroke:#C62828,color:#fff
+    style T fill:#9C27B0,stroke:#6A1B9A,color:#fff

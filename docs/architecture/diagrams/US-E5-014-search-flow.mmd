@@ -1,0 +1,39 @@
+sequenceDiagram
+    participant Client
+    participant Service as ContentSearchService
+    participant Cache as CacheService
+    participant ES as Elasticsearch
+    participant Analytics as Analytics Store
+
+    Client->>Service: search(query)
+    activate Service
+
+    Service->>Service: validateSearchQuery()
+    Service->>Service: generateCacheKey()
+
+    Service->>Cache: get(cacheKey)
+    activate Cache
+    Cache-->>Service: cached result or null
+    deactivate Cache
+
+    alt Cache Hit
+        Service-->>Client: return cached result
+    else Cache Miss
+        Service->>Service: buildElasticsearchQuery()
+        Service->>ES: search(esQuery)
+        activate ES
+        ES-->>Service: raw results
+        deactivate ES
+
+        Service->>Service: processSearchResults()
+        Service->>Cache: set(cacheKey, result, 300s)
+        Service->>Analytics: trackSearchAnalytics()
+        Service->>Service: logger.debug()
+
+        Service-->>Client: return search results
+    end
+
+    deactivate Service
+
+    Note over Service,Cache: Cache TTL: 5 minutes (300 seconds)
+    Note over Service,Analytics: Track: query, duration, result count

@@ -1,0 +1,40 @@
+graph TD
+    A[ProfileManager Component] --> B[ProfileDisplay Mode]
+    A --> C[ProfileEdit Mode]
+
+    B --> D[Avatar Display]
+    B --> E[Banner Display]
+    B --> F[Metadata Display]
+    B --> G[NIP-05 Badge]
+    B --> H[Lightning Tip Button]
+    B --> I[Follow Button]
+
+    C --> J[Form Fields]
+    C --> K[Image Upload]
+    C --> L[Preview Mode]
+    C --> M[Save/Cancel Actions]
+
+    A --> N[useProfileManager Hook]
+    N --> O[EventPublisherService]
+    N --> P[SubscriptionManagerService]
+    N --> Q[NIP05Service]
+    N --> R[EventCacheService]
+    N --> S[KeyManagementService]
+
+    O --> T[Publish Kind 0 Event]
+    P --> U[Fetch Profile Data]
+    Q --> V[Verify NIP-05]
+    R --> W[Cache Profile]
+    S --> X[Sign Events]
+
+    A --> Y[Action Buttons]
+    Y --> Z[Block/Mute]
+    Y --> AA[Report User]
+    Y --> AB[Share Profile]
+    Y --> AC[Generate QR Code]
+
+    style A fill:#4F46E5,stroke:#333,stroke-width:2px,color:#fff
+    style N fill:#10B981,stroke:#333,stroke-width:2px,color:#fff
+    style O fill:#F59E0B,stroke:#333,stroke-width:2px,color:#000
+    style P fill:#F59E0B,stroke:#333,stroke-width:2px,color:#000
+    style Q fill:#F59E0B,stroke:#333,stroke-width:2px,color:#000

@@ -1,0 +1,86 @@
+{
+  "imports": {},
+  "missing": [
+    "@/components",
+    "@/types",
+    "@jest/globals",
+    "@tanstack/react-query",
+    "msw",
+    "@/hooks",
+    "@/lib",
+    "date-fns",
+    "vitest",
+    "@storybook/react",
+    "qrcode.react",
+    "react-beautiful-dnd",
+    "swr",
+    "crypto",
+    "util"
+  ],
+  "unused": [
+    "@helia/http",
+    "@noble/secp256k1",
+    "@scure/bip32",
+    "@scure/bip39",
+    "@sentry/tracing",
+    "@supabase/supabase-js",
+    "@tiptap/extension-code-block-lowlight",
+    "@tiptap/extension-image",
+    "@tiptap/extension-link",
+    "@tiptap/react",
+    "@tiptap/starter-kit",
+    "@vercel/node",
+    "ipfs-http-client",
+    "lowlight",
+    "nodemailer",
+    "react-error-boundary",
+    "recharts",
+    "stripe",
+    "typed-emitter",
+    "@axe-core/react",
+    "@chromatic-com/storybook",
+    "compression",
+    "playwright",
+    "tw-animate-css"
+  ],
+  "conflicts": [],
+  "security": [
+    {
+      "package": "brace-expansion",
+      "severity": "low",
+      "title": "Security vulnerability",
+      "recommendation": "Update available"
+    },
+    {
+      "package": "interface-datastore",
+      "severity": "moderate",
+      "title": "Security vulnerability",
+      "recommendation": "Update available"
+    },
+    {
+      "package": "ipfs-core-utils",
+      "severity": "high",
+      "title": "Security vulnerability",
+      "recommendation": "Update available"
+    },
+    {
+      "package": "ipfs-http-client",
+      "severity": "high",
+      "title": "Security vulnerability",
+      "recommendation": "Update available"
+    },
+    {
+      "package": "nanoid",
+      "severity": "moderate",
+      "title": "Security vulnerability",
+      "recommendation": "Update available"
+    },
+    {
+      "package": "parse-duration",
+      "severity": "high",
+      "title": "Security vulnerability",
+      "recommendation": "Update available"
+    }
+  ],
+  "optimization": []
+}

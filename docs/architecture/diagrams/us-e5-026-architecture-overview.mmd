@@ -1,0 +1,73 @@
+graph TB
+    subgraph "Subscription Service Architecture"
+        SS[SubscriptionService]
+
+        subgraph "Core Dependencies"
+            PPS[PaymentProcessingService]
+            CS[CurrencyService]
+            ALS[AuditLogService]
+            CacheS[CacheService]
+            EB[EventBus]
+            Logger[Logger]
+        end
+
+        subgraph "Data Layer"
+            SR[SubscriptionRepository]
+            PR[PaymentRepository]
+            DB[(Database)]
+        end
+
+        subgraph "State Management"
+            SM[SubscriptionStateMachine]
+            States[trial → active → past_due<br/>→ canceled → expired]
+        end
+
+        subgraph "Scheduled Jobs"
+            RJ[RenewalJob]
+            EJ[ExpirationJob]
+            GJ[GracePeriodJob]
+            Scheduler[JobScheduler]
+        end
+
+        subgraph "Business Logic"
+            PM[PlanManager]
+            PC[ProrationCalculator]
+            RC[RenewalController]
+            IC[InvoiceCreator]
+        end
+    end
+
+    SS --> PPS
+    SS --> CS
+    SS --> ALS
+    SS --> CacheS
+    SS --> EB
+    SS --> Logger
+    SS --> SR
+    SS --> SM
+
+    SR --> DB
+    PR --> DB
+
+    SS --> PM
+    SS --> PC
+    SS --> RC
+    SS --> IC
+
+    Scheduler --> RJ
+    Scheduler --> EJ
+    Scheduler --> GJ
+
+    RJ --> SS
+    EJ --> SS
+    GJ --> SS
+
+    RC --> PPS
+    IC --> PPS
+    PC --> CS
+
+    style SS fill:#e1f5ff,stroke:#01579b,stroke-width:3px
+    style PPS fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style CS fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style SM fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style DB fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px

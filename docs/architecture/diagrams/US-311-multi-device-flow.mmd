@@ -1,0 +1,59 @@
+sequenceDiagram
+    actor User
+    participant Desktop
+    participant Mobile
+    participant API
+    participant DB as Database
+    
+    Note over User,DB: Device 1: Desktop Login
+    User->>Desktop: Login with NOSTR pubkey
+    Desktop->>API: POST /api/unified-sessions/create
+    API->>DB: Check existing sessions count
+    DB-->>API: 2 active sessions
+    API->>DB: Insert new session (device_id: desktop_123)
+    API->>DB: Log activity: login
+    API-->>Desktop: Session + Token (device 3 of 5)
+    Desktop->>User: Login successful
+    
+    Note over User,DB: Device 2: Mobile Login (Same User)
+    User->>Mobile: Login with same NOSTR pubkey
+    Mobile->>API: POST /api/unified-sessions/create
+    API->>DB: Check existing sessions count
+    DB-->>API: 3 active sessions
+    API->>DB: Insert new session (device_id: mobile_456)
+    API->>DB: Log activity: login
+    API-->>Mobile: Session + Token (device 4 of 5)
+    Mobile->>User: Login successful
+    
+    Note over User,DB: Concurrent Usage
+    Desktop->>API: POST /api/unified-sessions/validate
+    API->>DB: Validate desktop session
+    DB-->>API: Valid, update last_activity
+    API-->>Desktop: Session valid
+    
+    Mobile->>API: POST /api/unified-sessions/validate
+    API->>DB: Validate mobile session
+    DB-->>API: Valid, update last_activity
+    API-->>Mobile: Session valid
+    
+    Note over User,DB: Session Limit Enforcement
+    User->>Desktop: Login on NEW device (6th device)
+    Desktop->>API: POST /api/unified-sessions/create
+    API->>DB: Check existing sessions count
+    DB-->>API: 5 active sessions (AT LIMIT)
+    API->>DB: Revoke OLDEST session
+    API->>DB: Insert new session
+    API-->>Desktop: Session created (oldest revoked)
+    
+    Note over User,DB: Device-Specific Revocation
+    User->>Desktop: Revoke mobile device
+    Desktop->>API: DELETE /api/unified-sessions/revoke-device
+    API->>DB: Mark mobile sessions inactive
+    DB-->>API: 2 sessions revoked
+    API-->>Desktop: Mobile sessions revoked
+    
+    Mobile->>API: POST /api/unified-sessions/validate
+    API->>DB: Check session status
+    DB-->>API: Session inactive
+    API-->>Mobile: Session invalid (401)
+    Mobile->>User: Please log in again

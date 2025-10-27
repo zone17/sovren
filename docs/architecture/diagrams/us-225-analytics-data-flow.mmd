@@ -1,0 +1,106 @@
+sequenceDiagram
+    participant User as 👤 User
+    participant Dashboard as 📊 Dashboard
+    participant Hook as 🎣 React Hook
+    participant QueryClient as 🔄 Query Client
+    participant AnalyticsService as 🎯 Analytics Service
+    participant Cache as 📦 Cache
+    participant Transform as 🔄 Data Transform
+    participant API as 🌐 Backend API
+    participant DB as 💾 Database
+    participant WS as 🔌 WebSocket
+    participant Monitor as 📈 Performance Monitor
+
+    Note over User,Monitor: Analytics Data Fetch Flow
+
+    User->>Dashboard: Request Analytics Data
+    Dashboard->>Hook: useCreatorEarnings('7d')
+
+    Hook->>QueryClient: Query with cache key
+    QueryClient->>Cache: Check cache
+
+    alt Cache Hit
+        Cache-->>QueryClient: Return cached data
+        QueryClient-->>Hook: Cached analytics data
+        Hook-->>Dashboard: Display data
+        Dashboard-->>User: Show analytics
+    else Cache Miss
+        QueryClient->>AnalyticsService: fetchCreatorEarnings('7d')
+
+        AnalyticsService->>Monitor: Track request start
+        AnalyticsService->>API: GET /analytics/earnings?period=7d
+
+        API->>DB: Query earnings data
+        DB-->>API: Raw earnings data
+
+        API-->>AnalyticsService: Earnings response
+        AnalyticsService->>Transform: Transform raw data
+
+        Transform->>Transform: Aggregate metrics
+        Transform->>Transform: Format for display
+        Transform->>Transform: Calculate performance
+        Transform-->>AnalyticsService: Transformed data
+
+        AnalyticsService->>Cache: Store in cache
+        AnalyticsService->>Monitor: Track request completion
+        AnalyticsService-->>QueryClient: Return analytics data
+
+        QueryClient-->>Hook: Fresh analytics data
+        Hook-->>Dashboard: Display data
+        Dashboard-->>User: Show analytics
+    end
+
+    Note over User,Monitor: Real-time Analytics Updates
+
+    WS->>AnalyticsService: payment_received event
+    AnalyticsService->>Cache: Invalidate earnings cache
+    AnalyticsService->>QueryClient: Invalidate queries
+    QueryClient->>Hook: Trigger refetch
+    Hook->>AnalyticsService: Fetch updated data
+
+    AnalyticsService->>API: GET /analytics/earnings
+    API->>DB: Query latest data
+    DB-->>API: Updated data
+    API-->>AnalyticsService: Fresh response
+
+    AnalyticsService->>Transform: Transform updated data
+    Transform-->>AnalyticsService: Transformed data
+    AnalyticsService-->>Hook: Updated analytics
+    Hook-->>Dashboard: Refresh display
+    Dashboard-->>User: Live update notification
+
+    Note over User,Monitor: Error Handling Flow
+
+    User->>Dashboard: Request analytics (network error)
+    Dashboard->>Hook: useCreatorEarnings('30d')
+    Hook->>QueryClient: Query
+    QueryClient->>AnalyticsService: fetchCreatorEarnings
+
+    AnalyticsService->>Monitor: Track error attempt 1
+    AnalyticsService->>API: GET /analytics/earnings
+    API-->>AnalyticsService: Network Error
+
+    AnalyticsService->>AnalyticsService: Wait (exponential backoff)
+    AnalyticsService->>Monitor: Track retry attempt 2
+    AnalyticsService->>API: Retry request
+    API-->>AnalyticsService: Success response
+
+    AnalyticsService->>Transform: Transform data
+    Transform-->>AnalyticsService: Transformed data
+    AnalyticsService->>Monitor: Track successful recovery
+    AnalyticsService-->>QueryClient: Return data
+    QueryClient-->>Hook: Analytics data
+    Hook-->>Dashboard: Display with success message
+    Dashboard-->>User: Show analytics + recovery notification
+
+    Note over User,Monitor: Performance Monitoring
+
+    loop Every Request
+        Monitor->>Monitor: Record timing
+        Monitor->>Monitor: Track cache performance
+        Monitor->>Monitor: Monitor error rates
+        Monitor->>Monitor: Calculate response times
+    end
+
+    Monitor->>Dashboard: Performance metrics
+    Dashboard->>User: Show performance insights

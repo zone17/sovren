@@ -1,0 +1,75 @@
+sequenceDiagram
+    participant LN as Lightning Network
+    participant API as API Gateway
+    participant MW as Webhook Middleware
+    participant WSV as WebhookSignatureValidator
+    participant TS as Timestamp Validator
+    participant HMAC as HMAC Generator
+    participant WH as Webhook Handler
+    participant PSM as Payment State Machine
+    participant DB as Database
+
+    LN->>API: POST /api/webhooks/payment
+    Note over LN,API: Headers: x-webhook-signature, x-webhook-timestamp<br/>Body: payment event data
+
+    API->>MW: Forward Request
+    MW->>WSV: verifyWebhookRequest(req)
+
+    rect rgb(200, 150, 255)
+        Note over WSV: Step 1: Extract Headers
+        WSV->>WSV: Extract signature header
+        WSV->>WSV: Extract timestamp header
+        WSV->>WSV: Parse request body
+
+        alt Missing Headers
+            WSV-->>MW: Throw MissingWebhookHeadersError
+            MW-->>API: 401 Unauthorized
+            API-->>LN: 401 Unauthorized
+        end
+    end
+
+    rect rgb(255, 200, 150)
+        Note over WSV,TS: Step 2: Validate Timestamp
+        WSV->>TS: validateTimestamp(timestamp)
+        TS->>TS: now - timestamp > 300s?
+
+        alt Timestamp Expired
+            TS-->>WSV: Throw WebhookTimestampExpiredError
+            WSV-->>MW: 403 Forbidden (Replay Attack)
+            MW-->>API: 403 Forbidden
+            API-->>LN: 403 Forbidden
+        end
+
+        TS-->>WSV: Valid Timestamp
+    end
+
+    rect rgb(150, 255, 200)
+        Note over WSV,HMAC: Step 3: Verify HMAC Signature
+        WSV->>HMAC: computeSignature(timestamp, payload, secret)
+        HMAC->>HMAC: signedPayload = timestamp + "." + payload
+        HMAC->>HMAC: HMAC-SHA256(signedPayload, secret)
+        HMAC-->>WSV: expectedSignature
+
+        WSV->>WSV: timingSafeEqual(signature, expectedSignature)
+
+        alt Invalid Signature
+            WSV-->>MW: Throw InvalidWebhookSignatureError
+            MW-->>API: 401 Unauthorized
+            API-->>LN: 401 Unauthorized
+        end
+
+        WSV-->>MW: Signature Valid ✓
+    end
+
+    MW->>WH: processWebhook(req.body)
+    WH->>PSM: transition(paymentId, newState)
+    PSM->>DB: UPDATE payments SET state = $1
+    PSM->>DB: INSERT payment_events
+    DB-->>PSM: Transaction Complete
+    PSM-->>WH: TransitionResult
+
+    WH-->>MW: Processing Complete
+    MW-->>API: 200 OK
+    API-->>LN: 200 OK
+
+    Note over LN,DB: ✓ Authentic webhook processed<br/>✓ Payment state updated<br/>✓ Audit trail created

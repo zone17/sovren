@@ -19,7 +19,11 @@
     "baseUrl": ".",
     "paths": {
       "@sovren/*": ["packages/*/src"]
-    }
+    },
+    "types": ["node", "jest", "@testing-library/jest-dom"]
   },
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "packages/*/src/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "test-utils", "**/*.test.ts", "**/*.test.tsx", "**/__tests__"]
 }

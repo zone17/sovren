@@ -1,0 +1,67 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#9333ea',
+    'primaryTextColor': '#fff',
+    'primaryBorderColor': '#7e22ce',
+    'lineColor': '#e5e7eb',
+    'secondaryColor': '#f3f4f6',
+    'tertiaryColor': '#fbbf24',
+    'background': '#ffffff'
+  }
+}}%%
+stateDiagram-v2
+    [*] --> ChallengeRequested: User initiates login
+
+    ChallengeRequested --> ChallengeGenerated: Generate challenge
+    ChallengeGenerated --> ChallengeExpired: TTL expires (5 min)
+    ChallengeExpired --> [*]: Challenge invalid
+
+    ChallengeGenerated --> SignatureCreated: User signs challenge
+    SignatureCreated --> SignatureVerified: Backend verifies
+    SignatureCreated --> VerificationFailed: Invalid signature
+    VerificationFailed --> [*]: Authentication failed
+
+    SignatureVerified --> TokenGenerated: Create JWT
+    TokenGenerated --> SessionCreated: Create session
+    SessionCreated --> TokenActive: Token in use
+
+    TokenActive --> TokenUsed: API request
+    TokenUsed --> TokenActive: Update activity
+    TokenActive --> TokenRefreshed: Refresh request
+    TokenRefreshed --> NewTokenGenerated: Generate new token
+    NewTokenGenerated --> TokenActive: Continue session
+
+    TokenActive --> TokenExpired: 24h TTL
+    TokenExpired --> TokenRefreshed: Auto-refresh
+    TokenExpired --> SessionExpired: No refresh
+    SessionExpired --> [*]: Requires re-authentication
+
+    TokenActive --> TokenRevoked: User logout
+    TokenRevoked --> SessionTerminated: Clear session
+    SessionTerminated --> [*]: Logged out
+
+    TokenActive --> SessionRevoked: Admin action
+    SessionRevoked --> [*]: Force logout
+
+    note right of ChallengeGenerated
+        Challenge stored with:
+        - 5 minute TTL
+        - Unique nonce
+        - Pubkey binding
+    end note
+
+    note right of TokenActive
+        Token contains:
+        - NOSTR pubkey
+        - Session ID
+        - Role (creator/supporter/admin)
+        - Issue/Expiry times
+    end note
+
+    note right of TokenRefreshed
+        Refresh maintains:
+        - Same session
+        - Updated timestamps
+        - Activity tracking
+    end note

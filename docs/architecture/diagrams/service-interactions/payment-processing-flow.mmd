@@ -1,0 +1,109 @@
+%% Payment Processing Flow - Service Interaction Sequence
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete sequence diagram for Lightning payment processing workflow
+
+sequenceDiagram
+    actor User as User/Supporter
+    participant WebApp as Web Application
+    participant API as API Gateway
+    participant Auth as Auth Middleware
+    participant PaymentProc as Payment Processing Service
+    participant Currency as Currency Service
+    participant Lightning as Lightning Node
+    participant Webhook as Webhook Service
+    participant Repo as Repository Factory
+    participant DB as PostgreSQL
+    participant EventBus as Event Bus Service
+    participant PaymentAnalytics as Payment Analytics Service
+    participant Notification as Notification Service
+    participant Cache as Cache Service
+
+    User->>WebApp: Initiate Payment (1000 sats)
+    WebApp->>API: POST /api/payments/create
+    API->>Auth: Validate JWT
+    Auth-->>API: Authentication Success
+
+    API->>PaymentProc: createPayment(amount, userId)
+
+    Note over PaymentProc: Generate unique payment ID
+    PaymentProc->>Currency: convertIfNeeded(amount, currency)
+    Currency-->>PaymentProc: Amount in sats
+
+    PaymentProc->>Lightning: createInvoice(amount, description)
+    Lightning-->>PaymentProc: BOLT11 Invoice + Payment Hash
+
+    PaymentProc->>Repo: savePayment(pending)
+    Repo->>DB: INSERT INTO payments
+    DB-->>Repo: Payment ID
+    Repo-->>PaymentProc: Payment Saved
+
+    PaymentProc->>EventBus: publish('payment.created', data)
+    EventBus->>PaymentAnalytics: trackPaymentCreated(data)
+
+    PaymentProc-->>API: Invoice Data
+    API-->>WebApp: 201 Created with BOLT11
+    WebApp-->>User: Display Payment QR Code
+
+    User->>Lightning: Pay Invoice via Wallet
+    Lightning->>Lightning: Process Payment
+
+    Lightning-->>Webhook: Payment Received Callback
+    Webhook->>PaymentProc: verifyPayment(paymentHash)
+
+    PaymentProc->>Lightning: checkPaymentStatus(paymentHash)
+    Lightning-->>PaymentProc: Payment Confirmed
+
+    alt Payment Confirmed
+        PaymentProc->>Repo: updatePayment(status: confirmed)
+        Repo->>DB: UPDATE payments SET status='confirmed'
+        DB-->>Repo: Updated
+
+        PaymentProc->>EventBus: publish('payment.confirmed', data)
+
+        EventBus->>PaymentAnalytics: recordPayment(data)
+        PaymentAnalytics->>Repo: updateMetrics()
+        Repo->>DB: UPDATE payment_metrics
+
+        EventBus->>Notification: notifyCreator(paymentData)
+        Notification->>Repo: getCreator()
+        Notification->>EventBus: publish('notification.created')
+
+        EventBus->>Cache: invalidate(payment_stats_*)
+
+        PaymentProc-->>Webhook: Success
+        Webhook->>Repo: logWebhookDelivery(success)
+
+        Note over User,Notification: Payment confirmed,<br/>creator notified,<br/>analytics updated
+
+    else Payment Failed
+        PaymentProc->>Repo: updatePayment(status: failed)
+        Repo->>DB: UPDATE payments SET status='failed'
+
+        PaymentProc->>EventBus: publish('payment.failed', data)
+        EventBus->>Notification: notifyUserFailure(data)
+
+        PaymentProc-->>Webhook: Failure
+        Webhook->>Repo: logWebhookDelivery(failure)
+
+        Note over User,Notification: Payment failed,<br/>user notified
+    end
+
+    User->>WebApp: Check Payment Status
+    WebApp->>API: GET /api/payments/{id}
+    API->>Cache: get(payment_{id})
+
+    alt Cache Hit
+        Cache-->>API: Payment Data
+    else Cache Miss
+        API->>PaymentProc: getPayment(id)
+        PaymentProc->>Repo: findPayment(id)
+        Repo->>DB: SELECT FROM payments
+        DB-->>Repo: Payment Data
+        Repo-->>PaymentProc: Payment Data
+        PaymentProc-->>API: Payment Data
+        API->>Cache: set(payment_{id}, data, ttl: 60s)
+    end
+
+    API-->>WebApp: Payment Status
+    WebApp-->>User: Display Confirmation

@@ -1,0 +1,35 @@
+%% US-317: NOSTR Caching Layer - Cache Invalidation Patterns
+%% Pattern-based and event-driven cache invalidation
+
+graph TB
+    A[New Event Published] --> B{Event Type Analysis}
+
+    B -->|Kind 0: Profile| C[Invalidate Pattern]
+    B -->|Kind 1: Text Note| D[Mark Stale]
+    B -->|Kind 3: Contact List| C
+    B -->|Kind 5: Deletion| E[Immediate Invalidation]
+    B -->|Kind 7: Reaction| F[Cascade Invalidation]
+
+    subgraph "Invalidation Patterns"
+        C --> G[pubkey:PUBKEY]
+        C --> H[kind:KIND]
+        D --> I[Stale While Revalidate]
+        E --> J[Delete Immediately]
+        F --> K[Invalidate Referenced Events]
+    end
+
+    subgraph "Pattern Matching"
+        G --> L{Match Events}
+        H --> L
+
+        L -->|By Pubkey Index| M[Get Event IDs]
+        L -->|By Kind Index| M
+        L -->|By Tag Index| M
+
+        M --> N[Delete Matched Events]
+    end
+
+    style E fill:#f44336,stroke:#d32f2f,color:#fff
+    style D fill:#FF9800,stroke:#F57C00,color:#fff
+    style C fill:#2196F3,stroke:#1976D2,color:#fff
+    style F fill:#9C27B0,stroke:#7B1FA2,color:#fff

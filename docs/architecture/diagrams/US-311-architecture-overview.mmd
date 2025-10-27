@@ -1,0 +1,56 @@
+graph TB
+    subgraph "Client (Browser)"
+        Frontend[Frontend Application]
+        IndexedDB[(IndexedDB<br/>Local Sessions)]
+        BrowserManager[BrowserSessionManager]
+        BroadcastChannel[BroadcastChannel<br/>Multi-Tab Sync]
+        
+        Frontend --> BrowserManager
+        BrowserManager --> IndexedDB
+        BrowserManager --> BroadcastChannel
+    end
+    
+    subgraph "API Layer"
+        Routes["/api/unified-sessions/*<br/>REST API"]
+        RateLimit[Rate Limiting<br/>Middleware]
+        Validation[Request Validation<br/>Zod Schemas]
+        
+        Routes --> RateLimit
+        RateLimit --> Validation
+    end
+    
+    subgraph "Backend Services"
+        DatabaseManager[DatabaseSessionManager]
+        Supabase[Supabase Client]
+        
+        Validation --> DatabaseManager
+        DatabaseManager --> Supabase
+    end
+    
+    subgraph "Database (PostgreSQL)"
+        SessionsTable[(unified_sessions<br/>Table)]
+        ActivitiesTable[(unified_session_activities<br/>Table)]
+        Functions[Stored Procedures<br/>cleanup_expired_sessions<br/>get_session_statistics]
+        
+        Supabase --> SessionsTable
+        Supabase --> ActivitiesTable
+        Supabase --> Functions
+    end
+    
+    subgraph "Shared Core"
+        BaseClass[UnifiedSessionManager<br/>Abstract Base Class]
+        Types[Shared Types & Interfaces<br/>Session, DeviceInfo, Activity]
+        
+        BrowserManager -.implements.-> BaseClass
+        DatabaseManager -.implements.-> BaseClass
+        BaseClass --> Types
+    end
+    
+    Frontend -.HTTP.-> Routes
+    
+    style Frontend fill:#3B82F6,stroke:#2563EB,color:#fff
+    style Routes fill:#10B981,stroke:#059669,color:#fff
+    style DatabaseManager fill:#F59E0B,stroke:#D97706,color:#fff
+    style BrowserManager fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style SessionsTable fill:#EF4444,stroke:#DC2626,color:#fff
+    style BaseClass fill:#6366F1,stroke:#4F46E5,color:#fff

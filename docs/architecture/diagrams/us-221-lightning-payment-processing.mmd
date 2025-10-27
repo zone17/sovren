@@ -1,0 +1,62 @@
+graph TB
+    subgraph "US-221 Lightning Payment Processing - COMPLETED"
+        A["⚡ Lightning Payment Service<br/>packages/backend/src/services/lightning/lightningService.ts"] --> B["🧾 Receipt Generation"]
+        A --> C["📊 Payment Analytics"]
+        A --> D["🔗 Webhook Processing"]
+
+        B --> B1["Receipt Data Creation<br/>Payment + Creator + Supporter Info"]
+        B --> B2["Cryptographic Security<br/>SHA-256 Hash + HMAC Signature"]
+        B --> B3["Unique Receipt Numbers<br/>SVR-TIMESTAMP-RANDOM Format"]
+
+        C --> C1["Payment Volume Tracking<br/>Success/Failure Rates"]
+        C --> C2["Performance Metrics<br/>Processing Time Analytics"]
+        C --> C3["Revenue Analytics<br/>Creator Earnings Tracking"]
+
+        D --> D1["Payment Webhook Validation<br/>Signature Verification"]
+        D --> D2["Real-time Status Updates<br/>Payment State Management"]
+        D --> D3["Receipt Trigger Events<br/>Auto-generation on Payment"]
+
+        E["📧 Receipt Service<br/>packages/backend/src/services/lightning/receipt-service.ts"] --> E1["Receipt Generation<br/>Complete Transaction Records"]
+        E --> E2["PDF Creation<br/>Puppeteer-based Generation"]
+        E --> E3["Email Delivery<br/>SMTP with Attachments"]
+
+        F["🛠 Receipt API Routes<br/>packages/backend/src/routes/lightning-receipts.ts"] --> F1["POST /receipt<br/>Generate Receipt"]
+        F --> F2["GET /receipt/:id<br/>Retrieve Receipt"]
+        F --> F3["GET /receipt/:id/pdf<br/>Download PDF"]
+
+        G["🌐 Storage Backends"] --> G1["Local Storage<br/>Development Environment"]
+        G --> G2["AWS S3<br/>Production Storage"]
+        G --> G3["Google Cloud Storage<br/>Alternative Backend"]
+
+        H["📋 Template System"] --> H1["PDF Templates<br/>HTML to PDF Conversion"]
+        H --> H2["Email Templates<br/>HTML Email Rendering"]
+        H --> H3["Fallback Templates<br/>Default Template Engine"]
+
+        I["📊 Verification System"] --> I1["Hash Validation<br/>Receipt Integrity Checking"]
+        I --> I2["Signature Verification<br/>Authenticity Validation"]
+        I --> I3["Payment Verification<br/>Preimage/Hash Matching"]
+
+        J["🔄 Event Management"] --> J1["receipt:generated<br/>Creation Events"]
+        J --> J2["receipt:pdf:generated<br/>PDF Events"]
+        J --> J3["receipt:email:sent<br/>Delivery Events"]
+    end
+
+    style A fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    style E fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style F fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    style G fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style H fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    style I fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    style J fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+
+**📐 Diagram Legend:**
+
+- **Blue (Core Lightning Service)**: Central Lightning payment processing with invoice generation and webhook handling
+- **Purple (Receipt Service)**: Comprehensive receipt management with PDF generation and email delivery
+- **Green (API Routes)**: RESTful API endpoints with proper validation, rate limiting, and security
+- **Orange (Storage Systems)**: Multi-provider storage backends with configurable options and encryption
+- **Pink (Template Engine)**: Flexible template system supporting PDF and email generation with fallbacks
+- **Light Green (Security)**: Cryptographic verification system with hash, signature, and payment validation
+- **Light Blue (Event System)**: Real-time event management for receipt lifecycle and monitoring
+
+This architecture demonstrates the comprehensive, enterprise-grade approach to Lightning payment processing with complete receipt management that exceeds industry standards while maintaining security, performance, and scalability excellence.

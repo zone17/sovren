@@ -1,11 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
+import { User } from '@sovren/shared/types';
 import { supabase } from '../../lib/database';
 import { rateLimiter } from '../../lib/middleware/rateLimit';
 import { nameSchema, uuidSchema, validateRequest } from '../../lib/middleware/validation';
+import { AuthResult } from '../types/api-types';
 
 // 🔐 AUTHENTICATION MIDDLEWARE
-async function authenticateUser(req: VercelRequest): Promise<{ user: any; error?: string }> {
+async function authenticateUser(req: VercelRequest): Promise<AuthResult> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {
@@ -21,7 +23,7 @@ async function authenticateUser(req: VercelRequest): Promise<{ user: any; error?
       return { user: null, error: 'Invalid or expired token' };
     }
 
-    return { user };
+    return { user: user as User };
   } catch (error) {
     return { user: null, error: 'Authentication failed' };
   }
@@ -103,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 // 👤 GET USER PROFILE
-async function handleGetUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: any) {
+async function handleGetUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: User) {
   try {
     // 🔒 Authorization: Users can view their own profile or public profiles
     const { data: user, error } = await supabase
@@ -143,7 +145,7 @@ async function handleGetUser(req: VercelRequest, res: VercelResponse, userId: st
 }
 
 // ✏️ UPDATE USER PROFILE
-async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: any) {
+async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: User) {
   // 🔒 Authorization: Users can only update their own profile
   if (userId !== currentUser.id) {
     return res.status(403).json({
@@ -238,7 +240,7 @@ async function handleUpdateUser(req: VercelRequest, res: VercelResponse, userId:
 }
 
 // 🗑️ DELETE USER ACCOUNT
-async function handleDeleteUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: any) {
+async function handleDeleteUser(req: VercelRequest, res: VercelResponse, userId: string, currentUser: User) {
   // 🔒 Authorization: Users can only delete their own account
   if (userId !== currentUser.id) {
     return res.status(403).json({

@@ -1,0 +1,144 @@
+%% Repository Pattern - Data Access Abstraction
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete repository pattern implementation with factory and base classes
+
+graph TB
+    subgraph "Service Layer"
+        ContentService[Content Publishing Service]
+        UserService[User Profile Service]
+        PaymentService[Payment Processing Service]
+    end
+
+    subgraph "Repository Factory"
+        RepoFactory[Repository Factory<br/>---<br/>createRepository<br/>getRepository<br/>registerRepository]
+        RepoRegistry[Repository Registry<br/>Singleton Pattern]
+    end
+
+    subgraph "Repository Interfaces"
+        IContentRepo["IContentRepository<br/>---<br/>findById(id)<br/>findAll(filters)<br/>create(data)<br/>update(id, data)<br/>delete(id)<br/>findByUserId(userId)"]
+
+        IUserRepo["IUserRepository<br/>---<br/>findById(id)<br/>findByNostrKey(pubkey)<br/>create(data)<br/>update(id, data)<br/>findByEmail(email)"]
+
+        IPaymentRepo["IPaymentRepository<br/>---<br/>findById(id)<br/>findByPaymentHash(hash)<br/>create(data)<br/>update(id, data)<br/>findByStatus(status)"]
+    end
+
+    subgraph "Repository Implementations"
+        ContentRepo[ContentRepository<br/>PostgreSQL Implementation]
+        UserRepo[UserRepository<br/>PostgreSQL Implementation]
+        PaymentRepo[PaymentRepository<br/>PostgreSQL Implementation]
+    end
+
+    subgraph "Base Repository"
+        BaseRepo["BaseRepository<br/>---<br/>Abstract Methods:<br/>- tableName<br/>- primaryKey<br/>- validationSchema<br/>Common Methods:<br/>- findById<br/>- findAll<br/>- create<br/>- update<br/>- delete<br/>- transaction"]
+    end
+
+    subgraph "Query Builder"
+        QueryBuilder[Query Builder<br/>---<br/>select<br/>where<br/>join<br/>orderBy<br/>limit<br/>offset<br/>build]
+        SQLGenerator[SQL Generator<br/>Parameterized Queries]
+    end
+
+    subgraph "Connection Management"
+        ConnectionPool[Connection Pool<br/>PostgreSQL<br/>Min: 10, Max: 100]
+        TransactionManager[Transaction Manager<br/>ACID Guarantees]
+        MigrationRunner[Migration Runner<br/>Schema Evolution]
+    end
+
+    subgraph "Data Layer"
+        Database[(PostgreSQL<br/>Primary Database)]
+        ReadReplica1[(Read Replica 1)]
+        ReadReplica2[(Read Replica 2)]
+    end
+
+    %% Service to Factory
+    ContentService -->|1. Request Repository| RepoFactory
+    UserService -->|1. Request Repository| RepoFactory
+    PaymentService -->|1. Request Repository| RepoFactory
+
+    %% Factory Management
+    RepoFactory -->|2. Check Registry| RepoRegistry
+    RepoRegistry -->|3a. Cached Instance| RepoFactory
+    RepoRegistry -->|3b. Create New| RepoFactory
+
+    %% Interface to Implementation
+    RepoFactory -->|4. Return Interface| IContentRepo
+    RepoFactory -->|4. Return Interface| IUserRepo
+    RepoFactory -->|4. Return Interface| IPaymentRepo
+
+    IContentRepo -.Implements.-> ContentRepo
+    IUserRepo -.Implements.-> UserRepo
+    IPaymentRepo -.Implements.-> PaymentRepo
+
+    %% Base Repository Inheritance
+    ContentRepo -->|Extends| BaseRepo
+    UserRepo -->|Extends| BaseRepo
+    PaymentRepo -->|Extends| BaseRepo
+
+    %% Query Building
+    ContentRepo -->|5. Build Query| QueryBuilder
+    UserRepo -->|5. Build Query| QueryBuilder
+    PaymentRepo -->|5. Build Query| QueryBuilder
+
+    QueryBuilder -->|6. Generate SQL| SQLGenerator
+    SQLGenerator -->|7. Parameterized Query| ContentRepo
+
+    %% Connection Management
+    ContentRepo -->|8. Get Connection| ConnectionPool
+    UserRepo -->|8. Get Connection| ConnectionPool
+    PaymentRepo -->|8. Get Connection| ConnectionPool
+
+    ConnectionPool -->|9a. Read Query| ReadReplica1
+    ConnectionPool -->|9b. Read Query| ReadReplica2
+    ConnectionPool -->|9c. Write Query| Database
+
+    %% Transaction Management
+    ContentRepo -->|10. Begin Transaction| TransactionManager
+    TransactionManager -->|11. Execute| Database
+    Database -->|12. Commit/Rollback| TransactionManager
+    TransactionManager -->|13. Release Connection| ConnectionPool
+
+    %% Migration
+    MigrationRunner -->|Schema Changes| Database
+
+    %% Key Characteristics
+    Note1["Repository Benefits:<br/>✓ Data access abstraction<br/>✓ Testability (mocking)<br/>✓ Maintainability<br/>✓ Reusability<br/>✓ Separation of concerns"]
+
+    Note2["Implementation Features:<br/>- Factory pattern<br/>- Interface contracts<br/>- Base class inheritance<br/>- Query builder<br/>- Connection pooling<br/>- Transaction support"]
+
+    Note3["Best Practices:<br/>1. Single responsibility<br/>2. Interface segregation<br/>3. Dependency injection<br/>4. Unit of work pattern<br/>5. Query optimization<br/>6. Error handling"]
+
+    Note4["Performance Optimizations:<br/>- Connection pooling<br/>- Prepared statements<br/>- Read replica routing<br/>- Query caching<br/>- Batch operations<br/>- Index optimization"]
+
+    %% Styling
+    style ContentService fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style UserService fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style PaymentService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+
+    style RepoFactory fill:#9e9e9e,stroke:#616161,stroke-width:3px,color:#fff
+    style RepoRegistry fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+
+    style IContentRepo fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style IUserRepo fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style IPaymentRepo fill:#fff3e0,stroke:#e65100,stroke-width:2px
+
+    style ContentRepo fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style UserRepo fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style PaymentRepo fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+
+    style BaseRepo fill:#9e9e9e,stroke:#616161,stroke-width:3px,color:#fff
+
+    style QueryBuilder fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style SQLGenerator fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+
+    style ConnectionPool fill:#00bcd4,stroke:#00838f,stroke-width:3px,color:#fff
+    style TransactionManager fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style MigrationRunner fill:#ff5722,stroke:#bf360c,stroke-width:2px,color:#fff
+
+    style Database fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style ReadReplica1 fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style ReadReplica2 fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style Note1 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Note2 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Note3 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Note4 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px

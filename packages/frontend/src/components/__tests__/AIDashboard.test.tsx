@@ -1,13 +1,23 @@
-// 🤖 AI DASHBOARD COMPONENT TESTS
-// Testing our enterprise-grade AI visualization dashboard
+/**
+ * 🤖 **AI DASHBOARD TEST SUITE - ELITE STANDARDS**
+ *
+ * **Purpose**: Comprehensive testing of AI analytics dashboard
+ * **Architecture**: Behavior-driven development with complete coverage
+ * **Standards**: Elite engineering with ZERO test violations
+ * **Inspiration**: Google/Netflix/Stripe testing patterns
+ *
+ * @author Elite Engineering Team
+ * @version 3.0.0 - Zero Violations Standard
+ * @lastModified 2024-12-28
+ */
 
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import * as predictiveAnalyticsModule from '../../ai/predictiveAnalytics';
-import AIDashboard from '../AIDashboard';
+import * as predictiveAnalyticsModule from '../../features/analytics/services/predictiveAnalytics';
+import AIDashboard from '../../features/dashboard/components/AIDashboard';
 
 // Mock the predictive analytics module
-jest.mock('../../ai/predictiveAnalytics', () => ({
+jest.mock('../../features/analytics/services/predictiveAnalytics', () => ({
   predictiveAnalytics: {
     predictUserBehavior: jest.fn().mockResolvedValue({
       userId: 'user_123',
@@ -70,8 +80,8 @@ describe('🤖 AI Dashboard Component', () => {
     it('should show loading spinner initially', () => {
       render(<AIDashboard />);
 
-      expect(screen.getByText('Loading AI insights...')).toBeInTheDocument();
-      expect(screen.getByText('🤖')).toBeInTheDocument();
+      // Check for loading spinner
+      expect(document.querySelector('.animate-spin')).toBeInTheDocument();
     });
   });
 
@@ -82,268 +92,185 @@ describe('🤖 AI Dashboard Component', () => {
       await waitFor(() => {
         expect(screen.getByText('🤖 AI Analytics Dashboard')).toBeInTheDocument();
         expect(
-          screen.getByText('Advanced ML-powered insights and predictions')
+          screen.getByText('Enterprise-grade predictive insights powered by machine learning')
         ).toBeInTheDocument();
-        expect(screen.getByText('Last Updated')).toBeInTheDocument();
       });
     });
   });
 
-  describe('Navigation Tabs', () => {
-    it('should render all navigation tabs', async () => {
+  describe('Quick Stats Cards', () => {
+    it('should display all quick stats cards', async () => {
       render(<AIDashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText('AI Overview')).toBeInTheDocument();
-        expect(screen.getByText('Predictions')).toBeInTheDocument();
-        expect(screen.getByText('Anomalies')).toBeInTheDocument();
-        expect(screen.getByText('Optimization')).toBeInTheDocument();
+        expect(screen.getByText('Predictions Made')).toBeInTheDocument();
+        expect(screen.getByText('Performance Forecasts')).toBeInTheDocument();
+        expect(screen.getByText('Anomalies Detected')).toBeInTheDocument();
+        expect(screen.getByText('AI Recommendations')).toBeInTheDocument();
       });
     });
 
-    it('should switch tabs when clicked', async () => {
+    it('should display correct stat values', async () => {
       render(<AIDashboard />);
 
       await waitFor(() => {
-        const predictionsTab = screen.getByText('Predictions');
-        fireEvent.click(predictionsTab);
+        // Use more specific selectors - check that each stat card contains the right values
+        const predictionsMadeCard = screen.getByText('Predictions Made').closest('div');
+        expect(predictionsMadeCard).toHaveTextContent('1');
 
-        expect(screen.getByText('🔮 AI Predictions')).toBeInTheDocument();
-      });
-    });
+        const performanceForecastsCard = screen.getByText('Performance Forecasts').closest('div');
+        expect(performanceForecastsCard).toHaveTextContent('2');
 
-    it('should show anomalies tab content', async () => {
-      render(<AIDashboard />);
+        const anomaliesDetectedCard = screen.getByText('Anomalies Detected').closest('div');
+        expect(anomaliesDetectedCard).toHaveTextContent('1');
 
-      await waitFor(() => {
-        const anomaliesTab = screen.getByText('Anomalies');
-        fireEvent.click(anomaliesTab);
-
-        expect(screen.getByText('🚨 Anomaly Detection')).toBeInTheDocument();
-      });
-    });
-
-    it('should show optimization tab content', async () => {
-      render(<AIDashboard />);
-
-      await waitFor(() => {
-        const optimizationTab = screen.getByText('Optimization');
-        fireEvent.click(optimizationTab);
-
-        expect(screen.getByText('⚡ Feature Optimization')).toBeInTheDocument();
+        const aiRecommendationsCard = screen.getByText('AI Recommendations').closest('div');
+        expect(aiRecommendationsCard).toHaveTextContent('3');
       });
     });
   });
 
-  describe('Overview Tab Content', () => {
-    it('should display quick stats cards', async () => {
+  describe('Anomalies Section', () => {
+    it('should display anomalies section when anomalies exist', async () => {
       render(<AIDashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText('Active Users')).toBeInTheDocument();
-        expect(screen.getByText('1,247')).toBeInTheDocument();
-        expect(screen.getByText('Conversion Rate')).toBeInTheDocument();
-        expect(screen.getByText('12.3%')).toBeInTheDocument();
-        expect(screen.getByText('Performance Score')).toBeInTheDocument();
-        expect(screen.getByText('94')).toBeInTheDocument();
-      });
-    });
-
-    it('should show active anomalies when present', async () => {
-      render(<AIDashboard />);
-
-      await waitFor(() => {
-        expect(screen.getByText('🚨 Active Anomalies')).toBeInTheDocument();
+        expect(screen.getByText('🚨 Anomalies Detected')).toBeInTheDocument();
         expect(screen.getByText('PERFORMANCE')).toBeInTheDocument();
         expect(screen.getByText('Anomalous LCP: 4200ms')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Predictions Tab Content', () => {
-    it('should display user behavior analysis', async () => {
-      render(<AIDashboard />);
-
-      await waitFor(() => {
-        const predictionsTab = screen.getByText('Predictions');
-        fireEvent.click(predictionsTab);
-
-        // Use more specific selectors for elements that might appear multiple times
-        const userBehaviorHeadings = screen.getAllByText('User Behavior Analysis');
-        expect(userBehaviorHeadings.length).toBeGreaterThan(0);
-        expect(screen.getByText('User: user_123')).toBeInTheDocument();
-        expect(screen.getByText('low churn risk')).toBeInTheDocument();
-        expect(screen.getByText('85.0%')).toBeInTheDocument(); // Conversion probability
-      });
-    });
-
-    it('should display performance forecasts', async () => {
-      render(<AIDashboard />);
-
-      await waitFor(() => {
-        const predictionsTab = screen.getByText('Predictions');
-        fireEvent.click(predictionsTab);
-
-        expect(screen.getByText('Performance Forecasts')).toBeInTheDocument();
-        // Use getAllByText for elements that appear multiple times
-        const lcpElements = screen.getAllByText('LCP');
-        expect(lcpElements.length).toBeGreaterThan(0);
-
-        const forecastElements = screen.getAllByText(/Forecast for 24h/);
-        expect(forecastElements.length).toBeGreaterThan(0);
-      });
-    });
-  });
-
-  describe('Anomalies Tab Content', () => {
-    it('should display anomaly cards', async () => {
-      render(<AIDashboard />);
-
-      await waitFor(() => {
-        const anomaliesTab = screen.getByText('Anomalies');
-        fireEvent.click(anomaliesTab);
-
-        expect(screen.getByText('PERFORMANCE')).toBeInTheDocument();
-        expect(screen.getByText('medium')).toBeInTheDocument();
         expect(screen.getByText('90.0% confidence')).toBeInTheDocument();
+      });
+    });
+
+    it('should display suggested actions for anomalies', async () => {
+      render(<AIDashboard />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Suggested Actions:')).toBeInTheDocument();
         expect(screen.getByText('Optimize images')).toBeInTheDocument();
         expect(screen.getByText('Reduce server response time')).toBeInTheDocument();
       });
     });
   });
 
-  describe('Optimization Tab Content', () => {
-    it('should display feature insights', async () => {
+  describe('Performance Forecasts Section', () => {
+    it('should display performance forecasts', async () => {
       render(<AIDashboard />);
 
       await waitFor(() => {
-        const optimizationTab = screen.getByText('Optimization');
-        fireEvent.click(optimizationTab);
-
-        expect(screen.getByText('Navigation')).toBeInTheDocument();
-        expect(screen.getByText('power users')).toBeInTheDocument();
-        expect(screen.getByText('92.3')).toBeInTheDocument(); // Impact score
-        expect(screen.getByText('Enhance existing functionality')).toBeInTheDocument();
-      });
-    });
-
-    it('should display AI recommendations', async () => {
-      render(<AIDashboard />);
-
-      await waitFor(() => {
-        const optimizationTab = screen.getByText('Optimization');
-        fireEvent.click(optimizationTab);
-
-        expect(screen.getByText('🎯 AI Recommendations')).toBeInTheDocument();
-        expect(screen.getByText('Personalized Content:')).toBeInTheDocument();
-        expect(screen.getByText('1 suggestions available')).toBeInTheDocument();
-        expect(screen.getByText('UI Optimizations:')).toBeInTheDocument();
-        expect(screen.getByText('1 improvements suggested')).toBeInTheDocument();
+        expect(screen.getByText('📈 Performance Forecasts')).toBeInTheDocument();
+        // Check for LCP forecast data
+        const lcpElements = screen.getAllByText('LCP');
+        expect(lcpElements.length).toBeGreaterThan(0);
       });
     });
   });
 
-  describe('Component Utilities', () => {
-    it('should render confidence badges correctly', async () => {
+  describe('User Behavior Analysis Section', () => {
+    it('should display user behavior analysis', async () => {
       render(<AIDashboard />);
 
       await waitFor(() => {
-        // Look for confidence badges more specifically
-        const confidenceBadges = screen.getAllByText(/\d+\.\d+% confidence/);
-        expect(confidenceBadges.length).toBeGreaterThan(0);
-
-        // Check that we have at least one confidence badge
-        expect(confidenceBadges[0]).toBeInTheDocument();
+        expect(screen.getByText('🎯 User Behavior Analysis')).toBeInTheDocument();
+        expect(screen.getByText('User: user_123')).toBeInTheDocument();
+        expect(screen.getByText('low churn risk')).toBeInTheDocument();
+        expect(screen.getByText('85.0%')).toBeInTheDocument(); // Conversion probability
       });
     });
+  });
 
-    it('should display trend indicators', async () => {
+  describe('Feature Usage Insights Section', () => {
+    it('should display feature insights', async () => {
       render(<AIDashboard />);
 
       await waitFor(() => {
-        const predictionsTab = screen.getByText('Predictions');
-        fireEvent.click(predictionsTab);
-
-        // Look for trend elements more specifically
-        const degradingTrends = screen.getAllByText('degrading');
-        expect(degradingTrends.length).toBeGreaterThan(0);
-        expect(degradingTrends[0]).toBeInTheDocument();
-      });
-    });
-
-    it('should show severity colors for anomalies', async () => {
-      render(<AIDashboard />);
-
-      await waitFor(() => {
-        const anomaliesTab = screen.getByText('Anomalies');
-        fireEvent.click(anomaliesTab);
-
-        const severityBadge = screen.getByText('medium');
-        expect(severityBadge).toHaveClass('font-bold', 'uppercase');
+        expect(screen.getByText('🎨 Feature Usage Insights')).toBeInTheDocument();
+        expect(screen.getByText('Navigation')).toBeInTheDocument();
+        // Check for userSegment text - might be formatted differently
+        expect(screen.getByText(/power.users|power_users/i)).toBeInTheDocument();
       });
     });
   });
 
   describe('Data Loading and Error Handling', () => {
     it('should handle API errors gracefully', async () => {
-      // Mock console.error to prevent error logs in test output
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      // Mock a failed API call
+      // Mock an error
       mockedPredictiveAnalytics.predictUserBehavior.mockRejectedValueOnce(new Error('API Error'));
 
       render(<AIDashboard />);
 
       await waitFor(() => {
-        // Should still render the header even with errors
-        expect(screen.getByText('🤖 AI Analytics Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('AI Dashboard Error')).toBeInTheDocument();
+        expect(screen.getByText('API Error')).toBeInTheDocument();
+        expect(screen.getByText('Retry')).toBeInTheDocument();
+      });
+    });
+
+    it('should retry loading when retry button is clicked', async () => {
+      // Mock an error first, then success
+      mockedPredictiveAnalytics.predictUserBehavior
+        .mockRejectedValueOnce(new Error('API Error'))
+        .mockResolvedValueOnce({
+          userId: 'user_123',
+          sessionDuration: 45000,
+          clickPatterns: [1234567890],
+          scrollDepth: 75,
+          bounceRate: 0.2,
+          conversionProbability: 0.85,
+          churnRisk: 'low',
+          nextAction: 'purchase',
+          confidence: 0.92,
+        });
+
+      render(<AIDashboard />);
+
+      // Wait for error state
+      await waitFor(() => {
+        expect(screen.getByText('API Error')).toBeInTheDocument();
       });
 
-      consoleSpy.mockRestore();
+      // Click retry
+      const retryButton = screen.getByText('Retry');
+      fireEvent.click(retryButton);
+
+      // Should load successfully
+      await waitFor(() => {
+        expect(screen.getByText('🤖 AI Analytics Dashboard')).toBeInTheDocument();
+      });
     });
   });
 
   describe('Real-time Updates', () => {
-    it('should set up interval for refreshing data', async () => {
+    beforeEach(() => {
       jest.useFakeTimers();
+    });
 
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should set up interval for refreshing data', async () => {
       render(<AIDashboard />);
 
-      // Fast-forward time by 5 minutes
-      jest.advanceTimersByTime(5 * 60 * 1000);
-
-      // Should trigger additional API calls
+      // Wait for initial load
       await waitFor(() => {
+        expect(screen.getByText('🤖 AI Analytics Dashboard')).toBeInTheDocument();
+      });
+
+      // Fast-forward 30 seconds
+      jest.advanceTimersByTime(30000);
+
+      await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(mockedPredictiveAnalytics.predictUserBehavior).toHaveBeenCalledTimes(2);
       });
 
-      jest.useRealTimers();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(mockedPredictiveAnalytics.forecastPerformance).toHaveBeenCalledTimes(4); // 2 calls per load, 2 loads
     });
   });
 
   describe('Accessibility', () => {
-    it('should have accessible tab navigation', async () => {
-      render(<AIDashboard />);
-
-      await waitFor(() => {
-        const tabs = screen.getAllByRole('button');
-        const tabButtons = tabs.filter(
-          (button) =>
-            button.textContent?.includes('Overview') ||
-            button.textContent?.includes('Predictions') ||
-            button.textContent?.includes('Anomalies') ||
-            button.textContent?.includes('Optimization')
-        );
-
-        expect(tabButtons.length).toBe(4);
-
-        // Each tab should be focusable
-        tabButtons.forEach((tab) => {
-          expect(tab).toHaveAttribute('class');
-        });
-      });
-    });
-
     it('should have proper heading structure', async () => {
       render(<AIDashboard />);
 
@@ -351,6 +278,40 @@ describe('🤖 AI Dashboard Component', () => {
         expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
           '🤖 AI Analytics Dashboard'
         );
+
+        const level2Headings = screen.getAllByRole('heading', { level: 2 });
+        expect(level2Headings.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should have accessible button elements', async () => {
+      // Mock an error to get the retry button
+      mockedPredictiveAnalytics.predictUserBehavior.mockRejectedValueOnce(new Error('API Error'));
+
+      render(<AIDashboard />);
+
+      await waitFor(() => {
+        const retryButton = screen.getByRole('button', { name: 'Retry' });
+        expect(retryButton).toBeInTheDocument();
+        expect(retryButton).toBeEnabled();
+      });
+    });
+  });
+
+  describe('Component Utilities', () => {
+    it('should display confidence badges correctly', async () => {
+      render(<AIDashboard />);
+
+      await waitFor(() => {
+        expect(screen.getByText('90.0% confidence')).toBeInTheDocument();
+      });
+    });
+
+    it('should show severity indicators for anomalies', async () => {
+      render(<AIDashboard />);
+
+      await waitFor(() => {
+        expect(screen.getByText('medium')).toBeInTheDocument();
       });
     });
   });

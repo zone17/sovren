@@ -1,0 +1,148 @@
+%% Retry Pattern - Exponential Backoff with Jitter
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete retry pattern implementation for payment processing and webhooks
+
+graph TB
+    subgraph "Retry Pattern Components"
+        RetryHandler[Retry Handler<br/>Orchestrator]
+        RetryPolicy[Retry Policy<br/>Configuration]
+        BackoffStrategy[Backoff Strategy<br/>Exponential + Jitter]
+        RetryQueue[Retry Queue<br/>Persistent Storage]
+    end
+
+    subgraph "Retry Policy Configuration"
+        PolicyConfig["Retry Policy:<br/>---<br/>maxAttempts: 5<br/>initialDelay: 1000ms<br/>maxDelay: 60000ms<br/>backoffMultiplier: 2<br/>jitterFactor: 0.1<br/>retryableErrors: [timeout, 5xx]"]
+    end
+
+    subgraph "Retry States"
+        InitialAttempt[Attempt 1<br/>Delay: 0ms<br/>Status: Pending]
+
+        Retry1[Attempt 2<br/>Delay: 1000ms<br/>Status: Retrying]
+
+        Retry2[Attempt 3<br/>Delay: 2000ms + jitter<br/>Status: Retrying]
+
+        Retry3[Attempt 4<br/>Delay: 4000ms + jitter<br/>Status: Retrying]
+
+        Retry4[Attempt 5<br/>Delay: 8000ms + jitter<br/>Status: Retrying]
+
+        MaxRetries[Max Attempts<br/>Delay: 16000ms + jitter<br/>Status: Failed]
+    end
+
+    subgraph "Operation Execution"
+        Operation[Protected Operation<br/>Payment/Webhook/API]
+        SuccessHandler[Success Handler<br/>Complete Operation]
+        ErrorHandler[Error Handler<br/>Categorize Error]
+        DeadLetterQueue[Dead Letter Queue<br/>Failed Operations]
+    end
+
+    subgraph "Backoff Calculation"
+        BackoffCalc["Backoff Formula:<br/>---<br/>delay = min(<br/>  initialDelay * (multiplier ^ attempt),<br/>  maxDelay<br/>) + random(0, delay * jitter)<br/><br/>Example:<br/>Attempt 1: 1000ms<br/>Attempt 2: 2000ms + 200ms jitter<br/>Attempt 3: 4000ms + 400ms jitter<br/>Attempt 4: 8000ms + 800ms jitter<br/>Attempt 5: 16000ms + 1600ms jitter"]
+    end
+
+    subgraph "Error Classification"
+        ErrorTypes["Retryable Errors:<br/>---<br/>- Network timeout<br/>- Connection refused<br/>- 503 Service Unavailable<br/>- 504 Gateway Timeout<br/>- Temporary DB errors<br/><br/>Non-Retryable Errors:<br/>---<br/>- 400 Bad Request<br/>- 401 Unauthorized<br/>- 404 Not Found<br/>- Validation errors<br/>- Business logic errors"]
+    end
+
+    subgraph "Monitoring"
+        RetryMetrics[Retry Metrics<br/>---<br/>Total Attempts<br/>Success Rate<br/>Avg Retry Count<br/>Failure Rate]
+        AlertSystem[Alert System<br/>Max Retries Exceeded]
+    end
+
+    %% Initial Execution
+    RetryHandler -->|1. Execute| Operation
+    Operation -->|2a. Success| SuccessHandler
+    SuccessHandler -->|3. Complete| RetryHandler
+
+    Operation -->|2b. Error| ErrorHandler
+    ErrorHandler -->|3. Classify| ErrorHandler
+
+    %% Non-Retryable Error
+    ErrorHandler -->|4a. Non-Retryable| DeadLetterQueue
+    DeadLetterQueue -->|5. Alert| AlertSystem
+
+    %% Retryable Error - Start Retry
+    ErrorHandler -->|4b. Retryable| RetryHandler
+    RetryHandler -->|5. Check Policy| RetryPolicy
+    RetryPolicy -->|6. Within Limits| BackoffStrategy
+
+    %% Retry Attempts
+    BackoffStrategy -->|7. Calculate Delay| BackoffCalc
+    BackoffCalc -->|8. Wait| RetryHandler
+    RetryHandler -->|9. Queue Retry| RetryQueue
+
+    RetryQueue -->|10. Attempt 2| Retry1
+    Retry1 -->|11. Execute| Operation
+
+    Operation -->|12. Still Failing| ErrorHandler
+    ErrorHandler -->|13. Retryable| BackoffStrategy
+    BackoffStrategy -->|14. Delay 2s| Retry2
+
+    Retry2 -->|15. Execute| Operation
+    Operation -->|16. Still Failing| ErrorHandler
+    ErrorHandler -->|17. Retryable| BackoffStrategy
+    BackoffStrategy -->|18. Delay 4s| Retry3
+
+    Retry3 -->|19. Execute| Operation
+    Operation -->|20. Still Failing| ErrorHandler
+    ErrorHandler -->|21. Retryable| BackoffStrategy
+    BackoffStrategy -->|22. Delay 8s| Retry4
+
+    Retry4 -->|23. Execute| Operation
+    Operation -->|24. Still Failing| ErrorHandler
+    ErrorHandler -->|25. Retryable| BackoffStrategy
+    BackoffStrategy -->|26. Delay 16s| MaxRetries
+
+    %% Max Retries Exceeded
+    MaxRetries -->|27. Execute Final| Operation
+    Operation -->|28. Final Failure| ErrorHandler
+    ErrorHandler -->|29. Max Attempts| DeadLetterQueue
+    DeadLetterQueue -->|30. Alert| AlertSystem
+
+    %% Monitoring
+    RetryHandler -.Metrics.-> RetryMetrics
+    BackoffStrategy -.Metrics.-> RetryMetrics
+    ErrorHandler -.Metrics.-> RetryMetrics
+
+    %% Configuration
+    PolicyConfig -.Configure.-> RetryPolicy
+    ErrorTypes -.Configure.-> ErrorHandler
+
+    %% Key Characteristics
+    Note1["Retry Pattern Benefits:<br/>✓ Transient fault tolerance<br/>✓ Network resilience<br/>✓ Improved reliability<br/>✓ Automatic recovery<br/>✓ Graceful degradation"]
+
+    Note2["Exponential Backoff:<br/>- Prevents thundering herd<br/>- Reduces server load<br/>- Allows time for recovery<br/>- Jitter prevents collision<br/>- Configurable limits"]
+
+    Note3["Use Cases:<br/>- Payment processing<br/>- Webhook delivery<br/>- External API calls<br/>- Database operations<br/>- NOSTR relay publishing<br/>- Email sending"]
+
+    Note4["Best Practices:<br/>1. Set max retry limits<br/>2. Use exponential backoff<br/>3. Add jitter randomization<br/>4. Classify error types<br/>5. Monitor retry metrics<br/>6. Alert on failures<br/>7. Use idempotency keys"]
+
+    %% Styling
+    style RetryHandler fill:#9e9e9e,stroke:#616161,stroke-width:3px,color:#fff
+    style RetryPolicy fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style BackoffStrategy fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style RetryQueue fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+
+    style PolicyConfig fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style BackoffCalc fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style ErrorTypes fill:#ffebee,stroke:#c62828,stroke-width:2px
+
+    style InitialAttempt fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Retry1 fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Retry2 fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Retry3 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Retry4 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style MaxRetries fill:#ffebee,stroke:#c62828,stroke-width:3px
+
+    style Operation fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style SuccessHandler fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style ErrorHandler fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style DeadLetterQueue fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+
+    style RetryMetrics fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style AlertSystem fill:#ffebee,stroke:#c62828,stroke-width:2px
+
+    style Note1 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Note2 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Note3 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Note4 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px

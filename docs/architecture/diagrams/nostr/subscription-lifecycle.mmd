@@ -1,0 +1,45 @@
+stateDiagram-v2
+    [*] --> Initializing: subscribe(filters, callback)
+
+    Initializing --> Connecting: validate filters
+    Initializing --> Failed: validation error
+
+    Connecting --> Active: connected to relays
+    Connecting --> Retrying: connection timeout
+    Connecting --> Failed: max retries exceeded
+
+    Retrying --> Connecting: retry with backoff
+    Retrying --> Failed: max retries exceeded
+
+    Active --> ReceivingEvents: REQ sent
+
+    ReceivingEvents --> ReceivingEvents: EVENT received
+    ReceivingEvents --> EndOfStream: EOSE received
+    ReceivingEvents --> Paused: pause()
+    ReceivingEvents --> Closing: unsubscribe()
+
+    EndOfStream --> ReceivingEvents: new events
+    EndOfStream --> Paused: pause()
+    EndOfStream --> Closing: unsubscribe()
+
+    Paused --> ReceivingEvents: resume()
+    Paused --> Closing: unsubscribe()
+
+    Closing --> Closed: CLOSE sent
+    Closed --> [*]
+
+    Failed --> [*]
+
+    note right of ReceivingEvents
+        Events are:
+        1. Validated
+        2. Deduplicated
+        3. Cached
+        4. Delivered to callback
+    end note
+
+    note right of Active
+        Health monitoring active
+        Metrics being recorded
+        Auto-reconnect enabled
+    end note

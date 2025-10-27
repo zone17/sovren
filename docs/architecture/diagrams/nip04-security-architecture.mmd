@@ -1,0 +1,94 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#1e3a8a','secondaryColor':'#3b82f6','tertiaryColor':'#60a5fa'}}}%%
+graph TB
+    subgraph "User Interface Layer"
+        UI[User Interface<br/>React Components]
+        DM_UI[DM Input Component]
+        THREAD_UI[Thread View]
+    end
+
+    subgraph "NIP04Service - Enhanced Security"
+        direction TB
+        CORE[Core NIP-04<br/>Encryption/Decryption]
+
+        subgraph "Feature Modules"
+            RECEIPTS[Read Receipts<br/>Kind 1515]
+            TYPING[Typing Indicators<br/>Kind 20004]
+            HISTORY[Message History<br/>& Pagination]
+            CACHE[Decrypted Message<br/>Cache]
+        end
+
+        subgraph "Security Modules"
+            FS[Forward Secrecy<br/>Session Key Rotation]
+            SPAM[Spam Protection<br/>Rate Limiting + PoW]
+            BLOCKLIST[Block/Allow Lists]
+        end
+    end
+
+    subgraph "Cryptographic Layer"
+        ECDH[ECDH<br/>secp256k1]
+        AES[AES-256-CBC<br/>Encryption]
+        IV[Random IV<br/>Generation]
+        POW[Proof of Work<br/>Validator]
+    end
+
+    subgraph "Key Management"
+        KMS[KeyManagementService<br/>Secure Key Storage]
+        SESSION[Session Keys<br/>Ephemeral]
+        ROTATION[Key Rotation<br/>Every 100 Messages]
+    end
+
+    subgraph "NOSTR Network"
+        RELAYS[(NOSTR Relays<br/>Distributed)]
+        EVENT_STORE[(Event Store<br/>kind 4, 1515, 20004)]
+    end
+
+    %% User Interactions
+    UI -->|Send DM| DM_UI
+    DM_UI -->|Compose Message| CORE
+    THREAD_UI -->|Request History| HISTORY
+    THREAD_UI -->|Mark Read| RECEIPTS
+    DM_UI -->|Typing...| TYPING
+
+    %% Core NIP-04 Flow
+    CORE -->|Derive Shared Secret| ECDH
+    ECDH -->|Use Keys| KMS
+    CORE -->|Encrypt Content| AES
+    AES -->|Generate IV| IV
+
+    %% Forward Secrecy
+    FS -->|Generate| SESSION
+    SESSION -->|Monitor Count| ROTATION
+    ROTATION -->|Threshold Hit| SESSION
+    SESSION -.->|Use Instead of Main Key| AES
+
+    %% Spam Protection
+    CORE -->|Validate| SPAM
+    SPAM -->|Check Rate Limit| SPAM
+    SPAM -->|Validate PoW| POW
+    SPAM -->|Check Block List| BLOCKLIST
+
+    %% Feature Integrations
+    RECEIPTS -->|Create Kind 1515| CORE
+    TYPING -->|Create Kind 20004| CORE
+    HISTORY -->|Retrieve Cached| CACHE
+    CACHE -.->|Decrypt Once| CORE
+
+    %% Network Layer
+    CORE -->|Publish Events| RELAYS
+    RELAYS -->|Subscribe to DMs| CORE
+    RECEIPTS -->|Publish Receipt| RELAYS
+    TYPING -->|Publish Ephemeral| RELAYS
+    RELAYS -->|Store Events| EVENT_STORE
+
+    %% Security Annotations
+    style CORE fill:#1e3a8a,stroke:#3b82f6,stroke-width:3px,color:#fff
+    style FS fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#fff
+    style SPAM fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#fff
+    style AES fill:#059669,stroke:#10b981,stroke-width:2px,color:#fff
+    style ECDH fill:#059669,stroke:#10b981,stroke-width:2px,color:#fff
+    style KMS fill:#7c3aed,stroke:#a78bfa,stroke-width:2px,color:#fff
+    style SESSION fill:#7c3aed,stroke:#a78bfa,stroke-width:2px,color:#fff
+
+    classDef security fill:#dc2626,stroke:#ef4444,color:#fff
+    classDef crypto fill:#059669,stroke:#10b981,color:#fff
+    classDef feature fill:#1e3a8a,stroke:#3b82f6,color:#fff

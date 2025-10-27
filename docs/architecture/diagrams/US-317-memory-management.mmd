@@ -1,0 +1,48 @@
+graph TB
+    subgraph "Memory Monitoring"
+        TRACK[Track Memory Usage]
+        SIZE[Calculate Event Size]
+        LIMIT[Check Against Limit]
+    end
+
+    subgraph "Eviction Policy"
+        LRU[LRU Algorithm]
+        ACCESS[Access Order Tracking]
+        OLDEST[Find Oldest Access]
+    end
+
+    subgraph "Actions"
+        EVICT[Evict Event]
+        DEMOTE[Demote to IndexedDB]
+        UPDATE[Update Metrics]
+    end
+
+    subgraph "Automatic Cleanup"
+        TIMER[5 Min Interval]
+        EXPIRE[Find Expired Events]
+        DELETE[Delete Events]
+        COMPACT[Compact Memory]
+    end
+
+    TRACK --> SIZE
+    SIZE --> LIMIT
+
+    LIMIT -->|Over Limit| LRU
+    LRU --> ACCESS
+    ACCESS --> OLDEST
+    OLDEST --> EVICT
+
+    EVICT --> DEMOTE
+    DEMOTE --> UPDATE
+
+    TIMER --> EXPIRE
+    EXPIRE --> DELETE
+    DELETE --> COMPACT
+    COMPACT --> UPDATE
+
+    UPDATE -->|Memory OK| TRACK
+
+    style TRACK fill:#2196F3,stroke:#1565C0,color:#fff
+    style LRU fill:#FF9800,stroke:#E65100,color:#fff
+    style EVICT fill:#F44336,stroke:#C62828,color:#fff
+    style UPDATE fill:#4CAF50,stroke:#2E7D32,color:#fff

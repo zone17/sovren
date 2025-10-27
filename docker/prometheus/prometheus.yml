@@ -1,0 +1,61 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - 'mcp_rules.yml'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+scrape_configs:
+  # MCP Gateway monitoring
+  - job_name: 'mcp-gateway'
+    static_configs:
+      - targets: ['mcp-gateway:3000']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # MCP services health monitoring
+  - job_name: 'mcp-github'
+    static_configs:
+      - targets: ['mcp-github:3000']
+    metrics_path: /health
+    scrape_interval: 60s
+    scrape_timeout: 15s
+
+  - job_name: 'mcp-postgres'
+    static_configs:
+      - targets: ['mcp-postgres:3000']
+    metrics_path: /health
+    scrape_interval: 60s
+    scrape_timeout: 15s
+
+  - job_name: 'mcp-filesystem'
+    static_configs:
+      - targets: ['mcp-filesystem:3000']
+    metrics_path: /health
+    scrape_interval: 60s
+    scrape_timeout: 15s
+
+  - job_name: 'mcp-memory'
+    static_configs:
+      - targets: ['mcp-memory:8080']
+    metrics_path: /health
+    scrape_interval: 60s
+    scrape_timeout: 15s
+
+  - job_name: 'mcp-puppeteer'
+    static_configs:
+      - targets: ['mcp-puppeteer:3000']
+    metrics_path: /health
+    scrape_interval: 60s
+    scrape_timeout: 20s
+
+  # System metrics
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

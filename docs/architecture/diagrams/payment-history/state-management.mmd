@@ -1,0 +1,40 @@
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Loading: Component mounted
+    Loading --> Success: API call successful
+    Loading --> Error: API call failed
+
+    Success --> Filtering: User applies filter
+    Success --> Sorting: User changes sort
+    Success --> Paginating: User navigates pages
+
+    Filtering --> Success: Filter applied
+    Sorting --> Success: Sort applied
+    Paginating --> Success: Page changed
+
+    Success --> CopyingHash: User clicks copy
+    CopyingHash --> Success: Hash copied
+
+    Success --> DownloadingReceipt: User clicks download
+    DownloadingReceipt --> Success: Receipt downloaded
+
+    Success --> Refreshing: User clicks refresh
+    Refreshing --> Loading: Refetch initiated
+
+    Error --> Retrying: User clicks retry
+    Retrying --> Loading: Retry initiated
+
+    Success --> [*]: Component unmounted
+    Error --> [*]: Component unmounted
+
+    note right of Success
+        Data cached in React Query
+        Local filtering/sorting/pagination
+        No API calls for UI interactions
+    end note
+
+    note right of Error
+        Display error message
+        Show retry button
+        Preserve previous data if available
+    end note

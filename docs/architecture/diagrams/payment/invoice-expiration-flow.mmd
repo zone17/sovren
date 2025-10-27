@@ -1,0 +1,47 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#6366f1','primaryTextColor':'#fff','primaryBorderColor':'#4f46e5','lineColor':'#6366f1','secondaryColor':'#f3f4f6','tertiaryColor':'#fef3c7'}}}%%
+
+flowchart TD
+    Start([Invoice Expiration Service Started]) --> Schedule[Schedule Periodic Checks<br/>Every 5 minutes]
+    Schedule --> Timer{Timer Triggers}
+
+    Timer --> |Check Time| Lock{Acquire Check Lock}
+    Lock --> |Already Running| Skip[Skip - Check in Progress]
+    Lock --> |Lock Acquired| Query[Query Database<br/>SELECT * FROM payments<br/>WHERE state = 'PENDING'<br/>AND expires_at < NOW]
+
+    Query --> Results{Expired<br/>Payments?}
+    Results --> |No Payments| Release1[Release Lock]
+    Results --> |Found Payments| Process[Process Each Payment]
+
+    Process --> ForEach[For Each Expired Payment]
+    ForEach --> Transition[Call State Machine<br/>transition to EXPIRED]
+
+    Transition --> TransitionSuccess{Transition<br/>Successful?}
+    TransitionSuccess --> |Yes| SendEmail[Send Email Notification<br/>Invoice Expired Template]
+    TransitionSuccess --> |No| LogError1[Log Error<br/>Increment Failed Count]
+
+    SendEmail --> EmailSuccess{Email<br/>Sent?}
+    EmailSuccess --> |Yes| IncrementSuccess[Increment Success Count<br/>Log Success]
+    EmailSuccess --> |No| LogError2[Log Error<br/>Increment Failed Count]
+
+    IncrementSuccess --> NextPayment{More<br/>Payments?}
+    LogError1 --> NextPayment
+    LogError2 --> NextPayment
+
+    NextPayment --> |Yes| ForEach
+    NextPayment --> |No| UpdateMetrics[Update Service Metrics<br/>- Total Checks<br/>- Total Expired<br/>- Total Failed<br/>- Last Check Time<br/>- Duration]
+
+    UpdateMetrics --> Release2[Release Lock]
+    Release1 --> End([Check Complete])
+    Release2 --> End
+    Skip --> End
+
+    End --> Timer
+
+    style Start fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
+    style End fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
+    style Query fill:#3b82f6,stroke:#2563eb,stroke-width:2px,color:#fff
+    style Transition fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff
+    style SendEmail fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    style LogError1 fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#fff
+    style LogError2 fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#fff
+    style UpdateMetrics fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#fff

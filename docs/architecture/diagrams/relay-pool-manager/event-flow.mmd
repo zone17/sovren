@@ -1,0 +1,44 @@
+sequenceDiagram
+    participant App as Application
+    participant RPM as RelayPoolManager
+    participant Pool as SimplePool
+    participant R1 as Relay 1
+    participant R2 as Relay 2
+    participant R3 as Relay 3
+    participant HM as Health Monitor
+
+    App->>RPM: subscribe(filters)
+    RPM->>RPM: Select healthy relays
+    RPM->>Pool: subscribeMany([R1, R2, R3], filters)
+
+    activate Pool
+    Pool->>R1: Subscribe
+    Pool->>R2: Subscribe
+    Pool->>R3: Subscribe
+
+    R1-->>Pool: Event 1
+    R2-->>Pool: Event 1 (duplicate)
+    R3-->>Pool: Event 2
+
+    Pool->>RPM: Event 1 (deduplicated)
+    Pool->>RPM: Event 2
+    deactivate Pool
+
+    RPM->>RPM: Validate events
+    RPM->>App: onEvent(Event 1)
+    RPM->>App: onEvent(Event 2)
+
+    HM->>R1: Ping
+    R1-->>HM: Pong (50ms)
+    HM->>HM: Update metrics
+
+    Note over R2: Connection Lost
+    R2--xHM: Timeout
+    HM->>RPM: Relay R2 unhealthy
+    RPM->>RPM: Remove R2 from pool
+    RPM->>RPM: Trigger reconnection
+
+    HM->>R2: Reconnect attempt
+    R2-->>HM: Connected
+    HM->>RPM: Relay R2 healthy
+    RPM->>RPM: Add R2 back to pool

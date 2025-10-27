@@ -1,0 +1,272 @@
+{
+  "SchemaVersion": 2,
+  "CreatedAt": "2025-06-29T10:34:48.282241-04:00",
+  "ArtifactName": "grafana/grafana:latest",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "Size": 688736256,
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.21.3"
+    },
+    "ImageID": "sha256:4f2ba943b1dee49a450bc9ea4de00ce511ec6cfaf27565dd32b21480317bfd06",
+    "DiffIDs": [
+      "sha256:08000c18d16dadf9553d747a58cf44023423a9ab010aab96cf263d2216b8b350",
+      "sha256:f8b423b980a888a41adb597d25a208b63179115ad6ff5d96c31c1a8a0bddf650",
+      "sha256:82051154d995c5481e3c42865f7ee09ea91ceff89c37a0f5fdd6533d69304c67",
+      "sha256:6e8df67eea3ff95fb6709729affc078a065b1617ce68e604b4f6e2209f91b7df",
+      "sha256:c5fbaf9d1415279ff33b0a77ba6597c419d254886eb2d2c39170485afe4dd70f",
+      "sha256:2055574b0c4475cc8a758fc8ca5bd03a9d6d3e9a8335af4d4816300a248eacc7",
+      "sha256:64cbe7f84782a4bfdcae6caa88f063a82126d22b87a9f0ea763e843ee802118f",
+      "sha256:017a662351d0ec3dd78e8eea79be06c3a203e2487d1b65c8ed0d66fb4b5f2be1",
+      "sha256:c0d30d030e55be45065066f0a1fad16aa16026284dd171b478685aa82c9197f1",
+      "sha256:df56c0399d45bb0a517fd9fe8bdbcc3d615da076e98675094c5c7b4900246165"
+    ],
+    "RepoTags": [
+      "grafana/grafana:latest"
+    ],
+    "RepoDigests": [
+      "grafana/grafana@sha256:b5b59bfc7561634c2d7b136c4543d702ebcc94a3da477f21ff26f89ffd4214fa"
+    ],
+    "ImageConfig": {
+      "architecture": "amd64",
+      "created": "2025-06-13T14:32:39.024263006Z",
+      "history": [
+        {
+          "created": "2025-02-14T03:28:36Z",
+          "created_by": "ADD alpine-minirootfs-3.21.3-x86_64.tar.gz / # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-02-14T03:28:36Z",
+          "created_by": "CMD [\"/bin/sh\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:08.429770269Z",
+          "created_by": "LABEL maintainer=Grafana Labs \u003chello@grafana.com\u003e",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:08.429770269Z",
+          "created_by": "LABEL org.opencontainers.image.source=https://github.com/grafana/grafana",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:08.429770269Z",
+          "created_by": "ARG GF_UID=472",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:08.429770269Z",
+          "created_by": "ARG GF_GID=0",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:08.429770269Z",
+          "created_by": "ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin GF_PATHS_CONFIG=/etc/grafana/grafana.ini GF_PATHS_DATA=/var/lib/grafana GF_PATHS_HOME=/usr/share/grafana GF_PATHS_LOGS=/var/log/grafana GF_PATHS_PLUGINS=/var/lib/grafana/plugins GF_PATHS_PROVISIONING=/etc/grafana/provisioning",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:08.429770269Z",
+          "created_by": "WORKDIR /usr/share/grafana",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:10.318822076Z",
+          "created_by": "RUN |2 GF_UID=472 GF_GID=0 /bin/sh -c if grep -i -q alpine /etc/issue; then   apk add --no-cache ca-certificates bash curl tzdata musl-utils \u0026\u0026   apk info -vv | sort;   elif grep -i -q ubuntu /etc/issue; then   DEBIAN_FRONTEND=noninteractive \u0026\u0026   apt-get update \u0026\u0026   apt-get install -y ca-certificates curl tzdata musl \u0026\u0026   apt-get autoremove -y \u0026\u0026   rm -rf /var/lib/apt/lists/*;   else   echo 'ERROR: Unsupported base image' \u0026\u0026 /bin/false;   fi # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:10.318822076Z",
+          "created_by": "ARG GLIBC_VERSION=2.40",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:13.084614264Z",
+          "created_by": "RUN |3 GF_UID=472 GF_GID=0 GLIBC_VERSION=2.40 /bin/sh -c if grep -i -q alpine /etc/issue \u0026\u0026 [ `arch` = \"x86_64\" ]; then   wget -qO- \"https://dl.grafana.com/glibc/glibc-bin-$GLIBC_VERSION.tar.gz\" | tar zxf - -C /   usr/glibc-compat/lib/ld-linux-x86-64.so.2   usr/glibc-compat/lib/libc.so.6   usr/glibc-compat/lib/libdl.so.2   usr/glibc-compat/lib/libm.so.6   usr/glibc-compat/lib/libpthread.so.0   usr/glibc-compat/lib/librt.so.1   usr/glibc-compat/lib/libresolv.so.2 \u0026\u0026   mkdir /lib64 \u0026\u0026   ln -s /usr/glibc-compat/lib/ld-linux-x86-64.so.2 /lib64;   fi # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:34.700719274Z",
+          "created_by": "COPY /tmp/grafana/conf ./conf # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:35.656380032Z",
+          "created_by": "RUN |3 GF_UID=472 GF_GID=0 GLIBC_VERSION=2.40 /bin/sh -c if [ ! $(getent group \"$GF_GID\") ]; then   if grep -i -q alpine /etc/issue; then   addgroup -S -g $GF_GID grafana;   else   addgroup --system --gid $GF_GID grafana;   fi;   fi \u0026\u0026   GF_GID_NAME=$(getent group $GF_GID | cut -d':' -f1) \u0026\u0026   mkdir -p \"$GF_PATHS_HOME/.aws\" \u0026\u0026   if grep -i -q alpine /etc/issue; then   adduser -S -u $GF_UID -G \"$GF_GID_NAME\" grafana;   else   adduser --system --uid $GF_UID --ingroup \"$GF_GID_NAME\" grafana;   fi \u0026\u0026   mkdir -p \"$GF_PATHS_PROVISIONING/datasources\"   \"$GF_PATHS_PROVISIONING/dashboards\"   \"$GF_PATHS_PROVISIONING/notifiers\"   \"$GF_PATHS_PROVISIONING/plugins\"   \"$GF_PATHS_PROVISIONING/access-control\"   \"$GF_PATHS_PROVISIONING/alerting\"   \"$GF_PATHS_LOGS\"   \"$GF_PATHS_PLUGINS\"   \"$GF_PATHS_DATA\" \u0026\u0026   cp conf/sample.ini \"$GF_PATHS_CONFIG\" \u0026\u0026   cp conf/ldap.toml /etc/grafana/ldap.toml \u0026\u0026   chown -R \"grafana:$GF_GID_NAME\" \"$GF_PATHS_DATA\" \"$GF_PATHS_HOME/.aws\" \"$GF_PATHS_LOGS\" \"$GF_PATHS_PLUGINS\" \"$GF_PATHS_PROVISIONING\" \u0026\u0026   chmod -R 777 \"$GF_PATHS_DATA\" \"$GF_PATHS_HOME/.aws\" \"$GF_PATHS_LOGS\" \"$GF_PATHS_PLUGINS\" \"$GF_PATHS_PROVISIONING\" # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:36.597655632Z",
+          "created_by": "COPY /tmp/grafana/bin/grafana* /tmp/grafana/bin/*/grafana* ./bin/ # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:38.940531186Z",
+          "created_by": "COPY /tmp/grafana/public ./public # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:38.970506231Z",
+          "created_by": "COPY /tmp/grafana/LICENSE ./ # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:38.970506231Z",
+          "created_by": "EXPOSE map[3000/tcp:{}]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:38.970506231Z",
+          "created_by": "ARG RUN_SH=./packaging/docker/run.sh",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:39.024263006Z",
+          "created_by": "COPY ./packaging/docker/run.sh /run.sh # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-13T14:32:39.024263006Z",
+          "created_by": "USER 472",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-13T14:32:39.024263006Z",
+          "created_by": "ENTRYPOINT [\"/run.sh\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        }
+      ],
+      "os": "linux",
+      "rootfs": {
+        "type": "layers",
+        "diff_ids": [
+          "sha256:08000c18d16dadf9553d747a58cf44023423a9ab010aab96cf263d2216b8b350",
+          "sha256:f8b423b980a888a41adb597d25a208b63179115ad6ff5d96c31c1a8a0bddf650",
+          "sha256:82051154d995c5481e3c42865f7ee09ea91ceff89c37a0f5fdd6533d69304c67",
+          "sha256:6e8df67eea3ff95fb6709729affc078a065b1617ce68e604b4f6e2209f91b7df",
+          "sha256:c5fbaf9d1415279ff33b0a77ba6597c419d254886eb2d2c39170485afe4dd70f",
+          "sha256:2055574b0c4475cc8a758fc8ca5bd03a9d6d3e9a8335af4d4816300a248eacc7",
+          "sha256:64cbe7f84782a4bfdcae6caa88f063a82126d22b87a9f0ea763e843ee802118f",
+          "sha256:017a662351d0ec3dd78e8eea79be06c3a203e2487d1b65c8ed0d66fb4b5f2be1",
+          "sha256:c0d30d030e55be45065066f0a1fad16aa16026284dd171b478685aa82c9197f1",
+          "sha256:df56c0399d45bb0a517fd9fe8bdbcc3d615da076e98675094c5c7b4900246165"
+        ]
+      },
+      "config": {
+        "Entrypoint": [
+          "/run.sh"
+        ],
+        "Env": [
+          "PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "GF_PATHS_CONFIG=/etc/grafana/grafana.ini",
+          "GF_PATHS_DATA=/var/lib/grafana",
+          "GF_PATHS_HOME=/usr/share/grafana",
+          "GF_PATHS_LOGS=/var/log/grafana",
+          "GF_PATHS_PLUGINS=/var/lib/grafana/plugins",
+          "GF_PATHS_PROVISIONING=/etc/grafana/provisioning"
+        ],
+        "Labels": {
+          "maintainer": "Grafana Labs \u003chello@grafana.com\u003e",
+          "org.opencontainers.image.source": "https://github.com/grafana/grafana"
+        },
+        "User": "472",
+        "WorkingDir": "/usr/share/grafana",
+        "ExposedPorts": {
+          "3000/tcp": {}
+        }
+      }
+    },
+    "Layers": [
+      {
+        "Size": 8120832,
+        "Digest": "sha256:f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870",
+        "DiffID": "sha256:08000c18d16dadf9553d747a58cf44023423a9ab010aab96cf263d2216b8b350"
+      },
+      {
+        "Size": 2560,
+        "Digest": "sha256:9183b65e90ee3f409021ee6aa1702e68978c2cd1c74e812e40c47896f5303b58",
+        "DiffID": "sha256:f8b423b980a888a41adb597d25a208b63179115ad6ff5d96c31c1a8a0bddf650"
+      },
+      {
+        "Size": 8702464,
+        "Digest": "sha256:3f8d5c908dcc36057a55715f0ba351d38093c5e1c62c8dd9ca29f7fb12b32e7a",
+        "DiffID": "sha256:82051154d995c5481e3c42865f7ee09ea91ceff89c37a0f5fdd6533d69304c67"
+      },
+      {
+        "Size": 26550784,
+        "Digest": "sha256:30bb92ff060824778ed37be7ee62a1ca61c8af505a2b40876fc1c91359360e0b",
+        "DiffID": "sha256:6e8df67eea3ff95fb6709729affc078a065b1617ce68e604b4f6e2209f91b7df"
+      },
+      {
+        "Size": 219648,
+        "Digest": "sha256:807a2e881ecd96231081039e34c123beba859d5ce9c6427dea0b9fc8a656be0b",
+        "DiffID": "sha256:c5fbaf9d1415279ff33b0a77ba6597c419d254886eb2d2c39170485afe4dd70f"
+      },
+      {
+        "Size": 109056,
+        "Digest": "sha256:4a4d0948b0bfe88ca6b29e376e700e1453e9b743bd2a5169ee86d0a45dc38174",
+        "DiffID": "sha256:2055574b0c4475cc8a758fc8ca5bd03a9d6d3e9a8335af4d4816300a248eacc7"
+      },
+      {
+        "Size": 382419456,
+        "Digest": "sha256:04f6155c873d58c0223ee7fa3f362ae981628caea9d61d6f21521a22e61cdbb0",
+        "DiffID": "sha256:64cbe7f84782a4bfdcae6caa88f063a82126d22b87a9f0ea763e843ee802118f"
+      },
+      {
+        "Size": 262568448,
+        "Digest": "sha256:85dde7dceb0a185f41fa76e7698f1af1d26e4be1c8e958ef620a233fb713a011",
+        "DiffID": "sha256:017a662351d0ec3dd78e8eea79be06c3a203e2487d1b65c8ed0d66fb4b5f2be1"
+      },
+      {
+        "Size": 37888,
+        "Digest": "sha256:7009d5001b7723cb28304c5ad7389859cc0aa54bcc09c361a836f21f73fc5743",
+        "DiffID": "sha256:c0d30d030e55be45065066f0a1fad16aa16026284dd171b478685aa82c9197f1"
+      },
+      {
+        "Size": 5120,
+        "Digest": "sha256:538deb30e80ca6a7740db8f6b9423f6135efe98b391e909d1c11f84bc27f4098",
+        "DiffID": "sha256:df56c0399d45bb0a517fd9fe8bdbcc3d615da076e98675094c5c7b4900246165"
+      }
+    ]
+  },
+  "Results": [
+    {
+      "Target": "grafana/grafana:latest (alpine 3.21.3)",
+      "Class": "os-pkgs",
+      "Type": "alpine"
+    },
+    {
+      "Target": "Node.js",
+      "Class": "lang-pkgs",
+      "Type": "node-pkg"
+    },
+    {
+      "Target": "usr/share/grafana/bin/grafana",
+      "Class": "lang-pkgs",
+      "Type": "gobinary"
+    },
+    {
+      "Target": "usr/share/grafana/bin/grafana-cli",
+      "Class": "lang-pkgs",
+      "Type": "gobinary"
+    },
+    {
+      "Target": "usr/share/grafana/bin/grafana-server",
+      "Class": "lang-pkgs",
+      "Type": "gobinary"
+    }
+  ]
+}

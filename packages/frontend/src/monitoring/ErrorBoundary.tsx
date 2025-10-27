@@ -120,7 +120,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const { onError, level = 'component', name } = this.props;
     const { errorId } = this.state;
 
@@ -156,7 +156,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
-  private scheduleRetry = () => {
+  private scheduleRetry = (): void => {
     const delay = Math.min(1000 * Math.pow(2, this.state.retryCount), 10000); // Exponential backoff
 
     this.retryTimeoutId = window.setTimeout(() => {
@@ -170,7 +170,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }, delay);
   };
 
-  private resetError = () => {
+  private resetError = (): void => {
     if (this.retryTimeoutId) {
       clearTimeout(this.retryTimeoutId);
       this.retryTimeoutId = null;
@@ -185,13 +185,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     });
   };
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     if (this.retryTimeoutId) {
       clearTimeout(this.retryTimeoutId);
     }
   }
 
-  render() {
+  render(): React.ReactNode {
     if (this.state.hasError && this.state.error && this.state.errorId) {
       const FallbackComponent = this.props.fallback || DefaultErrorFallback;
 
@@ -214,7 +214,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 export const withErrorBoundary = <P extends object>(
   Component: React.ComponentType<P>,
   errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
-) => {
+): React.FC<P> => {
   const WrappedComponent: React.FC<P> = (props) => (
     <ErrorBoundary {...errorBoundaryProps}>
       <Component {...props} />
@@ -227,10 +227,10 @@ export const withErrorBoundary = <P extends object>(
 };
 
 // Utility for async error boundaries
-export const useAsyncError = () => {
+export const useAsyncError = (): ((error: Error) => void) => {
   const [, setError] = React.useState();
 
-  return React.useCallback((error: Error) => {
+  return React.useCallback((error: Error): void => {
     setError(() => {
       throw error;
     });

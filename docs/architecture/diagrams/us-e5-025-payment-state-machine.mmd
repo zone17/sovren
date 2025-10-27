@@ -1,0 +1,46 @@
+stateDiagram-v2
+    [*] --> PENDING: Invoice Created
+
+    PENDING --> PROCESSING: Payment Initiated
+    PENDING --> CANCELLED: User Cancelled
+    PENDING --> EXPIRED: Timeout Reached
+
+    PROCESSING --> COMPLETED: Payment Verified
+    PROCESSING --> FAILED: Payment Error
+
+    FAILED --> PENDING: Retry Payment
+
+    COMPLETED --> PARTIALLY_REFUNDED: Partial Refund
+    COMPLETED --> REFUNDED: Full Refund
+
+    PARTIALLY_REFUNDED --> REFUNDED: Remaining Refund
+
+    CANCELLED --> [*]
+    EXPIRED --> [*]
+    REFUNDED --> [*]
+
+    note right of PENDING
+        Invoice awaiting payment
+        Valid for 1 hour (default)
+    end note
+
+    note right of PROCESSING
+        Payment being verified
+        Transaction in progress
+    end note
+
+    note right of COMPLETED
+        Payment successful
+        Preimage verified
+    end note
+
+    note right of FAILED
+        Payment failed
+        Retryable errors can
+        transition back to PENDING
+    end note
+
+    note right of REFUNDED
+        Full or partial refund
+        completed
+    end note

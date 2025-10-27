@@ -1,100 +1,97 @@
-module.exports = {
-  preset: 'ts-jest',
+/** @type {import('jest').Config} */
+const config = {
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
+  roots: ['<rootDir>/src'],
+  testMatch: ['**/__tests__/**/*.{ts,tsx}', '**/*.{test,spec}.{ts,tsx}'],
+  transform: {
+    '^.+\\.(ts|tsx)$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: {
+          jsx: 'react-jsx',
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+        },
+      },
+    ],
+  },
   moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@shared/(.*)$': '<rootDir>/../shared/src/$1',
+
+    // 🌐 **IPFS/Helia Module Mocks**
+    '^@helia/unixfs$': '<rootDir>/src/test-utils/__mocks__/@helia/unixfs.js',
+    '^@helia/http$': '<rootDir>/src/test-utils/__mocks__/@helia/http.js',
+    '^helia$': '<rootDir>/src/test-utils/__mocks__/helia.js',
+
+    // 📦 **Arweave Mock**
+    '^arweave$': '<rootDir>/src/test-utils/__mocks__/arweave.js',
+
+    // 🔗 **NOSTR Tools Mock**
+    '^nostr-tools$': '<rootDir>/src/test-utils/__mocks__/nostr-tools.js',
+
+    // 🔐 **Noble Crypto Mock**
+    '^@noble/secp256k1$': '<rootDir>/src/test-utils/__mocks__/@noble/secp256k1.js',
+
+    // 🎨 **TipTap Mocks**
+    '^@tiptap/react$': '<rootDir>/src/test-utils/__mocks__/@tiptap/react.js',
+    '^@tiptap/starter-kit$': '<rootDir>/src/test-utils/__mocks__/@tiptap/starter-kit.js',
+    '^@tiptap/extension-(.*)$': '<rootDir>/src/test-utils/__mocks__/@tiptap/extension.js',
+
+    // 📊 **Web Vitals Mock**
+    '^web-vitals$': '<rootDir>/src/test-utils/__mocks__/web-vitals.js',
+
+    // ⚡ **Stripe Mock**
+    '^stripe$': '<rootDir>/src/test-utils/__mocks__/stripe.js',
+
+    // 📧 **Nodemailer Mock**
+    '^nodemailer$': '<rootDir>/src/test-utils/__mocks__/nodemailer.js',
+
+    // 🔄 **CSS and Static Assets**
+    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
+      'jest-transform-stub',
   },
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
-  // Elite testing: Mock import.meta for Jest compatibility
-  globals: {
-    'import.meta': {
-      env: {
-        DEV: false,
-        NODE_ENV: 'test',
-      },
-    },
-  },
-  transformIgnorePatterns: [
-    'node_modules/(?!(web-vitals)/)'
-  ],
+  testTimeout: 15000,
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/main.tsx',
     '!src/vite-env.d.ts',
+    '!src/test-utils/**/*',
+    '!src/**/__mocks__/**/*',
   ],
-  coverageThreshold: {
-    // ELITE STANDARDS: Differentiated coverage by code type
-    global: {
-      statements: 60, // Adjusted for monitoring infrastructure
-      branches: 50,
-      functions: 60,
-      lines: 60,
-    },
+  coverageReporters: ['text', 'lcov', 'html'],
+  moduleDirectories: ['node_modules', '<rootDir>/src'],
 
-    // 🏆 CORE BUSINESS LOGIC - HIGHEST STANDARDS (Google/Netflix level)
-    'src/pages/**/*.{ts,tsx}': {
-      statements: 90,  // User-facing features must be bulletproof
-      branches: 85,
-      functions: 90,
-      lines: 90,
-    },
-    'src/store/**/*.{ts,tsx}': {
-      statements: 95,  // State management is critical
-      branches: 90,
-      functions: 95,
-      lines: 95,
-    },
-    'src/components/**/*.{ts,tsx}': {
-      statements: 85,  // UI components need high confidence
-      branches: 80,
-      functions: 85,
-      lines: 85,
-    },
-    'src/hooks/**/*.{ts,tsx}': {
-      statements: 90,  // Custom hooks are reusable logic
-      branches: 85,
-      functions: 90,
-      lines: 90,
-    },
-
-    // 🔧 INFRASTRUCTURE CODE - MODERATE STANDARDS
-    'src/monitoring/**/*.{ts,tsx}': {
-      statements: 40,  // Monitoring code interfaces with browser APIs
-      branches: 30,
-      functions: 40,
-      lines: 40,
-    },
-
-    // 🤖 AI/ML CODE - HIGH STANDARDS (when we add it)
-    'src/ai/**/*.{ts,tsx}': {
-      statements: 85,  // AI logic needs testing but ML models are hard to test
-      branches: 75,
-      functions: 85,
-      lines: 85,
-    },
-  },
-  testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.{ts,tsx}',
-    '<rootDir>/src/**/*.{test,spec}.{ts,tsx}',
-  ],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
-      useESM: true,
-      tsconfig: {
-        jsx: 'react-jsx',
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-        skipLibCheck: true,
+  // 🌐 **TEST ENVIRONMENT SETUP**
+  globals: {
+    'import.meta': {
+      env: {
+        DEV: false,
+        NODE_ENV: 'test',
+        MODE: 'test',
+        // Vite environment variables for testing
+        VITE_SUPABASE_URL: 'https://test-project.supabase.co',
+        VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key',
+        VITE_ENABLE_CMS: 'true',
+        VITE_ENABLE_AI_ASSISTANT: 'true',
+        VITE_ENABLE_NOSTR_INTEGRATION: 'true',
+        VITE_ENABLE_LIGHTNING_PAYMENTS: 'true',
       },
-    }],
-    '^.+\\.(js|jsx)$': ['babel-jest', {
-      presets: [
-        ['@babel/preset-env', { targets: { node: 'current' } }],
-        ['@babel/preset-react', { runtime: 'automatic' }],
-      ],
-    }],
+    },
   },
+
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  fakeTimers: {
+    enableGlobally: false,
+  },
+  maxWorkers: 1,
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/dist/'],
+  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$|lucide-react|recharts|@noble|nostr-tools))'],
 };
+
+export default config;

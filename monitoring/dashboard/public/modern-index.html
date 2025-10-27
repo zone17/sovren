@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sovren Agent Development Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="modern-styles.css" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <h1 class="title">
+            <span class="icon">🤖</span>
+            Sovren Agent Dashboard
+          </h1>
+          <div class="project-info">
+            <span class="project-id" id="projectId">Loading...</span>
+            <span class="phase-badge" id="phaseBadge">-</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="uptime-container">
+            <span class="uptime-label">Uptime:</span>
+            <span class="uptime-value" id="uptime">00:00:00</span>
+          </div>
+          <button class="refresh-btn" id="refreshBtn" title="Refresh data">
+            <span class="icon">🔄</span>
+            Refresh
+          </button>
+          <div class="connection-status" id="connectionStatus">
+            <span class="status-dot"></span>
+            <span class="status-text">Connecting...</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card stat-completed" data-category="completed">
+          <div class="stat-content">
+            <div class="stat-header">
+              <div class="stat-icon">✅</div>
+              <div class="stat-change" id="completedChange">+0</div>
+            </div>
+            <div class="stat-value" id="statCompleted">0</div>
+            <div class="stat-label">Completed Tasks</div>
+          </div>
+        </div>
+
+        <div class="stat-card stat-active" data-category="active">
+          <div class="stat-content">
+            <div class="stat-header">
+              <div class="stat-icon">⚡</div>
+              <div class="stat-change" id="activeChange">+0</div>
+            </div>
+            <div class="stat-value" id="statActive">0</div>
+            <div class="stat-label">Active Tasks</div>
+          </div>
+        </div>
+
+        <div class="stat-card stat-blocked" data-category="blocked">
+          <div class="stat-content">
+            <div class="stat-header">
+              <div class="stat-icon">🚫</div>
+              <div class="stat-change" id="blockedChange">+0</div>
+            </div>
+            <div class="stat-value" id="statBlocked">0</div>
+            <div class="stat-label">Blocked Tasks</div>
+          </div>
+        </div>
+
+        <div class="stat-card stat-total" data-category="all">
+          <div class="stat-content">
+            <div class="stat-header">
+              <div class="stat-icon">📊</div>
+              <div class="stat-change" id="totalChange">+0</div>
+            </div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Tasks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Section -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Overall Progress</span>
+          <span class="progress-percentage" id="progressPercentage">0%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar">
+            <div class="progress-shine"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tasks Grid -->
+      <div class="tasks-grid">
+        <!-- Active Tasks -->
+        <div class="tasks-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span class="icon">⚡</span>
+              Active Tasks
+            </h2>
+            <span class="task-count" id="activeTaskCount">0</span>
+          </div>
+          <div class="task-list" id="activeTaskList">
+            <div class="empty-state">
+              <div class="empty-icon">💤</div>
+              <p>No active tasks</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blocked Tasks -->
+        <div class="tasks-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span class="icon">🚫</span>
+              Blocked Tasks
+            </h2>
+            <span class="task-count" id="blockedTaskCount">0</span>
+          </div>
+          <div class="task-list" id="blockedTaskList">
+            <div class="empty-state">
+              <div class="empty-icon">✨</div>
+              <p>No blocked tasks</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Logs -->
+      <div class="logs-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span class="icon">📝</span>
+            Activity Logs
+          </h2>
+          <div class="logs-controls">
+            <label class="auto-scroll-toggle">
+              <input type="checkbox" id="autoScrollCheckbox" checked />
+              <span>Auto-scroll</span>
+            </label>
+            <button class="clear-logs-btn" id="clearLogsBtn" title="Clear logs view">
+              <span class="icon">🗑️</span>
+            </button>
+          </div>
+        </div>
+        <div class="logs-container" id="logsContainer">
+          <div class="log-entry">
+            <span class="log-timestamp">[2025-01-24T00:00:00Z]</span>
+            <span class="log-level INFO">[INFO]</span>
+            <span class="log-agent">[SYSTEM]</span>
+            <span class="log-message">Waiting for log data...</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <span>Last Updated: <span id="lastUpdated">Never</span></span>
+        <span>|</span>
+        <span>Socket.IO v4.6</span>
+        <span>|</span>
+        <span>Built for Sovren</span>
+      </div>
+    </footer>
+
+    <!-- Task Detail Modal -->
+    <div class="modal-overlay" id="taskModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="modalTitle">Task Details</h3>
+          <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          <!-- Dynamic content will be inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="modern-app.js"></script>
+  </body>
+</html>

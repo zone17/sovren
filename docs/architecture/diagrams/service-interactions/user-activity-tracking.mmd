@@ -1,0 +1,155 @@
+%% User Activity Tracking - Service Interaction Sequence
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete sequence diagram for user activity tracking and analytics workflow
+
+sequenceDiagram
+    actor User as User
+    participant WebApp as Web Application
+    participant API as API Gateway
+    participant Activity as User Activity Service
+    participant Analytics as User Analytics Service
+    participant Repo as Repository Factory
+    participant DB as PostgreSQL
+    participant EventBus as Event Bus Service
+    participant Cache as Cache Service
+    participant Recommendation as Content Recommendation Service
+    participant Notification as Notification Service
+
+    rect rgb(230, 245, 255)
+        Note over User,Notification: Activity Tracking
+        User->>WebApp: View Content
+        WebApp->>API: POST /api/activity/track
+        API->>Activity: trackActivity({<br/>  type: 'content_view',<br/>  contentId: '123',<br/>  userId: 'abc',<br/>  metadata: {...}<br/>})
+
+        Activity->>Repo: saveActivity()
+        Repo->>DB: INSERT INTO user_activities
+        DB-->>Repo: Activity ID
+
+        Activity->>EventBus: publish('activity.tracked', data)
+        Activity-->>API: Success (async)
+        API-->>WebApp: 200 OK
+
+        EventBus->>Analytics: handleActivity(data)
+        Analytics->>Cache: increment(user_activity_count_{userId})
+        Analytics->>Repo: updateEngagementScore(userId)
+        Repo->>DB: UPDATE user_metrics
+
+        EventBus->>Recommendation: updateUserProfile(data)
+        Recommendation->>Cache: update(user_interests_{userId})
+    end
+
+    rect rgb(232, 245, 233)
+        Note over User,Notification: Engagement Action
+        User->>WebApp: Like Content
+        WebApp->>API: POST /api/activity/track
+        API->>Activity: trackActivity({<br/>  type: 'content_like',<br/>  contentId: '123',<br/>  userId: 'abc'<br/>})
+
+        Activity->>Repo: saveActivity()
+        Repo->>DB: INSERT INTO user_activities
+        Activity->>Repo: updateContentMetrics(contentId)
+        Repo->>DB: UPDATE content_metrics SET likes++
+
+        Activity->>EventBus: publish('activity.tracked', data)
+        Activity-->>API: Success
+
+        EventBus->>Analytics: handleEngagement(data)
+        Analytics->>Repo: incrementEngagementCount(userId)
+        Analytics->>Cache: set(last_active_{userId}, now())
+
+        EventBus->>Notification: notifyCreator(contentLiked)
+        Notification->>Repo: getCreator(contentId)
+        Notification->>EventBus: publish('notification.created')
+
+        EventBus->>Recommendation: recordPreference(userId, contentId, 'like')
+        Recommendation->>Cache: update(user_preferences_{userId})
+    end
+
+    rect rgb(255, 243, 224)
+        Note over User,Notification: Session Analytics
+        User->>WebApp: End Session
+        WebApp->>API: POST /api/activity/session-end
+        API->>Activity: finalizeSession(sessionId)
+
+        Activity->>Repo: getSessionActivities(sessionId)
+        Repo->>DB: SELECT FROM user_activities WHERE session_id
+        DB-->>Repo: Activity List
+
+        Activity->>Analytics: calculateSessionMetrics(activities)
+        Analytics->>Analytics: Compute:<br/>- Session duration<br/>- Pages viewed<br/>- Engagement rate<br/>- Content consumed
+
+        Analytics->>Repo: saveSessionSummary()
+        Repo->>DB: INSERT INTO session_summaries
+
+        Analytics->>EventBus: publish('session.completed', data)
+        Activity-->>API: Success
+        API-->>WebApp: 200 OK
+
+        EventBus->>Analytics: updateDailyMetrics(data)
+        Analytics->>Repo: updateUserStats(userId)
+        Repo->>DB: UPDATE user_statistics
+
+        EventBus->>Recommendation: updateRecommendations(userId)
+        Recommendation->>Cache: invalidate(recommendations_{userId})
+    end
+
+    rect rgb(248, 231, 248)
+        Note over User,Notification: Activity Retrieval
+        User->>WebApp: View Activity History
+        WebApp->>API: GET /api/activity/history
+        API->>Cache: get(activity_history_{userId})
+
+        alt Cache Hit
+            Cache-->>API: Cached History
+        else Cache Miss
+            API->>Activity: getActivityHistory(userId, filters)
+            Activity->>Repo: findActivities(userId)
+            Repo->>DB: SELECT FROM user_activities
+            DB-->>Repo: Activity Records
+
+            Activity->>Analytics: enrichWithMetrics(activities)
+            Analytics-->>Activity: Enriched Data
+
+            Activity-->>API: Activity History
+            API->>Cache: set(activity_history_{userId}, data, ttl: 300)
+        end
+
+        API-->>WebApp: 200 OK with History
+        WebApp-->>User: Display Activity Timeline
+    end
+
+    rect rgb(255, 235, 238)
+        Note over User,Notification: Analytics Dashboard
+        User->>WebApp: View Personal Analytics
+        WebApp->>API: GET /api/analytics/user/{userId}
+        API->>Analytics: getUserAnalytics(userId)
+
+        Analytics->>Cache: get(user_analytics_{userId})
+
+        alt Cache Hit
+            Cache-->>Analytics: Cached Analytics
+        else Cache Miss
+            Analytics->>Repo: getEngagementMetrics(userId)
+            Analytics->>Repo: getActivitySummary(userId)
+            Analytics->>Repo: getContentConsumption(userId)
+
+            par Parallel Data Fetch
+                Repo->>DB: SELECT engagement_metrics
+                Repo->>DB: SELECT activity_summaries
+                Repo->>DB: SELECT content_interactions
+            end
+
+            DB-->>Repo: Metrics Data
+            Repo-->>Analytics: Raw Data
+
+            Analytics->>Analytics: Calculate:<br/>- Engagement score<br/>- Activity trends<br/>- Content preferences<br/>- Platform usage
+
+            Analytics->>Cache: set(user_analytics_{userId}, data, ttl: 600)
+        end
+
+        Analytics-->>API: Analytics Dashboard Data
+        API-->>WebApp: 200 OK
+        WebApp-->>User: Display Personal Analytics
+    end
+
+    Note over User,Notification: Complete activity tracking:<br/>Real-time tracking → Analytics → Recommendations

@@ -1,0 +1,47 @@
+graph TD
+    START([Payment Created]) --> PENDING[PENDING State]
+
+    PENDING -->|User Initiates| PROCESSING[PROCESSING State]
+    PENDING -->|Timeout| EXPIRED[EXPIRED State]
+    PENDING -->|Validation Fails| FAILED[FAILED State]
+
+    PROCESSING -->|Provider Confirms| COMPLETED[COMPLETED State]
+    PROCESSING -->|Provider Rejects| FAILED
+
+    COMPLETED -->|Refund Request| REFUNDED[REFUNDED State]
+
+    FAILED -->|Retry Attempt| PENDING
+
+    EXPIRED --> TERMINAL_E([Terminal])
+    REFUNDED --> TERMINAL_R([Terminal])
+
+    %% Validation Annotations
+    PENDING -.->|Atomic Check| DB1[(Database)]
+    PROCESSING -.->|Atomic Check| DB2[(Database)]
+    COMPLETED -.->|Atomic Check| DB3[(Database)]
+    FAILED -.->|Atomic Check| DB4[(Database)]
+
+    %% Event Logging
+    PENDING -.->|Event Created| EVENTS1[(Payment Events)]
+    PROCESSING -.->|Event Created| EVENTS2[(Payment Events)]
+    COMPLETED -.->|Event Created| EVENTS3[(Payment Events)]
+    FAILED -.->|Event Created| EVENTS4[(Payment Events)]
+    EXPIRED -.->|Event Created| EVENTS5[(Payment Events)]
+    REFUNDED -.->|Event Created| EVENTS6[(Payment Events)]
+
+    style PENDING fill:#fff3cd
+    style PROCESSING fill:#cfe2ff
+    style COMPLETED fill:#d1e7dd
+    style FAILED fill:#f8d7da
+    style EXPIRED fill:#dee2e6
+    style REFUNDED fill:#dee2e6
+    style DB1 fill:#e7f3ff
+    style DB2 fill:#e7f3ff
+    style DB3 fill:#e7f3ff
+    style DB4 fill:#e7f3ff
+    style EVENTS1 fill:#e7f3ff
+    style EVENTS2 fill:#e7f3ff
+    style EVENTS3 fill:#e7f3ff
+    style EVENTS4 fill:#e7f3ff
+    style EVENTS5 fill:#e7f3ff
+    style EVENTS6 fill:#e7f3ff

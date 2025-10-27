@@ -1,0 +1,110 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#1e40af','primaryTextColor':'#fff','primaryBorderColor':'#3b82f6','lineColor':'#6366f1','secondaryColor':'#059669','tertiaryColor':'#dc2626'}}}%%
+flowchart TD
+    Start([Webhook Issue Detected]) --> CheckSymptom{What's wrong?}
+
+    CheckSymptom -->|Not received| NotReceived[Webhook not arriving]
+    CheckSymptom -->|Rejected| Rejected[Webhook rejected 403]
+    CheckSymptom -->|Duplicate| Duplicate[Duplicate webhooks]
+    CheckSymptom -->|Out of order| OutOfOrder[Out-of-order delivery]
+
+    %% Not Received Path
+    NotReceived --> CheckProvider[Check provider<br/>dashboard]
+    CheckProvider --> ProviderSent{Provider shows<br/>webhook sent?}
+    ProviderSent -->|No| ProviderFail[Provider delivery<br/>failure]
+    ProviderSent -->|Yes| CheckFirewall[Check firewall<br/>and network]
+
+    ProviderFail --> ContactProvider[Contact provider<br/>support]
+    ContactProvider --> VerifyEndpoint[Verify webhook<br/>endpoint URL]
+
+    CheckFirewall --> FirewallOK{Traffic reaching<br/>server?}
+    FirewallOK -->|No| OpenFirewall[Open firewall rules<br/>for provider IPs]
+    FirewallOK -->|Yes| CheckAppLogs[Check application<br/>logs]
+
+    CheckAppLogs --> InLogs{Webhook in<br/>app logs?}
+    InLogs -->|No| AppNotReceiving[App not receiving<br/>webhooks]
+    InLogs -->|Yes| ProcessingFailed[Webhook received<br/>but processing failed]
+
+    %% Rejected Path
+    Rejected --> CheckRejectionReason[Check rejection<br/>logs]
+    CheckRejectionReason --> RejectionType{Rejection<br/>reason?}
+
+    RejectionType -->|Invalid signature| SigFailure[Signature verification<br/>failed]
+    RejectionType -->|Timestamp expired| TimestampIssue[Timestamp outside<br/>tolerance]
+    RejectionType -->|Rate limited| RateLimited[Rate limit exceeded]
+    RejectionType -->|Replay detected| ReplayAttack[Replay attack<br/>prevented]
+
+    SigFailure --> GetSecret[Get current webhook<br/>secret from provider]
+    GetSecret --> CompareSecret{Does secret<br/>match config?}
+    CompareSecret -->|No| UpdateSecretEnv[Update .env with<br/>correct secret]
+    CompareSecret -->|Yes| CheckRotation{Secret recently<br/>rotated?}
+    CheckRotation -->|Yes| AddRotationSecret[Add old secret to<br/>WEBHOOK_SECRET_ROTATION]
+    CheckRotation -->|No| ManualTest[Manually test<br/>signature generation]
+
+    TimestampIssue --> CheckServerTime[Check server time<br/>with NTP]
+    CheckServerTime --> TimeDrift{Time drift<br/>detected?}
+    TimeDrift -->|Yes| SyncNTP[Sync with NTP:<br/>ntpdate time.nist.gov]
+    TimeDrift -->|No| CheckTolerance[Check timestamp<br/>tolerance setting]
+
+    RateLimited --> CheckRateLimit[Check rate limit<br/>configuration]
+    CheckRateLimit --> TooLow{Limit too<br/>restrictive?}
+    TooLow -->|Yes| IncreaseLimit[Increase rate limit<br/>or whitelist provider]
+    TooLow -->|No| CheckAbuse[Investigate potential<br/>abuse]
+
+    ReplayAttack --> CheckNonce[Check webhook ID<br/>in logs]
+    CheckNonce --> LegitReplay{Legitimate<br/>retry?}
+    LegitReplay -->|Yes| ClearNonceCache[Clear nonce cache<br/>for this webhook]
+    LegitReplay -->|No| BlockSource[Block source IP<br/>if malicious]
+
+    %% Duplicate Path
+    Duplicate --> CheckIdempotency[Check idempotency<br/>key handling]
+    CheckIdempotency --> HasIdempotency{Idempotency<br/>implemented?}
+    HasIdempotency -->|No| ImplementIdempotency[Implement webhook ID<br/>tracking in Redis]
+    HasIdempotency -->|Yes| CheckTTL{TTL appropriate?<br/>24 hours]
+    CheckTTL -->|No| AdjustTTL[Adjust TTL to<br/>24-48 hours]
+    CheckTTL -->|Yes| CheckProvider2[Provider retrying<br/>unnecessarily?]
+
+    CheckProvider2 --> ConfigureRetry[Configure provider<br/>retry settings]
+
+    %% Out of Order Path
+    OutOfOrder --> CheckVersioning[Check version-based<br/>concurrency control]
+    CheckVersioning --> HasVersioning{Using version<br/>numbers?}
+    HasVersioning -->|No| AddVersioning[Add version column<br/>to payments table]
+    HasVersioning -->|Yes| CheckIdempotent{Allowing idempotent<br/>transitions?}
+    CheckIdempotent -->|No| AllowIdempotent[Allow same-state<br/>transitions]
+    CheckIdempotent -->|Yes| CheckProgressive[Check progressive<br/>state detection]
+
+    CheckProgressive --> ImplementProgressive[Ignore webhooks for<br/>already-reached states]
+
+    %% Resolution paths
+    UpdateSecretEnv --> RestartApp[Restart application]
+    AddRotationSecret --> RestartApp
+    SyncNTP --> VerifyTime[Verify time<br/>synchronized]
+    IncreaseLimit --> RestartApp
+    ClearNonceCache --> RetryWebhook[Retry webhook<br/>delivery]
+    ImplementIdempotency --> DeployCode[Deploy code<br/>changes]
+    AddVersioning --> DeployCode
+    AllowIdempotent --> DeployCode
+    ImplementProgressive --> DeployCode
+
+    RestartApp --> TestWebhook[Test webhook<br/>delivery]
+    VerifyTime --> TestWebhook
+    RetryWebhook --> TestWebhook
+    DeployCode --> TestWebhook
+    ConfigureRetry --> TestWebhook
+
+    TestWebhook --> Success{Webhooks<br/>working?}
+    Success -->|Yes| Monitor[Monitor for<br/>recurrence]
+    Success -->|No| Escalate[Escalate to<br/>engineering team]
+
+    Monitor --> End([Issue Resolved])
+    Escalate --> End
+
+    style Start fill:#1e40af,stroke:#3b82f6,color:#fff
+    style SigFailure fill:#dc2626,stroke:#ef4444,color:#fff
+    style TimestampIssue fill:#f59e0b,stroke:#fbbf24,color:#000
+    style RateLimited fill:#f59e0b,stroke:#fbbf24,color:#000
+    style ReplayAttack fill:#dc2626,stroke:#ef4444,color:#fff
+    style DeployCode fill:#059669,stroke:#10b981,color:#fff
+    style Monitor fill:#059669,stroke:#10b981,color:#fff
+    style End fill:#7c3aed,stroke:#8b5cf6,color:#fff
+    style Escalate fill:#dc2626,stroke:#ef4444,color:#fff

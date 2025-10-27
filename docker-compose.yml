@@ -1,0 +1,784 @@
+# Sovren Elite Development Environment
+# Comprehensive Docker Compose Configuration for Multi-Service Architecture
+# Following Elite Engineering Standards with Production-Ready Patterns
+
+version: '3.8'
+
+# ====================================================================
+# SERVICES DEFINITION
+# ====================================================================
+
+services:
+  # ----------------------------------------------------------------
+  # CORE APPLICATION SERVICES
+  # ----------------------------------------------------------------
+
+  # Backend API Service - Node.js/TypeScript
+  backend:
+    build:
+      context: ./packages/backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sovren-backend-dev
+    hostname: backend-dev
+    ports:
+      - '3001:3001'
+      - '9229:9229' # Node.js debugging port
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - LOG_LEVEL=debug
+      - DEBUG=sovren:*
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      # Database Configuration
+      - DATABASE_URL=postgresql://sovren:dev_password_change_in_production@postgres:5432/sovren_dev
+      - REDIS_URL=redis://redis:6379
+      # External Services
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - LNBITS_API_URL=${LNBITS_API_URL}
+      - LNBITS_ADMIN_KEY=${LNBITS_ADMIN_KEY}
+      - LNBITS_INVOICE_READ_KEY=${LNBITS_INVOICE_READ_KEY}
+      - NOSTR_RELAYS=${NOSTR_RELAYS}
+    env_file:
+      - ./packages/backend/.env.development
+    volumes:
+      # Source code volumes with optimized consistency
+      - ./packages/backend/src:/app/src:delegated
+      - ./packages/backend/package.json:/app/package.json:delegated
+      - ./packages/backend/tsconfig.json:/app/tsconfig.json:delegated
+      - ./packages/shared:/app/shared:delegated
+      # Named volumes for performance
+      - backend_node_modules:/app/node_modules
+      - backend_dist:/app/dist
+      # Configuration and logs
+      - ./logs/backend:/app/logs
+      - ./docker/ssl:/app/ssl:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mcp-gateway:
+        condition: service_healthy
+    networks:
+      - sovren-network
+      - database-network
+      - cache-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - production
+
+  # Frontend React Application - Vite/TypeScript
+  frontend:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sovren-frontend-dev
+    hostname: frontend-dev
+    ports:
+      - '5173:5173' # Vite dev server
+      - '4173:4173' # Vite preview server
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
+      - VITE_SUPABASE_URL=${SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - VITE_LNBITS_API_URL=${LNBITS_API_URL}
+      - VITE_NOSTR_RELAYS=${NOSTR_RELAYS}
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    env_file:
+      - ./packages/frontend/.env.development
+    volumes:
+      # Source code volumes with optimized consistency
+      - ./packages/frontend/src:/app/src:delegated
+      - ./packages/frontend/public:/app/public:delegated
+      - ./packages/frontend/index.html:/app/index.html:delegated
+      - ./packages/frontend/vite.config.ts:/app/vite.config.ts:delegated
+      - ./packages/frontend/package.json:/app/package.json:delegated
+      - ./packages/shared:/app/shared:delegated
+      # Named volumes for performance
+      - frontend_node_modules:/app/node_modules
+      - frontend_dist:/app/dist
+      # Configuration and logs
+      - ./logs/frontend:/app/logs
+    depends_on:
+      - backend
+    networks:
+      - sovren-network
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:5173/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - production
+
+  # ----------------------------------------------------------------
+  # INFRASTRUCTURE SERVICES
+  # ----------------------------------------------------------------
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: sovren-postgres-dev
+    hostname: postgres-dev
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=sovren_dev
+      - POSTGRES_USER=sovren
+      - POSTGRES_PASSWORD=dev_password_change_in_production
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+      - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
+    volumes:
+      # Data persistence
+      - postgres_data:/var/lib/postgresql/data
+      # Configuration
+      - ./docker/postgres/postgresql.dev.conf:/etc/postgresql/postgresql.conf:ro
+      # Initialization scripts
+      - ./packages/backend/src/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./packages/backend/src/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      # Logs
+      - ./logs/postgres:/var/log/postgresql
+    networks:
+      - database-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sovren -d sovren_dev']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - minimal
+
+  # Redis Cache and Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: sovren-redis-dev
+    hostname: redis-dev
+    ports:
+      - '6379:6379'
+    volumes:
+      # Data persistence
+      - redis_data:/data
+      # Configuration
+      - ./docker/redis/redis.dev.conf:/usr/local/etc/redis/redis.conf:ro
+      # Logs
+      - ./logs/redis:/var/log/redis
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - cache-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - minimal
+
+  # ----------------------------------------------------------------
+  # GATEWAY AND PROXY SERVICES
+  # ----------------------------------------------------------------
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: sovren-nginx-dev
+    hostname: nginx-dev
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      # Configuration
+      - ./docker/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      # SSL certificates
+      - ./docker/ssl:/etc/nginx/ssl:ro
+      # Logs
+      - ./logs/nginx:/var/log/nginx
+      # Static files
+      - ./packages/frontend/dist:/usr/share/nginx/html/static:ro
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - sovren-network
+      - gateway-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - production
+
+  # MCP Gateway Service
+  mcp-gateway:
+    build:
+      context: ./docker/mcp-gateway
+      dockerfile: Dockerfile
+    container_name: sovren-mcp-gateway-dev
+    hostname: mcp-gateway-dev
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JWT_SECRET_FILE=/run/secrets/mcp_jwt_secret
+      - ADMIN_PASSWORD=${MCP_ADMIN_PASSWORD:-admin123}
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3001
+    volumes:
+      # Configuration
+      - ./docker/mcp-gateway/src:/app/src:delegated
+      - ./docker/mcp-gateway/package.json:/app/package.json:delegated
+      # Logs
+      - ./logs/mcp:/var/log/mcp
+    secrets:
+      - mcp_jwt_secret
+    networks:
+      - sovren-network
+      - mcp-network
+    healthcheck:
+      test: ['CMD', 'node', 'healthcheck.js']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - production
+
+  # ----------------------------------------------------------------
+  # MONITORING AND OBSERVABILITY
+  # ----------------------------------------------------------------
+
+  # Prometheus Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sovren-prometheus-dev
+    hostname: prometheus-dev
+    ports:
+      - '9090:9090'
+    volumes:
+      # Configuration
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/mcp_rules.yml:/etc/prometheus/mcp_rules.yml:ro
+      # Data persistence
+      - prometheus_data:/prometheus
+      # Logs
+      - ./logs/prometheus:/var/log/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - backend
+      - mcp-gateway
+    networks:
+      - monitoring-network
+      - sovren-network
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:9090/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - monitoring
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sovren-grafana-dev
+    hostname: grafana-dev
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      # Data persistence
+      - grafana_data:/var/lib/grafana
+      # Configuration
+      - ./docker/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      # Logs
+      - ./logs/grafana:/var/log/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - monitoring
+
+  # Fluent Bit Log Aggregation
+  fluent-bit:
+    image: fluent/fluent-bit:latest
+    container_name: sovren-fluent-bit-dev
+    hostname: fluent-bit-dev
+    volumes:
+      # Configuration
+      - ./docker/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      # Log sources
+      - ./logs:/var/log:ro
+      # Data persistence
+      - fluent_bit_data:/fluent-bit/data
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:2020/api/v1/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.125'
+          memory: 64M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+      - monitoring
+
+  # ----------------------------------------------------------------
+  # DEVELOPMENT AND TESTING SERVICES
+  # ----------------------------------------------------------------
+
+  # Mailhog Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sovren-mailhog-dev
+    hostname: mailhog-dev
+    ports:
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
+    networks:
+      - sovren-network
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:8025/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+        reservations:
+          cpus: '0.125'
+          memory: 32M
+    restart: unless-stopped
+    profiles:
+      - development
+      - testing
+
+  # Test Database for Integration Testing
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: sovren-postgres-test
+    hostname: postgres-test
+    ports:
+      - '5433:5432'
+    environment:
+      - POSTGRES_DB=sovren_test
+      - POSTGRES_USER=sovren_test
+      - POSTGRES_PASSWORD=test_password
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./packages/backend/src/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - test-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sovren_test -d sovren_test']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    profiles:
+      - testing
+
+  # Redis Test Instance
+  redis-test:
+    image: redis:7-alpine
+    container_name: sovren-redis-test
+    hostname: redis-test
+    ports:
+      - '6380:6379'
+    volumes:
+      - redis_test_data:/data
+      - ./docker/redis/redis.test.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - test-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.125'
+          memory: 64M
+    restart: unless-stopped
+    profiles:
+      - testing
+
+# ====================================================================
+# NETWORKS CONFIGURATION
+# ====================================================================
+
+networks:
+  # Main application network
+  sovren-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.enable_ipv6: 'false'
+      com.docker.network.bridge.name: sovren-bridge
+
+  # Database network (restricted access)
+  database-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/16
+          gateway: 172.21.0.1
+    driver_opts:
+      com.docker.network.enable_ipv6: 'false'
+      com.docker.network.bridge.name: sovren-db-bridge
+
+  # Cache network (restricted access)
+  cache-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.22.0.0/16
+          gateway: 172.22.0.1
+    driver_opts:
+      com.docker.network.enable_ipv6: 'false'
+      com.docker.network.bridge.name: sovren-cache-bridge
+
+  # Gateway network (DMZ)
+  gateway-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/16
+          gateway: 172.23.0.1
+    driver_opts:
+      com.docker.network.enable_ipv6: 'false'
+      com.docker.network.bridge.name: sovren-gateway-bridge
+
+  # MCP network (isolated)
+  mcp-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.24.0.0/16
+          gateway: 172.24.0.1
+    driver_opts:
+      com.docker.network.enable_ipv6: 'false'
+      com.docker.network.bridge.name: sovren-mcp-bridge
+
+  # Monitoring network
+  monitoring-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
+    driver_opts:
+      com.docker.network.enable_ipv6: 'false'
+      com.docker.network.bridge.name: sovren-monitoring-bridge
+
+  # Test network (isolated)
+  test-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.26.0.0/16
+          gateway: 172.26.0.1
+    driver_opts:
+      com.docker.network.enable_ipv6: 'false'
+      com.docker.network.bridge.name: sovren-test-bridge
+
+# ====================================================================
+# VOLUMES CONFIGURATION
+# ====================================================================
+
+volumes:
+  # Application data volumes
+  backend_node_modules:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/backend_node_modules
+
+  frontend_node_modules:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/frontend_node_modules
+
+  backend_dist:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/backend_dist
+
+  frontend_dist:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/frontend_dist
+
+  # Database volumes
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/postgres_dev_data
+
+  postgres_test_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/postgres_test_data
+
+  # Cache volumes
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/redis_dev_data
+
+  redis_test_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/redis_test_data
+
+  # Monitoring volumes
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/prometheus_data
+
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/grafana_data
+
+  fluent_bit_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/fluent_bit_data
+
+# ====================================================================
+# SECRETS CONFIGURATION
+# ====================================================================
+
+secrets:
+  mcp_jwt_secret:
+    file: ./docker/ssl/mcp_jwt_secret.txt
+
+# ====================================================================
+# CONFIGURATION
+# ====================================================================
+
+# Global configuration
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+x-environment-common: &environment-common
+  TZ: UTC
+  NODE_ENV: development
+  LOG_LEVEL: debug
+
+x-healthcheck-common: &healthcheck-common
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 30s
+
+x-resources-small: &resources-small
+  limits:
+    cpus: '0.25'
+    memory: 128M
+  reservations:
+    cpus: '0.125'
+    memory: 64M
+
+x-resources-medium: &resources-medium
+  limits:
+    cpus: '0.5'
+    memory: 256M
+  reservations:
+    cpus: '0.25'
+    memory: 128M
+
+x-resources-large: &resources-large
+  limits:
+    cpus: '1.0'
+    memory: 512M
+  reservations:
+    cpus: '0.5'
+    memory: 256M

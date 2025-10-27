@@ -1,0 +1,42 @@
+stateDiagram-v2
+    [*] --> Initializing: Component mounted
+
+    Initializing --> Loading: Subscribe to DMs
+    Loading --> Empty: No messages
+    Loading --> ThreadList: Messages loaded
+    Loading --> Error: Subscription failed
+
+    Empty --> ThreadList: First message received
+
+    ThreadList --> ThreadSelected: User selects thread
+    ThreadSelected --> ThreadList: Back to list
+    ThreadSelected --> Composing: User types message
+
+    Composing --> Encrypting: User sends
+    Encrypting --> Publishing: Encryption complete
+    Publishing --> ThreadSelected: Publish success
+    Publishing --> Error: Publish failed
+
+    ThreadSelected --> MarkingRead: Auto-mark as read
+    MarkingRead --> ThreadSelected: Update complete
+
+    ThreadList --> Refreshing: Pull to refresh
+    Refreshing --> ThreadList: Refresh complete
+
+    ThreadSelected --> Deleting: User deletes thread
+    Deleting --> ThreadList: Delete complete
+
+    Error --> ThreadList: Retry success
+    Error --> [*]: Fatal error
+
+    note right of Encrypting
+        NIP04Service encrypts
+        message using recipient's
+        public key
+    end note
+
+    note right of Publishing
+        EventPublisherService
+        publishes kind 4 event
+        to relays
+    end note

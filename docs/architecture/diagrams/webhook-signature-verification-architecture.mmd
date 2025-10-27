@@ -1,0 +1,51 @@
+graph TB
+    subgraph "External System"
+        LN[Lightning Network Node]
+    end
+
+    subgraph "Sovren Backend - Webhook Security Layer"
+        MW[Webhook Verification Middleware]
+        WSV[WebhookSignatureValidator]
+        ERR[Error Handler]
+    end
+
+    subgraph "Webhook Processing"
+        WH[Webhook Handler]
+        PSM[Payment State Machine]
+        DB[(Database)]
+    end
+
+    subgraph "Security Components"
+        TS[Timestamp Validator]
+        SIG[HMAC-SHA256 Signature]
+        SEC[Secret Manager]
+    end
+
+    LN -->|POST /api/webhooks/payment| MW
+    MW -->|Extract Headers & Body| WSV
+
+    WSV -->|Validate Timestamp| TS
+    TS -->|Check Age < 5min| WSV
+
+    WSV -->|Compute HMAC| SIG
+    SIG -->|Load Secret| SEC
+    SIG -->|timingSafeEqual| WSV
+
+    WSV -->|Valid| WH
+    WSV -->|Invalid Signature| ERR
+    WSV -->|Expired Timestamp| ERR
+
+    ERR -->|401 Unauthorized| LN
+    ERR -->|403 Forbidden| LN
+
+    WH -->|Process Payment| PSM
+    PSM -->|Update State| DB
+
+    WH -->|200 OK| LN
+
+    style MW fill:#4CAF50
+    style WSV fill:#2196F3
+    style ERR fill:#F44336
+    style SEC fill:#FF9800
+    style TS fill:#9C27B0
+    style SIG fill:#9C27B0

@@ -1,0 +1,161 @@
+%% Service Dependency Graph
+%% US-E5-032: Wire Services Through DI Container
+%% Complete dependency relationships for all 29 services
+
+graph LR
+    subgraph "Infrastructure (Singleton)"
+        Logger[[Logger]]
+        Config[[Config]]
+        DB[[Database]]
+        Redis[[Redis]]
+        EventBus[[EventBus]]
+        Cache[[Cache]]
+    end
+
+    subgraph "External Services (Singleton)"
+        Lightning[[Lightning]]
+        Nostr[[Nostr]]
+        Elasticsearch[[Elasticsearch]]
+    end
+
+    subgraph "Repositories"
+        ContentRepo[(Content<br/>Repository)]
+        UserRepo[(User<br/>Repository)]
+        PaymentRepo[(Payment<br/>Repository)]
+        SubRepo[(Subscription<br/>Repository)]
+        PrefRepo[(Preferences<br/>Repository)]
+    end
+
+    subgraph "Shared Services"
+        Email(Email)
+        Notification(Notification)
+        AuditLog(AuditLog)
+        Validation(Validation)
+    end
+
+    subgraph "Content Domain"
+        CPub[Content<br/>Publishing]
+        CMod[Content<br/>Moderation]
+        CSearch[Content<br/>Search]
+        CRec[Content<br/>Recommendation]
+        CAnalytics[Content<br/>Analytics]
+        CVer[Content<br/>Versioning]
+        CCreate[Content<br/>Creation]
+    end
+
+    subgraph "User Domain"
+        UProfile[User<br/>Profile]
+        UPref[User<br/>Preferences]
+        UActivity[User<br/>Activity]
+        URelation[User<br/>Relationship]
+        UAnalytics[User<br/>Analytics]
+    end
+
+    subgraph "Payment Domain"
+        Payment[Payment<br/>Processing]
+        Currency(Currency)
+        Subscription[Subscription]
+        Refund[Refund]
+        PAnalytics[Payment<br/>Analytics]
+        Webhook[Webhook]
+        Invoice[Invoice]
+    end
+
+    %% Infrastructure Dependencies
+    Cache --> Redis
+    Cache --> EventBus
+    Cache --> Logger
+
+    %% Repository Dependencies
+    ContentRepo --> DB
+    UserRepo --> DB
+    PaymentRepo --> DB
+    SubRepo --> DB
+    PrefRepo --> DB
+
+    %% Shared Service Dependencies
+    Email --> Config
+    Email --> Logger
+    Notification --> Email
+    Notification --> EventBus
+    Notification --> Logger
+    AuditLog --> DB
+    AuditLog --> Logger
+
+    %% Content Service Dependencies
+    CPub --> ContentRepo
+    CPub --> EventBus
+    CPub --> Cache
+    CPub --> Logger
+    CMod --> ContentRepo
+    CMod --> AuditLog
+    CMod --> Logger
+    CSearch --> Elasticsearch
+    CSearch --> Cache
+    CSearch --> Logger
+    CRec --> ContentRepo
+    CRec --> UActivity
+    CRec --> Cache
+    CRec --> Logger
+    CAnalytics --> ContentRepo
+    CAnalytics --> EventBus
+    CAnalytics --> Logger
+    CVer --> ContentRepo
+    CVer --> Logger
+    CCreate --> ContentRepo
+    CCreate --> Validation
+    CCreate --> Logger
+
+    %% User Service Dependencies
+    UProfile --> UserRepo
+    UProfile --> Cache
+    UProfile --> EventBus
+    UProfile --> Logger
+    UPref --> PrefRepo
+    UPref --> Cache
+    UPref --> Logger
+    UActivity --> DB
+    UActivity --> EventBus
+    UActivity --> Logger
+    URelation --> UserRepo
+    URelation --> Cache
+    URelation --> EventBus
+    URelation --> Logger
+    UAnalytics --> DB
+    UAnalytics --> EventBus
+    UAnalytics --> Logger
+
+    %% Payment Service Dependencies
+    Payment --> PaymentRepo
+    Payment --> Lightning
+    Payment --> EventBus
+    Payment --> Logger
+    Currency --> Config
+    Currency --> Cache
+    Subscription --> SubRepo
+    Subscription --> Payment
+    Subscription --> EventBus
+    Subscription --> Logger
+    Refund --> PaymentRepo
+    Refund --> Payment
+    Refund --> EventBus
+    Refund --> Logger
+    PAnalytics --> PaymentRepo
+    PAnalytics --> EventBus
+    PAnalytics --> Logger
+    Webhook --> DB
+    Webhook --> EventBus
+    Webhook --> Logger
+    Invoice --> PaymentRepo
+    Invoice --> Logger
+
+    %% Styling
+    classDef singleton fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    classDef scoped fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    classDef transient fill:#f0f0f0,stroke:#666,stroke-width:1px
+    classDef repository fill:#e1ffe1,stroke:#009900,stroke-width:2px
+
+    class Logger,Config,DB,Redis,EventBus,Cache,Lightning,Nostr,Elasticsearch singleton
+    class CPub,CMod,CSearch,CRec,CAnalytics,CVer,CCreate,UProfile,UPref,UActivity,URelation,UAnalytics,Payment,Subscription,Refund,PAnalytics,Webhook,Invoice scoped
+    class Email,Notification,AuditLog,Validation,Currency transient
+    class ContentRepo,UserRepo,PaymentRepo,SubRepo,PrefRepo repository

@@ -1,280 +1,326 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-import paymentSlice from '../store/slices/paymentSlice';
-import postSlice from '../store/slices/postSlice';
-import userSlice, { clearUser, setUser } from '../store/slices/userSlice';
-import type { User } from '../types';
+import { AuthProvider } from '../features/auth';
 import Profile from './Profile';
 
-// Mock components
-jest.mock('../components/Layout', () => ({
-  __esModule: true,
-  default: ({ children }: { children: React.ReactNode }): JSX.Element => (
-    <div data-testid="layout">{children}</div>
-  ),
-}));
+// Test user types
+type TestUser = {
+  id: string;
+  name?: string;
+  username?: string;
+  email: string;
+  nostr_pubkey?: string;
+  role: 'creator' | 'supporter' | 'admin';
+  permissions: string[];
+  created_at: Date;
+  lastLogin: Date;
+};
 
-jest.mock('../components/Button', () => ({
-  __esModule: true,
-  default: ({ children, onClick, variant, ...props }: any): JSX.Element => (
-    <button onClick={onClick} data-variant={variant} {...props}>
-      {children}
-    </button>
-  ),
-}));
-
-const mockUser: User = {
-  id: 'user1',
+// Mock user data
+const mockCreatorUser: TestUser = {
+  id: '1',
   name: 'Test User',
+  username: 'testuser',
   email: 'test@example.com',
-  nostr_pubkey: 'npub1testpubkey123456789',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
+  nostr_pubkey: 'npub1testpubkey123456789abcdef',
+  role: 'creator',
+  permissions: ['read', 'write'],
+  created_at: new Date('2023-12-31'),
+  lastLogin: new Date('2024-01-01T00:00:00Z'),
 };
 
-const createTestStore = (options: { withUser?: boolean } = {}) => {
-  const store = configureStore({
-    reducer: {
-      user: userSlice,
-      post: postSlice,
-      payment: paymentSlice,
-    },
-  });
-
-  // Set up initial state using actions
-  if (options.withUser) {
-    store.dispatch(setUser(mockUser));
-  } else {
-    store.dispatch(clearUser());
-  }
-
-  return store;
+const mockSupporterUser: TestUser = {
+  id: '2',
+  name: 'Supporter User',
+  username: 'supporter',
+  email: 'supporter@example.com',
+  role: 'supporter',
+  permissions: ['read'],
+  created_at: new Date('2023-12-01T00:00:00Z'),
+  lastLogin: new Date('2024-01-01T00:00:00Z'),
 };
 
-const renderWithProviders = (
-  component: React.ReactElement,
-  options: { withUser?: boolean } = {}
-) => {
-  const { withUser = true } = options;
-  const store = createTestStore({ withUser });
+const mockAdminUser: TestUser = {
+  id: '3',
+  name: 'Admin User',
+  username: 'admin',
+  email: 'admin@example.com',
+  nostr_pubkey: 'npub1adminpubkey123456789abcdef',
+  role: 'admin',
+  permissions: ['read', 'write', 'admin'],
+  created_at: new Date('2023-11-01T00:00:00Z'),
+  lastLogin: new Date('2024-01-01T00:00:00Z'),
+};
+
+const mockEmailUser: TestUser = {
+  id: '4',
+  name: 'Email User',
+  username: 'emailuser',
+  email: 'email@example.com',
+  role: 'creator',
+  permissions: ['read', 'write'],
+  created_at: new Date('2023-10-01T00:00:00Z'),
+  lastLogin: new Date('2024-01-01T00:00:00Z'),
+};
+
+// Mock logout function
+const mockLogout = jest.fn();
+
+// 🎯 **ELITE JEST MODULE MOCK** - Updated path
+// Current user for test context switching
+let currentTestUser: TestUser = mockCreatorUser;
+
+// Mock the entire AuthContext module with correct path
+jest.mock('../features/auth/services/AuthContext', () => {
+  const originalModule = jest.requireActual('../features/auth/services/AuthContext');
 
   return {
-    ...render(
-      <Provider store={store}>
-        <BrowserRouter>{component}</BrowserRouter>
-      </Provider>
-    ),
-    store,
+    ...originalModule,
+    useAuth: jest.fn(() => ({
+      user: currentTestUser,
+      token: 'mock-token',
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+      login: jest.fn(),
+      signup: jest.fn(),
+      logout: mockLogout,
+      authenticateNostr: jest.fn(),
+      generateNostrChallenge: jest.fn(),
+      refreshToken: jest.fn(),
+      updateProfile: jest.fn(),
+      verifyEmail: jest.fn(),
+      resetPassword: jest.fn(),
+    })),
+    AuthProvider: ({ children }: { children: React.ReactNode }) => {
+      return React.createElement('div', { 'data-testid': 'mock-auth-provider' }, children);
+    },
   };
+});
+
+// Elite render function with AuthProvider wrapper
+const renderWithTestWrapper = (user: TestUser = mockCreatorUser): void => {
+  currentTestUser = user;
+  render(
+    <AuthProvider>
+      <BrowserRouter>
+        <Profile />
+      </BrowserRouter>
+    </AuthProvider>
+  );
 };
 
 describe('Profile Component', () => {
-  beforeEach(() => {
+  beforeEach((): void => {
+    jest.clearAllMocks();
+    currentTestUser = mockCreatorUser;
+  });
+
+  describe('User Information Display', () => {
+    it('renders user name as main heading', () => {
+      renderWithTestWrapper();
+
+      const heading = screen.getByRole('heading', { level: 1 });
+      expect(heading).toHaveTextContent('Test User');
+    });
+
+    it('displays user role with appropriate icon', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('✨ Creator')).toBeInTheDocument();
+    });
+
+    it('shows member since date', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Member since 12/30/2023')).toBeInTheDocument();
+    });
+
+    it('displays logout button', () => {
+      renderWithTestWrapper();
+
+      const logoutButton = screen.getByRole('button', { name: 'Logout' });
+      expect(logoutButton).toBeInTheDocument();
+    });
+  });
+
+  describe('NOSTR Authentication Display', () => {
+    it('shows NOSTR identity section when user has nostr_pubkey', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('NOSTR Identity')).toBeInTheDocument();
+      expect(
+        screen.getByText(/You're using decentralized NOSTR authentication/)
+      ).toBeInTheDocument();
+    });
+
+    it('displays the public key', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Public Key (npub)')).toBeInTheDocument();
+      expect(screen.getByText('npub1testpubkey123456789abcdef')).toBeInTheDocument();
+    });
+
+    it('shows NOSTR benefits list', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Benefits of NOSTR Authentication:')).toBeInTheDocument();
+      expect(screen.getByText('• True ownership of your identity')).toBeInTheDocument();
+      expect(screen.getByText('• Works across all NOSTR apps')).toBeInTheDocument();
+      expect(screen.getByText('• No vendor lock-in')).toBeInTheDocument();
+    });
+
+    it('shows Lightning Network setup for creators', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Lightning Network')).toBeInTheDocument();
+      expect(
+        screen.getByText('Accept instant Bitcoin payments from your supporters.')
+      ).toBeInTheDocument();
+
+      const setupButton = screen.getByRole('button', { name: '⚡ Setup Lightning Wallet' });
+      expect(setupButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Role-Specific Features', () => {
+    it('shows creator features when user is a creator', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Creator Tools')).toBeInTheDocument();
+      expect(screen.getByText('• 📝 Create and publish content')).toBeInTheDocument();
+      expect(screen.getByText('• ⚡ Receive Lightning payments')).toBeInTheDocument();
+      expect(screen.getByText('• 📊 Analytics dashboard')).toBeInTheDocument();
+    });
+  });
+
+  describe('Account Settings', () => {
+    it('displays account settings section', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Account Settings')).toBeInTheDocument();
+    });
+
+    it('shows settings action buttons', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByRole('button', { name: '⚙️ Edit Profile' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '🔐 Security Settings' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '🌐 Export NOSTR Keys' })).toBeInTheDocument();
+    });
+  });
+
+  describe('User Interactions', () => {
+    it('handles logout button click', async (): Promise<void> => {
+      renderWithTestWrapper();
+
+      const logoutButton = screen.getByRole('button', { name: 'Logout' });
+      fireEvent.click(logoutButton);
+
+      await waitFor(() => {
+        expect(mockLogout).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('handles Lightning wallet setup button click', () => {
+      renderWithTestWrapper();
+
+      const setupButton = screen.getByRole('button', { name: '⚡ Setup Lightning Wallet' });
+      fireEvent.click(setupButton);
+
+      // Button should be clickable (implementation is in progress)
+      expect(setupButton).toBeInTheDocument();
+    });
+
+    it('handles edit profile button click', () => {
+      renderWithTestWrapper();
+
+      const editButton = screen.getByRole('button', { name: '⚙️ Edit Profile' });
+      fireEvent.click(editButton);
+
+      // Button should be clickable (implementation is in progress)
+      expect(editButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Platform Information', () => {
+    it('displays Sovren welcome section', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Welcome to Sovren')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'The decentralized creator platform that gives you true ownership and freedom.'
+        )
+      ).toBeInTheDocument();
+    });
+
+    it('shows platform technologies', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('🌐 NOSTR Protocol')).toBeInTheDocument();
+      expect(screen.getByText('⚡ Lightning Network')).toBeInTheDocument();
+      expect(screen.getByText('🔐 Self-Sovereign Identity')).toBeInTheDocument();
+    });
+
+    it('displays Lightning address information', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Your Lightning Address')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "This is how people can send you Bitcoin payments. It's like an email address for money."
+        )
+      ).toBeInTheDocument();
+    });
+
+    it('shows content creation guidance', () => {
+      renderWithTestWrapper();
+
+      expect(screen.getByText('Content Creation')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Start creating content and building your audience. You'll earn Bitcoin for every like, comment, and support from your followers."
+        )
+      ).toBeInTheDocument();
+    });
+  });
+});
+
+// Test different user roles using our elite test wrapper
+describe('Profile Component - Different Roles', () => {
+  beforeEach((): void => {
     jest.clearAllMocks();
   });
 
-  describe('Rendering with authenticated user', () => {
-    it('renders within Layout component', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByTestId('layout')).toBeInTheDocument();
-    });
+  it('shows supporter features for supporter role', () => {
+    renderWithTestWrapper(mockSupporterUser);
 
-    it('displays profile information heading', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(
-        screen.getByRole('heading', { level: 3, name: /profile information/i })
-      ).toBeInTheDocument();
-    });
-
-    it('displays profile description', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByText(/personal details and account information/i)).toBeInTheDocument();
-    });
-
-    it('displays user full name', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByText('Full name')).toBeInTheDocument();
-      expect(screen.getByText('Test User')).toBeInTheDocument();
-    });
-
-    it('displays user email address', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByText('Email address')).toBeInTheDocument();
-      expect(screen.getByText('test@example.com')).toBeInTheDocument();
-    });
-
-    it('displays Nostr public key', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByText('Nostr Public Key')).toBeInTheDocument();
-      expect(screen.getByText('npub1testpubkey123456789')).toBeInTheDocument();
-    });
-
-    it('displays member since date', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByText('Member since')).toBeInTheDocument();
-      const formattedDate = new Date('2024-01-01T00:00:00Z').toLocaleDateString();
-      expect(screen.getByText(formattedDate)).toBeInTheDocument();
-    });
-
-    it('displays Edit Profile button', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      const editButton = screen.getByRole('button', { name: /edit profile/i });
-      expect(editButton).toBeInTheDocument();
-      expect(editButton).toHaveAttribute('data-variant', 'outline');
-    });
-
-    it('displays Connect Wallet button', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      const walletButton = screen.getByRole('button', { name: /connect wallet/i });
-      expect(walletButton).toBeInTheDocument();
-      expect(walletButton).toHaveAttribute('data-variant', 'primary');
-    });
+    // Role display
+    expect(screen.getByText('💚 Supporter')).toBeInTheDocument();
   });
 
-  describe('Rendering without authenticated user', () => {
-    it('displays login prompt when user is not authenticated', () => {
-      renderWithProviders(<Profile />, { withUser: false });
-      expect(
-        screen.getByRole('heading', { level: 2, name: /please log in to view your profile/i })
-      ).toBeInTheDocument();
-    });
+  it('shows admin features for admin role', () => {
+    renderWithTestWrapper(mockAdminUser);
 
-    it('does not display profile information when user is not authenticated', () => {
-      renderWithProviders(<Profile />, { withUser: false });
-      expect(screen.queryByText('Profile Information')).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /edit profile/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /connect wallet/i })).not.toBeInTheDocument();
-    });
+    // Role display
+    expect(screen.getByText('🔑 Administrator')).toBeInTheDocument();
+  });
+});
 
-    it('does not display user data when not authenticated', () => {
-      renderWithProviders(<Profile />, { withUser: false });
-      expect(screen.queryByText('Test User')).not.toBeInTheDocument();
-      expect(screen.queryByText('test@example.com')).not.toBeInTheDocument();
-    });
+// Test email authentication fallback
+describe('Profile Component - Email Authentication', () => {
+  beforeEach((): void => {
+    jest.clearAllMocks();
   });
 
-  describe('User interactions', () => {
-    it('handles Edit Profile button click', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(<Profile />, { withUser: true });
+  it('shows email authentication when no NOSTR key', () => {
+    renderWithTestWrapper(mockEmailUser);
 
-      const editButton = screen.getByRole('button', { name: /edit profile/i });
-      await user.click(editButton);
-
-      // Button should be clickable (implementation is TODO)
-      expect(editButton).toBeInTheDocument();
-    });
-
-    it('handles Connect Wallet button click', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(<Profile />, { withUser: true });
-
-      const walletButton = screen.getByRole('button', { name: /connect wallet/i });
-      await user.click(walletButton);
-
-      // Button should be clickable (implementation is TODO)
-      expect(walletButton).toBeInTheDocument();
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('has proper heading hierarchy', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-
-      const profileHeading = screen.getByRole('heading', { level: 3 });
-      expect(profileHeading).toBeInTheDocument();
-      expect(profileHeading).toHaveTextContent('Profile Information');
-    });
-
-    it('has proper definition list structure', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-
-      // Check for definition list elements by finding dt/dd pairs
-      expect(screen.getByText('Full name')).toBeInTheDocument();
-      expect(screen.getByText('Email address')).toBeInTheDocument();
-      expect(screen.getByText('Nostr Public Key')).toBeInTheDocument();
-      expect(screen.getByText('Member since')).toBeInTheDocument();
-    });
-
-    it('has accessible button text', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-
-      const editButton = screen.getByRole('button', { name: /edit profile/i });
-      const walletButton = screen.getByRole('button', { name: /connect wallet/i });
-
-      expect(editButton).toBeInTheDocument();
-      expect(walletButton).toBeInTheDocument();
-    });
-
-    it('has proper semantic structure with definition terms and descriptions', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-
-      // Check that labels and values are properly structured
-      expect(screen.getByText('Full name')).toBeInTheDocument();
-      expect(screen.getByText('Email address')).toBeInTheDocument();
-      expect(screen.getByText('Nostr Public Key')).toBeInTheDocument();
-      expect(screen.getByText('Member since')).toBeInTheDocument();
-    });
-  });
-
-  describe('Different user data scenarios', () => {
-    it('handles user with empty nostr_pubkey', () => {
-      // For this test, we'll need to create a custom store with modified user data
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByText('Nostr Public Key')).toBeInTheDocument();
-    });
-
-    it('handles user with very long name', () => {
-      // For this test, we'll need to create a custom store with modified user data
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByText('Test User')).toBeInTheDocument();
-    });
-
-    it('handles different date formats correctly', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      const expectedDate = new Date('2024-01-01T00:00:00Z').toLocaleDateString();
-      expect(screen.getByText(expectedDate)).toBeInTheDocument();
-    });
-  });
-
-  describe('Layout and styling', () => {
-    it('has proper card-like structure', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-
-      // Check for the white background card structure
-      const container = screen.getByTestId('layout');
-      expect(container).toBeInTheDocument();
-    });
-
-    it('has proper grid layout for profile fields', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-
-      // Check for grid structure in profile fields
-      const container = screen.getByTestId('layout');
-      expect(container).toBeInTheDocument();
-    });
-
-    it('has proper button spacing and alignment', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-
-      const editButton = screen.getByRole('button', { name: /edit profile/i });
-      const walletButton = screen.getByRole('button', { name: /connect wallet/i });
-
-      // Both buttons should be present
-      expect(editButton).toBeInTheDocument();
-      expect(walletButton).toBeInTheDocument();
-    });
-  });
-
-  describe('Error handling edge cases', () => {
-    it('gracefully handles missing user properties', () => {
-      renderWithProviders(<Profile />, { withUser: true });
-      expect(screen.getByText('Test User')).toBeInTheDocument();
-      expect(screen.getByText('test@example.com')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Email Authentication')).toBeInTheDocument();
+    expect(screen.getByText("You're using traditional email authentication:")).toBeInTheDocument();
+    expect(screen.getByText('email@example.com')).toBeInTheDocument();
   });
 });

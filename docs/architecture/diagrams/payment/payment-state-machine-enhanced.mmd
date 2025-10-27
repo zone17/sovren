@@ -1,0 +1,162 @@
+%% Payment State Machine - Enhanced with Implementation Details (PAY-008)
+%% PAY-018: Payment Flow Mermaid Diagrams
+%%
+%% This state diagram shows the complete payment lifecycle with all
+%% valid state transitions, terminal states, and transition triggers.
+%% Implements PAY-008 validation and testing requirements.
+%%
+%% States:
+%% - PENDING: Initial state, invoice created and awaiting payment
+%% - PROCESSING: Payment initiated, awaiting confirmation from Lightning Network
+%% - COMPLETED: Payment successfully confirmed with cryptographic proof
+%% - FAILED: Payment attempt failed, eligible for retry
+%% - EXPIRED: Invoice expired without payment (TERMINAL - no further transitions)
+%% - REFUNDED: Completed payment was refunded (TERMINAL - no further transitions)
+%%
+%% Key Features:
+%% - Atomic state transitions via PostgreSQL stored procedure
+%% - Event sourcing with complete audit trail
+%% - Terminal state protection (EXPIRED, REFUNDED)
+%% - Concurrent update handling via database locks
+%% - Batch transition support
+
+stateDiagram-v2
+    [*] --> PENDING: Invoice Created<br/>✓ BOLT11 generated<br/>✓ Payment hash assigned<br/>✓ Expiry time set
+
+    state PENDING {
+        [*] --> AwaitingPayment
+        AwaitingPayment --> MonitoringWebhooks: Listening for events
+        MonitoringWebhooks --> VerifyingStatus: Periodic verification
+    }
+
+    PENDING --> PROCESSING: Payment Initiated<br/>Trigger: Webhook "payment.processing"<br/>User: Content creator<br/>Metadata: payment_request sent
+    Note left of PROCESSING: Transition validated by<br/>Payment State Machine<br/>Event logged in audit trail
+
+    PENDING --> EXPIRED: Timeout Reached<br/>Trigger: Invoice Expiration Service<br/>Condition: now() > expires_at<br/>Cron: Every 5 minutes
+    Note right of EXPIRED: TERMINAL STATE<br/>No further transitions<br/>Invoice cleanup scheduled
+
+    PENDING --> FAILED: Validation Error<br/>Trigger: Pre-flight validation failed<br/>Examples:<br/>- Insufficient funds<br/>- Invalid invoice<br/>- Node unreachable
+
+    state PROCESSING {
+        [*] --> AwaitingConfirmation
+        AwaitingConfirmation --> VerifyingPreimage: Checking cryptographic proof
+        VerifyingPreimage --> ConfirmingOnChain: Lightning settlement
+    }
+
+    PROCESSING --> COMPLETED: Payment Confirmed<br/>Trigger: Webhook "payment.completed"<br/>Proof: Preimage verified (SHA-256)<br/>Metadata: settled_at, amount_paid_msats
+    Note left of COMPLETED: ✓ Cryptographic proof validated<br/>✓ Funds received<br/>✓ Content access granted
+
+    PROCESSING --> FAILED: Provider Error<br/>Trigger: Lightning node error<br/>Examples:<br/>- Timeout<br/>- Network error<br/>- Insufficient capacity<br/>Retry: Exponential backoff
+
+    state COMPLETED {
+        [*] --> FundsReceived
+        FundsReceived --> ContentUnlocked: Access granted
+        ContentUnlocked --> AnalyticsRecorded: Revenue tracked
+    }
+
+    COMPLETED --> REFUNDED: Refund Issued<br/>Trigger: Manual admin action<br/>User: Platform admin<br/>Reason: Dispute, fraud, policy<br/>Metadata: refund_reason, refunded_by
+    Note right of REFUNDED: TERMINAL STATE<br/>Funds returned to payer<br/>Complete audit trail
+
+    state FAILED {
+        [*] --> ErrorRecorded
+        ErrorRecorded --> EvaluatingRetry: Check retry eligibility
+        EvaluatingRetry --> AwaitingRetry: Scheduled for retry
+    }
+
+    FAILED --> PENDING: Retry Payment<br/>Trigger: Payment Retry Service (PAY-009)<br/>Condition: attempt < maxAttempts (5)<br/>Delay: Exponential backoff + jitter<br/>Circuit Breaker: Must be CLOSED
+    Note left of PENDING: Retry attempt logged<br/>Exponential backoff applied<br/>Full jitter prevents thundering herd
+
+    EXPIRED --> [*]: Cleanup Complete<br/>Trigger: Invoice Expiration Service<br/>Action: Archive payment record<br/>Retention: 90 days for audit
+
+    REFUNDED --> [*]: Refund Processed<br/>Trigger: Refund completion<br/>Action: Archive with refund metadata<br/>Audit: Complete refund trail
+
+    note right of PENDING
+        Initial State
+        ✓ Invoice generated (BOLT11)
+        ✓ Awaiting payment
+        ✓ Expiry timer active
+        ✓ Webhook monitoring active
+        ✓ Can transition to: PROCESSING, EXPIRED, FAILED
+
+        Timeout: 1 hour (configurable)
+        Monitoring: Real-time webhooks + polling
+    end note
+
+    note right of PROCESSING
+        Active Processing
+        ✓ Payment in flight
+        ✓ Cannot be cancelled
+        ✓ Awaiting Lightning Network confirmation
+        ✓ Can transition to: COMPLETED, FAILED
+
+        Typical duration: 1-5 seconds
+        Max duration: 60 seconds before timeout
+    end note
+
+    note right of COMPLETED
+        Success State
+        ✓ Payment successful
+        ✓ Funds received and verified
+        ✓ Cryptographic proof validated (preimage)
+        ✓ Content access granted
+        ✓ Can transition to: REFUNDED
+
+        Proof: SHA-256(preimage) == payment_hash
+        Irreversible: Only refundable via REFUNDED state
+    end note
+
+    note right of FAILED
+        Failure State
+        ✓ Payment unsuccessful
+        ✓ Error details logged
+        ✓ Eligible for retry (if retryable error)
+        ✓ Can transition to: PENDING (retry)
+
+        Retryable errors:
+        - network_error
+        - timeout
+        - temporary_failure
+
+        Non-retryable errors:
+        - invalid_invoice
+        - insufficient_funds
+        - fraud_detected
+
+        Max retries: 5 attempts
+        Backoff: Exponential with jitter
+    end note
+
+    note right of EXPIRED
+        TERMINAL STATE
+        ✗ Payment timed out
+        ✗ Invoice no longer valid
+        ✗ No further transitions allowed
+        ✗ Automatic cleanup scheduled
+
+        Trigger: now() > expires_at
+        Cleanup: Archive after 90 days
+
+        Transition prevention enforced by:
+        - Application logic
+        - Database constraints
+        - State Machine validation
+    end note
+
+    note right of REFUNDED
+        TERMINAL STATE
+        ✓ Full refund issued
+        ✓ Funds returned to payer
+        ✗ No further transitions allowed
+        ✓ Complete audit trail maintained
+
+        Requires:
+        - Admin approval
+        - Refund reason
+        - Original payment must be COMPLETED
+
+        Audit includes:
+        - Refund timestamp
+        - Admin user ID
+        - Refund reason
+        - Original payment details
+    end note

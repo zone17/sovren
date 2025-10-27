@@ -1,0 +1,38 @@
+stateDiagram-v2
+    [*] --> Disconnected
+
+    Disconnected --> Connecting: connect()
+    Connecting --> Connected: Connection Success
+    Connecting --> Error: Connection Failed
+
+    Connected --> Healthy: Health Check Pass
+    Connected --> Degraded: High Latency
+    Connected --> Error: Connection Lost
+
+    Healthy --> Degraded: Latency Increase
+    Degraded --> Healthy: Latency Normal
+    Degraded --> Error: Connection Lost
+
+    Error --> Reconnecting: Auto Retry
+    Reconnecting --> Connected: Retry Success
+    Reconnecting --> Error: Retry Failed (Backoff)
+
+    Error --> Disconnected: Max Retries Exceeded
+    Connected --> Disconnected: disconnect()
+    Healthy --> Disconnected: disconnect()
+    Degraded --> Disconnected: disconnect()
+
+    note right of Healthy
+        Latency < 500ms
+        Success Rate > 95%
+    end note
+
+    note right of Degraded
+        Latency 500-2000ms
+        Success Rate 80-95%
+    end note
+
+    note right of Error
+        Latency > 2000ms
+        Success Rate < 80%
+    end note

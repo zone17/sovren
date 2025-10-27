@@ -1,0 +1,179 @@
+%% Payment Verification Flow (PAY-001)
+%% PAY-018: Payment Flow Mermaid Diagrams
+%%
+%% This sequence diagram illustrates the payment verification process
+%% implemented in PAY-001, showing how the PaymentRetryService verifies
+%% Lightning invoice status with cryptographic proof validation.
+%%
+%% Key Features:
+%% - Lightning node invoice status query
+%% - Preimage cryptographic verification (SHA-256)
+%% - Payment state validation
+%% - Timestamp expiry checking
+%% - State machine integration
+
+sequenceDiagram
+    participant Scheduler as Retry Scheduler
+    participant PRS as Payment Retry Service
+    participant Cache as Redis Cache
+    participant LND as LND Node
+    participant Crypto as Crypto Module
+    participant PSM as Payment State Machine
+    participant DB as Database
+    participant WS as WebSocket
+
+    Note over Scheduler,WS: Payment Verification Flow - PAY-001
+
+    %% Step 1: Retry Trigger
+    Scheduler->>PRS: executeRetry(payment_id)
+    Note over Scheduler,PRS: Triggered by:<br/>- Scheduled retry<br/>- Webhook timeout<br/>- Manual verification
+
+    PRS->>DB: SELECT payment WHERE id = payment_id
+    DB-->>PRS: Payment record
+    Note over DB,PRS: {<br/>  id: UUID,<br/>  payment_hash: "abc123...",<br/>  status: "PENDING",<br/>  attempt: 2<br/>}
+
+    %% Step 2: State Validation
+    PRS->>PRS: Check payment state
+    Note over PRS: Only verify if status:<br/>PENDING or FAILED
+
+    alt Payment Already Completed
+        PRS->>PRS: Log "Already verified"
+        PRS-->>Scheduler: Return early (optimization)
+    end
+
+    alt Payment Expired
+        PRS->>PRS: Log "Payment expired"
+        PRS-->>Scheduler: Return early (no retry)
+    end
+
+    %% Step 3: Cache Check
+    PRS->>Cache: GET invoice:payment_hash
+
+    alt Cache Hit
+        Cache-->>PRS: Cached invoice data
+        Note over Cache,PRS: Fast path - avoid LND query
+    else Cache Miss
+        Cache-->>PRS: null
+        Note over PRS: Proceed to LND query
+    end
+
+    %% Step 4: Lightning Node Query
+    PRS->>LND: lookupInvoice(payment_hash)
+    Note over PRS,LND: RPC Method: lookupInvoice<br/>Parameter: payment_hash (64 hex chars)
+
+    alt Network Error
+        LND-->>PRS: Connection timeout
+        PRS->>PRS: Log error + return false
+        PRS-->>Scheduler: Retry later (safe default)
+    end
+
+    alt Invalid Payment Hash
+        LND-->>PRS: Invalid hash format
+        PRS->>PRS: Log warning + return false
+        PRS-->>Scheduler: Skip retry (terminal error)
+    end
+
+    LND->>LND: Query invoice database
+    LND-->>PRS: Invoice status
+    Note over LND,PRS: {<br/>  invoice_status: "SETTLED",<br/>  payment_hash: "abc123...",<br/>  preimage: "def456...",<br/>  amount_paid_msats: 1000000,<br/>  settled_at: timestamp<br/>}
+
+    %% Step 5: Status Evaluation
+    PRS->>PRS: Evaluate invoice_status
+
+    rect rgb(255, 240, 240)
+        Note over PRS: Status: PENDING/OPEN
+        alt Invoice Still Pending
+            PRS->>PRS: Log "Still pending"
+            PRS->>PRS: return false (continue monitoring)
+            PRS-->>Scheduler: Schedule next retry
+        end
+    end
+
+    rect rgb(255, 245, 230)
+        Note over PRS: Status: EXPIRED
+        alt Invoice Expired
+            PRS->>PRS: Check expires_at timestamp
+            PRS->>PRS: now() > expires_at?
+            PRS->>PRS: Log "Invoice expired"
+            PRS->>PRS: return false (terminal)
+            PRS-->>Scheduler: No further retries
+        end
+    end
+
+    rect rgb(255, 235, 235)
+        Note over PRS: Status: FAILED/CANCELLED
+        alt Payment Failed
+            PRS->>PRS: Log "Payment failed"
+            PRS->>PRS: return false (retryable)
+            PRS-->>Scheduler: Trigger exponential backoff retry
+        end
+    end
+
+    rect rgb(235, 255, 235)
+        Note over PRS: Status: SETTLED/PAID
+        Note over PRS,Crypto: ✓ Payment Confirmed - Verify Proof
+    end
+
+    %% Step 6: Preimage Verification (Cryptographic Proof)
+    PRS->>PRS: Validate preimage exists
+    Note over PRS: preimage must be 64 hex chars
+
+    alt Preimage Missing
+        PRS->>PRS: Log "No preimage"
+        PRS->>PRS: return false (not settled)
+        PRS-->>Scheduler: Continue monitoring
+    end
+
+    PRS->>Crypto: SHA256(preimage)
+    Crypto->>Crypto: Hash preimage bytes
+    Crypto-->>PRS: computed_hash
+    Note over Crypto,PRS: SHA-256 output:<br/>"abc123..." (64 hex chars)
+
+    PRS->>PRS: Compare hashes
+    Note over PRS: timingSafeEqual(<br/>  computed_hash,<br/>  payment_hash<br/>)
+
+    alt Hash Mismatch
+        PRS->>PRS: Log "Invalid preimage!"
+        PRS->>PRS: Security alert (possible fraud)
+        PRS->>PRS: return false (reject payment)
+        PRS-->>Scheduler: Do not mark as paid
+    end
+
+    PRS->>PRS: Preimage verified ✓
+    Note over PRS: ✓ Cryptographic proof valid<br/>✓ Payment authentically settled
+
+    %% Step 7: State Machine Transition
+    PRS->>PSM: transition(payment_id, PENDING, COMPLETED)
+    Note over PRS,PSM: Atomic state update
+
+    PSM->>DB: BEGIN TRANSACTION
+
+    PSM->>DB: UPDATE payments SET status = 'COMPLETED'
+    Note over PSM,DB: Also update:<br/>- settled_at: timestamp<br/>- preimage: "def456..."<br/>- updated_at: now()
+
+    DB-->>PSM: Payment updated ✓
+
+    PSM->>DB: INSERT INTO payment_events
+    Note over PSM,DB: {<br/>  event: "PAYMENT_VERIFIED",<br/>  from_state: "PENDING",<br/>  to_state: "COMPLETED",<br/>  metadata: {<br/>    preimage: "def456...",<br/>    verified_via: "PAY-001"<br/>  }<br/>}
+
+    DB-->>PSM: Event logged ✓
+
+    PSM->>DB: COMMIT TRANSACTION
+    DB-->>PSM: Transaction committed ✓
+
+    PSM-->>PRS: Transition successful ✓
+
+    %% Step 8: Cache Update
+    PRS->>Cache: SET invoice:payment_hash (status=COMPLETED)
+    Cache-->>PRS: Cached ✓
+
+    %% Step 9: Real-time Notification
+    PRS->>WS: broadcast("payment:abc123...", {status: "COMPLETED"})
+    WS->>WS: Emit to subscribed clients
+    Note over WS: Frontend receives live update
+
+    %% Step 10: Return Success
+    PRS->>PRS: return true (verified)
+    PRS-->>Scheduler: ✓ Verification complete
+
+    Note over Scheduler,WS: ✓ Payment verified with cryptographic proof<br/>✓ State updated atomically<br/>✓ User notified in real-time

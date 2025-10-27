@@ -1,0 +1,130 @@
+sequenceDiagram
+    participant App as Application
+    participant Cache as EventCacheService
+    participant Mem as Memory Cache
+    participant IDB as IndexedDB
+    participant Relay as NOSTR Relay
+
+    Note over App,Relay: Event Storage Flow
+
+    App->>Cache: set(event, options)
+    activate Cache
+    Cache->>Cache: Validate event (Zod schema)
+    Cache->>Cache: Calculate TTL & expiration
+    Cache->>Mem: Check memory limit
+    alt Memory limit reached
+        Mem->>Mem: Evict LRU entry
+    end
+    Cache->>Mem: Store event + metadata
+    Cache->>Mem: Update indexes (pubkey, kind, tags)
+    Cache->>Mem: Track access order (LRU)
+    opt IndexedDB enabled
+        Cache->>IDB: Persist event + metadata
+    end
+    Cache->>Cache: Update statistics (set count)
+    Cache->>Cache: Track operation latency
+    Cache-->>App: Success
+    deactivate Cache
+
+    Note over App,Relay: Event Retrieval Flow
+
+    App->>Cache: get(eventId)
+    activate Cache
+    Cache->>Mem: Lookup by ID
+    alt Found in memory
+        Mem-->>Cache: Return cached event
+        Cache->>Cache: Check expiration
+        alt Expired
+            Cache->>Mem: Delete expired event
+            Cache->>IDB: Delete from IndexedDB
+            Cache-->>App: null (cache miss)
+        else Not expired
+            Cache->>Mem: Update access time (LRU)
+            Cache->>Cache: Increment hit counter
+            Cache-->>App: event (cache hit)
+        end
+    else Not in memory
+        opt IndexedDB enabled
+            Cache->>IDB: Lookup by ID
+            alt Found in IndexedDB
+                IDB-->>Cache: Return cached event
+                Cache->>Cache: Check expiration
+                alt Expired
+                    Cache->>IDB: Delete expired event
+                    Cache-->>App: null (cache miss)
+                else Not expired
+                    Cache->>Mem: Promote to memory cache
+                    Cache->>Cache: Increment hit counter
+                    Cache-->>App: event (cache hit from IDB)
+                end
+            else Not found
+                Cache->>Cache: Increment miss counter
+                Cache-->>App: null (cache miss)
+            end
+        end
+    end
+    deactivate Cache
+
+    Note over App,Relay: Query Flow with Filters
+
+    App->>Cache: query(filter)
+    activate Cache
+    Cache->>Cache: Parse filter criteria
+    Cache->>Mem: Use indexed lookup
+    alt Filter by IDs
+        Mem-->>Cache: Return events matching IDs
+    else Filter by authors
+        Mem->>Mem: Lookup pubkey index
+        Mem-->>Cache: Return author's events
+    else Filter by kinds
+        Mem->>Mem: Lookup kind index
+        Mem-->>Cache: Return events of kind
+    else Full scan
+        Mem-->>Cache: Return all events
+    end
+    Cache->>Cache: Apply additional filters (tags, time)
+    Cache->>Cache: Check expiration for each
+    Cache->>Cache: Sort by created_at DESC
+    Cache->>Cache: Apply limit
+    Cache->>Cache: Track query latency
+    Cache-->>App: Filtered events
+    deactivate Cache
+
+    Note over App,Relay: Cache Invalidation on Publish
+
+    App->>Cache: invalidateOnPublish(newEvent)
+    activate Cache
+    Cache->>Cache: Analyze event type
+    alt Replaceable event (kind 0,3,10000-19999)
+        Cache->>Cache: Generate patterns
+        Note right of Cache: pubkey:{author}<br/>kind:{kind}
+        Cache->>Mem: Invalidate matching events
+        opt IndexedDB enabled
+            Cache->>IDB: Delete matching events
+        end
+    end
+    alt Event references others (e-tags)
+        loop For each referenced event
+            Cache->>Mem: Delete referenced event
+            Cache->>IDB: Delete from IndexedDB
+        end
+    end
+    Cache->>Cache: Update eviction statistics
+    Cache-->>App: Invalidation complete
+    deactivate Cache
+
+    Note over App,Relay: Automatic Cleanup (Every 5 minutes)
+
+    Cache->>Cache: cleanup() timer fires
+    activate Cache
+    Cache->>Mem: Scan for expired events
+    Mem-->>Cache: List of expired IDs
+    loop For each expired event
+        Cache->>Mem: Delete event
+        Cache->>IDB: Delete from IndexedDB
+        Cache->>Cache: Update indexes
+        Cache->>Cache: Increment expiration counter
+    end
+    Cache->>Cache: Update lastCleanup timestamp
+    Cache-->>Cache: Cleanup complete
+    deactivate Cache

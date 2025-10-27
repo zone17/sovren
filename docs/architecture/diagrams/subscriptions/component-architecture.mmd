@@ -1,0 +1,52 @@
+%% Component Architecture Diagram
+%% Story: PAY-005 - Build Subscription Management UI Components
+%% Describes the component hierarchy and relationships
+
+graph TD
+    %% Main Components
+    App[Application Root] --> SM[SubscriptionManager<br/>Creator View]
+    App --> USM[UserSubscriptionManager<br/>User/Supporter View]
+
+    %% SubscriptionManager Children
+    SM --> PT[PricingTierCard<br/>Component]
+    SM --> SubC[SubscriberCard<br/>Component]
+    SM --> TD[TierDialog<br/>Create/Edit Tier]
+
+    %% UserSubscriptionManager Children
+    USM --> AST[ActiveSubscriptionsTab]
+    USM --> RST[RenewalSettingsTab]
+    USM --> PMT[PaymentMethodsTab]
+    USM --> SHT[SubscriptionHistoryTab]
+
+    %% Shared SubscriptionCard
+    AST --> SC[SubscriptionCard<br/>Reusable Component]
+    PT -.uses.-> SC
+
+    %% UI Components (shadcn/ui)
+    SC --> Card[Card Components]
+    SC --> Badge[Badge]
+    SC --> Button[Button]
+    TD --> Dialog[Dialog]
+    TD --> Input[Input/Select]
+
+    %% Services
+    USM --> SVC[useUserSubscriptionService<br/>Hook]
+    SVC --> API[API Service Layer]
+    API --> Mock[MockService<br/>Development]
+    API --> Prod[ProductionService<br/>Production]
+
+    %% State Management
+    SM -.local state.-> React[React State]
+    USM -.local state.-> React
+
+    %% Styling
+    SC -.styling.-> Tailwind[TailwindCSS]
+
+    %% Icons
+    SC --> Icons[Lucide Icons]
+
+    style SM fill:#e1f5fe
+    style USM fill:#e1f5fe
+    style SC fill:#fff9c4
+    style SVC fill:#f3e5f5
+    style API fill:#f3e5f5

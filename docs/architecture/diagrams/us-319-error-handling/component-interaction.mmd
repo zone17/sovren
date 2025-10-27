@@ -1,0 +1,50 @@
+graph TD
+    A[App Root] --> B[ErrorBoundary]
+    B --> C[Application Components]
+
+    C --> D[NOSTR Services]
+    D --> E[RelayPoolManager]
+    D --> F[EventPublisher]
+    D --> G[SubscriptionManager]
+    D --> H[MonitoringService]
+
+    E -->|Connection Errors| I[ConnectionErrorDisplay]
+    F -->|Publish Errors| J[PublishErrorHandler]
+    G -->|Subscription Errors| K[SubscriptionErrorDisplay]
+    H -->|Alerts| L[ErrorToast System]
+
+    I --> L
+    J --> L
+    K --> L
+
+    B -->|Catches Unhandled| M[ErrorFallbackUI]
+    M -->|User Action| N[Retry/Recovery Logic]
+
+    L --> O[Toast Container]
+    O --> P[Individual Toast Messages]
+    P -->|Auto-dismiss| Q[Remove Toast]
+    P -->|User Dismiss| Q
+    P -->|Retry Action| N
+
+    subgraph "Error Handling Layer"
+        B
+        I
+        J
+        K
+        L
+        M
+    end
+
+    subgraph "NOSTR Service Layer"
+        E
+        F
+        G
+        H
+    end
+
+    style B fill:#ff6b6b
+    style L fill:#ffd93d
+    style I fill:#6bcf7f
+    style J fill:#6bcf7f
+    style K fill:#6bcf7f
+    style M fill:#ff8787

@@ -1,0 +1,44 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#1a1a1a','primaryTextColor':'#fff','primaryBorderColor':'#7C0000','lineColor':'#F8B229','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+sequenceDiagram
+    participant App as Application
+    participant Service as RelayPoolManager
+    participant Config as RelayConfig
+    participant Env as Environment
+    participant Cache as Relay Cache
+    participant Defaults as Default Relays
+
+    App->>Service: initialize()
+    Service->>Config: getRelayUrls()
+
+    alt Cache Available
+        Config->>Cache: Check cached relays
+        Cache-->>Config: Return cached relays
+        Config-->>Service: Relay URLs
+    else No Cache
+        Config->>Env: Check VITE_NOSTR_RELAYS
+        alt Environment Variable Set
+            Env-->>Config: Custom relay URLs
+            Config->>Config: Parse & Validate URLs
+            Config->>Cache: Store in cache
+        else No Environment Variable
+            Config->>Env: Check NOSTR_RELAYS
+            alt Fallback Variable Set
+                Env-->>Config: Custom relay URLs
+                Config->>Config: Parse & Validate URLs
+                Config->>Cache: Store in cache
+            else No Variables
+                Config->>Defaults: Get default relays
+                Defaults-->>Config: Default relay list
+                Config->>Cache: Store in cache
+            end
+        end
+        Config-->>Service: Relay URLs
+    end
+
+    Service->>Service: Validate relay URLs
+    Service->>Service: Create connections
+    Service-->>App: Initialized
+
+    Note over App,Defaults: US-309: Centralized Relay Configuration
+    Note over Config,Cache: Single source of truth for relay URLs
+    Note over Env,Defaults: Environment-based with fallbacks

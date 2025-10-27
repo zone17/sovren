@@ -1,0 +1,69 @@
+%% US-322: NOSTR Backup Encryption Process
+%% Detailed encryption and decryption flow with security features
+
+graph LR
+    subgraph "Encryption Process"
+        P1[Password Input]
+        V1[Validate Password<br/>Min 12 chars, complexity]
+        S1[Generate Salt<br/>32 bytes random]
+        D1[PBKDF2 Key Derivation<br/>100,000 iterations<br/>SHA-256]
+        I1[Generate IV<br/>12 bytes random]
+        E1[AES-256-GCM<br/>Encryption]
+        T1[Auth Tag<br/>16 bytes]
+        O1[Encrypted Backup]
+    end
+
+    subgraph "Decryption Process"
+        P2[Password Input]
+        B2[Encrypted Backup]
+        S2[Extract Salt]
+        D2[PBKDF2 Key Derivation<br/>100,000 iterations<br/>SHA-256]
+        I2[Extract IV]
+        T2[Extract Auth Tag]
+        V2[Verify Auth Tag]
+        DC[AES-256-GCM<br/>Decryption]
+        O2[Decrypted Data]
+    end
+
+    subgraph "Security Features"
+        F1[Zero-Knowledge<br/>Architecture]
+        F2[Salt Randomization]
+        F3[Authentication Tag<br/>Verification]
+        F4[Checksum Validation<br/>SHA-256]
+    end
+
+    P1 --> V1
+    V1 -->|Valid| S1
+    V1 -->|Invalid| REJECT[Reject]
+
+    S1 --> D1
+    P1 --> D1
+    D1 --> I1
+    I1 --> E1
+    E1 --> T1
+    T1 --> O1
+
+    P2 --> D2
+    B2 --> S2
+    S2 --> D2
+    B2 --> I2
+    B2 --> T2
+    I2 --> DC
+    D2 --> DC
+    T2 --> V2
+    V2 -->|Valid| DC
+    V2 -->|Invalid| FAIL[Decryption Failed]
+    DC --> O2
+
+    F1 -.-> D1
+    F2 -.-> S1
+    F3 -.-> T1
+    F3 -.-> V2
+    F4 -.-> O2
+
+    style E1 fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff
+    style DC fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff
+    style V1 fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    style V2 fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    style REJECT fill:#ef4444,stroke:#b91c1c,stroke-width:2px,color:#fff
+    style FAIL fill:#ef4444,stroke:#b91c1c,stroke-width:2px,color:#fff

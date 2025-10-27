@@ -1,0 +1,429 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders default variant correctly: default variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Default Button
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders destructive variant correctly: destructive variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#da3633] text-white shadow-[0_1px_2px_rgba(218,54,51,0.12)] hover:bg-[#cb2d2a] hover:shadow-[0_2px_4px_rgba(218,54,51,0.16)] active:bg-[#bc2a28] active:shadow-[0_1px_2px_rgba(218,54,51,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Delete
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders ghost variant correctly: ghost variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-[#656d76] hover:bg-[#f3f4f6] hover:text-[#24292f] active:bg-[#e5e7ea] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Ghost
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders lightning variant correctly: lightning variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#f7931a] text-white shadow-[0_1px_2px_rgba(247,147,26,0.12)] hover:bg-[#e8851a] hover:shadow-[0_2px_4px_rgba(247,147,26,0.16)] active:bg-[#d97919] active:shadow-[0_1px_2px_rgba(247,147,26,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    ⚡ Lightning
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders link variant correctly: link variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-[#0969da] underline-offset-4 hover:underline hover:text-[#0860ca] active:text-[#0757ba] h-8 px-4 text-[13px]"
+  >
+    Link
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders outline variant correctly: outline variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-[#d1d9e0] bg-white text-[#24292f] shadow-[0_1px_2px_rgba(31,35,40,0.04)] hover:border-[#8c959f] hover:shadow-[0_2px_4px_rgba(31,35,40,0.08)] active:border-[#656d76] active:shadow-[0_1px_2px_rgba(31,35,40,0.04)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Outline
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders premium variant correctly: premium variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#1f2937] text-white shadow-[0_1px_2px_rgba(31,41,55,0.12)] hover:bg-[#111827] hover:shadow-[0_2px_4px_rgba(31,41,55,0.16)] active:bg-[#0f172a] active:shadow-[0_1px_2px_rgba(31,41,55,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Premium
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders primary variant correctly: primary variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Primary Button
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders secondary variant correctly: secondary variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#f6f8fa] text-[#24292f] border border-[#d1d9e0] shadow-[0_1px_2px_rgba(31,35,40,0.04)] hover:bg-[#f3f4f6] hover:border-[#8c959f] hover:shadow-[0_2px_4px_rgba(31,35,40,0.08)] active:bg-[#e5e7ea] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Secondary
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Basic Button Variants Button Variants Snapshots renders sovereign variant correctly: sovereign variant 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#6366f1] text-white shadow-[0_1px_2px_rgba(99,102,241,0.12)] hover:bg-[#5b5fd1] hover:shadow-[0_2px_4px_rgba(99,102,241,0.16)] active:bg-[#5350c1] active:shadow-[0_1px_2px_rgba(99,102,241,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    🔵 Sovereign
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Accessibility renders disabled button with proper accessibility: disabled-accessibility 1`] = `
+<div>
+  <button
+    aria-label="Disabled action"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    disabled=""
+  >
+    Disabled Action
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Accessibility renders loading button with proper accessibility: loading-accessibility 1`] = `
+<div>
+  <button
+    aria-label="Loading action"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    disabled=""
+  >
+    <div
+      class="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-60"
+    />
+    Loading Action
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Accessibility renders with proper ARIA attributes: aria-attributes 1`] = `
+<div>
+  <button
+    aria-describedby="save-description"
+    aria-label="Save document"
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    role="button"
+    tabindex="0"
+  >
+    Save
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Combinations Button Combinations Snapshots renders bitcoin lightning actions correctly: bitcoin lightning actions 1`] = `
+<div>
+  <div
+    class="flex flex-col space-y-2"
+  >
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#f7931a] text-white shadow-[0_1px_2px_rgba(247,147,26,0.12)] hover:bg-[#e8851a] hover:shadow-[0_2px_4px_rgba(247,147,26,0.16)] active:bg-[#d97919] active:shadow-[0_1px_2px_rgba(247,147,26,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      ⚡ Send Lightning
+    </button>
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#6366f1] text-white shadow-[0_1px_2px_rgba(99,102,241,0.12)] hover:bg-[#5b5fd1] hover:shadow-[0_2px_4px_rgba(99,102,241,0.16)] active:bg-[#5350c1] active:shadow-[0_1px_2px_rgba(99,102,241,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      🔵 Create Invoice
+    </button>
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#1f2937] text-white shadow-[0_1px_2px_rgba(31,41,55,0.12)] hover:bg-[#111827] hover:shadow-[0_2px_4px_rgba(31,41,55,0.16)] active:bg-[#0f172a] active:shadow-[0_1px_2px_rgba(31,41,55,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      💎 Premium Features
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Combinations Button Combinations Snapshots renders button group horizontal correctly: button group horizontal 1`] = `
+<div>
+  <div
+    class="flex space-x-2"
+  >
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 border border-[#d1d9e0] bg-white text-[#24292f] shadow-[0_1px_2px_rgba(31,35,40,0.04)] hover:border-[#8c959f] hover:shadow-[0_2px_4px_rgba(31,35,40,0.08)] active:border-[#656d76] active:shadow-[0_1px_2px_rgba(31,35,40,0.04)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      Cancel
+    </button>
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      Save
+    </button>
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#da3633] text-white shadow-[0_1px_2px_rgba(218,54,51,0.12)] hover:bg-[#cb2d2a] hover:shadow-[0_2px_4px_rgba(218,54,51,0.16)] active:bg-[#bc2a28] active:shadow-[0_1px_2px_rgba(218,54,51,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      Delete
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Combinations Button Combinations Snapshots renders button group vertical correctly: button group vertical 1`] = `
+<div>
+  <div
+    class="flex flex-col space-y-2"
+  >
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      Primary Action
+    </button>
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#f6f8fa] text-[#24292f] border border-[#d1d9e0] shadow-[0_1px_2px_rgba(31,35,40,0.04)] hover:bg-[#f3f4f6] hover:border-[#8c959f] hover:shadow-[0_2px_4px_rgba(31,35,40,0.08)] active:bg-[#e5e7ea] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      Secondary Action
+    </button>
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 text-[#656d76] hover:bg-[#f3f4f6] hover:text-[#24292f] active:bg-[#e5e7ea] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    >
+      Tertiary Action
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Custom Props renders with custom className: custom-className 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px] custom-button-class"
+  >
+    Custom Button
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Custom Props renders with custom data attributes: with-data-attributes 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    data-analytics="button-click"
+    data-testid="custom-button"
+  >
+    Analytics Button
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Custom Props renders with custom onClick handler: with-onClick 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Clickable Button
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Edge Cases Button Edge Cases Snapshots renders button with long text correctly: button with long text 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    This is a very long button text that might wrap or truncate
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Edge Cases Button Edge Cases Snapshots renders button with mixed content correctly: button with mixed content 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    <span
+      class="mr-2"
+    >
+      💡
+    </span>
+    Smart Action
+    <span
+      class="ml-2"
+    >
+      ⚡
+    </span>
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Edge Cases Button Edge Cases Snapshots renders button with numbers and symbols correctly: button with numbers and symbols 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    $50.00 - Process Payment
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Edge Cases Button Edge Cases Snapshots renders button with only icon correctly: button with only icon 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] text-[13px] font-medium leading-none tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 w-8 p-0"
+  >
+    🏠
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Edge Cases Button Edge Cases Snapshots renders button with special characters correctly: button with special characters 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Save & Continue → Next
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Edge Cases Button Edge Cases Snapshots renders empty button correctly: empty button 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  />
+</div>
+`;
+
+exports[`Button Component Snapshots Button Sizes Button Sizes Snapshots renders default size correctly: default size 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+  >
+    Default
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Sizes Button Sizes Snapshots renders icon size correctly: icon size 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] text-[13px] font-medium leading-none tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 w-8 p-0"
+  >
+    🏠
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Sizes Button Sizes Snapshots renders large size correctly: large size 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-9 px-6 text-[14px]"
+  >
+    Large
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button Sizes Button Sizes Snapshots renders small size correctly: small size 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-7 px-3 text-[12px]"
+  >
+    Small
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button States Button States Snapshots renders disabled state correctly: disabled state 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    disabled=""
+  >
+    Disabled
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button States Button States Snapshots renders loading and disabled correctly: loading and disabled 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    disabled=""
+  >
+    <div
+      class="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-60"
+    />
+    Loading Disabled
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button States Button States Snapshots renders loading state correctly: loading state 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+    disabled=""
+  >
+    <div
+      class="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-60"
+    />
+    Loading...
+  </button>
+</div>
+`;
+
+exports[`Button Component Snapshots Button States Button States Snapshots renders loading with different variants correctly: loading with different variants 1`] = `
+<div>
+  <div
+    class="space-y-2"
+  >
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      disabled=""
+    >
+      <div
+        class="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-60"
+      />
+      Default Loading
+    </button>
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#da3633] text-white shadow-[0_1px_2px_rgba(218,54,51,0.12)] hover:bg-[#cb2d2a] hover:shadow-[0_2px_4px_rgba(218,54,51,0.16)] active:bg-[#bc2a28] active:shadow-[0_1px_2px_rgba(218,54,51,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      disabled=""
+    >
+      <div
+        class="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-60"
+      />
+      Destructive Loading
+    </button>
+    <button
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-[6px] font-medium tracking-[-0.01em] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 bg-[#f7931a] text-white shadow-[0_1px_2px_rgba(247,147,26,0.12)] hover:bg-[#e8851a] hover:shadow-[0_2px_4px_rgba(247,147,26,0.16)] active:bg-[#d97919] active:shadow-[0_1px_2px_rgba(247,147,26,0.12)] active:translate-y-[0.5px] h-8 px-4 text-[13px]"
+      disabled=""
+    >
+      <div
+        class="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-60"
+      />
+      Lightning Loading
+    </button>
+  </div>
+</div>
+`;

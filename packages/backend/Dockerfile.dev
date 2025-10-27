@@ -1,0 +1,53 @@
+# Development Dockerfile for Sovren Backend
+# Optimized for development with hot reloading and debugging
+
+FROM node:18-alpine
+
+# Install development tools and dependencies
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    curl \
+    git \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY package*.json ./
+COPY tsconfig*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm ci && npm cache clean --force
+
+# Install nodemon globally for development
+RUN npm install -g nodemon ts-node
+
+# Copy source code (this will be overridden by volume mounts)
+COPY src/ ./src/
+
+# Create non-root user for development
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S backend -u 1001 -G nodejs
+
+# Set ownership of app directory
+RUN chown -R backend:nodejs /app
+
+# Switch to non-root user
+USER backend
+
+# Expose application port and debugging port
+EXPOSE 3001 9229
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3001/health || exit 1
+
+# Development command with debugging enabled
+CMD ["npm", "run", "dev"]
+
+# Metadata labels
+LABEL org.opencontainers.image.title="Sovren Backend Development"
+LABEL org.opencontainers.image.description="Development environment for Sovren backend"
+LABEL org.opencontainers.image.version="dev"

@@ -1,0 +1,75 @@
+stateDiagram-v2
+    [*] --> Created: User action occurs
+
+    Created --> Buffered: Add to memory buffer
+    Buffered --> Persisted: Periodic flush (5s)<br/>or buffer full (1000)
+
+    Persisted --> Indexed: Database INSERT complete
+    Indexed --> Cached: Store counters in Redis
+    Cached --> Published: Emit to Event Bus
+
+    Published --> Analyzed: Real-time stream consumers
+    Published --> Aggregated: Hourly/daily rollups
+
+    state "Activity States" as states {
+        Analyzed --> Active: Within retention period
+        Active --> Aging: Approaching anonymization
+    }
+
+    state "Privacy Lifecycle" as privacy {
+        Aging --> Anonymized: After anonymizeAfterDays
+        Anonymized --> Archived: PII removed
+        Archived --> Deleted: After deleteAfterDays
+    }
+
+    state "Analytics Processing" as analytics {
+        Aggregated --> HourlyRollup
+        Aggregated --> DailyRollup
+        Aggregated --> WeeklyRollup
+        Aggregated --> MonthlyRollup
+
+        HourlyRollup --> StatisticsCache
+        DailyRollup --> StatisticsCache
+        WeeklyRollup --> StatisticsCache
+        MonthlyRollup --> StatisticsCache
+    }
+
+    state "Security Monitoring" as security {
+        Analyzed --> RateLimitCheck
+        RateLimitCheck --> PatternDetection
+        PatternDetection --> SuspiciousActivity: Threshold exceeded
+        SuspiciousActivity --> SecurityAlert
+        SecurityAlert --> AuditLog
+    }
+
+    Deleted --> [*]
+
+    note right of Created
+        Activity event created with:
+        - userId
+        - type (ActivityType enum)
+        - metadata (IP, device, etc)
+        - timestamp
+    end note
+
+    note right of Buffered
+        High-throughput optimization:
+        - In-memory buffer (1000 items)
+        - Batch INSERT reduces DB load
+        - Non-blocking for API response
+    end note
+
+    note right of Anonymized
+        GDPR Compliance:
+        - Remove PII (IP, user agent)
+        - Keep aggregated statistics
+        - Maintain data utility
+    end note
+
+    note right of SecurityAlert
+        Fraud Detection Triggers:
+        - Rapid requests (>100/min)
+        - Failed logins (>5/15min)
+        - Multiple locations
+        - Unusual times (2am-5am)
+    end note

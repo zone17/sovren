@@ -1,0 +1,62 @@
+sequenceDiagram
+    participant Client as React Component
+    participant EPS as EventPublisherService
+    participant KMS as KeyManagementService
+    participant RPM as RelayPoolManager
+    participant Cache as EventCacheService
+    participant Relay as NOSTR Relay
+    participant Monitor as MonitoringService
+
+    Client->>EPS: publishEvent(unsignedEvent)
+    activate EPS
+
+    EPS->>EPS: validateEvent()
+
+    alt Event Invalid
+        EPS-->>Client: ValidationError
+    end
+
+    EPS->>KMS: signEvent(unsignedEvent)
+    activate KMS
+
+    alt Browser Extension Available
+        KMS->>Browser: window.nostr.signEvent()
+        Browser-->>KMS: signedEvent
+    else Local Key
+        KMS->>KMS: finalizeEvent(privateKey)
+        KMS-->>KMS: signedEvent
+    end
+
+    KMS-->>EPS: signedEvent
+    deactivate KMS
+
+    EPS->>RPM: publishToRelays(signedEvent)
+    activate RPM
+
+    RPM->>Monitor: recordMetric('publish_attempt')
+
+    par Publish to Multiple Relays
+        RPM->>Relay: EVENT message
+        Relay-->>RPM: OK true
+        RPM->>Relay: EVENT message
+        Relay-->>RPM: OK true
+        RPM->>Relay: EVENT message
+        Relay-->>RPM: OK false, "error"
+    end
+
+    RPM->>Cache: cacheEvent(signedEvent)
+    activate Cache
+    Cache->>Cache: deduplication check
+    Cache->>IndexedDB: store event
+    Cache-->>RPM: cached
+    deactivate Cache
+
+    RPM->>Monitor: recordMetric('publish_success', relayCount)
+    RPM-->>EPS: PublishResult (2/3 relays)
+    deactivate RPM
+
+    EPS->>Monitor: trackEventPublication(result)
+    EPS-->>Client: PublishResult
+    deactivate EPS
+
+    Note over Client,Monitor: Event published to 2/3 relays<br/>Cached locally<br/>Metrics recorded

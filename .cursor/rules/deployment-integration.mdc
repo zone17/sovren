@@ -1,0 +1,224 @@
+---
+description: Mandatory deployment integration requirements for all code changes (Post Epic 006)
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+alwaysApply: true
+---
+
+# Deployment Integration Rules (MANDATORY)
+
+**Status**: MANDATORY
+**Effective**: 2025-10-27 (Post Epic 006 - 100% CI/CD Automation)
+**Applies To**: ALL code changes
+
+## Overview
+
+Following Epic 006 completion, Sovren has **100% CI/CD automation** with zero-downtime blue-green deployments. **ALL code changes MUST integrate with automated pipelines.**
+
+## Mandatory Requirements
+
+### 1. Story Completion Criteria
+
+Stories are **NOT COMPLETE** until:
+- ✅ CI/CD quality gates passing
+- ✅ Staging deployment successful
+- ✅ Health checks passing (/health, /ready, /live, /detailed)
+- ✅ Smoke tests passing (28/28 tests)
+- ✅ Deployment status documented in completion summary
+
+### 2. Health Check Endpoints
+
+**All new backend services MUST implement**:
+
+```typescript
+// packages/backend/src/routes/health.ts
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    service: 'service-name',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: process.env.APP_VERSION
+  });
+});
+
+app.get('/ready', async (req, res) => {
+  const dbHealthy = await checkDatabaseConnection();
+  const cacheHealthy = await checkCacheConnection();
+
+  if (dbHealthy && cacheHealthy) {
+    res.json({ status: 'ready' });
+  } else {
+    res.status(503).json({ status: 'not ready' });
+  }
+});
+
+app.get('/live', (req, res) => {
+  res.json({ status: 'alive' });
+});
+
+app.get('/detailed', async (req, res) => {
+  // Admin-only detailed health report
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    services: {
+      database: await getDatabaseHealth(),
+      cache: await getCacheHealth(),
+      external: await getExternalServicesHealth()
+    },
+    metrics: {
+      memory: process.memoryUsage(),
+      cpu: process.cpuUsage()
+    }
+  });
+});
+```
+
+### 3. Pull Request Template
+
+**All PRs MUST include deployment checklist**:
+
+```markdown
+## Deployment Checklist
+- [ ] CI/CD checks passing
+- [ ] Tests passing (≥95% coverage for services)
+- [ ] Documentation updated
+- [ ] CHANGELOG.md updated
+- [ ] Health check endpoints implemented (if new service)
+- [ ] Ready for staging deployment
+
+## Deployment Status (Post-Merge)
+- [ ] Staging deployment: Success
+- [ ] Health checks: All passing
+- [ ] Smoke tests: 28/28 passing
+- [ ] Production: Pending manual approval
+```
+
+### 4. Deployment Workflow
+
+**Automatic Staging Deployment** (on merge to main):
+```bash
+# Triggered automatically
+git push origin main
+
+# Monitor deployment
+gh run watch
+
+# Verify staging
+curl https://api-staging.sovren.dev/health
+```
+
+**Production Deployment** (manual approval):
+```bash
+# Trigger production deployment
+gh workflow run backend-deployment.yml -f environment=production
+
+# Approve in GitHub UI
+# Actions → Backend Deployment → Review deployments → Approve
+
+# Verify production
+curl https://api.sovren.dev/health
+```
+
+### 5. Quality Gates
+
+**Pre-Deployment** (automatic):
+- ESLint: 0 errors/warnings
+- TypeScript: Type checks passing
+- Tests: ≥95% coverage for services
+- Security: 0 high/critical vulnerabilities
+- Docker: Image size < 150MB
+- Trivy: Security scan clean
+
+**Post-Deployment** (automatic):
+- Deployment time: < 10 minutes
+- Health checks: All passing
+- Smoke tests: 28/28 passing
+- Error rate: < 5%
+- Response time P95: < 1000ms
+
+### 6. Rollback Procedure
+
+**Automatic Rollback Triggers**:
+- HTTP 5xx error rate > 5% for 2 minutes
+- Response time P95 > 1000ms
+- Health check failures > 3 consecutive
+
+**Manual Rollback**:
+```bash
+# Emergency rollback (< 2 minutes)
+gh workflow run automated-rollback.yml -f environment=staging
+
+# Or for production
+gh workflow run automated-rollback.yml -f environment=production
+```
+
+## Code Patterns
+
+### Backend Service Template
+
+```typescript
+// packages/backend/src/services/myService.ts
+
+export class MyService {
+  async initialize() {
+    // Service initialization
+  }
+
+  async healthCheck(): Promise<boolean> {
+    // Service-specific health check
+    return true;
+  }
+}
+```
+
+### Frontend Component Template
+
+```typescript
+// packages/frontend/src/features/my-feature/components/MyComponent.tsx
+
+export const MyComponent: React.FC = () => {
+  // Component implementation
+  return <div>My Component</div>;
+};
+
+// Required: Storybook story
+// packages/frontend/src/stories/MyComponent.stories.tsx
+
+// Required: Tests (≥80% coverage)
+// packages/frontend/src/features/my-feature/__tests__/MyComponent.test.tsx
+```
+
+## Enforcement
+
+**Automated via CI/CD**:
+- Pre-commit hooks (lint, format, test)
+- GitHub Actions (quality gates)
+- Deployment pipeline (health checks, smoke tests)
+
+**Manual via Code Review**:
+- Deployment checklist verified
+- Health check endpoints reviewed
+- Documentation reviewed
+
+## References
+
+- **Deployment Integration Standards**: docs/development/DEPLOYMENT_INTEGRATION_STANDARDS.md
+- **Agent Template**: .claude/agents/DEPLOYMENT_INTEGRATION_TEMPLATE.md
+- **Deployment Guide**: docs/deployment/DEPLOYMENT_GUIDE.md
+- **Epic 006 Summary**: EPIC-006-DEPLOYMENT-AUTOMATION-COMPLETE.md
+
+## Exceptions
+
+**None permitted.** All code changes MUST follow this standard.
+
+---
+
+**Last Updated**: 2025-10-27
+**Version**: 1.0.0
+**Status**: MANDATORY

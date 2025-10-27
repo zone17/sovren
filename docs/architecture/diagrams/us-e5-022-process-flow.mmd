@@ -1,0 +1,48 @@
+flowchart TD
+    START([Client Request]) --> VALIDATE{Validate<br/>User IDs}
+
+    VALIDATE -->|Invalid| ERROR_INVALID[Throw Error:<br/>Invalid User IDs]
+    VALIDATE -->|Self-Relationship| ERROR_SELF[Throw Error:<br/>Cannot follow self]
+    VALIDATE -->|Valid| RATE_LIMIT{Check<br/>Rate Limit}
+
+    RATE_LIMIT -->|Exceeded| ERROR_RATE[Throw Error:<br/>Rate Limit]
+    RATE_LIMIT -->|OK| CHECK_EXISTING{Existing<br/>Relationship?}
+
+    CHECK_EXISTING -->|Yes & Active| RETURN_EXISTING[Return Existing<br/>Idempotent]
+    CHECK_EXISTING -->|No| CHECK_BLOCK{Check<br/>Blocks}
+
+    CHECK_BLOCK -->|Blocked| ERROR_BLOCKED[Throw Error:<br/>Blocked]
+    CHECK_BLOCK -->|Not Blocked| CHECK_PRIVACY{Check<br/>Privacy Settings}
+
+    CHECK_PRIVACY -->|Requires Approval| CREATE_PENDING[Create Pending<br/>Relationship]
+    CHECK_PRIVACY -->|Public Account| CREATE_ACTIVE[Create Active<br/>Relationship]
+
+    CREATE_PENDING --> UPDATE_GRAPH_PENDING[Skip Graph Update]
+    CREATE_ACTIVE --> UPDATE_GRAPH[Update Graph<br/>Add Bidirectional Links]
+
+    UPDATE_GRAPH_PENDING --> INVALIDATE_CACHE
+    UPDATE_GRAPH --> INVALIDATE_CACHE[Invalidate<br/>Cache Patterns]
+
+    INVALIDATE_CACHE --> EMIT_EVENT[Emit Domain Event<br/>user.followed]
+
+    EMIT_EVENT --> UPDATE_METRICS[Update Metrics<br/>Counters]
+
+    UPDATE_METRICS --> LOG[Log Success]
+
+    LOG --> RETURN[Return Relationship]
+
+    ERROR_INVALID --> END([End])
+    ERROR_SELF --> END
+    ERROR_RATE --> END
+    ERROR_BLOCKED --> END
+    RETURN_EXISTING --> END
+    RETURN --> END
+
+    style START fill:#50C878,stroke:#2E7D32,stroke-width:2px,color:#fff
+    style RETURN fill:#50C878,stroke:#2E7D32,stroke-width:2px,color:#fff
+    style ERROR_INVALID fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
+    style ERROR_SELF fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
+    style ERROR_RATE fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
+    style ERROR_BLOCKED fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
+    style UPDATE_GRAPH fill:#9370DB,stroke:#6B4B9C,stroke-width:2px,color:#fff
+    style EMIT_EVENT fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff

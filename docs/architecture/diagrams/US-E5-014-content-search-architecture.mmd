@@ -1,0 +1,48 @@
+graph TB
+    subgraph "Content Search Service Architecture"
+        API[API Layer]
+        CSS[ContentSearchService]
+        ES[Elasticsearch Client]
+        CACHE[CacheService]
+        LOGGER[Logger]
+
+        API -->|Search Request| CSS
+        CSS -->|Check Cache| CACHE
+        CACHE -->|Cache Miss| CSS
+        CSS -->|Query| ES
+        ES -->|Results| CSS
+        CSS -->|Store 5min TTL| CACHE
+        CSS -->|Log| LOGGER
+        CSS -->|Track Analytics| ANALYTICS[Analytics Store]
+
+        subgraph "Elasticsearch Index"
+            IDX[sovren_content]
+            MAPPING[Field Mappings]
+            ANALYZER[Custom Analyzers]
+
+            ES --> IDX
+            IDX --> MAPPING
+            IDX --> ANALYZER
+        end
+
+        subgraph "Search Features"
+            FTS[Full-Text Search]
+            FACETS[Faceted Search]
+            SUGGEST[Autocomplete]
+            FILTER[Advanced Filtering]
+            SORT[Custom Sorting]
+            HIGHLIGHT[Result Highlighting]
+        end
+
+        CSS --> FTS
+        CSS --> FACETS
+        CSS --> SUGGEST
+        CSS --> FILTER
+        CSS --> SORT
+        CSS --> HIGHLIGHT
+    end
+
+    style CSS fill:#4A90E2
+    style ES fill:#F5A623
+    style CACHE fill:#50E3C2
+    style IDX fill:#7ED321

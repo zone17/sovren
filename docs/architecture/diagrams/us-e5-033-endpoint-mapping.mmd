@@ -1,0 +1,108 @@
+graph LR
+    subgraph "Content API Endpoints"
+        CE1[POST /api/v1/content/publish]
+        CE2[POST /api/v1/content/moderate]
+        CE3[GET /api/v1/content/search]
+        CE4[GET /api/v1/content/recommendations]
+        CE5[GET /api/v1/content/analytics/:id]
+        CE6[GET /api/v1/content/versions/:id]
+        CE7[POST /api/v1/content/versions/:id/revert]
+    end
+
+    subgraph "User API Endpoints"
+        UE1[GET /api/v1/users/profile/:id]
+        UE2[PUT /api/v1/users/profile/:id]
+        UE3[GET /api/v1/users/preferences/:id]
+        UE4[PUT /api/v1/users/preferences/:id]
+        UE5[GET /api/v1/users/activity/:id]
+        UE6[POST /api/v1/users/relationships/follow]
+        UE7[DELETE /api/v1/users/relationships/unfollow]
+        UE8[GET /api/v1/users/analytics/:id]
+    end
+
+    subgraph "Payment API Endpoints"
+        PE1[POST /api/v1/payments/invoices]
+        PE2[GET /api/v1/payments/invoices/:id]
+        PE3[POST /api/v1/payments/invoices/:id/pay]
+        PE4[GET /api/v1/payments/currency/convert]
+        PE5[POST /api/v1/payments/subscriptions]
+        PE6[PUT /api/v1/payments/subscriptions/:id]
+        PE7[DELETE /api/v1/payments/subscriptions/:id]
+        PE8[POST /api/v1/payments/refunds]
+        PE9[GET /api/v1/payments/analytics]
+        PE10[POST /api/v1/payments/webhooks]
+    end
+
+    subgraph "Content Services"
+        CS1[ContentPublishingService]
+        CS2[ContentModerationService]
+        CS3[ContentSearchService]
+        CS4[ContentRecommendationService]
+        CS5[ContentAnalyticsService]
+        CS6[ContentVersioningService]
+    end
+
+    subgraph "User Services"
+        US1[UserProfileService]
+        US2[UserPreferencesService]
+        US3[UserActivityService]
+        US4[UserRelationshipService]
+        US5[UserAnalyticsService]
+    end
+
+    subgraph "Payment Services"
+        PS1[PaymentProcessingService]
+        PS2[InvoiceService]
+        PS3[CurrencyService]
+        PS4[SubscriptionService]
+        PS5[RefundService]
+        PS6[PaymentAnalyticsService]
+        PS7[WebhookService]
+    end
+
+    CE1 --> CS1
+    CE2 --> CS2
+    CE3 --> CS3
+    CE4 --> CS4
+    CE5 --> CS5
+    CE6 --> CS6
+    CE7 --> CS6
+
+    UE1 --> US1
+    UE2 --> US1
+    UE3 --> US2
+    UE4 --> US2
+    UE5 --> US3
+    UE6 --> US4
+    UE7 --> US4
+    UE8 --> US5
+
+    PE1 --> PS2
+    PE2 --> PS2
+    PE3 --> PS1
+    PE4 --> PS3
+    PE5 --> PS4
+    PE6 --> PS4
+    PE7 --> PS4
+    PE8 --> PS5
+    PE9 --> PS6
+    PE10 --> PS7
+
+    style CS1 fill:#FF9800
+    style CS2 fill:#FF9800
+    style CS3 fill:#FF9800
+    style CS4 fill:#FF9800
+    style CS5 fill:#FF9800
+    style CS6 fill:#FF9800
+    style US1 fill:#4CAF50
+    style US2 fill:#4CAF50
+    style US3 fill:#4CAF50
+    style US4 fill:#4CAF50
+    style US5 fill:#4CAF50
+    style PS1 fill:#2196F3
+    style PS2 fill:#2196F3
+    style PS3 fill:#2196F3
+    style PS4 fill:#2196F3
+    style PS5 fill:#2196F3
+    style PS6 fill:#2196F3
+    style PS7 fill:#2196F3

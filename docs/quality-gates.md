@@ -1,235 +1,366 @@
-# 🚀 Sovren Quality Gates
+# 🚪 Quality Gates
 
-## Overview
+## 📋 Overview
 
-Sovren implements comprehensive **pre-commit quality gates** to maintain our elite engineering standards. Every commit automatically enforces our **91.58% test coverage**, **zero violations**, and **TDD methodology**.
+This document defines the quality gates that all code changes must pass before being integrated into the main codebase. These gates ensure that all code meets our elite engineering standards and maintains the legendary status of the Sovren platform.
 
-## Quality Gates Architecture
+## 🎯 Quality Gate Philosophy
 
-### 🔒 Pre-Commit Gates
-**File**: `.husky/_/pre-commit`
+### Core Principles
 
-Runs on every `git commit` and enforces:
+- **Prevention over Detection**: Catch issues early in the development process
+- **Automated Validation**: Automate quality checks wherever possible
+- **Zero Tolerance**: No exceptions to quality requirements
+- **Continuous Improvement**: Regularly review and enhance quality standards
+- **Visual Documentation**: All implementations must include comprehensive Mermaid diagrams
 
-1. **Code Formatting & Linting** (lint-staged)
-   - ESLint with automatic fixes
-   - Prettier formatting
-   - TypeScript/React best practices
+## 📊 Quality Gate Process
 
-2. **Type Checking**
-   - Full TypeScript compilation
-   - Prevents type errors from reaching repository
+```mermaid
+graph TD
+    A[Code Change] --> B[1. Pre-Commit Gates]
+    B --> C[2. CI/CD Gates]
+    C --> D[3. PR Review Gates]
+    D --> E[4. Post-Merge Gates]
+    E --> F[Deployment]
 
-3. **Test Suite Execution**
-   - All 199 tests must pass
-   - Prevents broken functionality
+    B --> G[Linting & Formatting]
+    B --> H[Unit Tests]
+    B --> I[Documentation Check]
 
-4. **Coverage Enforcement**
-   - Maintains >90% test coverage threshold
-   - Current: **91.58% coverage**
-   - Fails if coverage drops below 90%
+    C --> J[Integration Tests]
+    C --> K[Security Scans]
+    C --> L[Performance Tests]
+    C --> M[Mermaid Diagram Validation]
 
-5. **Security Scanning**
-   - npm audit for vulnerabilities
-   - Blocks commits with security issues
+    D --> N[Code Review]
+    D --> O[Architecture Review]
+    D --> P[Documentation Review]
 
-6. **Build Verification**
-   - Production build must succeed
-   - Prevents deployment-breaking changes
+    E --> Q[E2E Tests]
+    E --> R[Canary Testing]
 
-### 📝 Commit Message Validation
-**File**: `.husky/_/commit-msg`
+    style A fill:#e1f5fe
+    style M fill:#e8f5e8
+    style P fill:#fff3e0
+```
 
-Enforces:
-- **Conventional Commits** format
-- TDD compliance reminders for feat/fix commits
-- Proper categorization (feat, fix, test, docs, etc.)
+## 📝 Quality Gate Requirements
 
-**Valid Examples**:
+### 1. Pre-Commit Gates
+
+These gates run locally before code is committed to the repository:
+
+- **Linting & Formatting**:
+
+  - Zero ESLint errors
+  - Code formatted according to project standards
+  - Import order validation
+
+- **Unit Tests**:
+
+  - All unit tests must pass
+  - New code must have unit tests
+  - Test coverage must meet thresholds
+
+- **Documentation Check**:
+  - Required documentation files exist
+  - Documentation follows standards
+  - Mermaid diagrams are properly formatted
+
+### 2. CI/CD Gates
+
+These gates run in the CI/CD pipeline when code is pushed:
+
+- **Integration Tests**:
+
+  - All integration tests must pass
+  - API contract tests must pass
+  - Database migration tests must pass
+
+- **Security Scans**:
+
+  - Dependency vulnerability scan
+  - SAST (Static Application Security Testing)
+  - Secret detection
+
+- **Performance Tests**:
+
+  - Performance regression tests
+  - Load testing for critical paths
+  - Memory leak detection
+
+- **Mermaid Diagram Validation**:
+  - All required diagrams are present
+  - Diagrams are syntactically valid
+  - Diagrams follow project standards
+
+### 3. PR Review Gates
+
+These gates are part of the pull request review process:
+
+- **Code Review**:
+
+  - Minimum 1 approving review
+  - No unresolved comments
+  - Code follows best practices
+
+- **Architecture Review**:
+
+  - Follows architectural patterns
+  - Properly integrates with existing systems
+  - Considers scalability and performance
+
+- **Documentation Review**:
+  - Complete and accurate documentation
+  - All required Mermaid diagrams present
+  - CHANGELOG properly updated
+
+### 4. Post-Merge Gates
+
+These gates run after code is merged but before deployment:
+
+- **E2E Tests**:
+
+  - All end-to-end tests pass
+  - Cross-browser compatibility
+  - Mobile responsiveness
+
+- **Canary Testing**:
+  - Gradual rollout to subset of users
+  - Monitoring for errors and performance
+  - Automatic rollback if issues detected
+
+## 📊 Mermaid Diagram Requirements
+
+```mermaid
+graph TD
+    A[Mermaid Diagram Requirements] --> B[1. Architecture Overview Diagram]
+    A --> C[2. Component Interaction Diagram]
+    A --> D[3. Data Flow Diagram]
+    A --> E[4. Process Flow Diagram]
+    A --> F[5. Implementation-Specific Diagrams]
+
+    B --> B1[System Context]
+    C --> C1[Component Dependencies]
+    D --> D1[Data Transformation]
+    E --> E1[User/System Interactions]
+    F --> F1[Database Schema]
+    F --> F2[State Machine]
+    F --> F3[Network Topology]
+    F --> F4[Security Flow]
+
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style F fill:#fff3e0
+```
+
+### Mandatory Diagram Types
+
+**EVERY** user story implementation MUST include the following diagrams:
+
+1. **Architecture Overview Diagram**:
+
+   - Shows the components involved in the implementation
+   - Illustrates the relationship between components
+   - Places the changes within the broader system context
+
+2. **Component Interaction Diagram**:
+
+   - Details how components interact with each other
+   - Shows the sequence of operations
+   - Illustrates API calls and data exchange patterns
+
+3. **Data Flow Diagram**:
+
+   - Visualizes how data moves through the system
+   - Shows data transformation steps
+   - Illustrates storage points and persistence mechanisms
+
+4. **Process Flow Diagram**:
+
+   - Provides step-by-step visualization of user interactions
+   - Shows system processes and decision points
+   - Illustrates error handling paths
+
+5. **Implementation-Specific Diagrams** (as needed):
+   - Database schema diagrams for data model changes
+   - State machine diagrams for complex state management
+   - Network topology diagrams for infrastructure changes
+   - Security flow diagrams for authentication/authorization features
+
+## 🛠️ Quality Gate Implementation
+
+### Pre-Commit Hooks
+
 ```bash
-feat: add user authentication system
-fix(login): resolve validation timeout issue
-test: add coverage for payment processing
-docs: update TDD guidelines
-```
+# .husky/pre-commit
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-### 🛡️ Pre-Push Protection
-**File**: `.husky/_/pre-push`
-
-Final verification before remote push:
-- Test suite re-execution
-- Development marker detection (TODO/FIXME)
-- Debug statement identification (console.log)
-- Documentation update reminders
-
-## Quality Metrics
-
-### Current Status ✅
-- **Test Coverage**: 91.58% (exceeds 90% threshold)
-- **Test Count**: 199 tests (all passing)
-- **ESLint Violations**: 0
-- **Security Vulnerabilities**: 0
-- **Build Time**: 349ms
-- **TDD Compliance**: Mandatory
-
-### Coverage Breakdown
-```
-Lines      : 92.82%
-Functions  : 76.71%
-Branches   : 75.75%
-Statements : 91.58%
-```
-
-## Developer Workflow
-
-### 1. Development Cycle
-```bash
-# 1. Write tests first (TDD)
-npm run test:watch
-
-# 2. Implement feature
-# 3. Run quality check
-npm run quality:check
-
-# 4. Fix issues if any
-npm run quality:fix
-
-# 5. Commit (quality gates run automatically)
-git commit -m "feat: add new feature with tests"
-```
-
-### 2. Quality Commands
-```bash
-# Check all quality gates manually
-npm run quality:check
-
-# Fix formatting and linting issues
-npm run quality:fix
-
-# View quality gates status
-npm run quality:gates
-
-# Generate coverage report
-npm run coverage:report
-
-# Current achievement summary
-npm run audit:current
-```
-
-### 3. Bypassing Gates (Emergency Only)
-```bash
-# Skip pre-commit hooks (NOT RECOMMENDED)
-git commit --no-verify -m "emergency: critical hotfix"
-
-# Note: This should only be used in genuine emergencies
-# and must be followed up with proper testing
-```
-
-## Configuration Files
-
-### lint-staged Configuration
-**File**: `package.json`
-```json
-"lint-staged": {
-  "*.{ts,tsx,js,jsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ],
-  "*.{json,md}": [
-    "prettier --write"
-  ]
-}
-```
-
-### Coverage Thresholds
-Enforced in pre-commit hook:
-- **Lines**: >90% required
-- **Functions**: >75% target
-- **Branches**: >75% target
-- **Statements**: >90% required
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. Coverage Below Threshold
-```bash
-❌ Test coverage (89.5%) is below 90% threshold!
-```
-**Solution**: Add tests for uncovered code paths
-
-#### 2. Type Checking Failures
-```bash
-❌ Type checking failed! Please fix TypeScript errors
-```
-**Solution**: Fix TypeScript compilation errors
-
-#### 3. Test Failures
-```bash
-❌ Tests failed! All tests must pass before committing
-```
-**Solution**: Fix failing tests or update test assertions
-
-#### 4. Commit Message Format
-```bash
-❌ Invalid commit message format!
-```
-**Solution**: Use conventional commit format
-
-### Quick Fixes
-```bash
-# Fix formatting issues
+# Run linting and formatting
+npm run lint
 npm run format
 
-# Fix linting issues
-npm run lint:fix
+# Run unit tests
+npm run test:unit
 
-# Run specific test file
-npm test -- Login.test.tsx
+# Check documentation
+npm run docs:check
 
-# Check coverage for specific file
-npm run coverage:report
+# Validate Mermaid diagrams
+npm run mermaid:validate
 ```
 
-## Integration Benefits
+### CI/CD Pipeline
 
-### 🎯 Quality Assurance
-- **Zero regression risk**: All changes validated before commit
-- **Consistent standards**: Automated enforcement
-- **TDD compliance**: Built into workflow
+```yaml
+# .github/workflows/quality-gates.yml
+name: Quality Gates
 
-### 🚀 Developer Experience
-- **Fast feedback**: Immediate quality feedback
-- **Automated fixes**: Lint-staged auto-fixes common issues
-- **Clear guidance**: Descriptive error messages
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
-### 📊 Metrics Tracking
-- **Coverage trends**: Maintained >90%
-- **Test growth**: 72 → 199 tests
-- **Violation prevention**: Zero ESLint/security issues
+jobs:
+  pre-commit-gates:
+    name: Pre-Commit Gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-## Future Enhancements
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-### Planned Additions
-1. **Performance budgets**: Bundle size limits
-2. **Accessibility testing**: WCAG compliance
-3. **Visual regression**: Screenshot comparisons
-4. **Dependency analysis**: License and security scanning
+      - name: Install dependencies
+        run: npm ci
 
-### CI/CD Integration
-Quality gates designed to integrate with:
-- **GitHub Actions**: Pull request validation
-- **Railway deployments**: Pre-deployment verification
-- **Monitoring alerts**: Coverage/performance tracking
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run formatting check
+        run: npm run format:check
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Check documentation
+        run: npm run docs:check
+
+      - name: Validate Mermaid diagrams
+        run: npm run mermaid:validate
+
+  integration-gates:
+    name: Integration Gates
+    runs-on: ubuntu-latest
+    needs: pre-commit-gates
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Run security scans
+        run: npm run security:scan
+
+      - name: Run performance tests
+        run: npm run test:performance
+
+  documentation-gates:
+    name: Documentation Gates
+    runs-on: ubuntu-latest
+    needs: pre-commit-gates
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check documentation completeness
+        run: npm run docs:validate
+
+      - name: Validate Mermaid diagrams
+        run: npm run mermaid:validate
+
+      - name: Check CHANGELOG
+        run: npm run changelog:check
+```
+
+## 🔍 Quality Gate Validation
+
+### Automated Checks
+
+- **Test Coverage**: Enforced minimum coverage thresholds
+- **Code Quality**: SonarQube analysis with quality gates
+- **Documentation**: Automated checks for required documentation
+- **Mermaid Diagrams**: Syntax validation and presence check
+
+### Manual Review Checklist
+
+- [ ] Code follows project standards and best practices
+- [ ] Architecture is consistent with system design
+- [ ] Documentation is complete and accurate
+- [ ] All required Mermaid diagrams are present and clear
+- [ ] Tests cover happy path and edge cases
+- [ ] Security considerations are addressed
+- [ ] Performance impact is acceptable
+- [ ] Accessibility requirements are met
+
+## 📈 Quality Metrics
+
+### Key Quality Indicators
+
+```mermaid
+graph LR
+    A[Quality Metrics] --> B[Test Coverage ≥ 95%]
+    A --> C[Code Duplication < 3%]
+    A --> D[Cyclomatic Complexity < 10]
+    A --> E[Technical Debt Ratio < 5%]
+    A --> F[Documentation Coverage 100%]
+    A --> G[Mermaid Diagram Compliance 100%]
+
+    style A fill:#e1f5fe
+    style F fill:#e8f5e8
+    style G fill:#fff3e0
+```
+
+- **Test Coverage**: Minimum 95% line coverage, 90% branch coverage
+- **Code Duplication**: Less than 3% duplicated code
+- **Cyclomatic Complexity**: Maximum complexity of 10 per function
+- **Technical Debt Ratio**: Less than 5% technical debt
+- **Documentation Coverage**: 100% of public APIs documented
+- **Mermaid Diagram Compliance**: 100% of required diagrams present
+
+### Quality Reporting
+
+- **Dashboard**: Real-time quality metrics dashboard
+- **Trend Analysis**: Historical quality metrics tracking
+- **Team Scorecards**: Team-level quality performance
+- **Quality Alerts**: Automated alerts for quality regressions
+
+## 🏆 Elite Quality Status
+
+Quality achieves **Elite Status** when:
+
+✅ **All automated quality gates pass** with no exceptions
+✅ **Test coverage exceeds 95%** across all code areas
+✅ **Zero known security vulnerabilities** exist in the codebase
+✅ **Documentation is complete** and up-to-date
+✅ **All required Mermaid diagrams** are present and follow standards
+✅ **Technical debt** is actively managed and minimized
 
 ---
 
-## Summary
-
-Sovren's quality gates ensure **every commit maintains elite standards**:
-- ✅ **91.58% test coverage** (automatically enforced)
-- ✅ **Zero violations** (ESLint + security)
-- ✅ **TDD methodology** (built into workflow)
-- ✅ **Production-ready code** (build verification)
-
-No code reaches the repository without meeting these standards. 🎉
+**MANDATORY REQUIREMENT**: Every code change MUST pass all quality gates, including the Mermaid diagram requirements, to be eligible for merge. No exceptions.

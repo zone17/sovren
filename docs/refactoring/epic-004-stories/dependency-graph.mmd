@@ -1,0 +1,106 @@
+graph TB
+    subgraph "Sprint 0: Foundation & Guidelines (Sequential)"
+        S0_1["#001: Audit Redux<br/>Store Structure<br/>(3-4h)"]
+        S0_2["#002: Audit React Query<br/>Usage<br/>(3-4h)"]
+        S0_3["#003: Create Decision<br/>Tree<br/>(2-3h)"]
+        S0_4["#004: Design Architecture<br/>Diagrams<br/>(3-4h)"]
+        S0_5["#005: Team Guidelines<br/>Review<br/>(2h)"]
+    end
+
+    subgraph "Sprint 1A: Server Data Migration (Backend Stream)"
+        S1A_1["#006: React Query Hooks<br/>for Creators<br/>(3-4h)"]
+        S1A_2["#007: React Query Hooks<br/>for Content<br/>(3-4h)"]
+        S1A_3["#008: React Query Hooks<br/>for Payments<br/>(3-4h)"]
+        S1A_4["#009: Remove Server Data<br/>from Redux<br/>(2-3h)"]
+        S1A_5["#010: Update Components<br/>to React Query<br/>(4h)"]
+        S1A_6["#011: Implement Caching<br/>Strategies<br/>(3h)"]
+        S1A_7["#012: Error Handling<br/>for React Query<br/>(3-4h)"]
+    end
+
+    subgraph "Sprint 1B: Client State Consolidation (Frontend Stream)"
+        S1B_1["#013: Consolidate UI State<br/>in Redux<br/>(3-4h)"]
+        S1B_2["#014: Remove UI State<br/>from React Query<br/>(2h)"]
+        S1B_3["#015: Update Theme and<br/>Modal Management<br/>(3h)"]
+        S1B_4["#016: Update Notification<br/>System<br/>(3h)"]
+        S1B_5["#017: Update Form State<br/>Management<br/>(3-4h)"]
+    end
+
+    subgraph "Sprint 2A: Testing & Validation"
+        S2A_1["#018: Integration Tests<br/>for Data Flow<br/>(3-4h)"]
+        S2A_2["#019: Performance<br/>Benchmarking<br/>(2-3h)"]
+        S2A_3["#020: Cache Hit Rate<br/>Validation<br/>(2-3h)"]
+        S2A_4["#021: Bundle Size<br/>Impact Check<br/>(2h)"]
+        S2A_5["#022: E2E Test<br/>Coverage<br/>(3-4h)"]
+    end
+
+    subgraph "Sprint 2B: Documentation & Training"
+        S2B_1["#023: Developer Guidelines<br/>Document<br/>(3-4h)"]
+        S2B_2["#024: Training Workshop<br/>Materials<br/>(4h)"]
+        S2B_3["#025: Architecture<br/>Decision Record<br/>(2h)"]
+    end
+
+    %% Sprint 0 Sequential Dependencies
+    S0_1 --> S0_3
+    S0_2 --> S0_3
+    S0_3 --> S0_4
+    S0_4 --> S0_5
+
+    %% Sprint 0 blocks all Sprint 1 work
+    S0_5 --> S1A_1
+    S0_5 --> S1A_2
+    S0_5 --> S1A_3
+    S0_5 --> S1B_1
+
+    %% Sprint 1A Backend Stream Dependencies
+    S1A_1 --> S1A_4
+    S1A_2 --> S1A_4
+    S1A_3 --> S1A_4
+    S1A_4 --> S1A_5
+    S1A_5 --> S1A_6
+    S1A_6 --> S1A_7
+
+    %% Sprint 1B Frontend Stream Dependencies
+    S1B_1 --> S1B_2
+    S1B_2 --> S1B_3
+    S1B_3 --> S1B_4
+    S1B_4 --> S1B_5
+
+    %% Sprint 1 streams converge before testing
+    S1A_7 --> S2A_1
+    S1B_5 --> S2A_1
+
+    %% Sprint 2A Testing Dependencies
+    S2A_1 --> S2A_2
+    S2A_2 --> S2A_3
+    S2A_3 --> S2A_4
+    S2A_4 --> S2A_5
+
+    %% Sprint 2B Documentation Dependencies
+    S2A_5 --> S2B_1
+    S2B_1 --> S2B_2
+    S2B_2 --> S2B_3
+
+    %% Parallel Work Opportunities (dashed lines)
+    S0_1 -."Can work in parallel".-> S0_2
+
+    S1A_1 -."Parallel: Backend Stream A".-> S1A_2
+    S1A_2 -."Parallel: Backend Stream A".-> S1A_3
+
+    S1A_1 -."Can work simultaneously<br/>with Frontend Stream B".-> S1B_1
+    S1A_2 -."Frontend/Backend parallel".-> S1B_2
+    S1A_3 -."Frontend/Backend parallel".-> S1B_3
+
+    S2B_1 -."Can start during testing".-> S2A_4
+
+    %% Styling
+    classDef foundation fill:#e1f5e1,stroke:#2d5016,stroke-width:2px
+    classDef backend fill:#e1e5f5,stroke:#1e3a8a,stroke-width:2px
+    classDef frontend fill:#f5e1e1,stroke:#7f1d1d,stroke-width:2px
+    classDef testing fill:#f5f5e1,stroke:#713f12,stroke-width:2px
+    classDef documentation fill:#fce7f3,stroke:#831843,stroke-width:2px
+
+    class S0_1,S0_2,S0_3,S0_4,S0_5 foundation
+    class S1A_1,S1A_2,S1A_3,S1A_4,S1A_5,S1A_6,S1A_7 backend
+    class S1B_1,S1B_2,S1B_3,S1B_4,S1B_5 frontend
+    class S2A_1,S2A_2,S2A_3,S2A_4,S2A_5 testing
+    class S2B_1,S2B_2,S2B_3 documentation

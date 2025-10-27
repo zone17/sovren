@@ -1,0 +1,46 @@
+flowchart LR
+    subgraph "Read Operations"
+        R1[Get Preferences] --> R2[Check Cache]
+        R2 -->|Hit| R3[Return Cached]
+        R2 -->|Miss| R4[Query Repository]
+        R4 --> R5[Create if Not Exists]
+        R5 --> R6[Cache Result]
+        R6 --> R3
+    end
+
+    subgraph "Write Operations"
+        W1[Update Request] --> W2[Validate Input]
+        W2 --> W3[Get Current State]
+        W3 --> W4[Detect Changes]
+        W4 --> W5[Validate Changes]
+        W5 --> W6[Update Repository]
+        W6 --> W7[Invalidate Cache]
+        W7 --> W8[Add History]
+        W8 --> W9[Emit Event]
+        W9 --> W10[Return Updated]
+    end
+
+    subgraph "Bulk Operations"
+        B1[Bulk Update] --> B2[Validate All]
+        B2 --> B3{Atomic?}
+        B3 -->|Yes| B4[Transaction Start]
+        B3 -->|No| B5[Sequential Updates]
+        B4 --> B6[Apply All Updates]
+        B6 --> B7[Transaction Commit]
+        B5 --> B7
+        B7 --> B8[Invalidate Cache]
+        B8 --> B9[Add History Entries]
+        B9 --> B10[Emit Events]
+    end
+
+    subgraph "Preset Operations"
+        P1[Apply Preset] --> P2[Load Preset Config]
+        P2 --> P3[Validate Preset]
+        P3 --> P4[Apply Updates]
+        P4 --> P5[Set Preset Flag]
+    end
+
+    style R1 fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style W1 fill:#2196F3,stroke:#1565C0,color:#fff
+    style B1 fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style P1 fill:#FF9800,stroke:#E65100,color:#fff

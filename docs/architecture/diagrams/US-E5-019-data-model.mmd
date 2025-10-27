@@ -1,0 +1,64 @@
+```mermaid
+classDiagram
+    class UserProfile {
+        +string id
+        +string userId
+        +string displayName
+        +string username
+        +string bio
+        +string location
+        +string website
+        +AvatarMetadata avatar
+        +SocialMediaLink[] socialLinks
+        +ProfileVisibility visibility
+        +VerificationStatus verificationStatus
+        +boolean verificationBadge
+        +Date verifiedAt
+        +ProfileAnalytics analytics
+        +Date createdAt
+        +Date updatedAt
+        +number completionScore
+    }
+
+    class AvatarMetadata {
+        +string url
+        +string thumbnailUrl
+        +number width
+        +number height
+        +number size
+        +string mimeType
+        +Date uploadedAt
+    }
+
+    class SocialMediaLink {
+        +SocialMediaPlatform platform
+        +string url
+        +string username
+        +boolean verified
+        +Date verifiedAt
+    }
+
+    class ProfileAnalytics {
+        +number profileViews
+        +number profileViewsToday
+        +number profileViewsThisWeek
+        +number profileViewsThisMonth
+        +number followersGained
+        +number followersGainedToday
+        +number followersGainedThisWeek
+        +number followersGainedThisMonth
+        +Date lastViewedAt
+    }
+
+    class ProfileCompletion {
+        +number percentage
+        +string[] missingFields
+        +string[] completedFields
+        +string[] suggestions
+    }
+
+    UserProfile --> AvatarMetadata : contains
+    UserProfile --> SocialMediaLink : has many
+    UserProfile --> ProfileAnalytics : embeds
+    UserProfile ..> ProfileCompletion : calculates
+```

@@ -1,0 +1,3305 @@
+openapi: 3.0.3
+info:
+  title: Sovren API
+  description: |
+    **Sovren API**: NOSTR-native decentralized creator monetization platform
+
+    ## Overview
+    The Sovren API provides comprehensive endpoints for content management, user profiles,
+    and payment processing via Bitcoin Lightning Network. Built on the NOSTR protocol
+    for true decentralization and censorship resistance.
+
+    ## Base URLs
+    - **Development**: `http://localhost:3001/api/v1`
+    - **Production**: `https://api.sovren.app/v1`
+
+    ## Authentication
+    All authenticated endpoints require a JWT bearer token obtained via the authentication flow.
+    The token must include the user's NOSTR public key for protocol compliance.
+
+    ```
+    Authorization: Bearer <your_jwt_token>
+    ```
+
+    ## Rate Limiting
+    API requests are rate-limited per endpoint category:
+    - Content operations: 100 requests/hour
+    - User operations: 200 requests/hour
+    - Payment operations: 50 requests/hour
+
+    Rate limit information is returned in response headers:
+    - `X-RateLimit-Limit`: Total requests allowed
+    - `X-RateLimit-Remaining`: Requests remaining
+    - `X-RateLimit-Reset`: Time when limit resets (Unix timestamp)
+
+    ## Error Handling
+    All errors follow a consistent format with appropriate HTTP status codes:
+    - `400`: Bad Request - Validation error
+    - `401`: Unauthorized - Authentication required
+    - `403`: Forbidden - Insufficient permissions
+    - `404`: Not Found - Resource doesn't exist
+    - `429`: Too Many Requests - Rate limit exceeded
+    - `500`: Internal Server Error - Server-side issue
+    - `503`: Service Unavailable - Temporary outage
+
+    ## Pagination
+    List endpoints support pagination with query parameters:
+    - `page`: Page number (default: 1)
+    - `limit`: Items per page (default: 20, max: 100)
+
+    Pagination metadata is included in responses:
+    ```json
+    {
+      "currentPage": 1,
+      "totalPages": 5,
+      "totalResults": 98
+    }
+    ```
+
+    ## Epic 005 Backend Service Refactoring
+    This API specification reflects the complete Phase 1-6 implementation of Epic 005,
+    including refactored services, controllers, DTOs, validators, and unified API routes.
+
+  version: 1.0.0
+  contact:
+    name: Sovren Development Team
+    url: https://sovren.app
+    email: api@sovren.app
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Development server
+  - url: https://api.sovren.app/v1
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Content
+    description: Content management, publishing, moderation, and analytics
+  - name: Users
+    description: User profiles, preferences, relationships, and activity tracking
+  - name: Payments
+    description: Lightning Network payments, invoices, subscriptions, and refunds
+
+paths:
+  # ============================================================================
+  # CONTENT API ENDPOINTS (7 endpoints)
+  # ============================================================================
+
+  /content/publish:
+    post:
+      tags: [Content]
+      summary: Publish new content
+      description: |
+        Publishes new content to the platform and optionally to NOSTR relays.
+        Supports multiple content types including articles, videos, audio, images, and raw NOSTR events.
+      operationId: publishContent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishContentRequest'
+            examples:
+              article:
+                summary: Publish an article
+                value:
+                  title: "Getting Started with Bitcoin Lightning"
+                  content: "In this comprehensive guide, we'll explore..."
+                  contentType: "article"
+                  tags: ["bitcoin", "lightning", "tutorial"]
+                  publishToNostr: true
+                  monetization:
+                    priceInSats: 1000
+                    allowTipping: true
+              video:
+                summary: Publish a video
+                value:
+                  title: "NOSTR Protocol Explained"
+                  content: "https://cdn.sovren.app/videos/nostr-explained.mp4"
+                  contentType: "video"
+                  tags: ["nostr", "protocol", "education"]
+                  monetization:
+                    priceInSats: 5000
+                    allowTipping: true
+                    subscriptionTier: "premium"
+      responses:
+        '201':
+          description: Content published successfully
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/X-RateLimit-Reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishContentResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      contentId: "550e8400-e29b-41d4-a716-446655440000"
+                      status: "published"
+                      nostrEventId: "7f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0"
+                      publishedAt: "2025-10-27T10:30:00Z"
+                      url: "https://sovren.app/content/550e8400-e29b-41d4-a716-446655440000"
+                      relayPublishResults:
+                        - relayUrl: "wss://relay.damus.io"
+                          success: true
+                        - relayUrl: "wss://relay.nostr.band"
+                          success: true
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /content/moderate:
+    post:
+      tags: [Content]
+      summary: Moderate content
+      description: |
+        Performs moderation actions on published content. Available actions include approve, reject,
+        flag for review, or mark for manual review. Supports both manual and AI-assisted moderation.
+      operationId: moderateContent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModerateContentRequest'
+            examples:
+              approve:
+                summary: Approve content
+                value:
+                  contentId: "550e8400-e29b-41d4-a716-446655440000"
+                  action: "approve"
+                  moderatorId: "mod-123"
+                  notes: "Content meets community guidelines"
+              flag:
+                summary: Flag content for review
+                value:
+                  contentId: "550e8400-e29b-41d4-a716-446655440001"
+                  action: "flag"
+                  reason: "Potential copyright violation"
+                  moderatorId: "mod-456"
+      responses:
+        '200':
+          description: Content moderated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerateContentResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /content/search:
+    get:
+      tags: [Content]
+      summary: Search content
+      description: |
+        Performs full-text search across published content with advanced filtering and sorting options.
+        Supports filtering by content type, tags, author, date range, and price range.
+      operationId: searchContent
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Search query string
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+          example: "bitcoin lightning network"
+        - name: contentType
+          in: query
+          description: Filter by content type (comma-separated)
+          schema:
+            type: string
+          example: "article,video"
+        - name: tags
+          in: query
+          description: Filter by tags (comma-separated)
+          schema:
+            type: string
+          example: "bitcoin,nostr"
+        - name: authorId
+          in: query
+          description: Filter by author user ID
+          schema:
+            type: string
+            format: uuid
+        - name: dateFrom
+          in: query
+          description: Filter by start date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: dateTo
+          in: query
+          description: Filter by end date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: minPrice
+          in: query
+          description: Minimum price in sats
+          schema:
+            type: integer
+            minimum: 0
+        - name: maxPrice
+          in: query
+          description: Maximum price in sats
+          schema:
+            type: integer
+            minimum: 0
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [relevance, date, popularity, price]
+            default: relevance
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchContentResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /content/recommendations:
+    get:
+      tags: [Content]
+      summary: Get content recommendations
+      description: |
+        Returns AI-powered personalized content recommendations based on user interests,
+        viewing history, and engagement patterns.
+      operationId: getRecommendations
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: User ID for personalization
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: Number of recommendations to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: diversity
+          in: query
+          description: Recommendation diversity (0-1 scale)
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 1
+            default: 0.5
+      responses:
+        '200':
+          description: Content recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRecommendationsResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /content/analytics/{id}:
+    get:
+      tags: [Content]
+      summary: Get content analytics
+      description: |
+        Retrieves comprehensive analytics for a specific piece of content including views,
+        engagement, revenue, traffic sources, and performance metrics.
+      operationId: getContentAnalytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content ID
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          description: Start date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: metrics
+          in: query
+          description: Specific metrics to retrieve (comma-separated)
+          schema:
+            type: string
+          example: "views,engagement,revenue"
+      responses:
+        '200':
+          description: Content analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentAnalyticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /content/versions/{id}:
+    get:
+      tags: [Content]
+      summary: Get version history
+      description: |
+        Retrieves complete version history for a piece of content including all changes,
+        timestamps, and authors.
+      operationId: getVersionHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content ID
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: Number of versions to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of versions to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Version history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetVersionHistoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /content/versions/{id}/revert:
+    post:
+      tags: [Content]
+      summary: Revert to previous version
+      description: |
+        Reverts content to a previous version. Creates a new version entry while preserving
+        the complete version history.
+      operationId: revertContentVersion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevertContentVersionRequest'
+            examples:
+              revert:
+                value:
+                  contentId: "550e8400-e29b-41d4-a716-446655440000"
+                  targetVersionId: "ver-789"
+                  reason: "Reverting to fix formatting issues introduced in latest version"
+      responses:
+        '200':
+          description: Content reverted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevertContentVersionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  # ============================================================================
+  # USER API ENDPOINTS (8 endpoints)
+  # ============================================================================
+
+  /users/profile/{id}:
+    get:
+      tags: [Users]
+      summary: Get user profile
+      description: |
+        Retrieves a user's public profile information including display name, bio, avatar,
+        stats, and NOSTR identity information.
+      operationId: getUserProfile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+        - name: includeStats
+          in: query
+          description: Include user statistics
+          schema:
+            type: boolean
+            default: true
+        - name: includeNostrProfile
+          in: query
+          description: Include NOSTR profile information
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    put:
+      tags: [Users]
+      summary: Update user profile
+      description: |
+        Updates a user's profile information. Users can only update their own profile.
+      operationId: updateUserProfile
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserProfileRequest'
+            examples:
+              basic:
+                value:
+                  userId: "user-123"
+                  profile:
+                    displayName: "Alice Creator"
+                    bio: "Bitcoin educator and content creator"
+                    avatarUrl: "https://cdn.sovren.app/avatars/alice.jpg"
+                    website: "https://alice.me"
+                    socialLinks:
+                      twitter: "@alicecreator"
+                      nostr: "npub1..."
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /users/preferences/{id}:
+    get:
+      tags: [Users]
+      summary: Get user preferences
+      description: |
+        Retrieves a user's preferences including notification settings, privacy settings,
+        and monetization preferences.
+      operationId: getUserPreferences
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User preferences retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferencesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    put:
+      tags: [Users]
+      summary: Update user preferences
+      description: |
+        Updates a user's preferences. Users can only update their own preferences.
+      operationId: updateUserPreferences
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserPreferencesRequest'
+      responses:
+        '200':
+          description: Preferences updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferencesResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /users/activity/{id}:
+    get:
+      tags: [Users]
+      summary: Get user activity
+      description: |
+        Retrieves a user's recent activity including content published, engagements,
+        payments, and social interactions.
+      operationId: getUserActivity
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+        - name: activityTypes
+          in: query
+          description: Filter by activity types (comma-separated)
+          schema:
+            type: string
+          example: "content,engagement,payment"
+        - name: startDate
+          in: query
+          description: Start date for activity (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for activity (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: User activity retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserActivityResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /users/relationships/follow:
+    post:
+      tags: [Users]
+      summary: Follow a user
+      description: |
+        Creates a follow relationship between two users. Optionally sends a notification
+        to the followed user.
+      operationId: followUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowUserRequest'
+            examples:
+              follow:
+                value:
+                  followerId: "user-123"
+                  followingId: "user-456"
+                  notifyFollowing: true
+      responses:
+        '201':
+          description: Follow relationship created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowUserResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /users/relationships/unfollow:
+    delete:
+      tags: [Users]
+      summary: Unfollow a user
+      description: |
+        Removes a follow relationship between two users.
+      operationId: unfollowUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnfollowUserRequest'
+            examples:
+              unfollow:
+                value:
+                  followerId: "user-123"
+                  followingId: "user-456"
+      responses:
+        '200':
+          description: Unfollow successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnfollowUserResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /users/analytics/{id}:
+    get:
+      tags: [Users]
+      summary: Get user analytics
+      description: |
+        Retrieves comprehensive analytics for a user including audience demographics,
+        content performance, revenue, engagement trends, and growth metrics.
+      operationId: getUserAnalytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          description: Start date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: metrics
+          in: query
+          description: Specific metrics to retrieve (comma-separated)
+          schema:
+            type: string
+          example: "audience,revenue,engagement"
+      responses:
+        '200':
+          description: User analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAnalyticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  # ============================================================================
+  # PAYMENT API ENDPOINTS (10 endpoints)
+  # ============================================================================
+
+  /payments/invoices:
+    post:
+      tags: [Payments]
+      summary: Create payment invoice
+      description: |
+        Creates a Lightning Network BOLT11 invoice for payment. Supports multiple currencies
+        with automatic conversion to satoshis.
+      operationId: createInvoice
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceRequest'
+            examples:
+              sats:
+                summary: Invoice in satoshis
+                value:
+                  amount: 10000
+                  currency: "SAT"
+                  description: "Payment for premium article access"
+                  metadata:
+                    contentId: "content-123"
+                  expiresIn: 3600
+              usd:
+                summary: Invoice in USD (auto-converted)
+                value:
+                  amount: 5.00
+                  currency: "USD"
+                  description: "Monthly subscription"
+                  payerInfo:
+                    userId: "user-456"
+                    email: "alice@example.com"
+                  metadata:
+                    subscriptionId: "sub-789"
+                  expiresIn: 1800
+      responses:
+        '201':
+          description: Invoice created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments/invoices/{id}:
+    get:
+      tags: [Payments]
+      summary: Get invoice details
+      description: |
+        Retrieves complete information about a specific invoice including payment status,
+        amount, and metadata.
+      operationId: getInvoice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Invoice ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invoice details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /payments/invoices/{id}/pay:
+    post:
+      tags: [Payments]
+      summary: Pay invoice
+      description: |
+        Processes payment for a specific invoice. Supports Lightning Network payments
+        via BOLT11 invoice.
+      operationId: payInvoice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Invoice ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayInvoiceRequest'
+            examples:
+              lightning:
+                value:
+                  invoiceId: "inv-123"
+                  paymentMethod: "lightning"
+                  payerMetadata:
+                    userId: "user-456"
+                    note: "Thanks for the great content!"
+      responses:
+        '200':
+          description: Payment processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayInvoiceResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments/currency/convert:
+    get:
+      tags: [Payments]
+      summary: Convert currency
+      description: |
+        Converts between different currencies (SAT, BTC, USD, etc.) using current exchange rates.
+      operationId: convertCurrency
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: amount
+          in: query
+          required: true
+          description: Amount to convert
+          schema:
+            type: number
+            format: float
+            minimum: 0
+        - name: fromCurrency
+          in: query
+          required: true
+          description: Source currency code
+          schema:
+            type: string
+            enum: [SAT, BTC, USD, EUR, GBP]
+        - name: toCurrency
+          in: query
+          required: true
+          description: Target currency code
+          schema:
+            type: string
+            enum: [SAT, BTC, USD, EUR, GBP]
+        - name: timestamp
+          in: query
+          description: Historical timestamp for conversion (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Currency converted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertCurrencyResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /payments/subscriptions:
+    post:
+      tags: [Payments]
+      summary: Create subscription
+      description: |
+        Creates a new recurring subscription for a creator's content tier.
+      operationId: createSubscription
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionRequest'
+            examples:
+              monthly:
+                value:
+                  creatorId: "creator-123"
+                  subscriberId: "user-456"
+                  plan:
+                    planId: "plan-789"
+                    tier: "premium"
+                    price: 50000
+                    currency: "SAT"
+                    interval: "monthly"
+                  paymentMethod:
+                    type: "lightning"
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /payments/subscriptions/{id}:
+    put:
+      tags: [Payments]
+      summary: Update subscription
+      description: |
+        Updates an existing subscription (change plan, pause, or reactivate).
+      operationId: updateSubscription
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Subscription ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionRequest'
+      responses:
+        '200':
+          description: Subscription updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    delete:
+      tags: [Payments]
+      summary: Cancel subscription
+      description: |
+        Cancels an active subscription. Can be set to cancel immediately or at period end.
+      operationId: cancelSubscription
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Subscription ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionRequest'
+            examples:
+              immediate:
+                summary: Cancel immediately
+                value:
+                  subscriptionId: "sub-123"
+                  reason: "No longer need access"
+                  cancelAt: "immediately"
+              period_end:
+                summary: Cancel at period end
+                value:
+                  subscriptionId: "sub-123"
+                  reason: "Switching to different tier"
+                  cancelAt: "period_end"
+      responses:
+        '200':
+          description: Subscription cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelSubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /payments/refunds:
+    post:
+      tags: [Payments]
+      summary: Create refund
+      description: |
+        Initiates a refund for a completed payment. Supports full and partial refunds.
+      operationId: createRefund
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRefundRequest'
+            examples:
+              full:
+                summary: Full refund
+                value:
+                  paymentId: "pay-123"
+                  reason: "Content not as described"
+                  refundType: "full"
+              partial:
+                summary: Partial refund
+                value:
+                  paymentId: "pay-123"
+                  amount: 5000
+                  reason: "Partial refund due to incomplete content"
+                  refundType: "partial"
+      responses:
+        '201':
+          description: Refund created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /payments/analytics:
+    get:
+      tags: [Payments]
+      summary: Get payment analytics
+      description: |
+        Retrieves comprehensive payment analytics including revenue, transaction counts,
+        success rates, payment methods, and subscription metrics.
+      operationId: getPaymentAnalytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          description: Filter by user ID
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          description: Start date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: groupBy
+          in: query
+          description: Group results by time period
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: day
+        - name: metrics
+          in: query
+          description: Specific metrics to retrieve (comma-separated)
+          schema:
+            type: string
+          example: "revenue,transactions,subscriptions"
+      responses:
+        '200':
+          description: Payment analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentAnalyticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /payments/webhooks:
+    post:
+      tags: [Payments]
+      summary: Register webhook
+      description: |
+        Registers a webhook endpoint to receive real-time payment event notifications.
+        Webhooks are secured with HMAC signatures.
+      operationId: registerWebhook
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterWebhookRequest'
+            examples:
+              payment_events:
+                value:
+                  url: "https://api.example.com/webhooks/sovren"
+                  events:
+                    - "payment.completed"
+                    - "payment.failed"
+                    - "invoice.created"
+                    - "subscription.created"
+                    - "subscription.cancelled"
+                    - "refund.processed"
+                  description: "Production webhook endpoint"
+      responses:
+        '201':
+          description: Webhook registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from the authentication endpoint.
+
+        Token must include:
+        - User ID
+        - NOSTR public key
+        - User role (supporter, creator, admin)
+        - Expiration timestamp
+
+        Example:
+        ```
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        ```
+
+  headers:
+    X-RateLimit-Limit:
+      description: Total number of requests allowed in the current window
+      schema:
+        type: integer
+      example: 100
+    X-RateLimit-Remaining:
+      description: Number of requests remaining in the current window
+      schema:
+        type: integer
+      example: 87
+    X-RateLimit-Reset:
+      description: Unix timestamp when the rate limit resets
+      schema:
+        type: integer
+      example: 1698415200
+
+  schemas:
+    # ========================================================================
+    # CONTENT SCHEMAS
+    # ========================================================================
+
+    PublishContentRequest:
+      type: object
+      required:
+        - title
+        - content
+        - contentType
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Content title
+          example: "Getting Started with Bitcoin Lightning"
+        content:
+          type: string
+          minLength: 1
+          maxLength: 1000000
+          description: Content body (text, markdown, or URL to media)
+          example: "In this comprehensive guide..."
+        contentType:
+          type: string
+          enum: [article, video, audio, image, nostr-event]
+          description: Type of content being published
+          example: "article"
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+          maxItems: 20
+          description: Content tags for categorization and search
+          example: ["bitcoin", "lightning", "tutorial"]
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional content metadata
+        publishToNostr:
+          type: boolean
+          default: true
+          description: Whether to publish to NOSTR relays
+        relayUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Specific NOSTR relay URLs (uses defaults if omitted)
+          example: ["wss://relay.damus.io", "wss://relay.nostr.band"]
+        monetization:
+          type: object
+          properties:
+            priceInSats:
+              type: integer
+              minimum: 0
+              description: Content price in satoshis (0 for free)
+              example: 1000
+            allowTipping:
+              type: boolean
+              default: true
+              description: Allow tips on free content
+            subscriptionTier:
+              type: string
+              description: Required subscription tier (if applicable)
+              example: "premium"
+
+    PublishContentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            contentId:
+              type: string
+              format: uuid
+              description: Unique content identifier
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            status:
+              type: string
+              enum: [published, pending, failed]
+              description: Publication status
+              example: "published"
+            nostrEventId:
+              type: string
+              description: NOSTR event ID (if published to NOSTR)
+              example: "7f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0"
+            relayPublishResults:
+              type: array
+              items:
+                type: object
+                properties:
+                  relayUrl:
+                    type: string
+                    format: uri
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+              description: Results from each relay
+            publishedAt:
+              type: string
+              format: date-time
+              example: "2025-10-27T10:30:00Z"
+            url:
+              type: string
+              format: uri
+              description: Public URL for the content
+              example: "https://sovren.app/content/550e8400-e29b-41d4-a716-446655440000"
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ModerateContentRequest:
+      type: object
+      required:
+        - contentId
+        - action
+        - moderatorId
+      properties:
+        contentId:
+          type: string
+          format: uuid
+          description: ID of content to moderate
+        action:
+          type: string
+          enum: [approve, reject, flag, review]
+          description: Moderation action to perform
+          example: "approve"
+        reason:
+          type: string
+          maxLength: 1000
+          description: Reason for moderation action
+        moderatorId:
+          type: string
+          format: uuid
+          description: ID of moderator performing action
+        notes:
+          type: string
+          maxLength: 2000
+          description: Internal moderation notes
+
+    ModerateContentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            contentId:
+              type: string
+              format: uuid
+            previousStatus:
+              type: string
+            newStatus:
+              type: string
+            moderationAction:
+              type: string
+            moderatedAt:
+              type: string
+              format: date-time
+            moderatedBy:
+              type: string
+              format: uuid
+            autoModeration:
+              type: object
+              properties:
+                aiScore:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 1
+                  description: AI moderation confidence score
+                flags:
+                  type: array
+                  items:
+                    type: string
+                  description: Potential issues detected
+                confidence:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 1
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    SearchContentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentSearchResult'
+            totalResults:
+              type: integer
+              example: 142
+            currentPage:
+              type: integer
+              example: 1
+            totalPages:
+              type: integer
+              example: 8
+            searchTime:
+              type: number
+              format: float
+              description: Search execution time in milliseconds
+              example: 23.5
+            facets:
+              type: object
+              description: Search result facets for filtering
+              properties:
+                contentTypes:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                  example:
+                    article: 89
+                    video: 42
+                    audio: 11
+                tags:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                  example:
+                    bitcoin: 67
+                    nostr: 45
+                    lightning: 30
+                priceRanges:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                  example:
+                    free: 78
+                    low: 45
+                    medium: 15
+                    high: 4
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ContentSearchResult:
+      type: object
+      properties:
+        contentId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        excerpt:
+          type: string
+          maxLength: 500
+          description: Content excerpt or summary
+        contentType:
+          type: string
+        authorId:
+          type: string
+          format: uuid
+        authorName:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+        priceInSats:
+          type: integer
+          minimum: 0
+        engagementScore:
+          type: number
+          format: float
+          description: Normalized engagement metric
+        relevanceScore:
+          type: number
+          format: float
+          description: Search relevance score
+
+    GetRecommendationsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            recommendations:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentRecommendation'
+            algorithm:
+              type: string
+              description: Recommendation algorithm used
+              example: "collaborative_filtering_v2"
+            generatedAt:
+              type: string
+              format: date-time
+            personalizedFor:
+              type: string
+              format: uuid
+              description: User ID for whom recommendations were generated
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ContentRecommendation:
+      type: object
+      properties:
+        contentId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        excerpt:
+          type: string
+        contentType:
+          type: string
+        authorId:
+          type: string
+          format: uuid
+        authorName:
+          type: string
+        score:
+          type: number
+          format: float
+          description: Recommendation confidence score
+        reason:
+          type: string
+          description: Explanation for recommendation
+          example: "Based on your interest in Bitcoin and recent views"
+        tags:
+          type: array
+          items:
+            type: string
+        priceInSats:
+          type: integer
+        thumbnailUrl:
+          type: string
+          format: uri
+
+    ContentAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            contentId:
+              type: string
+              format: uuid
+            timeRange:
+              type: object
+              properties:
+                start:
+                  type: string
+                  format: date-time
+                end:
+                  type: string
+                  format: date-time
+            overview:
+              type: object
+              properties:
+                totalViews:
+                  type: integer
+                  example: 1523
+                uniqueViewers:
+                  type: integer
+                  example: 892
+                totalEngagements:
+                  type: integer
+                  example: 234
+                averageEngagementRate:
+                  type: number
+                  format: float
+                  example: 0.154
+                revenue:
+                  type: object
+                  properties:
+                    totalSats:
+                      type: integer
+                      example: 125000
+                    totalUSD:
+                      type: number
+                      format: float
+                      example: 45.50
+            engagement:
+              type: object
+              properties:
+                likes:
+                  type: integer
+                shares:
+                  type: integer
+                comments:
+                  type: integer
+                saves:
+                  type: integer
+            traffic:
+              type: object
+              properties:
+                sources:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                  example:
+                    direct: 450
+                    nostr: 723
+                    twitter: 215
+                    search: 135
+                devices:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                  example:
+                    mobile: 876
+                    desktop: 587
+                    tablet: 60
+                geoLocations:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                  example:
+                    US: 623
+                    UK: 298
+                    CA: 187
+            performance:
+              type: object
+              properties:
+                averageReadTime:
+                  type: integer
+                  description: Average read time in seconds
+                  example: 245
+                completionRate:
+                  type: number
+                  format: float
+                  example: 0.68
+                bounceRate:
+                  type: number
+                  format: float
+                  example: 0.32
+            trends:
+              type: array
+              items:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  views:
+                    type: integer
+                  engagement:
+                    type: integer
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    GetVersionHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            contentId:
+              type: string
+              format: uuid
+            currentVersion:
+              type: integer
+              example: 5
+            versions:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentVersion'
+            totalVersions:
+              type: integer
+              example: 5
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ContentVersion:
+      type: object
+      properties:
+        versionId:
+          type: string
+          format: uuid
+        contentId:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          format: uuid
+        changes:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              oldValue:
+                description: Previous value (any type)
+              newValue:
+                description: New value (any type)
+        changesSummary:
+          type: string
+          description: Human-readable summary of changes
+        size:
+          type: integer
+          description: Version size in bytes
+
+    RevertContentVersionRequest:
+      type: object
+      required:
+        - contentId
+        - targetVersionId
+        - reason
+      properties:
+        contentId:
+          type: string
+          format: uuid
+        targetVersionId:
+          type: string
+          format: uuid
+          description: Version to revert to
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          description: Reason for reverting
+
+    RevertContentVersionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            contentId:
+              type: string
+              format: uuid
+            previousVersion:
+              type: integer
+            revertedToVersion:
+              type: integer
+            newVersion:
+              type: integer
+              description: New version number created by revert
+            revertedAt:
+              type: string
+              format: date-time
+            revertedBy:
+              type: string
+              format: uuid
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    # ========================================================================
+    # USER SCHEMAS
+    # ========================================================================
+
+    UserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+            nostrPubkey:
+              type: string
+              description: NOSTR public key (npub format)
+            profile:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                bio:
+                  type: string
+                avatarUrl:
+                  type: string
+                  format: uri
+                bannerUrl:
+                  type: string
+                  format: uri
+                website:
+                  type: string
+                  format: uri
+                location:
+                  type: string
+                socialLinks:
+                  type: object
+                  additionalProperties:
+                    type: string
+            stats:
+              type: object
+              properties:
+                followersCount:
+                  type: integer
+                followingCount:
+                  type: integer
+                contentCount:
+                  type: integer
+                totalEarnings:
+                  type: integer
+                  description: Total earnings in satoshis
+                memberSince:
+                  type: string
+                  format: date-time
+            nostrProfile:
+              type: object
+              properties:
+                nip05Verified:
+                  type: boolean
+                nip05Identifier:
+                  type: string
+                  example: "alice@sovren.app"
+                lightningAddress:
+                  type: string
+                  example: "alice@getalby.com"
+                relays:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    UpdateUserProfileRequest:
+      type: object
+      required:
+        - userId
+        - profile
+      properties:
+        userId:
+          type: string
+          format: uuid
+        profile:
+          type: object
+          properties:
+            displayName:
+              type: string
+              minLength: 1
+              maxLength: 100
+            bio:
+              type: string
+              maxLength: 1000
+            avatarUrl:
+              type: string
+              format: uri
+            bannerUrl:
+              type: string
+              format: uri
+            website:
+              type: string
+              format: uri
+            location:
+              type: string
+              maxLength: 200
+            socialLinks:
+              type: object
+              properties:
+                twitter:
+                  type: string
+                github:
+                  type: string
+                nostr:
+                  type: string
+
+    UserPreferencesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+            preferences:
+              type: object
+              properties:
+                notifications:
+                  type: object
+                  properties:
+                    email:
+                      type: boolean
+                    push:
+                      type: boolean
+                    nostr:
+                      type: boolean
+                    types:
+                      type: object
+                      additionalProperties:
+                        type: boolean
+                privacy:
+                  type: object
+                  properties:
+                    showEmail:
+                      type: boolean
+                    showLocation:
+                      type: boolean
+                    allowIndexing:
+                      type: boolean
+                    showAnalytics:
+                      type: boolean
+                content:
+                  type: object
+                  properties:
+                    defaultVisibility:
+                      type: string
+                      enum: [public, followers, subscribers]
+                    allowComments:
+                      type: boolean
+                    allowTipping:
+                      type: boolean
+                    defaultRelays:
+                      type: array
+                      items:
+                        type: string
+                        format: uri
+                monetization:
+                  type: object
+                  properties:
+                    defaultPricing:
+                      type: object
+                      additionalProperties:
+                        type: integer
+                    paymentMethods:
+                      type: array
+                      items:
+                        type: string
+                    autoWithdraw:
+                      type: boolean
+                    withdrawThreshold:
+                      type: integer
+            updatedAt:
+              type: string
+              format: date-time
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    UpdateUserPreferencesRequest:
+      type: object
+      required:
+        - userId
+        - preferences
+      properties:
+        userId:
+          type: string
+          format: uuid
+        preferences:
+          type: object
+          description: Partial preferences update (only include fields to change)
+
+    GetUserActivityResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+            activities:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserActivityItem'
+            totalActivities:
+              type: integer
+            currentPage:
+              type: integer
+            totalPages:
+              type: integer
+            summary:
+              type: object
+              properties:
+                contentPublished:
+                  type: integer
+                engagementsGiven:
+                  type: integer
+                paymentsReceived:
+                  type: integer
+                newFollowers:
+                  type: integer
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    UserActivityItem:
+      type: object
+      properties:
+        activityId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [content, engagement, payment, social]
+        action:
+          type: string
+          description: Specific action performed
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: object
+          properties:
+            title:
+              type: string
+            description:
+              type: string
+            relatedId:
+              type: string
+              format: uuid
+            relatedType:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+
+    FollowUserRequest:
+      type: object
+      required:
+        - followerId
+        - followingId
+      properties:
+        followerId:
+          type: string
+          format: uuid
+          description: ID of user performing the follow
+        followingId:
+          type: string
+          format: uuid
+          description: ID of user being followed
+        notifyFollowing:
+          type: boolean
+          default: true
+          description: Send notification to followed user
+
+    FollowUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            followerId:
+              type: string
+              format: uuid
+            followingId:
+              type: string
+              format: uuid
+            followedAt:
+              type: string
+              format: date-time
+            mutualFollow:
+              type: boolean
+              description: Whether this creates a mutual follow relationship
+            notificationSent:
+              type: boolean
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    UnfollowUserRequest:
+      type: object
+      required:
+        - followerId
+        - followingId
+      properties:
+        followerId:
+          type: string
+          format: uuid
+        followingId:
+          type: string
+          format: uuid
+
+    UnfollowUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            followerId:
+              type: string
+              format: uuid
+            followingId:
+              type: string
+              format: uuid
+            unfollowedAt:
+              type: string
+              format: date-time
+            success:
+              type: boolean
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    UserAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+            timeRange:
+              type: object
+              properties:
+                start:
+                  type: string
+                  format: date-time
+                end:
+                  type: string
+                  format: date-time
+            overview:
+              type: object
+              properties:
+                totalContent:
+                  type: integer
+                totalViews:
+                  type: integer
+                totalEngagements:
+                  type: integer
+                totalEarnings:
+                  type: object
+                  properties:
+                    sats:
+                      type: integer
+                    usd:
+                      type: number
+                      format: float
+                growthRate:
+                  type: number
+                  format: float
+                  description: Overall growth rate percentage
+            audience:
+              type: object
+              properties:
+                totalFollowers:
+                  type: integer
+                newFollowers:
+                  type: integer
+                followerGrowthRate:
+                  type: number
+                  format: float
+                topLocations:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                demographics:
+                  type: object
+                  properties:
+                    ageRanges:
+                      type: object
+                      additionalProperties:
+                        type: integer
+                    interests:
+                      type: array
+                      items:
+                        type: string
+            content:
+              type: object
+              properties:
+                published:
+                  type: integer
+                views:
+                  type: integer
+                avgEngagementRate:
+                  type: number
+                  format: float
+                topPerformingContent:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      contentId:
+                        type: string
+                        format: uuid
+                      title:
+                        type: string
+                      views:
+                        type: integer
+                      engagementRate:
+                        type: number
+                        format: float
+            revenue:
+              type: object
+              properties:
+                totalEarnings:
+                  type: integer
+                  description: Total earnings in satoshis
+                earnings:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        format: date
+                      amount:
+                        type: integer
+                      source:
+                        type: string
+                topRevenueSources:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                avgRevenuePerContent:
+                  type: number
+                  format: float
+            engagement:
+              type: object
+              properties:
+                totalEngagements:
+                  type: integer
+                engagementRate:
+                  type: number
+                  format: float
+                engagementsByType:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                peakEngagementTimes:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      day:
+                        type: string
+                      hour:
+                        type: integer
+                      count:
+                        type: integer
+            trends:
+              type: array
+              items:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  followers:
+                    type: integer
+                  views:
+                    type: integer
+                  engagements:
+                    type: integer
+                  earnings:
+                    type: integer
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    # ========================================================================
+    # PAYMENT SCHEMAS
+    # ========================================================================
+
+    CreateInvoiceRequest:
+      type: object
+      required:
+        - amount
+        - currency
+        - description
+      properties:
+        amount:
+          type: number
+          format: float
+          minimum: 0
+          description: Invoice amount
+          example: 10000
+        currency:
+          type: string
+          enum: [SAT, BTC, USD, EUR, GBP]
+          description: Currency code (auto-converts to SAT)
+          example: "SAT"
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Invoice description
+          example: "Payment for premium article access"
+        payerInfo:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+            name:
+              type: string
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Custom metadata for the invoice
+        expiresIn:
+          type: integer
+          minimum: 60
+          maximum: 86400
+          default: 3600
+          description: Invoice expiration time in seconds
+        webhookUrl:
+          type: string
+          format: uri
+          description: Webhook URL for payment notifications
+
+    InvoiceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            invoiceId:
+              type: string
+              format: uuid
+            paymentRequest:
+              type: string
+              description: BOLT11 Lightning invoice
+              example: "lnbc100n1..."
+            amount:
+              type: object
+              properties:
+                requested:
+                  type: number
+                  format: float
+                currency:
+                  type: string
+                sats:
+                  type: integer
+                  description: Amount in satoshis
+            status:
+              type: string
+              enum: [pending, paid, expired, cancelled]
+            description:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            expiresAt:
+              type: string
+              format: date-time
+            paymentHash:
+              type: string
+              description: Lightning payment hash
+            metadata:
+              type: object
+              additionalProperties: true
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    PayInvoiceRequest:
+      type: object
+      required:
+        - invoiceId
+      properties:
+        invoiceId:
+          type: string
+          format: uuid
+        paymentMethod:
+          type: string
+          enum: [lightning, onchain]
+          default: lightning
+        payerMetadata:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+            note:
+              type: string
+              maxLength: 500
+
+    PayInvoiceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            invoiceId:
+              type: string
+              format: uuid
+            paymentId:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [success, pending, failed]
+            paidAt:
+              type: string
+              format: date-time
+            amount:
+              type: object
+              properties:
+                paid:
+                  type: integer
+                  description: Amount paid in satoshis
+                currency:
+                  type: string
+            fees:
+              type: object
+              properties:
+                network:
+                  type: integer
+                  description: Network fee in satoshis
+                platform:
+                  type: integer
+                  description: Platform fee in satoshis
+            receipt:
+              type: object
+              properties:
+                receiptId:
+                  type: string
+                  format: uuid
+                url:
+                  type: string
+                  format: uri
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ConvertCurrencyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            amount:
+              type: number
+              format: float
+            fromCurrency:
+              type: string
+            toCurrency:
+              type: string
+            convertedAmount:
+              type: number
+              format: float
+            exchangeRate:
+              type: number
+              format: float
+            timestamp:
+              type: string
+              format: date-time
+            source:
+              type: string
+              description: Exchange rate source
+              example: "CoinGecko"
+            expiresAt:
+              type: string
+              format: date-time
+              description: When this rate expires (for caching)
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    CreateSubscriptionRequest:
+      type: object
+      required:
+        - creatorId
+        - subscriberId
+        - plan
+        - paymentMethod
+      properties:
+        creatorId:
+          type: string
+          format: uuid
+        subscriberId:
+          type: string
+          format: uuid
+        plan:
+          type: object
+          required:
+            - planId
+            - tier
+            - price
+            - currency
+            - interval
+          properties:
+            planId:
+              type: string
+              format: uuid
+            tier:
+              type: string
+              example: "premium"
+            price:
+              type: integer
+              minimum: 0
+            currency:
+              type: string
+            interval:
+              type: string
+              enum: [monthly, yearly]
+        paymentMethod:
+          type: object
+          required:
+            - type
+          properties:
+            type:
+              type: string
+              enum: [lightning, card]
+            details:
+              type: object
+              additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+
+    SubscriptionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            subscriptionId:
+              type: string
+              format: uuid
+            creatorId:
+              type: string
+              format: uuid
+            subscriberId:
+              type: string
+              format: uuid
+            plan:
+              type: object
+              properties:
+                planId:
+                  type: string
+                  format: uuid
+                tier:
+                  type: string
+                price:
+                  type: integer
+                currency:
+                  type: string
+                interval:
+                  type: string
+            status:
+              type: string
+              enum: [active, cancelled, expired, pending]
+            currentPeriod:
+              type: object
+              properties:
+                start:
+                  type: string
+                  format: date-time
+                end:
+                  type: string
+                  format: date-time
+            nextBillingDate:
+              type: string
+              format: date-time
+            createdAt:
+              type: string
+              format: date-time
+            cancelledAt:
+              type: string
+              format: date-time
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    UpdateSubscriptionRequest:
+      type: object
+      required:
+        - subscriptionId
+        - updates
+      properties:
+        subscriptionId:
+          type: string
+          format: uuid
+        updates:
+          type: object
+          properties:
+            planId:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [active, paused, cancelled]
+            paymentMethod:
+              type: object
+              properties:
+                type:
+                  type: string
+                details:
+                  type: object
+                  additionalProperties: true
+
+    CancelSubscriptionRequest:
+      type: object
+      required:
+        - subscriptionId
+      properties:
+        subscriptionId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          maxLength: 1000
+        cancelAt:
+          type: string
+          enum: [immediately, period_end]
+          default: period_end
+
+    CancelSubscriptionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            subscriptionId:
+              type: string
+              format: uuid
+            status:
+              type: string
+            cancelledAt:
+              type: string
+              format: date-time
+            effectiveDate:
+              type: string
+              format: date-time
+              description: When cancellation takes effect
+            refundAmount:
+              type: integer
+              description: Refund amount in satoshis (if applicable)
+            refundStatus:
+              type: string
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    CreateRefundRequest:
+      type: object
+      required:
+        - paymentId
+        - reason
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          minimum: 0
+          description: Partial refund amount (omit for full refund)
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        refundType:
+          type: string
+          enum: [full, partial]
+          default: full
+        metadata:
+          type: object
+          additionalProperties: true
+
+    RefundResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            refundId:
+              type: string
+              format: uuid
+            paymentId:
+              type: string
+              format: uuid
+            invoiceId:
+              type: string
+              format: uuid
+            amount:
+              type: object
+              properties:
+                requested:
+                  type: integer
+                processed:
+                  type: integer
+                currency:
+                  type: string
+            status:
+              type: string
+              enum: [pending, completed, failed]
+            reason:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            processedAt:
+              type: string
+              format: date-time
+            failureReason:
+              type: string
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    PaymentAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            timeRange:
+              type: object
+              properties:
+                start:
+                  type: string
+                  format: date-time
+                end:
+                  type: string
+                  format: date-time
+            overview:
+              type: object
+              properties:
+                totalRevenue:
+                  type: object
+                  properties:
+                    sats:
+                      type: integer
+                    usd:
+                      type: number
+                      format: float
+                totalTransactions:
+                  type: integer
+                successRate:
+                  type: number
+                  format: float
+                averageTransactionValue:
+                  type: number
+                  format: float
+                totalFees:
+                  type: integer
+            transactions:
+              type: object
+              properties:
+                successful:
+                  type: integer
+                failed:
+                  type: integer
+                pending:
+                  type: integer
+                refunded:
+                  type: integer
+            revenue:
+              type: array
+              items:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  amount:
+                    type: integer
+                  currency:
+                    type: string
+                  count:
+                    type: integer
+            paymentMethods:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  amount:
+                    type: integer
+            topProducts:
+              type: array
+              items:
+                type: object
+                properties:
+                  productId:
+                    type: string
+                  name:
+                    type: string
+                  revenue:
+                    type: integer
+                  transactions:
+                    type: integer
+            subscriptions:
+              type: object
+              properties:
+                active:
+                  type: integer
+                new:
+                  type: integer
+                cancelled:
+                  type: integer
+                churnRate:
+                  type: number
+                  format: float
+                mrr:
+                  type: integer
+                  description: Monthly Recurring Revenue in satoshis
+            refunds:
+              type: object
+              properties:
+                total:
+                  type: integer
+                amount:
+                  type: integer
+                refundRate:
+                  type: number
+                  format: float
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    RegisterWebhookRequest:
+      type: object
+      required:
+        - url
+        - events
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Webhook endpoint URL (must be HTTPS)
+        events:
+          type: array
+          items:
+            type: string
+            enum:
+              - payment.completed
+              - payment.failed
+              - invoice.created
+              - invoice.expired
+              - subscription.created
+              - subscription.updated
+              - subscription.cancelled
+              - refund.created
+              - refund.processed
+              - refund.failed
+          minItems: 1
+          description: Event types to subscribe to
+        secret:
+          type: string
+          minLength: 32
+          description: Webhook secret for HMAC signature (auto-generated if omitted)
+        description:
+          type: string
+          maxLength: 500
+        metadata:
+          type: object
+          additionalProperties: true
+
+    WebhookResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            webhookId:
+              type: string
+              format: uuid
+            url:
+              type: string
+              format: uri
+            events:
+              type: array
+              items:
+                type: string
+            status:
+              type: string
+              enum: [active, inactive, failed]
+            secret:
+              type: string
+              description: Webhook secret for signature verification
+            createdAt:
+              type: string
+              format: date-time
+            lastTriggeredAt:
+              type: string
+              format: date-time
+            deliveryStats:
+              type: object
+              properties:
+                total:
+                  type: integer
+                successful:
+                  type: integer
+                failed:
+                  type: integer
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    # ========================================================================
+    # COMMON SCHEMAS
+    # ========================================================================
+
+    ResponseMetadata:
+      type: object
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Unique request identifier for support/debugging
+        timestamp:
+          type: string
+          format: date-time
+          description: Server response timestamp
+        processingTime:
+          type: number
+          format: float
+          description: Request processing time in milliseconds
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          default: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code for programmatic handling
+              example: "E001"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Invalid request parameters"
+            details:
+              type: object
+              additionalProperties: true
+              description: Additional error context
+            field:
+              type: string
+              description: Field name for validation errors
+            validationErrors:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+                  value:
+                    description: Invalid value that caused error
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+  responses:
+    ValidationError:
+      description: Validation error - Request contains invalid data
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            validation:
+              value:
+                success: false
+                error:
+                  code: "E001"
+                  message: "Validation failed"
+                  validationErrors:
+                    - field: "title"
+                      message: "Title is required"
+                    - field: "amount"
+                      message: "Amount must be greater than 0"
+                metadata:
+                  requestId: "req-123"
+                  timestamp: "2025-10-27T10:30:00Z"
+                  processingTime: 5.2
+
+    Unauthorized:
+      description: Unauthorized - Authentication required or token invalid
+      headers:
+        WWW-Authenticate:
+          description: Authentication scheme
+          schema:
+            type: string
+          example: Bearer realm="Sovren API"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_token:
+              value:
+                success: false
+                error:
+                  code: "E401"
+                  message: "Authentication required"
+                  details:
+                    reason: "No bearer token provided"
+                metadata:
+                  requestId: "req-456"
+                  timestamp: "2025-10-27T10:30:00Z"
+            invalid_token:
+              value:
+                success: false
+                error:
+                  code: "E402"
+                  message: "Invalid or expired token"
+                  details:
+                    reason: "Token signature verification failed"
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            insufficient_permissions:
+              value:
+                success: false
+                error:
+                  code: "E403"
+                  message: "Insufficient permissions"
+                  details:
+                    required: "creator"
+                    current: "supporter"
+
+    NotFound:
+      description: Not Found - Resource doesn't exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_found:
+              value:
+                success: false
+                error:
+                  code: "E404"
+                  message: "Resource not found"
+                  details:
+                    resourceType: "content"
+                    resourceId: "550e8400-e29b-41d4-a716-446655440000"
+
+    RateLimitExceeded:
+      description: Too Many Requests - Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          description: Seconds until rate limit resets
+          schema:
+            type: integer
+          example: 3600
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            rate_limit:
+              value:
+                success: false
+                error:
+                  code: "E429"
+                  message: "Rate limit exceeded"
+                  details:
+                    limit: 100
+                    window: "1 hour"
+                    retryAfter: 3600
+
+    InternalError:
+      description: Internal Server Error - Something went wrong on the server
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            server_error:
+              value:
+                success: false
+                error:
+                  code: "E500"
+                  message: "Internal server error"
+                  details:
+                    message: "An unexpected error occurred. Our team has been notified."
+                metadata:
+                  requestId: "req-789"
+                  timestamp: "2025-10-27T10:30:00Z"

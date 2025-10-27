@@ -1,0 +1,88 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#1e40af','primaryTextColor':'#fff','primaryBorderColor':'#3b82f6','lineColor':'#6366f1','secondaryColor':'#059669','tertiaryColor':'#dc2626'}}}%%
+graph TD
+    Start([Payment Issue Reported]) --> CheckSymptom{What's the symptom?}
+
+    CheckSymptom -->|Invoice won't create| InvoiceIssues[Section 1: Invoice Creation]
+    CheckSymptom -->|Payment stuck pending| VerificationIssues[Section 2: Verification]
+    CheckSymptom -->|Webhook not received| WebhookIssues[Section 3: Webhooks]
+    CheckSymptom -->|Payment keeps retrying| RetryIssues[Section 4: Retry Logic]
+    CheckSymptom -->|Invalid state error| StateMachineIssues[Section 5: State Machine]
+    CheckSymptom -->|System slow| PerformanceIssues[Section 6: Performance]
+
+    InvoiceIssues --> CheckNode{Is Lightning<br/>node healthy?}
+    CheckNode -->|No| RestartNode[Restart LND Node<br/>Wait for sync]
+    CheckNode -->|Yes| CheckAmount{Is amount valid?}
+    CheckAmount -->|No| FixAmount[Update amount<br/>validation rules]
+    CheckAmount -->|Yes| CheckLiquidity{Sufficient<br/>inbound liquidity?}
+    CheckLiquidity -->|No| AddLiquidity[Open new channels<br/>or rebalance]
+    CheckLiquidity -->|Yes| CheckAPI{API responding?}
+
+    VerificationIssues --> CheckActual{What does LND<br/>say about payment?}
+    CheckActual -->|Settled| ManualUpdate[Manual DB update<br/>Mark completed]
+    CheckActual -->|Failed/Expired| MarkFailed[Update to failed<br/>Notify user]
+    CheckActual -->|Still pending| CheckWebhook{Was webhook<br/>received?}
+    CheckWebhook -->|No| WebhookMissing[Check webhook<br/>delivery logs]
+    CheckWebhook -->|Yes| CheckLock{Database<br/>locked?}
+
+    WebhookIssues --> CheckSig{Signature<br/>verification failing?}
+    CheckSig -->|Yes| CheckSecret{Is webhook<br/>secret correct?}
+    CheckSecret -->|No| UpdateSecret[Update webhook<br/>secret from provider]
+    CheckSecret -->|Yes| CheckTimestamp{Timestamp<br/>within tolerance?}
+    CheckTimestamp -->|No| SyncTime[Sync server time<br/>with NTP]
+    CheckSig -->|No| CheckDuplicate{Duplicate<br/>webhooks?}
+    CheckDuplicate -->|Yes| ImplementIdempotency[Implement idempotency<br/>key tracking]
+
+    RetryIssues --> CheckCircuit{Circuit breaker<br/>open?}
+    CheckCircuit -->|Yes| CheckNodeHealth{Is LND<br/>healthy now?}
+    CheckNodeHealth -->|Yes| ResetCircuit[Manually reset<br/>circuit breaker]
+    CheckNodeHealth -->|No| WaitNode[Fix LND issue<br/>first]
+    CheckCircuit -->|No| CheckMaxRetries{Max retries<br/>exceeded?}
+    CheckMaxRetries -->|Yes| CheckPaymentStatus{Check actual<br/>payment status}
+    CheckMaxRetries -->|No| CheckBackoff{Backoff<br/>too slow?}
+
+    StateMachineIssues --> CheckTransition{What transition<br/>was rejected?}
+    CheckTransition --> VerifyRules[Review state<br/>transition rules]
+    VerifyRules --> CheckConcurrent{Concurrent<br/>updates?}
+    CheckConcurrent -->|Yes| ImplementLocking[Implement optimistic<br/>locking with versions]
+    CheckConcurrent -->|No| CheckStuck{Payment stuck<br/>in state?}
+    CheckStuck -->|Yes| RunReconciliation[Run state<br/>reconciliation job]
+
+    PerformanceIssues --> CheckLatency{What's slow?}
+    CheckLatency -->|Verification| CheckCache{Caching<br/>enabled?}
+    CheckCache -->|No| AddCache[Implement Redis<br/>caching 30s TTL]
+    CheckCache -->|Yes| CheckLNDLatency{LND response<br/>time OK?}
+    CheckLatency -->|Database| CheckIndexes{Indexes<br/>present?}
+    CheckIndexes -->|No| AddIndexes[Add missing<br/>indexes]
+    CheckIndexes -->|Yes| CheckPool{Connection pool<br/>exhausted?}
+    CheckLatency -->|Memory leak| CheckMemory[Take heap<br/>snapshot]
+
+    RestartNode --> Verify[Verify fix<br/>Test invoice creation]
+    FixAmount --> Verify
+    AddLiquidity --> Verify
+    ManualUpdate --> Verify
+    MarkFailed --> Verify
+    UpdateSecret --> Verify
+    SyncTime --> Verify
+    ImplementIdempotency --> Verify
+    ResetCircuit --> Verify
+    AddCache --> Verify
+    AddIndexes --> Verify
+    RunReconciliation --> Verify
+
+    Verify --> Success{Issue<br/>resolved?}
+    Success -->|Yes| Document[Document root cause<br/>Update runbook]
+    Success -->|No| Escalate[Escalate to<br/>on-call engineer]
+
+    Document --> Monitor[Monitor for<br/>recurrence]
+    Escalate --> Monitor
+
+    style Start fill:#1e40af,stroke:#3b82f6,color:#fff
+    style InvoiceIssues fill:#059669,stroke:#10b981,color:#fff
+    style VerificationIssues fill:#059669,stroke:#10b981,color:#fff
+    style WebhookIssues fill:#059669,stroke:#10b981,color:#fff
+    style RetryIssues fill:#059669,stroke:#10b981,color:#fff
+    style StateMachineIssues fill:#059669,stroke:#10b981,color:#fff
+    style PerformanceIssues fill:#059669,stroke:#10b981,color:#fff
+    style Document fill:#7c3aed,stroke:#8b5cf6,color:#fff
+    style Monitor fill:#7c3aed,stroke:#8b5cf6,color:#fff
+    style Escalate fill:#dc2626,stroke:#ef4444,color:#fff

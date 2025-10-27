@@ -1,0 +1,54 @@
+graph TB
+    UP[User Preferences]
+
+    UP --> Notifications[Notification Preferences]
+    UP --> Privacy[Privacy Settings]
+    UP --> Content[Content Preferences]
+    UP --> Display[Display Preferences]
+    UP --> Communication[Communication Preferences]
+    UP --> Accessibility[Accessibility Settings]
+    UP --> DataExport[Data Export Preferences]
+
+    Notifications --> N1[Event Type]
+    Notifications --> N2[Email]
+    Notifications --> N3[Push]
+    Notifications --> N4[In-App]
+
+    Privacy --> P1[Profile Visibility]
+    Privacy --> P2[Activity Visibility]
+    Privacy --> P3[Online Status]
+    Privacy --> P4[Data Sharing]
+
+    Content --> C1[Languages]
+    Content --> C2[Topics]
+    Content --> C3[Content Types]
+    Content --> C4[Sensitive Content]
+
+    Display --> D1[Theme]
+    Display --> D2[Font Size]
+    Display --> D3[Layout]
+    Display --> D4[Color Scheme]
+
+    Communication --> CM1[Email Notifications]
+    Communication --> CM2[Marketing Emails]
+    Communication --> CM3[Product Updates]
+    Communication --> CM4[Frequency]
+
+    Accessibility --> A1[Screen Reader]
+    Accessibility --> A2[High Contrast]
+    Accessibility --> A3[Reduced Motion]
+    Accessibility --> A4[Keyboard Navigation]
+
+    DataExport --> DE1[Format]
+    DataExport --> DE2[Frequency]
+    DataExport --> DE3[Auto Export]
+    DataExport --> DE4[Include Content]
+
+    style UP fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style Notifications fill:#2196F3,stroke:#1565C0,color:#fff
+    style Privacy fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style Content fill:#FF9800,stroke:#E65100,color:#fff
+    style Display fill:#F44336,stroke:#C62828,color:#fff
+    style Communication fill:#00BCD4,stroke:#00838F,color:#fff
+    style Accessibility fill:#8BC34A,stroke:#558B2F,color:#fff
+    style DataExport fill:#795548,stroke:#4E342E,color:#fff

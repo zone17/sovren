@@ -1,0 +1,45 @@
+sequenceDiagram
+    actor User
+    participant PC as PaymentHistory Component
+    participant RQ as React Query
+    participant API as Lightning API
+    participant BE as Backend Server
+    participant DB as Database
+    participant CB as Clipboard
+
+    User->>PC: Views Dashboard
+    PC->>RQ: Initialize query
+    RQ->>API: getUserPaymentHistory()
+    API->>BE: GET /api/lightning/user/payments
+    BE->>DB: Query user payments
+    DB-->>BE: Return payment records
+    BE-->>API: Payment data (JSON)
+    API-->>RQ: LightningPayment[]
+    RQ-->>PC: Update state
+    PC-->>User: Display payments
+
+    Note over PC: User applies filter
+    User->>PC: Click "Paid" filter
+    PC->>PC: Filter local data
+    PC-->>User: Show filtered results
+
+    Note over PC: User sorts payments
+    User->>PC: Click "Sort by Amount"
+    PC->>PC: Sort local data
+    PC-->>User: Show sorted results
+
+    Note over PC: User navigates pages
+    User->>PC: Click "Next Page"
+    PC->>PC: Update pagination state
+    PC-->>User: Show next page
+
+    Note over PC: User copies payment hash
+    User->>PC: Click Copy button
+    PC->>CB: writeText(paymentHash)
+    CB-->>PC: Success
+    PC-->>User: Show toast notification
+
+    Note over PC: User downloads receipt
+    User->>PC: Click Download button
+    PC->>PC: Generate receipt JSON
+    PC->>User: Trigger file download

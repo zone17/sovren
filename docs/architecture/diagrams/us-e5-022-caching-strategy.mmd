@@ -1,0 +1,49 @@
+flowchart TD
+    subgraph "Cache Layers"
+        L1[Layer 1: Query Results<br/>Followers, Following Lists<br/>TTL: 5 minutes]
+        L2[Layer 2: Relationship Checks<br/>isFollowing, isBlocking<br/>TTL: 1 hour]
+        L3[Layer 3: Statistics<br/>Counts, Metrics<br/>TTL: 5 minutes]
+        L4[Layer 4: Recommendations<br/>Suggested Users<br/>TTL: 30 minutes]
+    end
+
+    subgraph "Cache Invalidation Patterns"
+        PATTERN1[Pattern: relationship:following:userId:*]
+        PATTERN2[Pattern: relationship:followers:targetUserId:*]
+        PATTERN3[Pattern: relationship:stats:userId]
+        PATTERN4[Pattern: relationship:recommendations:*]
+    end
+
+    subgraph "Cache Keys"
+        KEY_FOLLOW["relationship:following:${userId}:${targetUserId}"]
+        KEY_FOLLOWERS["relationship:followers:${userId}:${offset}:${limit}"]
+        KEY_FOLLOWING["relationship:following:${userId}:${offset}:${limit}"]
+        KEY_STATS["relationship:stats:${userId}"]
+        KEY_RECS["relationship:recommendations:${userId}"]
+        KEY_PRIVACY["relationship:privacy:${userId}"]
+    end
+
+    OPERATION[Relationship Operation] --> CHECK_CACHE{Cache Hit?}
+
+    CHECK_CACHE -->|Yes| RETURN_CACHED[Return Cached Data]
+    CHECK_CACHE -->|No| COMPUTE[Compute from Graph]
+
+    COMPUTE --> STORE_CACHE[Store in Cache<br/>with TTL]
+    STORE_CACHE --> RETURN_FRESH[Return Fresh Data]
+
+    MUTATION[Mutation Operation<br/>follow/unfollow/block] --> INVALIDATE[Invalidate Cache Patterns]
+
+    INVALIDATE --> INV_USER[Invalidate User Caches<br/>Source & Target]
+    INVALIDATE --> INV_STATS[Invalidate Statistics]
+    INVALIDATE --> INV_RECS[Invalidate Recommendations]
+
+    INV_USER --> PATTERN1
+    INV_USER --> PATTERN2
+    INV_STATS --> PATTERN3
+    INV_RECS --> PATTERN4
+
+    style L1 fill:#FFA500,stroke:#CC8400,stroke-width:2px,color:#fff
+    style L2 fill:#FFA500,stroke:#CC8400,stroke-width:2px,color:#fff
+    style L3 fill:#FFA500,stroke:#CC8400,stroke-width:2px,color:#fff
+    style L4 fill:#FFA500,stroke:#CC8400,stroke-width:2px,color:#fff
+    style INVALIDATE fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
+    style RETURN_CACHED fill:#50C878,stroke:#2E7D32,stroke-width:2px,color:#fff

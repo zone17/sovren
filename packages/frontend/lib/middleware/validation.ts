@@ -19,8 +19,16 @@ interface ValidationOptions {
   sanitize?: boolean;
 }
 
-// 🧹 SECURITY: Input sanitization
-const sanitizeInput = (obj: any): any => {
+// 🔧 Type-safe sanitization types
+type Sanitizable = string | number | boolean | null | undefined;
+type SanitizedObject<T> = {
+  [K in keyof T]: T[K] extends Sanitizable ? T[K] : SanitizedObject<T[K]>;
+};
+
+// 🧹 SECURITY: Input sanitization with proper types
+function sanitizeInput<T extends Record<string, unknown>>(obj: T): SanitizedObject<T>;
+function sanitizeInput(obj: unknown): unknown;
+function sanitizeInput(obj: unknown): unknown {
   if (typeof obj === 'string') {
     return obj
       .trim()
@@ -28,12 +36,16 @@ const sanitizeInput = (obj: any): any => {
       .substring(0, 10000); // Prevent DoS via large strings
   }
 
+  if (typeof obj === 'number' || typeof obj === 'boolean' || obj === null || obj === undefined) {
+    return obj;
+  }
+
   if (Array.isArray(obj)) {
-    return obj.slice(0, 100).map(sanitizeInput); // Limit array size
+    return obj.slice(0, 100).map((item) => sanitizeInput(item)); // Limit array size
   }
 
   if (obj && typeof obj === 'object') {
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     const entries = Object.entries(obj).slice(0, 50); // Limit object size
 
     for (const [key, value] of entries) {
@@ -46,7 +58,7 @@ const sanitizeInput = (obj: any): any => {
   }
 
   return obj;
-};
+}
 
 // 🛡️ ELITE REQUEST VALIDATION
 export function validateRequest<T>(
@@ -107,8 +119,8 @@ export function validateRequest<T>(
   }
 }
 
-// 📏 Field length validation
-function checkFieldLengths(data: any, maxLength: number): ValidationResult<any> {
+// 📏 Field length validation with proper types
+function checkFieldLengths<T>(data: T, maxLength: number): ValidationResult<T> {
   if (typeof data === 'string' && data.length > maxLength) {
     return {
       success: false,
@@ -124,12 +136,12 @@ function checkFieldLengths(data: any, maxLength: number): ValidationResult<any> 
     for (let i = 0; i < data.length; i++) {
       const result = checkFieldLengths(data[i], maxLength);
       if (!result.success) {
-        return result;
+        return result as ValidationResult<T>;
       }
     }
   }
 
-  if (data && typeof data === 'object') {
+  if (data && typeof data === 'object' && data !== null) {
     for (const [key, value] of Object.entries(data)) {
       if (key.length > 100) {
         return {
@@ -144,24 +156,31 @@ function checkFieldLengths(data: any, maxLength: number): ValidationResult<any> 
 
       const result = checkFieldLengths(value, maxLength);
       if (!result.success) {
-        return result;
+        return result as ValidationResult<T>;
       }
     }
   }
 
-  return { success: true };
+  return { success: true, data };
 }
 
-// 🎯 Filter only allowed fields
-function filterAllowedFields(data: any, allowedFields: string[]): any {
+// 🎯 Filter only allowed fields with proper types
+function filterAllowedFields<T extends Record<string, unknown>, K extends keyof T>(
+  data: T,
+  allowedFields: K[]
+): Pick<T, K>;
+function filterAllowedFields(data: unknown, allowedFields: string[]): unknown;
+function filterAllowedFields(data: unknown, allowedFields: string[]): unknown {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return data;
   }
 
-  const filtered: any = {};
+  const filtered: Record<string, unknown> = {};
+  const dataObj = data as Record<string, unknown>;
+
   for (const field of allowedFields) {
-    if (field in data) {
-      filtered[field] = data[field];
+    if (field in dataObj) {
+      filtered[field] = dataObj[field];
     }
   }
 

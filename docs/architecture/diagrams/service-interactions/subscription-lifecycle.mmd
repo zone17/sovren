@@ -1,0 +1,133 @@
+%% Subscription Lifecycle - Service Interaction Sequence
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete sequence diagram for subscription creation, renewal, and cancellation
+
+sequenceDiagram
+    actor User as User/Supporter
+    participant WebApp as Web Application
+    participant API as API Gateway
+    participant Sub as Subscription Service
+    participant PaymentProc as Payment Processing Service
+    participant Lightning as Lightning Node
+    participant Repo as Repository Factory
+    participant DB as PostgreSQL
+    participant EventBus as Event Bus Service
+    participant Analytics as Payment Analytics Service
+    participant Notification as Notification Service
+    participant Scheduler as Background Scheduler
+
+    rect rgb(230, 245, 255)
+        Note over User,Notification: Subscription Creation
+        User->>WebApp: Subscribe to Creator (Monthly Plan)
+        WebApp->>API: POST /api/subscriptions/create
+        API->>Sub: createSubscription(userId, creatorId, plan)
+
+        Sub->>Repo: checkExistingSubscription()
+        Repo->>DB: SELECT FROM subscriptions
+        DB-->>Repo: No Active Subscription
+
+        Sub->>PaymentProc: createInitialPayment(amount)
+        PaymentProc->>Lightning: createInvoice()
+        Lightning-->>PaymentProc: BOLT11 Invoice
+        PaymentProc-->>Sub: Invoice Created
+
+        Sub->>Repo: saveSubscription(pending)
+        Repo->>DB: INSERT INTO subscriptions
+        DB-->>Repo: Subscription ID
+
+        Sub-->>API: Subscription Created (pending payment)
+        API-->>WebApp: 201 Created with Invoice
+        WebApp-->>User: Display Payment QR
+
+        User->>Lightning: Pay Initial Invoice
+        Lightning-->>PaymentProc: Payment Confirmed
+        PaymentProc->>EventBus: publish('payment.confirmed')
+
+        EventBus->>Sub: handleInitialPayment(data)
+        Sub->>Repo: updateSubscription(status: active)
+        Repo->>DB: UPDATE subscriptions SET status='active'
+
+        Sub->>EventBus: publish('subscription.activated', data)
+        EventBus->>Analytics: recordSubscription(data)
+        EventBus->>Notification: notifyCreator(newSubscriber)
+        EventBus->>Notification: notifyUser(subscriptionActive)
+
+        Sub->>Scheduler: scheduleRenewal(nextBillingDate)
+    end
+
+    rect rgb(232, 245, 233)
+        Note over User,Notification: Automatic Renewal
+        Scheduler->>Sub: triggerRenewal(subscriptionId)
+        Sub->>Repo: getSubscription(id)
+        Repo->>DB: SELECT FROM subscriptions
+        DB-->>Repo: Subscription Data
+
+        alt Subscription Active
+            Sub->>PaymentProc: createRenewalPayment(amount)
+            PaymentProc->>Lightning: createInvoice()
+            Lightning-->>PaymentProc: BOLT11 Invoice
+
+            Sub->>Notification: notifyUser(renewalDue, invoice)
+            User->>Lightning: Pay Renewal Invoice
+
+            Lightning-->>PaymentProc: Payment Confirmed
+            PaymentProc->>EventBus: publish('payment.confirmed')
+
+            EventBus->>Sub: handleRenewalPayment(data)
+            Sub->>Repo: extendSubscription(nextPeriod)
+            Repo->>DB: UPDATE subscriptions SET next_billing_date
+
+            Sub->>EventBus: publish('subscription.renewed', data)
+            EventBus->>Analytics: recordRenewal(data)
+            EventBus->>Notification: notifyUser(renewalSuccess)
+
+            Sub->>Scheduler: scheduleNextRenewal()
+
+        else Payment Failed
+            Sub->>Repo: incrementFailedPayments()
+            Repo->>DB: UPDATE subscriptions SET failed_payments++
+
+            Sub->>EventBus: publish('subscription.payment_failed', data)
+            EventBus->>Notification: notifyUser(paymentFailed)
+
+            alt Failed Payments >= 3
+                Sub->>Repo: updateSubscription(status: suspended)
+                Repo->>DB: UPDATE subscriptions SET status='suspended'
+
+                Sub->>EventBus: publish('subscription.suspended', data)
+                EventBus->>Notification: notifyUser(subscriptionSuspended)
+                EventBus->>Notification: notifyCreator(subscriberSuspended)
+            else Retry Scheduled
+                Sub->>Scheduler: scheduleRetry(+24hours)
+            end
+        end
+    end
+
+    rect rgb(255, 243, 224)
+        Note over User,Notification: Cancellation
+        User->>WebApp: Cancel Subscription
+        WebApp->>API: POST /api/subscriptions/{id}/cancel
+        API->>Sub: cancelSubscription(id)
+
+        Sub->>Repo: getSubscription(id)
+        Repo->>DB: SELECT FROM subscriptions
+        DB-->>Repo: Subscription Data
+
+        Sub->>Repo: updateSubscription(status: cancelled)
+        Repo->>DB: UPDATE subscriptions SET status='cancelled'
+
+        Sub->>Scheduler: cancelScheduledRenewal(subscriptionId)
+        Scheduler-->>Sub: Renewal Cancelled
+
+        Sub->>EventBus: publish('subscription.cancelled', data)
+        EventBus->>Analytics: recordCancellation(data)
+        EventBus->>Notification: notifyUser(cancellationConfirmed)
+        EventBus->>Notification: notifyCreator(subscriberCancelled)
+
+        Sub-->>API: Success
+        API-->>WebApp: 200 OK
+        WebApp-->>User: Subscription Cancelled (access until end of period)
+    end
+
+    Note over User,Notification: Complete subscription lifecycle:<br/>Creation → Renewals → Cancellation

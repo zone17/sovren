@@ -1,0 +1,221 @@
+sequenceDiagram
+    %% NOSTR Key Management Flow - Sovren Platform
+    %% Shows browser extension detection, manual input, and key operations
+
+    participant User
+    participant UI as Key Management UI
+    participant KMS as Key Management<br/>Service
+    participant EXT as Browser Extension<br/>(Alby/nos2x)
+    participant IDB as IndexedDB<br/>Encrypted Storage
+    participant WebCrypto as Web Crypto API
+    participant NOSTR as NOSTR Service
+
+    %% Extension Detection Phase
+    rect rgb(240, 248, 255)
+        Note over User,NOSTR: Extension Detection Phase
+        User->>UI: Access Platform
+        UI->>KMS: Initialize Key Management
+        KMS->>EXT: Check for window.nostr
+
+        alt Extension Available
+            EXT-->>KMS: Extension detected (Alby/nos2x)
+            KMS->>UI: Show "Use Extension" option
+            Note right of EXT: Extension handles<br/>all key operations
+        else No Extension
+            KMS-->>UI: Extension not found
+            UI->>UI: Show manual key input
+            Note right of UI: User must provide<br/>keys manually
+        end
+    end
+
+    %% Browser Extension Flow
+    rect rgb(240, 255, 240)
+        Note over User,NOSTR: Browser Extension Flow
+        User->>UI: Click "Connect Extension"
+        UI->>KMS: Request Extension Auth
+        KMS->>EXT: getPublicKey()
+
+        alt User Approves
+            EXT->>EXT: Show Permission Dialog
+            User->>EXT: Approve Connection
+            EXT-->>KMS: Return Public Key
+            KMS->>KMS: Store pubkey reference
+            KMS-->>UI: Connection Successful
+            UI->>User: Show Connected State
+        else User Denies
+            EXT-->>KMS: Permission Denied
+            KMS-->>UI: Connection Failed
+            UI->>User: Show Error Message
+        end
+    end
+
+    %% Manual Key Generation Flow
+    rect rgb(255, 250, 240)
+        Note over User,NOSTR: Manual Key Generation Flow
+        User->>UI: Click "Generate New Key"
+        UI->>KMS: generateKeyPair(options)
+
+        KMS->>KMS: Validate Security Level
+        Note right of KMS: Security Levels:<br/>BASIC (128-bit)<br/>ENHANCED (256-bit)<br/>MAXIMUM (512-bit)
+
+        KMS->>WebCrypto: Generate Random Bytes
+        WebCrypto-->>KMS: Entropy (256+ bits)
+
+        KMS->>KMS: Create Private Key (hex)
+        KMS->>KMS: Derive Public Key
+        KMS->>KMS: Generate Key ID
+        KMS->>KMS: Calculate Entropy Score
+
+        KMS->>IDB: Encrypt & Store Key Pair
+        Note right of IDB: AES-256-GCM<br/>encryption
+        IDB-->>KMS: Storage Confirmed
+
+        KMS->>KMS: Create Backup Metadata
+        KMS-->>UI: Return Key Pair
+        UI->>User: Display Keys + Backup Warning
+
+        Note over User,UI: CRITICAL: User must<br/>backup private key
+    end
+
+    %% Manual Key Import Flow
+    rect rgb(255, 240, 245)
+        Note over User,NOSTR: Manual Key Import Flow
+        User->>UI: Click "Import Key"
+        UI->>User: Show Private Key Input
+        User->>UI: Enter Private Key (hex/nsec)
+
+        UI->>KMS: importKey(privateKey)
+        KMS->>KMS: Validate Key Format
+
+        alt Valid Hex (64 chars)
+            KMS->>KMS: Use as-is
+        else Valid nsec (bech32)
+            KMS->>KMS: Decode bech32 to hex
+        else Invalid Format
+            KMS-->>UI: Validation Error
+            UI->>User: Show Error Message
+        end
+
+        KMS->>KMS: Derive Public Key
+        KMS->>KMS: Verify Key Pair
+
+        KMS->>IDB: Encrypt & Store
+        IDB-->>KMS: Storage Confirmed
+        KMS-->>UI: Import Successful
+        UI->>User: Show Success + Key Info
+    end
+
+    %% Key Signing Flow
+    rect rgb(245, 240, 255)
+        Note over User,NOSTR: Event Signing Flow
+        NOSTR->>KMS: signEvent(event)
+
+        alt Using Extension
+            KMS->>EXT: signEvent(event)
+            EXT->>User: Show Signing Dialog
+            User->>EXT: Approve/Deny
+
+            alt User Approves
+                EXT->>EXT: Sign with Private Key
+                EXT-->>KMS: Return Signed Event
+            else User Denies
+                EXT-->>KMS: Signature Denied
+                KMS-->>NOSTR: Signing Failed
+            end
+
+        else Using Stored Key
+            KMS->>IDB: Retrieve Private Key
+            IDB-->>KMS: Return Encrypted Key
+            KMS->>WebCrypto: Decrypt Key
+            WebCrypto-->>KMS: Private Key
+
+            KMS->>KMS: Sign Event (schnorr)
+            KMS->>KMS: Clear Key from Memory
+            Note right of KMS: Private key only<br/>in memory briefly
+        end
+
+        KMS->>KMS: Validate Signature
+        KMS-->>NOSTR: Return Signed Event
+    end
+
+    %% Key Rotation Flow
+    rect rgb(255, 245, 240)
+        Note over User,NOSTR: Key Rotation Flow
+        User->>UI: Click "Rotate Key"
+        UI->>KMS: rotateKey(keyId, reason)
+
+        KMS->>KMS: Generate New Key Pair
+        KMS->>IDB: Store New Key
+        KMS->>IDB: Mark Old Key as Rotated
+
+        KMS->>NOSTR: Publish Rotation Event (NIP-26)
+        Note right of NOSTR: Announces key<br/>rotation to network
+
+        KMS->>KMS: Update Active Key Reference
+        KMS-->>UI: Rotation Complete
+        UI->>User: Show New Key Info + Backup
+    end
+
+    %% Key Backup Flow
+    rect rgb(240, 255, 255)
+        Note over User,NOSTR: Key Backup Flow
+        User->>UI: Click "Create Backup"
+        UI->>KMS: createBackup(keyId, method)
+
+        alt Mnemonic Phrase (BIP39)
+            KMS->>KMS: Generate 12/24 Word Phrase
+            KMS->>KMS: Verify Phrase Recovery
+            KMS-->>UI: Return Mnemonic
+            UI->>User: Display Words to Write Down
+
+        else Encrypted File
+            KMS->>KMS: Create Encrypted JSON
+            KMS->>KMS: Add Verification Hash
+            KMS-->>UI: Return File Blob
+            UI->>User: Trigger File Download
+
+        else QR Code
+            KMS->>KMS: Generate QR Data
+            KMS-->>UI: Return QR Code
+            UI->>User: Display for Scanning
+        end
+
+        KMS->>IDB: Mark Key as Backed Up
+        KMS->>KMS: Update Backup Metadata
+    end
+
+    %% Key Deletion Flow
+    rect rgb(255, 240, 240)
+        Note over User,NOSTR: Key Deletion Flow
+        User->>UI: Click "Delete Key"
+        UI->>User: Show Confirmation Dialog
+
+        alt User Confirms
+            User->>UI: Confirm Deletion
+            UI->>KMS: deleteKey(keyId)
+
+            KMS->>KMS: Check Backup Status
+            alt Key Not Backed Up
+                KMS-->>UI: Warning: No Backup Exists
+                UI->>User: Final Confirmation
+                User->>UI: Confirm Anyway
+            end
+
+            KMS->>IDB: Secure Delete (Overwrite)
+            IDB-->>KMS: Deletion Confirmed
+            KMS->>KMS: Clear Memory References
+            KMS-->>UI: Key Deleted
+            UI->>User: Show Success Message
+
+        else User Cancels
+            User->>UI: Cancel
+            UI->>User: Return to Key List
+        end
+    end
+
+    %% Key Format Conversions
+    Note over KMS: Key Format Support:<br/>• Hex (64 chars)<br/>• nsec (bech32)<br/>• npub (bech32)<br/>• Mnemonic (BIP39)
+
+    Note over IDB: Security Features:<br/>• AES-256-GCM encryption<br/>• Secure deletion<br/>• Metadata separation<br/>• Access logging
+
+    Note over EXT: Browser Extensions:<br/>• Alby (Lightning + NOSTR)<br/>• nos2x (NOSTR only)<br/>• Nostore<br/>• Flamingo

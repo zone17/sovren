@@ -1,0 +1,90 @@
+%% PaymentAnalyticsService Caching Strategy
+%% User Story: US-E5-028
+%% Multi-layered caching for optimal performance
+
+graph TB
+    subgraph "Request Types"
+        RT[Real-time<br/>Last 5min]
+        HOURLY[Hourly<br/>Last hour]
+        DAILY[Daily<br/>Today]
+        MONTHLY[Monthly<br/>This month]
+        HISTORICAL[Historical<br/>Past periods]
+    end
+
+    subgraph "Cache Tiers"
+        L1[L1 Cache<br/>TTL: 1 minute<br/>Real-time metrics]
+        L2[L2 Cache<br/>TTL: 5 minutes<br/>Hourly aggregates]
+        L3[L3 Cache<br/>TTL: 1 hour<br/>Daily metrics]
+        L4[L4 Cache<br/>TTL: 6 hours<br/>Monthly reports]
+        L5[L5 Cache<br/>TTL: 24 hours<br/>Historical data]
+    end
+
+    subgraph "Cache Operations"
+        GET[Get from Cache]
+        SET[Set in Cache]
+        INVALIDATE[Invalidate Pattern]
+        WARMUP[Warmup Common Queries]
+    end
+
+    subgraph "Cache Keys"
+        KEY_REVENUE["analytics:revenue:{period}:{dates}"]
+        KEY_TX["analytics:transactions:{period}"]
+        KEY_SUCCESS["analytics:success-rate:{period}"]
+        KEY_ARPU["analytics:arpu:{period}"]
+        KEY_REALTIME["analytics:realtime"]
+    end
+
+    subgraph "Invalidation Triggers"
+        EVENT_PAYMENT[Payment Event<br/>PAYMENT_RECEIVED]
+        EVENT_REFUND[Refund Event<br/>PAYMENT_REFUNDED]
+        EVENT_FAIL[Failure Event<br/>PAYMENT_FAILED]
+        MANUAL[Manual Invalidation<br/>clearCache()]
+    end
+
+    subgraph "Cache Hit Flow"
+        REQUEST[Analytics Request] --> CHECK{Check Cache}
+        CHECK -->|Hit| VALIDATE_TTL{TTL Valid?}
+        VALIDATE_TTL -->|Yes| RETURN_CACHED[Return Cached]
+        VALIDATE_TTL -->|No| RECOMPUTE[Recompute]
+        CHECK -->|Miss| RECOMPUTE
+        RECOMPUTE --> CACHE_NEW[Cache New Result]
+        CACHE_NEW --> RETURN_NEW[Return Result]
+    end
+
+    RT --> L1
+    HOURLY --> L2
+    DAILY --> L3
+    MONTHLY --> L4
+    HISTORICAL --> L5
+
+    L1 --> GET
+    L2 --> GET
+    L3 --> GET
+    L4 --> GET
+    L5 --> GET
+
+    GET --> SET
+    SET --> INVALIDATE
+    INVALIDATE --> WARMUP
+
+    KEY_REVENUE --> L3
+    KEY_TX --> L2
+    KEY_SUCCESS --> L2
+    KEY_ARPU --> L3
+    KEY_REALTIME --> L1
+
+    EVENT_PAYMENT --> INVALIDATE
+    EVENT_REFUND --> INVALIDATE
+    EVENT_FAIL --> INVALIDATE
+    MANUAL --> INVALIDATE
+
+    style L1 fill:#F44336,stroke:#B71C1C,color:#fff
+    style L2 fill:#FF9800,stroke:#E65100,color:#fff
+    style L3 fill:#FFC107,stroke:#F57C00,color:#fff
+    style L4 fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style L5 fill:#2196F3,stroke:#1565C0,color:#fff
+    style INVALIDATE fill:#9C27B0,stroke:#4A148C,color:#fff
+    style RETURN_CACHED fill:#4CAF50,stroke:#2E7D32,color:#fff
+
+    classDef cacheKey fill:#E1F5FE,stroke:#01579B
+    class KEY_REVENUE,KEY_TX,KEY_SUCCESS,KEY_ARPU,KEY_REALTIME cacheKey

@@ -8,7 +8,7 @@ import {
     SimplePool,
     verifyEvent
 } from 'nostr-tools';
-import { parseFeatureFlags } from '../../../shared/src/featureFlags';
+import { parseFeatureFlags, FeatureFlags } from '../../../shared/src/featureFlags';
 import {
     NostrContact,
     NostrCryptographyError,
@@ -31,6 +31,7 @@ import {
     UnsignedNostrEvent
 } from '../../../shared/src/types/nostr';
 import { config } from '../config/environment';
+import { relayPoolManager } from '../../src/services/nostr/RelayPoolManager';
 
 /**
  * 🌐 Elite NOSTR Service Implementation
@@ -62,16 +63,16 @@ export class NostrService extends EventEmitter {
   private static instance: NostrService;
   private config!: NostrServiceConfig;
   private state: NostrServiceState;
-  private pool: SimplePool;
+  private pool: SimplePool; // Deprecated: Use relayPoolManager instead
   private keyPair: NostrKeyPair | null = null;
   private mobileConfig: NostrMobileConfig;
-  private featureFlags: any;
+  private featureFlags: FeatureFlags;
   private reconnectTimeouts: Map<string, NodeJS.Timeout> = new Map();
   private subscriptionCallbacks: Map<string, (event: NostrEvent) => void> = new Map();
 
   private constructor() {
     super();
-    this.pool = new SimplePool();
+    this.pool = new SimplePool(); // Maintained for backward compatibility
     this.state = this.initializeState();
     this.mobileConfig = this.initializeMobileConfig();
   }
@@ -107,13 +108,23 @@ export class NostrService extends EventEmitter {
       // Initialize or load key pair
       await this.initializeKeyPair();
 
+      // Initialize RelayPoolManager with configuration
+      await relayPoolManager.initialize({
+        relays: this.config.relays,
+        maxRelays: this.config.maxRelays,
+        connectionTimeout: this.config.connectionTimeout,
+        autoReconnect: true,
+        enableHealthMonitoring: true,
+        enableDeduplication: true,
+      });
+
       // Connect to relays if auto-connect is enabled
       if (this.config.autoConnect && this.featureFlags.enableNostrRelay) {
-        await this.connectToRelays();
+        await relayPoolManager.connectAll();
       }
 
       this.state.isInitialized = true;
-      console.log('🌐 NOSTR service initialized successfully');
+      console.log('🌐 NOSTR service initialized successfully with RelayPoolManager');
 
     } catch (error) {
       console.error('❌ Failed to initialize NOSTR service:', error);
@@ -199,7 +210,7 @@ export class NostrService extends EventEmitter {
   }
 
   /**
-   * Connect to NOSTR relays
+   * Connect to NOSTR relays (now using RelayPoolManager)
    */
   public async connectToRelays(): Promise<void> {
     if (!this.featureFlags.enableNostrRelay) {
@@ -209,58 +220,23 @@ export class NostrService extends EventEmitter {
     this.state.isConnecting = true;
 
     try {
-      const connectionPromises = this.config.relays.slice(0, this.config.maxRelays).map(url =>
-        this.connectToRelay(url)
-      );
+      await relayPoolManager.connectAll();
 
-      await Promise.allSettled(connectionPromises);
+      // Sync state with RelayPoolManager
+      const connectedUrls = relayPoolManager.getConnectedRelays();
+      this.state.connectedRelays = connectedUrls.map(url => ({
+        url,
+        state: NostrRelayState.CONNECTED,
+        reconnectAttempts: 0,
+        subscriptions: [],
+        lastConnected: Date.now(),
+      }));
 
-      console.log(`🌐 Connected to ${this.state.connectedRelays.length} NOSTR relays`);
+      console.log(`🌐 Connected to ${connectedUrls.length} NOSTR relays via RelayPoolManager`);
     } catch (error) {
       console.error('❌ Failed to connect to relays:', error);
     } finally {
       this.state.isConnecting = false;
-    }
-  }
-
-  /**
-   * Connect to a single relay
-   */
-  private async connectToRelay(url: string): Promise<void> {
-    try {
-      const relay: NostrRelay = {
-        url,
-        state: NostrRelayState.CONNECTING,
-        reconnectAttempts: 0,
-        subscriptions: [],
-      };
-
-      // Update state
-      const existingIndex = this.state.connectedRelays.findIndex(r => r.url === url);
-      if (existingIndex >= 0) {
-        this.state.connectedRelays[existingIndex] = relay;
-      } else {
-        this.state.connectedRelays.push(relay);
-      }
-
-      // Use simple pool for connection
-      this.pool.ensureRelay(url);
-
-      relay.state = NostrRelayState.CONNECTED;
-      relay.lastConnected = Date.now();
-      relay.reconnectAttempts = 0;
-
-      this.emit('relay:connected', relay);
-      console.log(`✅ Connected to NOSTR relay: ${url}`);
-
-    } catch (error) {
-      const relay = this.state.connectedRelays.find(r => r.url === url);
-      if (relay) {
-        relay.state = NostrRelayState.ERROR;
-        relay.lastError = error instanceof Error ? error.message : 'Unknown error';
-        this.emit('relay:error', relay, error instanceof Error ? error : new Error('Unknown error'));
-      }
-      console.error(`❌ Failed to connect to relay ${url}:`, error);
     }
   }
 
@@ -357,7 +333,7 @@ export class NostrService extends EventEmitter {
   }
 
   /**
-   * Subscribe to events with filters
+   * Subscribe to events with filters (now using RelayPoolManager)
    */
   public subscribe(
     filters: NostrFilter[],
@@ -372,21 +348,16 @@ export class NostrService extends EventEmitter {
       // Validate filters
       filters.forEach(filter => NostrSchemas.Filter.parse(filter));
 
-      // Generate subscription ID
-      const subscriptionId = this.generateSubscriptionId();
-
-      // Store callback
-      this.subscriptionCallbacks.set(subscriptionId, onEvent);
-
-      // Subscribe using simple pool
-      const sub = this.pool.subscribeMany(this.getConnectedRelayUrls(), filters, {
-        onevent: (event: NostrToolsEvent) => {
+      // Subscribe using RelayPoolManager with automatic deduplication
+      const subscriptionId = relayPoolManager.subscribe(
+        filters,
+        (event: NostrToolsEvent) => {
           try {
             const validatedEvent = this.validateAndNormalizeEvent(event);
 
             // Cache the event if caching is enabled
             if (this.featureFlags.enableNostrEventCaching) {
-              this.cacheEvent(validatedEvent, 'unknown');
+              this.cacheEvent(validatedEvent, 'pool');
             }
 
             onEvent(validatedEvent);
@@ -395,10 +366,8 @@ export class NostrService extends EventEmitter {
             console.error('❌ Invalid event received:', error);
           }
         },
-        oneose: () => {
-          if (onEose) onEose();
-        }
-      });
+        onEose
+      );
 
       // Create subscription record
       const subscription: NostrSubscription = {
@@ -412,7 +381,7 @@ export class NostrService extends EventEmitter {
       this.state.subscriptions.set(subscriptionId, subscription);
       this.emit('subscription:started', subscription);
 
-      console.log(`📡 Started subscription: ${subscriptionId}`);
+      console.log(`📡 Started subscription via RelayPoolManager: ${subscriptionId}`);
       return subscriptionId;
 
     } catch (error) {
@@ -422,7 +391,7 @@ export class NostrService extends EventEmitter {
   }
 
   /**
-   * Unsubscribe from events
+   * Unsubscribe from events (now using RelayPoolManager)
    */
   public unsubscribe(subscriptionId: string): void {
     const subscription = this.state.subscriptions.get(subscriptionId);
@@ -430,8 +399,12 @@ export class NostrService extends EventEmitter {
       subscription.active = false;
       this.state.subscriptions.delete(subscriptionId);
       this.subscriptionCallbacks.delete(subscriptionId);
+
+      // Unsubscribe from RelayPoolManager
+      relayPoolManager.unsubscribe(subscriptionId);
+
       this.emit('subscription:ended', subscriptionId);
-      console.log(`📡 Ended subscription: ${subscriptionId}`);
+      console.log(`📡 Ended subscription via RelayPoolManager: ${subscriptionId}`);
     }
   }
 
@@ -474,7 +447,7 @@ export class NostrService extends EventEmitter {
   }
 
   /**
-   * Disconnect from all relays
+   * Disconnect from all relays (now using RelayPoolManager)
    */
   public async disconnect(): Promise<void> {
     // Clear reconnect timeouts
@@ -484,14 +457,14 @@ export class NostrService extends EventEmitter {
     // Close all subscriptions
     this.state.subscriptions.forEach(sub => this.unsubscribe(sub.id));
 
-    // Close pool connections
-    this.pool.close(this.getConnectedRelayUrls());
+    // Disconnect from RelayPoolManager
+    await relayPoolManager.disconnectAll();
 
     // Update state
     this.state.connectedRelays = [];
     this.state.isInitialized = false;
 
-    console.log('🌐 Disconnected from all NOSTR relays');
+    console.log('🌐 Disconnected from all NOSTR relays via RelayPoolManager');
   }
 
   // ============================================
@@ -559,19 +532,17 @@ export class NostrService extends EventEmitter {
       const keyPair = this.requireKeyPair();
       const privateKeyBytes = new Uint8Array(Buffer.from(keyPair.privateKey, 'hex'));
 
-      // Sign the event
-      const signedEvent = finalizeEvent(unsignedEvent as any, privateKeyBytes);
+      // Sign the event - finalizeEvent expects compatible event structure
+      const signedEvent = finalizeEvent(unsignedEvent, privateKeyBytes);
 
       // Validate the signed event
       const validatedEvent = this.validateAndNormalizeEvent(signedEvent);
 
-      // Publish to connected relays
-      await Promise.allSettled(
-        this.pool.publish(this.getConnectedRelayUrls(), signedEvent)
-      );
+      // Publish to connected relays using RelayPoolManager
+      await relayPoolManager.publishEvent(signedEvent);
 
       this.emit('event:published', validatedEvent);
-      console.log(`📝 Published event: ${validatedEvent.id}`);
+      console.log(`📝 Published event via RelayPoolManager: ${validatedEvent.id}`);
 
       return validatedEvent;
     } catch (error) {
@@ -580,13 +551,45 @@ export class NostrService extends EventEmitter {
     }
   }
 
-  private validateAndNormalizeEvent(event: any): NostrEvent {
+  private validateAndNormalizeEvent(event: Partial<NostrEvent>): NostrEvent {
     try {
-      // Validate event structure
+      // Validate required fields exist
+      if (!event.kind || event.content === undefined || !event.created_at || !event.tags) {
+        throw new NostrValidationError('Invalid NOSTR event: missing required fields', event);
+      }
+
+      // Validate field types
+      if (typeof event.kind !== 'number') {
+        throw new NostrValidationError('Invalid NOSTR event: kind must be a number', event);
+      }
+
+      if (typeof event.content !== 'string') {
+        throw new NostrValidationError('Invalid NOSTR event: content must be a string', event);
+      }
+
+      if (typeof event.created_at !== 'number') {
+        throw new NostrValidationError('Invalid NOSTR event: created_at must be a number', event);
+      }
+
+      if (!Array.isArray(event.tags)) {
+        throw new NostrValidationError('Invalid NOSTR event: tags must be an array', event);
+      }
+
+      // Validate tag structure
+      for (const tag of event.tags) {
+        if (!Array.isArray(tag) || tag.length < 1) {
+          throw new NostrValidationError('Invalid NOSTR event: each tag must be a non-empty array', event);
+        }
+        if (typeof tag[0] !== 'string') {
+          throw new NostrValidationError('Invalid NOSTR event: tag identifier must be a string', event);
+        }
+      }
+
+      // Validate event structure with Zod schema
       const validatedEvent = NostrSchemas.Event.parse(event);
 
       // Verify signature
-      if (!verifyEvent(event)) {
+      if (!verifyEvent(event as NostrToolsEvent)) {
         throw new NostrValidationError('Invalid event signature', validatedEvent);
       }
 

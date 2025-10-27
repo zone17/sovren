@@ -1,0 +1,59 @@
+%% US-317: NOSTR Caching Layer - Architecture Overview
+%% Complete two-tier caching system with React Query integration
+
+graph TB
+    subgraph "React Components"
+        A[Component] -->|useEvent| B[React Query Hooks]
+        A -->|useProfile| B
+        A -->|useEventQuery| B
+    end
+
+    subgraph "React Query Layer"
+        B -->|Query Keys| C[Query Client]
+        C -->|Invalidation| D[Cache Invalidation Logic]
+        C -->|Fetch| E[useEventCache Hooks]
+    end
+
+    subgraph "EventCacheService - Two-Tier Cache"
+        E -->|get/set| F[Memory Cache]
+        E -->|get/set| G[IndexedDB Cache]
+
+        F -->|LRU Eviction| H[Access Order Tracking]
+        F -->|TTL Check| I[Expiration Manager]
+
+        subgraph "Memory Layer - Hot Cache"
+            F
+            H
+            I
+            J[Index: Pubkey]
+            K[Index: Kind]
+            L[Index: Tags]
+        end
+
+        subgraph "Persistence Layer - Cold Cache"
+            G
+            M[IndexedDB Helper]
+            N[Compression Engine]
+            O[Size Manager]
+        end
+    end
+
+    subgraph "Cache Features"
+        P[Pattern-Based Invalidation]
+        Q[Cache Warming]
+        R[Background Refresh]
+        S[Performance Metrics]
+    end
+
+    F -.->|50MB Limit| O
+    G -.->|10K Events| O
+
+    D -->|invalidate| P
+    E -->|warmCache| Q
+    C -->|refetch| R
+    E -->|getStats| S
+
+    style F fill:#4CAF50,stroke:#388E3C,color:#fff
+    style G fill:#2196F3,stroke:#1976D2,color:#fff
+    style B fill:#FF9800,stroke:#F57C00,color:#fff
+    style E fill:#9C27B0,stroke:#7B1FA2,color:#fff

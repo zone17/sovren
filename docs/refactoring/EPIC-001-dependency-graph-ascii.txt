@@ -1,0 +1,273 @@
+Epic 001: Type Safety Improvements - Dependency Graph (ASCII)
+═══════════════════════════════════════════════════════════════════════
+
+LEGEND:
+  [HIGH]    = High Priority
+  [MED]     = Medium Priority
+  [LOW]     = Low Priority
+  ⚠️        = Medium Risk (requires extra attention)
+  🔒        = Security Review Required
+  →         = Blocks (must complete before)
+  ↔         = Can work in parallel
+  ─ ─ ─     = Cross-stream relationship (non-blocking)
+
+
+═══════════════════════════════════════════════════════════════════════
+SPRINT 0: FOUNDATION (Stories 1-10, Parallel Work, 6-8 hours)
+═══════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ STREAM A: Frontend Types (1 Developer, ~12 hours)                  │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Story 1: Event Handlers                                           │
+│  [HIGH] 2-3 hrs | Low Risk                                         │
+│  Files: Login.tsx, Signup.tsx, Profile.tsx, Post.tsx               │
+│                                                                     │
+│         ↕                                                           │
+│                                                                     │
+│  Story 2: API Responses                                            │
+│  [HIGH] 2-3 hrs | Low Risk                                         │
+│  Files: Home.tsx, Profile.tsx, Post.tsx, types/api-responses.ts    │
+│                                                                     │
+│         ↕                                                           │
+│                                                                     │
+│  Story 3: Validation Middleware ⚠️ 🔒                               │
+│  [HIGH] 2-3 hrs | MEDIUM RISK | SECURITY CRITICAL                  │
+│  Files: lib/middleware/validation.ts                               │
+│  Security Tests: XSS, SQL injection, prototype pollution           │
+│                                                                     │
+│         ↕                                                           │
+│                                                                     │
+│  Story 4: Email Service                                            │
+│  [MED] 2 hrs | Low Risk                                            │
+│  Files: lib/services/emailService.ts                               │
+│                                                                     │
+│         ↕                                                           │
+│                                                                     │
+│  Story 5: Test Utilities                                           │
+│  [MED] 2 hrs | Low Risk                                            │
+│  Files: test-utils/test-providers.tsx, react-query-test-utils.tsx  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ STREAM B: Shared Package Types (1 Developer, ~6 hours)             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Story 6: Quality Metrics                                          │
+│  [HIGH] 2-3 hrs | Low Risk                                         │
+│  Files: packages/shared/src/types/quality-metrics.ts               │
+│  Deliverable: Zod schemas for visualizations, AI service types     │
+│                                                                     │
+│         ↕                                                           │
+│                                                                     │
+│  Story 7: NOSTR Keys 🔒                                             │
+│  [MED] 1.5-2 hrs | Low Risk | SECURITY CRITICAL                    │
+│  Files: packages/shared/src/types/nostr-key-management.ts          │
+│  Security Review: Cryptographic key handling                       │
+│                                                                     │
+│         ↕                                                           │
+│                                                                     │
+│  Story 8: Environment Validator                                    │
+│  [LOW] 1.5 hrs | Low Risk                                          │
+│  Files: packages/shared/src/config/environment-validator.ts        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ STREAM C: API & Integration Types (1 Developer, ~5 hours)          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Story 9: API Routes ⚠️ 🔒                                          │
+│  [HIGH] 2-3 hrs | MEDIUM RISK | SECURITY CRITICAL                  │
+│  Files: api/payments/*, api/posts/*, api/auth/*, api/users/*       │
+│  Create: api/types/api-types.ts                                    │
+│  Security Tests: Auth validation, privilege escalation             │
+│                                                                     │
+│         ↕                                                           │
+│                                                                     │
+│  Story 10: NOSTR Service                                           │
+│  [MED] 2 hrs | Low Risk                                            │
+│  Files: lib/services/nostrService.ts                               │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+
+CROSS-STREAM RELATIONSHIPS (Non-blocking):
+═══════════════════════════════════════════════════════════════════════
+
+Story 2 (API Responses) ─ ─ ─ ─ ─ ─> Story 6 (Quality Metrics)
+   Uses types from quality metrics
+
+Story 2 (API Responses) ─ ─ ─ ─ ─ ─> Story 9 (API Routes)
+   Uses API types
+
+Story 10 (NOSTR Service) ─ ─ ─ ─ ─> Story 7 (NOSTR Keys)
+   Uses NOSTR key management types
+
+Story 4 (Email Service) ─ ─ ─ ─ ─ ─> Story 9 (API Routes)
+   Called from API routes
+
+
+PARALLEL WORK VISUALIZATION:
+═══════════════════════════════════════════════════════════════════════
+
+TIME →
+         Day 1 Morning      Day 1 Afternoon    Day 2 Morning
+         ┌────────────┐    ┌────────────┐    ┌────────────┐
+Dev 1    │ S1 + S2    │ →  │ S3         │ →  │ S4 + S5    │
+         └────────────┘    └────────────┘    └────────────┘
+         ┌────────────┐    ┌────────────┐
+Dev 2    │ S6         │ →  │ S7 + S8    │
+         └────────────┘    └────────────┘
+         ┌────────────┐    ┌────────────┐
+Dev 3    │ S9         │ →  │ S10        │
+         └────────────┘    └────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════
+SPRINT 1: STRICT MODE (Stories 11-12, Sequential, 3-4 hours)
+═══════════════════════════════════════════════════════════════════════
+
+                    ╔════════════════════════════════╗
+                    ║ CRITICAL DEPENDENCY GATE       ║
+                    ║ ALL SPRINT 0 STORIES MUST      ║
+                    ║ COMPLETE BEFORE SPRINT 1       ║
+                    ╚════════════════════════════════╝
+                                 ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ STREAM D: Strict Mode Enforcement (1 Developer, ~3.5 hours)        │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Story 11: Enable Strict Mode ⚠️                                    │
+│  [CRITICAL] 1.5-2 hrs | MEDIUM RISK                                │
+│  Files: All tsconfig.json files                                    │
+│  Tasks:                                                             │
+│    - Enable noUncheckedIndexedAccess                               │
+│    - Enable noImplicitOverride                                     │
+│    - Fix new type errors                                           │
+│    - Measure build time impact                                     │
+│                                                                     │
+│  ⚠️  DEPENDS ON: Stories 1-10 (ALL MUST BE COMPLETE)                │
+│                                                                     │
+│         ↓ (Blocks)                                                 │
+│                                                                     │
+│  Story 12: Validate Coverage                                       │
+│  [CRITICAL] 1.5-2 hrs | Low Risk                                   │
+│  Files: package.json, CI/CD, README.md                             │
+│  Tasks:                                                             │
+│    - Install type-coverage tool                                    │
+│    - Run tsc --noEmit → 0 errors                                   │
+│    - Run type-coverage → ≥ 99%                                     │
+│    - ESLint no-explicit-any → 0 warnings                           │
+│    - Update CI/CD with type checks                                 │
+│    - Add type coverage badge                                       │
+│                                                                     │
+│  ⚠️  DEPENDS ON: Story 11                                           │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════
+CRITICAL PATH ANALYSIS
+═══════════════════════════════════════════════════════════════════════
+
+Longest Sequential Path (Critical Path):
+
+Sprint 0 (Stories 1-10) → Story 11 → Story 12
+   6-8 hours parallel      1.5-2 hrs   1.5-2 hrs
+
+Total Critical Path Duration: ~10-12 hours (1.5 days with 3 developers)
+
+
+Parallel Capacity:
+
+Sprint 0: 3 streams can work simultaneously
+  - Maximum parallelization: 3 developers
+  - All 10 stories are independent
+  - No blocking dependencies within Sprint 0
+
+Sprint 1: Sequential work only
+  - Story 11 must complete before Story 12
+  - 1 developer can handle both stories
+
+
+═══════════════════════════════════════════════════════════════════════
+RISK MATRIX
+═══════════════════════════════════════════════════════════════════════
+
+         MEDIUM RISK                         LOW RISK
+       ┌────────────┐                  ┌────────────┐
+HIGH   │  Story 3   │                  │ Story 1    │
+       │  Story 9   │                  │ Story 2    │
+       │  Story 11  │                  │ Story 6    │
+       └────────────┘                  └────────────┘
+
+       ┌────────────┐                  ┌────────────┐
+MED    │            │                  │ Story 4    │
+       │            │                  │ Story 5    │
+       │            │                  │ Story 7    │
+       │            │                  │ Story 10   │
+       └────────────┘                  │ Story 12   │
+                                       └────────────┘
+
+       ┌────────────┐                  ┌────────────┐
+LOW    │            │                  │ Story 8    │
+       │            │                  │            │
+       └────────────┘                  └────────────┘
+
+
+SECURITY REVIEW REQUIRED: Stories 3, 7, 9 (3 stories)
+MEDIUM RISK STORIES: Stories 3, 9, 11 (3 stories)
+
+
+═══════════════════════════════════════════════════════════════════════
+COMPLETION CRITERIA CHECKLIST
+═══════════════════════════════════════════════════════════════════════
+
+Epic 001 is COMPLETE when Story 12 validates ALL of the following:
+
+  [ ] All `any` types replaced (grep check passes)
+  [ ] TypeScript strict mode enabled (all tsconfig.json)
+  [ ] Type coverage ≥ 99% (type-coverage tool)
+  [ ] Zero TypeScript errors (tsc --noEmit)
+  [ ] Zero ESLint explicit-any warnings
+  [ ] All tests pass (unit + integration + E2E)
+  [ ] Build time < 5% increase (measured)
+  [ ] CI/CD includes type coverage checks
+  [ ] Documentation updated
+  [ ] Type coverage badge in README
+
+
+═══════════════════════════════════════════════════════════════════════
+TIMELINE SCENARIOS
+═══════════════════════════════════════════════════════════════════════
+
+Scenario 1: Optimal (3 Developers)
+  Day 1: Sprint 0 (Stories 1-10 in parallel)
+  Day 2: Sprint 1 (Stories 11-12 sequential) + Testing
+  Total: 2 days
+
+Scenario 2: Budget (2 Developers)
+  Day 1: Streams A + B (Stories 1-8)
+  Day 2: Stream C + remaining A (Stories 9-10, 4-5)
+  Day 3: Strict Mode (Stories 11-12)
+  Total: 3 days
+
+Scenario 3: Minimum (1 Developer)
+  Days 1-3: All Sprint 0 stories sequentially
+  Day 4 (half): Sprint 1 stories
+  Total: 3.5 days
+
+
+═══════════════════════════════════════════════════════════════════════
+END OF DEPENDENCY GRAPH
+═══════════════════════════════════════════════════════════════════════
+
+Generated: 2025-10-23
+Epic: 001 - Type Safety Improvements
+Status: Ready for Development
+
+For visual Mermaid diagram, see: EPIC-001-dependency-graph.mmd
+(Render in GitHub or use mermaid.live)

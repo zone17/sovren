@@ -1,0 +1,61 @@
+stateDiagram-v2
+    [*] --> Pending: Webhook Event
+
+    Pending --> RateLimitCheck: Process
+
+    RateLimitCheck --> CircuitCheck: Within Limit
+    RateLimitCheck --> Queued: Limit Exceeded
+
+    CircuitCheck --> Delivering: Circuit Closed
+    CircuitCheck --> Failed: Circuit Open
+
+    Delivering --> Success: HTTP 2xx
+    Delivering --> Retry: HTTP 5xx/Timeout
+    Delivering --> Failed: HTTP 4xx
+
+    Success --> [*]: Log Success
+
+    Retry --> Attempt1: Retry Count = 0
+    Retry --> Attempt2: Retry Count = 1
+    Retry --> Attempt3: Retry Count = 2
+    Retry --> Attempt4: Retry Count = 3
+    Retry --> Attempt5: Retry Count = 4
+    Retry --> Attempt6: Retry Count = 5
+    Retry --> DeadLetterQueue: Retry Count >= 6
+
+    Attempt1 --> Delivering: Wait 0s (immediate)
+    Attempt2 --> Delivering: Wait 1m
+    Attempt3 --> Delivering: Wait 5m
+    Attempt4 --> Delivering: Wait 30m
+    Attempt5 --> Delivering: Wait 2h
+    Attempt6 --> Delivering: Wait 6h
+
+    DeadLetterQueue --> [*]: Manual Review Required
+    Failed --> [*]: Log Failure
+    Queued --> RateLimitCheck: Next Window
+
+    note right of Retry
+        Exponential Backoff Strategy
+        - Attempt 1: Immediate
+        - Attempt 2: 1 minute
+        - Attempt 3: 5 minutes
+        - Attempt 4: 30 minutes
+        - Attempt 5: 2 hours
+        - Attempt 6: 6 hours
+        Total time: ~8.6 hours
+    end note
+
+    note right of CircuitCheck
+        Circuit Breaker Rules:
+        - Opens after 5 consecutive failures
+        - Half-open after 5 minutes
+        - Closes after 3 successes
+    end note
+
+    note right of DeadLetterQueue
+        DLQ entries can be:
+        - Manually replayed
+        - Bulk replayed
+        - Investigated for issues
+        - Permanently deleted
+    end note

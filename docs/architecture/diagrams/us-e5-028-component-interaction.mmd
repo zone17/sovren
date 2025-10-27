@@ -1,0 +1,71 @@
+%% PaymentAnalyticsService Component Interactions
+%% User Story: US-E5-028
+%% Shows how components interact for analytics generation
+
+sequenceDiagram
+    participant Client
+    participant PAS as PaymentAnalyticsService
+    participant Cache as CacheService
+    participant Payment as PaymentProcessingService
+    participant Currency as CurrencyService
+    participant EventBus as EventBus
+
+    Note over Client,EventBus: Revenue Analytics Request Flow
+
+    Client->>PAS: getRevenueAnalytics(query)
+
+    PAS->>Cache: get(cacheKey)
+    alt Cache Hit
+        Cache-->>PAS: cachedData
+        PAS-->>Client: RevenueAnalytics
+    else Cache Miss
+        Cache-->>PAS: null
+
+        PAS->>Payment: getPaymentHistory(query)
+        Payment-->>PAS: PaymentTransaction[]
+
+        Note over PAS: Calculate Metrics<br/>- Total Revenue<br/>- Net Revenue<br/>- Growth Rate
+
+        loop For each currency
+            PAS->>Currency: convert(amount, from, to)
+            Currency-->>PAS: ConversionResult
+        end
+
+        Note over PAS: Aggregate Results<br/>- Currency breakdown<br/>- User metrics<br/>- Trends
+
+        PAS->>Cache: set(cacheKey, result, ttl)
+        Cache-->>PAS: void
+
+        PAS-->>Client: RevenueAnalytics
+    end
+
+    Note over Client,EventBus: Real-time Update Flow
+
+    Payment->>EventBus: publish(PAYMENT_RECEIVED)
+    EventBus->>PAS: onPaymentReceived(event)
+    PAS->>Cache: invalidate('analytics:*')
+    Cache-->>PAS: void
+
+    loop For each subscriber
+        PAS->>Client: realtimeMetrics
+    end
+
+    Note over Client,EventBus: Export Analytics Flow
+
+    Client->>PAS: exportAnalytics(request)
+
+    PAS->>PAS: getRevenueAnalytics(query)
+    Note over PAS: Generate analytics data
+
+    alt CSV Format
+        PAS->>PAS: formatAsCSV(data)
+    else JSON Format
+        PAS->>PAS: JSON.stringify(data)
+    else XLSX Format
+        PAS->>PAS: generateExcel(data)
+    else PDF Format
+        PAS->>PAS: generatePDF(data)
+    end
+
+    PAS->>PAS: storeExport(result)
+    PAS-->>Client: AnalyticsExportResult

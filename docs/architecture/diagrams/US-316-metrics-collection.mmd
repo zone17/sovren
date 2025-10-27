@@ -1,0 +1,172 @@
+```mermaid
+graph TB
+    subgraph "Metrics Collection Process - US-316"
+        subgraph "Input Events"
+            RC[Relay Connected]
+            RD[Relay Disconnected]
+            RE[Relay Error]
+            PE[Event Published]
+            SE[Subscription Event]
+            ER[Subscription Error]
+        end
+
+        subgraph "Metrics Processors"
+            RHP[Relay Health<br/>Processor]
+            PMP[Publish Metrics<br/>Processor]
+            SMP[Subscription Metrics<br/>Processor]
+            NMP[Network Metrics<br/>Processor]
+            MMP[Memory Metrics<br/>Processor]
+        end
+
+        subgraph "Metric Calculations"
+            subgraph "Relay Health"
+                RHC[Health Score<br/>0-100]
+                RUC[Uptime %]
+                RLC[Latency ms]
+                RSC[Status Count]
+            end
+
+            subgraph "Publishing"
+                PSR[Success Rate %]
+                PLP[Latency Percentiles<br/>p50, p75, p90, p95, p99]
+                PTC[Total/Success/Failed<br/>Counters]
+            end
+
+            subgraph "Subscriptions"
+                SAC[Active Count]
+                SER[Error Rate]
+                SEV[Events Received]
+                SPS[Events/Second]
+            end
+
+            subgraph "Network"
+                NLM[Latency Metrics]
+                NTM[Throughput Metrics]
+                NRC[Request Counters]
+            end
+
+            subgraph "Memory"
+                MEC[Event Cache Size]
+                MSC[Subscription Count]
+                MSE[Seen Events Count]
+            end
+        end
+
+        subgraph "Alert Triggers"
+            AT1{Error Rate<br/>>10%?}
+            AT2{Latency p95<br/>>1000ms?}
+            AT3{Relay<br/>Disconnected?}
+            AT4{Performance<br/>Degraded?}
+        end
+
+        subgraph "Aggregation"
+            AGG[Aggregate All<br/>Metrics]
+            SUM[Calculate<br/>Summaries]
+            EXP[Prepare<br/>Export]
+        end
+
+        subgraph "Output"
+            MET[MonitoringMetrics<br/>Object]
+            PROM[Prometheus<br/>Export]
+            JSON_OUT[JSON<br/>Export]
+            HEALTH[Health Check<br/>Result]
+        end
+
+        %% Event to Processor flow
+        RC --> RHP
+        RD --> RHP
+        RE --> RHP
+        PE --> PMP
+        SE --> SMP
+        ER --> SMP
+
+        %% Processor to Calculations
+        RHP --> RHC
+        RHP --> RUC
+        RHP --> RLC
+        RHP --> RSC
+
+        PMP --> PSR
+        PMP --> PLP
+        PMP --> PTC
+
+        SMP --> SAC
+        SMP --> SER
+        SMP --> SEV
+        SMP --> SPS
+
+        PMP --> NMP
+        SMP --> NMP
+        NMP --> NLM
+        NMP --> NTM
+        NMP --> NRC
+
+        SMP --> MMP
+        MMP --> MEC
+        MMP --> MSC
+        MMP --> MSE
+
+        %% Alert checking
+        PSR --> AT1
+        PLP --> AT2
+        RD --> AT3
+        NMP --> AT4
+
+        AT1 -->|Yes| ALERT1[Create Alert:<br/>HIGH_ERROR_RATE]
+        AT2 -->|Yes| ALERT2[Create Alert:<br/>HIGH_LATENCY]
+        AT3 -->|Yes| ALERT3[Create Alert:<br/>RELAY_DISCONNECTED]
+        AT4 -->|Yes| ALERT4[Create Alert:<br/>PERFORMANCE_DEGRADED]
+
+        %% Aggregation flow
+        RHC --> AGG
+        RUC --> AGG
+        RLC --> AGG
+        RSC --> AGG
+        PSR --> AGG
+        PLP --> AGG
+        PTC --> AGG
+        SAC --> AGG
+        SER --> AGG
+        SEV --> AGG
+        SPS --> AGG
+        NLM --> AGG
+        NTM --> AGG
+        NRC --> AGG
+        MEC --> AGG
+        MSC --> AGG
+        MSE --> AGG
+
+        AGG --> SUM
+        SUM --> EXP
+
+        %% Output generation
+        EXP --> MET
+        EXP --> PROM
+        EXP --> JSON_OUT
+        EXP --> HEALTH
+
+        %% Styling
+        classDef event fill:#4A90E2,stroke:#2E5C8A,color:#fff
+        classDef processor fill:#50C878,stroke:#2D7A4A,color:#fff
+        classDef metric fill:#FFA500,stroke:#CC8400,color:#fff
+        classDef alert fill:#FF6B6B,stroke:#C93636,color:#fff
+        classDef output fill:#9B59B6,stroke:#7D3C98,color:#fff
+
+        class RC,RD,RE,PE,SE,ER event
+        class RHP,PMP,SMP,NMP,MMP processor
+        class RHC,RUC,RLC,RSC,PSR,PLP,PTC,SAC,SER,SEV,SPS,NLM,NTM,NRC,MEC,MSC,MSE metric
+        class AT1,AT2,AT3,AT4,ALERT1,ALERT2,ALERT3,ALERT4 alert
+        class MET,PROM,JSON_OUT,HEALTH output
+    end
+
+    %% Performance Requirements
+    NOTE1[⚡ Collection overhead: <1ms per operation]
+    NOTE2[💾 Memory usage: <5MB for 1 hour metrics]
+    NOTE3[📊 Metrics interval: 5 seconds]
+    NOTE4[🎯 Target: 95%+ accuracy]
+
+    style NOTE1 fill:#FFE66D,stroke:#F4D03F
+    style NOTE2 fill:#FFE66D,stroke:#F4D03F
+    style NOTE3 fill:#FFE66D,stroke:#F4D03F
+    style NOTE4 fill:#FFE66D,stroke:#F4D03F
+```

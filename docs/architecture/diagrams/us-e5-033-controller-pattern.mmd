@@ -1,0 +1,67 @@
+graph TB
+    subgraph "Controller Pattern"
+        REQUEST[HTTP Request]
+
+        subgraph "Controller Layer Responsibilities"
+            EXTRACT[1. Extract Request Data<br/>params, query, body, headers]
+            VALIDATE[2. Validate via Middleware<br/>Zod schemas]
+            TRANSFORM_IN[3. Transform to Service DTOs<br/>Request DTO → Service Input]
+            INVOKE[4. Invoke Service Method<br/>via DI Container]
+            TRANSFORM_OUT[5. Transform Service Result<br/>Service Output → Response DTO]
+            FORMAT[6. Format HTTP Response<br/>status code, headers, body]
+        end
+
+        subgraph "Error Handling"
+            CATCH[Catch Service Errors]
+            MAP_ERROR[Map to HTTP Status]
+            FORMAT_ERROR[Format Error Response]
+        end
+
+        subgraph "Cross-Cutting Concerns"
+            LOG[Request/Response Logging]
+            METRICS[Metrics Collection]
+            TRACING[Distributed Tracing]
+        end
+
+        REQUEST --> EXTRACT
+        EXTRACT --> VALIDATE
+        VALIDATE --> TRANSFORM_IN
+        TRANSFORM_IN --> INVOKE
+        INVOKE --> TRANSFORM_OUT
+        TRANSFORM_OUT --> FORMAT
+
+        INVOKE -.-> CATCH
+        CATCH --> MAP_ERROR
+        MAP_ERROR --> FORMAT_ERROR
+
+        EXTRACT --> LOG
+        FORMAT --> LOG
+        INVOKE --> METRICS
+        INVOKE --> TRACING
+    end
+
+    subgraph "Service Layer"
+        SERVICE[Service Instance<br/>from DI Container]
+        INVOKE --> SERVICE
+    end
+
+    subgraph "Response Types"
+        SUCCESS[Success Response<br/>200/201/204]
+        ERROR_4XX[Client Error<br/>400/401/403/404/429]
+        ERROR_5XX[Server Error<br/>500/503]
+
+        FORMAT --> SUCCESS
+        FORMAT_ERROR --> ERROR_4XX
+        FORMAT_ERROR --> ERROR_5XX
+    end
+
+    style EXTRACT fill:#4CAF50
+    style VALIDATE fill:#4CAF50
+    style TRANSFORM_IN fill:#4CAF50
+    style INVOKE fill:#FF9800
+    style TRANSFORM_OUT fill:#4CAF50
+    style FORMAT fill:#4CAF50
+    style CATCH fill:#F44336
+    style MAP_ERROR fill:#F44336
+    style FORMAT_ERROR fill:#F44336
+    style SERVICE fill:#2196F3

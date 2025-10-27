@@ -1,0 +1,37 @@
+graph TB
+    subgraph "Client Layer"
+        Client[API Client]
+    end
+
+    subgraph "Service Layer"
+        UPS[UserPreferencesService]
+    end
+
+    subgraph "Repository Layer"
+        UPSR[UserPreferencesRepository]
+    end
+
+    subgraph "Infrastructure Layer"
+        Cache[CacheService<br/>Redis/Memory]
+        EventBus[EventBus<br/>Event-Driven]
+        Logger[Logger<br/>Logging]
+        DB[(Database<br/>PostgreSQL)]
+    end
+
+    Client -->|API Request| UPS
+
+    UPS -->|Get/Set Cache| Cache
+    UPS -->|Emit Events| EventBus
+    UPS -->|Log Operations| Logger
+    UPS -->|Data Access| UPSR
+
+    UPSR -->|CRUD Operations| DB
+
+    Cache -.->|Cache Miss| UPSR
+    EventBus -.->|preference_updated| NotificationService[NotificationService]
+
+    style UPS fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style UPSR fill:#2196F3,stroke:#1565C0,color:#fff
+    style Cache fill:#FF9800,stroke:#E65100,color:#fff
+    style EventBus fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style DB fill:#607D8B,stroke:#37474F,color:#fff

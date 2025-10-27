@@ -1,0 +1,44 @@
+graph LR
+    subgraph "1. Session Creation"
+        A1[NOSTR Pubkey] --> A2[Device Fingerprint]
+        A2 --> A3[Metadata Collection]
+        A3 --> A4[Token Generation]
+        A4 --> A5[Session Object]
+    end
+    
+    subgraph "2. Token Security"
+        B1[64-char Random Token] --> B2[SHA-256 Hash]
+        B2 --> B3[Store Hash Only]
+        B3 --> B4[Return Token Once]
+    end
+    
+    subgraph "3. Expiration Logic"
+        C1[Absolute Timeout<br/>7 days] --> C3[Session Expires]
+        C2[Idle Timeout<br/>24 hours] --> C3
+        C3 --> C4[Auto-Revoke]
+    end
+    
+    subgraph "4. Activity Tracking"
+        D1[Session Action] --> D2[Log Activity]
+        D2 --> D3[Activity Log<br/>last 100 entries]
+        D3 --> D4[Audit Trail]
+    end
+    
+    subgraph "5. Multi-Device"
+        E1[Device 1] --> E3[Session Limit Check]
+        E2[Device 2] --> E3
+        E3 --> E4{Count > 5?}
+        E4 -->|Yes| E5[Revoke Oldest]
+        E4 -->|No| E6[Allow New Session]
+    end
+    
+    A5 --> B1
+    B4 --> C1
+    C4 --> D1
+    D4 --> E3
+    
+    style A5 fill:#3B82F6,stroke:#2563EB,color:#fff
+    style B3 fill:#EF4444,stroke:#DC2626,color:#fff
+    style C3 fill:#F59E0B,stroke:#D97706,color:#fff
+    style D3 fill:#10B981,stroke:#059669,color:#fff
+    style E5 fill:#8B5CF6,stroke:#7C3AED,color:#fff

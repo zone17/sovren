@@ -1,5 +1,20 @@
 import { addBreadcrumb, captureMessage } from './simpleMonitoring';
 
+// 🌐 **Browser API Type Definitions**
+interface NavigatorConnection {
+  effectiveType?: 'slow-2g' | '2g' | '3g' | '4g';
+  type?: 'bluetooth' | 'cellular' | 'ethernet' | 'wifi' | 'other' | 'unknown' | 'none';
+  downlink?: number;
+  rtt?: number;
+  saveData?: boolean;
+}
+
+interface ExtendedNavigator extends Navigator {
+  connection?: NavigatorConnection;
+  mozConnection?: NavigatorConnection;
+  webkitConnection?: NavigatorConnection;
+}
+
 // User session data interface
 interface UserSession {
   sessionId: string;
@@ -38,6 +53,16 @@ interface PageMetrics {
   timeToInteractive?: number;
 }
 
+// Session summary interface
+interface SessionSummary extends UserSession {
+  sessionDuration: number;
+  interactionRate: number;
+  errorRate: number;
+  avgPageLoadTime: number;
+  recentInteractions: UserInteraction[];
+  performanceMetrics: PageMetrics[];
+}
+
 class RealUserMonitoring {
   private session: UserSession;
   private interactions: UserInteraction[] = [];
@@ -72,10 +97,8 @@ class RealUserMonitoring {
   }
 
   private getConnectionType(): 'slow-2g' | '2g' | '3g' | '4g' | 'unknown' {
-    const connection =
-      (navigator as any).connection ||
-      (navigator as any).mozConnection ||
-      (navigator as any).webkitConnection;
+    const nav = navigator as ExtendedNavigator;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
     return connection?.effectiveType || 'unknown';
   }
 
@@ -338,7 +361,7 @@ class RealUserMonitoring {
     addBreadcrumb(`User identified: ${userId}`, 'user', 'info');
   }
 
-  public trackCustomEvent(eventName: string, properties?: Record<string, any>): void {
+  public trackCustomEvent(eventName: string, properties?: Record<string, unknown>): void {
     addBreadcrumb(
       `Custom event: ${eventName}${properties ? ` - ${JSON.stringify(properties)}` : ''}`,
       'custom',
@@ -346,7 +369,7 @@ class RealUserMonitoring {
     );
   }
 
-  public getSessionSummary() {
+  public getSessionSummary(): SessionSummary {
     const sessionDuration = Date.now() - this.session.startTime;
 
     return {
@@ -402,10 +425,10 @@ class RealUserMonitoring {
 export const realUserMonitoring = new RealUserMonitoring();
 
 // Utility functions for common RUM tasks
-export const trackPageView = (url?: string) => realUserMonitoring.trackPageView(url);
-export const setRumUser = (userId: string) => realUserMonitoring.setUser(userId);
-export const trackCustomEvent = (eventName: string, properties?: Record<string, any>) =>
+export const trackPageView = (url?: string): void => realUserMonitoring.trackPageView(url);
+export const setRumUser = (userId: string): void => realUserMonitoring.setUser(userId);
+export const trackCustomEvent = (eventName: string, properties?: Record<string, unknown>): void =>
   realUserMonitoring.trackCustomEvent(eventName, properties);
-export const getRumSessionSummary = () => realUserMonitoring.getSessionSummary();
+export const getRumSessionSummary = (): SessionSummary => realUserMonitoring.getSessionSummary();
 
 export default realUserMonitoring;

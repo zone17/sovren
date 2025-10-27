@@ -1,0 +1,103 @@
+%% PaymentAnalyticsService Data Flow
+%% User Story: US-E5-028
+%% Data transformation and aggregation flow
+
+graph LR
+    subgraph "Raw Data Sources"
+        TX[Payment Transactions<br/>Status, Amount, Method]
+        INV[Invoices<br/>Created, Expired]
+        REF[Refunds<br/>Amount, Reason]
+        USERS[Users<br/>Active, Churned]
+    end
+
+    subgraph "Data Collection Layer"
+        QUERY[Query Builder<br/>Date ranges, Filters]
+        FETCH[Data Fetcher<br/>PaymentHistoryQuery]
+    end
+
+    subgraph "Data Processing"
+        FILTER[Filter<br/>Status, Method, Currency]
+        GROUP[Group By<br/>Time Period, User]
+        AGG[Aggregate<br/>Sum, Count, Avg]
+    end
+
+    subgraph "Currency Normalization"
+        DETECT[Detect Currencies<br/>BTC, USD, EUR, etc]
+        CONVERT[Convert to Base<br/>CurrencyService]
+        CONSOLIDATE[Consolidate<br/>Single Currency View]
+    end
+
+    subgraph "Analytics Calculation"
+        REV[Revenue Metrics<br/>Total, Net, Gross]
+        VOL[Volume Metrics<br/>Count, Average]
+        RATE[Success Rate<br/>Failed/Total]
+        TREND[Trend Analysis<br/>Growth, Forecast]
+    end
+
+    subgraph "Advanced Metrics"
+        ARPU_CALC[ARPU<br/>Revenue/Users]
+        CLV_CALC[Customer LTV<br/>Lifetime Value]
+        MRR_CALC[MRR/ARR<br/>Recurring Revenue]
+        CHURN_CALC[Churn Impact<br/>Lost Revenue]
+    end
+
+    subgraph "Cache Layer"
+        L1[L1 Cache<br/>1 minute TTL<br/>Real-time]
+        L2[L2 Cache<br/>5 minute TTL<br/>Hourly]
+        L3[L3 Cache<br/>1 hour TTL<br/>Daily]
+        L4[L4 Cache<br/>24 hour TTL<br/>Monthly]
+    end
+
+    subgraph "Output Formats"
+        API_RES[API Response<br/>JSON Objects]
+        TS_DATA[Time Series<br/>Arrays]
+        EXPORT_CSV[CSV Files]
+        EXPORT_JSON[JSON Files]
+        DASHBOARD[Dashboard Metrics<br/>Real-time]
+    end
+
+    TX --> QUERY
+    INV --> QUERY
+    REF --> QUERY
+    USERS --> QUERY
+
+    QUERY --> FETCH
+    FETCH --> FILTER
+    FILTER --> GROUP
+    GROUP --> AGG
+
+    AGG --> DETECT
+    DETECT --> CONVERT
+    CONVERT --> CONSOLIDATE
+
+    CONSOLIDATE --> REV
+    CONSOLIDATE --> VOL
+    CONSOLIDATE --> RATE
+    CONSOLIDATE --> TREND
+
+    REV --> ARPU_CALC
+    REV --> CLV_CALC
+    REV --> MRR_CALC
+    VOL --> CHURN_CALC
+
+    ARPU_CALC --> L1
+    ARPU_CALC --> L2
+    REV --> L3
+    TREND --> L4
+
+    L1 --> API_RES
+    L2 --> API_RES
+    L3 --> API_RES
+    L4 --> API_RES
+
+    API_RES --> TS_DATA
+    API_RES --> EXPORT_CSV
+    API_RES --> EXPORT_JSON
+    L1 --> DASHBOARD
+
+    style TX fill:#E3F2FD,stroke:#1976D2
+    style FILTER fill:#FFF3E0,stroke:#F57C00
+    style CONVERT fill:#F3E5F5,stroke:#7B1FA2
+    style REV fill:#E8F5E9,stroke:#388E3C
+    style L1 fill:#FFEBEE,stroke:#C62828
+    style API_RES fill:#E0F2F1,stroke:#00796B

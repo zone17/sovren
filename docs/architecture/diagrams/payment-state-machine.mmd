@@ -1,0 +1,66 @@
+%% Payment State Machine Diagram
+%% Story #001: Define Payment State Machine Types and Enums
+%%
+%% This diagram shows all possible payment states and valid transitions
+%% between states in the Sovren payment processing system.
+%%
+%% States:
+%% - PENDING: Initial state, awaiting processing
+%% - PROCESSING: Payment is being processed by provider
+%% - COMPLETED: Payment successfully completed
+%% - FAILED: Payment failed (can be retried)
+%% - EXPIRED: Payment expired without completion (terminal)
+%% - REFUNDED: Payment was completed and then refunded (terminal)
+
+stateDiagram-v2
+    [*] --> PENDING: Payment Created
+
+    PENDING --> PROCESSING: Initiate Payment
+    PENDING --> EXPIRED: Timeout
+    PENDING --> FAILED: Validation Error
+
+    PROCESSING --> COMPLETED: Payment Confirmed
+    PROCESSING --> FAILED: Provider Error
+
+    COMPLETED --> REFUNDED: Refund Issued
+
+    FAILED --> PENDING: Retry Payment
+
+    EXPIRED --> [*]
+    REFUNDED --> [*]
+
+    note right of PENDING
+        Initial state
+        Awaiting processing
+        Can expire after timeout
+    end note
+
+    note right of PROCESSING
+        Payment in progress
+        Awaiting provider confirmation
+        Cannot be cancelled
+    end note
+
+    note right of COMPLETED
+        Payment successful
+        Funds received
+        Can be refunded
+    end note
+
+    note right of FAILED
+        Payment unsuccessful
+        Can be retried
+        Error details logged
+    end note
+
+    note right of EXPIRED
+        TERMINAL STATE
+        Payment timed out
+        No further transitions
+    end note
+
+    note right of REFUNDED
+        TERMINAL STATE
+        Full refund issued
+        No further transitions
+    end note

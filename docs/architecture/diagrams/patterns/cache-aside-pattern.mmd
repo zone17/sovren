@@ -1,0 +1,133 @@
+%% Cache-Aside Pattern - Multi-Layer Caching Strategy
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete cache-aside pattern with multi-layer caching implementation
+
+graph TB
+    subgraph "Application Layer"
+        Service[Service Layer<br/>Business Logic]
+        CacheClient[Cache Client<br/>Abstraction Layer]
+    end
+
+    subgraph "Cache Layer 1 - In-Memory"
+        L1Cache[L1 Cache<br/>In-Memory Map<br/>TTL: 60s<br/>Size: 1000 entries]
+        L1Stats[L1 Statistics<br/>Hit Rate: 40%<br/>Avg Latency: 1ms]
+    end
+
+    subgraph "Cache Layer 2 - Redis"
+        L2Cache[L2 Cache<br/>Redis<br/>TTL: 300s<br/>Size: 100K entries]
+        L2Stats[L2 Statistics<br/>Hit Rate: 45%<br/>Avg Latency: 5ms]
+    end
+
+    subgraph "Cache Layer 3 - Query Cache"
+        L3Cache[L3 Cache<br/>Redis Query Cache<br/>TTL: 600s<br/>Size: 10K queries]
+        L3Stats[L3 Statistics<br/>Hit Rate: 10%<br/>Avg Latency: 10ms]
+    end
+
+    subgraph "Data Layer"
+        Repository[Repository Layer<br/>Data Access]
+        Database[(PostgreSQL<br/>Primary Source)]
+        DBStats[DB Statistics<br/>Query Rate: 5%<br/>Avg Latency: 50ms]
+    end
+
+    subgraph "Cache Invalidation"
+        InvalidationService[Invalidation Service<br/>Pattern Matching]
+        EventBus[Event Bus<br/>Change Events]
+        InvalidationPatterns["Invalidation Patterns:<br/>---<br/>user_* → All user keys<br/>content_{id} → Specific<br/>analytics_* → Wildcard<br/>payment_* → Wildcard"]
+    end
+
+    subgraph "Cache Warming"
+        WarmingService[Cache Warming Service<br/>Preload Strategy]
+        WarmingScheduler[Background Scheduler<br/>Periodic Warming]
+        WarmingPatterns["Warming Patterns:<br/>---<br/>Popular content<br/>Active users<br/>Recent payments<br/>Trending topics"]
+    end
+
+    %% Read Path - Cache Hit
+    Service -->|1. Read Request| CacheClient
+    CacheClient -->|2. Check L1| L1Cache
+    L1Cache -->|3a. HIT - Return| CacheClient
+    CacheClient -->|4. Return Data| Service
+
+    %% Read Path - L1 Miss, L2 Hit
+    L1Cache -->|3b. MISS| L2Cache
+    L2Cache -->|5a. HIT - Return| CacheClient
+    CacheClient -->|6. Store in L1| L1Cache
+    CacheClient -->|7. Return Data| Service
+
+    %% Read Path - L1/L2 Miss, L3 Hit
+    L2Cache -->|5b. MISS| L3Cache
+    L3Cache -->|8a. HIT - Return| CacheClient
+    CacheClient -->|9. Store in L2| L2Cache
+    CacheClient -->|10. Store in L1| L1Cache
+    CacheClient -->|11. Return Data| Service
+
+    %% Read Path - All Miss, DB Query
+    L3Cache -->|8b. MISS| Repository
+    Repository -->|12. Query| Database
+    Database -->|13. Return Data| Repository
+    Repository -->|14. Return Data| CacheClient
+    CacheClient -->|15. Store in L3| L3Cache
+    CacheClient -->|16. Store in L2| L2Cache
+    CacheClient -->|17. Store in L1| L1Cache
+    CacheClient -->|18. Return Data| Service
+
+    %% Write Path - Cache Invalidation
+    Service -->|19. Write Request| Repository
+    Repository -->|20. Execute Write| Database
+    Database -->|21. Write Complete| Repository
+    Repository -->|22. Publish Event| EventBus
+    EventBus -->|23. Trigger Invalidation| InvalidationService
+    InvalidationService -->|24. Clear L1| L1Cache
+    InvalidationService -->|25. Clear L2| L2Cache
+    InvalidationService -->|26. Clear L3| L3Cache
+
+    %% Cache Warming
+    WarmingScheduler -->|27. Trigger Warming| WarmingService
+    WarmingService -->|28. Query Popular Data| Repository
+    Repository -->|29. Return Data| WarmingService
+    WarmingService -->|30. Preload L2| L2Cache
+    WarmingService -->|31. Preload L3| L3Cache
+
+    %% Statistics
+    L1Cache -.Metrics.-> L1Stats
+    L2Cache -.Metrics.-> L2Stats
+    L3Cache -.Metrics.-> L3Stats
+    Database -.Metrics.-> DBStats
+
+    %% Key Characteristics
+    Note1["Cache-Aside Benefits:<br/>✓ Reduced DB load (95%)<br/>✓ Low latency (1-10ms)<br/>✓ High availability<br/>✓ Scalability<br/>✓ Cost efficiency"]
+
+    Note2["Multi-Layer Strategy:<br/>L1: Hot data (40% hits)<br/>L2: Warm data (45% hits)<br/>L3: Query cache (10% hits)<br/>DB: Cold data (5% queries)<br/>Total Hit Rate: 95%"]
+
+    Note3["TTL Strategy:<br/>L1: 60s (volatile)<br/>L2: 300s (semi-stable)<br/>L3: 600s (stable)<br/>Adaptive: Based on access"]
+
+    Note4["Invalidation Strategy:<br/>- Event-driven<br/>- Pattern-based<br/>- Cascading clear<br/>- Lazy expiration<br/>- Active monitoring"]
+
+    %% Styling
+    style Service fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style CacheClient fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+
+    style L1Cache fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style L2Cache fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#fff
+    style L3Cache fill:#f44336,stroke:#c62828,stroke-width:3px,color:#fff
+
+    style L1Stats fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style L2Stats fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style L3Stats fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style DBStats fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+
+    style Repository fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style Database fill:#2196f3,stroke:#1565c0,stroke-width:3px,color:#fff
+
+    style InvalidationService fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style InvalidationPatterns fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+
+    style WarmingService fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#fff
+    style WarmingScheduler fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style WarmingPatterns fill:#e0f7fa,stroke:#00838f,stroke-width:2px
+
+    style Note1 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Note2 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Note3 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Note4 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px

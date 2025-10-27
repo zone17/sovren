@@ -1,0 +1,48 @@
+```mermaid
+stateDiagram-v2
+    [*] --> NoSessionKey: Conversation starts
+
+    NoSessionKey --> SessionKeyActive: generateSessionKey()
+    note right of SessionKeyActive
+        - Ephemeral key pair created
+        - Threshold: 100 messages
+        - Message count: 0
+    end note
+
+    SessionKeyActive --> MessageSent: Send encrypted DM
+    MessageSent --> SessionKeyActive: count < 100
+    note right of MessageSent
+        Increment message counter
+        Check rotation threshold
+    end note
+
+    MessageSent --> RotationNeeded: count >= 100
+    note right of RotationNeeded
+        Threshold reached
+        Trigger key rotation
+    end note
+
+    RotationNeeded --> DestroyOldKey: Secure key destruction
+    note right of DestroyOldKey
+        - Clear old private key from memory
+        - Remove from KeyManagementService
+        - Zero out sensitive data
+    end note
+
+    DestroyOldKey --> GenerateNewKey: Create new session key
+    note right of GenerateNewKey
+        - New ephemeral key pair
+        - Reset message count to 0
+        - New rotation threshold
+    end note
+
+    GenerateNewKey --> SessionKeyActive: New session active
+
+    SessionKeyActive --> [*]: Conversation ends / destroy()
+    note left of [*]
+        Clean up:
+        - Destroy session keys
+        - Clear message cache
+        - Remove thread data
+    end note
+```

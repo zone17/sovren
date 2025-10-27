@@ -1,0 +1,26 @@
+# Grafana Datasource Provisioning Configuration
+# Auto-configures Prometheus as a datasource on Grafana startup
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    version: 1
+    editable: true
+    jsonData:
+      timeInterval: 15s
+      queryTimeout: 60s
+      httpMethod: POST
+      # Enable Prometheus exemplars (optional, for tracing integration)
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+    # Optional: Basic auth (if Prometheus is secured)
+    # basicAuth: true
+    # basicAuthUser: admin
+    # secureJsonData:
+    #   basicAuthPassword: password

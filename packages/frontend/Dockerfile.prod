@@ -1,0 +1,67 @@
+# Elite Production Dockerfile for Sovren Frontend
+# Following security-first principles with distroless runtime
+
+# Stage 1: Dependency installation
+FROM node:18-alpine AS deps
+WORKDIR /app
+
+# Install security updates and build dependencies
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git \
+    && rm -rf /var/cache/apk/* /tmp/*
+
+# Copy dependency files for optimal layer caching
+COPY package*.json ./
+COPY *.config.* ./
+
+# Install dependencies
+RUN npm ci --include=dev && \
+    npm cache clean --force && \
+    rm -rf ~/.npm /tmp/*
+
+# Stage 2: Application build
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package*.json ./
+
+# Copy source code
+COPY . .
+
+# Build optimized production bundle
+ENV NODE_ENV=production
+ENV VITE_BUILD_ANALYZE=false
+RUN npm run build && \
+    npm run build:analyze
+
+# Stage 3: Distroless Nginx runtime
+FROM gcr.io/distroless/static-debian11:nonroot AS runtime
+
+# Metadata labels for container management
+LABEL org.opencontainers.image.title="Sovren Frontend Production"
+LABEL org.opencontainers.image.description="Elite React frontend with optimized static serving - Production"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.authors="Sovren Development Team"
+LABEL org.opencontainers.image.source="https://github.com/sovren/frontend"
+LABEL org.opencontainers.image.vendor="Sovren"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="BUILD_DATE"
+LABEL org.opencontainers.image.revision="GIT_COMMIT"
+
+# Copy built application to static serve directory
+COPY --from=builder --chown=nonroot:nonroot /app/dist /app
+
+# Expose non-privileged port
+EXPOSE 8080
+
+# Use distroless nonroot user (UID 65532)
+USER nonroot
+
+# Static files are served directly by distroless
+WORKDIR /app

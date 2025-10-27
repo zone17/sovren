@@ -1,0 +1,58 @@
+graph TB
+    subgraph FilterBuilder["FilterBuilder Component"]
+        Header[Header with Title & Actions]
+
+        subgraph PresetSection["Quick Presets Section"]
+            PresetButtons[CommonFilter Preset Buttons]
+            PresetGrid[Grid: User Notes, Mentions, Replies, etc.]
+        end
+
+        subgraph CustomFields["Custom Filter Fields"]
+            IDsInput[Event IDs Input - Array]
+            AuthorsInput[Authors Input - Array of pubkeys]
+            KindsDropdown[Event Kinds - Multi-select dropdown]
+            TagsSection[Tag Filters Section]
+            TimeRange[Time Range - Since/Until picker]
+            LimitInput[Limit - Number input]
+        end
+
+        subgraph TagsSection["Tag Filters"]
+            EventTags[#e Event References]
+            PubkeyTags[#p Pubkey References]
+            HashtagsTags[#t Hashtags]
+            CustomTags[Custom Tags - Dynamic]
+        end
+
+        subgraph ValidationFeedback["Validation Feedback"]
+            Errors[Error Messages - Red]
+            Warnings[Warning Messages - Yellow]
+            Suggestions[Suggestions - Blue]
+        end
+
+        subgraph Preview["Filter Preview"]
+            JSONView[JSON Display - Read-only]
+            CopyButton[Copy to Clipboard]
+            SummaryText[Human-readable summary]
+        end
+
+        subgraph Actions["Action Buttons"]
+            ApplyButton[Apply Filter]
+            SaveTemplate[Save as Template]
+            LoadTemplate[Load Template]
+            ImportJSON[Import JSON]
+            ResetButton[Reset/Clear]
+        end
+    end
+
+    Header --> PresetSection
+    PresetSection --> CustomFields
+    CustomFields --> ValidationFeedback
+    ValidationFeedback --> Preview
+    Preview --> Actions
+
+    style FilterBuilder fill:#f3f4f6,stroke:#9ca3af
+    style PresetSection fill:#dbeafe,stroke:#3b82f6
+    style CustomFields fill:#fef3c7,stroke:#f59e0b
+    style ValidationFeedback fill:#fecaca,stroke:#ef4444
+    style Preview fill:#d1fae5,stroke:#10b981
+    style Actions fill:#e9d5ff,stroke:#a855f7

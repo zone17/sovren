@@ -1,0 +1,100 @@
+%% US-322: NOSTR Backup and Recovery - Component Interaction Diagram
+%% Shows how different components interact and their dependencies
+
+classDiagram
+    class NOSTRBackupService {
+        -keyManagement: KeyManagementService
+        -encryption: BackupEncryptionService
+        -config: BackupServiceConfig
+        -backupHistory: BackupHistoryEntry[]
+        +initialize()
+        +createBackup(password, contentType)
+        +verifyBackup(file, password)
+        +restoreBackup(file, password, options)
+        +scheduleBackup(schedule)
+        +getBackupHistory()
+        +validatePassword(password)
+    }
+
+    class BackupEncryptionService {
+        -PBKDF2_ITERATIONS: 100000
+        -ALGORITHM: "AES-256-GCM"
+        +encryptBackup(data, password)
+        +decryptBackup(encrypted, password)
+        +validatePasswordStrength(password)
+        +generateSecurePassword(length)
+        +hashData(data)
+        +verifyChecksum(data, checksum)
+    }
+
+    class KeyManagementService {
+        -keys: Map~string, KeyPair~
+        -db: IDBDatabase
+        +listKeys()
+        +getKey(keyId)
+        +importKey(keyData, format)
+        +signEvent(keyId, event)
+        +verifyEventSignature(event)
+    }
+
+    class BackupDialog {
+        -step: string
+        -contentType: BackupContentType
+        -password: string
+        -passwordStrength: PasswordStrength
+        +handleCreateBackup()
+        +handlePasswordChange()
+        +handleGeneratePassword()
+    }
+
+    class RestoreDialog {
+        -step: string
+        -backupFile: BackupFile
+        -verification: BackupVerification
+        -recoveryOptions: RecoveryOptions
+        +handleFileUpload()
+        +handleVerifyWithPassword()
+        +handleRestore()
+    }
+
+    class BackupFile {
+        +version: string
+        +created: number
+        +contentType: BackupContentType
+        +format: BackupFormat
+        +encrypted: boolean
+        +checksum: string
+        +data: EncryptedBackup | BackupData
+        +metadata: BackupMetadata
+    }
+
+    class EncryptedBackup {
+        +encryptedData: string
+        +salt: string
+        +iv: string
+        +authTag: string
+        +encryption: EncryptionMetadata
+    }
+
+    class BackupData {
+        +keys: KeysBackupData
+        +events: EventsBackupData
+        +configuration: ConfigBackupData
+    }
+
+    NOSTRBackupService --> BackupEncryptionService : uses
+    NOSTRBackupService --> KeyManagementService : uses
+    NOSTRBackupService ..> BackupFile : creates/validates
+    NOSTRBackupService ..> BackupData : manages
+
+    BackupDialog --> NOSTRBackupService : calls
+    RestoreDialog --> NOSTRBackupService : calls
+
+    BackupEncryptionService ..> EncryptedBackup : creates/decrypts
+
+    BackupFile *-- EncryptedBackup : contains when encrypted
+    BackupFile *-- BackupData : contains when decrypted
+
+    note for NOSTRBackupService "Singleton Pattern\nMain orchestrator for backup/restore operations"
+    note for BackupEncryptionService "Zero-Knowledge Architecture\nKeys never stored unencrypted"
+    note for KeyManagementService "Manages NOSTR keys\nIndexedDB storage"

@@ -1,0 +1,190 @@
+# ========================================
+# Sovren Backend - Elite .dockerignore
+# ========================================
+# Optimized for:
+# - Minimal image size
+# - Faster build times
+# - Better layer caching
+# - Security best practices
+# ========================================
+
+# ========================================
+# Dependencies (exclude, will be installed in container)
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.yarn/
+
+# ========================================
+# Build outputs (exclude, will be built in container)
+# ========================================
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# ========================================
+# Development & Testing
+# ========================================
+# Test files
+__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+test/
+tests/
+.vitest/
+jest.config.js
+jest.setup.js
+vitest.config.ts
+vitest.integration.config.ts
+tsconfig.test.json
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+.env.*.local
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.editorconfig
+.eslintcache
+
+# Performance testing
+performance/
+benchmarks/
+
+# ========================================
+# Documentation (not needed in runtime)
+# ========================================
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+!package.json
+!package-lock.json
+
+# ========================================
+# Version Control
+# ========================================
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# ========================================
+# CI/CD (not needed in container)
+# ========================================
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+jenkins/
+.jenkins/
+Jenkinsfile
+
+# ========================================
+# Docker (prevent recursive copying)
+# ========================================
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# ========================================
+# OS Files
+# ========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ========================================
+# Runtime Data (will be generated in container)
+# ========================================
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+lib-cov/
+.nyc_output/
+
+# ========================================
+# Temporary Files
+# ========================================
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ========================================
+# IDE
+# ========================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ========================================
+# Package Manager Lock Files
+# ========================================
+# Keep package-lock.json for npm ci
+# Uncomment if using yarn:
+# yarn.lock
+
+# ========================================
+# Build Tools Config (not needed in runtime)
+# ========================================
+webpack.config.js
+rollup.config.js
+vite.config.js
+.babelrc
+babel.config.js
+.prettierrc*
+.eslintrc*
+eslint.config.js
+tsconfig.json
+
+# ========================================
+# Security & Secrets (critical - never include)
+# ========================================
+.npmrc
+.yarnrc
+*.pem
+*.key
+*.cert
+.env.production
+
+# ========================================
+# Monorepo-specific
+# ========================================
+# Only if building from monorepo root
+# ../.git
+# ../node_modules
+# ../packages/frontend
+# ../packages/shared
+
+# ========================================
+# Notes for Maintainers
+# ========================================
+# 1. Keep this file minimal - only exclude what's necessary
+# 2. Test build with: DOCKER_BUILDKIT=1 docker build --progress=plain .
+# 3. Verify image size: docker images sovren-backend:latest
+# 4. Check what's in the image: docker run --rm -it sovren-backend:latest ls -la
+# ========================================

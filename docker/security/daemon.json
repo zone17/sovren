@@ -1,0 +1,89 @@
+{
+  "userns-remap": "default",
+  "experimental": false,
+  "live-restore": true,
+  "userland-proxy": false,
+  "icc": false,
+  "no-new-privileges": true,
+  "seccomp-profile": "/etc/docker/seccomp/default.json",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3",
+    "labels": "production",
+    "env": "production"
+  },
+  "storage-driver": "overlay2",
+  "storage-opts": ["overlay2.override_kernel_check=true"],
+  "default-runtime": "runc",
+  "runtimes": {
+    "runc": {
+      "path": "/usr/bin/runc",
+      "runtimeArgs": ["--systemd-cgroup"]
+    }
+  },
+  "default-ulimits": {
+    "nofile": {
+      "Name": "nofile",
+      "Hard": 64000,
+      "Soft": 64000
+    },
+    "memlock": {
+      "Name": "memlock",
+      "Hard": -1,
+      "Soft": -1
+    }
+  },
+  "authorization-plugins": [],
+  "max-concurrent-downloads": 3,
+  "max-concurrent-uploads": 5,
+  "debug": false,
+  "hosts": ["unix:///var/run/docker.sock"],
+  "tls": true,
+  "tlsverify": true,
+  "tlscert": "/etc/docker/certs/server-cert.pem",
+  "tlskey": "/etc/docker/certs/server-key.pem",
+  "tlscacert": "/etc/docker/certs/ca-cert.pem",
+  "features": {
+    "buildkit": true
+  },
+  "builder": {
+    "gc": {
+      "enabled": true,
+      "defaultKeepStorage": "20GB"
+    }
+  },
+  "containerd": "/run/containerd/containerd.sock",
+  "containerd-namespace": "moby",
+  "containerd-plugin-namespace": "moby",
+  "data-root": "/var/lib/docker",
+  "exec-root": "/var/run/docker",
+  "pidfile": "/var/run/docker.pid",
+  "cluster-store": "",
+  "cluster-advertise": "",
+  "dns": ["1.1.1.1", "8.8.8.8"],
+  "dns-search": [],
+  "labels": ["environment=production", "security=hardened"],
+  "metrics-addr": "127.0.0.1:9323",
+  "experimental": false,
+  "ip-forward": true,
+  "ip-masq": true,
+  "iptables": true,
+  "ipv6": false,
+  "fixed-cidr": "172.17.0.0/16",
+  "default-address-pools": [
+    {
+      "base": "172.30.0.0/16",
+      "size": 24
+    }
+  ],
+  "registry-mirrors": [],
+  "insecure-registries": [],
+  "disable-legacy-registry": true,
+  "selinux-enabled": true,
+  "cgroup-parent": "",
+  "default-shm-size": "64M",
+  "shutdown-timeout": 15,
+  "init": true,
+  "init-path": "/usr/libexec/docker-init"
+}

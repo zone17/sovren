@@ -1,5 +1,82 @@
-import { onCLS, onFCP, onFID, onINP, onLCP, onTTFB } from 'web-vitals';
-import { addBreadcrumb, captureMessage } from './simpleMonitoring';
+// Web Vitals imports with Jest compatibility
+let onCLS: any, onFCP: any, onFID: any, onINP: any, onLCP: any, onTTFB: any;
+
+if (typeof window !== 'undefined' && typeof jest === 'undefined') {
+  // Only import web-vitals in browser environment (not Jest)
+  try {
+    const webVitals = require('web-vitals');
+    ({ onCLS, onFCP, onFID, onINP, onLCP, onTTFB } = webVitals);
+  } catch (error) {
+    // Fallback if web-vitals is not available
+    console.warn('web-vitals library not available');
+    onCLS = onFCP = onFID = onINP = onLCP = onTTFB = () => {};
+  }
+} else {
+  // Mock functions for Jest/Node environment
+  onCLS = onFCP = onFID = onINP = onLCP = onTTFB = () => {};
+}
+
+import { addBreadcrumb } from './simpleMonitoring';
+
+// 🛡️ **ELITE BROWSER API INTERFACES**
+interface PerformanceMemory {
+  readonly usedJSHeapSize: number;
+  readonly totalJSHeapSize: number;
+  readonly jsHeapSizeLimit: number;
+}
+
+interface NavigatorConnection {
+  readonly effectiveType?: '2g' | '3g' | '4g' | 'slow-2g';
+  readonly downlink?: number;
+  readonly rtt?: number;
+  readonly saveData?: boolean;
+}
+
+interface ExtendedNavigator extends Navigator {
+  readonly connection?: NavigatorConnection;
+}
+
+interface ExtendedPerformance extends Performance {
+  readonly memory?: PerformanceMemory;
+}
+
+interface WebVitalsAttribution {
+  readonly largestShiftTarget?: string;
+  readonly largestShiftTime?: number;
+  readonly largestShiftValue?: number;
+  readonly largestShiftEntry?: PerformanceEntry;
+  readonly loadState?: 'loading' | 'dom-interactive' | 'dom-content-loaded' | 'complete';
+  readonly navigationEntry?: PerformanceNavigationTiming;
+  readonly fcpEntry?: PerformanceEntry;
+  readonly lcpEntry?: PerformanceEntry;
+  readonly ttfbEntry?: PerformanceEntry;
+}
+
+interface WebVitalsMetric {
+  readonly name: string;
+  readonly value: number;
+  readonly rating: 'good' | 'needs-improvement' | 'poor';
+  readonly delta: number;
+  readonly entries: PerformanceEntry[];
+  readonly id: string;
+  readonly attribution?: WebVitalsAttribution;
+}
+
+interface ElementTimingEntry extends PerformanceEntry {
+  readonly identifier?: string;
+  readonly renderTime?: number;
+  readonly loadTime?: number;
+}
+
+interface LayoutShiftEntry extends PerformanceEntry {
+  readonly value: number;
+  readonly hadRecentInput: boolean;
+  readonly sources?: ReadonlyArray<{
+    readonly node?: Node;
+    readonly currentRect?: DOMRect;
+    readonly previousRect?: DOMRect;
+  }>;
+}
 
 // Performance thresholds (in milliseconds) - Updated to latest Core Web Vitals guidelines
 export const PERFORMANCE_THRESHOLDS = {
@@ -29,7 +106,7 @@ interface PerformanceMetric {
   id: string;
   delta?: number; // For tracking changes over time
   entries?: PerformanceEntry[]; // Raw performance entries
-  attribution?: Record<string, any>; // Attribution data for debugging
+  attribution?: WebVitalsAttribution; // Attribution data for debugging
 }
 
 // Modern Performance Monitor with cutting-edge features
@@ -47,25 +124,25 @@ class PerformanceMonitor {
   // Initialize Core Web Vitals monitoring with latest v4 APIs
   private initWebVitals(): void {
     // Largest Contentful Paint
-    onLCP((metric) => {
+    onLCP((metric: WebVitalsMetric) => {
       this.recordMetric('LCP', metric.value, this.getRating('LCP', metric.value), {
         delta: metric.delta,
         entries: metric.entries,
-        attribution: (metric as any).attribution, // Attribution debugging
+        attribution: metric.attribution,
       });
     });
 
     // Interaction to Next Paint (replaces FID as the new standard)
-    onINP((metric) => {
+    onINP((metric: WebVitalsMetric) => {
       this.recordMetric('INP', metric.value, this.getRating('INP', metric.value), {
         delta: metric.delta,
         entries: metric.entries,
-        attribution: (metric as any).attribution,
+        attribution: metric.attribution,
       });
     });
 
     // Keep FID for backward compatibility but prioritize INP
-    onFID((metric) => {
+    onFID((metric: WebVitalsMetric) => {
       this.recordMetric('FID', metric.value, this.getRating('FID', metric.value), {
         delta: metric.delta,
         entries: metric.entries,
@@ -73,16 +150,16 @@ class PerformanceMonitor {
     });
 
     // Cumulative Layout Shift
-    onCLS((metric) => {
+    onCLS((metric: WebVitalsMetric) => {
       this.recordMetric('CLS', metric.value, this.getRating('CLS', metric.value), {
         delta: metric.delta,
         entries: metric.entries,
-        attribution: (metric as any).attribution,
+        attribution: metric.attribution,
       });
     });
 
     // First Contentful Paint
-    onFCP((metric) => {
+    onFCP((metric: WebVitalsMetric) => {
       this.recordMetric('FCP', metric.value, this.getRating('FCP', metric.value), {
         delta: metric.delta,
         entries: metric.entries,
@@ -90,7 +167,7 @@ class PerformanceMonitor {
     });
 
     // Time to First Byte
-    onTTFB((metric) => {
+    onTTFB((metric: WebVitalsMetric) => {
       this.recordMetric('TTFB', metric.value, this.getRating('TTFB', metric.value), {
         delta: metric.delta,
         entries: metric.entries,
@@ -105,11 +182,7 @@ class PerformanceMonitor {
       try {
         const elementObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            const elementEntry = entry as PerformanceEntry & {
-              identifier?: string;
-              renderTime?: number;
-              loadTime?: number;
-            };
+            const elementEntry = entry as ElementTimingEntry;
             if (elementEntry.identifier) {
               this.recordMetric(
                 `ELEMENT_${elementEntry.identifier.toUpperCase()}`,
@@ -134,11 +207,7 @@ class PerformanceMonitor {
         const layoutShiftObserver = new PerformanceObserver((list) => {
           let cumulativeScore = 0;
           for (const entry of list.getEntries()) {
-            const layoutShift = entry as PerformanceEntry & {
-              value: number;
-              hadRecentInput: boolean;
-              sources?: Array<{ node?: Node; currentRect?: DOMRect; previousRect?: DOMRect }>;
-            };
+            const layoutShift = entry as LayoutShiftEntry;
 
             if (!layoutShift.hadRecentInput) {
               cumulativeScore += layoutShift.value;
@@ -186,136 +255,152 @@ class PerformanceMonitor {
     }
 
     // Monitor memory usage (Chrome-specific)
-    if ((performance as any).memory) {
+    const extendedPerformance = performance as ExtendedPerformance;
+    if (extendedPerformance.memory) {
       setInterval(() => {
-        const memory = (performance as any).memory;
-        const usedPercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
+        const memory = extendedPerformance.memory;
+        if (memory) {
+          const usedPercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
 
-        if (usedPercent > 80) {
-          addBreadcrumb(`High memory usage: ${usedPercent.toFixed(1)}%`, 'performance', 'warning', {
-            used: memory.usedJSHeapSize,
-            total: memory.totalJSHeapSize,
-            limit: memory.jsHeapSizeLimit,
-          });
-        }
-      }, 30000); // Check every 30 seconds
-    }
-  }
-
-  // Initialize custom performance metrics
-  private initCustomMetrics(): void {
-    // Monitor long tasks with enhanced attribution
-    if ('PerformanceObserver' in window) {
-      const longTaskObserver = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const longTask = entry as PerformanceEntry & {
-            attribution?: Array<{
-              name: string;
-              entryType: string;
-              startTime: number;
-              duration: number;
-            }>;
-          };
-
-          if (longTask.duration > 50) {
-            // Tasks longer than 50ms
-            this.recordMetric('LONG_TASK', longTask.duration, 'poor', {
-              attribution: longTask.attribution,
-            });
-
+          if (usedPercent > 80) {
             addBreadcrumb(
-              `Long task detected: ${longTask.duration.toFixed(2)}ms`,
+              `High memory usage: ${usedPercent.toFixed(1)}%`,
               'performance',
               'warning',
               {
-                duration: longTask.duration,
-                attribution: longTask.attribution?.map((a) => a.name) || [],
+                used: memory.usedJSHeapSize,
+                total: memory.totalJSHeapSize,
+                limit: memory.jsHeapSizeLimit,
               }
             );
           }
         }
-      });
+      }, 10000); // Check every 10 seconds
+    }
+  }
 
+  // Initialize custom performance monitoring
+  private initCustomMetrics(): void {
+    // Navigation timing
+    this.measureNavigationTiming();
+
+    // Paint timing
+    this.measurePaintTiming();
+
+    // Resource timing
+    this.measureResourceTiming();
+
+    // Monitor long tasks
+    if ('PerformanceObserver' in window) {
       try {
+        const longTaskObserver = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            this.recordMetric(
+              'LONG_TASK',
+              entry.duration,
+              this.getRating('COMPONENT_RENDER', entry.duration)
+            );
+
+            // Log warning for long tasks
+            if (entry.duration > 50) {
+              addBreadcrumb(
+                `Long task detected: ${entry.duration.toFixed(2)}ms`,
+                'performance',
+                'warning',
+                {
+                  duration: entry.duration,
+                  startTime: entry.startTime,
+                }
+              );
+            }
+          }
+        });
+
         longTaskObserver.observe({ entryTypes: ['longtask'] });
         this.observers.set('longtask', longTaskObserver);
       } catch (e) {
         console.warn('Long task observer not supported');
       }
     }
-
-    // Enhanced navigation timing
-    this.measureNavigationTiming();
-
-    // Enhanced resource loading monitoring
-    this.measureResourceTiming();
-
-    // Monitor paint timing
-    this.measurePaintTiming();
   }
 
-  // Enhanced navigation timing measurement
+  // Measure navigation timing
   private measureNavigationTiming(): void {
-    if ('performance' in window && 'getEntriesByType' in performance) {
-      const navigation = performance.getEntriesByType('navigation')[0];
+    if ('PerformanceObserver' in window) {
+      try {
+        const navigationObserver = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            const navEntry = entry as PerformanceNavigationTiming;
 
-      if (navigation) {
-        // DNS lookup time
-        const dnsTime = navigation.domainLookupEnd - navigation.domainLookupStart;
-        this.recordMetric('DNS_LOOKUP', dnsTime, this.getRating('TTFB', dnsTime));
+            // DNS lookup time
+            if (navEntry.domainLookupEnd && navEntry.domainLookupStart) {
+              this.recordMetric(
+                'DNS_LOOKUP',
+                navEntry.domainLookupEnd - navEntry.domainLookupStart,
+                this.getRating(
+                  'API_RESPONSE',
+                  navEntry.domainLookupEnd - navEntry.domainLookupStart
+                )
+              );
+            }
 
-        // TCP connection time
-        const tcpTime = navigation.connectEnd - navigation.connectStart;
-        this.recordMetric('TCP_CONNECTION', tcpTime, this.getRating('TTFB', tcpTime));
+            // Connection time
+            if (navEntry.connectEnd && navEntry.connectStart) {
+              this.recordMetric(
+                'CONNECTION',
+                navEntry.connectEnd - navEntry.connectStart,
+                this.getRating('API_RESPONSE', navEntry.connectEnd - navEntry.connectStart)
+              );
+            }
 
-        // SSL/TLS negotiation time
-        if (navigation.secureConnectionStart > 0) {
-          const sslTime = navigation.connectEnd - navigation.secureConnectionStart;
-          this.recordMetric('SSL_TIME', sslTime, this.getRating('TTFB', sslTime));
-        }
+            // Server response time
+            if (navEntry.responseStart && navEntry.requestStart) {
+              this.recordMetric(
+                'SERVER_RESPONSE',
+                navEntry.responseStart - navEntry.requestStart,
+                this.getRating('API_RESPONSE', navEntry.responseStart - navEntry.requestStart)
+              );
+            }
 
-        // Server response time
-        const serverTime = navigation.responseEnd - navigation.requestStart;
-        this.recordMetric(
-          'SERVER_RESPONSE',
-          serverTime,
-          this.getRating('API_RESPONSE', serverTime)
-        );
+            // DOM processing time
+            if (navEntry.domContentLoadedEventEnd && navEntry.domContentLoadedEventStart) {
+              this.recordMetric(
+                'DOM_PROCESSING',
+                navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart,
+                this.getRating(
+                  'COMPONENT_RENDER',
+                  navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart
+                )
+              );
+            }
+          }
+        });
 
-        // DOM processing time
-        const domTime = navigation.domContentLoadedEventEnd - navigation.responseEnd;
-        this.recordMetric('DOM_PROCESSING', domTime, this.getRating('COMPONENT_RENDER', domTime));
-
-        // Page load complete time
-        const loadTime = navigation.loadEventEnd - navigation.fetchStart;
-        this.recordMetric('PAGE_LOAD', loadTime, this.getRating('API_RESPONSE', loadTime));
-
-        // Time to Interactive estimation
-        const tti = navigation.domContentLoadedEventEnd - navigation.fetchStart;
-        this.recordMetric('TIME_TO_INTERACTIVE', tti, this.getRating('API_RESPONSE', tti));
+        navigationObserver.observe({ entryTypes: ['navigation'] });
+        this.observers.set('navigation', navigationObserver);
+      } catch (e) {
+        console.warn('Navigation timing observer not supported');
       }
     }
   }
 
-  // Enhanced paint timing measurement
+  // Measure paint timing
   private measurePaintTiming(): void {
     if ('PerformanceObserver' in window) {
       try {
         const paintObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            const paintEntry = entry as PerformancePaintTiming;
-
-            if (paintEntry.name === 'first-paint') {
+            if (entry.name === 'first-paint') {
               this.recordMetric(
                 'FIRST_PAINT',
-                paintEntry.startTime,
-                this.getRating('FCP', paintEntry.startTime)
+                entry.startTime,
+                this.getRating('FCP', entry.startTime)
               );
-            } else if (paintEntry.name === 'first-contentful-paint') {
+            } else if (entry.name === 'first-contentful-paint') {
               this.recordMetric(
                 'FIRST_CONTENTFUL_PAINT',
-                paintEntry.startTime,
-                this.getRating('FCP', paintEntry.startTime)
+                entry.startTime,
+                this.getRating('FCP', entry.startTime)
               );
             }
           }
@@ -324,86 +409,66 @@ class PerformanceMonitor {
         paintObserver.observe({ entryTypes: ['paint'] });
         this.observers.set('paint', paintObserver);
       } catch (e) {
-        console.warn('Paint observer not supported');
+        console.warn('Paint timing observer not supported');
       }
     }
   }
 
-  // Enhanced resource loading measurement
+  // Measure resource timing for critical resources
   private measureResourceTiming(): void {
     if ('PerformanceObserver' in window) {
-      const resourceObserver = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const resource = entry as PerformanceResourceTiming;
-
-          // Categorize resources
-          const resourceType = this.getResourceType(resource.name);
-
-          // Track slow-loading resources with detailed timing
-          if (resource.duration > 1000) {
-            addBreadcrumb(
-              `Slow ${resourceType}: ${resource.name} took ${resource.duration.toFixed(2)}ms`,
-              'performance',
-              'warning',
-              {
-                type: resourceType,
-                duration: resource.duration,
-                size: resource.transferSize,
-                cached: resource.transferSize === 0 && resource.duration > 0,
-                timing: {
-                  dns: resource.domainLookupEnd - resource.domainLookupStart,
-                  tcp: resource.connectEnd - resource.connectStart,
-                  request: resource.responseStart - resource.requestStart,
-                  response: resource.responseEnd - resource.responseStart,
-                },
-              }
-            );
-          }
-
-          // Track failed resources
-          if (resource.transferSize === 0 && resource.duration > 0) {
-            addBreadcrumb(`Failed ${resourceType}: ${resource.name}`, 'performance', 'error', {
-              type: resourceType,
-            });
-          }
-
-          // Track large resources
-          if (resource.transferSize > 1024 * 1024) {
-            // > 1MB
-            addBreadcrumb(
-              `Large ${resourceType}: ${resource.name} (${(resource.transferSize / 1024 / 1024).toFixed(2)}MB)`,
-              'performance',
-              'warning',
-              {
-                type: resourceType,
-                size: resource.transferSize,
-                duration: resource.duration,
-              }
-            );
-          }
-        }
-      });
-
       try {
+        const resourceObserver = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            const resourceEntry = entry as PerformanceResourceTiming;
+            const resourceType = this.getResourceType(resourceEntry.name);
+
+            // Only monitor critical resources
+            if (['script', 'css', 'font', 'image'].includes(resourceType)) {
+              const duration = resourceEntry.responseEnd - resourceEntry.fetchStart;
+
+              this.recordMetric(
+                `RESOURCE_${resourceType.toUpperCase()}`,
+                duration,
+                this.getRating('API_RESPONSE', duration)
+              );
+
+              // Check for slow resources
+              if (duration > 3000) {
+                addBreadcrumb(
+                  `Slow resource: ${resourceEntry.name} (${duration.toFixed(2)}ms)`,
+                  'performance',
+                  'warning',
+                  {
+                    url: resourceEntry.name,
+                    duration,
+                    type: resourceType,
+                    size: resourceEntry.transferSize || 0,
+                  }
+                );
+              }
+            }
+          }
+        });
+
         resourceObserver.observe({ entryTypes: ['resource'] });
         this.observers.set('resource', resourceObserver);
       } catch (e) {
-        console.warn('Resource observer not supported');
+        console.warn('Resource timing observer not supported');
       }
     }
   }
 
-  // Determine resource type from URL
+  // Get resource type from URL
   private getResourceType(url: string): string {
     if (url.includes('.js')) return 'script';
-    if (url.includes('.css')) return 'stylesheet';
-    if (url.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/)) return 'image';
-    if (url.match(/\.(woff|woff2|ttf|eot)$/)) return 'font';
-    if (url.includes('/api/')) return 'api';
+    if (url.includes('.css')) return 'css';
+    if (url.includes('.woff') || url.includes('.ttf')) return 'font';
+    if (url.includes('.jpg') || url.includes('.png') || url.includes('.webp')) return 'image';
     return 'other';
   }
 
-  // Record a performance metric with enhanced data
+  // Record performance metric
   private recordMetric(
     name: string,
     value: number,
@@ -415,49 +480,35 @@ class PerformanceMonitor {
       value,
       rating,
       timestamp: Date.now(),
-      id: `${name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: crypto.randomUUID(),
       ...additionalData,
     };
 
     this.metrics.push(metric);
 
-    // Keep memory usage reasonable
-    if (this.metrics.length > 500) {
-      this.metrics = this.metrics.slice(-400); // Keep last 400 metrics
-    }
-
-    // Log to Sentry for poor performance with enhanced context
-    if (rating === 'poor') {
-      captureMessage(`Poor performance detected: ${name} = ${value.toFixed(2)}ms`, 'warning', {
-        metric_name: name,
-        metric_value: value,
-        metric_rating: rating,
-        attribution: additionalData?.attribution,
-      });
-    }
-
-    addBreadcrumb(
-      `Performance: ${name} = ${value.toFixed(2)}ms (${rating})`,
-      'performance',
-      rating === 'poor' ? 'warning' : 'info',
-      { value, rating, delta: additionalData?.delta }
-    );
-
-    // Dispatch custom event for real-time monitoring
-    window.dispatchEvent(
-      new CustomEvent('performance-metric', {
-        detail: metric,
-      })
-    );
-
-    // Call registered callbacks
+    // Trigger callbacks
     this.vitalsCallbacks.forEach((callback) => {
       try {
         callback();
       } catch (error) {
-        console.warn('Performance callback error:', error);
+        console.error('Performance callback error:', error);
       }
     });
+
+    // Log poor performance immediately
+    if (rating === 'poor') {
+      addBreadcrumb(`Poor performance: ${name} = ${value.toFixed(2)}ms`, 'performance', 'warning', {
+        name,
+        value,
+        rating,
+        timestamp: Date.now(),
+      });
+    }
+
+    // Limit metrics storage (memory management)
+    if (this.metrics.length > 1000) {
+      this.metrics = this.metrics.slice(-500); // Keep last 500 metrics
+    }
   }
 
   // Get performance rating based on thresholds
@@ -564,7 +615,14 @@ class PerformanceMonitor {
   }
 
   // Get metrics summary with enhanced analytics
-  public getMetricsSummary() {
+  public getMetricsSummary(): {
+    total: number;
+    good: number;
+    needsImprovement: number;
+    poor: number;
+    byType: Record<string, { count: number; avgValue: number; rating: string; trend?: string }>;
+    coreWebVitals: Record<string, { value: number; rating: string; delta?: number }>;
+  } {
     const summary = {
       total: this.metrics.length,
       good: this.metrics.filter((m) => m.rating === 'good').length,
@@ -681,9 +739,31 @@ export const endMeasurement = (name: string): number => {
 };
 
 // Performance report for debugging with enhanced insights
-export const getPerformanceReport = () => {
+export const getPerformanceReport = (): {
+  summary: ReturnType<PerformanceMonitor['getMetricsSummary']>;
+  coreWebVitals: Record<string, { value: number; rating: string; delta?: number }>;
+  recentMetrics: PerformanceMetric[];
+  poorPerformance: PerformanceMetric[];
+  trends: Record<string, string>;
+  timestamp: string;
+  pageInfo: {
+    url: string;
+    title: string;
+    referrer: string;
+    userAgent: string;
+    connection: string;
+    memory?: {
+      used: number;
+      total: number;
+      limit: number;
+    };
+  };
+} => {
   const metrics = performanceMonitor.getMetrics();
   const summary = performanceMonitor.getMetricsSummary();
+
+  const extendedNavigator = navigator as ExtendedNavigator;
+  const extendedPerformance = performance as ExtendedPerformance;
 
   return {
     summary,
@@ -699,12 +779,12 @@ export const getPerformanceReport = () => {
       title: document.title,
       referrer: document.referrer,
       userAgent: navigator.userAgent,
-      connection: (navigator as any).connection?.effectiveType || 'unknown',
-      memory: (performance as any).memory
+      connection: extendedNavigator.connection?.effectiveType || 'unknown',
+      memory: extendedPerformance.memory
         ? {
-            used: (performance as any).memory.usedJSHeapSize,
-            total: (performance as any).memory.totalJSHeapSize,
-            limit: (performance as any).memory.jsHeapSizeLimit,
+            used: extendedPerformance.memory.usedJSHeapSize,
+            total: extendedPerformance.memory.totalJSHeapSize,
+            limit: extendedPerformance.memory.jsHeapSizeLimit,
           }
         : undefined,
     },

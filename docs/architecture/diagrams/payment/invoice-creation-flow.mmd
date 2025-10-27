@@ -1,0 +1,118 @@
+%% Lightning Invoice Creation Flow
+%% PAY-018: Payment Flow Mermaid Diagrams
+%%
+%% This sequence diagram shows the complete flow for creating a
+%% Lightning Network BOLT11 invoice from user request to database storage.
+%%
+%% Key Steps:
+%% 1. User initiates payment request
+%% 2. API validates and authenticates
+%% 3. Lightning Payment Service generates invoice
+%% 4. LND node creates BOLT11 payment request
+%% 5. Invoice stored in database
+%% 6. Real-time notification sent to user
+
+sequenceDiagram
+    actor Creator as Content Creator
+    participant UI as Frontend UI
+    participant API as API Gateway
+    participant Auth as Auth Middleware
+    participant LPS as Lightning Payment Service
+    participant PSM as Payment State Machine
+    participant LND as LND Node
+    participant DB as PostgreSQL Database
+    participant Cache as Redis Cache
+    participant WS as WebSocket Service
+
+    Note over Creator,WS: Invoice Creation Flow - BOLT11 Generation
+
+    %% Step 1: User Request
+    Creator->>UI: Request payment for content
+    Note over Creator,UI: Amount: 1000 sats<br/>Description: "Premium Article"
+
+    UI->>API: POST /api/payments/create-invoice
+    Note over UI,API: Body: {<br/>  amount_msats: 1000000,<br/>  description: "Premium Article",<br/>  content_id: "abc123"<br/>}
+
+    %% Step 2: Authentication
+    API->>Auth: Validate JWT token
+    Auth->>Auth: Check user permissions
+
+    alt Invalid Token
+        Auth-->>API: 401 Unauthorized
+        API-->>UI: Error: Invalid credentials
+        UI-->>Creator: Show login prompt
+    end
+
+    Auth-->>API: User authenticated ✓
+    Note over Auth,API: user_id: "user-uuid"
+
+    %% Step 3: Validation
+    API->>API: Validate request data
+    API->>API: Check rate limits (100/min)
+    API->>API: Validate amount (min 1 sat)
+
+    alt Validation Failed
+        API-->>UI: 400 Bad Request
+        UI-->>Creator: Show error message
+    end
+
+    %% Step 4: Lightning Invoice Generation
+    API->>LPS: createInvoice(user_id, amount, description)
+
+    LPS->>LPS: Generate unique payment_hash
+    Note over LPS: SHA256(randomBytes(32))
+
+    LPS->>Cache: Check for duplicate invoice
+    Cache-->>LPS: No duplicate found ✓
+
+    LPS->>LND: addInvoice(amount_msats, description, expiry)
+    Note over LPS,LND: RPC: addInvoice<br/>Amount: 1000000 msats<br/>Expiry: 3600 seconds (1 hour)
+
+    LND->>LND: Generate BOLT11 invoice
+    LND->>LND: Sign with node private key
+    LND-->>LPS: Invoice created ✓
+    Note over LND,LPS: payment_request: "lnbc10m1..."<br/>payment_hash: "abc123..."<br/>expires_at: timestamp
+
+    %% Step 5: Database Storage
+    LPS->>DB: BEGIN TRANSACTION
+
+    LPS->>DB: INSERT INTO payments
+    Note over LPS,DB: {<br/>  id: UUID,<br/>  user_id: "user-uuid",<br/>  payment_hash: "abc123...",<br/>  payment_request: "lnbc10m1...",<br/>  amount_msats: 1000000,<br/>  status: "PENDING",<br/>  expires_at: timestamp,<br/>  metadata: {...}<br/>}
+
+    DB-->>LPS: Payment record created ✓
+
+    %% Step 6: State Machine Initialization
+    LPS->>PSM: initialize(payment_id, PENDING)
+    PSM->>DB: INSERT INTO payment_events
+    Note over PSM,DB: {<br/>  payment_id: UUID,<br/>  event: "INVOICE_CREATED",<br/>  from_state: null,<br/>  to_state: "PENDING",<br/>  timestamp: now()<br/>}
+
+    DB-->>PSM: Event logged ✓
+    PSM-->>LPS: State initialized ✓
+
+    LPS->>DB: COMMIT TRANSACTION
+    DB-->>LPS: Transaction committed ✓
+
+    %% Step 7: Caching
+    LPS->>Cache: SET invoice:payment_hash, invoice_data
+    Note over LPS,Cache: TTL: 3600 seconds<br/>(matches invoice expiry)
+    Cache-->>LPS: Cached ✓
+
+    %% Step 8: Response
+    LPS-->>API: Invoice created successfully
+    Note over LPS,API: {<br/>  id: UUID,<br/>  payment_request: "lnbc10m1...",<br/>  payment_hash: "abc123...",<br/>  amount_msats: 1000000,<br/>  expires_at: timestamp,<br/>  status: "PENDING"<br/>}
+
+    API-->>UI: 201 Created + invoice data
+
+    UI->>UI: Generate QR code from BOLT11
+    UI->>UI: Display payment details
+
+    %% Step 9: Real-time Setup
+    UI->>WS: Subscribe to payment updates
+    Note over UI,WS: channel: "payment:abc123..."
+    WS-->>UI: Subscribed ✓
+
+    UI-->>Creator: Show invoice + QR code
+    Note over Creator,UI: ✓ Invoice ready for payment<br/>✓ 1000 sats (1000000 msats)<br/>✓ Expires in 1 hour<br/>✓ QR code displayed
+
+    %% Step 10: Background Monitoring
+    Note over LPS,DB: Invoice monitoring begins<br/>Retry service watches for payment<br/>Expiration service schedules cleanup

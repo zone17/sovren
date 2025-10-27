@@ -1,0 +1,42 @@
+sequenceDiagram
+    participant User
+    participant API
+    participant Analytics as UserAnalyticsService
+    participant Cache as Redis Cache
+    participant DB as PostgreSQL
+    participant EventBus as Event Bus
+    participant Worker as Background Worker
+
+    Note over User,Worker: Real-time Activity Tracking
+    User->>API: User Action
+    API->>EventBus: Publish user.activity event
+    EventBus->>Analytics: Event Handler
+    Analytics->>Analytics: Buffer Event
+
+    Note over Analytics: Buffer reaches threshold
+    Analytics->>DB: Batch Insert Events
+
+    Note over User,Worker: Analytics Query Flow
+    User->>API: Request Metrics
+    API->>Analytics: getEngagementMetrics()
+
+    Analytics->>Cache: Check Cache
+    alt Cache Hit
+        Cache-->>Analytics: Return Cached Data
+        Analytics-->>API: Return Metrics
+    else Cache Miss
+        Analytics->>DB: Query Raw Data
+        DB-->>Analytics: Return Results
+        Analytics->>Analytics: Calculate Metrics
+        Analytics->>Cache: Store in Cache
+        Analytics-->>API: Return Metrics
+    end
+
+    API-->>User: Display Metrics
+
+    Note over Worker,DB: Background Aggregation
+    Worker->>Analytics: processAggregations('hourly')
+    Analytics->>DB: Aggregate User Activity
+    Analytics->>DB: Update Aggregate Tables
+    Analytics->>Cache: Invalidate Stale Cache
+    Analytics->>DB: Cleanup Old Data

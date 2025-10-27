@@ -1,0 +1,34 @@
+graph TD
+    A[User Interface] --> B[FilterBuilder Component]
+    B --> C[FilterField Components]
+    B --> D[PresetSelector]
+    B --> E[FilterPreview]
+    B --> F[TemplateManager]
+
+    C --> C1[IDsField]
+    C --> C2[AuthorsField]
+    C --> C3[KindsField]
+    C --> C4[TagsField]
+    C --> C5[TimeRangeField]
+    C --> C6[LimitField]
+
+    D --> G[CommonFilters Utility]
+    G --> H[@shared/types/nostr]
+
+    B --> I[NostrFilterBuilder]
+    I --> H
+
+    F --> J[LocalStorage]
+
+    B --> K[Validation Service]
+    K --> L[validateFilter]
+    L --> H
+
+    E --> M[JSON Display]
+
+    B --> N[Parent Component]
+    N --> O[Subscription System]
+
+    style B fill:#4f46e5,stroke:#312e81,color:#fff
+    style H fill:#10b981,stroke:#065f46,color:#fff
+    style G fill:#f59e0b,stroke:#92400e,color:#fff

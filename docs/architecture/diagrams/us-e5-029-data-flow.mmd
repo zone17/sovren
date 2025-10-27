@@ -1,0 +1,86 @@
+graph LR
+    subgraph "Input"
+        EVENT[Domain Event]
+        REG[Register Endpoint]
+        REPLAY[Replay Request]
+    end
+
+    subgraph "WebhookService Core"
+        FILTER[Event Filter]
+        MATCH[Subscription Matcher]
+        BUILDER[Payload Builder]
+        SIGNER[Signature Generator]
+        VALIDATOR[Payload Validator]
+    end
+
+    subgraph "Delivery Pipeline"
+        RLIMIT[Rate Limiter]
+        CBREAKER[Circuit Breaker]
+        QUEUE[Job Queue]
+        WORKER[Delivery Worker]
+        RETRY[Retry Scheduler]
+    end
+
+    subgraph "Storage"
+        DB[(Database)]
+        CACHE[(Cache)]
+        DLQ[(Dead Letter Queue)]
+        HISTORY[(Delivery History)]
+    end
+
+    subgraph "Output"
+        HTTP[HTTP Request]
+        ENDPOINT[Customer Endpoint]
+        AUDIT[Audit Logs]
+        METRICS[Metrics]
+    end
+
+    %% Registration flow
+    REG --> DB
+    REG --> CACHE
+
+    %% Event flow
+    EVENT --> FILTER
+    FILTER --> MATCH
+    MATCH --> VALIDATOR
+    VALIDATOR --> BUILDER
+    BUILDER --> SIGNER
+
+    %% Delivery flow
+    SIGNER --> RLIMIT
+    RLIMIT --> CBREAKER
+    CBREAKER --> QUEUE
+    QUEUE --> WORKER
+
+    %% Worker operations
+    WORKER --> HTTP
+    HTTP --> ENDPOINT
+
+    %% Success path
+    ENDPOINT -.Success.-> HISTORY
+    HISTORY --> DB
+    HISTORY --> METRICS
+    HISTORY --> AUDIT
+
+    %% Failure path
+    ENDPOINT -.Failure.-> RETRY
+    RETRY --> CBREAKER
+    RETRY -.Max Retries.-> DLQ
+    DLQ --> DB
+    DLQ --> AUDIT
+
+    %% Replay flow
+    REPLAY --> HISTORY
+    HISTORY --> FILTER
+
+    %% Cache interactions
+    MATCH --> CACHE
+    RLIMIT --> CACHE
+    CBREAKER --> CACHE
+
+    style EVENT fill:#4A90E2,stroke:#333,stroke-width:2px
+    style FILTER fill:#50E3C2,stroke:#333,stroke-width:2px
+    style QUEUE fill:#F5A623,stroke:#333,stroke-width:2px
+    style WORKER fill:#F5A623,stroke:#333,stroke-width:2px
+    style DLQ fill:#D0021B,stroke:#333,stroke-width:2px
+    style ENDPOINT fill:#7ED321,stroke:#333,stroke-width:2px

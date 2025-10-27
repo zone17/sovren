@@ -1,0 +1,54 @@
+graph TB
+    subgraph "Cache Layers"
+        L1[Realtime Data<br/>TTL: 30 seconds]
+        L2[Hourly Aggregates<br/>TTL: 1 hour]
+        L3[Daily Aggregates<br/>TTL: 24 hours]
+        L4[Weekly Aggregates<br/>TTL: 7 days]
+    end
+
+    subgraph "Metrics by Cache Layer"
+        RT[Active Users<br/>Current Sessions<br/>Events/Second]
+        HR[DAU/WAU/MAU<br/>Engagement Score<br/>Health Scores]
+        DY[Acquisition Metrics<br/>Retention Curves<br/>LTV Analysis]
+        WK[Cohort Analysis<br/>Growth Trends<br/>Churn Analysis]
+    end
+
+    subgraph "Cache Operations"
+        GET[Cache.get()]
+        SET[Cache.set()]
+        INV[Cache.invalidate()]
+        REF[Cache.refresh()]
+    end
+
+    subgraph "Cache Policies"
+        LRU[LRU Eviction]
+        TTL[TTL Expiration]
+        PAT[Pattern-based Invalidation]
+    end
+
+    RT --> L1
+    HR --> L2
+    DY --> L3
+    WK --> L4
+
+    L1 --> GET
+    L2 --> GET
+    L3 --> GET
+    L4 --> GET
+
+    GET --> SET
+    SET --> INV
+    INV --> REF
+
+    L1 --> TTL
+    L2 --> TTL
+    L3 --> LRU
+    L4 --> LRU
+
+    REF --> PAT
+
+    style L1 fill:#FF6B6B,color:#fff
+    style L2 fill:#FFA726,color:#000
+    style L3 fill:#66BB6A,color:#fff
+    style L4 fill:#42A5F5,color:#fff
+    style PAT fill:#9C27B0,color:#fff

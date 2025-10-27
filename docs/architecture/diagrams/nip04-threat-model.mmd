@@ -1,0 +1,111 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#dc2626','secondaryColor':'#ef4444'}}}%%
+graph TB
+    subgraph "Threat Landscape"
+        T1[Eavesdropping<br/>on Relays]
+        T2[MITM Attack<br/>Relay Compromise]
+        T3[Spam & DoS<br/>Attacks]
+        T4[Key Compromise<br/>Single Point of Failure]
+        T5[Timing Attacks<br/>Side Channels]
+        T6[Replay Attacks<br/>Old Messages]
+    end
+
+    subgraph "NIP04 Security Mitigations"
+        direction TB
+
+        subgraph "Encryption Protections"
+            M1[End-to-End Encryption<br/>AES-256-CBC]
+            M2[ECDH Key Exchange<br/>secp256k1]
+            M3[Random IV per Message<br/>No IV Reuse]
+        end
+
+        subgraph "Forward Secrecy"
+            M4[Session Key Rotation<br/>Every 100 Messages]
+            M5[Ephemeral Keys<br/>Per-Conversation]
+            M6[Old Key Deletion<br/>Past Messages Secure]
+        end
+
+        subgraph "Anti-Spam & Rate Limiting"
+            M7[Per-Minute Limit<br/>Default: 20 msg/min]
+            M8[Per-Hour Limit<br/>Default: 200 msg/hr]
+            M9[Proof-of-Work<br/>Configurable Difficulty]
+            M10[Block/Allow Lists<br/>Granular Control]
+        end
+
+        subgraph "Attack Surface Reduction"
+            M11[No Private Key Storage<br/>on Server]
+            M12[Minimal Metadata<br/>Leakage]
+            M13[Input Validation<br/>All User Data]
+            M14[Error Message<br/>Sanitization]
+        end
+    end
+
+    subgraph "Attack Scenarios & Defenses"
+        direction LR
+
+        subgraph "Scenario 1: Relay Compromise"
+            S1A[Attacker Controls Relay]
+            S1B[Can See Encrypted Events]
+            S1C[Cannot Decrypt<br/>Without Private Keys]
+            S1D[Cannot Correlate<br/>Session Keys Rotate]
+        end
+
+        subgraph "Scenario 2: Spam Attack"
+            S2A[Attacker Floods DMs]
+            S2B[Rate Limiter Kicks In]
+            S2C[PoW Required]
+            S2D[Attacker Blocked]
+        end
+
+        subgraph "Scenario 3: Key Compromise"
+            S3A[User Key Stolen]
+            S3B[Old Messages Safe<br/>Due to Key Rotation]
+            S3C[Future Messages Use<br/>New Session Keys]
+            S3D[Limited Damage Window]
+        end
+    end
+
+    %% Threat Mappings
+    T1 -->|Mitigated by| M1
+    T1 -->|Mitigated by| M2
+    T2 -->|Mitigated by| M1
+    T2 -->|Mitigated by| M2
+    T3 -->|Mitigated by| M7
+    T3 -->|Mitigated by| M8
+    T3 -->|Mitigated by| M9
+    T3 -->|Mitigated by| M10
+    T4 -->|Mitigated by| M4
+    T4 -->|Mitigated by| M5
+    T4 -->|Mitigated by| M6
+    T5 -->|Mitigated by| M13
+    T5 -->|Mitigated by| M14
+    T6 -->|Mitigated by| M3
+    T6 -->|Mitigated by| M4
+
+    %% Scenario Flows
+    S1A --> S1B --> S1C --> S1D
+    S2A --> S2B --> S2C --> S2D
+    S3A --> S3B --> S3C --> S3D
+
+    %% Styling
+    style T1 fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#fff
+    style T2 fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#fff
+    style T3 fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#fff
+    style T4 fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#fff
+    style T5 fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#fff
+    style T6 fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#fff
+
+    style M1 fill:#059669,stroke:#10b981,stroke-width:2px,color:#fff
+    style M2 fill:#059669,stroke:#10b981,stroke-width:2px,color:#fff
+    style M3 fill:#059669,stroke:#10b981,stroke-width:2px,color:#fff
+    style M4 fill:#7c3aed,stroke:#a78bfa,stroke-width:2px,color:#fff
+    style M5 fill:#7c3aed,stroke:#a78bfa,stroke-width:2px,color:#fff
+    style M6 fill:#7c3aed,stroke:#a78bfa,stroke-width:2px,color:#fff
+    style M7 fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#fff
+    style M8 fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#fff
+    style M9 fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#fff
+    style M10 fill:#d97706,stroke:#f59e0b,stroke-width:2px,color:#fff
+
+    classDef threat fill:#dc2626,stroke:#ef4444,color:#fff
+    classDef encryption fill:#059669,stroke:#10b981,color:#fff
+    classDef forwardSecrecy fill:#7c3aed,stroke:#a78bfa,color:#fff
+    classDef antiSpam fill:#d97706,stroke:#f59e0b,color:#fff

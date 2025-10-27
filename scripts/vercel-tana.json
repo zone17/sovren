@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "src": "scripts/tana-project-controller.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/tana-sync",
+      "dest": "scripts/tana-project-controller.js"
+    }
+  ],
+  "env": {
+    "TANA_TOKEN": "@tana-token"
+  }
+}

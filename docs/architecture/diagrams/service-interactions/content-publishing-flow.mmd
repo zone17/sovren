@@ -1,0 +1,73 @@
+%% Content Publishing Flow - Service Interaction Sequence
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete sequence diagram for content publishing workflow
+
+sequenceDiagram
+    actor Creator as Creator
+    participant WebApp as Web Application
+    participant API as API Gateway
+    participant Auth as Auth Middleware
+    participant ContentPub as Content Publishing Service
+    participant ContentMod as Content Moderation Service
+    participant ContentVer as Content Versioning Service
+    participant Repo as Repository Factory
+    participant DB as PostgreSQL
+    participant EventBus as Event Bus Service
+    participant Nostr as NOSTR Relays
+    participant Cache as Cache Service
+    participant Analytics as Content Analytics Service
+    participant Notification as Notification Service
+
+    Creator->>WebApp: Create/Edit Content
+    WebApp->>API: POST /api/content/publish
+    API->>Auth: Validate JWT + NOSTR Key
+    Auth-->>API: Authentication Success
+
+    API->>ContentPub: publishContent(data)
+
+    Note over ContentPub: Validate content structure
+    ContentPub->>ContentMod: moderateContent(data)
+    ContentMod-->>ContentPub: Moderation Result (approved/flagged)
+
+    alt Content Approved
+        ContentPub->>ContentVer: createVersion(content)
+        ContentVer->>Repo: saveVersion()
+        Repo->>DB: INSERT INTO content_versions
+        DB-->>Repo: Version Created
+        Repo-->>ContentVer: Version ID
+        ContentVer-->>ContentPub: Version Created
+
+        ContentPub->>Repo: saveContent()
+        Repo->>DB: INSERT INTO content
+        DB-->>Repo: Content ID
+        Repo-->>ContentPub: Content Saved
+
+        ContentPub->>Nostr: publishEvent(kind: 1)
+        Nostr-->>ContentPub: Event Published
+
+        ContentPub->>EventBus: publish('content.published', data)
+        EventBus->>Analytics: handleContentPublished(data)
+        EventBus->>Notification: notifyFollowers(data)
+        EventBus->>Cache: invalidate(creator_content_*)
+
+        ContentPub-->>API: Success Response
+        API-->>WebApp: 201 Created
+        WebApp-->>Creator: Content Published Successfully
+
+        Analytics->>Repo: incrementPublishCount()
+        Repo->>DB: UPDATE creator_metrics
+        Notification->>Repo: getFollowers(creatorId)
+        Repo->>DB: SELECT FROM relationships
+        DB-->>Repo: Follower List
+        Notification->>EventBus: publish('notification.created')
+
+    else Content Flagged
+        ContentMod->>Repo: saveFlag()
+        Repo->>DB: INSERT INTO moderation_flags
+        ContentPub-->>API: 422 Content Flagged
+        API-->>WebApp: Moderation Required
+        WebApp-->>Creator: Content Requires Review
+    end
+
+    Note over Creator,Notification: Content successfully published<br/>to database, NOSTR, and followers notified

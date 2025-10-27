@@ -1,0 +1,124 @@
+sequenceDiagram
+    participant Client
+    participant API
+    participant UAS as UserActivityService
+    participant Buffer as Activity Buffer
+    participant EventBus
+    participant Cache
+    participant DB as Database
+    participant Audit
+
+    Note over Client,Audit: Activity Logging Flow (High-Throughput)
+
+    Client->>API: User Action (e.g., view content)
+    API->>UAS: logActivity(userId, type, metadata)
+
+    UAS->>UAS: Create ActivityEvent
+    UAS->>UAS: Parse device from user agent
+    UAS->>Buffer: Add to buffer
+
+    alt Buffer is full
+        UAS->>DB: Batch INSERT (1000 activities)
+        DB-->>UAS: Success
+    end
+
+    UAS->>EventBus: Publish activity event
+    EventBus-->>UAS: Event published
+
+    UAS->>Cache: Increment activity counter
+    Cache-->>UAS: Counter updated
+
+    opt Session provided
+        UAS->>Cache: Get session
+        Cache-->>UAS: Session data
+        UAS->>Cache: Update session activity
+    end
+
+    UAS-->>API: ActivityEvent
+    API-->>Client: Success
+
+    Note over Buffer,DB: Periodic Flush (every 5 seconds)
+
+    loop Every 5 seconds
+        Buffer->>DB: Flush buffered activities
+        DB-->>Buffer: Batch inserted
+    end
+
+    Note over Client,Audit: Session Management Flow
+
+    Client->>API: Login request
+    API->>UAS: createSession(userId, metadata)
+
+    UAS->>UAS: Generate session ID
+    UAS->>Cache: Store session (30min TTL)
+    UAS->>DB: Persist session
+    UAS->>UAS: logActivity(SESSION_CREATED)
+
+    UAS-->>API: UserSession
+    API-->>Client: Session created
+
+    Note over Client,Audit: Statistics Query Flow
+
+    Client->>API: GET /activities/stats
+    API->>UAS: getActivityStats(startDate, endDate)
+
+    UAS->>Cache: Check cache
+
+    alt Cache hit
+        Cache-->>UAS: Cached stats
+    else Cache miss
+        UAS->>DB: Query activities
+        UAS->>DB: Query sessions
+        UAS->>DB: Aggregate data
+        DB-->>UAS: Raw data
+        UAS->>UAS: Calculate statistics
+        UAS->>Cache: Store stats (1h TTL)
+    end
+
+    UAS-->>API: ActivityStats
+    API-->>Client: Statistics response
+
+    Note over Client,Audit: Suspicious Activity Detection
+
+    Client->>API: Multiple failed logins
+    API->>UAS: logActivity(FAILED_LOGIN)
+    UAS->>UAS: Increment failure counter
+
+    API->>UAS: detectSuspiciousActivity(userId)
+    UAS->>DB: Query recent activities
+    DB-->>UAS: Activity history
+
+    UAS->>UAS: Analyze patterns
+    UAS->>UAS: Calculate confidence score
+
+    alt Suspicious detected
+        UAS->>Audit: Log security alert
+        UAS->>EventBus: Publish security event
+    end
+
+    UAS-->>API: SuspiciousActivityResult
+    API-->>Client: Alert/Block response
+
+    Note over Client,Audit: Privacy & GDPR Compliance
+
+    Client->>API: Request data export
+    API->>UAS: exportUserActivity(request)
+
+    UAS->>DB: Query all user activities
+    DB-->>UAS: Activity records
+
+    UAS->>UAS: Format as JSON/CSV
+    UAS->>Audit: Log export action
+
+    UAS-->>API: ActivityExportResult
+    API-->>Client: Download data
+
+    Client->>API: Request data deletion
+    API->>UAS: deleteActivities(userId, beforeDate)
+
+    UAS->>DB: DELETE activities
+    DB-->>UAS: Rows deleted
+
+    UAS->>Audit: Log deletion
+    UAS-->>API: Deletion count
+    API-->>Client: Confirmation

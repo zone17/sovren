@@ -1,0 +1,136 @@
+%% User Domain Architecture - 5 Services
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete user domain architecture with all service interactions
+
+graph TB
+    subgraph "User Domain Services"
+        UserProfile[User Profile Service<br/>---<br/>createProfile<br/>updateProfile<br/>getProfile<br/>verifyNIP05]
+
+        UserPreferences[User Preferences Service<br/>---<br/>getPreferences<br/>updatePreferences<br/>resetToDefaults<br/>exportPreferences]
+
+        UserActivity[User Activity Service<br/>---<br/>trackActivity<br/>getActivityHistory<br/>finalizeSession<br/>getSessionMetrics]
+
+        UserRelationship[User Relationship Service<br/>---<br/>follow<br/>unfollow<br/>block<br/>getFollowers<br/>getFollowing<br/>getRelationshipGraph]
+
+        UserAnalytics[User Analytics Service<br/>---<br/>getUserMetrics<br/>getEngagementScore<br/>trackBehavior<br/>generateInsights<br/>predictChurn]
+    end
+
+    subgraph "External Systems"
+        NostrRelays[NOSTR Relays<br/>Profile Events (kind 0)<br/>Contact Lists (kind 3)<br/>Relay Lists (kind 10002)]
+        NIP05Server[NIP-05 Verification<br/>/.well-known/nostr.json<br/>Identity Verification]
+    end
+
+    subgraph "Shared Infrastructure"
+        EventBus[Event Bus<br/>Event Distribution]
+        RepositoryFactory[Repository Factory<br/>Data Access]
+        CacheService[Cache Service<br/>Multi-Layer Caching]
+    end
+
+    subgraph "Data Models"
+        UsersTable[(users<br/>---<br/>id, nostr_pubkey<br/>username, email<br/>profile_data, nip05<br/>created_at, updated_at)]
+
+        PreferencesTable[(user_preferences<br/>---<br/>user_id, category<br/>preferences_json<br/>updated_at)]
+
+        ActivitiesTable[(user_activities<br/>---<br/>id, user_id<br/>activity_type, metadata<br/>session_id<br/>created_at)]
+
+        RelationshipsTable[(user_relationships<br/>---<br/>id, follower_id<br/>following_id, type<br/>created_at)]
+
+        AnalyticsTable[(user_analytics<br/>---<br/>user_id, metric_type<br/>value, period<br/>calculated_at)]
+
+        SessionsTable[(user_sessions<br/>---<br/>id, user_id<br/>started_at, ended_at<br/>duration, activities_count)]
+    end
+
+    %% User Profile Flows
+    UserProfile -->|Publish to NOSTR| NostrRelays
+    UserProfile -->|Verify identity| NIP05Server
+    UserProfile -->|Write| RepositoryFactory
+    UserProfile -->|Publish event| EventBus
+    UserProfile -->|Cache profile| CacheService
+
+    %% User Preferences Flows
+    UserPreferences -->|Read prefs| RepositoryFactory
+    UserPreferences -->|Write prefs| RepositoryFactory
+    UserPreferences -->|Cache prefs| CacheService
+    UserPreferences -->|Publish event| EventBus
+
+    %% User Activity Flows
+    UserActivity -->|Track activity| RepositoryFactory
+    UserActivity -->|Write session| RepositoryFactory
+    UserActivity -->|Publish event| EventBus
+    UserActivity -->|Cache recent| CacheService
+
+    %% User Relationship Flows
+    UserRelationship -->|Publish to NOSTR| NostrRelays
+    UserRelationship -->|Write relationships| RepositoryFactory
+    UserRelationship -->|Cache graph| CacheService
+    UserRelationship -->|Publish event| EventBus
+
+    %% User Analytics Flows
+    UserAnalytics -->|Read activities| UserActivity
+    UserAnalytics -->|Read relationships| UserRelationship
+    UserAnalytics -->|Write metrics| RepositoryFactory
+    UserAnalytics -->|Cache metrics| CacheService
+    UserAnalytics -->|Publish event| EventBus
+
+    %% Repository to Database
+    RepositoryFactory --> UsersTable
+    RepositoryFactory --> PreferencesTable
+    RepositoryFactory --> ActivitiesTable
+    RepositoryFactory --> RelationshipsTable
+    RepositoryFactory --> AnalyticsTable
+    RepositoryFactory --> SessionsTable
+
+    %% Event Bus Subscriptions
+    EventBus -->|user.registered| UserPreferences
+    EventBus -->|user.registered| UserAnalytics
+    EventBus -->|user.activity| UserAnalytics
+    EventBus -->|user.preference_updated| UserAnalytics
+    EventBus -->|relationship.changed| UserAnalytics
+    EventBus -->|relationship.changed| CacheService
+
+    %% Cross-Domain Dependencies
+    ContentRecommendation[Content Recommendation Service]
+    NotificationService[Notification Service]
+
+    UserActivity -->|Activity data| ContentRecommendation
+    UserPreferences -->|Preferences data| ContentRecommendation
+    UserRelationship -->|Relationship data| NotificationService
+
+    %% Key Workflows
+    Note1["User Registration Flow:<br/>1. Create profile<br/>2. Generate NOSTR keys<br/>3. Publish to relays<br/>4. Set default preferences<br/>5. Initialize analytics<br/>6. Emit user.registered<br/>7. Send welcome notification"]
+
+    Note2["User Activity Tracking:<br/>1. Track user actions<br/>2. Update session metrics<br/>3. Calculate engagement<br/>4. Update preferences<br/>5. Trigger recommendations<br/>6. Emit activity events<br/>7. Update analytics"]
+
+    Note3["Relationship Management:<br/>1. Follow/unfollow action<br/>2. Update local database<br/>3. Publish to NOSTR<br/>4. Invalidate cache<br/>5. Update relationship graph<br/>6. Notify followed user<br/>7. Update analytics"]
+
+    Note4["Analytics & Insights:<br/>1. Aggregate activities<br/>2. Calculate engagement<br/>3. Track content preferences<br/>4. Predict churn risk<br/>5. Generate insights<br/>6. Cache metrics<br/>7. Update dashboard"]
+
+    %% Styling
+    style UserProfile fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style UserPreferences fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style UserActivity fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style UserRelationship fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style UserAnalytics fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style NostrRelays fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style NIP05Server fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style RepositoryFactory fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style CacheService fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+
+    style UsersTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style PreferencesTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style ActivitiesTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style RelationshipsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style AnalyticsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style SessionsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style ContentRecommendation fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style NotificationService fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+
+    style Note1 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Note2 fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
+    style Note3 fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    style Note4 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px

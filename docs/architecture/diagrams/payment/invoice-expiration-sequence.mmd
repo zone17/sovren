@@ -1,0 +1,48 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#6366f1','actorTextColor':'#1f2937','actorLineColor':'#6366f1','signalColor':'#6366f1','signalTextColor':'#1f2937'}}}%%
+
+sequenceDiagram
+    participant Scheduler as Invoice Expiration<br/>Scheduler
+    participant Service as Invoice Expiration<br/>Service
+    participant DB as Supabase<br/>Database
+    participant SM as Payment State<br/>Machine
+    participant Email as Email<br/>Service
+    participant User as User
+
+    Note over Scheduler: Every 5 minutes
+    Scheduler->>Service: checkExpiredInvoices()
+
+    Service->>Service: Check if already running
+    alt Check already in progress
+        Service-->>Scheduler: Return empty result
+    else Lock acquired
+        Service->>DB: Query expired payments<br/>WHERE state = 'PENDING'<br/>AND expires_at < NOW()
+        DB-->>Service: Return expired payments
+
+        loop For each expired payment
+            Service->>SM: transition(paymentId, EXPIRED, metadata)
+            SM->>DB: BEGIN TRANSACTION
+            SM->>DB: UPDATE payments SET state = 'expired'
+            SM->>DB: INSERT INTO payment_events
+            SM->>DB: COMMIT TRANSACTION
+            DB-->>SM: Transaction successful
+            SM-->>Service: Transition result
+
+            Service->>Email: sendInvoiceExpiredEmail(userId, paymentId, details)
+            Email->>Email: Render template with data
+            Email->>Email: Send via email provider
+            alt Email sent successfully
+                Email-->>Service: Success
+                Service->>User: 📧 Invoice Expired Notification
+                Service->>Service: Increment success count
+            else Email failed
+                Email-->>Service: Error
+                Service->>Service: Log error & increment failed count
+            end
+        end
+
+        Service->>Service: Update metrics<br/>- totalChecks++<br/>- totalExpired += count<br/>- lastCheckAt = now<br/>- lastCheckDuration = duration
+        Service->>Service: Release lock
+        Service-->>Scheduler: Check result<br/>(found, expired, failed counts)
+    end
+
+    Note over Scheduler: Schedule next check<br/>in 5 minutes

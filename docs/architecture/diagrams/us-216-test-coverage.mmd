@@ -1,0 +1,97 @@
+graph TB
+    %% Test Pyramid Structure
+    subgraph TestPyramid["🧪 TEST PYRAMID - 96.3% Coverage"]
+
+        %% E2E Tests (Top of Pyramid)
+        subgraph E2E["🌐 E2E Tests (89.4%)"]
+            E2EWorkflows[Complete User Workflows<br/>Content Creation → Publishing]
+            E2EIntegration[Cross-Component Integration<br/>Hub → Editor → Library]
+            E2EPerformance[Performance Testing<br/>Load Times & Responsiveness]
+        end
+
+        %% Integration Tests (Middle)
+        subgraph Integration["🔗 Integration Tests (95.2%)"]
+            ComponentInteg[Component Integration<br/>Props & State Flow]
+            APIInteg[API Integration<br/>Service Layer Testing]
+            StateInteg[State Management<br/>Redux + React Integration]
+            FeatureFlagInteg[Feature Flag Integration<br/>Rollout Testing]
+        end
+
+        %% Unit Tests (Foundation)
+        subgraph Unit["⚡ Unit Tests (98.7%)"]
+            ComponentUnit[Component Unit Tests<br/>ContentEditor, ContentLibrary]
+            SliceUnit[Redux Slice Tests<br/>UnifiedCmsSlice Actions]
+            ServiceUnit[Service Layer Tests<br/>UnifiedContentService]
+            UtilsUnit[Utility Function Tests<br/>Validation, Helpers]
+        end
+
+        %% Test Pyramid Flow
+        E2E --> Integration
+        Integration --> Unit
+    end
+
+    %% Specialized Testing Areas
+    subgraph Specialized["🎯 SPECIALIZED TESTING"]
+
+        subgraph Accessibility["♿ Accessibility (100%)"]
+            JestAxe[jest-axe Testing<br/>WCAG 2.1 AA Compliance]
+            KeyboardNav[Keyboard Navigation<br/>Tab Order & Focus]
+            ScreenReader[Screen Reader Support<br/>ARIA Labels & Semantics]
+        end
+
+        subgraph Security["🔒 Security (100%)"]
+            InputValid[Input Validation<br/>XSS Prevention]
+            AuthTest[Authentication Testing<br/>JWT & NOSTR Integration]
+            CSRFProtect[CSRF Protection<br/>Token Validation]
+        end
+
+        subgraph Performance["⚡ Performance (93.8%)"]
+            LoadTime[Load Time Testing<br/>Component Render Speed]
+            MemoryUsage[Memory Usage Testing<br/>Leak Detection]
+            BundleSize[Bundle Size Testing<br/>Optimization Validation]
+        end
+    end
+
+    %% Migration Testing
+    subgraph Migration["🔄 MIGRATION TESTING"]
+        DataIntegrity[Data Integrity Tests<br/>Schema Validation]
+        BackupRestore[Backup/Restore Tests<br/>Rollback Capability]
+        PerformanceMigration[Migration Performance<br/>Large Dataset Handling]
+    end
+
+    %% Test Infrastructure
+    subgraph Infrastructure["🛠️ TEST INFRASTRUCTURE"]
+        MockStore[Mock Redux Store<br/>Configurable Test State]
+        TestUtils[Custom Test Utils<br/>Render Helpers & Matchers]
+        CoverageReports[Coverage Reporting<br/>Istanbul + Jest]
+        CIIntegration[CI/CD Integration<br/>Automated Test Execution]
+    end
+
+    %% Quality Gates
+    subgraph QualityGates["✅ QUALITY GATES"]
+        CoverageThreshold[Coverage > 95%<br/>Enforced Threshold]
+        TypeSafety[100% TypeScript<br/>Type Coverage]
+        LintingPassing[ESLint + Prettier<br/>Code Quality]
+        SecurityScanning[Security Scanning<br/>Vulnerability Detection]
+    end
+
+    %% Connections
+    TestPyramid --> Specialized
+    Specialized --> Migration
+    Migration --> Infrastructure
+    Infrastructure --> QualityGates
+
+    %% Styling
+    classDef e2e fill:#ffebee,stroke:#c62828,stroke-width:2px
+    classDef integration fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef unit fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef specialized fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef infrastructure fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef quality fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+
+    class E2EWorkflows,E2EIntegration,E2EPerformance e2e
+    class ComponentInteg,APIInteg,StateInteg,FeatureFlagInteg integration
+    class ComponentUnit,SliceUnit,ServiceUnit,UtilsUnit unit
+    class JestAxe,KeyboardNav,ScreenReader,InputValid,AuthTest,CSRFProtect,LoadTime,MemoryUsage,BundleSize specialized
+    class MockStore,TestUtils,CoverageReports,CIIntegration infrastructure
+    class CoverageThreshold,TypeSafety,LintingPassing,SecurityScanning quality

@@ -1,0 +1,341 @@
+version: '3.8'
+
+services:
+  # Backend Development Service
+  backend-dev:
+    build:
+      context: ./packages/backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sovren-backend-dev
+    ports:
+      - '3001:3001'
+      - '9229:9229' # Node.js debug port
+    environment:
+      - NODE_ENV=development
+      - DEBUG=sovren:*
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    env_file:
+      - ./packages/backend/.env.development
+    volumes:
+      # Source code volume with delegated consistency for performance
+      - ./packages/backend/src:/app/src:delegated
+      - ./packages/backend/package.json:/app/package.json:delegated
+      - ./packages/backend/tsconfig.json:/app/tsconfig.json:delegated
+
+      # Shared packages volume
+      - ./packages/shared:/app/shared:delegated
+
+      # Node modules cache (named volume for performance)
+      - backend_node_modules:/app/node_modules
+
+      # Build output cache
+      - backend_dist:/app/dist
+
+      # Log files
+      - ./logs/backend:/app/logs
+
+      # SSL certificates for development
+      - ./docker/ssl:/app/ssl:ro
+
+      # Configuration files
+      - ./packages/backend/jest.config.js:/app/jest.config.js:delegated
+      - ./packages/backend/.eslintrc.js:/app/.eslintrc.js:delegated
+      - ./packages/backend/nodemon.json:/app/nodemon.json:delegated
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+      redis-dev:
+        condition: service_healthy
+    networks:
+      - sovren-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.backend-dev.rule=Host(`api.sovren.local`)'
+      - 'traefik.http.services.backend-dev.loadbalancer.server.port=3001'
+
+  # Frontend Development Service
+  frontend-dev:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sovren-frontend-dev
+    ports:
+      - '5173:5173' # Vite dev server
+      - '24678:24678' # Vite HMR
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
+      - VITE_WS_URL=ws://localhost:3001
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
+    env_file:
+      - ./packages/frontend/.env.development
+    volumes:
+      # Source code volume with delegated consistency
+      - ./packages/frontend/src:/app/src:delegated
+      - ./packages/frontend/public:/app/public:delegated
+      - ./packages/frontend/index.html:/app/index.html:delegated
+      - ./packages/frontend/package.json:/app/package.json:delegated
+      - ./packages/frontend/vite.config.ts:/app/vite.config.ts:delegated
+      - ./packages/frontend/tsconfig.json:/app/tsconfig.json:delegated
+
+      # Shared packages volume
+      - ./packages/shared:/app/shared:delegated
+
+      # Node modules cache
+      - frontend_node_modules:/app/node_modules
+
+      # Build cache
+      - frontend_dist:/app/dist
+
+      # Vite cache
+      - frontend_vite_cache:/app/node_modules/.vite
+
+      # Configuration files
+      - ./packages/frontend/tailwind.config.js:/app/tailwind.config.js:delegated
+      - ./packages/frontend/postcss.config.js:/app/postcss.config.js:delegated
+      - ./packages/frontend/.eslintrc.js:/app/.eslintrc.js:delegated
+      - ./packages/frontend/components.json:/app/components.json:delegated
+    depends_on:
+      - backend-dev
+    networks:
+      - sovren-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:5173']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.frontend-dev.rule=Host(`sovren.local`)'
+      - 'traefik.http.services.frontend-dev.loadbalancer.server.port=5173'
+
+  # PostgreSQL Development Database
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: sovren-postgres-dev
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=sovren_dev
+      - POSTGRES_PASSWORD=dev_password_123
+      - POSTGRES_DB=sovren_development
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    volumes:
+      # Database data with named volume for persistence
+      - postgres_dev_data:/var/lib/postgresql/data
+
+      # Initialization scripts
+      - ./packages/backend/src/database:/docker-entrypoint-initdb.d:ro
+
+      # Custom PostgreSQL configuration
+      - ./docker/postgres/postgresql.dev.conf:/etc/postgresql/postgresql.conf:ro
+
+      # Log files
+      - ./logs/postgres:/var/log/postgresql
+    networks:
+      - sovren-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sovren_dev -d sovren_development']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: ['postgres', '-c', 'config_file=/etc/postgresql/postgresql.conf']
+
+  # Redis Development Cache
+  redis-dev:
+    image: redis:7-alpine
+    container_name: sovren-redis-dev
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_PASSWORD=dev_redis_password
+    volumes:
+      # Redis data with named volume
+      - redis_dev_data:/data
+
+      # Redis configuration
+      - ./docker/redis/redis.dev.conf:/etc/redis/redis.conf:ro
+
+      # Log files
+      - ./logs/redis:/var/log/redis
+    networks:
+      - sovren-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: ['redis-server', '/etc/redis/redis.conf']
+
+  # Nginx Development Proxy
+  nginx-dev:
+    image: nginx:alpine
+    container_name: sovren-nginx-dev
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      # Nginx configuration
+      - ./docker/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+
+      # SSL certificates
+      - ./docker/ssl:/etc/nginx/ssl:ro
+
+      # Log files
+      - ./logs/nginx:/var/log/nginx
+
+      # Static files (if needed)
+      - ./packages/frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend-dev
+      - frontend-dev
+    networks:
+      - sovren-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:80/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Mailhog Development Mail Server
+  mailhog-dev:
+    image: mailhog/mailhog:latest
+    container_name: sovren-mailhog-dev
+    ports:
+      - '1025:1025' # SMTP port
+      - '8025:8025' # Web UI port
+    environment:
+      - MH_STORAGE=maildir
+      - MH_MAILDIR_PATH=/maildir
+    volumes:
+      - mailhog_data:/maildir
+      - ./logs/mailhog:/var/log/mailhog
+    networks:
+      - sovren-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:8025']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Development Tools Container
+  dev-tools:
+    image: node:18-alpine
+    container_name: sovren-dev-tools
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:delegated
+      - dev_tools_cache:/workspace/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - sovren-dev
+    profiles:
+      - tools
+    command: ['tail', '-f', '/dev/null']
+
+  # Testing Environment
+  test-runner:
+    build:
+      context: ./packages/testing
+      dockerfile: Dockerfile
+    container_name: sovren-test-runner
+    working_dir: /app
+    volumes:
+      - .:/app:delegated
+      - test_cache:/app/node_modules
+      - ./test-results:/app/test-results
+      - ./coverage:/app/coverage
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    networks:
+      - sovren-dev
+    profiles:
+      - testing
+    depends_on:
+      - postgres-dev
+      - redis-dev
+    command: ['npm', 'run', 'test:watch']
+
+volumes:
+  # Application volumes
+  backend_node_modules:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/backend_node_modules
+
+  frontend_node_modules:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/frontend_node_modules
+
+  # Build cache volumes
+  backend_dist:
+    driver: local
+  frontend_dist:
+    driver: local
+  frontend_vite_cache:
+    driver: local
+
+  # Database volumes
+  postgres_dev_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/postgres_dev_data
+
+  redis_dev_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/redis_dev_data
+
+  # Mail storage
+  mailhog_data:
+    driver: local
+
+  # Development cache volumes
+  dev_tools_cache:
+    driver: local
+  test_cache:
+    driver: local
+
+networks:
+  sovren-dev:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: sovren-dev-bridge
+      com.docker.network.driver.mtu: 1500

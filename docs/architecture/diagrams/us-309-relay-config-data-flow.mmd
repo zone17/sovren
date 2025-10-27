@@ -1,0 +1,69 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#1a1a1a','primaryTextColor':'#fff','primaryBorderColor':'#7C0000','lineColor':'#F8B229','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+flowchart LR
+    subgraph "Configuration Sources"
+        direction TB
+        S1[.env File]
+        S2[Environment Variables]
+        S3[Runtime Config]
+    end
+
+    subgraph "RelayConfig Service"
+        direction TB
+        P1[Parse Environment]
+        P2[Validate URLs]
+        P3[Cache Results]
+        P4[Return Relay Metadata]
+    end
+
+    subgraph "Relay Outputs"
+        direction TB
+        O1[All Relays<br/>getRelays&#40;&#41;]
+        O2[Relay URLs<br/>getRelayUrls&#40;&#41;]
+        O3[Read Relays<br/>getReadRelays&#40;&#41;]
+        O4[Write Relays<br/>getWriteRelays&#40;&#41;]
+    end
+
+    subgraph "Consumer Services"
+        direction TB
+        C1[RelayPoolManager<br/>Connection Pool]
+        C2[NIP65Service<br/>Relay Lists]
+        C3[Event Publishing<br/>Write Operations]
+        C4[Event Querying<br/>Read Operations]
+    end
+
+    S1 --> P1
+    S2 --> P1
+    S3 --> P1
+
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+
+    P4 --> O1
+    P4 --> O2
+    P4 --> O3
+    P4 --> O4
+
+    O1 --> C1
+    O2 --> C1
+    O3 --> C4
+    O4 --> C3
+
+    C1 --> C2
+    C3 --> C1
+    C4 --> C1
+
+    style P1 fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
+    style P2 fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
+    style P3 fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
+    style P4 fill:#2ecc71,stroke:#27ae60,stroke-width:3px,color:#000
+
+    style O1 fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff
+    style O2 fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff
+    style O3 fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff
+    style O4 fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff
+
+    style C1 fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
+    style C2 fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
+    style C3 fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
+    style C4 fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff

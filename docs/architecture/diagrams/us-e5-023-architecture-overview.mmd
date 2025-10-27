@@ -1,0 +1,77 @@
+graph TB
+    subgraph "Client Layer"
+        Dashboard[Analytics Dashboard]
+        API[API Client]
+        Export[Export Manager]
+    end
+
+    subgraph "Service Layer"
+        UAS[UserAnalyticsService]
+
+        subgraph "Analytics Modules"
+            ACQ[Acquisition Metrics]
+            ENG[Engagement Metrics]
+            RET[Retention Analysis]
+            COH[Cohort Analysis]
+            SEG[User Segmentation]
+            FUN[Funnel Analysis]
+            LTV[LTV Calculator]
+            CHU[Churn Predictor]
+            HLT[Health Scorer]
+            EXP[Export Engine]
+        end
+    end
+
+    subgraph "Infrastructure"
+        Cache[(Redis Cache)]
+        DB[(PostgreSQL)]
+        EventBus[Event Bus]
+        AuditLog[Audit Log Service]
+    end
+
+    subgraph "Background Jobs"
+        AGG[Aggregation Worker]
+        FLUSH[Buffer Flush Worker]
+        SCORE[Score Update Worker]
+    end
+
+    Dashboard --> API
+    API --> UAS
+    Export --> UAS
+
+    UAS --> ACQ
+    UAS --> ENG
+    UAS --> RET
+    UAS --> COH
+    UAS --> SEG
+    UAS --> FUN
+    UAS --> LTV
+    UAS --> CHU
+    UAS --> HLT
+    UAS --> EXP
+
+    ACQ --> Cache
+    ENG --> Cache
+    RET --> Cache
+    COH --> Cache
+    SEG --> DB
+    FUN --> DB
+    LTV --> DB
+    CHU --> DB
+    HLT --> Cache
+
+    UAS --> DB
+    UAS --> Cache
+    UAS --> EventBus
+    UAS --> AuditLog
+
+    AGG --> UAS
+    FLUSH --> UAS
+    SCORE --> UAS
+
+    EventBus -.->|User Events| UAS
+
+    style UAS fill:#4CAF50,color:#fff
+    style Cache fill:#2196F3,color:#fff
+    style DB fill:#FF9800,color:#fff
+    style EventBus fill:#9C27B0,color:#fff

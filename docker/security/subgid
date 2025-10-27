@@ -1,0 +1,29 @@
+# Group namespace mapping for Docker security
+# Format: groupname:start_gid:range_count
+# This creates isolated group namespaces for containers
+
+# Default Docker group namespace mapping
+# Maps container root group (gid 0) to host gid 165536
+# Maps container group 1000 to host gid 166536
+# Provides 65536 group IDs for mapping
+dockremap:165536:65536
+
+# Application-specific group namespace mapping
+# Maps container app group to isolated host range
+sovren-app:231072:65536
+
+# Database group namespace mapping
+# Maps container db group to isolated host range
+sovren-db:296608:65536
+
+# Cache group namespace mapping
+# Maps container cache group to isolated host range
+sovren-cache:362144:65536
+
+# Monitoring group namespace mapping
+# Maps container monitoring group to isolated host range
+sovren-monitor:427680:65536
+
+# Backup group namespace mapping
+# Maps container backup group to isolated host range
+sovren-backup:493216:65536

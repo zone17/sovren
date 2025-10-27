@@ -1,0 +1,53 @@
+graph TD
+    Start{{"🤔 New State<br/>Requirement"}}
+
+    Q1{"Is this data from<br/>an external source?<br/>(API, WebSocket, NOSTR)"}
+    Q2{"Is this UI/presentation<br/>state?<br/>(theme, modals, notifications)"}
+    Q3{"Does this need to<br/>persist across<br/>page refreshes?"}
+    Q4{"Is this shared<br/>across multiple<br/>components?"}
+
+    RQ["✅ USE REACT QUERY<br/><br/>📦 Server State<br/>• API data fetching<br/>• Real-time updates<br/>• Background sync<br/>• Optimistic updates<br/>• Auto caching"]
+
+    Redux1["✅ USE REDUX<br/><br/>🎨 UI State<br/>• Theme management<br/>• Modal state<br/>• Notifications<br/>• Sidebar state"]
+
+    Redux2["✅ USE REDUX +<br/>LOCALSTORAGE<br/><br/>💾 Persistent State<br/>• User preferences<br/>• Settings<br/>• Session data"]
+
+    Redux3["✅ USE REDUX or<br/>CONTEXT API<br/><br/>🔗 Shared State<br/>• Global flags<br/>• App-wide state"]
+
+    Local["✅ USE LOCAL STATE<br/>(useState/useReducer)<br/><br/>🏠 Component State<br/>• Form inputs<br/>• Toggle states<br/>• Temporary UI"]
+
+    Start --> Q1
+
+    Q1 -->|YES| RQ
+    Q1 -->|NO| Q2
+
+    Q2 -->|YES| Redux1
+    Q2 -->|NO| Q3
+
+    Q3 -->|YES| Redux2
+    Q3 -->|NO| Q4
+
+    Q4 -->|YES| Redux3
+    Q4 -->|NO| Local
+
+    %% Examples
+    RQ -.Example.-> Ex1["useCreators()<br/>useContent()<br/>usePayments()"]
+    Redux1 -.Example.-> Ex2["theme: 'dark'<br/>activeModal: 'edit'<br/>notifications: []"]
+    Redux2 -.Example.-> Ex3["userPreferences<br/>savedFilters<br/>recentSearches"]
+    Redux3 -.Example.-> Ex4["featureFlags<br/>globalSettings"]
+    Local -.Example.-> Ex5["inputValue<br/>isOpen<br/>selectedTab"]
+
+    %% Styling
+    classDef question fill:#fef3c7,stroke:#92400e,stroke-width:3px,color:#000
+    classDef reactQuery fill:#dbeafe,stroke:#1e3a8a,stroke-width:3px,color:#000
+    classDef redux fill:#fce7f3,stroke:#831843,stroke-width:3px,color:#000
+    classDef local fill:#dcfce7,stroke:#14532d,stroke-width:3px,color:#000
+    classDef example fill:#f3f4f6,stroke:#6b7280,stroke-width:1px,color:#374151,stroke-dasharray: 5 5
+    classDef start fill:#c7d2fe,stroke:#3730a3,stroke-width:4px,color:#000
+
+    class Start start
+    class Q1,Q2,Q3,Q4 question
+    class RQ reactQuery
+    class Redux1,Redux2,Redux3 redux
+    class Local local
+    class Ex1,Ex2,Ex3,Ex4,Ex5 example

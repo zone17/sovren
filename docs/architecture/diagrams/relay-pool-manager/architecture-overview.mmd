@@ -1,0 +1,54 @@
+graph TB
+    subgraph "Application Layer"
+        A[NostrService]
+        B[Components]
+        C[Hooks]
+    end
+
+    subgraph "Relay Pool Manager"
+        D[RelayPoolManager Singleton]
+        E[Connection Pool]
+        F[Health Monitor]
+        G[Event Aggregator]
+        H[Subscription Manager]
+    end
+
+    subgraph "Relay Layer"
+        I[Relay 1<br/>wss://relay.damus.io]
+        J[Relay 2<br/>wss://nos.lol]
+        K[Relay 3<br/>wss://relay.nostr.info]
+        L[Relay N<br/>User configured]
+    end
+
+    subgraph "Configuration"
+        M[Environment Variables]
+        N[Default Relays]
+        O[User Relay List]
+    end
+
+    A --> D
+    B --> D
+    C --> D
+
+    D --> E
+    D --> F
+    D --> G
+    D --> H
+
+    E --> I
+    E --> J
+    E --> K
+    E --> L
+
+    F -.monitors.-> I
+    F -.monitors.-> J
+    F -.monitors.-> K
+    F -.monitors.-> L
+
+    M --> D
+    N --> D
+    O --> D
+
+    style D fill:#4a90e2,color:#fff
+    style F fill:#e74c3c,color:#fff
+    style E fill:#2ecc71,color:#fff

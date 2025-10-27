@@ -1,0 +1,132 @@
+repos:
+  # Code formatting and linting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$'
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: detect-private-key
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  # JavaScript/TypeScript linting
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint
+        entry: npx eslint
+        language: node
+        types: [javascript, typescript, tsx]
+        args: [--fix, --max-warnings=0]
+        additional_dependencies:
+          - eslint@^8.0.0
+          - '@typescript-eslint/eslint-plugin@^6.0.0'
+          - '@typescript-eslint/parser@^6.0.0'
+
+      - id: prettier
+        name: Prettier
+        entry: npx prettier
+        language: node
+        types: [javascript, typescript, tsx, json, yaml, markdown]
+        args: [--write]
+        additional_dependencies:
+          - prettier@^3.0.0
+
+      - id: typescript-check
+        name: TypeScript Check
+        entry: npx tsc
+        language: node
+        types: [typescript, tsx]
+        args: [--noEmit]
+        pass_filenames: false
+
+      - id: jest-unit-tests
+        name: Jest Unit Tests
+        entry: npm run test:unit
+        language: node
+        types: [javascript, typescript, tsx]
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: test-coverage-check
+        name: Test Coverage Check
+        entry: npm run test:coverage:check
+        language: node
+        types: [javascript, typescript, tsx]
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # Security scanning
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package-lock.json|yarn.lock
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3009]
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.5
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.37.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+        exclude: '^(CHANGELOG\.md|node_modules/)'
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.32.0
+    hooks:
+      - id: yamllint
+        args: [-d, relaxed]
+
+  # Git commit message linting
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.10.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # Documentation checks
+  - repo: local
+    hooks:
+      - id: docs-build-check
+        name: Documentation Build Check
+        entry: npm run docs:build
+        language: node
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: changelog-updated
+        name: Changelog Updated
+        entry: python3 scripts/check-changelog.py
+        language: python3
+        stages: [pre-commit]
+        files: '^(?!CHANGELOG\.md).*$'
+
+# Configuration
+default_stages: [pre-commit]
+fail_fast: false
+minimum_pre_commit_version: '3.0.0'

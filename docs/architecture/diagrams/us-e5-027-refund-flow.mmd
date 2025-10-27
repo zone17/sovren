@@ -1,0 +1,67 @@
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant RefundService
+    participant PaymentService
+    participant CurrencyService
+    participant FraudDetection
+    participant AuthEngine
+    participant EventBus
+    participant NotificationService
+
+    User->>API: POST /refunds (transactionId, amount, reason)
+    API->>RefundService: createRefund(request)
+
+    RefundService->>RefundService: Check idempotency
+    alt Duplicate Request
+        RefundService-->>API: Return existing refund
+    end
+
+    RefundService->>PaymentService: getTransaction(transactionId)
+    PaymentService-->>RefundService: transaction
+
+    RefundService->>RefundService: validateRefund(transaction, amount)
+    alt Validation Failed
+        RefundService-->>API: Error (400 Bad Request)
+    end
+
+    RefundService->>FraudDetection: detectFraud(refund)
+    FraudDetection-->>RefundService: riskScore, flags
+    alt High Risk
+        RefundService-->>API: Error (403 Blocked)
+    end
+
+    RefundService->>RefundService: checkRateLimit(userId)
+    alt Rate Limit Exceeded
+        RefundService-->>API: Error (429 Too Many Requests)
+    end
+
+    RefundService->>CurrencyService: convert(amount, USD)
+    CurrencyService-->>RefundService: usdAmount
+
+    RefundService->>AuthEngine: requiresAuthorization(usdAmount)
+    AuthEngine-->>RefundService: authLevel
+
+    alt Auto-Approved
+        RefundService->>RefundService: status = AUTHORIZED
+        RefundService->>RefundService: processRefund(refundId)
+    else Manual Review Required
+        RefundService->>RefundService: status = PENDING
+        RefundService->>EventBus: REFUND_AUTHORIZATION_REQUIRED
+        EventBus->>NotificationService: Notify Admin
+    end
+
+    RefundService->>RefundService: saveRefund(refund)
+    RefundService->>EventBus: REFUND_INITIATED
+    RefundService-->>API: refund
+    API-->>User: 201 Created
+
+    alt Auto-Processing
+        RefundService->>RefundService: executeRefund()
+        RefundService->>PaymentService: Process via Lightning/On-chain
+        PaymentService-->>RefundService: result
+        RefundService->>EventBus: REFUND_COMPLETED
+        RefundService->>NotificationService: Send receipt
+    end
+```

@@ -1,0 +1,66 @@
+%% Idempotency System - Component Interaction Diagram
+%% Story: PAY-010
+%% Date: 2025-10-25
+
+graph LR
+    subgraph "Middleware Layer"
+        IM[IdempotencyMiddleware]
+        CONFIG[IdempotencyConfig]
+    end
+
+    subgraph "Repository Layer"
+        IR[IdempotencyRepository]
+    end
+
+    subgraph "Service Layer"
+        ICS[IdempotencyCleanupService]
+    end
+
+    subgraph "Database Layer"
+        DB[(PostgreSQL<br/>idempotency_cache<br/>table)]
+    end
+
+    subgraph "Type Definitions"
+        TYPES[idempotency.ts<br/>- IdempotencyCache<br/>- IdempotencyCacheRequest<br/>- CachedResponse<br/>- IdempotencyConfig]
+    end
+
+    subgraph "API Routes"
+        ROUTES[Payment Routes<br/>/api/lightning/invoice<br/>/api/payments/process]
+    end
+
+    subgraph "Integration"
+        EXAMPLE[example-idempotency-integration.ts<br/>- setupIdempotencySystem<br/>- createIdempotentPaymentAPI]
+    end
+
+    %% Interactions
+    IM -->|uses| IR
+    IM -->|configured by| CONFIG
+    IR -->|queries/updates| DB
+    ICS -->|uses| IR
+    ICS -->|scheduled cleanup| DB
+    ROUTES -->|protected by| IM
+    EXAMPLE -->|creates| IM
+    EXAMPLE -->|creates| ICS
+    EXAMPLE -->|creates| IR
+    EXAMPLE -->|applies| ROUTES
+
+    %% Type Dependencies
+    IM -.->|implements| TYPES
+    IR -.->|implements| TYPES
+    ICS -.->|implements| TYPES
+    CONFIG -.->|defined in| TYPES
+
+    %% Styling
+    classDef middlewareStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef repoStyle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef serviceStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef dataStyle fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    classDef typeStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,stroke-dasharray: 5 5
+    classDef routeStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+
+    class IM,CONFIG middlewareStyle
+    class IR repoStyle
+    class ICS serviceStyle
+    class DB dataStyle
+    class TYPES typeStyle
+    class ROUTES,EXAMPLE routeStyle

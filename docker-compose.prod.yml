@@ -1,0 +1,362 @@
+# Sovren Production Environment
+# Elite production configuration with security, monitoring, and scalability
+
+services:
+  # Backend API Service
+  backend:
+    build:
+      context: ./packages/backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: sovren-backend-prod
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - LOG_LEVEL=info
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - LNBITS_API_URL=${LNBITS_API_URL}
+      - LNBITS_ADMIN_KEY=${LNBITS_ADMIN_KEY}
+      - LNBITS_INVOICE_READ_KEY=${LNBITS_INVOICE_READ_KEY}
+      - NOSTR_RELAYS=${NOSTR_RELAYS}
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - sovren-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    # 🔒 Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+      - /var/log:noexec,nosuid,size=50m
+      - /app/.npm:noexec,nosuid,size=50m
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+
+  # Frontend Nginx Service
+  frontend:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: sovren-frontend-prod
+    ports:
+      - '8080:8080'
+    networks:
+      - sovren-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    # 🔒 Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+      - /var/cache/nginx:noexec,nosuid,size=50m
+      - /var/run:noexec,nosuid,size=10m
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+
+  # Redis for production caching
+  redis:
+    image: redis:7-alpine
+    container_name: sovren-redis-prod
+    volumes:
+      - redis_data:/data
+      - ./redis-prod.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - sovren-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    # 🔒 Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+    cap_drop:
+      - ALL
+
+  # Load Balancer
+  nginx-lb:
+    image: nginx:alpine
+    container_name: sovren-loadbalancer
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx-lb.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - certbot_data:/etc/letsencrypt:ro
+    depends_on:
+      - frontend
+    networks:
+      - sovren-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    # 🔒 Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+      - /var/cache/nginx:noexec,nosuid,size=50m
+      - /var/run:noexec,nosuid,size=10m
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+
+  # SSL Certificate Management
+  certbot:
+    image: certbot/certbot
+    container_name: sovren-certbot
+    volumes:
+      - certbot_data:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email ${SSL_EMAIL} --agree-tos --no-eff-email -d ${DOMAIN}
+    networks:
+      - sovren-network
+    # 🔒 Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sovren-prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - sovren-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    # 🔒 Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sovren-grafana
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - sovren-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    # 🔒 Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+      - /var/log/grafana:noexec,nosuid,size=50m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # Log aggregation with Fluentd
+  fluentd:
+    image: fluent/fluentd:latest
+    container_name: sovren-fluentd
+    volumes:
+      - ./fluentd.conf:/fluentd/etc/fluent.conf:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - sovren-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    # 🔒 Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+# Production volumes with backup considerations
+volumes:
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/sovren/redis
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/sovren/prometheus
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/sovren/grafana
+  certbot_data:
+    driver: local
+  certbot_www:
+    driver: local
+
+# Production network with enhanced security
+networks:
+  sovren-network:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/16
+          gateway: 172.21.0.1
+    driver_opts:
+      com.docker.network.bridge.enable_icc: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'true'
+      com.docker.network.driver.mtu: '1450'

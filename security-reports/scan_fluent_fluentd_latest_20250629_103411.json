@@ -1,0 +1,832 @@
+{
+  "SchemaVersion": 2,
+  "CreatedAt": "2025-06-29T10:35:20.663715-04:00",
+  "ArtifactName": "fluent/fluentd:latest",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "Size": 172871680,
+    "OS": {
+      "Family": "debian",
+      "Name": "12.10"
+    },
+    "ImageID": "sha256:f41da78e2f82728f79eb5bf80eb215370d4d3721c0de98e6c3666cc82365397c",
+    "DiffIDs": [
+      "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c",
+      "sha256:ab8a6d337b46e99b8579f6218519c9e5716dc3dfee950f33d849ccecbac0e1a2",
+      "sha256:87a9853e905f47d0264a44a54d5729f09c24c07187825c8c7fa73567881ba183",
+      "sha256:9a2100b6f3b842939732345990008a94ac5be6e4c6fe98970f5e2a5ef7aa774a",
+      "sha256:9756b2a869b70d5f4ffd0e26759ec546fbf82143fc6349f04183094d3033cd26",
+      "sha256:58f2f55c644fc617c6e7ac710c0ab98f5e49ec0fe2606df31e3db58586e04b61",
+      "sha256:7e5fc8db875ce2dca001e8d04000f4e9e05ac434342ca3c67450532c74620ca4",
+      "sha256:be75ac13fcad7ea156a1a6f8d57793443ea845f8b90d5535b8c89dcdb7bf68cc",
+      "sha256:019dbe3e21f713f6a3c9ea7c5818f5643957b15e624e97b7b5469929b395aa1d"
+    ],
+    "RepoTags": [
+      "fluent/fluentd:latest"
+    ],
+    "RepoDigests": [
+      "fluent/fluentd@sha256:f8d26db76ba06ce96e8d402119675071624dab724af49be40fd34641c347c440"
+    ],
+    "ImageConfig": {
+      "architecture": "amd64",
+      "created": "2025-05-20T05:19:41.8741031Z",
+      "history": [
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "# debian.sh --arch 'amd64' out/ 'bookworm' '@1745798400'",
+          "comment": "debuerreotype 0.15"
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "RUN /bin/sh -c set -eux; \tapt-get update; \tapt-get install -y --no-install-recommends \t\tca-certificates \t; \trm -rf /var/lib/apt/lists/* # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "RUN /bin/sh -c set -eux; \tmkdir -p /usr/local/etc; \techo 'gem: --no-document' \u003e\u003e /usr/local/etc/gemrc # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "ENV LANG=C.UTF-8",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "ENV RUBY_VERSION=3.2.8",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "ENV RUBY_DOWNLOAD_URL=https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.8.tar.xz",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "ENV RUBY_DOWNLOAD_SHA256=1cccd3100155275293ae5d4ea0a1a1068f5de69e71732220f144acce26327a3c",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "RUN /bin/sh -c set -eux; \t\tsavedAptMark=\"$(apt-mark showmanual)\"; \tapt-get update; \tapt-get install -y --no-install-recommends \t\tbison \t\tdpkg-dev \t\tlibgdbm-dev \t\truby \t\tautoconf \t\tbzip2 \t\tg++ \t\tgcc \t\tlibbz2-dev \t\tlibffi-dev \t\tlibgdbm-compat-dev \t\tlibglib2.0-dev \t\tlibgmp-dev \t\tlibncurses-dev \t\tlibreadline-dev \t\tlibssl-dev \t\tlibxml2-dev \t\tlibxslt-dev \t\tlibyaml-dev \t\tmake \t\twget \t\txz-utils \t\tzlib1g-dev \t; \t\trustArch=; \tdpkgArch=\"$(dpkg --print-architecture)\"; \tcase \"$dpkgArch\" in \t\t'amd64') rustArch='x86_64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.27.1/x86_64-unknown-linux-gnu/rustup-init'; rustupSha256='6aeece6993e902708983b209d04c0d1dbb14ebb405ddb87def578d41f920f56d' ;; \t\t'arm64') rustArch='aarch64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.27.1/aarch64-unknown-linux-gnu/rustup-init'; rustupSha256='1cffbf51e63e634c746f741de50649bbbcbd9dbe1de363c9ecef64e278dba2b2' ;; \tesac; \t\tif [ -n \"$rustArch\" ]; then \t\tmkdir -p /tmp/rust; \t\t\t\twget -O /tmp/rust/rustup-init \"$rustupUrl\"; \t\techo \"$rustupSha256 */tmp/rust/rustup-init\" | sha256sum --check --strict; \t\tchmod +x /tmp/rust/rustup-init; \t\t\t\texport RUSTUP_HOME='/tmp/rust/rustup' CARGO_HOME='/tmp/rust/cargo'; \t\texport PATH=\"$CARGO_HOME/bin:$PATH\"; \t\t/tmp/rust/rustup-init -y --no-modify-path --profile minimal --default-toolchain '1.84.0' --default-host \"$rustArch\"; \t\t\t\trustc --version; \t\tcargo --version; \tfi; \t\twget -O ruby.tar.xz \"$RUBY_DOWNLOAD_URL\"; \techo \"$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz\" | sha256sum --check --strict; \t\tmkdir -p /usr/src/ruby; \ttar -xJf ruby.tar.xz -C /usr/src/ruby --strip-components=1; \trm ruby.tar.xz; \t\tcd /usr/src/ruby; \t\tautoconf; \tgnuArch=\"$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)\"; \t./configure \t\t--build=\"$gnuArch\" \t\t--disable-install-doc \t\t--enable-shared \t\t${rustArch:+--enable-yjit} \t; \tmake -j \"$(nproc)\"; \tmake install; \t\trm -rf /tmp/rust; \tapt-mark auto '.*' \u003e /dev/null; \tapt-mark manual $savedAptMark \u003e /dev/null; \tfind /usr/local -type f -executable -not \\( -name '*tkinter*' \\) -exec ldd '{}' ';' \t\t| awk '/=\u003e/ { so = $(NF-1); if (index(so, \"/usr/local/\") == 1) { next }; gsub(\"^/(usr/)?\", \"\", so); printf \"*%s\\n\", so }' \t\t| sort -u \t\t| xargs -r dpkg-query --search \t\t| cut -d: -f1 \t\t| sort -u \t\t| xargs -r apt-mark manual \t; \tapt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \trm -rf /var/lib/apt/lists/*; \t\tcd /; \trm -r /usr/src/ruby; \tif dpkg -l | grep -i ruby; then exit 1; fi; \t[ \"$(command -v ruby)\" = '/usr/local/bin/ruby' ]; \truby --version; \tgem --version; \tbundle --version # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "ENV GEM_HOME=/usr/local/bundle",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "ENV BUNDLE_SILENCE_ROOT_WARNING=1 BUNDLE_APP_CONFIG=/usr/local/bundle",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "ENV PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "RUN /bin/sh -c set -eux; \tmkdir \"$GEM_HOME\"; \tchmod 1777 \"$GEM_HOME\" # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-03-26T11:33:53Z",
+          "created_by": "CMD [\"irb\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-20T05:19:41.73959182Z",
+          "created_by": "LABEL maintainer=Fluentd developers \u003cfluentd@googlegroups.com\u003e",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-20T05:19:41.73959182Z",
+          "created_by": "LABEL Description=Fluentd docker image Vendor=Fluent Organization Version=1.18.0",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-20T05:19:41.73959182Z",
+          "created_by": "RUN /bin/sh -c apt-get update  \u0026\u0026 apt-get install -y --no-install-recommends             ca-certificates tini  \u0026\u0026 buildDeps=\"       make gcc g++ libc-dev       wget bzip2 gnupg dirmngr     \"  \u0026\u0026 apt-get install -y --no-install-recommends $buildDeps  \u0026\u0026 echo 'gem: --no-document' \u003e\u003e /etc/gemrc  \u0026\u0026 gem install oj -v 3.16.5  \u0026\u0026 gem install json -v 2.7.4  \u0026\u0026 gem install rexml -v 3.3.9  \u0026\u0026 gem install async -v 1.32.1  \u0026\u0026 gem install async-http -v 0.64.2  \u0026\u0026 gem install fluentd -v 1.18.0  \u0026\u0026 export GEM_DIR=$(ruby -e 'puts Gem.dir')  \u0026\u0026 echo GEM_DIR=$GEM_DIR  \u0026\u0026 rm -rf $GEM_DIR/cache/*.gem  \u0026\u0026 find $GEM_DIR -maxdepth 3 -type d -name test -or -name ext -or -name spec -or -name benchmark | xargs -r rm -rfv  \u0026\u0026 find $GEM_DIR -name \"*.so\" | xargs -r strip  \u0026\u0026 dpkgArch=\"$(dpkg --print-architecture | awk -F- '{ print $NF }')\"  \u0026\u0026 wget -O /tmp/jemalloc-5.3.0.tar.bz2 https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2  \u0026\u0026 cd /tmp \u0026\u0026 tar -xjf jemalloc-5.3.0.tar.bz2 --no-same-owner \u0026\u0026 cd jemalloc-5.3.0/  \u0026\u0026 (echo \"je_cv_madv_free=no\" \u003e config.cache) \u0026\u0026 ./configure -C \u0026\u0026 make  \u0026\u0026 mv lib/libjemalloc.so.2 /usr/lib  \u0026\u0026 apt-get purge -y --auto-remove                   -o APT::AutoRemove::RecommendsImportant=false                   $buildDeps                   '*-dev'  \u0026\u0026 rm -rf /var/lib/apt/lists/*  \u0026\u0026 rm -rf /tmp/* /var/tmp/* # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-05-20T05:19:41.84761711Z",
+          "created_by": "RUN /bin/sh -c groupadd -r fluent \u0026\u0026 useradd -r -g fluent fluent     \u0026\u0026 mkdir -p /fluentd/log     \u0026\u0026 mkdir -p /fluentd/etc /fluentd/plugins     \u0026\u0026 chown -R fluent /fluentd \u0026\u0026 chgrp -R fluent /fluentd # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-05-20T05:19:41.860958948Z",
+          "created_by": "COPY fluent.conf /fluentd/etc/ # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-05-20T05:19:41.8741031Z",
+          "created_by": "COPY entrypoint.sh /bin/ # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-05-20T05:19:41.8741031Z",
+          "created_by": "ENV FLUENTD_CONF=fluent.conf",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-20T05:19:41.8741031Z",
+          "created_by": "ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-20T05:19:41.8741031Z",
+          "created_by": "EXPOSE map[24224/tcp:{} 5140/tcp:{}]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-20T05:19:41.8741031Z",
+          "created_by": "USER fluent",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-20T05:19:41.8741031Z",
+          "created_by": "ENTRYPOINT [\"tini\" \"--\" \"/bin/entrypoint.sh\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-20T05:19:41.8741031Z",
+          "created_by": "CMD [\"fluentd\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        }
+      ],
+      "os": "linux",
+      "rootfs": {
+        "type": "layers",
+        "diff_ids": [
+          "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c",
+          "sha256:ab8a6d337b46e99b8579f6218519c9e5716dc3dfee950f33d849ccecbac0e1a2",
+          "sha256:87a9853e905f47d0264a44a54d5729f09c24c07187825c8c7fa73567881ba183",
+          "sha256:9a2100b6f3b842939732345990008a94ac5be6e4c6fe98970f5e2a5ef7aa774a",
+          "sha256:9756b2a869b70d5f4ffd0e26759ec546fbf82143fc6349f04183094d3033cd26",
+          "sha256:58f2f55c644fc617c6e7ac710c0ab98f5e49ec0fe2606df31e3db58586e04b61",
+          "sha256:7e5fc8db875ce2dca001e8d04000f4e9e05ac434342ca3c67450532c74620ca4",
+          "sha256:be75ac13fcad7ea156a1a6f8d57793443ea845f8b90d5535b8c89dcdb7bf68cc",
+          "sha256:019dbe3e21f713f6a3c9ea7c5818f5643957b15e624e97b7b5469929b395aa1d"
+        ]
+      },
+      "config": {
+        "Cmd": [
+          "fluentd"
+        ],
+        "Entrypoint": [
+          "tini",
+          "--",
+          "/bin/entrypoint.sh"
+        ],
+        "Env": [
+          "PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG=C.UTF-8",
+          "RUBY_VERSION=3.2.8",
+          "RUBY_DOWNLOAD_URL=https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.8.tar.xz",
+          "RUBY_DOWNLOAD_SHA256=1cccd3100155275293ae5d4ea0a1a1068f5de69e71732220f144acce26327a3c",
+          "GEM_HOME=/usr/local/bundle",
+          "BUNDLE_SILENCE_ROOT_WARNING=1",
+          "BUNDLE_APP_CONFIG=/usr/local/bundle",
+          "FLUENTD_CONF=fluent.conf",
+          "LD_PRELOAD=/usr/lib/libjemalloc.so.2"
+        ],
+        "Labels": {
+          "Description": "Fluentd docker image",
+          "Vendor": "Fluent Organization",
+          "Version": "1.18.0",
+          "maintainer": "Fluentd developers \u003cfluentd@googlegroups.com\u003e"
+        },
+        "User": "fluent",
+        "ExposedPorts": {
+          "24224/tcp": {},
+          "5140/tcp": {}
+        },
+        "ArgsEscaped": true
+      }
+    },
+    "Layers": [
+      {
+        "Size": 77895680,
+        "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+        "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+      },
+      {
+        "Size": 9511424,
+        "Digest": "sha256:603c226faf7bed8a12e29eb84f2e18d6944f226b76e7ab699863e165403d0ba4",
+        "DiffID": "sha256:ab8a6d337b46e99b8579f6218519c9e5716dc3dfee950f33d849ccecbac0e1a2"
+      },
+      {
+        "Size": 3584,
+        "Digest": "sha256:36abc0fca086e6999407f981c69938ee8dd1837f0565dca22b2b918cfe12e91d",
+        "DiffID": "sha256:87a9853e905f47d0264a44a54d5729f09c24c07187825c8c7fa73567881ba183"
+      },
+      {
+        "Size": 64841216,
+        "Digest": "sha256:a1e674df25f2be9bfae7f45a1d65025495004459ad5f1f280f9fe71ea5f2c76a",
+        "DiffID": "sha256:9a2100b6f3b842939732345990008a94ac5be6e4c6fe98970f5e2a5ef7aa774a"
+      },
+      {
+        "Size": 2560,
+        "Digest": "sha256:009ae8c310adf866d680dd353fab5c3ce736d43082f5d142ca8c1602f89199a0",
+        "DiffID": "sha256:9756b2a869b70d5f4ffd0e26759ec546fbf82143fc6349f04183094d3033cd26"
+      },
+      {
+        "Size": 20597248,
+        "Digest": "sha256:12fa42da4eb5168b0e014dde68e3e02024d9a5b4ae72fa25b88924374742ee51",
+        "DiffID": "sha256:58f2f55c644fc617c6e7ac710c0ab98f5e49ec0fe2606df31e3db58586e04b61"
+      },
+      {
+        "Size": 12800,
+        "Digest": "sha256:ddd82a7d7ba38acb4eb53a040624bfbc627dec196b1e2d8d4b22ff7cf24afc37",
+        "DiffID": "sha256:7e5fc8db875ce2dca001e8d04000f4e9e05ac434342ca3c67450532c74620ca4"
+      },
+      {
+        "Size": 3584,
+        "Digest": "sha256:cc84acb76a8e37023a096c18e3d9ba34fe337526003987ed96b0af8a813f9593",
+        "DiffID": "sha256:be75ac13fcad7ea156a1a6f8d57793443ea845f8b90d5535b8c89dcdb7bf68cc"
+      },
+      {
+        "Size": 3584,
+        "Digest": "sha256:e9c5df20f24a08b92a040d852709a5313f9725c438ba836f374b0dfddf64ee13",
+        "DiffID": "sha256:019dbe3e21f713f6a3c9ea7c5818f5643957b15e624e97b7b5469929b395aa1d"
+      }
+    ]
+  },
+  "Results": [
+    {
+      "Target": "fluent/fluentd:latest (debian 12.10)",
+      "Class": "os-pkgs",
+      "Type": "debian",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2025-4802",
+          "PkgID": "libc-bin@2.36-9+deb12u10",
+          "PkgName": "libc-bin",
+          "PkgIdentifier": {
+            "PURL": "pkg:deb/debian/libc-bin@2.36-9%2Bdeb12u10?arch=amd64\u0026distro=debian-12.10",
+            "UID": "205f0e4a1d969bcb"
+          },
+          "InstalledVersion": "2.36-9+deb12u10",
+          "Status": "affected",
+          "Layer": {
+            "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+            "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+          },
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-4802",
+          "DataSource": {
+            "ID": "debian",
+            "Name": "Debian Security Tracker",
+            "URL": "https://salsa.debian.org/security-tracker-team/security-tracker"
+          },
+          "Title": "glibc: static setuid binary dlopen may incorrectly search LD_LIBRARY_PATH",
+          "Description": "Untrusted LD_LIBRARY_PATH environment variable vulnerability in the GNU C Library version 2.27 to 2.38 allows attacker controlled loading of dynamically shared library in statically compiled setuid binaries that call dlopen (including internal dlopen calls after setlocale or calls to NSS functions such as getaddrinfo).",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-426"
+          ],
+          "VendorSeverity": {
+            "alma": 2,
+            "amazon": 3,
+            "oracle-oval": 2,
+            "redhat": 2,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "V3Score": 7
+            }
+          },
+          "References": [
+            "http://www.openwall.com/lists/oss-security/2025/05/16/7",
+            "http://www.openwall.com/lists/oss-security/2025/05/17/2",
+            "https://access.redhat.com/errata/RHSA-2025:8655",
+            "https://access.redhat.com/security/cve/CVE-2025-4802",
+            "https://bugzilla.redhat.com/2367468",
+            "https://errata.almalinux.org/9/ALSA-2025-8655.html",
+            "https://linux.oracle.com/cve/CVE-2025-4802.html",
+            "https://linux.oracle.com/errata/ELSA-2025-8686.html",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-4802",
+            "https://sourceware.org/bugzilla/show_bug.cgi?id=32976",
+            "https://sourceware.org/cgit/glibc/commit/?id=1e18586c5820e329f741d5c710275e165581380e",
+            "https://sourceware.org/cgit/glibc/commit/?id=5451fa962cd0a90a0e2ec1d8910a559ace02bba0",
+            "https://ubuntu.com/security/notices/USN-7541-1",
+            "https://www.cve.org/CVERecord?id=CVE-2025-4802",
+            "https://www.openwall.com/lists/oss-security/2025/05/16/7",
+            "https://www.openwall.com/lists/oss-security/2025/05/17/2"
+          ],
+          "PublishedDate": "2025-05-16T20:15:22.28Z",
+          "LastModifiedDate": "2025-06-17T14:09:23.137Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-4802",
+          "PkgID": "libc6@2.36-9+deb12u10",
+          "PkgName": "libc6",
+          "PkgIdentifier": {
+            "PURL": "pkg:deb/debian/libc6@2.36-9%2Bdeb12u10?arch=amd64\u0026distro=debian-12.10",
+            "UID": "a311111c5d474127"
+          },
+          "InstalledVersion": "2.36-9+deb12u10",
+          "Status": "affected",
+          "Layer": {
+            "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+            "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+          },
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-4802",
+          "DataSource": {
+            "ID": "debian",
+            "Name": "Debian Security Tracker",
+            "URL": "https://salsa.debian.org/security-tracker-team/security-tracker"
+          },
+          "Title": "glibc: static setuid binary dlopen may incorrectly search LD_LIBRARY_PATH",
+          "Description": "Untrusted LD_LIBRARY_PATH environment variable vulnerability in the GNU C Library version 2.27 to 2.38 allows attacker controlled loading of dynamically shared library in statically compiled setuid binaries that call dlopen (including internal dlopen calls after setlocale or calls to NSS functions such as getaddrinfo).",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-426"
+          ],
+          "VendorSeverity": {
+            "alma": 2,
+            "amazon": 3,
+            "oracle-oval": 2,
+            "redhat": 2,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "V3Score": 7
+            }
+          },
+          "References": [
+            "http://www.openwall.com/lists/oss-security/2025/05/16/7",
+            "http://www.openwall.com/lists/oss-security/2025/05/17/2",
+            "https://access.redhat.com/errata/RHSA-2025:8655",
+            "https://access.redhat.com/security/cve/CVE-2025-4802",
+            "https://bugzilla.redhat.com/2367468",
+            "https://errata.almalinux.org/9/ALSA-2025-8655.html",
+            "https://linux.oracle.com/cve/CVE-2025-4802.html",
+            "https://linux.oracle.com/errata/ELSA-2025-8686.html",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-4802",
+            "https://sourceware.org/bugzilla/show_bug.cgi?id=32976",
+            "https://sourceware.org/cgit/glibc/commit/?id=1e18586c5820e329f741d5c710275e165581380e",
+            "https://sourceware.org/cgit/glibc/commit/?id=5451fa962cd0a90a0e2ec1d8910a559ace02bba0",
+            "https://ubuntu.com/security/notices/USN-7541-1",
+            "https://www.cve.org/CVERecord?id=CVE-2025-4802",
+            "https://www.openwall.com/lists/oss-security/2025/05/16/7",
+            "https://www.openwall.com/lists/oss-security/2025/05/17/2"
+          ],
+          "PublishedDate": "2025-05-16T20:15:22.28Z",
+          "LastModifiedDate": "2025-06-17T14:09:23.137Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-6020",
+          "PkgID": "libpam-modules@1.5.2-6+deb12u1",
+          "PkgName": "libpam-modules",
+          "PkgIdentifier": {
+            "PURL": "pkg:deb/debian/libpam-modules@1.5.2-6%2Bdeb12u1?arch=amd64\u0026distro=debian-12.10",
+            "UID": "854c4c35b318f724"
+          },
+          "InstalledVersion": "1.5.2-6+deb12u1",
+          "Status": "affected",
+          "Layer": {
+            "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+            "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+          },
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-6020",
+          "DataSource": {
+            "ID": "debian",
+            "Name": "Debian Security Tracker",
+            "URL": "https://salsa.debian.org/security-tracker-team/security-tracker"
+          },
+          "Title": "linux-pam: Linux-pam directory Traversal",
+          "Description": "A flaw was found in linux-pam. The module pam_namespace may use access user-controlled paths without proper protection, allowing local users to elevate their privileges to root via multiple symlink attacks and race conditions.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-22"
+          ],
+          "VendorSeverity": {
+            "oracle-oval": 3,
+            "redhat": 3,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+              "V3Score": 7.8
+            }
+          },
+          "References": [
+            "http://www.openwall.com/lists/oss-security/2025/06/17/1",
+            "https://access.redhat.com/security/cve/CVE-2025-6020",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=2372512",
+            "https://linux.oracle.com/cve/CVE-2025-6020.html",
+            "https://linux.oracle.com/errata/ELSA-2025-9526.html",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-6020",
+            "https://ubuntu.com/security/notices/USN-7580-1",
+            "https://www.cve.org/CVERecord?id=CVE-2025-6020",
+            "https://www.openwall.com/lists/oss-security/2025/06/17/1"
+          ],
+          "PublishedDate": "2025-06-17T13:15:21.66Z",
+          "LastModifiedDate": "2025-06-17T20:50:23.507Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-6020",
+          "PkgID": "libpam-modules-bin@1.5.2-6+deb12u1",
+          "PkgName": "libpam-modules-bin",
+          "PkgIdentifier": {
+            "PURL": "pkg:deb/debian/libpam-modules-bin@1.5.2-6%2Bdeb12u1?arch=amd64\u0026distro=debian-12.10",
+            "UID": "6e01953a38b979ef"
+          },
+          "InstalledVersion": "1.5.2-6+deb12u1",
+          "Status": "affected",
+          "Layer": {
+            "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+            "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+          },
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-6020",
+          "DataSource": {
+            "ID": "debian",
+            "Name": "Debian Security Tracker",
+            "URL": "https://salsa.debian.org/security-tracker-team/security-tracker"
+          },
+          "Title": "linux-pam: Linux-pam directory Traversal",
+          "Description": "A flaw was found in linux-pam. The module pam_namespace may use access user-controlled paths without proper protection, allowing local users to elevate their privileges to root via multiple symlink attacks and race conditions.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-22"
+          ],
+          "VendorSeverity": {
+            "oracle-oval": 3,
+            "redhat": 3,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+              "V3Score": 7.8
+            }
+          },
+          "References": [
+            "http://www.openwall.com/lists/oss-security/2025/06/17/1",
+            "https://access.redhat.com/security/cve/CVE-2025-6020",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=2372512",
+            "https://linux.oracle.com/cve/CVE-2025-6020.html",
+            "https://linux.oracle.com/errata/ELSA-2025-9526.html",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-6020",
+            "https://ubuntu.com/security/notices/USN-7580-1",
+            "https://www.cve.org/CVERecord?id=CVE-2025-6020",
+            "https://www.openwall.com/lists/oss-security/2025/06/17/1"
+          ],
+          "PublishedDate": "2025-06-17T13:15:21.66Z",
+          "LastModifiedDate": "2025-06-17T20:50:23.507Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-6020",
+          "PkgID": "libpam-runtime@1.5.2-6+deb12u1",
+          "PkgName": "libpam-runtime",
+          "PkgIdentifier": {
+            "PURL": "pkg:deb/debian/libpam-runtime@1.5.2-6%2Bdeb12u1?arch=all\u0026distro=debian-12.10",
+            "UID": "a4ba3bc9ed7e203b"
+          },
+          "InstalledVersion": "1.5.2-6+deb12u1",
+          "Status": "affected",
+          "Layer": {
+            "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+            "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+          },
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-6020",
+          "DataSource": {
+            "ID": "debian",
+            "Name": "Debian Security Tracker",
+            "URL": "https://salsa.debian.org/security-tracker-team/security-tracker"
+          },
+          "Title": "linux-pam: Linux-pam directory Traversal",
+          "Description": "A flaw was found in linux-pam. The module pam_namespace may use access user-controlled paths without proper protection, allowing local users to elevate their privileges to root via multiple symlink attacks and race conditions.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-22"
+          ],
+          "VendorSeverity": {
+            "oracle-oval": 3,
+            "redhat": 3,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+              "V3Score": 7.8
+            }
+          },
+          "References": [
+            "http://www.openwall.com/lists/oss-security/2025/06/17/1",
+            "https://access.redhat.com/security/cve/CVE-2025-6020",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=2372512",
+            "https://linux.oracle.com/cve/CVE-2025-6020.html",
+            "https://linux.oracle.com/errata/ELSA-2025-9526.html",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-6020",
+            "https://ubuntu.com/security/notices/USN-7580-1",
+            "https://www.cve.org/CVERecord?id=CVE-2025-6020",
+            "https://www.openwall.com/lists/oss-security/2025/06/17/1"
+          ],
+          "PublishedDate": "2025-06-17T13:15:21.66Z",
+          "LastModifiedDate": "2025-06-17T20:50:23.507Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-6020",
+          "PkgID": "libpam0g@1.5.2-6+deb12u1",
+          "PkgName": "libpam0g",
+          "PkgIdentifier": {
+            "PURL": "pkg:deb/debian/libpam0g@1.5.2-6%2Bdeb12u1?arch=amd64\u0026distro=debian-12.10",
+            "UID": "ceb03f98e63e7ec7"
+          },
+          "InstalledVersion": "1.5.2-6+deb12u1",
+          "Status": "affected",
+          "Layer": {
+            "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+            "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+          },
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-6020",
+          "DataSource": {
+            "ID": "debian",
+            "Name": "Debian Security Tracker",
+            "URL": "https://salsa.debian.org/security-tracker-team/security-tracker"
+          },
+          "Title": "linux-pam: Linux-pam directory Traversal",
+          "Description": "A flaw was found in linux-pam. The module pam_namespace may use access user-controlled paths without proper protection, allowing local users to elevate their privileges to root via multiple symlink attacks and race conditions.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-22"
+          ],
+          "VendorSeverity": {
+            "oracle-oval": 3,
+            "redhat": 3,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+              "V3Score": 7.8
+            }
+          },
+          "References": [
+            "http://www.openwall.com/lists/oss-security/2025/06/17/1",
+            "https://access.redhat.com/security/cve/CVE-2025-6020",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=2372512",
+            "https://linux.oracle.com/cve/CVE-2025-6020.html",
+            "https://linux.oracle.com/errata/ELSA-2025-9526.html",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-6020",
+            "https://ubuntu.com/security/notices/USN-7580-1",
+            "https://www.cve.org/CVERecord?id=CVE-2025-6020",
+            "https://www.openwall.com/lists/oss-security/2025/06/17/1"
+          ],
+          "PublishedDate": "2025-06-17T13:15:21.66Z",
+          "LastModifiedDate": "2025-06-17T20:50:23.507Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2023-31484",
+          "PkgID": "perl-base@5.36.0-7+deb12u2",
+          "PkgName": "perl-base",
+          "PkgIdentifier": {
+            "PURL": "pkg:deb/debian/perl-base@5.36.0-7%2Bdeb12u2?arch=amd64\u0026distro=debian-12.10",
+            "UID": "170e64dcedbd4508"
+          },
+          "InstalledVersion": "5.36.0-7+deb12u2",
+          "Status": "affected",
+          "Layer": {
+            "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+            "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+          },
+          "SeveritySource": "nvd",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2023-31484",
+          "DataSource": {
+            "ID": "debian",
+            "Name": "Debian Security Tracker",
+            "URL": "https://salsa.debian.org/security-tracker-team/security-tracker"
+          },
+          "Title": "perl: CPAN.pm does not verify TLS certificates when downloading distributions over HTTPS",
+          "Description": "CPAN.pm before 2.35 does not verify TLS certificates when downloading distributions over HTTPS.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-295"
+          ],
+          "VendorSeverity": {
+            "alma": 2,
+            "amazon": 3,
+            "cbl-mariner": 3,
+            "nvd": 3,
+            "oracle-oval": 2,
+            "redhat": 2,
+            "rocky": 2,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "V3Score": 8.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+              "V3Score": 7.4
+            }
+          },
+          "References": [
+            "http://www.openwall.com/lists/oss-security/2023/04/29/1",
+            "http://www.openwall.com/lists/oss-security/2023/05/03/3",
+            "http://www.openwall.com/lists/oss-security/2023/05/03/5",
+            "http://www.openwall.com/lists/oss-security/2023/05/07/2",
+            "https://access.redhat.com/errata/RHSA-2023:6539",
+            "https://access.redhat.com/security/cve/CVE-2023-31484",
+            "https://blog.hackeriet.no/perl-http-tiny-insecure-tls-default-affects-cpan-modules/",
+            "https://bugzilla.redhat.com/2218667",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=2218667",
+            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-31484",
+            "https://errata.almalinux.org/9/ALSA-2023-6539.html",
+            "https://errata.rockylinux.org/RLSA-2023:6539",
+            "https://github.com/andk/cpanpm/commit/9c98370287f4e709924aee7c58ef21c85289a7f0 (2.35-TRIAL)",
+            "https://github.com/andk/cpanpm/pull/175",
+            "https://linux.oracle.com/cve/CVE-2023-31484.html",
+            "https://linux.oracle.com/errata/ELSA-2024-3094.html",
+            "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/BM6UW55CNFUTNGD5ZRKGUKKKFDJGMFHL/",
+            "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/LEGCEOKFJVBJ2QQ6S2H4NAEWTUERC7SB/",
+            "https://metacpan.org/dist/CPAN/changes",
+            "https://nvd.nist.gov/vuln/detail/CVE-2023-31484",
+            "https://security.netapp.com/advisory/ntap-20240621-0007/",
+            "https://ubuntu.com/security/notices/USN-6112-1",
+            "https://ubuntu.com/security/notices/USN-6112-2",
+            "https://www.cve.org/CVERecord?id=CVE-2023-31484",
+            "https://www.openwall.com/lists/oss-security/2023/04/18/14"
+          ],
+          "PublishedDate": "2023-04-29T00:15:09Z",
+          "LastModifiedDate": "2024-11-21T08:01:57.707Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2023-45853",
+          "PkgID": "zlib1g@1:1.2.13.dfsg-1",
+          "PkgName": "zlib1g",
+          "PkgIdentifier": {
+            "PURL": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64\u0026distro=debian-12.10\u0026epoch=1",
+            "UID": "a68dc3e936e6a0f7"
+          },
+          "InstalledVersion": "1:1.2.13.dfsg-1",
+          "Status": "will_not_fix",
+          "Layer": {
+            "Digest": "sha256:254e724d77862dc53abbd3bf0e27f9d2f64293909cdd3d0aad6a8fe5a6680659",
+            "DiffID": "sha256:6c4c763d22d0c5f9b2c5901dfa667fbbc4713cee6869336b8fd5022185071f1c"
+          },
+          "SeveritySource": "nvd",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2023-45853",
+          "DataSource": {
+            "ID": "debian",
+            "Name": "Debian Security Tracker",
+            "URL": "https://salsa.debian.org/security-tracker-team/security-tracker"
+          },
+          "Title": "zlib: integer overflow and resultant heap-based buffer overflow in zipOpenNewFileInZip4_6",
+          "Description": "MiniZip in zlib through 1.3 has an integer overflow and resultant heap-based buffer overflow in zipOpenNewFileInZip4_64 via a long filename, comment, or extra field. NOTE: MiniZip is not a supported part of the zlib product. NOTE: pyminizip through 0.2.6 is also vulnerable because it bundles an affected zlib version, and exposes the applicable MiniZip code through its compress API.",
+          "Severity": "CRITICAL",
+          "CweIDs": [
+            "CWE-190"
+          ],
+          "VendorSeverity": {
+            "amazon": 2,
+            "azure": 3,
+            "cbl-mariner": 4,
+            "ghsa": 4,
+            "nvd": 4,
+            "photon": 4,
+            "redhat": 2,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "V3Score": 9.8
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "V3Score": 9.8
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
+              "V3Score": 5.3
+            }
+          },
+          "References": [
+            "http://www.openwall.com/lists/oss-security/2023/10/20/9",
+            "http://www.openwall.com/lists/oss-security/2024/01/24/10",
+            "https://access.redhat.com/security/cve/CVE-2023-45853",
+            "https://chromium.googlesource.com/chromium/src/+/d709fb23806858847131027da95ef4c548813356",
+            "https://chromium.googlesource.com/chromium/src/+/de29dd6c7151d3cd37cb4cf0036800ddfb1d8b61",
+            "https://github.com/madler/zlib/blob/ac8f12c97d1afd9bafa9c710f827d40a407d3266/contrib/README.contrib#L1-L4",
+            "https://github.com/madler/zlib/commit/73331a6a0481067628f065ffe87bb1d8f787d10c",
+            "https://github.com/madler/zlib/pull/843",
+            "https://github.com/smihica/pyminizip",
+            "https://github.com/smihica/pyminizip/blob/master/zlib-1.2.11/contrib/minizip/zip.c",
+            "https://lists.debian.org/debian-lts-announce/2023/11/msg00026.html",
+            "https://nvd.nist.gov/vuln/detail/CVE-2023-45853",
+            "https://pypi.org/project/pyminizip/#history",
+            "https://security.gentoo.org/glsa/202401-18",
+            "https://security.netapp.com/advisory/ntap-20231130-0009",
+            "https://security.netapp.com/advisory/ntap-20231130-0009/",
+            "https://ubuntu.com/security/notices/USN-7107-1",
+            "https://www.cve.org/CVERecord?id=CVE-2023-45853",
+            "https://www.winimage.com/zLibDll/minizip.html"
+          ],
+          "PublishedDate": "2023-10-14T02:15:09.323Z",
+          "LastModifiedDate": "2024-12-20T17:41:31.237Z"
+        }
+      ]
+    },
+    {
+      "Target": "Ruby",
+      "Class": "lang-pkgs",
+      "Type": "gemspec",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2025-43857",
+          "PkgName": "net-imap",
+          "PkgPath": "usr/local/lib/ruby/gems/3.2.0/specifications/net-imap-0.3.8.gemspec",
+          "PkgIdentifier": {
+            "PURL": "pkg:gem/net-imap@0.3.8",
+            "UID": "df9f38eb7208d00e"
+          },
+          "InstalledVersion": "0.3.8",
+          "FixedVersion": "~\u003e 0.2.5, ~\u003e 0.3.9, ~\u003e 0.4.20, \u003e= 0.5.7",
+          "Status": "fixed",
+          "Layer": {
+            "Digest": "sha256:a1e674df25f2be9bfae7f45a1d65025495004459ad5f1f280f9fe71ea5f2c76a",
+            "DiffID": "sha256:9a2100b6f3b842939732345990008a94ac5be6e4c6fe98970f5e2a5ef7aa774a"
+          },
+          "SeveritySource": "nvd",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-43857",
+          "DataSource": {
+            "ID": "ruby-advisory-db",
+            "Name": "Ruby Advisory Database",
+            "URL": "https://github.com/rubysec/ruby-advisory-db"
+          },
+          "Title": "net-imap: net-imap rubygem vulnerable to possible DoS by memory exhaustion",
+          "Description": "Net::IMAP implements Internet Message Access Protocol (IMAP) client functionality in Ruby. Prior to versions 0.5.7, 0.4.20, 0.3.9, and 0.2.5, there is a possibility for denial of service by memory exhaustion when net-imap reads server responses. At any time while the client is connected, a malicious server can send can send a \"literal\" byte count, which is automatically read by the client's receiver thread. The response reader immediately allocates memory for the number of bytes indicated by the server response. This should not be an issue when securely connecting to trusted IMAP servers that are well-behaved. It can affect insecure connections and buggy, untrusted, or compromised servers (for example, connecting to a user supplied hostname). This issue has been patched in versions 0.5.7, 0.4.20, 0.3.9, and 0.2.5.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-400",
+            "CWE-405",
+            "CWE-770",
+            "CWE-789"
+          ],
+          "VendorSeverity": {
+            "ghsa": 2,
+            "nvd": 3,
+            "redhat": 2
+          },
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H",
+              "V3Score": 6.5
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2025-43857",
+            "https://github.com/advisories/GHSA-j3g3-5qv5-52mj",
+            "https://github.com/ruby/net-imap",
+            "https://github.com/ruby/net-imap/pull/442",
+            "https://github.com/ruby/net-imap/pull/444",
+            "https://github.com/ruby/net-imap/pull/444/commits/0ae8576c1a90bcd9573f81bdad4b4b824642d105#diff-53721cb4d9c3fb86b95cc8476ca2df90968ad8c481645220c607034399151462",
+            "https://github.com/ruby/net-imap/pull/445",
+            "https://github.com/ruby/net-imap/pull/446",
+            "https://github.com/ruby/net-imap/pull/447",
+            "https://github.com/ruby/net-imap/security/advisories/GHSA-j3g3-5qv5-52mj",
+            "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/net-imap/CVE-2025-43857.yml",
+            "https://hackerone.com/reports/3108869",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-43857",
+            "https://www.cve.org/CVERecord?id=CVE-2025-43857",
+            "https://www.ruby-lang.org/en/news/2025/04/28/dos-net-imap-cve-2025-43857"
+          ],
+          "PublishedDate": "2025-04-28T16:15:33.44Z",
+          "LastModifiedDate": "2025-05-12T19:36:55.893Z"
+        }
+      ]
+    }
+  ]
+}

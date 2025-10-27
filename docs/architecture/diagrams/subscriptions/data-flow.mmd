@@ -1,0 +1,80 @@
+%% Data Flow Diagram
+%% Story: PAY-005 - Build Subscription Management UI Components
+%% Describes how data flows through the subscription system
+
+sequenceDiagram
+    participant User
+    participant UI as SubscriptionCard/Manager
+    participant Hook as useUserSubscriptionService
+    participant Service as API Service
+    participant API as Backend API
+    participant DB as Database
+
+    %% Initial Load
+    User->>UI: View Subscriptions
+    UI->>Hook: refreshSubscriptions()
+    Hook->>Service: getSubscriptions()
+    Service->>API: GET /api/user/subscriptions
+    API->>DB: Query subscriptions
+    DB-->>API: Subscription data
+    API-->>Service: JSON response
+    Service-->>Hook: Validated data
+    Hook-->>UI: subscriptions state
+    UI-->>User: Display subscriptions
+
+    %% Toggle Auto-Renewal
+    User->>UI: Toggle Auto-Renew
+    UI->>Hook: toggleAutoRenew(id, true)
+    Hook->>Service: toggleAutoRenew(id, true)
+    Service->>API: PATCH /api/user/subscriptions/:id/auto-renew
+    API->>DB: Update auto_renew
+    DB-->>API: Confirmation
+    API-->>Service: Success response
+    Service->>Hook: Trigger refresh
+    Hook->>Service: getSubscriptions()
+    Service->>API: GET /api/user/subscriptions
+    API->>DB: Query updated data
+    DB-->>API: Updated subscriptions
+    API-->>Service: JSON response
+    Service-->>Hook: Updated data
+    Hook-->>UI: Updated state
+    UI-->>User: Show updated status
+
+    %% Cancel Subscription
+    User->>UI: Cancel Subscription
+    UI->>Hook: cancelSubscription(id)
+    Hook->>Service: cancelSubscription(id)
+    Service->>API: POST /api/user/subscriptions/:id/cancel
+    API->>DB: Update status to 'cancelled'
+    API->>DB: Create history entry
+    DB-->>API: Confirmation
+    API-->>Service: Success response
+    Service->>Hook: Trigger refresh
+    Hook->>Service: getSubscriptions()
+    Service-->>Hook: Updated data
+    Hook-->>UI: Updated state
+    UI-->>User: Show cancellation confirmation
+
+    %% Payment Method Management
+    User->>UI: Add Payment Method
+    UI->>Hook: addPaymentMethod()
+    Hook->>Service: addPaymentMethod(data)
+    Service->>API: POST /api/user/payment-methods
+    API->>DB: Insert payment method
+    DB-->>API: New payment method
+    API-->>Service: Created response
+    Service-->>Hook: New method data
+    Hook->>Service: getPaymentMethods()
+    Service-->>Hook: All payment methods
+    Hook-->>UI: Updated payment methods
+    UI-->>User: Show new payment method
+
+    %% Error Handling
+    User->>UI: Perform Action
+    UI->>Hook: action()
+    Hook->>Service: apiCall()
+    Service->>API: HTTP Request
+    API-->>Service: Error Response
+    Service-->>Hook: Error
+    Hook-->>UI: error state
+    UI-->>User: Display error message

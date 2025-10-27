@@ -1,0 +1,107 @@
+graph TB
+    subgraph "Client Layer"
+        CLIENT[Client Application]
+    end
+
+    subgraph "API Gateway Layer"
+        GATEWAY[Express App Gateway]
+        MIDDLEWARE[Middleware Stack]
+        GATEWAY --> MIDDLEWARE
+    end
+
+    subgraph "Middleware Components"
+        AUTH[Authentication Middleware]
+        VALIDATION[Validation Middleware]
+        RATELIMIT[Rate Limiting Middleware]
+        ERRORHANDLER[Error Handler Middleware]
+        LOGGING[Logging Middleware]
+
+        MIDDLEWARE --> AUTH
+        MIDDLEWARE --> VALIDATION
+        MIDDLEWARE --> RATELIMIT
+        MIDDLEWARE --> ERRORHANDLER
+        MIDDLEWARE --> LOGGING
+    end
+
+    subgraph "Route Layer"
+        CONTENT_ROUTES[Content Routes]
+        USER_ROUTES[User Routes]
+        PAYMENT_ROUTES[Payment Routes]
+
+        AUTH --> CONTENT_ROUTES
+        AUTH --> USER_ROUTES
+        AUTH --> PAYMENT_ROUTES
+    end
+
+    subgraph "Controller Layer"
+        CONTENT_CTRL[Content Controllers]
+        USER_CTRL[User Controllers]
+        PAYMENT_CTRL[Payment Controllers]
+
+        CONTENT_ROUTES --> CONTENT_CTRL
+        USER_ROUTES --> USER_CTRL
+        PAYMENT_ROUTES --> PAYMENT_CTRL
+    end
+
+    subgraph "Service Layer - Phase 1-5 Complete"
+        CONTENT_SVC[Content Services<br/>7 Services]
+        USER_SVC[User Services<br/>6 Services]
+        PAYMENT_SVC[Payment Services<br/>8 Services]
+        ANALYTICS_SVC[Analytics Services<br/>3 Services]
+        NOTIFICATION_SVC[Notification Services<br/>3 Services]
+        CACHE_SVC[Cache Services<br/>2 Services]
+
+        CONTENT_CTRL --> CONTENT_SVC
+        USER_CTRL --> USER_SVC
+        PAYMENT_CTRL --> PAYMENT_SVC
+
+        CONTENT_CTRL --> ANALYTICS_SVC
+        USER_CTRL --> ANALYTICS_SVC
+        PAYMENT_CTRL --> ANALYTICS_SVC
+
+        CONTENT_SVC --> NOTIFICATION_SVC
+        USER_SVC --> NOTIFICATION_SVC
+        PAYMENT_SVC --> NOTIFICATION_SVC
+
+        CONTENT_SVC --> CACHE_SVC
+        USER_SVC --> CACHE_SVC
+        PAYMENT_SVC --> CACHE_SVC
+    end
+
+    subgraph "DI Container - US-E5-032"
+        CONTAINER[Inversify Container<br/>29 Services Registered]
+        CONTENT_SVC -.-> CONTAINER
+        USER_SVC -.-> CONTAINER
+        PAYMENT_SVC -.-> CONTAINER
+        ANALYTICS_SVC -.-> CONTAINER
+        NOTIFICATION_SVC -.-> CONTAINER
+        CACHE_SVC -.-> CONTAINER
+    end
+
+    subgraph "Repository Layer"
+        REPOSITORIES[Data Repositories]
+        CONTENT_SVC --> REPOSITORIES
+        USER_SVC --> REPOSITORIES
+        PAYMENT_SVC --> REPOSITORIES
+    end
+
+    subgraph "Data Layer"
+        POSTGRESQL[(PostgreSQL)]
+        REDIS[(Redis Cache)]
+
+        REPOSITORIES --> POSTGRESQL
+        CACHE_SVC --> REDIS
+    end
+
+    CLIENT --> GATEWAY
+
+    style GATEWAY fill:#4CAF50
+    style CONTAINER fill:#2196F3
+    style CONTENT_SVC fill:#FF9800
+    style USER_SVC fill:#FF9800
+    style PAYMENT_SVC fill:#FF9800
+    style ANALYTICS_SVC fill:#9C27B0
+    style NOTIFICATION_SVC fill:#9C27B0
+    style CACHE_SVC fill:#9C27B0
+    style POSTGRESQL fill:#336791
+    style REDIS fill:#DC382D

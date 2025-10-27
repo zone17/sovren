@@ -1,0 +1,399 @@
+version: '3.8'
+
+services:
+  # Frontend service with read-only filesystem
+  frontend:
+    build:
+      context: ../../packages/frontend
+      dockerfile: ../../docker/security/Dockerfile.secure-base
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
+        VERSION: ${VERSION:-latest}
+    container_name: sovren-frontend-secure
+    hostname: sovren-frontend
+    user: '1001:1001'
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+      - apparmor:docker-default
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+      - /var/tmp:noexec,nosuid,size=50m
+      - /var/cache:noexec,nosuid,size=50m
+    volumes:
+      - frontend_logs:/var/log/app:rw
+      - frontend_cache:/var/cache/app:rw
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REACT_APP_API_URL=https://api.sovren.app
+    networks:
+      - sovren-secure
+    ports:
+      - '3000:3000'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+          pids: 100
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+        labels: 'service=frontend,environment=production'
+
+  # Backend service with read-only filesystem
+  backend:
+    build:
+      context: ../../packages/backend
+      dockerfile: ../../docker/security/Dockerfile.secure-base
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
+        VERSION: ${VERSION:-latest}
+    container_name: sovren-backend-secure
+    hostname: sovren-backend
+    user: '1001:1001'
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+      - apparmor:docker-default
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+      - /var/tmp:noexec,nosuid,size=50m
+      - /var/cache:noexec,nosuid,size=50m
+    volumes:
+      - backend_logs:/var/log/app:rw
+      - backend_cache:/var/cache/app:rw
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - sovren-secure
+    ports:
+      - '3001:3001'
+    depends_on:
+      - postgres
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+          pids: 200
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+        labels: 'service=backend,environment=production'
+
+  # PostgreSQL with security hardening
+  postgres:
+    image: postgres:15-alpine
+    container_name: sovren-postgres-secure
+    hostname: sovren-postgres
+    user: '999:999'
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+      - apparmor:docker-default
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+      - /var/tmp:noexec,nosuid,size=50m
+      - /run:noexec,nosuid,size=50m
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:rw
+      - postgres_logs:/var/log/postgresql:rw
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-sovren}
+      - POSTGRES_USER=${POSTGRES_USER:-sovren}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    networks:
+      - sovren-secure
+    ports:
+      - '5432:5432'
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c hba_file=/etc/postgresql/pg_hba.conf
+      -c log_destination=stderr
+      -c log_statement=all
+      -c log_min_duration_statement=1000
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+          pids: 100
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-sovren} -d ${POSTGRES_DB:-sovren}']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+        labels: 'service=postgres,environment=production'
+
+  # Redis with security hardening
+  redis:
+    image: redis:7-alpine
+    container_name: sovren-redis-secure
+    hostname: sovren-redis
+    user: '999:999'
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+      - apparmor:docker-default
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+      - /var/tmp:noexec,nosuid,size=50m
+    volumes:
+      - redis_data:/data:rw
+      - redis_logs:/var/log/redis:rw
+      - ./redis.conf:/etc/redis/redis.conf:ro
+    networks:
+      - sovren-secure
+    ports:
+      - '6379:6379'
+    command: >
+      redis-server /etc/redis/redis.conf
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --appendonly yes
+      --appendfsync everysec
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+          pids: 50
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+        labels: 'service=redis,environment=production'
+
+  # Nginx reverse proxy with security hardening
+  nginx:
+    image: nginx:1.24-alpine
+    container_name: sovren-nginx-secure
+    hostname: sovren-nginx
+    user: '101:101'
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:default
+      - apparmor:docker-default
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+      - /var/tmp:noexec,nosuid,size=50m
+      - /var/cache/nginx:noexec,nosuid,size=100m
+      - /var/run:noexec,nosuid,size=50m
+    volumes:
+      - nginx_logs:/var/log/nginx:rw
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - sovren-secure
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - frontend
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+          pids: 50
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:80/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+        labels: 'service=nginx,environment=production'
+
+# Networks
+networks:
+  sovren-secure:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'true'
+      com.docker.network.bridge.host_binding_ipv4: '127.0.0.1'
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    labels:
+      - 'com.sovren.network=secure'
+      - 'com.sovren.environment=production'
+
+# Volumes
+volumes:
+  frontend_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/sovren/frontend
+  frontend_cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/cache/sovren/frontend
+  backend_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/sovren/backend
+  backend_cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/cache/sovren/backend
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/sovren/postgres
+  postgres_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/sovren/postgres
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/sovren/redis
+  redis_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/sovren/redis
+  nginx_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/sovren/nginx
+
+# Secrets (for Docker Swarm)
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  redis_password:
+    file: ./secrets/redis_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt

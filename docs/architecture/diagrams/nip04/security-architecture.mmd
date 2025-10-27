@@ -1,0 +1,69 @@
+```mermaid
+graph TB
+    subgraph "NIP-04 Security Architecture"
+        subgraph "Client Layer"
+            UI[User Interface]
+            NIP04[NIP04Service]
+            KeyMgmt[KeyManagementService]
+        end
+
+        subgraph "Encryption Layer"
+            ECDH[ECDH Key Exchange<br/>secp256k1]
+            AES[AES-256-CBC<br/>Encryption]
+            IV[IV Generator<br/>Crypto.getRandomValues]
+            Base64[Base64 Encoder]
+        end
+
+        subgraph "Security Controls"
+            SessionKey[Session Key Rotation<br/>100 msg threshold]
+            RateLimit[Rate Limiting<br/>10/min 200/hr]
+            PoW[Proof of Work<br/>16-bit difficulty]
+            BlockList[Block/Allow Lists]
+        end
+
+        subgraph "Storage Layer"
+            ThreadCache[Thread Cache<br/>Memory]
+            MessageCache[Message Cache<br/>Decrypted Content]
+            ReadReceipts[Read Receipt Store]
+        end
+
+        subgraph "Security Features"
+            NoReplay[Anti-Replay<br/>Message IDs]
+            NoTiming[Timing Attack Prevention<br/>Constant Time]
+            SecureRandom[CSPRNG<br/>IV Generation]
+            InputValid[Input Validation<br/>All Inputs]
+        end
+
+        UI --> NIP04
+        NIP04 --> KeyMgmt
+        NIP04 --> ECDH
+        ECDH --> AES
+        AES --> IV
+        AES --> Base64
+
+        NIP04 --> SessionKey
+        NIP04 --> RateLimit
+        NIP04 --> PoW
+        NIP04 --> BlockList
+
+        NIP04 --> ThreadCache
+        NIP04 --> MessageCache
+        NIP04 --> ReadReceipts
+
+        NIP04 --> NoReplay
+        NIP04 --> NoTiming
+        IV --> SecureRandom
+        NIP04 --> InputValid
+    end
+
+    style ECDH fill:#e1f5ff
+    style AES fill:#e1f5ff
+    style SessionKey fill:#fff3e0
+    style RateLimit fill:#fff3e0
+    style PoW fill:#fff3e0
+    style BlockList fill:#fff3e0
+    style NoReplay fill:#f3e5f5
+    style NoTiming fill:#f3e5f5
+    style SecureRandom fill:#f3e5f5
+    style InputValid fill:#f3e5f5
+```

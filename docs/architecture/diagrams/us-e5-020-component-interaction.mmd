@@ -1,0 +1,40 @@
+sequenceDiagram
+    actor User
+    participant API as API Endpoint
+    participant Service as UserPreferencesService
+    participant Cache as CacheService
+    participant Repo as Repository
+    participant EventBus as EventBus
+    participant DB as Database
+
+    User->>API: Update Display Theme
+    API->>Service: updateDisplayPreferences(userId, {theme: 'dark'})
+
+    Service->>Service: validateUserId()
+    Service->>Cache: get(cacheKey)
+    Cache-->>Service: null (cache miss)
+
+    Service->>Repo: findById(userId)
+    Repo->>DB: SELECT preferences
+    DB-->>Repo: preferences data
+    Repo-->>Service: UserPreferences
+
+    Service->>Service: validatePreferences()
+    Service->>Service: detectChanges()
+
+    Service->>Repo: update(userId, updates)
+    Repo->>DB: UPDATE preferences
+    DB-->>Repo: updated data
+    Repo-->>Service: UpdatedPreferences
+
+    Service->>Cache: delete(cacheKey)
+    Cache-->>Service: invalidated
+
+    Service->>Repo: addHistoryEntry()
+    Repo->>DB: INSERT history
+
+    Service->>EventBus: publish(preference_updated)
+    EventBus-->>Service: event published
+
+    Service-->>API: UpdatedPreferences
+    API-->>User: Success Response

@@ -1,0 +1,69 @@
+graph TD
+    A[Error Occurs] --> B{Error Source?}
+
+    B -->|Connection| C[Connection Error]
+    B -->|Publishing| D[Publish Error]
+    B -->|Subscription| E[Subscription Error]
+    B -->|Unknown| F[Generic Error]
+
+    C --> G{Error Type}
+    G -->|Timeout| H[Connection Timeout]
+    G -->|Refused| I[Connection Refused]
+    G -->|Disconnected| J[Relay Disconnected]
+    G -->|Network| K[Network Error]
+
+    D --> L{Error Type}
+    L -->|Validation| M[Event Validation Failed]
+    L -->|Rate Limit| N[Rate Limit Exceeded]
+    L -->|Relay Rejected| O[Relay Rejected Event]
+    L -->|Timeout| P[Publish Timeout]
+
+    E --> Q{Error Type}
+    Q -->|Filter Invalid| R[Filter Validation Error]
+    Q -->|Timeout| S[Subscription Timeout]
+    Q -->|No Relays| T[No Active Relays]
+    Q -->|EOSE Failed| U[EOSE Not Received]
+
+    H --> V{Severity Classification}
+    I --> V
+    J --> V
+    K --> V
+    M --> V
+    N --> V
+    O --> V
+    P --> V
+    R --> V
+    S --> V
+    T --> V
+    U --> V
+    F --> V
+
+    V -->|Low Impact| W[INFO Toast]
+    V -->|Medium Impact| X[WARNING Toast]
+    V -->|High Impact| Y[ERROR Toast]
+    V -->|Critical Impact| Z[CRITICAL Toast + Alert]
+
+    W --> AA[Auto-dismiss 3s]
+    X --> AB[Auto-dismiss 5s]
+    Y --> AC[Auto-dismiss 7s + Retry]
+    Z --> AD[Manual Dismiss + Retry]
+
+    subgraph "Error Metadata"
+        AE[Error Code]
+        AF[Error Message]
+        AG[Troubleshooting Hints]
+        AH[Retry Strategy]
+        AI[Affected Resources]
+    end
+
+    V --> AE
+    V --> AF
+    V --> AG
+    V --> AH
+    V --> AI
+
+    style V fill:#ff6b6b
+    style W fill:#6bcf7f
+    style X fill:#ffd93d
+    style Y fill:#ff9f43
+    style Z fill:#d63031

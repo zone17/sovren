@@ -1,0 +1,84 @@
+%% User Actions and Workflows
+%% Story: PAY-005 - Build Subscription Management UI Components
+%% Describes key user workflows in subscription management
+
+graph TD
+    Start([User Opens<br/>Subscription Manager])
+
+    %% Main Navigation
+    Start --> ViewMode{View Mode}
+    ViewMode -->|Creator| CreatorFlow[Creator Dashboard]
+    ViewMode -->|User/Supporter| UserFlow[User Dashboard]
+
+    %% Creator Flow
+    CreatorFlow --> CreatorTabs{Select Tab}
+    CreatorTabs -->|Tiers| ManageTiers[View Subscription Tiers]
+    CreatorTabs -->|Subscribers| ViewSubscribers[View Subscribers List]
+
+    ManageTiers --> CreateTier{Action}
+    CreateTier -->|Create New| OpenDialog[Open Tier Dialog]
+    CreateTier -->|Edit Existing| OpenDialog
+    CreateTier -->|Toggle Active| UpdateTier[Update Tier Status]
+    CreateTier -->|Delete| ConfirmDelete{Confirm?}
+
+    OpenDialog --> FillForm[Fill Tier Details:<br/>Name, Price, Features,<br/>Billing Period]
+    FillForm --> SaveTier[Save Tier]
+    SaveTier --> RefreshTiers[Refresh Tier List]
+
+    ConfirmDelete -->|Yes| DeleteTier[Delete Tier]
+    ConfirmDelete -->|No| ManageTiers
+    DeleteTier --> RefreshTiers
+
+    ViewSubscribers --> SubscriberAction{Action}
+    SubscriberAction -->|View Details| ShowDetails[Show Subscriber Details]
+    SubscriberAction -->|Pause| PauseSub[Update Status to Paused]
+    SubscriberAction -->|Activate| ActivateSub[Update Status to Active]
+
+    %% User Flow
+    UserFlow --> UserTabs{Select Tab}
+    UserTabs -->|Active| ActiveSubs[View Active Subscriptions]
+    UserTabs -->|Renewal| RenewalSettings[Manage Renewal Settings]
+    UserTabs -->|Payment| PaymentMethods[Manage Payment Methods]
+    UserTabs -->|History| ViewHistory[View Subscription History]
+
+    ActiveSubs --> SubAction{Action}
+    SubAction -->|View| ViewSubDetails[View Subscription Details]
+    SubAction -->|Pause| PauseSubscription[Pause Subscription]
+    SubAction -->|Resume| ResumeSubscription[Resume Subscription]
+    SubAction -->|Cancel| CancelConfirm{Confirm Cancel?}
+    SubAction -->|Toggle Auto-Renew| ToggleAuto[Update Auto-Renewal Setting]
+
+    CancelConfirm -->|Yes| CancelSub[Cancel Subscription]
+    CancelConfirm -->|No| ActiveSubs
+    CancelSub --> RefreshSubs[Refresh Subscription List]
+
+    PauseSubscription --> RefreshSubs
+    ResumeSubscription --> RefreshSubs
+    ToggleAuto --> RefreshSubs
+
+    RenewalSettings --> ConfigRenewal[Configure:<br/>Auto-renewal,<br/>Notifications,<br/>Failure Handling]
+    ConfigRenewal --> SaveSettings[Save Settings]
+    SaveSettings --> RefreshSubs
+
+    PaymentMethods --> PaymentAction{Action}
+    PaymentAction -->|Add New| AddMethod[Add Payment Method:<br/>Lightning/Bitcoin/NOSTR]
+    PaymentAction -->|Edit| EditMethod[Update Method Details]
+    PaymentAction -->|Delete| DeleteMethod[Remove Payment Method]
+    PaymentAction -->|Set Default| SetDefault[Set as Default Method]
+
+    AddMethod --> RefreshMethods[Refresh Payment Methods]
+    EditMethod --> RefreshMethods
+    DeleteMethod --> RefreshMethods
+    SetDefault --> RefreshMethods
+
+    ViewHistory --> ExportHistory{Export?}
+    ExportHistory -->|Yes| DownloadCSV[Download CSV File]
+    ExportHistory -->|No| ViewHistory
+
+    %% Styling
+    style Start fill:#e3f2fd
+    style CreatorFlow fill:#fff3e0
+    style UserFlow fill:#f3e5f5
+    style RefreshTiers fill:#c8e6c9
+    style RefreshSubs fill:#c8e6c9
+    style RefreshMethods fill:#c8e6c9

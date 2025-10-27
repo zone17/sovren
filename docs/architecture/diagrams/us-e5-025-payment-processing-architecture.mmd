@@ -1,0 +1,59 @@
+graph TB
+    subgraph "Client Layer"
+        Client[API Client]
+    end
+
+    subgraph "PaymentProcessingService"
+        PPS[PaymentProcessingService]
+        StateMachine[Payment State Machine]
+        Repository[Payment Repository]
+
+        PPS --> StateMachine
+        PPS --> Repository
+    end
+
+    subgraph "Dependencies"
+        EventBus[Event Bus]
+        Logger[Logger Service]
+        Cache[Cache Service]
+        Currency[Currency Service]
+        Audit[Audit Log Service]
+    end
+
+    subgraph "Data Storage"
+        InvoiceStore[(Invoice Storage)]
+        TransactionStore[(Transaction Storage)]
+        RefundStore[(Refund Storage)]
+        IdempotencyStore[(Idempotency Storage)]
+    end
+
+    subgraph "External Systems"
+        LightningNode[Lightning Node<br/>LND/Core Lightning]
+        BitcoinNetwork[Bitcoin Network]
+    end
+
+    Client -->|createInvoice| PPS
+    Client -->|processPayment| PPS
+    Client -->|initiateRefund| PPS
+
+    PPS -->|emit events| EventBus
+    PPS -->|log operations| Logger
+    PPS -->|cache invoices| Cache
+    PPS -->|convert amounts| Currency
+    PPS -->|audit trail| Audit
+
+    Repository --> InvoiceStore
+    Repository --> TransactionStore
+    Repository --> RefundStore
+    Repository --> IdempotencyStore
+
+    PPS -.->|generate invoice| LightningNode
+    PPS -.->|verify payment| LightningNode
+    LightningNode -.-> BitcoinNetwork
+
+    EventBus -->|notify| WebhookSubscribers[Webhook Subscribers]
+
+    style PPS fill:#4a9eff,stroke:#2171d9,stroke-width:3px
+    style StateMachine fill:#ff9f40,stroke:#ff7700,stroke-width:2px
+    style EventBus fill:#6bff6b,stroke:#00cc00,stroke-width:2px
+    style LightningNode fill:#ffd700,stroke:#ffaa00,stroke-width:2px

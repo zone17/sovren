@@ -1,8 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { Button, Layout } from '../components';
 import { useAppSelector } from '../store';
-import Layout from '../components/Layout';
-import Button from '../components/Button';
 
 const Post: React.FC = () => {
   const { id } = useParams<{ id: string }>();

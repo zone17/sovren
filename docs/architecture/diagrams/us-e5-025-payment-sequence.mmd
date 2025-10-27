@@ -1,0 +1,60 @@
+sequenceDiagram
+    participant Client
+    participant PaymentService
+    participant StateMachine
+    participant Repository
+    participant Cache
+    participant EventBus
+    participant LightningNode
+
+    %% Invoice Creation Flow
+    rect rgb(240, 248, 255)
+        Note over Client,LightningNode: Invoice Creation Flow
+        Client->>+PaymentService: createInvoice(params)
+        PaymentService->>PaymentService: validateAmount()
+        PaymentService->>PaymentService: checkIdempotency()
+        PaymentService->>PaymentService: generatePaymentHash()
+        PaymentService->>LightningNode: generateBolt11Invoice()
+        LightningNode-->>PaymentService: BOLT11 invoice
+        PaymentService->>Repository: saveInvoice(invoice)
+        PaymentService->>Cache: cacheInvoice(invoice)
+        PaymentService->>EventBus: emit(INVOICE_CREATED)
+        PaymentService-->>-Client: invoice
+    end
+
+    %% Payment Processing Flow
+    rect rgb(255, 250, 240)
+        Note over Client,LightningNode: Payment Processing Flow
+        Client->>+PaymentService: processPayment(params)
+        PaymentService->>Repository: getInvoice(id)
+        Repository-->>PaymentService: invoice
+        PaymentService->>StateMachine: validateTransition(PENDING → PROCESSING)
+        StateMachine-->>PaymentService: valid
+        PaymentService->>Repository: updateInvoice(status: PROCESSING)
+        PaymentService->>Repository: createTransaction()
+        PaymentService->>LightningNode: executePayment()
+        LightningNode-->>PaymentService: payment result
+        PaymentService->>PaymentService: verifyPreimage()
+        PaymentService->>StateMachine: validateTransition(PROCESSING → COMPLETED)
+        StateMachine-->>PaymentService: valid
+        PaymentService->>Repository: updateTransaction(status: COMPLETED)
+        PaymentService->>Repository: updateInvoice(status: COMPLETED)
+        PaymentService->>Cache: cacheInvoice(invoice)
+        PaymentService->>EventBus: emit(PAYMENT_RECEIVED)
+        EventBus->>WebhookSubscribers: notifyPaymentReceived()
+        PaymentService-->>-Client: paymentResult
+    end
+
+    %% Refund Flow
+    rect rgb(255, 240, 245)
+        Note over Client,EventBus: Refund Flow
+        Client->>+PaymentService: initiateRefund(txId, amount)
+        PaymentService->>Repository: getTransaction(id)
+        Repository-->>PaymentService: transaction
+        PaymentService->>StateMachine: validateTransition(COMPLETED → REFUNDED)
+        StateMachine-->>PaymentService: valid
+        PaymentService->>Repository: createRefund()
+        PaymentService->>Repository: updateTransaction(status: REFUNDED)
+        PaymentService->>EventBus: emit(PAYMENT_REFUNDED)
+        PaymentService-->>-Client: refund
+    end

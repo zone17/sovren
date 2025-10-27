@@ -1,0 +1,47 @@
+graph LR
+    subgraph "Content Indexing Flow"
+        CREATE[Content Created]
+        UPDATE[Content Updated]
+        DELETE[Content Deleted]
+
+        CREATE -->|indexDocument| IDX[Index Document]
+        UPDATE -->|updateDocument| UPD[Update Document]
+        DELETE -->|deleteDocument| DEL[Delete Document]
+
+        IDX --> ES[Elasticsearch]
+        UPD --> ES
+        DEL --> ES
+
+        IDX --> INVAL[Invalidate Cache]
+        UPD --> INVAL
+        DEL --> INVAL
+    end
+
+    subgraph "Search Query Flow"
+        QUERY[Search Query]
+        QUERY --> VALIDATE[Validate Query]
+        VALIDATE --> CACHE_CHECK{Cache Hit?}
+
+        CACHE_CHECK -->|Yes| RETURN[Return Cached]
+        CACHE_CHECK -->|No| BUILD[Build ES Query]
+
+        BUILD --> EXECUTE[Execute Search]
+        EXECUTE --> PROCESS[Process Results]
+        PROCESS --> CACHE_STORE[Store in Cache]
+        CACHE_STORE --> RETURN
+    end
+
+    subgraph "Result Processing"
+        RAW[Raw ES Response]
+        RAW --> EXTRACT[Extract Documents]
+        RAW --> FACET_PROC[Process Facets]
+        RAW --> HIGHLIGHT_PROC[Process Highlights]
+
+        EXTRACT --> RESULT[Search Result]
+        FACET_PROC --> RESULT
+        HIGHLIGHT_PROC --> RESULT
+    end
+
+    style ES fill:#F5A623
+    style CACHE_CHECK fill:#50E3C2
+    style RESULT fill:#4A90E2

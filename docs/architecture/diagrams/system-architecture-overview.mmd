@@ -1,0 +1,196 @@
+%% System Architecture Overview - Epic 005 Backend Service Refactoring
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete system architecture showing all 29 services organized by domain
+
+graph TB
+    subgraph "Client Layer"
+        WebApp[Web Application<br/>React + TypeScript]
+        MobileApp[Mobile App<br/>Progressive Web App]
+    end
+
+    subgraph "API Gateway Layer"
+        APIGateway[API Gateway<br/>Express.js]
+        AuthMiddleware[Auth Middleware<br/>JWT + NOSTR]
+        RateLimiter[Rate Limiter]
+    end
+
+    subgraph "Core Infrastructure Services"
+        ServiceContainer[Service Container<br/>Dependency Injection]
+        ServiceFactory[Service Factory<br/>Service Creation]
+        EventBus[Event Bus Service<br/>Pub/Sub Pattern]
+        RepositoryFactory[Repository Factory<br/>Data Access]
+        MigrationService[Migration Service<br/>Schema Evolution]
+        DependencyAnalyzer[Dependency Analyzer<br/>Graph Analysis]
+    end
+
+    subgraph "Shared Services Domain"
+        EmailService[Email Service<br/>Transactional Emails]
+        NotificationService[Notification Service<br/>Multi-Channel]
+        AuditLogService[Audit Log Service<br/>Compliance Tracking]
+        CacheService[Cache Service<br/>Redis + Multi-Layer]
+    end
+
+    subgraph "Content Services Domain"
+        ContentPublishing[Content Publishing Service<br/>NOSTR Integration]
+        ContentModeration[Content Moderation Service<br/>AI + Manual Review]
+        ContentSearch[Content Search Service<br/>Full-Text Search]
+        ContentRecommendation[Content Recommendation Service<br/>AI-Powered]
+        ContentAnalytics[Content Analytics Service<br/>Performance Metrics]
+        ContentVersioning[Content Versioning Service<br/>Version Control]
+    end
+
+    subgraph "User Services Domain"
+        UserProfile[User Profile Service<br/>Identity Management]
+        UserPreferences[User Preferences Service<br/>Settings Management]
+        UserActivity[User Activity Service<br/>Behavior Tracking]
+        UserRelationship[User Relationship Service<br/>Social Graph]
+        UserAnalytics[User Analytics Service<br/>Engagement Metrics]
+    end
+
+    subgraph "Payment Services Domain"
+        PaymentProcessing[Payment Processing Service<br/>Lightning Network]
+        CurrencyService[Currency Service<br/>Exchange Rates]
+        SubscriptionService[Subscription Service<br/>Recurring Billing]
+        RefundService[Refund Service<br/>Payment Reversal]
+        PaymentAnalytics[Payment Analytics Service<br/>Revenue Metrics]
+        WebhookService[Webhook Service<br/>Event Delivery]
+    end
+
+    subgraph "External Systems"
+        NostrRelays[NOSTR Relays<br/>Distributed Network]
+        LightningNode[Lightning Node<br/>Bitcoin Payments]
+        EmailProvider[Email Provider<br/>SMTP/API]
+        ExchangeAPIs[Exchange APIs<br/>Currency Data]
+        SearchEngine[Search Engine<br/>Elasticsearch]
+    end
+
+    subgraph "Data Layer"
+        PostgreSQL[(PostgreSQL<br/>Primary Database)]
+        Redis[(Redis<br/>Cache + Queue)]
+        S3[S3-Compatible Storage<br/>Media Files]
+    end
+
+    %% Client to API Gateway
+    WebApp --> APIGateway
+    MobileApp --> APIGateway
+
+    %% API Gateway to Middleware
+    APIGateway --> AuthMiddleware
+    APIGateway --> RateLimiter
+
+    %% API Gateway to Core Infrastructure
+    APIGateway --> ServiceContainer
+    ServiceContainer --> ServiceFactory
+    ServiceContainer --> EventBus
+    ServiceContainer --> RepositoryFactory
+
+    %% Core Infrastructure Dependencies
+    ServiceFactory --> DependencyAnalyzer
+    MigrationService --> PostgreSQL
+
+    %% Shared Services Dependencies
+    EventBus --> NotificationService
+    EventBus --> AuditLogService
+    NotificationService --> EmailService
+    EmailService --> EmailProvider
+    CacheService --> Redis
+
+    %% Content Services Dependencies
+    ServiceContainer --> ContentPublishing
+    ServiceContainer --> ContentModeration
+    ServiceContainer --> ContentSearch
+    ServiceContainer --> ContentRecommendation
+    ServiceContainer --> ContentAnalytics
+    ServiceContainer --> ContentVersioning
+
+    ContentPublishing --> NostrRelays
+    ContentPublishing --> EventBus
+    ContentSearch --> SearchEngine
+    ContentRecommendation --> ContentAnalytics
+    ContentVersioning --> S3
+
+    %% User Services Dependencies
+    ServiceContainer --> UserProfile
+    ServiceContainer --> UserPreferences
+    ServiceContainer --> UserActivity
+    ServiceContainer --> UserRelationship
+    ServiceContainer --> UserAnalytics
+
+    UserProfile --> NostrRelays
+    UserActivity --> EventBus
+    UserRelationship --> CacheService
+
+    %% Payment Services Dependencies
+    ServiceContainer --> PaymentProcessing
+    ServiceContainer --> CurrencyService
+    ServiceContainer --> SubscriptionService
+    ServiceContainer --> RefundService
+    ServiceContainer --> PaymentAnalytics
+    ServiceContainer --> WebhookService
+
+    PaymentProcessing --> LightningNode
+    PaymentProcessing --> EventBus
+    CurrencyService --> ExchangeAPIs
+    SubscriptionService --> PaymentProcessing
+    RefundService --> PaymentProcessing
+    WebhookService --> EventBus
+
+    %% All Services to Repository Factory
+    ContentPublishing --> RepositoryFactory
+    ContentModeration --> RepositoryFactory
+    ContentSearch --> RepositoryFactory
+    ContentRecommendation --> RepositoryFactory
+    ContentAnalytics --> RepositoryFactory
+    ContentVersioning --> RepositoryFactory
+    UserProfile --> RepositoryFactory
+    UserPreferences --> RepositoryFactory
+    UserActivity --> RepositoryFactory
+    UserRelationship --> RepositoryFactory
+    UserAnalytics --> RepositoryFactory
+    PaymentProcessing --> RepositoryFactory
+    SubscriptionService --> RepositoryFactory
+    RefundService --> RepositoryFactory
+    PaymentAnalytics --> RepositoryFactory
+
+    %% Repository Factory to Database
+    RepositoryFactory --> PostgreSQL
+
+    %% Styling by Domain
+    style ServiceContainer fill:#9e9e9e,stroke:#616161,stroke-width:3px,color:#fff
+    style ServiceFactory fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style RepositoryFactory fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style MigrationService fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style DependencyAnalyzer fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+
+    style EmailService fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+    style NotificationService fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+    style AuditLogService fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+    style CacheService fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+
+    style ContentPublishing fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentModeration fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentSearch fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentRecommendation fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentAnalytics fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentVersioning fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+
+    style UserProfile fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style UserPreferences fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style UserActivity fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style UserRelationship fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style UserAnalytics fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style PaymentProcessing fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style CurrencyService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style SubscriptionService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style RefundService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style PaymentAnalytics fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style WebhookService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+
+    style NostrRelays fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style LightningNode fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style EmailProvider fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style ExchangeAPIs fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style SearchEngine fill:#fce4ec,stroke:#c2185b,stroke-width:2px

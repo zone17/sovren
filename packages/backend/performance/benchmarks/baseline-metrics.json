@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "generated": "2024-10-27T00:00:00.000Z",
+  "environment": {
+    "nodeVersion": "v20.10.0",
+    "platform": "darwin",
+    "cpus": 8,
+    "memory": 16
+  },
+  "benchmarks": {
+    "api": {
+      "content": {
+        "list": { "p95": 300, "p99": 500, "throughput": 100 },
+        "get": { "p95": 200, "p99": 400, "throughput": 150 },
+        "create": { "p95": 300, "p99": 500, "throughput": 80 },
+        "update": { "p95": 250, "p99": 450, "throughput": 90 },
+        "delete": { "p95": 200, "p99": 400, "throughput": 100 },
+        "search": { "p95": 400, "p99": 600, "throughput": 70 }
+      },
+      "user": {
+        "profile": { "p95": 150, "p99": 300, "throughput": 200 },
+        "update": { "p95": 200, "p99": 400, "throughput": 120 },
+        "search": { "p95": 250, "p99": 450, "throughput": 100 },
+        "list": { "p95": 200, "p99": 400, "throughput": 150 },
+        "auth": { "p95": 200, "p99": 400, "throughput": 100 },
+        "register": { "p95": 250, "p99": 450, "throughput": 80 }
+      },
+      "payment": {
+        "createInvoice": { "p95": 100, "p99": 200, "throughput": 100 },
+        "processPayment": { "p95": 200, "p99": 400, "throughput": 50 },
+        "listInvoices": { "p95": 300, "p99": 600, "throughput": 80 },
+        "transactions": { "p95": 400, "p99": 800, "throughput": 60 },
+        "subscription": { "p95": 300, "p99": 600, "throughput": 70 },
+        "refund": { "p95": 200, "p99": 400, "throughput": 50 },
+        "currencyConvert": { "p95": 50, "p99": 100, "throughput": 200 },
+        "webhook": { "p95": 500, "p99": 1000, "throughput": 40 }
+      }
+    },
+    "database": {
+      "read": {
+        "simple": { "p95": 10, "p99": 20, "throughput": 500 },
+        "complex": { "p95": 100, "p99": 200, "throughput": 100 },
+        "join": { "p95": 150, "p99": 300, "throughput": 70 },
+        "aggregation": { "p95": 200, "p99": 400, "throughput": 50 }
+      },
+      "write": {
+        "insert": { "p95": 20, "p99": 40, "throughput": 300 },
+        "update": { "p95": 25, "p99": 50, "throughput": 250 },
+        "delete": { "p95": 20, "p99": 40, "throughput": 300 },
+        "batch": { "p95": 100, "p99": 200, "throughput": 100 }
+      },
+      "transaction": {
+        "simple": { "p95": 50, "p99": 100, "throughput": 200 },
+        "complex": { "p95": 150, "p99": 300, "throughput": 70 }
+      }
+    },
+    "cache": {
+      "operations": {
+        "hit": { "p95": 1, "p99": 2, "throughput": 50000 },
+        "miss": { "p95": 20, "p99": 40, "throughput": 100 },
+        "set": { "p95": 2, "p99": 5, "throughput": 50000 },
+        "delete": { "p95": 1, "p99": 2, "throughput": 50000 }
+      },
+      "hitRate": {
+        "target": 80,
+        "actual": 85
+      }
+    }
+  },
+  "systemLimits": {
+    "cpu": {
+      "average": 70,
+      "peak": 90
+    },
+    "memory": {
+      "heap": 80,
+      "total": 85
+    },
+    "connections": {
+      "database": 80,
+      "redis": 80
+    },
+    "network": {
+      "bandwidth": 50
+    }
+  },
+  "notes": "Baseline metrics measured under controlled conditions with minimal system load. These serve as targets for performance testing and regression detection."
+}

@@ -1,0 +1,517 @@
+{
+  "epic_004_stories": [
+    {
+      "id": "story-004-001",
+      "story_id": "US-004-001",
+      "name": "Audit Redux Store Structure",
+      "wave": 1,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Run audit script on Redux store",
+        "Categorize each slice (client/server/mixed)",
+        "Identify server data in Redux",
+        "Create migration list",
+        "Generate JSON audit report",
+        "Create markdown summary",
+        "Review with tech lead",
+        "Document findings"
+      ]
+    },
+    {
+      "id": "story-004-002",
+      "story_id": "US-004-002",
+      "name": "Audit React Query Usage",
+      "wave": 1,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Scan for all useQuery hooks",
+        "Scan for all useMutation hooks",
+        "Document cache keys",
+        "Identify Redux duplicates",
+        "Find missing React Query hooks",
+        "Generate audit report",
+        "Review findings",
+        "Create action items"
+      ]
+    },
+    {
+      "id": "story-004-003",
+      "story_id": "US-004-003",
+      "name": "Create State Management Decision Tree",
+      "wave": 1,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Define decision criteria",
+        "Create decision flow",
+        "Document edge cases",
+        "Add code examples",
+        "Create Mermaid diagram",
+        "Get team feedback",
+        "Finalize guidelines",
+        "Publish to wiki"
+      ]
+    },
+    {
+      "id": "story-004-004",
+      "story_id": "US-004-004",
+      "name": "Design State Architecture Diagrams",
+      "wave": 1,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Create overall architecture diagram",
+        "Design data flow diagram",
+        "Create Redux slice diagram",
+        "Design React Query structure",
+        "Generate Mermaid files",
+        "Create PNG exports",
+        "Review with team",
+        "Finalize diagrams"
+      ]
+    },
+    {
+      "id": "story-004-005",
+      "story_id": "US-004-005",
+      "name": "Team Guidelines Review Session",
+      "wave": 1,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Prepare review materials",
+        "Schedule team meeting",
+        "Present findings",
+        "Collect feedback",
+        "Update guidelines",
+        "Get team sign-off",
+        "Publish final version",
+        "Update documentation"
+      ]
+    },
+    {
+      "id": "story-004-006",
+      "story_id": "US-004-006",
+      "name": "Create React Query Hooks for Creators",
+      "wave": 2,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Create useCreators hook",
+        "Create useCreatorProfile hook",
+        "Create useUpdateCreator mutation",
+        "Create useDeleteCreator mutation",
+        "Implement optimistic updates",
+        "Add error handling",
+        "Write unit tests (95% coverage)",
+        "Write integration tests",
+        "Update TypeScript types",
+        "Document API usage"
+      ]
+    },
+    {
+      "id": "story-004-007",
+      "story_id": "US-004-007",
+      "name": "Create React Query Hooks for Content",
+      "wave": 2,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Create useContent hook with pagination",
+        "Create useContentItem hook",
+        "Create useCreateContent mutation",
+        "Create useUpdateContent mutation",
+        "Create useDeleteContent mutation",
+        "Implement infinite scrolling",
+        "Add optimistic updates",
+        "Setup real-time subscriptions",
+        "Write unit tests (95% coverage)",
+        "Write integration tests"
+      ]
+    },
+    {
+      "id": "story-004-008",
+      "story_id": "US-004-008",
+      "name": "Create React Query Hooks for Payments",
+      "wave": 2,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Create useSubscriptions hook",
+        "Create useInvoices hook",
+        "Create usePaymentStatus hook",
+        "Create useCreatePayment mutation",
+        "Create useCancelSubscription mutation",
+        "Implement polling logic",
+        "Add retry mechanisms",
+        "Handle payment failures",
+        "Write unit tests (95% coverage)",
+        "Write integration tests"
+      ]
+    },
+    {
+      "id": "story-004-009",
+      "story_id": "US-004-009",
+      "name": "Remove Server Data from Redux Slices",
+      "wave": 2,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Delete creatorsSlice.ts",
+        "Remove server data from cmsSlice",
+        "Remove server data from analyticsSlice",
+        "Remove all server actions",
+        "Remove all server selectors",
+        "Update store configuration",
+        "Fix TypeScript errors",
+        "Update all tests",
+        "Verify no regressions",
+        "Clean up imports"
+      ]
+    },
+    {
+      "id": "story-004-010",
+      "story_id": "US-004-010",
+      "name": "Update Components to Use React Query",
+      "wave": 2,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Update CreatorList component",
+        "Update CreatorProfile component",
+        "Update ContentList component",
+        "Update ContentEditor component",
+        "Update PaymentHistory component",
+        "Update SubscriptionManager",
+        "Fix all imports",
+        "Update PropTypes/interfaces",
+        "Update component tests",
+        "Verify UI functionality"
+      ]
+    },
+    {
+      "id": "story-004-011",
+      "story_id": "US-004-011",
+      "name": "Implement Caching Strategies",
+      "wave": 2,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Configure global query client",
+        "Set cache times per data type",
+        "Configure background refetch",
+        "Setup window focus refetch",
+        "Configure network reconnect",
+        "Setup cache persistence",
+        "Track performance metrics",
+        "Document strategies",
+        "Test cache behavior",
+        "Optimize stale times"
+      ]
+    },
+    {
+      "id": "story-004-012",
+      "story_id": "US-004-012",
+      "name": "Implement Error Handling for React Query",
+      "wave": 2,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Create global error handler",
+        "Add query-specific handlers",
+        "Implement mutation rollback",
+        "Create error boundaries",
+        "Build retry UI components",
+        "Add offline detection",
+        "Configure Sentry logging",
+        "Define error messages",
+        "Test error scenarios",
+        "Document error patterns"
+      ]
+    },
+    {
+      "id": "story-004-013",
+      "story_id": "US-004-013",
+      "name": "Consolidate UI State in Redux",
+      "wave": 3,
+      "points": 1,
+      "agent": "elite-frontend-dev",
+      "status": "pending",
+      "subtasks": [
+        "Expand uiSlice with all UI state",
+        "Create actions for UI operations",
+        "Create selectors for UI access",
+        "Add persistence middleware",
+        "Remove UI state from components",
+        "Define TypeScript types",
+        "Write reducer unit tests",
+        "Write integration tests",
+        "Update documentation",
+        "Verify UI consistency"
+      ]
+    },
+    {
+      "id": "story-004-014",
+      "story_id": "US-004-014",
+      "name": "Remove UI State from React Query",
+      "wave": 3,
+      "points": 1,
+      "agent": "elite-frontend-dev",
+      "status": "pending",
+      "subtasks": [
+        "Audit React Query cache",
+        "Identify UI state in cache",
+        "Remove UI state patterns",
+        "Update components to use Redux",
+        "Clean cache keys",
+        "Verify with DevTools",
+        "Update tests",
+        "Document changes"
+      ]
+    },
+    {
+      "id": "story-004-015",
+      "story_id": "US-004-015",
+      "name": "Update Theme and Modal Management",
+      "wave": 3,
+      "points": 1,
+      "agent": "elite-frontend-dev",
+      "status": "pending",
+      "subtasks": [
+        "Create ThemeProvider with Redux",
+        "Create ModalManager with Redux",
+        "Implement theme persistence",
+        "Prevent modal stacking",
+        "Add keyboard shortcuts",
+        "Add accessibility features",
+        "Setup CSS variables",
+        "Write component tests",
+        "Test across all routes",
+        "Update documentation"
+      ]
+    },
+    {
+      "id": "story-004-016",
+      "story_id": "US-004-016",
+      "name": "Update Notification System",
+      "wave": 3,
+      "points": 1,
+      "agent": "elite-frontend-dev",
+      "status": "pending",
+      "subtasks": [
+        "Create NotificationCenter component",
+        "Add Redux notification actions",
+        "Implement auto-dismiss timer",
+        "Create notification stacking UI",
+        "Differentiate toast vs notification",
+        "Add sound/vibration options",
+        "Add accessibility announcements",
+        "Write unit tests",
+        "Write integration tests",
+        "Document usage patterns"
+      ]
+    },
+    {
+      "id": "story-004-017",
+      "story_id": "US-004-017",
+      "name": "Update Form State Management",
+      "wave": 3,
+      "points": 1,
+      "agent": "elite-frontend-dev",
+      "status": "pending",
+      "subtasks": [
+        "Document form guidelines",
+        "Create complex form slice",
+        "Update simple forms to local state",
+        "Create multi-step form example",
+        "Define validation patterns",
+        "Add auto-save for complex forms",
+        "Implement form persistence",
+        "Write form flow tests",
+        "Document best practices",
+        "Create code examples"
+      ]
+    },
+    {
+      "id": "story-004-018",
+      "story_id": "US-004-018",
+      "name": "Integration Tests for Data Flow",
+      "wave": 4,
+      "points": 1,
+      "agent": "test-automation-engineer",
+      "status": "pending",
+      "subtasks": [
+        "Test React Query data flow",
+        "Test Redux state flow",
+        "Test cache invalidation",
+        "Test optimistic updates",
+        "Test error handling",
+        "Test cross-feature integration",
+        "Achieve 80%+ coverage",
+        "Update CI pipeline",
+        "Document test patterns",
+        "Review with QA team"
+      ]
+    },
+    {
+      "id": "story-004-019",
+      "story_id": "US-004-019",
+      "name": "Performance Benchmarking",
+      "wave": 4,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Create benchmark script",
+        "Capture baseline metrics",
+        "Measure cache hit rate",
+        "Measure Redux update speed",
+        "Measure bundle size impact",
+        "Run user flow tests",
+        "Generate performance report",
+        "Document improvements",
+        "Compare with baseline",
+        "Verify 60fps updates"
+      ]
+    },
+    {
+      "id": "story-004-020",
+      "story_id": "US-004-020",
+      "name": "Cache Hit Rate Validation",
+      "wave": 4,
+      "points": 1,
+      "agent": "test-automation-engineer",
+      "status": "pending",
+      "subtasks": [
+        "Implement cache metrics class",
+        "Monitor cache events",
+        "Track per-query hit rates",
+        "Monitor background fetches",
+        "Track stale fetches",
+        "Create metrics dashboard",
+        "Set up alerts (<70% hit rate)",
+        "Generate daily reports",
+        "Verify >80% hit rate",
+        "Document cache patterns"
+      ]
+    },
+    {
+      "id": "story-004-021",
+      "story_id": "US-004-021",
+      "name": "Bundle Size Impact Check",
+      "wave": 4,
+      "points": 1,
+      "agent": "backend-api-builder",
+      "status": "pending",
+      "subtasks": [
+        "Create bundle analysis script",
+        "Capture baseline size",
+        "Measure post-refactor size",
+        "Verify <5KB increase",
+        "Implement code splitting",
+        "Verify tree shaking",
+        "Setup lazy loading",
+        "Generate size report",
+        "Add to PR checks",
+        "Document optimizations"
+      ]
+    },
+    {
+      "id": "story-004-022",
+      "story_id": "US-004-022",
+      "name": "End-to-End Test Coverage",
+      "wave": 4,
+      "points": 1,
+      "agent": "test-automation-engineer",
+      "status": "pending",
+      "subtasks": [
+        "Create E2E test suite",
+        "Test creator flows",
+        "Test content flows",
+        "Test payment flows",
+        "Test UI state persistence",
+        "Test error recovery",
+        "Test form flows",
+        "Integrate with CI",
+        "Ensure consistent passing",
+        "Document test scenarios"
+      ]
+    },
+    {
+      "id": "story-004-023",
+      "story_id": "US-004-023",
+      "name": "Create Developer Guidelines Document",
+      "wave": 5,
+      "points": 1,
+      "agent": "technical-docs-writer",
+      "status": "pending",
+      "subtasks": [
+        "Create guidelines structure",
+        "Document decision matrix",
+        "Add code examples per pattern",
+        "Document anti-patterns",
+        "Create migration guide",
+        "Get team review",
+        "Publish to wiki",
+        "Add to onboarding docs",
+        "Create quick reference",
+        "Update developer handbook"
+      ]
+    },
+    {
+      "id": "story-004-024",
+      "story_id": "US-004-024",
+      "name": "Create Training Workshop Materials",
+      "wave": 5,
+      "points": 1,
+      "agent": "technical-docs-writer",
+      "status": "pending",
+      "subtasks": [
+        "Create slide deck",
+        "Prepare exercise repository",
+        "Document solutions",
+        "Write live coding script",
+        "Schedule workshop",
+        "Deliver workshop",
+        "Record session",
+        "Collect feedback",
+        "Update materials",
+        "Publish to team portal"
+      ]
+    },
+    {
+      "id": "story-004-025",
+      "story_id": "US-004-025",
+      "name": "Create Architecture Decision Record",
+      "wave": 5,
+      "points": 1,
+      "agent": "technical-docs-writer",
+      "status": "pending",
+      "subtasks": [
+        "Write ADR document",
+        "Document context",
+        "State decision clearly",
+        "Document consequences",
+        "Analyze alternatives",
+        "Provide references",
+        "Get peer review",
+        "Add to ADR index",
+        "Link from documentation",
+        "Notify team of completion"
+      ]
+    }
+  ]
+}

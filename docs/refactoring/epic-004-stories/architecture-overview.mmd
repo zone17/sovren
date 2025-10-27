@@ -1,0 +1,123 @@
+graph TB
+    subgraph "External Data Sources"
+        API["REST APIs<br/>(Backend Services)"]
+        WS["WebSockets<br/>(Real-time)"]
+        NOSTR["NOSTR Network<br/>(Decentralized)"]
+    end
+
+    subgraph "React Query Layer - Server State Management"
+        RQClient["QueryClient<br/>(Global Config)"]
+
+        subgraph "Query Hooks"
+            QCreators["useCreators()<br/>useCreatorProfile()"]
+            QContent["useContent()<br/>useContentStream()"]
+            QPayments["useSubscriptions()<br/>useInvoices()"]
+            QNostr["useNostrEvents()<br/>useNostrProfile()"]
+        end
+
+        subgraph "Mutation Hooks"
+            MCreators["useUpdateCreator()<br/>useDeleteCreator()"]
+            MContent["useCreateContent()<br/>useUpdateContent()"]
+            MPayments["useCreatePayment()<br/>useCancelSubscription()"]
+        end
+
+        Cache["Query Cache<br/>(Automatic)<br/>• 5-15min stale time<br/>• Auto invalidation<br/>• Background refetch"]
+    end
+
+    subgraph "Redux Store - Client State Management"
+        Store["Redux Store<br/>(createStore)"]
+
+        subgraph "Redux Slices"
+            AuthSlice["authSlice<br/>• user<br/>• token<br/>• isAuthenticated"]
+            UISlice["uiSlice<br/>• theme<br/>• modals<br/>• notifications<br/>• sidebar state"]
+            PrefsSlice["preferencesSlice<br/>• settings<br/>• filters<br/>• view modes"]
+            FormSlice["formSlice<br/>• multi-step forms<br/>• draft state"]
+        end
+
+        Persist["Redux Persist<br/>(localStorage)<br/>• preferences<br/>• UI settings<br/>• auth tokens"]
+    end
+
+    subgraph "React Components Layer"
+        Pages["Page Components<br/>(Home, Profile, etc)"]
+        Features["Feature Components<br/>(CreatorList, ContentEditor)"]
+        UI["UI Components<br/>(Button, Modal, etc)"]
+
+        LocalState["Local Component State<br/>(useState/useReducer)<br/>• Form inputs<br/>• Toggles<br/>• Temporary UI"]
+    end
+
+    subgraph "Developer Tools"
+        RQDevTools["React Query DevTools<br/>(Cache Inspector)"]
+        ReduxDevTools["Redux DevTools<br/>(Time Travel)"]
+    end
+
+    %% Data Flow - Server State
+    API --> RQClient
+    WS --> RQClient
+    NOSTR --> RQClient
+
+    RQClient --> QCreators
+    RQClient --> QContent
+    RQClient --> QPayments
+    RQClient --> QNostr
+
+    QCreators --> Cache
+    QContent --> Cache
+    QPayments --> Cache
+    QNostr --> Cache
+
+    Cache --> Pages
+    Cache --> Features
+
+    MCreators --> API
+    MContent --> API
+    MPayments --> API
+
+    MCreators -.Auto Invalidate.-> Cache
+    MContent -.Auto Invalidate.-> Cache
+    MPayments -.Auto Invalidate.-> Cache
+
+    %% Data Flow - Client State
+    Store --> AuthSlice
+    Store --> UISlice
+    Store --> PrefsSlice
+    Store --> FormSlice
+
+    UISlice --> Persist
+    PrefsSlice --> Persist
+    AuthSlice --> Persist
+
+    AuthSlice --> Pages
+    UISlice --> Pages
+    UISlice --> Features
+    PrefsSlice --> Features
+    FormSlice --> Features
+
+    %% Local State
+    LocalState --> UI
+    LocalState --> Features
+
+    %% User Interactions
+    Pages -.Dispatch Actions.-> Store
+    Features -.Dispatch Actions.-> Store
+    Features -.Trigger Mutations.-> MCreators
+    Features -.Trigger Mutations.-> MContent
+    Features -.Trigger Mutations.-> MPayments
+
+    %% DevTools
+    RQClient -.Monitor.-> RQDevTools
+    Store -.Monitor.-> ReduxDevTools
+
+    %% Styling
+    classDef external fill:#fee2e2,stroke:#7f1d1d,stroke-width:2px
+    classDef reactQuery fill:#dbeafe,stroke:#1e3a8a,stroke-width:2px
+    classDef redux fill:#fce7f3,stroke:#831843,stroke-width:2px
+    classDef component fill:#dcfce7,stroke:#14532d,stroke-width:2px
+    classDef devtools fill:#fef3c7,stroke:#92400e,stroke-width:2px
+    classDef cache fill:#e0e7ff,stroke:#3730a3,stroke-width:2px
+
+    class API,WS,NOSTR external
+    class RQClient,QCreators,QContent,QPayments,QNostr,MCreators,MContent,MPayments reactQuery
+    class Cache cache
+    class Store,AuthSlice,UISlice,PrefsSlice,FormSlice,Persist redux
+    class Pages,Features,UI,LocalState component
+    class RQDevTools,ReduxDevTools devtools

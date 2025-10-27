@@ -1,0 +1,104 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#9333ea',
+    'primaryTextColor': '#fff',
+    'primaryBorderColor': '#7e22ce',
+    'lineColor': '#e5e7eb',
+    'secondaryColor': '#f3f4f6',
+    'tertiaryColor': '#fbbf24',
+    'background': '#ffffff'
+  }
+}}%%
+graph TB
+    subgraph "Frontend Layer"
+        User[User Browser]
+        React[React App]
+        AuthCtx[NostrAuthContext]
+        KeyMgmt[Key Management Service]
+        Extension[Browser Extension<br/>NIP-07]
+    end
+
+    subgraph "API Gateway"
+        Routes[Express Routes]
+        AuthMW[Auth Middleware]
+        RateMW[Rate Limit Middleware]
+    end
+
+    subgraph "Authentication Core"
+        UnifiedAuth[Unified Auth Service]
+        ChallengeStore[Challenge Store<br/>In-Memory Map]
+        JWTGen[JWT Generator]
+        SigVerify[Signature Verifier]
+    end
+
+    subgraph "Session Management"
+        SessionSvc[Session Service]
+        SessionStore[Session Store]
+        DeviceTracker[Device Tracker]
+        ActivityLog[Activity Logger]
+    end
+
+    subgraph "Security & Monitoring"
+        RateLimiter[Rate Limiter<br/>per pubkey]
+        SecurityLog[Security Event Log]
+        SuspicionDetect[Suspicious Pattern<br/>Detector]
+        AuditLog[Audit Logger]
+    end
+
+    subgraph "Data Layer"
+        Supabase[(Supabase DB)]
+        Redis[(Redis Cache<br/>Optional)]
+        IndexedDB[(IndexedDB<br/>Keys)]
+    end
+
+    %% Frontend Connections
+    User -->|Interact| React
+    React -->|Use| AuthCtx
+    AuthCtx -->|Manage Keys| KeyMgmt
+    AuthCtx -->|API Calls| Routes
+    KeyMgmt -->|Store Keys| IndexedDB
+    KeyMgmt -.->|Optional| Extension
+
+    %% API Gateway Flow
+    Routes -->|Protected Routes| AuthMW
+    Routes -->|All Routes| RateMW
+    AuthMW -->|Validate| UnifiedAuth
+    RateMW -->|Check Limits| RateLimiter
+
+    %% Authentication Core Flow
+    UnifiedAuth -->|Generate/Verify| ChallengeStore
+    UnifiedAuth -->|Create Tokens| JWTGen
+    UnifiedAuth -->|Verify Signatures| SigVerify
+    UnifiedAuth -->|Manage Sessions| SessionSvc
+
+    %% Session Management Flow
+    SessionSvc -->|CRUD| SessionStore
+    SessionSvc -->|Track| DeviceTracker
+    SessionSvc -->|Log| ActivityLog
+    SessionStore -->|Persist| Supabase
+    SessionStore -.->|Cache| Redis
+
+    %% Security & Monitoring Flow
+    UnifiedAuth -->|Log Events| SecurityLog
+    UnifiedAuth -->|Detect| SuspicionDetect
+    RateLimiter -->|Track Violations| SecurityLog
+    SecurityLog -->|Aggregate| AuditLog
+    AuditLog -->|Store| Supabase
+
+    %% Data Flow
+    ActivityLog -->|Store| Supabase
+    DeviceTracker -->|Store| Supabase
+
+    %% Styling
+    classDef frontend fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    classDef api fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef auth fill:#dcfce7,stroke:#22c55e,stroke-width:2px
+    classDef security fill:#fee2e2,stroke:#ef4444,stroke-width:2px
+    classDef data fill:#e5e7eb,stroke:#6b7280,stroke-width:2px
+
+    class User,React,AuthCtx,KeyMgmt,Extension frontend
+    class Routes,AuthMW,RateMW api
+    class UnifiedAuth,ChallengeStore,JWTGen,SigVerify,SessionSvc,SessionStore,DeviceTracker,ActivityLog auth
+    class RateLimiter,SecurityLog,SuspicionDetect,AuditLog security
+    class Supabase,Redis,IndexedDB data

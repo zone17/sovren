@@ -1,0 +1,47 @@
+sequenceDiagram
+    participant Client1 as Client 1
+    participant Client2 as Client 2
+    participant StateMachine
+    participant Database
+
+    Note over Client1,Database: Concurrent Transition Scenario
+
+    par Client 1 Transition
+        Client1->>StateMachine: transition(payment1, PROCESSING)
+        activate StateMachine
+        StateMachine->>Database: SELECT payment
+        Database-->>StateMachine: state: PENDING
+    and Client 2 Transition
+        Client2->>StateMachine: transition(payment1, FAILED)
+        activate StateMachine
+        StateMachine->>Database: SELECT payment
+        Database-->>StateMachine: state: PENDING
+    end
+
+    Note over StateMachine,Database: Both validations pass
+
+    par Atomic Database Operations
+        StateMachine->>Database: transition_payment_state(PENDING → PROCESSING)
+        activate Database
+        Database->>Database: BEGIN TRANSACTION
+        Database->>Database: CHECK current_state = PENDING
+        Database->>Database: UPDATE state = PROCESSING
+        Database->>Database: COMMIT
+        deactivate Database
+        Database-->>StateMachine: Success
+        deactivate StateMachine
+        StateMachine-->>Client1: Success
+    and
+        StateMachine->>Database: transition_payment_state(PENDING → FAILED)
+        activate Database
+        Database->>Database: BEGIN TRANSACTION
+        Database->>Database: CHECK current_state = PENDING
+        Note over Database: State already PROCESSING!
+        Database->>Database: ROLLBACK
+        deactivate Database
+        Database-->>StateMachine: Error: State mismatch
+        deactivate StateMachine
+        StateMachine-->>Client2: StateTransitionError
+    end
+
+    Note over Client1,Client2: Only ONE transition succeeds<br/>Database atomicity prevents corruption

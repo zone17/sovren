@@ -1,0 +1,92 @@
+graph TB
+    subgraph "Client Layer"
+        API[API Endpoints]
+        WS[WebSocket/SSE]
+    end
+
+    subgraph "Service Layer"
+        UAS[UserActivityService]
+        AUTH[UserAuthenticationService]
+        CONTENT[ContentService]
+    end
+
+    subgraph "Core Infrastructure"
+        EB[Event Bus]
+        CACHE[Cache Service<br/>Redis]
+        DB[(Database<br/>PostgreSQL)]
+        AUDIT[Audit Log Service]
+    end
+
+    subgraph "UserActivityService Components"
+        BUFFER[Activity Buffer<br/>In-Memory Queue]
+        LOGGER[Activity Logger]
+        STATS[Statistics Engine]
+        SESSION[Session Manager]
+        SECURITY[Fraud Detection]
+        PRIVACY[Privacy Controls]
+        AGGREGATOR[Aggregation Engine]
+    end
+
+    subgraph "Data Storage"
+        DB_ACT[(user_activities)]
+        DB_SESS[(user_sessions)]
+        DB_AGG[(activity_aggregations)]
+        CACHE_SESS[Session Cache]
+        CACHE_STATS[Stats Cache]
+    end
+
+    %% Client to Service
+    API --> UAS
+    WS --> UAS
+
+    %% Service Dependencies
+    UAS --> EB
+    UAS --> CACHE
+    UAS --> DB
+    UAS --> AUDIT
+    AUTH -.-> EB
+    CONTENT -.-> EB
+
+    %% Internal Components
+    UAS --> BUFFER
+    UAS --> LOGGER
+    UAS --> STATS
+    UAS --> SESSION
+    UAS --> SECURITY
+    UAS --> PRIVACY
+    UAS --> AGGREGATOR
+
+    %% Buffer to Storage
+    BUFFER -->|Batch Flush| DB_ACT
+    LOGGER --> DB_ACT
+
+    %% Session Management
+    SESSION --> CACHE_SESS
+    SESSION --> DB_SESS
+
+    %% Statistics
+    STATS --> CACHE_STATS
+    STATS --> DB_ACT
+    AGGREGATOR --> DB_AGG
+
+    %% Event Flow
+    EB -.->|Subscribe| LOGGER
+    LOGGER -.->|Publish| EB
+
+    %% Security
+    SECURITY --> DB_ACT
+    SECURITY --> AUDIT
+
+    %% Privacy
+    PRIVACY --> DB_ACT
+    PRIVACY --> AUDIT
+
+    classDef service fill:#4A90E2,stroke:#2E5C8A,color:#fff
+    classDef infrastructure fill:#50C878,stroke:#2E7D5A,color:#fff
+    classDef storage fill:#F39C12,stroke:#D68910,color:#fff
+    classDef component fill:#9B59B6,stroke:#6C3483,color:#fff
+
+    class UAS,AUTH,CONTENT service
+    class EB,CACHE,DB,AUDIT infrastructure
+    class DB_ACT,DB_SESS,DB_AGG,CACHE_SESS,CACHE_STATS storage
+    class BUFFER,LOGGER,STATS,SESSION,SECURITY,PRIVACY,AGGREGATOR component

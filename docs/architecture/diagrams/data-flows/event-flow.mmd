@@ -1,0 +1,118 @@
+%% Event Flow - Event-Driven Architecture Pattern
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete event flow showing pub/sub pattern and event propagation
+
+graph TB
+    subgraph "Event Publishers"
+        ContentService[Content Publishing Service]
+        PaymentService[Payment Processing Service]
+        UserService[User Activity Service]
+        SubscriptionService[Subscription Service]
+    end
+
+    subgraph "Event Bus Core"
+        EventBus[Event Bus Service<br/>In-Memory Pub/Sub]
+        EventQueue[Event Queue<br/>Priority Processing]
+        EventLog[Event Log<br/>Audit Trail]
+    end
+
+    subgraph "Event Subscribers - Immediate"
+        CacheInvalidation[Cache Invalidation<br/>High Priority]
+        NotificationService[Notification Service<br/>Real-time Alerts]
+        AuditLogger[Audit Logger<br/>Compliance]
+    end
+
+    subgraph "Event Subscribers - Analytics"
+        ContentAnalytics[Content Analytics<br/>Metrics Aggregation]
+        UserAnalytics[User Analytics<br/>Engagement Tracking]
+        PaymentAnalytics[Payment Analytics<br/>Revenue Metrics]
+    end
+
+    subgraph "Event Subscribers - Processing"
+        SearchIndexer[Search Indexer<br/>Elasticsearch Sync]
+        RecommendationEngine[Recommendation Engine<br/>ML Model Update]
+        EmailService[Email Service<br/>Transactional]
+        WebhookService[Webhook Service<br/>External Delivery]
+    end
+
+    subgraph "Event Types"
+        ContentEvents["content.published<br/>content.updated<br/>content.deleted<br/>content.moderated"]
+        PaymentEvents["payment.created<br/>payment.confirmed<br/>payment.failed<br/>payment.refunded"]
+        UserEvents["user.registered<br/>user.activity<br/>user.preference_updated<br/>user.relationship_changed"]
+        SubscriptionEvents["subscription.created<br/>subscription.renewed<br/>subscription.cancelled<br/>subscription.suspended"]
+    end
+
+    %% Publishers to Event Bus
+    ContentService -->|Publish| EventBus
+    PaymentService -->|Publish| EventBus
+    UserService -->|Publish| EventBus
+    SubscriptionService -->|Publish| EventBus
+
+    %% Event Bus Processing
+    EventBus --> EventQueue
+    EventBus --> EventLog
+    EventQueue -->|Priority 1| CacheInvalidation
+    EventQueue -->|Priority 2| NotificationService
+    EventQueue -->|Priority 3| AuditLogger
+
+    %% Event Distribution
+    EventBus -->|Subscribe| ContentAnalytics
+    EventBus -->|Subscribe| UserAnalytics
+    EventBus -->|Subscribe| PaymentAnalytics
+    EventBus -->|Subscribe| SearchIndexer
+    EventBus -->|Subscribe| RecommendationEngine
+    EventBus -->|Subscribe| EmailService
+    EventBus -->|Subscribe| WebhookService
+
+    %% Event Type Routing
+    ContentEvents -.Routes to.-> ContentAnalytics
+    ContentEvents -.Routes to.-> SearchIndexer
+    ContentEvents -.Routes to.-> NotificationService
+
+    PaymentEvents -.Routes to.-> PaymentAnalytics
+    PaymentEvents -.Routes to.-> WebhookService
+    PaymentEvents -.Routes to.-> NotificationService
+
+    UserEvents -.Routes to.-> UserAnalytics
+    UserEvents -.Routes to.-> RecommendationEngine
+    UserEvents -.Routes to.-> CacheInvalidation
+
+    SubscriptionEvents -.Routes to.-> PaymentAnalytics
+    SubscriptionEvents -.Routes to.-> EmailService
+    SubscriptionEvents -.Routes to.-> NotificationService
+
+    %% Example Flow Annotations
+    Note1[Event Flow Pattern:<br/>1. Service publishes event<br/>2. EventBus queues by priority<br/>3. Subscribers process async<br/>4. Failures logged + retried<br/>5. Complete event traced]
+
+    Note2[Performance Metrics:<br/>Event Latency: <5ms<br/>Processing Time: 10-500ms<br/>Success Rate: 99.9%<br/>Throughput: 10K events/sec]
+
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:4px,color:#fff
+    style EventQueue fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+    style EventLog fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+
+    style ContentService fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style PaymentService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style UserService fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style SubscriptionService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+
+    style CacheInvalidation fill:#f44336,stroke:#c62828,stroke-width:3px,color:#fff
+    style NotificationService fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style AuditLogger fill:#607d8b,stroke:#37474f,stroke-width:2px,color:#fff
+
+    style ContentAnalytics fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style UserAnalytics fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style PaymentAnalytics fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+
+    style SearchIndexer fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style RecommendationEngine fill:#e91e63,stroke:#ad1457,stroke-width:2px,color:#fff
+    style EmailService fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#fff
+    style WebhookService fill:#ff5722,stroke:#bf360c,stroke-width:2px,color:#fff
+
+    style ContentEvents fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style PaymentEvents fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style UserEvents fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style SubscriptionEvents fill:#fff3e0,stroke:#e65100,stroke-width:2px
+
+    style Note1 fill:#fffde7,stroke:#f57f17,stroke-width:2px
+    style Note2 fill:#e0f7fa,stroke:#00838f,stroke-width:2px

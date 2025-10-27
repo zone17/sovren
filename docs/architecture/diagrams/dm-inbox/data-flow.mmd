@@ -1,0 +1,47 @@
+sequenceDiagram
+    participant User
+    participant DMInbox
+    participant MessageComposer
+    participant NIP04Service
+    participant EventPublisher
+    participant SubscriptionManager
+    participant RelayPool
+
+    Note over User,RelayPool: Initial Load - Subscribe to DMs
+
+    User->>DMInbox: Opens DM Inbox
+    DMInbox->>SubscriptionManager: subscribe([{kinds: [4], authors: [userPubkey]}])
+    SubscriptionManager->>RelayPool: Create subscription
+    RelayPool-->>SubscriptionManager: EOSE + Events
+    SubscriptionManager-->>DMInbox: DM Events
+    DMInbox->>NIP04Service: decrypt(encryptedContent, senderPubkey)
+    NIP04Service-->>DMInbox: Decrypted messages
+    DMInbox->>User: Display thread list
+
+    Note over User,RelayPool: User Selects Thread
+
+    User->>DMInbox: Click thread
+    DMInbox->>DMInbox: Filter messages for thread
+    DMInbox->>User: Display conversation view
+
+    Note over User,RelayPool: Send New Message
+
+    User->>MessageComposer: Type message
+    User->>MessageComposer: Click Send
+    MessageComposer->>NIP04Service: encrypt(message, recipientPubkey)
+    NIP04Service-->>MessageComposer: Encrypted content
+    MessageComposer->>EventPublisher: createAndPublish({kind: 4, content})
+    EventPublisher->>RelayPool: Publish event
+    RelayPool-->>EventPublisher: Publish results
+    EventPublisher-->>MessageComposer: Success
+    MessageComposer->>DMInbox: Update UI optimistically
+    DMInbox->>User: Show sent message
+
+    Note over User,RelayPool: Receive New Message
+
+    RelayPool->>SubscriptionManager: New DM event
+    SubscriptionManager->>DMInbox: onEvent callback
+    DMInbox->>NIP04Service: decrypt(encryptedContent, senderPubkey)
+    NIP04Service-->>DMInbox: Decrypted message
+    DMInbox->>DMInbox: Add to thread
+    DMInbox->>User: Display new message + notification

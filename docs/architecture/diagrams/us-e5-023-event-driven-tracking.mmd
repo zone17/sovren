@@ -1,0 +1,57 @@
+graph LR
+    subgraph "Event Sources"
+        UC[User Created]
+        UL[User Login]
+        UA[User Activity]
+        CC[Content Created]
+        CV[Content Viewed]
+    end
+
+    subgraph "Event Bus"
+        EB[Event Bus Service]
+    end
+
+    subgraph "UserAnalyticsService"
+        EH[Event Handlers]
+        BUF[Event Buffer<br/>Max: 1000 events]
+        PROC[Event Processor]
+    end
+
+    subgraph "Storage"
+        MEM[(In-Memory Buffer)]
+        DB[(PostgreSQL)]
+        CACHE[(Redis Cache)]
+    end
+
+    subgraph "Aggregation Pipeline"
+        HOUR[Hourly Aggregator]
+        DAY[Daily Aggregator]
+        WEEK[Weekly Aggregator]
+    end
+
+    UC --> EB
+    UL --> EB
+    UA --> EB
+    CC --> EB
+    CV --> EB
+
+    EB --> EH
+    EH --> BUF
+    BUF --> MEM
+
+    BUF -->|Buffer Full or<br/>30s Timer| PROC
+    PROC --> DB
+
+    DB --> HOUR
+    HOUR --> DAY
+    DAY --> WEEK
+
+    HOUR --> CACHE
+    DAY --> CACHE
+    WEEK --> CACHE
+
+    style BUF fill:#FF6B6B,color:#fff
+    style EB fill:#4ECDC4,color:#fff
+    style PROC fill:#95E1D3,color:#000
+    style DB fill:#F38181,color:#fff
+    style CACHE fill:#AA96DA,color:#fff

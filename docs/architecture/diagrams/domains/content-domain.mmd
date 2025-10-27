@@ -1,0 +1,131 @@
+%% Content Domain Architecture - 6 Services
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete content domain architecture with all service interactions
+
+graph TB
+    subgraph "Content Domain Services"
+        ContentPublishing[Content Publishing Service<br/>---<br/>publishContent<br/>updateContent<br/>deleteContent<br/>scheduleContent]
+
+        ContentModeration[Content Moderation Service<br/>---<br/>moderateContent<br/>flagContent<br/>reviewContent<br/>autoModerate]
+
+        ContentSearch[Content Search Service<br/>---<br/>search<br/>indexContent<br/>updateIndex<br/>deleteFromIndex]
+
+        ContentRecommendation[Content Recommendation Service<br/>---<br/>getRecommendations<br/>updateUserProfile<br/>trainModel<br/>calculateSimilarity]
+
+        ContentAnalytics[Content Analytics Service<br/>---<br/>trackView<br/>trackEngagement<br/>getMetrics<br/>generateReports]
+
+        ContentVersioning[Content Versioning Service<br/>---<br/>createVersion<br/>getVersion<br/>listVersions<br/>revertToVersion]
+    end
+
+    subgraph "External Systems"
+        NostrRelays[NOSTR Relays<br/>wss://relay.damus.io<br/>wss://nos.lol<br/>wss://relay.nostr.band]
+        Elasticsearch[Elasticsearch<br/>Full-Text Search<br/>Content Indexing]
+        S3Storage[S3-Compatible Storage<br/>Media Files<br/>Version History]
+        MLModel[ML Model<br/>Content Similarity<br/>Recommendations]
+    end
+
+    subgraph "Shared Infrastructure"
+        EventBus[Event Bus<br/>Event Distribution]
+        RepositoryFactory[Repository Factory<br/>Data Access]
+        CacheService[Cache Service<br/>Multi-Layer Caching]
+    end
+
+    subgraph "Data Models"
+        ContentTable[(content<br/>---<br/>id, user_id, title<br/>body, type, status<br/>tags, metadata<br/>created_at, updated_at)]
+
+        VersionsTable[(content_versions<br/>---<br/>id, content_id<br/>version_number, data<br/>created_at, created_by)]
+
+        AnalyticsTable[(content_analytics<br/>---<br/>content_id, views<br/>likes, shares<br/>engagement_score<br/>period)]
+
+        ModerationTable[(content_moderation<br/>---<br/>id, content_id<br/>status, flags<br/>reviewer_id, notes)]
+
+        SearchIndex[Search Index<br/>---<br/>content_id, title<br/>body, tags, score<br/>boost_factors]
+    end
+
+    %% Content Publishing Flows
+    ContentPublishing -->|Publish to NOSTR| NostrRelays
+    ContentPublishing -->|Check moderation| ContentModeration
+    ContentPublishing -->|Create version| ContentVersioning
+    ContentPublishing -->|Write| RepositoryFactory
+    ContentPublishing -->|Publish event| EventBus
+
+    %% Content Moderation Flows
+    ContentModeration -->|Read content| RepositoryFactory
+    ContentModeration -->|Write flags| RepositoryFactory
+    ContentModeration -->|Publish event| EventBus
+    ContentModeration -->|AI moderation| MLModel
+
+    %% Content Search Flows
+    ContentSearch -->|Index content| Elasticsearch
+    ContentSearch -->|Query index| Elasticsearch
+    ContentSearch -->|Cache results| CacheService
+    ContentSearch -->|Read metadata| RepositoryFactory
+
+    %% Content Recommendation Flows
+    ContentRecommendation -->|Read analytics| ContentAnalytics
+    ContentRecommendation -->|Query similar| MLModel
+    ContentRecommendation -->|Cache recommendations| CacheService
+    ContentRecommendation -->|Read content| RepositoryFactory
+
+    %% Content Analytics Flows
+    ContentAnalytics -->|Track metrics| RepositoryFactory
+    ContentAnalytics -->|Read aggregates| RepositoryFactory
+    ContentAnalytics -->|Cache metrics| CacheService
+    ContentAnalytics -->|Publish event| EventBus
+
+    %% Content Versioning Flows
+    ContentVersioning -->|Store version| S3Storage
+    ContentVersioning -->|Write metadata| RepositoryFactory
+    ContentVersioning -->|Read versions| RepositoryFactory
+
+    %% Repository to Database
+    RepositoryFactory --> ContentTable
+    RepositoryFactory --> VersionsTable
+    RepositoryFactory --> AnalyticsTable
+    RepositoryFactory --> ModerationTable
+
+    %% Event Bus Subscriptions
+    EventBus -->|content.published| ContentSearch
+    EventBus -->|content.published| ContentAnalytics
+    EventBus -->|content.published| ContentRecommendation
+    EventBus -->|content.updated| ContentSearch
+    EventBus -->|content.deleted| ContentSearch
+    EventBus -->|content.moderated| ContentPublishing
+
+    %% Search Integration
+    Elasticsearch --> SearchIndex
+
+    %% Key Workflows
+    Note1["Content Publishing Flow:<br/>1. Validate content<br/>2. Moderate (auto/manual)<br/>3. Create version<br/>4. Save to database<br/>5. Publish to NOSTR<br/>6. Emit events<br/>7. Index for search<br/>8. Update analytics"]
+
+    Note2["Content Discovery Flow:<br/>1. User search query<br/>2. Query Elasticsearch<br/>3. Rank by relevance<br/>4. Check user preferences<br/>5. Apply personalization<br/>6. Return results<br/>7. Track search analytics"]
+
+    Note3["Content Recommendation Flow:<br/>1. Get user profile<br/>2. Fetch engagement history<br/>3. Calculate preferences<br/>4. Query similar content<br/>5. Apply ML model<br/>6. Rank recommendations<br/>7. Return top N results"]
+
+    %% Styling
+    style ContentPublishing fill:#2196f3,stroke:#1565c0,stroke-width:3px,color:#fff
+    style ContentModeration fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentSearch fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentRecommendation fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentAnalytics fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ContentVersioning fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+
+    style NostrRelays fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style Elasticsearch fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#fff
+    style S3Storage fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style MLModel fill:#e91e63,stroke:#ad1457,stroke-width:2px,color:#fff
+
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style RepositoryFactory fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style CacheService fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+
+    style ContentTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style VersionsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style AnalyticsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style ModerationTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style SearchIndex fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#fff
+
+    style Note1 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Note2 fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style Note3 fill:#e0f2f1,stroke:#00695c,stroke-width:2px

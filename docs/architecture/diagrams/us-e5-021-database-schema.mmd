@@ -1,0 +1,51 @@
+erDiagram
+    USER_ACTIVITIES ||--o{ USERS : "belongs to"
+    USER_ACTIVITIES ||--o{ USER_SESSIONS : "part of"
+    ACTIVITY_AGGREGATIONS ||--o{ USERS : "aggregates"
+    USER_SESSIONS ||--o{ USERS : "belongs to"
+
+    USER_ACTIVITIES {
+        uuid id PK "Primary key"
+        uuid user_id FK "User reference"
+        uuid session_id FK "Session reference (nullable)"
+        varchar type "ActivityType enum"
+        jsonb metadata "IP, device, location, etc"
+        timestamp timestamp "When activity occurred"
+        boolean is_anonymous "PII removed flag"
+        timestamp created_at "Record creation"
+    }
+
+    USER_SESSIONS {
+        uuid id PK "Primary key"
+        uuid user_id FK "User reference"
+        timestamp started_at "Session start"
+        timestamp last_activity_at "Last activity"
+        timestamp expires_at "Expiration time"
+        timestamp ended_at "Session end (nullable)"
+        varchar ip_address "Client IP"
+        text user_agent "Browser/device info"
+        varchar device_type "desktop/mobile/tablet"
+        varchar device_os "Operating system"
+        varchar device_browser "Browser name"
+        boolean is_active "Active status"
+        integer activity_count "Activities in session"
+        timestamp created_at "Record creation"
+    }
+
+    ACTIVITY_AGGREGATIONS {
+        uuid id PK "Primary key"
+        uuid user_id FK "User reference (null for global)"
+        varchar period "hourly/daily/weekly/monthly"
+        timestamp start_date "Period start"
+        timestamp end_date "Period end"
+        jsonb activity_counts "Counts by ActivityType"
+        integer unique_users "Unique user count"
+        timestamp created_at "Aggregation creation"
+    }
+
+    USERS {
+        uuid id PK "Primary key"
+        varchar username "Username"
+        varchar email "Email address"
+        timestamp created_at "Account creation"
+    }

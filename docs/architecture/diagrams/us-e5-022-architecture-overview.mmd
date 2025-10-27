@@ -1,0 +1,60 @@
+graph TB
+    subgraph "Client Layer"
+        API[API Endpoints]
+    end
+
+    subgraph "Service Layer"
+        URS[UserRelationshipService]
+
+        subgraph "Core Operations"
+            FOLLOW[Follow/Unfollow]
+            BLOCK[Block/Unblock]
+            MUTE[Mute/Unmute]
+            FRIEND[Friend Requests]
+        end
+
+        subgraph "Data Management"
+            GRAPH[RelationshipGraph<br/>In-Memory Graph]
+            STORE[Relationship Store<br/>Map-based Storage]
+            PRIVACY[Privacy Settings]
+        end
+    end
+
+    subgraph "Infrastructure Layer"
+        EVENTBUS[Event Bus<br/>Domain Events]
+        CACHE[Cache Service<br/>Redis]
+        LOGGER[Logger<br/>Winston/Pino]
+    end
+
+    subgraph "External Services"
+        DB[(Database<br/>PostgreSQL)]
+        NOTIFICATION[Notification Service]
+        AUDIT[Audit Log Service]
+    end
+
+    API --> URS
+    URS --> FOLLOW
+    URS --> BLOCK
+    URS --> MUTE
+    URS --> FRIEND
+
+    FOLLOW --> GRAPH
+    BLOCK --> GRAPH
+    MUTE --> GRAPH
+    FRIEND --> STORE
+
+    GRAPH --> STORE
+    STORE --> PRIVACY
+
+    URS --> EVENTBUS
+    URS --> CACHE
+    URS --> LOGGER
+
+    EVENTBUS -.-> NOTIFICATION
+    EVENTBUS -.-> AUDIT
+    CACHE -.-> DB
+
+    style URS fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff
+    style EVENTBUS fill:#50C878,stroke:#2E7D32,stroke-width:2px,color:#fff
+    style CACHE fill:#FFA500,stroke:#CC8400,stroke-width:2px,color:#fff
+    style GRAPH fill:#9370DB,stroke:#6B4B9C,stroke-width:2px,color:#fff

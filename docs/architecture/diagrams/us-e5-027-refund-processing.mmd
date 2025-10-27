@@ -1,0 +1,75 @@
+```mermaid
+flowchart TD
+    Start([Process Refund]) --> GetRefund[Get Refund Record]
+    GetRefund --> CheckStatus{Refund<br/>Status?}
+
+    CheckStatus -->|Not AUTHORIZED/RETRY| ErrorInvalidStatus[Error: Invalid Status]
+    CheckStatus -->|AUTHORIZED or RETRY| UpdateStatus[Update Status to PROCESSING]
+
+    UpdateStatus --> GetTransaction[Get Original Transaction]
+    GetTransaction --> CheckMethod{Payment<br/>Method?}
+
+    CheckMethod -->|Lightning| CheckInvoiceAge{Invoice<br/>Age?}
+    CheckMethod -->|WebLN| CheckInvoiceAge
+    CheckMethod -->|On-Chain| ProcessOnChain
+    CheckMethod -->|Other| ProcessOriginal
+
+    CheckInvoiceAge -->|< 1 hour| ProcessLightning[Process Lightning Refund]
+    CheckInvoiceAge -->|> 1 hour| ProcessOnChain[Process On-Chain Fallback]
+
+    ProcessLightning --> GenerateInvoice[Generate Lightning Invoice]
+    GenerateInvoice --> SendLightning[Send via Lightning Network]
+    SendLightning --> LNResult{Success?}
+
+    LNResult -->|Yes| RecordPreimage[Record Preimage<br/>Proof of Payment]
+    LNResult -->|No| CheckRetryable{Retryable<br/>Error?}
+
+    ProcessOnChain --> CreateTx[Create On-Chain Transaction]
+    CreateTx --> BroadcastTx[Broadcast Transaction]
+    BroadcastTx --> OnChainResult{Success?}
+
+    OnChainResult -->|Yes| RecordTxHash[Record Transaction Hash]
+    OnChainResult -->|No| CheckRetryable
+
+    ProcessOriginal --> ExecuteRefund[Execute via Original Method]
+    ExecuteRefund --> OriginalResult{Success?}
+
+    OriginalResult -->|Yes| RecordProof[Record Proof of Refund]
+    OriginalResult -->|No| CheckRetryable
+
+    RecordPreimage --> FeeHandling
+    RecordTxHash --> FeeHandling
+    RecordProof --> FeeHandling
+
+    FeeHandling[Apply Fee Handling] --> FeeCheck{Fee<br/>Handling?}
+    FeeCheck -->|Deducted| DeductFee[Deduct Fee from Refund]
+    FeeCheck -->|Absorbed| AbsorbFee[Platform Absorbs Fee]
+
+    DeductFee --> UpdateCompleted
+    AbsorbFee --> UpdateCompleted
+
+    UpdateCompleted[Update Status to COMPLETED] --> EmitSuccess[Emit REFUND_COMPLETED Event]
+    EmitSuccess --> SendReceipt[Send Receipt to User]
+    SendReceipt --> Success([Refund Success])
+
+    CheckRetryable -->|Yes| CheckRetryCount{Retry Count<br/>< Max?}
+    CheckRetryable -->|No| UpdateFailed
+
+    CheckRetryCount -->|Yes| ScheduleRetry[Update Status to RETRY<br/>Schedule Next Attempt]
+    CheckRetryCount -->|No| UpdateFailed
+
+    UpdateFailed[Update Status to FAILED] --> EmitFailed[Emit REFUND_FAILED Event]
+    EmitFailed --> NotifyFailure[Notify User of Failure]
+    NotifyFailure --> Failure([Refund Failed])
+
+    ScheduleRetry --> Failure
+    ErrorInvalidStatus --> Failure
+
+    style Start fill:#4CAF50
+    style Success fill:#4CAF50
+    style Failure fill:#F44336
+    style ProcessLightning fill:#2196F3
+    style ProcessOnChain fill:#FF9800
+    style ProcessOriginal fill:#9C27B0
+    style FeeHandling fill:#FFC107
+```

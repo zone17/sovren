@@ -1,0 +1,41 @@
+flowchart TD
+    Start([Convert Currency Request]) --> CheckCache{Rate in Cache?}
+
+    CheckCache -->|Yes| CacheHit[Return Cached Rate<br/>~10ms response]
+    CheckCache -->|No| CacheMiss[Cache Miss]
+
+    CacheMiss --> TryPrimary[Try CoinGecko<br/>Primary Provider]
+
+    TryPrimary --> PrimarySuccess{Success?}
+    PrimarySuccess -->|Yes| StoreRate1[Store Rate in Cache<br/>TTL: 5 minutes]
+    PrimarySuccess -->|No| TrySecondary[Try Kraken<br/>Secondary Provider]
+
+    TrySecondary --> SecondarySuccess{Success?}
+    SecondarySuccess -->|Yes| StoreRate2[Store Rate in Cache<br/>TTL: 5 minutes]
+    SecondarySuccess -->|No| TryFallback[Try Fallback<br/>Manual Rates]
+
+    TryFallback --> FallbackSuccess{Rate Available?}
+    FallbackSuccess -->|Yes| StoreRate3[Store Rate in Cache<br/>TTL: 5 minutes]
+    FallbackSuccess -->|No| Error[Throw Error<br/>No Rate Available]
+
+    StoreRate1 --> EmitEvent1[Emit Rate Update Event]
+    StoreRate2 --> EmitEvent2[Emit Rate Update Event]
+    StoreRate3 --> EmitEvent3[Emit Rate Update Event]
+
+    EmitEvent1 --> ReturnRate1[Return Rate to Client]
+    EmitEvent2 --> ReturnRate2[Return Rate to Client]
+    EmitEvent3 --> ReturnRate3[Return Rate to Client]
+
+    CacheHit --> End([Return to Client])
+    ReturnRate1 --> End
+    ReturnRate2 --> End
+    ReturnRate3 --> End
+    Error --> End
+
+    style Start fill:#4a9eff,stroke:#2171d9,stroke-width:2px
+    style CacheHit fill:#6bff6b,stroke:#00cc00,stroke-width:2px
+    style TryPrimary fill:#ffaa00,stroke:#ff7700,stroke-width:2px
+    style TrySecondary fill:#ffaa00,stroke:#ff7700,stroke-width:2px
+    style TryFallback fill:#ffdd00,stroke:#ccaa00,stroke-width:2px
+    style Error fill:#ff4040,stroke:#cc0000,stroke-width:2px
+    style End fill:#9f40ff,stroke:#7700ff,stroke-width:2px

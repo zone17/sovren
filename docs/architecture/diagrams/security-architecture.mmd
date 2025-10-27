@@ -1,0 +1,206 @@
+%% Security Architecture - Comprehensive Security Model
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete security architecture covering authentication, authorization, and data protection
+
+graph TB
+    subgraph "Client Security Layer"
+        Browser[Web Browser<br/>HTTPS Only]
+        PWA[Progressive Web App<br/>Secure Context]
+        CSP[Content Security Policy<br/>XSS Protection]
+        CORS[CORS Policy<br/>Origin Validation]
+    end
+
+    subgraph "Edge Security Layer - Cloudflare"
+        WAF[Web Application Firewall<br/>OWASP Rules]
+        DDoS[DDoS Protection<br/>Rate Limiting]
+        TLS[TLS 1.3<br/>Certificate Management]
+        Bot[Bot Protection<br/>Challenge Page]
+    end
+
+    subgraph "API Gateway Security"
+        RateLimiter[Rate Limiter<br/>Per-IP/User Limits]
+        InputValidation[Input Validation<br/>Schema Enforcement]
+        Sanitization[Data Sanitization<br/>XSS/SQLi Prevention]
+        RequestLogger[Request Logger<br/>Audit Trail]
+    end
+
+    subgraph "Authentication Layer"
+        NostrAuth[NOSTR Authentication<br/>Public Key Cryptography]
+        JWTService[JWT Service<br/>Token Generation/Validation]
+        SessionManager[Session Manager<br/>Redis-backed]
+        NIP05Verifier[NIP-05 Verifier<br/>Identity Verification]
+        ExtensionAuth[Browser Extension Auth<br/>Alby, nos2x]
+    end
+
+    subgraph "Authorization Layer"
+        RBAC[Role-Based Access Control<br/>Admin/Creator/User]
+        PermissionChecker[Permission Checker<br/>Resource Access]
+        ResourceOwner[Resource Ownership<br/>Creator Content]
+        SubscriptionValidator[Subscription Validator<br/>Paid Content Access]
+    end
+
+    subgraph "Application Security"
+        ServiceAuth[Service Authentication<br/>Internal Service Keys]
+        APIKeyManager[API Key Manager<br/>Third-party Access]
+        SecretManager[Secret Manager<br/>Environment Variables]
+        AuditLogger[Audit Logger<br/>Security Events]
+    end
+
+    subgraph "Data Protection Layer"
+        Encryption[Encryption Service<br/>AES-256-GCM]
+        KeyManagement[Key Management<br/>Rotation Policy]
+        DataMasking[Data Masking<br/>PII Protection]
+        BackupEncryption[Backup Encryption<br/>At-Rest Protection]
+    end
+
+    subgraph "Payment Security"
+        LightningAuth[Lightning Node Auth<br/>Macaroon/TLS]
+        PaymentVerification[Payment Verification<br/>HTLC + Preimage]
+        WebhookSignature[Webhook Signature<br/>HMAC-SHA256]
+        IdempotencyKey[Idempotency Keys<br/>Duplicate Prevention]
+    end
+
+    subgraph "Database Security"
+        ConnectionEncryption[Connection Encryption<br/>SSL/TLS Required]
+        QueryParameterization[Prepared Statements<br/>SQL Injection Prevention]
+        RowLevelSecurity[Row-Level Security<br/>PostgreSQL RLS]
+        DataEncryption[Encryption at Rest<br/>Transparent Data Encryption]
+    end
+
+    subgraph "Monitoring & Incident Response"
+        SecurityMonitor[Security Monitor<br/>Real-time Alerts]
+        IntrusionDetection[Intrusion Detection<br/>Anomaly Detection]
+        IncidentResponse[Incident Response<br/>Automated Actions]
+        ThreatIntel[Threat Intelligence<br/>IP Reputation]
+    end
+
+    %% Client to Edge
+    Browser --> TLS
+    PWA --> TLS
+    TLS --> WAF
+    WAF --> DDoS
+    DDoS --> Bot
+
+    %% Edge to API Gateway
+    Bot --> RateLimiter
+    RateLimiter --> InputValidation
+    InputValidation --> Sanitization
+    Sanitization --> RequestLogger
+
+    %% API Gateway to Authentication
+    RequestLogger --> NostrAuth
+    NostrAuth --> ExtensionAuth
+    NostrAuth --> JWTService
+    JWTService --> SessionManager
+    NostrAuth --> NIP05Verifier
+
+    %% Authentication to Authorization
+    SessionManager --> RBAC
+    RBAC --> PermissionChecker
+    PermissionChecker --> ResourceOwner
+    PermissionChecker --> SubscriptionValidator
+
+    %% Authorization to Application
+    SubscriptionValidator --> ServiceAuth
+    ServiceAuth --> APIKeyManager
+    APIKeyManager --> SecretManager
+    SecretManager --> AuditLogger
+
+    %% Data Protection
+    ServiceAuth --> Encryption
+    Encryption --> KeyManagement
+    Encryption --> DataMasking
+    Encryption --> BackupEncryption
+
+    %% Payment Security
+    ServiceAuth --> LightningAuth
+    LightningAuth --> PaymentVerification
+    PaymentVerification --> WebhookSignature
+    PaymentVerification --> IdempotencyKey
+
+    %% Database Security
+    ServiceAuth --> ConnectionEncryption
+    ConnectionEncryption --> QueryParameterization
+    QueryParameterization --> RowLevelSecurity
+    RowLevelSecurity --> DataEncryption
+
+    %% Monitoring
+    RequestLogger -.Events.-> SecurityMonitor
+    AuditLogger -.Events.-> SecurityMonitor
+    SecurityMonitor --> IntrusionDetection
+    IntrusionDetection --> IncidentResponse
+    IntrusionDetection --> ThreatIntel
+
+    %% Client Security
+    Browser --> CSP
+    Browser --> CORS
+
+    %% Security Policies
+    SecurityPolicies["Security Policies:<br/>---<br/>Password Policy: N/A (NOSTR keys)<br/>Session Timeout: 7 days<br/>Token Expiry: 1 hour<br/>Rate Limits: 100 req/min<br/>Max Login Attempts: N/A<br/>CORS Origins: Whitelist only<br/>CSP: Strict policy<br/>HSTS: Max-age 31536000"]
+
+    %% Compliance
+    Compliance["Compliance & Standards:<br/>---<br/>OWASP Top 10<br/>PCI DSS (Level 2)<br/>GDPR Data Protection<br/>SOC 2 Type II<br/>ISO 27001<br/>NIST Cybersecurity Framework"]
+
+    %% Threat Model
+    ThreatModel["Threat Model:<br/>---<br/>1. XSS Attacks → CSP + Sanitization<br/>2. SQL Injection → Prepared Statements<br/>3. CSRF → SameSite Cookies + Tokens<br/>4. DDoS → Rate Limiting + WAF<br/>5. Man-in-Middle → TLS 1.3<br/>6. Session Hijacking → Secure Cookies<br/>7. Brute Force → Rate Limiting<br/>8. Data Breach → Encryption at Rest"]
+
+    %% Incident Response
+    IncidentProcedure["Incident Response:<br/>---<br/>1. Detection (Monitoring)<br/>2. Containment (Block IP)<br/>3. Investigation (Logs)<br/>4. Remediation (Patch)<br/>5. Recovery (Restore)<br/>6. Post-Mortem (Learn)"]
+
+    %% Styling
+    style Browser fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style PWA fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style CSP fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style CORS fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style WAF fill:#f44336,stroke:#c62828,stroke-width:3px,color:#fff
+    style DDoS fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style TLS fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style Bot fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+
+    style RateLimiter fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style InputValidation fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style Sanitization fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style RequestLogger fill:#607d8b,stroke:#37474f,stroke-width:2px,color:#fff
+
+    style NostrAuth fill:#9c27b0,stroke:#6a1b9a,stroke-width:3px,color:#fff
+    style JWTService fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style SessionManager fill:#3f51b5,stroke:#283593,stroke-width:2px,color:#fff
+    style NIP05Verifier fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style ExtensionAuth fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+
+    style RBAC fill:#2196f3,stroke:#1565c0,stroke-width:3px,color:#fff
+    style PermissionChecker fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ResourceOwner fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style SubscriptionValidator fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+
+    style ServiceAuth fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style APIKeyManager fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+    style SecretManager fill:#607d8b,stroke:#37474f,stroke-width:2px,color:#fff
+    style AuditLogger fill:#607d8b,stroke:#37474f,stroke-width:2px,color:#fff
+
+    style Encryption fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style KeyManagement fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style DataMasking fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style BackupEncryption fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style LightningAuth fill:#fff9c4,stroke:#f57f17,stroke-width:3px
+    style PaymentVerification fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style WebhookSignature fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style IdempotencyKey fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+
+    style ConnectionEncryption fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style QueryParameterization fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style RowLevelSecurity fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style DataEncryption fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style SecurityMonitor fill:#f44336,stroke:#c62828,stroke-width:3px,color:#fff
+    style IntrusionDetection fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style IncidentResponse fill:#ff5722,stroke:#bf360c,stroke-width:2px,color:#fff
+    style ThreatIntel fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+
+    style SecurityPolicies fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Compliance fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style ThreatModel fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style IncidentProcedure fill:#fff3e0,stroke:#e65100,stroke-width:2px

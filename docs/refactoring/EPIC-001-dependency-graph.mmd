@@ -1,0 +1,86 @@
+graph TB
+    subgraph "Sprint 0: Foundation - Parallel Work (6-8 hours)"
+        subgraph "Stream A: Frontend Types (1 developer, ~12 hours)"
+            S1["#1: Event Handlers<br/>2-3 hrs | Low Risk"]
+            S2["#2: API Responses<br/>2-3 hrs | Low Risk"]
+            S3["#3: Validation<br/>2-3 hrs | MEDIUM RISK"]
+            S4["#4: Email Service<br/>2 hrs | Low Risk"]
+            S5["#5: Test Utilities<br/>2 hrs | Low Risk"]
+        end
+
+        subgraph "Stream B: Shared Package Types (1 developer, ~6 hours)"
+            S6["#6: Quality Metrics<br/>2-3 hrs | Low Risk"]
+            S7["#7: NOSTR Keys<br/>1.5-2 hrs | Low Risk"]
+            S8["#8: Environment<br/>1.5 hrs | Low Risk"]
+        end
+
+        subgraph "Stream C: API & Integration (1 developer, ~5 hours)"
+            S9["#9: API Routes<br/>2-3 hrs | MEDIUM RISK"]
+            S10["#10: NOSTR Service<br/>2 hrs | Low Risk"]
+        end
+    end
+
+    subgraph "Sprint 1: Strict Mode - Sequential (3-4 hours)"
+        subgraph "Stream D: Strict Mode Enforcement (1 developer)"
+            S11["#11: Enable Strict Mode<br/>1.5-2 hrs | MEDIUM RISK"]
+            S12["#12: Validate Coverage<br/>1.5-2 hrs | Low Risk"]
+        end
+    end
+
+    %% Sequential dependencies (solid lines with labels)
+    S1 --> S11
+    S2 --> S11
+    S3 --> S11
+    S4 --> S11
+    S5 --> S11
+    S6 --> S11
+    S7 --> S11
+    S8 --> S11
+    S9 --> S11
+    S10 --> S11
+    S11 --> S12
+
+    %% Cross-stream relationships (dashed lines)
+    S2 -.Type Usage.-> S6
+    S2 -.Type Usage.-> S9
+    S7 -.Type Usage.-> S10
+    S4 -.API Call.-> S9
+
+    %% Parallel work opportunities (annotations)
+    S1 -.Parallel Stream A.-> S2
+    S2 -.Parallel Stream A.-> S3
+    S3 -.Parallel Stream A.-> S4
+    S4 -.Parallel Stream A.-> S5
+
+    S6 -.Parallel Stream B.-> S7
+    S7 -.Parallel Stream B.-> S8
+
+    S9 -.Parallel Stream C.-> S10
+
+    %% Styling
+    classDef frontend fill:#e1f5e1,stroke:#2d5016,stroke-width:2px,color:#000
+    classDef shared fill:#e1e5f5,stroke:#1a3d7c,stroke-width:2px,color:#000
+    classDef api fill:#f5e1e1,stroke:#7c1a1a,stroke-width:2px,color:#000
+    classDef strict fill:#f5f5e1,stroke:#7c7c1a,stroke-width:2px,color:#000
+    classDef mediumRisk fill:#ffebcc,stroke:#cc6600,stroke-width:3px,color:#000
+
+    class S1,S2,S3,S4,S5 frontend
+    class S6,S7,S8 shared
+    class S9,S10 api
+    class S11,S12 strict
+    class S3,S9,S11 mediumRisk
+
+    %% Legend
+    subgraph "Legend"
+        L1["Frontend Types Stream"]
+        L2["Shared Package Stream"]
+        L3["API Integration Stream"]
+        L4["Strict Mode Stream"]
+        L5["Medium Risk Story"]
+    end
+
+    class L1 frontend
+    class L2 shared
+    class L3 api
+    class L4 strict
+    class L5 mediumRisk

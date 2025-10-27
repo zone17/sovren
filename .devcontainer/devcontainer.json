@@ -1,0 +1,208 @@
+{
+  "name": "Sovren Development Container",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // TypeScript and JavaScript
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+
+        // Docker
+        "ms-azuretools.vscode-docker",
+
+        // Node.js
+        "ms-vscode.vscode-node-azure-pack",
+
+        // Testing
+        "orta.vscode-jest",
+        "ms-playwright.playwright",
+
+        // Git
+        "eamodio.gitlens",
+
+        // Markdown
+        "yzhang.markdown-all-in-one",
+        "bierner.markdown-mermaid",
+
+        // Productivity
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-js-debug",
+
+        // Code Quality
+        "sonarsource.sonarlint-vscode",
+        "streetsidesoftware.code-spell-checker",
+
+        // React
+        "ms-vscode.vscode-react-refactor",
+        "formulahendry.auto-rename-tag",
+
+        // API Development
+        "humao.rest-client",
+        "42crunch.vscode-openapi",
+
+        // Database
+        "ms-mssql.mssql",
+        "cweijan.vscode-postgresql-client2",
+
+        // Theme
+        "PKief.material-icon-theme",
+        "zhuangtongfa.material-theme"
+      ],
+
+      "settings": {
+        "typescript.preferences.importModuleSpecifier": "relative",
+        "typescript.suggest.autoImports": true,
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        "typescript.inlayHints.parameterNames.enabled": "literals",
+        "typescript.inlayHints.parameterTypes.enabled": true,
+        "typescript.inlayHints.variableTypes.enabled": true,
+        "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
+        "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+
+        "eslint.workingDirectories": ["packages/backend", "packages/frontend"],
+        "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+
+        "prettier.configPath": "./prettier.config.js",
+        "prettier.requireConfig": true,
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true,
+          "source.organizeImports": true
+        },
+
+        "tailwindCSS.includeLanguages": {
+          "typescript": "javascript",
+          "typescriptreact": "javascript"
+        },
+        "tailwindCSS.experimental.classRegex": [
+          ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+          ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+        ],
+
+        "files.associations": {
+          "*.css": "tailwindcss",
+          "*.md": "markdown"
+        },
+
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash"
+          }
+        },
+
+        "jest.testEnvironment": "jsdom",
+        "jest.rootPath": "packages/backend",
+        "jest.jestCommandLine": "npm test",
+
+        "debug.node.autoAttach": "on",
+        "debug.javascript.autoAttachFilter": "onlyWithFlag",
+
+        "git.autofetch": true,
+        "git.enableSmartCommit": true,
+        "git.confirmSync": false,
+
+        "files.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/build": true,
+          "**/.git": true,
+          "**/.DS_Store": true,
+          "**/coverage": true
+        },
+
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/build": true,
+          "**/coverage": true
+        },
+
+        "emmet.includeLanguages": {
+          "typescript": "html",
+          "typescriptreact": "html"
+        },
+
+        "workbench.iconTheme": "material-icon-theme",
+        "workbench.colorTheme": "One Dark Pro",
+
+        "markdown.extension.toc.levels": "2..6",
+        "markdown.extension.preview.autoShowPreviewToSide": true,
+
+        "rest-client.environmentVariables": {
+          "development": {
+            "baseUrl": "http://localhost:3001",
+            "frontend": "http://localhost:5173"
+          }
+        }
+      }
+    }
+  },
+
+  "forwardPorts": [3001, 5173, 9229, 8080, 8025, 6379, 5432],
+  "portsAttributes": {
+    "3001": {
+      "label": "Backend API",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Frontend Dev Server",
+      "onAutoForward": "openBrowser"
+    },
+    "9229": {
+      "label": "Node.js Debug",
+      "onAutoForward": "silent"
+    },
+    "8080": {
+      "label": "Nginx Proxy",
+      "onAutoForward": "notify"
+    },
+    "8025": {
+      "label": "Mailhog UI",
+      "onAutoForward": "notify"
+    },
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    }
+  },
+
+  "postCreateCommand": "npm install && npm run docker:setup",
+  "postStartCommand": "npm run docker:health",
+
+  "remoteUser": "backend",
+  "containerUser": "backend",
+
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    }
+  },
+
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "source=sovren-backend-node-modules,target=/app/node_modules,type=volume",
+    "source=sovren-frontend-node-modules,target=/workspace/packages/frontend/node_modules,type=volume"
+  ]
+}

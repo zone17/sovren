@@ -1,0 +1,109 @@
+%% Payment System Architecture Overview
+%% PAY-018: Payment Flow Mermaid Diagrams
+%%
+%% This diagram shows the complete payment processing architecture
+%% with all major components and their interactions across the system.
+%%
+%% Components:
+%% - Frontend: User-facing payment UI
+%% - Backend API: Payment processing logic
+%% - Lightning Network: Bitcoin payment provider
+%% - Database: Payment state and audit trail
+%% - Services: Core payment processing services
+
+graph TB
+    subgraph "Frontend Layer"
+        UI[Payment UI Components]
+        Wallet[Wallet Integration]
+        WS[WebSocket Client]
+    end
+
+    subgraph "API Gateway Layer"
+        API[API Gateway]
+        Auth[Authentication Middleware]
+        Rate[Rate Limiter]
+        WebhookAPI[Webhook Endpoints]
+    end
+
+    subgraph "Payment Processing Services"
+        LPS[Lightning Payment Service]
+        PSM[Payment State Machine<br/>PAY-008]
+        PRS[Payment Retry Service<br/>PAY-009]
+        IES[Invoice Expiration Service<br/>PAY-004]
+        WHV[Webhook Signature Validator<br/>PAY-003]
+    end
+
+    subgraph "Lightning Network Integration"
+        LND[LND Node]
+        CLN[Core Lightning Node]
+        Relay[Lightning Network]
+    end
+
+    subgraph "Data Layer"
+        DB[(PostgreSQL Database)]
+        Cache[(Redis Cache)]
+        EventLog[(Payment Event Log)]
+    end
+
+    subgraph "External Services"
+        Email[Email Service]
+        Analytics[Analytics Service]
+        Monitor[Monitoring/Metrics]
+    end
+
+    %% User Flow - Invoice Creation
+    UI -->|1. Create Invoice| API
+    API -->|2. Authenticate| Auth
+    Auth -->|3. Generate Invoice| LPS
+    LPS -->|4. Create BOLT11| LND
+    LND -->|5. Broadcast| Relay
+    LPS -->|6. Save Invoice| DB
+    LPS -->|7. Return Payment Request| UI
+    UI -->|8. Display Invoice| Wallet
+
+    %% Payment Flow - Lightning Network
+    Wallet -->|9. Pay Invoice| Relay
+    Relay -->|10. Settle Payment| LND
+    LND -->|11. Webhook Event| WebhookAPI
+    WebhookAPI -->|12. Verify Signature| WHV
+    WHV -->|13. Process Payment| PSM
+    PSM -->|14. Update State| DB
+    PSM -->|15. Log Event| EventLog
+
+    %% Verification Flow (PAY-001)
+    PRS -->|16. Verify Status| LND
+    LND -->|17. Invoice Status| PRS
+    PRS -->|18. State Transition| PSM
+
+    %% Real-time Updates
+    PSM -->|19. Broadcast Update| WS
+    WS -->|20. Live Status| UI
+
+    %% Background Jobs
+    IES -->|21. Check Expired| DB
+    IES -->|22. Expire Invoice| PSM
+    PRS -->|23. Retry Failed| LPS
+
+    %% Monitoring & Analytics
+    PSM -->|24. Record Metrics| Monitor
+    LPS -->|25. Track Analytics| Analytics
+    PRS -->|26. Send Notifications| Email
+
+    %% Caching Layer
+    LPS <-->|27. Cache Invoices| Cache
+    PSM <-->|28. Cache State| Cache
+
+    %% Styling
+    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef api fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef service fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef lightning fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef database fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef external fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+
+    class UI,Wallet,WS frontend
+    class API,Auth,Rate,WebhookAPI api
+    class LPS,PSM,PRS,IES,WHV service
+    class LND,CLN,Relay lightning
+    class DB,Cache,EventLog database
+    class Email,Analytics,Monitor external

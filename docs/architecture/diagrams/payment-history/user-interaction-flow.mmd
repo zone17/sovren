@@ -1,0 +1,59 @@
+flowchart TD
+    Start([User Opens Dashboard]) --> Load[Load Payment History]
+    Load --> HasData{Has Payments?}
+
+    HasData -->|No| Empty[Show Empty State]
+    HasData -->|Yes| Display[Display Payment List]
+
+    Display --> UserAction{User Action?}
+
+    UserAction -->|Filter| FilterFlow[Apply Filter]
+    FilterFlow --> FilterOptions{Filter Type?}
+    FilterOptions -->|All| ShowAll[Show All Payments]
+    FilterOptions -->|Paid| ShowPaid[Show Paid Only]
+    FilterOptions -->|Pending| ShowPending[Show Pending Only]
+    FilterOptions -->|Failed| ShowFailed[Show Failed Only]
+    ShowAll --> UpdateView[Update View]
+    ShowPaid --> UpdateView
+    ShowPending --> UpdateView
+    ShowFailed --> UpdateView
+
+    UserAction -->|Sort| SortFlow[Change Sort Order]
+    SortFlow --> SortOptions{Sort By?}
+    SortOptions -->|Date| SortDate[Sort by Date]
+    SortOptions -->|Amount| SortAmount[Sort by Amount]
+    SortDate --> UpdateView
+    SortAmount --> UpdateView
+
+    UserAction -->|Navigate| PageFlow[Navigate Pages]
+    PageFlow --> PageOptions{Direction?}
+    PageOptions -->|Next| NextPage[Go to Next Page]
+    PageOptions -->|Previous| PrevPage[Go to Previous Page]
+    NextPage --> UpdateView
+    PrevPage --> UpdateView
+
+    UserAction -->|Copy| CopyFlow[Copy Payment Hash]
+    CopyFlow --> CopyClipboard[Write to Clipboard]
+    CopyClipboard --> ShowToast1[Show Success Toast]
+    ShowToast1 --> UserAction
+
+    UserAction -->|Download| DownloadFlow[Download Receipt]
+    DownloadFlow --> GenerateJSON[Generate Receipt JSON]
+    GenerateJSON --> TriggerDownload[Trigger File Download]
+    TriggerDownload --> ShowToast2[Show Success Toast]
+    ShowToast2 --> UserAction
+
+    UserAction -->|Refresh| RefreshFlow[Refresh Data]
+    RefreshFlow --> Load
+
+    UpdateView --> UserAction
+
+    Empty --> WaitAction[Wait for First Payment]
+    WaitAction --> End([User Leaves Dashboard])
+    UserAction --> End
+
+    style Start fill:#10b981,color:#fff
+    style Display fill:#6366f1,color:#fff
+    style UserAction fill:#f59e0b,color:#fff
+    style UpdateView fill:#8b5cf6,color:#fff
+    style End fill:#ef4444,color:#fff

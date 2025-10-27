@@ -1,0 +1,60 @@
+graph TD
+    A[Health Monitor] --> B{Check Interval<br/>Every 30s}
+
+    B --> C[Measure Latency]
+    B --> D[Track Success Rate]
+    B --> E[Monitor Uptime]
+    B --> F[Check Connection State]
+
+    C --> G{Latency Check}
+    D --> H{Success Rate Check}
+    E --> I{Uptime Check}
+    F --> J{Connection Check}
+
+    G -->|< 500ms| K[Score: 100]
+    G -->|500-1000ms| L[Score: 75]
+    G -->|1000-2000ms| M[Score: 50]
+    G -->|> 2000ms| N[Score: 0]
+
+    H -->|> 95%| O[Score: 100]
+    H -->|80-95%| P[Score: 75]
+    H -->|60-80%| Q[Score: 50]
+    H -->|< 60%| R[Score: 0]
+
+    I -->|> 99%| S[Score: 100]
+    I -->|90-99%| T[Score: 75]
+    I -->|< 90%| U[Score: 50]
+
+    J -->|Connected| V[Score: 100]
+    J -->|Disconnected| W[Score: 0]
+
+    K --> X[Calculate Weighted Score]
+    L --> X
+    M --> X
+    N --> X
+    O --> X
+    P --> X
+    Q --> X
+    R --> X
+    S --> X
+    T --> X
+    U --> X
+    V --> X
+    W --> X
+
+    X --> Y{Overall Health}
+    Y -->|Score > 80| Z[HEALTHY]
+    Y -->|Score 50-80| AA[DEGRADED]
+    Y -->|Score < 50| AB[UNHEALTHY]
+
+    AB --> AC[Trigger Reconnection]
+    AC --> AD{Exponential Backoff}
+    AD -->|Attempt 1| AE[Retry in 1s]
+    AD -->|Attempt 2| AF[Retry in 2s]
+    AD -->|Attempt 3| AG[Retry in 4s]
+    AD -->|Attempt 4| AH[Retry in 8s]
+    AD -->|Max Attempts| AI[Mark as Failed]
+
+    style Z fill:#2ecc71,color:#fff
+    style AA fill:#f39c12,color:#fff
+    style AB fill:#e74c3c,color:#fff

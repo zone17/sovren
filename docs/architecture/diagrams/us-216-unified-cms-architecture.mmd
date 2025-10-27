@@ -1,0 +1,40 @@
+graph TB
+    %% Content Management Hub - Main Controller
+    Hub[ContentManagementHub<br/>Main Controller] --> Library[ContentLibrary<br/>Unified Browsing]
+    Hub --> Editor[ContentEditor<br/>Unified Editing]
+    Hub --> Service[UnifiedContentService<br/>API Abstraction]
+
+    %% Component to State Management
+    Library --> Redux[UnifiedCmsSlice<br/>Centralized State]
+    Editor --> Redux
+    Service --> Redux
+
+    %% State Management to Backend
+    Redux --> API[Backend API<br/>Content Endpoints]
+    Service --> Cache[Multi-level Cache<br/>Performance Layer]
+
+    %% Backend Infrastructure
+    API --> Database[(PostgreSQL Database<br/>Unified Schema)]
+    Migration[Migration System<br/>Safe Data Transfer] --> Database
+
+    %% External Integrations
+    Service --> Auth[Authentication<br/>NOSTR/JWT]
+    Service --> Validation[Input Validation<br/>Zod Schemas]
+
+    %% Monitoring and Observability
+    Hub --> Monitor[Monitoring<br/>Performance Metrics]
+    API --> Logging[Audit Logging<br/>Security Events]
+
+    %% Feature Flags
+    Hub --> FeatureFlags[Feature Flags<br/>Gradual Rollout]
+
+    %% Styling
+    classDef primary fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef secondary fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef backend fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef infrastructure fill:#fff3e0,stroke:#e65100,stroke-width:2px
+
+    class Hub,Library,Editor primary
+    class Redux,Service,Cache secondary
+    class API,Database,Migration backend
+    class Auth,Validation,Monitor,Logging,FeatureFlags infrastructure

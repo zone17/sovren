@@ -1,0 +1,165 @@
+%% Payment Domain Architecture - 7 Services
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete payment domain architecture with Lightning Network integration
+
+graph TB
+    subgraph "Payment Domain Services"
+        PaymentProcessing[Payment Processing Service<br/>---<br/>createPayment<br/>verifyPayment<br/>processRefund<br/>getPaymentStatus<br/>listPayments]
+
+        CurrencyService[Currency Service<br/>---<br/>convertCurrency<br/>getExchangeRate<br/>supportedCurrencies<br/>updateRates]
+
+        SubscriptionService[Subscription Service<br/>---<br/>createSubscription<br/>renewSubscription<br/>cancelSubscription<br/>upgradeDowngrade<br/>getSubscriptionStatus]
+
+        RefundService[Refund Service<br/>---<br/>requestRefund<br/>processRefund<br/>approveRefund<br/>rejectRefund<br/>getRefundStatus]
+
+        PaymentAnalytics[Payment Analytics Service<br/>---<br/>trackRevenue<br/>getPaymentMetrics<br/>calculateMRR<br/>forecastRevenue<br/>generateReports]
+
+        WebhookService[Webhook Service<br/>---<br/>registerWebhook<br/>deliverWebhook<br/>retryFailed<br/>verifySignature<br/>getDeliveryStatus]
+    end
+
+    subgraph "External Systems"
+        LightningNode[Lightning Node<br/>LND/c-lightning<br/>---<br/>createInvoice<br/>checkPayment<br/>sendPayment<br/>getBalance]
+
+        ExchangeAPIs[Exchange Rate APIs<br/>---<br/>CoinGecko<br/>Binance<br/>Kraken]
+
+        WebhookEndpoints[External Webhook Endpoints<br/>---<br/>Third-party integrations<br/>Custom callbacks]
+    end
+
+    subgraph "Shared Infrastructure"
+        EventBus[Event Bus<br/>Event Distribution]
+        RepositoryFactory[Repository Factory<br/>Data Access]
+        CacheService[Cache Service<br/>Multi-Layer Caching]
+        BackgroundScheduler[Background Scheduler<br/>Cron Jobs + Queues]
+    end
+
+    subgraph "Data Models"
+        PaymentsTable[(payments<br/>---<br/>id, user_id, creator_id<br/>amount, currency<br/>payment_hash, preimage<br/>bolt11_invoice<br/>status, metadata<br/>created_at, confirmed_at)]
+
+        SubscriptionsTable[(subscriptions<br/>---<br/>id, user_id, creator_id<br/>plan_id, status<br/>amount, interval<br/>next_billing_date<br/>failed_payments<br/>created_at, cancelled_at)]
+
+        RefundsTable[(refunds<br/>---<br/>id, payment_id<br/>amount, reason<br/>status, approver_id<br/>processed_at)]
+
+        AnalyticsTable[(payment_analytics<br/>---<br/>period, metric_type<br/>value, creator_id<br/>calculated_at)]
+
+        WebhooksTable[(webhooks<br/>---<br/>id, url, events<br/>secret, status<br/>delivery_attempts<br/>last_delivery_at)]
+
+        ExchangeRatesTable[(exchange_rates<br/>---<br/>from_currency<br/>to_currency, rate<br/>source, updated_at)]
+    end
+
+    %% Payment Processing Flows
+    PaymentProcessing -->|Create invoice| LightningNode
+    PaymentProcessing -->|Verify payment| LightningNode
+    PaymentProcessing -->|Convert currency| CurrencyService
+    PaymentProcessing -->|Write| RepositoryFactory
+    PaymentProcessing -->|Publish event| EventBus
+    PaymentProcessing -->|Cache status| CacheService
+
+    %% Currency Service Flows
+    CurrencyService -->|Fetch rates| ExchangeAPIs
+    CurrencyService -->|Write rates| RepositoryFactory
+    CurrencyService -->|Cache rates| CacheService
+    CurrencyService -->|Publish event| EventBus
+
+    %% Subscription Service Flows
+    SubscriptionService -->|Create payment| PaymentProcessing
+    SubscriptionService -->|Write subscription| RepositoryFactory
+    SubscriptionService -->|Schedule renewal| BackgroundScheduler
+    SubscriptionService -->|Publish event| EventBus
+    SubscriptionService -->|Cache status| CacheService
+
+    %% Refund Service Flows
+    RefundService -->|Verify payment| PaymentProcessing
+    RefundService -->|Process refund| LightningNode
+    RefundService -->|Write refund| RepositoryFactory
+    RefundService -->|Publish event| EventBus
+
+    %% Payment Analytics Flows
+    PaymentAnalytics -->|Read payments| RepositoryFactory
+    PaymentAnalytics -->|Read subscriptions| RepositoryFactory
+    PaymentAnalytics -->|Write metrics| RepositoryFactory
+    PaymentAnalytics -->|Cache metrics| CacheService
+    PaymentAnalytics -->|Publish event| EventBus
+
+    %% Webhook Service Flows
+    WebhookService -->|Deliver webhook| WebhookEndpoints
+    WebhookService -->|Read config| RepositoryFactory
+    WebhookService -->|Write delivery log| RepositoryFactory
+    WebhookService -->|Schedule retry| BackgroundScheduler
+    WebhookService -->|Publish event| EventBus
+
+    %% Repository to Database
+    RepositoryFactory --> PaymentsTable
+    RepositoryFactory --> SubscriptionsTable
+    RepositoryFactory --> RefundsTable
+    RepositoryFactory --> AnalyticsTable
+    RepositoryFactory --> WebhooksTable
+    RepositoryFactory --> ExchangeRatesTable
+
+    %% Background Jobs
+    BackgroundScheduler -->|Trigger renewal| SubscriptionService
+    BackgroundScheduler -->|Update rates| CurrencyService
+    BackgroundScheduler -->|Retry webhooks| WebhookService
+    BackgroundScheduler -->|Calculate analytics| PaymentAnalytics
+
+    %% Event Bus Subscriptions
+    EventBus -->|payment.created| PaymentAnalytics
+    EventBus -->|payment.confirmed| WebhookService
+    EventBus -->|payment.confirmed| SubscriptionService
+    EventBus -->|payment.confirmed| PaymentAnalytics
+    EventBus -->|payment.failed| WebhookService
+    EventBus -->|subscription.created| PaymentAnalytics
+    EventBus -->|subscription.renewed| PaymentAnalytics
+    EventBus -->|subscription.cancelled| PaymentAnalytics
+    EventBus -->|refund.processed| PaymentAnalytics
+
+    %% Cross-Domain Dependencies
+    NotificationService[Notification Service]
+    ContentService[Content Publishing Service]
+    AuditService[Audit Log Service]
+
+    WebhookService -->|Notify| NotificationService
+    SubscriptionService -->|Grant access| ContentService
+    PaymentProcessing -->|Log transaction| AuditService
+
+    %% Key Workflows
+    Note1["Payment Flow:<br/>1. Create payment request<br/>2. Generate Lightning invoice<br/>3. User pays invoice<br/>4. Lightning node confirms<br/>5. Webhook callback<br/>6. Update database<br/>7. Emit events<br/>8. Update analytics"]
+
+    Note2["Subscription Flow:<br/>1. Create subscription<br/>2. Initial payment<br/>3. Schedule renewal<br/>4. Auto-renew on date<br/>5. Process payment<br/>6. Extend subscription<br/>7. Handle failures<br/>8. Notify user"]
+
+    Note3["Refund Flow:<br/>1. Request refund<br/>2. Verify eligibility<br/>3. Approve/reject<br/>4. Process refund<br/>5. Update Lightning<br/>6. Update database<br/>7. Emit events<br/>8. Notify parties"]
+
+    Note4["Analytics Flow:<br/>1. Aggregate payments<br/>2. Calculate MRR<br/>3. Track conversions<br/>4. Forecast revenue<br/>5. Identify trends<br/>6. Cache metrics<br/>7. Generate reports"]
+
+    %% Styling
+    style PaymentProcessing fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#fff
+    style CurrencyService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style SubscriptionService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style RefundService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style PaymentAnalytics fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style WebhookService fill:#ff5722,stroke:#bf360c,stroke-width:2px,color:#fff
+
+    style LightningNode fill:#fff9c4,stroke:#f57f17,stroke-width:3px
+    style ExchangeAPIs fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style WebhookEndpoints fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style RepositoryFactory fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style CacheService fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style BackgroundScheduler fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+
+    style PaymentsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style SubscriptionsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style RefundsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style AnalyticsTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style WebhooksTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style ExchangeRatesTable fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style NotificationService fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+    style ContentService fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style AuditService fill:#607d8b,stroke:#37474f,stroke-width:2px,color:#fff
+
+    style Note1 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Note2 fill:#fff8e1,stroke:#f57f17,stroke-width:2px
+    style Note3 fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style Note4 fill:#e0f7fa,stroke:#00838f,stroke-width:2px

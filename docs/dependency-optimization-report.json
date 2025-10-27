@@ -1,0 +1,1625 @@
+{
+  "bundleAnalysis": {
+    "totalSize": 902.0600000000001,
+    "bundles": [
+      {
+        "filename": "dist/assets/css/index-Ba6T0jIn.css",
+        "size": 129.27
+      },
+      {
+        "filename": "dist/assets/js/Sovren-icon-BmztuJ9O.js",
+        "size": 0.07
+      },
+      {
+        "filename": "dist/assets/js/skeleton-BaJNmwFr.js",
+        "size": 0.22
+      },
+      {
+        "filename": "dist/assets/js/clock-_iOb25o2.js",
+        "size": 0.36
+      },
+      {
+        "filename": "dist/assets/js/smartphone-BtFsS24j.js",
+        "size": 0.38
+      },
+      {
+        "filename": "dist/assets/js/lock-BR9A60PU.js",
+        "size": 0.39
+      },
+      {
+        "filename": "dist/assets/js/dollar-sign-CIXt7pfv.js",
+        "size": 0.4
+      },
+      {
+        "filename": "dist/assets/js/copy-B_oDTVh-.js",
+        "size": 0.42
+      },
+      {
+        "filename": "dist/assets/js/external-link-qnCAjkHB.js",
+        "size": 0.44
+      },
+      {
+        "filename": "dist/assets/js/key-DUOtrxEA.js",
+        "size": 0.44
+      },
+      {
+        "filename": "dist/assets/js/wallet-C7KdNx_E.js",
+        "size": 0.47
+      },
+      {
+        "filename": "dist/assets/js/input-CPCUYwXw.js",
+        "size": 0.54
+      },
+      {
+        "filename": "dist/assets/js/crown-BSnLwjm5.js",
+        "size": 0.55
+      },
+      {
+        "filename": "dist/assets/js/star-p4nOl0Os.js",
+        "size": 0.66
+      },
+      {
+        "filename": "dist/assets/js/card-CDgFxqXr.js",
+        "size": 0.72
+      },
+      {
+        "filename": "dist/assets/js/globe-BnkkgqLP.js",
+        "size": 0.8
+      },
+      {
+        "filename": "dist/assets/js/settings-SYVQ3woZ.js",
+        "size": 0.91
+      },
+      {
+        "filename": "dist/assets/js/badge-B8iUQrs8.js",
+        "size": 0.96
+      },
+      {
+        "filename": "dist/assets/js/eye-off-BnU2HbB1.js",
+        "size": 0.98
+      },
+      {
+        "filename": "dist/assets/js/zap-BozJJ4_N.js",
+        "size": 1.16
+      },
+      {
+        "filename": "dist/assets/js/sparkles-BC3mYaZS.js",
+        "size": 1.34
+      },
+      {
+        "filename": "dist/assets/js/pure-CDcV6Obf.js",
+        "size": 1.35
+      },
+      {
+        "filename": "dist/assets/js/Post-CDwN7EhO.js",
+        "size": 1.65
+      },
+      {
+        "filename": "dist/assets/js/label-C_W8x6p1.js",
+        "size": 3.81
+      },
+      {
+        "filename": "dist/assets/js/createLucideIcon-COx2mpG2.js",
+        "size": 5.82
+      },
+      {
+        "filename": "dist/assets/js/Home-CoTwF2oG.js",
+        "size": 5.85
+      },
+      {
+        "filename": "dist/assets/js/MonitoringDashboard-DZDc_bcF.js",
+        "size": 7.63
+      },
+      {
+        "filename": "dist/assets/js/Login-JjB4YwrI.js",
+        "size": 7.86
+      },
+      {
+        "filename": "dist/assets/js/Profile-BrUWFicq.js",
+        "size": 8.8
+      },
+      {
+        "filename": "dist/assets/js/ProfileDashboard-BwcDPJ9m.js",
+        "size": 8.95
+      },
+      {
+        "filename": "dist/assets/js/Signup-G2pPInUn.js",
+        "size": 9.2
+      },
+      {
+        "filename": "dist/assets/js/performance-DVIWdGy_.js",
+        "size": 9.36
+      },
+      {
+        "filename": "dist/assets/js/predictiveAnalytics-BDP5gNEo.js",
+        "size": 10.74
+      },
+      {
+        "filename": "dist/assets/js/NostrOnboarding-Cd-zPu64.js",
+        "size": 15.88
+      },
+      {
+        "filename": "dist/assets/js/LightningOnboarding-B_Mr_Qes.js",
+        "size": 18.43
+      },
+      {
+        "filename": "dist/assets/js/router-CZIFw3Z_.js",
+        "size": 20.72
+      },
+      {
+        "filename": "dist/assets/js/SubscriptionManager-Dpy8SWCp.js",
+        "size": 22.67
+      },
+      {
+        "filename": "dist/assets/js/utils-CLJs87Zn.js",
+        "size": 24.48
+      },
+      {
+        "filename": "dist/assets/js/redux-B0Ki0Efh.js",
+        "size": 26.72
+      },
+      {
+        "filename": "dist/assets/js/CreatorDashboard-rY28RQ7H.js",
+        "size": 29.43
+      },
+      {
+        "filename": "dist/assets/js/CreatorDashboard-D6CtM2U4.js",
+        "size": 30.66
+      },
+      {
+        "filename": "dist/assets/js/sha256-R1bsHuQI.js",
+        "size": 38.1
+      },
+      {
+        "filename": "dist/assets/js/SovereignOnboarding-Ds4uSM1p.js",
+        "size": 40.08
+      },
+      {
+        "filename": "dist/assets/js/index-De350_Sd.js",
+        "size": 47.21
+      },
+      {
+        "filename": "dist/assets/js/index-CnzPuDEO.js",
+        "size": 101.46
+      },
+      {
+        "filename": "dist/assets/js/tooltip-DKs3Myww.js",
+        "size": 121.99
+      },
+      {
+        "filename": "dist/assets/js/react-vendor-D03TD32I.js",
+        "size": 141.73
+      }
+    ],
+    "recommendation": {
+      "level": "critical",
+      "message": "Bundle size is too large and needs immediate optimization"
+    }
+  },
+  "duplicates": [],
+  "optimizations": [],
+  "treeShaking": [
+    {
+      "package": "barrel-imports",
+      "recommendation": "Replace barrel imports with direct imports",
+      "reason": "Barrel imports prevent effective tree shaking",
+      "impact": "Significantly reduced bundle size",
+      "files": [
+        {
+          "file": "src/App.test.tsx",
+          "imports": [
+            "import { configureStore } from '@reduxj",
+            "import { render } from '@testing-librar",
+            "import { Provider } from 'react-redux';\nimport App from '"
+          ]
+        },
+        {
+          "file": "src/App.tsx",
+          "imports": [
+            "import { Route, Routes } from 'react-router-dom';\nimport Layout from '"
+          ]
+        },
+        {
+          "file": "src/__tests__/components/analytics/OptimizationSuggestionPanel.test.tsx",
+          "imports": [
+            "import { afterEach, beforeEach, describe, expect, it } from '@jes",
+            "import { QueryClient, QueryClientProvider } from '@tanstac",
+            "import { render, screen, waitFor, within } from '@testing-librar"
+          ]
+        },
+        {
+          "file": "src/__tests__/components/performance/CollaborativeFeatures.test.tsx",
+          "imports": [
+            "import { render, screen, fireEvent, waitFor, act } from '@testing-librar",
+            "import { CollaborativeFeatures } from '."
+          ]
+        },
+        {
+          "file": "src/__tests__/components/performance/InstantMessagingFeatures.test.tsx",
+          "imports": [
+            "import { render, screen, fireEvent, waitFor, act } from '@testing-librar",
+            "import { InstantMessagingFeatures } from '."
+          ]
+        },
+        {
+          "file": "src/__tests__/components/performance/IntelligentContentCache.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar"
+          ]
+        },
+        {
+          "file": "src/__tests__/components/performance/LiveContentUpdates.test.tsx",
+          "imports": [
+            "import { render, screen, fireEvent, waitFor, act } from '@testing-librar",
+            "import { LiveContentUpdates } from '."
+          ]
+        },
+        {
+          "file": "src/__tests__/components/performance/PageLoadOptimizer.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar"
+          ]
+        },
+        {
+          "file": "src/__tests__/integration/engagement-analytics-integration.test.tsx",
+          "imports": [
+            "import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from '@jes",
+            "import { QueryClient, QueryClientProvider } from '@tanstac",
+            "import { render, screen, waitFor, within } from '@testing-librar",
+            "import { rest } from 'msw';\nimport { setupServer } from 'ms"
+          ]
+        },
+        {
+          "file": "src/components/DevTools/FeatureFlagToggle.tsx",
+          "imports": [
+            "import { featureFlags } from '."
+          ]
+        },
+        {
+          "file": "src/components/NIP05Manager.tsx",
+          "imports": [
+            "import {\n  AlertTriangle,\n  CheckCircle,\n  Clock,\n  Copy,\n  ExternalLink,\n  Globe,\n  RefreshCw,\n  Shield,\n  X,\n  XCircle,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useState } from 'react';\nimport { Alert, AlertDescription } from '"
+          ]
+        },
+        {
+          "file": "src/components/ProfileDashboard.tsx",
+          "imports": [
+            "import {\n  CheckCircle,\n  Copy,\n  ExternalLink,\n  Key,\n  Settings,\n  Shield,\n  User,\n  Wallet,\n  Zap,\n} from 'lucide-react';\nimport React, { useEffect, useState } from 'react';\nimport { Badge } from '"
+          ]
+        },
+        {
+          "file": "src/components/SessionManager.tsx",
+          "imports": [
+            "import {\n  AlertTriangle,\n  Clock,\n  MapPin,\n  Monitor,\n  MoreVertical,\n  RefreshCw,\n  Shield,\n  Smartphone,\n  Tablet,\n  Trash2,\n  Wifi,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useState } from 'react';\nimport { Alert, AlertDescription } from '"
+          ]
+        },
+        {
+          "file": "src/components/__tests__/AIDashboard.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar"
+          ]
+        },
+        {
+          "file": "src/components/__tests__/NIP05Manager.test.tsx",
+          "imports": [
+            "import { jest } from '@jes",
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import { NIP05Manager } from '."
+          ]
+        },
+        {
+          "file": "src/components/__tests__/SimpleContentEditor.test.tsx",
+          "imports": [
+            "import { configureStore } from '@reduxj",
+            "import { render, screen, waitFor } from '@testing-librar",
+            "import { Provider } from 'react-redux';\nimport SimpleContentEditor from '."
+          ]
+        },
+        {
+          "file": "src/components/admin/AutomatedContentModerationDashboard.tsx",
+          "imports": [
+            "import {\n  Activity,\n  AlertCircle,\n  AlertTriangle,\n  BarChart3,\n  Bell,\n  Bot,\n  Brain,\n  CheckCircle,\n  Clock,\n  Eye,\n  FileText,\n  Filter,\n  Image,\n  MessageSquare,\n  RefreshCw,\n  Settings,\n  Shield,\n  TrendingDown,\n  TrendingUp,\n  Users,\n  Video,\n  XCircle,\n  Zap,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useState } from 'react';\nimport {\n  CartesianGrid,\n  Legend,\n  Line,\n  LineChart,\n  Pie,\n  PieChart,\n  ResponsiveContainer,\n  Tooltip,\n  XAxis,\n  YAxis,\n} from 'recharts';\nimport { useAutomatedContentModeration } from '.",
+            "import {\n  ContentFilter,\n  ContentModerationResult,\n  ModerationAnalytics,\n  ModerationKPI,\n  ModerationOptimization,\n  UserReport,\n} from '.",
+            "import { Alert, AlertDescription } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '.",
+            "import { Progress } from '.",
+            "import { Tabs, TabsContent, TabsList, TabsTrigger } from '."
+          ]
+        },
+        {
+          "file": "src/components/admin/AutonomousUserManagementDashboard.tsx",
+          "imports": [
+            "import {\n  Activity,\n  AlertCircle,\n  AlertTriangle,\n  BarChart3,\n  Bot,\n  Brain,\n  CheckCircle,\n  Clock,\n  Database,\n  Eye,\n  Gauge,\n  History,\n  Key,\n  Lock,\n  Play,\n  RefreshCw,\n  Settings,\n  Shield,\n  UserCheck,\n  Users,\n  UserX,\n  Zap,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useState } from 'react';\nimport { useAutonomousUserManagement } from '.",
+            "import {\n  AccessControlMetrics,\n  BehaviorAnalyticsMetrics,\n  BehaviorAnomaly,\n  BulkOperation,\n  BulkOperationsMetrics,\n  RoleDefinition,\n  UserAccountMetrics,\n  UserAccountOperation,\n  UserAccountPolicy,\n  UserRoleAssignment,\n} from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '.",
+            "import { Progress } from '.",
+            "import { Tabs, TabsContent, TabsList, TabsTrigger } from '."
+          ]
+        },
+        {
+          "file": "src/components/admin/__tests__/AutomatedContentModerationDashboard.test.tsx",
+          "imports": [
+            "import { afterEach, beforeEach, describe, expect, it } from '@jes",
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import { useAutomatedContentModeration } from '.",
+            "import {\n  ContentFilter,\n  ContentModerationResult,\n  ModerationAnalytics,\n  ModerationKPI,\n  ModerationOptimization,\n  UserReport,\n} from '."
+          ]
+        },
+        {
+          "file": "src/components/admin/__tests__/AutonomousUserManagementDashboard.test.tsx",
+          "imports": [
+            "import { beforeEach, describe, expect, it } from '@jes",
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import {\n  AccessControlMetrics,\n  BehaviorAnalyticsMetrics,\n  BehaviorAnomaly,\n  BulkOperation,\n  BulkOperationsMetrics,\n  RoleDefinition,\n  UserAccountMetrics,\n  UserAccountOperation,\n  UserAccountPolicy,\n  UserRoleAssignment,\n} from '."
+          ]
+        },
+        {
+          "file": "src/components/ai/RecommendationWidget.tsx",
+          "imports": [
+            "import {\n  Bookmark,\n  Clock,\n  Eye,\n  Info,\n  MoreHorizontal,\n  Share2,\n  Sparkles,\n  Target,\n  ThumbsDown,\n  ThumbsUp,\n  TrendingUp,\n  X,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useMemo, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/components/analytics/AnalyticsDashboard.tsx",
+          "imports": [
+            "import {\n  Activity,\n  AlertTriangle,\n  BarChart3,\n  Bug,\n  Database,\n  Filter,\n  LineChart,\n  Monitor,\n  PieChart,\n  RefreshCw,\n  Settings,\n  TrendingUp,\n  Users,\n  Zap,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useState } from 'react';\n\nimport { Alert, AlertDescription } from '",
+            "import { useAnalyticsService } from '.",
+            "import { AnalyticsDashboardConfig } from '."
+          ]
+        },
+        {
+          "file": "src/components/analytics/EngagementAnalyticsDashboard.tsx",
+          "imports": [
+            "import { format, parseISO, subDays } from 'date-fns';\nimport {\n  AlertCircle,\n  CheckCircle,\n  Download,\n  RefreshCw,\n  TrendingDown,\n  TrendingUp,\n} from 'lucide-react';\nimport React, { useCallback, useMemo, useState } from 'react';\nimport {\n  CartesianGrid,\n  Cell,\n  Legend,\n  Line,\n  LineChart,\n  Pie,\n  PieChart,\n  ResponsiveContainer,\n  Tooltip,\n  XAxis,\n  YAxis,\n} from 'recharts';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/components/analytics/GrowthForecastingChart.tsx",
+          "imports": [
+            "import { AlertCircle, BarChart3, Target, Zap } from 'lucide-react';\nimport React, { useCallback, useMemo, useState } from 'react';\nimport {\n  CartesianGrid,\n  Legend,\n  Line,\n  LineChart,\n  ReferenceLine,\n  ResponsiveContainer,\n  Tooltip,\n  XAxis,\n  YAxis,\n} from 'recharts';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/components/analytics/OptimizationSuggestionPanel.tsx",
+          "imports": [
+            "import {\n  AlertTriangle,\n  BarChart3,\n  ChevronRight,\n  Clock,\n  Lightbulb,\n  Pause,\n  Play,\n  Target,\n  TrendingUp,\n} from 'lucide-react';\nimport React, { useCallback, useMemo, useState } from 'react';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/components/analytics/PerformancePredictionViewer.tsx",
+          "imports": [
+            "import { AlertTriangle, Brain, Info, TrendingUp, Zap } from 'lucide-react';\nimport React, { useCallback, useMemo, useState } from 'react';\nimport {\n  Area,\n  CartesianGrid,\n  Legend,\n  Line,\n  LineChart,\n  ResponsiveContainer,\n  Tooltip,\n  XAxis,\n  YAxis,\n} from 'recharts';\nimport { z } from 'zod';"
+          ]
+        },
+        {
+          "file": "src/components/auth/NOSTRKeyManager.tsx",
+          "imports": [
+            "import { AnimatePresence, motion } from 'framer-motion';\nimport React, { useCallback, useEffect, useRef, useState } from 'react';\nimport { z } from 'zod';\n",
+            "import { nip19 } from 'nostr-tools';\nimport { generateSecretKey, getPublicKey } from 'nostr-tool",
+            "import { useAuth } from '."
+          ]
+        },
+        {
+          "file": "src/components/auth/NOSTRSessionProtection.tsx",
+          "imports": [
+            "import { AnimatePresence, motion } from 'framer-motion';\nimport React, { useCallback, useEffect, useRef, useState } from 'react';\nimport { z } from 'zod';\n",
+            "import { useAuth } from '."
+          ]
+        },
+        {
+          "file": "src/components/auth/NOSTRSigningValidator.tsx",
+          "imports": [
+            "import { AnimatePresence, motion } from 'framer-motion';\nimport React, { useCallback, useEffect, useRef, useState } from 'react';\nimport { z } from 'zod';\n",
+            "import { getEventHash, verifyEvent } from 'nostr-tools';\n",
+            "import { useAuth } from '."
+          ]
+        },
+        {
+          "file": "src/components/email/EmailNotificationPreferences.tsx",
+          "imports": [
+            "import {\n  Bell,\n  BellOff,\n  Clock,\n  CreditCard,\n  Info,\n  Mail,\n  MessageSquare,\n  Moon,\n  Settings,\n  Shield,\n  Users,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useState } from 'react';\nimport { useEmailService } from '.",
+            "import { useToast } from '.",
+            "import { Alert, AlertDescription } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '.",
+            "import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.",
+            "import { Slider } from '.",
+            "import { Switch } from '."
+          ]
+        },
+        {
+          "file": "src/components/layout/MobileResponsiveLayout.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/layout/__tests__/MobileResponsiveLayout.test.tsx",
+          "imports": [
+            "import { render, screen, waitFor } from '@testing-librar",
+            "import {\n  ResponsiveCardGrid,\n  ResponsiveContainer,\n  ResponsiveGrid,\n  ResponsiveLayout,\n  ResponsiveMedia,\n  ResponsiveSection,\n  ResponsiveStack,\n  useBreakpoint,\n} from '."
+          ]
+        },
+        {
+          "file": "src/components/lightning/LightningPaymentButton.tsx",
+          "imports": [
+            "import { useToast } from '.",
+            "import { Button } from '.",
+            "import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '.",
+            "import { QRCode } from '.",
+            "import { Spinner } from '."
+          ]
+        },
+        {
+          "file": "src/components/lightning/LightningSubscriptionCard.tsx",
+          "imports": [
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '."
+          ]
+        },
+        {
+          "file": "src/components/lightning/LightningWalletManager.tsx",
+          "imports": [
+            "import { useToast } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '.",
+            "import { Input } from '.",
+            "import { QRCode } from '."
+          ]
+        },
+        {
+          "file": "src/components/onboarding/LightningOnboarding.tsx",
+          "imports": [
+            "import {\n  AlertTriangle,\n  ArrowRight,\n  Bitcoin,\n  CheckCircle,\n  Clock,\n  Copy,\n  Crown,\n  DollarSign,\n  Download,\n  ExternalLink,\n  QrCode,\n  Shield,\n  Smartphone,\n  Sparkles,\n  Wallet,\n  Zap,\n} from 'lucide-react';\nimport React, { useState } from 'react';\nimport { Alert, AlertDescription } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent } from '.",
+            "import { Input } from '.",
+            "import { Label } from '."
+          ]
+        },
+        {
+          "file": "src/components/onboarding/NostrOnboarding.tsx",
+          "imports": [
+            "import {\n  ArrowRight,\n  CheckCircle,\n  Copy,\n  Crown,\n  Download,\n  Eye,\n  EyeOff,\n  Globe,\n  HelpCircle,\n  Key,\n  Lock,\n  Shield,\n  Sparkles,\n  Zap,\n} from 'lucide-react';\nimport React, { useState } from 'react';\nimport { useAuth } from '.",
+            "import { Alert, AlertDescription } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent } from '.",
+            "import { Input } from '.",
+            "import { Label } from '."
+          ]
+        },
+        {
+          "file": "src/components/onboarding/SovereignOnboarding.tsx",
+          "imports": [
+            "import {\n  ArrowLeft,\n  ArrowRight,\n  CheckCircle,\n  Clock,\n  Copy,\n  Crown,\n  Download,\n  ExternalLink,\n  Eye,\n  EyeOff,\n  Globe,\n  Heart,\n  HelpCircle,\n  Key,\n  Rocket,\n  Shield,\n  Smartphone,\n  Sparkles,\n  Star,\n  Zap,\n} from 'lucide-react';\nimport React, { useState } from 'react';\nimport { useNavigate } from 'react-router-dom';\nimport SovrenIconPNG from '.",
+            "import { useAuth } from '.",
+            "import { Alert, AlertDescription } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent } from '.",
+            "import { Input } from '.",
+            "import { Label } from '."
+          ]
+        },
+        {
+          "file": "src/components/performance/APIResponseCache.tsx",
+          "imports": [
+            "import {\n  BarChart3,\n  CheckCircle,\n  Clock,\n  Database,\n  Globe,\n  RefreshCw,\n  Settings,\n  Timer,\n  Trash2,\n} from 'lucide-react';\nimport { useCallback, useEffect, useMemo, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/components/performance/CollaborativeFeatures.tsx",
+          "imports": [
+            "import { z } from 'zod';\nimport { \n  Users, \n  Edit3, \n  MessageCircle, \n  Eye, \n  Mouse, \n  Lock, \n  Unlock, \n  UserCheck, \n  UserX, \n  Activity,\n  GitBranch,\n  Merge,\n  AlertTriangle,\n  Check,\n  Clock,\n  Settings,\n  Share2,\n  History,\n  Undo,\n  Redo\n} from 'lucide-react';\nimport { Alert, AlertDescription } from '.",
+            "import { Button } from '.",
+            "import { Badge } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '.",
+            "import { Input } from '.",
+            "import { Textarea } from '.",
+            "import { Switch } from '.",
+            "import { Avatar, AvatarFallback, AvatarImage } from '.",
+            "import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.",
+            "import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '.",
+            "import { useFeatureFlags } from '."
+          ]
+        },
+        {
+          "file": "src/components/performance/DatabaseQueryOptimizer.tsx",
+          "imports": [
+            "import {\n  Activity,\n  AlertTriangle,\n  BarChart3,\n  CheckCircle,\n  Database,\n  Timer,\n  TrendingUp,\n  Zap,\n} from 'lucide-react';\nimport { useCallback, useEffect, useState } from 'react';\n\ninterface QueryMetrics {\n  id: string;\n  query: string;\n  executionTime: number;\n  rowsAffected: number;\n  cacheHit: boolean;\n  indexUsed: boolean;\n  optimizationScore: number;\n  suggestions: string[];\n}\n\ninterface ConnectionPoolMetrics {\n  activeConnections: number;\n  idleConnections: number;\n  maxConnections: number;\n  avgConnectionTime: number;\n  poolEfficiency: number;\n}\n\ninterface IndexStrategy {\n  table: string;\n  columns: string[];\n  type: 'btree' | 'hash' | 'gin' | 'gist';\n  estimatedImprovement: number;\n  priority: 'high' | 'medium' | 'low';\n}\n"
+          ]
+        },
+        {
+          "file": "src/components/performance/ImageOptimizer.tsx",
+          "imports": [
+            "import { Camera, FileImage, Image as ImageIcon, Loader, TrendingUp, Zap } from 'lucide-react';\nimport React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';\n\ninterface ImageFormat {\n  format: 'webp' | 'avif' | 'jpeg' | 'png';\n  supported: boolean;\n  quality: number;\n  compression: number;\n}\n\ninterface ImageMetrics {\n  originalSize: number;\n  optimizedSize: number;\n  compressionRatio: number;\n  loadTime: number;\n  format: string;\n  dimensions: { width: number; height: number };\n}\n\ninterface OptimizedImageProps {\n  src: string;\n  alt: string;\n  width?: number;\n  height?: number;\n  sizes?: string;\n  priority?: boolean;\n  placeholder?: 'blur' | 'empty' | 'skeleton';\n  quality?: number;\n  formats?: ('webp' | 'avif' | 'jpeg' | 'png')[];\n  responsive?: boolean;\n  lazy?: boolean;\n  onLoad?: (metrics: ImageMetrics) => void;\n  onError?: (error: Error) => void;\n  className?: string;\n}\n\ninterface ImageOptimizerProps {\n "
+          ]
+        },
+        {
+          "file": "src/components/performance/InstantMessagingFeatures.tsx",
+          "imports": [
+            "import { z } from 'zod';\nimport { \n  Send, \n  Image, \n  File, \n  Mic, \n  Video, \n  Shield, \n  Check, \n  CheckCheck, \n  Clock, \n  Search,\n  Filter,\n  Download,\n  Eye,\n  Lock,\n  Trash2,\n  Edit3,\n  Forward,\n  Reply,\n  MoreHorizontal\n} from 'lucide-react';\nimport { Alert, AlertDescription } from '.",
+            "import { Button } from '.",
+            "import { Badge } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '.",
+            "import { Input } from '.",
+            "import { Textarea } from '.",
+            "import { Switch } from '.",
+            "import { Avatar, AvatarFallback, AvatarImage } from '.",
+            "import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '.",
+            "import { useFeatureFlags } from '."
+          ]
+        },
+        {
+          "file": "src/components/performance/IntelligentContentCache.tsx",
+          "imports": [
+            "import {\n  Activity,\n  Clock,\n  Database,\n  HardDrive,\n  RefreshCw,\n  TrendingUp,\n  Wifi,\n  Zap,\n} from 'lucide-react';\nimport { useCallback, useEffect, useMemo, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/components/performance/LiveContentUpdates.tsx",
+          "imports": [
+            "import { z } from 'zod';\nimport { Activity, AlertTriangle, CheckCircle, Clock, Filter, RefreshCw, Zap } from 'lucide-react';\nimport { Alert, AlertDescription } from '.",
+            "import { Button } from '.",
+            "import { Badge } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '.",
+            "import { Switch } from '.",
+            "import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.",
+            "import { useFeatureFlags } from '."
+          ]
+        },
+        {
+          "file": "src/components/performance/NetworkPerformanceOptimizer.tsx",
+          "imports": [
+            "import { Activity, Database, Globe, Signal, Timer, TrendingUp, Wifi, Zap } from 'lucide-react';\nimport React, { useEffect, useMemo, useState } from 'react';\n\ninterface ConnectionMetrics {\n  rtt: number;\n  downlink: number;\n  effectiveType: 'slow-2g' | '2g' | '3g' | '4g';\n  bandwidth: number;\n  latency: number;\n  packetLoss: number;\n}\n\ninterface RequestPriority {\n  url: string;\n  priority: 'high' | 'medium' | 'low';\n  type: 'critical' | 'important' | 'background';\n  timestamp: Date;\n  status: 'pending' | 'active' | 'completed' | 'failed';\n}\n\ninterface CompressionMetrics {\n  originalSize: number;\n  compressedSize: number;\n  algorithm: 'gzip' | 'brotli' | 'deflate';\n  ratio: number;\n  savingsKB: number;\n}\n\ninterface CDNMetrics {\n  endpoint: string;\n  region: string;\n  latency: number;\n  hitRate: number;\n  bandwidth: number;\n  isOptimal: boolean;\n}\n\ninterface NetworkPerformanceOptimizerProps {\n  enableRequestPrioritization?: boolean;\n  enableConnectionPooling?: boolean;\n  enableCompression?: boolean;\n  enableDNSPrefetching?: boolean;\n  cdnEndpoints?: string[];\n  monitoringInterval?: number;\n  enableAdaptiveLoading?: boolean;\n  performanceThreshold?: number;\n  onPerformanceEvent?: (event: string, data?: any) => void;\n}\n"
+          ]
+        },
+        {
+          "file": "src/components/performance/PWAServiceWorker.tsx",
+          "imports": [
+            "import { Activity, Bell, Download, Globe, HardDrive, RefreshCw, Wifi, WifiOff } from 'lucide-react';\nimport React, { useCallback, useEffect, useMemo, useState } from 'react';\n\ninterface ServiceWorkerStatus {\n  isSupported: boolean;\n  isInstalled: boolean;\n  isActive: boolean;\n  isUpdateAvailable: boolean;\n  scope: string;\n  state: ServiceWorkerState | 'not-supported';\n}\n\ninterface CacheStatus {\n  name: string;\n  size: number;\n  entryCount: number;\n  lastUpdated: Date;\n  hitRate: number;\n}\n\ninterface OfflineCapability {\n  isOffline: boolean;\n  cachedPages: string[];\n  unavailableFeatures: string[];\n  queuedActions: number;\n  lastSync: Date | null;\n}\n\ninterface PWAServiceWorkerProps {\n "
+          ]
+        },
+        {
+          "file": "src/components/performance/PageLoadOptimizer.tsx",
+          "imports": [
+            "import { AlertTriangle, FileText, Monitor, Timer, TrendingUp, Wifi, Zap } from 'lucide-react';\nimport React, { useCallback, useEffect, useMemo, useState } from 'react';\n\ninterface PerformanceMetrics {\n  loadTime: number;\n  bundleSize: number;\n  criticalResources: number;\n  imageOptimization: number;\n  cacheHitRate: number;\n  networkSpeed: 'slow-2g' | '2g' | '3g' | '4g' | 'fast';\n}\n\ninterface AuditResult {\n  category: string;\n  score: number;\n  recommendations: string[];\n  impact: 'high' | 'medium' | 'low';\n}\n\ninterface PageLoadOptimizerProps {\n "
+          ]
+        },
+        {
+          "file": "src/components/performance/RealTimeNotificationSystem.tsx",
+          "imports": [
+            "import { AlertCircle, Bell, BellOff, Check, Clock, Settings, Wifi, WifiOff, X } from 'lucide-react';\nimport React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';\nimport { z } from 'zod';\nimport { useFeatureFlags } from '.",
+            "import { Alert, AlertDescription } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '.",
+            "import { Switch } from '."
+          ]
+        },
+        {
+          "file": "src/components/performance/StaticAssetOptimizer.tsx",
+          "imports": [
+            "import { BarChart3, Download, FileText, Image, Settings, Zap } from 'lucide-react';\nimport { useCallback, useState } from 'react';\n\ninterface AssetMetrics {\n  type: 'css' | 'js' | 'image' | 'font';\n  originalSize: number;\n  optimizedSize: number;\n  compressionRatio: number;\n  loadTime: number;\n  cacheHit: boolean;\n}\n\ninterface OptimizationConfig {\n  minification: boolean;\n  compression: boolean;\n  bundling: boolean;\n  preloading: boolean;\n  lazyLoading: boolean;\n  webpConversion: boolean;\n}\n"
+          ]
+        },
+        {
+          "file": "src/components/quality-metrics/QualityMetricsDashboard.tsx",
+          "imports": [
+            "import {\n  Activity,\n  AlertCircle,\n  Brain,\n  Download,\n  Filter,\n  Refresh,\n  TrendingDown,\n  TrendingUp,\n  Zap,\n} from 'lucide-react';\nimport React, { useMemo, useState } from 'react';\nimport {\n  Area,\n  AreaChart,\n  CartesianGrid,\n  Cell,\n  Line,\n  LineChart,\n  Pie,\n  PieChart,\n  ResponsiveContainer,\n  Tooltip,\n  XAxis,\n  YAxis,\n} from 'recharts';\nimport {\n  BugMetric,\n  CodeQualityMetric,\n  CoverageMetric,\n  PerformanceBenchmark,\n} from '.",
+            "import { useQualityMetricsService } from '.",
+            "import { Alert, AlertDescription } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '.",
+            "import { Progress } from '.",
+            "import { Tabs, TabsContent, TabsList, TabsTrigger } from '."
+          ]
+        },
+        {
+          "file": "src/components/social-media/SocialShareButtons.tsx",
+          "imports": [
+            "import { AnimatePresence, motion } from 'framer-motion';\nimport {\n  BarChart3,\n  Check,\n  Copy,\n  ExternalLink,\n  Facebook,\n  Instagram,\n  Linkedin,\n  MessageSquare,\n  Send,\n  Share2,\n  Twitter,\n  Users,\n  Youtube,\n} from 'lucide-react';\nimport React, { useCallback, useMemo, useState } from 'react';\nimport { useAnalytics } from '.",
+            "import { useSocialMediaService } from '.",
+            "import { useToast } from '.",
+            "import { cn } from '.",
+            "import {\n  SocialPlatform,\n  SocialShareRequest,\n  SocialShareResponse,\n} from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/BehavioralRecommendations.tsx",
+          "imports": [
+            "import { motion } from 'framer-motion';\nimport {\n  Activity,\n  BarChart3,\n  Bookmark,\n  Brain,\n  ChevronRight,\n  Clock,\n  Eye,\n  Heart,\n  MousePointer,\n  Play,\n  RefreshCw,\n  Share2,\n  TrendingUp,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useRef, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/components/ui/ContentCaching.tsx",
+          "imports": [
+            "import { z } from 'zod';\nimport { useFeatureFlags } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/ContentSimilarity.tsx",
+          "imports": [
+            "import { AnimatePresence, motion } from 'framer-motion';\nimport {\n  Bookmark,\n  ChevronRight,\n  Clock,\n  Eye,\n  Heart,\n  Info,\n  Layers,\n  Network,\n  Play,\n  RefreshCw,\n  Search,\n  Share2,\n  TrendingUp,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/components/ui/Layout.tsx",
+          "imports": [
+            "import { Link } from 'react-router-dom';\nimport { useAuth, useAuthStatus } from '.",
+            "import { FeatureFlagToggle } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/MobileComponents.tsx",
+          "imports": [
+            "import { ChevronDown, ChevronRight, X } from 'lucide-react';\nimport React, { useCallback, useEffect, useRef, useState } from 'react';\nimport { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/MobileNavigation.tsx",
+          "imports": [
+            "import { AnimatePresence, motion } from 'framer-motion';\nimport {\n  Bell,\n  Compass,\n  CreditCard,\n  Home,\n  Menu,\n  Plus,\n  Search,\n  Settings,\n  User,\n  X,\n} from 'lucide-react';\nimport React, { useCallback, useState } from 'react';\nimport { Link, useLocation } from 'react-router-dom';\nimport { useAuth } from '.",
+            "import { useFeatureFlags } from '.",
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/OfflineCapabilities.tsx",
+          "imports": [
+            "import { z } from 'zod';\nimport { useFeatureFlags } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/OfflineReading.tsx",
+          "imports": [
+            "import { z } from 'zod';\nimport { useFeatureFlags } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/PersonalizedRecommendations.tsx",
+          "imports": [
+            "import { AnimatePresence, motion } from 'framer-motion';\nimport {\n  Bookmark,\n  Brain,\n  ChevronRight,\n  Clock,\n  Eye,\n  Heart,\n  Info,\n  Play,\n  RefreshCw,\n  Share2,\n  Sparkles,\n  Star,\n  TrendingUp,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/components/ui/RecommendationFeedback.tsx",
+          "imports": [
+            "import { motion } from 'framer-motion';\nimport {\n  Award,\n  Brain,\n  CheckCircle,\n  Gift,\n  Heart,\n  MessageSquare,\n  Send,\n  Star,\n  ThumbsDown,\n  ThumbsUp,\n  XCircle,\n} from 'lucide-react';\nimport React, { useCallback, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/components/ui/TouchOptimization.tsx",
+          "imports": [
+            "import { useCallback, useEffect, useRef, useState } from 'react';\nimport { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/__tests__/MobileComponents.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import {\n  MobileButton,\n  MobileCard,\n  MobileInput,\n  MobileList,\n  MobileModal,\n} from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/__tests__/MobileNavigation.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import { BrowserRouter } from 'react-router-dom';\nimport { MobileNavigation } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/__tests__/OfflineCapabilities.test.tsx",
+          "imports": [
+            "import { act, fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';\nimport OfflineCapabilities, {\n  CacheManager,\n  ServiceWorkerManager,\n  SyncManager,\n  useOfflineErrorHandler,\n  useOfflineState,\n} from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/__tests__/TouchOptimization.test.tsx",
+          "imports": [
+            "import { act, fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import { useRef } from 'react';\nimport {\n  DragDrop,\n  PinchToZoom,\n  PullToRefresh,\n  Swipeable,\n  TouchTarget,\n  useHapticFeedback,\n  useTouchGestures,\n  useTouchTargetAudit,\n} from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/__tests__/button.performance.test.tsx",
+          "imports": [
+            "import {\n  benchmarkComponent,\n  createPerformanceTestSuite,\n  PerformanceTestOptions,\n  PerformanceThresholds,\n  testPerformanceThresholds,\n  usePerformanceTesting,\n} from '.",
+            "import { Button } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/__tests__/button.snapshot.test.tsx",
+          "imports": [
+            "import {\n  createComprehensiveSnapshots,\n  SnapshotTestCase,\n  useSnapshotTesting,\n} from '.",
+            "import { Button } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/__tests__/design-system.integration.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen } from '@testing-librar",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import { Card, CardContent, CardHeader, CardTitle } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/alert.tsx",
+          "imports": [
+            "import { cva, type VariantProps } from 'class-variance-authority';\nimport * as React from 'react';\nimport { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/avatar.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/badge.test.tsx",
+          "imports": [
+            "import { render, screen } from \"@testing-librar"
+          ]
+        },
+        {
+          "file": "src/components/ui/badge.tsx",
+          "imports": [
+            "import { cva, type VariantProps } from 'class-variance-authority';\nimport React from 'react';\nimport { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/button.test.backup.tsx",
+          "imports": [
+            "import { fireEvent, render, screen } from '@testing-librar"
+          ]
+        },
+        {
+          "file": "src/components/ui/button.test.tsx",
+          "imports": [
+            "import { render, screen, fireEvent } from '@testing-librar"
+          ]
+        },
+        {
+          "file": "src/components/ui/button.tsx",
+          "imports": [
+            "import { cva, type VariantProps } from 'class-variance-authority';\nimport * as React from 'react';\nimport { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/card.test.tsx",
+          "imports": [
+            "import { render, screen } from \"@testing-librar"
+          ]
+        },
+        {
+          "file": "src/components/ui/card.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/dialog.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/dropdown-menu.tsx",
+          "imports": [
+            "import { Check, ChevronRight, Circle } from 'lucide-react';\nimport * as React from 'react';\nimport { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/error-boundary.tsx",
+          "imports": [
+            "import { Component, ReactNode } from 'react';\n\ninterface ErrorBoundaryState {\n  hasError: boolean;\n  error?: Error;\n}\n\ninterface ErrorBoundaryProps {\n  children: ReactNode;\n  fallback?: ReactNode;\n}\n\nexport class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {\n  constructor(props: ErrorBoundaryProps) {\n    super(props);\n    this.state = { hasError: false };\n  }\n\n  static getDerivedStateFromError(error: Error): ErrorBoundaryState {\n    return { hasError: true, error };\n  }\n\n  componentDidCatch(error: Error, errorInfo: any) {\n    console.error('ErrorBoundary caught an error:', error, errorInfo);\n  }\n\n  render() {\n    if (this.state.hasError) {\n      return (\n        this.props.fallback || (\n          <div className=\"p-4 text-center\">\n            <h2 className=\"text-lg font-semibold text-red-600\">Something went wrong"
+          ]
+        },
+        {
+          "file": "src/components/ui/input.stories.test.tsx",
+          "imports": [
+            "import { composeStories } from \"@storyboo",
+            "import { render, screen } from \"@testing-librar"
+          ]
+        },
+        {
+          "file": "src/components/ui/input.test.tsx",
+          "imports": [
+            "import { render, screen } from \"@testing-librar"
+          ]
+        },
+        {
+          "file": "src/components/ui/input.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/label.tsx",
+          "imports": [
+            "import { cva, type VariantProps } from 'class-variance-authority';\nimport * as React from 'react';\nimport { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/select.tsx",
+          "imports": [
+            "import { Check, ChevronDown, ChevronUp } from 'lucide-react';\nimport * as React from 'react';\nimport { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/skeleton.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/spinner.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/switch.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/tabs.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/textarea.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/components/ui/tooltip.tsx",
+          "imports": [
+            "import { cn } from '."
+          ]
+        },
+        {
+          "file": "src/features/ai/components/PersonalizedRecommendations.tsx",
+          "imports": [
+            "import { AnimatePresence, motion } from 'framer-motion';\nimport {\n  Bookmark,\n  Brain,\n  ChevronRight,\n  Clock,\n  Eye,\n  Heart,\n  Info,\n  Play,\n  RefreshCw,\n  Settings,\n  Share2,\n  Sparkles,\n  Star,\n  TrendingUp,\n  Zap,\n} from 'lucide-react';\nimport React, { useCallback, useEffect, useRef, useState } from 'react';\nimport { aiContentRecommendationsService } from '.",
+            "import {\n  AIRecommendationError,\n  ContentRecommendation,\n  PersonalizedRecommendationsProps,\n  RecommendationFeedback,\n  UserInteraction,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/ai/services/aiContentRecommendationsService.ts",
+          "imports": [
+            "import {\n  AdaptiveModel,\n  AIRecommendationError,\n  AIRecommendationSystem,\n  BehaviorPattern,\n  ContentFeature,\n  ContentRecommendation,\n  FeedbackProcessingError,\n  ModelUpdateEvent,\n  RecommendationAlgorithm,\n  RecommendationFeedback,\n  RecommendationRequest,\n  RecommendationResponse,\n  SimilarityScore,\n  UserInteraction,\n  UserPreference,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/ai/types/index.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/features/analytics/components/CreatorDashboard.tsx",
+          "imports": [
+            "import { useFeatureFlags } from '.",
+            "import {\n  AnalyticsChartData,\n  AnalyticsEvent,\n  CreatorEarnings,\n  CreatorPerformanceMetrics,\n} from '.",
+            "import { useDispatch } from 'react-redux';\nimport { AppDispatch } from '.",
+            "import { mockAnalyticsService as analyticsService } from '.",
+            "import { Button } from '.",
+            "import { Alert, AlertDescription, AlertTitle } from '.",
+            "import { Badge } from '.",
+            "import {\n  Card,\n  CardContent,\n  CardDescription,\n  CardHeader,\n  CardTitle,\n} from '.",
+            "import {\n  Select,\n  SelectContent,\n  SelectItem,\n  SelectTrigger,\n  SelectValue,\n} from '.",
+            "import { Skeleton } from '.",
+            "import { Tabs, TabsContent, TabsList, TabsTrigger } from '.",
+            "import {\n//   Activity,\n//   AlertCircle,\n//   BarChart3,\n//   DollarSign,\n//   Download,\n//   Eye,\n//   Lightbulb,\n//   RefreshCw,\n//   SimpleChart,\n//   Target,\n//   TrendingDown,\n//   TrendingUp,\n//   Users,\n//   Zap,\n// } from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/components/EnhancedCreatorDashboard.tsx",
+          "imports": [
+            "import { useFeatureFlags } from '.",
+            "import { useAppDispatch } from '.",
+            "import { mockAnalyticsService as analyticsService } from '.",
+            "import { Alert, AlertDescription, AlertTitle } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import {\n  Card,\n  CardContent,\n  CardDescription,\n  CardHeader,\n  CardTitle,\n} from '.",
+            "import {\n  Select,\n  SelectContent,\n  SelectItem,\n  SelectTrigger,\n  SelectValue,\n} from '.",
+            "import { Skeleton } from '.",
+            "import { Tabs, TabsContent, TabsList, TabsTrigger } from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/components/__tests__/CreatorDashboard.ui.test.tsx",
+          "imports": [
+            "import { configureStore } from '@reduxj",
+            "import { render } from '@testing-librar",
+            "import { Provider } from 'react-redux';\nimport { BrowserRouter } from 'react-router-dom';\nimport { AuthProvider } from '.",
+            "import { CreatorDashboard } from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/components/__tests__/CreatorDashboard.us-067-070.test.tsx",
+          "imports": [
+            "import { render, screen, fireEvent, waitFor } from '@testing-librar",
+            "import { Provider } from 'react-redux';\nimport { BrowserRouter } from 'react-router-dom';\nimport { configureStore } from '@reduxj",
+            "import { TestProviders } from '.",
+            "import { CreatorDashboard } from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/services/__tests__/mockAnalyticsService.test.ts",
+          "imports": [
+            "import { AnalyticsError, AnalyticsEvent } from '.",
+            "import { mockAnalyticsService } from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/services/__tests__/predictiveAnalytics.test.ts",
+          "imports": [
+            "import {\n    analyzeFeatureUsage,\n    detectAnomalies,\n    forecastPerformance,\n    getRealtimeRecommendations,\n    predictUserBehavior\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/services/analyticsService.ts",
+          "imports": [
+            "import {\n  AnalyticsChartData,\n  AnalyticsError,\n  AnalyticsEvent,\n  AnalyticsExport,\n  AnalyticsFilters,\n  AnalyticsValidationError,\n  CreatorEarnings,\n  CreatorPerformanceMetrics,\n  LightningPaymentAnalytics,\n  MobileAnalyticsView,\n  validateCreatorEarnings,\n  validateLightningPayment,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/services/enhancedAnalyticsService.ts",
+          "imports": [
+            "import { z } from 'zod';\nimport type {\n  AnalyticsDashboardKPI,\n  AnalyticsEvent,\n  AudienceGrowthData,\n  ContentPerformanceMetrics,\n  DashboardLayoutConfig,\n  RevenueTrackingData,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/services/mockAnalyticsService.ts",
+          "imports": [
+            "import {\n  AnalyticsChartData,\n  AnalyticsError,\n  AnalyticsEvent,\n  AnalyticsExport,\n  AnalyticsFilters,\n  CreatorEarnings,\n  CreatorPerformanceMetrics,\n  LightningPaymentAnalytics,\n  MobileAnalyticsView,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/analytics/types/index.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/features/auth/components/ProtectedRoute.tsx",
+          "imports": [
+            "import { Navigate } from 'react-router-dom';\nimport { useAuthStatus } from '."
+          ]
+        },
+        {
+          "file": "src/features/auth/services/AuthContext.tsx",
+          "imports": [
+            "import { featureFlags } from '."
+          ]
+        },
+        {
+          "file": "src/features/auth/services/__tests__/realAuthService.test.ts",
+          "imports": [
+            "import { realAuthService } from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/ContentCollectionManager.tsx",
+          "imports": [
+            "import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';\nimport { useAppDispatch, useAppSelector } from '.",
+            "import {\n  addContentToCollection,\n  createContentCollection,\n  deleteContentCollection,\n  fetchContentCollections,\n  removeContentFromCollection,\n  reorderCollectionItems,\n  updateContentCollection,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/ContentEditor.tsx",
+          "imports": [
+            "import { useSelector } from 'react-redux';\nimport { RootState, useAppDispatch } from '.",
+            "import {\n  addContentBlock,\n  analyzeContentQuality,\n  applyContentImprovement,\n  autoSave,\n  deleteContentBlock,\n  generateContentWithAI,\n  removeContentImprovement,\n  setCollaborativeMode,\n  updateContentBlock,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/ContentManagementTools.tsx",
+          "imports": [
+            "import { useFeatureFlags } from '.",
+            "import { useAppDispatch } from '.",
+            "import { mockContentManagementService } from '.",
+            "import { Alert, AlertDescription, AlertTitle } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import {\n  Card,\n  CardContent,\n  CardDescription,\n  CardHeader,\n  CardTitle,\n} from '.",
+            "import { Checkbox } from '.",
+            "import { Input } from '.",
+            "import {\n  Select,\n  SelectContent,\n  SelectItem,\n  SelectTrigger,\n  SelectValue,\n} from '.",
+            "import { Skeleton } from '.",
+            "import { Tabs, TabsContent, TabsList, TabsTrigger } from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/ContentSeriesBuilder.tsx",
+          "imports": [
+            "import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';\nimport { useAppDispatch, useAppSelector } from '.",
+            "import {\n  addEpisodeToSeries,\n  createContentSeries,\n  deleteContentSeries,\n  fetchContentSeries,\n  removeEpisodeFromSeries,\n  reorderSeriesEpisodes,\n  updateContentSeries,\n  updateEpisodeProgress,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/MarkdownEditor.tsx",
+          "imports": [
+            "import { useAppDispatch, useAppSelector } from '.",
+            "import { updateCurrentContent } from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/MediaEmbedder.tsx",
+          "imports": [
+            "import { useAppDispatch, useAppSelector } from '.",
+            "import { addContentBlock, uploadMedia } from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/PremiumContentPaywall.tsx",
+          "imports": [
+            "import { useAppDispatch, useAppSelector } from '.",
+            "import { supportContent } from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/RichTextEditor.tsx",
+          "imports": [
+            "import { useAppDispatch, useAppSelector } from '.",
+            "import { updateCurrentContent } from '."
+          ]
+        },
+        {
+          "file": "src/features/content/components/SimpleContentEditor.tsx",
+          "imports": [
+            "import { useAppDispatch, useAppSelector } from '.",
+            "import {\n  addContentBlock,\n  deleteContentBlock,\n  updateContentBlock,\n  updateCurrentContent,\n  uploadMedia,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/content/types/contentManagement.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/features/dashboard/components/AIDashboard.tsx",
+          "imports": [
+            "import { predictiveAnalytics } from '."
+          ]
+        },
+        {
+          "file": "src/features/dashboard/components/MonitoringDashboard.tsx",
+          "imports": [
+            "import { getPerformanceReport } from '."
+          ]
+        },
+        {
+          "file": "src/features/subscriptions/components/SubscriptionManager.tsx",
+          "imports": [
+            "import { Button } from '.",
+            "import { Alert, AlertDescription, AlertTitle } from '.",
+            "import { Badge } from '.",
+            "import {\n  Card,\n  CardContent,\n  CardDescription,\n  CardFooter,\n  CardHeader,\n  CardTitle,\n} from '.",
+            "import {\n  Dialog,\n  DialogContent,\n  DialogDescription,\n  DialogHeader,\n  DialogTitle,\n} from '.",
+            "import { Input } from '.",
+            "import { Label } from '.",
+            "import {\n  Select,\n  SelectContent,\n  SelectItem,\n  SelectTrigger,\n  SelectValue,\n} from '.",
+            "import { Skeleton } from '.",
+            "import { Switch } from '.",
+            "import { Tabs, TabsContent, TabsList, TabsTrigger } from '.",
+            "import { Textarea } from '.",
+            "import {\n  AlertCircle,\n  CheckCircle,\n  Clock,\n  Crown,\n  DollarSign,\n  Edit3,\n  Eye,\n  Globe,\n  Lock,\n  Plus,\n  RefreshCw,\n  Settings,\n  Shield,\n  Star,\n  Trash2,\n  TrendingUp,\n  Unlock,\n  Users,\n  XCircle,\n  Zap,\n} from 'lucide-react';\n"
+          ]
+        },
+        {
+          "file": "src/features/subscriptions/components/UserSubscriptionManager.tsx",
+          "imports": [
+            "import {\n  AlertCircle,\n  Calendar,\n  CheckCircle,\n  Clock,\n  CreditCard,\n  Crown,\n  Download,\n  Edit,\n  Eye,\n  History,\n  Plus,\n  Settings,\n  Shield,\n  Star,\n  Trash2,\n  XCircle,\n  Zap,\n} from 'lucide-react';\nimport React, { useEffect, useState } from 'react';\nimport { Alert, AlertDescription, AlertTitle } from '.",
+            "import { Badge } from '.",
+            "import { Button } from '.",
+            "import {\n  Card,\n  CardContent,\n  CardDescription,\n  CardHeader,\n  CardTitle,\n} from '.",
+            "import { Switch } from '.",
+            "import { Tabs, TabsContent, TabsList, TabsTrigger } from '.",
+            "import { useFeatureFlags } from '.",
+            "import { useUserSubscriptionService } from '."
+          ]
+        },
+        {
+          "file": "src/features/subscriptions/components/__tests__/UserSubscriptionManager.test.tsx",
+          "imports": [
+            "import { render, screen, waitFor } from '@testing-librar",
+            "import { UserSubscriptionManager } from '."
+          ]
+        },
+        {
+          "file": "src/features/subscriptions/services/useUserSubscriptionService.ts",
+          "imports": [
+            "import { useCallback, useState } from 'react';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/features/supporter/components/SupporterExperience.tsx",
+          "imports": [
+            "import { \n  FeedContentItem, \n  PersonalizedFeed, \n  Category, \n  SearchQuery, \n  SearchResults, \n  TrendingContent,\n  validatePersonalizedFeed,\n  validateSearchResults,\n  validateTrendingContent\n} from '.",
+            "import { useSupporterExperienceService } from '."
+          ]
+        },
+        {
+          "file": "src/features/supporter/components/__tests__/SupporterExperience.us-075-078.test.tsx",
+          "imports": [
+            "import { render, screen, fireEvent, waitFor, within } from '@testing-librar",
+            "import { jest } from '@jes",
+            "import { useSupporterExperienceService } from '."
+          ]
+        },
+        {
+          "file": "src/features/supporter/services/supporterExperienceService.ts",
+          "imports": [
+            "import { useState, useEffect, useCallback, useRef } from 'react';\nimport {\n  PersonalizedFeed,\n  Category,\n  SearchQuery,\n  SearchResults,\n  TrendingContent,\n  FeedContentItem,\n  validatePersonalizedFeed,\n  validateSearchResults,\n  validateTrendingContent,\n} from '."
+          ]
+        },
+        {
+          "file": "src/features/supporter/types/supporterExperience.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/hooks/use-toast.ts",
+          "imports": [
+            "import { useCallback } from 'react';\n\ninterface ToastOptions {\n  title: string;\n  description: string;\n  variant?: 'default' | 'destructive';\n}\n\nexport const useToast = () => {\n  const toast = useCallback((options: ToastOptions) => {\n   "
+          ]
+        },
+        {
+          "file": "src/hooks/useAnalytics.ts",
+          "imports": [
+            "import { useCallback } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/hooks/useAnalyticsService.ts",
+          "imports": [
+            "import { useCallback, useEffect, useState } from 'react';\n\nimport {\n  AnalyticsDashboardConfig,\n  AnalyticsEvent,\n  AutomatedReport,\n  ConversionFunnel,\n  DataVisualization,\n  DataWarehouseConnection,\n  ErrorAnalytics,\n  ErrorEvent,\n  PerformanceAlertRule,\n  PerformanceBaseline,\n  PerformanceMetric,\n  PredictiveAnalyticsModel,\n  UserBehavior,\n} from '."
+          ]
+        },
+        {
+          "file": "src/hooks/useEmailService.ts",
+          "imports": [
+            "import { useCallback, useEffect, useState } from 'react';\nimport useSWR, { mutate } from 'swr';\nimport {\n  CreateCampaignRequest,\n  CreateNewsletterRequest,\n  EmailAnalyticsResponse,\n  EmailCampaign,\n  EmailNotification,\n  EmailSegment,\n  Newsletter,\n  NotificationPreferences,\n  SendNotificationRequest,\n  SendTransactionalRequest,\n  Subscriber,\n  TransactionalEmail,\n} from '."
+          ]
+        },
+        {
+          "file": "src/hooks/useEngagementAnalytics.ts",
+          "imports": [
+            "import { useQuery, useQueryClient } from '@tanstac",
+            "import { useCallback, useMemo } from 'react';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/hooks/useFeatureFlags.test.ts",
+          "imports": [
+            "import { renderHook, waitFor } from '@testing-librar"
+          ]
+        },
+        {
+          "file": "src/hooks/useFeatureFlags.ts",
+          "imports": [
+            "import { useEffect, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/hooks/useQualityMetricsService.ts",
+          "imports": [
+            "import { useCallback, useEffect, useMemo, useRef, useState } from 'react';\nimport {\n  BugMetric,\n  CodeQualityMetric,\n  CoverageMetric,\n  PerformanceBenchmark,\n  QualityMetricsConfig,\n  QualityMetricsDashboard,\n} from '."
+          ]
+        },
+        {
+          "file": "src/hooks/useSocialMediaService.ts",
+          "imports": [
+            "import { useMutation, useQuery, useQueryClient } from '@tanstac",
+            "import { useCallback, useMemo } from 'react';\nimport {\n  AnalyticsReport,\n  CreateSocialPostRequest,\n  CrossPlatformAnalytics,\n  CrossPlatformPost,\n  GetAnalyticsRequest,\n  PostingSchedule,\n  SocialAccount,\n  SocialLoginRequest,\n  SocialPlatform,\n  SocialShareRequest,\n  SocialShareResponse,\n} from '."
+          ]
+        },
+        {
+          "file": "src/hooks/useToast.ts",
+          "imports": [
+            "import { useCallback, useEffect, useState } from 'react';\n"
+          ]
+        },
+        {
+          "file": "src/lib/utils.ts",
+          "imports": [
+            "import { clsx, type ClassValue } from 'clsx';\nimport { twMerge } from 'tailwind-merge';\n"
+          ]
+        },
+        {
+          "file": "src/main.tsx",
+          "imports": [
+            "import { Provider } from 'react-redux';\nimport { BrowserRouter } from 'react-router-dom';\nimport App from '"
+          ]
+        },
+        {
+          "file": "src/pages/CreatorDashboard.tsx",
+          "imports": [
+            "import { useAuth } from '.",
+            "import { useAppDispatch, useAppSelector } from '.",
+            "import {\n  createContentItem,\n  loadContentItems,\n  publishContentItem,\n  setCurrentContent,\n} from '."
+          ]
+        },
+        {
+          "file": "src/pages/Home.test.tsx",
+          "imports": [
+            "import { configureStore } from '@reduxj",
+            "import { render, screen } from '@testing-librar",
+            "import { Provider } from 'react-redux';\nimport { BrowserRouter } from 'react-router-dom';\nimport { AuthProvider } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Home.tsx",
+          "imports": [
+            "import { useNavigate } from 'react-router-dom';\nimport SovrenIconPNG from '.",
+            "import { Button } from '.",
+            "import { Globe, Shield, Zap } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Login.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import { BrowserRouter } from 'react-router-dom';\nimport { AuthProvider } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Login.tsx",
+          "imports": [
+            "import { Link, useNavigate } from 'react-router-dom';\nimport { Button } from '.",
+            "import { useAuth } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Post.test.tsx",
+          "imports": [
+            "import { configureStore } from '@reduxj",
+            "import { render, screen } from '@testing-librar",
+            "import { Provider } from 'react-redux';\nimport { BrowserRouter } from 'react-router-dom';\nimport { AuthProvider } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Post.tsx",
+          "imports": [
+            "import { useParams } from 'react-router-dom';\nimport { Button, Layout } from '.",
+            "import { useAppSelector } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Profile.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import { BrowserRouter } from 'react-router-dom';\nimport { AuthProvider } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Profile.tsx",
+          "imports": [
+            "import { Button } from '.",
+            "import { useAuth } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Signup.test.tsx",
+          "imports": [
+            "import { fireEvent, render, screen, waitFor } from '@testing-librar",
+            "import { BrowserRouter } from 'react-router-dom';\nimport { AuthProvider } from '."
+          ]
+        },
+        {
+          "file": "src/pages/Signup.tsx",
+          "imports": [
+            "import { Link, useNavigate } from 'react-router-dom';\nimport { Button } from '.",
+            "import { Alert } from '.",
+            "import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '.",
+            "import { Input } from '.",
+            "import { Label } from '.",
+            "import { useAuth } from '."
+          ]
+        },
+        {
+          "file": "src/pages/__tests__/Home.ui.test.tsx",
+          "imports": [
+            "import { render, screen } from '@testing-librar",
+            "import { BrowserRouter } from 'react-router-dom';\nimport { AuthProvider } from '."
+          ]
+        },
+        {
+          "file": "src/pages/__tests__/Signup.ui.test.tsx",
+          "imports": [
+            "import { configureStore } from '@reduxj",
+            "import { render, screen } from '@testing-librar",
+            "import { Provider } from 'react-redux';\nimport { BrowserRouter } from 'react-router-dom';\nimport { AuthProvider } from '."
+          ]
+        },
+        {
+          "file": "src/services/AuditLoggingService.ts",
+          "imports": [
+            "import { createHash, createHmac, randomBytes } from 'crypto';\nimport {\n  AuditEvent,\n  AuditEventSchema,\n  AuditEventType,\n  AuditLogRetention,\n  AuditLogRetentionSchema,\n  AuditReport,\n  AuditReportSchema,\n  AuditSeverity,\n  ComplianceFramework,\n  LogIntegrity,\n  LogIntegritySchema,\n  SecurityEvent,\n  SecurityEventSchema,\n} from '."
+          ]
+        },
+        {
+          "file": "src/services/BackupRecoveryService.ts",
+          "imports": [
+            "import { createHash, randomBytes } from 'crypto';\nimport {\n  Backup,\n  BackupRetentionPolicy,\n  BackupRetentionPolicySchema,\n  BackupSchema,\n  BackupStorageLocation,\n  BackupType,\n  BackupVerification,\n  BackupVerificationSchema,\n  ComplianceFramework,\n  RecoveryProcedure,\n  RecoveryProcedureSchema,\n} from '."
+          ]
+        },
+        {
+          "file": "src/services/DataEncryptionService.ts",
+          "imports": [
+            "import {\n  createCipher,\n  createDecipher,\n  createHash,\n  createHmac,\n  pbkdf2,\n  randomBytes,\n  scrypt,\n} from 'crypto';\nimport { promisify } from 'util';\nimport {\n  EncryptedData,\n  EncryptedDataSchema,\n  EncryptionAlgorithm,\n  EncryptionKey,\n  EncryptionKeySchema,\n  EncryptionMetrics,\n  EncryptionMetricsSchema,\n  FieldEncryptionConfig,\n  FieldEncryptionConfigSchema,\n  KeyDerivation,\n} from '."
+          ]
+        },
+        {
+          "file": "src/services/NOSTRAccountProtectionService.ts",
+          "imports": [
+            "import { createHash, randomBytes } from 'crypto';\nimport { finalizeEvent, verifyEvent } from 'nostr-tools';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/services/NOSTRKeyManagementService.ts",
+          "imports": [
+            "import { createHash } from 'crypto';\nimport { finalizeEvent, generateSecretKey, getPublicKey, nip19, verifyEvent } from 'nostr-tools';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/services/NOSTRSessionService.ts",
+          "imports": [
+            "import { createHash, randomBytes } from 'crypto';\nimport { finalizeEvent, getPublicKey } from 'nostr-tools';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/services/NOSTRSigningService.ts",
+          "imports": [
+            "import { createHash, randomBytes } from 'crypto';\nimport { finalizeEvent, generateSecretKey, getPublicKey, verifyEvent } from 'nostr-tools';\nimport { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/services/PrivacyControlsService.ts",
+          "imports": [
+            "import { randomBytes } from 'crypto';\nimport {\n  ComplianceFramework,\n  Consent,\n  ConsentSchema,\n  DataAccessRequest,\n  DataAccessRequestSchema,\n  DataCategory,\n  DataVisibility,\n  PrivacyImpactAssessment,\n  PrivacyImpactAssessmentSchema,\n  PrivacySetting,\n  PrivacySettingSchema,\n} from '."
+          ]
+        },
+        {
+          "file": "src/services/__tests__/NOSTRKeyManagementService.test.ts",
+          "imports": [
+            "import { beforeEach, describe, expect, it, jest } from '@jes",
+            "import { NOSTRKeyManagementService } from '."
+          ]
+        },
+        {
+          "file": "src/services/__tests__/automated-content-moderation-service.test.ts",
+          "imports": [
+            "import {\n  AutomatedModerationError,\n  MODERATION_CONSTANTS,\n  UserReport,\n} from '.",
+            "import {\n  AutomatedContentModerationServiceImpl,\n  automatedContentModerationService,\n} from '."
+          ]
+        },
+        {
+          "file": "src/services/__tests__/automated-content-moderation.basic.test.ts",
+          "imports": [
+            "import { AutomatedContentModerationServiceImpl } from '."
+          ]
+        },
+        {
+          "file": "src/services/automated-content-moderation-service.ts",
+          "imports": [
+            "import {\n  AutomatedContentModerationService,\n  AutomatedModerationError,\n  ContentFilter,\n  ContentModerationResult,\n  ContentModerationResultSchema,\n  FilteringResult,\n  FilteringResultSchema,\n  FilterPerformanceMetrics,\n  MODERATION_CONSTANTS,\n  ModerationAction,\n  ModerationAnalytics,\n  ModerationAnalyticsSchema,\n  ModerationKPI,\n  ModerationOptimization,\n  UserReport,\n  UserReportSchema,\n} from '."
+          ]
+        },
+        {
+          "file": "src/services/autonomous-user-management-service.ts",
+          "imports": [
+            "import { useMemo } from 'react';\nimport {\n  AccessControlMetrics,\n  AutonomousUserManagementService,\n  BehaviorAnalyticsMetrics,\n  BehaviorAnomaly,\n  BehaviorPattern,\n  BulkOperation,\n  BulkOperationTemplate,\n  BulkOperationsMetrics,\n  RoleDefinition,\n  UserAccountMetrics,\n  UserAccountOperation,\n  UserAccountPolicy,\n  UserBehaviorEvent,\n  UserRoleAssignment,\n} from '."
+          ]
+        },
+        {
+          "file": "src/shared/utils/auth.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/shared/utils/storage.ts",
+          "imports": [
+            "import { unixfs } from '@heli",
+            "import { createHelia } from 'helia';\nimport { z } from 'zod';\nimport type {\n  ContentGenerationJob,\n  ContentImprovement,\n  ContentItem,\n  MediaAsset,\n} from '."
+          ]
+        },
+        {
+          "file": "src/store/index.ts",
+          "imports": [
+            "import { configureStore } from '@reduxj",
+            "import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';\n"
+          ]
+        },
+        {
+          "file": "src/store/slices/cmsSlice.ts",
+          "imports": [
+            "import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxj",
+            "import { z } from 'zod';\nimport type { User } from '.",
+            "import { decentralizedStorage } from '."
+          ]
+        },
+        {
+          "file": "src/store/slices/paymentSlice.ts",
+          "imports": [
+            "import { createSlice, PayloadAction } from '@reduxj"
+          ]
+        },
+        {
+          "file": "src/store/slices/postSlice.ts",
+          "imports": [
+            "import { createSlice, PayloadAction } from '@reduxj"
+          ]
+        },
+        {
+          "file": "src/store/slices/userSlice.ts",
+          "imports": [
+            "import { createSlice, PayloadAction } from '@reduxj"
+          ]
+        },
+        {
+          "file": "src/store/types.ts",
+          "imports": [
+            "import { User, Post, Payment, UserState, PostState, PaymentState } from '."
+          ]
+        },
+        {
+          "file": "src/stories/Button.stories.ts",
+          "imports": [
+            "import { fn } from 'storyboo"
+          ]
+        },
+        {
+          "file": "src/stories/Header.stories.ts",
+          "imports": [
+            "import { fn } from 'storyboo"
+          ]
+        },
+        {
+          "file": "src/stories/Page.stories.ts",
+          "imports": [
+            "import { expect, userEvent, within } from 'storyboo"
+          ]
+        },
+        {
+          "file": "src/test-utils/__tests__/test-reporting.demo.test.ts",
+          "imports": [
+            "import {\n  createTestError,\n  createTestResult,\n  ReportOptions,\n  TestReportingEngine,\n  useTestReporting,\n} from '."
+          ]
+        },
+        {
+          "file": "src/test-utils/external-dependency-mocker.ts",
+          "imports": [
+            "import { jest } from '@jes"
+          ]
+        },
+        {
+          "file": "src/test-utils/performance-testing.tsx",
+          "imports": [
+            "import { cleanup, render, RenderOptions } from '@testing-librar",
+            "import { ReactElement } from 'react';\nimport { MemoryRouter } from 'react-router-dom';\n"
+          ]
+        },
+        {
+          "file": "src/test-utils/snapshot-testing.tsx",
+          "imports": [
+            "import { render, RenderOptions } from '@testing-librar",
+            "import { ReactElement } from 'react';\nimport { MemoryRouter } from 'react-router-dom';"
+          ]
+        },
+        {
+          "file": "src/test-utils/test-providers.tsx",
+          "imports": [
+            "import { configureStore, Store } from '@reduxj",
+            "import { render, RenderOptions } from '@testing-librar",
+            "import { Provider } from 'react-redux';\nimport { BrowserRouter, MemoryRouter } from 'react-router-dom';\n"
+          ]
+        },
+        {
+          "file": "src/test-utils/test-timeout-manager.ts",
+          "imports": [
+            "import { jest } from '@jes"
+          ]
+        },
+        {
+          "file": "src/types/ai-enhanced-features.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/types/automated-content-moderation.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/types/autonomous-user-management.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/types/dataProtection.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        },
+        {
+          "file": "src/types/engagement-analytics.ts",
+          "imports": [
+            "import { z } from 'zod';\n"
+          ]
+        }
+      ]
+    }
+  ],
+  "bundleSplitting": [
+    {
+      "type": "vendor-splitting",
+      "libraries": [
+        "react",
+        "react-dom",
+        "react-router-dom",
+        "@tanstack/react-query",
+        "framer-motion",
+        "recharts",
+        "stripe"
+      ],
+      "recommendation": "Split vendor libraries into separate chunks",
+      "reason": "Better caching and parallel loading",
+      "implementation": "Configure Vite/Rollup splitVendorChunkPlugin"
+    },
+    {
+      "type": "dynamic-imports",
+      "recommendation": "Implement dynamic imports for heavy components",
+      "examples": [
+        "Dashboard components",
+        "Chart libraries (recharts)",
+        "Rich text editors",
+        "File upload components"
+      ],
+      "reason": "Reduce initial bundle size and improve TTI"
+    }
+  ],
+  "performanceImpact": {
+    "currentSize": 902.0600000000001,
+    "optimizedSize": 872.0600000000001,
+    "estimatedSavings": 30,
+    "savingsPercent": "3.3",
+    "loadTimeImprovement": {
+      "3G": 18,
+      "4G": 1,
+      "Broadband": 0
+    },
+    "cacheEfficiency": {
+      "score": "High",
+      "benefits": [
+        "Separate vendor chunks improve cache hit rates",
+        "Vendor libraries cached independently from app code",
+        "Dynamic imports enable progressive loading"
+      ]
+    }
+  }
+}

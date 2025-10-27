@@ -1,0 +1,111 @@
+%% Event-Driven Architecture Pattern
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete event-driven architecture pattern with pub/sub implementation
+
+graph TB
+    subgraph "Event Publishing Pattern"
+        Publisher[Service Publisher<br/>Business Logic Layer]
+        EventFactory[Event Factory<br/>Event Creation]
+        EventBus[Event Bus<br/>Central Hub]
+        EventQueue[Event Queue<br/>Priority + FIFO]
+        EventLog[Event Log<br/>Audit Trail]
+    end
+
+    subgraph "Event Subscription Pattern"
+        SubscriptionManager[Subscription Manager<br/>Subscriber Registry]
+        EventFilter[Event Filter<br/>Pattern Matching]
+        EventRouter[Event Router<br/>Selective Delivery]
+    end
+
+    subgraph "Event Processing Pattern"
+        Subscriber1[Immediate Subscriber<br/>Cache Invalidation<br/>Priority: 1]
+        Subscriber2[Real-time Subscriber<br/>Notifications<br/>Priority: 2]
+        Subscriber3[Async Subscriber<br/>Analytics<br/>Priority: 3]
+        Subscriber4[Background Subscriber<br/>Search Indexing<br/>Priority: 4]
+    end
+
+    subgraph "Error Handling Pattern"
+        ErrorHandler[Error Handler<br/>Exception Management]
+        RetryStrategy[Retry Strategy<br/>Exponential Backoff]
+        DeadLetterQueue[Dead Letter Queue<br/>Failed Events]
+        ErrorLogger[Error Logger<br/>Monitoring]
+    end
+
+    subgraph "Event Types & Structure"
+        EventStructure["Event Structure:<br/>---<br/>id: UUID<br/>type: string<br/>source: string<br/>timestamp: ISO8601<br/>data: object<br/>metadata: object<br/>version: string"]
+
+        EventTypes["Common Event Types:<br/>---<br/>content.published<br/>content.updated<br/>content.deleted<br/>payment.confirmed<br/>payment.failed<br/>user.registered<br/>user.activity<br/>subscription.renewed"]
+    end
+
+    %% Event Publishing Flow
+    Publisher -->|1. Create Event| EventFactory
+    EventFactory -->|2. Validate Schema| EventFactory
+    EventFactory -->|3. Publish| EventBus
+
+    EventBus -->|4. Queue Event| EventQueue
+    EventBus -->|5. Log Event| EventLog
+    EventBus -->|6. Register| SubscriptionManager
+
+    %% Subscription Flow
+    SubscriptionManager -->|7. Match Subscribers| EventFilter
+    EventFilter -->|8. Filter by Pattern| EventRouter
+    EventRouter -->|9. Route to Subscribers| Subscriber1
+    EventRouter -->|9. Route to Subscribers| Subscriber2
+    EventRouter -->|9. Route to Subscribers| Subscriber3
+    EventRouter -->|9. Route to Subscribers| Subscriber4
+
+    %% Processing Flow
+    Subscriber1 -->|10a. Process Success| EventBus
+    Subscriber2 -->|10b. Process Success| EventBus
+    Subscriber3 -->|10c. Process Success| EventBus
+    Subscriber4 -->|10d. Process Success| EventBus
+
+    %% Error Handling Flow
+    Subscriber1 -->|11a. Process Error| ErrorHandler
+    Subscriber2 -->|11b. Process Error| ErrorHandler
+    Subscriber3 -->|11c. Process Error| ErrorHandler
+    Subscriber4 -->|11d. Process Error| ErrorHandler
+
+    ErrorHandler -->|12. Attempt Retry| RetryStrategy
+    RetryStrategy -->|13a. Retry Success| EventBus
+    RetryStrategy -->|13b. Max Retries| DeadLetterQueue
+    ErrorHandler -->|14. Log Error| ErrorLogger
+
+    %% Key Characteristics
+    Note1["Event-Driven Benefits:<br/>✓ Loose coupling<br/>✓ Async processing<br/>✓ Scalability<br/>✓ Fault tolerance<br/>✓ Event replay<br/>✓ Audit trail"]
+
+    Note2["Implementation Details:<br/>- In-memory event bus<br/>- Topic-based routing<br/>- Priority queuing<br/>- Retry with backoff<br/>- Dead letter queue<br/>- Event versioning"]
+
+    Note3["Performance Metrics:<br/>- Event latency: <5ms<br/>- Throughput: 10K/sec<br/>- Success rate: 99.9%<br/>- Retry rate: <1%<br/>- Queue depth: <100"]
+
+    Note4["Best Practices:<br/>1. Idempotent subscribers<br/>2. Schema versioning<br/>3. Event sourcing<br/>4. Correlation IDs<br/>5. Monitoring + alerting<br/>6. Circuit breakers"]
+
+    %% Styling
+    style Publisher fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style EventFactory fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:4px,color:#fff
+    style EventQueue fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+    style EventLog fill:#607d8b,stroke:#37474f,stroke-width:2px,color:#fff
+
+    style SubscriptionManager fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style EventFilter fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style EventRouter fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+
+    style Subscriber1 fill:#f44336,stroke:#c62828,stroke-width:3px,color:#fff
+    style Subscriber2 fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style Subscriber3 fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style Subscriber4 fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#fff
+
+    style ErrorHandler fill:#f44336,stroke:#c62828,stroke-width:3px,color:#fff
+    style RetryStrategy fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style DeadLetterQueue fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style ErrorLogger fill:#607d8b,stroke:#37474f,stroke-width:2px,color:#fff
+
+    style EventStructure fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style EventTypes fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+
+    style Note1 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Note2 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Note3 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Note4 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px

@@ -1,0 +1,75 @@
+graph TB
+    subgraph "Input Data"
+        USER[User Profile Data]
+        ACT[Activity History]
+        ENG[Engagement Metrics]
+        PAY[Payment History]
+    end
+
+    subgraph "Risk Factor Calculation"
+        RF1[Days Since Last Activity<br/>Weight: 0.3]
+        RF2[Engagement Score<br/>Weight: 0.25]
+        RF3[Subscription Status<br/>Weight: 0.2]
+        RF4[Account Age<br/>Weight: 0.15]
+        RF5[Activity Level<br/>Weight: 0.1]
+    end
+
+    subgraph "Risk Scoring Engine"
+        NORM[Normalize Factors<br/>0-100 scale]
+        WEIGHT[Apply Weights]
+        CALC[Calculate Risk Score]
+    end
+
+    subgraph "Risk Classification"
+        LOW[Low Risk<br/>0-24]
+        MED[Medium Risk<br/>25-49]
+        HIGH[High Risk<br/>50-74]
+        CRIT[Critical Risk<br/>75-100]
+    end
+
+    subgraph "Recommendations"
+        REC[Retention Action Generator]
+        EMAIL[Re-engagement Email]
+        DISC[Subscription Discount]
+        TUTOR[Onboarding Tutorial]
+        SUPPORT[Personal Outreach]
+    end
+
+    USER --> RF1
+    ACT --> RF1
+    ACT --> RF2
+    ENG --> RF2
+    PAY --> RF3
+    USER --> RF4
+    ACT --> RF5
+
+    RF1 --> NORM
+    RF2 --> NORM
+    RF3 --> NORM
+    RF4 --> NORM
+    RF5 --> NORM
+
+    NORM --> WEIGHT
+    WEIGHT --> CALC
+
+    CALC --> LOW
+    CALC --> MED
+    CALC --> HIGH
+    CALC --> CRIT
+
+    LOW --> REC
+    MED --> REC
+    HIGH --> REC
+    CRIT --> REC
+
+    REC --> EMAIL
+    REC --> DISC
+    REC --> TUTOR
+    REC --> SUPPORT
+
+    style CALC fill:#FF6B6B,color:#fff
+    style CRIT fill:#D32F2F,color:#fff
+    style HIGH fill:#F57C00,color:#fff
+    style MED fill:#FFA726,color:#000
+    style LOW fill:#66BB6A,color:#fff
+    style REC fill:#42A5F5,color:#fff

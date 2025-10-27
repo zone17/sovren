@@ -1,0 +1,348 @@
+{
+  "name": "Sovren Frontend Dependency Configuration",
+  "version": "1.0.0",
+  "description": "Comprehensive dependency management for analytics and UI components",
+  "lastUpdated": "2024-12-30",
+
+  "analytics": {
+    "core": {
+      "@tanstack/react-query": {
+        "version": "^5.83.0",
+        "required": true,
+        "purpose": "Data fetching, caching, and synchronization for analytics",
+        "compatibility": {
+          "react": ">=18.0.0",
+          "typescript": ">=5.0.0"
+        },
+        "devDependency": false,
+        "securityLevel": "high",
+        "testCoverage": true
+      },
+      "@tanstack/react-query-devtools": {
+        "version": "^5.83.0",
+        "required": false,
+        "purpose": "Development tools for React Query debugging",
+        "compatibility": {
+          "@tanstack/react-query": "^5.83.0"
+        },
+        "devDependency": true,
+        "securityLevel": "low",
+        "testCoverage": false
+      }
+    },
+    "ui": {
+      "recharts": {
+        "version": "^2.15.3",
+        "required": true,
+        "purpose": "Chart and data visualization components",
+        "compatibility": {
+          "react": ">=16.8.0",
+          "react-dom": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "medium",
+        "testCoverage": true
+      },
+      "date-fns": {
+        "version": "^4.1.0",
+        "required": true,
+        "purpose": "Date manipulation and formatting utilities",
+        "compatibility": {
+          "typescript": ">=4.0.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": true
+      },
+      "lucide-react": {
+        "version": "^0.513.0",
+        "required": true,
+        "purpose": "Icon components for analytics UI",
+        "compatibility": {
+          "react": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": false
+      }
+    },
+    "validation": {
+      "zod": {
+        "version": "^3.25.42",
+        "required": true,
+        "purpose": "Schema validation for analytics data",
+        "compatibility": {
+          "typescript": ">=4.0.0"
+        },
+        "devDependency": false,
+        "securityLevel": "medium",
+        "testCoverage": true
+      }
+    }
+  },
+
+  "uiComponents": {
+    "radix": {
+      "@radix-ui/react-avatar": {
+        "version": "^1.1.10",
+        "required": true,
+        "purpose": "Avatar component for user interfaces",
+        "compatibility": {
+          "react": ">=16.8.0",
+          "react-dom": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": true
+      },
+      "@radix-ui/react-dialog": {
+        "version": "^1.1.14",
+        "required": true,
+        "purpose": "Modal and dialog components",
+        "compatibility": {
+          "react": ">=16.8.0",
+          "react-dom": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": true
+      },
+      "@radix-ui/react-dropdown-menu": {
+        "version": "^2.1.15",
+        "required": true,
+        "purpose": "Dropdown menu components",
+        "compatibility": {
+          "react": ">=16.8.0",
+          "react-dom": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": true
+      },
+      "@radix-ui/react-select": {
+        "version": "^2.2.5",
+        "required": true,
+        "purpose": "Select input components for filters",
+        "compatibility": {
+          "react": ">=16.8.0",
+          "react-dom": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": true
+      },
+      "@radix-ui/react-tabs": {
+        "version": "^1.1.12",
+        "required": true,
+        "purpose": "Tab navigation components",
+        "compatibility": {
+          "react": ">=16.8.0",
+          "react-dom": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": true
+      },
+      "@radix-ui/react-tooltip": {
+        "version": "^1.2.7",
+        "required": true,
+        "purpose": "Tooltip components for UI elements",
+        "compatibility": {
+          "react": ">=16.8.0",
+          "react-dom": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": true
+      }
+    },
+    "styling": {
+      "tailwindcss": {
+        "version": "^3.4.0",
+        "required": true,
+        "purpose": "Utility-first CSS framework",
+        "compatibility": {
+          "postcss": ">=8.0.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": false
+      },
+      "tailwindcss-animate": {
+        "version": "^1.0.5",
+        "required": true,
+        "purpose": "Animation utilities for Tailwind CSS",
+        "compatibility": {
+          "tailwindcss": ">=3.0.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": false
+      },
+      "class-variance-authority": {
+        "version": "^0.7.1",
+        "required": true,
+        "purpose": "Component variant system",
+        "compatibility": {
+          "react": ">=16.8.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": false
+      },
+      "clsx": {
+        "version": "^2.1.1",
+        "required": true,
+        "purpose": "Conditional CSS class utilities",
+        "compatibility": {},
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": false
+      },
+      "tailwind-merge": {
+        "version": "^3.3.0",
+        "required": true,
+        "purpose": "Tailwind CSS class merging utility",
+        "compatibility": {
+          "tailwindcss": ">=3.0.0"
+        },
+        "devDependency": false,
+        "securityLevel": "low",
+        "testCoverage": false
+      }
+    }
+  },
+
+  "testing": {
+    "core": {
+      "@testing-library/react": {
+        "version": "^14.3.1",
+        "required": true,
+        "purpose": "React component testing utilities",
+        "compatibility": {
+          "react": ">=18.0.0",
+          "react-dom": ">=18.0.0"
+        },
+        "devDependency": true,
+        "securityLevel": "medium",
+        "testCoverage": true
+      },
+      "@testing-library/jest-dom": {
+        "version": "^6.6.3",
+        "required": true,
+        "purpose": "Custom Jest matchers for DOM testing",
+        "compatibility": {
+          "jest": ">=24.0.0"
+        },
+        "devDependency": true,
+        "securityLevel": "low",
+        "testCoverage": false
+      },
+      "@testing-library/user-event": {
+        "version": "^14.6.1",
+        "required": true,
+        "purpose": "User interaction simulation for tests",
+        "compatibility": {
+          "@testing-library/react": ">=12.0.0"
+        },
+        "devDependency": true,
+        "securityLevel": "low",
+        "testCoverage": true
+      }
+    },
+    "mocking": {
+      "msw": {
+        "version": "^2.10.4",
+        "required": true,
+        "purpose": "API mocking for integration tests",
+        "compatibility": {
+          "node": ">=18.0.0"
+        },
+        "devDependency": true,
+        "securityLevel": "medium",
+        "testCoverage": true
+      }
+    }
+  },
+
+  "security": {
+    "policies": {
+      "vulnerabilityThreshold": "moderate",
+      "autoUpdate": false,
+      "auditFrequency": "weekly",
+      "allowedLicenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"],
+      "blockedLicenses": ["GPL-3.0", "AGPL-3.0"],
+      "requireSecurityReview": ["high", "critical"]
+    },
+    "scanning": {
+      "enabled": true,
+      "tools": ["npm audit", "snyk"],
+      "schedule": "daily",
+      "reportFormat": "json"
+    }
+  },
+
+  "versionManagement": {
+    "strategy": "semver",
+    "updatePolicy": {
+      "major": "manual",
+      "minor": "auto-approve-ci",
+      "patch": "auto-approve"
+    },
+    "lockfile": {
+      "enabled": true,
+      "validation": true,
+      "integrity": "sha512"
+    },
+    "compatibilityMatrix": {
+      "react": "^18.3.1",
+      "typescript": "^5.3.3",
+      "node": ">=18.0.0",
+      "npm": ">=9.0.0"
+    }
+  },
+
+  "monitoring": {
+    "bundleSize": {
+      "enabled": true,
+      "maxSize": "250kb",
+      "alerts": true
+    },
+    "performance": {
+      "enabled": true,
+      "metrics": ["loadTime", "renderTime", "memoryUsage"],
+      "thresholds": {
+        "loadTime": "2s",
+        "renderTime": "100ms",
+        "memoryUsage": "50MB"
+      }
+    }
+  },
+
+  "documentation": {
+    "required": true,
+    "formats": ["README", "CHANGELOG", "API"],
+    "maintenance": {
+      "frequency": "monthly",
+      "responsibility": "team"
+    }
+  },
+
+  "automation": {
+    "dependencyUpdates": {
+      "enabled": true,
+      "schedule": "weekly",
+      "strategy": "conservative"
+    },
+    "securityUpdates": {
+      "enabled": true,
+      "priority": "immediate",
+      "autoMerge": false
+    },
+    "testing": {
+      "required": true,
+      "coverage": ">=95%",
+      "types": ["unit", "integration", "e2e"]
+    }
+  }
+}

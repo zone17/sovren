@@ -1,0 +1,52 @@
+graph TB
+    subgraph "Relationship Graph Structure"
+        NODE[Graph Node]
+
+        NODE --> FOLLOWERS[Followers Set<br/>Users following this node]
+        NODE --> FOLLOWING[Following Set<br/>Users this node follows]
+        NODE --> BLOCKED[Blocked Set<br/>Users this node blocked]
+        NODE --> MUTED[Muted Set<br/>Users this node muted]
+    end
+
+    subgraph "Graph Operations"
+        ADD_FOLLOW[addFollow<br/>Bidirectional Update]
+        REMOVE_FOLLOW[removeFollow<br/>Bidirectional Update]
+        ADD_BLOCK[addBlock<br/>One-way Update]
+        ADD_MUTE[addMute<br/>One-way Update]
+
+        QUERY_FOLLOWERS[getFollowers<br/>O(1) Lookup]
+        QUERY_FOLLOWING[getFollowing<br/>O(1) Lookup]
+        QUERY_MUTUAL[getMutualFollows<br/>Set Intersection]
+    end
+
+    subgraph "Example Graph State"
+        U1[User1]
+        U2[User2]
+        U3[User3]
+        U4[User4]
+
+        U1 -->|follows| U2
+        U1 -->|follows| U3
+        U2 -->|follows| U1
+        U2 -->|follows| U4
+        U1 -.blocks.-> U4
+        U3 -.mutes.-> U2
+    end
+
+    subgraph "Mutual Follows Detection"
+        MUTUAL_CHECK{Is Following<br/>Both Ways?}
+        U1_TO_U2[User1 → User2]
+        U2_TO_U1[User2 → User1]
+
+        U1_TO_U2 --> MUTUAL_CHECK
+        U2_TO_U1 --> MUTUAL_CHECK
+        MUTUAL_CHECK -->|Yes| MUTUAL_RESULT[Mutual Follow<br/>Friends]
+        MUTUAL_CHECK -->|No| ONE_WAY[One-way Follow]
+    end
+
+    style NODE fill:#9370DB,stroke:#6B4B9C,stroke-width:3px,color:#fff
+    style ADD_FOLLOW fill:#50C878,stroke:#2E7D32,stroke-width:2px,color:#fff
+    style QUERY_FOLLOWERS fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style MUTUAL_RESULT fill:#FFD700,stroke:#FFA500,stroke-width:2px,color:#000
+    style U1 fill:#E8F4F8,stroke:#4A90E2,stroke-width:2px
+    style U2 fill:#E8F4F8,stroke:#4A90E2,stroke-width:2px

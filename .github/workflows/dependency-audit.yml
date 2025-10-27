@@ -1,0 +1,301 @@
+name: 🔒 Dependency Security Audit
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/frontend/package.json'
+      - 'packages/frontend/package-lock.json'
+      - '.github/workflows/dependency-audit.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/frontend/package.json'
+      - 'packages/frontend/package-lock.json'
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  dependency-audit:
+    name: 🔍 Comprehensive Dependency Audit
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: packages/frontend
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          cache-dependency-path: packages/frontend/package-lock.json
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run comprehensive dependency audit
+        run: node ../../scripts/dependency-audit.cjs
+        continue-on-error: true
+
+      - name: 🔒 NPM Security Audit
+        run: |
+          echo "## NPM Security Audit Results" >> audit-results.md
+          echo "" >> audit-results.md
+          npm audit --audit-level=low --format=json > npm-audit.json || true
+
+          # Parse and format results
+          if [ -s npm-audit.json ]; then
+            echo "### Security Vulnerabilities Found" >> audit-results.md
+            echo "" >> audit-results.md
+            echo "\`\`\`json" >> audit-results.md
+            cat npm-audit.json >> audit-results.md
+            echo "\`\`\`" >> audit-results.md
+          else
+            echo "✅ No security vulnerabilities found" >> audit-results.md
+          fi
+        continue-on-error: true
+
+      - name: 📊 License Compliance Check
+        run: |
+          echo "" >> audit-results.md
+          echo "## License Compliance Check" >> audit-results.md
+          echo "" >> audit-results.md
+
+          npx license-checker --onlyAllow 'MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;CC0-1.0;Unlicense' \
+            --json > license-check.json || true
+
+          if [ $? -eq 0 ]; then
+            echo "✅ All licenses are compliant" >> audit-results.md
+          else
+            echo "❌ License compliance issues found" >> audit-results.md
+            echo "\`\`\`json" >> audit-results.md
+            cat license-check.json >> audit-results.md
+            echo "\`\`\`" >> audit-results.md
+          fi
+        continue-on-error: true
+
+      - name: 📦 Bundle Size Analysis
+        run: |
+          echo "" >> audit-results.md
+          echo "## Bundle Size Analysis" >> audit-results.md
+          echo "" >> audit-results.md
+
+          npm run build 2>&1 | tee build-output.log
+
+          # Extract bundle size information
+          if grep -q "dist/assets" build-output.log; then
+            echo "### Build Output" >> audit-results.md
+            echo "\`\`\`" >> audit-results.md
+            grep "dist/assets" build-output.log >> audit-results.md
+            echo "\`\`\`" >> audit-results.md
+          fi
+        continue-on-error: true
+
+      - name: 🔄 Dependency Tree Analysis
+        run: |
+          echo "" >> audit-results.md
+          echo "## Dependency Tree Analysis" >> audit-results.md
+          echo "" >> audit-results.md
+
+          # Check for duplicate dependencies
+          npm ls --depth=0 --json > dep-tree.json 2>/dev/null || true
+
+          # Count total dependencies
+          TOTAL_DEPS=$(npm ls --depth=0 --parseable 2>/dev/null | wc -l)
+          echo "- Total Dependencies: $TOTAL_DEPS" >> audit-results.md
+
+          # Check for peer dependency warnings
+          npm ls 2>&1 | grep -i "peer dep" > peer-deps.log || true
+          if [ -s peer-deps.log ]; then
+            echo "- ⚠️ Peer Dependency Issues Found" >> audit-results.md
+            echo "\`\`\`" >> audit-results.md
+            cat peer-deps.log >> audit-results.md
+            echo "\`\`\`" >> audit-results.md
+          else
+            echo "- ✅ No peer dependency issues" >> audit-results.md
+          fi
+        continue-on-error: true
+
+      - name: 🚨 Critical Vulnerability Check
+        id: vuln-check
+        run: |
+          # Check for critical and high vulnerabilities
+          HIGH_VULNS=$(npm audit --audit-level=high --format=json 2>/dev/null | jq -r '.metadata.vulnerabilities.high // 0')
+          CRITICAL_VULNS=$(npm audit --audit-level=critical --format=json 2>/dev/null | jq -r '.metadata.vulnerabilities.critical // 0')
+
+          echo "high-vulns=$HIGH_VULNS" >> $GITHUB_OUTPUT
+          echo "critical-vulns=$CRITICAL_VULNS" >> $GITHUB_OUTPUT
+
+          if [ "$CRITICAL_VULNS" -gt 0 ] || [ "$HIGH_VULNS" -gt 5 ]; then
+            echo "fail-build=true" >> $GITHUB_OUTPUT
+            echo "❌ Critical security issues found: $CRITICAL_VULNS critical, $HIGH_VULNS high" >> audit-results.md
+          else
+            echo "fail-build=false" >> $GITHUB_OUTPUT
+            echo "✅ No critical security issues" >> audit-results.md
+          fi
+        continue-on-error: true
+
+      - name: 📄 Generate Audit Report
+        run: |
+          echo "# 🔒 Dependency Audit Report - $(date)" > final-audit-report.md
+          echo "" >> final-audit-report.md
+          echo "**Repository**: ${{ github.repository }}" >> final-audit-report.md
+          echo "**Branch**: ${{ github.ref_name }}" >> final-audit-report.md
+          echo "**Commit**: ${{ github.sha }}" >> final-audit-report.md
+          echo "**Run ID**: ${{ github.run_id }}" >> final-audit-report.md
+          echo "" >> final-audit-report.md
+
+          # Add comprehensive audit results
+          if [ -f "audit-results.md" ]; then
+            cat audit-results.md >> final-audit-report.md
+          fi
+
+          # Add custom audit results if available
+          if [ -f "../../docs/dependency-audit-report.json" ]; then
+            echo "" >> final-audit-report.md
+            echo "## Custom Dependency Analysis" >> final-audit-report.md
+            echo "" >> final-audit-report.md
+            echo "See attached JSON report for detailed analysis." >> final-audit-report.md
+          fi
+
+      - name: 📎 Upload Audit Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-report-${{ github.run_id }}
+          path: |
+            packages/frontend/final-audit-report.md
+            packages/frontend/npm-audit.json
+            packages/frontend/license-check.json
+            packages/frontend/dep-tree.json
+            docs/dependency-audit-report.json
+          retention-days: 30
+
+      - name: 💬 Comment PR with Audit Results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'packages/frontend/final-audit-report.md';
+
+            if (fs.existsSync(path)) {
+              const report = fs.readFileSync(path, 'utf8');
+              const truncatedReport = report.length > 50000
+                ? report.substring(0, 50000) + '\n\n... (truncated - see full report in artifacts)'
+                : report;
+
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🔒 Dependency Audit Results\n\n${truncatedReport}`
+              });
+            }
+
+      - name: 🚨 Fail on Critical Vulnerabilities
+        if: steps.vuln-check.outputs.fail-build == 'true'
+        run: |
+          echo "❌ Build failed due to critical security vulnerabilities!"
+          echo "Critical vulnerabilities: ${{ steps.vuln-check.outputs.critical-vulns }}"
+          echo "High vulnerabilities: ${{ steps.vuln-check.outputs.high-vulns }}"
+          echo ""
+          echo "Please review the audit report and fix critical vulnerabilities before proceeding."
+          exit 1
+
+  dependency-update-check:
+    name: 📦 Dependency Update Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    defaults:
+      run:
+        working-directory: packages/frontend
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          cache-dependency-path: packages/frontend/package-lock.json
+
+      - name: 🔍 Check for dependency updates
+        run: |
+          npm outdated --format=json > outdated.json || true
+
+          if [ -s outdated.json ]; then
+            echo "📦 Dependency updates available"
+            cat outdated.json
+
+            # Create issue for dependency updates
+            echo "UPDATES_AVAILABLE=true" >> $GITHUB_ENV
+          else
+            echo "✅ All dependencies are up to date"
+            echo "UPDATES_AVAILABLE=false" >> $GITHUB_ENV
+          fi
+
+      - name: 🎫 Create Issue for Dependency Updates
+        if: env.UPDATES_AVAILABLE == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            if (fs.existsSync('packages/frontend/outdated.json')) {
+              const outdated = JSON.parse(fs.readFileSync('packages/frontend/outdated.json', 'utf8'));
+
+              let body = `## 📦 Dependency Updates Available\n\n`;
+              body += `**Date**: ${new Date().toISOString()}\n\n`;
+              body += `The following dependencies have updates available:\n\n`;
+
+              for (const [pkg, info] of Object.entries(outdated)) {
+                body += `- **${pkg}**: ${info.current} → ${info.latest}\n`;
+              }
+
+              body += `\n## 🔄 Next Steps\n\n`;
+              body += `1. Review the changelog for each package\n`;
+              body += `2. Test updates in a development branch\n`;
+              body += `3. Update dependencies with \`npm update\`\n`;
+              body += `4. Run tests to ensure compatibility\n`;
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `📦 Dependency Updates Available - ${new Date().toDateString()}`,
+                body: body,
+                labels: ['dependencies', 'maintenance']
+              });
+            }
+
+  security-advisory-check:
+    name: 🛡️ Security Advisory Monitor
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check GitHub Security Advisories
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // This could be enhanced to check for specific advisories
+            // related to our dependencies using GitHub's GraphQL API
+            console.log('Security advisory check completed');
+
+      - name: 📧 Notify Security Team
+        if: failure()
+        run: |
+          echo "🚨 Security advisory check failed - notify security team"
+          # Add notification logic here (Slack, email, etc.)

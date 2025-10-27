@@ -1,0 +1,59 @@
+```mermaid
+flowchart TD
+    Start([Refund Request]) --> CheckIdempotency{Idempotency<br/>Key Exists?}
+
+    CheckIdempotency -->|Yes| ReturnExisting[Return Existing Refund]
+    CheckIdempotency -->|No| ValidateTransaction
+
+    ValidateTransaction[Validate Transaction] --> ValidTx{Valid<br/>Transaction?}
+    ValidTx -->|No| ErrorInvalidTx[Error: Invalid Transaction]
+    ValidTx -->|Yes| CheckAmount
+
+    CheckAmount[Check Refund Amount] --> ValidAmount{Amount<br/>Valid?}
+    ValidAmount -->|No| ErrorInvalidAmount[Error: Invalid Amount]
+    ValidAmount -->|Yes| CheckTimeLimit
+
+    CheckTimeLimit[Check Time Limit] --> WithinTime{Within<br/>90 Days?}
+    WithinTime -->|No| ErrorTimeLimit[Error: Time Limit Exceeded]
+    WithinTime -->|Yes| CheckRateLimit
+
+    CheckRateLimit[Check Rate Limit] --> RateLimitOK{Rate Limit<br/>OK?}
+    RateLimitOK -->|No| ErrorRateLimit[Error: Rate Limit Exceeded]
+    RateLimitOK -->|Yes| DetectFraud
+
+    DetectFraud[Fraud Detection] --> FraudCheck{Risk<br/>Score?}
+    FraudCheck -->|Critical| ErrorFraud[Error: Blocked - Fraud]
+    FraudCheck -->|Low/Medium/High| ConvertCurrency
+
+    ConvertCurrency[Convert to USD] --> CheckAuthThreshold{Amount<br/>>= $100?}
+
+    CheckAuthThreshold -->|No| AutoApprove[Auto-Approve<br/>status = AUTHORIZED]
+    CheckAuthThreshold -->|Yes| ManualReview[Manual Review Required<br/>status = PENDING]
+
+    AutoApprove --> CreateRefund[Create Refund Record]
+    ManualReview --> CreateRefund
+
+    CreateRefund --> EmitEvent[Emit REFUND_INITIATED Event]
+    EmitEvent --> StoreIdempotency[Store Idempotency Record]
+
+    StoreIdempotency --> CheckAutoProcess{Auto-<br/>Approved?}
+    CheckAutoProcess -->|Yes| QueueProcessing[Queue for Auto-Processing]
+    CheckAutoProcess -->|No| NotifyAdmin[Notify Admin for Approval]
+
+    QueueProcessing --> Success([Return Refund<br/>201 Created])
+    NotifyAdmin --> Success
+    ReturnExisting --> Success
+
+    ErrorInvalidTx --> ErrorResponse([Return Error])
+    ErrorInvalidAmount --> ErrorResponse
+    ErrorTimeLimit --> ErrorResponse
+    ErrorRateLimit --> ErrorResponse
+    ErrorFraud --> ErrorResponse
+
+    style Start fill:#4CAF50
+    style Success fill:#4CAF50
+    style ErrorResponse fill:#F44336
+    style AutoApprove fill:#8BC34A
+    style ManualReview fill:#FF9800
+    style DetectFraud fill:#FFC107
+```

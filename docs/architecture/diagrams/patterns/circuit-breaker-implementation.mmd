@@ -1,0 +1,141 @@
+%% Circuit Breaker Implementation - Webhook Service Example
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete circuit breaker implementation for webhook delivery
+
+graph TB
+    subgraph "Circuit Breaker Components"
+        CircuitBreaker[Circuit Breaker<br/>State Machine]
+        StateManager[State Manager<br/>Transition Logic]
+        FailureCounter[Failure Counter<br/>Sliding Window]
+        HealthChecker[Health Checker<br/>Test Requests]
+    end
+
+    subgraph "Configuration"
+        Config["Circuit Breaker Config:<br/>---<br/>failureThreshold: 5<br/>failureWindow: 60s<br/>openTimeout: 30s<br/>halfOpenMaxRequests: 3<br/>successThreshold: 2<br/>timeoutDuration: 5s"]
+    end
+
+    subgraph "Client Service"
+        WebhookService[Webhook Service<br/>Caller]
+        FallbackHandler[Fallback Handler<br/>Cached Response]
+        RetryQueue[Retry Queue<br/>Failed Requests]
+    end
+
+    subgraph "Protected Service"
+        ExternalWebhook[External Webhook Endpoint<br/>Third-party API]
+        ServiceMonitor[Service Monitor<br/>Health Status]
+    end
+
+    subgraph "States & Metrics"
+        ClosedState[CLOSED<br/>---<br/>Requests: 1000<br/>Failures: 2<br/>Success Rate: 99.8%]
+
+        OpenState[OPEN<br/>---<br/>Blocked: 500<br/>Duration: 30s<br/>Fallback Used: 500]
+
+        HalfOpenState[HALF-OPEN<br/>---<br/>Test Requests: 3<br/>Successes: 2<br/>Testing: true]
+    end
+
+    subgraph "Monitoring & Alerting"
+        MetricsCollector[Metrics Collector<br/>Prometheus]
+        AlertManager[Alert Manager<br/>Circuit Open Alert]
+        Dashboard[Monitoring Dashboard<br/>Real-time Status]
+    end
+
+    %% Normal Flow (CLOSED)
+    WebhookService -->|1. Request| CircuitBreaker
+    CircuitBreaker -->|2. Check State| StateManager
+    StateManager -->|3. CLOSED - Allow| CircuitBreaker
+    CircuitBreaker -->|4. Execute| ExternalWebhook
+
+    ExternalWebhook -->|5a. Success| CircuitBreaker
+    CircuitBreaker -->|6. Reset Counter| FailureCounter
+    CircuitBreaker -->|7. Return Success| WebhookService
+
+    ExternalWebhook -->|5b. Failure| CircuitBreaker
+    CircuitBreaker -->|6. Increment Counter| FailureCounter
+    FailureCounter -->|7. Check Threshold| StateManager
+
+    %% State Transition to OPEN
+    StateManager -->|8. Threshold Exceeded| StateManager
+    StateManager -->|9. Transition to OPEN| OpenState
+    StateManager -->|10. Start Timer| StateManager
+    StateManager -->|11. Alert| AlertManager
+
+    %% OPEN State
+    WebhookService -->|12. Request| CircuitBreaker
+    CircuitBreaker -->|13. Check State| StateManager
+    StateManager -->|14. OPEN - Block| CircuitBreaker
+    CircuitBreaker -->|15. Use Fallback| FallbackHandler
+    FallbackHandler -->|16. Return Cached| WebhookService
+    CircuitBreaker -->|17. Queue Retry| RetryQueue
+
+    %% Transition to HALF-OPEN
+    StateManager -->|18. Timeout Elapsed| StateManager
+    StateManager -->|19. Transition to HALF-OPEN| HalfOpenState
+    StateManager -->|20. Allow Test Requests| CircuitBreaker
+
+    %% HALF-OPEN State
+    WebhookService -->|21. Test Request| CircuitBreaker
+    CircuitBreaker -->|22. Check State| StateManager
+    StateManager -->|23. HALF-OPEN - Limited Allow| CircuitBreaker
+    CircuitBreaker -->|24. Execute Test| ExternalWebhook
+    ExternalWebhook -->|25a. Test Success| CircuitBreaker
+    CircuitBreaker -->|26. Increment Success| HealthChecker
+    HealthChecker -->|27. Success Threshold Met| StateManager
+    StateManager -->|28. Transition to CLOSED| ClosedState
+
+    ExternalWebhook -->|25b. Test Failed| CircuitBreaker
+    CircuitBreaker -->|26. Record Failure| HealthChecker
+    HealthChecker -->|27. Test Failed| StateManager
+    StateManager -->|28. Transition to OPEN| OpenState
+
+    %% Monitoring
+    CircuitBreaker -.Metrics.-> MetricsCollector
+    StateManager -.Metrics.-> MetricsCollector
+    FailureCounter -.Metrics.-> MetricsCollector
+    MetricsCollector --> Dashboard
+    AlertManager --> Dashboard
+
+    %% Service Health
+    ExternalWebhook -.Health Check.-> ServiceMonitor
+    ServiceMonitor --> Dashboard
+
+    %% Configuration
+    Config -.Configure.-> CircuitBreaker
+    Config -.Configure.-> StateManager
+
+    %% Key Characteristics
+    Note1["Circuit Breaker Benefits:<br/>✓ Fail fast behavior<br/>✓ Prevents cascade failures<br/>✓ Automatic recovery<br/>✓ Service isolation<br/>✓ Graceful degradation"]
+
+    Note2["Implementation Details:<br/>- Sliding window counter<br/>- Configurable thresholds<br/>- State transition logic<br/>- Fallback mechanisms<br/>- Retry queue integration<br/>- Metrics + alerting"]
+
+    Note3["Use Cases:<br/>- Webhook delivery<br/>- External API calls<br/>- Payment processing<br/>- Email sending<br/>- NOSTR relay connections<br/>- Exchange rate APIs"]
+
+    Note4["Best Practices:<br/>1. Set appropriate thresholds<br/>2. Implement fallbacks<br/>3. Monitor circuit state<br/>4. Alert on transitions<br/>5. Test recovery paths<br/>6. Document behavior"]
+
+    %% Styling
+    style CircuitBreaker fill:#9e9e9e,stroke:#616161,stroke-width:3px,color:#fff
+    style StateManager fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style FailureCounter fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style HealthChecker fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style Config fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+
+    style WebhookService fill:#ff5722,stroke:#bf360c,stroke-width:2px,color:#fff
+    style FallbackHandler fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style RetryQueue fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+
+    style ExternalWebhook fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#fff
+    style ServiceMonitor fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    style ClosedState fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style OpenState fill:#f44336,stroke:#c62828,stroke-width:3px,color:#fff
+    style HalfOpenState fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#fff
+
+    style MetricsCollector fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style AlertManager fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style Dashboard fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+
+    style Note1 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Note2 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Note3 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Note4 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px

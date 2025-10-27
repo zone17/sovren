@@ -1,0 +1,192 @@
+groups:
+  - name: payment_critical_alerts
+    interval: 30s
+    rules:
+      # CRITICAL: Payment success rate below 95%
+      - alert: LowPaymentSuccessRate
+        expr: payment_success_rate < 0.95
+        for: 5m
+        labels:
+          severity: critical
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Payment success rate critically low"
+          description: "Payment success rate is {{ $value | humanizePercentage }} (threshold: 95%). Immediate action required."
+          runbook_url: "https://docs.sovren.app/runbooks/low-success-rate"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-business"
+
+      # CRITICAL: No payments processed in last 15 minutes during business hours
+      - alert: ZeroPaymentVolume
+        expr: |
+          (rate(payment_total[15m]) == 0)
+          and
+          (hour() >= 8 and hour() <= 20)
+        for: 15m
+        labels:
+          severity: critical
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Zero payment volume detected during business hours"
+          description: "No payments have been processed in the last 15 minutes. Payment system may be down."
+          runbook_url: "https://docs.sovren.app/runbooks/zero-volume"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-technical"
+
+      # CRITICAL: P95 latency exceeds 2 seconds
+      - alert: HighPaymentLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(payment_duration_ms_bucket[5m])) by (le)) > 2000
+        for: 5m
+        labels:
+          severity: critical
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Payment P95 latency exceeds 2 seconds"
+          description: "95th percentile payment latency is {{ $value | humanizeDuration }} (threshold: 2s). User experience severely degraded."
+          runbook_url: "https://docs.sovren.app/runbooks/high-latency"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-technical"
+
+  - name: payment_warning_alerts
+    interval: 60s
+    rules:
+      # WARNING: Payment success rate below 98% (early warning)
+      - alert: DegradedPaymentSuccessRate
+        expr: payment_success_rate < 0.98 and payment_success_rate >= 0.95
+        for: 10m
+        labels:
+          severity: warning
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Payment success rate degraded"
+          description: "Payment success rate is {{ $value | humanizePercentage }} (warning threshold: 98%). Monitor closely."
+          runbook_url: "https://docs.sovren.app/runbooks/degraded-success-rate"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-business"
+
+      # WARNING: P95 latency exceeds 1 second
+      - alert: ElevatedPaymentLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(payment_duration_ms_bucket[5m])) by (le)) > 1000 and histogram_quantile(0.95, sum(rate(payment_duration_ms_bucket[5m])) by (le)) <= 2000
+        for: 10m
+        labels:
+          severity: warning
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Payment P95 latency elevated"
+          description: "95th percentile payment latency is {{ $value | humanizeDuration }} (warning threshold: 1s)."
+          runbook_url: "https://docs.sovren.app/runbooks/elevated-latency"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-technical"
+
+      # WARNING: P99 latency exceeds 5 seconds
+      - alert: HighPaymentLatencyP99
+        expr: histogram_quantile(0.99, sum(rate(payment_duration_ms_bucket[5m])) by (le)) > 5000
+        for: 10m
+        labels:
+          severity: warning
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Payment P99 latency very high"
+          description: "99th percentile payment latency is {{ $value | humanizeDuration }} (threshold: 5s). Some payments experiencing severe delays."
+          runbook_url: "https://docs.sovren.app/runbooks/p99-latency"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-technical"
+
+      # WARNING: High active payment count (possible queue backup)
+      - alert: HighActivePaymentCount
+        expr: active_payments_count > 50
+        for: 15m
+        labels:
+          severity: warning
+          team: payments
+          component: lightning
+        annotations:
+          summary: "High number of active payments"
+          description: "{{ $value }} active payments detected (threshold: 50). Payment queue may be backing up."
+          runbook_url: "https://docs.sovren.app/runbooks/high-active-payments"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-technical"
+
+      # WARNING: Error rate spike
+      - alert: PaymentErrorRateSpike
+        expr: rate(payment_failure_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Payment error rate spike detected"
+          description: "Error rate is {{ $value }} errors/sec. Investigate error logs immediately."
+          runbook_url: "https://docs.sovren.app/runbooks/error-spike"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-technical"
+
+  - name: payment_info_alerts
+    interval: 120s
+    rules:
+      # INFO: Payment volume unusually low (outside business hours is OK)
+      - alert: LowPaymentVolume
+        expr: |
+          (rate(payment_total[1h]) < 0.1)
+          and
+          (hour() >= 8 and hour() <= 20)
+        for: 1h
+        labels:
+          severity: info
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Payment volume lower than expected"
+          description: "Payment rate is {{ $value }} payments/sec (expected: >0.1/sec during business hours). May be normal variance."
+          runbook_url: "https://docs.sovren.app/runbooks/low-volume"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-business"
+
+      # INFO: Average payment amount anomaly
+      - alert: AnomalousAveragePaymentAmount
+        expr: |
+          abs(
+            (payment_volume_sats_total / payment_total) -
+            (payment_volume_sats_total offset 1h / payment_total offset 1h)
+          ) / (payment_volume_sats_total offset 1h / payment_total offset 1h) > 0.5
+        for: 30m
+        labels:
+          severity: info
+          team: payments
+          component: lightning
+        annotations:
+          summary: "Average payment amount changed significantly"
+          description: "Average payment amount changed by >50% compared to 1 hour ago. May indicate fraud or promotional activity."
+          runbook_url: "https://docs.sovren.app/runbooks/payment-amount-anomaly"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-business"
+
+  - name: http_monitoring
+    interval: 60s
+    rules:
+      # WARNING: High HTTP error rate
+      - alert: HighHTTPErrorRate
+        expr: |
+          sum(rate(http_requests_by_status{code=~"5.."}[5m])) /
+          sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          component: api
+        annotations:
+          summary: "High HTTP 5xx error rate"
+          description: "HTTP 5xx error rate is {{ $value | humanizePercentage }} (threshold: 5%)."
+          runbook_url: "https://docs.sovren.app/runbooks/http-errors"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-technical"
+
+      # WARNING: Slow HTTP response time
+      - alert: SlowHTTPResponseTime
+        expr: http_request_duration_ms{quantile="0.95"} > 1000
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+          component: api
+        annotations:
+          summary: "HTTP P95 response time slow"
+          description: "HTTP P95 response time is {{ $value }}ms (threshold: 1000ms)."
+          runbook_url: "https://docs.sovren.app/runbooks/slow-http"
+          dashboard_url: "https://grafana.sovren.app/d/sovren-payment-technical"

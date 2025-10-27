@@ -1,0 +1,50 @@
+graph TD
+    subgraph "DMInbox Component"
+        DMInbox[DMInbox Main Component]
+        ThreadList[ThreadList Panel]
+        ConversationView[ConversationView Panel]
+        MessageComposer[MessageComposer]
+        ThreadItem[ThreadItem Component]
+        MessageBubble[MessageBubble Component]
+    end
+
+    subgraph "Services Layer"
+        NIP04[NIP04Service]
+        EventPublisher[EventPublisherService]
+        SubManager[SubscriptionManagerService]
+        KeyMgmt[KeyManagementService]
+        RelayPool[RelayPoolManager]
+    end
+
+    subgraph "State Management"
+        DMState[DM State Hook]
+        ThreadCache[Thread Cache]
+        MessageQueue[Message Queue]
+    end
+
+    DMInbox --> ThreadList
+    DMInbox --> ConversationView
+    DMInbox --> MessageComposer
+    ThreadList --> ThreadItem
+    ConversationView --> MessageBubble
+
+    DMInbox --> DMState
+    DMState --> NIP04
+    DMState --> EventPublisher
+    DMState --> SubManager
+
+    MessageComposer --> NIP04
+    MessageComposer --> EventPublisher
+
+    NIP04 --> KeyMgmt
+    EventPublisher --> KeyMgmt
+    EventPublisher --> RelayPool
+    SubManager --> RelayPool
+
+    DMState --> ThreadCache
+    DMState --> MessageQueue
+
+    style DMInbox fill:#4F46E5,stroke:#312E81,stroke-width:3px,color:#fff
+    style NIP04 fill:#10B981,stroke:#065F46,stroke-width:2px,color:#fff
+    style EventPublisher fill:#10B981,stroke:#065F46,stroke-width:2px,color:#fff
+    style SubManager fill:#10B981,stroke:#065F46,stroke-width:2px,color:#fff

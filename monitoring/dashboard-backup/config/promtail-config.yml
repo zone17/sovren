@@ -1,0 +1,139 @@
+# Promtail Configuration
+# Log Shipping for Sovren Payment System
+# Story: PAY-013
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Payment API logs
+  - job_name: payment-api
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: payment-api
+          service: backend
+          component: payment-api
+          __path__: /data/payment-api/*.log
+
+    pipeline_stages:
+      # Parse JSON logs
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            message: message
+            payment_id: payment_id
+            user_id: user_id
+            amount_sats: amount_sats
+            status: status
+
+      # Extract timestamp
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+
+      # Add labels from log fields
+      - labels:
+          level:
+          status:
+
+      # Drop debug logs in production
+      - match:
+          selector: '{level="debug"}'
+          action: drop
+
+  # System logs
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/syslog
+
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\S+\s+\S+\s+\S+) (?P<hostname>\S+) (?P<service>\S+): (?P<message>.*)$'
+      - labels:
+          hostname:
+          service:
+
+  # Database logs (PostgreSQL)
+  - job_name: postgres
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: postgres
+          service: database
+          __path__: /var/log/postgresql/*.log
+
+    pipeline_stages:
+      - regex:
+          expression: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} \w+ \[(?P<pid>\d+)\] (?P<level>\w+):  (?P<message>.*)$'
+      - labels:
+          level:
+          pid:
+
+  # Lightning Network node logs
+  - job_name: lightning-node
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: lightning-node
+          service: lightning
+          __path__: /data/lightning/*.log
+
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            message: message
+            invoice: invoice
+            payment_hash: payment_hash
+
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+
+      - labels:
+          level:
+
+  # Application error logs (critical only)
+  - job_name: errors
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: errors
+          severity: critical
+          __path__: /data/payment-api/error.log
+
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: timestamp
+            error: error
+            stack: stack
+            context: context
+
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+
+      # Send to AlertManager if critical
+      - match:
+          selector: '{job="errors"}'
+          action: keep

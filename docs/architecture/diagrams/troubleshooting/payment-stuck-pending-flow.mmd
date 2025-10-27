@@ -1,0 +1,85 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#1e40af','primaryTextColor':'#fff','primaryBorderColor':'#3b82f6','lineColor':'#6366f1','secondaryColor':'#059669','tertiaryColor':'#dc2626'}}}%%
+flowchart TD
+    Start([Payment Stuck in Pending]) --> CheckAge{How long<br/>in pending?}
+
+    CheckAge -->|< 2 min| Normal[Normal<br/>Wait for webhook]
+    CheckAge -->|2-5 min| Investigate[Begin investigation]
+    CheckAge -->|> 5 min| Critical[Critical issue<br/>Immediate action]
+
+    Investigate --> QueryLND[Query Lightning Node:<br/>lncli lookupinvoice]
+    Critical --> QueryLND
+
+    QueryLND --> LNDResponse{LND invoice<br/>status?}
+
+    LNDResponse -->|SETTLED| WebhookMissed[Webhook was missed]
+    LNDResponse -->|OPEN/ACCEPTED| StillPending[Actually still pending]
+    LNDResponse -->|CANCELED/EXPIRED| Failed[Payment failed]
+    LNDResponse -->|Error/Timeout| NodeIssue[LND node issue]
+
+    WebhookMissed --> CheckWebhookLogs[Check webhook<br/>delivery logs]
+    CheckWebhookLogs --> WebhookFound{Webhook in logs?}
+
+    WebhookFound -->|Yes, processed| DBIssue[Database update failed]
+    WebhookFound -->|Yes, rejected| SigIssue[Signature verification<br/>failed]
+    WebhookFound -->|No| ProviderIssue[Provider didn't<br/>send webhook]
+
+    DBIssue --> CheckLocks[Check for<br/>database locks]
+    CheckLocks --> HasLock{Lock found?}
+    HasLock -->|Yes| TerminateLock[Terminate blocking<br/>query]
+    HasLock -->|No| ManualUpdate1[Manual DB update<br/>to completed]
+
+    SigIssue --> VerifySecret[Verify webhook<br/>secret matches]
+    VerifySecret --> SecretOK{Secret correct?}
+    SecretOK -->|No| UpdateSecret[Update webhook<br/>secret]
+    SecretOK -->|Yes| CheckTimestamp[Check timestamp<br/>tolerance]
+
+    ProviderIssue --> RetriggerWebhook[Contact provider to<br/>retrigger webhook]
+    RetriggerWebhook --> ManualUpdate2[Or manual DB<br/>update]
+
+    StillPending --> CheckUser{Did user<br/>complete payment?}
+    CheckUser -->|Unknown| ContactUser[Contact user to<br/>verify]
+    CheckUser -->|Yes| InvestigateRouting[Investigate Lightning<br/>routing issue]
+    CheckUser -->|No| WaitOrExpire[Wait or mark<br/>as expired]
+
+    InvestigateRouting --> CheckChannels[Check channel<br/>liquidity]
+    CheckChannels --> LiquidityOK{Sufficient<br/>liquidity?}
+    LiquidityOK -->|No| AddLiquidity[Add inbound<br/>liquidity]
+    LiquidityOK -->|Yes| RoutingProblem[Lightning network<br/>routing problem]
+
+    Failed --> MarkFailed[Update DB status<br/>to 'failed']
+    MarkFailed --> NotifyUser1[Notify user payment<br/>failed]
+
+    NodeIssue --> RestartLND[Restart LND node]
+    RestartLND --> WaitSync[Wait for sync<br/>5-10 minutes]
+    WaitSync --> RetryQuery[Retry invoice<br/>lookup]
+
+    TerminateLock --> ManualUpdate1
+    UpdateSecret --> ManualUpdate1
+    CheckTimestamp --> ManualUpdate1
+    ManualUpdate2 --> UpdateDB[Update payment<br/>to completed]
+    ManualUpdate1 --> UpdateDB
+
+    UpdateDB --> TriggerConfirmation[Trigger post-payment<br/>webhooks]
+    TriggerConfirmation --> NotifyUser2[Notify user payment<br/>confirmed]
+
+    WaitOrExpire --> SetExpiry[Set expiry time<br/>if not set]
+    AddLiquidity --> MonitorPayment[Monitor payment<br/>for settlement]
+    RoutingProblem --> DocumentIssue[Document routing<br/>issue]
+
+    NotifyUser1 --> LogIncident[Log incident for<br/>analysis]
+    NotifyUser2 --> LogSuccess[Log successful<br/>recovery]
+    DocumentIssue --> LogIncident
+    MonitorPayment --> LogSuccess
+    SetExpiry --> LogSuccess
+
+    LogIncident --> End([Investigation Complete])
+    LogSuccess --> End
+
+    style Start fill:#1e40af,stroke:#3b82f6,color:#fff
+    style Critical fill:#dc2626,stroke:#ef4444,color:#fff
+    style WebhookMissed fill:#f59e0b,stroke:#fbbf24,color:#000
+    style Failed fill:#dc2626,stroke:#ef4444,color:#fff
+    style NodeIssue fill:#dc2626,stroke:#ef4444,color:#fff
+    style UpdateDB fill:#059669,stroke:#10b981,color:#fff
+    style NotifyUser2 fill:#059669,stroke:#10b981,color:#fff
+    style End fill:#7c3aed,stroke:#8b5cf6,color:#fff

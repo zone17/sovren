@@ -1,0 +1,95 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#1e3a8a','secondaryColor':'#3b82f6'}}}%%
+sequenceDiagram
+    participant Alice as Alice<br/>(Sender)
+    participant NIP04 as NIP04Service
+    participant KMS as KeyManagement
+    participant Spam as SpamProtection
+    participant Crypto as Crypto Layer
+    participant Relay as NOSTR Relay
+    participant Bob as Bob<br/>(Recipient)
+
+    %% 1. Alice composes message
+    Alice->>NIP04: sendDM("Hello Bob!", bob_pubkey)
+
+    %% 2. Session key check
+    NIP04->>NIP04: maybeRotateSessionKey()
+    alt Session Key Exists & Count < 100
+        NIP04->>NIP04: Use existing session key
+    else Count >= 100 or No Session
+        NIP04->>KMS: generateSessionKey()
+        KMS-->>NIP04: New ephemeral key pair
+    end
+
+    %% 3. Spam check (for incoming)
+    Note over NIP04: Spam check happens on receive<br/>not send
+
+    %% 4. Encryption
+    NIP04->>KMS: getPrivateKey(alice)
+    KMS-->>NIP04: alice_private_key
+    NIP04->>Crypto: deriveSharedSecret(alice_sk, bob_pk)
+    Crypto-->>NIP04: shared_secret
+    NIP04->>Crypto: generateIV()
+    Crypto-->>NIP04: random_iv
+    NIP04->>Crypto: aes256cbc_encrypt(message, shared_secret, iv)
+    Crypto-->>NIP04: encrypted_content?iv=base64_iv
+
+    %% 5. Create and publish event
+    NIP04->>NIP04: createDMEvent(encrypted, bob_pk)
+    NIP04->>KMS: signEvent(kind: 4)
+    KMS-->>NIP04: signed_event
+    NIP04->>Relay: publish(dm_event)
+    Relay-->>NIP04: OK/FAILED
+
+    %% 6. Cache
+    NIP04->>NIP04: addToThread(message)
+    NIP04->>NIP04: cacheDecryptedMessage()
+
+    %% 7. Bob receives
+    Relay->>Bob: EVENT kind:4 from Alice
+    Bob->>NIP04: processIncomingDM(event)
+
+    %% 8. Spam protection
+    NIP04->>Spam: checkSpamProtection(alice_pubkey, event)
+    alt In Block List
+        Spam-->>NIP04: REJECTED
+        NIP04-->>Bob: [Message Blocked]
+    else Rate Limit Exceeded
+        Spam-->>NIP04: REJECTED
+        NIP04-->>Bob: [Rate Limited]
+    else PoW Required & Insufficient
+        Spam-->>NIP04: REJECTED
+        NIP04-->>Bob: [Insufficient PoW]
+    else All Checks Pass
+        Spam-->>NIP04: ALLOWED
+
+        %% 9. Decryption
+        NIP04->>KMS: getPrivateKey(bob)
+        KMS-->>NIP04: bob_private_key
+        NIP04->>Crypto: deriveSharedSecret(bob_sk, alice_pk)
+        Crypto-->>NIP04: shared_secret
+        NIP04->>Crypto: aes256cbc_decrypt(encrypted, shared_secret)
+        Crypto-->>NIP04: plaintext_message
+
+        %% 10. Display and cache
+        NIP04->>NIP04: cacheDecryptedMessage()
+        NIP04->>NIP04: addToThread(message)
+        NIP04-->>Bob: Display: "Hello Bob!"
+
+        %% 11. Read receipt
+        Bob->>NIP04: markAsRead(alice_pubkey)
+        NIP04->>NIP04: createReadReceipt(message_id)
+        NIP04->>Relay: publish(kind: 1515)
+        Relay->>Alice: EVENT kind:1515 (read receipt)
+        Alice->>NIP04: processReadReceipt()
+        NIP04->>NIP04: updateMessageStatus(read: true)
+    end
+
+    Note over Alice,Bob: Message successfully delivered<br/>with end-to-end encryption
+
+    rect rgb(220, 38, 38, 0.1)
+        Note over NIP04,Crypto: Security Layer:<br/>ECDH + AES-256-CBC + Random IV
+    end
+
+    rect rgb(124, 58, 237, 0.1)
+        Note over KMS: Key Management:<br/>Session key rotation every 100 msgs
+    end

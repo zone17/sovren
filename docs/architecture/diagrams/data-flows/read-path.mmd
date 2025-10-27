@@ -1,0 +1,60 @@
+%% Read Path Data Flow - Multi-Layer Caching Strategy
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete read path with cache-aside pattern implementation
+
+graph LR
+    Client[Client Application<br/>Browser/Mobile]
+    API[API Gateway<br/>Request Handler]
+    EdgeCache[Edge Cache<br/>Vercel/Cloudflare<br/>TTL: 60s]
+    ServiceLayer[Service Layer<br/>Business Logic]
+    AppCache[Application Cache<br/>Redis L1<br/>TTL: 300s]
+    ServiceCache[Service Cache<br/>In-Memory<br/>TTL: 60s]
+    RepoLayer[Repository Layer<br/>Data Access]
+    QueryCache[Query Cache<br/>Redis L2<br/>TTL: 600s]
+    DBReadReplica[(Read Replica<br/>PostgreSQL)]
+    DBPrimary[(Primary Database<br/>PostgreSQL)]
+
+    Client -->|1. GET /api/content/123| API
+
+    API -->|2. Check Edge Cache| EdgeCache
+    EdgeCache -->|3a. Cache HIT| API
+    EdgeCache -->|3b. Cache MISS| ServiceLayer
+
+    ServiceLayer -->|4. Check App Cache| AppCache
+    AppCache -->|5a. Cache HIT| ServiceLayer
+    AppCache -->|5b. Cache MISS| ServiceCache
+
+    ServiceCache -->|6a. Cache HIT| AppCache
+    ServiceCache -->|6b. Cache MISS| RepoLayer
+
+    RepoLayer -->|7. Check Query Cache| QueryCache
+    QueryCache -->|8a. Cache HIT| RepoLayer
+    QueryCache -->|8b. Cache MISS| DBReadReplica
+
+    DBReadReplica -->|9. Execute Query| DBReadReplica
+    DBReadReplica -->|10. Return Data| RepoLayer
+
+    RepoLayer -->|11. Store in Query Cache| QueryCache
+    RepoLayer -->|12. Return Data| ServiceLayer
+
+    ServiceLayer -->|13. Store in Service Cache| ServiceCache
+    ServiceLayer -->|14. Store in App Cache| AppCache
+    ServiceLayer -->|15. Return Data| API
+
+    API -->|16. Store in Edge Cache| EdgeCache
+    API -->|17. Return Response| Client
+
+    Note1[Cache Hit Rate: ~85%<br/>Average Latency: 50ms<br/>DB Load: 15% of requests]
+
+    style Client fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style API fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style EdgeCache fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
+    style AppCache fill:#fce4ec,stroke:#c2185b,stroke-width:3px
+    style ServiceCache fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style QueryCache fill:#fff9c4,stroke:#f57f17,stroke-width:3px
+    style DBReadReplica fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style DBPrimary fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style ServiceLayer fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style RepoLayer fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style Note1 fill:#fffde7,stroke:#f57f17,stroke-width:2px

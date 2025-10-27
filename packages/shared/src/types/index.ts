@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
-// User types
-export const UserSchema = z.object({
-  id: z.string(),
-  email: z.string().email(),
-  name: z.string(),
-  nostrPubkey: z.string().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
+// Export all type modules
+export * from './nostr';
+export * from './user';
+export * from './quality-metrics';
+export * from './nostr-key-management';
+export * from './api-handlers';
+export * from './payment-state';
+export * from './nostr-service';
 
-export type User = z.infer<typeof UserSchema>;
+// Export config utilities
+export * from '../config';
 
 // Post types
 export const PostSchema = z.object({
@@ -48,11 +48,42 @@ export const ApiResponseSchema = <T extends z.ZodType>(
   success: z.ZodBoolean;
   data: z.ZodOptional<T>;
   error: z.ZodOptional<z.ZodString>;
+  message: z.ZodOptional<z.ZodString>;
+  timestamp: z.ZodOptional<z.ZodString>;
 }> =>
   z.object({
     success: z.boolean(),
     data: dataSchema.optional(),
     error: z.string().optional(),
+    message: z.string().optional(),
+    timestamp: z.string().optional(),
   });
 
 export type ApiResponse<T> = z.infer<ReturnType<typeof ApiResponseSchema<z.ZodType<T>>>>;
+
+// Pagination types
+export const PaginationSchema = z.object({
+  page: z.number().positive().default(1),
+  limit: z.number().min(1).max(100).default(20),
+  total: z.number().nonnegative(),
+  totalPages: z.number().nonnegative(),
+  hasNext: z.boolean(),
+  hasPrev: z.boolean(),
+});
+
+export type Pagination = z.infer<typeof PaginationSchema>;
+
+// Paginated response
+export const PaginatedResponseSchema = <T extends z.ZodType>(
+  dataSchema: T
+) =>
+  z.object({
+    success: z.boolean(),
+    data: z.array(dataSchema),
+    pagination: PaginationSchema,
+    error: z.string().optional(),
+    message: z.string().optional(),
+    timestamp: z.string().optional(),
+  });
+
+export type PaginatedResponse<T> = z.infer<ReturnType<typeof PaginatedResponseSchema<z.ZodType<T>>>>;

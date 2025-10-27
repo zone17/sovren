@@ -1,0 +1,43 @@
+sequenceDiagram
+    participant User
+    participant Component
+    participant NostrService
+    participant ErrorHandler
+    participant ToastSystem
+    participant ErrorBoundary
+
+    User->>Component: Interact (publish, subscribe, connect)
+    Component->>NostrService: Service Call
+
+    alt Success Path
+        NostrService-->>Component: Success Response
+        Component-->>User: Update UI
+    else Recoverable Error
+        NostrService-->>ErrorHandler: Error Event
+        ErrorHandler->>ToastSystem: Display Error Toast
+        ToastSystem-->>User: Show notification
+        User->>ToastSystem: Click Retry
+        ToastSystem->>ErrorHandler: Trigger Retry
+        ErrorHandler->>NostrService: Retry Operation
+        NostrService-->>Component: Retry Response
+    else Critical Error
+        NostrService-->>ErrorBoundary: Unhandled Exception
+        ErrorBoundary->>ErrorBoundary: Catch Error
+        ErrorBoundary-->>User: Show Fallback UI
+        User->>ErrorBoundary: Click Recover
+        ErrorBoundary->>Component: Reset State
+        Component-->>User: Reload UI
+    end
+
+    Note over ErrorHandler,ToastSystem: Error Classification
+    ErrorHandler->>ErrorHandler: Classify Error Type
+    ErrorHandler->>ErrorHandler: Determine Severity
+    ErrorHandler->>ErrorHandler: Add Troubleshooting Hints
+    ErrorHandler->>ToastSystem: Send Enhanced Error
+
+    Note over ToastSystem: Toast Management
+    ToastSystem->>ToastSystem: Queue Toast
+    ToastSystem->>ToastSystem: Apply Auto-dismiss Timer
+    ToastSystem-->>User: Animate Toast In
+    ToastSystem->>ToastSystem: Wait for Timeout/User Action
+    ToastSystem-->>User: Animate Toast Out

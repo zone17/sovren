@@ -1,0 +1,55 @@
+sequenceDiagram
+    participant Client
+    participant Gateway as Express Gateway
+    participant Auth as Auth Middleware
+    participant Validation as Validation Middleware
+    participant RateLimit as Rate Limit Middleware
+    participant Route as Route Handler
+    participant Controller
+    participant Service as Service Layer
+    participant Repository
+    participant Database as PostgreSQL/Redis
+
+    Client->>Gateway: HTTP Request
+    Gateway->>Auth: Authenticate Request
+
+    alt Valid Authentication
+        Auth->>Validation: Pass to Validation
+        Validation->>Validation: Validate Request Body/Params
+
+        alt Valid Request
+            Validation->>RateLimit: Check Rate Limit
+
+            alt Within Rate Limit
+                RateLimit->>Route: Route Request
+                Route->>Controller: Invoke Controller Method
+                Controller->>Controller: Transform DTOs
+                Controller->>Service: Call Service Method
+                Service->>Service: Business Logic
+                Service->>Repository: Data Operations
+                Repository->>Database: Query/Command
+                Database-->>Repository: Result
+                Repository-->>Service: Data
+                Service-->>Controller: Result
+                Controller->>Controller: Transform to Response DTO
+                Controller-->>Route: Response
+                Route-->>Gateway: HTTP Response
+                Gateway-->>Client: 200 OK + Data
+            else Rate Limit Exceeded
+                RateLimit-->>Client: 429 Too Many Requests
+            end
+        else Invalid Request
+            Validation-->>Client: 400 Bad Request + Validation Errors
+        end
+    else Invalid Authentication
+        Auth-->>Client: 401 Unauthorized
+    end
+
+    Note over Client,Database: Error Handling
+    alt Service Error
+        Service-->>Controller: Throw Service Error
+        Controller->>Controller: Transform to HTTP Error
+        Controller-->>Gateway: Error Response
+        Gateway->>Gateway: Error Handler Middleware
+        Gateway-->>Client: 4xx/5xx + Error Details
+    end

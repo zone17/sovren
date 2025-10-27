@@ -1,0 +1,49 @@
+flowchart TD
+    Start([User Action]) --> CheckExtension{Browser<br/>Extension?}
+
+    CheckExtension -->|Yes| DetectExtension[Detect NIP-07<br/>Extension]
+    CheckExtension -->|No| CheckStored{Stored<br/>Key?}
+
+    DetectExtension --> RequestPubkey[Request Public Key]
+    RequestPubkey --> CacheExtension[Cache Extension<br/>Reference]
+    CacheExtension --> Ready([Ready to Sign])
+
+    CheckStored -->|Yes| LoadFromIDB[Load from IndexedDB]
+    CheckStored -->|No| GenerateOrImport{Generate<br/>or Import?}
+
+    LoadFromIDB --> Decrypt[Decrypt with Password]
+    Decrypt --> ValidateKey[Validate Key Pair]
+    ValidateKey --> CacheSession[Cache in Session]
+    CacheSession --> Ready
+
+    GenerateOrImport -->|Generate| GenerateEntropy[Generate Entropy]
+    GenerateOrImport -->|Import| ImportFormat{Import Format?}
+
+    GenerateEntropy --> ValidateEntropy[Validate Entropy<br/>Quality]
+    ValidateEntropy --> CreateKeypair[Create Key Pair]
+
+    ImportFormat -->|nsec| DecodeNsec[Decode Bech32]
+    ImportFormat -->|Hex| ValidateHex[Validate Hex]
+    ImportFormat -->|Mnemonic| DeriveMnemonic[Derive from<br/>Mnemonic]
+
+    DecodeNsec --> CreateKeypair
+    ValidateHex --> CreateKeypair
+    DeriveMnemonic --> CreateKeypair
+
+    CreateKeypair --> ScoreSecurity[Calculate Security<br/>Score]
+    ScoreSecurity --> Encrypt[Encrypt with<br/>AES-256-GCM]
+    Encrypt --> StoreIDB[Store in IndexedDB]
+    StoreIDB --> CacheSession
+
+    Ready --> SignEvent{Sign Event?}
+    SignEvent -->|Extension| ExtensionSign[window.nostr<br/>.signEvent]
+    SignEvent -->|Local| LocalSign[finalizeEvent with<br/>private key]
+
+    ExtensionSign --> Signed([Signed Event])
+    LocalSign --> Signed
+
+    style CheckExtension fill:#4A90E2
+    style GenerateEntropy fill:#50C878
+    style Encrypt fill:#F5A623
+    style Ready fill:#50C878
+    style Signed fill:#50C878

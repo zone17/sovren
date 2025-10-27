@@ -1,0 +1,1234 @@
+#!/usr/bin/env node
+
+/**
+ * Population Script for Epic 005: Backend Service Refactoring
+ * Adds all 42 stories with 10 subtasks each to the dashboard
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load existing tasks
+const tasksPath = path.join(__dirname, '..', 'monitoring', 'dashboard', 'data', 'tasks.json');
+const tasks = JSON.parse(fs.readFileSync(tasksPath, 'utf8'));
+
+// Generate Epic 005 stories with subtasks
+const epic005Stories = [
+  // PHASE 1: DESIGN & INTERFACE DEFINITION (Stories 1-6)
+  {
+    id: 'story-us-e5-001',
+    type: 'story',
+    story_id: 'US-E5-001',
+    name: 'US-E5-001: Analyze and Document Current Service Dependencies',
+    description: 'Analyze and document all current service dependencies and coupling points',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 1: Design & Interface Definition',
+    dependencies: [],
+    subtasks: [
+      { order: 1, description: 'Create docs/refactoring/service-dependency-analysis.md', status: 'pending' },
+      { order: 2, description: 'Use AST parser to analyze service imports and method calls', status: 'pending' },
+      { order: 3, description: 'Generate dependency graph using madge tool', status: 'pending' },
+      { order: 4, description: 'Classify dependencies as tight/loose/data coupling', status: 'pending' },
+      { order: 5, description: 'Identify critical payment flow dependencies', status: 'pending' },
+      { order: 6, description: 'Create dependency matrix showing inter-service calls', status: 'pending' },
+      { order: 7, description: 'Document risk areas requiring extra care', status: 'pending' },
+      { order: 8, description: 'Create Mermaid dependency visualization diagram', status: 'pending' },
+      { order: 9, description: 'Get senior developer review and approval', status: 'pending' },
+      { order: 10, description: 'Publish analysis document to project docs', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-002',
+    type: 'story',
+    story_id: 'US-E5-002',
+    name: 'US-E5-002: Define Service Bounded Contexts and Interfaces',
+    description: 'Define clear bounded contexts and interface contracts for each service',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 1: Design & Interface Definition',
+    dependencies: ['US-E5-001'],
+    subtasks: [
+      { order: 1, description: 'Create packages/backend/src/interfaces/ directory structure', status: 'pending' },
+      { order: 2, description: 'Define IContentCreationService interface with methods', status: 'pending' },
+      { order: 3, description: 'Define IContentPublishingService interface', status: 'pending' },
+      { order: 4, description: 'Define IUserAuthenticationService interface', status: 'pending' },
+      { order: 5, description: 'Define IPaymentProcessingService interface', status: 'pending' },
+      { order: 6, description: 'Create TypeScript types for all service contracts', status: 'pending' },
+      { order: 7, description: 'Document bounded contexts in docs/refactoring/bounded-contexts.md', status: 'pending' },
+      { order: 8, description: 'Add JSDoc comments to all interfaces', status: 'pending' },
+      { order: 9, description: 'Create Mermaid diagram showing service boundaries', status: 'pending' },
+      { order: 10, description: 'Validate interfaces with team and get approval', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-003',
+    type: 'story',
+    story_id: 'US-E5-003',
+    name: 'US-E5-003: Design Dependency Injection Container Structure',
+    description: 'Design and implement a dependency injection container',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 1: Design & Interface Definition',
+    dependencies: ['US-E5-002'],
+    subtasks: [
+      { order: 1, description: 'Install InversifyJS and reflect-metadata dependencies', status: 'pending' },
+      { order: 2, description: 'Create services/container.ts with basic container setup', status: 'pending' },
+      { order: 3, description: 'Create services/types.ts with service type symbols', status: 'pending' },
+      { order: 4, description: 'Configure TypeScript decorators in tsconfig.json', status: 'pending' },
+      { order: 5, description: 'Create container bindings for existing services', status: 'pending' },
+      { order: 6, description: 'Setup container initialization in app startup', status: 'pending' },
+      { order: 7, description: 'Create unit tests for container resolution', status: 'pending' },
+      { order: 8, description: 'Add container documentation with examples', status: 'pending' },
+      { order: 9, description: 'Verify no circular dependencies exist', status: 'pending' },
+      { order: 10, description: 'Performance test container initialization time', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-004',
+    type: 'story',
+    story_id: 'US-E5-004',
+    name: 'US-E5-004: Create Service Factory Pattern Implementation',
+    description: 'Implement a service factory pattern',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 1: Design & Interface Definition',
+    dependencies: ['US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create factories/ServiceFactory.ts base class', status: 'pending' },
+      { order: 2, description: 'Implement ContentServiceFactory with bundle creation', status: 'pending' },
+      { order: 3, description: 'Implement UserServiceFactory for user services', status: 'pending' },
+      { order: 4, description: 'Implement PaymentServiceFactory with error handling', status: 'pending' },
+      { order: 5, description: 'Add factory configuration validation', status: 'pending' },
+      { order: 6, description: 'Create factory unit tests with mocks', status: 'pending' },
+      { order: 7, description: 'Add meaningful error messages for misconfiguration', status: 'pending' },
+      { order: 8, description: 'Document factory pattern usage in README', status: 'pending' },
+      { order: 9, description: 'Create integration tests for factories', status: 'pending' },
+      { order: 10, description: 'Benchmark factory instantiation performance', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-005',
+    type: 'story',
+    story_id: 'US-E5-005',
+    name: 'US-E5-005: Setup Service Event Bus for Inter-Service Communication',
+    description: 'Implement an event bus for service communication',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 1: Design & Interface Definition',
+    dependencies: ['US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create events/EventBus.ts with EventEmitter implementation', status: 'pending' },
+      { order: 2, description: 'Define IEventBus interface with emit/on/off methods', status: 'pending' },
+      { order: 3, description: 'Create events/types.ts with ServiceEvents enum', status: 'pending' },
+      { order: 4, description: 'Implement typed event payloads for type safety', status: 'pending' },
+      { order: 5, description: 'Add retry logic with exponential backoff', status: 'pending' },
+      { order: 6, description: 'Implement error handling and dead letter queue', status: 'pending' },
+      { order: 7, description: 'Create unit tests for event bus functionality', status: 'pending' },
+      { order: 8, description: 'Add event logging for debugging', status: 'pending' },
+      { order: 9, description: 'Document event bus patterns and best practices', status: 'pending' },
+      { order: 10, description: 'Performance test event throughput capacity', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-006',
+    type: 'story',
+    story_id: 'US-E5-006',
+    name: 'US-E5-006: Create Service Migration Strategy Document',
+    description: 'Create detailed migration strategy from monolithic to service-oriented',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'documentation',
+    phase: 'Phase 1: Design & Interface Definition',
+    dependencies: ['US-E5-001', 'US-E5-002', 'US-E5-003', 'US-E5-004', 'US-E5-005'],
+    subtasks: [
+      { order: 1, description: 'Create docs/refactoring/migration-strategy.md', status: 'pending' },
+      { order: 2, description: 'Document step-by-step migration process for each service', status: 'pending' },
+      { order: 3, description: 'Define feature flag configuration strategy', status: 'pending' },
+      { order: 4, description: 'Create rollback procedures for each phase', status: 'pending' },
+      { order: 5, description: 'Document testing checkpoints and validation criteria', status: 'pending' },
+      { order: 6, description: 'Define performance benchmarks and thresholds', status: 'pending' },
+      { order: 7, description: 'Document database migration considerations', status: 'pending' },
+      { order: 8, description: 'Create risk mitigation strategies', status: 'pending' },
+      { order: 9, description: 'Get team review and sign-off', status: 'pending' },
+      { order: 10, description: 'Publish strategy to team wiki', status: 'pending' }
+    ]
+  },
+
+  // PHASE 2: SHARED SERVICES EXTRACTION (Stories 7-10)
+  {
+    id: 'story-us-e5-007',
+    type: 'story',
+    story_id: 'US-E5-007',
+    name: 'US-E5-007: Extract and Implement EmailService',
+    description: 'Extract email functionality into a dedicated EmailService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 2: Shared Services Extraction',
+    dependencies: ['US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create services/shared/EmailService.ts with @injectable decorator', status: 'pending' },
+      { order: 2, description: 'Implement sendEmail method with retry logic', status: 'pending' },
+      { order: 3, description: 'Implement sendBulkEmails with batch processing', status: 'pending' },
+      { order: 4, description: 'Add email template support with handlebars', status: 'pending' },
+      { order: 5, description: 'Implement exponential backoff for retries', status: 'pending' },
+      { order: 6, description: 'Add attachment handling capability', status: 'pending' },
+      { order: 7, description: 'Create comprehensive unit tests (95% coverage)', status: 'pending' },
+      { order: 8, description: 'Register EmailService in DI container', status: 'pending' },
+      { order: 9, description: 'Add monitoring and metrics collection', status: 'pending' },
+      { order: 10, description: 'Document EmailService API and usage examples', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-008',
+    type: 'story',
+    story_id: 'US-E5-008',
+    name: 'US-E5-008: Extract and Implement NotificationService',
+    description: 'Create a centralized NotificationService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 2: Shared Services Extraction',
+    dependencies: ['US-E5-003', 'US-E5-007'],
+    subtasks: [
+      { order: 1, description: 'Create services/shared/NotificationService.ts', status: 'pending' },
+      { order: 2, description: 'Implement multi-channel notification logic (email, push, in-app)', status: 'pending' },
+      { order: 3, description: 'Add user preference checking before sending', status: 'pending' },
+      { order: 4, description: 'Implement fallback channel mechanism', status: 'pending' },
+      { order: 5, description: 'Add notification queueing and batching', status: 'pending' },
+      { order: 6, description: 'Create notification templates system', status: 'pending' },
+      { order: 7, description: 'Inject EmailService and PushService dependencies', status: 'pending' },
+      { order: 8, description: 'Add comprehensive tests with mocked services', status: 'pending' },
+      { order: 9, description: 'Register in DI container with proper scope', status: 'pending' },
+      { order: 10, description: 'Document notification patterns and usage', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-009',
+    type: 'story',
+    story_id: 'US-E5-009',
+    name: 'US-E5-009: Extract and Implement AuditLogService',
+    description: 'Create an AuditLogService for compliance and debugging',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 2: Shared Services Extraction',
+    dependencies: ['US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create services/shared/AuditLogService.ts', status: 'pending' },
+      { order: 2, description: 'Implement immutable log storage mechanism', status: 'pending' },
+      { order: 3, description: 'Add structured logging with who/what/when/where', status: 'pending' },
+      { order: 4, description: 'Create database indexes for efficient querying', status: 'pending' },
+      { order: 5, description: 'Implement query methods with filtering', status: 'pending' },
+      { order: 6, description: 'Add configurable retention policies', status: 'pending' },
+      { order: 7, description: 'Ensure GDPR compliance in log storage', status: 'pending' },
+      { order: 8, description: 'Create unit tests for audit operations', status: 'pending' },
+      { order: 9, description: 'Register service with singleton scope', status: 'pending' },
+      { order: 10, description: 'Document audit log requirements and usage', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-010',
+    type: 'story',
+    story_id: 'US-E5-010',
+    name: 'US-E5-010: Extract and Implement CacheService',
+    description: 'Implement a centralized CacheService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 2: Shared Services Extraction',
+    dependencies: ['US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create services/shared/CacheService.ts', status: 'pending' },
+      { order: 2, description: 'Implement Redis integration with connection pooling', status: 'pending' },
+      { order: 3, description: 'Add get/set methods with TTL support', status: 'pending' },
+      { order: 4, description: 'Implement cache-aside pattern with fallback', status: 'pending' },
+      { order: 5, description: 'Add pattern-based cache invalidation', status: 'pending' },
+      { order: 6, description: 'Implement tag-based invalidation system', status: 'pending' },
+      { order: 7, description: 'Add serialization/deserialization logic', status: 'pending' },
+      { order: 8, description: 'Create comprehensive cache tests', status: 'pending' },
+      { order: 9, description: 'Register in DI container', status: 'pending' },
+      { order: 10, description: 'Document caching strategies and patterns', status: 'pending' }
+    ]
+  },
+
+  // PHASE 3: CONTENT SERVICE REFACTORING (Stories 11-17)
+  {
+    id: 'story-us-e5-011',
+    type: 'story',
+    story_id: 'US-E5-011',
+    name: 'US-E5-011: Implement ContentCreationService',
+    description: 'Extract content creation logic into ContentCreationService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 3: Content Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-009'],
+    subtasks: [
+      { order: 1, description: 'Create services/content/ContentCreationService.ts', status: 'pending' },
+      { order: 2, description: 'Implement createDraft method with validation', status: 'pending' },
+      { order: 3, description: 'Add content validation with business rules', status: 'pending' },
+      { order: 4, description: 'Implement auto-save functionality', status: 'pending' },
+      { order: 5, description: 'Add version tracking for drafts', status: 'pending' },
+      { order: 6, description: 'Inject ContentRepository and ValidationService', status: 'pending' },
+      { order: 7, description: 'Integrate AuditLogService for tracking', status: 'pending' },
+      { order: 8, description: 'Create unit tests with 95% coverage', status: 'pending' },
+      { order: 9, description: 'Update API routes to use new service', status: 'pending' },
+      { order: 10, description: 'Document content creation workflow', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-012',
+    type: 'story',
+    story_id: 'US-E5-012',
+    name: 'US-E5-012: Implement ContentPublishingService',
+    description: 'Create ContentPublishingService for publication workflows',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 3: Content Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-005'],
+    subtasks: [
+      { order: 1, description: 'Create services/content/ContentPublishingService.ts', status: 'pending' },
+      { order: 2, description: 'Implement publish method with immediate/scheduled options', status: 'pending' },
+      { order: 3, description: 'Add NOSTR event publication integration', status: 'pending' },
+      { order: 4, description: 'Implement idempotent retry logic', status: 'pending' },
+      { order: 5, description: 'Add content status update logic', status: 'pending' },
+      { order: 6, description: 'Inject ContentRepository and NostrService', status: 'pending' },
+      { order: 7, description: 'Emit CONTENT_PUBLISHED event to EventBus', status: 'pending' },
+      { order: 8, description: 'Create comprehensive publishing tests', status: 'pending' },
+      { order: 9, description: 'Update publishing API endpoints', status: 'pending' },
+      { order: 10, description: 'Document publishing workflow and events', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-013',
+    type: 'story',
+    story_id: 'US-E5-013',
+    name: 'US-E5-013: Implement ContentModerationService',
+    description: 'Create ContentModerationService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 3: Content Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-009'],
+    subtasks: [
+      { order: 1, description: 'Create services/content/ContentModerationService.ts', status: 'pending' },
+      { order: 2, description: 'Implement moderate method with AI integration', status: 'pending' },
+      { order: 3, description: 'Add configurable moderation rules engine', status: 'pending' },
+      { order: 4, description: 'Implement manual review workflow', status: 'pending' },
+      { order: 5, description: 'Add approve/reject/require-review actions', status: 'pending' },
+      { order: 6, description: 'Integrate audit logging for all decisions', status: 'pending' },
+      { order: 7, description: 'Create moderation queue management', status: 'pending' },
+      { order: 8, description: 'Add unit tests for moderation logic', status: 'pending' },
+      { order: 9, description: 'Update moderation API endpoints', status: 'pending' },
+      { order: 10, description: 'Document moderation policies and workflow', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-014',
+    type: 'story',
+    story_id: 'US-E5-014',
+    name: 'US-E5-014: Implement ContentSearchService',
+    description: 'Create ContentSearchService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 3: Content Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-010'],
+    subtasks: [
+      { order: 1, description: 'Create services/content/ContentSearchService.ts', status: 'pending' },
+      { order: 2, description: 'Implement search method with Elasticsearch client', status: 'pending' },
+      { order: 3, description: 'Add full-text search with filters and facets', status: 'pending' },
+      { order: 4, description: 'Implement relevance scoring algorithm', status: 'pending' },
+      { order: 5, description: 'Add search result caching with CacheService', status: 'pending' },
+      { order: 6, description: 'Implement search indexing queue', status: 'pending' },
+      { order: 7, description: 'Add personalization to search results', status: 'pending' },
+      { order: 8, description: 'Create search performance tests', status: 'pending' },
+      { order: 9, description: 'Update search API endpoints', status: 'pending' },
+      { order: 10, description: 'Document search features and optimization', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-015',
+    type: 'story',
+    story_id: 'US-E5-015',
+    name: 'US-E5-015: Implement ContentRecommendationService',
+    description: 'Create ContentRecommendationService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 3: Content Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-010'],
+    subtasks: [
+      { order: 1, description: 'Create services/content/ContentRecommendationService.ts', status: 'pending' },
+      { order: 2, description: 'Implement getRecommendations with ML model', status: 'pending' },
+      { order: 3, description: 'Add collaborative filtering algorithm', status: 'pending' },
+      { order: 4, description: 'Implement content-based recommendation', status: 'pending' },
+      { order: 5, description: 'Add recommendation pre-computation job', status: 'pending' },
+      { order: 6, description: 'Integrate caching for recommendations', status: 'pending' },
+      { order: 7, description: 'Add A/B testing support for algorithms', status: 'pending' },
+      { order: 8, description: 'Create recommendation accuracy tests', status: 'pending' },
+      { order: 9, description: 'Update recommendation API endpoints', status: 'pending' },
+      { order: 10, description: 'Document recommendation algorithms', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-016',
+    type: 'story',
+    story_id: 'US-E5-016',
+    name: 'US-E5-016: Implement ContentAnalyticsService',
+    description: 'Create ContentAnalyticsService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 3: Content Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create services/content/ContentAnalyticsService.ts', status: 'pending' },
+      { order: 2, description: 'Implement trackEvent method for analytics', status: 'pending' },
+      { order: 3, description: 'Add view/like/share tracking logic', status: 'pending' },
+      { order: 4, description: 'Implement getMetrics with aggregation', status: 'pending' },
+      { order: 5, description: 'Add real-time analytics processing', status: 'pending' },
+      { order: 6, description: 'Create historical analytics queries', status: 'pending' },
+      { order: 7, description: 'Add custom dimension support', status: 'pending' },
+      { order: 8, description: 'Create analytics performance tests', status: 'pending' },
+      { order: 9, description: 'Update analytics API endpoints', status: 'pending' },
+      { order: 10, description: 'Document analytics tracking and reporting', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-017',
+    type: 'story',
+    story_id: 'US-E5-017',
+    name: 'US-E5-017: Implement ContentVersioningService',
+    description: 'Create ContentVersioningService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 3: Content Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create services/content/ContentVersioningService.ts', status: 'pending' },
+      { order: 2, description: 'Implement saveVersion with delta storage', status: 'pending' },
+      { order: 3, description: 'Add efficient delta compression algorithm', status: 'pending' },
+      { order: 4, description: 'Implement rollback functionality', status: 'pending' },
+      { order: 5, description: 'Add version diff/comparison method', status: 'pending' },
+      { order: 6, description: 'Create version history retrieval', status: 'pending' },
+      { order: 7, description: 'Add version pruning for old versions', status: 'pending' },
+      { order: 8, description: 'Create versioning unit tests', status: 'pending' },
+      { order: 9, description: 'Update versioning API endpoints', status: 'pending' },
+      { order: 10, description: 'Document version control workflow', status: 'pending' }
+    ]
+  },
+
+  // PHASE 4: USER SERVICE REFACTORING (Stories 18-23)
+  {
+    id: 'story-us-e5-018',
+    type: 'story',
+    story_id: 'US-E5-018',
+    name: 'US-E5-018: Implement UserAuthenticationService',
+    description: 'Extract authentication logic into UserAuthenticationService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 4: User Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-009'],
+    subtasks: [
+      { order: 1, description: 'Create services/user/UserAuthenticationService.ts', status: 'pending' },
+      { order: 2, description: 'Implement login method with credential validation', status: 'pending' },
+      { order: 3, description: 'Add rate limiting and brute force protection', status: 'pending' },
+      { order: 4, description: 'Implement session management logic', status: 'pending' },
+      { order: 5, description: 'Add TOTP multi-factor authentication', status: 'pending' },
+      { order: 6, description: 'Implement backup codes generation', status: 'pending' },
+      { order: 7, description: 'Add logout and session invalidation', status: 'pending' },
+      { order: 8, description: 'Create security-focused unit tests', status: 'pending' },
+      { order: 9, description: 'Update authentication API endpoints', status: 'pending' },
+      { order: 10, description: 'Document authentication flow and security', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-019',
+    type: 'story',
+    story_id: 'US-E5-019',
+    name: 'US-E5-019: Implement UserProfileService',
+    description: 'Create UserProfileService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 4: User Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create services/user/UserProfileService.ts', status: 'pending' },
+      { order: 2, description: 'Implement getProfile with privacy checks', status: 'pending' },
+      { order: 3, description: 'Add updateProfile with validation', status: 'pending' },
+      { order: 4, description: 'Implement media upload handling', status: 'pending' },
+      { order: 5, description: 'Add profile field validation rules', status: 'pending' },
+      { order: 6, description: 'Implement privacy settings management', status: 'pending' },
+      { order: 7, description: 'Add profile completeness calculation', status: 'pending' },
+      { order: 8, description: 'Create profile service tests', status: 'pending' },
+      { order: 9, description: 'Update profile API endpoints', status: 'pending' },
+      { order: 10, description: 'Document profile management features', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-020',
+    type: 'story',
+    story_id: 'US-E5-020',
+    name: 'US-E5-020: Implement UserPreferencesService',
+    description: 'Create UserPreferencesService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 4: User Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create services/user/UserPreferencesService.ts', status: 'pending' },
+      { order: 2, description: 'Implement getPreferences with defaults', status: 'pending' },
+      { order: 3, description: 'Add updatePreferences with validation', status: 'pending' },
+      { order: 4, description: 'Implement notification preferences logic', status: 'pending' },
+      { order: 5, description: 'Add privacy preferences management', status: 'pending' },
+      { order: 6, description: 'Implement display preferences (theme, language)', status: 'pending' },
+      { order: 7, description: 'Add preference migration for updates', status: 'pending' },
+      { order: 8, description: 'Create preferences service tests', status: 'pending' },
+      { order: 9, description: 'Update preferences API endpoints', status: 'pending' },
+      { order: 10, description: 'Document preference categories and options', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-021',
+    type: 'story',
+    story_id: 'US-E5-021',
+    name: 'US-E5-021: Implement UserActivityService',
+    description: 'Create UserActivityService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 4: User Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-009'],
+    subtasks: [
+      { order: 1, description: 'Create services/user/UserActivityService.ts', status: 'pending' },
+      { order: 2, description: 'Implement trackActivity with async logging', status: 'pending' },
+      { order: 3, description: 'Add activity storage with proper indexing', status: 'pending' },
+      { order: 4, description: 'Implement getActivityHistory with pagination', status: 'pending' },
+      { order: 5, description: 'Add GDPR-compliant data export', status: 'pending' },
+      { order: 6, description: 'Implement activity aggregation for analytics', status: 'pending' },
+      { order: 7, description: 'Add activity retention policies', status: 'pending' },
+      { order: 8, description: 'Create activity tracking tests', status: 'pending' },
+      { order: 9, description: 'Update activity API endpoints', status: 'pending' },
+      { order: 10, description: 'Document activity tracking and privacy', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-022',
+    type: 'story',
+    story_id: 'US-E5-022',
+    name: 'US-E5-022: Implement UserRelationshipService',
+    description: 'Create UserRelationshipService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 4: User Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-008'],
+    subtasks: [
+      { order: 1, description: 'Create services/user/UserRelationshipService.ts', status: 'pending' },
+      { order: 2, description: 'Implement follow/unfollow methods', status: 'pending' },
+      { order: 3, description: 'Add block/mute functionality', status: 'pending' },
+      { order: 4, description: 'Implement getFollowers with pagination', status: 'pending' },
+      { order: 5, description: 'Add getFollowing with efficient queries', status: 'pending' },
+      { order: 6, description: 'Implement privacy controls for relationships', status: 'pending' },
+      { order: 7, description: 'Add relationship notifications integration', status: 'pending' },
+      { order: 8, description: 'Create relationship service tests', status: 'pending' },
+      { order: 9, description: 'Update relationship API endpoints', status: 'pending' },
+      { order: 10, description: 'Document relationship features and privacy', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-023',
+    type: 'story',
+    story_id: 'US-E5-023',
+    name: 'US-E5-023: Implement UserAnalyticsService',
+    description: 'Create UserAnalyticsService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P1-HIGH',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 4: User Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003'],
+    subtasks: [
+      { order: 1, description: 'Create services/user/UserAnalyticsService.ts', status: 'pending' },
+      { order: 2, description: 'Implement getUserMetrics for individual users', status: 'pending' },
+      { order: 3, description: 'Add engagement metrics calculation', status: 'pending' },
+      { order: 4, description: 'Implement retention metrics tracking', status: 'pending' },
+      { order: 5, description: 'Add cohort analysis functionality', status: 'pending' },
+      { order: 6, description: 'Implement user segmentation logic', status: 'pending' },
+      { order: 7, description: 'Add dashboard-ready metric formatting', status: 'pending' },
+      { order: 8, description: 'Create analytics service tests', status: 'pending' },
+      { order: 9, description: 'Update analytics API endpoints', status: 'pending' },
+      { order: 10, description: 'Document user analytics and reporting', status: 'pending' }
+    ]
+  },
+
+  // PHASE 5: PAYMENT SERVICE REFACTORING - CRITICAL PATH (Stories 24-31)
+  {
+    id: 'story-us-e5-024',
+    type: 'story',
+    story_id: 'US-E5-024',
+    name: 'US-E5-024: Implement InvoiceService with Comprehensive Testing',
+    description: 'Extract invoice generation into InvoiceService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 5: Payment Service Refactoring',
+    dependencies: ['US-E5-002', 'US-E5-003', 'US-E5-009'],
+    subtasks: [
+      { order: 1, description: 'Create services/payment/InvoiceService.ts', status: 'pending' },
+      { order: 2, description: 'Implement generateInvoice with line items', status: 'pending' },
+      { order: 3, description: 'Add tax calculation integration', status: 'pending' },
+      { order: 4, description: 'Implement proration logic for subscriptions', status: 'pending' },
+      { order: 5, description: 'Add discount and credit application', status: 'pending' },
+      { order: 6, description: 'Ensure 100% backward compatibility', status: 'pending' },
+      { order: 7, description: 'Create comprehensive unit tests (100% coverage)', status: 'pending' },
+      { order: 8, description: 'Add property-based testing for calculations', status: 'pending' },
+      { order: 9, description: 'Perform security review and audit', status: 'pending' },
+      { order: 10, description: 'Document invoice generation process', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-025',
+    type: 'story',
+    story_id: 'US-E5-025',
+    name: 'US-E5-025: Implement PaymentProcessingService with Failsafes',
+    description: 'Create PaymentProcessingService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 5: Payment Service Refactoring',
+    dependencies: ['US-E5-024'],
+    subtasks: [
+      { order: 1, description: 'Create services/payment/PaymentProcessingService.ts', status: 'pending' },
+      { order: 2, description: 'Implement processPayment with idempotency', status: 'pending' },
+      { order: 3, description: 'Add Stripe payment provider integration', status: 'pending' },
+      { order: 4, description: 'Add Lightning Network payment support', status: 'pending' },
+      { order: 5, description: 'Implement retry with exponential backoff', status: 'pending' },
+      { order: 6, description: 'Add fraud detection integration', status: 'pending' },
+      { order: 7, description: 'Ensure PCI compliance in implementation', status: 'pending' },
+      { order: 8, description: 'Create failure scenario tests', status: 'pending' },
+      { order: 9, description: 'Perform load testing for peak times', status: 'pending' },
+      { order: 10, description: 'Document payment processing security', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-026',
+    type: 'story',
+    story_id: 'US-E5-026',
+    name: 'US-E5-026: Implement SubscriptionService with Lifecycle Management',
+    description: 'Create SubscriptionService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 5: Payment Service Refactoring',
+    dependencies: ['US-E5-024', 'US-E5-025'],
+    subtasks: [
+      { order: 1, description: 'Create services/payment/SubscriptionService.ts', status: 'pending' },
+      { order: 2, description: 'Implement createSubscription with validation', status: 'pending' },
+      { order: 3, description: 'Add update/pause/resume/cancel operations', status: 'pending' },
+      { order: 4, description: 'Implement renewal processing logic', status: 'pending' },
+      { order: 5, description: 'Add grace period and dunning management', status: 'pending' },
+      { order: 6, description: 'Implement accurate proration for changes', status: 'pending' },
+      { order: 7, description: 'Add webhook setup for providers', status: 'pending' },
+      { order: 8, description: 'Create lifecycle state machine tests', status: 'pending' },
+      { order: 9, description: 'Test all edge cases and transitions', status: 'pending' },
+      { order: 10, description: 'Document subscription lifecycle management', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-027',
+    type: 'story',
+    story_id: 'US-E5-027',
+    name: 'US-E5-027: Implement RefundService with Audit Trail',
+    description: 'Create RefundService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 5: Payment Service Refactoring',
+    dependencies: ['US-E5-025', 'US-E5-026'],
+    subtasks: [
+      { order: 1, description: 'Create services/payment/RefundService.ts', status: 'pending' },
+      { order: 2, description: 'Implement requestRefund with validation', status: 'pending' },
+      { order: 3, description: 'Add full and partial refund support', status: 'pending' },
+      { order: 4, description: 'Implement approval workflow for thresholds', status: 'pending' },
+      { order: 5, description: 'Add reason codes and categorization', status: 'pending' },
+      { order: 6, description: 'Integrate complete audit trail', status: 'pending' },
+      { order: 7, description: 'Add authorization checks for approvals', status: 'pending' },
+      { order: 8, description: 'Implement rate limiting on requests', status: 'pending' },
+      { order: 9, description: 'Create compliance verification tests', status: 'pending' },
+      { order: 10, description: 'Document refund policies and workflow', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-028',
+    type: 'story',
+    story_id: 'US-E5-028',
+    name: 'US-E5-028: Implement PaymentAnalyticsService',
+    description: 'Create PaymentAnalyticsService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 5: Payment Service Refactoring',
+    dependencies: ['US-E5-024', 'US-E5-025', 'US-E5-026', 'US-E5-027'],
+    subtasks: [
+      { order: 1, description: 'Create services/payment/PaymentAnalyticsService.ts', status: 'pending' },
+      { order: 2, description: 'Implement MRR calculation logic', status: 'pending' },
+      { order: 3, description: 'Add churn rate analytics', status: 'pending' },
+      { order: 4, description: 'Implement LTV calculation', status: 'pending' },
+      { order: 5, description: 'Add conversion metrics tracking', status: 'pending' },
+      { order: 6, description: 'Implement reconciliation with providers', status: 'pending' },
+      { order: 7, description: 'Add discrepancy detection logic', status: 'pending' },
+      { order: 8, description: 'Create real-time reporting views', status: 'pending' },
+      { order: 9, description: 'Test financial calculations accuracy', status: 'pending' },
+      { order: 10, description: 'Document metrics and KPIs', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-029',
+    type: 'story',
+    story_id: 'US-E5-029',
+    name: 'US-E5-029: Implement WebhookService for Payment Events',
+    description: 'Create WebhookService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 5: Payment Service Refactoring',
+    dependencies: ['US-E5-025'],
+    subtasks: [
+      { order: 1, description: 'Create services/payment/WebhookService.ts', status: 'pending' },
+      { order: 2, description: 'Implement webhook signature verification', status: 'pending' },
+      { order: 3, description: 'Add idempotency checking logic', status: 'pending' },
+      { order: 4, description: 'Implement event processing pipeline', status: 'pending' },
+      { order: 5, description: 'Add retry queue with backoff', status: 'pending' },
+      { order: 6, description: 'Implement dead letter queue handling', status: 'pending' },
+      { order: 7, description: 'Add IP whitelisting for providers', status: 'pending' },
+      { order: 8, description: 'Create webhook replay functionality', status: 'pending' },
+      { order: 9, description: 'Test webhook security thoroughly', status: 'pending' },
+      { order: 10, description: 'Document webhook integration guide', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-030',
+    type: 'story',
+    story_id: 'US-E5-030',
+    name: 'US-E5-030: Implement CurrencyService for Multi-Currency Support',
+    description: 'Create CurrencyService',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 5: Payment Service Refactoring',
+    dependencies: ['US-E5-024'],
+    subtasks: [
+      { order: 1, description: 'Create services/payment/CurrencyService.ts', status: 'pending' },
+      { order: 2, description: 'Implement currency conversion logic', status: 'pending' },
+      { order: 3, description: 'Add real-time exchange rate fetching', status: 'pending' },
+      { order: 4, description: 'Implement rate caching strategy', status: 'pending' },
+      { order: 5, description: 'Add support for USD, EUR, GBP, crypto', status: 'pending' },
+      { order: 6, description: 'Implement locale-aware formatting', status: 'pending' },
+      { order: 7, description: 'Add historical rate tracking', status: 'pending' },
+      { order: 8, description: 'Create currency conversion tests', status: 'pending' },
+      { order: 9, description: 'Test formatting across locales', status: 'pending' },
+      { order: 10, description: 'Document supported currencies and usage', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-031',
+    type: 'story',
+    story_id: 'US-E5-031',
+    name: 'US-E5-031: Payment Service Integration Testing Suite',
+    description: 'Comprehensive integration tests for all payment services',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 5: Payment Service Refactoring',
+    dependencies: ['US-E5-024', 'US-E5-025', 'US-E5-026', 'US-E5-027', 'US-E5-028', 'US-E5-029', 'US-E5-030'],
+    subtasks: [
+      { order: 1, description: 'Create tests/integration/payment-services.test.ts', status: 'pending' },
+      { order: 2, description: 'Test complete subscription lifecycle', status: 'pending' },
+      { order: 3, description: 'Test payment failure scenarios', status: 'pending' },
+      { order: 4, description: 'Test refund processing workflow', status: 'pending' },
+      { order: 5, description: 'Test webhook processing pipeline', status: 'pending' },
+      { order: 6, description: 'Test race conditions and concurrency', status: 'pending' },
+      { order: 7, description: 'Perform security penetration testing', status: 'pending' },
+      { order: 8, description: 'Run performance benchmarking', status: 'pending' },
+      { order: 9, description: 'Validate all edge cases', status: 'pending' },
+      { order: 10, description: 'Document test results and coverage', status: 'pending' }
+    ]
+  },
+
+  // PHASE 6: INTEGRATION & TESTING (Stories 32-36)
+  {
+    id: 'story-us-e5-032',
+    type: 'story',
+    story_id: 'US-E5-032',
+    name: 'US-E5-032: Wire All Services Through Dependency Injection',
+    description: 'Wire all refactored services through the DI container',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 6: Integration & Testing',
+    dependencies: ['US-E5-007', 'US-E5-011', 'US-E5-018', 'US-E5-024'],
+    subtasks: [
+      { order: 1, description: 'Register all content services in container', status: 'pending' },
+      { order: 2, description: 'Register all user services in container', status: 'pending' },
+      { order: 3, description: 'Register all payment services in container', status: 'pending' },
+      { order: 4, description: 'Register all shared services in container', status: 'pending' },
+      { order: 5, description: 'Configure proper service scopes (singleton/transient)', status: 'pending' },
+      { order: 6, description: 'Verify no circular dependencies exist', status: 'pending' },
+      { order: 7, description: 'Test container resolution for all services', status: 'pending' },
+      { order: 8, description: 'Add container validation on startup', status: 'pending' },
+      { order: 9, description: 'Create container health check endpoint', status: 'pending' },
+      { order: 10, description: 'Document container configuration', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-033',
+    type: 'story',
+    story_id: 'US-E5-033',
+    name: 'US-E5-033: Update API Routes to Use New Services',
+    description: 'Update all API routes to use refactored services',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 6: Integration & Testing',
+    dependencies: ['US-E5-032'],
+    subtasks: [
+      { order: 1, description: 'Update content API routes with DI', status: 'pending' },
+      { order: 2, description: 'Update user API routes with DI', status: 'pending' },
+      { order: 3, description: 'Update payment API routes with DI', status: 'pending' },
+      { order: 4, description: 'Inject services using container.get()', status: 'pending' },
+      { order: 5, description: 'Maintain exact API contracts (no breaking changes)', status: 'pending' },
+      { order: 6, description: 'Add request validation middleware', status: 'pending' },
+      { order: 7, description: 'Update error handling in routes', status: 'pending' },
+      { order: 8, description: 'Test all endpoints with Postman', status: 'pending' },
+      { order: 9, description: 'Verify backward compatibility', status: 'pending' },
+      { order: 10, description: 'Update API documentation', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-034',
+    type: 'story',
+    story_id: 'US-E5-034',
+    name: 'US-E5-034: Run Complete Integration Test Suite',
+    description: 'Run comprehensive integration tests',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 6: Integration & Testing',
+    dependencies: ['US-E5-032', 'US-E5-033'],
+    subtasks: [
+      { order: 1, description: 'Run existing integration test suite', status: 'pending' },
+      { order: 2, description: 'Test complete content workflow end-to-end', status: 'pending' },
+      { order: 3, description: 'Test user registration and authentication flow', status: 'pending' },
+      { order: 4, description: 'Test payment processing workflow', status: 'pending' },
+      { order: 5, description: 'Verify cross-service communication', status: 'pending' },
+      { order: 6, description: 'Test event bus message delivery', status: 'pending' },
+      { order: 7, description: 'Measure and verify 95%+ coverage', status: 'pending' },
+      { order: 8, description: 'Fix any failing tests', status: 'pending' },
+      { order: 9, description: 'Generate test coverage report', status: 'pending' },
+      { order: 10, description: 'Document test results', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-035',
+    type: 'story',
+    story_id: 'US-E5-035',
+    name: 'US-E5-035: Performance Testing and Optimization',
+    description: 'Benchmark and optimize the refactored services',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 6: Integration & Testing',
+    dependencies: ['US-E5-032', 'US-E5-033', 'US-E5-034'],
+    subtasks: [
+      { order: 1, description: 'Create performance test scenarios', status: 'pending' },
+      { order: 2, description: 'Measure baseline performance metrics', status: 'pending' },
+      { order: 3, description: 'Test refactored services under load', status: 'pending' },
+      { order: 4, description: 'Compare response times (must not regress)', status: 'pending' },
+      { order: 5, description: 'Check memory usage (< 10% increase)', status: 'pending' },
+      { order: 6, description: 'Identify and profile bottlenecks', status: 'pending' },
+      { order: 7, description: 'Optimize slow database queries', status: 'pending' },
+      { order: 8, description: 'Optimize service initialization time', status: 'pending' },
+      { order: 9, description: 'Re-test after optimizations', status: 'pending' },
+      { order: 10, description: 'Document performance benchmarks', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-036',
+    type: 'story',
+    story_id: 'US-E5-036',
+    name: 'US-E5-036: Fix Integration Issues and Regressions',
+    description: 'Fix any issues found during integration testing',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 6: Integration & Testing',
+    dependencies: ['US-E5-034', 'US-E5-035'],
+    subtasks: [
+      { order: 1, description: 'Triage all issues found in testing', status: 'pending' },
+      { order: 2, description: 'Fix critical payment service issues first', status: 'pending' },
+      { order: 3, description: 'Fix high-priority functionality bugs', status: 'pending' },
+      { order: 4, description: 'Fix performance regression issues', status: 'pending' },
+      { order: 5, description: 'Add regression tests for fixed bugs', status: 'pending' },
+      { order: 6, description: 'Fix medium-priority issues', status: 'pending' },
+      { order: 7, description: 'Re-run integration tests', status: 'pending' },
+      { order: 8, description: 'Verify all fixes work correctly', status: 'pending' },
+      { order: 9, description: 'Update documentation for changes', status: 'pending' },
+      { order: 10, description: 'Get sign-off for production readiness', status: 'pending' }
+    ]
+  },
+
+  // PHASE 7: DOCUMENTATION & CLEANUP (Stories 37-42)
+  {
+    id: 'story-us-e5-037',
+    type: 'story',
+    story_id: 'US-E5-037',
+    name: 'US-E5-037: Create Service Architecture Diagrams',
+    description: 'Create comprehensive architecture diagrams',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P2-MEDIUM',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'documentation',
+    phase: 'Phase 7: Documentation & Cleanup',
+    dependencies: ['US-E5-032'],
+    subtasks: [
+      { order: 1, description: 'Create service architecture overview diagram', status: 'pending' },
+      { order: 2, description: 'Create payment flow sequence diagram', status: 'pending' },
+      { order: 3, description: 'Create DI container structure diagram', status: 'pending' },
+      { order: 4, description: 'Create content workflow diagram', status: 'pending' },
+      { order: 5, description: 'Create user authentication flow diagram', status: 'pending' },
+      { order: 6, description: 'Create event bus communication diagram', status: 'pending' },
+      { order: 7, description: 'Create data flow diagrams', status: 'pending' },
+      { order: 8, description: 'Add diagrams to documentation site', status: 'pending' },
+      { order: 9, description: 'Get diagrams reviewed by team', status: 'pending' },
+      { order: 10, description: 'Commit diagrams to repository', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-038',
+    type: 'story',
+    story_id: 'US-E5-038',
+    name: 'US-E5-038: Update API Documentation',
+    description: 'Update API documentation for new service endpoints',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P2-MEDIUM',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'documentation',
+    phase: 'Phase 7: Documentation & Cleanup',
+    dependencies: ['US-E5-033'],
+    subtasks: [
+      { order: 1, description: 'Update OpenAPI/Swagger specifications', status: 'pending' },
+      { order: 2, description: 'Document new service endpoints', status: 'pending' },
+      { order: 3, description: 'Mark deprecated endpoints clearly', status: 'pending' },
+      { order: 4, description: 'Add migration guide for API changes', status: 'pending' },
+      { order: 5, description: 'Update request/response examples', status: 'pending' },
+      { order: 6, description: 'Update Postman collections', status: 'pending' },
+      { order: 7, description: 'Add authentication documentation', status: 'pending' },
+      { order: 8, description: 'Document error codes and handling', status: 'pending' },
+      { order: 9, description: 'Review documentation with frontend team', status: 'pending' },
+      { order: 10, description: 'Publish to documentation site', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-039',
+    type: 'story',
+    story_id: 'US-E5-039',
+    name: 'US-E5-039: Create Developer Guide for New Architecture',
+    description: 'Create a developer guide for the new service architecture',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P2-MEDIUM',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'documentation',
+    phase: 'Phase 7: Documentation & Cleanup',
+    dependencies: ['US-E5-032'],
+    subtasks: [
+      { order: 1, description: 'Create docs/developer-guide.md', status: 'pending' },
+      { order: 2, description: 'Document service architecture overview', status: 'pending' },
+      { order: 3, description: 'Explain service responsibilities and boundaries', status: 'pending' },
+      { order: 4, description: 'Document how to add new services', status: 'pending' },
+      { order: 5, description: 'Explain DI patterns and best practices', status: 'pending' },
+      { order: 6, description: 'Document testing strategies', status: 'pending' },
+      { order: 7, description: 'Add troubleshooting guide', status: 'pending' },
+      { order: 8, description: 'Include code examples and snippets', status: 'pending' },
+      { order: 9, description: 'Review guide with development team', status: 'pending' },
+      { order: 10, description: 'Publish to team wiki', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-040',
+    type: 'story',
+    story_id: 'US-E5-040',
+    name: 'US-E5-040: Write Architecture Decision Records (ADRs)',
+    description: 'Document architecture decisions in ADRs',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P2-MEDIUM',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'documentation',
+    phase: 'Phase 7: Documentation & Cleanup',
+    dependencies: [],
+    subtasks: [
+      { order: 1, description: 'Create ADR for service decomposition strategy', status: 'pending' },
+      { order: 2, description: 'Create ADR for DI framework selection (InversifyJS)', status: 'pending' },
+      { order: 3, description: 'Create ADR for service boundary decisions', status: 'pending' },
+      { order: 4, description: 'Create ADR for payment service isolation', status: 'pending' },
+      { order: 5, description: 'Create ADR for event-driven communication', status: 'pending' },
+      { order: 6, description: 'Document trade-offs for each decision', status: 'pending' },
+      { order: 7, description: 'Explain alternatives considered', status: 'pending' },
+      { order: 8, description: 'Add context and consequences', status: 'pending' },
+      { order: 9, description: 'Get ADRs reviewed by architects', status: 'pending' },
+      { order: 10, description: 'Commit ADRs to docs/decisions/', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-041',
+    type: 'story',
+    story_id: 'US-E5-041',
+    name: 'US-E5-041: Remove Deprecated Monolithic Services',
+    description: 'Remove old monolithic service code',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P2-MEDIUM',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 7: Documentation & Cleanup',
+    dependencies: ['US-E5-036'],
+    subtasks: [
+      { order: 1, description: 'Identify all deprecated service files', status: 'pending' },
+      { order: 2, description: 'Verify no references to old services remain', status: 'pending' },
+      { order: 3, description: 'Delete old ContentService.ts', status: 'pending' },
+      { order: 4, description: 'Delete old UserService.ts', status: 'pending' },
+      { order: 5, description: 'Delete old PaymentService.ts', status: 'pending' },
+      { order: 6, description: 'Remove obsolete test files', status: 'pending' },
+      { order: 7, description: 'Clean up unused imports', status: 'pending' },
+      { order: 8, description: 'Update build configuration', status: 'pending' },
+      { order: 9, description: 'Verify build still passes', status: 'pending' },
+      { order: 10, description: 'Commit cleanup changes', status: 'pending' }
+    ]
+  },
+  {
+    id: 'story-us-e5-042',
+    type: 'story',
+    story_id: 'US-E5-042',
+    name: 'US-E5-042: Final Testing and Sign-off',
+    description: 'Perform final validation of the refactored system',
+    epic_label: 'Epic 005: Backend Service Refactoring',
+    priority: 'P0-CRITICAL',
+    status: 'pending',
+    progress_percent: 0,
+    agent: null,
+    agent_type: 'backend',
+    phase: 'Phase 7: Documentation & Cleanup',
+    dependencies: ['US-E5-036', 'US-E5-037', 'US-E5-038', 'US-E5-039', 'US-E5-040', 'US-E5-041'],
+    subtasks: [
+      { order: 1, description: 'Run full test suite one final time', status: 'pending' },
+      { order: 2, description: 'Execute performance benchmarks', status: 'pending' },
+      { order: 3, description: 'Run security scanning tools', status: 'pending' },
+      { order: 4, description: 'Verify no performance regression', status: 'pending' },
+      { order: 5, description: 'Check documentation completeness', status: 'pending' },
+      { order: 6, description: 'Create deployment checklist', status: 'pending' },
+      { order: 7, description: 'Get QA team sign-off', status: 'pending' },
+      { order: 8, description: 'Get security team approval', status: 'pending' },
+      { order: 9, description: 'Get management sign-off', status: 'pending' },
+      { order: 10, description: 'Mark epic as ready for deployment', status: 'pending' }
+    ]
+  }
+];
+
+// Add Epic 005 parent task
+const epic005Parent = {
+  id: 'epic-005-parent',
+  type: 'epic',
+  name: 'Epic 005: Backend Service Refactoring - 0/42 stories (0%)',
+  agent: 'project-orchestrator',
+  status: 'pending',
+  progress_percent: 0,
+  started_at: new Date().toISOString(),
+  completed_at: null,
+  phase_breakdown: {
+    'Phase 1: Design & Interface Definition': { total: 6, completed: 0 },
+    'Phase 2: Shared Services Extraction': { total: 4, completed: 0 },
+    'Phase 3: Content Service Refactoring': { total: 7, completed: 0 },
+    'Phase 4: User Service Refactoring': { total: 6, completed: 0 },
+    'Phase 5: Payment Service Refactoring': { total: 8, completed: 0 },
+    'Phase 6: Integration & Testing': { total: 5, completed: 0 },
+    'Phase 7: Documentation & Cleanup': { total: 6, completed: 0 }
+  }
+};
+
+// Check if Epic 005 already exists
+const existingEpic005Index = tasks.phases['active-development'].tasks.findIndex(
+  task => task.id === 'epic-005-parent'
+);
+
+if (existingEpic005Index !== -1) {
+  // Update existing Epic 005
+  tasks.phases['active-development'].tasks[existingEpic005Index] = epic005Parent;
+  console.log('✅ Updated existing Epic 005 parent task');
+} else {
+  // Add Epic 005 at the beginning of active tasks
+  tasks.phases['active-development'].tasks.unshift(epic005Parent);
+  console.log('✅ Added Epic 005 parent task');
+}
+
+// Remove any existing Epic 005 stories (clean slate)
+tasks.phases['active-development'].tasks = tasks.phases['active-development'].tasks.filter(
+  task => !task.story_id || !task.story_id.startsWith('US-E5-')
+);
+
+// Add all Epic 005 stories
+tasks.phases['active-development'].tasks.push(...epic005Stories);
+
+// Save updated tasks
+fs.writeFileSync(tasksPath, JSON.stringify(tasks, null, 2));
+
+// Generate summary
+console.log('\n' + '='.repeat(60));
+console.log('EPIC 005 POPULATION COMPLETE');
+console.log('='.repeat(60));
+console.log(`✅ Added ${epic005Stories.length} stories to dashboard`);
+console.log(`✅ Total subtasks: ${epic005Stories.length * 10} (10 per story)`);
+console.log('\nPhase Breakdown:');
+console.log('  Phase 1 (Design):     6 stories  (US-E5-001 to US-E5-006)');
+console.log('  Phase 2 (Shared):     4 stories  (US-E5-007 to US-E5-010)');
+console.log('  Phase 3 (Content):    7 stories  (US-E5-011 to US-E5-017)');
+console.log('  Phase 4 (User):       6 stories  (US-E5-018 to US-E5-023)');
+console.log('  Phase 5 (Payment):    8 stories  (US-E5-024 to US-E5-031) [CRITICAL PATH]');
+console.log('  Phase 6 (Integration): 5 stories  (US-E5-032 to US-E5-036)');
+console.log('  Phase 7 (Documentation): 6 stories (US-E5-037 to US-E5-042)');
+console.log('\nDashboard Location: /monitoring/dashboard/data/tasks.json');
+console.log('Dashboard URL: http://localhost:3000/monitoring/dashboard/');
+console.log('\n✅ Ready to begin Phase 1 execution!');
+console.log('='.repeat(60));

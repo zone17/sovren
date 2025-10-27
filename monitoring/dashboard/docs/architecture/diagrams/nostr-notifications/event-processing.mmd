@@ -1,0 +1,54 @@
+flowchart TD
+    Start([NOSTR Event Received]) --> CheckKind{Event Kind?}
+
+    CheckKind -->|Kind 1| CheckMention{Has user<br/>p-tag?}
+    CheckKind -->|Kind 4| ProcessDM[Process DM]
+    CheckKind -->|Kind 6| ProcessRepost[Process Repost]
+    CheckKind -->|Kind 7| ProcessReaction[Process Reaction]
+    CheckKind -->|Kind 3| ProcessFollow[Process Follow]
+    CheckKind -->|Kind 9735| ProcessZap[Process Zap]
+    CheckKind -->|Other| Ignore[Ignore Event]
+
+    CheckMention -->|Yes| CreateMention[Create Mention Notification]
+    CheckMention -->|No| CheckReply{Reply to<br/>user's event?}
+
+    CheckReply -->|Yes| CreateReply[Create Reply Notification]
+    CheckReply -->|No| Ignore
+
+    CreateMention --> GetAuthor[Fetch Author Profile]
+    CreateReply --> GetAuthor
+    ProcessDM --> GetAuthor
+    ProcessRepost --> GetAuthor
+    ProcessReaction --> GetAuthor
+    ProcessFollow --> GetAuthor
+    ProcessZap --> GetAuthor
+
+    GetAuthor --> FormatContent[Format Notification Content]
+    FormatContent --> CheckDuplicate{Already<br/>exists?}
+
+    CheckDuplicate -->|Yes| Ignore
+    CheckDuplicate -->|No| StoreNotification[Store in IndexedDB]
+
+    StoreNotification --> UpdateState[Update React State]
+    UpdateState --> CheckPreferences{Notifications<br/>enabled?}
+
+    CheckPreferences -->|Yes| ShowToast[Show Toast]
+    CheckPreferences -->|No| End([Done])
+
+    ShowToast --> CheckSound{Sound<br/>enabled?}
+    CheckSound -->|Yes| PlaySound[Play Sound]
+    CheckSound -->|No| CheckDesktop{Desktop<br/>enabled?}
+
+    PlaySound --> CheckDesktop
+    CheckDesktop -->|Yes| ShowDesktop[Show Desktop Notification]
+    CheckDesktop -->|No| End
+
+    ShowDesktop --> End
+    Ignore --> End
+
+    style Start fill:#4a90e2
+    style CreateMention fill:#2ecc71
+    style CreateReply fill:#2ecc71
+    style ProcessDM fill:#e74c3c
+    style StoreNotification fill:#9b59b6
+    style End fill:#95a5a6

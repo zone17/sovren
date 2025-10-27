@@ -1,0 +1,77 @@
+graph TB
+    subgraph "EventCacheService Architecture"
+        subgraph "Entry Points"
+            A[Event Publisher] --> B[EventCacheService]
+            C[Subscription Manager] --> B
+            D[Profile Service] --> B
+            E[NIP-05 Service] --> B
+        end
+
+        subgraph "EventCacheService Core"
+            B --> F[set/get/query/delete]
+            F --> G[Memory Cache<br/>LRU + TTL]
+            F --> H[IndexedDB<br/>Persistent Storage]
+
+            G --> I[Access Order Tracking]
+            G --> J[Expiration Checking]
+            G --> K[Memory Limit Enforcement]
+
+            H --> L[Event Store]
+            H --> M[Sync Queue]
+        end
+
+        subgraph "Indexing Layer"
+            G --> N[Pubkey Index]
+            G --> O[Kind Index]
+            G --> P[Tag Index]
+        end
+
+        subgraph "Cache Invalidation"
+            Q[New Event Published] --> R[invalidateOnPublish]
+            R --> S{Event Type?}
+            S -->|Replaceable<br/>kind 0,3,10000-19999| T[Invalidate Author Cache]
+            S -->|References Event| U[Delete Referenced Event]
+            S -->|Pattern Match| V[Pattern-Based Invalidation]
+        end
+
+        subgraph "Memory Management"
+            K --> W{Over Limit?}
+            W -->|Yes| X[Evict LRU Entry]
+            W -->|No| Y[Continue]
+            X --> Z[Update Indexes]
+            Z --> Y
+        end
+
+        subgraph "Performance Metrics"
+            B --> AA[Track Operations]
+            AA --> AB[Hit/Miss Rate]
+            AA --> AC[Operation Latency]
+            AA --> AD[Memory Usage]
+            AA --> AE[Eviction Count]
+        end
+    end
+
+    subgraph "Configuration"
+        AF[Cache Config] --> B
+        AF --> AG[maxMemoryEvents: 1000]
+        AF --> AH[maxMemoryBytes: 50MB]
+        AF --> AI[defaultTTL: 5min]
+        AF --> AJ[enableIndexedDB: true]
+        AF --> AK[enableAnalytics: true]
+    end
+
+    subgraph "Data Flow"
+        AL[Query Request] --> F
+        F --> AM{In Memory?}
+        AM -->|Yes + Not Expired| AN[Return from Memory]
+        AM -->|No| AO{In IndexedDB?}
+        AO -->|Yes + Not Expired| AP[Promote to Memory]
+        AO -->|No| AQ[Return null/Cache Miss]
+        AP --> AN
+    end
+
+    style B fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style G fill:#2196F3,stroke:#1565C0,color:#fff
+    style H fill:#FF9800,stroke:#E65100,color:#fff
+    style R fill:#F44336,stroke:#C62828,color:#fff
+    style AA fill:#9C27B0,stroke:#6A1B9A,color:#fff

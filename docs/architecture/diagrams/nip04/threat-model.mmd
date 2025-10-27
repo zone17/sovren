@@ -1,0 +1,81 @@
+```mermaid
+graph TB
+    subgraph "Threat Model: NIP-04 Encrypted DMs"
+        subgraph "Assets"
+            PK[Private Keys]
+            MSG[Message Content]
+            META[Metadata]
+            SESS[Session Keys]
+        end
+
+        subgraph "Threats"
+            T1[T1: Key Extraction<br/>SEVERITY: CRITICAL]
+            T2[T2: Man-in-the-Middle<br/>SEVERITY: HIGH]
+            T3[T3: Replay Attacks<br/>SEVERITY: MEDIUM]
+            T4[T4: Timing Attacks<br/>SEVERITY: MEDIUM]
+            T5[T5: Spam/DoS<br/>SEVERITY: MEDIUM]
+            T6[T6: Message Tampering<br/>SEVERITY: HIGH]
+            T7[T7: IV Reuse<br/>SEVERITY: CRITICAL]
+            T8[T8: Known Plaintext<br/>SEVERITY: LOW]
+            T9[T9: Session Rollback<br/>SEVERITY: MEDIUM]
+            T10[T10: Memory Leaks<br/>SEVERITY: LOW]
+        end
+
+        subgraph "Mitigations"
+            M1[M1: Never log/store private keys<br/>Store in KeyManagementService only]
+            M2[M2: ECDH + secp256k1<br/>Public key cryptography]
+            M3[M3: Message IDs + Timestamps<br/>Detect duplicate messages]
+            M4[M4: Constant-time operations<br/>No branching on secrets]
+            M5[M5: Rate limiting<br/>10/min, 200/hr per sender]
+            M6[M6: No HMAC in NIP-04<br/>Note: Integrity not guaranteed]
+            M7[M7: CSPRNG IV generation<br/>Unique IV per message]
+            M8[M8: Unique IV per encryption<br/>Different ciphertext each time]
+            M9[M9: Session key rotation<br/>100 message threshold]
+            M10[M10: Cleanup on destroy()<br/>Clear all caches]
+        end
+
+        subgraph "Security Controls"
+            C1[Input Validation<br/>All inputs sanitized]
+            C2[Proof of Work<br/>16-bit difficulty option]
+            C3[Block/Allow Lists<br/>Sender filtering]
+            C4[Read Receipts<br/>Kind 1515 events]
+            C5[Forward Secrecy<br/>Session key rotation]
+            C6[Message Cache<br/>LRU eviction]
+        end
+
+        T1 -.->|Mitigated by| M1
+        T2 -.->|Mitigated by| M2
+        T3 -.->|Mitigated by| M3
+        T4 -.->|Mitigated by| M4
+        T5 -.->|Mitigated by| M5
+        T6 -.->|Acknowledged| M6
+        T7 -.->|Mitigated by| M7
+        T8 -.->|Mitigated by| M8
+        T9 -.->|Mitigated by| M9
+        T10 -.->|Mitigated by| M10
+
+        M1 --> C1
+        M5 --> C2
+        M5 --> C3
+        M3 --> C4
+        M9 --> C5
+        M10 --> C6
+
+        PK --> T1
+        MSG --> T2
+        MSG --> T6
+        META --> T3
+        SESS --> T9
+    end
+
+    style T1 fill:#ffcdd2
+    style T2 fill:#ffcdd2
+    style T6 fill:#ffcdd2
+    style T7 fill:#ffcdd2
+    style M1 fill:#c8e6c9
+    style M2 fill:#c8e6c9
+    style M7 fill:#c8e6c9
+    style M9 fill:#c8e6c9
+    style C1 fill:#fff9c4
+    style C5 fill:#fff9c4
+```

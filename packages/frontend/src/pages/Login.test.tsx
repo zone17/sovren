@@ -1,238 +1,180 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-import userSlice from '../store/slices/userSlice';
+import { AuthProvider } from '../features/auth';
 import Login from './Login';
 
-// Mock react-router-dom
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
+// Mock the auth service
+jest.mock('../lib/auth', () => ({
+  authService: {
+    login: jest.fn(),
+    generateNostrChallenge: jest.fn(),
+    authenticateNostr: jest.fn(),
+  },
 }));
 
-// Mock components
-jest.mock('../components/Layout', () => ({
-  __esModule: true,
-  default: ({ children }: { children: React.ReactNode }): JSX.Element => (
-    <div data-testid="layout">{children}</div>
-  ),
-}));
-
-jest.mock('../components/Button', () => ({
-  __esModule: true,
-  default: ({
-    children,
-    onClick,
-    type,
-    disabled,
-    className,
-    isLoading,
-    variant,
-  }: {
-    children: React.ReactNode;
-    onClick?: () => void;
-    type?: 'button' | 'submit' | 'reset';
-    disabled?: boolean;
-    className?: string;
-    isLoading?: boolean;
-    variant?: string;
-  }): JSX.Element => (
-    <button
-      onClick={onClick}
-      type={type}
-      disabled={disabled}
-      className={className}
-      data-testid="button"
-      data-loading={isLoading}
-      data-variant={variant}
-    >
-      {children}
-    </button>
-  ),
-}));
-
-// Test utilities
-const renderWithProviders = (component: React.ReactElement) => {
-  const store = configureStore({
-    reducer: {
-      user: userSlice,
-    },
-  });
-
-  return render(
-    <Provider store={store}>
-      <BrowserRouter>{component}</BrowserRouter>
-    </Provider>
+const renderWithProviders = (component: React.ReactElement): void => {
+  render(
+    <BrowserRouter>
+      <AuthProvider>{component}</AuthProvider>
+    </BrowserRouter>
   );
 };
 
 describe('Login Component', () => {
   beforeEach(() => {
-    mockNavigate.mockClear();
+    jest.clearAllMocks();
   });
 
   describe('Rendering', () => {
-    it('renders login form correctly', () => {
+    it('renders the main heading', () => {
       renderWithProviders(<Login />);
 
-      expect(screen.getByText('Sign in to your account')).toBeInTheDocument();
-      expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+      const heading = screen.getByRole('heading', { level: 2 });
+      expect(heading).toBeInTheDocument();
+      expect(heading).toHaveTextContent('Sign in to Sovren');
     });
 
-    it('renders signup link', () => {
+    it('renders authentication mode selector', () => {
       renderWithProviders(<Login />);
 
-      expect(screen.getByText(/create a new account/i)).toBeInTheDocument();
+      // Check for authentication mode tabs
+      expect(screen.getByText('🌐 NOSTR Keys')).toBeInTheDocument();
+      expect(screen.getByText('📧 Email')).toBeInTheDocument();
     });
 
-    it('has proper form accessibility', () => {
+    it('shows NOSTR authentication by default', () => {
       renderWithProviders(<Login />);
 
-      const emailInput = screen.getByLabelText(/email address/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-
-      expect(emailInput).toHaveAttribute('type', 'email');
-      expect(emailInput).toHaveAttribute('required');
-      expect(passwordInput).toHaveAttribute('type', 'password');
-      expect(passwordInput).toHaveAttribute('required');
+      // Check for NOSTR-specific elements (default mode)
+      expect(screen.getByText('🔐 Sovereign Authentication')).toBeInTheDocument();
+      expect(screen.getByLabelText('Public Key (npub...)')).toBeInTheDocument();
+      expect(screen.getByLabelText('Private Key (nsec...)')).toBeInTheDocument();
     });
-  });
 
-  describe('Form validation', () => {
-    it('shows validation errors for empty form', async () => {
-      const user = userEvent.setup();
+    it('switches to email mode when clicked', () => {
       renderWithProviders(<Login />);
 
-      const submitButton = screen.getByRole('button', { name: 'Sign in' });
-      await user.click(submitButton);
+      // Switch to email mode
+      const emailTab = screen.getByText('📧 Email');
+      fireEvent.click(emailTab);
 
-      // Check for HTML5 validation or custom validation messages
-      const emailInput = screen.getByLabelText(/email address/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-
-      expect(emailInput).toBeInvalid();
-      expect(passwordInput).toBeInvalid();
+      // Check for email form elements
+      expect(screen.getByLabelText('Email address')).toBeInTheDocument();
+      expect(screen.getByLabelText('Password')).toBeInTheDocument();
     });
 
-    it('validates email format', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(<Login />);
-
-      const emailInput = screen.getByLabelText(/email address/i);
-      await user.type(emailInput, 'invalid-email');
-
-      const submitButton = screen.getByRole('button', { name: 'Sign in' });
-      await user.click(submitButton);
-
-      expect(emailInput).toBeInvalid();
-    });
-  });
-
-  describe('Form interaction', () => {
-    it('allows typing in form fields', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(<Login />);
-
-      const emailInput = screen.getByLabelText(/email address/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-
-      expect(emailInput).toHaveValue('test@example.com');
-      expect(passwordInput).toHaveValue('password123');
-    });
-
-    it('submits form with valid data', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(<Login />);
-
-      const emailInput = screen.getByLabelText(/email address/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-      const submitButton = screen.getByRole('button', { name: 'Sign in' });
-
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-      await user.click(submitButton);
-
-      // Verify the form submission behavior
-      expect(emailInput).toHaveValue('test@example.com');
-      expect(passwordInput).toHaveValue('password123');
-    });
-  });
-
-  describe('Layout and styling', () => {
-    it('uses proper layout structure', () => {
-      renderWithProviders(<Login />);
-
-      const layout = screen.getByTestId('layout');
-      expect(layout).toBeInTheDocument();
-    });
-
-    it('has responsive design classes', () => {
-      renderWithProviders(<Login />);
-
-      // Check for form element
-      const form = document.querySelector('form');
-      expect(form).toBeInTheDocument();
-    });
-  });
-
-  describe('Navigation integration', () => {
     it('renders signup link correctly', () => {
       renderWithProviders(<Login />);
 
-      const signupText = screen.getByText(/create a new account/i);
-      expect(signupText).toBeInTheDocument();
+      expect(screen.getByText('Create account')).toBeInTheDocument();
     });
+  });
 
-    it('integrates properly with React Router', () => {
+  describe('User Interactions', () => {
+    it('allows switching between authentication modes', () => {
       renderWithProviders(<Login />);
 
-      // Verify component renders without router errors
-      expect(screen.getByText('Sign in to your account')).toBeInTheDocument();
+      // Default should be NOSTR
+      expect(screen.getByText('🔐 Sovereign Authentication')).toBeInTheDocument();
+
+      // Switch to email
+      const emailTab = screen.getByText('📧 Email');
+      fireEvent.click(emailTab);
+
+      // Should show email form
+      expect(screen.getByLabelText('Email address')).toBeInTheDocument();
+
+      // Switch back to NOSTR
+      const nostrTab = screen.getByText('🌐 NOSTR Keys');
+      fireEvent.click(nostrTab);
+
+      // Should show NOSTR form again
+      expect(screen.getByText('🔐 Sovereign Authentication')).toBeInTheDocument();
+    });
+
+    it('handles NOSTR key input', () => {
+      renderWithProviders(<Login />);
+
+      const publicKeyInput = screen.getByLabelText('Public Key (npub...)');
+      const privateKeyInput = screen.getByLabelText('Private Key (nsec...)');
+
+      fireEvent.change(publicKeyInput, { target: { value: 'npub1test123' } });
+      fireEvent.change(privateKeyInput, { target: { value: 'nsec1test123' } });
+
+      expect(publicKeyInput).toHaveValue('npub1test123');
+      expect(privateKeyInput).toHaveValue('nsec1test123');
+    });
+
+    it('generates new NOSTR keys when generate button is clicked', async (): Promise<void> => {
+      renderWithProviders(<Login />);
+
+      const generateButton = screen.getByText('🎲 Generate New Keys');
+      fireEvent.click(generateButton);
+
+      // Should show loading state
+      await waitFor(() => {
+        expect(generateButton).toBeDisabled();
+      });
+    });
+  });
+
+  describe('Form Validation', () => {
+    it('disables NOSTR sign in button when keys are missing', () => {
+      renderWithProviders(<Login />);
+
+      const signInButton = screen.getByText('🌐 Sign In with NOSTR');
+      expect(signInButton).toBeDisabled();
+    });
+
+    it('enables NOSTR sign in button when keys are provided', () => {
+      renderWithProviders(<Login />);
+
+      const publicKeyInput = screen.getByLabelText('Public Key (npub...)');
+      const privateKeyInput = screen.getByLabelText('Private Key (nsec...)');
+
+      fireEvent.change(publicKeyInput, { target: { value: 'npub1test123' } });
+      fireEvent.change(privateKeyInput, { target: { value: 'nsec1test123' } });
+
+      const signInButton = screen.getByText('🌐 Sign In with NOSTR');
+      expect(signInButton).not.toBeDisabled();
+    });
+
+    it('disables email sign in button when credentials are missing', () => {
+      renderWithProviders(<Login />);
+
+      // Switch to email mode
+      const emailTab = screen.getByText('📧 Email');
+      fireEvent.click(emailTab);
+
+      const signInButton = screen.getByText('📧 Sign In with Email');
+      expect(signInButton).toBeDisabled();
     });
   });
 
   describe('Accessibility', () => {
-    it('has proper form labels and structure', () => {
+    it('has proper form labels', () => {
       renderWithProviders(<Login />);
 
-      // Check form exists
-      const form = document.querySelector('form');
-      expect(form).toBeInTheDocument();
+      // NOSTR mode labels
+      expect(screen.getByLabelText('Public Key (npub...)')).toHaveAttribute('id', 'publicKey');
+      expect(screen.getByLabelText('Private Key (nsec...)')).toHaveAttribute('id', 'privateKey');
 
-      // Check input labels
-      expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+      // Switch to email mode
+      const emailTab = screen.getByText('📧 Email');
+      fireEvent.click(emailTab);
+
+      // Email mode labels
+      expect(screen.getByLabelText('Email address')).toHaveAttribute('type', 'email');
+      expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
     });
 
     it('has proper heading structure', () => {
       renderWithProviders(<Login />);
 
       const heading = screen.getByRole('heading', { level: 2 });
-      expect(heading).toHaveTextContent('Sign in to your account');
-    });
-
-    it('supports keyboard navigation', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(<Login />);
-
-      const emailInput = screen.getByLabelText(/email address/i);
-      const passwordInput = screen.getByLabelText(/password/i);
-
-      // Test that inputs can be focused (instead of testing exact tab order)
-      await user.click(emailInput);
-      expect(emailInput).toHaveFocus();
-
-      await user.click(passwordInput);
-      expect(passwordInput).toHaveFocus();
+      expect(heading).toHaveTextContent('Sign in to Sovren');
     });
   });
 });

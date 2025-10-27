@@ -1,0 +1,67 @@
+graph LR
+    subgraph "Incoming Webhook Request"
+        REQ[HTTP Request]
+        H1[x-webhook-signature]
+        H2[x-webhook-timestamp]
+        BODY[JSON Payload]
+    end
+
+    subgraph "Signature Computation"
+        TS[Timestamp: 1698765432]
+        PL[Stringified Payload]
+        CONCAT[Concatenate: timestamp.payload]
+        SECRET[Webhook Secret<br/>PAYMENT_WEBHOOK_SECRET]
+        HMAC[HMAC-SHA256]
+        SIG[Computed Signature]
+    end
+
+    subgraph "Verification Process"
+        EXT[Extract Signature & Timestamp]
+        COMP[Compare Signatures<br/>timingSafeEqual]
+        VAL{Valid?}
+    end
+
+    subgraph "Outcomes"
+        SUCCESS[✓ Process Webhook]
+        FAIL1[✗ 401 Unauthorized]
+        FAIL2[✗ 403 Forbidden]
+    end
+
+    REQ --> H1
+    REQ --> H2
+    REQ --> BODY
+
+    H2 --> TS
+    BODY --> PL
+    TS --> CONCAT
+    PL --> CONCAT
+
+    CONCAT --> HMAC
+    SECRET --> HMAC
+    HMAC --> SIG
+
+    H1 --> EXT
+    H2 --> EXT
+    SIG --> COMP
+    EXT --> COMP
+
+    COMP --> VAL
+
+    VAL -->|Yes + Fresh Timestamp| SUCCESS
+    VAL -->|No| FAIL1
+    VAL -->|Yes + Old Timestamp| FAIL2
+
+    style REQ fill:#E3F2FD
+    style H1 fill:#BBDEFB
+    style H2 fill:#BBDEFB
+    style BODY fill:#BBDEFB
+
+    style CONCAT fill:#FFF9C4
+    style HMAC fill:#FFF59D
+    style SIG fill:#FFF176
+
+    style SUCCESS fill:#C8E6C9
+    style FAIL1 fill:#FFCDD2
+    style FAIL2 fill:#FFCDD2
+
+    style SECRET fill:#FFE0B2

@@ -1,0 +1,136 @@
+graph TB
+    subgraph "Frontend Analytics Architecture"
+        subgraph "React Components"
+            Dashboard["📊 Creator Dashboard"]
+            Charts["📈 Analytics Charts"]
+            Filters["🔍 Analytics Filters"]
+            Exports["📤 Export Controls"]
+        end
+
+        subgraph "React Query Layer"
+            QueryClient["🔄 Query Client"]
+            UseEarnings["💰 useCreatorEarnings"]
+            UsePayments["⚡ useLightningPayments"]
+            UseCharts["📊 useChartData"]
+            UseMetrics["📈 usePerformanceMetrics"]
+        end
+
+        subgraph "Analytics Service Layer"
+            AnalyticsService["🎯 Analytics Service"]
+            DataTransform["🔄 Data Transformations"]
+            PerformanceMonitor["⚡ Performance Monitor"]
+            ErrorHandler["🚨 Error Handler"]
+        end
+
+        subgraph "Caching Strategy"
+            MemoryCache["🧠 Memory Cache"]
+            QueryCache["📦 Query Cache"]
+            CacheInvalidation["♻️ Cache Invalidation"]
+        end
+
+        subgraph "Real-time Layer"
+            WebSocketClient["🔌 WebSocket Client"]
+            EventSubscriber["📡 Event Subscriber"]
+            RealTimeUpdates["⚡ Real-time Updates"]
+        end
+    end
+
+    subgraph "Backend Integration"
+        subgraph "API Endpoints"
+            EarningsAPI["/api/analytics/earnings"]
+            PaymentsAPI["/api/analytics/payments"]
+            ChartAPI["/api/analytics/charts"]
+            ExportAPI["/api/analytics/export"]
+        end
+
+        subgraph "WebSocket Server"
+            WSServer["🔌 WebSocket Server"]
+            EventBroadcast["📢 Event Broadcast"]
+        end
+
+        subgraph "Database Layer"
+            Analytics[("📊 Analytics DB")]
+            Lightning[("⚡ Lightning DB")]
+            Content[("📝 Content DB")]
+        end
+    end
+
+    subgraph "External Services"
+        NostrNetwork["🌐 NOSTR Network"]
+        LightningNode["⚡ Lightning Node"]
+        PaymentProcessor["💳 Payment Processor"]
+    end
+
+    %% Frontend Flow
+    Dashboard --> UseEarnings
+    Dashboard --> UsePayments
+    Dashboard --> UseCharts
+    Charts --> UseCharts
+    Filters --> UseEarnings
+    Exports --> AnalyticsService
+
+    %% React Query Integration
+    UseEarnings --> QueryClient
+    UsePayments --> QueryClient
+    UseCharts --> QueryClient
+    UseMetrics --> QueryClient
+
+    QueryClient --> AnalyticsService
+    QueryClient --> QueryCache
+
+    %% Service Layer Flow
+    AnalyticsService --> DataTransform
+    AnalyticsService --> PerformanceMonitor
+    AnalyticsService --> ErrorHandler
+    AnalyticsService --> MemoryCache
+
+    %% Caching Strategy
+    MemoryCache --> CacheInvalidation
+    QueryCache --> CacheInvalidation
+    CacheInvalidation --> AnalyticsService
+
+    %% Real-time Integration
+    AnalyticsService --> WebSocketClient
+    WebSocketClient --> EventSubscriber
+    EventSubscriber --> RealTimeUpdates
+    RealTimeUpdates --> Dashboard
+
+    %% Backend API Integration
+    AnalyticsService --> EarningsAPI
+    AnalyticsService --> PaymentsAPI
+    AnalyticsService --> ChartAPI
+    AnalyticsService --> ExportAPI
+
+    %% WebSocket Integration
+    WebSocketClient --> WSServer
+    WSServer --> EventBroadcast
+    EventBroadcast --> WebSocketClient
+
+    %% Database Integration
+    EarningsAPI --> Analytics
+    PaymentsAPI --> Lightning
+    ChartAPI --> Analytics
+    ChartAPI --> Content
+
+    %% External Service Integration
+    WSServer --> NostrNetwork
+    WSServer --> LightningNode
+    PaymentsAPI --> PaymentProcessor
+
+    %% Performance Monitoring
+    PerformanceMonitor --> AnalyticsService
+    ErrorHandler --> PerformanceMonitor
+
+    classDef frontend fill:#e1f5fe
+    classDef service fill:#f3e5f5
+    classDef cache fill:#fff3e0
+    classDef realtime fill:#e8f5e8
+    classDef backend fill:#fff8e1
+    classDef external fill:#fce4ec
+
+    class Dashboard,Charts,Filters,Exports frontend
+    class AnalyticsService,DataTransform,PerformanceMonitor,ErrorHandler service
+    class MemoryCache,QueryCache,CacheInvalidation cache
+    class WebSocketClient,EventSubscriber,RealTimeUpdates realtime
+    class EarningsAPI,PaymentsAPI,ChartAPI,ExportAPI,WSServer,EventBroadcast backend
+    class NostrNetwork,LightningNode,PaymentProcessor external

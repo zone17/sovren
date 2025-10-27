@@ -1,0 +1,63 @@
+graph LR
+    subgraph "UserRelationshipService"
+        CORE[Core Service Logic]
+
+        subgraph "Operations"
+            FOLLOW_OP[Follow Operations]
+            BLOCK_OP[Block Operations]
+            MUTE_OP[Mute Operations]
+            FRIEND_OP[Friend Operations]
+            LIST_OP[List Operations]
+            BULK_OP[Bulk Operations]
+        end
+
+        subgraph "Internal Components"
+            GRAPH[RelationshipGraph<br/>Bidirectional Index]
+            VALIDATOR[Relationship Validator]
+            RATELIMITER[Rate Limiter]
+        end
+    end
+
+    subgraph "Dependencies"
+        EVENTBUS[IEventBus]
+        CACHE[ICacheService]
+        LOGGER[ILogger]
+    end
+
+    CORE --> FOLLOW_OP
+    CORE --> BLOCK_OP
+    CORE --> MUTE_OP
+    CORE --> FRIEND_OP
+    CORE --> LIST_OP
+    CORE --> BULK_OP
+
+    FOLLOW_OP --> GRAPH
+    FOLLOW_OP --> VALIDATOR
+    FOLLOW_OP --> RATELIMITER
+
+    BLOCK_OP --> GRAPH
+    BLOCK_OP --> VALIDATOR
+
+    MUTE_OP --> GRAPH
+
+    FRIEND_OP --> VALIDATOR
+
+    LIST_OP --> GRAPH
+
+    BULK_OP --> FOLLOW_OP
+    BULK_OP --> RATELIMITER
+
+    CORE --> EVENTBUS
+    CORE --> CACHE
+    CORE --> LOGGER
+
+    GRAPH -.Cache Invalidation.-> CACHE
+    VALIDATOR -.Read Privacy Settings.-> CACHE
+
+    FOLLOW_OP -.Emit Events.-> EVENTBUS
+    BLOCK_OP -.Emit Events.-> EVENTBUS
+
+    style CORE fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff
+    style GRAPH fill:#9370DB,stroke:#6B4B9C,stroke-width:2px,color:#fff
+    style EVENTBUS fill:#50C878,stroke:#2E7D32,stroke-width:2px,color:#fff
+    style CACHE fill:#FFA500,stroke:#CC8400,stroke-width:2px,color:#fff

@@ -1,0 +1,78 @@
+graph TB
+    subgraph "Client Layer"
+        UI[React Components]
+        Hooks[Custom Hooks]
+        Context[NOSTR Context]
+    end
+
+    subgraph "Service Layer"
+        RPM[RelayPoolManager<br/>Connection Management]
+        KMS[KeyManagementService<br/>Key Storage & Signing]
+        EPS[EventPublisherService<br/>Event Publishing]
+        SMS[SubscriptionManagerService<br/>Subscription Tracking]
+        ECS[EventCacheService<br/>Event Caching]
+        MS[MonitoringService<br/>Health & Metrics]
+    end
+
+    subgraph "NIP Implementation Layer"
+        NIP04[NIP04Service<br/>Encrypted DMs]
+        NIP05[NIP05Service<br/>DNS Verification]
+        NIP19[NIP19Service<br/>Bech32 Encoding]
+        NIP26[NIP26Service<br/>Delegated Events]
+        NIP65[NIP65Service<br/>Relay Discovery]
+        SovrenNIP[SovrenNIPService<br/>Custom NIPs 30078-30082]
+    end
+
+    subgraph "Storage Layer"
+        IDB[(IndexedDB<br/>Encrypted Keys)]
+        Cache[(In-Memory Cache<br/>Events)]
+        Session[(Session Storage<br/>Temporary Data)]
+    end
+
+    subgraph "External Layer"
+        Relays[NOSTR Relays]
+        Extensions[Browser Extensions<br/>Alby, nos2x]
+        Lightning[Lightning Network<br/>Payment Integration]
+    end
+
+    UI --> Hooks
+    Hooks --> Context
+    Context --> RPM
+    Context --> KMS
+    Context --> EPS
+
+    RPM --> SMS
+    RPM --> ECS
+    RPM --> MS
+
+    EPS --> RPM
+    EPS --> KMS
+
+    SMS --> RPM
+    ECS --> IDB
+    KMS --> IDB
+    KMS --> Session
+
+    NIP04 --> KMS
+    NIP05 --> RPM
+    NIP19 --> KMS
+    NIP26 --> KMS
+    NIP65 --> RPM
+    SovrenNIP --> EPS
+
+    RPM <--> Relays
+    KMS <--> Extensions
+    SovrenNIP --> Lightning
+
+    MS --> Cache
+    ECS --> Cache
+
+    classDef service fill:#4A90E2,stroke:#2E5C8A,color:#fff
+    classDef nip fill:#50C878,stroke:#2E7D4E,color:#fff
+    classDef storage fill:#F5A623,stroke:#C17D11,color:#fff
+    classDef external fill:#E94B3C,stroke:#B8352A,color:#fff
+
+    class RPM,KMS,EPS,SMS,ECS,MS service
+    class NIP04,NIP05,NIP19,NIP26,NIP65,SovrenNIP nip
+    class IDB,Cache,Session storage
+    class Relays,Extensions,Lightning external

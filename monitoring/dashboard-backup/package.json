@@ -1,0 +1,29 @@
+{
+  "name": "sovren-monitoring-dashboard",
+  "version": "1.0.0",
+  "description": "Real-time dashboard for monitoring autonomous agent development",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test-data-generator.js"
+  },
+  "keywords": [
+    "monitoring",
+    "dashboard",
+    "socket.io",
+    "real-time",
+    "agent-orchestration"
+  ],
+  "author": "Sovren Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1",
+    "tail": "^2.2.6"
+  }
+}

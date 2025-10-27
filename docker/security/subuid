@@ -1,0 +1,29 @@
+# User namespace mapping for Docker security
+# Format: username:start_uid:range_count
+# This creates isolated user namespaces for containers
+
+# Default Docker user namespace mapping
+# Maps container root (uid 0) to host uid 165536
+# Maps container user 1000 to host uid 166536
+# Provides 65536 user IDs for mapping
+dockremap:165536:65536
+
+# Application-specific user namespace mapping
+# Maps container app user to isolated host range
+sovren-app:231072:65536
+
+# Database user namespace mapping
+# Maps container db user to isolated host range
+sovren-db:296608:65536
+
+# Cache user namespace mapping
+# Maps container cache user to isolated host range
+sovren-cache:362144:65536
+
+# Monitoring user namespace mapping
+# Maps container monitoring user to isolated host range
+sovren-monitor:427680:65536
+
+# Backup user namespace mapping
+# Maps container backup user to isolated host range
+sovren-backup:493216:65536

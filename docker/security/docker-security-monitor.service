@@ -1,0 +1,39 @@
+[Unit]
+Description=Docker Runtime Security Monitor
+Documentation=https://github.com/sovren/docker-security-implementation
+After=docker.service
+Requires=docker.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/opt/sovren/docker/security/runtime-security-monitor.sh monitor
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+
+# Environment variables
+Environment=MONITORING_INTERVAL=30
+Environment=LOG_FILE=/var/log/docker-security-monitor.log
+Environment=AUDIT_LOG=/var/log/security-audit.log
+Environment=METRICS_FILE=/tmp/security-metrics.json
+Environment=ALERT_THRESHOLD=3
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/log /tmp
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_SYS_PTRACE CAP_NET_ADMIN
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=docker-security-monitor
+
+[Install]
+WantedBy=multi-user.target

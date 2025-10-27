@@ -1,0 +1,44 @@
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Service as UserProfileService
+    participant Cache as CacheService
+    participant EventBus
+    participant AuditLog
+
+    Client->>Service: createProfile(request)
+    Service->>Service: validateProfile()
+    Service->>Service: checkUsernameAvailability()
+    Service->>Service: create profile entity
+    Service->>Cache: set(profileKey, profile)
+    Service->>AuditLog: log(CREATE action)
+    Service->>EventBus: emit(PROFILE_CREATED event)
+    Service-->>Client: return profile
+
+    Client->>Service: getProfile(userId)
+    Service->>Cache: get(profileKey)
+    alt Cache Hit
+        Cache-->>Service: return cached profile
+    else Cache Miss
+        Service->>Service: retrieve from storage
+        Service->>Cache: set(profileKey, profile)
+    end
+    Service-->>Client: return profile
+
+    Client->>Service: updateProfile(userId, updates)
+    Service->>Service: validateProfile()
+    Service->>Service: apply updates
+    Service->>Cache: delete(old cache keys)
+    Service->>AuditLog: log(UPDATE action)
+    Service->>EventBus: emit(PROFILE_UPDATED event)
+    Service-->>Client: return updated profile
+
+    Client->>Service: uploadAvatar(request)
+    Service->>Service: validate image
+    Service->>Service: process with sharp
+    Service->>Service: update profile
+    Service->>Cache: invalidate caches
+    Service->>AuditLog: log(AVATAR_UPLOAD action)
+    Service->>EventBus: emit(AVATAR_UPLOADED event)
+    Service-->>Client: return avatar metadata
+```

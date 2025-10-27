@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant User
+    participant FeedTimeline
+    participant useFeedSubscription
+    participant SubscriptionManager
+    participant Relays
+    participant EventCache
+    participant FeedItem
+    participant EventPublisher
+
+    User->>FeedTimeline: Load Feed
+    FeedTimeline->>useFeedSubscription: Subscribe to events
+    useFeedSubscription->>EventCache: Check cache
+    EventCache-->>useFeedSubscription: Return cached events
+    useFeedSubscription->>SubscriptionManager: Subscribe to kind 1 events
+    SubscriptionManager->>Relays: REQ subscription
+    Relays-->>SubscriptionManager: EVENT responses
+    SubscriptionManager-->>useFeedSubscription: Stream events
+    useFeedSubscription->>EventCache: Cache new events
+    useFeedSubscription-->>FeedTimeline: Update event list
+    FeedTimeline->>FeedItem: Render events
+
+    User->>FeedItem: Click like button
+    FeedItem->>EventPublisher: Publish kind 7 reaction
+    EventPublisher->>Relays: EVENT kind 7
+    Relays-->>EventPublisher: OK response
+    EventPublisher-->>FeedItem: Optimistic update
+    FeedItem-->>User: Show liked state
+
+    User->>FeedTimeline: Scroll down
+    FeedTimeline->>useFeedSubscription: Request older events
+    useFeedSubscription->>SubscriptionManager: Update since filter
+    SubscriptionManager->>Relays: REQ with older timestamp
+    Relays-->>SubscriptionManager: Older events
+    SubscriptionManager-->>useFeedSubscription: Stream events
+    useFeedSubscription-->>FeedTimeline: Append events

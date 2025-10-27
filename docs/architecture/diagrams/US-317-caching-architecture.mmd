@@ -1,0 +1,49 @@
+graph TB
+    subgraph "Client Layer"
+        APP[Application]
+        NOSTR[NOSTR Client]
+    end
+
+    subgraph "Frontend Caching Layer"
+        CACHE[EventCacheService]
+        MEM[Memory Cache<br/>LRU Eviction<br/>50MB Limit]
+        IDB[IndexedDB<br/>Persistent Storage<br/>7 Day TTL]
+        SYNC[Sync Queue<br/>Offline Support]
+    end
+
+    subgraph "Backend Caching Layer"
+        REDIS[RedisAdapter]
+        CLUSTER[Redis Cluster<br/>Connection Pool]
+        FALLBACK[Memory Fallback]
+    end
+
+    subgraph "NOSTR Network"
+        RELAY1[Relay 1]
+        RELAY2[Relay 2]
+        RELAY3[Relay 3]
+    end
+
+    APP -->|Query Events| CACHE
+    NOSTR -->|Publish Event| CACHE
+
+    CACHE -->|Hot Data| MEM
+    CACHE -->|Cold Data| IDB
+    CACHE -->|Offline Writes| SYNC
+
+    CACHE -.->|Cache Miss| RELAY1
+    CACHE -.->|Cache Miss| RELAY2
+    CACHE -.->|Cache Miss| RELAY3
+
+    RELAY1 -->|Events| CACHE
+    RELAY2 -->|Events| CACHE
+    RELAY3 -->|Events| CACHE
+
+    CACHE -.->|Production Backend| REDIS
+    REDIS -->|Connected| CLUSTER
+    REDIS -.->|Failover| FALLBACK
+
+    style CACHE fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style MEM fill:#2196F3,stroke:#1565C0,color:#fff
+    style IDB fill:#FF9800,stroke:#E65100,color:#fff
+    style REDIS fill:#F44336,stroke:#C62828,color:#fff
+    style CLUSTER fill:#9C27B0,stroke:#6A1B9A,color:#fff

@@ -8,11 +8,42 @@ export interface EmailTemplate {
   text: string;
 }
 
+// 🎨 Template data types for type-safe email templates
+export interface WelcomeEmailData {
+  name: string;
+  loginUrl: string;
+}
+
+export interface PaymentConfirmationData {
+  name: string;
+  paymentId: string;
+  amount: string | number;
+  currency: string;
+  date: string;
+}
+
+export interface PaymentFailedData {
+  name: string;
+  failureReason: string;
+  retryUrl: string;
+}
+
+export interface PasswordResetData {
+  name: string;
+  resetUrl: string;
+}
+
+export type EmailTemplateData =
+  | WelcomeEmailData
+  | PaymentConfirmationData
+  | PaymentFailedData
+  | PasswordResetData;
+
 export interface EmailOptions {
   to: string | string[];
   subject?: string;
   template?: string;
-  templateData?: Record<string, any>;
+  templateData?: Record<string, string | number>;
   html?: string;
   text?: string;
   attachments?: Array<{
@@ -242,11 +273,12 @@ export class EmailService {
         messageId: result.messageId,
       };
 
-    } catch (error: any) {
-      console.error('Email sending failed:', error);
+    } catch (error) {
+      const err = error as Error;
+      console.error('Email sending failed:', err);
       return {
         success: false,
-        error: error.message,
+        error: err.message || 'Email sending failed',
       };
     }
   }
@@ -263,14 +295,18 @@ export class EmailService {
     });
   }
 
-  async sendPaymentConfirmation(to: string, name: string, paymentData: any): Promise<EmailResult> {
+  async sendPaymentConfirmation(
+    to: string,
+    name: string,
+    paymentData: { id: string; amount: string | number; currency: string }
+  ): Promise<EmailResult> {
     return this.sendEmail({
       to,
       template: 'paymentConfirmation',
       templateData: {
         name,
         paymentId: paymentData.id,
-        amount: paymentData.amount,
+        amount: paymentData.amount.toString(),
         currency: paymentData.currency.toUpperCase(),
         date: new Date().toLocaleDateString(),
       },
@@ -300,10 +336,11 @@ export class EmailService {
     });
   }
 
-  // 🔄 Template variable replacement
-  private replaceTemplateVars(template: string, data: Record<string, any>): string {
+  // 🔄 Template variable replacement with proper types
+  private replaceTemplateVars(template: string, data: Record<string, string | number>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return data[key] !== undefined ? String(data[key]) : match;
+      const value = data[key];
+      return value !== undefined ? String(value) : match;
     });
   }
 

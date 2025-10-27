@@ -1,0 +1,26 @@
+%% US-317: NOSTR Caching Layer - Data Flow
+%% Shows how data flows through the caching system
+
+sequenceDiagram
+    participant C as Component
+    participant RQ as React Query
+    participant EC as EventCacheService
+    participant MC as Memory Cache
+    participant IDB as IndexedDB
+    participant R as NOSTR Relay
+
+    Note over C,R: Event Fetch Flow (Cache Miss)
+    C->>RQ: useEvent(eventId)
+    RQ->>EC: get(eventId)
+    EC->>MC: Check memory cache
+    MC-->>EC: null (miss)
+    EC->>IDB: Check IndexedDB
+    IDB-->>EC: null (miss)
+    EC-->>RQ: null
+    RQ->>R: Fetch from relay
+    R-->>RQ: Event data
+    RQ->>EC: set(event)
+    EC->>MC: Store in memory
+    EC->>IDB: Persist to IndexedDB
+    EC-->>RQ: Success
+    RQ-->>C: Event data

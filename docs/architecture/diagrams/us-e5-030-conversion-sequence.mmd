@@ -1,0 +1,80 @@
+sequenceDiagram
+    participant Client
+    participant CurrencyService
+    participant RateCache
+    participant ProviderManager
+    participant CoinGecko
+    participant Kraken
+    participant Fallback
+    participant EventBus
+
+    %% Happy Path: Cache Hit
+    rect rgb(240, 255, 240)
+        Note over Client,EventBus: Happy Path - Cache Hit
+        Client->>+CurrencyService: convert(0.5 BTC → USD)
+        CurrencyService->>RateCache: getRate('BTC:USD')
+        RateCache-->>CurrencyService: cached rate (45000)
+        CurrencyService->>CurrencyService: calculateConversion(0.5 * 45000)
+        CurrencyService->>CurrencyService: roundToPrecision(22500, 2)
+        CurrencyService-->>-Client: { convertedAmount: 22500, rate: 45000 }
+        Note over Client,CurrencyService: ~10ms response time
+    end
+
+    %% Cache Miss with Provider Fallback
+    rect rgb(255, 250, 240)
+        Note over Client,EventBus: Cache Miss - Provider Chain
+        Client->>+CurrencyService: convert(0.3 BTC → EUR)
+        CurrencyService->>RateCache: getRate('BTC:EUR')
+        RateCache-->>CurrencyService: null (cache miss)
+        CurrencyService->>ProviderManager: fetchRate(BTC, EUR)
+
+        ProviderManager->>CoinGecko: fetchRate(BTC, EUR)
+        CoinGecko-->>ProviderManager: 42000 (success)
+
+        ProviderManager-->>CurrencyService: 42000
+        CurrencyService->>RateCache: storeRate('BTC:EUR', 42000, 300s)
+        CurrencyService->>CurrencyService: calculateConversion(0.3 * 42000)
+        CurrencyService->>EventBus: emit(RATE_UPDATED)
+        CurrencyService-->>-Client: { convertedAmount: 12600, rate: 42000 }
+        Note over Client,CurrencyService: ~500ms response time
+    end
+
+    %% Provider Failure with Fallback
+    rect rgb(255, 240, 240)
+        Note over Client,EventBus: Provider Failure - Fallback Chain
+        Client->>+CurrencyService: convert(1000 SAT → USD)
+        CurrencyService->>RateCache: getRate('SAT:USD')
+        RateCache-->>CurrencyService: null (cache miss)
+        CurrencyService->>ProviderManager: fetchRate(SAT, USD)
+
+        ProviderManager->>CoinGecko: fetchRate(SAT, USD)
+        CoinGecko-->>ProviderManager: Error (API failure)
+
+        ProviderManager->>Kraken: fetchRate(SAT, USD)
+        Kraken-->>ProviderManager: Error (API failure)
+
+        ProviderManager->>Fallback: fetchRate(SAT, USD)
+        Fallback-->>ProviderManager: 0.00045 (fallback rate)
+
+        ProviderManager-->>CurrencyService: 0.00045
+        CurrencyService->>RateCache: storeRate('SAT:USD', 0.00045, 300s)
+        CurrencyService->>CurrencyService: calculateConversion(1000 * 0.00045)
+        CurrencyService->>EventBus: emit(RATE_UPDATED)
+        CurrencyService-->>-Client: { convertedAmount: 0.45, rate: 0.00045 }
+        Note over Client,CurrencyService: ~1000ms response time (fallback)
+    end
+
+    %% Batch Conversion
+    rect rgb(240, 240, 255)
+        Note over Client,EventBus: Batch Conversion
+        Client->>+CurrencyService: convertBatch([BTC→USD, BTC→EUR, SAT→BTC])
+        par Parallel Conversions
+            CurrencyService->>CurrencyService: convert(BTC → USD)
+        and
+            CurrencyService->>CurrencyService: convert(BTC → EUR)
+        and
+            CurrencyService->>CurrencyService: convert(SAT → BTC)
+        end
+        CurrencyService-->>-Client: [result1, result2, result3]
+        Note over Client,CurrencyService: Parallel processing for efficiency
+    end

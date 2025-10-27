@@ -1,0 +1,95 @@
+graph LR
+    subgraph "External Services"
+        AUTH[Authentication Service]
+        CONTENT[Content Service]
+        PAYMENT[Payment Service]
+    end
+
+    subgraph "UserActivityService"
+        CORE[Core Activity Logger]
+        FEED[Activity Feed Generator]
+        SESSION[Session Manager]
+        STATS[Statistics Calculator]
+        INSIGHTS[Insights Engine]
+        SECURITY[Fraud Detector]
+        PRIVACY[Privacy Manager]
+        AGGREGATOR[Aggregation Engine]
+    end
+
+    subgraph "Event-Driven Integration"
+        EB[Event Bus]
+        SUB1[User Events Subscriber]
+        SUB2[Content Events Subscriber]
+        SUB3[Payment Events Subscriber]
+        PUB[Activity Events Publisher]
+    end
+
+    subgraph "Data Layer"
+        BUFFER[Memory Buffer<br/>1000 items]
+        CACHE[Redis Cache<br/>Session & Stats]
+        DB[PostgreSQL<br/>Persistent Storage]
+    end
+
+    subgraph "Cross-Cutting Concerns"
+        AUDIT[Audit Logger]
+        MONITOR[Health Monitor]
+        RETENTION[Retention Policy]
+    end
+
+    %% External to Event Bus
+    AUTH -->|Emit: login, logout| EB
+    CONTENT -->|Emit: created, viewed| EB
+    PAYMENT -->|Emit: payment events| EB
+
+    %% Event Bus to Subscribers
+    EB --> SUB1
+    EB --> SUB2
+    EB --> SUB3
+
+    %% Subscribers to Core Logger
+    SUB1 -->|Auto-log activities| CORE
+    SUB2 -->|Auto-log activities| CORE
+    SUB3 -->|Auto-log activities| CORE
+
+    %% Core Logger Flow
+    CORE --> BUFFER
+    BUFFER -->|Flush every 5s| DB
+    CORE --> PUB
+    PUB -->|Publish activity| EB
+    CORE --> CACHE
+
+    %% Component Interactions
+    FEED --> DB
+    FEED --> CACHE
+    SESSION <--> CACHE
+    SESSION --> DB
+    STATS --> DB
+    STATS <--> CACHE
+    INSIGHTS --> STATS
+    INSIGHTS --> FEED
+    SECURITY --> FEED
+    SECURITY --> AUDIT
+    PRIVACY --> DB
+    PRIVACY --> AUDIT
+    AGGREGATOR --> DB
+    AGGREGATOR --> STATS
+
+    %% Cross-cutting
+    CORE -.-> AUDIT
+    SESSION -.-> AUDIT
+    MONITOR -.-> DB
+    MONITOR -.-> CACHE
+    RETENTION --> PRIVACY
+    RETENTION --> DB
+
+    classDef external fill:#E74C3C,stroke:#C0392B,color:#fff
+    classDef service fill:#4A90E2,stroke:#2E5C8A,color:#fff
+    classDef event fill:#2ECC71,stroke:#27AE60,color:#fff
+    classDef data fill:#F39C12,stroke:#D68910,color:#fff
+    classDef concern fill:#9B59B6,stroke:#6C3483,color:#fff
+
+    class AUTH,CONTENT,PAYMENT external
+    class CORE,FEED,SESSION,STATS,INSIGHTS,SECURITY,PRIVACY,AGGREGATOR service
+    class EB,SUB1,SUB2,SUB3,PUB event
+    class BUFFER,CACHE,DB data
+    class AUDIT,MONITOR,RETENTION concern

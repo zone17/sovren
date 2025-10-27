@@ -1,0 +1,260 @@
+graph TB
+    %% NOSTR Implementation Protocols (NIPs) Compliance Map - Sovren Platform
+    %% Shows which NIPs are implemented and their status
+
+    subgraph "Core Protocol NIPs - IMPLEMENTED"
+        NIP01[NIP-01: Basic Protocol<br/>✅ IMPLEMENTED<br/>Event kinds, signatures, relays]
+        NIP01_SUB1[Event Structure<br/>kind, content, tags,<br/>created_at, pubkey]
+        NIP01_SUB2[Signature Validation<br/>Schnorr signatures<br/>secp256k1]
+        NIP01_SUB3[Relay Communication<br/>WebSocket messages<br/>EVENT, REQ, CLOSE]
+
+        NIP01 --> NIP01_SUB1
+        NIP01 --> NIP01_SUB2
+        NIP01 --> NIP01_SUB3
+    end
+
+    subgraph "Encrypted Direct Messages - IMPLEMENTED"
+        NIP04[NIP-04: Encrypted DMs<br/>✅ IMPLEMENTED<br/>Private messaging with encryption]
+        NIP04_SUB1[AES-256-CBC<br/>Shared secret encryption]
+        NIP04_SUB2[ECDH Key Exchange<br/>secp256k1 curve]
+        NIP04_SUB3[Kind 4 Events<br/>Encrypted content field]
+
+        NIP04 --> NIP04_SUB1
+        NIP04 --> NIP04_SUB2
+        NIP04 --> NIP04_SUB3
+    end
+
+    subgraph "DNS-Based Verification - IMPLEMENTED"
+        NIP05[NIP-05: DNS Verification<br/>✅ IMPLEMENTED<br/>username@domain.com verification]
+        NIP05_SUB1[DNS TXT Records<br/>/.well-known/nostr.json]
+        NIP05_SUB2[Backend Service<br/>Verification API]
+        NIP05_SUB3[Monitoring Service<br/>Health checks]
+        NIP05_SUB4[Frontend Component<br/>NIP05Manager.tsx]
+
+        NIP05 --> NIP05_SUB1
+        NIP05 --> NIP05_SUB2
+        NIP05 --> NIP05_SUB3
+        NIP05 --> NIP05_SUB4
+    end
+
+    subgraph "Event Kinds - IMPLEMENTED"
+        NIP06[NIP-06: Basic Key Derivation<br/>⚠️ PARTIAL<br/>BIP39 mnemonic support]
+        NIP06_SUB1[Mnemonic Generation<br/>12/24 word phrases]
+        NIP06_SUB2[Key Derivation<br/>From seed phrase]
+
+        NIP06 --> NIP06_SUB1
+        NIP06 --> NIP06_SUB2
+    end
+
+    subgraph "Bech32 Identifiers - IMPLEMENTED"
+        NIP19[NIP-19: bech32 Identifiers<br/>✅ IMPLEMENTED<br/>npub, nsec, note formats]
+        NIP19_SUB1[npub Encoding<br/>Public key format]
+        NIP19_SUB2[nsec Encoding<br/>Private key format]
+        NIP19_SUB3[note Encoding<br/>Event ID format]
+        NIP19_SUB4[Decode/Encode Utils<br/>Conversion functions]
+
+        NIP19 --> NIP19_SUB1
+        NIP19 --> NIP19_SUB2
+        NIP19 --> NIP19_SUB3
+        NIP19 --> NIP19_SUB4
+    end
+
+    subgraph "Delegated Event Signing - PLANNED"
+        NIP26[NIP-26: Delegated Signing<br/>🔄 PLANNED<br/>Key delegation and rotation]
+        NIP26_SUB1[Delegation Tokens<br/>Temporary permissions]
+        NIP26_SUB2[Key Rotation Events<br/>Announce key changes]
+        NIP26_SUB3[Signature Delegation<br/>Third-party signing]
+
+        NIP26 --> NIP26_SUB1
+        NIP26 --> NIP26_SUB2
+        NIP26 --> NIP26_SUB3
+    end
+
+    subgraph "Long-Form Content - IMPLEMENTED"
+        NIP23[NIP-23: Long-form Content<br/>✅ IMPLEMENTED<br/>Articles and blog posts]
+        NIP23_SUB1[Kind 30023 Events<br/>Article format]
+        NIP23_SUB2[Markdown Support<br/>Rich text editor]
+        NIP23_SUB3[Content Metadata<br/>Tags, title, summary]
+        NIP23_SUB4[Content Library<br/>ContentLibrary.tsx]
+
+        NIP23 --> NIP23_SUB1
+        NIP23 --> NIP23_SUB2
+        NIP23 --> NIP23_SUB3
+        NIP23 --> NIP23_SUB4
+    end
+
+    subgraph "Application-Specific Data - IMPLEMENTED"
+        NIP78[NIP-78: App Data<br/>✅ IMPLEMENTED<br/>Custom application data]
+        NIP78_SUB1[Kind 30078 Events<br/>App-specific storage]
+        NIP78_SUB2[User Preferences<br/>Settings sync]
+        NIP78_SUB3[State Management<br/>Redux integration]
+
+        NIP78 --> NIP78_SUB1
+        NIP78 --> NIP78_SUB2
+        NIP78 --> NIP78_SUB3
+    end
+
+    subgraph "Lightning Integration - IMPLEMENTED"
+        NIP57[NIP-57: Lightning Zaps<br/>✅ IMPLEMENTED<br/>Lightning Network payments]
+        NIP57_SUB1[LNURL Integration<br/>Payment requests]
+        NIP57_SUB2[Zap Events<br/>Kind 9735]
+        NIP57_SUB3[Invoice Generation<br/>BOLT11 invoices]
+        NIP57_SUB4[Payment Verification<br/>WebLN support]
+
+        NIP57 --> NIP57_SUB1
+        NIP57 --> NIP57_SUB2
+        NIP57 --> NIP57_SUB3
+        NIP57 --> NIP57_SUB4
+    end
+
+    subgraph "Browser Extension Support - IMPLEMENTED"
+        NIPEXT[Browser Extension (window.nostr)<br/>✅ IMPLEMENTED<br/>Alby, nos2x, Nostore support]
+        NIPEXT_SUB1[getPublicKey()<br/>Fetch user pubkey]
+        NIPEXT_SUB2[signEvent()<br/>Sign events via extension]
+        NIPEXT_SUB3[getRelays()<br/>User's relay list]
+        NIPEXT_SUB4[Extension Detection<br/>ExtensionSelector.tsx]
+
+        NIPEXT --> NIPEXT_SUB1
+        NIPEXT --> NIPEXT_SUB2
+        NIPEXT --> NIPEXT_SUB3
+        NIPEXT --> NIPEXT_SUB4
+    end
+
+    subgraph "Contact Lists - PLANNED"
+        NIP02[NIP-02: Contact Lists<br/>🔄 PLANNED<br/>Follow relationships]
+        NIP02_SUB1[Kind 3 Events<br/>Contact list format]
+        NIP02_SUB2[Social Graph<br/>Follower network]
+        NIP02_SUB3[Relay Hints<br/>Preferred relays]
+
+        NIP02 --> NIP02_SUB1
+        NIP02 --> NIP02_SUB2
+        NIP02 --> NIP02_SUB3
+    end
+
+    subgraph "Event Deletion - PLANNED"
+        NIP09[NIP-09: Event Deletion<br/>🔄 PLANNED<br/>Request event removal]
+        NIP09_SUB1[Kind 5 Events<br/>Deletion requests]
+        NIP09_SUB2[Relay Processing<br/>Honor deletions]
+
+        NIP09 --> NIP09_SUB1
+        NIP09 --> NIP09_SUB2
+    end
+
+    subgraph "Reactions - PLANNED"
+        NIP25[NIP-25: Reactions<br/>🔄 PLANNED<br/>Likes and emoji reactions]
+        NIP25_SUB1[Kind 7 Events<br/>Reaction format]
+        NIP25_SUB2[Emoji Support<br/>Custom reactions]
+
+        NIP25 --> NIP25_SUB1
+        NIP25 --> NIP25_SUB2
+    end
+
+    subgraph "Implementation Status Legend"
+        STATUS1[✅ IMPLEMENTED<br/>Fully functional]
+        STATUS2[⚠️ PARTIAL<br/>Basic implementation]
+        STATUS3[🔄 PLANNED<br/>Future release]
+        STATUS4[❌ NOT PLANNED<br/>Out of scope]
+    end
+
+    %% Implementation Dependencies
+    NIP01 -.-> NIP04
+    NIP01 -.-> NIP05
+    NIP01 -.-> NIP19
+    NIP01 -.-> NIP23
+    NIP01 -.-> NIP57
+    NIP01 -.-> NIP78
+
+    NIP19 -.-> NIP05
+    NIP19 -.-> NIP26
+
+    NIPEXT -.-> NIP01
+    NIPEXT -.-> NIP04
+
+    %% Sovren Features Using NIPs
+    subgraph "Sovren Feature Mapping"
+        AUTH[Authentication System<br/>Uses: NIP-01, NIP-05, NIP-19]
+        CONTENT[Content Management<br/>Uses: NIP-01, NIP-23]
+        PAYMENTS[Lightning Payments<br/>Uses: NIP-57]
+        MESSAGING[Private Messaging<br/>Uses: NIP-04]
+        PROFILE[Profile Management<br/>Uses: NIP-05]
+        STORAGE[User Data Storage<br/>Uses: NIP-78]
+    end
+
+    NIP01 -.-> AUTH
+    NIP05 -.-> AUTH
+    NIP19 -.-> AUTH
+
+    NIP01 -.-> CONTENT
+    NIP23 -.-> CONTENT
+
+    NIP57 -.-> PAYMENTS
+
+    NIP04 -.-> MESSAGING
+
+    NIP05 -.-> PROFILE
+
+    NIP78 -.-> STORAGE
+
+    %% Styling
+    classDef implemented fill:#d1fae5,stroke:#10b981,stroke-width:3px,color:#000
+    classDef partial fill:#fef3c7,stroke:#f59e0b,stroke-width:3px,color:#000
+    classDef planned fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:#000
+    classDef notPlanned fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#000
+    classDef feature fill:#e0e7ff,stroke:#6366f1,stroke-width:2px,color:#000
+    classDef sub fill:#f3f4f6,stroke:#6b7280,stroke-width:1px,color:#000
+    classDef legend fill:#fff,stroke:#000,stroke-width:2px,color:#000
+
+    class NIP01,NIP04,NIP05,NIP19,NIP23,NIP57,NIP78,NIPEXT implemented
+    class NIP06 partial
+    class NIP02,NIP09,NIP25,NIP26 planned
+    class AUTH,CONTENT,PAYMENTS,MESSAGING,PROFILE,STORAGE feature
+    class NIP01_SUB1,NIP01_SUB2,NIP01_SUB3 sub
+    class NIP04_SUB1,NIP04_SUB2,NIP04_SUB3 sub
+    class NIP05_SUB1,NIP05_SUB2,NIP05_SUB3,NIP05_SUB4 sub
+    class NIP06_SUB1,NIP06_SUB2 sub
+    class NIP19_SUB1,NIP19_SUB2,NIP19_SUB3,NIP19_SUB4 sub
+    class NIP26_SUB1,NIP26_SUB2,NIP26_SUB3 sub
+    class NIP23_SUB1,NIP23_SUB2,NIP23_SUB3,NIP23_SUB4 sub
+    class NIP78_SUB1,NIP78_SUB2,NIP78_SUB3 sub
+    class NIP57_SUB1,NIP57_SUB2,NIP57_SUB3,NIP57_SUB4 sub
+    class NIPEXT_SUB1,NIPEXT_SUB2,NIPEXT_SUB3,NIPEXT_SUB4 sub
+    class NIP02_SUB1,NIP02_SUB2,NIP02_SUB3 sub
+    class NIP09_SUB1,NIP09_SUB2 sub
+    class NIP25_SUB1,NIP25_SUB2 sub
+    class STATUS1,STATUS2,STATUS3,STATUS4 legend
+
+    %% Implementation Notes
+    note1["`**PRIORITY NIPs (Implemented):**
+    • NIP-01: Foundation for all NOSTR functionality
+    • NIP-04: Private creator-supporter communication
+    • NIP-05: Identity verification and trust
+    • NIP-19: User-friendly key formats
+    • NIP-23: Long-form creator content
+    • NIP-57: Direct Lightning monetization
+    • NIP-78: Platform settings and preferences`"]
+
+    note2["`**ROADMAP (Q1 2025):**
+    • NIP-02: Social graph for recommendations
+    • NIP-09: Content moderation and deletion
+    • NIP-25: Engagement metrics (reactions)
+    • NIP-26: Advanced key management`"]
+
+    note3["`**SECURITY IMPLEMENTATION:**
+    • All signatures use Schnorr (secp256k1)
+    • Event IDs are SHA256 hashes
+    • Private keys never sent to server
+    • Encrypted storage (AES-256-GCM)
+    • Extension support for hardware wallets`"]
+
+    note4["`**COMPLIANCE VALIDATION:**
+    ✅ All events pass NIP-01 validation
+    ✅ Signature verification on all events
+    ✅ Relay message format compliance
+    ✅ Event kind adherence
+    ✅ Tag structure validation
+    ✅ Timestamp verification`"]
+
+    style note1 fill:#d1fae5,stroke:#10b981,stroke-width:2px
+    style note2 fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style note3 fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style note4 fill:#e0e7ff,stroke:#6366f1,stroke-width:2px

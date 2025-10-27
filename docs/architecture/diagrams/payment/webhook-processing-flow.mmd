@@ -1,0 +1,224 @@
+%% Webhook Processing Flow (PAY-002, PAY-003)
+%% PAY-018: Payment Flow Mermaid Diagrams
+%%
+%% This sequence diagram shows the complete webhook processing flow
+%% with signature verification (PAY-003) and race condition prevention (PAY-002).
+%%
+%% Key Features:
+%% - HMAC-SHA256 signature verification
+%% - Timestamp validation (5-minute window)
+%% - Rate limiting (100 req/min per IP)
+%% - Idempotency key enforcement
+%% - Database-level row locking (SELECT FOR UPDATE)
+%% - Atomic transaction processing
+%% - Out-of-order webhook detection
+%% - Complete audit trail
+
+sequenceDiagram
+    participant LN as Lightning Network
+    participant LB as Load Balancer
+    participant Rate as Rate Limiter
+    participant WHR as Webhook Route
+    participant WHV as Webhook Signature<br/>Validator (PAY-003)
+    participant Dedup as Idempotency Check<br/>(PAY-002)
+    participant Lock as Database Lock<br/>(PAY-002)
+    participant PSM as Payment State Machine
+    participant DB as PostgreSQL
+    participant Log as Webhook Event Log
+    participant WS as WebSocket
+
+    Note over LN,WS: Webhook Processing with Security & Race Condition Protection
+
+    %% Step 1: Webhook Delivery
+    LN->>LB: POST /api/webhooks/lightning
+    Note over LN,LB: Headers:<br/>x-webhook-signature: "hmac..."<br/>x-webhook-timestamp: 1234567890<br/>Body: {<br/>  event: "payment.completed",<br/>  payment_hash: "abc123...",<br/>  preimage: "def456..."<br/>}
+
+    LB->>LB: Extract client IP
+    Note over LB: IP: 203.0.113.42
+
+    %% Step 2: Rate Limiting (PAY-003)
+    LB->>Rate: Check rate limit for IP
+    Rate->>Rate: Check request count (sliding window)
+
+    alt Rate Limit Exceeded
+        Rate-->>WHR: 429 Too Many Requests
+        Note over Rate,WHR: Retry-After: 60 seconds
+        WHR-->>LB: 429 Response
+        LB-->>LN: 429 Too Many Requests
+        Note over LN: Lightning provider will retry
+    end
+
+    Rate->>Rate: Increment request counter
+    Rate-->>LB: Rate limit OK (45/100)
+
+    LB->>WHR: Forward request
+
+    %% Step 3: Signature Verification (PAY-003)
+    WHR->>WHV: verifyWebhookSignature(req)
+
+    rect rgb(200, 150, 255)
+        Note over WHV: Step 3A: Extract Headers
+        WHV->>WHV: Extract x-webhook-signature
+        WHV->>WHV: Extract x-webhook-timestamp
+
+        alt Missing Headers
+            WHV-->>WHR: 401 Unauthorized
+            Note over WHV,WHR: Missing required headers
+            WHR-->>LB: 401 Response + log IP
+            LB-->>LN: 401 Unauthorized
+        end
+    end
+
+    rect rgb(255, 200, 150)
+        Note over WHV: Step 3B: Timestamp Validation
+        WHV->>WHV: Parse timestamp
+        WHV->>WHV: now() - timestamp
+
+        alt Timestamp Too Old (> 5 minutes)
+            WHV-->>WHR: 401 Unauthorized
+            Note over WHV,WHR: Replay attack prevented<br/>IP logged for monitoring
+            WHR-->>LB: 401 Response
+            LB-->>LN: 401 Unauthorized
+        end
+
+        alt Timestamp in Future
+            WHV-->>WHR: 401 Unauthorized
+            Note over WHV,WHR: Clock skew or attack<br/>IP logged
+            WHR-->>LB: 401 Response
+            LB-->>LN: 401 Unauthorized
+        end
+
+        Note over WHV: Timestamp valid ✓<br/>(within 5-minute window)
+    end
+
+    rect rgb(150, 255, 200)
+        Note over WHV: Step 3C: HMAC Verification
+        WHV->>WHV: Reconstruct signed payload
+        Note over WHV: signedPayload =<br/>timestamp + "." + body
+
+        WHV->>WHV: HMAC-SHA256(signedPayload, PRIMARY_SECRET)
+        WHV->>WHV: Compare signatures (constant-time)
+
+        alt Signature Mismatch - Try Rotation
+            WHV->>WHV: HMAC-SHA256(signedPayload, ROTATION_SECRET)
+            WHV->>WHV: Compare with rotation secret
+
+            alt Both Secrets Failed
+                WHV-->>WHR: 401 Unauthorized
+                Note over WHV,WHR: Invalid signature<br/>Potential spoofing<br/>IP logged
+                WHR-->>LB: 401 Response
+                LB-->>LN: 401 Unauthorized
+            end
+
+            Note over WHV: Rotation secret matched ✓<br/>Log for monitoring
+        end
+
+        Note over WHV: Signature verified ✓<br/>Webhook authentic
+    end
+
+    WHV-->>WHR: Signature valid ✓
+
+    %% Step 4: Idempotency Check (PAY-002)
+    WHR->>Dedup: checkDuplicate(idempotencyKey)
+    Note over WHR,Dedup: Key generation:<br/>webhook_id OR<br/>hash(payment_hash + event + timestamp)
+
+    Dedup->>DB: SELECT FROM webhook_events<br/>WHERE idempotency_key = $1
+
+    alt Duplicate Webhook
+        DB-->>Dedup: Existing webhook found
+        Dedup->>Log: Mark as duplicate
+        Note over Dedup,Log: status: "duplicate"<br/>original_webhook_id: UUID
+
+        Dedup-->>WHR: 200 OK (idempotent response)
+        Note over Dedup,WHR: Return success for duplicate<br/>(idempotency compliance)
+
+        WHR-->>LB: 200 OK + duplicate flag
+        LB-->>LN: 200 OK
+        Note over LN,Dedup: ✓ Duplicate detected<br/>✓ No reprocessing<br/>✓ Audit trail maintained
+    end
+
+    Dedup-->>WHR: No duplicate ✓ (new webhook)
+
+    %% Step 5: Database Row Locking (PAY-002)
+    WHR->>Lock: acquirePaymentLock(payment_hash)
+
+    Lock->>DB: BEGIN TRANSACTION
+
+    Lock->>DB: SELECT * FROM payments<br/>WHERE payment_hash = $1<br/>FOR UPDATE SKIP LOCKED
+    Note over Lock,DB: Row-level lock prevents<br/>concurrent webhook processing
+
+    alt Lock Already Held
+        DB-->>Lock: Empty result (locked by other process)
+        Lock->>Lock: Log "Concurrent processing detected"
+        Lock->>DB: ROLLBACK
+
+        Lock-->>WHR: 200 OK (graceful handling)
+        Note over Lock,WHR: Other process handling webhook<br/>Safe to return success
+
+        WHR-->>LB: 200 OK
+        LB-->>LN: 200 OK
+        Note over LN: Concurrent webhook handled gracefully
+    end
+
+    DB-->>Lock: Payment row locked ✓
+    Note over DB,Lock: {<br/>  id: UUID,<br/>  payment_hash: "abc123...",<br/>  status: "PENDING",<br/>  updated_at: timestamp<br/>}
+
+    Lock-->>WHR: Lock acquired ✓
+
+    %% Step 6: Out-of-Order Detection (PAY-002)
+    WHR->>WHR: checkWebhookOrdering(payment, webhook)
+
+    WHR->>Log: SELECT * FROM webhook_events<br/>WHERE payment_hash = $1<br/>ORDER BY created_at DESC LIMIT 1
+
+    Log-->>WHR: Last webhook event
+
+    WHR->>WHR: Compare timestamps
+    WHR->>WHR: Validate logical ordering
+
+    alt Out-of-Order Webhook
+        WHR->>WHR: Log warning "Out-of-order webhook"
+        Note over WHR: Still process but flag for monitoring<br/>State machine validates transitions
+    end
+
+    %% Step 7: Payment State Transition
+    WHR->>PSM: transition(payment_id, PENDING, COMPLETED, metadata)
+
+    PSM->>PSM: Validate state transition
+    Note over PSM: PENDING → COMPLETED allowed ✓
+
+    PSM->>DB: UPDATE payments<br/>SET status = 'COMPLETED',<br/>    preimage = $1,<br/>    settled_at = now(),<br/>    updated_at = now()<br/>WHERE id = $2
+    Note over PSM,DB: Within same transaction as lock
+
+    DB-->>PSM: Payment updated ✓
+
+    PSM->>DB: INSERT INTO payment_events
+    Note over PSM,DB: {<br/>  payment_id: UUID,<br/>  event: "PAYMENT_COMPLETED",<br/>  from_state: "PENDING",<br/>  to_state: "COMPLETED",<br/>  metadata: {<br/>    source: "webhook",<br/>    preimage: "def456..."<br/>  }<br/>}
+
+    DB-->>PSM: Event logged ✓
+    PSM-->>WHR: Transition successful ✓
+
+    %% Step 8: Webhook Audit Log (PAY-002)
+    WHR->>Log: INSERT INTO webhook_events
+    Note over WHR,Log: {<br/>  idempotency_key: "unique-key",<br/>  payment_hash: "abc123...",<br/>  event_type: "payment.completed",<br/>  status: "processed",<br/>  client_ip: "203.0.113.42",<br/>  processing_duration_ms: 45,<br/>  is_out_of_order: false,<br/>  created_at: now()<br/>}
+
+    Log->>DB: INSERT webhook_events
+    DB-->>Log: Audit record created ✓
+    Log-->>WHR: Logged ✓
+
+    %% Step 9: Commit Transaction
+    WHR->>DB: COMMIT TRANSACTION
+    DB-->>WHR: All changes committed ✓
+    Note over DB,WHR: ✓ Payment state updated<br/>✓ Event logged<br/>✓ Webhook logged<br/>✓ Lock released
+
+    %% Step 10: Real-time Notification
+    WHR->>WS: broadcast("payment:abc123...", {status: "COMPLETED"})
+    WS->>WS: Notify all subscribed clients
+    Note over WS: Frontend receives instant update
+
+    %% Step 11: Response
+    WHR-->>LB: 200 OK + processing metadata
+    Note over WHR,LB: {<br/>  success: true,<br/>  payment_id: UUID,<br/>  status: "COMPLETED",<br/>  processed_at: timestamp<br/>}
+
+    LB-->>LN: 200 OK
+
+    Note over LN,WS: ✓ Webhook authenticated (HMAC)<br/>✓ Race conditions prevented (row lock)<br/>✓ Duplicate detected (idempotency)<br/>✓ Audit trail complete<br/>✓ User notified in real-time

@@ -1,0 +1,141 @@
+graph TB
+    %% NOSTR Architecture Overview - Sovren Platform
+    %% Shows all NOSTR components and their interactions
+
+    subgraph "Frontend Layer"
+        UI[User Interface<br/>React Components]
+        KM[Key Management<br/>Component]
+        EP[Event Publisher<br/>Component]
+        ES[Event Subscriber<br/>Component]
+        NIP05[NIP-05 Manager<br/>Component]
+    end
+
+    subgraph "Service Layer"
+        NOSTR[NOSTR Service<br/>nostr-tools]
+        KMS[Key Management<br/>Service]
+        SIG[Signing Service<br/>Event Validation]
+        SESS[Session Service<br/>Protection]
+        ACCT[Account Protection<br/>Service]
+    end
+
+    subgraph "Key Storage"
+        EXT[Browser Extension<br/>Alby, nos2x]
+        IDB[IndexedDB<br/>Encrypted Storage]
+        MEM[Memory<br/>Session Keys]
+    end
+
+    subgraph "NOSTR Protocol Layer"
+        POOL[Relay Pool<br/>SimplePool]
+        WS1[WebSocket<br/>Relay 1]
+        WS2[WebSocket<br/>Relay 2]
+        WS3[WebSocket<br/>Relay 3]
+        WSN[WebSocket<br/>Relay N]
+    end
+
+    subgraph "External Relays"
+        R1[wss://relay.damus.io]
+        R2[wss://relay.nostr.band]
+        R3[wss://nos.lol]
+        RN[Custom Relays...]
+    end
+
+    subgraph "Authentication Flow"
+        AUTH[Auth Context<br/>React Context]
+        DEMO[Demo Auth<br/>Demo Mode]
+        REAL[Real Auth<br/>Supabase]
+    end
+
+    subgraph "Backend Services"
+        API[API Server<br/>Express/Node]
+        NIP05SVC[NIP-05 Verification<br/>Service]
+        MONITOR[NIP-05 Monitoring<br/>Health Checks]
+        DB[(Supabase<br/>Database)]
+    end
+
+    %% User Interactions
+    UI --> KM
+    UI --> EP
+    UI --> ES
+    UI --> NIP05
+
+    %% Component to Service Layer
+    KM --> KMS
+    EP --> NOSTR
+    EP --> SIG
+    ES --> NOSTR
+    NIP05 --> NOSTR
+
+    %% Authentication Flow
+    UI --> AUTH
+    AUTH --> DEMO
+    AUTH --> REAL
+    REAL --> API
+
+    %% Key Management Flow
+    KMS --> EXT
+    KMS --> IDB
+    KMS --> MEM
+    EXT -.-> KM
+
+    %% Session and Account Protection
+    SIG --> SESS
+    SIG --> ACCT
+    SESS --> KMS
+
+    %% NOSTR Service to Protocol Layer
+    NOSTR --> POOL
+    POOL --> WS1
+    POOL --> WS2
+    POOL --> WS3
+    POOL --> WSN
+
+    %% WebSocket Connections to Relays
+    WS1 <-.-> R1
+    WS2 <-.-> R2
+    WS3 <-.-> R3
+    WSN <-.-> RN
+
+    %% Backend Integration
+    API --> NIP05SVC
+    NIP05SVC --> MONITOR
+    NIP05SVC --> DB
+    NOSTR -.-> API
+
+    %% NIP-05 Verification Flow
+    NIP05 --> API
+
+    %% Styling
+    classDef frontend fill:#3b82f6,stroke:#1e40af,stroke-width:2px,color:#fff
+    classDef service fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff
+    classDef storage fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
+    classDef protocol fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    classDef external fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#fff
+    classDef auth fill:#ec4899,stroke:#db2777,stroke-width:2px,color:#fff
+    classDef backend fill:#6366f1,stroke:#4f46e5,stroke-width:2px,color:#fff
+
+    class UI,KM,EP,ES,NIP05 frontend
+    class NOSTR,KMS,SIG,SESS,ACCT service
+    class EXT,IDB,MEM storage
+    class POOL,WS1,WS2,WS3,WSN protocol
+    class R1,R2,R3,RN external
+    class AUTH,DEMO,REAL auth
+    class API,NIP05SVC,MONITOR,DB backend
+
+    %% Notes
+    note1["`**Key Features:**
+    • Multi-relay redundancy
+    • Browser extension support
+    • Encrypted key storage
+    • Session protection
+    • NIP-05 verification
+    • Real-time event streaming`"]
+
+    note2["`**Security:**
+    • Private keys never on server
+    • IndexedDB encryption
+    • Session validation
+    • Account protection
+    • Multi-signature support`"]
+
+    style note1 fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style note2 fill:#fecaca,stroke:#ef4444,stroke-width:2px

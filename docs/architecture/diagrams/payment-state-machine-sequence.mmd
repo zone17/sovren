@@ -1,0 +1,78 @@
+%% Payment State Machine Transition Sequence Diagram
+%% Story #002: Implement Payment State Machine Service
+%%
+%% This diagram shows the sequence of operations when transitioning
+%% a payment from one state to another using the PaymentStateMachine service.
+
+sequenceDiagram
+    participant Client as Client/Service
+    participant PSM as PaymentStateMachine
+    participant Validator as State Validator
+    participant DB as PostgreSQL Database
+    participant Events as payment_events Table
+
+    Note over Client,Events: Payment State Transition Flow
+
+    Client->>PSM: transition(paymentId, toState, metadata)
+    activate PSM
+
+    PSM->>PSM: Log debug: Attempting transition
+
+    PSM->>DB: SELECT * FROM payments WHERE id = paymentId
+    activate DB
+    DB-->>PSM: Return payment object
+    deactivate DB
+
+    alt Payment not found
+        PSM->>PSM: Log error: Payment not found
+        PSM-->>Client: throw PaymentNotFoundError
+    end
+
+    PSM->>Validator: isTransitionAllowed(fromState, toState)
+    activate Validator
+    Validator->>Validator: Check ALLOWED_TRANSITIONS map
+    Validator-->>PSM: Return boolean (allowed/denied)
+    deactivate Validator
+
+    alt Invalid transition
+        PSM->>PSM: Log warn: Invalid transition
+        PSM-->>Client: throw InvalidTransitionError
+    end
+
+    Note over PSM,Events: Atomic Database Transaction
+
+    PSM->>DB: RPC: transition_payment_state(...)
+    activate DB
+
+    DB->>DB: BEGIN TRANSACTION
+    DB->>DB: SELECT FOR UPDATE (row lock)
+
+    alt State mismatch (race condition)
+        DB-->>PSM: Return error: State mismatch
+        PSM-->>Client: throw StateTransitionError
+    end
+
+    DB->>DB: UPDATE payments SET state = toState
+    DB->>Events: INSERT INTO payment_events
+    Events-->>DB: Return event_id
+    DB->>DB: COMMIT TRANSACTION
+
+    DB-->>PSM: Return success + event_id
+    deactivate DB
+
+    PSM->>DB: SELECT * FROM payments WHERE id = paymentId
+    activate DB
+    DB-->>PSM: Return updated payment
+    deactivate DB
+
+    PSM->>DB: SELECT * FROM payment_events WHERE id = event_id
+    activate DB
+    DB-->>PSM: Return payment event
+    deactivate DB
+
+    PSM->>PSM: Log info: Transition successful
+
+    PSM-->>Client: Return TransitionResult (event + payment)
+    deactivate PSM
+
+    Note over Client,Events: Audit Trail Complete

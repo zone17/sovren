@@ -1,0 +1,127 @@
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant MS as MonitoringService
+    participant RPM as RelayPoolManager
+    participant EPS as EventPublisher
+    participant SMS as SubscriptionManager
+    participant Dashboard as Dashboard UI
+
+    %% Initialization
+    rect rgb(200, 220, 255)
+        Note over App,MS: Service Initialization
+        App->>MS: initialize(config)
+        MS->>RPM: getConfiguredRelays()
+        RPM-->>MS: relay URLs
+        MS->>MS: initializeRelayMetrics()
+        MS->>MS: setupEventListeners()
+        MS->>MS: startMetricsCollection()
+        MS-->>App: initialized
+    end
+
+    %% Relay Events Monitoring
+    rect rgb(220, 255, 220)
+        Note over RPM,MS: Relay Connection Monitoring
+        RPM->>MS: emit('relay:connected', url)
+        MS->>RPM: getRelayHealth(url)
+        RPM-->>MS: health info
+        MS->>MS: updateRelayHealth()
+        MS->>MS: checkAlertConditions()
+        alt Health degraded
+            MS->>MS: createAlert(RELAY_DISCONNECTED)
+        end
+    end
+
+    %% Publishing Events Monitoring
+    rect rgb(255, 240, 220)
+        Note over EPS,MS: Event Publishing Monitoring
+        EPS->>MS: emit('event:published', result)
+        MS->>MS: trackPublishEvent()
+        MS->>MS: updateLatencyMetrics()
+        MS->>MS: calculatePercentiles()
+        alt High error rate
+            MS->>MS: createAlert(HIGH_ERROR_RATE)
+        end
+        alt High latency
+            MS->>MS: createAlert(HIGH_LATENCY)
+        end
+    end
+
+    %% Subscription Events Monitoring
+    rect rgb(255, 220, 255)
+        Note over SMS,MS: Subscription Monitoring
+        SMS->>MS: subscriptionEvent(subId, event)
+        MS->>MS: trackSubscriptionEvent()
+        MS->>MS: updateThroughput()
+        alt Subscription error
+            SMS->>MS: subscriptionError(subId, error)
+            MS->>MS: createAlert(SUBSCRIPTION_ERROR)
+        end
+    end
+
+    %% Metrics Collection Cycle
+    rect rgb(220, 255, 255)
+        Note over MS,Dashboard: Periodic Metrics Collection
+        loop Every 5 seconds
+            MS->>MS: collectMetrics()
+            MS->>RPM: getRelayHealth() for all relays
+            RPM-->>MS: health data
+            MS->>MS: calculateHealthSummary()
+            MS->>MS: calculatePublishSummary()
+            MS->>MS: calculateNetworkMetrics()
+            MS->>MS: emit('metrics:updated', metrics)
+            MS->>Dashboard: metrics update
+        end
+    end
+
+    %% Dashboard Interaction
+    rect rgb(255, 220, 220)
+        Note over Dashboard,MS: Dashboard Operations
+        Dashboard->>MS: getMetrics()
+        MS-->>Dashboard: current metrics
+        Dashboard->>MS: healthCheck()
+        MS-->>Dashboard: health result
+        Dashboard->>MS: getActiveAlerts()
+        MS-->>Dashboard: alerts[]
+        Dashboard->>MS: acknowledgeAlert(alertId)
+        MS->>MS: updateAlertStatus()
+    end
+
+    %% Metrics Export
+    rect rgb(240, 240, 220)
+        Note over MS,App: Metrics Export
+        App->>MS: exportPrometheus()
+        MS->>MS: formatPrometheusMetrics()
+        MS-->>App: prometheus text format
+        App->>MS: exportJSON()
+        MS->>MS: getCurrentMetrics()
+        MS-->>App: JSON metrics
+    end
+
+    %% Health Check
+    rect rgb(220, 240, 220)
+        Note over MS,App: Health Check Endpoint
+        App->>MS: healthCheck()
+        MS->>MS: evaluateRelayHealth()
+        MS->>MS: evaluatePublishingHealth()
+        MS->>MS: evaluateSubscriptionHealth()
+        MS->>MS: evaluatePerformanceHealth()
+        MS->>MS: calculateOverallHealth()
+        MS-->>App: HealthCheckResult
+    end
+
+    %% Alert Lifecycle
+    rect rgb(255, 230, 230)
+        Note over MS: Alert Lifecycle
+        MS->>MS: createAlert(params)
+        MS->>MS: checkAlertCondition()
+        alt Condition enabled
+            MS->>MS: generateAlertId()
+            MS->>MS: addToAlertsList()
+            MS->>MS: emit('alert:created', alert)
+            alt Has callback
+                MS->>App: config.onAlert(alert)
+            end
+        end
+    end
+```

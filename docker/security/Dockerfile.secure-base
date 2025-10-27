@@ -1,0 +1,95 @@
+# Secure Base Dockerfile Template - Production Ready
+# This template implements Docker security best practices including:
+# - Read-only root filesystem
+# - Non-root user execution
+# - Minimal attack surface
+# - Security hardening
+
+# Stage 1: Build stage with full toolchain
+FROM node:18-alpine AS builder
+
+# Set build arguments
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+
+# Add metadata labels
+LABEL org.opencontainers.image.title="Sovren Secure Base Image" \
+      org.opencontainers.image.description="Production-ready secure base image for Sovren" \
+      org.opencontainers.image.created=$BUILD_DATE \
+      org.opencontainers.image.revision=$VCS_REF \
+      org.opencontainers.image.version=$VERSION \
+      org.opencontainers.image.vendor="Sovren" \
+      org.opencontainers.image.licenses="MIT"
+
+# Install build dependencies
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    && update-ca-certificates
+
+# Create application directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production --no-audit --no-fund \
+    && npm cache clean --force
+
+# Copy application source
+COPY . .
+
+# Build application
+RUN npm run build
+
+# Stage 2: Production stage with minimal surface
+FROM node:18-alpine AS production
+
+# Set production environment
+ENV NODE_ENV=production \
+    PORT=3000 \
+    NPM_CONFIG_LOGLEVEL=warn \
+    NPM_CONFIG_AUDIT=false \
+    NPM_CONFIG_FUND=false
+
+# Install runtime dependencies only
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    dumb-init \
+    && update-ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user and group
+RUN addgroup -g 1001 -S sovren \
+    && adduser -S -D -H -u 1001 -s /sbin/nologin -G sovren sovren
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app /tmp/app /var/log/app /var/cache/app \
+    && chown -R sovren:sovren /app /tmp/app /var/log/app /var/cache/app
+
+# Set working directory
+WORKDIR /app
+
+# Copy built application from builder stage
+COPY --from=builder --chown=sovren:sovren /app/dist ./dist
+COPY --from=builder --chown=sovren:sovren /app/node_modules ./node_modules
+COPY --from=builder --chown=sovren:sovren /app/package*.json ./
+
+# Switch to non-root user
+USER sovren
+
+# Expose port
+EXPOSE 3000
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+# Start application
+CMD ["node", "dist/server.js"]

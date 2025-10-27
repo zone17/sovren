@@ -1,0 +1,365 @@
+EPIC 002: PAYMENT PROCESSING - DEPENDENCY TREE
+==============================================
+
+Total Stories: 18 | Total Effort: 52-76 hours | Fastest: 2-3 days (4+ devs)
+
+CRITICAL PATH (Must complete sequentially):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#001 Payment State Machine Types (2-4h)
+  │
+  ├──[BLOCKS ALL]──► #002 Payment State Machine Service (3-4h)
+  │                   │
+  │                   ├──[BLOCKS ALL]──► #003 Invoice Expiration (3-4h)
+  │                   │                   └── Can run parallel after #002
+  │                   │
+  │                   ├──[BLOCKS ALL]──► #004 Race Condition Prevention (4h)
+  │                   │                   │
+  │                   │                   └──► #007 Retry Logic (4h)
+  │                   │                         │
+  │                   │                         └──► #008 Subscription Retry (4h)
+  │                   │
+  │                   ├──[ENABLES]──► #005 Webhook Signature (3-4h)
+  │                   │                │
+  │                   │                └──► #017 Webhook System (4h)
+  │                   │
+  │                   ├──[ENABLES]──► #006 Idempotency Keys (3-4h)
+  │                   │
+  │                   ├──[ENABLES]──► #009 Refund Processing (4h)
+  │                   │
+  │                   ├──[ENABLES]──► #010 Subscription Upgrade (4h)
+  │                   │
+  │                   ├──[ENABLES]──► #012 Payment Analytics (4h)
+  │                   │
+  │                   └──[ENABLES]──► #013 Batch Processing (3-4h)
+
+Independent Stories (No blockers, can start anytime):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#011 Multi-Currency Display (3-4h)        [Can run parallel with all Sprint 2]
+#014 Payment Method Fallback (3-4h)       [Can run parallel with all Sprint 3]
+#015 Tax Calculation (3-4h)               [Can run parallel with all Sprint 3]
+#016 Invoice PDF Generation (3-4h)        [Can run parallel with all Sprint 3]
+#018 Mermaid Documentation (3-4h)         [Can run parallel with ALL stories]
+
+
+SPRINT 0: FOUNDATION (8-12 hours)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Priority: CRITICAL | Risk: HIGH | Team: 1-2 senior developers
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #001: Payment State Machine Types                        [2-4 hours]    │
+│ ├── Define PaymentState enum (6 states)                                 │
+│ ├── Define PaymentTransition interface                                  │
+│ ├── Define PaymentEvent type                                            │
+│ ├── Create payment_events database table                                │
+│ └── Export types from shared package                                    │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Blocks: ALL OTHER STORIES                                               │
+└─────────────────────────────────────────────────────────────────────────┘
+                             ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #002: Payment State Machine Service                      [3-4 hours]    │
+│ ├── Implement state transition validation                               │
+│ ├── Create atomic database transitions                                  │
+│ ├── Build audit trail system                                            │
+│ ├── Test concurrent state transitions                                   │
+│ └── Database function: transition_payment_state()                       │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001                                                        │
+│ Blocks: ALL OTHER STORIES                                               │
+└─────────────────────────────────────────────────────────────────────────┘
+                             ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #003: Invoice Expiration Handling                        [3-4 hours]    │
+│ ├── Auto-expire old invoices (cron job)                                 │
+│ ├── Email notification system                                           │
+│ ├── Cleanup expired invoices from queue                                 │
+│ └── Handle edge cases (timezone, DST)                                   │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002                                                  │
+│ Blocks: None (can run parallel after #002)                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+SPRINT 1: SECURITY HARDENING (12-16 hours)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Priority: CRITICAL | Risk: HIGH | Team: 2-3 developers with security experience
+
+                      [From #002]
+                             ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #004: Race Condition Prevention                          [4 hours]      │
+│ ├── Implement SELECT FOR UPDATE locking                                 │
+│ ├── Add NOWAIT lock acquisition                                         │
+│ ├── Create PaymentAlreadyProcessingError                                │
+│ ├── Test 100 concurrent verifications                                   │
+│ └── Database function: acquire_payment_lock()                           │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002                                                  │
+│ Blocks: #007, #008                                                      │
+└─────────────────────────────────────────────────────────────────────────┘
+                             ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #007: Exponential Backoff Retry Logic                    [4 hours]      │
+│ ├── Retry schedule: 1s, 2s, 4s, 8s, 16s                                 │
+│ ├── Retryable vs non-retryable error classification                     │
+│ ├── Max retry limit (5 attempts)                                        │
+│ ├── payment_retry_attempts table                                        │
+│ └── Job queue integration                                               │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002, #004                                            │
+│ Blocks: #008                                                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+PARALLEL with #004 & #007:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #005: Webhook Signature Validation                       [3-4 hours]    │
+│ ├── HMAC SHA-256 signature generation                                   │
+│ ├── Timestamp validation (5-minute window)                              │
+│ ├── Constant-time comparison (timing attack prevention)                 │
+│ ├── Express middleware for validation                                   │
+│ └── Security audit of implementation                                    │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002                                                  │
+│ Can work parallel with: #004, #006, #007                                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #006: Idempotency Key Support                            [3-4 hours]    │
+│ ├── Create idempotency_keys database table                              │
+│ ├── Redis caching layer                                                 │
+│ ├── 24-hour result caching                                              │
+│ ├── Failed operation retry support                                      │
+│ └── requireIdempotencyKey middleware                                    │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002                                                  │
+│ Can work parallel with: #004, #005, #007                                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+SPRINT 2: PAYMENT FEATURES (16-24 hours)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Priority: HIGH | Risk: MEDIUM | Team: 3-4 developers (backend + frontend + data)
+
+                      [From #007]
+                             ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #008: Subscription Retry & Grace Period                  [4 hours]      │
+│ ├── 7-day grace period on failed payments                               │
+│ ├── Retry schedule: Day 1, 3, 7                                         │
+│ ├── Access during grace period                                          │
+│ ├── Auto-cancellation after failed retries                              │
+│ └── Email notifications (failed, retry, reactivated, canceled)          │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002, #007                                            │
+│ Can work parallel with: #009, #010, #011, #012                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+PARALLEL with #008 (All can run simultaneously):
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #009: Refund Processing Workflow                         [4 hours]      │
+│ ├── Refund request creation (pending_approval)                          │
+│ ├── Admin approval workflow                                             │
+│ ├── Lightning payout for refund                                         │
+│ ├── Payment state transition to REFUNDED                                │
+│ └── Email notifications                                                 │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002                                                  │
+│ Can work parallel with: #008, #010, #011, #012                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #010: Subscription Upgrade/Downgrade                     [4 hours]      │
+│ ├── Prorated billing calculation (daily precision)                      │
+│ ├── Immediate charge for upgrades                                       │
+│ ├── Credit balance for downgrades                                       │
+│ ├── subscription_changes audit table                                    │
+│ └── User confirmation flow                                              │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002                                                  │
+│ Can work parallel with: #008, #009, #011, #012                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #011: Multi-Currency Display                             [3-4 hours]    │
+│ ├── Multi-source exchange rate fetching                                 │
+│ ├── Redis caching (5-minute refresh)                                    │
+│ ├── Support USD, EUR, GBP, JPY, CAD, AUD                                │
+│ ├── PriceDisplay React component                                        │
+│ └── User currency preference storage                                    │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: None (independent feature)                                  │
+│ Can work parallel with: ALL Sprint 2 stories                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #012: Payment Analytics Dashboard                        [4 hours]      │
+│ ├── Revenue metrics (30-day totals, averages)                           │
+│ ├── Payment success rate calculation                                    │
+│ ├── Failed payment reason aggregation                                   │
+│ ├── Subscription churn by cohort                                        │
+│ └── Real-time dashboard (5-minute refresh)                              │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002 (for audit trail data)                           │
+│ Can work parallel with: ALL Sprint 2 stories                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+SPRINT 3: ADVANCED FEATURES (16-24 hours)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Priority: MEDIUM-LOW | Risk: LOW-MEDIUM | Team: 4+ developers + tech writer
+
+ALL STORIES CAN RUN IN PARALLEL (Maximum parallelization opportunity)
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #013: Batch Payment Processing                           [3-4 hours]    │
+│ ├── Concurrent payout processing (10 simultaneous)                      │
+│ ├── Batch status tracking                                               │
+│ ├── Individual item success/failure logging                             │
+│ └── Admin UI for batch operations                                       │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002                                                  │
+│ Can work parallel with: ALL Sprint 3 stories                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #014: Payment Method Fallback                            [3-4 hours]    │
+│ ├── Priority-based fallback: Lightning → On-chain → Manual              │
+│ ├── Automatic fallback on primary failure                               │
+│ ├── Method success/failure logging                                      │
+│ └── User notification for fallback usage                                │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #001, #002                                                  │
+│ Can work parallel with: ALL Sprint 3 stories                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #015: Tax Calculation                                    [3-4 hours]    │
+│ ├── Regional tax rate database (US states, EU countries)                │
+│ ├── Tax calculation per transaction                                     │
+│ ├── Tax rate updates from external API                                  │
+│ └── Legal compliance review                                             │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: None                                                        │
+│ Can work parallel with: ALL Sprint 3 stories                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #016: Invoice PDF Generation                             [3-4 hours]    │
+│ ├── PDF generation with payment details                                 │
+│ ├── Professional invoice template (PDFKit)                              │
+│ ├── Download endpoint (/api/invoices/:id/pdf)                           │
+│ └── Secure storage (S3 with encryption)                                 │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: None                                                        │
+│ Can work parallel with: ALL Sprint 3 stories                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #017: Payment Webhook Event System                       [4 hours]      │
+│ ├── Webhook delivery with HMAC signature                                │
+│ ├── Retry logic (3 attempts, exponential backoff)                       │
+│ ├── webhook_subscriptions and webhook_deliveries tables                 │
+│ └── Admin UI for webhook management                                     │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: #005 (webhook signature validation)                         │
+│ Can work parallel with: Other Sprint 3 stories                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ #018: Mermaid Flow Documentation                         [3-4 hours]    │
+│ ├── State machine diagram                                               │
+│ ├── Verification flow sequence diagram                                  │
+│ ├── Retry logic flowchart                                               │
+│ ├── Webhook flow diagram                                                │
+│ └── Subscription lifecycle diagram                                      │
+│ Status: ⭕ NOT STARTED                                                   │
+│ Depends on: ALL (documents their implementation)                        │
+│ Can work parallel with: ALL stories (incremental documentation)         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+LEGEND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Priority Levels:
+  ⭐⭐⭐⭐⭐ CRITICAL (P0) - Production blocker, must complete first
+  ⭐⭐⭐⭐   HIGH (P1) - Core functionality, high business value
+  ⭐⭐⭐     MEDIUM (P2) - Important feature, revenue impact
+  ⭐⭐       LOW (P3) - Nice-to-have enhancement
+
+Risk Levels:
+  🔴 HIGH RISK - Requires extra review, pair programming, security audit
+  🟡 MEDIUM RISK - Standard code review, comprehensive testing
+  🟢 LOW RISK - Fast track, standard review process
+
+Status:
+  ⭕ NOT STARTED
+  🚧 IN PROGRESS
+  ✅ COMPLETED
+  ❌ BLOCKED
+
+Dependency Types:
+  [BLOCKS ALL] → Must complete before any other story can start
+  [BLOCKS] → Must complete before specific stories can start
+  [ENABLES] → Enables but doesn't strictly block
+  [PARALLEL] → Can work simultaneously with other stories
+
+
+TEAM ALLOCATION QUICK GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1 Developer (Sequential, 6.5-9.5 days):
+  Follow numbering: #001 → #002 → #003 → ... → #018
+
+2 Developers (Balanced, 4-5 days):
+  Dev A: Critical path (#001, #002, #004, #007, #008)
+  Dev B: Security + Features (#003, #005, #006, #009, #010)
+
+3 Developers (Optimal, 3-4 days):
+  Dev A: Foundation (#001, #002, #003)
+  Dev B: Security (#004, #005, #006, #007)
+  Dev C: Features (#009, #010, #011, #012)
+
+4+ Developers (Maximum Speed, 2-3 days):
+  Dev A: Foundation (#001, #002, #003)
+  Dev B: Security (#004, #005, #006)
+  Dev C: Features (#009, #010, #011, #012)
+  Dev D: Advanced (#013, #014, #015, #016, #017)
+  Tech Writer: Documentation (#018)
+
+
+CRITICAL PATH (Shortest Path to MVP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+#001 (2-4h) → #002 (3-4h) → #004 (4h) → #007 (4h)
+
+Total: 13-16 hours (1.5-2 days with 1 developer)
+
+This gives you: Payment state machine + Race condition prevention + Retry logic
+= Minimum viable payment processing system
+
+
+PARALLEL WORK OPPORTUNITIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After #002 completes, these can run in parallel:
+
+Stream A (Security): #005 + #006 (6-8 hours, 2 developers)
+Stream B (Features): #009 + #010 + #011 + #012 (15-18 hours, 4 developers)
+Stream C (Advanced): #013 + #014 + #015 + #016 + #017 (16-20 hours, 5 developers)
+Stream D (Docs): #018 (3-4 hours, 1 technical writer, can run alongside all)
+
+Maximum parallelization: 12 people working simultaneously after Sprint 0
+
+
+NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Review EPIC-002-USER-STORIES.md for detailed story specifications
+2. Check EPIC-002-DEPENDENCY-GRAPH.mmd for visual dependency graph
+3. Read EPIC-002-STORY-MAP.md for sprint planning
+4. Start Sprint 0 with Story #001
+
+Generated: 2025-10-23 | Epic 002 Status: ✅ READY FOR DEVELOPMENT

@@ -1,0 +1,73 @@
+%% Bootstrap Initialization Sequence
+%% US-E5-032: Wire Services Through DI Container
+%% Shows step-by-step initialization with timing
+
+sequenceDiagram
+    participant App as Application
+    participant Bootstrap as Bootstrap Module
+    participant Registry as Service Registry
+    participant Container as DI Container
+    participant Infra as Infrastructure
+    participant Services as Business Services
+    participant Health as Health Checks
+
+    App->>Bootstrap: bootstrapApplication(config)
+    activate Bootstrap
+
+    Note over Bootstrap: Phase 1: Create Registry
+    Bootstrap->>Registry: createServiceRegistry()
+    Registry-->>Bootstrap: registry instance
+
+    Note over Bootstrap: Phase 2: Register Services<br/>(~5-10ms)
+    Bootstrap->>Registry: registerInfrastructureServices()
+    Registry->>Registry: Logger, Config, DB, Redis
+    Bootstrap->>Registry: registerSharedServices()
+    Registry->>Registry: EventBus, Cache, Email, etc.
+    Bootstrap->>Registry: registerContentServices()
+    Registry->>Registry: 7 content services
+    Bootstrap->>Registry: registerUserServices()
+    Registry->>Registry: 5 user services
+    Bootstrap->>Registry: registerPaymentServices()
+    Registry->>Registry: 7 payment services
+    Registry-->>Bootstrap: 29+ services registered
+
+    Note over Bootstrap: Phase 3: Validate Dependencies<br/>(~1-2ms)
+    Bootstrap->>Registry: validate()
+    Registry->>Registry: Check circular deps
+    Registry->>Registry: Check missing deps
+    alt Validation Failed
+        Registry-->>Bootstrap: errors
+        Bootstrap-->>App: BootstrapResult (failed)
+    end
+    Registry-->>Bootstrap: validation OK
+
+    Note over Bootstrap: Phase 4: Create Container<br/>(~1ms)
+    Bootstrap->>Registry: createContainer()
+    Registry->>Container: new ServiceContainer()
+    Container-->>Registry: container instance
+    Registry-->>Bootstrap: container
+
+    Note over Bootstrap: Phase 5: Health Checks<br/>(~10-50ms)
+    Bootstrap->>Health: performHealthChecks(container)
+    Health->>Container: resolve(EventBusService)
+    Container->>Infra: create EventBusService
+    Infra-->>Container: instance
+    Container-->>Health: service
+    Health->>Health: await service.isHealthy()
+    Health->>Container: resolve(CacheService)
+    Container->>Infra: create CacheService
+    Infra-->>Container: instance
+    Container-->>Health: service
+    Health->>Health: await service.healthCheck()
+    Health->>Container: resolve(Database)
+    Container-->>Health: db connection
+    Health-->>Bootstrap: health results
+
+    Note over Bootstrap: Phase 6: Setup Shutdown<br/>(~1ms)
+    Bootstrap->>Bootstrap: setupGracefulShutdown(container)
+
+    Note over Bootstrap: Total Time: ~20-70ms
+    Bootstrap-->>App: BootstrapResult {<br/>success: true,<br/>container,<br/>timing,<br/>servicesRegistered: 29+<br/>}
+    deactivate Bootstrap
+
+    Note over App: Application Ready<br/>Services available for injection

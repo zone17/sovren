@@ -1,0 +1,95 @@
+sequenceDiagram
+    participant User
+    participant API
+    participant SS as SubscriptionService
+    participant PC as ProrationCalculator
+    participant CS as CurrencyService
+    participant PPS as PaymentProcessingService
+    participant DB as Database
+    participant ALS as AuditLogService
+    participant EB as EventBus
+
+    Note over User,API: User wants to upgrade<br/>from Creator ($9/mo) to Pro ($29/mo)
+
+    User->>API: POST /subscriptions/:id/upgrade
+    API->>SS: upgradeSubscription(id, newPlanId)
+
+    SS->>DB: Get subscription details
+    DB-->>SS: Current subscription
+
+    SS->>SS: Validate upgrade allowed
+
+    alt Valid upgrade
+        SS->>DB: Get plan details (current & new)
+        DB-->>SS: Plan information
+
+        SS->>PC: calculateProration(currentPlan, newPlan, daysRemaining)
+
+        Note over PC: Proration calculation:<br/>Unused credit = ($9/30) * 15 days = $4.50<br/>New plan cost = $29/30 * 15 days = $14.50<br/>Amount due = $14.50 - $4.50 = $10.00
+
+        PC->>CS: convertToUserCurrency(prorationAmount)
+        CS-->>PC: Converted amount
+        PC-->>SS: ProrationResult
+
+        alt Proration amount > 0 (upgrade)
+            SS->>PPS: createInvoice(prorationAmount)
+            PPS-->>SS: Invoice created
+
+            SS->>PPS: processPayment(invoice)
+
+            alt Payment successful
+                PPS-->>SS: PaymentResult (success)
+
+                SS->>DB: BEGIN TRANSACTION
+                SS->>DB: Update subscription.planId = newPlanId
+                SS->>DB: Update subscription.price = newPrice
+                SS->>DB: Update subscription.features = newFeatures
+                SS->>DB: COMMIT TRANSACTION
+
+                SS->>ALS: Log upgrade success
+                SS->>EB: Emit 'subscription.upgraded'
+                SS->>EB: Emit 'subscription.plan_changed'
+
+                SS->>SS: updateAnalytics(MRR, upgradeLTV)
+
+                SS-->>API: Upgrade successful
+                API-->>User: 200 OK + new subscription
+
+            else Payment failed
+                PPS-->>SS: PaymentResult (failed)
+                SS->>ALS: Log upgrade payment failure
+                SS-->>API: Payment failed error
+                API-->>User: 402 Payment Required
+                Note over User: Subscription remains<br/>on current plan
+            end
+
+        else Proration amount < 0 (downgrade)
+            Note over SS: Credit remaining time<br/>Apply to next billing cycle
+
+            SS->>DB: BEGIN TRANSACTION
+            SS->>DB: subscription.pendingPlanChange = newPlanId
+            SS->>DB: subscription.creditBalance = abs(prorationAmount)
+            SS->>DB: COMMIT TRANSACTION
+
+            Note over SS: Downgrade effective<br/>at end of current period
+
+            SS->>ALS: Log scheduled downgrade
+            SS->>EB: Emit 'subscription.downgrade_scheduled'
+
+            SS-->>API: Downgrade scheduled
+            API-->>User: 200 OK + pending change info
+
+        else Proration amount = 0
+            SS->>DB: Update subscription immediately
+            SS->>EB: Emit 'subscription.plan_changed'
+            SS-->>API: Plan changed
+            API-->>User: 200 OK
+        end
+
+    else Invalid upgrade
+        SS-->>API: Validation error
+        API-->>User: 400 Bad Request
+        Note over User: E.g., downgrade to same plan,<br/>incompatible plan change
+    end
+
+    Note over SS,EB: All operations are atomic<br/>and fully audited

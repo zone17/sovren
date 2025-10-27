@@ -1,0 +1,114 @@
+graph TB
+    subgraph "Memory Management System"
+        A[Event Added to Cache] --> B{Check Limits}
+
+        B --> C[Limit 1: Event Count]
+        B --> D[Limit 2: Memory Bytes]
+
+        C --> E{size >= maxMemoryEvents?}
+        E -->|Yes| F[Trigger LRU Eviction]
+        E -->|No| G[Allow Add]
+
+        D --> H{bytes >= maxMemoryBytes?}
+        H -->|Yes| F
+        H -->|No| G
+
+        F --> I[Find Least Recently Used]
+        I --> J[Access Order Map]
+        J --> K{Scan Entries}
+        K --> L[Find Min Access Time]
+        L --> M[Select LRU Event]
+
+        M --> N[Delete LRU Event]
+        N --> O[Remove from Memory Cache]
+        O --> P[Remove from Indexes]
+        P --> Q[Update Access Order]
+        Q --> R[Recalculate Memory Usage]
+
+        R --> S{Still Over Limit?}
+        S -->|Yes| F
+        S -->|No| T[Eviction Complete]
+
+        G --> U[Add Event to Cache]
+        T --> U
+
+        U --> V[Update Indexes]
+        V --> W[Track Access Time]
+        W --> X[Increment Access Counter]
+        X --> Y[Calculate Memory Size]
+    end
+
+    subgraph "Access Tracking (LRU)"
+        Z[Access Order Map]
+        Z --> AA[Event ID → Access Counter]
+        AA --> AB[Counter increments on:<br/>1. Event added<br/>2. Event retrieved<br/>3. Event queried]
+
+        AC[Access Counter]
+        AC --> AD[Global monotonic counter]
+        AD --> AE[Ensures total ordering]
+    end
+
+    subgraph "Memory Calculation"
+        AF[estimateEventSize(event)]
+        AF --> AG[JSON.stringify(event)]
+        AG --> AH[new Blob().size]
+        AH --> AI[Return bytes]
+
+        AJ[Total Memory]
+        AJ --> AK[Sum all cached events]
+        AK --> AL[Update stats.memoryBytes]
+        AL --> AM[Update metrics.storage.memoryUsage]
+    end
+
+    subgraph "Automatic Cleanup"
+        AN[Cleanup Timer<br/>Every 5 minutes]
+        AN --> AO[cleanup()]
+        AO --> AP[Scan Memory Cache]
+        AP --> AQ{For each event}
+        AQ --> AR{isExpired?}
+        AR -->|Yes| AS[Add to deletion list]
+        AR -->|No| AT[Keep in cache]
+        AS --> AU[Batch Delete Expired]
+        AU --> AV[Update indexes]
+        AV --> AW[Recalculate memory]
+        AW --> AX[Update statistics]
+    end
+
+    subgraph "Configuration Options"
+        BA[maxMemoryEvents: 1000<br/>Default: 1000 events]
+        BB[maxMemoryBytes: 50MB<br/>Default: 52,428,800 bytes]
+        BC[defaultTTL: 5min<br/>Default: 300,000ms]
+        BD[enableIndexedDB: true<br/>Persistent storage]
+    end
+
+    subgraph "Performance Monitoring"
+        BE[Memory Utilization %]
+        BE --> BF[(memoryUsage / memoryLimit) * 100]
+
+        BG[Eviction Rate]
+        BG --> BH[evictions / totalEvents]
+
+        BI[Cache Efficiency]
+        BI --> BJ[hitRate %]
+        BI --> BK[missRate %]
+    end
+
+    subgraph "Two-Tier Strategy"
+        BL[Hot Tier: Memory Cache]
+        BL --> BM[Fast access<br/>Limited size<br/>LRU eviction]
+
+        BN[Cold Tier: IndexedDB]
+        BN --> BO[Persistent<br/>Larger capacity<br/>Slower access]
+
+        BM --> BP{Cache Miss?}
+        BP -->|Yes| BQ[Check IndexedDB]
+        BQ --> BR{Found?}
+        BR -->|Yes| BS[Promote to Memory]
+        BR -->|No| BT[Fetch from Relay]
+    end
+
+    style F fill:#F44336,stroke:#C62828,color:#fff
+    style U fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style AN fill:#FF9800,stroke:#E65100,color:#fff
+    style BL fill:#2196F3,stroke:#1565C0,color:#fff
+    style BN fill:#9C27B0,stroke:#6A1B9A,color:#fff

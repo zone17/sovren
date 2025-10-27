@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { supabase } from '../../lib/database';
 import { rateLimiter } from '../../lib/middleware/rateLimit';
 import { emailSchema, nameSchema, passwordSchema, validateRequest } from '../../lib/middleware/validation';
+import { ApiSuccessResponse } from '../types/api-types';
 
 // 🔐 ELITE REGISTRATION VALIDATION SCHEMA
 const registerSchema = z.object({
@@ -137,18 +138,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ✅ Elite success response
-    const response: any = {
+    const response: ApiSuccessResponse<{
+      user: {
+        id: string;
+        email: string;
+        name: string;
+        emailVerified: boolean;
+        createdAt: string;
+      };
+      session?: {
+        accessToken: string;
+        refreshToken: string;
+        expiresAt: number;
+        tokenType: string;
+      } | null;
+      requiresEmailVerification: boolean;
+    }> & {
+      metadata: {
+        registrationMethod: string;
+        ipAddress: string | string[] | undefined;
+        userAgent: string | undefined;
+      };
+    } = {
       success: true,
       message: data.user?.email_confirmed_at
         ? 'Registration successful'
         : 'Registration successful. Please check your email to verify your account.',
       data: {
         user: {
-          id: data.user?.id,
-          email: data.user?.email,
+          id: data.user?.id || '',
+          email: data.user?.email || '',
           name: name,
           emailVerified: !!data.user?.email_confirmed_at,
-          createdAt: data.user?.created_at,
+          createdAt: data.user?.created_at || new Date().toISOString(),
         },
         requiresEmailVerification: !data.user?.email_confirmed_at,
       },
@@ -178,7 +200,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(201).json(response);
 
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     console.error('Registration error:', error);
 
     return res.status(500).json({

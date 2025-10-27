@@ -1,0 +1,27 @@
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> LoadingProfile: Load profile
+    LoadingProfile --> ProfileLoaded: Success
+    LoadingProfile --> LoadError: Fetch failed
+    LoadError --> LoadingProfile: Retry
+
+    ProfileLoaded --> ViewMode: Display profile
+    ViewMode --> EditMode: Click edit
+    EditMode --> ViewMode: Cancel
+
+    EditMode --> ValidatingFields: Input changes
+    ValidatingFields --> EditMode: Validation complete
+
+    EditMode --> PreviewMode: Click preview
+    PreviewMode --> EditMode: Back to edit
+
+    EditMode --> Publishing: Save changes
+    Publishing --> PublishSuccess: Event published
+    Publishing --> PublishError: Publish failed
+    PublishSuccess --> ViewMode: Update display
+    PublishError --> EditMode: Show error
+
+    ViewMode --> VerifyingNIP05: Check NIP-05
+    VerifyingNIP05 --> ViewMode: Verification complete
+
+    ViewMode --> [*]: Unmount

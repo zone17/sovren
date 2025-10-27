@@ -1,0 +1,56 @@
+```mermaid
+stateDiagram-v2
+    [*] --> Pending: Create Refund
+
+    Pending --> Authorized: Auto-Approve (<$100)
+    Pending --> Authorized: Manual Authorization
+    Pending --> Canceled: Denied/Canceled
+    Pending --> Failed: Validation Failed
+
+    Authorized --> Processing: Start Processing
+    Authorized --> Canceled: Cancel Before Processing
+
+    Processing --> Completed: Success
+    Processing --> Failed: Processing Error
+    Processing --> Retry: Temporary Failure
+
+    Retry --> Processing: Retry Attempt
+    Retry --> Failed: Max Retries Exceeded
+    Retry --> Canceled: Manual Cancel
+
+    Failed --> Retry: Manual Retry
+    Failed --> Canceled: Give Up
+
+    Completed --> [*]
+    Canceled --> [*]
+
+    note right of Pending
+        Initial state
+        Awaiting authorization
+        Time limit: 7 days
+    end note
+
+    note right of Authorized
+        Ready for processing
+        Auto-approved: <$100
+        Manual: ≥$100
+    end note
+
+    note right of Processing
+        Active refund
+        Payment method specific
+        Lightning/On-chain
+    end note
+
+    note right of Completed
+        Terminal state
+        Funds returned
+        Receipt generated
+    end note
+
+    note right of Failed
+        Terminal state (unless retry)
+        Error recorded
+        Notification sent
+    end note
+```

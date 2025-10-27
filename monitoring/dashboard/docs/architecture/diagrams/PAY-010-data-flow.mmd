@@ -1,0 +1,59 @@
+%% Idempotency System - Data Flow Diagram
+%% Story: PAY-010
+%% Date: 2025-10-25
+
+sequenceDiagram
+    participant Client
+    participant Middleware as Idempotency<br/>Middleware
+    participant Repository as Idempotency<br/>Repository
+    participant Database as PostgreSQL<br/>idempotency_cache
+    participant Handler as Payment<br/>Handler
+
+    Note over Client,Database: First Request (No Cache)
+    Client->>+Middleware: POST /api/lightning/invoice<br/>Header: Idempotency-Key: uuid-1234<br/>Body: {amount: 10000}
+    Middleware->>Middleware: Validate UUID format
+    Middleware->>Middleware: Compute SHA-256 hash<br/>of request body
+    Middleware->>+Repository: findByKey(uuid-1234)
+    Repository->>+Database: SELECT * FROM idempotency_cache<br/>WHERE idempotency_key = uuid-1234
+    Database-->>-Repository: No rows found
+    Repository-->>-Middleware: null (cache miss)
+    Middleware->>+Handler: Process payment request
+    Handler-->>-Middleware: {invoice: lnbc..., amount: 10000}
+    Middleware->>Middleware: Intercept response.json()
+    Middleware->>+Repository: store(uuid-1234, hash, response)
+    Repository->>+Database: INSERT INTO idempotency_cache<br/>(..., expires_at = NOW() + 24h)
+    Database-->>-Repository: Success
+    Repository-->>-Middleware: true
+    Middleware-->>-Client: 201 Created<br/>{invoice: lnbc..., amount: 10000}
+
+    Note over Client,Database: Duplicate Request (Cache Hit)
+    Client->>+Middleware: POST /api/lightning/invoice<br/>Header: Idempotency-Key: uuid-1234<br/>Body: {amount: 10000} (same)
+    Middleware->>Middleware: Validate UUID format
+    Middleware->>Middleware: Compute SHA-256 hash
+    Middleware->>+Repository: findByKey(uuid-1234)
+    Repository->>+Database: SELECT * FROM idempotency_cache<br/>WHERE idempotency_key = uuid-1234
+    Database-->>-Repository: Row found (not expired)
+    Repository-->>-Middleware: {response_body, response_status, ...}
+    Middleware->>Middleware: Compare request hashes
+    Note over Middleware: Hashes match ✓
+    Middleware-->>-Client: 200 OK (from cache)<br/>Header: X-Idempotency-Cached: true<br/>{invoice: lnbc..., amount: 10000}
+
+    Note over Client,Database: Request Body Changed (Error)
+    Client->>+Middleware: POST /api/lightning/invoice<br/>Header: Idempotency-Key: uuid-1234<br/>Body: {amount: 20000} (CHANGED)
+    Middleware->>Middleware: Validate UUID format
+    Middleware->>Middleware: Compute SHA-256 hash
+    Middleware->>+Repository: findByKey(uuid-1234)
+    Repository->>+Database: SELECT * FROM idempotency_cache<br/>WHERE idempotency_key = uuid-1234
+    Database-->>-Repository: Row found
+    Repository-->>-Middleware: {response_body, request_hash_old, ...}
+    Middleware->>Middleware: Compare request hashes
+    Note over Middleware: Hashes DON'T match ✗
+    Middleware-->>-Client: 500 Internal Server Error<br/>{error: "Idempotency check failed"}
+
+    Note over Client,Database: Automatic Cleanup (Background)
+    loop Every 1 hour
+        Middleware->>+Repository: cleanupExpired()
+        Repository->>+Database: DELETE FROM idempotency_cache<br/>WHERE expires_at < NOW()
+        Database-->>-Repository: Deleted 42 rows
+        Repository-->>-Middleware: {deleted_count: 42, duration_ms: 50}
+    end

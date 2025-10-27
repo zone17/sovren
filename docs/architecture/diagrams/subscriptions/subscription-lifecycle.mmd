@@ -1,0 +1,54 @@
+%% Subscription Lifecycle State Machine
+%% Story: PAY-005 - Build Subscription Management UI Components
+%% Describes subscription status transitions
+
+stateDiagram-v2
+    [*] --> Pending: User initiates<br/>subscription
+
+    Pending --> Active: Payment<br/>successful
+    Pending --> Failed: Payment<br/>failed
+
+    Active --> Paused: User pauses
+    Active --> Cancelled: User cancels
+    Active --> Expired: Payment<br/>failed (renewal)
+    Active --> Active: Successful<br/>renewal
+
+    Paused --> Active: User resumes
+    Paused --> Cancelled: User cancels
+    Paused --> Expired: Grace period<br/>ends
+
+    Cancelled --> [*]: Cleanup
+    Expired --> [*]: Cleanup
+    Failed --> [*]: Cleanup
+
+    Expired --> Active: User<br/>reactivates
+
+    note right of Pending
+        Initial state when
+        subscription is created
+        Waiting for first payment
+    end note
+
+    note right of Active
+        Subscription is active
+        User has access to benefits
+        Auto-renewal enabled/disabled
+    end note
+
+    note right of Paused
+        Temporarily suspended
+        No access to benefits
+        Can be resumed
+    end note
+
+    note right of Cancelled
+        User-initiated cancellation
+        Access until period end
+        Cannot be resumed
+    end note
+
+    note right of Expired
+        Payment failure or
+        subscription period ended
+        Can be reactivated
+    end note

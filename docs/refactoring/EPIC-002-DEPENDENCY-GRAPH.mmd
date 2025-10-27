@@ -1,0 +1,226 @@
+```mermaid
+graph TB
+    subgraph "Sprint 0: Foundation (CRITICAL PATH)"
+        S001["#001: Payment State Machine Types<br/>Types, Enums, DB Migration<br/>2-4 hours | HIGH RISK"]
+        S002["#002: Payment State Machine Service<br/>State Transitions, Validation<br/>3-4 hours | HIGH RISK"]
+        S003["#003: Invoice Expiration Handling<br/>Auto-expiration, Notifications<br/>3-4 hours | MEDIUM RISK"]
+    end
+
+    subgraph "Sprint 1: Security Hardening (CRITICAL PATH)"
+        S004["#004: Race Condition Prevention<br/>Atomic Verification, DB Locks<br/>4 hours | HIGH RISK"]
+        S005["#005: Webhook Signature Validation<br/>HMAC, Replay Prevention<br/>3-4 hours | MEDIUM RISK"]
+        S006["#006: Idempotency Key Support<br/>Duplicate Prevention<br/>3-4 hours | MEDIUM RISK"]
+        S007["#007: Exponential Backoff Retry<br/>Smart Retry Logic<br/>4 hours | MEDIUM RISK"]
+    end
+
+    subgraph "Sprint 2: Payment Features"
+        S008["#008: Subscription Retry & Grace<br/>Grace Period, Auto-retry<br/>4 hours | MEDIUM RISK"]
+        S009["#009: Refund Processing<br/>Approval Workflow, Payouts<br/>4 hours | MEDIUM RISK"]
+        S010["#010: Subscription Upgrade<br/>Prorated Billing<br/>4 hours | MEDIUM RISK"]
+        S011["#011: Multi-Currency Display<br/>Real-time Conversion<br/>3-4 hours | LOW RISK"]
+        S012["#012: Payment Analytics<br/>Revenue Metrics, Dashboards<br/>4 hours | LOW RISK"]
+    end
+
+    subgraph "Sprint 3: Advanced Features"
+        S013["#013: Batch Payment Processing<br/>Concurrent Payouts<br/>3-4 hours | LOW RISK"]
+        S014["#014: Payment Method Fallback<br/>Lightning → Onchain<br/>3-4 hours | MEDIUM RISK"]
+        S015["#015: Tax Calculation<br/>Regional Tax Rules<br/>3-4 hours | MEDIUM RISK"]
+        S016["#016: Invoice PDF Generation<br/>Receipt Downloads<br/>3-4 hours | LOW RISK"]
+        S017["#017: Payment Webhook System<br/>Event Notifications<br/>4 hours | MEDIUM RISK"]
+        S018["#018: Mermaid Documentation<br/>Flow Diagrams<br/>3-4 hours | LOW RISK"]
+    end
+
+    %% Critical Path Dependencies (Sequential - MUST complete in order)
+    S001 -->|BLOCKS ALL| S002
+    S002 -->|BLOCKS ALL| S003
+    S002 -->|BLOCKS ALL| S004
+    S002 -->|BLOCKS ALL| S005
+    S002 -->|BLOCKS ALL| S006
+    S004 -->|BLOCKS| S007
+    S007 -->|BLOCKS| S008
+
+    %% Related Dependencies (Can work in parallel after blocker completes)
+    S002 -.->|ENABLES| S009
+    S002 -.->|ENABLES| S010
+    S002 -.->|ENABLES| S012
+    S002 -.->|ENABLES| S013
+    S005 -.->|RELATED| S017
+
+    %% Parallel Work Opportunities (Dashed lines)
+    S005 -."Parallel with".-> S006
+    S009 -."Parallel with".-> S010
+    S009 -."Parallel with".-> S011
+    S010 -."Parallel with".-> S011
+    S011 -."Parallel with".-> S012
+    S013 -."Parallel with".-> S014
+    S013 -."Parallel with".-> S015
+    S013 -."Parallel with".-> S016
+    S014 -."Parallel with".-> S015
+    S014 -."Parallel with".-> S016
+    S015 -."Parallel with".-> S016
+
+    %% Documentation runs parallel with all
+    S018 -."Documents ALL".-> S001
+    S018 -."Documents ALL".-> S002
+    S018 -."Documents ALL".-> S004
+
+    %% Styling
+    classDef critical fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef security fill:#4dabf7,stroke:#1971c2,color:#fff
+    classDef features fill:#51cf66,stroke:#2b8a3e,color:#fff
+    classDef advanced fill:#ffd43b,stroke:#f59f00,color:#000
+    classDef docs fill:#e599f7,stroke:#9c36b5,color:#fff
+
+    class S001,S002,S003 critical
+    class S004,S005,S006,S007 security
+    class S008,S009,S010,S011,S012 features
+    class S013,S014,S015,S016,S017 advanced
+    class S018 docs
+
+```
+
+## Dependency Legend
+
+### Line Types
+- **Solid Line (→)**: BLOCKING dependency - Must complete before next can start
+- **Dotted Line (-.->)**: ENABLING dependency - Enables but doesn't strictly block
+- **Dashed Line (.->)**: PARALLEL opportunity - Can work simultaneously
+
+### Color Coding
+- **Red (Critical)**: Sprint 0 - Foundation work, highest risk
+- **Blue (Security)**: Sprint 1 - Security hardening, critical path continues
+- **Green (Features)**: Sprint 2 - Core payment features
+- **Yellow (Advanced)**: Sprint 3 - Nice-to-have enhancements
+- **Purple (Docs)**: Documentation - Can run parallel with all work
+
+### Critical Path (Sequential)
+The absolute minimum sequence that must be completed in order:
+
+1. **#001** Payment State Machine Types (FOUNDATION)
+2. **#002** Payment State Machine Service (FOUNDATION)
+3. **#004** Race Condition Prevention (SECURITY)
+4. **#007** Exponential Backoff Retry (FEATURES)
+
+**Critical Path Duration**: 15-16 hours (2 days with 1 developer)
+
+### Parallel Work Streams
+
+#### Stream A: Security (After #002)
+- **#005** Webhook Signature Validation (parallel with #006)
+- **#006** Idempotency Key Support (parallel with #005)
+
+**Duration**: 6-8 hours (can complete in 1 day with 2 developers)
+
+#### Stream B: Features (After #002)
+- **#009** Refund Processing (parallel with #010, #011, #012)
+- **#010** Subscription Upgrade (parallel with #009, #011, #012)
+- **#011** Multi-Currency Display (parallel with #009, #010, #012)
+- **#012** Payment Analytics (parallel with #009, #010, #011)
+
+**Duration**: 15-18 hours (can complete in 1 day with 4 developers)
+
+#### Stream C: Advanced Features (After Sprint 1)
+- **#013** Batch Processing (parallel with #014, #015, #016)
+- **#014** Payment Fallback (parallel with #013, #015, #016)
+- **#015** Tax Calculation (parallel with #013, #014, #016)
+- **#016** Invoice PDF (parallel with #013, #014, #015)
+- **#017** Webhook System (can start after #005)
+
+**Duration**: 16-20 hours (can complete in 1 day with 5 developers)
+
+#### Stream D: Documentation (Parallel with ALL)
+- **#018** Mermaid Documentation (documents entire Epic, runs alongside development)
+
+**Duration**: 3-4 hours (1 technical writer)
+
+### Optimal Team Composition
+
+#### Scenario 1: Single Developer (Sequential)
+- **Duration**: 52-76 hours (6.5-9.5 days)
+- **Order**: Follow critical path, then security, then features, then advanced
+
+#### Scenario 2: Two Developers (Balanced)
+- **Developer A**: Critical path (#001, #002, #004, #007)
+- **Developer B**: Security + Features (#005, #006, #009, #010)
+- **Duration**: 32-40 hours (4-5 days)
+
+#### Scenario 3: Three Developers (Optimal)
+- **Developer A**: Foundation + Critical (#001, #002, #003, #004)
+- **Developer B**: Security (#005, #006, #007)
+- **Developer C**: Features (#009, #010, #011, #012)
+- **Duration**: 24-32 hours (3-4 days)
+
+#### Scenario 4: Four+ Developers (Maximum Parallelism)
+- **Developer A**: Foundation (#001, #002, #003)
+- **Developer B**: Security (#004, #005, #006)
+- **Developer C**: Features (#009, #010, #011, #012)
+- **Developer D**: Advanced (#013, #014, #015, #016, #017)
+- **Tech Writer**: Documentation (#018)
+- **Duration**: 16-24 hours (2-3 days)
+
+### Risk Mitigation Strategy
+
+#### High-Risk Stories (Extra Review Required)
+1. **#001** - Type definitions affect entire codebase
+2. **#002** - State machine is critical infrastructure
+3. **#004** - Race conditions are subtle and hard to test
+
+**Mitigation**:
+- Pair programming for #001 and #002
+- Extensive integration testing for #004
+- Security review for all high-risk stories
+
+#### Medium-Risk Stories (Standard Review)
+- All security stories (#005, #006, #007)
+- Complex features (#008, #009, #010, #017)
+
+**Mitigation**:
+- Code review by senior developer
+- Comprehensive test coverage
+- Staging deployment testing
+
+#### Low-Risk Stories (Fast Track)
+- UI enhancements (#011, #012)
+- Optional features (#013, #014, #015, #016)
+- Documentation (#018)
+
+**Mitigation**:
+- Standard code review
+- Unit tests sufficient
+
+### Sprint Velocity Planning
+
+#### Sprint 0 (Week 1, Days 1-2)
+- **Goal**: Complete foundation
+- **Stories**: #001, #002, #003
+- **Points**: 3 stories (8-12 hours)
+- **Team**: 1-2 developers
+- **Risk**: HIGH - Everything depends on this
+
+#### Sprint 1 (Week 1, Days 3-4)
+- **Goal**: Security hardening
+- **Stories**: #004, #005, #006, #007
+- **Points**: 4 stories (12-16 hours)
+- **Team**: 2-3 developers
+- **Risk**: CRITICAL - Security must be solid
+
+#### Sprint 2 (Week 2, Days 1-3)
+- **Goal**: Core payment features
+- **Stories**: #008, #009, #010, #011, #012
+- **Points**: 5 stories (16-24 hours)
+- **Team**: 3-4 developers
+- **Risk**: MEDIUM - Revenue features
+
+#### Sprint 3 (Week 2, Days 4-5)
+- **Goal**: Advanced features
+- **Stories**: #013, #014, #015, #016, #017, #018
+- **Points**: 6 stories (16-24 hours)
+- **Team**: 4+ developers
+- **Risk**: LOW - Nice-to-have enhancements
+
+### Total Estimated Duration
+
+- **Minimum (4+ developers)**: 2-3 days
+- **Optimal (3 developers)**: 3-4 days
+- **Conservative (2 developers)**: 4-5 days
+- **Single developer**: 6.5-9.5 days

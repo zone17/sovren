@@ -1,0 +1,61 @@
+```mermaid
+graph TB
+    subgraph "RefundService Architecture"
+        RS[RefundService]
+
+        subgraph "Core Dependencies"
+            PS[PaymentProcessingService]
+            CS[CurrencyService]
+            EB[EventBus]
+            LOG[Logger]
+            CACHE[CacheService]
+        end
+
+        subgraph "Data Layer"
+            REPO[RefundRepository]
+            DB[(Database)]
+        end
+
+        subgraph "State Management"
+            SM[RefundStateMachine]
+            STATES["pending → authorized → processing → completed/failed"]
+        end
+
+        subgraph "Security & Fraud"
+            AUTH[Authorization Engine]
+            FRAUD[Fraud Detection]
+            RATE[Rate Limiter]
+        end
+
+        subgraph "Payment Methods"
+            LN[Lightning Network]
+            ONCHAIN[On-Chain Bitcoin]
+            ORIG[Original Method]
+        end
+
+        RS --> PS
+        RS --> CS
+        RS --> EB
+        RS --> LOG
+        RS --> CACHE
+        RS --> REPO
+        RS --> SM
+        RS --> AUTH
+        RS --> FRAUD
+        RS --> RATE
+
+        REPO --> DB
+        SM --> STATES
+
+        RS -.Refund Processing.-> LN
+        RS -.Refund Processing.-> ONCHAIN
+        RS -.Refund Processing.-> ORIG
+    end
+
+    style RS fill:#4CAF50
+    style PS fill:#2196F3
+    style CS fill:#2196F3
+    style AUTH fill:#FF9800
+    style FRAUD fill:#F44336
+    style RATE fill:#FF9800
+```

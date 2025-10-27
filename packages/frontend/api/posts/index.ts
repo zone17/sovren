@@ -1,11 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
+import { User } from '@sovren/shared/types';
 import { supabase } from '../../lib/database';
 import { rateLimiter } from '../../lib/middleware/rateLimit';
 import { contentSchema, validateRequest } from '../../lib/middleware/validation';
+import { AuthResult, PostsQueryParams } from '../types/api-types';
 
 // 🔐 AUTHENTICATION MIDDLEWARE
-async function authenticateUser(req: VercelRequest): Promise<{ user: any; error?: string }> {
+async function authenticateUser(req: VercelRequest): Promise<AuthResult> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {
@@ -21,7 +23,7 @@ async function authenticateUser(req: VercelRequest): Promise<{ user: any; error?
       return { user: null, error: 'Invalid or expired token' };
     }
 
-    return { user };
+    return { user: user as User };
   } catch (error) {
     return { user: null, error: 'Authentication failed' };
   }
@@ -35,14 +37,17 @@ const createPostSchema = z.object({
 });
 
 // 📋 SIMPLE QUERY PARAMETER PARSING
-function parseQueryParams(query: any) {
+function parseQueryParams(query: VercelRequest['query']): PostsQueryParams {
   const page = Math.max(1, parseInt(query.page as string) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 10));
-  const published = ['true', 'false', 'all'].includes(query.published) ? query.published : 'all';
+  const offset = (page - 1) * limit;
+  const published = ['true', 'false', 'all'].includes(query.published as string)
+    ? (query.published as 'true' | 'false' | 'all')
+    : 'all';
   const author_id = query.author_id && typeof query.author_id === 'string' ? query.author_id : undefined;
   const search = query.search && typeof query.search === 'string' ? query.search.substring(0, 100) : undefined;
 
-  return { page, limit, published, author_id, search };
+  return { page, limit, offset, published, author_id, search };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

@@ -1,0 +1,57 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#4F46E5','primaryTextColor':'#fff','primaryBorderColor':'#312E81','lineColor':'#6366F1','secondaryColor':'#10B981','tertiaryColor':'#F59E0B'}}}%%
+
+graph TB
+    Start([User Login Request]) --> CreateSession[Create Session]
+    
+    CreateSession --> GenerateToken[Generate Secure Token<br/>64-char random hex]
+    GenerateToken --> HashToken[Hash Token<br/>SHA-256]
+    HashToken --> GenerateDeviceID[Generate Device ID<br/>fingerprint + pubkey]
+    
+    GenerateDeviceID --> CheckLimit{Sessions < Max Limit?<br/>default: 5}
+    CheckLimit -->|No| RevokeOldest[Revoke Oldest Session]
+    CheckLimit -->|Yes| StoreSession
+    RevokeOldest --> StoreSession[Store Session<br/>Database/IndexedDB]
+    
+    StoreSession --> LogCreation[Log Activity:<br/>session_created]
+    LogCreation --> SetExpiry[Set Expiration Times<br/>Absolute: 7 days<br/>Idle: 24 hours]
+    
+    SetExpiry --> ReturnToken[Return Session + Token<br/>ONLY TIME TOKEN IS RETURNED!]
+    ReturnToken --> SessionActive{{Session Active}}
+    
+    SessionActive --> Validate{Validate Request}
+    Validate -->|Valid Token| CheckExpiry{Expired?}
+    Validate -->|Invalid Token| InvalidateSession[Invalidate Session]
+    
+    CheckExpiry -->|Absolute Timeout| Expire[Auto-Expire Session]
+    CheckExpiry -->|Idle Timeout| Expire
+    CheckExpiry -->|Valid| UpdateActivity[Update Last Activity]
+    
+    UpdateActivity --> LogActivity[Log Activity:<br/>api_call, page_view]
+    LogActivity --> CheckRefresh{Refresh Needed?<br/>50% lifetime}
+    
+    CheckRefresh -->|Yes| Refresh[Refresh Session:<br/>New Token + Extend Expiry]
+    CheckRefresh -->|No| Continue[Continue Session]
+    
+    Refresh --> SessionActive
+    Continue --> SessionActive
+    
+    Expire --> LogExpiry[Log Activity:<br/>timeout]
+    InvalidateSession --> LogInvalid[Log Activity:<br/>invalidation]
+    
+    LogExpiry --> Revoked[Session Revoked]
+    LogInvalid --> Revoked
+    
+    SessionActive --> ManualLogout{Manual Logout?}
+    ManualLogout -->|Yes| RevokeSession[Revoke Session]
+    ManualLogout -->|No| SessionActive
+    
+    RevokeSession --> LogLogout[Log Activity:<br/>logout]
+    LogLogout --> Revoked
+    
+    Revoked --> End([Session Ended])
+    
+    style Start fill:#10B981,stroke:#059669,color:#fff
+    style End fill:#EF4444,stroke:#DC2626,color:#fff
+    style SessionActive fill:#4F46E5,stroke:#4338CA,color:#fff
+    style ReturnToken fill:#F59E0B,stroke:#D97706,color:#fff
+    style Revoked fill:#6B7280,stroke:#4B5563,color:#fff

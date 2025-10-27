@@ -1,0 +1,26 @@
+graph LR
+    A[Feed Events Array<br/>1000+ items] --> B{react-window<br/>FixedSizeList}
+
+    B --> C[Viewport<br/>Visible items 0-20]
+
+    C --> D1[FeedItem 0]
+    C --> D2[FeedItem 1]
+    C --> D3[...]
+    C --> D4[FeedItem 20]
+
+    B --> E[Overscan Buffer<br/>Items 21-30]
+
+    E --> F1[FeedItem 21]
+    E --> F2[...]
+    E --> F3[FeedItem 30]
+
+    B --> G[Not Rendered<br/>Items 31-999]
+
+    H[User Scrolls] --> B
+    B --> I[Re-calculate visible range]
+    I --> C
+
+    style A fill:#4f46e5,stroke:#333,stroke-width:2px,color:#fff
+    style B fill:#10b981,stroke:#333,stroke-width:2px,color:#fff
+    style C fill:#f59e0b,stroke:#333,stroke-width:2px,color:#fff
+    style G fill:#e5e7eb,stroke:#333,stroke-width:1px,color:#000

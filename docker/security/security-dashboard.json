@@ -1,0 +1,405 @@
+{
+  "dashboard": {
+    "id": "docker-security-dashboard",
+    "title": "Docker Security Monitoring Dashboard",
+    "version": "1.0.0",
+    "description": "Comprehensive security monitoring dashboard for Docker containers",
+    "refresh_interval": "30s",
+    "time_range": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  },
+  "panels": [
+    {
+      "id": "security-overview",
+      "title": "Security Overview",
+      "type": "stat",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 3
+      },
+      "metrics": [
+        {
+          "name": "Total Containers",
+          "query": "docker_containers_running",
+          "color": "#1f77b4",
+          "unit": "short"
+        },
+        {
+          "name": "Security Alerts",
+          "query": "security_alerts_total",
+          "color": "#ff7f0e",
+          "unit": "short"
+        },
+        {
+          "name": "Vulnerability Count",
+          "query": "vulnerability_count_total",
+          "color": "#d62728",
+          "unit": "short"
+        },
+        {
+          "name": "Compliance Score",
+          "query": "compliance_score_percent",
+          "color": "#2ca02c",
+          "unit": "percent"
+        }
+      ]
+    },
+    {
+      "id": "container-security",
+      "title": "Container Security Status",
+      "type": "table",
+      "position": {
+        "x": 0,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "columns": [
+        {
+          "name": "Container ID",
+          "field": "container_id",
+          "width": 120
+        },
+        {
+          "name": "Image",
+          "field": "image_name",
+          "width": 200
+        },
+        {
+          "name": "Security Score",
+          "field": "security_score",
+          "width": 100,
+          "type": "number"
+        },
+        {
+          "name": "Vulnerabilities",
+          "field": "vulnerability_count",
+          "width": 100,
+          "type": "number"
+        },
+        {
+          "name": "Status",
+          "field": "security_status",
+          "width": 100,
+          "type": "status"
+        },
+        {
+          "name": "Last Scan",
+          "field": "last_scan_time",
+          "width": 150,
+          "type": "timestamp"
+        }
+      ]
+    },
+    {
+      "id": "resource-usage",
+      "title": "Resource Usage Monitoring",
+      "type": "graph",
+      "position": {
+        "x": 0,
+        "y": 11,
+        "w": 6,
+        "h": 6
+      },
+      "metrics": [
+        {
+          "name": "CPU Usage",
+          "query": "container_cpu_usage_percent",
+          "color": "#1f77b4",
+          "unit": "percent"
+        },
+        {
+          "name": "Memory Usage",
+          "query": "container_memory_usage_percent",
+          "color": "#ff7f0e",
+          "unit": "percent"
+        }
+      ],
+      "thresholds": [
+        {
+          "value": 80,
+          "color": "#ffb84d",
+          "label": "Warning"
+        },
+        {
+          "value": 90,
+          "color": "#ff0000",
+          "label": "Critical"
+        }
+      ]
+    },
+    {
+      "id": "network-security",
+      "title": "Network Security",
+      "type": "graph",
+      "position": {
+        "x": 6,
+        "y": 11,
+        "w": 6,
+        "h": 6
+      },
+      "metrics": [
+        {
+          "name": "Exposed Ports",
+          "query": "exposed_ports_count",
+          "color": "#d62728",
+          "unit": "short"
+        },
+        {
+          "name": "Network Connections",
+          "query": "network_connections_count",
+          "color": "#2ca02c",
+          "unit": "short"
+        }
+      ]
+    },
+    {
+      "id": "vulnerability-trends",
+      "title": "Vulnerability Trends",
+      "type": "graph",
+      "position": {
+        "x": 0,
+        "y": 17,
+        "w": 12,
+        "h": 6
+      },
+      "metrics": [
+        {
+          "name": "Critical Vulnerabilities",
+          "query": "vulnerabilities_critical_count",
+          "color": "#ff0000",
+          "unit": "short"
+        },
+        {
+          "name": "High Vulnerabilities",
+          "query": "vulnerabilities_high_count",
+          "color": "#ff7f0e",
+          "unit": "short"
+        },
+        {
+          "name": "Medium Vulnerabilities",
+          "query": "vulnerabilities_medium_count",
+          "color": "#ffb84d",
+          "unit": "short"
+        },
+        {
+          "name": "Low Vulnerabilities",
+          "query": "vulnerabilities_low_count",
+          "color": "#2ca02c",
+          "unit": "short"
+        }
+      ]
+    },
+    {
+      "id": "security-events",
+      "title": "Recent Security Events",
+      "type": "logs",
+      "position": {
+        "x": 0,
+        "y": 23,
+        "w": 12,
+        "h": 8
+      },
+      "query": "security_events_log",
+      "fields": ["timestamp", "severity", "event_type", "container_id", "message"],
+      "time_field": "timestamp",
+      "level_field": "severity"
+    },
+    {
+      "id": "compliance-status",
+      "title": "Compliance Status",
+      "type": "pie",
+      "position": {
+        "x": 0,
+        "y": 31,
+        "w": 6,
+        "h": 6
+      },
+      "metrics": [
+        {
+          "name": "Compliant",
+          "query": "compliance_passed_count",
+          "color": "#2ca02c"
+        },
+        {
+          "name": "Non-Compliant",
+          "query": "compliance_failed_count",
+          "color": "#d62728"
+        },
+        {
+          "name": "Pending",
+          "query": "compliance_pending_count",
+          "color": "#ff7f0e"
+        }
+      ]
+    },
+    {
+      "id": "alert-summary",
+      "title": "Alert Summary",
+      "type": "stat",
+      "position": {
+        "x": 6,
+        "y": 31,
+        "w": 6,
+        "h": 6
+      },
+      "metrics": [
+        {
+          "name": "Critical Alerts",
+          "query": "alerts_critical_count",
+          "color": "#ff0000",
+          "unit": "short"
+        },
+        {
+          "name": "Warning Alerts",
+          "query": "alerts_warning_count",
+          "color": "#ff7f0e",
+          "unit": "short"
+        },
+        {
+          "name": "Info Alerts",
+          "query": "alerts_info_count",
+          "color": "#1f77b4",
+          "unit": "short"
+        }
+      ]
+    }
+  ],
+  "alerts": [
+    {
+      "id": "critical-vulnerability-alert",
+      "name": "Critical Vulnerability Detected",
+      "description": "Alert when critical vulnerabilities are detected in containers",
+      "query": "vulnerabilities_critical_count > 0",
+      "severity": "critical",
+      "frequency": "1m",
+      "actions": [
+        {
+          "type": "slack",
+          "webhook": "${SLACK_WEBHOOK}",
+          "message": "Critical vulnerability detected in container environment"
+        },
+        {
+          "type": "email",
+          "recipients": ["security@sovren.com"],
+          "subject": "Critical Security Alert"
+        }
+      ]
+    },
+    {
+      "id": "privileged-container-alert",
+      "name": "Privileged Container Running",
+      "description": "Alert when containers are running with privileged access",
+      "query": "privileged_containers_count > 0",
+      "severity": "critical",
+      "frequency": "30s",
+      "actions": [
+        {
+          "type": "slack",
+          "webhook": "${SLACK_WEBHOOK}",
+          "message": "Privileged container detected - immediate attention required"
+        }
+      ]
+    },
+    {
+      "id": "resource-exhaustion-alert",
+      "name": "Resource Exhaustion Warning",
+      "description": "Alert when containers exceed resource limits",
+      "query": "container_cpu_usage_percent > 80 OR container_memory_usage_percent > 80",
+      "severity": "warning",
+      "frequency": "5m",
+      "actions": [
+        {
+          "type": "slack",
+          "webhook": "${SLACK_WEBHOOK}",
+          "message": "Container resource usage exceeding limits"
+        }
+      ]
+    },
+    {
+      "id": "security-scan-failure-alert",
+      "name": "Security Scan Failure",
+      "description": "Alert when security scans fail",
+      "query": "security_scan_failures_count > 0",
+      "severity": "warning",
+      "frequency": "10m",
+      "actions": [
+        {
+          "type": "email",
+          "recipients": ["devops@sovren.com"],
+          "subject": "Security Scan Failure Alert"
+        }
+      ]
+    },
+    {
+      "id": "compliance-failure-alert",
+      "name": "Compliance Check Failure",
+      "description": "Alert when compliance checks fail",
+      "query": "compliance_score_percent < 90",
+      "severity": "warning",
+      "frequency": "1h",
+      "actions": [
+        {
+          "type": "slack",
+          "webhook": "${SLACK_WEBHOOK}",
+          "message": "Compliance score below threshold"
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "container_filter",
+      "type": "query",
+      "label": "Container",
+      "query": "SELECT DISTINCT container_name FROM containers",
+      "multi": true,
+      "include_all": true
+    },
+    {
+      "name": "time_range",
+      "type": "interval",
+      "label": "Time Range",
+      "options": ["5m", "15m", "1h", "6h", "24h", "7d"],
+      "default": "1h"
+    },
+    {
+      "name": "severity_filter",
+      "type": "custom",
+      "label": "Severity",
+      "options": ["critical", "warning", "info"],
+      "multi": true,
+      "include_all": true
+    }
+  ],
+  "annotations": [
+    {
+      "name": "Security Incidents",
+      "query": "security_incidents_log",
+      "time_field": "timestamp",
+      "text_field": "incident_description",
+      "tag_fields": ["severity", "incident_type"],
+      "color": "#ff0000"
+    },
+    {
+      "name": "Deployments",
+      "query": "deployment_events_log",
+      "time_field": "timestamp",
+      "text_field": "deployment_description",
+      "tag_fields": ["environment", "service"],
+      "color": "#2ca02c"
+    }
+  ],
+  "settings": {
+    "auto_refresh": true,
+    "refresh_interval": "30s",
+    "timezone": "UTC",
+    "theme": "dark",
+    "show_help": true,
+    "show_legend": true
+  }
+}

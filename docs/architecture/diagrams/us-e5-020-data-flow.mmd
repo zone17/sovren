@@ -1,0 +1,35 @@
+flowchart TD
+    Start([User Action]) --> ValidateInput{Valid Input?}
+    ValidateInput -->|No| ErrorResponse[Return Error]
+    ValidateInput -->|Yes| CheckCache{Cache Hit?}
+
+    CheckCache -->|Yes| ReturnCached[Return Cached Data]
+    CheckCache -->|No| LoadFromDB[Load from Database]
+
+    LoadFromDB --> CheckExists{Exists?}
+    CheckExists -->|No| CreateDefault[Create Default Preferences]
+    CheckExists -->|Yes| MergeData[Merge with Updates]
+
+    CreateDefault --> CacheData[Cache Data]
+    MergeData --> ValidatePrefs{Valid Preferences?}
+
+    ValidatePrefs -->|No| ErrorResponse
+    ValidatePrefs -->|Yes| UpdateDB[Update Database]
+
+    UpdateDB --> InvalidateCache[Invalidate Cache]
+    InvalidateCache --> AddHistory[Add History Entry]
+    AddHistory --> EmitEvent[Emit preference_updated Event]
+    EmitEvent --> CacheData
+
+    CacheData --> ReturnData[Return Updated Data]
+    ReturnCached --> End([Response])
+    ReturnData --> End
+    ErrorResponse --> End
+
+    style Start fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style End fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style ValidateInput fill:#2196F3,stroke:#1565C0,color:#fff
+    style CheckCache fill:#FF9800,stroke:#E65100,color:#fff
+    style ValidatePrefs fill:#2196F3,stroke:#1565C0,color:#fff
+    style CheckExists fill:#2196F3,stroke:#1565C0,color:#fff
+    style ErrorResponse fill:#F44336,stroke:#C62828,color:#fff

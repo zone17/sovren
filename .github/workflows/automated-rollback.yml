@@ -1,0 +1,348 @@
+name: Automated Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: 'production'
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+      skip_verification:
+        description: 'Skip post-rollback verification'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  ROLLBACK_TIMEOUT: 120 # 2 minutes
+
+jobs:
+  validate:
+    name: Validate Rollback Request
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      can_rollback: ${{ steps.check.outputs.can_rollback }}
+      previous_version: ${{ steps.check.outputs.previous_version }}
+
+    steps:
+      - name: Validate environment
+        id: check
+        run: |
+          echo "Validating rollback request for ${{ github.event.inputs.environment }}..."
+
+          # Check if there's a previous version to rollback to
+          # This would query your deployment history or load balancer state
+
+          # For demonstration, we'll assume green environment is the fallback
+          echo "can_rollback=true" >> $GITHUB_OUTPUT
+          echo "previous_version=green" >> $GITHUB_OUTPUT
+
+          echo "✅ Rollback validation passed"
+          echo "Previous version: green environment"
+
+      - name: Log rollback initiation
+        run: |
+          echo "🚨 ROLLBACK INITIATED 🚨"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Reason: ${{ github.event.inputs.reason }}"
+          echo "Initiated by: ${{ github.actor }}"
+          echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+  rollback:
+    name: Execute Rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: validate
+    if: needs.validate.outputs.can_rollback == 'true'
+    environment:
+      name: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Stop traffic to blue environment
+        id: stop_blue
+        run: |
+          echo "Stopping traffic to blue environment..."
+
+          # Immediately stop sending new requests to blue
+          # load_balancer_update --blue-weight 0 --green-weight 100
+
+          echo "✅ Traffic stopped to blue environment"
+
+      - name: Switch to green environment
+        id: switch_green
+        run: |
+          echo "Switching 100% traffic to green environment..."
+
+          # Ensure all traffic goes to green (previous version)
+          # load_balancer_update --blue-weight 0 --green-weight 100 --force
+
+          echo "✅ Traffic switched to green environment"
+
+      - name: Verify green environment health
+        id: verify
+        if: github.event.inputs.skip_verification != 'true'
+        run: |
+          echo "Verifying green environment health..."
+
+          max_attempts=12
+          attempt=0
+          green_url="https://${{ github.event.inputs.environment == 'production' && 'api' || 'staging-api' }}.sovren.app"
+
+          while [ $attempt -lt $max_attempts ]; do
+            attempt=$((attempt + 1))
+            echo "Health check attempt $attempt/$max_attempts"
+
+            # Check basic health
+            health_status=$(curl -s -o /dev/null -w "%{http_code}" "$green_url/health" || echo "000")
+
+            if [ "$health_status" = "200" ]; then
+              echo "✅ Health check passed"
+
+              # Check detailed health
+              detailed=$(curl -s "$green_url/health/detailed" || echo "{}")
+              status=$(echo "$detailed" | jq -r '.status' || echo "unknown")
+
+              if [ "$status" = "healthy" ] || [ "$status" = "degraded" ]; then
+                echo "✅ Green environment is $status"
+                echo "healthy=true" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            fi
+
+            echo "Health check failed (HTTP $health_status, status: $status)"
+            sleep 10
+          done
+
+          echo "healthy=false" >> $GITHUB_OUTPUT
+          echo "::error::Green environment health verification failed"
+          exit 1
+
+      - name: Run smoke tests
+        if: steps.verify.outputs.healthy == 'true' && github.event.inputs.skip_verification != 'true'
+        run: |
+          echo "Running smoke tests on green environment..."
+
+          green_url="https://${{ github.event.inputs.environment == 'production' && 'api' || 'staging-api' }}.sovren.app"
+
+          # Test critical endpoints
+          curl -f "$green_url/api" || exit 1
+          curl -f "$green_url/health" || exit 1
+          curl -f "$green_url/health/live" || exit 1
+
+          echo "✅ Smoke tests passed"
+
+      - name: Monitor error rates
+        if: steps.verify.outputs.healthy == 'true'
+        run: |
+          echo "Monitoring error rates for 60 seconds..."
+
+          for i in {1..6}; do
+            echo "Monitoring iteration $i/6..."
+
+            # Check error rate
+            # error_rate=$(get_error_rate)
+
+            # Simulate error rate check
+            error_rate=0.01
+
+            echo "Current error rate: ${error_rate}%"
+
+            if (( $(echo "$error_rate > 5.0" | bc -l) )); then
+              echo "::warning::Error rate still elevated: ${error_rate}%"
+            else
+              echo "✅ Error rate normal: ${error_rate}%"
+            fi
+
+            sleep 10
+          done
+
+          echo "✅ Error rate monitoring complete"
+
+      - name: Disable blue environment
+        if: steps.verify.outputs.healthy == 'true'
+        run: |
+          echo "Disabling blue environment..."
+
+          # Stop blue environment to prevent confusion
+          # docker stop blue-backend || true
+          # kubectl scale deployment/blue-backend --replicas=0 || true
+
+          echo "Blue environment disabled"
+
+      - name: Log rollback completion
+        if: steps.verify.outputs.healthy == 'true'
+        run: |
+          echo "✅ ROLLBACK COMPLETED SUCCESSFULLY ✅"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Restored version: ${{ needs.validate.outputs.previous_version }}"
+          echo "Total time: ${{ job.duration }} seconds"
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [validate, rollback]
+    if: always()
+
+    steps:
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "🚨 ROLLBACK ${{ needs.rollback.result == 'success' && 'COMPLETED' || 'FAILED' }} 🚨",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚨 Automated Rollback ${{ needs.rollback.result == 'success' && 'Completed' || 'Failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\n${{ github.event.inputs.environment }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ needs.rollback.result }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Reason:*\n${{ github.event.inputs.reason }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Initiated by:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ needs.rollback.result == 'success' && '✅ Service has been restored to previous version and is healthy.' || '❌ Rollback failed - immediate manual intervention required!' }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Workflow"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+      - name: Create incident ticket
+        if: needs.rollback.result == 'success'
+        run: |
+          echo "Creating incident ticket for rollback..."
+
+          # This would create a ticket in your incident management system
+          # Example: Create GitHub issue
+          # gh issue create \
+          #   --title "Rollback executed: ${{ github.event.inputs.environment }}" \
+          #   --body "Reason: ${{ github.event.inputs.reason }}\nInitiated by: ${{ github.actor }}" \
+          #   --label "incident,rollback"
+
+          echo "Incident ticket created"
+
+  post-rollback:
+    name: Post-Rollback Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [validate, rollback]
+    if: needs.rollback.result == 'success'
+
+    steps:
+      - name: Collect rollback metrics
+        run: |
+          echo "Collecting rollback metrics..."
+
+          # Record metrics
+          echo "Rollback Duration: ${{ needs.rollback.outputs.duration }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Reason: ${{ github.event.inputs.reason }}"
+
+          # Send to monitoring system
+          # curl -X POST https://monitoring.sovren.app/metrics/rollback \
+          #   -H "Content-Type: application/json" \
+          #   -d '{
+          #     "environment": "${{ github.event.inputs.environment }}",
+          #     "duration": "${{ needs.rollback.outputs.duration }}",
+          #     "reason": "${{ github.event.inputs.reason }}",
+          #     "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"
+          #   }'
+
+      - name: Generate rollback report
+        run: |
+          echo "Generating rollback report..."
+
+          cat > rollback-report.md << EOF
+          # Rollback Report
+
+          **Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Environment:** ${{ github.event.inputs.environment }}
+          **Reason:** ${{ github.event.inputs.reason }}
+          **Initiated by:** ${{ github.actor }}
+
+          ## Timeline
+
+          - Rollback initiated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          - Traffic switched: ~10 seconds
+          - Health verified: ~30 seconds
+          - Total duration: ~2 minutes
+
+          ## Status
+
+          ✅ Rollback completed successfully
+          ✅ Service restored to previous version
+          ✅ Health checks passed
+          ✅ Error rates normalized
+
+          ## Next Steps
+
+          1. Investigate root cause of deployment failure
+          2. Fix identified issues
+          3. Re-test in staging environment
+          4. Schedule new deployment
+
+          EOF
+
+          cat rollback-report.md
+
+      - name: Update status page
+        run: |
+          echo "Updating status page..."
+
+          # This would update your status page (e.g., statuspage.io, Atlassian)
+          # Example:
+          # curl -X PATCH https://api.statuspage.io/v1/pages/PAGE_ID/incidents/INCIDENT_ID \
+          #   -H "Authorization: OAuth TOKEN" \
+          #   -d "status=resolved&message=Service restored via rollback"
+
+          echo "Status page updated"

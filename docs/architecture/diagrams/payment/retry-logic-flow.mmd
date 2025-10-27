@@ -1,0 +1,124 @@
+%% Retry Logic Flow with Exponential Backoff & Circuit Breaker (PAY-009)
+%% PAY-018: Payment Flow Mermaid Diagrams
+%%
+%% This flowchart shows the enhanced retry logic implemented in PAY-009,
+%% including exponential backoff with full jitter and circuit breaker pattern.
+%%
+%% Key Features:
+%% - Exponential backoff: delay = baseDelay * 2^attempt (capped at maxDelay)
+%% - Full jitter: delay * random(0, 1) prevents thundering herd
+%% - Circuit breaker: Opens after 5 consecutive failures
+%% - Half-open state: Tests recovery after timeout
+%% - Configurable retry policy
+%% - Comprehensive error handling
+
+flowchart TD
+    Start([Payment Failed]) --> CheckError{Error Code<br/>Retryable?}
+
+    %% Non-retryable path
+    CheckError -->|No| NonRetryable[Log: Non-retryable error]
+    NonRetryable --> MarkFailed[Mark payment as FAILED]
+    MarkFailed --> NotifyUser[Send failure notification]
+    NotifyUser --> End1([End - No Retry])
+
+    %% Retryable path
+    CheckError -->|Yes| CheckAttempts{Attempts < Max?<br/>Default: 5}
+
+    %% Max attempts exceeded
+    CheckAttempts -->|No| MaxExceeded[Log: Max retries exceeded]
+    MaxExceeded --> MarkFailed
+
+    %% Retry allowed
+    CheckAttempts -->|Yes| CheckCircuit{Circuit Breaker<br/>State?}
+
+    %% Circuit Breaker States
+    CheckCircuit -->|OPEN| CheckTimeout{Timeout<br/>Expired?<br/>Default: 60s}
+
+    CheckTimeout -->|No| BlockRetry[Block retry attempt]
+    BlockRetry --> LogBlocked[Log: Circuit breaker blocking]
+    LogBlocked --> ThrowError[Throw CircuitBreakerOpenError]
+    ThrowError --> End2([End - Blocked])
+
+    CheckTimeout -->|Yes| HalfOpen[Transition to HALF-OPEN]
+    HalfOpen --> LogHalfOpen[Log: Testing recovery]
+    LogHalfOpen --> AllowSingleRetry[Allow single test retry]
+    AllowSingleRetry --> CalculateDelay
+
+    CheckCircuit -->|HALF-OPEN| AllowSingleRetry
+
+    CheckCircuit -->|CLOSED| CalculateDelay[Calculate Retry Delay]
+
+    %% Exponential Backoff Calculation
+    CalculateDelay --> BaseCalc[baseDelay = 1000ms<br/>Default: 1 second]
+    BaseCalc --> ExponentialCalc[exponentialDelay =<br/>baseDelay * 2^attempt]
+
+    ExponentialCalc --> Example[Example:<br/>Attempt 1: 1000ms<br/>Attempt 2: 2000ms<br/>Attempt 3: 4000ms<br/>Attempt 4: 8000ms<br/>Attempt 5: 16000ms]
+
+    Example --> CapDelay{Delay ><br/>maxDelay?<br/>Default: 60s}
+
+    CapDelay -->|Yes| ApplyCap[delay = maxDelay<br/>60000ms]
+    CapDelay -->|No| UseCalculated[delay = exponentialDelay]
+
+    ApplyCap --> ApplyJitter
+    UseCalculated --> ApplyJitter[Apply Full Jitter]
+
+    %% Full Jitter Application
+    ApplyJitter --> JitterCalc[jitteredDelay =<br/>floor delay * random 0, 1]
+    JitterCalc --> JitterExample[Example:<br/>Max delay: 4000ms<br/>Jitter range: 0-4000ms<br/>Avg delay: 2000ms]
+
+    JitterExample --> JitterBenefit[Benefit:<br/>Prevents thundering herd<br/>Distributes retry load<br/>50% avg reduction]
+
+    %% Schedule Retry
+    JitterBenefit --> ScheduleRetry[Schedule retry job]
+    ScheduleRetry --> RecordAttempt[INSERT retry_attempts]
+    RecordAttempt --> RecordDetails[Record:<br/>- attempt_number<br/>- scheduled_at<br/>- delay_ms<br/>- backoff_multiplier]
+
+    RecordDetails --> SetTimer[Set timer for jitteredDelay]
+    SetTimer --> LogScheduled[Log: Retry scheduled]
+    LogScheduled --> End3([End - Retry Scheduled])
+
+    %% Execute Retry (Timer Fires)
+    End3 -.->|Timer fires| ExecuteStart([Execute Retry])
+    ExecuteStart --> VerifyPayment[Verify payment status<br/>See: payment-verification-flow.mmd]
+
+    VerifyPayment --> VerifyResult{Verification<br/>Result?}
+
+    %% Success Path
+    VerifyResult -->|Success| RecordSuccess[Record retry success]
+    RecordSuccess --> ResetCircuit[Circuit Breaker:<br/>CLOSE + reset counter]
+    ResetCircuit --> LogSuccess[Log: Payment verified]
+    LogSuccess --> TransitionComplete[Transition to COMPLETED]
+    TransitionComplete --> NotifySuccess[Notify user: Payment successful]
+    NotifySuccess --> UpdateMetrics[Update metrics:<br/>- successful_retries++<br/>- success_rate recalc]
+    UpdateMetrics --> End4([End - Success])
+
+    %% Failure Path
+    VerifyResult -->|Failure| RecordFailure[Record retry failure]
+    RecordFailure --> IncrementCircuit[Circuit Breaker:<br/>failureCount++]
+    IncrementCircuit --> CheckThreshold{failureCount >=<br/>threshold?<br/>Default: 5}
+
+    CheckThreshold -->|Yes| OpenCircuit[OPEN circuit breaker]
+    OpenCircuit --> LogOpen[Log: Circuit opened<br/>Alert operations team]
+    LogOpen --> SetOpenTime[Record opened_at timestamp]
+    SetOpenTime --> FailureLoop[Loop back to retry logic]
+    FailureLoop -.->|Next retry| Start
+
+    CheckThreshold -->|No| KeepClosed[Keep circuit CLOSED]
+    KeepClosed --> FailureLoop
+
+    %% Styling
+    classDef startEnd fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef process fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef error fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    classDef success fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef circuit fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef jitter fill:#e0f2f1,stroke:#004d40,stroke-width:2px
+
+    class Start,End1,End2,End3,End4,ExecuteStart startEnd
+    class CheckError,CheckAttempts,CheckCircuit,CheckTimeout,CapDelay,VerifyResult,CheckThreshold decision
+    class CalculateDelay,BaseCalc,ExponentialCalc,Example,ScheduleRetry,RecordAttempt,RecordDetails,SetTimer,VerifyPayment,TransitionComplete,NotifySuccess,UpdateMetrics process
+    class NonRetryable,MarkFailed,MaxExceeded,BlockRetry,LogBlocked,ThrowError error
+    class RecordSuccess,LogSuccess,NotifySuccess success
+    class CheckCircuit,HalfOpen,AllowSingleRetry,ResetCircuit,IncrementCircuit,OpenCircuit,LogOpen,SetOpenTime,KeepClosed circuit
+    class ApplyJitter,JitterCalc,JitterExample,JitterBenefit jitter

@@ -1,0 +1,267 @@
+{
+  "SchemaVersion": 2,
+  "CreatedAt": "2025-06-29T10:35:25.160059-04:00",
+  "ArtifactName": "certbot/certbot:latest",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "Size": 119362560,
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.20.6"
+    },
+    "ImageID": "sha256:95d0b35bc337d35dbdfed0c7e51498c727d9c1c49755cdbc099ca9b01470400a",
+    "DiffIDs": [
+      "sha256:994456c4fd7b2b87346a81961efb4ce945a39592d32e0762b38768bca7c7d085",
+      "sha256:742e38c37a3df8d7685f163c146ab948120a81e39dd97817addae56e878b6f1a",
+      "sha256:7b7e15815a1df5e94833097b7f662b81e9d1395b4c874b79ff8001d05fae55a5",
+      "sha256:dbb969ba5eafbfe83869528a067a90aae0fca8d7a8f6e9eed106d7298bce9402",
+      "sha256:f32fe9d781e9d32ba80fd2b30a27629648a10d56dddc48ad28bc779b63eca7ea",
+      "sha256:ff73bbad7de210501b297a23f1088afe27f02eb2ccb772b97825a49a85873b6b",
+      "sha256:c03686bc9e4caea59f8d9afec71188f348d4a2e3faad5072509787a6a3bfca35",
+      "sha256:f3317624d866ed469e048cbc328e6cc1aa86eef2fa59edfea92db75cf4e4d94c",
+      "sha256:8337fe606356b0a01fc667121d0eacba9eead25523b7c6669cd65ff21438b297",
+      "sha256:c36cc8abde5ec080abc8648d8f79113ee12f69cfe7b982c63965e03ee911fd11",
+      "sha256:3afa4b5eb8c8fdc6161da44e7381e73f789a4a4ba466ee51ac5347f29a439ff1"
+    ],
+    "RepoTags": [
+      "certbot/certbot:latest"
+    ],
+    "RepoDigests": [
+      "certbot/certbot@sha256:263fe7ee9dde6440bf8baa957c0a8eb0118fc05ef86cf743c4cc84ca84303a21"
+    ],
+    "ImageConfig": {
+      "architecture": "amd64",
+      "created": "2025-06-12T18:13:30.969499511Z",
+      "history": [
+        {
+          "created": "2025-02-14T03:00:07Z",
+          "created_by": "ADD alpine-minirootfs-3.20.6-x86_64.tar.gz / # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-02-14T03:00:07Z",
+          "created_by": "CMD [\"/bin/sh\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "ENV LANG=C.UTF-8",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "RUN /bin/sh -c set -eux; \tapk add --no-cache \t\tca-certificates \t\ttzdata \t; # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "ENV GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "ENV PYTHON_VERSION=3.12.10",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "ENV PYTHON_SHA256=07ab697474595e06f06647417d3c7fa97ded07afc1a7e4454c5639919b46eaea",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "RUN /bin/sh -c set -eux; \t\tapk add --no-cache --virtual .build-deps \t\tgnupg \t\ttar \t\txz \t\t\t\tbluez-dev \t\tbzip2-dev \t\tdpkg-dev dpkg \t\tfindutils \t\tgcc \t\tgdbm-dev \t\tlibc-dev \t\tlibffi-dev \t\tlibnsl-dev \t\tlibtirpc-dev \t\tlinux-headers \t\tmake \t\tncurses-dev \t\topenssl-dev \t\tpax-utils \t\treadline-dev \t\tsqlite-dev \t\ttcl-dev \t\ttk \t\ttk-dev \t\tutil-linux-dev \t\txz-dev \t\tzlib-dev \t; \t\twget -O python.tar.xz \"https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz\"; \techo \"$PYTHON_SHA256 *python.tar.xz\" | sha256sum -c -; \twget -O python.tar.xz.asc \"https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc\"; \tGNUPGHOME=\"$(mktemp -d)\"; export GNUPGHOME; \tgpg --batch --keyserver hkps://keys.openpgp.org --recv-keys \"$GPG_KEY\"; \tgpg --batch --verify python.tar.xz.asc python.tar.xz; \tgpgconf --kill all; \trm -rf \"$GNUPGHOME\" python.tar.xz.asc; \tmkdir -p /usr/src/python; \ttar --extract --directory /usr/src/python --strip-components=1 --file python.tar.xz; \trm python.tar.xz; \t\tcd /usr/src/python; \tgnuArch=\"$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)\"; \t./configure \t\t--build=\"$gnuArch\" \t\t--enable-loadable-sqlite-extensions \t\t--enable-option-checking=fatal \t\t--enable-shared \t\t$(test \"$gnuArch\" != 'riscv64-linux-musl' \u0026\u0026 echo '--with-lto') \t\t--with-ensurepip \t; \tnproc=\"$(nproc)\"; \tEXTRA_CFLAGS=\"-DTHREAD_STACK_SIZE=0x100000\"; \tLDFLAGS=\"${LDFLAGS:--Wl},--strip-all\"; \t\tarch=\"$(apk --print-arch)\"; \t\tcase \"$arch\" in \t\t\tx86_64|aarch64) \t\t\t\tEXTRA_CFLAGS=\"${EXTRA_CFLAGS:-} -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer\"; \t\t\t\t;; \t\t\tx86) \t\t\t\t;; \t\t\t*) \t\t\t\tEXTRA_CFLAGS=\"${EXTRA_CFLAGS:-} -fno-omit-frame-pointer\"; \t\t\t\t;; \t\tesac; \tmake -j \"$nproc\" \t\t\"EXTRA_CFLAGS=${EXTRA_CFLAGS:-}\" \t\t\"LDFLAGS=${LDFLAGS:-}\" \t; \trm python; \tmake -j \"$nproc\" \t\t\"EXTRA_CFLAGS=${EXTRA_CFLAGS:-}\" \t\t\"LDFLAGS=${LDFLAGS:--Wl},-rpath='\\$\\$ORIGIN/../lib'\" \t\tpython \t; \tmake install; \t\tcd /; \trm -rf /usr/src/python; \t\tfind /usr/local -depth \t\t\\( \t\t\t\\( -type d -a \\( -name test -o -name tests -o -name idle_test \\) \\) \t\t\t-o \\( -type f -a \\( -name '*.pyc' -o -name '*.pyo' -o -name 'libpython*.a' \\) \\) \t\t\\) -exec rm -rf '{}' + \t; \t\tfind /usr/local -type f -executable -not \\( -name '*tkinter*' \\) -exec scanelf --needed --nobanner --format '%n#p' '{}' ';' \t\t| tr ',' '\\n' \t\t| sort -u \t\t| awk 'system(\"[ -e /usr/local/lib/\" $1 \" ]\") == 0 { next } { print \"so:\" $1 }' \t\t| xargs -rt apk add --no-network --virtual .python-rundeps \t; \tapk del --no-network .build-deps; \t\texport PYTHONDONTWRITEBYTECODE=1; \tpython3 --version; \tpip3 --version # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "RUN /bin/sh -c set -eux; \tfor src in idle3 pip3 pydoc3 python3 python3-config; do \t\tdst=\"$(echo \"$src\" | tr -d 3)\"; \t\t[ -s \"/usr/local/bin/$src\" ]; \t\t[ ! -e \"/usr/local/bin/$dst\" ]; \t\tln -svT \"$src\" \"/usr/local/bin/$dst\"; \tdone # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-05-08T22:27:23Z",
+          "created_by": "CMD [\"python3\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-12T18:12:50.474436112Z",
+          "created_by": "ENTRYPOINT [\"certbot\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-12T18:12:50.474436112Z",
+          "created_by": "EXPOSE map[443/tcp:{} 80/tcp:{}]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-12T18:12:50.474436112Z",
+          "created_by": "VOLUME [/etc/letsencrypt /var/lib/letsencrypt]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-12T18:12:50.474436112Z",
+          "created_by": "WORKDIR /opt/certbot",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-12T18:12:50.498168463Z",
+          "created_by": "COPY CHANGELOG.md README.rst src/ # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-12T18:12:50.526174022Z",
+          "created_by": "COPY tools tools # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-12T18:12:50.585050046Z",
+          "created_by": "COPY acme src/acme # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-12T18:12:50.70944491Z",
+          "created_by": "COPY certbot src/certbot # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-12T18:12:52.042889002Z",
+          "created_by": "RUN /bin/sh -c apk add --no-cache --virtual .certbot-deps         libffi         libssl3         openssl         ca-certificates         binutils # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2025-06-12T18:12:52.042889002Z",
+          "created_by": "ARG CARGO_NET_GIT_FETCH_WITH_CLI=true",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2025-06-12T18:13:30.969499511Z",
+          "created_by": "RUN |1 CARGO_NET_GIT_FETCH_WITH_CLI=true /bin/sh -c apk add --no-cache --virtual .build-deps         gcc         linux-headers         openssl-dev         musl-dev         libffi-dev         python3-dev         cargo         git         pkgconfig     \u0026\u0026 CARGO_LOG=trace CARGO_TERM_VERBOSE=true python tools/pip_install.py             --no-cache-dir -vvv             --editable src/acme             --editable src/certbot     \u0026\u0026 apk del .build-deps     \u0026\u0026 rm -rf ${HOME}/.cargo # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        }
+      ],
+      "os": "linux",
+      "rootfs": {
+        "type": "layers",
+        "diff_ids": [
+          "sha256:994456c4fd7b2b87346a81961efb4ce945a39592d32e0762b38768bca7c7d085",
+          "sha256:742e38c37a3df8d7685f163c146ab948120a81e39dd97817addae56e878b6f1a",
+          "sha256:7b7e15815a1df5e94833097b7f662b81e9d1395b4c874b79ff8001d05fae55a5",
+          "sha256:dbb969ba5eafbfe83869528a067a90aae0fca8d7a8f6e9eed106d7298bce9402",
+          "sha256:f32fe9d781e9d32ba80fd2b30a27629648a10d56dddc48ad28bc779b63eca7ea",
+          "sha256:ff73bbad7de210501b297a23f1088afe27f02eb2ccb772b97825a49a85873b6b",
+          "sha256:c03686bc9e4caea59f8d9afec71188f348d4a2e3faad5072509787a6a3bfca35",
+          "sha256:f3317624d866ed469e048cbc328e6cc1aa86eef2fa59edfea92db75cf4e4d94c",
+          "sha256:8337fe606356b0a01fc667121d0eacba9eead25523b7c6669cd65ff21438b297",
+          "sha256:c36cc8abde5ec080abc8648d8f79113ee12f69cfe7b982c63965e03ee911fd11",
+          "sha256:3afa4b5eb8c8fdc6161da44e7381e73f789a4a4ba466ee51ac5347f29a439ff1"
+        ]
+      },
+      "config": {
+        "Entrypoint": [
+          "certbot"
+        ],
+        "Env": [
+          "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG=C.UTF-8",
+          "GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305",
+          "PYTHON_VERSION=3.12.10",
+          "PYTHON_SHA256=07ab697474595e06f06647417d3c7fa97ded07afc1a7e4454c5639919b46eaea"
+        ],
+        "Volumes": {
+          "/etc/letsencrypt": {},
+          "/var/lib/letsencrypt": {}
+        },
+        "WorkingDir": "/opt/certbot",
+        "ExposedPorts": {
+          "443/tcp": {},
+          "80/tcp": {}
+        }
+      }
+    },
+    "Layers": [
+      {
+        "Size": 8088576,
+        "Digest": "sha256:0a9a5dfd008f05ebc27e4790db0709a29e527690c21bcbcd01481eaeb6bb49dc",
+        "DiffID": "sha256:994456c4fd7b2b87346a81961efb4ce945a39592d32e0762b38768bca7c7d085"
+      },
+      {
+        "Size": 1687552,
+        "Digest": "sha256:1799ce2dd17e35796abb5baa5ebd092f2e3acebfafbd180f0e07c2403e9209a7",
+        "DiffID": "sha256:742e38c37a3df8d7685f163c146ab948120a81e39dd97817addae56e878b6f1a"
+      },
+      {
+        "Size": 40451584,
+        "Digest": "sha256:8be8a68a3e49fec0b56794e7483db21dd3d7adf6591594deaa58e270f22f976a",
+        "DiffID": "sha256:7b7e15815a1df5e94833097b7f662b81e9d1395b4c874b79ff8001d05fae55a5"
+      },
+      {
+        "Size": 5120,
+        "Digest": "sha256:1d7a63b094ee269ef952d5db0120848504eae8e5a17c28267080178878fe7efc",
+        "DiffID": "sha256:dbb969ba5eafbfe83869528a067a90aae0fca8d7a8f6e9eed106d7298bce9402"
+      },
+      {
+        "Size": 2048,
+        "Digest": "sha256:a2c580eaba127106d1eb12645055643fb390546815e719ad3e2ce558802df061",
+        "DiffID": "sha256:f32fe9d781e9d32ba80fd2b30a27629648a10d56dddc48ad28bc779b63eca7ea"
+      },
+      {
+        "Size": 137216,
+        "Digest": "sha256:37579339bb657ef9c0bad7fc11497e1e4b8b6c77d39d1a285358e6d93602fd6a",
+        "DiffID": "sha256:ff73bbad7de210501b297a23f1088afe27f02eb2ccb772b97825a49a85873b6b"
+      },
+      {
+        "Size": 138240,
+        "Digest": "sha256:d9e07b9e5b0757402183564f728b4bbd04ed9bd09157c996a03be3df577caaf2",
+        "DiffID": "sha256:c03686bc9e4caea59f8d9afec71188f348d4a2e3faad5072509787a6a3bfca35"
+      },
+      {
+        "Size": 407552,
+        "Digest": "sha256:d58808100c8d2e23c0ad3c8f0a97d6828d8684c16618a578986f382ddcae84f4",
+        "DiffID": "sha256:f3317624d866ed469e048cbc328e6cc1aa86eef2fa59edfea92db75cf4e4d94c"
+      },
+      {
+        "Size": 2007552,
+        "Digest": "sha256:56082c55746e2c8c1d516eb08f2fe0b667e33010bc9a4cc11e3799bcacf3bbf5",
+        "DiffID": "sha256:8337fe606356b0a01fc667121d0eacba9eead25523b7c6669cd65ff21438b297"
+      },
+      {
+        "Size": 14067712,
+        "Digest": "sha256:396afed88755954e9e6330028c52fd1221b03a5fc31831a2caefbbd32bdd823b",
+        "DiffID": "sha256:c36cc8abde5ec080abc8648d8f79113ee12f69cfe7b982c63965e03ee911fd11"
+      },
+      {
+        "Size": 52369408,
+        "Digest": "sha256:04e4c8d13e2f10e6a0efe7c7d95a630dd5083096c67d41240bb94b54b0e611a5",
+        "DiffID": "sha256:3afa4b5eb8c8fdc6161da44e7381e73f789a4a4ba466ee51ac5347f29a439ff1"
+      }
+    ]
+  },
+  "Results": [
+    {
+      "Target": "certbot/certbot:latest (alpine 3.20.6)",
+      "Class": "os-pkgs",
+      "Type": "alpine"
+    },
+    {
+      "Target": "Python",
+      "Class": "lang-pkgs",
+      "Type": "python-pkg"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+%% US-317: NOSTR Caching Layer - TTL Strategy
+%% Time-To-Live configuration for different event types
+
+graph LR
+    subgraph "TTL Configuration"
+        A[Event Type] --> B{Determine TTL}
+
+        B -->|Kind 1: Text Notes| C[5 minutes]
+        B -->|Kind 0: Profiles| D[1 hour]
+        B -->|Kind 3: Contact Lists| E[1 hour]
+        B -->|Kind 7: Reactions| F[5 minutes]
+        B -->|NIP-05 Verification| G[24 hours]
+        B -->|Custom Events| H[5 minutes default]
+    end
+
+    subgraph "Expiration Handling"
+        C --> I[Set expiresAt]
+        D --> I
+        E --> I
+        F --> I
+        G --> I
+        H --> I
+
+        I --> J{On Access}
+        J -->|TTL Expired| K[Delete from cache]
+        J -->|TTL Valid| L[Update lastAccessed]
+
+        K --> M[Increment expirations]
+        L --> N[Return cached data]
+    end
+
+    subgraph "Automatic Cleanup"
+        O[Cleanup Timer] -->|Every 5 minutes| P[Scan for expired]
+        P --> Q[Delete expired events]
+        Q --> R[Update statistics]
+    end
+
+    style C fill:#FF9800,stroke:#F57C00,color:#fff
+    style D fill:#4CAF50,stroke:#388E3C,color:#fff
+    style E fill:#4CAF50,stroke:#388E3C,color:#fff
+    style G fill:#2196F3,stroke:#1976D2,color:#fff
+    style K fill:#f44336,stroke:#d32f2f,color:#fff
+    style L fill:#8BC34A,stroke:#689F38,color:#fff

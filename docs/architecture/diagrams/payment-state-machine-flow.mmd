@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant Client
+    participant StateMachine
+    participant Database
+    participant EventLog
+
+    Client->>StateMachine: transition(paymentId, PROCESSING)
+
+    activate StateMachine
+    StateMachine->>Database: SELECT payment WHERE id = ?
+    Database-->>StateMachine: Payment (state: PENDING)
+
+    StateMachine->>StateMachine: validateTransition(PENDING → PROCESSING)
+
+    alt Transition Valid
+        StateMachine->>Database: CALL transition_payment_state()
+        activate Database
+        Database->>Database: BEGIN TRANSACTION
+        Database->>Database: UPDATE payments SET state = PROCESSING
+        Database->>Database: INSERT INTO payment_events
+        Database->>Database: COMMIT TRANSACTION
+        deactivate Database
+        Database-->>StateMachine: Success
+
+        StateMachine->>Database: SELECT payment WHERE id = ?
+        Database-->>StateMachine: Updated Payment
+
+        StateMachine->>Database: SELECT latest event
+        Database-->>StateMachine: Event Record
+
+        StateMachine->>EventLog: Log transition success
+        StateMachine-->>Client: TransitionResult (success: true)
+    else Transition Invalid
+        StateMachine->>EventLog: Log validation failure
+        StateMachine-->>Client: InvalidTransitionError
+    end
+    deactivate StateMachine

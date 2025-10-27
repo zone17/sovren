@@ -3,3 +3,159 @@ description:
 globs:
 alwaysApply: false
 ---
+# Sovren Ways of Working
+
+## Development Workflow
+
+### User Story Implementation
+
+1. **Read and understand requirements**
+   - Review the user story in detail
+   - Clarify any questions with the product owner
+   - Understand the acceptance criteria
+
+2. **Create Mermaid diagrams FIRST**
+   - Architecture Overview Diagram
+   - Component Interaction Diagram
+   - Data Flow Diagram
+   - Process Flow Diagram
+   - Implementation-Specific Diagrams (as needed)
+   - Reference: [Mermaid Diagram Guide](docs/development/mermaid-diagram-guide.md)
+
+3. **Design review**
+   - Review diagrams with team members
+   - Validate approach against architectural standards
+   - Get early feedback before implementation
+
+4. **Test-Driven Development**
+   - Write tests before implementation
+   - Ensure 95%+ test coverage
+   - Follow the Red-Green-Refactor cycle
+
+5. **Implementation**
+   - Follow the [Code of Craft](CODE_OF_CRAFT.md) principles
+   - Adhere to project coding standards
+   - Keep functions small and focused
+   - Use clear, intention-revealing names
+
+6. **Documentation**
+   - Update relevant documentation
+   - Add JSDoc comments to all public APIs
+   - Create or update README files as needed
+   - Update CHANGELOG.md with implementation details
+
+7. **Quality validation**
+   - Run all automated quality checks
+   - Ensure all [Quality Gates](docs/quality-gates.md) pass
+   - Perform manual testing as needed
+
+8. **Pull Request**
+   - Create a PR with a clear description
+   - Reference the user story and requirements
+   - Include all required Mermaid diagrams
+   - Attach screenshots of UI changes if applicable
+
+9. **Code Review**
+   - Address all review comments
+   - Ensure all quality gates pass
+   - Get required approvals
+
+10. **Merge and Deploy** (UPDATED: Post Epic 006 - 100% CI/CD Automation)
+    - Merge to main branch (triggers automated staging deployment)
+    - **CI/CD Pipeline Execution**:
+      - Automated quality gates execute (lint, tests, security scans)
+      - Docker images built and pushed to GHCR
+      - All checks MUST pass before deployment proceeds
+    - **Staging Deployment** (Automatic):
+      - Auto-deploys to staging environment on main merge
+      - Database migrations run automatically
+      - Health checks execute (/health, /ready, /live)
+      - Smoke tests run (28+ tests must pass)
+    - **Validation**:
+      - Verify staging health: `curl https://api-staging.sovren.dev/health`
+      - Monitor deployment: `gh run watch`
+      - Review deployment logs: `gh run view --log`
+      - Confirm smoke tests passing
+    - **Production Deployment** (Manual Approval):
+      - Trigger: `gh workflow run backend-deployment.yml -f environment=production`
+      - Approve in GitHub UI (1 required reviewer)
+      - Blue-green deployment with progressive traffic shift
+      - Automatic rollback if error rate > 5% or health checks fail
+    - **Story Completion Documentation**:
+      - Document deployment status in completion summary
+      - Include deployment verification commands
+      - Confirm staging deployment success
+      - Note production deployment readiness
+    - **Reference**: [Deployment Integration Standards](docs/development/DEPLOYMENT_INTEGRATION_STANDARDS.md)
+
+## Mermaid Diagram Requirements
+
+All user story implementations **MUST** include the following diagrams:
+
+1. **Architecture Overview Diagram**
+   - Shows the components involved in the implementation
+   - Illustrates the relationship between components
+   - Places the changes within the broader system context
+
+2. **Component Interaction Diagram**
+   - Details how components interact with each other
+   - Shows the sequence of operations
+   - Illustrates API calls and data exchange patterns
+
+3. **Data Flow Diagram**
+   - Visualizes how data moves through the system
+   - Shows data transformation steps
+   - Illustrates storage points and persistence mechanisms
+
+4. **Process Flow Diagram**
+   - Provides step-by-step visualization of user interactions
+   - Shows system processes and decision points
+   - Illustrates error handling paths
+
+5. **Implementation-Specific Diagrams** (as needed)
+   - Database schema diagrams for data model changes
+   - State machine diagrams for complex state management
+   - Network topology diagrams for infrastructure changes
+   - Security flow diagrams for authentication/authorization features
+
+For detailed guidance, refer to the [Mermaid Diagram Guide](docs/development/mermaid-diagram-guide.md) and [Mermaid Requirements](docs/development/mermaid-requirement.md).
+
+## Communication
+
+### Daily Stand-ups
+
+- Focus on progress, blockers, and plans
+- Keep updates concise and relevant
+- Flag any issues that need wider discussion
+
+### Code Reviews
+
+- Be constructive and respectful
+- Focus on code quality, not style preferences
+- Verify that all required diagrams are present and clear
+- Ensure documentation is complete and accurate
+- Check that tests are comprehensive and pass
+
+### Documentation
+
+- Keep documentation up-to-date
+- Document architectural decisions
+- Create and update Mermaid diagrams
+- Maintain comprehensive CHANGELOG entries
+
+## Quality Standards
+
+- Follow the [11 Commandments of Elite Engineering Excellence](CODE_OF_CRAFT.md)
+- Ensure all code changes pass the defined [Quality Gates](docs/quality-gates.md)
+- Maintain 95%+ test coverage for all new code
+- Create comprehensive Mermaid diagrams for all implementations
+- Keep technical debt to a minimum
+
+## Continuous Improvement
+
+- Regularly review and update these ways of working
+- Share best practices and lessons learned
+- Contribute to improving documentation and guides
+- Suggest enhancements to quality gates and standards
+
+These ways of working are mandatory for all team members and AI contributors. No exceptions are permitted without explicit approval from the engineering leadership team.

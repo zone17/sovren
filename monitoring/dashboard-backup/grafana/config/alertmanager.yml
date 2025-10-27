@@ -1,0 +1,121 @@
+# AlertManager Configuration for Sovren Payment Alerts
+
+global:
+  resolve_timeout: 5m
+  slack_api_url_file: /etc/alertmanager/slack_url
+
+route:
+  group_by: ['alertname', 'severity', 'team']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default-receiver'
+
+  routes:
+    # Critical alerts: Page + Slack + Email
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 1h
+      continue: false
+
+    # Warning alerts: Slack only
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+
+    # Info alerts: Slack (less frequent)
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      group_wait: 1m
+      group_interval: 10m
+      repeat_interval: 12h
+
+receivers:
+  - name: 'default-receiver'
+    slack_configs:
+      - channel: '#payments-alerts'
+        title: 'Sovren Payment Alert'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Summary:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+
+  - name: 'critical-alerts'
+    pagerduty_configs:
+      - routing_key_file: /etc/alertmanager/pagerduty_key
+        severity: critical
+        description: '{{ .CommonAnnotations.summary }}'
+        details:
+          firing: '{{ .Alerts.Firing | len }}'
+          resolved: '{{ .Alerts.Resolved | len }}'
+    slack_configs:
+      - channel: '#payments-critical'
+        title: '🚨 CRITICAL Payment Alert'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* CRITICAL
+          *Summary:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Runbook:* {{ .Annotations.runbook_url }}
+          *Dashboard:* {{ .Annotations.dashboard_url }}
+          {{ end }}
+        color: danger
+    email_configs:
+      - to: 'oncall@sovren.app'
+        from: 'alerts@sovren.app'
+        smarthost: 'smtp.sendgrid.net:587'
+        auth_username: 'apikey'
+        auth_password_file: /etc/alertmanager/sendgrid_key
+        headers:
+          Subject: '🚨 CRITICAL: {{ .CommonLabels.alertname }}'
+
+  - name: 'warning-alerts'
+    slack_configs:
+      - channel: '#payments-alerts'
+        title: '⚠️ Payment Warning'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* WARNING
+          *Summary:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Runbook:* {{ .Annotations.runbook_url }}
+          {{ end }}
+        color: warning
+
+  - name: 'info-alerts'
+    slack_configs:
+      - channel: '#payments-info'
+        title: 'ℹ️ Payment Info'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Summary:* {{ .Annotations.summary }}
+          {{ end }}
+        color: good
+
+inhibit_rules:
+  # Suppress warning alerts if critical alert for same service is firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+
+  # Suppress info alerts if warning or critical is firing
+  - source_match_re:
+      severity: 'critical|warning'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'service']

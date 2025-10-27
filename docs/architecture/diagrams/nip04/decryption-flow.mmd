@@ -1,0 +1,54 @@
+```mermaid
+sequenceDiagram
+    participant Bob
+    participant NIP04Service
+    participant KeyMgmt
+    participant SpamCheck
+    participant ECDH
+    participant AES256
+    participant Cache
+
+    Note over Bob,Cache: Encrypted DM Decryption Flow
+
+    Bob->>NIP04Service: Receive DM event (kind 4)
+
+    NIP04Service->>SpamCheck: checkSpamProtection(senderPubkey, event)
+
+    alt Blocked or Rate Limited
+        SpamCheck-->>NIP04Service: REJECTED
+        NIP04Service-->>Bob: Message blocked
+    else Allowed
+        SpamCheck-->>NIP04Service: ALLOWED
+
+        NIP04Service->>NIP04Service: Validate encrypted format
+        Note over NIP04Service: Check for ?iv= separator
+
+        NIP04Service->>NIP04Service: Parse encrypted content
+        Note over NIP04Service: Split ciphertext and IV
+
+        NIP04Service->>NIP04Service: Base64 decode ciphertext and IV
+
+        NIP04Service->>KeyMgmt: getPrivateKey()
+        KeyMgmt-->>NIP04Service: privateKey
+
+        NIP04Service->>ECDH: deriveSharedSecret(privateKey, senderPubkey)
+        Note over ECDH: secp256k1 ECDH
+        ECDH-->>NIP04Service: sharedSecret (32 bytes)
+
+        NIP04Service->>AES256: decrypt(ciphertext, sharedSecret, IV)
+        Note over AES256: AES-256-CBC
+        AES256-->>NIP04Service: plaintext
+
+        NIP04Service->>Cache: cacheDecryptedMessage(messageId, message, plaintext)
+        Cache-->>NIP04Service: Cached
+
+        NIP04Service->>NIP04Service: addMessageToThread(message)
+        NIP04Service->>NIP04Service: Update unread count
+
+        NIP04Service-->>Bob: Decrypted message
+
+        Bob->>NIP04Service: createReadReceipt(messageId, senderPubkey)
+        NIP04Service-->>Bob: readReceiptEvent (kind 1515)
+    end
+
+    Note over Bob,Cache: Security: Rate limit + Spam + Validation

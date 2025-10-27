@@ -1,0 +1,74 @@
+%% PaymentAnalyticsService Process Flow
+%% User Story: US-E5-028
+%% End-to-end analytics generation process
+
+flowchart TD
+    START([Analytics Request]) --> CHECK_CACHE{Check Cache?}
+
+    CHECK_CACHE -->|Hit| RETURN_CACHED[Return Cached Result]
+    CHECK_CACHE -->|Miss| VALIDATE[Validate Query Parameters]
+
+    VALIDATE --> BUILD_QUERY[Build Payment History Query]
+    BUILD_QUERY --> FETCH_DATA[Fetch Transaction Data<br/>PaymentProcessingService]
+
+    FETCH_DATA --> HAS_DATA{Has Data?}
+    HAS_DATA -->|No| RETURN_EMPTY[Return Empty Analytics]
+    HAS_DATA -->|Yes| CLASSIFY[Classify Transactions<br/>Status, Method, Currency]
+
+    CLASSIFY --> CURRENCY_CHECK{Multi-Currency?}
+    CURRENCY_CHECK -->|Yes| CONVERT[Convert to Base Currency<br/>CurrencyService]
+    CURRENCY_CHECK -->|No| CALC_BASIC
+    CONVERT --> CALC_BASIC[Calculate Basic Metrics<br/>Total, Count, Average]
+
+    CALC_BASIC --> CALC_REVENUE[Calculate Revenue<br/>Net, Gross, Refunded]
+    CALC_REVENUE --> CALC_SUCCESS[Calculate Success Rate<br/>Failed/Total]
+    CALC_SUCCESS --> CALC_DISTRIBUTION[Calculate Distribution<br/>By Method, Currency]
+
+    CALC_DISTRIBUTION --> NEED_TREND{Need Trend<br/>Analysis?}
+    NEED_TREND -->|Yes| TREND_ANALYSIS[Trend Analysis<br/>SMA, EMA, Regression]
+    NEED_TREND -->|No| NEED_FORECAST
+
+    TREND_ANALYSIS --> DETECT_SEASON[Detect Seasonality]
+    DETECT_SEASON --> NEED_FORECAST{Need<br/>Forecast?}
+
+    NEED_FORECAST -->|Yes| FORECAST[Generate Forecast<br/>Linear Extrapolation]
+    NEED_FORECAST -->|No| NEED_CUSTOMER
+    FORECAST --> NEED_CUSTOMER{Need Customer<br/>Analytics?}
+
+    NEED_CUSTOMER -->|Yes| CALC_ARPU[Calculate ARPU]
+    NEED_CUSTOMER -->|No| BUILD_RESULT
+
+    CALC_ARPU --> CALC_CLV[Calculate Customer LTV]
+    CALC_CLV --> CALC_CHURN[Calculate Churn Impact]
+    CALC_CHURN --> CALC_MRR[Calculate MRR/ARR]
+    CALC_MRR --> BUILD_RESULT[Build Result Object]
+
+    BUILD_RESULT --> CACHE_RESULT[Cache Result<br/>TTL based on period]
+    CACHE_RESULT --> TRACK_METRICS[Track Query Metrics<br/>Performance]
+    TRACK_METRICS --> RETURN_RESULT[Return Analytics Result]
+
+    RETURN_CACHED --> END([End])
+    RETURN_EMPTY --> END
+    RETURN_RESULT --> END
+
+    subgraph "Error Handling"
+        ERROR[Error Occurred] --> LOG_ERROR[Log Error<br/>Logger]
+        LOG_ERROR --> CHECK_RETRY{Retryable?}
+        CHECK_RETRY -->|Yes| RETRY[Retry with Backoff]
+        CHECK_RETRY -->|No| THROW_ERROR[Throw Error]
+        RETRY --> FETCH_DATA
+        THROW_ERROR --> END
+    end
+
+    FETCH_DATA -.->|Error| ERROR
+    CONVERT -.->|Error| ERROR
+    CALC_BASIC -.->|Error| ERROR
+
+    style START fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style CHECK_CACHE fill:#2196F3,stroke:#1565C0,color:#fff
+    style CONVERT fill:#9C27B0,stroke:#4A148C,color:#fff
+    style TREND_ANALYSIS fill:#FF9800,stroke:#E65100,color:#fff
+    style FORECAST fill:#FF9800,stroke:#E65100,color:#fff
+    style CACHE_RESULT fill:#00BCD4,stroke:#006064,color:#fff
+    style END fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style ERROR fill:#F44336,stroke:#B71C1C,color:#fff

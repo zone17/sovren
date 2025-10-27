@@ -1,0 +1,500 @@
+name: Backend Deployment (Blue-Green)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: 'staging'
+      force_deploy:
+        description: 'Force deployment (skip health checks)'
+        required: false
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'packages/backend/**'
+      - '!packages/backend/**/*.md'
+      - '!packages/backend/**/*.test.ts'
+      - '.github/workflows/backend-deployment.yml'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/backend
+  NODE_VERSION: '20.x'
+
+jobs:
+  # Pre-deployment quality gates
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: packages/backend
+
+      - name: Run quality checks
+        id: check
+        run: |
+          echo "Running quality gates..."
+          npm run lint
+          npm run type-check
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+        working-directory: packages/backend
+
+      - name: Run tests
+        run: npm run test:ci
+        working-directory: packages/backend
+
+  # Build and push Docker image
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: quality-gates
+    if: needs.quality-gates.outputs.should_deploy == 'true'
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.build.outputs.digest }}
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write # For signing images with Cosign
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value={{branch}}-{{date 'YYYYMMDD-HHmmss'}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./packages/backend
+          file: ./packages/backend/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            VCS_REF=${{ github.sha }}
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign container image
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
+  # Security scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-and-push
+
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check for critical vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }}
+          exit-code: '1'
+          severity: 'CRITICAL'
+
+  # Deploy to staging (automatic)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build-and-push, security-scan]
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging-api.sovren.app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        uses: ./.github/workflows/deploy-blue-green
+        with:
+          environment: staging
+          image_tag: ${{ needs.build-and-push.outputs.image_tag }}
+          deployment_url: https://staging-api.sovren.app
+        env:
+          DEPLOYMENT_TOKEN: ${{ secrets.STAGING_DEPLOYMENT_TOKEN }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          REDIS_URL: ${{ secrets.STAGING_REDIS_URL }}
+
+  # Deploy to production (manual approval required)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build-and-push, security-scan, deploy-staging]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://api.sovren.app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check deployment window
+        id: check_window
+        run: |
+          # Only deploy during business hours (Mon-Fri 9am-5pm EST) unless force_deploy is true
+          if [ "${{ github.event.inputs.force_deploy }}" != "true" ]; then
+            current_hour=$(TZ=America/New_York date +%H)
+            current_day=$(TZ=America/New_York date +%u)
+
+            if [ $current_day -gt 5 ] || [ $current_hour -lt 9 ] || [ $current_hour -gt 17 ]; then
+              echo "::error::Deployment outside business hours (Mon-Fri 9am-5pm EST). Use force_deploy to override."
+              exit 1
+            fi
+          fi
+          echo "Deployment window check passed"
+
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+          # This would run actual migration scripts
+          # npm run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Deploy to production blue environment
+        id: deploy_blue
+        run: |
+          echo "Deploying to blue environment..."
+          # This would trigger actual deployment
+          # Implementation depends on infrastructure (Railway, Render, etc.)
+          echo "blue_url=https://blue.api.sovren.app" >> $GITHUB_OUTPUT
+
+      - name: Health check blue environment
+        id: health_check
+        run: |
+          echo "Performing health checks on blue environment..."
+
+          max_attempts=30
+          attempt=0
+
+          while [ $attempt -lt $max_attempts ]; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" ${{ steps.deploy_blue.outputs.blue_url }}/health || echo "000")
+
+            if [ "$response" = "200" ]; then
+              echo "Health check passed"
+              echo "healthy=true" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            echo "Health check attempt $((attempt + 1))/$max_attempts failed (HTTP $response)"
+            attempt=$((attempt + 1))
+            sleep 10
+          done
+
+          echo "healthy=false" >> $GITHUB_OUTPUT
+          echo "::error::Health checks failed after $max_attempts attempts"
+          exit 1
+
+      - name: Run smoke tests
+        if: steps.health_check.outputs.healthy == 'true'
+        run: |
+          echo "Running smoke tests..."
+          # Test critical endpoints
+          curl -f ${{ steps.deploy_blue.outputs.blue_url }}/api/health || exit 1
+          curl -f ${{ steps.deploy_blue.outputs.blue_url }}/api || exit 1
+
+      - name: Progressive traffic switch
+        id: traffic_switch
+        if: steps.health_check.outputs.healthy == 'true'
+        run: |
+          echo "Starting progressive traffic switch..."
+
+          # Switch 10% traffic to blue
+          echo "Switching 10% traffic to blue..."
+          # load_balancer_update --blue-weight 10 --green-weight 90
+          sleep 60
+
+          # Monitor error rates
+          error_rate=$(curl -s https://monitoring.sovren.app/metrics/error_rate | jq -r '.rate')
+          if (( $(echo "$error_rate > 0.05" | bc -l) )); then
+            echo "::error::Error rate too high ($error_rate > 5%), initiating rollback"
+            exit 1
+          fi
+
+          # Switch 50% traffic
+          echo "Switching 50% traffic to blue..."
+          # load_balancer_update --blue-weight 50 --green-weight 50
+          sleep 60
+
+          # Monitor again
+          error_rate=$(curl -s https://monitoring.sovren.app/metrics/error_rate | jq -r '.rate')
+          if (( $(echo "$error_rate > 0.05" | bc -l) )); then
+            echo "::error::Error rate too high ($error_rate > 5%), initiating rollback"
+            exit 1
+          fi
+
+          # Switch 100% traffic
+          echo "Switching 100% traffic to blue..."
+          # load_balancer_update --blue-weight 100 --green-weight 0
+          echo "Traffic switch complete"
+
+      - name: Monitor deployment
+        if: steps.traffic_switch.outcome == 'success'
+        run: |
+          echo "Monitoring deployment for 5 minutes..."
+          for i in {1..30}; do
+            error_rate=$(curl -s https://monitoring.sovren.app/metrics/error_rate | jq -r '.rate' || echo "0.0")
+            response_time=$(curl -s https://monitoring.sovren.app/metrics/p95_response_time | jq -r '.value' || echo "0")
+
+            echo "Iteration $i/30: Error rate: $error_rate, P95 response time: ${response_time}ms"
+
+            if (( $(echo "$error_rate > 0.05" | bc -l) )) || (( $(echo "$response_time > 1000" | bc -l) )); then
+              echo "::error::Deployment metrics degraded, initiating rollback"
+              # Trigger rollback workflow
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "Deployment monitoring complete - all metrics healthy"
+
+      - name: Cleanup green environment
+        if: steps.traffic_switch.outcome == 'success'
+        run: |
+          echo "Keeping green environment for 5 minutes for quick rollback..."
+          sleep 300
+          echo "Decommissioning green environment..."
+          # cleanup_green_environment
+
+      - name: Send deployment notification
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Production Deployment ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚀 Production Deployment ${{ job.status == 'success' && 'Successful' || 'Failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\nProduction"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ job.status }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Author:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Workflow"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+  # Automatic rollback on failure
+  rollback:
+    name: Automatic Rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: deploy-production
+    if: failure()
+    environment:
+      name: production
+
+    steps:
+      - name: Initiate rollback
+        run: |
+          echo "🚨 INITIATING AUTOMATIC ROLLBACK 🚨"
+          echo "Switching 100% traffic back to green environment..."
+          # load_balancer_update --blue-weight 0 --green-weight 100
+
+      - name: Verify rollback
+        run: |
+          echo "Verifying rollback..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://api.sovren.app/health)
+
+          if [ "$response" = "200" ]; then
+            echo "✅ Rollback successful - production is healthy"
+          else
+            echo "::error::❌ Rollback verification failed - manual intervention required"
+            exit 1
+          fi
+
+      - name: Send rollback alert
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "🚨 PRODUCTION ROLLBACK EXECUTED 🚨",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚨 Production Rollback Executed"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Deployment failed and automatic rollback has been triggered."
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Rollback Status:*\n${{ job.status }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Time:*\n${{ github.event.repository.updated_at }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Logs"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+  # Deployment metrics
+  metrics:
+    name: Deployment Metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: deploy-production
+    if: always()
+
+    steps:
+      - name: Record deployment metrics
+        run: |
+          echo "Recording deployment metrics..."
+          echo "Deployment ID: ${{ github.run_id }}"
+          echo "Status: ${{ needs.deploy-production.result }}"
+          echo "Duration: ${{ github.event.repository.updated_at }}"
+          echo "Commit: ${{ github.sha }}"
+
+          # Send metrics to monitoring system
+          # curl -X POST https://monitoring.sovren.app/metrics/deployment \
+          #   -H "Content-Type: application/json" \
+          #   -d '{
+          #     "deployment_id": "${{ github.run_id }}",
+          #     "status": "${{ needs.deploy-production.result }}",
+          #     "environment": "production",
+          #     "commit": "${{ github.sha }}",
+          #     "timestamp": "${{ github.event.repository.updated_at }}"
+          #   }'

@@ -1,0 +1,128 @@
+erDiagram
+    SUBSCRIPTION_PLAN {
+        uuid id PK
+        string name
+        string tier "free|creator|pro|enterprise"
+        decimal monthly_price
+        decimal yearly_price
+        string currency
+        jsonb features
+        int max_users
+        int max_storage_gb
+        boolean analytics_enabled
+        boolean priority_support
+        boolean api_access
+        int trial_days
+        boolean active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SUBSCRIPTION {
+        uuid id PK
+        uuid user_id FK
+        uuid plan_id FK
+        string status "trial|active|past_due|paused|canceled|expired"
+        decimal price
+        string currency
+        string billing_interval "monthly|yearly|custom"
+        date trial_start_date
+        date trial_end_date
+        date current_period_start
+        date current_period_end
+        date next_billing_date
+        date canceled_at
+        date ended_at
+        boolean auto_renew
+        int grace_period_days
+        int retry_count
+        decimal credit_balance
+        uuid pending_plan_change FK
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SUBSCRIPTION_INVOICE {
+        uuid id PK
+        uuid subscription_id FK
+        uuid payment_transaction_id FK
+        string invoice_type "initial|renewal|upgrade|downgrade|proration"
+        decimal amount
+        string currency
+        decimal tax_amount
+        decimal discount_amount
+        decimal total_amount
+        string status "draft|pending|paid|failed|void"
+        date due_date
+        date paid_at
+        jsonb line_items
+        timestamp created_at
+    }
+
+    SUBSCRIPTION_USAGE {
+        uuid id PK
+        uuid subscription_id FK
+        string metric_name
+        decimal quantity
+        string unit
+        date period_start
+        date period_end
+        decimal unit_price
+        decimal total_cost
+        timestamp recorded_at
+    }
+
+    SUBSCRIPTION_EVENT {
+        uuid id PK
+        uuid subscription_id FK
+        string event_type "created|renewed|upgraded|downgraded|paused|resumed|canceled|expired"
+        string previous_status
+        string new_status
+        uuid previous_plan_id FK
+        uuid new_plan_id FK
+        jsonb metadata
+        timestamp occurred_at
+    }
+
+    SUBSCRIPTION_ANALYTICS {
+        uuid id PK
+        date period_date
+        string period_type "day|week|month|year"
+        int active_subscriptions
+        int new_subscriptions
+        int canceled_subscriptions
+        int churned_subscriptions
+        decimal mrr "Monthly Recurring Revenue"
+        decimal arr "Annual Recurring Revenue"
+        decimal churn_rate
+        decimal avg_ltv "Average Lifetime Value"
+        jsonb tier_breakdown
+        timestamp calculated_at
+    }
+
+    PAYMENT_TRANSACTION {
+        uuid id PK
+        uuid user_id FK
+        string type
+        decimal amount
+        string currency
+        string status
+        timestamp created_at
+    }
+
+    USER {
+        uuid id PK
+        string email
+        string name
+        timestamp created_at
+    }
+
+    SUBSCRIPTION ||--|| SUBSCRIPTION_PLAN : "has current plan"
+    SUBSCRIPTION ||--o| SUBSCRIPTION_PLAN : "has pending plan"
+    SUBSCRIPTION ||--o{ SUBSCRIPTION_INVOICE : "generates"
+    SUBSCRIPTION ||--o{ SUBSCRIPTION_USAGE : "tracks"
+    SUBSCRIPTION ||--o{ SUBSCRIPTION_EVENT : "records"
+    SUBSCRIPTION }o--|| USER : "belongs to"
+    SUBSCRIPTION_INVOICE }o--o| PAYMENT_TRANSACTION : "linked to"
+    PAYMENT_TRANSACTION }o--|| USER : "belongs to"

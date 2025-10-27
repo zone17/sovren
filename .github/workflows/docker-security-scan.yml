@@ -1,0 +1,393 @@
+name: Docker Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docker/**'
+      - 'packages/*/Dockerfile'
+      - 'packages/*/package.json'
+      - '.github/workflows/docker-security-scan.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'docker/**'
+      - 'packages/*/Dockerfile'
+      - 'packages/*/package.json'
+  schedule:
+    # Run security scan daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  dockerfile-security-scan:
+    name: Dockerfile Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Dockerfile security scan with Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/security/Dockerfile.secure-base
+          format: sarif
+          output-file: hadolint-results.sarif
+          no-fail: true
+
+      - name: Upload Hadolint results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: hadolint-results.sarif
+
+      - name: Run Dockerfile security scan with Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: docker/
+          framework: dockerfile
+          output_format: sarif
+          output_file_path: checkov-dockerfile-results.sarif
+          soft_fail: true
+
+      - name: Upload Checkov results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: checkov-dockerfile-results.sarif
+
+  container-image-security-scan:
+    name: Container Image Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+
+    strategy:
+      matrix:
+        image:
+          - name: frontend
+            dockerfile: packages/frontend/Dockerfile
+            context: packages/frontend
+          - name: backend
+            dockerfile: packages/backend/Dockerfile
+            context: packages/backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image.name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.dockerfile }}
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.meta.outputs.tags }}
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.image.name }}.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results-${{ matrix.image.name }}.sarif'
+
+          - name: Run Grype vulnerability scanner
+      uses: anchore/scan-action@v3
+      id: grype-scan
+      with:
+        image: ${{ steps.meta.outputs.tags }}
+        severity-cutoff: medium
+        output-format: sarif
+
+      - name: Upload Grype scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: grype-results-${{ matrix.image.name }}.sarif
+
+      - name: Run Docker Scout security scan
+        uses: docker/scout-action@v1
+        if: ${{ github.actor != 'dependabot[bot]' }}
+        with:
+          command: cves
+          image: ${{ steps.meta.outputs.tags }}
+          sarif-file: scout-results-${{ matrix.image.name }}.sarif
+          summary: true
+
+      - name: Upload Docker Scout scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always() && github.actor != 'dependabot[bot]'
+        with:
+          sarif_file: scout-results-${{ matrix.image.name }}.sarif
+
+      - name: Generate security report
+        run: |
+          echo "## Security Scan Results for ${{ matrix.image.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Trivy Scan" >> $GITHUB_STEP_SUMMARY
+          echo "- Image: ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Scan Date: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- SARIF file: trivy-results-${{ matrix.image.name }}.sarif" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Grype Scan" >> $GITHUB_STEP_SUMMARY
+          echo "- SARIF file: grype-results-${{ matrix.image.name }}.sarif" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Docker Scout Scan" >> $GITHUB_STEP_SUMMARY
+          echo "- SARIF file: scout-results-${{ matrix.image.name }}.sarif" >> $GITHUB_STEP_SUMMARY
+
+      - name: Push image to registry (if main branch)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+
+  docker-compose-security-scan:
+    name: Docker Compose Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Docker Compose security scan with Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: docker/
+          framework: docker_compose
+          output_format: sarif
+          output_file_path: checkov-compose-results.sarif
+          soft_fail: true
+
+      - name: Upload Checkov Docker Compose results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: checkov-compose-results.sarif
+
+      - name: Validate Docker Compose security configuration
+        run: |
+          echo "## Docker Compose Security Validation" >> $GITHUB_STEP_SUMMARY
+          echo "### Checking security configurations..." >> $GITHUB_STEP_SUMMARY
+
+          # Check for read-only filesystems
+          if grep -q "read_only: true" docker/security/docker-compose.secure.yml; then
+            echo "✅ Read-only filesystems configured" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Read-only filesystems not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for non-root users
+          if grep -q 'user: "1001:1001"' docker/security/docker-compose.secure.yml; then
+            echo "✅ Non-root users configured" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Non-root users not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for security options
+          if grep -q "no-new-privileges:true" docker/security/docker-compose.secure.yml; then
+            echo "✅ No-new-privileges configured" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ No-new-privileges not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for capability dropping
+          if grep -q "cap_drop:" docker/security/docker-compose.secure.yml; then
+            echo "✅ Capability dropping configured" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Capability dropping not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for resource limits
+          if grep -q "resources:" docker/security/docker-compose.secure.yml; then
+            echo "✅ Resource limits configured" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Resource limits not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  security-policy-compliance:
+    name: Security Policy Compliance Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install security tools
+        run: |
+          # Install docker-bench-security
+          git clone https://github.com/docker/docker-bench-security.git
+          cd docker-bench-security
+          chmod +x docker-bench-security.sh
+          cd ..
+
+          # Install CIS Docker Benchmark tools
+          pip install docker-image-py
+
+      - name: Run CIS Docker Benchmark
+        run: |
+          echo "## CIS Docker Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo "### Running CIS Docker Benchmark..." >> $GITHUB_STEP_SUMMARY
+
+          # Run docker-bench-security
+          cd docker-bench-security
+          ./docker-bench-security.sh -l /tmp/docker-bench.log || true
+
+          # Extract key findings
+          if [ -f /tmp/docker-bench.log ]; then
+            echo "### Key Security Findings:" >> $GITHUB_STEP_SUMMARY
+            grep -E "(WARN|INFO|PASS|FAIL)" /tmp/docker-bench.log | head -20 >> $GITHUB_STEP_SUMMARY || true
+          fi
+
+      - name: Validate security configurations
+        run: |
+          echo "## Security Configuration Validation" >> $GITHUB_STEP_SUMMARY
+          echo "### Checking Docker security configurations..." >> $GITHUB_STEP_SUMMARY
+
+          # Check daemon.json security settings
+          if [ -f "docker/security/daemon.json" ]; then
+            echo "✅ Docker daemon security configuration found" >> $GITHUB_STEP_SUMMARY
+
+            # Check for user namespace remapping
+            if grep -q '"userns-remap"' docker/security/daemon.json; then
+              echo "✅ User namespace remapping configured" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ User namespace remapping not configured" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            # Check for no-new-privileges
+            if grep -q '"no-new-privileges": true' docker/security/daemon.json; then
+              echo "✅ No-new-privileges configured" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ No-new-privileges not configured" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            # Check for live-restore
+            if grep -q '"live-restore": true' docker/security/daemon.json; then
+              echo "✅ Live-restore configured" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ Live-restore not configured" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ Docker daemon security configuration not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for security monitoring script
+          if [ -f "docker/security/filesystem-monitor.sh" ]; then
+            echo "✅ Security monitoring script found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Security monitoring script not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for user namespace mapping files
+          if [ -f "docker/security/subuid" ] && [ -f "docker/security/subgid" ]; then
+            echo "✅ User namespace mapping files found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ User namespace mapping files not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  security-scan-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        dockerfile-security-scan,
+        container-image-security-scan,
+        docker-compose-security-scan,
+        security-policy-compliance,
+      ]
+    if: always()
+
+    steps:
+      - name: Generate security scan summary
+        run: |
+          echo "# 🔒 Docker Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dockerfile Security Scan**: ${{ needs.dockerfile-security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Container Image Security Scan**: ${{ needs.container-image-security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker Compose Security Scan**: ${{ needs.docker-compose-security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Policy Compliance**: ${{ needs.security-policy-compliance.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Security Tools Used" >> $GITHUB_STEP_SUMMARY
+          echo "- **Hadolint**: Dockerfile linting and security checks" >> $GITHUB_STEP_SUMMARY
+          echo "- **Checkov**: Infrastructure as Code security scanning" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trivy**: Container vulnerability scanning" >> $GITHUB_STEP_SUMMARY
+          echo "- **Grype**: Container vulnerability scanning" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker Scout**: Container security analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker Bench Security**: CIS Docker Benchmark" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review security findings in the GitHub Security tab" >> $GITHUB_STEP_SUMMARY
+          echo "2. Address any HIGH or CRITICAL vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          echo "3. Update base images and dependencies as needed" >> $GITHUB_STEP_SUMMARY
+          echo "4. Re-run security scans after fixes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Date**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit SHA**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for security scan failures
+        if: needs.dockerfile-security-scan.result == 'failure' || needs.container-image-security-scan.result == 'failure' || needs.docker-compose-security-scan.result == 'failure' || needs.security-policy-compliance.result == 'failure'
+        run: |
+          echo "❌ One or more security scans failed. Please review the results and fix any issues before merging."
+          exit 1

@@ -1,0 +1,85 @@
+graph TB
+    subgraph "Data Sources"
+        User[User Input]
+        Extension[Browser Extension]
+        Relays[NOSTR Relays]
+        LocalStorage[Local Storage]
+    end
+
+    subgraph "Input Processing"
+        User --> Validate[Input Validation]
+        Extension --> ExtractKey[Extract Public Key]
+        Validate --> Sanitize[Sanitize Data]
+        Sanitize --> Transform[Transform to Event]
+    end
+
+    subgraph "Key Management Flow"
+        ExtractKey --> KeyCache[Session Key Cache]
+        LocalStorage --> LoadKey[Load Encrypted Key]
+        LoadKey --> DecryptKey[Decrypt Key]
+        DecryptKey --> KeyCache
+        KeyCache --> SigningService[Signing Service]
+    end
+
+    subgraph "Event Processing Flow"
+        Transform --> UnsignedEvent[Unsigned Event]
+        UnsignedEvent --> SigningService
+        SigningService --> SignedEvent[Signed Event]
+        SignedEvent --> ValidationService[Event Validation]
+        ValidationService --> PublishQueue[Publish Queue]
+    end
+
+    subgraph "Distribution Layer"
+        PublishQueue --> RelaySelector[Select Relays]
+        RelaySelector --> FastRelay[Fast Relay]
+        RelaySelector --> GoodRelay[Good Relay]
+        RelaySelector --> FallbackRelay[Fallback Relay]
+
+        FastRelay --> PublishResult1[OK Response]
+        GoodRelay --> PublishResult2[OK Response]
+        FallbackRelay --> PublishResult3[OK Response]
+    end
+
+    subgraph "Caching & Storage"
+        PublishResult1 --> Dedup[Deduplication Check]
+        PublishResult2 --> Dedup
+        PublishResult3 --> Dedup
+
+        Dedup --> EventCache[(Event Cache)]
+        EventCache --> IndexedDB[(IndexedDB)]
+        EventCache --> MemoryCache[(Memory Cache)]
+    end
+
+    subgraph "Subscription Flow"
+        Relays --> WebSocket[WebSocket Messages]
+        WebSocket --> Parser[Message Parser]
+        Parser --> EventMsg[EVENT Message]
+        Parser --> EOSEMsg[EOSE Message]
+        Parser --> OKMsg[OK Message]
+
+        EventMsg --> SubDedup[Deduplication]
+        SubDedup --> SubCache[Add to Cache]
+        SubCache --> Callback[Subscription Callback]
+    end
+
+    subgraph "Monitoring & Metrics"
+        PublishResult1 --> Metrics[Metrics Collector]
+        PublishResult2 --> Metrics
+        PublishResult3 --> Metrics
+        Callback --> Metrics
+
+        Metrics --> Analytics[Analytics Engine]
+        Analytics --> Dashboard[Monitoring Dashboard]
+    end
+
+    Callback --> UI[Update UI]
+
+    classDef input fill:#4A90E2,stroke:#2E5C8A,color:#fff
+    classDef process fill:#50C878,stroke:#2E7D4E,color:#fff
+    classDef storage fill:#F5A623,stroke:#C17D11,color:#fff
+    classDef output fill:#9B59B6,stroke:#6C3483,color:#fff
+
+    class User,Extension,Relays,LocalStorage input
+    class Validate,Transform,SigningService,ValidationService,Dedup process
+    class EventCache,IndexedDB,MemoryCache,KeyCache storage
+    class UI,Dashboard output

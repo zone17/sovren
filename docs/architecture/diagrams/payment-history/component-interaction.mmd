@@ -1,0 +1,29 @@
+graph TD
+    A[User Dashboard] --> B[PaymentHistory Component]
+    B --> C[React Query Hook]
+    C --> D[lightningApi.getUserPaymentHistory]
+    D --> E[Backend API: /api/lightning/user/payments]
+    E --> F[Lightning Payment Database]
+
+    B --> G[Filter Controls]
+    B --> H[Sort Controls]
+    B --> I[Pagination Controls]
+    B --> J[Payment List]
+
+    J --> K[PaymentItem 1]
+    J --> L[PaymentItem 2]
+    J --> M[PaymentItem N]
+
+    K --> N[Copy Hash Button]
+    K --> O[Download Receipt Button]
+
+    N --> P[Clipboard API]
+    O --> Q[File Download]
+
+    B --> R[useToast Hook]
+    R --> S[Toast Notifications]
+
+    style B fill:#6366f1,color:#fff
+    style D fill:#f7931a,color:#fff
+    style E fill:#10b981,color:#fff
+    style R fill:#ec4899,color:#fff

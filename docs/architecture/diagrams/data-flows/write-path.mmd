@@ -1,0 +1,79 @@
+%% Write Path Data Flow - Write-Through with Cache Invalidation
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete write path with transaction management and cache invalidation
+
+graph TD
+    Client[Client Application<br/>Browser/Mobile]
+    API[API Gateway<br/>Request Validation]
+    ServiceLayer[Service Layer<br/>Business Logic]
+    ValidationLayer[Validation Layer<br/>Input Validation]
+    TransactionMgr[Transaction Manager<br/>ACID Guarantees]
+    RepoLayer[Repository Layer<br/>Data Persistence]
+    DBPrimary[(Primary Database<br/>PostgreSQL)]
+    EventBus[Event Bus<br/>Pub/Sub]
+    CacheInvalidation[Cache Invalidation<br/>Multi-Layer]
+
+    subgraph "Cache Layers"
+        EdgeCache[Edge Cache<br/>Vercel/Cloudflare]
+        AppCache[Application Cache<br/>Redis L1]
+        ServiceCache[Service Cache<br/>In-Memory]
+        QueryCache[Query Cache<br/>Redis L2]
+    end
+
+    subgraph "Event Subscribers"
+        Analytics[Analytics Service]
+        Notification[Notification Service]
+        Search[Search Indexer]
+        Audit[Audit Logger]
+    end
+
+    Client -->|1. POST /api/content| API
+    API -->|2. Authenticate & Authorize| API
+    API -->|3. Forward Request| ServiceLayer
+
+    ServiceLayer -->|4. Validate Input| ValidationLayer
+    ValidationLayer -->|5a. Invalid| ServiceLayer
+    ValidationLayer -->|5b. Valid| TransactionMgr
+
+    TransactionMgr -->|6. BEGIN TRANSACTION| DBPrimary
+    TransactionMgr -->|7. Execute Write| RepoLayer
+
+    RepoLayer -->|8. INSERT/UPDATE| DBPrimary
+    DBPrimary -->|9. Write Success| RepoLayer
+    RepoLayer -->|10. Return Data| TransactionMgr
+
+    TransactionMgr -->|11. COMMIT TRANSACTION| DBPrimary
+    DBPrimary -->|12. Transaction Complete| TransactionMgr
+
+    TransactionMgr -->|13. Publish Event| EventBus
+
+    EventBus -->|14a. Trigger Invalidation| CacheInvalidation
+    CacheInvalidation -->|15. Invalidate Patterns| EdgeCache
+    CacheInvalidation -->|16. Invalidate Keys| AppCache
+    CacheInvalidation -->|17. Clear Service Cache| ServiceCache
+    CacheInvalidation -->|18. Remove Query Cache| QueryCache
+
+    EventBus -->|14b. Notify Subscribers| Analytics
+    EventBus -->|14c. Notify Subscribers| Notification
+    EventBus -->|14d. Notify Subscribers| Search
+    EventBus -->|14e. Notify Subscribers| Audit
+
+    TransactionMgr -->|19. Return Success| ServiceLayer
+    ServiceLayer -->|20. Return Response| API
+    API -->|21. Return 201 Created| Client
+
+    Note1[Write Latency: ~200ms<br/>Transaction Success: 99.9%<br/>Cache Invalidation: <10ms]
+
+    style Client fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style API fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style ServiceLayer fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style ValidationLayer fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style TransactionMgr fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+    style RepoLayer fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style DBPrimary fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:3px,color:#fff
+    style CacheInvalidation fill:#f44336,stroke:#c62828,stroke-width:3px,color:#fff
+    style EdgeCache fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style AppCache fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style Note1 fill:#fffde7,stroke:#f57f17,stroke-width:2px

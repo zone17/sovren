@@ -1,0 +1,282 @@
+version: '3.8'
+
+networks:
+  mcp_isolated:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+  mcp_gateway:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+
+volumes:
+  mcp_secrets:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=100m,uid=1001
+
+  mcp_audit_logs:
+    driver: local
+
+secrets:
+  github_token:
+    external: true
+    name: sovren_github_token
+
+  supabase_url:
+    external: true
+    name: sovren_supabase_url
+
+  supabase_key:
+    external: true
+    name: sovren_supabase_key
+
+services:
+  # MCP Security Gateway
+  mcp-gateway:
+    image: sovren/mcp-gateway:latest
+    build:
+      context: ./docker/mcp-gateway
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    networks:
+      - mcp_gateway
+      - mcp_isolated
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - AUDIT_ENABLED=true
+      - JWT_SECRET_FILE=/run/secrets/mcp_jwt_secret
+    volumes:
+      - mcp_audit_logs:/var/log/mcp
+    secrets:
+      - source: sovren_mcp_jwt_secret
+        target: mcp_jwt_secret
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: '1001:1001'
+
+  # GitHub Integration Server
+  mcp-github:
+    image: mcp/github:latest
+    networks:
+      - mcp_isolated
+    environment:
+      - GITHUB_TOKEN_FILE=/run/secrets/github_token
+      - ALLOWED_REPOS=sovren/*
+      - READ_ONLY_MODE=true
+      - MAX_REQUESTS_PER_HOUR=1000
+    secrets:
+      - github_token
+    volumes:
+      - mcp_audit_logs:/var/log/mcp
+    healthcheck:
+      test: ['CMD', 'node', 'healthcheck.js']
+      interval: 60s
+      timeout: 15s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined
+    user: '1001:1001'
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+
+  # Database Query Server
+  mcp-postgres:
+    image: mcp/postgres:latest
+    networks:
+      - mcp_isolated
+    environment:
+      - DATABASE_URL_FILE=/run/secrets/supabase_url
+      - READ_ONLY_MODE=true
+      - QUERY_TIMEOUT=30s
+      - MAX_ROWS=1000
+      - ALLOWED_SCHEMAS=public
+    secrets:
+      - supabase_url
+    volumes:
+      - mcp_audit_logs:/var/log/mcp
+    healthcheck:
+      test: ['CMD', 'pg_isready', '--timeout=10']
+      interval: 45s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: '1001:1001'
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+
+  # Filesystem Access Server
+  mcp-filesystem:
+    image: mcp/filesystem:latest
+    networks:
+      - mcp_isolated
+    environment:
+      - ALLOWED_PATHS=/workspace
+      - READ_ONLY_MODE=true
+      - MAX_FILE_SIZE=10MB
+      - ALLOWED_EXTENSIONS=.js,.ts,.json,.md,.yml,.yaml,.txt,.sql
+    volumes:
+      - ./:/workspace:ro
+      - mcp_audit_logs:/var/log/mcp
+    healthcheck:
+      test: ['CMD', 'test', '-f', '/workspace/package.json']
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+      - apparmor:mcp-filesystem-profile
+    user: '1001:1001'
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=25m
+
+  # Memory Persistence Server
+  mcp-memory:
+    image: mcp/memory:latest
+    networks:
+      - mcp_isolated
+    environment:
+      - STORAGE_LIMIT=100MB
+      - ENCRYPTION_ENABLED=true
+      - SESSION_TIMEOUT=3600
+    volumes:
+      - mcp_secrets:/var/lib/mcp/memory
+      - mcp_audit_logs:/var/log/mcp
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
+      interval: 45s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: '1001:1001'
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+
+  # Browser Automation Server (Sandboxed)
+  mcp-puppeteer:
+    image: mcp/puppeteer:latest
+    networks:
+      - mcp_isolated
+    environment:
+      - SANDBOX_MODE=true
+      - NO_SANDBOX=false
+      - DISABLE_DEV_SHM_USAGE=true
+      - MAX_TABS=3
+      - SESSION_TIMEOUT=300
+    volumes:
+      - mcp_audit_logs:/var/log/mcp
+    healthcheck:
+      test: ['CMD', 'node', 'healthcheck.js']
+      interval: 60s
+      timeout: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:chrome.json
+    user: '1001:1001'
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+      - /dev/shm:rw,nosuid,nodev,noexec,relatime,size=64m
+
+  # Audit Log Aggregator
+  mcp-audit:
+    image: fluent/fluent-bit:latest
+    networks:
+      - mcp_gateway
+    volumes:
+      - mcp_audit_logs:/var/log/mcp:ro
+      - ./docker/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    environment:
+      - FLB_LOG_LEVEL=info
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+    restart: unless-stopped
+    depends_on:
+      - mcp-gateway
+
+  # Prometheus Monitoring
+  mcp-prometheus:
+    image: prom/prometheus:latest
+    networks:
+      - mcp_gateway
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/mcp_rules.yml:/etc/prometheus/mcp_rules.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.3'
+    restart: unless-stopped
+    depends_on:
+      - mcp-gateway

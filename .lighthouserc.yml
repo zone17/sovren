@@ -1,0 +1,198 @@
+# Elite Lighthouse CI Configuration for Sovren
+# Comprehensive performance testing with strict budgets
+
+ci:
+  collect:
+    # URLs to test
+    url:
+      - 'http://localhost:3000'
+      - 'http://localhost:3000/dashboard'
+      - 'http://localhost:3000/create'
+      - 'http://localhost:3000/profile'
+      - 'http://localhost:3000/onboarding'
+      - 'http://localhost:3000/login'
+      - 'http://localhost:3000/signup'
+
+    # Collection settings
+    settings:
+      # Chrome flags for consistent testing
+      chromeFlags:
+        - '--no-sandbox'
+        - '--disable-dev-shm-usage'
+        - '--disable-gpu'
+        - '--headless'
+
+      # Throttling settings
+      throttling:
+        rttMs: 150
+        throughputKbps: 1600
+        cpuSlowdownMultiplier: 4
+
+      # Number of runs per URL
+      numberOfRuns: 3
+
+      # Skip certain audits that may be flaky in CI
+      skipAudits:
+        - 'uses-http2'
+        - 'redirects-http'
+
+      # Preset configuration
+      preset: 'desktop'
+
+      # Additional settings
+      maxWaitForFcp: 15000
+      maxWaitForLoad: 35000
+
+  assert:
+    # Performance assertions - Elite standards
+    assertions:
+      # Core Web Vitals - Strict thresholds
+      'largest-contentful-paint': ['error', { maxNumericValue: 2500 }]
+      'first-contentful-paint': ['error', { maxNumericValue: 1800 }]
+      'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }]
+      'total-blocking-time': ['error', { maxNumericValue: 300 }]
+      'speed-index': ['error', { maxNumericValue: 3000 }]
+
+      # Performance score
+      'categories:performance': ['error', { minScore: 0.9 }]
+
+      # Accessibility - WCAG AA compliance
+      'categories:accessibility': ['error', { minScore: 0.95 }]
+
+      # Best practices
+      'categories:best-practices': ['error', { minScore: 0.9 }]
+
+      # SEO
+      'categories:seo': ['error', { minScore: 0.9 }]
+
+      # PWA (if applicable)
+      'categories:pwa': ['warn', { minScore: 0.8 }]
+
+      # Resource efficiency
+      'unused-css-rules': ['warn', { maxLength: 10 }]
+      'unused-javascript': ['warn', { maxLength: 10 }]
+      'unminified-css': ['error', { maxLength: 0 }]
+      'unminified-javascript': ['error', { maxLength: 0 }]
+
+      # Image optimization
+      'uses-optimized-images': ['error', { maxLength: 0 }]
+      'uses-webp-images': ['warn', { maxLength: 5 }]
+      'uses-responsive-images': ['error', { maxLength: 0 }]
+
+      # Caching
+      'uses-long-term-caching': ['warn', { maxLength: 5 }]
+
+      # JavaScript
+      'bootup-time': ['error', { maxNumericValue: 3000 }]
+      'mainthread-work-breakdown': ['error', { maxNumericValue: 4000 }]
+
+      # Network
+      'server-response-time': ['error', { maxNumericValue: 600 }]
+      'redirects': ['error', { maxLength: 0 }]
+
+      # Security
+      'is-on-https': ['error', { minScore: 1 }]
+      'uses-http2': ['warn', { minScore: 0.8 }]
+
+      # Mobile-specific (when testing mobile)
+      'tap-targets': ['error', { minScore: 0.9 }]
+      'content-width': ['error', { minScore: 1 }]
+
+  upload:
+    # Upload results for analysis
+    target: 'temporary-public-storage'
+
+    # Alternative: Use LHCI server if available
+    # serverBaseUrl: 'https://your-lhci-server.com'
+    # token: 'your-build-token'
+
+  server:
+    # Local LHCI server configuration (optional)
+    port: 9001
+    storage:
+      storageMethod: 'filesystem'
+      storagePath: './lighthouse-data'
+
+  wizard:
+    # Configuration for setup wizard
+    skipWizard: true
+
+# Budget configuration for specific metrics
+budgets:
+  - path: '/*'
+    timings:
+      - metric: 'first-contentful-paint'
+        budget: 1800
+        tolerance: 100
+      - metric: 'largest-contentful-paint'
+        budget: 2500
+        tolerance: 200
+      - metric: 'speed-index'
+        budget: 3000
+        tolerance: 300
+      - metric: 'cumulative-layout-shift'
+        budget: 0.1
+        tolerance: 0.02
+      - metric: 'total-blocking-time'
+        budget: 300
+        tolerance: 50
+
+    resourceSizes:
+      - resourceType: 'script'
+        budget: 500000 # 500KB
+        tolerance: 50000
+      - resourceType: 'stylesheet'
+        budget: 100000 # 100KB
+        tolerance: 10000
+      - resourceType: 'image'
+        budget: 1000000 # 1MB
+        tolerance: 100000
+      - resourceType: 'font'
+        budget: 200000 # 200KB
+        tolerance: 20000
+      - resourceType: 'total'
+        budget: 2000000 # 2MB
+        tolerance: 200000
+
+    resourceCounts:
+      - resourceType: 'script'
+        budget: 20
+        tolerance: 2
+      - resourceType: 'stylesheet'
+        budget: 10
+        tolerance: 1
+      - resourceType: 'image'
+        budget: 30
+        tolerance: 3
+      - resourceType: 'font'
+        budget: 5
+        tolerance: 1
+      - resourceType: 'third-party'
+        budget: 10
+        tolerance: 2
+
+# Mobile-specific configuration
+mobile:
+  collect:
+    settings:
+      preset: 'mobile'
+      throttling:
+        rttMs: 150
+        throughputKbps: 1600
+        cpuSlowdownMultiplier: 4
+      formFactor: 'mobile'
+      screenEmulation:
+        mobile: true
+        width: 412
+        height: 823
+        deviceScaleFactor: 2.625
+
+  assert:
+    assertions:
+      # Mobile-specific thresholds (more lenient)
+      'largest-contentful-paint': ['error', { maxNumericValue: 3000 }]
+      'first-contentful-paint': ['error', { maxNumericValue: 2200 }]
+      'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }]
+      'total-blocking-time': ['error', { maxNumericValue: 500 }]
+      'speed-index': ['error', { maxNumericValue: 4000 }]
+      'categories:performance': ['error', { minScore: 0.85 }]

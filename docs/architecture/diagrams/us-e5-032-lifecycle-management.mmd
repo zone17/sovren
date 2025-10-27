@@ -1,0 +1,106 @@
+%% Service Lifecycle Management
+%% US-E5-032: Wire Services Through DI Container
+%% Shows how different lifecycle scopes behave
+
+graph TB
+    subgraph "Application Lifecycle"
+        Start[Application Start]
+        Bootstrap[Bootstrap Container]
+        Running[Application Running]
+        Shutdown[Graceful Shutdown]
+        End[Application End]
+
+        Start --> Bootstrap
+        Bootstrap --> Running
+        Running --> Shutdown
+        Shutdown --> End
+    end
+
+    subgraph "Container Hierarchy"
+        Root[Root Container<br/>Application Scope]
+        Request1[Request Scope 1<br/>HTTP Request]
+        Request2[Request Scope 2<br/>HTTP Request]
+        Request3[Request Scope 3<br/>HTTP Request]
+
+        Root --> Request1
+        Root --> Request2
+        Root --> Request3
+    end
+
+    subgraph "Singleton Services<br/>(Shared Across All Scopes)"
+        S1[[EventBusService]]
+        S2[[CacheService]]
+        S3[[Logger]]
+        S4[[Database]]
+        S5[[Lightning]]
+
+        Note1[Single instance created<br/>at bootstrap<br/>Lives entire app lifetime<br/>Shared state OK]
+    end
+
+    subgraph "Scoped Services<br/>(One Per Request)"
+        Req1Svc1[UserProfileService]
+        Req1Svc2[PaymentService]
+        Req2Svc1[UserProfileService]
+        Req2Svc2[PaymentService]
+
+        Note2[New instance per request<br/>Lives for request duration<br/>Isolated state<br/>Disposed after request]
+    end
+
+    subgraph "Transient Services<br/>(New Every Time)"
+        T1(EmailService)
+        T2(EmailService)
+        T3(NotificationService)
+        T4(NotificationService)
+
+        Note3[New instance per resolution<br/>Stateless operations<br/>No shared state<br/>Short-lived]
+    end
+
+    %% Service Creation Flow
+    Bootstrap --> S1
+    Bootstrap --> S2
+    Bootstrap --> S3
+    Bootstrap --> S4
+    Bootstrap --> S5
+
+    Request1 --> Req1Svc1
+    Request1 --> Req1Svc2
+    Request2 --> Req2Svc1
+    Request2 --> Req2Svc2
+
+    Req1Svc1 -.uses.-> S1
+    Req1Svc1 -.uses.-> S2
+    Req1Svc2 -.uses.-> S5
+    Req2Svc1 -.uses.-> S1
+    Req2Svc1 -.uses.-> S2
+
+    Req1Svc1 --> T1
+    Req1Svc2 --> T2
+    Req2Svc1 --> T3
+    Req2Svc2 --> T4
+
+    %% Lifecycle Events
+    Running -.request start.-> Request1
+    Running -.request start.-> Request2
+    Request1 -.request end.-> Running
+    Request2 -.request end.-> Running
+
+    %% Disposal
+    Shutdown --> DisposeScoped[Dispose Scoped Services]
+    Shutdown --> DisposeSingletons[Dispose Singletons]
+    DisposeScoped --> DisposeSingletons
+
+    style S1 fill:#e1f5ff,stroke:#0066cc,stroke-width:3px
+    style S2 fill:#e1f5ff,stroke:#0066cc,stroke-width:3px
+    style S3 fill:#e1f5ff,stroke:#0066cc,stroke-width:3px
+    style S4 fill:#e1f5ff,stroke:#0066cc,stroke-width:3px
+    style S5 fill:#e1f5ff,stroke:#0066cc,stroke-width:3px
+
+    style Req1Svc1 fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Req1Svc2 fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Req2Svc1 fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Req2Svc2 fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+
+    style T1 fill:#f0f0f0,stroke:#666,stroke-width:1px
+    style T2 fill:#f0f0f0,stroke:#666,stroke-width:1px
+    style T3 fill:#f0f0f0,stroke:#666,stroke-width:1px
+    style T4 fill:#f0f0f0,stroke:#666,stroke-width:1px

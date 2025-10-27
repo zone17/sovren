@@ -1,0 +1,102 @@
+%% Payment Flow - Lightning Network Integration
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete payment data flow from invoice creation to settlement
+
+graph TD
+    User[User/Supporter<br/>Lightning Wallet]
+    API[API Gateway<br/>Payment Endpoint]
+    PaymentService[Payment Processing Service<br/>Business Logic]
+    CurrencyService[Currency Service<br/>Exchange Rates]
+    LightningNode[Lightning Node<br/>LND/c-lightning]
+    WebhookService[Webhook Service<br/>Callback Handler]
+    Repository[Repository Layer<br/>Data Persistence]
+    DB[(PostgreSQL<br/>Payments Table)]
+    EventBus[Event Bus<br/>Event Distribution]
+    Cache[Cache Service<br/>Redis]
+
+    subgraph "Payment Creation Phase"
+        User -->|1. Request Payment<br/>Amount: 1000 sats| API
+        API -->|2. Create Payment Request| PaymentService
+        PaymentService -->|3. Get Exchange Rate| CurrencyService
+        CurrencyService -->|4. Return Rate<br/>USD: $0.35| PaymentService
+        PaymentService -->|5. Generate Payment ID| PaymentService
+        PaymentService -->|6. Create Invoice<br/>amount: 1000 sats<br/>expiry: 1 hour| LightningNode
+        LightningNode -->|7. Return BOLT11<br/>+ Payment Hash| PaymentService
+        PaymentService -->|8. Save Payment<br/>status: pending| Repository
+        Repository -->|9. INSERT payment| DB
+        DB -->|10. Payment ID| Repository
+        PaymentService -->|11. Publish Event<br/>payment.created| EventBus
+        EventBus -->|12. Track Creation| PaymentAnalytics[Payment Analytics]
+        PaymentService -->|13. Return Invoice| API
+        API -->|14. Display QR Code<br/>+ Invoice String| User
+    end
+
+    subgraph "Payment Execution Phase"
+        User -->|15. Scan QR<br/>Confirm Payment| UserWallet[User's Lightning Wallet]
+        UserWallet -->|16. Route Payment<br/>via Lightning Network| LightningNetwork[Lightning Network<br/>Multi-hop Routing]
+        LightningNetwork -->|17. Deliver Payment| LightningNode
+        LightningNode -->|18. Verify HTLC<br/>Check Preimage| LightningNode
+        LightningNode -->|19. Payment Received<br/>Release Preimage| LightningNetwork
+        LightningNetwork -->|20. Confirm to Sender| UserWallet
+        UserWallet -->|21. Show Confirmation| User
+    end
+
+    subgraph "Payment Verification Phase"
+        LightningNode -->|22. Webhook Callback<br/>payment_hash| WebhookService
+        WebhookService -->|23. Verify Payment| PaymentService
+        PaymentService -->|24. Check Status| LightningNode
+        LightningNode -->|25. Confirmed<br/>+ preimage| PaymentService
+        PaymentService -->|26. Update Payment<br/>status: confirmed| Repository
+        Repository -->|27. UPDATE payment| DB
+        PaymentService -->|28. Invalidate Cache| Cache
+        Cache -->|29. Remove payment_*| Cache
+        PaymentService -->|30. Publish Event<br/>payment.confirmed| EventBus
+    end
+
+    subgraph "Post-Payment Processing"
+        EventBus -->|31a. Record Metrics| PaymentAnalytics
+        PaymentAnalytics -->|32. Update Stats<br/>total_volume<br/>avg_amount<br/>success_rate| DB
+        EventBus -->|31b. Notify Creator| NotificationService[Notification Service]
+        NotificationService -->|33. Send Notification<br/>Email + In-App| Creator[Creator]
+        EventBus -->|31c. Update Subscription| SubscriptionService[Subscription Service]
+        SubscriptionService -->|34. Activate Access<br/>Grant Content Rights| DB
+        EventBus -->|31d. Log Transaction| AuditService[Audit Service]
+        AuditService -->|35. Audit Log Entry| DB
+    end
+
+    subgraph "Payment Query Phase"
+        User -->|36. Check Status| API
+        API -->|37. Get Payment| PaymentService
+        PaymentService -->|38. Check Cache| Cache
+        Cache -->|39a. Cache HIT| PaymentService
+        Cache -->|39b. Cache MISS| Repository
+        Repository -->|40. SELECT payment| DB
+        DB -->|41. Payment Data| Repository
+        Repository -->|42. Return Data| PaymentService
+        PaymentService -->|43. Cache Result<br/>TTL: 60s| Cache
+        PaymentService -->|44. Return Status| API
+        API -->|45. Display Status<br/>Confirmed| User
+    end
+
+    Note1[Payment Flow Metrics:<br/>Invoice Generation: <100ms<br/>Lightning Settlement: 1-5s<br/>Webhook Processing: <500ms<br/>End-to-End: 5-10s<br/>Success Rate: 98.5%]
+
+    Note2[Security Measures:<br/>- Payment hash verification<br/>- HTLC preimage validation<br/>- Idempotency keys<br/>- Webhook HMAC signatures<br/>- Rate limiting per user]
+
+    style User fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style API fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style PaymentService fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#fff
+    style CurrencyService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style LightningNode fill:#fff9c4,stroke:#f57f17,stroke-width:3px
+    style LightningNetwork fill:#fffde7,stroke:#f9a825,stroke-width:2px
+    style WebhookService fill:#ff5722,stroke:#bf360c,stroke-width:2px,color:#fff
+    style Repository fill:#9e9e9e,stroke:#616161,stroke-width:2px,color:#fff
+    style DB fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style EventBus fill:#9e9e9e,stroke:#616161,stroke-width:3px,color:#fff
+    style Cache fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style PaymentAnalytics fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style NotificationService fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style SubscriptionService fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    style AuditService fill:#607d8b,stroke:#37474f,stroke-width:2px,color:#fff
+    style Note1 fill:#e0f7fa,stroke:#00838f,stroke-width:2px
+    style Note2 fill:#fce4ec,stroke:#c2185b,stroke-width:2px

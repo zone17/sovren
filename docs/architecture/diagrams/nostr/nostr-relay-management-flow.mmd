@@ -1,0 +1,219 @@
+graph TB
+    %% NOSTR Relay Connection Management - Sovren Platform
+    %% Shows relay pool initialization, health monitoring, reconnection, and load balancing
+
+    subgraph "Initialization Phase"
+        START[Application Start]
+        CONFIG[Load Relay Config<br/>from Environment]
+        PARSE[Parse Relay URLs<br/>Validate Format]
+        PRIORITY[Assign Priority Levels<br/>Primary/Secondary/Backup]
+    end
+
+    subgraph "Relay Pool Manager"
+        POOL[SimplePool Instance<br/>nostr-tools]
+        CONNECT[Connection Manager]
+        HEALTH[Health Monitor]
+        FAILOVER[Failover Controller]
+        BALANCE[Load Balancer]
+    end
+
+    subgraph "Connection States"
+        CONNECTING[Connecting<br/>WebSocket Handshake]
+        CONNECTED[Connected<br/>Ready for Events]
+        DEGRADED[Degraded<br/>High Latency]
+        DISCONNECTED[Disconnected<br/>Connection Lost]
+        FAILED[Failed<br/>Max Retries Exceeded]
+    end
+
+    subgraph "Primary Relays"
+        R1[wss://relay.damus.io<br/>Priority: 1<br/>Region: US]
+        R2[wss://relay.nostr.band<br/>Priority: 1<br/>Region: EU]
+        R3[wss://nos.lol<br/>Priority: 1<br/>Region: Global]
+    end
+
+    subgraph "Secondary Relays"
+        R4[wss://relay.snort.social<br/>Priority: 2<br/>Region: US]
+        R5[wss://nostr.wine<br/>Priority: 2<br/>Region: EU]
+    end
+
+    subgraph "Backup Relays"
+        R6[wss://relay.sovren.app<br/>Priority: 3<br/>Self-hosted]
+        R7[Custom User Relays<br/>Priority: 3]
+    end
+
+    subgraph "Health Monitoring"
+        PING[Ping/Pong Monitor<br/>Every 30s]
+        LATENCY[Latency Tracker<br/>Response Times]
+        UPTIME[Uptime Calculator<br/>Success Rate]
+        EVENTS[Event Throughput<br/>Events/sec]
+    end
+
+    subgraph "Metrics Collection"
+        M1[Connection Time<br/>Initial + Reconnect]
+        M2[Response Latency<br/>Avg/Min/Max]
+        M3[Success Rate<br/>Successful/Total]
+        M4[Error Types<br/>Categorized]
+        M5[Event Count<br/>Published/Received]
+    end
+
+    subgraph "Failover Logic"
+        DETECT[Detect Failure<br/>Timeout/Error]
+        SCORE[Update Health Score<br/>Penalize Failed Relay]
+        SELECT[Select Replacement<br/>Best Available Relay]
+        SWITCH[Switch Traffic<br/>To Backup Relay]
+        NOTIFY[Notify User<br/>Optional Alert]
+    end
+
+    subgraph "Reconnection Strategy"
+        BACKOFF[Exponential Backoff<br/>2s → 4s → 8s → 16s]
+        MAXRETRY[Max Retry Limit<br/>5 attempts]
+        COOLDOWN[Cooldown Period<br/>5 minutes]
+        RETEST[Retest Failed Relay<br/>Background Checks]
+    end
+
+    subgraph "Load Balancing"
+        ROUND[Round Robin<br/>Distribute Evenly]
+        LATENCY_LB[Latency-Based<br/>Prefer Fast Relays]
+        GEO[Geo-Routing<br/>Nearest Relay]
+        RANDOM[Random Selection<br/>Fault Tolerance]
+    end
+
+    %% Initialization Flow
+    START --> CONFIG
+    CONFIG --> PARSE
+    PARSE --> PRIORITY
+    PRIORITY --> POOL
+
+    %% Pool to Connection Manager
+    POOL --> CONNECT
+    CONNECT --> HEALTH
+    HEALTH --> FAILOVER
+    FAILOVER --> BALANCE
+
+    %% Connection to Relays
+    CONNECT -.-> CONNECTING
+    CONNECTING --> R1
+    CONNECTING --> R2
+    CONNECTING --> R3
+    CONNECTING --> R4
+    CONNECTING --> R5
+    CONNECTING --> R6
+    CONNECTING --> R7
+
+    %% Connection State Transitions
+    CONNECTING --> CONNECTED
+    CONNECTED --> DEGRADED
+    DEGRADED --> DISCONNECTED
+    DISCONNECTED --> FAILED
+    CONNECTED --> DISCONNECTED
+
+    %% Health Monitoring
+    HEALTH --> PING
+    HEALTH --> LATENCY
+    HEALTH --> UPTIME
+    HEALTH --> EVENTS
+
+    %% Metrics Flow
+    PING --> M1
+    LATENCY --> M2
+    UPTIME --> M3
+    EVENTS --> M5
+    DISCONNECTED --> M4
+
+    %% Failover Process
+    DISCONNECTED --> DETECT
+    DETECT --> SCORE
+    SCORE --> SELECT
+    SELECT --> SWITCH
+    SWITCH --> NOTIFY
+
+    %% Reconnection Flow
+    FAILED --> BACKOFF
+    BACKOFF --> MAXRETRY
+    MAXRETRY --> COOLDOWN
+    COOLDOWN --> RETEST
+    RETEST --> CONNECTING
+
+    %% Load Balancing Strategies
+    BALANCE --> ROUND
+    BALANCE --> LATENCY_LB
+    BALANCE --> GEO
+    BALANCE --> RANDOM
+
+    %% Feedback Loops
+    M2 -.-> LATENCY_LB
+    M3 -.-> SCORE
+    SCORE -.-> SELECT
+    SELECT -.-> SWITCH
+
+    %% Styling
+    classDef init fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
+    classDef pool fill:#ddd6fe,stroke:#7c3aed,stroke-width:2px
+    classDef state fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef relay fill:#d1fae5,stroke:#10b981,stroke-width:2px
+    classDef secondary fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    classDef backup fill:#ffe4e6,stroke:#f43f5e,stroke-width:2px
+    classDef monitor fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+    classDef metrics fill:#fef9c3,stroke:#eab308,stroke-width:2px
+    classDef failover fill:#fed7aa,stroke:#f97316,stroke-width:2px
+    classDef reconnect fill:#fecaca,stroke:#ef4444,stroke-width:2px
+    classDef balance fill:#ccfbf1,stroke:#14b8a6,stroke-width:2px
+
+    class START,CONFIG,PARSE,PRIORITY init
+    class POOL,CONNECT,HEALTH,FAILOVER,BALANCE pool
+    class CONNECTING,CONNECTED,DEGRADED,DISCONNECTED,FAILED state
+    class R1,R2,R3 relay
+    class R4,R5 secondary
+    class R6,R7 backup
+    class PING,LATENCY,UPTIME,EVENTS monitor
+    class M1,M2,M3,M4,M5 metrics
+    class DETECT,SCORE,SELECT,SWITCH,NOTIFY failover
+    class BACKOFF,MAXRETRY,COOLDOWN,RETEST reconnect
+    class ROUND,LATENCY_LB,GEO,RANDOM balance
+
+    %% Relay Health Scoring Algorithm
+    note1["`**Health Score Calculation:**
+    Score = (Uptime × 0.4) + (Latency × 0.3) + (Success Rate × 0.3)
+
+    **Degradation Triggers:**
+    • Latency > 2000ms
+    • Success rate < 80%
+    • 3+ consecutive errors
+
+    **Failure Triggers:**
+    • Timeout > 10s
+    • Connection refused
+    • 5+ retry failures
+    • Invalid responses`"]
+
+    %% Connection Pool Configuration
+    note2["`**Pool Configuration:**
+    • Min Connections: 3 (primary)
+    • Max Connections: 10 (all tiers)
+    • Connection Timeout: 10s
+    • Idle Timeout: 5 minutes
+    • Ping Interval: 30s
+    • Max Events/sec: 100 per relay`"]
+
+    %% Relay Selection Strategy
+    note3["`**Selection Strategy:**
+    1. Check primary relays first
+    2. If all degraded, try secondary
+    3. If all failed, use backup
+    4. Geo-optimize for user location
+    5. Load balance across healthy relays
+    6. Maintain 2+ active connections`"]
+
+    %% Error Handling
+    note4["`**Error Handling:**
+    • Network errors: Auto-reconnect
+    • Rate limits: Backoff + retry
+    • Invalid auth: Skip relay
+    • Protocol errors: Log + report
+    • Timeout: Mark degraded
+    • Server errors: Failover`"]
+
+    style note1 fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style note2 fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style note3 fill:#d1fae5,stroke:#10b981,stroke-width:2px
+    style note4 fill:#fecaca,stroke:#ef4444,stroke-width:2px

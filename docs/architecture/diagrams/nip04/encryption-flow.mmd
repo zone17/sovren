@@ -1,0 +1,46 @@
+```mermaid
+sequenceDiagram
+    participant Alice
+    participant NIP04Service
+    participant KeyMgmt
+    participant ECDH
+    participant AES256
+    participant NostrRelay
+
+    Note over Alice,NostrRelay: Encrypted DM Encryption Flow
+
+    Alice->>NIP04Service: encrypt(message, recipientPubkey)
+
+    NIP04Service->>NIP04Service: Validate input parameters
+    NIP04Service->>NIP04Service: Check spam protection
+
+    NIP04Service->>KeyMgmt: getPrivateKey()
+    KeyMgmt-->>NIP04Service: privateKey
+
+    NIP04Service->>ECDH: deriveSharedSecret(privateKey, recipientPubkey)
+    Note over ECDH: secp256k1 ECDH
+    ECDH-->>NIP04Service: sharedSecret (32 bytes)
+
+    NIP04Service->>NIP04Service: Generate random IV (16 bytes)
+    Note over NIP04Service: crypto.getRandomValues()
+
+    NIP04Service->>AES256: encrypt(plaintext, sharedSecret, IV)
+    Note over AES256: AES-256-CBC
+    AES256-->>NIP04Service: ciphertext
+
+    NIP04Service->>NIP04Service: Base64 encode ciphertext and IV
+    NIP04Service->>NIP04Service: Format: ciphertext?iv=base64_iv
+
+    NIP04Service->>NIP04Service: createDMEvent(encrypted, recipientPubkey)
+    NIP04Service->>KeyMgmt: signEvent(event)
+    KeyMgmt-->>NIP04Service: signedEvent (kind 4)
+
+    NIP04Service->>NIP04Service: maybeRotateSessionKey()
+    Note over NIP04Service: Check if 100 messages sent
+
+    NIP04Service-->>Alice: signedDMEvent
+
+    Alice->>NostrRelay: publishEvent(signedDMEvent)
+    NostrRelay-->>Alice: OK
+
+    Note over Alice,NostrRelay: Total Security Steps: 10+

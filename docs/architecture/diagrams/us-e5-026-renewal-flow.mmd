@@ -1,0 +1,71 @@
+sequenceDiagram
+    participant Scheduler
+    participant SS as SubscriptionService
+    participant PPS as PaymentProcessingService
+    participant CS as CurrencyService
+    participant IS as InvoiceService
+    participant ALS as AuditLogService
+    participant EB as EventBus
+    participant DB as Database
+
+    Note over Scheduler: Daily cron job checks<br/>subscriptions due for renewal
+
+    Scheduler->>SS: checkRenewalsNeeded()
+    SS->>DB: Query subscriptions where<br/>nextBillingDate <= today
+    DB-->>SS: List of subscriptions
+
+    loop For each subscription
+        SS->>SS: validateSubscriptionActive()
+
+        alt Subscription is active
+            SS->>CS: convertToUserCurrency(amount)
+            CS-->>SS: Converted amount
+
+            SS->>IS: createRenewalInvoice(subscription)
+            IS-->>SS: Invoice created
+
+            SS->>PPS: processPayment(invoice)
+
+            alt Payment successful
+                PPS-->>SS: PaymentResult (success)
+                SS->>DB: Update subscription<br/>(nextBillingDate += period)
+                SS->>ALS: Log renewal success
+                SS->>EB: Emit 'subscription.renewed'
+                EB-->>SS: Event published
+
+                SS->>IS: markInvoicePaid()
+                SS->>SS: updateMetrics(MRR, ARR)
+
+            else Payment failed
+                PPS-->>SS: PaymentResult (failed)
+                SS->>DB: Update subscription<br/>(status = past_due)
+                SS->>ALS: Log renewal failure
+                SS->>EB: Emit 'subscription.payment_failed'
+
+                SS->>SS: scheduleRetry(subscription)
+                Note over SS: Retry schedule:<br/>Day 1, Day 3, Day 7
+
+                alt Grace period active
+                    SS->>EB: Emit 'subscription.grace_period_started'
+                else Max retries exceeded
+                    SS->>SS: cancelSubscription(id)
+                    SS->>EB: Emit 'subscription.canceled'
+                end
+            end
+
+        else Subscription paused
+            SS->>SS: Skip renewal
+            Note over SS: Billing suspended
+
+        else Subscription canceled
+            SS->>SS: checkIfExpired()
+            alt Period ended
+                SS->>SS: expireSubscription(id)
+                SS->>EB: Emit 'subscription.expired'
+            end
+        end
+    end
+
+    SS-->>Scheduler: Renewal processing complete
+
+    Note over SS,EB: All state changes are<br/>audited and event-driven

@@ -1,0 +1,230 @@
+%% Deployment Architecture - Production Environment
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Complete production deployment architecture for Sovren platform
+
+graph TB
+    subgraph "Client Devices"
+        Browser[Web Browser<br/>Desktop/Mobile]
+        PWA[Progressive Web App<br/>Installed]
+        MobileWeb[Mobile Browser<br/>iOS/Android]
+    end
+
+    subgraph "CDN Layer - Cloudflare"
+        CDN[Cloudflare CDN<br/>Global Edge Network]
+        WAF[Web Application Firewall<br/>DDoS Protection]
+        DNS[DNS Management<br/>Route 53/Cloudflare]
+    end
+
+    subgraph "Frontend Hosting - Vercel"
+        VercelEdge[Vercel Edge Network<br/>Global Distribution]
+        StaticAssets[Static Assets<br/>JS/CSS/Images]
+        EdgeFunctions[Edge Functions<br/>SSR/API Routes]
+        VercelAnalytics[Vercel Analytics<br/>Web Vitals]
+    end
+
+    subgraph "API Gateway Layer - Docker"
+        LB[Load Balancer<br/>Nginx]
+        APIGateway1[API Gateway Instance 1<br/>Express.js]
+        APIGateway2[API Gateway Instance 2<br/>Express.js]
+        APIGateway3[API Gateway Instance 3<br/>Express.js]
+        RateLimiter[Rate Limiter<br/>Redis-backed]
+    end
+
+    subgraph "Application Services - Docker Compose"
+        ServiceContainer[Service Container<br/>Master Orchestrator]
+
+        subgraph "Core Services"
+            EventBus[Event Bus<br/>In-Memory Pub/Sub]
+            RepoFactory[Repository Factory<br/>Data Access Layer]
+        end
+
+        subgraph "Content Domain"
+            ContentPub[Content Publishing]
+            ContentMod[Content Moderation]
+            ContentSearch[Content Search]
+            ContentRec[Content Recommendation]
+        end
+
+        subgraph "User Domain"
+            UserProfile[User Profile]
+            UserActivity[User Activity]
+            UserRelationship[User Relationship]
+        end
+
+        subgraph "Payment Domain"
+            PaymentProc[Payment Processing]
+            Subscription[Subscription Management]
+            Refund[Refund Processing]
+            Webhook[Webhook Delivery]
+        end
+
+        subgraph "Shared Services"
+            Email[Email Service]
+            Notification[Notification Service]
+            Cache[Cache Service]
+            Audit[Audit Log]
+        end
+    end
+
+    subgraph "Data Layer - Supabase/PostgreSQL"
+        DBPrimary[(Primary Database<br/>PostgreSQL 15)]
+        DBReadReplica1[(Read Replica 1<br/>PostgreSQL)]
+        DBReadReplica2[(Read Replica 2<br/>PostgreSQL)]
+        DBBackup[(Backup Storage<br/>Point-in-Time Recovery)]
+    end
+
+    subgraph "Cache Layer - Redis Cloud"
+        RedisCluster1[(Redis Cluster Node 1<br/>Session + Cache)]
+        RedisCluster2[(Redis Cluster Node 2<br/>Session + Cache)]
+        RedisCluster3[(Redis Cluster Node 3<br/>Session + Cache)]
+    end
+
+    subgraph "Storage Layer - S3 Compatible"
+        S3Media[Media Storage<br/>Images/Videos]
+        S3Backups[Database Backups<br/>Automated]
+        S3Logs[Application Logs<br/>Archive]
+    end
+
+    subgraph "External Services"
+        NostrRelays[NOSTR Relay Network<br/>wss://relay.damus.io<br/>wss://relay.nostr.band<br/>wss://nos.lol]
+        LightningNode[Lightning Node<br/>LND/c-lightning<br/>Self-hosted]
+        EmailProvider[Email Provider<br/>SendGrid/Postmark]
+        ExchangeAPI[Exchange Rate API<br/>CoinGecko/Binance]
+    end
+
+    subgraph "Monitoring & Logging"
+        Sentry[Sentry<br/>Error Tracking]
+        Datadog[Datadog<br/>APM + Metrics]
+        LogAggregator[Log Aggregator<br/>Loki/CloudWatch]
+        Uptime[Uptime Monitoring<br/>UptimeRobot]
+    end
+
+    subgraph "CI/CD Pipeline - GitHub Actions"
+        GHActions[GitHub Actions<br/>Automated Testing]
+        VercelDeploy[Vercel Auto-Deploy<br/>Frontend]
+        DockerBuild[Docker Build<br/>Multi-stage]
+        DockerRegistry[Container Registry<br/>Docker Hub/GHCR]
+    end
+
+    %% Client to CDN
+    Browser --> CDN
+    PWA --> CDN
+    MobileWeb --> CDN
+
+    %% CDN to Frontend
+    CDN --> WAF
+    WAF --> VercelEdge
+    VercelEdge --> StaticAssets
+    VercelEdge --> EdgeFunctions
+
+    %% Frontend to API Gateway
+    StaticAssets --> LB
+    EdgeFunctions --> LB
+
+    %% Load Balancer Distribution
+    LB --> APIGateway1
+    LB --> APIGateway2
+    LB --> APIGateway3
+
+    %% API Gateway to Rate Limiter
+    APIGateway1 --> RateLimiter
+    APIGateway2 --> RateLimiter
+    APIGateway3 --> RateLimiter
+
+    %% Rate Limiter to Redis
+    RateLimiter --> RedisCluster1
+    RateLimiter --> RedisCluster2
+    RateLimiter --> RedisCluster3
+
+    %% API Gateway to Service Container
+    APIGateway1 --> ServiceContainer
+    APIGateway2 --> ServiceContainer
+    APIGateway3 --> ServiceContainer
+
+    %% Service Container to Core Services
+    ServiceContainer --> EventBus
+    ServiceContainer --> RepoFactory
+
+    %% Service Container to Domain Services
+    ServiceContainer --> ContentPub
+    ServiceContainer --> ContentMod
+    ServiceContainer --> ContentSearch
+    ServiceContainer --> ContentRec
+    ServiceContainer --> UserProfile
+    ServiceContainer --> UserActivity
+    ServiceContainer --> UserRelationship
+    ServiceContainer --> PaymentProc
+    ServiceContainer --> Subscription
+    ServiceContainer --> Refund
+    ServiceContainer --> Webhook
+    ServiceContainer --> Email
+    ServiceContainer --> Notification
+    ServiceContainer --> Cache
+    ServiceContainer --> Audit
+
+    %% Repository Factory to Database
+    RepoFactory --> DBPrimary
+    RepoFactory --> DBReadReplica1
+    RepoFactory --> DBReadReplica2
+
+    %% Database Replication
+    DBPrimary -.Replication.-> DBReadReplica1
+    DBPrimary -.Replication.-> DBReadReplica2
+    DBPrimary -.Backup.-> DBBackup
+
+    %% Cache Service to Redis
+    Cache --> RedisCluster1
+    Cache --> RedisCluster2
+    Cache --> RedisCluster3
+
+    %% Storage Connections
+    ContentPub --> S3Media
+    DBBackup --> S3Backups
+    Audit --> S3Logs
+
+    %% External Service Connections
+    ContentPub --> NostrRelays
+    UserProfile --> NostrRelays
+    PaymentProc --> LightningNode
+    Email --> EmailProvider
+    PaymentProc --> ExchangeAPI
+
+    %% Monitoring Connections
+    APIGateway1 -.Metrics.-> Datadog
+    ServiceContainer -.Errors.-> Sentry
+    ServiceContainer -.Logs.-> LogAggregator
+    VercelEdge -.Uptime.-> Uptime
+
+    %% CI/CD Connections
+    GHActions --> VercelDeploy
+    GHActions --> DockerBuild
+    DockerBuild --> DockerRegistry
+    DockerRegistry --> ServiceContainer
+
+    %% Styling
+    style CDN fill:#ff9800,stroke:#e65100,stroke-width:3px,color:#fff
+    style VercelEdge fill:#000000,stroke:#ffffff,stroke-width:3px,color:#fff
+    style LB fill:#9c27b0,stroke:#6a1b9a,stroke-width:3px,color:#fff
+    style ServiceContainer fill:#2196f3,stroke:#1565c0,stroke-width:3px,color:#fff
+
+    style DBPrimary fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style RedisCluster1 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style RedisCluster2 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    style RedisCluster3 fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+
+    style NostrRelays fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style LightningNode fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+
+    style Sentry fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+    style Datadog fill:#673ab7,stroke:#4527a0,stroke-width:2px,color:#fff
+
+    classDef contentServices fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    classDef userServices fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+    classDef paymentServices fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#fff
+    classDef sharedServices fill:#757575,stroke:#424242,stroke-width:2px,color:#fff
+
+    class ContentPub,ContentMod,ContentSearch,ContentRec contentServices
+    class UserProfile,UserActivity,UserRelationship userServices
+    class PaymentProc,Subscription,Refund,Webhook paymentServices
+    class Email,Notification,Cache,Audit sharedServices

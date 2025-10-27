@@ -1,0 +1,43 @@
+%% Circuit Breaker Pattern - Fault Tolerance
+%% Version: 1.0.0
+%% Date: 2025-10-27
+%% Description: Circuit breaker pattern for webhook delivery and external service calls
+
+stateDiagram-v2
+    [*] --> Closed: Initial State
+
+    Closed --> Open: Failure Threshold Exceeded<br/>(5 failures in 60s)
+    Closed --> Closed: Successful Request<br/>(Reset failure count)
+    Closed --> Closed: Failed Request<br/>(Increment failure count)
+
+    Open --> HalfOpen: Timeout Elapsed<br/>(30s wait period)
+    Open --> Open: Request Attempted<br/>(Fail fast, don't call service)
+
+    HalfOpen --> Closed: Test Request Successful<br/>(Reset circuit)
+    HalfOpen --> Open: Test Request Failed<br/>(Back to open state)
+    HalfOpen --> HalfOpen: Waiting for Test<br/>(Limited requests allowed)
+
+    note right of Closed
+        CLOSED STATE
+        - All requests flow through
+        - Monitor failure rate
+        - Track response times
+        - Increment error counter
+    end note
+
+    note right of Open
+        OPEN STATE
+        - Block all requests
+        - Return cached response
+        - Or return error immediately
+        - Wait for timeout period
+        - Log all blocked attempts
+    end note
+
+    note right of HalfOpen
+        HALF-OPEN STATE
+        - Allow test requests
+        - Limited throughput
+        - Monitor success rate
+        - Quick transition decision
+    end note

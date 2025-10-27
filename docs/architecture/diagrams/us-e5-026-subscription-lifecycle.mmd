@@ -1,0 +1,65 @@
+stateDiagram-v2
+    [*] --> trial: createSubscription(with trial)
+    [*] --> active: createSubscription(no trial)
+
+    trial --> active: trial ends + payment successful
+    trial --> canceled: cancelDuringTrial()
+    trial --> expired: trial ends + no payment
+
+    active --> active: renewalSuccessful()
+    active --> past_due: renewalFailed()
+    active --> paused: pauseSubscription()
+    active --> canceled: cancelSubscription(immediate)
+    active --> pending_cancellation: cancelSubscription(end of period)
+
+    past_due --> active: retrySuccessful()
+    past_due --> grace_period: gracePeriodStarts()
+    past_due --> canceled: maxRetriesExceeded()
+
+    grace_period --> active: paymentRecovered()
+    grace_period --> canceled: gracePeriodExpired()
+
+    paused --> active: resumeSubscription()
+    paused --> canceled: cancelWhilePaused()
+
+    pending_cancellation --> canceled: periodEnds()
+    pending_cancellation --> active: undoCancellation()
+
+    active --> upgrading: upgradeSubscription()
+    active --> downgrading: downgradeSubscription()
+
+    upgrading --> active: upgradeCompleted()
+    downgrading --> active: downgradeCompleted()
+
+    canceled --> expired: retentionPeriodEnds()
+    expired --> [*]
+
+    note right of trial
+        Duration: 7/14/30 days
+        No charges during trial
+        Auto-converts to active
+    end note
+
+    note right of active
+        Recurring billing active
+        Full feature access
+        Auto-renewal enabled
+    end note
+
+    note right of past_due
+        Grace period: 3-7 days
+        Retry schedule: 1,3,7 days
+        Limited feature access
+    end note
+
+    note right of paused
+        Billing suspended
+        Feature access limited
+        Can resume anytime
+    end note
+
+    note right of canceled
+        Billing stopped
+        Access until period end
+        Data retained 90 days
+    end note

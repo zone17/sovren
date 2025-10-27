@@ -1,0 +1,36 @@
+stateDiagram-v2
+    [*] --> Empty: Component mount
+    Empty --> BuildingFilter: Add first field
+    BuildingFilter --> BuildingFilter: Modify fields
+    BuildingFilter --> Validating: Field change
+    Validating --> Valid: Validation success
+    Validating --> Invalid: Validation failure
+    Valid --> BuildingFilter: Continue editing
+    Invalid --> BuildingFilter: Fix errors
+
+    BuildingFilter --> PresetSelected: Select preset
+    PresetSelected --> Validating: Apply preset
+
+    BuildingFilter --> TemplateSaving: Save as template
+    TemplateSaving --> BuildingFilter: Template saved
+
+    Empty --> TemplateLoading: Load template
+    TemplateLoading --> Validating: Template loaded
+
+    Valid --> Exporting: Export filter
+    Exporting --> [*]: Filter exported
+
+    BuildingFilter --> Importing: Import JSON
+    Importing --> Validating: Parse JSON
+
+    note right of Validating
+        Real-time validation
+        using NostrFilterSchema
+        and custom rules
+    end note
+
+    note right of Valid
+        Filter is ready
+        to use for
+        subscriptions
+    end note

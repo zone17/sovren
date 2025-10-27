@@ -1,0 +1,106 @@
+%% DI Container Architecture Overview
+%% US-E5-032: Wire Services Through DI Container
+%% Shows all 29 services organized by domain and lifecycle
+
+graph TB
+    subgraph "Application Container"
+        subgraph "Infrastructure Layer (Singletons)"
+            EventBus[[EventBusService]]
+            Cache[[CacheService]]
+            Logger[[Logger]]
+            Config[[Config]]
+            DB[[Database]]
+            Redis[[Redis]]
+        end
+
+        subgraph "Phase 2: Shared Services"
+            Email(EmailService<br/>Transient)
+            Notification(NotificationService<br/>Transient)
+            AuditLog(AuditLogService<br/>Transient)
+        end
+
+        subgraph "Phase 3: Content Services (Scoped)"
+            ContentPub[ContentPublishingService]
+            ContentMod[ContentModerationService]
+            ContentSearch[ContentSearchService]
+            ContentRec[ContentRecommendationService]
+            ContentAnalytics[ContentAnalyticsService]
+            ContentVer[ContentVersioningService]
+            ContentCreate[ContentCreationService]
+        end
+
+        subgraph "Phase 4: User Services (Scoped)"
+            UserProfile[UserProfileService]
+            UserPref[UserPreferencesService]
+            UserActivity[UserActivityService]
+            UserRelation[UserRelationshipService]
+            UserAnalytics[UserAnalyticsService]
+        end
+
+        subgraph "Phase 5: Payment Services (Scoped)"
+            Payment[PaymentProcessingService]
+            Currency(CurrencyService<br/>Transient)
+            Subscription[SubscriptionService]
+            Refund[RefundService]
+            PaymentAnalytics[PaymentAnalyticsService]
+            Webhook[WebhookService]
+            Invoice[InvoiceService]
+        end
+
+        subgraph "External Integrations (Singletons)"
+            Lightning[[LightningService]]
+            Nostr[[NostrService]]
+            Elasticsearch[[ElasticsearchService]]
+        end
+    end
+
+    %% Infrastructure Dependencies
+    Cache --> Redis
+    Cache --> EventBus
+    Cache --> Logger
+
+    %% Shared Service Dependencies
+    Notification --> Email
+    Notification --> EventBus
+    Email --> Config
+    AuditLog --> DB
+
+    %% Content Service Dependencies
+    ContentPub --> ContentRepo
+    ContentPub --> EventBus
+    ContentPub --> Cache
+    ContentMod --> AuditLog
+    ContentSearch --> Elasticsearch
+    ContentRec --> UserActivity
+
+    %% User Service Dependencies
+    UserProfile --> Cache
+    UserProfile --> EventBus
+    UserPref --> Cache
+    UserActivity --> EventBus
+    UserRelation --> Cache
+
+    %% Payment Service Dependencies
+    Payment --> Lightning
+    Payment --> EventBus
+    Subscription --> Payment
+    Refund --> Payment
+    PaymentAnalytics --> EventBus
+    Webhook --> EventBus
+
+    %% Repositories
+    ContentRepo[(ContentRepository)]
+    UserRepo[(UserRepository)]
+    PaymentRepo[(PaymentRepository)]
+
+    ContentRepo --> DB
+    UserRepo --> DB
+    PaymentRepo --> DB
+
+    style EventBus fill:#e1f5ff
+    style Cache fill:#e1f5ff
+    style Logger fill:#e1f5ff
+    style Config fill:#e1f5ff
+    style DB fill:#fff4e1
+    style Lightning fill:#e1ffe1
+    style Nostr fill:#e1ffe1

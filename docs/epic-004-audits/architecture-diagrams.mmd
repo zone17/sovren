@@ -1,0 +1,503 @@
+# State Management Architecture Diagrams - Epic 004
+
+## 1. Overall State Architecture (Target State)
+
+```mermaid
+graph TB
+    subgraph "External Data Sources"
+        API[REST APIs]
+        WS[WebSocket]
+        NOSTR[NOSTR Relays]
+        LN[Lightning Network]
+    end
+
+    subgraph "React Query Layer"
+        QC[Query Client]
+        Cache[Query Cache]
+        Hooks[Custom Hooks]
+
+        QC --> Cache
+        Cache --> Hooks
+    end
+
+    subgraph "Redux Store"
+        Store[Redux Store]
+
+        subgraph "Client State Slices"
+            UI[uiSlice]
+            Auth[authSlice]
+            Editor[editorSlice]
+            Prefs[preferencesSlice]
+        end
+
+        Store --> UI
+        Store --> Auth
+        Store --> Editor
+        Store --> Prefs
+    end
+
+    subgraph "React Components"
+        Pages[Page Components]
+        Features[Feature Components]
+        Shared[Shared Components]
+    end
+
+    subgraph "Persistence Layer"
+        LS[localStorage]
+        IDB[IndexedDB]
+    end
+
+    API --> QC
+    WS --> QC
+    NOSTR --> QC
+    LN --> QC
+
+    Hooks --> Pages
+    Hooks --> Features
+    Hooks --> Shared
+
+    Store --> Pages
+    Store --> Features
+    Store --> Shared
+
+    UI --> LS
+    Auth --> LS
+    Prefs --> LS
+    Editor --> IDB
+
+    style QC fill:#4CAF50
+    style Cache fill:#4CAF50
+    style Hooks fill:#4CAF50
+    style Store fill:#2196F3
+    style UI fill:#2196F3
+    style Auth fill:#2196F3
+```
+
+## 2. Data Flow Architecture
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Component
+    participant ReactQuery
+    participant Redux
+    participant API
+    participant Cache
+    participant LocalStorage
+
+    Note over Component: User Interaction
+    User->>Component: Click "Load Posts"
+
+    Note over Component,ReactQuery: Server Data Flow
+    Component->>ReactQuery: usePosts()
+    ReactQuery->>Cache: Check cache
+    alt Cache Hit
+        Cache-->>ReactQuery: Return cached data
+        ReactQuery-->>Component: Immediate response
+    else Cache Miss
+        ReactQuery->>API: GET /api/posts
+        API-->>ReactQuery: Posts data
+        ReactQuery->>Cache: Update cache
+        ReactQuery-->>Component: Fresh data
+    end
+
+    Note over Component,Redux: UI State Flow
+    User->>Component: Toggle theme
+    Component->>Redux: dispatch(setTheme('dark'))
+    Redux->>LocalStorage: Persist theme
+    Redux-->>Component: Update UI
+```
+
+## 3. Redux Store Organization (After Migration)
+
+```mermaid
+graph LR
+    subgraph "Redux Store (Client State Only)"
+        subgraph "uiSlice"
+            Theme[theme: light/dark]
+            Sidebar[sidebarOpen: boolean]
+            Modal[activeModal: string]
+            Notif[notifications: array]
+            Toast[toasts: array]
+        end
+
+        subgraph "authSlice"
+            IsAuth[isAuthenticated: boolean]
+            Token[token: string]
+            Pubkey[nostrPubkey: string]
+        end
+
+        subgraph "editorSlice"
+            Editing[isEditing: boolean]
+            AutoSave[autoSaveEnabled: boolean]
+            LastSave[lastSaved: timestamp]
+            Selected[selectedBlocks: array]
+        end
+
+        subgraph "preferencesSlice"
+            Lang[language: string]
+            NotifPrefs[notificationPrefs: object]
+            Privacy[privacySettings: object]
+        end
+
+        subgraph "formSlice"
+            MultiStep[multiStepForms: object]
+            Drafts[formDrafts: object]
+        end
+    end
+
+    style uiSlice fill:#E3F2FD
+    style authSlice fill:#FFF3E0
+    style editorSlice fill:#F3E5F5
+    style preferencesSlice fill:#E8F5E9
+    style formSlice fill:#FFF9C4
+```
+
+## 4. React Query Structure
+
+```mermaid
+graph TB
+    subgraph "Query Keys Structure"
+        QK[Query Keys]
+
+        subgraph "Users Domain"
+            U1[users.all]
+            U2[users.list]
+            U3[users.detail]
+            U4[users.current]
+        end
+
+        subgraph "Posts Domain"
+            P1[posts.all]
+            P2[posts.list]
+            P3[posts.detail]
+            P4[posts.comments]
+        end
+
+        subgraph "Content Domain"
+            C1[content.all]
+            C2[content.list]
+            C3[content.detail]
+            C4[content.versions]
+        end
+
+        subgraph "Payments Domain"
+            Pay1[payments.all]
+            Pay2[payments.list]
+            Pay3[payments.invoices]
+            Pay4[payments.status]
+        end
+    end
+
+    subgraph "Cache Strategies"
+        CS[Cache Config]
+
+        Fresh[Always Fresh: 0ms]
+        Quick[Quick Update: 1min]
+        Standard[Standard: 5min]
+        Stable[Stable: 15min]
+    end
+
+    subgraph "Mutations"
+        Create[Create Mutations]
+        Update[Update Mutations]
+        Delete[Delete Mutations]
+
+        OptUpdate[Optimistic Updates]
+        Rollback[Error Rollback]
+    end
+
+    QK --> U1
+    QK --> P1
+    QK --> C1
+    QK --> Pay1
+
+    CS --> Fresh
+    CS --> Quick
+    CS --> Standard
+    CS --> Stable
+
+    Pay4 --> Fresh
+    C2 --> Quick
+    P2 --> Standard
+    U3 --> Stable
+
+    Create --> OptUpdate
+    Update --> OptUpdate
+    Delete --> Rollback
+```
+
+## 5. Component State Connection
+
+```mermaid
+graph TD
+    subgraph "Page Component"
+        Page[CreatorDashboard]
+    end
+
+    subgraph "State Sources"
+        subgraph "React Query Hooks"
+            H1[useCreatorStats]
+            H2[useRecentContent]
+            H3[useEarnings]
+            H4[useSubscribers]
+        end
+
+        subgraph "Redux Selectors"
+            S1[selectDashboardView]
+            S2[selectDateRange]
+            S3[selectTheme]
+        end
+
+        subgraph "Local State"
+            L1[selectedTab]
+            L2[expandedCards]
+            L3[chartHover]
+        end
+    end
+
+    Page --> H1
+    Page --> H2
+    Page --> H3
+    Page --> H4
+    Page --> S1
+    Page --> S2
+    Page --> S3
+    Page --> L1
+    Page --> L2
+    Page --> L3
+
+    style H1 fill:#4CAF50
+    style H2 fill:#4CAF50
+    style H3 fill:#4CAF50
+    style H4 fill:#4CAF50
+    style S1 fill:#2196F3
+    style S2 fill:#2196F3
+    style S3 fill:#2196F3
+    style L1 fill:#FF9800
+    style L2 fill:#FF9800
+    style L3 fill:#FF9800
+```
+
+## 6. Migration Flow (Current → Target)
+
+```mermaid
+graph LR
+    subgraph "Current State (Mixed)"
+        CS1[userSlice<br/>34 lines]
+        CS2[postSlice<br/>70 lines]
+        CS3[paymentSlice<br/>70 lines]
+        CS4[cmsSlice<br/>890 lines!]
+    end
+
+    subgraph "Migration Process"
+        M1[Extract Server Data]
+        M2[Create React Query Hooks]
+        M3[Remove from Redux]
+        M4[Update Components]
+    end
+
+    subgraph "Target State (Clean)"
+        subgraph "React Query"
+            RQ1[useUser]
+            RQ2[usePosts]
+            RQ3[usePayments]
+            RQ4[useContent]
+        end
+
+        subgraph "Redux (Client Only)"
+            R1[authSlice<br/>20 lines]
+            R2[uiSlice<br/>50 lines]
+            R3[editorSlice<br/>40 lines]
+        end
+    end
+
+    CS1 --> M1
+    CS2 --> M1
+    CS3 --> M1
+    CS4 --> M1
+
+    M1 --> M2
+    M2 --> M3
+    M3 --> M4
+
+    M4 --> RQ1
+    M4 --> RQ2
+    M4 --> RQ3
+    M4 --> RQ4
+
+    M4 --> R1
+    M4 --> R2
+    M4 --> R3
+
+    style CS1 fill:#ffcccc
+    style CS2 fill:#ffcccc
+    style CS3 fill:#ffcccc
+    style CS4 fill:#ff9999
+    style RQ1 fill:#ccffcc
+    style RQ2 fill:#ccffcc
+    style RQ3 fill:#ccffcc
+    style RQ4 fill:#ccffcc
+    style R1 fill:#ccccff
+    style R2 fill:#ccccff
+    style R3 fill:#ccccff
+```
+
+## 7. Cache Invalidation Strategy
+
+```mermaid
+graph TD
+    subgraph "Mutation Triggers"
+        CreatePost[Create Post]
+        UpdatePost[Update Post]
+        DeletePost[Delete Post]
+        CreateComment[Add Comment]
+    end
+
+    subgraph "Cache Invalidation"
+        I1[Invalidate posts.list]
+        I2[Invalidate posts.detail]
+        I3[Invalidate user.stats]
+        I4[Invalidate related queries]
+    end
+
+    subgraph "Background Refetch"
+        R1[Refetch Active Queries]
+        R2[Update UI Optimistically]
+        R3[Sync with Server]
+    end
+
+    CreatePost --> I1
+    CreatePost --> I3
+
+    UpdatePost --> I1
+    UpdatePost --> I2
+
+    DeletePost --> I1
+    DeletePost --> I2
+    DeletePost --> I3
+
+    CreateComment --> I2
+    CreateComment --> I4
+
+    I1 --> R1
+    I2 --> R1
+    I3 --> R1
+    I4 --> R1
+
+    R1 --> R2
+    R2 --> R3
+```
+
+## 8. Error Handling Architecture
+
+```mermaid
+graph TB
+    subgraph "Error Sources"
+        E1[Network Error]
+        E2[Auth Error]
+        E3[Validation Error]
+        E4[Server Error]
+    end
+
+    subgraph "React Query Layer"
+        QE[Query Error Handler]
+        ME[Mutation Error Handler]
+        Retry[Retry Logic]
+        Fallback[Fallback Data]
+    end
+
+    subgraph "Redux Layer"
+        ErrorState[Error Notifications]
+        ErrorModal[Error Modal]
+    end
+
+    subgraph "Component Layer"
+        ErrorBoundary[Error Boundary]
+        LocalError[Local Error State]
+    end
+
+    E1 --> QE
+    E2 --> QE
+    E3 --> ME
+    E4 --> QE
+
+    QE --> Retry
+    QE --> Fallback
+    ME --> Retry
+
+    QE --> ErrorState
+    ME --> ErrorState
+
+    ErrorState --> ErrorModal
+    ErrorBoundary --> ErrorModal
+    LocalError --> ErrorState
+
+    style E1 fill:#ffcccc
+    style E2 fill:#ffcccc
+    style E3 fill:#ffcccc
+    style E4 fill:#ffcccc
+```
+
+## 9. Performance Optimization
+
+```mermaid
+graph LR
+    subgraph "Optimization Techniques"
+        subgraph "React Query"
+            PC[Prefetch Critical]
+            WR[Window Refocus]
+            BR[Background Refresh]
+            DD[Dedupe Requests]
+        end
+
+        subgraph "Redux"
+            Memo[Memoized Selectors]
+            Batch[Batch Updates]
+            Lazy[Lazy Slices]
+        end
+
+        subgraph "Components"
+            RMemo[React.memo]
+            UCB[useCallback]
+            UM[useMemo]
+            VS[Virtualization]
+        end
+    end
+
+    subgraph "Metrics"
+        CHR[Cache Hit Rate >80%]
+        TTI[TTI <2s]
+        FPS[60 FPS]
+        Bundle[Bundle <250KB]
+    end
+
+    PC --> CHR
+    WR --> CHR
+    BR --> CHR
+    DD --> CHR
+
+    Memo --> FPS
+    Batch --> FPS
+    RMemo --> FPS
+
+    Lazy --> Bundle
+    VS --> TTI
+```
+
+## Summary
+
+These diagrams illustrate the complete state management architecture for Epic 004:
+
+1. **Clear Separation**: Server state in React Query, client state in Redux
+2. **Optimized Caching**: Different strategies per data type
+3. **Performance First**: Prefetching, memoization, lazy loading
+4. **Error Resilient**: Comprehensive error handling at all layers
+5. **Migration Path**: Clear steps from current mixed state to clean architecture
+
+The architecture ensures:
+- ✅ 75% reduction in Redux code
+- ✅ 80%+ cache hit rate target
+- ✅ Zero duplicate state
+- ✅ Type-safe throughout
+- ✅ Testable and maintainable

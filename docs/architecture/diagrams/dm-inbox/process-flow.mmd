@@ -1,0 +1,63 @@
+flowchart TD
+    Start([User Opens DM Inbox]) --> Init[Initialize Component]
+    Init --> CheckKey{Active Key<br/>Available?}
+
+    CheckKey -->|No| ShowKeyError[Display Key Setup Required]
+    ShowKeyError --> End([End])
+
+    CheckKey -->|Yes| Subscribe[Subscribe to DM Events]
+    Subscribe --> SubSuccess{Subscription<br/>Successful?}
+
+    SubSuccess -->|No| ShowSubError[Display Connection Error]
+    ShowSubError --> Retry{User Retries?}
+    Retry -->|Yes| Subscribe
+    Retry -->|No| End
+
+    SubSuccess -->|Yes| ReceiveEvents[Receive DM Events]
+    ReceiveEvents --> DecryptLoop[Decrypt Each Message]
+    DecryptLoop --> GroupThreads[Group by Thread ID]
+    GroupThreads --> SortThreads[Sort by Latest Message]
+    SortThreads --> DisplayList[Display Thread List]
+
+    DisplayList --> UserAction{User Action}
+
+    UserAction -->|Select Thread| ShowConvo[Display Conversation]
+    ShowConvo --> UserConvoAction{User Action}
+
+    UserConvoAction -->|Type Message| ComposeMsg[Show Message Composer]
+    ComposeMsg --> SendMsg{User Sends?}
+    SendMsg -->|Yes| ValidateMsg{Message Valid?}
+    ValidateMsg -->|No| ShowValidError[Show Validation Error]
+    ShowValidError --> ComposeMsg
+    ValidateMsg -->|Yes| EncryptMsg[Encrypt with NIP04]
+    EncryptMsg --> CreateEvent[Create Kind 4 Event]
+    CreateEvent --> PublishEvent[Publish to Relays]
+    PublishEvent --> PubSuccess{Publish<br/>Successful?}
+    PubSuccess -->|Yes| OptimisticUpdate[Update UI Optimistically]
+    OptimisticUpdate --> ShowConvo
+    PubSuccess -->|No| ShowPubError[Show Publish Error]
+    ShowPubError --> SendMsg
+
+    UserConvoAction -->|Back| DisplayList
+    UserConvoAction -->|Delete| ConfirmDelete{Confirm<br/>Delete?}
+    ConfirmDelete -->|Yes| DeleteThread[Clear Thread History]
+    DeleteThread --> DisplayList
+    ConfirmDelete -->|No| ShowConvo
+
+    UserConvoAction -->|Mark Read| UpdateReadStatus[Update Last Read Time]
+    UpdateReadStatus --> ClearBadge[Clear Unread Badge]
+    ClearBadge --> ShowConvo
+
+    UserAction -->|Search| FilterThreads[Filter Thread List]
+    FilterThreads --> DisplayFiltered[Display Filtered Results]
+    DisplayFiltered --> UserAction
+
+    UserAction -->|Refresh| Subscribe
+    UserAction -->|Close| Cleanup[Unsubscribe & Cleanup]
+    Cleanup --> End
+
+    style Start fill:#4F46E5,stroke:#312E81,color:#fff
+    style End fill:#EF4444,stroke:#991B1B,color:#fff
+    style EncryptMsg fill:#10B981,stroke:#065F46,color:#fff
+    style PublishEvent fill:#10B981,stroke:#065F46,color:#fff
+    style OptimisticUpdate fill:#F59E0B,stroke:#92400E,color:#fff

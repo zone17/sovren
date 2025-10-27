@@ -3,3 +3,110 @@ description:
 globs:
 alwaysApply: false
 ---
+
+# Sovren Project Rules
+
+## Core Documentation References
+
+All team members and AI contributors must read, understand, and follow these core documents:
+
+1. **CODE_OF_CRAFT.md** - The 11 Commandments of Elite Engineering Excellence
+2. **docs/quality-gates.md** - Quality gates that all code changes must pass
+3. **docs/development/mermaid-requirement.md** - Mandatory Mermaid diagram requirements
+4. **docs/development/mermaid-diagram-guide.md** - Guide for creating effective Mermaid diagrams
+5. **docs/development/user-story-implementation.md** - User story implementation workflow
+6. **CHANGELOG.md** - History of all changes and implementations
+
+## Mandatory Requirements
+
+### Visual Architecture Documentation
+
+- **ALL** user story implementations MUST include the required Mermaid diagrams
+- Diagrams MUST follow the standards defined in the Mermaid diagram guide
+- Pull requests without the required diagrams WILL be rejected
+- No exceptions to the diagram requirements are permitted
+
+### Mermaid Diagram Linking Requirements (MANDATORY)
+
+**CRITICAL RULE**: All Mermaid diagrams MUST be properly linked with visual rendering capabilities:
+
+1. **Create Diagram Files**: Save all Mermaid diagrams as `.mmd` files in `/docs/architecture/diagrams/`
+2. **Visual GitHub Links**: ALWAYS include GitHub-rendered diagram links using this format:
+   ```markdown
+   ![Diagram Name](https://github.com/owner/repo/blob/main/docs/architecture/diagrams/diagram-name.mmd)
+   ```
+3. **Multiple Link Formats**: Provide multiple viewing options:
+
+   ```markdown
+   ## 📊 Architecture Diagrams
+
+   ### System Architecture
+
+   - **[📊 View on GitHub](https://github.com/owner/repo/blob/main/docs/architecture/diagrams/system-architecture.mmd)** - Auto-rendered visual
+   - **[🔗 Interactive Editor](https://mermaid.live/edit#your-encoded-diagram)** - Edit and customize
+   - **[📁 Source File](docs/architecture/diagrams/system-architecture.mmd)** - Raw Mermaid code
+   ```
+
+4. **Documentation Integration**: Every documentation file that references architecture MUST include visual diagram links
+5. **Validation Reports**: All validation reports MUST include working visual diagram links, not just embedded code
+6. **README Updates**: Update relevant README files with proper diagram links
+
+**ENFORCEMENT**: Any documentation or validation report without proper visual diagram links will be REJECTED. No exceptions.
+
+### Quality Gates
+
+- All code changes MUST pass the quality gates defined in docs/quality-gates.md
+- Test coverage MUST meet or exceed 95% for all new code
+- Documentation MUST be complete and up-to-date
+- Technical debt MUST be actively managed and minimized
+
+### Deployment Integration (MANDATORY - Effective 2025-10-27)
+
+**Following Epic 006 completion, ALL story implementations MUST integrate with automated CI/CD pipelines:**
+
+- **CI/CD Integration**: All code changes MUST trigger and pass automated quality gates
+- **Staging Deployment**: All merged PRs MUST successfully deploy to staging environment
+- **Health Checks**: All services MUST implement `/health`, `/ready`, and `/live` endpoints
+- **Smoke Tests**: All deployments MUST pass automated smoke tests (28+ tests)
+- **Production Ready**: Stories are NOT complete until staging deployment succeeds
+- **Rollback Tested**: All deployments MUST support automatic rollback (< 2 minutes)
+
+**Reference**: [docs/development/DEPLOYMENT_INTEGRATION_STANDARDS.md](docs/development/DEPLOYMENT_INTEGRATION_STANDARDS.md)
+
+**Agent Requirements**:
+- Create PR with deployment checklist
+- Verify CI/CD checks passing
+- Confirm staging auto-deployment success
+- Validate health checks passing
+- Document deployment status in completion summary
+- Include deployment verification commands in output
+
+### Code of Craft
+
+- All code MUST adhere to the 11 Commandments in CODE_OF_CRAFT.md
+- Code reviews MUST enforce these commandments without exception
+- New team members MUST read and acknowledge these commandments before contributing
+
+## Implementation Process
+
+1. Read and understand the user story requirements
+2. Create the required Mermaid diagrams BEFORE implementation
+3. Implement the code following TDD principles
+4. Ensure all quality gates pass
+5. Update documentation and CHANGELOG.md
+6. Submit pull request with all required artifacts
+7. **Verify CI/CD pipeline execution and pass all checks** ✅
+8. **Confirm staging deployment successful** ✅
+9. **Validate health checks and smoke tests passing** ✅
+10. **Document deployment status in completion summary** ✅
+
+## Enforcement
+
+These rules are enforced through:
+
+1. Automated checks in the CI/CD pipeline
+2. Pull request templates with mandatory checklist items
+3. Code review process that verifies compliance
+4. Quality gates that block non-compliant changes
+
+No exceptions to these rules are permitted without explicit approval from the engineering leadership team.

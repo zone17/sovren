@@ -1,0 +1,70 @@
+%% US-322: NOSTR Backup and Recovery System - Architecture Overview
+%% This diagram shows the high-level architecture of the backup and recovery system
+
+graph TB
+    subgraph "User Interface Layer"
+        UI[Backup/Restore UI Components]
+        BD[BackupDialog]
+        RD[RestoreDialog]
+        BS[BackupSettings]
+    end
+
+    subgraph "Service Layer"
+        NBS[NOSTRBackupService]
+        BES[BackupEncryptionService]
+        KMS[KeyManagementService]
+    end
+
+    subgraph "Data Layer"
+        IDB[(IndexedDB<br/>Key Storage)]
+        LS[(LocalStorage<br/>Backup History)]
+        FS[(File System<br/>Backup Files)]
+    end
+
+    subgraph "Backup Process"
+        COLLECT[Collect Data]
+        ENCRYPT[Encrypt with AES-256-GCM]
+        GENERATE[Generate Backup File]
+        VERIFY[Verify Integrity]
+    end
+
+    subgraph "Recovery Process"
+        UPLOAD[Upload Backup File]
+        VALIDATE[Validate Structure]
+        DECRYPT[Decrypt with Password]
+        RESTORE[Restore Data]
+        TEST[Test & Verify]
+    end
+
+    UI --> BD
+    UI --> RD
+    UI --> BS
+
+    BD --> NBS
+    RD --> NBS
+    BS --> NBS
+
+    NBS --> BES
+    NBS --> KMS
+    NBS --> COLLECT
+    NBS --> VERIFY
+
+    COLLECT --> ENCRYPT
+    ENCRYPT --> GENERATE
+    GENERATE --> FS
+
+    RD --> UPLOAD
+    UPLOAD --> VALIDATE
+    VALIDATE --> DECRYPT
+    DECRYPT --> RESTORE
+    RESTORE --> TEST
+
+    KMS --> IDB
+    NBS --> LS
+    BES -.Crypto API.-> ENCRYPT
+    BES -.Crypto API.-> DECRYPT
+
+    style NBS fill:#3b82f6,stroke:#1e40af,stroke-width:3px,color:#fff
+    style BES fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff
+    style ENCRYPT fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    style DECRYPT fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff

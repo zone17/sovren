@@ -1,0 +1,42 @@
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        API[API Routes]
+    end
+
+    subgraph "Service Layer"
+        UPS[UserProfileService]
+    end
+
+    subgraph "Dependencies"
+        EB[EventBus]
+        LOGGER[Logger]
+        CACHE[CacheService]
+        AUDIT[AuditLogService]
+    end
+
+    subgraph "Data Storage"
+        MEM[In-Memory Store]
+        REDIS[Redis Cache]
+    end
+
+    subgraph "Event System"
+        EVENTS[Domain Events]
+    end
+
+    API -->|Create/Read/Update/Delete| UPS
+
+    UPS -->|Publish Events| EB
+    UPS -->|Log Operations| LOGGER
+    UPS -->|Cache Data| CACHE
+    UPS -->|Audit Trail| AUDIT
+    UPS -->|Store Profiles| MEM
+
+    CACHE -->|Read/Write| REDIS
+    EB -->|Emit| EVENTS
+
+    style UPS fill:#4CAF50
+    style EB fill:#2196F3
+    style CACHE fill:#FF9800
+    style AUDIT fill:#9C27B0
+```

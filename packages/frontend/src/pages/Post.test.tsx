@@ -4,8 +4,9 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-import paymentSlice from '../store/slices/paymentSlice';
-import postSlice, { setPosts } from '../store/slices/postSlice';
+import { AuthProvider } from '../features/auth';
+// TODO: US-E4-010 - Replace with React Query
+import { paymentReducer as paymentSlice, postReducer as postSlice, setPosts } from '../store/slices/tempStubs';
 import userSlice, { clearUser, setUser } from '../store/slices/userSlice';
 import type { Post as PostType, User } from '../types';
 import Post from './Post';
@@ -13,23 +14,45 @@ import Post from './Post';
 // Mock react-router-dom
 const mockNavigate = jest.fn();
 const mockUseParams = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-  useParams: () => mockUseParams(),
-}));
+jest.mock(
+  'react-router-dom',
+  (): Record<string, unknown> => ({
+    ...jest.requireActual('react-router-dom'),
+    useNavigate: (): jest.Mock => mockNavigate,
+    useParams: (): Record<string, string> => mockUseParams() as Record<string, string>,
+  })
+);
 
-// Mock components
-jest.mock('../components/Layout', () => ({
+// Mock components with proper structure matching actual Layout
+jest.mock('../components/ui/Layout', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }): JSX.Element => (
     <div data-testid="layout">{children}</div>
   ),
 }));
 
-jest.mock('../components/Button', () => ({
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: string;
+  [key: string]: unknown;
+}
+
+jest.mock('../components/ui/Button', () => ({
   __esModule: true,
-  default: ({ children, onClick, variant, ...props }: any): JSX.Element => (
+  default: ({ children, onClick, variant, ...props }: ButtonProps): JSX.Element => (
+    <button onClick={onClick} data-variant={variant} {...props}>
+      {children}
+    </button>
+  ),
+}));
+
+// Mock the components index to properly export Button
+jest.mock('../components', () => ({
+  Layout: ({ children }: { children: React.ReactNode }): JSX.Element => (
+    <div data-testid="layout">{children}</div>
+  ),
+  Button: ({ children, onClick, variant, ...props }: ButtonProps): JSX.Element => (
     <button onClick={onClick} data-variant={variant} {...props}>
       {children}
     </button>
@@ -55,7 +78,9 @@ const mockPost: PostType = {
   author_id: 'author1',
 };
 
-const createTestStore = (options: { withUser?: boolean; withPosts?: boolean } = {}) => {
+const createTestStore = (
+  options: { withUser?: boolean; withPosts?: boolean } = {}
+): ReturnType<typeof configureStore> => {
   const store = configureStore({
     reducer: {
       user: userSlice,
@@ -80,10 +105,16 @@ const createTestStore = (options: { withUser?: boolean; withPosts?: boolean } = 
   return store;
 };
 
+interface RenderOptions {
+  withUser?: boolean;
+  withPosts?: boolean;
+  postId?: string;
+}
+
 const renderWithProviders = (
   component: React.ReactElement,
-  options: { withUser?: boolean; withPosts?: boolean; postId?: string } = {}
-) => {
+  options: RenderOptions = {}
+): ReturnType<typeof render> & { store: ReturnType<typeof configureStore> } => {
   const { withUser = true, withPosts = true, postId = '1' } = options;
   const store = createTestStore({ withUser, withPosts });
 
@@ -92,16 +123,18 @@ const renderWithProviders = (
 
   return {
     ...render(
-      <Provider store={store}>
-        <BrowserRouter>{component}</BrowserRouter>
-      </Provider>
+      <AuthProvider>
+        <Provider store={store}>
+          <BrowserRouter>{component}</BrowserRouter>
+        </Provider>
+      </AuthProvider>
     ),
     store,
   };
 };
 
 describe('Post Component', () => {
-  beforeEach(() => {
+  beforeEach((): void => {
     jest.clearAllMocks();
     mockNavigate.mockClear();
     mockUseParams.mockClear();
@@ -110,43 +143,43 @@ describe('Post Component', () => {
   });
 
   describe('Rendering with post data', () => {
-    it('renders within Layout component', () => {
+    it('renders within Layout component', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
       expect(screen.getByTestId('layout')).toBeInTheDocument();
     });
 
-    it('displays post title correctly', () => {
+    it('displays post title correctly', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
       const title = screen.getByRole('heading', { level: 1 });
       expect(title).toHaveTextContent('Test Post Title');
     });
 
-    it('displays post content', () => {
+    it('displays post content', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
       expect(
         screen.getByText(/This is a test post content with some detailed information/)
       ).toBeInTheDocument();
     });
 
-    it('displays author information', () => {
+    it('displays author information', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
       expect(screen.getByText(/By author1/)).toBeInTheDocument();
     });
 
-    it('displays formatted creation date', () => {
+    it('displays formatted creation date', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
       const formattedDate = new Date('2024-01-15T10:30:00Z').toLocaleDateString();
       expect(screen.getByText(formattedDate)).toBeInTheDocument();
     });
 
-    it('displays Support Creator button when user is logged in', () => {
+    it('displays Support Creator button when user is logged in', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
       const supportButton = screen.getByRole('button', { name: /support creator/i });
       expect(supportButton).toBeInTheDocument();
       expect(supportButton).toHaveAttribute('data-variant', 'primary');
     });
 
-    it('displays comments section', () => {
+    it('displays comments section', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
       expect(screen.getByRole('heading', { level: 2, name: /comments/i })).toBeInTheDocument();
       expect(screen.getByText(/Comments coming soon/)).toBeInTheDocument();
@@ -154,12 +187,12 @@ describe('Post Component', () => {
   });
 
   describe('Rendering without user', () => {
-    it('does not display Support Creator button when user is not logged in', () => {
+    it('does not display Support Creator button when user is not logged in', (): void => {
       renderWithProviders(<Post />, { withUser: false, withPosts: true });
       expect(screen.queryByRole('button', { name: /support creator/i })).not.toBeInTheDocument();
     });
 
-    it('still displays post content and metadata', () => {
+    it('still displays post content and metadata', (): void => {
       renderWithProviders(<Post />, { withUser: false, withPosts: true });
       expect(screen.getByText('Test Post Title')).toBeInTheDocument();
       expect(screen.getByText(/By author1/)).toBeInTheDocument();
@@ -167,14 +200,14 @@ describe('Post Component', () => {
   });
 
   describe('Post not found scenario', () => {
-    it('displays post not found message when post does not exist', () => {
+    it('displays post not found message when post does not exist', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: false });
       expect(
         screen.getByRole('heading', { level: 2, name: /post not found/i })
       ).toBeInTheDocument();
     });
 
-    it('does not display post content when post is not found', () => {
+    it('does not display post content when post is not found', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: false });
       expect(screen.queryByText('Test Post Title')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /support creator/i })).not.toBeInTheDocument();
@@ -182,7 +215,7 @@ describe('Post Component', () => {
   });
 
   describe('User interactions', () => {
-    it('handles Support Creator button click', async () => {
+    it('handles Support Creator button click', async (): Promise<void> => {
       const user = userEvent.setup();
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
 
@@ -195,7 +228,7 @@ describe('Post Component', () => {
   });
 
   describe('Accessibility', () => {
-    it('has proper heading hierarchy', () => {
+    it('has proper heading hierarchy', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
 
       const mainHeading = screen.getByRole('heading', { level: 1 });
@@ -205,21 +238,21 @@ describe('Post Component', () => {
       expect(commentsHeading).toBeInTheDocument();
     });
 
-    it('has proper semantic structure with article element', () => {
+    it('has proper semantic structure with article element', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
 
       const article = screen.getByRole('article');
       expect(article).toBeInTheDocument();
     });
 
-    it('has proper time element with datetime attribute', () => {
+    it('has proper time element with datetime attribute', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
 
       const timeElement = screen.getByText(new Date('2024-01-15T10:30:00Z').toLocaleDateString());
       expect(timeElement.closest('time')).toHaveAttribute('dateTime', '2024-01-15T10:30:00Z');
     });
 
-    it('has accessible button text', () => {
+    it('has accessible button text', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
 
       const supportButton = screen.getByRole('button', { name: /support creator/i });
@@ -228,12 +261,12 @@ describe('Post Component', () => {
   });
 
   describe('Routing integration', () => {
-    it('retrieves post ID from URL parameters correctly', () => {
+    it('retrieves post ID from URL parameters correctly', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true, postId: '1' });
       expect(screen.getByText('Test Post Title')).toBeInTheDocument();
     });
 
-    it('handles different post IDs from route parameters', () => {
+    it('handles different post IDs from route parameters', (): void => {
       // Test that component can handle different post IDs
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
       expect(screen.getByTestId('layout')).toBeInTheDocument();
@@ -241,7 +274,7 @@ describe('Post Component', () => {
   });
 
   describe('Date formatting', () => {
-    it('formats dates correctly for different locales', () => {
+    it('formats dates correctly for different locales', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
 
       const formattedDate = new Date('2024-01-15T10:30:00Z').toLocaleDateString();
@@ -250,13 +283,13 @@ describe('Post Component', () => {
   });
 
   describe('Content display', () => {
-    it('displays long content correctly', () => {
+    it('displays long content correctly', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
 
       expect(screen.getByText(/This is a test post content/)).toBeInTheDocument();
     });
 
-    it('applies prose styling classes', () => {
+    it('applies prose styling classes', (): void => {
       renderWithProviders(<Post />, { withUser: true, withPosts: true });
 
       const contentDiv = screen.getByText(/This is a test post content/).closest('div');

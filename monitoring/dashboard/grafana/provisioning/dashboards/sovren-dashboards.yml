@@ -1,0 +1,16 @@
+# Grafana Dashboard Provisioning Configuration
+# Auto-imports dashboards from the dashboards directory on startup
+
+apiVersion: 1
+
+providers:
+  - name: 'Sovren Payment Analytics'
+    orgId: 1
+    folder: 'Payment Analytics'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false

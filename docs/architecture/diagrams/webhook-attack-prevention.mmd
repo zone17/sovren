@@ -1,0 +1,78 @@
+graph TB
+    subgraph "Attack Scenarios"
+        A1[Replay Attack<br/>Old Timestamp]
+        A2[Signature Forgery<br/>Invalid HMAC]
+        A3[Missing Headers<br/>No Authentication]
+        A4[Timing Attack<br/>Signature Comparison]
+        A5[Modified Payload<br/>Data Tampering]
+    end
+
+    subgraph "Defense Mechanisms"
+        D1[Timestamp Validation<br/>5-Minute Window]
+        D2[HMAC-SHA256<br/>Cryptographic Signature]
+        D3[Header Validation<br/>Required Headers]
+        D4[Constant-Time Compare<br/>timingSafeEqual]
+        D5[Payload Integrity<br/>Signed with Timestamp]
+    end
+
+    subgraph "Security Outcomes"
+        O1[403 Forbidden<br/>Replay Prevented]
+        O2[401 Unauthorized<br/>Invalid Signature]
+        O3[401 Unauthorized<br/>Missing Auth]
+        O4[Timing Attack<br/>Prevented]
+        O5[401 Unauthorized<br/>Tampered Data]
+    end
+
+    subgraph "Metrics & Monitoring"
+        M1[Failed Attempts Counter]
+        M2[Attack Type Classifier]
+        M3[Alert System]
+        M4[Rate Limiting]
+    end
+
+    A1 -->|Blocked by| D1
+    D1 -->|Results in| O1
+
+    A2 -->|Blocked by| D2
+    D2 -->|Results in| O2
+
+    A3 -->|Blocked by| D3
+    D3 -->|Results in| O3
+
+    A4 -->|Blocked by| D4
+    D4 -->|Results in| O4
+
+    A5 -->|Blocked by| D5
+    D5 -->|Results in| O5
+
+    O1 --> M1
+    O2 --> M1
+    O3 --> M1
+    O5 --> M1
+
+    M1 --> M2
+    M2 --> M3
+    M1 --> M4
+
+    style A1 fill:#F44336
+    style A2 fill:#F44336
+    style A3 fill:#F44336
+    style A4 fill:#F44336
+    style A5 fill:#F44336
+
+    style D1 fill:#4CAF50
+    style D2 fill:#4CAF50
+    style D3 fill:#4CAF50
+    style D4 fill:#4CAF50
+    style D5 fill:#4CAF50
+
+    style O1 fill:#FF9800
+    style O2 fill:#FF9800
+    style O3 fill:#FF9800
+    style O4 fill:#2196F3
+    style O5 fill:#FF9800
+
+    style M1 fill:#9C27B0
+    style M2 fill:#9C27B0
+    style M3 fill:#9C27B0
+    style M4 fill:#9C27B0

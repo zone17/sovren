@@ -1,0 +1,77 @@
+%% US-317: NOSTR Caching Layer - Performance Optimization
+%% Memory management, LRU eviction, and performance tracking
+
+graph TB
+    subgraph "Memory Management"
+        A[Event Storage Request] --> B{Check Limits}
+        B -->|Events < 1000| C[Store in Memory]
+        B -->|Events >= 1000| D[LRU Eviction]
+        B -->|Memory < 50MB| C
+        B -->|Memory >= 50MB| D
+
+        D --> E[Find Least Recently Used]
+        E --> F[Get Access Order]
+        F --> G[Evict Oldest Event]
+        G --> H[Move to IndexedDB Only]
+        H --> C
+    end
+
+    subgraph "Indexing Strategy"
+        C --> I[Update Indexes]
+        I --> J[Pubkey Index: Map<string, Set<string>>]
+        I --> K[Kind Index: Map<number, Set<string>>]
+        I --> L[Tag Index: Map<string, Set<string>>]
+
+        J --> M[O1 Pubkey Lookup]
+        K --> N[O1 Kind Lookup]
+        L --> O[O1 Tag Lookup]
+    end
+
+    subgraph "Query Optimization"
+        P[Filter Query] --> Q{Index Available?}
+        Q -->|Yes| M
+        Q -->|Yes| N
+        Q -->|Yes| O
+        Q -->|No| R[Full Scan - O_n_]
+
+        M --> S[Indexed Lookup - O1]
+        N --> S
+        O --> S
+        R --> S
+
+        S --> T[Apply Remaining Filters]
+        T --> U[Sort by created_at]
+        U --> V[Apply Limit]
+    end
+
+    subgraph "Performance Tracking"
+        W[Operation] --> X{Track Metrics}
+        X --> Y[Record Duration]
+        X --> Z[Update Counters]
+
+        Y --> AA[Calculate Averages]
+        Z --> AB[hits/misses/evictions]
+
+        AA --> AC[Performance Metrics]
+        AB --> AC
+
+        AC --> AD{Target: <5ms}
+        AD -->|Pass| AE[Green: Optimal]
+        AD -->|Fail| AF[Red: Needs Optimization]
+    end
+
+    subgraph "Benchmark Targets"
+        AG[Get Operation] --> AH[< 5ms]
+        AI[Set Operation] --> AJ[< 5ms]
+        AK[Query Operation] --> AL[< 10ms]
+        AM[Hit Rate] --> AN[> 80%]
+    end
+
+    style AE fill:#4CAF50,stroke:#388E3C,color:#fff
+    style AF fill:#f44336,stroke:#d32f2f,color:#fff
+    style S fill:#4CAF50,stroke:#388E3C,color:#fff
+    style R fill:#FF9800,stroke:#F57C00,color:#fff
+    style AH fill:#4CAF50,stroke:#388E3C,color:#fff
+    style AJ fill:#4CAF50,stroke:#388E3C,color:#fff
+    style AL fill:#4CAF50,stroke:#388E3C,color:#fff
+    style AN fill:#4CAF50,stroke:#388E3C,color:#fff

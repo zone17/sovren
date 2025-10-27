@@ -1,0 +1,128 @@
+/* Sovren Agent Orchestration Dashboard - v4.0 Simplified */
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #1a1a24;
+  --bg-card: #2a2a38;
+  --bg-hover: #35354a;
+  --text-primary: #e8e8f0;
+  --text-secondary: #b0b0c0;
+  --text-muted: #808090;
+  --border-primary: #3a3a48;
+  --accent-blue: #4f9eff;
+  --accent-purple: #8b5cf6;
+  --accent-green: #10b981;
+  --accent-amber: #f59e0b;
+  --epic-003: #8b5cf6;
+  --epic-004: #3b82f6;
+  --epic-005: #10b981;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.dashboard-container { max-width: 1600px; margin: 0 auto; padding: 1.5rem; }
+
+/* Header */
+.dashboard-header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; border-bottom: 2px solid var(--border-primary); }
+.dashboard-header h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.dashboard-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1rem; }
+.last-update { font-size: 0.9rem; color: var(--text-muted); }
+
+/* Metrics */
+.metrics-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+.metric-tile { background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 12px; padding: 2rem; text-align: center; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.metric-tile:hover { transform: translateY(-4px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-color: var(--accent-blue); }
+.metric-tile.active { border-color: var(--accent-blue); background: linear-gradient(135deg, rgba(79,158,255,0.1), rgba(79,158,255,0.05)); }
+.metric-tile.complete { border-color: var(--accent-green); background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05)); }
+.metric-icon { font-size: 3rem; margin-bottom: 1rem; }
+.metric-value { font-size: 3rem; font-weight: 700; margin-bottom: 0.5rem; }
+.metric-label { font-size: 1rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Active Agents */
+.active-agents-section { background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; margin-bottom: 3rem; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.active-agents-section h2 { font-size: 1.8rem; margin-bottom: 1.5rem; }
+.active-agents-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+.no-active-agents { grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted); font-size: 1.1rem; }
+.agent-card { background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s; }
+.agent-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-color: var(--accent-purple); }
+.agent-card-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.agent-icon { font-size: 2rem; }
+.agent-name { font-size: 1.2rem; font-weight: 600; }
+.agent-status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; background: var(--accent-green); color: white; }
+.agent-story { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-primary); color: var(--text-secondary); font-size: 0.95rem; }
+
+/* Kanban */
+.kanban-section { margin-bottom: 3rem; }
+.kanban-section h2 { font-size: 1.8rem; margin-bottom: 1.5rem; }
+.kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.kanban-lane { background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 12px; min-height: 400px; display: flex; flex-direction: column; }
+.kanban-lane-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-primary); }
+.kanban-lane-header.todo { background: linear-gradient(135deg, rgba(79,158,255,0.1), rgba(79,158,255,0.05)); border-bottom-color: var(--accent-blue); }
+.kanban-lane-header.in-progress { background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.05)); border-bottom-color: var(--accent-amber); }
+.kanban-lane-header.complete { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05)); border-bottom-color: var(--accent-green); }
+.kanban-lane-header h3 { font-size: 1.2rem; font-weight: 600; }
+.lane-count { background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600; }
+.kanban-lane-content { padding: 1.5rem; flex: 1; overflow-y: auto; }
+.kanban-card { background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 6px; padding: 1.5rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s; }
+.kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-color: var(--accent-blue); }
+.kanban-card-epic { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; }
+.kanban-card-epic[data-epic="003"] { background: rgba(139,92,246,0.2); color: var(--epic-003); border: 1px solid var(--epic-003); }
+.kanban-card-epic[data-epic="004"] { background: rgba(59,130,246,0.2); color: var(--epic-004); border: 1px solid var(--epic-004); }
+.kanban-card-epic[data-epic="005"] { background: rgba(16,185,129,0.2); color: var(--epic-005); border: 1px solid var(--epic-005); }
+.kanban-card-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+.kanban-card-agent { display: inline-block; padding: 0.2rem 0.6rem; background: var(--bg-hover); border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem; }
+.kanban-card-progress { margin-top: 1rem; }
+.progress-bar-container { width: 100%; height: 8px; background: var(--bg-hover); border-radius: 4px; overflow: hidden; margin-top: 0.25rem; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); transition: width 0.3s; }
+.progress-text { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem; display: block; }
+
+/* Activity Log */
+.activity-log-section { background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; margin-bottom: 3rem; }
+.activity-log-section h2 { font-size: 1.8rem; margin-bottom: 1.5rem; }
+.activity-log-container { max-height: 400px; overflow-y: auto; padding: 1rem; }
+.activity-log-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; margin-bottom: 0.5rem; background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 6px; }
+.activity-icon { font-size: 1.2rem; flex-shrink: 0; }
+.activity-content { flex: 1; }
+.activity-message { margin-bottom: 0.25rem; }
+.activity-time { font-size: 0.85rem; color: var(--text-muted); }
+
+/* Modals */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+.modal.show { display: flex; }
+.modal-content { background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 16px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.modal-header { padding: 2rem; border-bottom: 1px solid var(--border-primary); display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { font-size: 1.5rem; }
+.modal-close { background: none; border: none; font-size: 2rem; color: var(--text-secondary); cursor: pointer; transition: color 0.15s; }
+.modal-close:hover { color: var(--text-primary); }
+.modal-body { padding: 2rem; }
+.story-detail-section, .agent-detail-section { margin-bottom: 2rem; }
+.story-detail-section h3, .agent-detail-section h3 { font-size: 1.2rem; margin-bottom: 1rem; }
+.story-status-bar { position: relative; width: 100%; height: 40px; background: var(--bg-hover); border-radius: 6px; overflow: hidden; margin-top: 1rem; }
+.status-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); transition: width 0.3s; }
+.status-bar-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+.story-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 1.5rem; }
+.story-detail-item { padding: 1rem; background: var(--bg-hover); border-radius: 6px; }
+.subtask-count-badge { display: inline-block; padding: 0.25rem 0.75rem; background: var(--accent-blue); color: white; border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-left: 0.5rem; }
+.subtask-item { background: var(--bg-hover); border: 1px solid var(--border-primary); border-radius: 6px; padding: 1rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.15s; }
+.subtask-item:hover { background: var(--bg-card); border-color: var(--accent-blue); transform: translateX(4px); }
+.subtask-item.completed { opacity: 0.6; text-decoration: line-through; }
+.thought-stream { max-height: 400px; overflow-y: auto; padding: 1rem; background: var(--bg-hover); border-radius: 6px; }
+.thought-stream-loading { text-align: center; padding: 2rem; color: var(--text-muted); }
+.thought-entry { padding: 1rem; margin-bottom: 0.5rem; background: var(--bg-card); border-left: 3px solid var(--accent-purple); border-radius: 6px; }
+
+/* Responsive */
+@media (max-width: 1200px) { .kanban-board { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .metrics-section { grid-template-columns: repeat(2, 1fr); } .story-detail-grid { grid-template-columns: 1fr; } .dashboard-header h1 { font-size: 2rem; } }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border-primary); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }

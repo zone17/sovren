@@ -1,0 +1,71 @@
+%% US-322: NOSTR Backup and Recovery - Data Flow Diagram
+%% This diagram shows how data flows through the backup and recovery process
+
+sequenceDiagram
+    participant User
+    participant UI as Backup Dialog
+    participant Service as NOSTRBackupService
+    participant Encryption as BackupEncryptionService
+    participant KeyMgmt as KeyManagementService
+    participant Storage as Storage Layer
+
+    Note over User,Storage: Backup Creation Flow
+
+    User->>UI: Initiate Backup
+    UI->>User: Select Content Type
+    User->>UI: Choose (Keys/Events/Config/Complete)
+    UI->>User: Enter Password
+    User->>UI: Provide Strong Password
+
+    UI->>Service: createBackup(password, contentType)
+
+    Service->>KeyMgmt: listKeys()
+    KeyMgmt-->>Service: [KeyPairs]
+
+    Service->>Service: collectBackupData()
+    Note over Service: Collect keys, events,<br/>configuration
+
+    Service->>Service: JSON.stringify(data)
+    Service->>Service: calculateChecksum(json)
+
+    Service->>Encryption: encryptBackup(json, password)
+    Note over Encryption: AES-256-GCM<br/>PBKDF2 100,000 iterations
+
+    Encryption-->>Service: encryptedBackup
+
+    Service->>Service: createBackupFile()
+    Service->>Storage: saveToHistory()
+    Service->>UI: {file, downloadUrl}
+
+    UI->>User: Download Backup File
+
+    Note over User,Storage: Restore Flow
+
+    User->>UI: Upload Backup File
+    UI->>Service: verifyBackup(file, password)
+
+    Service->>Service: validateStructure()
+    Service->>Encryption: decryptBackup(file, password)
+    Encryption-->>Service: decryptedJson
+    Service->>Service: verifyChecksum()
+
+    Service-->>UI: verificationResult
+
+    UI->>User: Show Verification Status
+    User->>UI: Confirm Restore Options
+    UI->>Service: restoreBackup(file, password, options)
+
+    Service->>Encryption: decryptBackup(file, password)
+    Encryption-->>Service: backupData
+
+    Service->>KeyMgmt: importKey(keyData)
+    KeyMgmt-->>Service: importedKey
+
+    Service->>Service: verifyRestoration()
+    Service->>KeyMgmt: signEvent(testEvent)
+    KeyMgmt-->>Service: signedEvent
+    Service->>KeyMgmt: verifyEventSignature(signedEvent)
+    KeyMgmt-->>Service: true
+
+    Service-->>UI: recoveryResult
+    UI->>User: Show Success/Errors

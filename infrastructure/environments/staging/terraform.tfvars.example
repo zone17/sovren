@@ -1,0 +1,32 @@
+# ============================================================================
+# Staging Environment Configuration Example
+# ============================================================================
+# Copy this file to terraform.tfvars and fill in your actual values
+# NEVER commit terraform.tfvars to version control!
+# ============================================================================
+
+# ============================================================================
+# DATABASE CONFIGURATION (SUPABASE STAGING PROJECT)
+# ============================================================================
+database_url      = "postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres"
+database_host     = "db.[PROJECT-ID].supabase.co"
+database_port     = 5432
+database_username = "postgres"
+database_password = "your-staging-database-password"
+
+# ============================================================================
+# REDIS CONFIGURATION (UPSTASH OR RAILWAY STAGING)
+# ============================================================================
+redis_url      = "redis://default:[PASSWORD]@staging-redis.upstash.io:6379"
+redis_password = "your-staging-redis-password"
+
+# ============================================================================
+# GITHUB CONFIGURATION
+# ============================================================================
+github_repository_owner = "your-github-username-or-org"
+
+# ============================================================================
+# STAGING FEATURES
+# ============================================================================
+enable_debug_logging         = true
+enable_performance_monitoring = true

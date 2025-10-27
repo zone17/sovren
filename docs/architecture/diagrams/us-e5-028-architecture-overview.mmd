@@ -1,0 +1,92 @@
+%% PaymentAnalyticsService Architecture Overview
+%% User Story: US-E5-028
+%% CRITICAL: 100% test coverage (achieved 97.25%)
+
+graph TB
+    subgraph "Client Layer"
+        API[API Endpoints]
+        Dashboard[Real-time Dashboard]
+        Export[Export Requests]
+    end
+
+    subgraph "PaymentAnalyticsService"
+        PAS[PaymentAnalyticsService<br/>97.25% Coverage]
+
+        subgraph "Core Analytics"
+            Revenue[Revenue Analytics]
+            Transactions[Transaction Metrics]
+            Success[Success Rate Analysis]
+            Refunds[Refund Analytics]
+        end
+
+        subgraph "Customer Analytics"
+            TopCustomers[Top Customers]
+            ARPU[ARPU Calculator]
+            CLV[Customer LTV]
+            Churn[Churn Analysis]
+        end
+
+        subgraph "Advanced Features"
+            Forecast[Revenue Forecasting]
+            Trends[Trend Analysis]
+            MRR[MRR/ARR Metrics]
+            Realtime[Real-time Metrics]
+        end
+
+        subgraph "Export & Reporting"
+            CSV[CSV Export]
+            JSON[JSON Export]
+            XLSX[XLSX Export]
+            PDF[PDF Export]
+        end
+    end
+
+    subgraph "Dependencies"
+        PaymentService[IPaymentProcessingService<br/>Transaction Data]
+        CurrencyService[ICurrencyService<br/>Multi-Currency Support]
+        CacheService[ICacheService<br/>Performance Cache]
+        EventBus[IEventBus<br/>Real-time Events]
+        Logger[ILogger<br/>Monitoring]
+    end
+
+    subgraph "Data Storage"
+        Cache[(Redis Cache<br/>TTL: 1m-24h)]
+        Aggregation[(Pre-aggregated Data)]
+        Exports[(Export Files<br/>7-day retention)]
+    end
+
+    API --> PAS
+    Dashboard --> Realtime
+    Export --> PAS
+
+    PAS --> Revenue
+    PAS --> Transactions
+    PAS --> Success
+    PAS --> Refunds
+    PAS --> TopCustomers
+    PAS --> ARPU
+    PAS --> CLV
+    PAS --> Churn
+    PAS --> Forecast
+    PAS --> Trends
+    PAS --> MRR
+    PAS --> Realtime
+    PAS --> CSV
+    PAS --> JSON
+    PAS --> XLSX
+    PAS --> PDF
+
+    PAS --> PaymentService
+    PAS --> CurrencyService
+    PAS --> CacheService
+    PAS --> EventBus
+    PAS --> Logger
+
+    CacheService --> Cache
+    PAS --> Aggregation
+    Export --> Exports
+
+    style PAS fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style Revenue fill:#2196F3,stroke:#1565C0,color:#fff
+    style Realtime fill:#FF9800,stroke:#E65100,color:#fff
+    style Cache fill:#9C27B0,stroke:#4A148C,color:#fff

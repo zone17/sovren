@@ -1,0 +1,91 @@
+```mermaid
+graph TB
+    subgraph "NOSTR Monitoring Architecture - US-316"
+        subgraph "Monitoring Service Layer"
+            MS[MonitoringService<br/>Singleton]
+            MC[Metrics Collector]
+            AL[Alert Engine]
+            EX[Metrics Exporter]
+        end
+
+        subgraph "Data Sources"
+            RPM[RelayPoolManager<br/>Connection Health]
+            EPS[EventPublisherService<br/>Publish Metrics]
+            SMS[SubscriptionManager<br/>Subscription Metrics]
+        end
+
+        subgraph "Metrics Storage"
+            RHM[(Relay Health<br/>Metrics)]
+            PM[(Publish<br/>Metrics)]
+            SM[(Subscription<br/>Metrics)]
+            NM[(Network<br/>Metrics)]
+            MM[(Memory<br/>Metrics)]
+        end
+
+        subgraph "Alert System"
+            AC[Alert Conditions]
+            AA[Active Alerts]
+            AH[Alert History]
+        end
+
+        subgraph "Export Formats"
+            PROM[Prometheus<br/>Format]
+            JSON[JSON<br/>Format]
+            HTTP[HTTP Health<br/>Endpoint]
+        end
+
+        subgraph "UI Layer"
+            DASH[Monitoring<br/>Dashboard]
+            ALERT[Alerts<br/>Panel]
+            CHARTS[Performance<br/>Charts]
+        end
+
+        %% Data flow connections
+        RPM -->|Relay Events| MS
+        EPS -->|Publish Events| MS
+        SMS -->|Subscription Events| MS
+
+        MS --> MC
+        MC -->|Store| RHM
+        MC -->|Store| PM
+        MC -->|Store| SM
+        MC -->|Store| NM
+        MC -->|Store| MM
+
+        MS --> AL
+        AL -->|Check| AC
+        AL -->|Create| AA
+        AL -->|Archive| AH
+
+        MS --> EX
+        EX -->|Export| PROM
+        EX -->|Export| JSON
+        EX -->|Export| HTTP
+
+        MS -->|Real-time Updates| DASH
+        AA -->|Display| ALERT
+        MC -->|Visualize| CHARTS
+
+        %% Styling
+        classDef service fill:#4A90E2,stroke:#2E5C8A,color:#fff
+        classDef storage fill:#50C878,stroke:#2D7A4A,color:#fff
+        classDef ui fill:#FF6B6B,stroke:#C93636,color:#fff
+        classDef export fill:#FFA500,stroke:#CC8400,color:#fff
+
+        class MS,MC,AL,EX service
+        class RHM,PM,SM,NM,MM storage
+        class DASH,ALERT,CHARTS ui
+        class PROM,JSON,HTTP export
+    end
+
+    %% Notes
+    NOTE1[📊 Comprehensive monitoring for<br/>all NOSTR operations]
+    NOTE2[⚡ Real-time metrics collection<br/>with 5s interval]
+    NOTE3[🚨 Intelligent alerting based<br/>on configurable conditions]
+    NOTE4[📤 Export to external<br/>monitoring systems]
+
+    style NOTE1 fill:#FFE66D,stroke:#F4D03F
+    style NOTE2 fill:#FFE66D,stroke:#F4D03F
+    style NOTE3 fill:#FFE66D,stroke:#F4D03F
+    style NOTE4 fill:#FFE66D,stroke:#F4D03F
+```

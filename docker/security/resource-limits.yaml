@@ -1,0 +1,498 @@
+# Docker Container Resource Limits Configuration
+# This file defines comprehensive resource limits for all Sovren containers
+# to ensure security, performance, and resource isolation
+
+# Global Resource Limits
+global:
+  # Default resource limits applied to all containers
+  defaults:
+    memory:
+      limit: '512M'
+      reservation: '256M'
+      swap: '0' # Disable swap for security
+    cpu:
+      limit: '0.5'
+      reservation: '0.25'
+      shares: 1024
+    pids:
+      limit: 100
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      nproc:
+        soft: 4096
+        hard: 4096
+      memlock:
+        soft: 67108864
+        hard: 67108864
+    network:
+      bandwidth_limit: '100M'
+      connection_limit: 1000
+    disk:
+      read_bps: '100M'
+      write_bps: '50M'
+      read_iops: 1000
+      write_iops: 500
+
+# Service-Specific Resource Limits
+services:
+  # Frontend Service Limits
+  frontend:
+    memory:
+      limit: '512M'
+      reservation: '256M'
+      swap: '0'
+    cpu:
+      limit: '0.5'
+      reservation: '0.25'
+      shares: 1024
+    pids:
+      limit: 100
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 8192
+      nproc:
+        soft: 1024
+        hard: 1024
+    network:
+      bandwidth_limit: '100M'
+      connection_limit: 500
+    disk:
+      read_bps: '50M'
+      write_bps: '25M'
+      read_iops: 500
+      write_iops: 250
+    healthcheck:
+      interval: 30
+      timeout: 10
+      retries: 3
+      start_period: 30
+
+  # Backend Service Limits
+  backend:
+    memory:
+      limit: '1G'
+      reservation: '512M'
+      swap: '0'
+    cpu:
+      limit: '1.0'
+      reservation: '0.5'
+      shares: 2048
+    pids:
+      limit: 200
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 16384
+      nproc:
+        soft: 2048
+        hard: 2048
+    network:
+      bandwidth_limit: '200M'
+      connection_limit: 1000
+    disk:
+      read_bps: '100M'
+      write_bps: '50M'
+      read_iops: 1000
+      write_iops: 500
+    healthcheck:
+      interval: 30
+      timeout: 10
+      retries: 3
+      start_period: 60
+
+  # Database Service Limits
+  postgres:
+    memory:
+      limit: '1G'
+      reservation: '512M'
+      swap: '0'
+    cpu:
+      limit: '1.0'
+      reservation: '0.5'
+      shares: 2048
+    pids:
+      limit: 100
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      nproc:
+        soft: 1024
+        hard: 1024
+    network:
+      bandwidth_limit: '200M'
+      connection_limit: 200
+    disk:
+      read_bps: '200M'
+      write_bps: '100M'
+      read_iops: 2000
+      write_iops: 1000
+    healthcheck:
+      interval: 30
+      timeout: 10
+      retries: 3
+      start_period: 60
+
+  # Redis Service Limits
+  redis:
+    memory:
+      limit: '512M'
+      reservation: '256M'
+      swap: '0'
+    cpu:
+      limit: '0.5'
+      reservation: '0.25'
+      shares: 1024
+    pids:
+      limit: 50
+    ulimits:
+      nofile:
+        soft: 32768
+        hard: 32768
+      nproc:
+        soft: 512
+        hard: 512
+    network:
+      bandwidth_limit: '100M'
+      connection_limit: 500
+    disk:
+      read_bps: '100M'
+      write_bps: '50M'
+      read_iops: 1000
+      write_iops: 500
+    healthcheck:
+      interval: 30
+      timeout: 10
+      retries: 3
+      start_period: 30
+
+  # Nginx Service Limits
+  nginx:
+    memory:
+      limit: '256M'
+      reservation: '128M'
+      swap: '0'
+    cpu:
+      limit: '0.5'
+      reservation: '0.25'
+      shares: 1024
+    pids:
+      limit: 50
+    ulimits:
+      nofile:
+        soft: 32768
+        hard: 32768
+      nproc:
+        soft: 1024
+        hard: 1024
+    network:
+      bandwidth_limit: '1G'
+      connection_limit: 10000
+    disk:
+      read_bps: '100M'
+      write_bps: '50M'
+      read_iops: 1000
+      write_iops: 500
+    healthcheck:
+      interval: 30
+      timeout: 10
+      retries: 3
+      start_period: 30
+
+  # Monitoring Service Limits
+  monitoring:
+    prometheus:
+      memory:
+        limit: '2G'
+        reservation: '1G'
+        swap: '0'
+      cpu:
+        limit: '1.0'
+        reservation: '0.5'
+        shares: 2048
+      pids:
+        limit: 200
+      ulimits:
+        nofile:
+          soft: 65536
+          hard: 65536
+        nproc:
+          soft: 2048
+          hard: 2048
+      network:
+        bandwidth_limit: '200M'
+        connection_limit: 1000
+      disk:
+        read_bps: '200M'
+        write_bps: '100M'
+        read_iops: 2000
+        write_iops: 1000
+
+    grafana:
+      memory:
+        limit: '512M'
+        reservation: '256M'
+        swap: '0'
+      cpu:
+        limit: '0.5'
+        reservation: '0.25'
+        shares: 1024
+      pids:
+        limit: 100
+      ulimits:
+        nofile:
+          soft: 16384
+          hard: 16384
+        nproc:
+          soft: 1024
+          hard: 1024
+      network:
+        bandwidth_limit: '100M'
+        connection_limit: 500
+      disk:
+        read_bps: '50M'
+        write_bps: '25M'
+        read_iops: 500
+        write_iops: 250
+
+# Resource Monitoring Configuration
+monitoring:
+  # Resource usage thresholds for alerting
+  thresholds:
+    memory:
+      warning: 80 # Percentage
+      critical: 90
+    cpu:
+      warning: 80
+      critical: 90
+    disk:
+      warning: 80
+      critical: 90
+    network:
+      warning: 80
+      critical: 90
+    pids:
+      warning: 80
+      critical: 90
+
+  # Monitoring intervals
+  intervals:
+    collection: 10 # seconds
+    evaluation: 30 # seconds
+    alerting: 60 # seconds
+
+  # Alert destinations
+  alerts:
+    slack:
+      enabled: true
+      webhook_url: '${SLACK_WEBHOOK_URL}'
+      channel: '#infrastructure-alerts'
+    email:
+      enabled: true
+      recipients:
+        - 'devops@sovren.app'
+        - 'security@sovren.app'
+    pagerduty:
+      enabled: true
+      service_key: '${PAGERDUTY_SERVICE_KEY}'
+
+# Security Policies
+security:
+  # Resource enforcement policies
+  enforcement:
+    # Prevent resource limit bypass
+    strict_limits: true
+    # Kill containers exceeding limits
+    oom_kill_disable: false
+    # Prevent privileged containers
+    no_privileged: true
+    # Prevent host resource access
+    no_host_pid: true
+    no_host_ipc: true
+    no_host_network: true
+
+  # Container capabilities
+  capabilities:
+    # Drop all capabilities by default
+    drop_all: true
+    # Explicitly allow only required capabilities
+    allowed:
+      - NET_BIND_SERVICE
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    # Explicitly deny dangerous capabilities
+    denied:
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - SYS_MODULE
+      - DAC_READ_SEARCH
+      - SETPCAP
+      - LINUX_IMMUTABLE
+      - NET_ADMIN
+      - SYS_RAWIO
+      - SYS_CHROOT
+      - MKNOD
+      - SETFCAP
+      - IPC_LOCK
+
+  # Security options
+  security_opts:
+    - 'no-new-privileges:true'
+    - 'seccomp:default'
+    - 'apparmor:docker-default'
+
+# Scaling Configuration
+scaling:
+  # Auto-scaling policies
+  policies:
+    cpu_based:
+      enabled: true
+      target_cpu_percent: 70
+      scale_up_cooldown: 300
+      scale_down_cooldown: 600
+    memory_based:
+      enabled: true
+      target_memory_percent: 80
+      scale_up_cooldown: 300
+      scale_down_cooldown: 600
+    custom_metrics:
+      enabled: true
+      metrics:
+        - name: 'request_rate'
+          target_value: 100
+          type: 'per_second'
+        - name: 'response_time'
+          target_value: 200
+          type: 'milliseconds'
+
+  # Scaling limits
+  limits:
+    min_replicas: 1
+    max_replicas: 10
+    scale_up_step: 2
+    scale_down_step: 1
+
+# Compliance Configuration
+compliance:
+  # Compliance standards
+  standards:
+    - CIS_DOCKER_BENCHMARK
+    - NIST_SP_800_190
+    - PCI_DSS
+    - SOC2
+
+  # Compliance checks
+  checks:
+    - name: 'Resource limits configured'
+      description: 'All containers must have resource limits'
+      severity: 'high'
+      enabled: true
+    - name: 'Memory limits within policy'
+      description: 'Memory limits must not exceed policy thresholds'
+      severity: 'medium'
+      enabled: true
+    - name: 'CPU limits within policy'
+      description: 'CPU limits must not exceed policy thresholds'
+      severity: 'medium'
+      enabled: true
+    - name: 'No privileged containers'
+      description: 'Containers must not run in privileged mode'
+      severity: 'critical'
+      enabled: true
+    - name: 'Capabilities dropped'
+      description: 'All unnecessary capabilities must be dropped'
+      severity: 'high'
+      enabled: true
+
+# Logging Configuration
+logging:
+  # Resource usage logging
+  resource_usage:
+    enabled: true
+    interval: 60 # seconds
+    retention_days: 30
+    log_level: 'info'
+    log_format: 'json'
+    log_destination: '/var/log/sovren/resource-usage.log'
+
+  # Audit logging
+  audit:
+    enabled: true
+    log_file: '/var/log/sovren/resource-audit.log'
+    retention_days: 365
+    events:
+      - 'resource_limit_exceeded'
+      - 'container_killed'
+      - 'resource_policy_violation'
+      - 'scaling_event'
+      - 'resource_allocation_change'
+
+# Emergency Procedures
+emergency:
+  # Resource exhaustion response
+  resource_exhaustion:
+    # Automatic responses
+    auto_responses:
+      - type: 'scale_up'
+        condition: 'cpu > 90%'
+        action: 'add_replica'
+      - type: 'throttle'
+        condition: 'memory > 95%'
+        action: 'limit_requests'
+      - type: 'failover'
+        condition: 'service_unavailable'
+        action: 'redirect_traffic'
+
+    # Manual procedures
+    manual_procedures:
+      - name: 'Resource limit increase'
+        description: 'Temporarily increase resource limits'
+        approval_required: true
+        duration_limit: '1 hour'
+      - name: 'Emergency scaling'
+        description: 'Scale beyond normal limits'
+        approval_required: true
+        duration_limit: '2 hours'
+      - name: 'Service shutdown'
+        description: 'Gracefully shutdown non-critical services'
+        approval_required: false
+        duration_limit: 'immediate'
+
+# Testing Configuration
+testing:
+  # Load testing
+  load_testing:
+    enabled: true
+    frequency: 'weekly'
+    duration: '30 minutes'
+    target_load: '80%'
+    scenarios:
+      - 'normal_load'
+      - 'peak_load'
+      - 'stress_test'
+
+  # Chaos engineering
+  chaos_engineering:
+    enabled: true
+    frequency: 'monthly'
+    scenarios:
+      - 'resource_exhaustion'
+      - 'container_failure'
+      - 'network_partition'
+      - 'disk_full'
+
+  # Validation
+  validation:
+    enabled: true
+    frequency: 'daily'
+    checks:
+      - 'resource_limits_applied'
+      - 'monitoring_functional'
+      - 'alerting_functional'
+      - 'scaling_functional'

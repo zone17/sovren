@@ -1,0 +1,50 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#1a1a1a','primaryTextColor':'#fff','primaryBorderColor':'#7C0000','lineColor':'#F8B229','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+graph TB
+    subgraph "Environment Configuration"
+        ENV1[VITE_NOSTR_RELAYS<br/>Frontend Vite Env]
+        ENV2[NOSTR_RELAYS<br/>Backend Node Env]
+        ENV3[.env Files<br/>Development Config]
+    end
+
+    subgraph "Centralized Configuration Layer"
+        RC[RelayConfig Service<br/>@shared/config/relay-config.ts]
+        CACHE[Relay Cache<br/>In-Memory]
+        DEFAULTS[Default Relays<br/>Fallback Configuration]
+    end
+
+    subgraph "Consumer Services"
+        RPM[RelayPoolManager<br/>Connection Pool]
+        NIP65[NIP65Service<br/>Relay Lists]
+        NOSTR[NostrService<br/>Event Publishing]
+    end
+
+    subgraph "Application Layer"
+        FRONTEND[Frontend Components]
+        BACKEND[Backend Services]
+    end
+
+    ENV1 --> RC
+    ENV2 --> RC
+    ENV3 -.-> ENV1
+    ENV3 -.-> ENV2
+
+    RC --> CACHE
+    RC --> DEFAULTS
+
+    RC --> RPM
+    RC --> NIP65
+    RC --> NOSTR
+
+    RPM --> FRONTEND
+    NIP65 --> FRONTEND
+    NOSTR --> BACKEND
+
+    style RC fill:#2ecc71,stroke:#27ae60,stroke-width:3px,color:#000
+    style CACHE fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
+    style DEFAULTS fill:#95a5a6,stroke:#7f8c8d,stroke-width:2px,color:#000
+    style RPM fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
+    style NIP65 fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
+    style NOSTR fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
+
+    classDef envStyle fill:#f39c12,stroke:#e67e22,stroke-width:2px,color:#000
+    class ENV1,ENV2,ENV3 envStyle

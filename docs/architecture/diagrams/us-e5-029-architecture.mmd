@@ -1,0 +1,76 @@
+graph TB
+    subgraph "WebhookService Architecture"
+        WS[WebhookService]
+
+        subgraph "Core Components"
+            REG[Endpoint Registry]
+            SIG[Signature Verifier]
+            DEL[Delivery Engine]
+            RETRY[Retry Manager]
+            DLQ[Dead Letter Queue]
+            RATE[Rate Limiter]
+            CB[Circuit Breaker]
+        end
+
+        subgraph "Storage Layer"
+            REPO[WebhookRepository]
+            CACHE[(Cache)]
+            QUEUE[(Job Queue)]
+        end
+
+        subgraph "Dependencies"
+            EVENTBUS[EventBus]
+            AUDIT[AuditLogService]
+            LOGGER[Logger]
+        end
+
+        subgraph "External Systems"
+            HTTP[HTTP Client]
+            ENDPOINTS[Customer Endpoints]
+        end
+    end
+
+    %% Core flow
+    WS --> REG
+    WS --> SIG
+    WS --> DEL
+    WS --> RETRY
+    WS --> DLQ
+    WS --> RATE
+    WS --> CB
+
+    %% Storage interactions
+    REG --> REPO
+    DEL --> REPO
+    RETRY --> REPO
+    DLQ --> REPO
+
+    REG --> CACHE
+    DEL --> CACHE
+    RATE --> CACHE
+    CB --> CACHE
+
+    DEL --> QUEUE
+    RETRY --> QUEUE
+
+    %% External interactions
+    WS --> EVENTBUS
+    WS --> AUDIT
+    WS --> LOGGER
+
+    DEL --> HTTP
+    HTTP --> ENDPOINTS
+
+    %% Event subscriptions
+    EVENTBUS -.payment.*.-> DEL
+    EVENTBUS -.subscription.*.-> DEL
+    EVENTBUS -.refund.*.-> DEL
+    EVENTBUS -.invoice.*.-> DEL
+
+    style WS fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style REG fill:#50E3C2,stroke:#333,stroke-width:2px
+    style DEL fill:#F5A623,stroke:#333,stroke-width:2px
+    style RETRY fill:#F5A623,stroke:#333,stroke-width:2px
+    style DLQ fill:#D0021B,stroke:#333,stroke-width:2px
+    style RATE fill:#7ED321,stroke:#333,stroke-width:2px
+    style CB fill:#BD10E0,stroke:#333,stroke-width:2px

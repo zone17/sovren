@@ -1,0 +1,92 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#9333ea',
+    'primaryTextColor': '#fff',
+    'primaryBorderColor': '#7e22ce',
+    'lineColor': '#e5e7eb',
+    'secondaryColor': '#f3f4f6',
+    'tertiaryColor': '#fbbf24',
+    'background': '#ffffff'
+  }
+}}%%
+sequenceDiagram
+    participant User as User (Browser)
+    participant Frontend as Frontend (React)
+    participant KeyMgmt as Key Management Service
+    participant Backend as Backend API
+    participant AuthSvc as Unified Auth Service
+    participant SessionSvc as Session Service
+    participant RateLimiter as Rate Limiter
+    participant DB as Database
+
+    %% Authentication Flow
+    autonumber
+
+    User->>Frontend: Click "Login with NOSTR"
+    Frontend->>KeyMgmt: Get/Generate Key Pair
+    KeyMgmt-->>Frontend: Return pubkey
+
+    %% Challenge Generation
+    Frontend->>Backend: POST /api/unified-auth/challenge
+    Backend->>RateLimiter: Check rate limit (by pubkey)
+    RateLimiter-->>Backend: Allow/Deny
+
+    alt Rate limit exceeded
+        Backend-->>Frontend: 429 Rate Limited
+    else Rate limit OK
+        Backend->>AuthSvc: generateChallenge(pubkey)
+        AuthSvc->>AuthSvc: Create cryptographic challenge
+        AuthSvc->>AuthSvc: Store challenge with TTL
+        AuthSvc-->>Backend: Challenge object
+        Backend-->>Frontend: Challenge + expires_at
+    end
+
+    %% Signature Creation
+    Frontend->>KeyMgmt: Sign challenge
+    KeyMgmt->>KeyMgmt: Create NOSTR event
+    KeyMgmt->>KeyMgmt: Sign with private key
+    KeyMgmt-->>Frontend: Signed event
+
+    %% Verification
+    Frontend->>Backend: POST /api/unified-auth/verify
+    Backend->>RateLimiter: Check rate limit
+    RateLimiter-->>Backend: Allow/Deny
+
+    Backend->>AuthSvc: verifyChallenge(signature, challenge)
+    AuthSvc->>AuthSvc: Verify challenge exists
+    AuthSvc->>AuthSvc: Check expiration
+    AuthSvc->>AuthSvc: Verify signature
+    AuthSvc->>AuthSvc: Prevent replay attack
+
+    alt Verification failed
+        AuthSvc-->>Backend: Invalid signature
+        Backend-->>Frontend: 401 Unauthorized
+    else Verification success
+        AuthSvc->>AuthSvc: Generate JWT token
+        AuthSvc->>SessionSvc: Create session
+        SessionSvc->>DB: Store session
+        SessionSvc-->>AuthSvc: Session ID
+        AuthSvc->>AuthSvc: Log security event
+        AuthSvc-->>Backend: Token + Session ID
+        Backend-->>Frontend: JWT token + session
+    end
+
+    %% Store Authentication
+    Frontend->>Frontend: Store token in localStorage
+    Frontend->>Frontend: Store session in sessionStorage
+    Frontend->>Frontend: Update auth context
+    Frontend->>User: Authenticated!
+
+    %% Subsequent Requests
+    User->>Frontend: Access protected resource
+    Frontend->>Backend: GET /api/resource + Bearer token
+    Backend->>AuthSvc: validateToken(token)
+    AuthSvc->>SessionSvc: Check session active
+    SessionSvc->>DB: Query session
+    SessionSvc-->>AuthSvc: Session valid
+    AuthSvc->>SessionSvc: Update last activity
+    AuthSvc-->>Backend: Token valid + pubkey
+    Backend->>Backend: Process request
+    Backend-->>Frontend: Protected resource
+    Frontend-->>User: Display resource

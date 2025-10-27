@@ -1,0 +1,292 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Architecture Rules: Elite Infrastructure and Platform Engineering
+
+## Technology Stack Standards
+
+This document establishes the specific rules, patterns, and best practices for our architecture technology stack. These rules are derived from industry-leading practices and are designed to ensure consistency, reliability, and scalability across all infrastructure and platform engineering efforts.
+
+### Core Architecture Stack
+
+Our architecture is built on a carefully selected technology stack that provides enterprise-grade capabilities while maintaining operational simplicity and cost effectiveness:
+
+**Containerization and Orchestration**: Docker for containerization, Kubernetes via Kubefirst for orchestration
+**Source Control and CI/CD**: GitHub for source control, Argo CD for GitOps deployment, Tekton for pipeline execution
+**Infrastructure as Code**: Terraform for infrastructure provisioning, Ansible for configuration management
+**Hosting and Edge**: Vercel for frontend deployment and edge computing, Supabase for backend-as-a-service
+**Observability Stack**: Prometheus for metrics, Grafana for visualization, Loki for logging, Jaeger for distributed tracing
+**Security and Policy**: Vault for secrets management, OPA/Gatekeeper for policy enforcement
+**API Management**: WSO2 API Manager for enterprise API gateway capabilities
+**Feature Management**: Flagsmith for feature flag management and experimentation
+**Developer Experience**: Backstage for internal developer platform and service catalog
+
+## Container Architecture Standards
+
+### Docker Implementation Rules
+
+Container design in our organization follows strict principles that ensure consistency, security, and operational excellence across all containerized applications. Every container image we build must adhere to these standards to maintain our elite engineering reputation and operational reliability.
+
+Base image selection is critical for security and maintainability. We exclusively use official base images from trusted sources, preferring Alpine Linux variants for their minimal attack surface and smaller size. When Alpine is not suitable, we use official Ubuntu LTS or Debian stable images. All base images must be regularly updated and scanned for vulnerabilities using automated tools integrated into our CI/CD pipeline.
+
+Multi-stage builds are mandatory for all application containers to minimize final image size and reduce attack surface. The build process must clearly separate build dependencies from runtime dependencies, ensuring that development tools, source code, and build artifacts are not present in production images. Each stage must be optimized for its specific purpose, with clear documentation explaining the rationale for each stage.
+
+Layer optimization requires careful consideration of Docker layer caching and image size. Instructions that change frequently must be placed later in the Dockerfile to maximize cache utilization. Package installations must be combined into single RUN instructions with proper cleanup to minimize layer size. We maintain strict limits on final image sizes: base application images must not exceed 500MB, and specialized images must justify any size beyond 1GB.
+
+Security hardening is implemented at the container level through multiple mechanisms. Containers must run as non-root users with minimal required privileges. File system permissions must follow the principle of least privilege, with sensitive directories mounted as read-only where possible. We implement comprehensive security scanning in our build pipeline and maintain zero-tolerance for high-severity vulnerabilities.
+
+Health check implementation is required for all application containers to enable proper orchestration and monitoring. Health checks must validate not only that the application is running but that it can perform its core functions. Health check endpoints must be lightweight and must not perform expensive operations that could impact application performance.
+
+Resource constraints must be explicitly defined for all containers to ensure predictable resource utilization and prevent resource contention. CPU and memory limits must be based on actual application requirements determined through load testing and monitoring. We maintain resource budgets for different application types and regularly review resource utilization to optimize costs and performance.
+
+### Kubernetes Orchestration with Kubefirst
+
+Kubernetes deployment patterns in our organization leverage Kubefirst to provide a complete, production-ready Kubernetes platform with integrated GitOps workflows and comprehensive observability. Our Kubernetes standards ensure that applications are deployed consistently and can scale reliably while maintaining security and operational excellence.
+
+Namespace organization follows a clear hierarchy that separates different environments, applications, and concerns. We use namespace-based multi-tenancy with appropriate resource quotas and network policies to ensure isolation between different workloads. Namespace naming conventions must be consistent and descriptive, following the pattern environment-application-component for clear identification.
+
+Workload deployment patterns favor Deployments for stateless applications and StatefulSets for stateful workloads. All workloads must include appropriate resource requests and limits, health checks, and security contexts. We implement horizontal pod autoscaling for applications that can benefit from automatic scaling, with careful consideration of scaling metrics and thresholds.
+
+Service mesh integration using the service mesh capabilities provided by Kubefirst enables secure, observable communication between services. All inter-service communication must be encrypted using mutual TLS, and we implement comprehensive traffic policies to control service-to-service communication. Service mesh configuration must be version-controlled and deployed using GitOps principles.
+
+Storage management follows cloud-native patterns with appropriate storage classes for different use cases. Persistent volumes must be properly sized and backed up according to data retention requirements. We implement storage monitoring to track utilization and performance, ensuring that storage resources are optimized for cost and performance.
+
+Network policy implementation ensures that pod-to-pod communication follows the principle of least privilege. Default network policies deny all traffic, with explicit policies allowing only required communication paths. Network policies must be documented and regularly reviewed to ensure they remain appropriate as applications evolve.
+
+Secret management integrates with Vault to provide secure, auditable secret distribution to applications. Secrets must never be stored in container images or configuration files, and all secret access must be logged and monitored. We implement secret rotation policies and automated secret lifecycle management.
+
+## GitOps and CI/CD Excellence
+
+### GitHub Source Control Standards
+
+Source control practices in our organization ensure that all code changes are properly tracked, reviewed, and integrated while maintaining the integrity and security of our codebase. Our GitHub standards provide the foundation for reliable, collaborative software development.
+
+Repository organization follows consistent patterns that make it easy for team members to navigate and understand our codebase. Repository names must be descriptive and follow kebab-case naming conventions. Repository structure must include standard files including README, CONTRIBUTING, LICENSE, and SECURITY documentation. We maintain clear separation between different types of repositories: application code, infrastructure code, and documentation repositories.
+
+Branch protection rules ensure that all changes to main branches undergo proper review and validation. Main branches must be protected with required status checks, including automated testing, security scanning, and code quality validation. Direct pushes to main branches are prohibited, and all changes must be made through pull requests with appropriate review requirements.
+
+Commit message standards ensure that the history of changes is clear and searchable. Commit messages must follow conventional commit format with clear, descriptive messages that explain both what changed and why. Commit messages must reference relevant issue numbers and include breaking change notifications when applicable.
+
+Pull request workflows ensure that all code changes receive appropriate review and validation before integration. Pull request templates must be used to ensure that all necessary information is provided, including description of changes, testing performed, and any breaking changes. Pull request reviews must be performed by qualified team members who understand the affected code areas.
+
+Security scanning integration ensures that all code changes are automatically scanned for security vulnerabilities and compliance issues. We implement multiple scanning tools including static analysis, dependency scanning, and secret detection. Security scan results must be addressed before pull request approval, with clear escalation procedures for handling security findings.
+
+Access control and permissions follow the principle of least privilege, with team members granted only the access necessary for their roles. Repository access must be regularly reviewed and updated as team membership changes. We implement branch protection rules and required reviews to ensure that sensitive changes receive appropriate oversight.
+
+### Argo CD GitOps Implementation
+
+GitOps deployment practices using Argo CD ensure that all infrastructure and application deployments are declarative, version-controlled, and auditable. Our Argo CD implementation provides reliable, automated deployment capabilities while maintaining security and compliance requirements.
+
+Application definition standards ensure that all Argo CD applications are consistently configured and properly managed. Application manifests must include appropriate sync policies, health checks, and rollback configurations. We maintain clear separation between different environments using Argo CD projects and implement appropriate access controls for each environment.
+
+Sync policy configuration balances automation with safety, implementing automatic sync for non-production environments while requiring manual approval for production deployments. Sync policies must include appropriate pruning and self-healing configurations to ensure that deployed resources match the desired state defined in Git.
+
+Multi-environment management uses Argo CD's multi-cluster capabilities to manage deployments across different environments and regions. Environment-specific configurations are managed using Kustomize or Helm with clear parameter management and validation. We implement promotion workflows that ensure changes are properly tested before reaching production environments.
+
+Secret management integration with Vault ensures that sensitive configuration data is properly handled in GitOps workflows. Secrets are never stored in Git repositories, and we implement secure secret injection mechanisms that integrate with our secret management infrastructure.
+
+Monitoring and alerting for GitOps operations provide visibility into deployment status and health. We implement comprehensive monitoring of Argo CD operations and maintain alerting for deployment failures, sync issues, and configuration drift. Deployment metrics are integrated into our overall observability platform.
+
+Disaster recovery procedures ensure that GitOps infrastructure can be quickly restored in case of failures. We maintain backup and restore procedures for Argo CD configuration and implement multi-region deployment capabilities for critical applications.
+
+### Tekton Pipeline Standards
+
+Pipeline implementation using Tekton provides flexible, Kubernetes-native CI/CD capabilities that integrate seamlessly with our GitOps workflows. Our Tekton standards ensure that pipelines are reliable, secure, and maintainable while providing the flexibility needed for diverse application requirements.
+
+Task definition standards ensure that pipeline tasks are reusable, well-documented, and properly parameterized. Tasks must include appropriate resource requirements, security contexts, and error handling. We maintain a library of common tasks that can be reused across different pipelines, reducing duplication and ensuring consistency.
+
+Pipeline composition follows modular patterns that enable reuse and maintainability. Pipelines must be composed of discrete tasks that can be independently tested and validated. Pipeline parameters must be clearly defined and documented, with appropriate default values and validation rules.
+
+Security implementation in pipelines ensures that build and deployment processes follow security best practices. Pipeline tasks must run with minimal required privileges, and sensitive operations must be properly isolated and audited. We implement comprehensive scanning and validation in pipeline execution.
+
+Artifact management ensures that build artifacts are properly stored, versioned, and secured. Artifacts must be stored in appropriate registries with proper access controls and retention policies. We implement artifact signing and verification to ensure integrity throughout the deployment process.
+
+Monitoring and observability for pipeline execution provide visibility into build and deployment performance. We track pipeline execution metrics, success rates, and performance characteristics to identify optimization opportunities and ensure reliable operation.
+
+## Infrastructure as Code Excellence
+
+### Terraform Infrastructure Provisioning
+
+Infrastructure provisioning using Terraform ensures that all infrastructure resources are declarative, version-controlled, and reproducible. Our Terraform standards provide the foundation for reliable, scalable infrastructure management across multiple cloud providers and environments.
+
+Module design patterns ensure that Terraform code is reusable, maintainable, and follows best practices for infrastructure as code. Modules must be designed with clear interfaces, appropriate abstraction levels, and comprehensive documentation. We maintain a library of standard modules for common infrastructure patterns, ensuring consistency across different projects and environments.
+
+State management follows best practices for remote state storage and locking to prevent conflicts and ensure data integrity. State files must be stored in secure, encrypted backends with appropriate access controls and backup procedures. We implement state locking mechanisms to prevent concurrent modifications and maintain audit trails for all state changes.
+
+Variable and output management ensures that Terraform configurations are flexible and properly parameterized. Variables must be clearly documented with appropriate types, descriptions, and validation rules. Outputs must provide necessary information for dependent resources and integrations while avoiding exposure of sensitive data.
+
+Security implementation in Terraform includes proper resource configuration, access controls, and compliance validation. All resources must be configured with appropriate security settings, including encryption, access controls, and network restrictions. We implement automated compliance scanning to ensure that infrastructure configurations meet security and regulatory requirements.
+
+Environment management uses consistent patterns for deploying infrastructure across different environments while maintaining appropriate isolation and configuration differences. Environment-specific configurations are managed through variable files and workspace separation, ensuring that changes can be safely tested before production deployment.
+
+Disaster recovery and backup procedures ensure that infrastructure can be quickly restored in case of failures. We maintain comprehensive documentation of infrastructure dependencies and implement automated backup procedures for critical infrastructure components.
+
+### Ansible Configuration Management
+
+Configuration management using Ansible ensures that system configurations are consistent, auditable, and maintainable across all infrastructure components. Our Ansible standards provide reliable, secure configuration management capabilities that integrate with our infrastructure provisioning workflows.
+
+Playbook organization follows clear patterns that make configurations easy to understand and maintain. Playbooks must be organized into logical roles and tasks with clear separation of concerns. We maintain a library of standard roles for common configuration tasks, ensuring consistency and reducing duplication across different systems.
+
+Inventory management ensures that target systems are properly organized and configured for Ansible execution. Inventory files must be dynamic where possible, integrating with cloud provider APIs to automatically discover and configure target systems. Static inventory files must be properly maintained and version-controlled.
+
+Variable management follows hierarchical patterns that enable flexible configuration while maintaining security and consistency. Variables must be properly scoped and documented, with sensitive variables encrypted using Ansible Vault. We implement clear precedence rules for variable resolution and maintain comprehensive documentation of variable usage.
+
+Security implementation in Ansible includes proper privilege escalation, secure communication, and audit logging. Ansible execution must use minimal required privileges with appropriate sudo configuration. All Ansible operations must be logged and audited, with sensitive operations requiring additional approval workflows.
+
+Testing and validation ensure that Ansible configurations are properly tested before deployment to production systems. We implement comprehensive testing using tools like Molecule to validate role functionality across different operating systems and configurations. Configuration changes must be tested in non-production environments before production deployment.
+
+Integration with CI/CD pipelines ensures that configuration changes are properly validated and deployed using automated workflows. Ansible playbooks must be integrated with our GitOps workflows and include appropriate approval and rollback mechanisms.
+
+## Observability and Monitoring Excellence
+
+### Prometheus Metrics Collection
+
+Metrics collection using Prometheus provides comprehensive visibility into system performance, reliability, and business metrics across all infrastructure and application components. Our Prometheus implementation ensures that we have the data necessary to operate systems reliably and optimize performance continuously.
+
+Metric design patterns ensure that metrics are meaningful, efficient, and properly structured for analysis and alerting. Metrics must follow naming conventions that clearly indicate their purpose and scope. We implement the four golden signals of monitoring: latency, traffic, errors, and saturation, for all critical services and systems.
+
+Service discovery integration ensures that Prometheus can automatically discover and monitor new services as they are deployed. Service discovery must be configured to work seamlessly with our Kubernetes infrastructure and include appropriate filtering and labeling to organize metrics effectively.
+
+Alerting rule configuration provides timely notification of issues while minimizing alert fatigue. Alerting rules must be based on symptoms rather than causes, focusing on user-impacting issues rather than internal system states. We implement alert severity levels and escalation procedures to ensure that critical issues receive immediate attention.
+
+Data retention and storage management ensure that metrics data is available for analysis while managing storage costs effectively. Retention policies must be configured based on data importance and regulatory requirements. We implement appropriate data compression and archival strategies for long-term metric storage.
+
+Performance optimization ensures that Prometheus infrastructure can handle the scale of metrics collection required for our systems. This includes proper resource sizing, federation configuration for large-scale deployments, and optimization of query performance for dashboards and alerting.
+
+Integration with other observability tools ensures that metrics data is correlated with logs and traces to provide comprehensive system visibility. Metrics must be properly labeled to enable correlation with other observability data sources.
+
+### Grafana Visualization and Dashboarding
+
+Visualization and dashboarding using Grafana provides intuitive, actionable insights into system performance and business metrics. Our Grafana implementation ensures that stakeholders at all levels have access to the information they need to make informed decisions about system operation and optimization.
+
+Dashboard design patterns ensure that dashboards are informative, actionable, and appropriate for their intended audience. Dashboards must follow clear visual hierarchy principles with the most important information prominently displayed. We maintain different dashboard types for different audiences: operational dashboards for on-call engineers, executive dashboards for leadership, and detailed analysis dashboards for troubleshooting.
+
+Panel configuration standards ensure that visualizations accurately represent data and provide meaningful insights. Panels must include appropriate units, thresholds, and time ranges for their intended purpose. We implement consistent color schemes and styling across all dashboards to ensure visual consistency.
+
+Alerting integration ensures that Grafana alerts complement Prometheus alerting with appropriate notification channels and escalation procedures. Grafana alerts must be configured for dashboard-specific use cases and include appropriate context and remediation guidance.
+
+Template and variable management enables flexible, reusable dashboards that can be adapted for different services and environments. Templates must be properly documented and maintained, with clear guidance on customization and deployment.
+
+Access control and permissions ensure that dashboard access is appropriate for different user roles and responsibilities. We implement role-based access control with appropriate dashboard sharing and editing permissions.
+
+Performance optimization ensures that dashboards load quickly and provide responsive user experiences. This includes optimization of query performance, appropriate use of caching, and efficient panel configuration.
+
+### Loki Log Aggregation
+
+Log aggregation using Loki provides centralized, searchable access to log data from all system components while maintaining cost-effective storage and query performance. Our Loki implementation ensures that log data is available for troubleshooting, security analysis, and compliance requirements.
+
+Log ingestion patterns ensure that logs are properly collected, parsed, and indexed for efficient searching and analysis. Log sources must be configured with appropriate labels and metadata to enable effective filtering and correlation. We implement structured logging standards that facilitate automated parsing and analysis.
+
+Label strategy balances query performance with storage efficiency by implementing appropriate labeling schemes that enable effective log filtering without creating excessive cardinality. Labels must be carefully chosen to support common query patterns while avoiding performance issues.
+
+Retention and storage management ensure that log data is available for required periods while managing storage costs effectively. Retention policies must be configured based on log importance, regulatory requirements, and storage capacity. We implement appropriate compression and archival strategies for long-term log storage.
+
+Query optimization ensures that log searches are performed efficiently and provide timely results. This includes proper use of label filters, time range restrictions, and query optimization techniques. We provide training and documentation on effective log query patterns.
+
+Integration with alerting systems ensures that log-based alerts can be configured for important events and error conditions. Log-based alerts must be carefully designed to avoid false positives while ensuring that critical issues are detected promptly.
+
+Security and access control ensure that log data is properly protected and accessed only by authorized personnel. We implement appropriate access controls and audit logging for log access, ensuring that sensitive information in logs is properly protected.
+
+### Jaeger Distributed Tracing
+
+Distributed tracing using Jaeger provides detailed visibility into request flows across microservices architectures, enabling effective performance optimization and troubleshooting of complex distributed systems. Our Jaeger implementation ensures that trace data is collected efficiently and provides actionable insights into system behavior.
+
+Instrumentation standards ensure that applications generate meaningful trace data that provides comprehensive visibility into request processing. Instrumentation must be implemented at appropriate levels of detail, capturing key operations while avoiding excessive overhead. We maintain instrumentation libraries and guidelines for different programming languages and frameworks.
+
+Sampling strategies balance trace data completeness with system performance and storage requirements. Sampling must be configured to capture representative traces while managing data volume effectively. We implement adaptive sampling strategies that adjust based on system load and trace characteristics.
+
+Trace analysis patterns enable effective use of trace data for performance optimization and troubleshooting. We provide training and documentation on effective trace analysis techniques, including identification of performance bottlenecks, error analysis, and dependency mapping.
+
+Integration with metrics and logs ensures that trace data can be correlated with other observability data sources to provide comprehensive system insights. Traces must include appropriate metadata and identifiers to enable correlation with metrics and log data.
+
+Performance optimization ensures that tracing infrastructure can handle the scale of trace collection required for our systems. This includes proper resource sizing, data retention configuration, and query performance optimization.
+
+Security and privacy considerations ensure that trace data does not expose sensitive information while providing necessary visibility into system operation. We implement appropriate data sanitization and access controls for trace data.
+
+## Security and Policy Management
+
+### Vault Secrets Management
+
+Secrets management using HashiCorp Vault provides secure, auditable storage and distribution of sensitive configuration data across all infrastructure and application components. Our Vault implementation ensures that secrets are properly protected while remaining accessible to authorized systems and personnel.
+
+Secret organization follows hierarchical patterns that enable appropriate access controls and audit capabilities. Secrets must be organized into logical paths that reflect organizational structure and access requirements. We implement clear naming conventions and metadata standards that facilitate secret discovery and management.
+
+Authentication and authorization integration ensures that only authorized systems and personnel can access secrets. Vault must be integrated with our identity management systems and implement appropriate authentication methods for different use cases. We maintain role-based access controls that follow the principle of least privilege.
+
+Secret rotation policies ensure that secrets are regularly updated to minimize the impact of potential compromises. Rotation policies must be configured based on secret sensitivity and usage patterns. We implement automated rotation for secrets that support it and maintain clear procedures for manual rotation of other secrets.
+
+Audit logging provides comprehensive visibility into secret access and management operations. All secret operations must be logged with appropriate detail to support security analysis and compliance requirements. Audit logs must be properly protected and retained according to regulatory requirements.
+
+High availability and disaster recovery ensure that secrets remain accessible even during infrastructure failures. Vault must be deployed in highly available configurations with appropriate backup and recovery procedures. We maintain clear procedures for Vault recovery and secret restoration.
+
+Integration with application deployment ensures that secrets are securely distributed to applications without exposure in configuration files or environment variables. We implement secure secret injection mechanisms that integrate with our container orchestration and deployment systems.
+
+### OPA/Gatekeeper Policy Enforcement
+
+Policy enforcement using Open Policy Agent (OPA) and Gatekeeper provides comprehensive, declarative policy management across our Kubernetes infrastructure. Our policy implementation ensures that security, compliance, and operational requirements are consistently enforced across all workloads.
+
+Policy design patterns ensure that policies are clear, maintainable, and effectively enforce intended requirements. Policies must be written in clear, understandable Rego code with comprehensive documentation explaining their purpose and implementation. We maintain a library of standard policies for common security and compliance requirements.
+
+Constraint configuration ensures that policies are properly applied to appropriate resources with clear violation handling. Constraints must be carefully scoped to avoid unintended impacts while ensuring comprehensive coverage of policy requirements. We implement graduated enforcement with warnings before blocking violations where appropriate.
+
+Policy testing and validation ensure that policies work correctly and don't have unintended consequences. All policies must be thoroughly tested before deployment, including testing of both positive and negative cases. We maintain automated testing for policy changes and implement staged rollout procedures.
+
+Violation monitoring and reporting provide visibility into policy violations and compliance status. Policy violations must be properly logged and reported with appropriate alerting for critical violations. We maintain dashboards and reports that provide visibility into policy compliance across our infrastructure.
+
+Policy lifecycle management ensures that policies are properly maintained and updated as requirements change. We implement version control for policies and maintain clear procedures for policy updates and rollbacks. Policy changes must undergo appropriate review and approval processes.
+
+Integration with CI/CD pipelines ensures that policy compliance is validated during deployment processes. Policies must be integrated with our GitOps workflows to prevent deployment of non-compliant resources. We implement policy validation in development environments to catch issues early.
+
+## API Management and Developer Experience
+
+### WSO2 API Manager Implementation
+
+API management using WSO2 API Manager provides enterprise-grade API gateway capabilities with comprehensive security, monitoring, and developer experience features. Our API management implementation ensures that APIs are properly secured, monitored, and documented while providing excellent developer experiences.
+
+API design standards ensure that APIs are consistent, well-documented, and follow industry best practices. APIs must follow RESTful design principles with clear resource modeling and appropriate HTTP method usage. We maintain API design guidelines and review processes to ensure consistency across all APIs.
+
+Security implementation includes comprehensive authentication, authorization, and threat protection capabilities. APIs must implement appropriate security measures including OAuth 2.0, API key management, and rate limiting. We maintain security policies that are consistently applied across all APIs with appropriate customization for different security requirements.
+
+Developer portal configuration provides comprehensive documentation and self-service capabilities for API consumers. The developer portal must include complete API documentation, interactive testing capabilities, and clear onboarding procedures. We maintain high-quality documentation standards and provide comprehensive examples and tutorials.
+
+Analytics and monitoring provide detailed visibility into API usage, performance, and security events. API analytics must track key metrics including usage patterns, performance characteristics, and error rates. We implement comprehensive alerting for API issues and maintain dashboards that provide visibility into API health and usage.
+
+Lifecycle management ensures that APIs are properly versioned and managed throughout their lifecycle. We implement clear versioning strategies and deprecation procedures that minimize impact on API consumers. API changes must be properly communicated and managed through appropriate change management processes.
+
+Integration with backend services ensures that APIs can efficiently and reliably access backend functionality. API implementations must include appropriate caching, circuit breaking, and retry mechanisms to ensure reliable operation. We maintain clear integration patterns and guidelines for different types of backend services.
+
+### Flagsmith Feature Management
+
+Feature flag management using Flagsmith provides comprehensive feature toggle capabilities that enable safe, gradual rollout of new functionality while supporting experimentation and A/B testing. Our feature flag implementation ensures that features can be safely deployed and managed with minimal risk.
+
+Flag design patterns ensure that feature flags are properly structured and maintainable. Flags must be designed with clear naming conventions and appropriate granularity to support different use cases. We maintain guidelines for when to use feature flags and how to structure them for maximum effectiveness.
+
+Environment management ensures that feature flags are properly configured across different environments with appropriate promotion workflows. Flag configurations must be properly tested in non-production environments before production deployment. We implement clear procedures for flag promotion and rollback.
+
+Targeting and segmentation capabilities enable precise control over feature rollouts with support for different user segments and rollout strategies. Targeting rules must be clearly documented and regularly reviewed to ensure they remain appropriate. We implement gradual rollout capabilities that enable safe feature deployment.
+
+Analytics and monitoring provide visibility into feature flag performance and user impact. Flag analytics must track key metrics including adoption rates, performance impact, and user engagement. We implement alerting for flag-related issues and maintain dashboards that provide visibility into flag status and impact.
+
+Flag lifecycle management ensures that feature flags are properly maintained and cleaned up when no longer needed. We implement clear procedures for flag retirement and maintain automated cleanup processes to prevent flag debt accumulation.
+
+Integration with deployment pipelines ensures that feature flags are properly coordinated with code deployments. Flag changes must be properly tested and validated as part of our CI/CD processes. We maintain clear procedures for coordinating flag changes with code deployments.
+
+### Backstage Developer Platform
+
+Developer platform implementation using Backstage provides comprehensive developer experience capabilities including service catalogs, documentation, and workflow automation. Our Backstage implementation ensures that developers have access to the tools and information they need to be productive and effective.
+
+Service catalog management provides comprehensive visibility into all services and infrastructure components with clear ownership and dependency information. The service catalog must be automatically populated from our infrastructure and deployment systems with appropriate metadata and documentation. We maintain clear standards for service documentation and metadata.
+
+Template and scaffolding capabilities enable developers to quickly create new services and components using approved patterns and configurations. Templates must be regularly updated to reflect current best practices and include comprehensive documentation and examples. We maintain a library of templates for different types of services and components.
+
+Documentation integration ensures that all technical documentation is easily discoverable and properly maintained. Documentation must be automatically synchronized from source repositories and include appropriate search and navigation capabilities. We maintain high standards for documentation quality and completeness.
+
+Workflow automation provides streamlined processes for common developer tasks including service creation, deployment, and maintenance. Workflows must be designed to reduce manual effort while maintaining appropriate controls and validation. We implement self-service capabilities that enable developers to perform routine tasks without manual intervention.
+
+Plugin ecosystem management ensures that Backstage capabilities are extended appropriately to meet our specific needs. Plugin selection and development must follow clear criteria and standards to ensure compatibility and maintainability. We maintain clear procedures for plugin evaluation and deployment.
+
+Integration with existing tools ensures that Backstage provides a unified interface to our development toolchain. Integrations must be properly maintained and provide seamless user experiences. We implement single sign-on and appropriate access controls to ensure security while maintaining usability.
+
+This comprehensive architecture rules document establishes the specific standards and practices for our technology stack while ensuring that all components work together effectively to provide a reliable, scalable, and secure platform for our applications and services.
