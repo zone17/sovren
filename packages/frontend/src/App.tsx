@@ -2,7 +2,13 @@ import React, { Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/ui/Layout';
 import { AuthProvider, ProtectedRoute } from './features/auth';
-import ErrorBoundary from './monitoring/ErrorBoundary';
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
+import { AuthErrorBoundary } from './features/auth/ErrorBoundary';
+import { ContentErrorBoundary } from './features/content/ErrorBoundary';
+import { AnalyticsErrorBoundary } from './features/analytics/ErrorBoundary';
+import { DashboardErrorBoundary } from './features/dashboard/ErrorBoundary';
+import { SubscriptionsErrorBoundary } from './features/subscriptions/ErrorBoundary';
+import { NostrErrorBoundary } from './features/nostr/ErrorBoundary';
 
 // 🎯 **LAZY LOADING**
 const Home = React.lazy(() =>
@@ -69,22 +75,64 @@ function App(): React.ReactElement {
   );
 
   return (
-    <ErrorBoundary>
+    <GlobalErrorBoundary>
       <AuthProvider>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             {/* Pages with their own layout (no duplicates) */}
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route
+              path="/login"
+              element={
+                <AuthErrorBoundary>
+                  <Login />
+                </AuthErrorBoundary>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <AuthErrorBoundary>
+                  <Signup />
+                </AuthErrorBoundary>
+              }
+            />
 
             {/* 🚀 ONBOARDING ROUTES */}
-            <Route path="/onboarding" element={<SovereignOnboarding />} />
-            <Route path="/onboarding/nostr" element={<NostrOnboarding />} />
-            <Route path="/onboarding/lightning" element={<LightningOnboarding />} />
+            <Route
+              path="/onboarding"
+              element={
+                <AuthErrorBoundary>
+                  <SovereignOnboarding />
+                </AuthErrorBoundary>
+              }
+            />
+            <Route
+              path="/onboarding/nostr"
+              element={
+                <NostrErrorBoundary>
+                  <NostrOnboarding />
+                </NostrErrorBoundary>
+              }
+            />
+            <Route
+              path="/onboarding/lightning"
+              element={
+                <NostrErrorBoundary>
+                  <LightningOnboarding />
+                </NostrErrorBoundary>
+              }
+            />
 
             {/* 👤 PROFILE DASHBOARD (Shows post-onboarding profile) */}
-            <Route path="/profile-dashboard" element={<ProfileDashboard />} />
+            <Route
+              path="/profile-dashboard"
+              element={
+                <AuthErrorBoundary>
+                  <ProfileDashboard />
+                </AuthErrorBoundary>
+              }
+            />
 
             {/* Protected Routes that need Layout */}
             <Route
@@ -92,7 +140,9 @@ function App(): React.ReactElement {
               element={
                 <Layout>
                   <ProtectedRoute>
-                    <Profile />
+                    <AuthErrorBoundary>
+                      <Profile />
+                    </AuthErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
@@ -103,7 +153,9 @@ function App(): React.ReactElement {
               element={
                 <Layout>
                   <ProtectedRoute>
-                    <Post />
+                    <ContentErrorBoundary>
+                      <Post />
+                    </ContentErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
@@ -115,7 +167,9 @@ function App(): React.ReactElement {
               element={
                 <Layout>
                   <ProtectedRoute>
-                    <CreatorDashboard />
+                    <ContentErrorBoundary>
+                      <CreatorDashboard />
+                    </ContentErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
@@ -126,7 +180,9 @@ function App(): React.ReactElement {
               element={
                 <Layout>
                   <ProtectedRoute>
-                    <CreatorDashboard />
+                    <DashboardErrorBoundary>
+                      <CreatorDashboard />
+                    </DashboardErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
@@ -138,7 +194,9 @@ function App(): React.ReactElement {
               element={
                 <Layout>
                   <ProtectedRoute>
-                    <AnalyticsDashboard />
+                    <AnalyticsErrorBoundary>
+                      <AnalyticsDashboard />
+                    </AnalyticsErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
@@ -150,7 +208,9 @@ function App(): React.ReactElement {
               element={
                 <Layout>
                   <ProtectedRoute>
-                    <SubscriptionManager />
+                    <SubscriptionsErrorBoundary>
+                      <SubscriptionManager />
+                    </SubscriptionsErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
@@ -162,7 +222,9 @@ function App(): React.ReactElement {
               element={
                 <Layout>
                   <ProtectedRoute requireRole="admin">
-                    <MonitoringDashboard />
+                    <DashboardErrorBoundary>
+                      <MonitoringDashboard />
+                    </DashboardErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
@@ -170,7 +232,7 @@ function App(): React.ReactElement {
           </Routes>
         </Suspense>
       </AuthProvider>
-    </ErrorBoundary>
+    </GlobalErrorBoundary>
   );
 }
 

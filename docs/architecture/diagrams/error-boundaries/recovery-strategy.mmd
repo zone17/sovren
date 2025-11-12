@@ -1,0 +1,36 @@
+graph TD
+    A[Error Occurs] --> B{Error Level?}
+
+    B -->|Component| C[Feature Error Boundary]
+    B -->|Feature| C
+    B -->|App| D[Global Error Boundary]
+
+    C --> E{Retry Count?}
+    E -->|< 3| F[Auto Retry with Backoff]
+    E -->|>= 3| G[Show Manual Retry UI]
+
+    F --> H{Success?}
+    H -->|Yes| I[Resume Normal Operation]
+    H -->|No| E
+
+    G --> J{User Action?}
+    J -->|Retry| K[Reset State & Retry]
+    J -->|Go Home| L[Navigate to Home]
+    J -->|Continue| M[Use Rest of App]
+
+    K --> H
+
+    D --> N[Show Critical Error UI]
+    N --> O{User Action?}
+    O -->|Reload Page| P[Full Page Refresh]
+    O -->|Go Home| L
+
+    I --> Q[Normal App State]
+    L --> Q
+    M --> Q
+    P --> Q
+
+    style C fill:#ffd43b,stroke:#fab005
+    style D fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    style I fill:#51cf66,stroke:#2f9e44
+    style Q fill:#51cf66,stroke:#2f9e44
