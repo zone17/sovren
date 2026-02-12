@@ -1,0 +1,27 @@
+name: 'Setup Node.js'
+description: 'Setup Node.js with npm caching using .nvmrc'
+
+inputs:
+  install-deps:
+    description: 'Install npm dependencies'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Read .nvmrc
+      id: nvmrc
+      shell: bash
+      run: echo "version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ steps.nvmrc.outputs.version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      if: inputs.install-deps == 'true'
+      shell: bash
+      run: npm ci --prefer-offline --no-audit

@@ -17,8 +17,10 @@ on:
           - major        # Major version updates
           - ai-curated   # AI decides what to update
 
+permissions: read-all
+
 env:
-  NODE_VERSION: '18.x'
+  NODE_VERSION: '20'
   PYTHON_VERSION: '3.11'
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
@@ -94,7 +96,7 @@ jobs:
 
           class AIDependencyAnalyzer:
               def __init__(self):
-                  openai.api_key = os.getenv('OPENAI_API_KEY')
+                  self.client = openai.OpenAI() if os.getenv('OPENAI_API_KEY') else None
                   self.package_json = self.load_package_json()
                   self.audit_data = self.load_audit_data()
                   self.outdated_data = self.load_outdated_data()
@@ -173,7 +175,7 @@ jobs:
 
               def ai_package_risk_assessment(self, package_name, current_version, latest_version):
                   """Use AI to assess upgrade risk"""
-                  if not openai.api_key:
+                  if not self.client:
                       return {"risk": "medium", "reasoning": "AI analysis disabled"}
 
                   package_info = self.get_package_info(package_name)
@@ -198,7 +200,7 @@ jobs:
                       Respond with JSON: {{"risk": "low|medium|high", "reasoning": "brief explanation", "recommendation": "action to take"}}
                       """
 
-                      response = openai.ChatCompletion.create(
+                      response = self.client.chat.completions.create(
                           model="gpt-4",
                           messages=[{"role": "user", "content": prompt}],
                           max_tokens=300,
@@ -409,7 +411,7 @@ jobs:
                       if update['priority'] == 'immediate':
                           try:
                               result = subprocess.run(
-                                  ['npm', 'audit', 'fix', '--force'],
+                                  ['npm', 'audit', 'fix'],
                                   capture_output=True, text=True, check=True
                               )
                               self.updated_packages.append(f"Security fix: {update['package']}")
@@ -591,8 +593,8 @@ jobs:
           echo "🚨 CRITICAL SECURITY VULNERABILITIES DETECTED"
           echo "Applying emergency security fixes..."
 
-          # Force security fixes
-          npm audit fix --force || echo "Some fixes may require manual intervention"
+          # Apply security fixes (without --force to avoid breaking changes)
+          npm audit fix || echo "Some fixes may require manual intervention"
 
           # Verify build still works
           npm run build || echo "Build may need attention after security fixes"
@@ -619,7 +621,7 @@ jobs:
             **Critical security vulnerabilities detected by AI analysis.**
 
             ## ⚡ Immediate Actions Taken
-            - Automatic security fixes applied via `npm audit fix --force`
+            - Automatic security fixes applied via `npm audit fix`
             - Build verification attempted
 
             ## 🔍 Vulnerabilities Found

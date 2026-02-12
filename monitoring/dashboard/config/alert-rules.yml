@@ -1,13 +1,82 @@
 # Prometheus Alert Rules
-# Payment System Critical Alerts for Sovren Platform
-# Story: PAY-013
+# Sovren Platform - Production Alerts
+# Updated: US-E0-010 Observability Real-ification
 
 groups:
-  # Payment System Alerts
+  # SLO Alerts - Based on real prom-client metrics
+  - name: slo_alerts
+    interval: 30s
+    rules:
+      # SLO: API Availability - Error rate < 1% over 5m window
+      - alert: SLOHighErrorRate
+        expr: |
+          (
+            sum(rate(sovren_http_request_errors_total[5m]))
+            /
+            sum(rate(sovren_http_requests_total[5m]))
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+          slo: availability
+        annotations:
+          summary: "SLO violation: API error rate exceeds 1%"
+          description: "API error rate is {{ $value | humanizePercentage }} (SLO: < 1%)."
+          runbook_url: "docs/observability/runbooks/high-error-rate.md"
+
+      # SLO: API Latency - P99 < 500ms
+      - alert: SLOHighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(sovren_http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+          slo: latency
+        annotations:
+          summary: "SLO violation: P99 latency exceeds 500ms"
+          description: "P99 request latency is {{ $value }}s (SLO: < 500ms)."
+          runbook_url: "docs/observability/runbooks/high-latency.md"
+
+      # SLO: API Latency - P95 < 250ms (warning)
+      - alert: SLOHighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(sovren_http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 0.25
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+          slo: latency
+        annotations:
+          summary: "SLO warning: P95 latency exceeds 250ms"
+          description: "P95 request latency is {{ $value }}s (target: < 250ms)."
+
+      # SLO: Queue Job Completion Rate > 99%
+      - alert: SLOQueueJobFailures
+        expr: |
+          (
+            sum(rate(sovren_queue_jobs_total{status="failed"}[5m]))
+            /
+            sum(rate(sovren_queue_jobs_total[5m]))
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+          slo: queue-reliability
+        annotations:
+          summary: "SLO warning: Queue job failure rate exceeds 1%"
+          description: "Queue job failure rate is {{ $value | humanizePercentage }}."
+
+  # Payment System Alerts (kept from existing)
   - name: payment_system
     interval: 30s
     rules:
-      # CRITICAL: High Payment Failure Rate
       - alert: HighPaymentFailureRate
         expr: |
           (
@@ -19,145 +88,15 @@ groups:
         labels:
           severity: critical
           team: payments
-          component: payment-processor
         annotations:
           summary: "High payment failure rate detected"
-          description: "Payment failure rate is {{ $value | humanizePercentage }} (threshold: 5%). This requires immediate investigation."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/high-payment-failure-rate.md"
-          dashboard_url: "http://grafana:3000/d/payments/payment-dashboard"
-
-      # CRITICAL: Payment Success Rate Below Threshold
-      - alert: LowPaymentSuccessRate
-        expr: payment_success_rate < 0.95
-        for: 5m
-        labels:
-          severity: critical
-          team: payments
-          component: payment-processor
-        annotations:
-          summary: "Payment success rate below 95%"
-          description: "Payment success rate is {{ $value | humanizePercentage }} (threshold: 95%). Immediate action required."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/low-payment-success-rate.md"
-
-      # WARNING: Slow Payment Processing
-      - alert: SlowPaymentProcessing
-        expr: |
-          histogram_quantile(0.95,
-            rate(payment_duration_seconds_bucket[5m])
-          ) > 30
-        for: 5m
-        labels:
-          severity: warning
-          team: payments
-          component: payment-processor
-        annotations:
-          summary: "Payment processing is slow"
-          description: "P95 payment duration is {{ $value }}s (threshold: 30s). Performance degradation detected."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/slow-payment-processing.md"
-
-      # WARNING: High Active Payments Queue
-      - alert: HighActivePaymentsQueue
-        expr: active_payments_count > 100
-        for: 5m
-        labels:
-          severity: warning
-          team: payments
-          component: payment-processor
-        annotations:
-          summary: "High number of active payments"
-          description: "{{ $value }} payments are currently active (threshold: 100). Queue may be backing up."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/high-active-payments.md"
-
-      # CRITICAL: No Payments Processed (during business hours)
-      - alert: NoPaymentsProcessed
-        expr: |
-          rate(payment_total[10m]) == 0
-          and
-          hour() >= 8 and hour() <= 20
-        for: 10m
-        labels:
-          severity: critical
-          team: payments
-          component: payment-processor
-        annotations:
-          summary: "No payments processed in last 10 minutes"
-          description: "Payment processing appears to be down during business hours. Immediate investigation required."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/no-payments-processed.md"
-
-  # Health Check Alerts
-  - name: health_checks
-    interval: 30s
-    rules:
-      # CRITICAL: Lightning Node Disconnected
-      - alert: LightningNodeDown
-        expr: health_check_status{component="lightning_node"} < 0.5
-        for: 2m
-        labels:
-          severity: critical
-          team: infrastructure
-          component: lightning-node
-        annotations:
-          summary: "Lightning Network node is down"
-          description: "Lightning node health check is failing (status: {{ $value }}). Payment processing affected."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/lightning-node-down.md"
-
-      # CRITICAL: Database Connection Failed
-      - alert: DatabaseConnectionFailed
-        expr: health_check_status{component="database"} == 0
-        for: 1m
-        labels:
-          severity: critical
-          team: infrastructure
-          component: database
-        annotations:
-          summary: "Database connection failed"
-          description: "Database health check is failing. Immediate action required."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/database-connection-failed.md"
-
-      # WARNING: Database Slow Queries
-      - alert: DatabaseSlowQueries
-        expr: health_check_status{component="database"} == 0.5
-        for: 5m
-        labels:
-          severity: warning
-          team: infrastructure
-          component: database
-        annotations:
-          summary: "Database queries are slow"
-          description: "Database queries are taking longer than 1s. Performance degradation detected."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/database-slow-queries.md"
-
-      # WARNING: Webhook Processing Delays
-      - alert: WebhookProcessingDelays
-        expr: health_check_latency_seconds{component="webhook_endpoint"} > 10
-        for: 5m
-        labels:
-          severity: warning
-          team: payments
-          component: webhooks
-        annotations:
-          summary: "Webhook processing is delayed"
-          description: "Webhook endpoint latency is {{ $value }}s (threshold: 10s). Processing delays detected."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/webhook-delays.md"
-
-      # CRITICAL: Circuit Breaker Open
-      - alert: CircuitBreakerOpen
-        expr: health_check_status{component="circuit_breaker"} == 0
-        for: 2m
-        labels:
-          severity: critical
-          team: payments
-          component: circuit-breaker
-        annotations:
-          summary: "Circuit breaker is open"
-          description: "Circuit breaker has opened due to repeated failures. Service degraded."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/circuit-breaker-open.md"
+          description: "Payment failure rate is {{ $value | humanizePercentage }} (threshold: 5%)."
+          runbook_url: "docs/observability/runbooks/high-payment-failure-rate.md"
 
   # System Resource Alerts
   - name: system_resources
     interval: 30s
     rules:
-      # CRITICAL: High CPU Usage
       - alert: HighCPUUsage
         expr: |
           100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
@@ -165,13 +104,10 @@ groups:
         labels:
           severity: warning
           team: infrastructure
-          component: system
         annotations:
-          summary: "High CPU usage detected"
-          description: "CPU usage is {{ $value }}% (threshold: 85%). System may be overloaded."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/high-cpu-usage.md"
+          summary: "High CPU usage: {{ $value | humanize }}%"
+          runbook_url: "docs/observability/runbooks/high-cpu-usage.md"
 
-      # CRITICAL: High Memory Usage
       - alert: HighMemoryUsage
         expr: |
           (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
@@ -179,13 +115,10 @@ groups:
         labels:
           severity: warning
           team: infrastructure
-          component: system
         annotations:
-          summary: "High memory usage detected"
-          description: "Memory usage is {{ $value }}% (threshold: 85%). System may run out of memory."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/high-memory-usage.md"
+          summary: "High memory usage: {{ $value | humanize }}%"
+          runbook_url: "docs/observability/runbooks/high-memory-usage.md"
 
-      # CRITICAL: Disk Space Low
       - alert: DiskSpaceLow
         expr: |
           (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs"} / node_filesystem_size_bytes)) * 100 > 85
@@ -193,69 +126,45 @@ groups:
         labels:
           severity: warning
           team: infrastructure
-          component: system
         annotations:
-          summary: "Disk space is low"
-          description: "Disk usage is {{ $value }}% (threshold: 85%). Clean up required soon."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/disk-space-low.md"
+          summary: "Disk space low: {{ $value | humanize }}% used"
+          runbook_url: "docs/observability/runbooks/disk-space-low.md"
 
-      # WARNING: High Network Traffic
-      - alert: HighNetworkTraffic
-        expr: |
-          rate(node_network_receive_bytes_total[5m]) > 100000000
-        for: 5m
-        labels:
-          severity: warning
-          team: infrastructure
-          component: network
-        annotations:
-          summary: "High network traffic detected"
-          description: "Network receive rate is {{ $value | humanize }}B/s. Unusual traffic pattern."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/high-network-traffic.md"
-
-  # Database Specific Alerts
-  - name: database
+  # Node.js Process Alerts (from prom-client default metrics)
+  - name: nodejs_process
     interval: 30s
     rules:
-      # WARNING: High Database Connections
-      - alert: HighDatabaseConnections
-        expr: database_connections_active > 80
+      - alert: NodeJSHighHeapUsage
+        expr: |
+          sovren_nodejs_heap_size_used_bytes / sovren_nodejs_heap_size_total_bytes > 0.9
         for: 5m
         labels:
           severity: warning
-          team: infrastructure
-          component: database
+          team: backend
         annotations:
-          summary: "High number of database connections"
-          description: "{{ $value }} active database connections (threshold: 80). Connection pool may be exhausted."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/high-db-connections.md"
+          summary: "Node.js heap usage above 90%"
+          description: "Heap is at {{ $value | humanizePercentage }}. Risk of OOM."
+
+      - alert: NodeJSHighEventLoopLag
+        expr: sovren_nodejs_eventloop_lag_seconds > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Node.js event loop lag above 500ms"
+          description: "Event loop lag is {{ $value }}s. App may be unresponsive."
 
   # Prometheus Meta-Alerts
   - name: prometheus
     interval: 60s
     rules:
-      # WARNING: Prometheus Scrape Failures
-      - alert: PrometheusScrapeFailures
+      - alert: PrometheusTargetDown
         expr: up == 0
         for: 5m
         labels:
-          severity: warning
-          team: infrastructure
-          component: monitoring
-        annotations:
-          summary: "Prometheus scrape is failing"
-          description: "Prometheus cannot scrape {{ $labels.job }} on {{ $labels.instance }}. Monitoring blind spot detected."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/prometheus-scrape-failures.md"
-
-      # WARNING: Prometheus Target Down
-      - alert: PrometheusTargetDown
-        expr: up == 0
-        for: 10m
-        labels:
           severity: critical
           team: infrastructure
-          component: monitoring
         annotations:
-          summary: "Prometheus target is down"
-          description: "{{ $labels.job }} on {{ $labels.instance }} has been down for 10 minutes."
-          runbook_url: "https://github.com/sovren/monitoring/runbooks/prometheus-target-down.md"
+          summary: "Target {{ $labels.job }} is down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been unreachable for 5+ minutes."

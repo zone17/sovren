@@ -24,6 +24,8 @@ on:
       - '!packages/backend/**/*.test.ts'
       - '.github/workflows/backend-deployment.yml'
 
+permissions: read-all
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/backend

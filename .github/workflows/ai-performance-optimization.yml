@@ -1,17 +1,14 @@
-# ⚡ AI Performance Optimization
+name: AI Performance Optimization
 
 on:
   schedule:
     - cron: '0 4 * * *'  # Daily at 4 AM UTC
   workflow_dispatch:
-  push:
-    paths:
-      - 'packages/frontend/**'
-      - 'vite.config.ts'
-      - 'package.json'
+
+permissions: read-all
 
 env:
-  NODE_VERSION: '18.x'
+  NODE_VERSION: '20'
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 jobs:

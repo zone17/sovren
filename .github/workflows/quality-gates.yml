@@ -1,14 +1,13 @@
 name: Quality Gates
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
   workflow_dispatch:
+  workflow_call:
+
+permissions: read-all
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
   CACHE_VERSION: v1
 
 jobs:
@@ -96,7 +95,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ['18', '20']
+        node-version: ['20', '22']
 
     steps:
       - name: Checkout code

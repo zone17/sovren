@@ -7,6 +7,7 @@
 
 import rateLimit, { Options, RateLimitRequestHandler } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
+import Redis from 'ioredis';
 import { Request, Response } from 'express';
 import { RateLimitError } from './error-handler-middleware';
 
@@ -137,22 +138,41 @@ export function createRateLimiter(config: RateLimitConfig): RateLimitRequestHand
 // ============================================================================
 
 /**
+ * Lazily initialized Redis client for rate limiting.
+ * Shared across all Redis-backed rate limiters.
+ */
+let redisClient: Redis | null = null;
+
+function getRedisClient(): Redis {
+  if (!redisClient) {
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    redisClient = new Redis(redisUrl, {
+      enableOfflineQueue: true,
+      maxRetriesPerRequest: 3,
+      retryStrategy(times: number) {
+        return Math.min(times * 200, 3000);
+      },
+    });
+
+    redisClient.on('error', (err) => {
+      console.error('Redis rate-limit client error:', err.message);
+    });
+  }
+  return redisClient;
+}
+
+/**
  * Create rate limiter with Redis store for distributed systems
  * Use this in production when running multiple API instances
  */
 export function createRedisRateLimiter(config: RateLimitConfig): RateLimitRequestHandler {
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+  const client = getRedisClient();
 
   return rateLimit({
     ...defaultOptions,
     ...config,
     store: new RedisStore({
-      // @ts-ignore - Redis client typing issue
-      sendCommand: (...args: string[]) => {
-        // Use ioredis or redis client
-        console.warn('Redis rate limiting not configured');
-        return Promise.resolve(null);
-      },
+      sendCommand: (...args: string[]) => client.call(...(args as [string, ...string[]])),
     }),
     message: config.message || 'Too many requests, please try again later',
   });

@@ -1,17 +1,15 @@
 # Prometheus Configuration
-# Payment System Monitoring for Sovren Platform
-# Story: PAY-013
+# Sovren Platform Monitoring
+# Updated: US-E0-010 Observability Real-ification
 
 global:
-  scrape_interval: 15s # Default scrape interval
-  evaluation_interval: 15s # How often to evaluate rules
-  scrape_timeout: 10s # Scrape timeout
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
 
-  # Attach labels to all time series and alerts
   external_labels:
-    monitor: 'sovren-payment-monitor'
+    monitor: 'sovren-monitor'
     environment: 'production'
-    cluster: 'main'
 
 # Alertmanager configuration
 alerting:
@@ -30,31 +28,16 @@ scrape_configs:
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
-        labels:
-          component: 'prometheus'
 
-  # Payment System API
-  - job_name: 'payment-api'
+  # Sovren API (prom-client metrics at /metrics)
+  - job_name: 'sovren-api'
     scrape_interval: 15s
-    scrape_timeout: 10s
     metrics_path: '/metrics'
     static_configs:
       - targets:
-          - 'payment-api:3000' # Payment API service
+          - 'sovren-api:3001'
         labels:
-          component: 'payment-api'
-          service: 'backend'
-
-  # Health Check Endpoint
-  - job_name: 'health-checks'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-    metrics_path: '/health/metrics'
-    static_configs:
-      - targets:
-          - 'payment-api:3000'
-        labels:
-          component: 'health-checks'
+          service: 'sovren-api'
 
   # Node Exporter (System Metrics)
   - job_name: 'node-exporter'
@@ -62,64 +45,21 @@ scrape_configs:
     static_configs:
       - targets:
           - 'node-exporter:9100'
-        labels:
-          component: 'node-exporter'
-          instance: 'payment-server'
 
-  # Lightning Network Node (if available)
-  - job_name: 'lightning-node'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-    metrics_path: '/metrics'
-    static_configs:
-      - targets:
-          # Uncomment and configure when Lightning node is available
-          # - 'lnd:9092'
-          # - 'c-lightning:9900'
-        labels:
-          component: 'lightning-node'
-    # Only scrape if targets exist
-    relabel_configs:
-      - source_labels: [__address__]
-        regex: '.*'
-        action: keep
-
-  # Database (PostgreSQL Exporter)
+  # PostgreSQL Exporter
   - job_name: 'postgres-exporter'
     scrape_interval: 15s
     static_configs:
       - targets:
           - 'postgres-exporter:9187'
         labels:
-          component: 'database'
-          database: 'payments'
+          service: 'database'
 
-  # Redis (if used for caching)
+  # Redis Exporter
   - job_name: 'redis-exporter'
     scrape_interval: 15s
     static_configs:
       - targets:
           - 'redis-exporter:9121'
         labels:
-          component: 'cache'
-
-# Remote write (optional - for long-term storage)
-# remote_write:
-#   - url: 'http://prometheus-remote-storage:9009/api/v1/write'
-#     queue_config:
-#       capacity: 10000
-#       max_shards: 200
-#       min_shards: 1
-#       max_samples_per_send: 5000
-#       batch_send_deadline: 5s
-
-# Remote read (optional)
-# remote_read:
-#   - url: 'http://prometheus-remote-storage:9009/api/v1/read'
-
-# Storage configuration
-storage:
-  tsdb:
-    retention.time: 15d # Keep metrics for 15 days
-    retention.size: 10GB # Or 10GB, whichever comes first
-    path: /prometheus
+          service: 'cache'

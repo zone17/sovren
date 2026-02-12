@@ -1,6 +1,6 @@
 # Promtail Configuration
-# Log Shipping for Sovren Payment System
-# Story: PAY-013
+# Log Shipping for Sovren Platform
+# Updated: US-E0-010 Observability Real-ification
 
 server:
   http_listen_port: 9080
@@ -14,43 +14,65 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # Payment API logs
-  - job_name: payment-api
+  # Sovren API logs (structured JSON from Winston)
+  - job_name: sovren-api
     static_configs:
       - targets:
           - localhost
         labels:
-          job: payment-api
+          job: sovren-api
           service: backend
-          component: payment-api
-          __path__: /data/payment-api/*.log
+          component: api
+          __path__: /data/sovren-api/*.log
 
     pipeline_stages:
-      # Parse JSON logs
+      # Parse structured JSON logs from Winston
       - json:
           expressions:
             timestamp: timestamp
             level: level
             message: message
-            payment_id: payment_id
-            user_id: user_id
-            amount_sats: amount_sats
+            correlationId: correlationId
+            service: service
+            requestMethod: requestMethod
+            requestPath: requestPath
             status: status
+            durationMs: durationMs
 
       # Extract timestamp
       - timestamp:
           source: timestamp
-          format: RFC3339
+          format: '2006-01-02T15:04:05.000Z07:00'
 
-      # Add labels from log fields
+      # Promote fields to labels for efficient querying
       - labels:
           level:
-          status:
+          correlationId:
+          service:
 
       # Drop debug logs in production
       - match:
           selector: '{level="debug"}'
           action: drop
+
+  # Docker container logs (auto-discovery)
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/**/*.log
+
+    pipeline_stages:
+      - docker: {}
+      - json:
+          expressions:
+            level: level
+            message: message
+            correlationId: correlationId
+      - labels:
+          level:
 
   # System logs
   - job_name: system
@@ -110,30 +132,3 @@ scrape_configs:
 
       - labels:
           level:
-
-  # Application error logs (critical only)
-  - job_name: errors
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: errors
-          severity: critical
-          __path__: /data/payment-api/error.log
-
-    pipeline_stages:
-      - json:
-          expressions:
-            timestamp: timestamp
-            error: error
-            stack: stack
-            context: context
-
-      - timestamp:
-          source: timestamp
-          format: RFC3339
-
-      # Send to AlertManager if critical
-      - match:
-          selector: '{job="errors"}'
-          action: keep

@@ -4,6 +4,27 @@ import Redis from 'ioredis';
 
 const router = Router();
 
+// Module-level singletons to avoid creating new connections per health check probe
+let singletonRedis: InstanceType<typeof Redis> | null = null;
+let singletonSupabase: ReturnType<typeof createClient> | null = null;
+
+function getRedisClient(): InstanceType<typeof Redis> {
+  if (!singletonRedis) {
+    singletonRedis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+  }
+  return singletonRedis;
+}
+
+function getSupabaseClient(): ReturnType<typeof createClient> {
+  if (!singletonSupabase) {
+    singletonSupabase = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_ANON_KEY || ''
+    );
+  }
+  return singletonSupabase;
+}
+
 interface HealthCheckResult {
   status: 'healthy' | 'unhealthy' | 'degraded';
   timestamp: string;
@@ -46,16 +67,66 @@ interface ServiceHealth {
 
 // Simple health check endpoint for load balancers
 router.get('/health', (req: Request, res: Response) => {
+  const memUsage = process.memoryUsage();
+  const memPercentage = Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100);
+
   res.status(200).json({
     status: 'healthy',
+    service: 'sovren-api',
+    version: process.env.npm_package_version || '1.0.0',
     timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    memory: {
+      heapUsedMB: Math.round(memUsage.heapUsed / 1024 / 1024),
+      heapTotalMB: Math.round(memUsage.heapTotal / 1024 / 1024),
+      percentage: memPercentage,
+    },
+  });
+});
+
+// Readiness probe shortcut (alias for /health/ready)
+router.get('/ready', async (req: Request, res: Response) => {
+  try {
+    const dbHealth = await checkDatabase();
+    const redisHealth = await checkRedis();
+
+    if (dbHealth.status === 'healthy' && redisHealth.status === 'healthy') {
+      res.status(200).json({
+        status: 'ready',
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      res.status(503).json({
+        status: 'not-ready',
+        timestamp: new Date().toISOString(),
+        issues: {
+          database: dbHealth.status !== 'healthy' ? dbHealth.error : null,
+          redis: redisHealth.status !== 'healthy' ? redisHealth.error : null,
+        },
+      });
+    }
+  } catch (error) {
+    res.status(503).json({
+      status: 'not-ready',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// Liveness probe shortcut (alias for /health/live)
+router.get('/live', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'alive',
+    timestamp: new Date().toISOString(),
+    pid: process.pid,
+    uptime: process.uptime(),
   });
 });
 
 // Comprehensive health check with detailed diagnostics
 router.get('/health/detailed', async (req: Request, res: Response) => {
-  const startTime = Date.now();
-
   try {
     const healthResult: HealthCheckResult = {
       status: 'healthy',
@@ -145,12 +216,9 @@ async function checkDatabase(): Promise<ServiceHealth> {
   const startTime = Date.now();
 
   try {
-    const supabase = createClient(
-      process.env.SUPABASE_URL || '',
-      process.env.SUPABASE_ANON_KEY || ''
-    );
+    const supabase = getSupabaseClient();
 
-    const { data, error } = await supabase.from('health_check').select('*').limit(1);
+    const { error } = await supabase.from('health_check').select('*').limit(1);
 
     const responseTime = Date.now() - startTime;
 
@@ -186,12 +254,10 @@ async function checkRedis(): Promise<ServiceHealth> {
   const startTime = Date.now();
 
   try {
-    const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+    const redis = getRedisClient();
 
     await redis.ping();
     const responseTime = Date.now() - startTime;
-
-    await redis.disconnect();
 
     return {
       status: responseTime < 500 ? 'healthy' : 'degraded',

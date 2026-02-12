@@ -104,8 +104,8 @@ export class SecurityHeaderStrategy {
       contentSecurityPolicy: {
         directives: {
           'default-src': ["'self'"],
-          'script-src': ["'self'", "'unsafe-inline'", 'https://trusted-cdn.com'],
-          'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+          'script-src': ["'self'", 'https://trusted-cdn.com'],
+          'style-src': ["'self'", 'https://fonts.googleapis.com'],
           'img-src': ["'self'", 'data:', 'https:'],
           'font-src': ["'self'", 'https://fonts.gstatic.com'],
           'connect-src': ["'self'", 'https://api.sovren.dev', 'wss:', 'https:'],
@@ -211,7 +211,7 @@ export class ContentSecurityPolicyManager {
     const expires = Date.now() + 3600000; // 1 hour
 
     // Store nonce with request identifier
-    const requestId = req.headers['x-request-id'] as string || 'default';
+    const requestId = (req.headers['x-request-id'] as string) || 'default';
     this.nonces.set(requestId, { nonce, expires });
 
     // Cleanup expired nonces
@@ -259,15 +259,17 @@ export class ContentSecurityPolicyManager {
   }
 
   private logCSPUsage(req: Request, cspHeader: string): void {
-    console.log('CSP Header Applied:', {
-      url: req.originalUrl,
-      userAgent: req.get('User-Agent'),
-      csp: cspHeader.substring(0, 200) + '...',
-      timestamp: new Date().toISOString(),
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('CSP Header Applied:', {
+        url: req.originalUrl,
+        userAgent: req.get('User-Agent'),
+        csp: cspHeader.substring(0, 200) + '...',
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
-  validateCSPCompliance(req: Request, res: Response): boolean {
+  validateCSPCompliance(req: Request, _res: Response): boolean {
     const config = this.strategy.getConfig();
     const requiredDirectives = [
       'default-src',
@@ -281,7 +283,7 @@ export class ContentSecurityPolicyManager {
     ];
 
     const cspDirectives = config.contentSecurityPolicy.directives;
-    const missing = requiredDirectives.filter(directive => !cspDirectives[directive]);
+    const missing = requiredDirectives.filter((directive) => !cspDirectives[directive]);
 
     if (missing.length > 0) {
       console.warn('CSP Compliance Warning:', {
@@ -397,6 +399,9 @@ export class SecurityHeaderMonitor {
   private maxEvents = 10000;
 
   logHeaderApplication(req: Request, headerName: string, headerValue: string): void {
+    if (process.env.NODE_ENV !== 'development' && process.env.DEBUG_SECURITY_HEADERS !== 'true') {
+      return;
+    }
     this.addEvent('header_applied', {
       headerName,
       headerValue: headerValue.substring(0, 100),
@@ -451,14 +456,14 @@ export class SecurityHeaderMonitor {
     topUrls: Array<{ url: string; count: number }>;
     recommendations: string[];
   } {
-    const headerApplications = this.events.filter(e => e.type === 'header_applied').length;
-    const violations = this.events.filter(e => e.type === 'security_violation').length;
-    const complianceChecks = this.events.filter(e => e.type === 'compliance_check').length;
+    const headerApplications = this.events.filter((e) => e.type === 'header_applied').length;
+    const violations = this.events.filter((e) => e.type === 'security_violation').length;
+    const complianceChecks = this.events.filter((e) => e.type === 'compliance_check').length;
 
     const violationsByType: Record<string, number> = {};
     const urlCounts: Record<string, number> = {};
 
-    this.events.forEach(event => {
+    this.events.forEach((event) => {
       if (event.type === 'security_violation') {
         const violationType = event.details.violationType;
         violationsByType[violationType] = (violationsByType[violationType] || 0) + 1;
@@ -498,7 +503,9 @@ export class SecurityHeaderMonitor {
     }
 
     if (violationsByType['frame_block'] > 5) {
-      recommendations.push('High number of frame embedding attempts detected - monitor for clickjacking');
+      recommendations.push(
+        'High number of frame embedding attempts detected - monitor for clickjacking'
+      );
     }
 
     if (violationsByType['xss_attempt'] > 0) {
@@ -546,7 +553,11 @@ export class HeaderComplianceTester {
       headerName: 'Strict-Transport-Security',
       headerValue: this.hstsManager.buildHSTSHeader(),
       applied: hstsCompliant && hstsRequired,
-      reason: !hstsRequired ? 'HTTPS connection required' : !hstsCompliant ? 'Configuration issues' : undefined,
+      reason: !hstsRequired
+        ? 'HTTPS connection required'
+        : !hstsCompliant
+          ? 'Configuration issues'
+          : undefined,
     });
 
     // Test other security headers
@@ -558,7 +569,7 @@ export class HeaderComplianceTester {
       'Permissions-Policy',
     ];
 
-    securityHeaders.forEach(headerName => {
+    securityHeaders.forEach((headerName) => {
       const headerValue = res.getHeader(headerName) as string;
       results.push({
         headerName,
@@ -568,13 +579,11 @@ export class HeaderComplianceTester {
       });
     });
 
-    const appliedHeaders = results.filter(r => r.applied).length;
+    const appliedHeaders = results.filter((r) => r.applied).length;
     const totalHeaders = results.length;
     const compliance = (appliedHeaders / totalHeaders) * 100;
 
-    const missing = results
-      .filter(r => !r.applied)
-      .map(r => r.headerName);
+    const missing = results.filter((r) => !r.applied).map((r) => r.headerName);
 
     if (compliance < 80) {
       recommendations.push('Critical: Security header compliance is below 80%');
@@ -614,7 +623,7 @@ export class HeaderComplianceTester {
     let score = 0;
     let maxScore = 0;
 
-    results.forEach(result => {
+    results.forEach((result) => {
       const weight = weights[result.headerName as keyof typeof weights] || 1;
       maxScore += weight;
       if (result.applied) {
@@ -638,6 +647,12 @@ export class HeaderConfigurationManager {
     this.strategy = SecurityHeaderStrategy.getInstance();
     this.configurations = new Map();
     this.loadEnvironmentConfigurations();
+
+    // Auto-load the configuration for the current environment
+    const currentEnv = process.env.NODE_ENV || 'development';
+    if (this.configurations.has(currentEnv)) {
+      this.loadConfiguration(currentEnv);
+    }
   }
 
   private loadEnvironmentConfigurations(): void {
@@ -709,7 +724,10 @@ export class HeaderConfigurationManager {
 
     // Validate frame options
     const validFrameOptions = ['DENY', 'SAMEORIGIN'];
-    if (!validFrameOptions.includes(config.frameOptions) && !config.frameOptions.startsWith('ALLOW-FROM')) {
+    if (
+      !validFrameOptions.includes(config.frameOptions) &&
+      !config.frameOptions.startsWith('ALLOW-FROM')
+    ) {
       errors.push('Invalid frame options value');
     }
 
@@ -748,7 +766,7 @@ export class SecurityHeaderEffectivenessTester {
     const xssProtectionTest = await this.testXSSProtectionEffectiveness();
 
     const passedTests = [cspTest, hstsTest, frameOptionsTest, xssProtectionTest].filter(
-      test => test.passed
+      (test) => test.passed
     ).length;
 
     const overallScore = (passedTests / 4) * 100;
@@ -768,12 +786,9 @@ export class SecurityHeaderEffectivenessTester {
 
     try {
       const cspHeader = cspManager.buildCSPHeader(mockReq);
-      const hasRequiredDirectives = [
-        'default-src',
-        'script-src',
-        'style-src',
-        'img-src',
-      ].every(directive => cspHeader.includes(directive));
+      const hasRequiredDirectives = ['default-src', 'script-src', 'style-src', 'img-src'].every(
+        (directive) => cspHeader.includes(directive)
+      );
 
       return {
         passed: hasRequiredDirectives,
@@ -915,9 +930,10 @@ export function createSecurityHeadersMiddleware(options: Partial<SecurityHeaders
 
       // Apply XSS Protection
       if (config.xssProtection.enabled) {
-        const xssValue = config.xssProtection.mode === 'report'
-          ? `1; report=${config.xssProtection.reportUri}`
-          : '1; mode=block';
+        const xssValue =
+          config.xssProtection.mode === 'report'
+            ? `1; report=${config.xssProtection.reportUri}`
+            : '1; mode=block';
         res.setHeader('X-XSS-Protection', xssValue);
         monitor.logHeaderApplication(req, 'X-XSS-Protection', xssValue);
       }
@@ -941,17 +957,29 @@ export function createSecurityHeadersMiddleware(options: Partial<SecurityHeaders
       // Apply Cross-Origin Policies
       if (config.crossOriginPolicies.embedderPolicy) {
         res.setHeader('Cross-Origin-Embedder-Policy', config.crossOriginPolicies.embedderPolicy);
-        monitor.logHeaderApplication(req, 'Cross-Origin-Embedder-Policy', config.crossOriginPolicies.embedderPolicy);
+        monitor.logHeaderApplication(
+          req,
+          'Cross-Origin-Embedder-Policy',
+          config.crossOriginPolicies.embedderPolicy
+        );
       }
 
       if (config.crossOriginPolicies.openerPolicy) {
         res.setHeader('Cross-Origin-Opener-Policy', config.crossOriginPolicies.openerPolicy);
-        monitor.logHeaderApplication(req, 'Cross-Origin-Opener-Policy', config.crossOriginPolicies.openerPolicy);
+        monitor.logHeaderApplication(
+          req,
+          'Cross-Origin-Opener-Policy',
+          config.crossOriginPolicies.openerPolicy
+        );
       }
 
       if (config.crossOriginPolicies.resourcePolicy) {
         res.setHeader('Cross-Origin-Resource-Policy', config.crossOriginPolicies.resourcePolicy);
-        monitor.logHeaderApplication(req, 'Cross-Origin-Resource-Policy', config.crossOriginPolicies.resourcePolicy);
+        monitor.logHeaderApplication(
+          req,
+          'Cross-Origin-Resource-Policy',
+          config.crossOriginPolicies.resourcePolicy
+        );
       }
 
       // Apply custom headers
@@ -964,7 +992,8 @@ export function createSecurityHeadersMiddleware(options: Partial<SecurityHeaders
       strategy.incrementMetric('headersApplied');
 
       // Run compliance check (in production, run periodically)
-      if (Math.random() < 0.01) { // 1% sampling
+      if (Math.random() < 0.01) {
+        // 1% sampling
         const complianceReport = await complianceTester.runComplianceTest(req, res);
         monitor.logComplianceCheck(req, complianceReport);
         strategy.updateMetrics('complianceScore', complianceReport.securityScore);

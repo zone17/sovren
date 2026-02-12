@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
@@ -9,6 +10,13 @@ import authRouter from './routes/auth';
 import lightningRoutes from './routes/lightning';
 import lightningReceiptRoutes from './routes/lightning-receipts';
 import userRouter from './routes/users';
+import healthRouter from './routes/health';
+import v1Routes from './routes/v1';
+import { csrfProtection } from './middleware/csrf';
+import { deploymentMonitoring, getPrometheusMetrics } from './middleware/deployment-monitoring';
+import { correlationIdMiddleware, getCorrelationId } from './middleware/correlation-id';
+import logger from './lib/logger';
+import { initSentry, Sentry } from './lib/sentry';
 
 /**
  * 🚀 Elite Express.js Application Factory
@@ -29,6 +37,9 @@ import userRouter from './routes/users';
  * ```
  */
 export function createApp(): Express {
+  // Initialize Sentry before Express (required for @sentry/node to hook into HTTP)
+  initSentry();
+
   const app = express();
 
   // 🔒 Security Middleware Stack
@@ -38,7 +49,7 @@ export function createApp(): Express {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'"],
           scriptSrc: ["'self'"],
           imgSrc: ["'self'", 'data:', 'https:'],
           connectSrc: ["'self'", 'wss:', 'https:'],
@@ -68,7 +79,8 @@ export function createApp(): Express {
           ? ['https://sovren.app', 'https://www.sovren.app']
           : ['http://localhost:3000', 'http://localhost:5173'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+      exposedHeaders: ['X-CSRF-Token'],
       credentials: true,
       maxAge: 86400, // 24 hours preflight cache
     })
@@ -90,20 +102,28 @@ export function createApp(): Express {
   });
   app.use(limiter);
 
-  // 📝 Request Processing Middleware
+  // Correlation ID middleware (must be early - before logging and metrics)
+  app.use(correlationIdMiddleware);
+
+  // Request Processing Middleware
   app.use(
     express.json({
       limit: '10mb', // Allow for image uploads
       verify: (req, res, buf) => {
-        // WHY: Store raw body for signature verification
+        // Store raw body for signature verification
         (req as any).rawBody = buf;
       },
     })
   );
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // 📊 Request Logging Middleware
-  // WHY: Observability for debugging and monitoring
+  // Cookie parser (required for CSRF double-submit cookie pattern)
+  app.use(cookieParser());
+
+  // CSRF protection (double-submit cookie pattern)
+  app.use(csrfProtection());
+
+  // Structured Request Logging Middleware with correlation IDs
   app.use((req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
 
@@ -113,22 +133,36 @@ export function createApp(): Express {
         method: req.method,
         url: req.url,
         status: res.statusCode,
-        duration: `${duration}ms`,
+        durationMs: duration,
         userAgent: req.get('User-Agent'),
         ip: req.ip,
-        timestamp: new Date().toISOString(),
+        correlationId: getCorrelationId(),
       };
 
-      // Log errors and slow requests for monitoring
-      if (res.statusCode >= 400 || duration > 1000) {
-        console.warn('🚨 API Request Warning:', logData);
+      if (res.statusCode >= 500) {
+        logger.error('Request completed with server error', logData);
+      } else if (res.statusCode >= 400) {
+        logger.warn('Request completed with client error', logData);
+      } else if (duration > 1000) {
+        logger.warn('Slow request detected', logData);
       } else {
-        console.log('📊 API Request:', logData);
+        logger.info('Request completed', logData);
       }
     });
 
     next();
   });
+
+  // Deployment monitoring middleware (tracks request metrics for Prometheus)
+  app.use(deploymentMonitoring);
+
+  // Prometheus metrics endpoint (scraped by Prometheus) - async handler for prom-client
+  app.get('/metrics', (req, res) => {
+    getPrometheusMetrics(req, res);
+  });
+
+  // Comprehensive health check routes (checks DB, Redis, Lightning, NOSTR)
+  app.use('/', healthRouter);
 
   // 🎯 API Routes
   // WHY: Organized route structure following RESTful principles
@@ -137,83 +171,8 @@ export function createApp(): Express {
   app.use('/api/lightning', lightningRoutes);
   app.use('/api/lightning/receipt', lightningReceiptRoutes);
 
-  // 🏥 Health Check Endpoints
-  // WHY: Kubernetes and container orchestrators use different health check types
-
-  // /health - Overall health status (general health check)
-  app.get('/health', (req: Request, res: Response) => {
-    res.json({
-      success: true,
-      data: {
-        status: 'healthy',
-        service: 'sovren-api',
-        version: process.env.npm_package_version || '1.0.0',
-        timestamp: Date.now(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development',
-      },
-    });
-  });
-
-  // /ready - Readiness probe (ready to receive traffic)
-  // WHY: Indicates the service is ready to handle requests (DB connected, dependencies available)
-  app.get('/ready', async (req: Request, res: Response) => {
-    try {
-      // Check if critical dependencies are available
-      // TODO: Add database connectivity check when implemented
-      // TODO: Add Redis connectivity check when implemented
-      // TODO: Add external service dependency checks
-
-      const checks = {
-        server: true,
-        uptime: process.uptime() > 10, // At least 10 seconds uptime
-        memory: process.memoryUsage().heapUsed < process.memoryUsage().heapTotal * 0.9, // < 90% memory
-      };
-
-      const isReady = Object.values(checks).every((check) => check === true);
-
-      if (isReady) {
-        res.status(200).json({
-          success: true,
-          data: {
-            status: 'ready',
-            checks,
-            timestamp: Date.now(),
-          },
-        });
-      } else {
-        res.status(503).json({
-          success: false,
-          data: {
-            status: 'not_ready',
-            checks,
-            timestamp: Date.now(),
-          },
-        });
-      }
-    } catch (error) {
-      res.status(503).json({
-        success: false,
-        error: 'Service not ready',
-        timestamp: Date.now(),
-      });
-    }
-  });
-
-  // /live - Liveness probe (process is alive)
-  // WHY: Indicates the application is running and not deadlocked
-  app.get('/live', (req: Request, res: Response) => {
-    // Simple liveness check - if we can respond, we're alive
-    res.status(200).json({
-      success: true,
-      data: {
-        status: 'alive',
-        pid: process.pid,
-        uptime: process.uptime(),
-        timestamp: Date.now(),
-      },
-    });
-  });
+  // API v1 Routes (DI-based controllers for content, users, payments)
+  app.use('/api/v1', v1Routes);
 
   // 🎯 API Root Endpoint
   // WHY: Provide API information and available endpoints
@@ -227,6 +186,9 @@ export function createApp(): Express {
         endpoints: {
           authentication: '/api/auth',
           users: '/api/users',
+          content: '/api/v1/content',
+          payments: '/api/v1/payments',
+          lightning: '/api/lightning',
           health: '/health',
         },
         documentation: 'https://docs.sovren.app/api',
@@ -248,16 +210,22 @@ export function createApp(): Express {
     });
   });
 
-  // 🔥 Global Error Handler
-  // WHY: Centralized error handling with security considerations
-  app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-    console.error('🔥 API Error:', {
+  // Global Error Handler
+  app.use((error: any, req: Request, res: Response, _next: NextFunction) => {
+    // Capture to Sentry with correlation context
+    Sentry.withScope((scope) => {
+      scope.setTag('correlationId', getCorrelationId());
+      scope.setExtra('url', req.url);
+      scope.setExtra('method', req.method);
+      Sentry.captureException(error);
+    });
+
+    logger.error('Unhandled API error', {
       error: error.message,
       stack: error.stack,
       url: req.url,
       method: req.method,
-      body: req.body,
-      timestamp: new Date().toISOString(),
+      correlationId: getCorrelationId(),
     });
 
     // Validation errors from Zod

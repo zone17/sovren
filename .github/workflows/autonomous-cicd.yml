@@ -1,10 +1,6 @@
 name: 🤖 Autonomous CI/CD Pipeline
 
 on:
-  push:
-    branches: [main, develop, feature/**, bugfix/**, hotfix/**]
-  pull_request:
-    branches: [main, develop]
   schedule:
     # Self-optimization runs every 6 hours
     - cron: '0 */6 * * *'
@@ -21,13 +17,15 @@ on:
           - conservative
           - experimental
 
+permissions: read-all
+
 # Advanced concurrency with intelligent queue management
 concurrency:
   group: autonomous-cicd-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ !contains(github.ref, 'refs/heads/main') }}
 
 env:
-  NODE_VERSION: '18.x'
+  NODE_VERSION: '20'
   PYTHON_VERSION: '3.11'
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -81,8 +79,8 @@ jobs:
           import requests
           import yaml
 
-          # Initialize OpenAI
-          openai.api_key = os.environ.get('OPENAI_API_KEY')
+          # Initialize OpenAI client (v1.0+ API)
+          client = openai.OpenAI() if os.environ.get('OPENAI_API_KEY') else None
 
           # Analyze repository state
           def analyze_repository():
@@ -129,7 +127,9 @@ jobs:
               """
 
               try:
-                  response = openai.ChatCompletion.create(
+                  if not client:
+                      raise Exception("No API key")
+                  response = client.chat.completions.create(
                       model="gpt-4",
                       messages=[{"role": "user", "content": prompt}],
                       temperature=0.1,
@@ -379,21 +379,13 @@ jobs:
           # Adaptive test configuration
           case "$TEST_TYPE" in
             "unit")
-              if [[ "$RISK_LEVEL" == "low" ]]; then
-                npm run test:unit:fast
-              else
-                npm run test:unit:thorough
-              fi
+              npm run test:unit
               ;;
             "integration")
               npm run test:integration
               ;;
             "e2e")
-              if [[ "$RISK_LEVEL" == "high" ]]; then
-                npm run test:e2e:critical-path
-              else
-                npm run test:e2e
-              fi
+              npm run test:e2e
               ;;
           esac
 
@@ -482,8 +474,8 @@ jobs:
           import requests
           from datetime import datetime, timedelta
 
-          # Initialize OpenAI
-          openai.api_key = os.environ.get('OPENAI_API_KEY')
+          # Initialize OpenAI client (v1.0+ API)
+          client = openai.OpenAI() if os.environ.get('OPENAI_API_KEY') else None
 
           # Collect pipeline data
           def collect_pipeline_metrics():
@@ -544,7 +536,9 @@ jobs:
               """
 
               try:
-                  response = openai.ChatCompletion.create(
+                  if not client:
+                      raise Exception("No API key")
+                  response = client.chat.completions.create(
                       model="gpt-4",
                       messages=[{"role": "user", "content": prompt}],
                       temperature=0.1,
@@ -637,8 +631,8 @@ jobs:
           import subprocess
           from datetime import datetime
 
-          # Initialize OpenAI
-          openai.api_key = os.environ.get('OPENAI_API_KEY')
+          # Initialize OpenAI client (v1.0+ API)
+          client = openai.OpenAI() if os.environ.get('OPENAI_API_KEY') else None
 
           # Analyze failure state
           def analyze_failures():
@@ -683,7 +677,9 @@ jobs:
               """
 
               try:
-                  response = openai.ChatCompletion.create(
+                  if not client:
+                      raise Exception("No API key")
+                  response = client.chat.completions.create(
                       model="gpt-4",
                       messages=[{"role": "user", "content": prompt}],
                       temperature=0.1,
