@@ -15,6 +15,7 @@ import { registerSharedServices } from './container/bindings/shared.bindings';
 import { registerContentServices } from './container/bindings/content.bindings';
 import { registerUserServices } from './container/bindings/user.bindings';
 import { registerPaymentServices } from './container/bindings/payment.bindings';
+import { registerControllers } from './container/bindings/controller.bindings';
 
 /**
  * Bootstrap configuration
@@ -86,6 +87,7 @@ export async function bootstrapApplication(
   registerContentServices(registry);
   registerUserServices(registry);
   registerPaymentServices(registry);
+  registerControllers(registry);
 
   const registrationTime = performance.now() - registrationStart;
 
@@ -186,11 +188,14 @@ export async function bootstrapApplication(
  * Register infrastructure services (Logger, Config, Database, Redis, etc.)
  */
 function registerInfrastructureServices(registry: ServiceRegistry): void {
-  // Logger (Winston)
+  // Logger (Winston) - structured JSON output for Promtail/Loki ingestion
   registry.registerSingletonFactory(TYPES.Logger, () => {
     const winston = require('winston');
+    const isProduction = process.env.NODE_ENV === 'production';
+
     return winston.createLogger({
       level: process.env.LOG_LEVEL || 'info',
+      defaultMeta: { service: 'sovren-api' },
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
@@ -198,7 +203,15 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
       ),
       transports: [
         new winston.transports.Console({
-          format: winston.format.simple(),
+          format: isProduction
+            ? winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+              )
+            : winston.format.combine(
+                winston.format.colorize(),
+                winston.format.simple()
+              ),
         }),
       ],
     });

@@ -104,7 +104,13 @@ export function csrfProtection(
   return (req: Request, res: Response, next: NextFunction): void => {
     // Skip excluded paths
     const requestPath = req.path || req.url;
-    if (opts.excludePaths.some((p) => requestPath.startsWith(p))) {
+    if (opts.excludePaths.some((p) => requestPath === p || requestPath.startsWith(p + '/'))) {
+      next();
+      return;
+    }
+
+    // Machine clients with token-based auth skip CSRF (CSRF only protects cookie-based auth)
+    if (req.headers.authorization?.startsWith('Bearer ')) {
       next();
       return;
     }
@@ -176,4 +182,3 @@ export function csrfProtection(
   };
 }
 
-export default csrfProtection;

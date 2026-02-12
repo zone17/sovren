@@ -1,7 +1,6 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { z } from 'zod';
 
@@ -15,8 +14,10 @@ import v1Routes from './routes/v1';
 import { csrfProtection } from './middleware/csrf';
 import { deploymentMonitoring, getPrometheusMetrics } from './middleware/deployment-monitoring';
 import { correlationIdMiddleware, getCorrelationId } from './middleware/correlation-id';
+import { createRateLimiter } from './middleware/rate-limit-middleware';
+import { errorHandler } from './middleware/error-handler-middleware';
 import logger from './lib/logger';
-import { initSentry, Sentry } from './lib/sentry';
+import { initSentry } from './lib/sentry';
 
 /**
  * 🚀 Elite Express.js Application Factory
@@ -41,6 +42,9 @@ export function createApp(): Express {
   initSentry();
 
   const app = express();
+
+  // Correlation ID middleware (must be first - before all other middleware)
+  app.use(correlationIdMiddleware);
 
   // 🔒 Security Middleware Stack
   // WHY: Defense in depth - multiple layers protect against common attacks
@@ -80,30 +84,14 @@ export function createApp(): Express {
           : ['http://localhost:3000', 'http://localhost:5173'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-      exposedHeaders: ['X-CSRF-Token'],
+      exposedHeaders: ['X-CSRF-Token', 'X-Correlation-ID', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset', 'Retry-After'],
       credentials: true,
       maxAge: 86400, // 24 hours preflight cache
     })
   );
 
-  // ⚡ Rate Limiting
-  // WHY: Prevent abuse and ensure fair resource allocation
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Generous limit for authenticated users
-    message: {
-      success: false,
-      error: 'Too many requests from this IP, please try again later',
-      code: 'RATE_LIMIT_EXCEEDED',
-      retryAfter: 900, // 15 minutes in seconds
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-  app.use(limiter);
-
-  // Correlation ID middleware (must be early - before logging and metrics)
-  app.use(correlationIdMiddleware);
+  // ⚡ Rate Limiting (via rate-limit-middleware)
+  app.use(createRateLimiter({ windowMs: 15 * 60 * 1000, max: 1000 }));
 
   // Request Processing Middleware
   app.use(
@@ -111,7 +99,7 @@ export function createApp(): Express {
       limit: '10mb', // Allow for image uploads
       verify: (req, res, buf) => {
         // Store raw body for signature verification
-        (req as any).rawBody = buf;
+        (req as Request).rawBody = buf;
       },
     })
   );
@@ -210,65 +198,8 @@ export function createApp(): Express {
     });
   });
 
-  // Global Error Handler
-  app.use((error: any, req: Request, res: Response, _next: NextFunction) => {
-    // Capture to Sentry with correlation context
-    Sentry.withScope((scope) => {
-      scope.setTag('correlationId', getCorrelationId());
-      scope.setExtra('url', req.url);
-      scope.setExtra('method', req.method);
-      Sentry.captureException(error);
-    });
-
-    logger.error('Unhandled API error', {
-      error: error.message,
-      stack: error.stack,
-      url: req.url,
-      method: req.method,
-      correlationId: getCorrelationId(),
-    });
-
-    // Validation errors from Zod
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        code: 'VALIDATION_ERROR',
-        details: error.errors.map((err) => ({
-          field: err.path.join('.'),
-          message: err.message,
-        })),
-      });
-    }
-
-    // JWT errors
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid authentication token',
-        code: 'AUTHENTICATION_ERROR',
-      });
-    }
-
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication token expired',
-        code: 'TOKEN_EXPIRED',
-      });
-    }
-
-    // Default server error
-    // WHY: Never expose internal error details in production
-    const isDevelopment = process.env.NODE_ENV === 'development';
-
-    return res.status(error.status || 500).json({
-      success: false,
-      error: isDevelopment ? error.message : 'Internal server error',
-      code: 'INTERNAL_ERROR',
-      ...(isDevelopment && { stack: error.stack }),
-    });
-  });
+  // Global Error Handler (Sentry + structured logging in error-handler-middleware)
+  app.use(errorHandler);
 
   return app;
 }

@@ -5,17 +5,26 @@
  * All routes use /api/v1/payments prefix
  */
 
-import { Router } from 'express';
+import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { PaymentController } from '../../controllers/payment/PaymentController';
 import { authenticate } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { rateLimiters } from '../../middleware/rate-limit-middleware';
 import { PaymentValidators } from '../../validators/payment';
 
 const router = Router();
-const paymentController = container.get<PaymentController>(TYPES.PaymentController);
+
+/**
+ * Lazily resolve the PaymentController from the DI container.
+ */
+let _paymentController: any = null;
+function getController() {
+  if (!_paymentController) {
+    _paymentController = container.get(TYPES.PaymentController);
+  }
+  return _paymentController;
+}
 
 // Invoice endpoints
 router.post(
@@ -23,7 +32,7 @@ router.post(
   authenticate,
   rateLimiters.payment.createInvoice,
   validate({ body: PaymentValidators.createInvoice }),
-  paymentController.createInvoice
+  (req: Request, res: Response, next: NextFunction) => getController().createInvoice(req, res, next)
 );
 
 router.get(
@@ -31,7 +40,7 @@ router.get(
   authenticate,
   rateLimiters.payment.read,
   validate({ params: PaymentValidators.invoiceIdParam }),
-  paymentController.getInvoice
+  (req: Request, res: Response, next: NextFunction) => getController().getInvoice(req, res, next)
 );
 
 router.post(
@@ -39,7 +48,7 @@ router.post(
   authenticate,
   rateLimiters.payment.payInvoice,
   validate({ params: PaymentValidators.invoiceIdParam, body: PaymentValidators.payInvoice }),
-  paymentController.payInvoice
+  (req: Request, res: Response, next: NextFunction) => getController().payInvoice(req, res, next)
 );
 
 // Currency conversion endpoint
@@ -48,7 +57,7 @@ router.get(
   authenticate,
   rateLimiters.payment.read,
   validate({ query: PaymentValidators.convertCurrency }),
-  paymentController.convertCurrency
+  (req: Request, res: Response, next: NextFunction) => getController().convertCurrency(req, res, next)
 );
 
 // Subscription endpoints
@@ -57,7 +66,7 @@ router.post(
   authenticate,
   rateLimiters.payment.createSubscription,
   validate({ body: PaymentValidators.createSubscription }),
-  paymentController.createSubscription
+  (req: Request, res: Response, next: NextFunction) => getController().createSubscription(req, res, next)
 );
 
 router.put(
@@ -65,7 +74,7 @@ router.put(
   authenticate,
   rateLimiters.payment.read,
   validate({ params: PaymentValidators.subscriptionIdParam, body: PaymentValidators.updateSubscription }),
-  paymentController.updateSubscription
+  (req: Request, res: Response, next: NextFunction) => getController().updateSubscription(req, res, next)
 );
 
 router.delete(
@@ -73,7 +82,7 @@ router.delete(
   authenticate,
   rateLimiters.payment.read,
   validate({ params: PaymentValidators.subscriptionIdParam, body: PaymentValidators.cancelSubscription }),
-  paymentController.cancelSubscription
+  (req: Request, res: Response, next: NextFunction) => getController().cancelSubscription(req, res, next)
 );
 
 // Refund endpoint
@@ -82,7 +91,7 @@ router.post(
   authenticate,
   rateLimiters.payment.createRefund,
   validate({ body: PaymentValidators.createRefund }),
-  paymentController.createRefund
+  (req: Request, res: Response, next: NextFunction) => getController().createRefund(req, res, next)
 );
 
 // Analytics endpoint
@@ -91,7 +100,7 @@ router.get(
   authenticate,
   rateLimiters.payment.analytics,
   validate({ query: PaymentValidators.getPaymentAnalytics }),
-  paymentController.getPaymentAnalytics
+  (req: Request, res: Response, next: NextFunction) => getController().getPaymentAnalytics(req, res, next)
 );
 
 // Webhook endpoint
@@ -100,7 +109,7 @@ router.post(
   authenticate,
   rateLimiters.payment.webhook,
   validate({ body: PaymentValidators.registerWebhook }),
-  paymentController.registerWebhook
+  (req: Request, res: Response, next: NextFunction) => getController().registerWebhook(req, res, next)
 );
 
 export default router;

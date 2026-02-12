@@ -117,6 +117,14 @@ export const TYPES = {
   AuthenticationService: new ServiceToken<any>('AuthenticationService', 'Authentication and authorization'),
   RateLimitService: new ServiceToken<any>('RateLimitService', 'API rate limiting'),
 
+  // ======================
+  // CONTROLLERS (API Layer)
+  // ======================
+
+  ContentController: new ServiceToken<any>('ContentController', 'Content API controller'),
+  UserController: new ServiceToken<any>('UserController', 'User API controller'),
+  PaymentController: new ServiceToken<any>('PaymentController', 'Payment API controller'),
+
 } as const;
 
 /**

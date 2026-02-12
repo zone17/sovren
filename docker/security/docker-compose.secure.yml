@@ -165,7 +165,7 @@ services:
     networks:
       - sovren-secure
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     command: >
       postgres
       -c config_file=/etc/postgresql/postgresql.conf
@@ -225,7 +225,7 @@ services:
     networks:
       - sovren-secure
     ports:
-      - '6379:6379'
+      - '127.0.0.1:6379:6379'
     command: >
       redis-server /etc/redis/redis.conf
       --requirepass ${REDIS_PASSWORD}
@@ -245,7 +245,7 @@ services:
           memory: 256M
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -321,7 +321,7 @@ networks:
   sovren-secure:
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.enable_icc: 'false'
+      com.docker.network.bridge.enable_icc: 'true'
       com.docker.network.bridge.enable_ip_masquerade: 'true'
       com.docker.network.bridge.host_binding_ipv4: '127.0.0.1'
     ipam:

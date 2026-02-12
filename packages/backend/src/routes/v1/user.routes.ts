@@ -5,17 +5,26 @@
  * All routes use /api/v1/users prefix
  */
 
-import { Router } from 'express';
+import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { UserController } from '../../controllers/user/UserController';
 import { authenticate, optionalAuth } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { rateLimiters } from '../../middleware/rate-limit-middleware';
 import { UserValidators } from '../../validators/user';
 
 const router = Router();
-const userController = container.get<UserController>(TYPES.UserController);
+
+/**
+ * Lazily resolve the UserController from the DI container.
+ */
+let _userController: any = null;
+function getController() {
+  if (!_userController) {
+    _userController = container.get(TYPES.UserController);
+  }
+  return _userController;
+}
 
 // Profile endpoints
 router.get(
@@ -23,7 +32,7 @@ router.get(
   optionalAuth,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
-  userController.getProfile
+  (req: Request, res: Response, next: NextFunction) => getController().getProfile(req, res, next)
 );
 
 router.put(
@@ -31,7 +40,7 @@ router.put(
   authenticate,
   rateLimiters.user.updateProfile,
   validate({ params: UserValidators.userIdParam, body: UserValidators.updateUserProfile }),
-  userController.updateProfile
+  (req: Request, res: Response, next: NextFunction) => getController().updateProfile(req, res, next)
 );
 
 // Preferences endpoints
@@ -40,7 +49,7 @@ router.get(
   authenticate,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
-  userController.getPreferences
+  (req: Request, res: Response, next: NextFunction) => getController().getPreferences(req, res, next)
 );
 
 router.put(
@@ -48,7 +57,7 @@ router.put(
   authenticate,
   rateLimiters.user.updatePreferences,
   validate({ params: UserValidators.userIdParam, body: UserValidators.updateUserPreferences }),
-  userController.updatePreferences
+  (req: Request, res: Response, next: NextFunction) => getController().updatePreferences(req, res, next)
 );
 
 // Activity endpoint
@@ -57,7 +66,7 @@ router.get(
   authenticate,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
-  userController.getActivity
+  (req: Request, res: Response, next: NextFunction) => getController().getActivity(req, res, next)
 );
 
 // Relationship endpoints
@@ -66,7 +75,7 @@ router.post(
   authenticate,
   rateLimiters.user.follow,
   validate({ body: UserValidators.followUser }),
-  userController.followUser
+  (req: Request, res: Response, next: NextFunction) => getController().followUser(req, res, next)
 );
 
 router.delete(
@@ -74,7 +83,7 @@ router.delete(
   authenticate,
   rateLimiters.user.follow,
   validate({ body: UserValidators.unfollowUser }),
-  userController.unfollowUser
+  (req: Request, res: Response, next: NextFunction) => getController().unfollowUser(req, res, next)
 );
 
 // Analytics endpoint
@@ -83,7 +92,7 @@ router.get(
   authenticate,
   rateLimiters.user.analytics,
   validate({ params: UserValidators.userIdParam }),
-  userController.getUserAnalytics
+  (req: Request, res: Response, next: NextFunction) => getController().getUserAnalytics(req, res, next)
 );
 
 export default router;

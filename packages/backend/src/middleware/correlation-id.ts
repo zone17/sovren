@@ -47,11 +47,15 @@ export function getCorrelationId(): string {
  * service or load balancer), that value is reused. Otherwise a new UUID is
  * generated.
  */
+// Only accept alphanumeric, hyphens; max 128 chars (covers UUIDs, ULIDs, etc.)
+const VALID_CORRELATION_ID = /^[a-zA-Z0-9-]{1,128}$/;
+
 export function correlationIdMiddleware(req: Request, res: Response, next: NextFunction): void {
-  const correlationId =
+  const rawId =
     (req.headers['x-correlation-id'] as string) ||
-    (req.headers['x-request-id'] as string) ||
-    randomUUID();
+    (req.headers['x-request-id'] as string);
+  const correlationId =
+    rawId && VALID_CORRELATION_ID.test(rawId) ? rawId : randomUUID();
 
   // Set the correlation ID on the response header so clients can reference it
   res.setHeader('X-Correlation-ID', correlationId);

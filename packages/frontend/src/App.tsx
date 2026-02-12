@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/ui/Layout';
 import { AuthProvider, ProtectedRoute } from './features/auth';
-import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
+import { ErrorBoundary } from './monitoring/ErrorBoundary';
 import { AuthErrorBoundary } from './features/auth/ErrorBoundary';
 import { ContentErrorBoundary } from './features/content/ErrorBoundary';
 import { AnalyticsErrorBoundary } from './features/analytics/ErrorBoundary';
@@ -67,6 +67,25 @@ const ProfileDashboard = React.lazy(() =>
   }))
 );
 
+// Discovery & Creator Profile
+const DiscoveryPage = React.lazy(() =>
+  import('./features/discovery/components/DiscoveryPage').then((module) => ({
+    default: module.DiscoveryPage,
+  }))
+);
+const CreatorProfilePage = React.lazy(() =>
+  import('./pages/CreatorProfile').then((module) => ({
+    default: module.default,
+  }))
+);
+
+// Revenue Analytics
+const RevenueAnalytics = React.lazy(() =>
+  import('./features/analytics/components/RevenueAnalytics').then((module) => ({
+    default: module.RevenueAnalytics,
+  }))
+);
+
 function App(): React.ReactElement {
   const LoadingSpinner = () => (
     <div className="flex justify-center items-center h-64">
@@ -75,7 +94,7 @@ function App(): React.ReactElement {
   );
 
   return (
-    <GlobalErrorBoundary>
+    <ErrorBoundary level="global" name="Application">
       <AuthProvider>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
@@ -216,6 +235,40 @@ function App(): React.ReactElement {
               }
             />
 
+            {/* Discovery (Public) */}
+            <Route
+              path="/discover"
+              element={
+                <Layout>
+                  <DiscoveryPage />
+                </Layout>
+              }
+            />
+
+            {/* Creator Profile (Public) */}
+            <Route
+              path="/creator/:id"
+              element={
+                <Layout>
+                  <CreatorProfilePage />
+                </Layout>
+              }
+            />
+
+            {/* Revenue Analytics */}
+            <Route
+              path="/dashboard/revenue"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <AnalyticsErrorBoundary>
+                      <RevenueAnalytics />
+                    </AnalyticsErrorBoundary>
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+
             {/* Admin Routes */}
             <Route
               path="/monitoring"
@@ -232,7 +285,7 @@ function App(): React.ReactElement {
           </Routes>
         </Suspense>
       </AuthProvider>
-    </GlobalErrorBoundary>
+    </ErrorBoundary>
   );
 }
 

@@ -7,6 +7,9 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
+import { getCorrelationId } from './correlation-id';
+import { Sentry } from '../lib/sentry';
+import logger from '../lib/logger';
 
 // ============================================================================
 // Error Types
@@ -17,7 +20,7 @@ export class AppError extends Error {
     public statusCode: number,
     public code: string,
     message: string,
-    public details?: any,
+    public details?: Record<string, unknown> | string,
     public isOperational: boolean = true
   ) {
     super(message);
@@ -27,55 +30,55 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: Record<string, unknown> | string) {
     super(400, 'VALIDATION_ERROR', message, details);
   }
 }
 
 export class AuthenticationError extends AppError {
-  constructor(message: string = 'Authentication required', details?: any) {
+  constructor(message: string = 'Authentication required', details?: Record<string, unknown> | string) {
     super(401, 'AUTHENTICATION_ERROR', message, details);
   }
 }
 
 export class AuthorizationError extends AppError {
-  constructor(message: string = 'Insufficient permissions', details?: any) {
+  constructor(message: string = 'Insufficient permissions', details?: Record<string, unknown> | string) {
     super(403, 'AUTHORIZATION_ERROR', message, details);
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(resource: string = 'Resource', details?: any) {
+  constructor(resource: string = 'Resource', details?: Record<string, unknown> | string) {
     super(404, 'NOT_FOUND', `${resource} not found`, details);
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: Record<string, unknown> | string) {
     super(409, 'CONFLICT', message, details);
   }
 }
 
 export class RateLimitError extends AppError {
-  constructor(message: string = 'Too many requests', details?: any) {
+  constructor(message: string = 'Too many requests', details?: Record<string, unknown> | string) {
     super(429, 'RATE_LIMIT_EXCEEDED', message, details);
   }
 }
 
 export class ServiceError extends AppError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: Record<string, unknown> | string) {
     super(500, 'SERVICE_ERROR', message, details);
   }
 }
 
 export class DatabaseError extends AppError {
-  constructor(message: string = 'Database operation failed', details?: any) {
+  constructor(message: string = 'Database operation failed', details?: Record<string, unknown> | string) {
     super(500, 'DATABASE_ERROR', message, details, false); // Not operational
   }
 }
 
 export class ExternalServiceError extends AppError {
-  constructor(service: string, message: string, details?: any) {
+  constructor(service: string, message: string, details?: Record<string, unknown> | string) {
     super(503, 'EXTERNAL_SERVICE_ERROR', `${service} service unavailable: ${message}`, details);
   }
 }
@@ -88,7 +91,7 @@ export interface ErrorResponse {
   success: false;
   error: string;
   code: string;
-  details?: any;
+  details?: Record<string, unknown> | string | Array<Record<string, unknown>>;
   stack?: string;
   metadata: {
     requestId: string;
@@ -109,7 +112,7 @@ export const errorHandler = (
   next: NextFunction
 ): void => {
   const isDevelopment = process.env.NODE_ENV === 'development';
-  const requestId = (req as any).id || generateRequestId();
+  const requestId = getCorrelationId();
 
   // Log error details
   logError(error, req, requestId);
@@ -257,9 +260,16 @@ function handleUnexpectedError(
 // ============================================================================
 
 function logError(error: Error | AppError, req: Request, requestId: string): void {
+  // Capture to Sentry with correlation context
+  Sentry.withScope((scope) => {
+    scope.setTag('correlationId', requestId);
+    scope.setExtra('url', req.url);
+    scope.setExtra('method', req.method);
+    Sentry.captureException(error);
+  });
+
   const errorLog = {
     requestId,
-    timestamp: new Date().toISOString(),
     error: {
       name: error.name,
       message: error.message,
@@ -270,69 +280,18 @@ function logError(error: Error | AppError, req: Request, requestId: string): voi
         isOperational: error.isOperational,
       }),
     },
-    request: {
-      method: req.method,
-      path: req.path,
-      query: req.query,
-      body: sanitizeForLogging(req.body),
-      headers: {
-        'user-agent': req.get('user-agent'),
-        'content-type': req.get('content-type'),
-      },
-      ip: req.ip,
-    },
-    user: (req as any).user?.nostr_pubkey,
+    url: req.url,
+    method: req.method,
+    ip: req.ip,
+    user: req.user?.nostr_pubkey,
   };
 
   if (error instanceof AppError && error.isOperational) {
-    console.warn('⚠️  Operational Error:', JSON.stringify(errorLog, null, 2));
+    logger.warn('Operational error', errorLog);
   } else {
-    console.error('🔥 Unexpected Error:', JSON.stringify(errorLog, null, 2));
+    logger.error('Unexpected error', errorLog);
   }
 }
-
-function sanitizeForLogging(data: any): any {
-  if (!data) return data;
-
-  const sensitiveFields = [
-    'password',
-    'token',
-    'secret',
-    'apiKey',
-    'privateKey',
-    'signature',
-    'authorization',
-  ];
-
-  if (typeof data === 'object') {
-    const sanitized = { ...data };
-    for (const field of sensitiveFields) {
-      if (field in sanitized) {
-        sanitized[field] = '[REDACTED]';
-      }
-    }
-    return sanitized;
-  }
-
-  return data;
-}
-
-// ============================================================================
-// Request ID Generation
-// ============================================================================
-
-function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-}
-
-/**
- * Middleware to attach request ID to all requests
- */
-export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  (req as any).id = generateRequestId();
-  res.setHeader('X-Request-ID', (req as any).id);
-  next();
-};
 
 // ============================================================================
 // Async Handler Wrapper
@@ -350,7 +309,7 @@ export const requestIdMiddleware = (req: Request, res: Response, next: NextFunct
  * ```
  */
 export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
 ) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
@@ -375,7 +334,7 @@ export const notFoundHandler = (req: Request, res: Response, next: NextFunction)
 // ============================================================================
 
 export const handleUnhandledRejections = (): void => {
-  process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+  process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
     console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
     // In production, you might want to exit the process or alert monitoring
     if (process.env.NODE_ENV === 'production') {

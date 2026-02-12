@@ -12,6 +12,7 @@
 
 import winston from 'winston';
 import { getRequestContext } from '../middleware/correlation-id';
+import { isSensitiveKey } from './sensitive-fields';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -34,23 +35,10 @@ const correlationFormat = winston.format((info) => {
  * Redacts common secret field names.
  */
 const sanitizeFormat = winston.format((info) => {
-  const sensitiveKeys = [
-    'password',
-    'token',
-    'secret',
-    'authorization',
-    'cookie',
-    'x-api-key',
-    'credit_card',
-    'ssn',
-    'private_key',
-    'nsec',
-  ];
-
   const sanitize = (obj: Record<string, unknown>): Record<string, unknown> => {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (sensitiveKeys.some((s) => key.toLowerCase().includes(s))) {
+      if (isSensitiveKey(key)) {
         result[key] = '[REDACTED]';
       } else if (value && typeof value === 'object' && !Array.isArray(value)) {
         result[key] = sanitize(value as Record<string, unknown>);

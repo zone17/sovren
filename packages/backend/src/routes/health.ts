@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { Request, Response, Router } from 'express';
 import Redis from 'ioredis';
+import WebSocket from 'ws';
+import os from 'os';
 
 const router = Router();
 
@@ -62,7 +64,7 @@ interface ServiceHealth {
   responseTime: number;
   lastChecked: string;
   error?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 // Simple health check endpoint for load balancers
@@ -85,45 +87,11 @@ router.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Readiness probe shortcut (alias for /health/ready)
-router.get('/ready', async (req: Request, res: Response) => {
-  try {
-    const dbHealth = await checkDatabase();
-    const redisHealth = await checkRedis();
+// Readiness probe shortcut (redirect to /health/ready)
+router.get('/ready', (req: Request, res: Response) => res.redirect(307, '/health/ready'));
 
-    if (dbHealth.status === 'healthy' && redisHealth.status === 'healthy') {
-      res.status(200).json({
-        status: 'ready',
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      res.status(503).json({
-        status: 'not-ready',
-        timestamp: new Date().toISOString(),
-        issues: {
-          database: dbHealth.status !== 'healthy' ? dbHealth.error : null,
-          redis: redisHealth.status !== 'healthy' ? redisHealth.error : null,
-        },
-      });
-    }
-  } catch (error) {
-    res.status(503).json({
-      status: 'not-ready',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-// Liveness probe shortcut (alias for /health/live)
-router.get('/live', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'alive',
-    timestamp: new Date().toISOString(),
-    pid: process.pid,
-    uptime: process.uptime(),
-  });
-});
+// Liveness probe shortcut (redirect to /health/live)
+router.get('/live', (req: Request, res: Response) => res.redirect(307, '/health/live'));
 
 // Comprehensive health check with detailed diagnostics
 router.get('/health/detailed', async (req: Request, res: Response) => {
@@ -218,7 +186,7 @@ async function checkDatabase(): Promise<ServiceHealth> {
   try {
     const supabase = getSupabaseClient();
 
-    const { error } = await supabase.from('health_check').select('*').limit(1);
+    const { error } = await supabase.from('health_check').select('id').limit(1);
 
     const responseTime = Date.now() - startTime;
 
@@ -394,7 +362,7 @@ function getSystemMetrics() {
       percentage: Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100),
     },
     cpu: {
-      loadAverage: process.platform !== 'win32' ? require('os').loadavg() : [0, 0, 0],
+      loadAverage: process.platform !== 'win32' ? os.loadavg() : [0, 0, 0],
     },
     process: {
       pid: process.pid,

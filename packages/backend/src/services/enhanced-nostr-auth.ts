@@ -24,6 +24,7 @@ import { randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
 import { NostrAuthService } from './nostr-auth';
+import { getSecretsService } from './SecretsService';
 
 // 🎯 Enhanced Authentication Schemas
 export const DeviceInfoSchema = z.object({
@@ -133,7 +134,7 @@ export class EnhancedNostrAuthService extends EventEmitter {
       enableSecurityMonitoring: true,
       rateLimitWindow: 15 * 60 * 1000, // 15 minutes
       rateLimitMax: 10,
-      encryptionKey: config.encryptionKey || this.generateEncryptionKey(),
+      encryptionKey: config.encryptionKey || '',
       ...config,
     };
 
@@ -141,6 +142,30 @@ export class EnhancedNostrAuthService extends EventEmitter {
     if (typeof globalThis !== 'undefined' && globalThis.process?.env?.NODE_ENV !== 'test') {
       this.cleanupInterval = globalThis.setInterval(() => this.cleanup(), 60000); // Every minute
     }
+
+    // Load encryption key from SecretsService if not provided
+    if (!this.config.encryptionKey) {
+      this.loadEncryptionKey();
+    }
+  }
+
+  /**
+   * Load encryption key from SecretsService asynchronously.
+   * Falls back to generating a random key only if SecretsService is unavailable.
+   */
+  private async loadEncryptionKey(): Promise<void> {
+    try {
+      const secrets = await getSecretsService();
+      const key = await secrets.getSecret('NOSTR_AUTH_ENCRYPTION_KEY');
+      if (key) {
+        this.config.encryptionKey = key;
+        return;
+      }
+    } catch {
+      // SecretsService unavailable (e.g., in test environment)
+    }
+    // Fallback for development/test only
+    this.config.encryptionKey = this.generateEncryptionKey();
   }
 
   /**

@@ -19,10 +19,15 @@ import client, { Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom-c
 const register = client.register;
 
 // Collect default Node.js metrics (memory, CPU, event loop lag, GC, etc.)
-collectDefaultMetrics({
-  register,
-  prefix: 'sovren_',
-});
+let metricsInitialized = false;
+export function initMetrics(): void {
+  if (metricsInitialized) return;
+  collectDefaultMetrics({ register, prefix: 'sovren_' });
+  metricsInitialized = true;
+}
+
+// Auto-initialize on import for backward compatibility
+initMetrics();
 
 // --- HTTP Request Metrics ---
 
@@ -133,7 +138,7 @@ export function deploymentMonitoring(req: Request, res: Response, next: NextFunc
     return;
   }
 
-  const route = normalizeRoute(req.route?.path || req.path);
+  const route = req.route?.path ? normalizeRoute(req.route.path) : '/unmatched';
   const end = httpRequestDuration.startTimer({ method: req.method, route });
 
   httpActiveConnections.inc();
@@ -205,6 +210,7 @@ export async function getPrometheusMetrics(req: Request, res: Response): Promise
     const metrics = await register.metrics();
     res.end(metrics);
   } catch (error) {
+    console.error('Error collecting Prometheus metrics:', error);
     res.status(500).end('Error collecting metrics');
   }
 }

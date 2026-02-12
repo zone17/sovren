@@ -14,6 +14,7 @@
  */
 
 import * as Sentry from '@sentry/node';
+import { isSensitiveKey } from './sensitive-fields';
 
 const dsn = process.env.SENTRY_DSN || '';
 
@@ -44,9 +45,8 @@ export function initSentry(): void {
 
       if (event.request?.data && typeof event.request.data === 'object') {
         const data = event.request.data as Record<string, unknown>;
-        const sensitiveKeys = ['password', 'token', 'secret', 'private_key', 'nsec'];
         for (const key of Object.keys(data)) {
-          if (sensitiveKeys.some((s) => key.toLowerCase().includes(s))) {
+          if (isSensitiveKey(key)) {
             data[key] = '[REDACTED]';
           }
         }
@@ -70,12 +70,5 @@ export function initSentry(): void {
 
   console.log('[Sentry] Initialized for environment:', process.env.NODE_ENV);
 }
-
-/**
- * Sentry Express error handler. Add AFTER all routes.
- */
-export const sentryErrorHandler = Sentry.setupExpressErrorHandler
-  ? (app: import('express').Express) => Sentry.setupExpressErrorHandler(app)
-  : () => {}; // No-op if DSN not set
 
 export { Sentry };

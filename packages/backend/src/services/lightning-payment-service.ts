@@ -716,7 +716,7 @@ export class LightningPaymentService extends EventEmitter {
         status,
         updated_at: updated_at.toISOString(),
         metadata: metadata
-          ? supabase.raw(`metadata || '${JSON.stringify(metadata)}'::jsonb`)
+          ? supabase.raw(`metadata || ?::jsonb`, [JSON.stringify(metadata)])
           : undefined,
       })
       .eq('payment_hash', payment_hash);

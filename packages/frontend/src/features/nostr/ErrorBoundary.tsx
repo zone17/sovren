@@ -1,31 +1,15 @@
-/**
- * NOSTR Feature Error Boundary
- *
- * Error boundary for NOSTR protocol features.
- * Handles relay connection failures and protocol errors.
- *
- * @module features/nostr/ErrorBoundary
- */
-
 import React from 'react';
-import { FeatureErrorBoundary } from '../../components/FeatureErrorBoundary';
+import { ErrorBoundary } from '../../monitoring/ErrorBoundary';
 
 interface NostrErrorBoundaryProps {
   children: React.ReactNode;
 }
 
-/**
- * NOSTR Error Boundary Component
- */
 export const NostrErrorBoundary: React.FC<NostrErrorBoundaryProps> = ({ children }) => {
   return (
-    <FeatureErrorBoundary
-      featureName="NOSTR Protocol"
-      maxRetries={3}
-      autoRetry={true}
-    >
+    <ErrorBoundary level="feature" featureName="NOSTR Protocol">
       {children}
-    </FeatureErrorBoundary>
+    </ErrorBoundary>
   );
 };
 

@@ -195,17 +195,3 @@ export function isReady(): boolean {
 
 // Re-export Sentry for advanced usage (ErrorBoundary, etc.)
 export { Sentry };
-
-// Default export for backwards compatibility
-export default {
-  initSentry,
-  setUser,
-  clearUser,
-  captureError,
-  captureMessage,
-  addBreadcrumb,
-  measurePerformance,
-  measureAsyncPerformance,
-  flush,
-  isReady,
-};

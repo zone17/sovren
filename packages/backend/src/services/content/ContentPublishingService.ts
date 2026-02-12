@@ -28,6 +28,8 @@ import { IDatabase } from '../../interfaces/IDatabase';
 import { INotificationService } from '../../interfaces/INotificationService';
 import { Logger } from '../../utils/logger';
 import { ServiceError } from '../../utils/errors';
+import { decrypt, isEncrypted } from '../../utils/encryption';
+import { getSecretsService } from '../SecretsService';
 
 /**
  * Job state for scheduled publishing
@@ -765,9 +767,18 @@ export class ContentPublishingService implements IContentPublishingService {
       }
 
       const row = result.rows[0];
+      let privateKey = row.nostr_private_key;
+
+      // Decrypt private key if stored encrypted
+      if (isEncrypted(privateKey)) {
+        const secrets = await getSecretsService();
+        const encryptionKey = await secrets.getSecret('NOSTR_KEY_ENCRYPTION_KEY');
+        privateKey = decrypt(privateKey, encryptionKey);
+      }
+
       return {
         publicKey: row.nostr_public_key,
-        privateKey: row.nostr_private_key,
+        privateKey,
         relays: row.nostr_relays ? JSON.parse(row.nostr_relays) : undefined,
       };
     } catch (error) {

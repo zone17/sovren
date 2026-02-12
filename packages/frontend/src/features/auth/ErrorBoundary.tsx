@@ -1,26 +1,19 @@
-/* eslint-env browser, node */
-/**
- * Auth Feature Error Boundary
- *
- * Error boundary specific to authentication features.
- * Handles auth-specific error scenarios with appropriate fallback UI.
- *
- * @module features/auth/ErrorBoundary
- */
-
 import React from 'react';
-import { FeatureErrorBoundary, FeatureErrorFallbackProps } from '../../components/FeatureErrorBoundary';
+import { ErrorBoundary } from '../../monitoring/ErrorBoundary';
 
 interface AuthErrorBoundaryProps {
   children: React.ReactNode;
 }
 
-/**
- * Custom fallback for auth errors
- */
-const AuthErrorFallback: React.FC<FeatureErrorFallbackProps> = (props) => {
-  const { error, onReset, onGoHome } = props;
+interface AuthErrorFallbackProps {
+  error: Error;
+  resetError: () => void;
+  errorId: string;
+  level: string;
+  name?: string;
+}
 
+const AuthErrorFallback: React.FC<AuthErrorFallbackProps> = ({ error, resetError }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
@@ -52,13 +45,13 @@ const AuthErrorFallback: React.FC<FeatureErrorFallbackProps> = (props) => {
 
         <div className="space-y-3">
           <button
-            onClick={onReset}
+            onClick={resetError}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Try Again
           </button>
           <button
-            onClick={onGoHome}
+            onClick={() => { window.location.href = '/'; }}
             className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
             Go to Home
@@ -73,19 +66,11 @@ const AuthErrorFallback: React.FC<FeatureErrorFallbackProps> = (props) => {
   );
 };
 
-/**
- * Auth Error Boundary Component
- */
 export const AuthErrorBoundary: React.FC<AuthErrorBoundaryProps> = ({ children }) => {
   return (
-    <FeatureErrorBoundary
-      featureName="Authentication"
-      fallback={AuthErrorFallback}
-      maxRetries={2}
-      autoRetry={false} // Don't auto-retry auth errors
-    >
+    <ErrorBoundary level="feature" featureName="Authentication" fallback={AuthErrorFallback}>
       {children}
-    </FeatureErrorBoundary>
+    </ErrorBoundary>
   );
 };
 

@@ -11,6 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import DOMPurify from 'dompurify';
 import { useAppDispatch, useAppSelector } from '../../../store';
 import { updateCurrentContent } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
 
@@ -85,7 +86,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Initialize editor content
   useEffect(() => {
     if (editorRef.current && content !== editorContent) {
-      editorRef.current.innerHTML = content;
+      editorRef.current.innerHTML = DOMPurify.sanitize(content);
       setEditorContent(content);
       updateCounts(content);
     }

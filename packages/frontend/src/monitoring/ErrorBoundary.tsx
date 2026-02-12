@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { addBreadcrumb, captureError } from './simpleMonitoring';
+import { captureError as sentryCaptureError, addBreadcrumb as sentryBreadcrumb } from './sentry';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -13,8 +14,10 @@ interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: React.ComponentType<ErrorFallbackProps>;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  level?: 'page' | 'component' | 'feature';
+  level?: 'global' | 'page' | 'component' | 'feature';
+  featureName?: string;
   name?: string;
+  enableAutoRetry?: boolean;
 }
 
 interface ErrorFallbackProps {
@@ -33,7 +36,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
   level,
   name,
 }) => {
-  const isPageLevel = level === 'page';
+  const isPageLevel = level === 'page' || level === 'global';
 
   return (
     <div
@@ -111,7 +114,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    const errorId = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const errorId = `error-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
     return {
       hasError: true,
@@ -121,26 +124,42 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    const { onError, level = 'component', name } = this.props;
+    const { onError, level = 'component', name, featureName, enableAutoRetry = false } = this.props;
+    const displayName = featureName || name;
     const { errorId } = this.state;
 
-    // Add breadcrumb for context
+    // Add breadcrumb for context (simple monitoring)
     addBreadcrumb(
-      `Error boundary caught error in ${name || level}: ${error.message}`,
+      `Error boundary caught error in ${displayName || level}: ${error.message}`,
       'error',
       'error'
     );
 
-    // Capture error with context
+    // Capture to local monitoring
     captureError(error, {
       errorInfo,
       level,
-      name,
+      name: displayName,
       errorId,
       retryCount: this.state.retryCount,
       userAgent: navigator.userAgent,
       url: window.location.href,
       timestamp: new Date().toISOString(),
+    });
+
+    // Report to Sentry (real error tracking)
+    sentryBreadcrumb(
+      `Error boundary caught: ${displayName || level}`,
+      'error-boundary',
+      'error',
+      { componentName: displayName, level }
+    );
+    sentryCaptureError(error, {
+      componentName: displayName,
+      level,
+      errorId,
+      retryCount: this.state.retryCount,
+      componentStack: errorInfo.componentStack,
     });
 
     this.setState({ errorInfo });
@@ -150,8 +169,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       onError(error, errorInfo);
     }
 
-    // Auto-retry for non-page level errors
-    if (level !== 'page' && this.state.retryCount < this.maxRetries) {
+    // Auto-retry only when explicitly enabled (render bugs don't benefit from retry)
+    if (enableAutoRetry && this.state.retryCount < this.maxRetries) {
       this.scheduleRetry();
     }
   }
@@ -201,7 +220,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           resetError={this.resetError}
           errorId={this.state.errorId}
           level={this.props.level || 'component'}
-          name={this.props.name}
+          name={this.props.featureName || this.props.name}
         />
       );
     }

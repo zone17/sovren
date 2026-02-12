@@ -179,7 +179,11 @@ class GitHubTokenRotation {
     // Encrypt token before saving
     const iv = crypto.randomBytes(16);
     const key = crypto.scryptSync(
-      process.env.BACKUP_ENCRYPTION_KEY || 'default-backup-key',
+      (() => {
+        const key = process.env.BACKUP_ENCRYPTION_KEY;
+        if (!key) throw new Error('BACKUP_ENCRYPTION_KEY environment variable is required');
+        return key;
+      })(),
       'salt',
       32
     );

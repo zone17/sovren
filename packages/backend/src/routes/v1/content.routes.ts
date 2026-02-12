@@ -5,17 +5,28 @@
  * All routes use /api/v1/content prefix
  */
 
-import { Router } from 'express';
+import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { ContentController } from '../../controllers/content/ContentController';
 import { authenticate, optionalAuth, requireCreator } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { rateLimiters } from '../../middleware/rate-limit-middleware';
 import { ContentValidators } from '../../validators/content';
 
 const router = Router();
-const contentController = container.get<ContentController>(TYPES.ContentController);
+
+/**
+ * Lazily resolve the ContentController from the DI container.
+ * The container is initialized asynchronously at server startup,
+ * so we resolve on first request rather than at module import time.
+ */
+let _contentController: any = null;
+function getController() {
+  if (!_contentController) {
+    _contentController = container.get(TYPES.ContentController);
+  }
+  return _contentController;
+}
 
 /**
  * @openapi
@@ -45,7 +56,7 @@ router.post(
   requireCreator,
   rateLimiters.content.publish,
   validate({ body: ContentValidators.publishContent }),
-  contentController.publishContent
+  (req: Request, res: Response, next: NextFunction) => getController().publishContent(req, res, next)
 );
 
 /**
@@ -63,7 +74,7 @@ router.post(
   requireCreator,
   rateLimiters.content.moderate,
   validate({ body: ContentValidators.moderateContent }),
-  contentController.moderateContent
+  (req: Request, res: Response, next: NextFunction) => getController().moderateContent(req, res, next)
 );
 
 /**
@@ -78,7 +89,7 @@ router.get(
   optionalAuth,
   rateLimiters.content.search,
   validate({ query: ContentValidators.searchContent }),
-  contentController.searchContent
+  (req: Request, res: Response, next: NextFunction) => getController().searchContent(req, res, next)
 );
 
 /**
@@ -93,7 +104,7 @@ router.get(
   optionalAuth,
   rateLimiters.content.recommendations,
   validate({ query: ContentValidators.getRecommendations }),
-  contentController.getRecommendations
+  (req: Request, res: Response, next: NextFunction) => getController().getRecommendations(req, res, next)
 );
 
 /**
@@ -110,7 +121,7 @@ router.get(
   authenticate,
   rateLimiters.content.analytics,
   validate({ params: ContentValidators.contentIdParam }),
-  contentController.getContentAnalytics
+  (req: Request, res: Response, next: NextFunction) => getController().getContentAnalytics(req, res, next)
 );
 
 /**
@@ -127,7 +138,7 @@ router.get(
   authenticate,
   rateLimiters.content.read,
   validate({ params: ContentValidators.contentIdParam }),
-  contentController.getVersionHistory
+  (req: Request, res: Response, next: NextFunction) => getController().getVersionHistory(req, res, next)
 );
 
 /**
@@ -148,7 +159,7 @@ router.post(
     params: ContentValidators.contentIdParam,
     body: ContentValidators.revertContentVersion,
   }),
-  contentController.revertContentVersion
+  (req: Request, res: Response, next: NextFunction) => getController().revertContentVersion(req, res, next)
 );
 
 export default router;

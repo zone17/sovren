@@ -5,6 +5,7 @@
  * Prevents abuse and ensures fair resource allocation
  */
 
+import crypto from 'crypto';
 import rateLimit, { Options, RateLimitRequestHandler } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import Redis from 'ioredis';
@@ -192,7 +193,7 @@ export function createUserRateLimiter(config: RateLimitConfig): RateLimitRequest
     ...config,
     keyGenerator: (req: Request) => {
       // Use user's NOSTR pubkey if authenticated, otherwise fall back to IP
-      const user = (req as any).user;
+      const user = req.user;
       return user?.nostr_pubkey || req.ip || 'unknown';
     },
     message: config.message || 'Too many requests, please try again later',
@@ -274,27 +275,16 @@ export const bypassRateLimitInTest = (req: Request): boolean => {
     return true;
   }
 
-  // Allow bypass with special header in development
+  // Allow bypass with special header in development (timing-safe comparison)
   if (process.env.NODE_ENV === 'development') {
-    return req.headers['x-bypass-rate-limit'] === process.env.RATE_LIMIT_BYPASS_SECRET;
+    const header = req.headers['x-bypass-rate-limit'];
+    const secret = process.env.RATE_LIMIT_BYPASS_SECRET;
+    if (typeof header === 'string' && secret && header.length === secret.length) {
+      return crypto.timingSafeEqual(Buffer.from(header), Buffer.from(secret));
+    }
+    return false;
   }
 
   return false;
 };
 
-// ============================================================================
-// Export Default Rate Limiter
-// ============================================================================
-
-export default {
-  auth: authRateLimiter,
-  contentCreation: contentCreationRateLimiter,
-  payment: paymentRateLimiter,
-  readOnly: readOnlyRateLimiter,
-  expensiveOperation: expensiveOperationRateLimiter,
-  webhook: webhookRateLimiter,
-  custom: createRateLimiter,
-  userBased: createUserRateLimiter,
-  redis: createRedisRateLimiter,
-  limiters: rateLimiters,
-};

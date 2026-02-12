@@ -209,7 +209,7 @@ export class LightningReceiptService extends EventEmitter {
           pass: process.env.SMTP_PASS,
         },
         tls: {
-          rejectUnauthorized: false,
+          rejectUnauthorized: process.env.NODE_ENV === 'production',
         },
       });
 

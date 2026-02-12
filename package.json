@@ -9,10 +9,13 @@
   ],
   "overrides": {
     "esbuild": ">=0.24.3",
-    "path-to-regexp": ">=6.3.0",
-    "undici": ">=6.0.0"
+    "undici": ">=6.0.0",
+    "express": {
+      "path-to-regexp": "0.1.12"
+    }
   },
   "scripts": {
+    "postinstall": "node scripts/fix-express-path-to-regexp.js",
     "dev": "npm run dev --workspace=packages/frontend",
     "build": "npm run build --workspace=packages/frontend",
     "test": "jest --config jest.config.elite.ts --verbose",
@@ -48,6 +51,11 @@
     "test:deployment:multi-service": "jest --testPathPattern=tests/deployment/multi-service --runInBand",
     "test:deployment:performance": "jest --testPathPattern=tests/deployment/performance --runInBand",
     "test:deployment:load": "jest --testPathPattern=tests/deployment/load --runInBand",
+    "rotate:github": "ts-node scripts/automated-github-token-rotation.ts",
+    "rotate:supabase": "ts-node scripts/automated-supabase-rotation.ts",
+    "rotate:all": "npm run rotate:github && npm run rotate:supabase",
+    "rotate:verify": "ts-node scripts/verify-rotation-setup.ts",
+    "rotate:test": "npm run rotate:verify && echo 'Rotation setup verified'",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "format": "prettier --write .",
@@ -64,6 +72,13 @@
     "quality:full": "npm run quality:check && npm run test:all",
     "storybook": "cd packages/frontend && npm run storybook",
     "build-storybook": "cd packages/frontend && npm run build-storybook",
+    "rotate:github:vault": "ts-node scripts/automated-github-token-rotation-vault.ts",
+    "rotate:supabase:vault": "ts-node scripts/automated-supabase-rotation-vault.ts",
+    "rotate:verify:vault": "ts-node scripts/verify-rotation-setup-vault.ts",
+    "vault:setup": "./scripts/setup-vault.sh",
+    "vault:setup:prod": "./scripts/setup-vault.sh prod",
+    "vault:status": "docker exec sovren-vault vault status",
+    "vault:logs": "docker logs sovren-vault",
     "chromatic": "cd packages/frontend && npx chromatic",
     "audit:security": "npm audit --audit-level high && npm run lint && npm run type-check",
     "audit:dependencies": "npm outdated",
@@ -95,9 +110,14 @@
     "migrate:rollback:dry-run": "ts-node scripts/nostr-migration/rollback-migration.ts --dry-run"
   },
   "dependencies": {
+    "@octokit/core": "^5.1.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
-    "nostr-tools": "^2.13.2"
+    "jsonwebtoken": "^9.0.2",
+    "node-vault": "^0.10.9",
+    "nostr-tools": "^2.13.2",
+    "pg": "^8.11.3",
+    "sodium-native": "^4.0.4"
   },
   "devDependencies": {
     "@storybook/addon-actions": "^9.0.6",

@@ -6,7 +6,7 @@
  * Connection pool management for zero service interruption
  */
 
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -208,7 +208,11 @@ class SupabaseCredentialRotation {
     // Encrypt credentials before saving
     const iv = crypto.randomBytes(16);
     const key = crypto.scryptSync(
-      process.env.BACKUP_ENCRYPTION_KEY || 'default-backup-key',
+      (() => {
+        const key = process.env.BACKUP_ENCRYPTION_KEY;
+        if (!key) throw new Error('BACKUP_ENCRYPTION_KEY environment variable is required');
+        return key;
+      })(),
       'salt',
       32
     );
@@ -467,10 +471,9 @@ class SupabaseCredentialRotation {
 
   private async updateSupabasePasswordViaCLI(newPassword: string): Promise<void> {
     try {
-      execSync(
-        `supabase db password update --password "${newPassword}"`,
-        { stdio: 'pipe' }
-      );
+      execFileSync('supabase', ['db', 'password', 'update', '--password', newPassword], {
+        stdio: 'pipe',
+      });
 
       // Wait for password change to propagate
       await this.sleep(10000); // 10 seconds
