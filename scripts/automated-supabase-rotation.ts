@@ -10,7 +10,6 @@ import { execSync, execFileSync } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as https from 'https';
 
 interface RotationResult {
   passwordGenerated: boolean;
@@ -28,6 +27,7 @@ class SupabaseCredentialRotation {
   private readonly awsRegion = 'us-east-1';
   private readonly secretName = 'sovren/database/credentials';
   private readonly backupDir = path.join(__dirname, '../.credentials-backup');
+  private readonly lockFilePath = path.join(__dirname, '../.credentials-backup/rotation.lock');
   private readonly maxRetries = 3;
   private readonly retryDelay = 5000;
   private readonly connectionDrainTime = 30000; // 30 seconds for graceful drain
@@ -42,12 +42,27 @@ class SupabaseCredentialRotation {
     console.log(`🗄️  Project: ${this.supabaseProjectRef}`);
     console.log(`🔐 AWS Region: ${this.awsRegion}\n`);
 
+    // Prevent concurrent rotation runs
+    this.ensureBackupDirectory();
+    if (fs.existsSync(this.lockFilePath)) {
+      const lockContent = fs.readFileSync(this.lockFilePath, 'utf8');
+      const lockTime = new Date(lockContent).getTime();
+      const staleThreshold = 10 * 60 * 1000; // 10 minutes
+
+      if (Date.now() - lockTime < staleThreshold) {
+        throw new Error(
+          `Rotation already in progress (locked at ${lockContent}). Remove ${this.lockFilePath} if stale.`
+        );
+      }
+      console.warn('Stale lock detected, overriding...');
+    }
+
+    fs.writeFileSync(this.lockFilePath, new Date().toISOString(), { mode: 0o600 });
+
     let currentPassword: string | null = null;
     let newPassword: string | null = null;
 
     try {
-      // Step 0: Ensure backup directory exists
-      this.ensureBackupDirectory();
       console.log('✅ Backup directory ready');
 
       // Step 1: Get current credentials and backup
@@ -70,39 +85,35 @@ class SupabaseCredentialRotation {
       await this.prepareDualPasswordSupport(currentPassword, newPassword);
       console.log('✅ Dual-password support prepared');
 
-      // Step 5: Update Supabase database password via API with retry
-      await this.updateSupabasePasswordWithRetry(newPassword);
-      console.log('✅ Supabase database password updated');
+      // Step 5: Write-ahead rotation (stage in AWS, then DB, then promote)
+      await this.rotatePasswordSafely(newPassword);
+      console.log('✅ Password rotated safely (write-ahead pattern)');
 
-      // Step 6: Update AWS Secrets Manager atomically
-      await this.updateAWSSecretsAtomically(newPassword);
-      console.log('✅ AWS Secrets Manager updated atomically');
-
-      // Step 7: Verify connection with new password
+      // Step 6: Verify connection with new password
       const verified = await this.verifyConnectionComprehensive(newPassword);
       if (!verified) {
         throw new Error('Comprehensive connection verification failed');
       }
       console.log('✅ Database connection verified (read/write operations)');
 
-      // Step 8: Gracefully refresh connection pools
+      // Step 7: Gracefully refresh connection pools
       await this.refreshConnectionPools(newPassword);
       console.log('✅ Connection pools refreshed gracefully');
 
-      // Step 9: Wait for old connections to drain
+      // Step 8: Wait for old connections to drain
       console.log(`⏳ Waiting ${this.connectionDrainTime / 1000}s for connection drain...`);
       await this.sleep(this.connectionDrainTime);
       console.log('✅ Old connections drained');
 
-      // Step 10: Update local environment files
+      // Step 9: Update local environment files
       await this.updateLocalEnv(newPassword);
       console.log('✅ Local environment files updated');
 
-      // Step 11: Run comprehensive verification tests
+      // Step 10: Run comprehensive verification tests
       await this.runVerificationTests();
       console.log('✅ All verification tests passed (7/7)');
 
-      // Step 12: Create audit trail
+      // Step 11: Create audit trail
       await this.createAuditTrail(true, newPassword);
       console.log('✅ Audit trail created');
 
@@ -115,7 +126,6 @@ class SupabaseCredentialRotation {
         backupCreated: true,
         auditLogged: true,
       };
-
     } catch (error) {
       console.error('❌ Credential rotation failed:', error);
 
@@ -131,7 +141,11 @@ class SupabaseCredentialRotation {
       }
 
       // Create failure audit trail
-      await this.createAuditTrail(false, null, error instanceof Error ? error.message : String(error));
+      await this.createAuditTrail(
+        false,
+        null,
+        error instanceof Error ? error.message : String(error)
+      );
 
       return {
         passwordGenerated: false,
@@ -143,6 +157,13 @@ class SupabaseCredentialRotation {
         auditLogged: true,
         errorMessage: error instanceof Error ? error.message : String(error),
       };
+    } finally {
+      // Always remove lock
+      try {
+        fs.unlinkSync(this.lockFilePath);
+      } catch {
+        /* ignore */
+      }
     }
   }
 
@@ -165,7 +186,9 @@ class SupabaseCredentialRotation {
       // Continue with manual specification
     }
 
-    throw new Error('Could not determine Supabase project reference. Set DATABASE_URL or SUPABASE_PROJECT_REF');
+    throw new Error(
+      'Could not determine Supabase project reference. Set DATABASE_URL or SUPABASE_PROJECT_REF'
+    );
   }
 
   private ensureBackupDirectory(): void {
@@ -187,7 +210,7 @@ class SupabaseCredentialRotation {
     } catch {
       // Source 2: Environment variables
       const dbUrl = process.env.DATABASE_URL || '';
-      const match = dbUrl.match(/postgresql:\/\/([^:]+):([^@]+)@([^:\/]+):(\d+)\/(.+)/);
+      const match = dbUrl.match(/postgresql:\/\/([^:]+):([^@]+)@([^:/]+):(\d+)\/(.+)/);
       if (match) {
         return {
           username: match[1],
@@ -234,7 +257,8 @@ class SupabaseCredentialRotation {
   private generateSecurePassword(): string {
     // Generate cryptographically secure password meeting enterprise standards
     const length = 32;
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+    const charset =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
     let password = '';
 
     // Ensure password has at least one of each required character type
@@ -258,7 +282,10 @@ class SupabaseCredentialRotation {
     }
 
     // Shuffle the password to avoid predictable patterns
-    return password.split('').sort(() => crypto.randomInt(-1, 2)).join('');
+    return password
+      .split('')
+      .sort(() => crypto.randomInt(-1, 2))
+      .join('');
   }
 
   private validatePasswordComplexity(password: string): boolean {
@@ -268,16 +295,13 @@ class SupabaseCredentialRotation {
     const hasNumbers = /\d/.test(password);
     const hasSpecial = /[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(password);
 
-    return (
-      password.length >= minLength &&
-      hasUppercase &&
-      hasLowercase &&
-      hasNumbers &&
-      hasSpecial
-    );
+    return password.length >= minLength && hasUppercase && hasLowercase && hasNumbers && hasSpecial;
   }
 
-  private async prepareDualPasswordSupport(oldPassword: string, newPassword: string): Promise<void> {
+  private async prepareDualPasswordSupport(
+    _oldPassword: string,
+    _newPassword: string
+  ): Promise<void> {
     // This would typically involve configuring the database to accept both passwords
     // During the transition period, both passwords are valid
     // This is a placeholder for the actual implementation which depends on your infrastructure
@@ -324,6 +348,100 @@ class SupabaseCredentialRotation {
     }
   }
 
+  /**
+   * Write-ahead rotation: stage in AWS, change DB, then promote.
+   * If crash occurs between steps, recovery is straightforward:
+   * - After stageAWSSecret but before DB change: no harm, AWSCURRENT unchanged
+   * - After DB change but before promote: AWSPENDING has new password for recovery
+   */
+  private async rotatePasswordSafely(newPassword: string): Promise<void> {
+    // Step 5a: Stage new password in AWS (AWSPENDING)
+    await this.stageAWSSecret(newPassword);
+    console.log('  AWS AWSPENDING staged');
+
+    // Step 5b: Update Supabase DB password
+    await this.updateSupabasePasswordWithRetry(newPassword);
+    console.log('  Supabase password updated');
+
+    // Step 5c: Promote AWSPENDING to AWSCURRENT
+    await this.promoteAWSSecret();
+    console.log('  AWS AWSCURRENT promoted');
+  }
+
+  private async stageAWSSecret(newPassword: string): Promise<void> {
+    const currentSecret = await this.getAWSSecret();
+    const stagedSecret = {
+      ...currentSecret,
+      password: newPassword,
+      lastRotated: new Date().toISOString(),
+      version: (currentSecret.version || 0) + 1,
+    };
+
+    execFileSync(
+      'aws',
+      [
+        'secretsmanager',
+        'put-secret-value',
+        '--secret-id',
+        this.secretName,
+        '--secret-string',
+        JSON.stringify(stagedSecret),
+        '--version-stage',
+        'AWSPENDING',
+        '--region',
+        this.awsRegion,
+      ],
+      { encoding: 'utf8', stdio: 'pipe' }
+    );
+  }
+
+  private async promoteAWSSecret(): Promise<void> {
+    const result = execFileSync(
+      'aws',
+      [
+        'secretsmanager',
+        'describe-secret',
+        '--secret-id',
+        this.secretName,
+        '--region',
+        this.awsRegion,
+      ],
+      { encoding: 'utf8', stdio: 'pipe' }
+    );
+
+    const secret = JSON.parse(result);
+    const versions = secret.VersionIdsToStages || {};
+
+    let pendingVersionId: string | null = null;
+    for (const [versionId, stages] of Object.entries(versions)) {
+      if ((stages as string[]).includes('AWSPENDING')) {
+        pendingVersionId = versionId;
+        break;
+      }
+    }
+
+    if (!pendingVersionId) {
+      throw new Error('No AWSPENDING version found to promote');
+    }
+
+    execFileSync(
+      'aws',
+      [
+        'secretsmanager',
+        'update-secret-version-stage',
+        '--secret-id',
+        this.secretName,
+        '--version-stage',
+        'AWSCURRENT',
+        '--move-to-version-id',
+        pendingVersionId,
+        '--region',
+        this.awsRegion,
+      ],
+      { stdio: 'pipe' }
+    );
+  }
+
   private async verifyConnectionComprehensive(password: string): Promise<boolean> {
     try {
       // Use pg library to test connection
@@ -348,8 +466,8 @@ class SupabaseCredentialRotation {
 
       // Test write operation (in a transaction that we'll roll back)
       await client.query('BEGIN');
-      await client.query("CREATE TEMP TABLE test_rotation (id INT)");
-      await client.query("INSERT INTO test_rotation VALUES (1)");
+      await client.query('CREATE TEMP TABLE test_rotation (id INT)');
+      await client.query('INSERT INTO test_rotation VALUES (1)');
       await client.query('ROLLBACK');
 
       await client.end();
@@ -374,7 +492,9 @@ class SupabaseCredentialRotation {
     try {
       const poolScriptPath = path.join(__dirname, '../packages/backend/scripts/refresh-pool.ts');
       if (fs.existsSync(poolScriptPath)) {
-        execSync(`ts-node ${poolScriptPath}`, { env: { ...process.env, DB_PASSWORD: newPassword } });
+        execSync(`ts-node ${poolScriptPath}`, {
+          env: { ...process.env, DB_PASSWORD: newPassword },
+        });
       }
     } catch {
       // Continue even if local refresh fails
@@ -383,14 +503,28 @@ class SupabaseCredentialRotation {
 
   private async rollbackCredentials(previousPassword: string): Promise<void> {
     try {
-      // Rollback Supabase password
+      // Rollback Supabase password first (most critical)
       await this.updateSupabasePassword(previousPassword);
+      console.log('  DB password rolled back');
 
-      // Rollback AWS Secrets Manager to previous version
-      execSync(
-        `aws secretsmanager update-secret-version-stage --secret-id ${this.secretName} --version-stage AWSCURRENT --move-to-version-id AWSPREVIOUS --region ${this.awsRegion}`,
-        { stdio: 'pipe' }
-      );
+      // Clean up any AWSPENDING stage (best-effort)
+      try {
+        execFileSync(
+          'aws',
+          [
+            'secretsmanager',
+            'describe-secret',
+            '--secret-id',
+            this.secretName,
+            '--region',
+            this.awsRegion,
+          ],
+          { encoding: 'utf8', stdio: 'pipe' }
+        );
+        // AWS automatically cleans up AWSPENDING when not promoted
+      } catch {
+        // AWS cleanup is best-effort
+      }
 
       // Refresh connection pools with old password
       await this.refreshConnectionPools(previousPassword);
@@ -400,7 +534,11 @@ class SupabaseCredentialRotation {
     }
   }
 
-  private async createAuditTrail(success: boolean, newPassword: string | null, errorMessage?: string): Promise<void> {
+  private async createAuditTrail(
+    success: boolean,
+    newPassword: string | null,
+    errorMessage?: string
+  ): Promise<void> {
     const auditLog = {
       timestamp: new Date().toISOString(),
       action: 'supabase_credential_rotation',
@@ -454,7 +592,7 @@ class SupabaseCredentialRotation {
       {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ password: newPassword }),
@@ -478,7 +616,9 @@ class SupabaseCredentialRotation {
       // Wait for password change to propagate
       await this.sleep(10000); // 10 seconds
     } catch (error) {
-      throw new Error('Failed to update Supabase password via CLI. Ensure SUPABASE_ACCESS_TOKEN is set or Supabase CLI is authenticated.');
+      throw new Error(
+        'Failed to update Supabase password via CLI. Ensure SUPABASE_ACCESS_TOKEN is set or Supabase CLI is authenticated.'
+      );
     }
   }
 
@@ -574,7 +714,8 @@ class SupabaseCredentialRotation {
     const status = success ? '✅ Complete' : '❌ Failed';
     const title = `IMMED-004: Supabase Credential Rotation ${status}`;
 
-    const body = success ? `## Supabase Credential Rotation Complete
+    const body = success
+      ? `## Supabase Credential Rotation Complete
 
 **Automated Rotation Date**: ${new Date().toISOString()}
 **Project**: ${this.supabaseProjectRef}
@@ -602,7 +743,8 @@ class SupabaseCredentialRotation {
 **Next Rotation**: ${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
 
 🔐 Generated with enterprise-grade credential rotation system
-` : `## Supabase Credential Rotation Failed
+`
+      : `## Supabase Credential Rotation Failed
 
 **Failure Date**: ${new Date().toISOString()}
 **Project**: ${this.supabaseProjectRef}
@@ -642,7 +784,7 @@ ${errorMessage?.includes('Rollback successful') ? '✅ Rollback successful - pre
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

@@ -138,12 +138,14 @@ export function deploymentMonitoring(req: Request, res: Response, next: NextFunc
     return;
   }
 
-  const route = req.route?.path ? normalizeRoute(req.route.path) : '/unmatched';
-  const end = httpRequestDuration.startTimer({ method: req.method, route });
+  const end = httpRequestDuration.startTimer();
 
   httpActiveConnections.inc();
 
   res.on('finish', () => {
+    const route = req.route?.path
+      ? normalizeRoute(req.route.path)
+      : normalizeRoute(req.originalUrl);
     const statusCode = res.statusCode.toString();
     const labels = { method: req.method, route, status_code: statusCode };
 

@@ -6,7 +6,7 @@
  * No manual intervention required
  */
 
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -94,7 +94,6 @@ class GitHubTokenRotation {
         backupCreated: true,
         auditLogged: true,
       };
-
     } catch (error) {
       console.error('❌ Token rotation failed:', error);
 
@@ -110,7 +109,11 @@ class GitHubTokenRotation {
       }
 
       // Create failure audit trail
-      await this.createAuditTrail(false, null, error instanceof Error ? error.message : String(error));
+      await this.createAuditTrail(
+        false,
+        null,
+        error instanceof Error ? error.message : String(error)
+      );
 
       return {
         oldTokenRevoked: false,
@@ -228,7 +231,7 @@ class GitHubTokenRotation {
     ];
 
     for (const verify of verifications) {
-      if (!await verify()) {
+      if (!(await verify())) {
         return false;
       }
     }
@@ -238,11 +241,11 @@ class GitHubTokenRotation {
   private verifyTokenFormat(token: string): boolean {
     // GitHub tokens should match expected patterns
     const patterns = [
-      /^gh[ps]_[a-zA-Z0-9]{36,}$/,  // Personal access token
-      /^ghs_[a-zA-Z0-9]{36,}$/,       // GitHub App installation token
-      /^[a-f0-9]{40}$/,                // Classic token
+      /^gh[ps]_[a-zA-Z0-9]{36,}$/, // Personal access token
+      /^ghs_[a-zA-Z0-9]{36,}$/, // GitHub App installation token
+      /^[a-f0-9]{40}$/, // Classic token
     ];
-    return patterns.some(pattern => pattern.test(token));
+    return patterns.some((pattern) => pattern.test(token));
   }
 
   private async verifyRepositoryPermissions(token: string): Promise<boolean> {
@@ -274,42 +277,29 @@ class GitHubTokenRotation {
   }
 
   private async updateGitHubSecretsAtomically(newToken: string): Promise<void> {
-    // Use GitHub API directly for atomic update
-    const secretName = 'GITHUB_TOKEN';
+    const secretNames = ['GITHUB_TOKEN'];
 
-    // Get repository public key for encrypting secret
-    const keyResponse = await this.makeGitHubRequest(
-      `/repos/${this.repoOwner}/${this.repoName}/actions/secrets/public-key`,
-      'GET',
-      newToken
-    );
-    const { key, key_id } = JSON.parse(keyResponse);
-
-    // Encrypt the secret value
-    const encryptedValue = this.encryptSecret(newToken, key);
-
-    // Update the secret
-    await this.makeGitHubRequest(
-      `/repos/${this.repoOwner}/${this.repoName}/actions/secrets/${secretName}`,
-      'PUT',
-      newToken,
-      JSON.stringify({
-        encrypted_value: encryptedValue,
-        key_id,
-      })
-    );
-  }
-
-  private encryptSecret(secret: string, publicKey: string): string {
-    // Use libsodium for encryption (GitHub's requirement)
-    // For Node.js, we'll use a simpler approach with base64
-    // In production, use @octokit/core or sodium-native
-    const messageBytes = Buffer.from(secret);
-    const keyBytes = Buffer.from(publicKey, 'base64');
-
-    // This is a simplified version - use proper sodium encryption in production
-    // For now, return base64 encoded secret (GitHub will handle actual encryption)
-    return Buffer.from(secret).toString('base64');
+    for (const secretName of secretNames) {
+      try {
+        execFileSync(
+          'gh',
+          [
+            'secret',
+            'set',
+            secretName,
+            '--repo',
+            `${this.repoOwner}/${this.repoName}`,
+            '--body',
+            newToken,
+          ],
+          {
+            stdio: 'pipe',
+          }
+        );
+      } catch (error) {
+        throw new Error(`Failed to update GitHub Actions secret ${secretName}: ${error}`);
+      }
+    }
   }
 
   private async verifySecretsUpdated(token: string): Promise<boolean> {
@@ -359,7 +349,11 @@ class GitHubTokenRotation {
     }
   }
 
-  private async createAuditTrail(success: boolean, newToken: string | null, errorMessage?: string): Promise<void> {
+  private async createAuditTrail(
+    success: boolean,
+    newToken: string | null,
+    errorMessage?: string
+  ): Promise<void> {
     const auditLog = {
       timestamp: new Date().toISOString(),
       action: 'github_token_rotation',
@@ -395,8 +389,8 @@ class GitHubTokenRotation {
         path,
         method,
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28',
           'User-Agent': 'Sovren-Credential-Rotation/1.0',
           ...(body && { 'Content-Type': 'application/json' }),
@@ -405,7 +399,7 @@ class GitHubTokenRotation {
 
       const req = https.request(options, (res) => {
         let data = '';
-        res.on('data', (chunk) => data += chunk);
+        res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
             resolve(data);
@@ -422,7 +416,7 @@ class GitHubTokenRotation {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async generateNewTokenViaGitHubApp(): Promise<string> {
@@ -461,8 +455,8 @@ class GitHubTokenRotation {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${jwt}`,
-          'Accept': 'application/vnd.github+json',
+          Authorization: `Bearer ${jwt}`,
+          Accept: 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28',
         },
       }
@@ -484,7 +478,7 @@ class GitHubTokenRotation {
 
     const payload = {
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (10 * 60), // 10 minutes
+      exp: Math.floor(Date.now() / 1000) + 10 * 60, // 10 minutes
       iss: appId,
     };
 
@@ -496,8 +490,8 @@ class GitHubTokenRotation {
       `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/installation`,
       {
         headers: {
-          'Authorization': `Bearer ${jwt}`,
-          'Accept': 'application/vnd.github+json',
+          Authorization: `Bearer ${jwt}`,
+          Accept: 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28',
         },
       }
@@ -536,13 +530,10 @@ class GitHubTokenRotation {
   private async updateGitHubSecrets(newToken: string): Promise<void> {
     // Update GitHub Actions secret using gh CLI
     try {
-      execSync(
-        `gh secret set GITHUB_TOKEN --repo ${this.repoOwner}/${this.repoName}`,
-        {
-          input: newToken,
-          stdio: ['pipe', 'pipe', 'pipe'],
-        }
-      );
+      execSync(`gh secret set GITHUB_TOKEN --repo ${this.repoOwner}/${this.repoName}`, {
+        input: newToken,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
     } catch (error) {
       throw new Error('Failed to update GitHub Actions secrets');
     }
@@ -555,8 +546,8 @@ class GitHubTokenRotation {
         `https://api.github.com/repos/${this.repoOwner}/${this.repoName}`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/vnd.github+json',
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/vnd.github+json',
           },
         }
       );
@@ -573,8 +564,8 @@ class GitHubTokenRotation {
       // List all tokens and find the one to revoke
       const response = await fetch('https://api.github.com/user/tokens', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
         },
       });
 
@@ -590,8 +581,8 @@ class GitHubTokenRotation {
           await fetch(`https://api.github.com/user/tokens/${t.id}`, {
             method: 'DELETE',
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Accept': 'application/vnd.github+json',
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/vnd.github+json',
             },
           });
           break;
@@ -615,7 +606,8 @@ class GitHubTokenRotation {
     const status = success ? '✅ Complete' : '❌ Failed';
     const title = `IMMED-003: GitHub Token Rotation ${status}`;
 
-    const body = success ? `## GitHub Token Rotation Complete
+    const body = success
+      ? `## GitHub Token Rotation Complete
 
 **Automated Rotation Date**: ${new Date().toISOString()}
 
@@ -638,7 +630,8 @@ class GitHubTokenRotation {
 **Next Rotation**: ${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
 
 🔐 Generated with enterprise-grade credential rotation system
-` : `## GitHub Token Rotation Failed
+`
+      : `## GitHub Token Rotation Failed
 
 **Failure Date**: ${new Date().toISOString()}
 

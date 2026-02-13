@@ -8,9 +8,9 @@
 import crypto from 'crypto';
 import rateLimit, { Options, RateLimitRequestHandler } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
-import Redis from 'ioredis';
 import { Request, Response } from 'express';
 import { RateLimitError } from './error-handler-middleware';
+import { getRedisClient as getSharedRedisClient } from '../lib/redis';
 
 // ============================================================================
 // Rate Limit Configuration
@@ -139,35 +139,11 @@ export function createRateLimiter(config: RateLimitConfig): RateLimitRequestHand
 // ============================================================================
 
 /**
- * Lazily initialized Redis client for rate limiting.
- * Shared across all Redis-backed rate limiters.
- */
-let redisClient: Redis | null = null;
-
-function getRedisClient(): Redis {
-  if (!redisClient) {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    redisClient = new Redis(redisUrl, {
-      enableOfflineQueue: true,
-      maxRetriesPerRequest: 3,
-      retryStrategy(times: number) {
-        return Math.min(times * 200, 3000);
-      },
-    });
-
-    redisClient.on('error', (err) => {
-      console.error('Redis rate-limit client error:', err.message);
-    });
-  }
-  return redisClient;
-}
-
-/**
  * Create rate limiter with Redis store for distributed systems
  * Use this in production when running multiple API instances
  */
 export function createRedisRateLimiter(config: RateLimitConfig): RateLimitRequestHandler {
-  const client = getRedisClient();
+  const client = getSharedRedisClient();
 
   return rateLimit({
     ...defaultOptions,
@@ -287,4 +263,3 @@ export const bypassRateLimitInTest = (req: Request): boolean => {
 
   return false;
 };
-

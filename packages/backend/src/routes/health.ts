@@ -1,21 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { Request, Response, Router } from 'express';
-import Redis from 'ioredis';
 import WebSocket from 'ws';
 import os from 'os';
+import { getRedisClient } from '../lib/redis';
 
 const router = Router();
 
-// Module-level singletons to avoid creating new connections per health check probe
-let singletonRedis: InstanceType<typeof Redis> | null = null;
+// Module-level singleton to avoid creating new connections per health check probe
 let singletonSupabase: ReturnType<typeof createClient> | null = null;
-
-function getRedisClient(): InstanceType<typeof Redis> {
-  if (!singletonRedis) {
-    singletonRedis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-  }
-  return singletonRedis;
-}
 
 function getSupabaseClient(): ReturnType<typeof createClient> {
   if (!singletonSupabase) {
@@ -182,11 +174,17 @@ router.get('/health/live', (req: Request, res: Response) => {
 
 async function checkDatabase(): Promise<ServiceHealth> {
   const startTime = Date.now();
+  const TIMEOUT_MS = 5000;
 
   try {
     const supabase = getSupabaseClient();
 
-    const { error } = await supabase.from('health_check').select('id').limit(1);
+    const queryPromise = supabase.from('health_check').select('id').limit(1);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Database health check timed out')), TIMEOUT_MS)
+    );
+
+    const { error } = await Promise.race([queryPromise, timeoutPromise]);
 
     const responseTime = Date.now() - startTime;
 
@@ -309,27 +307,28 @@ async function checkNostr(): Promise<ServiceHealth> {
       };
     }
 
-    // Check first relay as a representative
     const relay = relays[0];
     const ws = new WebSocket(relay);
 
-    await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        ws.close();
-        reject(new Error('Connection timeout'));
-      }, 5000);
+    try {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Connection timeout'));
+        }, 5000);
 
-      ws.onopen = () => {
-        clearTimeout(timeout);
-        ws.close();
-        resolve(void 0);
-      };
+        ws.onopen = () => {
+          clearTimeout(timeout);
+          resolve(void 0);
+        };
 
-      ws.onerror = (error) => {
-        clearTimeout(timeout);
-        reject(error);
-      };
-    });
+        ws.onerror = (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        };
+      });
+    } finally {
+      ws.close();
+    }
 
     const responseTime = Date.now() - startTime;
 

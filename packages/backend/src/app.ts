@@ -84,7 +84,15 @@ export function createApp(): Express {
           : ['http://localhost:3000', 'http://localhost:5173'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-      exposedHeaders: ['X-CSRF-Token', 'X-Correlation-ID', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset', 'Retry-After'],
+      exposedHeaders: [
+        'X-CSRF-Token',
+        'X-Correlation-ID',
+        'RateLimit-Limit',
+        'RateLimit-Remaining',
+        'RateLimit-Reset',
+        'RateLimit-Policy',
+        'Retry-After',
+      ],
       credentials: true,
       maxAge: 86400, // 24 hours preflight cache
     })
