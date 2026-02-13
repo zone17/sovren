@@ -8,20 +8,21 @@
 import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, requireNostrSignature } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { rateLimiters } from '../../middleware/rate-limit-middleware';
 import { PaymentValidators } from '../../validators/payment';
+import { PaymentController } from '../../controllers/payment/PaymentController';
 
 const router = Router();
 
 /**
  * Lazily resolve the PaymentController from the DI container.
  */
-let _paymentController: any = null;
-function getController() {
+let _paymentController: PaymentController | null = null;
+function getController(): PaymentController {
   if (!_paymentController) {
-    _paymentController = container.get(TYPES.PaymentController);
+    _paymentController = container.get<PaymentController>(TYPES.PaymentController);
   }
   return _paymentController;
 }
@@ -30,6 +31,7 @@ function getController() {
 router.post(
   '/invoices',
   authenticate,
+  requireNostrSignature,
   rateLimiters.payment.createInvoice,
   validate({ body: PaymentValidators.createInvoice }),
   (req: Request, res: Response, next: NextFunction) => getController().createInvoice(req, res, next)
@@ -46,6 +48,7 @@ router.get(
 router.post(
   '/invoices/:id/pay',
   authenticate,
+  requireNostrSignature,
   rateLimiters.payment.payInvoice,
   validate({ params: PaymentValidators.invoiceIdParam, body: PaymentValidators.payInvoice }),
   (req: Request, res: Response, next: NextFunction) => getController().payInvoice(req, res, next)
@@ -64,6 +67,7 @@ router.get(
 router.post(
   '/subscriptions',
   authenticate,
+  requireNostrSignature,
   rateLimiters.payment.createSubscription,
   validate({ body: PaymentValidators.createSubscription }),
   (req: Request, res: Response, next: NextFunction) => getController().createSubscription(req, res, next)
@@ -72,6 +76,7 @@ router.post(
 router.put(
   '/subscriptions/:id',
   authenticate,
+  requireNostrSignature,
   rateLimiters.payment.read,
   validate({ params: PaymentValidators.subscriptionIdParam, body: PaymentValidators.updateSubscription }),
   (req: Request, res: Response, next: NextFunction) => getController().updateSubscription(req, res, next)
@@ -80,6 +85,7 @@ router.put(
 router.delete(
   '/subscriptions/:id',
   authenticate,
+  requireNostrSignature,
   rateLimiters.payment.read,
   validate({ params: PaymentValidators.subscriptionIdParam, body: PaymentValidators.cancelSubscription }),
   (req: Request, res: Response, next: NextFunction) => getController().cancelSubscription(req, res, next)
@@ -89,6 +95,7 @@ router.delete(
 router.post(
   '/refunds',
   authenticate,
+  requireNostrSignature,
   rateLimiters.payment.createRefund,
   validate({ body: PaymentValidators.createRefund }),
   (req: Request, res: Response, next: NextFunction) => getController().createRefund(req, res, next)
@@ -107,6 +114,7 @@ router.get(
 router.post(
   '/webhooks',
   authenticate,
+  requireNostrSignature,
   rateLimiters.payment.webhook,
   validate({ body: PaymentValidators.registerWebhook }),
   (req: Request, res: Response, next: NextFunction) => getController().registerWebhook(req, res, next)

@@ -1,5 +1,6 @@
 import { JWTPayload, nostrAuth } from '@/services/nostr-auth';
 import { NextFunction, Request, Response } from 'express';
+import logger from '../lib/logger';
 
 // 🌟 Extended Request interface with NOSTR authentication
 declare global {
@@ -42,11 +43,11 @@ export const authenticate = async (
     const verification = await nostrAuth.verifyJWT(token);
 
     if (!verification.valid || !verification.payload) {
+      logger.warn('JWT verification failed', { error: verification.error, ip: req.ip, path: req.path });
       res.status(401).json({
         success: false,
-        error: 'Invalid or expired token',
+        error: 'Authentication failed',
         code: 'INVALID_TOKEN',
-        details: verification.error,
       });
       return;
     }
@@ -61,11 +62,11 @@ export const authenticate = async (
     };
     next();
   } catch (error) {
+    logger.error('Authentication service error', { error: error instanceof Error ? error.message : 'Unknown error', ip: req.ip, path: req.path });
     res.status(500).json({
       success: false,
-      error: 'Authentication service error',
+      error: 'Authentication failed',
       code: 'AUTH_ERROR',
-      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 };
@@ -85,10 +86,10 @@ export const authorize = (allowedRoles: Array<'creator' | 'supporter' | 'admin'>
     const userRole = req.user.role || 'supporter'; // Default to supporter
 
     if (!allowedRoles.includes(userRole)) {
+      logger.warn('Authorization failed', { requiredRoles: allowedRoles, currentRole: userRole, pubkey: req.user.nostr_pubkey, path: req.path });
       res.status(403).json({
         error: 'Insufficient permissions',
         code: 'UNAUTHORIZED',
-        details: `Required roles: ${allowedRoles.join(', ')}. Current role: ${userRole}`,
       });
       return;
     }
@@ -178,20 +179,20 @@ export const requireNostrSignature = async (
     });
 
     if (!verification.valid) {
+      logger.warn('NOSTR signature verification failed', { error: verification.error, pubkey: req.user.nostr_pubkey, path: req.path });
       res.status(403).json({
         error: 'Invalid NOSTR signature',
         code: 'INVALID_SIGNATURE',
-        details: verification.error,
       });
       return;
     }
 
     next();
   } catch (error) {
+    logger.error('Signature verification error', { error: error instanceof Error ? error.message : 'Unknown error', path: req.path });
     res.status(500).json({
       error: 'Signature verification failed',
       code: 'SIGNATURE_ERROR',
-      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 };

@@ -17,7 +17,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { authenticate } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimit';
+import { createRateLimiter } from '../middleware/rate-limit-middleware';
 import { createAIRecommendationService } from '../services/ai-recommendation-service';
 import type {
   RecommendationFeedback,
@@ -49,7 +49,7 @@ const validateRequest = (schema: z.ZodSchema) => {
 };
 
 // Rate limiter configuration
-const rateLimiter = createRateLimiter({
+const aiRateLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 minute
   max: 30, // 30 requests per minute
 });
@@ -139,7 +139,7 @@ const feedbackSchema = z.object({
 router.get(
   '/',
   authenticate,
-  rateLimiter,
+  aiRateLimiter,
   validateRequest(recommendationRequestSchema),
   async (req: Request, res: Response) => {
     try {
@@ -192,7 +192,7 @@ router.get(
 router.put(
   '/preferences',
   authenticateToken,
-  rateLimiter({ windowMs: 60 * 1000, max: 10 }), // 10 updates per minute
+  createRateLimiter({ windowMs: 60 * 1000, max: 10 }), // 10 updates per minute
   validateRequest(z.object({ body: userPreferencesSchema })),
   async (req, res) => {
     try {
@@ -234,7 +234,7 @@ router.put(
 router.post(
   '/behavior',
   authenticate,
-  rateLimiter,
+  aiRateLimiter,
   validateRequest(behaviorEventSchema),
   async (req: Request, res: Response) => {
     try {
@@ -275,7 +275,7 @@ router.post(
  * @desc Get behavioral recommendations based on user patterns
  * @access Private
  */
-router.get('/behavioral', authenticate, rateLimiter, async (req: Request, res: Response) => {
+router.get('/behavioral', authenticate, aiRateLimiter, async (req: Request, res: Response) => {
   try {
     const userPubkey = req.user?.nostr_pubkey;
     if (!userPubkey) {
@@ -319,7 +319,7 @@ router.get('/behavioral', authenticate, rateLimiter, async (req: Request, res: R
 router.get(
   '/similar/:contentId',
   authenticate,
-  rateLimiter,
+  aiRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const { contentId } = req.params;
@@ -371,7 +371,7 @@ router.get(
 router.post(
   '/similarity',
   authenticateToken,
-  rateLimiter({ windowMs: 60 * 1000, max: 20 }), // 20 calculations per minute
+  createRateLimiter({ windowMs: 60 * 1000, max: 20 }), // 20 calculations per minute
   validateRequest(
     z.object({
       body: z.object({
@@ -431,7 +431,7 @@ router.post(
 router.post(
   '/feedback',
   authenticate,
-  rateLimiter,
+  aiRateLimiter,
   validateRequest(feedbackSchema),
   async (req: Request, res: Response) => {
     try {
@@ -478,7 +478,7 @@ router.post(
 router.get(
   '/feedback/analytics',
   authenticateToken,
-  rateLimiter({ windowMs: 60 * 1000, max: 10 }), // 10 requests per minute
+  createRateLimiter({ windowMs: 60 * 1000, max: 10 }), // 10 requests per minute
   async (req, res) => {
     try {
       // Check if user has admin privileges

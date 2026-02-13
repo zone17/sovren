@@ -16,22 +16,33 @@ import logger from '../lib/logger';
 // ============================================================================
 
 export class AppError extends Error {
+  public readonly timestamp: Date;
+
   constructor(
     public statusCode: number,
     public code: string,
     message: string,
     public details?: Record<string, unknown> | string,
-    public isOperational: boolean = true
+    public isOperational: boolean = true,
+    public readonly context?: Record<string, unknown>,
+    public override readonly cause?: Error | unknown
   ) {
     super(message);
     this.name = this.constructor.name;
+    this.timestamp = new Date();
     Error.captureStackTrace(this, this.constructor);
   }
-}
 
-export class ValidationError extends AppError {
-  constructor(message: string, details?: Record<string, unknown> | string) {
-    super(400, 'VALIDATION_ERROR', message, details);
+  toJSON(): Record<string, unknown> {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      statusCode: this.statusCode,
+      timestamp: this.timestamp.toISOString(),
+      context: this.context,
+      cause: this.cause instanceof Error ? this.cause.message : this.cause,
+    };
   }
 }
 
@@ -47,27 +58,9 @@ export class AuthorizationError extends AppError {
   }
 }
 
-export class NotFoundError extends AppError {
-  constructor(resource: string = 'Resource', details?: Record<string, unknown> | string) {
-    super(404, 'NOT_FOUND', `${resource} not found`, details);
-  }
-}
-
-export class ConflictError extends AppError {
-  constructor(message: string, details?: Record<string, unknown> | string) {
-    super(409, 'CONFLICT', message, details);
-  }
-}
-
 export class RateLimitError extends AppError {
   constructor(message: string = 'Too many requests', details?: Record<string, unknown> | string) {
     super(429, 'RATE_LIMIT_EXCEEDED', message, details);
-  }
-}
-
-export class ServiceError extends AppError {
-  constructor(message: string, details?: Record<string, unknown> | string) {
-    super(500, 'SERVICE_ERROR', message, details);
   }
 }
 
@@ -82,6 +75,9 @@ export class ExternalServiceError extends AppError {
     super(503, 'EXTERNAL_SERVICE_ERROR', `${service} service unavailable: ${message}`, details);
   }
 }
+
+// Re-export canonical error classes from utils/errors to avoid duplicate definitions
+export { ValidationError, NotFoundError, ConflictError, ServiceError } from '../utils/errors';
 
 // ============================================================================
 // Error Response Interface
@@ -322,9 +318,11 @@ export const asyncHandler = (
 
 export const notFoundHandler = (req: Request, res: Response, next: NextFunction): void => {
   const error = new NotFoundError('Endpoint', {
-    path: req.path,
-    method: req.method,
-    suggestion: 'Check the API documentation for available endpoints',
+    details: {
+      path: req.path,
+      method: req.method,
+      suggestion: 'Check the API documentation for available endpoints',
+    },
   });
   next(error);
 };

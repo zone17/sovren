@@ -482,6 +482,60 @@ describe('CSRF Middleware', () => {
     });
   });
 
+  describe('Bearer token bypass (machine clients)', () => {
+    it('should bypass CSRF validation for POST with Bearer token', () => {
+      const req = createMockReq({
+        method: 'POST',
+        headers: { authorization: 'Bearer some-valid-jwt-token' },
+      });
+      const res = createMockRes();
+
+      middleware(req, res, next);
+
+      expect(next).toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalledWith(403);
+    });
+
+    it('should bypass CSRF validation for PUT with Bearer token', () => {
+      const req = createMockReq({
+        method: 'PUT',
+        headers: { authorization: 'Bearer another-token' },
+      });
+      const res = createMockRes();
+
+      middleware(req, res, next);
+
+      expect(next).toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalledWith(403);
+    });
+
+    it('should bypass CSRF validation for DELETE with Bearer token', () => {
+      const req = createMockReq({
+        method: 'DELETE',
+        headers: { authorization: 'Bearer delete-token' },
+      });
+      const res = createMockRes();
+
+      middleware(req, res, next);
+
+      expect(next).toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalledWith(403);
+    });
+
+    it('should NOT bypass for non-Bearer authorization schemes', () => {
+      const req = createMockReq({
+        method: 'POST',
+        headers: { authorization: 'Basic dXNlcjpwYXNz' },
+      });
+      const res = createMockRes();
+
+      middleware(req, res, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(403);
+    });
+  });
+
   describe('Custom safe methods', () => {
     it('should allow custom safe methods', () => {
       const customMiddleware = csrfProtection({

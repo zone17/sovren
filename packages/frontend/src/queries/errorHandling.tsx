@@ -11,9 +11,24 @@
  * - Global error handling
  */
 
-import React, { Component, ReactNode, useCallback, useState } from 'react';
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import React, { Component, ErrorInfo, ReactNode, useCallback, useState } from 'react';
+import { QueryClient, QueryErrorResetBoundary } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
+
+// Type for HTTP-like errors that may have status codes
+interface HttpError {
+  message?: string;
+  code?: string;
+  status?: number;
+  response?: { status?: number };
+}
+
+// Type for window with analytics tracking
+interface AnalyticsWindow extends Window {
+  analytics?: {
+    track: (event: string, data: Record<string, unknown>) => void;
+  };
+}
 
 // Error types for different handling strategies
 export enum ErrorType {
@@ -34,14 +49,15 @@ export enum ErrorSeverity {
 }
 
 // Classify errors by type and severity
-export const classifyError = (error: any): { type: ErrorType; severity: ErrorSeverity } => {
+export const classifyError = (error: unknown): { type: ErrorType; severity: ErrorSeverity } => {
+  const httpError = error as HttpError | undefined;
   // Network errors
-  if (!navigator.onLine || error?.code === 'NETWORK_ERROR') {
+  if (!navigator.onLine || httpError?.code === 'NETWORK_ERROR') {
     return { type: ErrorType.NETWORK, severity: ErrorSeverity.HIGH };
   }
 
   // HTTP status-based classification
-  const status = error?.status || error?.response?.status;
+  const status = httpError?.status || httpError?.response?.status;
 
   if (status === 401) {
     return { type: ErrorType.AUTHENTICATION, severity: ErrorSeverity.CRITICAL };
@@ -51,11 +67,11 @@ export const classifyError = (error: any): { type: ErrorType; severity: ErrorSev
     return { type: ErrorType.AUTHORIZATION, severity: ErrorSeverity.HIGH };
   }
 
-  if (status >= 400 && status < 500) {
+  if (status !== undefined && status >= 400 && status < 500) {
     return { type: ErrorType.VALIDATION, severity: ErrorSeverity.MEDIUM };
   }
 
-  if (status >= 500) {
+  if (status !== undefined && status >= 500) {
     return { type: ErrorType.SERVER, severity: ErrorSeverity.HIGH };
   }
 
@@ -66,14 +82,16 @@ export const classifyError = (error: any): { type: ErrorType; severity: ErrorSev
 export const errorRecovery = {
   // Retry with exponential backoff
   retryWithBackoff: async (
-    fn: () => Promise<any>,
+    fn: () => Promise<unknown>,
     maxRetries: number = 3,
     baseDelay: number = 1000
-  ): Promise<any> => {
+  ): Promise<unknown> => {
+    let lastError: unknown;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         return await fn();
       } catch (error) {
+        lastError = error;
         if (attempt === maxRetries - 1) {
           throw error;
         }
@@ -84,10 +102,11 @@ export const errorRecovery = {
         await new Promise(resolve => setTimeout(resolve, delay + jitter));
       }
     }
+    throw lastError;
   },
 
   // Fallback to cached data
-  fallbackToCache: (queryKey: string[], queryClient: any) => {
+  fallbackToCache: (queryKey: string[], queryClient: QueryClient) => {
     const cachedData = queryClient.getQueryData(queryKey);
     if (cachedData) {
       toast.info('Using cached data due to connection issues');
@@ -112,8 +131,9 @@ export const errorRecovery = {
 };
 
 // Global error handler for React Query
-export const globalErrorHandler = (error: any, query: any) => {
+export const globalErrorHandler = (error: unknown, query: { queryKey: unknown }) => {
   const { type, severity } = classifyError(error);
+  const httpError = error as HttpError | undefined;
 
   // Log all errors
   console.error(`[${type}] Query error:`, {
@@ -129,7 +149,7 @@ export const globalErrorHandler = (error: any, query: any) => {
       break;
 
     case ErrorSeverity.MEDIUM:
-      toast.error(error?.message || 'An error occurred');
+      toast.error(httpError?.message || 'An error occurred');
       break;
 
     case ErrorSeverity.HIGH:
@@ -145,43 +165,50 @@ export const globalErrorHandler = (error: any, query: any) => {
   }
 
   // Track errors for monitoring
-  if (typeof window !== 'undefined' && window.analytics) {
-    window.analytics.track('query_error', {
+  const win = window as AnalyticsWindow;
+  if (typeof window !== 'undefined' && win.analytics) {
+    win.analytics.track('query_error', {
       type,
       severity,
       queryKey: query.queryKey,
-      errorMessage: error?.message,
+      errorMessage: httpError?.message,
     });
   }
 };
 
 // Error boundary component for React Query
-interface ErrorBoundaryState {
+interface QueryErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
-  errorInfo: any;
+  errorInfo: ErrorInfo | null;
+}
+
+interface QueryErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
 class QueryErrorBoundary extends Component<
-  { children: ReactNode; fallback?: ReactNode },
-  ErrorBoundaryState
+  QueryErrorBoundaryProps,
+  QueryErrorBoundaryState
 > {
-  constructor(props: any) {
+  constructor(props: QueryErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): QueryErrorBoundaryState {
     return { hasError: true, error, errorInfo: null };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to monitoring service
     console.error('Error boundary caught:', error, errorInfo);
 
     // Track in analytics
-    if (typeof window !== 'undefined' && window.analytics) {
-      window.analytics.track('error_boundary_triggered', {
+    const win = window as AnalyticsWindow;
+    if (typeof window !== 'undefined' && win.analytics) {
+      win.analytics.track('error_boundary_triggered', {
         error: error.toString(),
         componentStack: errorInfo.componentStack,
       });
@@ -293,12 +320,13 @@ export const LoadingSkeleton: React.FC<{ type?: 'text' | 'card' | 'list' }> = ({
 
 // Error display component
 export const ErrorDisplay: React.FC<{
-  error: any;
+  error: unknown;
   onRetry?: () => void;
   showDetails?: boolean;
 }> = ({ error, onRetry, showDetails = false }) => {
-  const { type, severity } = classifyError(error);
+  const { type } = classifyError(error);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+  const httpError = error as HttpError | undefined;
 
   const getErrorMessage = () => {
     switch (type) {
@@ -309,11 +337,11 @@ export const ErrorDisplay: React.FC<{
       case ErrorType.AUTHORIZATION:
         return 'You don\'t have permission to view this content.';
       case ErrorType.VALIDATION:
-        return error?.message || 'Invalid request. Please check your input.';
+        return httpError?.message || 'Invalid request. Please check your input.';
       case ErrorType.SERVER:
         return 'Server error. Our team has been notified.';
       default:
-        return error?.message || 'An unexpected error occurred.';
+        return httpError?.message || 'An unexpected error occurred.';
     }
   };
 
@@ -334,7 +362,7 @@ export const ErrorDisplay: React.FC<{
             </button>
           )}
 
-          {showDetails && error && (
+          {showDetails && !!error && (
             <div className="mt-3">
               <button
                 onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
@@ -358,15 +386,16 @@ export const ErrorDisplay: React.FC<{
 
 // Hook for error handling in components
 export const useErrorHandler = () => {
-  const handleError = useCallback((error: any, context?: string) => {
+  const handleError = useCallback((error: unknown, context?: string) => {
     const { type, severity } = classifyError(error);
+    const httpError = error as HttpError | undefined;
 
     // Log with context
     console.error(`Error in ${context || 'component'}:`, error);
 
     // Show appropriate UI feedback
     if (severity >= ErrorSeverity.MEDIUM) {
-      toast.error(error?.message || 'An error occurred');
+      toast.error(httpError?.message || 'An error occurred');
     }
 
     // Special handling for specific error types

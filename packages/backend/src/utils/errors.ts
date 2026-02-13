@@ -1,85 +1,50 @@
 /**
- * Service Error Utilities
- * Custom error classes for service layer
+ * Canonical Error Classes
+ *
+ * Single source of truth for all application error types.
+ * These extend AppError from the error-handler-middleware and are
+ * re-exported from there for backward compatibility.
  */
+
+import { AppError } from '../middleware/error-handler-middleware';
 
 export interface ServiceErrorOptions {
   cause?: Error | unknown;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
+  details?: Record<string, unknown> | string;
 }
 
-/**
- * ServiceError - Base error class for service layer operations
- * Provides enhanced error tracking with cause chain and context
- */
-export class ServiceError extends Error {
-  public readonly cause?: Error | unknown;
-  public readonly context?: Record<string, any>;
-  public readonly timestamp: Date;
-
+export class ServiceError extends AppError {
   constructor(message: string, options?: ServiceErrorOptions) {
-    super(message);
+    super(500, 'SERVICE_ERROR', message, options?.details, true, options?.context, options?.cause);
     this.name = 'ServiceError';
-    this.cause = options?.cause;
-    this.context = options?.context;
-    this.timestamp = new Date();
-
-    // Maintain proper stack trace
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ServiceError);
-    }
-  }
-
-  /**
-   * Returns a JSON representation of the error
-   */
-  toJSON(): Record<string, any> {
-    return {
-      name: this.name,
-      message: this.message,
-      timestamp: this.timestamp.toISOString(),
-      context: this.context,
-      cause: this.cause instanceof Error ? this.cause.message : this.cause,
-    };
   }
 }
 
-/**
- * ValidationError - Error for validation failures
- */
-export class ValidationError extends ServiceError {
+export class ValidationError extends AppError {
   constructor(message: string, options?: ServiceErrorOptions) {
-    super(message, options);
+    super(400, 'VALIDATION_ERROR', message, options?.details, true, options?.context, options?.cause);
     this.name = 'ValidationError';
   }
 }
 
-/**
- * NotFoundError - Error for resource not found
- */
-export class NotFoundError extends ServiceError {
+export class NotFoundError extends AppError {
   constructor(resource: string, options?: ServiceErrorOptions) {
-    super(`${resource} not found`, options);
+    super(404, 'NOT_FOUND', `${resource} not found`, options?.details, true, options?.context, options?.cause);
     this.name = 'NotFoundError';
   }
 }
 
-/**
- * ConflictError - Error for resource conflicts
- */
-export class ConflictError extends ServiceError {
+export class ConflictError extends AppError {
   constructor(message: string, options?: ServiceErrorOptions) {
-    super(message, options);
+    super(409, 'CONFLICT', message, options?.details, true, options?.context, options?.cause);
     this.name = 'ConflictError';
   }
 }
 
-/**
- * UnauthorizedError - Error for unauthorized access
- */
-export class UnauthorizedError extends ServiceError {
+export class UnauthorizedError extends AppError {
   constructor(message: string = 'Unauthorized', options?: ServiceErrorOptions) {
-    super(message, options);
+    super(401, 'AUTHENTICATION_ERROR', message, options?.details, true, options?.context, options?.cause);
     this.name = 'UnauthorizedError';
   }
 }

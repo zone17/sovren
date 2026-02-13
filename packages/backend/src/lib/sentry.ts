@@ -14,7 +14,7 @@
  */
 
 import * as Sentry from '@sentry/node';
-import { isSensitiveKey } from './sensitive-fields';
+import { sanitizeObject } from './sensitive-fields';
 
 const dsn = process.env.SENTRY_DSN || '';
 
@@ -35,24 +35,27 @@ export function initSentry(): void {
     // Integrations
     integrations: [Sentry.httpIntegration(), Sentry.expressIntegration()],
 
-    // Sanitize sensitive data before sending
+    // Sanitize sensitive data before sending (clone to avoid mutating original)
     beforeSend(event) {
-      if (event.request?.headers) {
-        delete event.request.headers['authorization'];
-        delete event.request.headers['cookie'];
-        delete event.request.headers['x-api-key'];
-      }
+      const sanitizedEvent = { ...event };
 
-      if (event.request?.data && typeof event.request.data === 'object') {
-        const data = event.request.data as Record<string, unknown>;
-        for (const key of Object.keys(data)) {
-          if (isSensitiveKey(key)) {
-            data[key] = '[REDACTED]';
-          }
+      if (sanitizedEvent.request) {
+        sanitizedEvent.request = { ...sanitizedEvent.request };
+        if (sanitizedEvent.request.headers) {
+          sanitizedEvent.request.headers = { ...sanitizedEvent.request.headers };
+          delete sanitizedEvent.request.headers['authorization'];
+          delete sanitizedEvent.request.headers['cookie'];
+          delete sanitizedEvent.request.headers['x-api-key'];
+        }
+
+        if (sanitizedEvent.request.data && typeof sanitizedEvent.request.data === 'object') {
+          sanitizedEvent.request.data = sanitizeObject(
+            sanitizedEvent.request.data as Record<string, unknown>
+          );
         }
       }
 
-      return event;
+      return sanitizedEvent;
     },
 
     // Sanitize breadcrumbs

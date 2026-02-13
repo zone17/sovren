@@ -11,6 +11,8 @@ import lightningReceiptRoutes from './routes/lightning-receipts';
 import userRouter from './routes/users';
 import healthRouter from './routes/health';
 import v1Routes from './routes/v1';
+import contentDiscoveryRoutes from './routes/content-discovery';
+import subscriptionTiersRoutes from './routes/subscription-tiers';
 import { csrfProtection } from './middleware/csrf';
 import { deploymentMonitoring, getPrometheusMetrics } from './middleware/deployment-monitoring';
 import { correlationIdMiddleware, getCorrelationId } from './middleware/correlation-id';
@@ -169,6 +171,10 @@ export function createApp(): Express {
 
   // API v1 Routes (DI-based controllers for content, users, payments)
   app.use('/api/v1', v1Routes);
+
+  // Content discovery and subscription tier routes
+  app.use('/api/discovery', contentDiscoveryRoutes);
+  app.use('/api/subscription-tiers', subscriptionTiersRoutes);
 
   // 🎯 API Root Endpoint
   // WHY: Provide API information and available endpoints

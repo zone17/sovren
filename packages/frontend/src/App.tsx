@@ -94,7 +94,7 @@ function App(): React.ReactElement {
   );
 
   return (
-    <ErrorBoundary level="global" name="Application">
+    <ErrorBoundary level="page" name="Application">
       <AuthProvider>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>

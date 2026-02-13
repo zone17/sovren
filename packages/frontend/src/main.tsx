@@ -52,7 +52,7 @@ const rootElement = globalThis.document?.getElementById('root');
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <ErrorBoundary level="page" name="Application">
+      <ErrorBoundary level="global" name="Application">
         <Provider store={store}>
           <QueryClientProvider client={queryClient}>
             <BrowserRouter

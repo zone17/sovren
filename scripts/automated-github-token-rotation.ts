@@ -150,7 +150,7 @@ class GitHubTokenRotation {
 
         // Method 2: gh CLI
         try {
-          const token = execSync('gh auth token', { encoding: 'utf8', stdio: 'pipe' }).trim();
+          const token = execFileSync('gh', ['auth', 'token'], { encoding: 'utf8', stdio: 'pipe' }).trim();
           if (token) return token;
         } catch {
           // Continue to next method
@@ -515,10 +515,12 @@ class GitHubTokenRotation {
     const tokenName = `sovren-automated-${Date.now()}`;
 
     // Use gh CLI to create token
-    const result = execSync(
-      `gh api /user/tokens -f note="${tokenName}" -f scopes="repo,workflow" --jq .token`,
-      { encoding: 'utf8' }
-    ).trim();
+    const result = execFileSync('gh', [
+      'api', '/user/tokens',
+      '-f', `note=${tokenName}`,
+      '-f', 'scopes=repo,workflow',
+      '--jq', '.token',
+    ], { encoding: 'utf8' }).trim();
 
     if (!result) {
       throw new Error('Failed to generate token via gh CLI');
@@ -530,7 +532,10 @@ class GitHubTokenRotation {
   private async updateGitHubSecrets(newToken: string): Promise<void> {
     // Update GitHub Actions secret using gh CLI
     try {
-      execSync(`gh secret set GITHUB_TOKEN --repo ${this.repoOwner}/${this.repoName}`, {
+      execFileSync('gh', [
+        'secret', 'set', 'GITHUB_TOKEN',
+        '--repo', `${this.repoOwner}/${this.repoName}`,
+      ], {
         input: newToken,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
@@ -598,7 +603,7 @@ class GitHubTokenRotation {
     // Run the verification script
     const scriptPath = path.join(__dirname, 'verify-token-rotation.sh');
     if (fs.existsSync(scriptPath)) {
-      execSync(`bash ${scriptPath}`, { stdio: 'inherit' });
+      execFileSync('bash', [scriptPath], { stdio: 'inherit' });
     }
   }
 

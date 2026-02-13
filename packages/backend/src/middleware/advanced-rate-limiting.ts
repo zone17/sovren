@@ -851,10 +851,9 @@ export class BypassDetector {
   private detectUserAgentRotation(req: Request): boolean {
     const userAgent = req.get('User-Agent') || '';
 
-    // Check for suspicious user agent patterns
+    // Only flag actual malicious patterns, not standard API clients
     const suspiciousPatterns = [
       /^Mozilla\/5\.0 \(compatible; [^)]+\)$/, // Generic bot pattern
-      /curl|wget|python|java|go-http-client/i,
       /bot|crawler|spider|scraper/i,
     ];
 
@@ -863,23 +862,18 @@ export class BypassDetector {
 
   private detectDistributedAttack(req: Request): boolean {
     // This would require analyzing patterns across multiple requests
-    // Simplified implementation checking for common distributed attack indicators
+    // Only flag truly suspicious indicators, not legitimate API clients
     const userAgent = req.get('User-Agent') || '';
-    const acceptLanguage = req.get('Accept-Language') || '';
 
-    // Very generic headers that suggest automated requests
-    return userAgent.length < 20 || !acceptLanguage || userAgent === 'Mozilla/5.0';
+    // Completely empty user agent is suspicious (legitimate clients send something)
+    return !userAgent;
   }
 
   private detectBotSignature(req: Request): boolean {
     const userAgent = req.get('User-Agent') || '';
-    const headers = req.headers;
 
-    // Check for common bot signatures
+    // Only flag actual bot identifiers in user agent
     const botIndicators = [
-      !headers.accept || headers.accept === '*/*',
-      !headers['accept-language'],
-      !headers['accept-encoding'],
       userAgent.includes('bot'),
       userAgent.includes('crawler'),
       userAgent.includes('spider'),

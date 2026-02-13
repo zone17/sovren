@@ -15,7 +15,7 @@ import {
   UserRelationshipService,
   UserAnalyticsService,
 } from '../../services/user';
-import { asyncHandler, NotFoundError } from '../../middleware/error-handler-middleware';
+import { asyncHandler } from '../../middleware/error-handler-middleware';
 import * as DTOs from '../../dtos/user';
 
 @injectable()

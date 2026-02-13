@@ -177,7 +177,7 @@ class SupabaseCredentialRotation {
 
     // Fallback: try to get from Supabase CLI
     try {
-      const result = execSync('supabase projects list --format json', { encoding: 'utf8' });
+      const result = execFileSync('supabase', ['projects', 'list', '--format', 'json'], { encoding: 'utf8' });
       const projects = JSON.parse(result);
       if (projects.length > 0) {
         return projects[0].id;
@@ -332,17 +332,23 @@ class SupabaseCredentialRotation {
 
     try {
       // Use versioning for atomic update
-      const result = execSync(
-        `aws secretsmanager put-secret-value --secret-id ${this.secretName} --secret-string '${JSON.stringify(updatedSecret)}' --region ${this.awsRegion} --version-stage AWSCURRENT`,
-        { encoding: 'utf8', stdio: 'pipe' }
-      );
+      const result = execFileSync('aws', [
+        'secretsmanager', 'put-secret-value',
+        '--secret-id', this.secretName,
+        '--secret-string', JSON.stringify(updatedSecret),
+        '--region', this.awsRegion,
+        '--version-stage', 'AWSCURRENT',
+      ], { encoding: 'utf8', stdio: 'pipe' });
 
       // Mark old version as AWSPREVIOUS for rollback capability
       const versionId = JSON.parse(result).VersionId;
-      execSync(
-        `aws secretsmanager update-secret-version-stage --secret-id ${this.secretName} --version-stage AWSPREVIOUS --move-to-version-id ${versionId} --region ${this.awsRegion}`,
-        { stdio: 'pipe' }
-      );
+      execFileSync('aws', [
+        'secretsmanager', 'update-secret-version-stage',
+        '--secret-id', this.secretName,
+        '--version-stage', 'AWSPREVIOUS',
+        '--move-to-version-id', versionId,
+        '--region', this.awsRegion,
+      ], { stdio: 'pipe' });
     } catch (error) {
       throw new Error('Failed to update AWS Secrets Manager atomically');
     }
@@ -492,7 +498,7 @@ class SupabaseCredentialRotation {
     try {
       const poolScriptPath = path.join(__dirname, '../packages/backend/scripts/refresh-pool.ts');
       if (fs.existsSync(poolScriptPath)) {
-        execSync(`ts-node ${poolScriptPath}`, {
+        execFileSync('ts-node', [poolScriptPath], {
           env: { ...process.env, DB_PASSWORD: newPassword },
         });
       }
@@ -571,7 +577,7 @@ class SupabaseCredentialRotation {
     if (!accessToken) {
       // Try to get from Supabase CLI
       try {
-        const token = execSync('supabase auth token', { encoding: 'utf8' }).trim();
+        const token = execFileSync('supabase', ['auth', 'token'], { encoding: 'utf8' }).trim();
         if (token) {
           return this.updateSupabasePasswordWithToken(token, newPassword);
         }
@@ -631,10 +637,12 @@ class SupabaseCredentialRotation {
     };
 
     try {
-      execSync(
-        `aws secretsmanager update-secret --secret-id ${this.secretName} --secret-string '${JSON.stringify(updatedSecret)}' --region ${this.awsRegion}`,
-        { stdio: 'pipe' }
-      );
+      execFileSync('aws', [
+        'secretsmanager', 'update-secret',
+        '--secret-id', this.secretName,
+        '--secret-string', JSON.stringify(updatedSecret),
+        '--region', this.awsRegion,
+      ], { stdio: 'pipe' });
     } catch (error) {
       throw new Error('Failed to update AWS Secrets Manager');
     }
@@ -642,10 +650,13 @@ class SupabaseCredentialRotation {
 
   private getAWSSecret(): any {
     try {
-      const result = execSync(
-        `aws secretsmanager get-secret-value --secret-id ${this.secretName} --region ${this.awsRegion} --query SecretString --output text`,
-        { encoding: 'utf8' }
-      );
+      const result = execFileSync('aws', [
+        'secretsmanager', 'get-secret-value',
+        '--secret-id', this.secretName,
+        '--region', this.awsRegion,
+        '--query', 'SecretString',
+        '--output', 'text',
+      ], { encoding: 'utf8' });
       return JSON.parse(result);
     } catch {
       // Return minimal secret structure if doesn't exist
@@ -671,7 +682,7 @@ class SupabaseCredentialRotation {
     // Update DATABASE_URL with new password
     const dbUrlRegex = /DATABASE_URL=postgresql:\/\/([^:]+):([^@]+)@(.+)/;
     envContent = envContent.replace(dbUrlRegex, (match, user, oldPassword, rest) => {
-      return `DATABASE_URL=postgresql://${user}:${newPassword}@${rest}`;
+      return `DATABASE_URL=postgresql://${user}:${encodeURIComponent(newPassword)}@${rest}`;
     });
 
     fs.writeFileSync(envPath, envContent);
@@ -706,7 +717,7 @@ class SupabaseCredentialRotation {
   private async runVerificationTests(): Promise<void> {
     const scriptPath = path.join(__dirname, 'verify-credential-rotation.ts');
     if (fs.existsSync(scriptPath)) {
-      execSync(`ts-node ${scriptPath}`, { stdio: 'inherit' });
+      execFileSync('ts-node', [scriptPath], { stdio: 'inherit' });
     }
   }
 
@@ -774,10 +785,12 @@ ${errorMessage?.includes('Rollback successful') ? '✅ Rollback successful - pre
 `;
 
     try {
-      execSync(
-        `gh issue create --title "${title}" --body "${body.replace(/"/g, '\\"')}" --label security,database`,
-        { stdio: 'pipe' }
-      );
+      execFileSync('gh', [
+        'issue', 'create',
+        '--title', title,
+        '--body', body,
+        '--label', 'security,database',
+      ], { stdio: 'pipe' });
     } catch (error) {
       console.warn('⚠️  Could not create GitHub issue:', error);
     }

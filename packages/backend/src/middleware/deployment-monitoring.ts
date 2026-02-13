@@ -145,7 +145,7 @@ export function deploymentMonitoring(req: Request, res: Response, next: NextFunc
   res.on('finish', () => {
     const route = req.route?.path
       ? normalizeRoute(req.route.path)
-      : normalizeRoute(req.originalUrl);
+      : '/unmatched';
     const statusCode = res.statusCode.toString();
     const labels = { method: req.method, route, status_code: statusCode };
 

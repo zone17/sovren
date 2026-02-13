@@ -34,7 +34,6 @@ import {
   ContentApiResponse,
 } from '../../dtos/content';
 import { asyncHandler } from '../../middleware/error-handler-middleware';
-import { NotFoundError, ServiceError } from '../../middleware/error-handler-middleware';
 
 /**
  * Content Controller
