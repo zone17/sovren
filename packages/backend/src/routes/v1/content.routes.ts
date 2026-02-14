@@ -30,6 +30,21 @@ function getController() {
 
 /**
  * @openapi
+ * /api/v1/content:
+ *   get:
+ *     summary: List content (discovery feed)
+ *     tags: [Content]
+ */
+router.get(
+  '/',
+  optionalAuth,
+  rateLimiters.content.search,
+  validate({ query: ContentValidators.listContent }),
+  (req: Request, res: Response, next: NextFunction) => getController().listContent(req, res, next)
+);
+
+/**
+ * @openapi
  * /api/v1/content/publish:
  *   post:
  *     summary: Publish new content
@@ -56,7 +71,8 @@ router.post(
   requireCreator,
   rateLimiters.content.publish,
   validate({ body: ContentValidators.publishContent }),
-  (req: Request, res: Response, next: NextFunction) => getController().publishContent(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().publishContent(req, res, next)
 );
 
 /**
@@ -74,7 +90,8 @@ router.post(
   requireCreator,
   rateLimiters.content.moderate,
   validate({ body: ContentValidators.moderateContent }),
-  (req: Request, res: Response, next: NextFunction) => getController().moderateContent(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().moderateContent(req, res, next)
 );
 
 /**
@@ -104,7 +121,8 @@ router.get(
   optionalAuth,
   rateLimiters.content.recommendations,
   validate({ query: ContentValidators.getRecommendations }),
-  (req: Request, res: Response, next: NextFunction) => getController().getRecommendations(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getRecommendations(req, res, next)
 );
 
 /**
@@ -121,7 +139,8 @@ router.get(
   authenticate,
   rateLimiters.content.analytics,
   validate({ params: ContentValidators.contentIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().getContentAnalytics(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getContentAnalytics(req, res, next)
 );
 
 /**
@@ -138,7 +157,8 @@ router.get(
   authenticate,
   rateLimiters.content.read,
   validate({ params: ContentValidators.contentIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().getVersionHistory(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getVersionHistory(req, res, next)
 );
 
 /**
@@ -159,7 +179,66 @@ router.post(
     params: ContentValidators.contentIdParam,
     body: ContentValidators.revertContentVersion,
   }),
-  (req: Request, res: Response, next: NextFunction) => getController().revertContentVersion(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().revertContentVersion(req, res, next)
+);
+
+// ============================================================================
+// Content CRUD (parameterized routes must come after named routes)
+// ============================================================================
+
+/**
+ * @openapi
+ * /api/v1/content/{id}:
+ *   get:
+ *     summary: Get a single content item
+ *     tags: [Content]
+ */
+router.get(
+  '/:id',
+  optionalAuth,
+  rateLimiters.content.read,
+  validate({ params: ContentValidators.contentIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().getContent(req, res, next)
+);
+
+/**
+ * @openapi
+ * /api/v1/content/{id}:
+ *   put:
+ *     summary: Update content
+ *     tags: [Content]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.put(
+  '/:id',
+  authenticate,
+  requireCreator,
+  rateLimiters.content.publish,
+  validate({
+    params: ContentValidators.contentIdParam,
+    body: ContentValidators.updateContent,
+  }),
+  (req: Request, res: Response, next: NextFunction) => getController().updateContent(req, res, next)
+);
+
+/**
+ * @openapi
+ * /api/v1/content/{id}:
+ *   delete:
+ *     summary: Delete content
+ *     tags: [Content]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  requireCreator,
+  rateLimiters.content.publish,
+  validate({ params: ContentValidators.contentIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().deleteContent(req, res, next)
 );
 
 export default router;

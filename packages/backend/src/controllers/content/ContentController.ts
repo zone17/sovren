@@ -15,6 +15,7 @@ import {
   ContentRecommendationService,
   ContentAnalyticsService,
   ContentVersioningService,
+  ContentCreationService,
 } from '../../services/content';
 import {
   PublishContentRequestDTO,
@@ -39,9 +40,10 @@ import { asyncHandler } from '../../middleware/error-handler-middleware';
  * Content Controller
  *
  * Manages all content-related HTTP endpoints:
+ * - Content CRUD (create, read, update, delete, list)
  * - Publishing content
  * - Content moderation
- * - Content search
+ * - Content search and discovery
  * - Content recommendations
  * - Content analytics
  * - Version management
@@ -60,8 +62,141 @@ export class ContentController {
     @inject(TYPES.ContentAnalyticsService)
     private analyticsService: ContentAnalyticsService,
     @inject(TYPES.ContentVersioningService)
-    private versioningService: ContentVersioningService
+    private versioningService: ContentVersioningService,
+    @inject(TYPES.ContentCreationService)
+    private creationService: ContentCreationService
   ) {}
+
+  /**
+   * GET /api/v1/content
+   *
+   * List content with optional filters (discovery feed)
+   */
+  public listContent = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+      const startTime = Date.now();
+      const requestData: SearchContentRequestDTO = {
+        query: (req.query.query as string) || '*',
+        sort: (req.query.sort as any) || 'date',
+        pagination: {
+          page: parseInt(req.query.page as string) || 1,
+          limit: parseInt(req.query.limit as string) || 20,
+        },
+      };
+
+      const result = await this.searchService.search(requestData);
+
+      const response: ContentApiResponse<SearchContentResponseDTO> = {
+        success: true,
+        data: {
+          results: result.results.map((item) => ({
+            contentId: item.id,
+            title: item.title,
+            excerpt: item.excerpt || item.content.substring(0, 200),
+            contentType: item.contentType,
+            authorId: item.authorId,
+            authorName: item.authorName || 'Unknown',
+            publishedAt: item.publishedAt.toISOString(),
+            tags: item.tags,
+            priceInSats: item.priceInSats,
+            engagementScore: item.engagementScore || 0,
+            relevanceScore: item.relevanceScore || 0,
+          })),
+          totalResults: result.totalResults,
+          currentPage: result.currentPage,
+          totalPages: result.totalPages,
+          searchTime: Date.now() - startTime,
+          facets: result.facets,
+        },
+        metadata: {
+          requestId: (req as any).id,
+          timestamp: new Date().toISOString(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+
+      res.status(200).json(response);
+    }
+  );
+
+  /**
+   * GET /api/v1/content/:id
+   *
+   * Get a single content item by ID
+   */
+  public getContent = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+      const startTime = Date.now();
+      const contentId = req.params.id;
+
+      const result = await this.creationService.getContent(contentId);
+
+      const response: ContentApiResponse<any> = {
+        success: true,
+        data: result,
+        metadata: {
+          requestId: (req as any).id,
+          timestamp: new Date().toISOString(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+
+      res.status(200).json(response);
+    }
+  );
+
+  /**
+   * PUT /api/v1/content/:id
+   *
+   * Update an existing content item
+   */
+  public updateContent = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+      const startTime = Date.now();
+      const contentId = req.params.id;
+      const updates = req.body;
+
+      const result = await this.creationService.updateContent(contentId, updates);
+
+      const response: ContentApiResponse<any> = {
+        success: true,
+        data: result,
+        metadata: {
+          requestId: (req as any).id,
+          timestamp: new Date().toISOString(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+
+      res.status(200).json(response);
+    }
+  );
+
+  /**
+   * DELETE /api/v1/content/:id
+   *
+   * Delete a content item
+   */
+  public deleteContent = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+      const startTime = Date.now();
+      const contentId = req.params.id;
+
+      await this.creationService.deleteContent(contentId);
+
+      const response: ContentApiResponse<{ deleted: boolean }> = {
+        success: true,
+        data: { deleted: true },
+        metadata: {
+          requestId: (req as any).id,
+          timestamp: new Date().toISOString(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+
+      res.status(200).json(response);
+    }
+  );
 
   /**
    * POST /api/v1/content/publish
@@ -69,7 +204,7 @@ export class ContentController {
    * Publish new content to the platform and NOSTR network
    */
   public publishContent = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const startTime = Date.now();
       const requestData: PublishContentRequestDTO = req.body;
       const userId = (req as any).user?.nostr_pubkey;
@@ -107,7 +242,7 @@ export class ContentController {
    * Moderate content (approve, reject, flag)
    */
   public moderateContent = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const startTime = Date.now();
       const requestData: ModerateContentRequestDTO = req.body;
 
@@ -149,7 +284,7 @@ export class ContentController {
    * Search for content across the platform
    */
   public searchContent = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const startTime = Date.now();
       const requestData: SearchContentRequestDTO = {
         query: req.query.query as string,
@@ -202,7 +337,7 @@ export class ContentController {
    * Get personalized content recommendations
    */
   public getRecommendations = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const startTime = Date.now();
       const userId = req.query.userId as string;
 
@@ -255,7 +390,7 @@ export class ContentController {
    * Get analytics for specific content
    */
   public getContentAnalytics = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const startTime = Date.now();
       const contentId = req.params.id;
 
@@ -266,9 +401,7 @@ export class ContentController {
       };
 
       const result = await this.analyticsService.getContentAnalytics(contentId, {
-        startDate: requestData.timeRange?.start
-          ? new Date(requestData.timeRange.start)
-          : undefined,
+        startDate: requestData.timeRange?.start ? new Date(requestData.timeRange.start) : undefined,
         endDate: requestData.timeRange?.end ? new Date(requestData.timeRange.end) : undefined,
       });
 
@@ -316,7 +449,7 @@ export class ContentController {
    * Get version history for content
    */
   public getVersionHistory = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const startTime = Date.now();
       const contentId = req.params.id;
 
@@ -366,7 +499,7 @@ export class ContentController {
    * Revert content to a previous version
    */
   public revertContentVersion = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       const startTime = Date.now();
       const contentId = req.params.id;
       const requestData: RevertContentVersionRequestDTO = {

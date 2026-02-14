@@ -60,7 +60,26 @@ router.get(
   authenticate,
   rateLimiters.payment.read,
   validate({ query: PaymentValidators.convertCurrency }),
-  (req: Request, res: Response, next: NextFunction) => getController().convertCurrency(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().convertCurrency(req, res, next)
+);
+
+// Subscription tier listing (public)
+router.get(
+  '/subscriptions/tiers',
+  rateLimiters.payment.read,
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getSubscriptionTiers(req, res, next)
+);
+
+// Get specific subscription
+router.get(
+  '/subscriptions/:id',
+  authenticate,
+  rateLimiters.payment.read,
+  validate({ params: PaymentValidators.subscriptionIdParam }),
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getSubscription(req, res, next)
 );
 
 // Subscription endpoints
@@ -70,7 +89,8 @@ router.post(
   requireNostrSignature,
   rateLimiters.payment.createSubscription,
   validate({ body: PaymentValidators.createSubscription }),
-  (req: Request, res: Response, next: NextFunction) => getController().createSubscription(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().createSubscription(req, res, next)
 );
 
 router.put(
@@ -78,8 +98,12 @@ router.put(
   authenticate,
   requireNostrSignature,
   rateLimiters.payment.read,
-  validate({ params: PaymentValidators.subscriptionIdParam, body: PaymentValidators.updateSubscription }),
-  (req: Request, res: Response, next: NextFunction) => getController().updateSubscription(req, res, next)
+  validate({
+    params: PaymentValidators.subscriptionIdParam,
+    body: PaymentValidators.updateSubscription,
+  }),
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().updateSubscription(req, res, next)
 );
 
 router.delete(
@@ -87,8 +111,12 @@ router.delete(
   authenticate,
   requireNostrSignature,
   rateLimiters.payment.read,
-  validate({ params: PaymentValidators.subscriptionIdParam, body: PaymentValidators.cancelSubscription }),
-  (req: Request, res: Response, next: NextFunction) => getController().cancelSubscription(req, res, next)
+  validate({
+    params: PaymentValidators.subscriptionIdParam,
+    body: PaymentValidators.cancelSubscription,
+  }),
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().cancelSubscription(req, res, next)
 );
 
 // Refund endpoint
@@ -107,7 +135,8 @@ router.get(
   authenticate,
   rateLimiters.payment.analytics,
   validate({ query: PaymentValidators.getPaymentAnalytics }),
-  (req: Request, res: Response, next: NextFunction) => getController().getPaymentAnalytics(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getPaymentAnalytics(req, res, next)
 );
 
 // Webhook endpoint
@@ -117,7 +146,8 @@ router.post(
   requireNostrSignature,
   rateLimiters.payment.webhook,
   validate({ body: PaymentValidators.registerWebhook }),
-  (req: Request, res: Response, next: NextFunction) => getController().registerWebhook(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().registerWebhook(req, res, next)
 );
 
 export default router;

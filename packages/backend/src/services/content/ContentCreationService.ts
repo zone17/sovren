@@ -7,7 +7,7 @@ import {
   MediaFile,
   MediaAsset,
   ValidationResult,
-  ContentMetadata
+  ContentMetadata,
 } from '../../interfaces/content';
 import { ICacheService } from '../../interfaces/ICacheService';
 import { IEventBusService } from '../../interfaces/IEventBusService';
@@ -62,7 +62,7 @@ export class ContentCreationService implements IContentCreationService {
     @inject(TYPES.Cache) private readonly cache: ICacheService,
     @inject(TYPES.EventBus) private readonly eventBus: IEventBusService,
     @inject(TYPES.AuditLog) private readonly auditLog: IAuditLogService,
-    @inject(TYPES.Notification) private readonly notification: INotificationService,
+    @inject(TYPES.Notification) private readonly notification: INotificationService
   ) {
     this.logger = new Logger(ContentCreationService.name);
   }
@@ -162,7 +162,7 @@ export class ContentCreationService implements IContentCreationService {
 
       this.logger.info('Content created successfully', {
         contentId: content.id,
-        slug: content.slug
+        slug: content.slug,
       });
 
       return content;
@@ -184,7 +184,7 @@ export class ContentCreationService implements IContentCreationService {
     try {
       this.logger.info('Uploading media file', {
         filename: file.filename,
-        mimetype: file.mimetype
+        mimetype: file.mimetype,
       });
 
       // Validate file type and size
@@ -204,10 +204,7 @@ export class ContentCreationService implements IContentCreationService {
         processedFile = await this.optimizeImage(file.buffer);
 
         // Generate thumbnail
-        thumbnailPath = await this.generateThumbnail(
-          file.buffer,
-          assetId
-        );
+        thumbnailPath = await this.generateThumbnail(file.buffer, assetId);
       }
 
       // Save to storage
@@ -268,7 +265,7 @@ export class ContentCreationService implements IContentCreationService {
       });
 
       this.logger.info('Media uploaded successfully', {
-        assetId: mediaAsset.id
+        assetId: mediaAsset.id,
       });
 
       return mediaAsset;
@@ -289,13 +286,13 @@ export class ContentCreationService implements IContentCreationService {
   public async validateContent(draft: ContentDraft): Promise<ValidationResult> {
     try {
       const validation = this.contentSchema.validate(draft, {
-        abortEarly: false
+        abortEarly: false,
       });
 
       if (validation.error) {
         return {
           isValid: false,
-          errors: validation.error.details.map(detail => ({
+          errors: validation.error.details.map((detail) => ({
             field: detail.path.join('.'),
             message: detail.message,
             type: detail.type,
@@ -356,10 +353,7 @@ export class ContentCreationService implements IContentCreationService {
    * @param contentId - The content ID to auto-save
    * @param draft - Partial draft updates
    */
-  public async autosave(
-    contentId: string,
-    draft: Partial<ContentDraft>
-  ): Promise<void> {
+  public async autosave(contentId: string, draft: Partial<ContentDraft>): Promise<void> {
     try {
       const cacheKey = `autosave:${contentId}`;
 
@@ -427,11 +421,9 @@ export class ContentCreationService implements IContentCreationService {
     let slug = baseSlug;
     let counter = 1;
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-      const existing = await this.db.query(
-        'SELECT id FROM content WHERE slug = $1',
-        [slug]
-      );
+      const existing = await this.db.query('SELECT id FROM content WHERE slug = $1', [slug]);
 
       if (existing.rows.length === 0) {
         break;
@@ -484,13 +476,18 @@ export class ContentCreationService implements IContentCreationService {
   }
 
   /**
-   * Helper method to get content by ID
+   * Get content by ID
+   * @param contentId - The content ID to retrieve
+   * @returns The content item
    */
-  private async getContent(contentId: string): Promise<Content> {
-    const result = await this.db.query(
-      'SELECT * FROM content WHERE id = $1',
-      [contentId]
-    );
+  public async getContent(contentId: string): Promise<Content> {
+    // Check cache first
+    const cached = await this.cache.get<Content>(`content:${contentId}`);
+    if (cached) {
+      return cached;
+    }
+
+    const result = await this.db.query('SELECT * FROM content WHERE id = $1', [contentId]);
 
     if (result.rows.length === 0) {
       throw new ServiceError('Content not found', {
@@ -498,7 +495,92 @@ export class ContentCreationService implements IContentCreationService {
       });
     }
 
-    return result.rows[0];
+    const content = result.rows[0];
+    await this.cache.set(`content:${contentId}`, content, 300);
+    return content;
+  }
+
+  /**
+   * Update an existing content item
+   * @param contentId - The content ID to update
+   * @param updates - Partial content updates
+   * @returns The updated content
+   */
+  public async updateContent(contentId: string, updates: Partial<ContentDraft>): Promise<Content> {
+    await this.getContent(contentId);
+
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.title !== undefined) {
+      fields.push(`title = $${paramIndex++}`);
+      values.push(updates.title);
+    }
+    if (updates.content !== undefined) {
+      fields.push(`content = $${paramIndex++}`);
+      values.push(updates.content);
+    }
+    if (updates.summary !== undefined) {
+      fields.push(`summary = $${paramIndex++}`);
+      values.push(updates.summary);
+    }
+    if (updates.tags !== undefined) {
+      fields.push(`tags = $${paramIndex++}`);
+      values.push(JSON.stringify(updates.tags));
+    }
+    if (updates.category !== undefined) {
+      fields.push(`category = $${paramIndex++}`);
+      values.push(updates.category);
+    }
+    if (updates.status !== undefined) {
+      fields.push(`status = $${paramIndex++}`);
+      values.push(updates.status);
+    }
+
+    fields.push(`updated_at = $${paramIndex++}`);
+    values.push(new Date());
+    values.push(contentId);
+
+    if (fields.length > 1) {
+      await this.db.query(
+        `UPDATE content SET ${fields.join(', ')} WHERE id = $${paramIndex}`,
+        values
+      );
+    }
+
+    // Invalidate cache
+    await this.cache.delete(`content:${contentId}`);
+
+    // Emit event
+    await this.eventBus.emit('content.updated', {
+      contentId,
+      updatedFields: Object.keys(updates),
+      timestamp: Date.now(),
+    });
+
+    return this.getContent(contentId);
+  }
+
+  /**
+   * Delete a content item
+   * @param contentId - The content ID to delete
+   */
+  public async deleteContent(contentId: string): Promise<void> {
+    await this.getContent(contentId); // Verify exists
+
+    await this.db.query('DELETE FROM content WHERE id = $1', [contentId]);
+
+    // Invalidate cache
+    await this.cache.delete(`content:${contentId}`);
+
+    // Emit event
+    await this.eventBus.emit('content.deleted', {
+      contentId,
+      timestamp: Date.now(),
+    });
+
+    this.logger.info('Content deleted', { contentId });
   }
 
   /**
@@ -544,10 +626,7 @@ export class ContentCreationService implements IContentCreationService {
   /**
    * Generates thumbnail for image
    */
-  private async generateThumbnail(
-    buffer: Buffer,
-    assetId: string
-  ): Promise<string> {
+  private async generateThumbnail(buffer: Buffer, assetId: string): Promise<string> {
     const thumbnail = await sharp(buffer)
       .resize(400, 400, {
         fit: 'cover',
@@ -569,6 +648,7 @@ export class ContentCreationService implements IContentCreationService {
    */
   private detectLanguage(text: string): string {
     // Simplified detection - in production use a proper library
+    // eslint-disable-next-line no-control-regex
     const hasNonAscii = /[^\x00-\x7F]/.test(text);
     return hasNonAscii ? 'unknown' : 'en';
   }
@@ -576,10 +656,7 @@ export class ContentCreationService implements IContentCreationService {
   /**
    * Notifies collaborators about new content
    */
-  private async notifyCollaborators(
-    content: Content,
-    collaborators: string[]
-  ): Promise<void> {
+  private async notifyCollaborators(content: Content, collaborators: string[]): Promise<void> {
     for (const collaboratorId of collaborators) {
       await this.notification.send({
         recipientId: collaboratorId,

@@ -5,7 +5,7 @@
  * Integrates with Payment Services via DI container
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../container/types';
 import {
@@ -18,7 +18,6 @@ import {
   WebhookService,
 } from '../../services/payment';
 import { asyncHandler } from '../../middleware/error-handler-middleware';
-import * as DTOs from '../../dtos/payment';
 
 @injectable()
 export class PaymentController {
@@ -84,7 +83,10 @@ export class PaymentController {
     const subscriptionId = req.params.id;
     const { reason, cancelAt } = req.body;
 
-    const result = await this.subscriptionService.cancelSubscription(subscriptionId, { reason, cancelAt });
+    const result = await this.subscriptionService.cancelSubscription(subscriptionId, {
+      reason,
+      cancelAt,
+    });
     res.status(200).json({ success: true, data: result });
   });
 
@@ -110,5 +112,19 @@ export class PaymentController {
     const webhook = await this.webhookService.registerWebhook(webhookData);
 
     res.status(201).json({ success: true, data: webhook });
+  });
+
+  public getSubscriptionTiers = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const tier = req.query.tier as string | undefined;
+    const plans = await this.subscriptionService.listPlans(tier as any);
+
+    res.status(200).json({ success: true, data: plans });
+  });
+
+  public getSubscription = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const subscriptionId = req.params.id;
+    const subscription = await this.subscriptionService.getSubscription(subscriptionId);
+
+    res.status(200).json({ success: true, data: subscription });
   });
 }

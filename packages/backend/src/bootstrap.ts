@@ -11,6 +11,7 @@ import type { IServiceContainer } from './interfaces/shared/IServiceRegistry';
 import { TYPES } from './container/types';
 import { getRedisClient } from './lib/redis';
 import logger from './lib/logger';
+import { SecretsService } from './services/SecretsService';
 
 // Import binding modules
 import { registerSharedServices } from './container/bindings/shared.bindings';
@@ -93,7 +94,10 @@ export async function bootstrapApplication(
   const registrationTime = performance.now() - registrationStart;
 
   if (fullConfig.logStartup) {
-    logger.info('Service registration complete', { durationMs: registrationTime.toFixed(2), count: registry.getRegisteredTokens().length });
+    logger.info('Service registration complete', {
+      durationMs: registrationTime.toFixed(2),
+      count: registry.getRegisteredTokens().length,
+    });
   }
 
   // ======================
@@ -105,7 +109,9 @@ export async function bootstrapApplication(
     const validation = registry.validate();
 
     if (!validation.valid) {
-      logger.error('Container validation failed', { errors: validation.errors.map((e) => e.message) });
+      logger.error('Container validation failed', {
+        errors: validation.errors.map((e) => e.message),
+      });
       validation.errors.forEach((error) => {
         errors.push(new Error(error.message));
       });
@@ -209,6 +215,16 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
         return value.toLowerCase() === 'true';
       },
     };
+  });
+
+  // SecretsService — AWS Secrets Manager with env fallback
+  registry.registerSingletonFactory(TYPES.SecretsService, () => {
+    const secretsService = new SecretsService({
+      environment: (process.env.NODE_ENV as any) || 'development',
+      useAwsSecrets: process.env.USE_AWS_SECRETS === 'true',
+      awsRegion: process.env.AWS_REGION || 'us-east-1',
+    });
+    return secretsService;
   });
 
   // Database (Supabase client - placeholder)
@@ -329,6 +345,18 @@ async function performHealthChecks(container: IServiceContainer): Promise<Map<st
         try {
           container.resolve(TYPES.Database);
           return true; // Placeholder
+        } catch {
+          return false;
+        }
+      },
+    },
+    {
+      name: 'SecretsService',
+      check: async () => {
+        try {
+          const secrets = container.resolve(TYPES.SecretsService) as SecretsService;
+          await secrets.initialize();
+          return true;
         } catch {
           return false;
         }

@@ -119,6 +119,29 @@ export const RevertContentVersionSchema = z.object({
 });
 
 // ============================================================================
+// Content CRUD Validation
+// ============================================================================
+
+export const ListContentSchema = z.object({
+  query: z.string().max(500).optional(),
+  sort: z.enum(['date', 'popularity', 'relevance', 'price']).optional().default('date'),
+  contentType: z.enum(['article', 'video', 'audio', 'image', 'nostr-event']).optional(),
+  tags: z.string().optional(), // comma-separated
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+export const UpdateContentSchema = z.object({
+  title: z.string().min(1).max(500).optional(),
+  content: z.string().min(1).max(1000000).optional(),
+  summary: z.string().max(1000).optional(),
+  tags: z.array(z.string()).max(20).optional(),
+  category: z.string().max(100).optional(),
+  status: z.enum(['draft', 'ready', 'scheduled']).optional(),
+  metadata: z.record(z.any()).optional(),
+});
+
+// ============================================================================
 // Parameter Validation
 // ============================================================================
 
@@ -149,6 +172,8 @@ export const ContentValidators = {
   revertContentVersion: RevertContentVersionSchema,
   contentIdParam: ContentIdParamSchema,
   contentQuery: ContentQuerySchema,
+  listContent: ListContentSchema,
+  updateContent: UpdateContentSchema,
 } as const;
 
 export type ContentValidatorKeys = keyof typeof ContentValidators;
