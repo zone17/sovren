@@ -4,7 +4,8 @@ import { EventEmitter } from 'events';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { z } from 'zod';
-import { RedisClient } from '../config/redis';
+import Redis from 'ioredis';
+import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
 import { AnalyticsService } from './analytics-service';
@@ -121,14 +122,14 @@ interface ExportOptions {
  */
 export class TransactionHistoryService extends EventEmitter {
   private logger: Logger;
-  private redis: RedisClient;
+  private redis: Redis;
   private analyticsService: AnalyticsService;
   private transactionCache: Map<string, Transaction>;
 
   constructor() {
     super();
     this.logger = new Logger('TransactionHistoryService');
-    this.redis = new RedisClient();
+    this.redis = getRedisClient();
     this.analyticsService = new AnalyticsService();
     this.transactionCache = new Map();
 
@@ -1014,8 +1015,7 @@ export class TransactionHistoryService extends EventEmitter {
     // Clear caches
     this.transactionCache.clear();
 
-    // Close connections
-    await this.redis.disconnect();
+    // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
     this.logger.info('Transaction History Service shutdown completed');
   }

@@ -28,7 +28,7 @@ const AuthenticateRequestSchema = z.object({
   challenge: z.string().min(1, 'challenge is required'),
   timestamp: z.number(),
   signature: z.string().min(1, 'Signature is required'),
-  role: z.enum(['creator', 'supporter', 'admin']).optional().default('supporter'),
+  role: z.enum(['creator', 'supporter']).optional().default('supporter'),
 });
 
 // 🎲 Generate authentication challenge

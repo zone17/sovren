@@ -179,6 +179,22 @@ describe('Authentication API Routes', () => {
       expect(response.body.code).toBe('AUTHENTICATION_ERROR');
     });
 
+    it('should reject admin role in authentication request', async () => {
+      const response = await request(app)
+        .post('/api/auth/authenticate')
+        .send({
+          nostr_pubkey: testPubkey,
+          challenge: 'a'.repeat(64),
+          timestamp: Date.now(),
+          signature: 'valid_signature',
+          role: 'admin',
+        })
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('VALIDATION_ERROR');
+    });
+
     it('should not bypass authentication when signature contains mock', async () => {
       // Verify the mock bypass is removed: signature containing 'mock'
       // should go through normal verification flow
@@ -293,6 +309,8 @@ describe('Authentication API Routes', () => {
       });
 
       // First authenticate to get the admin JWT
+      // Note: role:'admin' is not sent in the request body (blocked by Zod validation).
+      // The admin role is set server-side via the verifyJWT mock above.
       const authResponse = await request(app)
         .post('/api/auth/authenticate')
         .send({
@@ -300,7 +318,6 @@ describe('Authentication API Routes', () => {
           challenge: 'a'.repeat(64),
           timestamp: Date.now(),
           signature: 'admin_signature',
-          role: 'admin',
         });
 
       const token = authResponse.body.data.token;

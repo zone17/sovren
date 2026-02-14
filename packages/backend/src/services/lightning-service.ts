@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
 import { TTLCache } from '../utils/ttl-cache';
+import { JsonFilePaymentStore, type PaymentPersistence } from './payment-persistence';
 
 // 🌩️ ELITE LIGHTNING NETWORK SERVICE
 // Comprehensive Bitcoin Lightning Network integration for Sovren
@@ -161,6 +162,7 @@ export class LightningService extends EventEmitter {
     maxSize: 50_000,
     ttlMs: 24 * 60 * 60 * 1000,
   }); // 24hr TTL
+  private persistence!: PaymentPersistence;
 
   private constructor() {
     super();
@@ -184,6 +186,17 @@ export class LightningService extends EventEmitter {
     try {
       // Validate configuration
       this.config = LightningConfigSchema.parse(config);
+
+      // Initialize persistence layer
+      this.persistence = new JsonFilePaymentStore();
+
+      // Hydrate caches from persistence
+      const persistedInvoices = await this.persistence.getAllInvoices();
+      for (const inv of persistedInvoices) {
+        if (inv.status === 'pending' && inv.expires_at > Date.now()) {
+          this.invoiceCache.set(inv.id, inv);
+        }
+      }
 
       // Test LNbits connection
       await this.testConnection();
@@ -287,8 +300,9 @@ export class LightningService extends EventEmitter {
         },
       };
 
-      // Cache invoice
+      // Cache invoice and persist
       this.invoiceCache.set(invoiceId, invoice);
+      await this.persistence.saveInvoice(invoice);
 
       // Emit event
       this.emit('invoice:created', invoice);
@@ -357,8 +371,10 @@ export class LightningService extends EventEmitter {
           supporter_id: invoice.metadata?.supporterId || '',
         };
 
-        // Cache payment
+        // Cache payment and persist
         this.paymentCache.set(payment.id, payment);
+        await this.persistence.savePayment(payment);
+        await this.persistence.updateInvoiceStatus(invoice.id, 'paid');
 
         // Emit events
         this.emit('invoice:paid', payment);
@@ -558,10 +574,13 @@ export class LightningService extends EventEmitter {
 
       // Process payment if it's a payment webhook
       if (payload.type === 'payment' && payload.payment_hash) {
-        // Find matching invoice
-        const invoice = this.invoiceCache
+        // Find matching invoice (cache first, then persistence fallback)
+        let invoice = this.invoiceCache
           .values()
           .find((inv) => inv.payment_hash === payload.payment_hash);
+        if (!invoice) {
+          invoice = await this.persistence.getInvoiceByPaymentHash(payload.payment_hash) ?? undefined;
+        }
 
         if (invoice && invoice.status === 'pending') {
           // Update invoice status
@@ -581,8 +600,10 @@ export class LightningService extends EventEmitter {
             supporter_id: invoice.metadata?.supporterId || '',
           };
 
-          // Cache payment
+          // Cache payment and persist
           this.paymentCache.set(payment.id, payment);
+          await this.persistence.savePayment(payment);
+          await this.persistence.updateInvoiceStatus(invoice.id, 'paid');
 
           // Emit events
           this.emit('invoice:paid', payment);
@@ -628,10 +649,8 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      // Filter payments by creator
-      let payments = this.paymentCache
-        .values()
-        .filter((payment) => payment.creator_id === creatorId);
+      // Read from persistence for complete history
+      let payments = await this.persistence.getPaymentsByCreator(creatorId);
 
       // Apply status filter
       if (options?.status) {
@@ -678,8 +697,8 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      const invoices = this.invoiceCache.values();
-      const payments = this.paymentCache.values();
+      const invoices = await this.persistence.getAllInvoices();
+      const payments = await this.persistence.getAllPayments();
 
       const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
       const averageAmount = payments.length > 0 ? totalAmount / payments.length : 0;

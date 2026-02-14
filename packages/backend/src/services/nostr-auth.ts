@@ -42,7 +42,22 @@ export class NostrAuthService {
     jwtExpiresIn: string = '24h',
     challengeTTL: number = 300000 // 5 minutes
   ) {
-    this.JWT_SECRET = jwtSecret || this.generateSecureSecret();
+    if (jwtSecret) {
+      if (jwtSecret.length < 32) {
+        throw new Error(
+          'JWT_SECRET must be at least 32 characters. ' +
+          'Generate one with: openssl rand -base64 32'
+        );
+      }
+      this.JWT_SECRET = jwtSecret;
+    } else if (process.env.NODE_ENV === 'test') {
+      this.JWT_SECRET = this.generateSecureSecret();
+    } else {
+      throw new Error(
+        'JWT_SECRET environment variable is required. ' +
+        'Generate one with: openssl rand -base64 32'
+      );
+    }
     this.JWT_EXPIRES_IN = jwtExpiresIn;
     this.CHALLENGE_TTL = challengeTTL;
     this.challenges = new Map();
@@ -171,7 +186,7 @@ export class NostrAuthService {
    */
   async generateJWT(
     pubkey: string,
-    role: 'creator' | 'supporter' | 'admin' = 'supporter'
+    role: 'creator' | 'supporter' = 'supporter'
   ): Promise<string> {
     try {
       const payload: JWTPayload = {
@@ -371,7 +386,7 @@ export class NostrAuthService {
 }
 
 // 🏭 Singleton instance for application use
-export const nostrAuth = new NostrAuthService();
+export const nostrAuth = new NostrAuthService(process.env.JWT_SECRET);
 
 // 🎯 Export utility functions
 export const createSignatureMessage = (challenge: string, timestamp: number): string => {

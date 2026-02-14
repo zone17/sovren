@@ -1,7 +1,8 @@
 import { randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
-import { RedisClient } from '../config/redis';
+import Redis from 'ioredis';
+import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
 import { AnalyticsService } from './analytics-service';
@@ -80,7 +81,7 @@ interface PayoutSchedule {
  */
 export class PayoutManagementService extends EventEmitter {
   private logger: Logger;
-  private redis: RedisClient;
+  private redis: Redis;
   private lightningService: LightningPaymentService;
   private transactionService: TransactionHistoryService;
   private notificationService: NotificationService;
@@ -94,7 +95,7 @@ export class PayoutManagementService extends EventEmitter {
   ) {
     super();
     this.logger = new Logger('PayoutManagementService');
-    this.redis = new RedisClient();
+    this.redis = getRedisClient();
     this.lightningService = lightningService;
     this.transactionService = transactionService;
     this.notificationService = new NotificationService();
@@ -876,8 +877,7 @@ export class PayoutManagementService extends EventEmitter {
     // Clear caches
     this.earningsCache.clear();
 
-    // Close connections
-    await this.redis.disconnect();
+    // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
     this.logger.info('Payout Management Service shutdown completed');
   }

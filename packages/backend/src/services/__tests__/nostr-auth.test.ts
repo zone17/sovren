@@ -1,10 +1,12 @@
 import { createSignatureMessage, NostrAuthService, validateNostrPubkey } from '../nostr-auth';
 
+const VALID_SECRET = 'a'.repeat(32); // Minimum 32 characters
+
 describe('NOSTR Authentication Service', () => {
   let authService: NostrAuthService;
 
   beforeEach(() => {
-    authService = new NostrAuthService('test-secret-key');
+    authService = new NostrAuthService(VALID_SECRET);
   });
 
   describe('Challenge Generation', () => {
@@ -66,6 +68,42 @@ describe('NOSTR Authentication Service', () => {
       expect(stats.jwtExpiresIn).toBeDefined();
       expect(stats.challengeTTL).toBeDefined();
     });
+  });
+});
+
+describe('JWT Secret Validation (P1-089)', () => {
+  it('should accept a valid JWT secret (>= 32 chars)', () => {
+    expect(() => new NostrAuthService('a'.repeat(32))).not.toThrow();
+    expect(() => new NostrAuthService('a'.repeat(64))).not.toThrow();
+  });
+
+  it('should reject a JWT secret shorter than 32 characters', () => {
+    expect(() => new NostrAuthService('short')).toThrow(
+      'JWT_SECRET must be at least 32 characters'
+    );
+    expect(() => new NostrAuthService('a'.repeat(31))).toThrow(
+      'JWT_SECRET must be at least 32 characters'
+    );
+  });
+
+  it('should allow random secret in test environment (no secret provided)', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'test';
+
+    expect(() => new NostrAuthService()).not.toThrow();
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('should throw when no secret provided in non-test environment', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    expect(() => new NostrAuthService()).toThrow(
+      'JWT_SECRET environment variable is required'
+    );
+
+    process.env.NODE_ENV = originalEnv;
   });
 });
 

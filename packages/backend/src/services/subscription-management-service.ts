@@ -1,7 +1,8 @@
 import { randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
-import { RedisClient } from '../config/redis';
+import Redis from 'ioredis';
+import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
 import { AnalyticsService } from './analytics-service';
@@ -118,7 +119,7 @@ interface SubscriptionAnalytics {
  */
 export class SubscriptionManagementService extends EventEmitter {
   private logger: Logger;
-  private redis: RedisClient;
+  private redis: Redis;
   private lightningService: LightningPaymentService;
   private notificationService: NotificationService;
   private analyticsService: AnalyticsService;
@@ -129,7 +130,7 @@ export class SubscriptionManagementService extends EventEmitter {
   constructor(lightningService: LightningPaymentService) {
     super();
     this.logger = new Logger('SubscriptionManagementService');
-    this.redis = new RedisClient();
+    this.redis = getRedisClient();
     this.lightningService = lightningService;
     this.notificationService = new NotificationService();
     this.analyticsService = new AnalyticsService();
@@ -1053,8 +1054,7 @@ export class SubscriptionManagementService extends EventEmitter {
     // Clear caches
     this.subscriptionCache.clear();
 
-    // Close connections
-    await this.redis.disconnect();
+    // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
     this.logger.info('Subscription Management Service shutdown completed');
   }

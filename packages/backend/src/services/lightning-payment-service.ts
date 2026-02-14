@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
-import { RedisClient } from '../config/redis';
+import Redis from 'ioredis';
+import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
 import { TTLCache } from '../utils/ttl-cache';
@@ -111,7 +112,7 @@ interface PaymentStatusUpdate {
  */
 export class LightningPaymentService extends EventEmitter {
   private logger: Logger;
-  private redis: RedisClient;
+  private redis: Redis;
   private wsService: WebSocketService;
   private notificationService: NotificationService;
   private analyticsService: AnalyticsService;
@@ -122,7 +123,7 @@ export class LightningPaymentService extends EventEmitter {
   constructor() {
     super();
     this.logger = new Logger('LightningPaymentService');
-    this.redis = new RedisClient();
+    this.redis = getRedisClient();
     this.wsService = new WebSocketService();
     this.notificationService = new NotificationService();
     this.analyticsService = new AnalyticsService();
@@ -832,8 +833,7 @@ export class LightningPaymentService extends EventEmitter {
     // Clear caches
     this.invoiceCache.destroy();
 
-    // Close connections
-    await this.redis.disconnect();
+    // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
     this.logger.info('Lightning Payment Service shutdown completed');
   }
