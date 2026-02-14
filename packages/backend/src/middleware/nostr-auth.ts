@@ -13,20 +13,6 @@ import { unifiedNostrAuth } from '../services/unified-nostr-auth';
 // TYPE DEFINITIONS
 // =====================================================
 
-declare global {
-  namespace Express {
-    interface Request {
-      nostr?: {
-        pubkey: string;
-        npub?: string;
-        sessionId?: string;
-        role?: 'creator' | 'supporter' | 'admin';
-        session?: any;
-      };
-    }
-  }
-}
-
 export interface NostrAuthOptions {
   requireRole?: 'creator' | 'supporter' | 'admin';
   allowExpired?: boolean;
@@ -164,11 +150,7 @@ export function optionalNostrAuth() {
 /**
  * Middleware for generating authentication challenges
  */
-export async function generateChallenge(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function generateChallenge(req: Request, res: Response, _next: NextFunction) {
   try {
     const { pubkey } = req.body;
 
@@ -217,11 +199,7 @@ export async function generateChallenge(
 /**
  * Middleware for verifying NOSTR signatures
  */
-export async function verifySignature(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function verifySignature(req: Request, res: Response, _next: NextFunction) {
   try {
     const { pubkey, signature, challenge, timestamp, deviceInfo } = req.body;
 
@@ -282,11 +260,7 @@ export async function verifySignature(
 /**
  * Middleware for refreshing JWT tokens
  */
-export async function refreshToken(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function refreshToken(req: Request, res: Response, _next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
 
@@ -331,11 +305,7 @@ export async function refreshToken(
 /**
  * Middleware for logging out users
  */
-export async function logout(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function logout(req: Request, res: Response, _next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
 
@@ -372,11 +342,7 @@ export async function logout(
 /**
  * Middleware for validating existing tokens
  */
-export async function validateToken(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function validateToken(req: Request, res: Response, _next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
 
@@ -423,10 +389,7 @@ export async function validateToken(
 /**
  * Check if user has required role
  */
-function hasRequiredRole(
-  userRole: string,
-  requiredRole: string
-): boolean {
+function hasRequiredRole(userRole: string, requiredRole: string): boolean {
   const roleHierarchy: Record<string, number> = {
     supporter: 1,
     creator: 2,

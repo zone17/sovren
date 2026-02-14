@@ -2,21 +2,6 @@ import { JWTPayload, nostrAuth } from '@/services/nostr-auth';
 import { NextFunction, Request, Response } from 'express';
 import logger from '../lib/logger';
 
-// 🌟 Extended Request interface with NOSTR authentication
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        nostr_pubkey: string;
-        role?: 'creator' | 'supporter' | 'admin' | undefined;
-        signature_verified: boolean;
-        iat: number;
-        exp: number;
-      };
-    }
-  }
-}
-
 // 🔒 Authentication middleware for JWT verification
 export const authenticate = async (
   req: Request,
@@ -43,7 +28,11 @@ export const authenticate = async (
     const verification = await nostrAuth.verifyJWT(token);
 
     if (!verification.valid || !verification.payload) {
-      logger.warn('JWT verification failed', { error: verification.error, ip: req.ip, path: req.path });
+      logger.warn('JWT verification failed', {
+        error: verification.error,
+        ip: req.ip,
+        path: req.path,
+      });
       res.status(401).json({
         success: false,
         error: 'Authentication failed',
@@ -62,7 +51,11 @@ export const authenticate = async (
     };
     next();
   } catch (error) {
-    logger.error('Authentication service error', { error: error instanceof Error ? error.message : 'Unknown error', ip: req.ip, path: req.path });
+    logger.error('Authentication service error', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      ip: req.ip,
+      path: req.path,
+    });
     res.status(500).json({
       success: false,
       error: 'Authentication failed',
@@ -86,7 +79,12 @@ export const authorize = (allowedRoles: Array<'creator' | 'supporter' | 'admin'>
     const userRole = req.user.role || 'supporter'; // Default to supporter
 
     if (!allowedRoles.includes(userRole)) {
-      logger.warn('Authorization failed', { requiredRoles: allowedRoles, currentRole: userRole, pubkey: req.user.nostr_pubkey, path: req.path });
+      logger.warn('Authorization failed', {
+        requiredRoles: allowedRoles,
+        currentRole: userRole,
+        pubkey: req.user.nostr_pubkey,
+        path: req.path,
+      });
       res.status(403).json({
         error: 'Insufficient permissions',
         code: 'UNAUTHORIZED',
@@ -179,7 +177,11 @@ export const requireNostrSignature = async (
     });
 
     if (!verification.valid) {
-      logger.warn('NOSTR signature verification failed', { error: verification.error, pubkey: req.user.nostr_pubkey, path: req.path });
+      logger.warn('NOSTR signature verification failed', {
+        error: verification.error,
+        pubkey: req.user.nostr_pubkey,
+        path: req.path,
+      });
       res.status(403).json({
         error: 'Invalid NOSTR signature',
         code: 'INVALID_SIGNATURE',
@@ -189,7 +191,10 @@ export const requireNostrSignature = async (
 
     next();
   } catch (error) {
-    logger.error('Signature verification error', { error: error instanceof Error ? error.message : 'Unknown error', path: req.path });
+    logger.error('Signature verification error', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      path: req.path,
+    });
     res.status(500).json({
       error: 'Signature verification failed',
       code: 'SIGNATURE_ERROR',
@@ -274,7 +279,7 @@ export const handleAuthError = (
   error: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   console.error('Authentication error:', error);
 

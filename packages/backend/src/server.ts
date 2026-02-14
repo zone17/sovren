@@ -19,9 +19,9 @@ dotenv.config();
  * container orchestration signals, and unexpected errors gracefully.
  */
 
-// 🔧 Process Configuration
-// WHY: Prevent memory leaks and handle unhandled Promise rejections
-process.setMaxListeners(0);
+// Process listener limit: set above known listener count (~15)
+// to detect genuine leaks without false positives during normal operation.
+process.setMaxListeners(25);
 
 // 📊 Application State
 let server: any = null;

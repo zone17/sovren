@@ -114,7 +114,6 @@ prisma/migrations/
 
 # Local development
 .vercel
-.env.example
 
 # Husky
 .husky/_ 

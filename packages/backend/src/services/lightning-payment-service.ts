@@ -4,11 +4,13 @@ import { z } from 'zod';
 import { RedisClient } from '../config/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
+import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 import { NotificationService } from './notification-service';
 import { WebSocketService } from './websocket-service';
 
 // Lightning Network Types and Schemas
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LightningInvoiceSchema = z.object({
   payment_request: z.string().min(1),
   payment_hash: z.string().length(64),
@@ -114,8 +116,8 @@ export class LightningPaymentService extends EventEmitter {
   private notificationService: NotificationService;
   private analyticsService: AnalyticsService;
   private walletProviders: Map<string, WalletProvider>;
-  private paymentMonitors: Map<string, NodeJS.Timeout>;
-  private invoiceCache: Map<string, LightningInvoice>;
+  private paymentMonitors: Map<string, NodeJS.Timeout>; // Self-cleaning via 1hr timeout in startPaymentMonitoring
+  private invoiceCache: TTLCache<string, LightningInvoice>;
 
   constructor() {
     super();
@@ -126,7 +128,7 @@ export class LightningPaymentService extends EventEmitter {
     this.analyticsService = new AnalyticsService();
     this.walletProviders = new Map();
     this.paymentMonitors = new Map();
-    this.invoiceCache = new Map();
+    this.invoiceCache = new TTLCache({ maxSize: 10_000, ttlMs: 30 * 60 * 1000 }); // 30 min TTL, 10k max
 
     this.initializeService();
   }
@@ -635,8 +637,8 @@ export class LightningPaymentService extends EventEmitter {
   }
 
   private async verifyWithProvider(
-    provider: WalletProvider,
-    payment_hash: string
+    _provider: WalletProvider,
+    _payment_hash: string
   ): Promise<PaymentVerification | null> {
     // This would integrate with actual provider APIs
     // Mock implementation for now
@@ -822,13 +824,13 @@ export class LightningPaymentService extends EventEmitter {
    */
   async shutdown(): Promise<void> {
     // Clear all payment monitors
-    for (const [hash, monitor] of this.paymentMonitors) {
+    for (const [, monitor] of this.paymentMonitors) {
       clearInterval(monitor);
     }
     this.paymentMonitors.clear();
 
     // Clear caches
-    this.invoiceCache.clear();
+    this.invoiceCache.destroy();
 
     // Close connections
     await this.redis.disconnect();

@@ -311,14 +311,14 @@ async function checkNostr(): Promise<ServiceHealth> {
     const ws = new WebSocket(relay);
 
     try {
-      await new Promise((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Connection timeout'));
         }, 5000);
 
         ws.onopen = () => {
           clearTimeout(timeout);
-          resolve(void 0);
+          resolve();
         };
 
         ws.onerror = (error) => {
@@ -327,6 +327,10 @@ async function checkNostr(): Promise<ServiceHealth> {
         };
       });
     } finally {
+      ws.onopen = null;
+      ws.onerror = null;
+      ws.onclose = null;
+      ws.onmessage = null;
       ws.close();
     }
 

@@ -61,29 +61,7 @@ router.post('/authenticate', authRateLimit, async (req: Request, res: Response) 
     // Validate request body
     const validatedData = AuthenticateRequestSchema.parse(req.body);
 
-    // For testing purposes, mock the signature verification
-    if (process.env.NODE_ENV === 'test' && req.body.signature?.includes('mock')) {
-      // Mock successful verification for tests
-      const token = await nostrAuth.generateJWT(
-        validatedData.nostr_pubkey,
-        validatedData.role
-      );
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          token,
-          user: {
-            nostr_pubkey: validatedData.nostr_pubkey,
-            role: validatedData.role,
-            signature_verified: true,
-          },
-          expires_in: '24h',
-        },
-      });
-    }
-
-    // Real NOSTR signature verification
+    // NOSTR signature verification
     const verification = await nostrAuth.verifySignature({
       pubkey: validatedData.nostr_pubkey,
       signature: validatedData.signature,
@@ -100,10 +78,7 @@ router.post('/authenticate', authRateLimit, async (req: Request, res: Response) 
     }
 
     // Generate JWT token
-    const token = await nostrAuth.generateJWT(
-      verification.pubkey,
-      validatedData.role
-    );
+    const token = await nostrAuth.generateJWT(verification.pubkey, validatedData.role);
 
     return res.status(200).json({
       success: true,

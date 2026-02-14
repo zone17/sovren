@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
+import { TTLCache } from '../utils/ttl-cache';
 
 // 🌩️ ELITE LIGHTNING NETWORK SERVICE
 // Comprehensive Bitcoin Lightning Network integration for Sovren
@@ -68,18 +69,22 @@ export const LnurlPayResponseSchema = z.object({
   metadata: z.string(),
   tag: z.literal('payRequest'),
   commentAllowed: z.number().nonnegative().default(0),
-  payerData: z.object({
-    name: z.object({ mandatory: z.boolean().default(false) }),
-    email: z.object({ mandatory: z.boolean().default(false) }),
-    pubkey: z.object({ mandatory: z.boolean().default(false) }),
-  }).optional(),
+  payerData: z
+    .object({
+      name: z.object({ mandatory: z.boolean().default(false) }),
+      email: z.object({ mandatory: z.boolean().default(false) }),
+      pubkey: z.object({ mandatory: z.boolean().default(false) }),
+    })
+    .optional(),
 });
 
 /**
  * Lightning Address Schema
  */
 export const LightningAddressSchema = z.object({
-  identifier: z.string().regex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid Lightning address format'),
+  identifier: z
+    .string()
+    .regex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid Lightning address format'),
   domain: z.string(),
   user: z.string(),
   active: z.boolean().default(true),
@@ -104,7 +109,7 @@ export interface LightningServiceEvents {
   'payment:completed': (payment: LightningPayment) => void;
   'payment:failed': (payment: LightningPayment) => void;
   'webhook:received': (data: any) => void;
-  'error': (error: Error) => void;
+  error: (error: Error) => void;
 }
 
 /**
@@ -148,8 +153,14 @@ export class LightningService extends EventEmitter {
   private static instance: LightningService;
   private config!: LightningConfig;
   private isInitialized = false;
-  private invoiceCache = new Map<string, LightningInvoice>();
-  private paymentCache = new Map<string, LightningPayment>();
+  private invoiceCache = new TTLCache<string, LightningInvoice>({
+    maxSize: 10_000,
+    ttlMs: 60 * 60 * 1000,
+  }); // 1hr TTL
+  private paymentCache = new TTLCache<string, LightningPayment>({
+    maxSize: 50_000,
+    ttlMs: 24 * 60 * 60 * 1000,
+  }); // 24hr TTL
 
   private constructor() {
     super();
@@ -182,11 +193,14 @@ export class LightningService extends EventEmitter {
       console.log(`📡 Connected to LNbits: ${this.config.lnbitsUrl}`);
       console.log(`💳 Wallet ID: ${this.config.lnbitsWalletId}`);
       console.log(`🔗 LNURL-pay: ${this.config.enableLnurlPay ? 'Enabled' : 'Disabled'}`);
-      console.log(`📧 Lightning Address: ${this.config.enableLightningAddress ? 'Enabled' : 'Disabled'}`);
-
+      console.log(
+        `📧 Lightning Address: ${this.config.enableLightningAddress ? 'Enabled' : 'Disabled'}`
+      );
     } catch (error) {
       console.error('❌ Failed to initialize Lightning service:', error);
-      throw new Error(`Lightning service initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Lightning service initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -201,7 +215,9 @@ export class LightningService extends EventEmitter {
       }
       console.log(`✅ LNbits connection verified - Wallet: ${response.name}`);
     } catch (error) {
-      throw new Error(`LNbits connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `LNbits connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -225,7 +241,10 @@ export class LightningService extends EventEmitter {
       this.requireInitialization();
 
       // Validate amount
-      if (params.amount < this.config.minInvoiceAmount || params.amount > this.config.maxInvoiceAmount) {
+      if (
+        params.amount < this.config.minInvoiceAmount ||
+        params.amount > this.config.maxInvoiceAmount
+      ) {
         return {
           success: false,
           error: `Amount must be between ${this.config.minInvoiceAmount} and ${this.config.maxInvoiceAmount} satoshis`,
@@ -243,7 +262,9 @@ export class LightningService extends EventEmitter {
         amount: params.amount,
         memo,
         expiry: expiryMinutes * 60, // Convert to seconds
-        webhook: this.config.enableWebhooks ? `${process.env.WEBHOOK_BASE_URL}/api/lightning/webhook` : undefined,
+        webhook: this.config.enableWebhooks
+          ? `${process.env.WEBHOOK_BASE_URL}/api/lightning/webhook`
+          : undefined,
         internal: false,
       });
 
@@ -254,7 +275,7 @@ export class LightningService extends EventEmitter {
         amount: params.amount,
         description: params.description,
         created_at: Date.now(),
-        expires_at: Date.now() + (expiryMinutes * 60 * 1000),
+        expires_at: Date.now() + expiryMinutes * 60 * 1000,
         status: 'pending',
         payment_hash: lnbitsResponse.payment_hash,
         payment_request: lnbitsResponse.payment_request,
@@ -278,7 +299,6 @@ export class LightningService extends EventEmitter {
         success: true,
         invoice,
       };
-
     } catch (error) {
       console.error('❌ Failed to create Lightning invoice:', error);
       return {
@@ -361,7 +381,6 @@ export class LightningService extends EventEmitter {
         success: true,
         invoice,
       };
-
     } catch (error) {
       console.error('❌ Failed to check invoice status:', error);
       return {
@@ -404,13 +423,17 @@ export class LightningService extends EventEmitter {
       const callbackUrl = `${baseUrl}/api/lightning/lnurl-pay/${params.creatorId}`;
 
       // Create LNURL-pay response data
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const lnurlData: LnurlPayResponse = {
         callback: callbackUrl,
         maxSendable: maxAmount * 1000, // Convert to millisatoshis
         minSendable: minAmount * 1000, // Convert to millisatoshis
         metadata: JSON.stringify([
           ['text/plain', `Support creator on Sovren`],
-          ['text/long-desc', `Send Bitcoin Lightning payment to support this creator on the Sovren platform.`],
+          [
+            'text/long-desc',
+            `Send Bitcoin Lightning payment to support this creator on the Sovren platform.`,
+          ],
         ]),
         tag: 'payRequest',
         commentAllowed: params.commentAllowed || 280,
@@ -431,7 +454,6 @@ export class LightningService extends EventEmitter {
         lnurl: lnurlString,
         qrCode: await this.generateQrCode(lnurlString),
       };
-
     } catch (error) {
       console.error('❌ Failed to generate LNURL-pay:', error);
       return {
@@ -485,13 +507,14 @@ export class LightningService extends EventEmitter {
         updated_at: Date.now(),
       };
 
-      console.log(`📧 Created Lightning address: ${lightningAddressString} for creator: ${params.creatorId}`);
+      console.log(
+        `📧 Created Lightning address: ${lightningAddressString} for creator: ${params.creatorId}`
+      );
 
       return {
         success: true,
         lightningAddress,
       };
-
     } catch (error) {
       console.error('❌ Failed to create Lightning address:', error);
       return {
@@ -504,7 +527,10 @@ export class LightningService extends EventEmitter {
   /**
    * Process Lightning webhook
    */
-  public async processWebhook(payload: any, signature?: string): Promise<{
+  public async processWebhook(
+    payload: any,
+    signature?: string
+  ): Promise<{
     success: boolean;
     payment?: LightningPayment;
     error?: string;
@@ -533,8 +559,9 @@ export class LightningService extends EventEmitter {
       // Process payment if it's a payment webhook
       if (payload.type === 'payment' && payload.payment_hash) {
         // Find matching invoice
-        const invoice = Array.from(this.invoiceCache.values())
-          .find(inv => inv.payment_hash === payload.payment_hash);
+        const invoice = this.invoiceCache
+          .values()
+          .find((inv) => inv.payment_hash === payload.payment_hash);
 
         if (invoice && invoice.status === 'pending') {
           // Update invoice status
@@ -573,7 +600,6 @@ export class LightningService extends EventEmitter {
       return {
         success: true,
       };
-
     } catch (error) {
       console.error('❌ Failed to process Lightning webhook:', error);
       return {
@@ -586,11 +612,14 @@ export class LightningService extends EventEmitter {
   /**
    * Get creator payment history
    */
-  public async getCreatorPayments(creatorId: string, options?: {
-    limit?: number;
-    offset?: number;
-    status?: 'pending' | 'completed' | 'failed';
-  }): Promise<{
+  public async getCreatorPayments(
+    creatorId: string,
+    options?: {
+      limit?: number;
+      offset?: number;
+      status?: 'pending' | 'completed' | 'failed';
+    }
+  ): Promise<{
     success: boolean;
     payments?: LightningPayment[];
     total?: number;
@@ -600,12 +629,13 @@ export class LightningService extends EventEmitter {
       this.requireInitialization();
 
       // Filter payments by creator
-      let payments = Array.from(this.paymentCache.values())
-        .filter(payment => payment.creator_id === creatorId);
+      let payments = this.paymentCache
+        .values()
+        .filter((payment) => payment.creator_id === creatorId);
 
       // Apply status filter
       if (options?.status) {
-        payments = payments.filter(payment => payment.status === options.status);
+        payments = payments.filter((payment) => payment.status === options.status);
       }
 
       // Sort by settled_at descending
@@ -621,7 +651,6 @@ export class LightningService extends EventEmitter {
         payments: paginatedPayments,
         total: payments.length,
       };
-
     } catch (error) {
       console.error('❌ Failed to get creator payments:', error);
       return {
@@ -649,13 +678,13 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      const invoices = Array.from(this.invoiceCache.values());
-      const payments = Array.from(this.paymentCache.values());
+      const invoices = this.invoiceCache.values();
+      const payments = this.paymentCache.values();
 
       const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
       const averageAmount = payments.length > 0 ? totalAmount / payments.length : 0;
       const successRate = invoices.length > 0 ? (payments.length / invoices.length) * 100 : 0;
-      const activeInvoices = invoices.filter(inv => inv.status === 'pending').length;
+      const activeInvoices = invoices.filter((inv) => inv.status === 'pending').length;
 
       return {
         success: true,
@@ -668,7 +697,6 @@ export class LightningService extends EventEmitter {
           activeInvoices,
         },
       };
-
     } catch (error) {
       console.error('❌ Failed to get Lightning stats:', error);
       return {
@@ -727,7 +755,6 @@ export class LightningService extends EventEmitter {
         status,
         checks,
       };
-
     } catch (error) {
       return {
         success: false,
@@ -750,7 +777,11 @@ export class LightningService extends EventEmitter {
     }
   }
 
-  private async makeRequest(method: 'GET' | 'POST' | 'PUT' | 'DELETE', endpoint: string, data?: any): Promise<any> {
+  private async makeRequest(
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    endpoint: string,
+    data?: any
+  ): Promise<any> {
     const url = `${this.config.lnbitsUrl}${endpoint}`;
     const headers: Record<string, string> = {
       'X-Api-Key': this.config.lnbitsApiKey,

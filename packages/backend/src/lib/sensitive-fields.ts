@@ -36,13 +36,14 @@ const MAX_SANITIZE_DEPTH = 10;
 export function sanitizeObject(
   data: Record<string, unknown>,
   depth: number = 0,
-  seen: WeakSet<object> = new WeakSet()
+  seen: WeakMap<object, Record<string, unknown>> = new WeakMap()
 ): Record<string, unknown> {
   if (depth >= MAX_SANITIZE_DEPTH) return { _truncated: '[MAX_DEPTH]' };
-  if (seen.has(data)) return { _circular: '[CIRCULAR]' };
-  seen.add(data);
+  if (seen.has(data)) return seen.get(data)!;
 
   const sanitized: Record<string, unknown> = {};
+  seen.set(data, sanitized);
+
   for (const [key, value] of Object.entries(data)) {
     if (isSensitiveKey(key)) {
       sanitized[key] = '[REDACTED]';

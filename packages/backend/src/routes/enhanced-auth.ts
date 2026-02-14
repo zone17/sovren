@@ -118,24 +118,6 @@ router.post('/authenticate', authRateLimit, async (req: Request, res: Response) 
   try {
     const validatedData = EnhancedAuthenticateRequestSchema.parse(req.body);
 
-    // For testing purposes, mock the signature verification
-    if (process.env.NODE_ENV === 'test' && req.body.signature?.includes('mock')) {
-      return res.status(200).json({
-        success: true,
-        data: {
-          sessionId: 'mock-session-id',
-          accessToken: 'mock-jwt-token',
-          refreshToken: 'mock-refresh-token',
-          expiresAt: Date.now() + 86400000, // 24 hours
-          user: {
-            pubkey: validatedData.pubkey,
-            deviceId: validatedData.deviceInfo.deviceId,
-            trusted: validatedData.deviceInfo.trusted,
-          },
-        },
-      });
-    }
-
     // Enhanced authentication with device support
     const authResult = await enhancedNostrAuth.authenticateWithDevice({
       pubkey: validatedData.pubkey,
@@ -471,37 +453,5 @@ router.get('/health', async (req: Request, res: Response) => {
     });
   }
 });
-
-// 🧪 Test endpoint (only available in test environment)
-if (process.env.NODE_ENV === 'test') {
-  router.post('/test/mock-auth', async (req: Request, res: Response) => {
-    try {
-      const { pubkey } = req.body;
-
-      if (!pubkey || !/^[0-9a-fA-F]{64}$/.test(pubkey)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Valid pubkey required',
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        data: {
-          sessionId: 'test-session-id',
-          accessToken: 'test-jwt-token',
-          refreshToken: 'test-refresh-token',
-          expiresAt: Date.now() + 86400000,
-          user: { pubkey },
-        },
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: 'Test mock auth failed',
-      });
-    }
-  });
-}
 
 export default router;
