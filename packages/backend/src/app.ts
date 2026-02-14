@@ -17,7 +17,7 @@ import { csrfProtection } from './middleware/csrf';
 import { deploymentMonitoring, getPrometheusMetrics } from './middleware/deployment-monitoring';
 import { correlationIdMiddleware, getCorrelationId } from './middleware/correlation-id';
 import { createRateLimiter } from './middleware/rate-limit-middleware';
-import { errorHandler } from './middleware/error-handler-middleware';
+import { errorHandler, notFoundHandler } from './middleware/error-handler-middleware';
 import logger from './lib/logger';
 import { initSentry } from './lib/sentry';
 
@@ -80,10 +80,20 @@ export function createApp(): Express {
   // WHY: Enable secure cross-origin requests for our frontend applications
   app.use(
     cors({
-      origin:
-        process.env.NODE_ENV === 'production'
-          ? ['https://sovren.app', 'https://www.sovren.app']
-          : ['http://localhost:3000', 'http://localhost:5173'],
+      origin: (origin, callback) => {
+        // Allow requests with no Origin header (non-browser clients, agents, curl)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins =
+          process.env.NODE_ENV === 'production'
+            ? ['https://sovren.app', 'https://www.sovren.app']
+            : ['http://localhost:3000', 'http://localhost:5173'];
+
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      },
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
       exposedHeaders: [
@@ -154,9 +164,35 @@ export function createApp(): Express {
   // Deployment monitoring middleware (tracks request metrics for Prometheus)
   app.use(deploymentMonitoring);
 
-  // Prometheus metrics endpoint (scraped by Prometheus) - async handler for prom-client
+  // Prometheus metrics endpoint (scraped by Prometheus) — protected by token or IP allowlist
   app.get('/metrics', (req, res) => {
-    getPrometheusMetrics(req, res);
+    // Allow requests with a valid metrics token
+    const metricsToken = process.env.METRICS_AUTH_TOKEN;
+    const authHeader = req.headers.authorization;
+    if (metricsToken && authHeader === `Bearer ${metricsToken}`) {
+      getPrometheusMetrics(req, res);
+      return;
+    }
+
+    // Allow requests from trusted internal IPs (Prometheus scraper)
+    const allowedIPs = (process.env.METRICS_ALLOWED_IPS || '127.0.0.1,::1,::ffff:127.0.0.1').split(',');
+    const clientIP = req.ip || req.socket.remoteAddress || '';
+    if (allowedIPs.includes(clientIP)) {
+      getPrometheusMetrics(req, res);
+      return;
+    }
+
+    // In development/test, allow all (no token configured)
+    if (!metricsToken && process.env.NODE_ENV !== 'production') {
+      getPrometheusMetrics(req, res);
+      return;
+    }
+
+    res.status(403).json({
+      success: false,
+      error: 'Forbidden',
+      code: 'METRICS_AUTH_REQUIRED',
+    });
   });
 
   // Comprehensive health check routes (checks DB, Redis, Lightning, NOSTR)
@@ -199,20 +235,12 @@ export function createApp(): Express {
     });
   });
 
-  // 🚫 404 Handler
-  // WHY: Provide consistent error response for unknown endpoints
-  app.use('*', (req: Request, res: Response) => {
-    res.status(404).json({
-      success: false,
-      error: 'Endpoint not found',
-      code: 'NOT_FOUND',
-      path: req.originalUrl,
-      method: req.method,
-      suggestion: 'Check the API documentation for available endpoints',
-    });
-  });
+  // 404 Handler — catch-all for unmatched routes.
+  // Uses notFoundHandler which creates an AppError and passes to error middleware via next().
+  app.use(notFoundHandler);
 
   // Global Error Handler (Sentry + structured logging in error-handler-middleware)
+  // MUST be registered AFTER all routes and the 404 handler so it catches all errors.
   app.use(errorHandler);
 
   return app;
@@ -258,7 +286,7 @@ export const AppConfig = {
       if (process.env.NODE_ENV === 'production') {
         throw new Error('JWT_SECRET environment variable is required in production');
       }
-      console.warn('⚠️ Using default JWT_SECRET - not suitable for production');
+      logger.warn('Using default JWT_SECRET - not suitable for production');
       return 'development-only-secret-key';
     })(),
 

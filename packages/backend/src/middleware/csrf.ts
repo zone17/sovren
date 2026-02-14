@@ -41,7 +41,7 @@ const DEFAULT_OPTIONS: Required<CsrfOptions> = {
   cookie: {
     httpOnly: false, // Must be readable by JS to send back in header
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/',
   },
   excludePaths: [

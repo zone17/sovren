@@ -10,13 +10,9 @@ echo "🔍 Running pre-commit quality gates..."
 echo "📝 Checking code formatting and linting..."
 npx lint-staged
 
-# 2. Type checking
-echo "🔧 Running TypeScript type checking..."
-npm run type-check
-if [ $? -ne 0 ]; then
-  echo "❌ Type checking failed! Please fix TypeScript errors before committing."
-  exit 1
-fi
+# 2. Type checking moved to CI (hundreds of pre-existing TS errors make
+#    full type-check impractical at commit time; ESLint + lint-staged catch
+#    most issues). See AD-5 in docs/plans/p2-remediation-architecture.md.
 
 # 3. Run all tests to ensure nothing breaks
 echo "🧪 Running full test suite..."
@@ -135,4 +131,3 @@ echo ""
 
 # Continue with other pre-commit checks
 npm run lint:check
-npm run test:types

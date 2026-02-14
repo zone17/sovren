@@ -15,12 +15,13 @@
 
 import * as Sentry from '@sentry/node';
 import { sanitizeObject } from './sensitive-fields';
+import logger from './logger';
 
 const dsn = process.env.SENTRY_DSN || '';
 
 export function initSentry(): void {
   if (!dsn) {
-    console.log('[Sentry] No SENTRY_DSN configured, error tracking disabled');
+    logger.info('No SENTRY_DSN configured, error tracking disabled');
     return;
   }
 
@@ -71,7 +72,7 @@ export function initSentry(): void {
     },
   });
 
-  console.log('[Sentry] Initialized for environment:', process.env.NODE_ENV);
+  logger.info('Sentry initialized', { environment: process.env.NODE_ENV });
 }
 
 export { Sentry };

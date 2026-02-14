@@ -25,7 +25,7 @@ import jwt from 'jsonwebtoken';
 import { verifyEvent, type Event as NostrEvent } from 'nostr-tools';
 import { z } from 'zod';
 import { SessionService, type CreateSessionRequest, type Session } from './session-service';
-import { RequestRateLimiter } from '../middleware/advanced-rate-limiting';
+import { RequestRateLimiter } from '../lib/rate-limiter';
 import { KeyManagementService } from '../../frontend/src/services/nostr/KeyManagementService';
 import { EventEmitter } from 'events';
 

@@ -1,6 +1,8 @@
-import { JWTPayload, nostrAuth } from '@/services/nostr-auth';
+import { nostrAuth } from '@/services/nostr-auth';
 import { NextFunction, Request, Response } from 'express';
 import logger from '../lib/logger';
+import { AppError } from '../lib/app-error';
+import { UnauthorizedError } from '../utils/errors';
 
 // 🔒 Authentication middleware for JWT verification
 export const authenticate = async (
@@ -13,13 +15,9 @@ export const authenticate = async (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({
-        success: false,
-        error: 'Authorization header required',
-        code: 'MISSING_TOKEN',
+      throw new UnauthorizedError('Authorization header required', {
         details: 'Expected Authorization: Bearer <token> header',
       });
-      return;
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
@@ -33,12 +31,7 @@ export const authenticate = async (
         ip: req.ip,
         path: req.path,
       });
-      res.status(401).json({
-        success: false,
-        error: 'Authentication failed',
-        code: 'INVALID_TOKEN',
-      });
-      return;
+      throw new UnauthorizedError('Authentication failed');
     }
 
     // Attach user information to request
@@ -51,16 +44,16 @@ export const authenticate = async (
     };
     next();
   } catch (error) {
+    if (error instanceof AppError) {
+      next(error);
+      return;
+    }
     logger.error('Authentication service error', {
       error: error instanceof Error ? error.message : 'Unknown error',
       ip: req.ip,
       path: req.path,
     });
-    res.status(500).json({
-      success: false,
-      error: 'Authentication failed',
-      code: 'AUTH_ERROR',
-    });
+    next(new AppError(500, 'AUTH_ERROR', 'Authentication failed'));
   }
 };
 
@@ -129,7 +122,7 @@ export const optionalAuth = async (
     next();
   } catch (error) {
     // Log error but don't block request
-    console.warn('Optional auth failed:', error);
+    logger.warn('Optional auth failed', { error: (error as Error).message });
     next();
   }
 };
@@ -202,31 +195,6 @@ export const requireNostrSignature = async (
   }
 };
 
-// 🏥 Rate limiting for authentication endpoints
-export const authRateLimit = {
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 requests per windowMs
-  message: {
-    error: 'Too many authentication attempts',
-    code: 'RATE_LIMITED',
-    details: 'Please try again later',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-};
-
-// 🎯 Validation helpers for user roles
-export const isAdmin = (user?: JWTPayload): boolean => {
-  return user?.role === 'admin';
-};
-
-export const isCreator = (user?: JWTPayload): boolean => {
-  return user?.role === 'creator' || user?.role === 'admin';
-};
-
-export const isAuthenticated = (user?: JWTPayload): boolean => {
-  return !!user && user.signature_verified;
-};
 
 // 🔒 Resource ownership middleware
 export const requireOwnership = (resourcePubkeyField: string = 'nostr_pubkey') => {
@@ -274,18 +242,3 @@ export const requireOwnership = (resourcePubkeyField: string = 'nostr_pubkey') =
   };
 };
 
-// 🎪 Error handling for authentication middleware
-export const handleAuthError = (
-  error: Error,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-): void => {
-  console.error('Authentication error:', error);
-
-  res.status(500).json({
-    error: 'Authentication system error',
-    code: 'AUTH_SYSTEM_ERROR',
-    details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
-  });
-};

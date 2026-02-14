@@ -6,7 +6,7 @@
  * re-exported from there for backward compatibility.
  */
 
-import { AppError } from '../middleware/error-handler-middleware';
+import { AppError } from '../lib/app-error';
 
 export interface ServiceErrorOptions {
   cause?: Error | unknown;

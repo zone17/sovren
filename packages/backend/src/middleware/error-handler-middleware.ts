@@ -12,39 +12,11 @@ import { Sentry } from '../lib/sentry';
 import logger from '../lib/logger';
 
 // ============================================================================
-// Error Types
+// Error Types — AppError imported from canonical location (lib/app-error.ts)
 // ============================================================================
 
-export class AppError extends Error {
-  public readonly timestamp: Date;
-
-  constructor(
-    public statusCode: number,
-    public code: string,
-    message: string,
-    public details?: Record<string, unknown> | string,
-    public isOperational: boolean = true,
-    public readonly context?: Record<string, unknown>,
-    public override readonly cause?: Error | unknown
-  ) {
-    super(message);
-    this.name = this.constructor.name;
-    this.timestamp = new Date();
-    Error.captureStackTrace(this, this.constructor);
-  }
-
-  toJSON(): Record<string, unknown> {
-    return {
-      name: this.name,
-      message: this.message,
-      code: this.code,
-      statusCode: this.statusCode,
-      timestamp: this.timestamp.toISOString(),
-      context: this.context,
-      cause: this.cause instanceof Error ? this.cause.message : this.cause,
-    };
-  }
-}
+import { AppError } from '../lib/app-error';
+export { AppError };
 
 export class AuthenticationError extends AppError {
   constructor(message: string = 'Authentication required', details?: Record<string, unknown> | string) {
@@ -105,7 +77,7 @@ export const errorHandler = (
   error: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   const isDevelopment = process.env.NODE_ENV === 'development';
   const requestId = getCorrelationId();

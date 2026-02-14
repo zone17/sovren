@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import { z } from 'zod';
 import { TTLCache } from '../utils/ttl-cache';
 import { JsonFilePaymentStore, type PaymentPersistence } from './payment-persistence';
+import { verifyWebhookHmac } from '../lib/webhook-security';
 
 // 🌩️ ELITE LIGHTNING NETWORK SERVICE
 // Comprehensive Bitcoin Lightning Network integration for Sovren
@@ -554,14 +555,15 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      // Verify webhook signature if provided
+      // Verify webhook signature if provided (constant-time comparison)
       if (signature && this.config.webhookSecret) {
-        const expectedSignature = crypto
-          .createHmac('sha256', this.config.webhookSecret)
-          .update(JSON.stringify(payload))
-          .digest('hex');
+        const isValid = verifyWebhookHmac(
+          JSON.stringify(payload),
+          signature,
+          this.config.webhookSecret
+        );
 
-        if (signature !== expectedSignature) {
+        if (!isValid) {
           return {
             success: false,
             error: 'Invalid webhook signature',

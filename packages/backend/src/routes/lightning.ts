@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
+import { validateRequest } from '../middleware/validation-middleware';
 import { lightningService } from '../services/lightning/lightningService';
 import { CreateInvoiceRequestSchema } from '../types/lightning';
 

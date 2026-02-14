@@ -14,6 +14,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import client, { Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom-client';
+import logger from '../lib/logger';
 
 // Use the global default registry
 const register = client.register;
@@ -110,13 +111,6 @@ export const queueDepth = new Gauge({
   registers: [register],
 });
 
-// --- Deployment Health ---
-
-interface DeploymentHealthResult {
-  healthy: boolean;
-  reasons: string[];
-}
-
 /**
  * Normalize route paths to avoid high-cardinality labels.
  * Replaces dynamic segments (UUIDs, hex strings, numeric IDs) with placeholders.
@@ -161,46 +155,6 @@ export function deploymentMonitoring(req: Request, res: Response, next: NextFunc
   next();
 }
 
-/**
- * Health check endpoint handler.
- * Evaluates SLO thresholds against real prom-client metrics.
- */
-export function getDeploymentHealth(req: Request, res: Response): void {
-  const health = checkDeploymentHealth();
-  const statusCode = health.healthy ? 200 : 503;
-
-  res.status(statusCode).json({
-    status: health.healthy ? 'healthy' : 'unhealthy',
-    timestamp: new Date().toISOString(),
-    health: {
-      healthy: health.healthy,
-      issues: health.reasons,
-    },
-  });
-}
-
-/**
- * Check deployment health against SLO thresholds.
- * Uses synchronous metric inspection since prom-client stores data in-process.
- */
-function checkDeploymentHealth(): DeploymentHealthResult {
-  const reasons: string[] = [];
-  let healthy = true;
-
-  // Thresholds are evaluated when the health endpoint is called.
-  // Detailed SLO tracking happens in Prometheus via recording rules.
-  // This is a basic liveness/readiness check.
-
-  const memUsage = process.memoryUsage();
-  const heapPercentage = (memUsage.heapUsed / memUsage.heapTotal) * 100;
-
-  if (heapPercentage > 90) {
-    healthy = false;
-    reasons.push(`Heap memory usage critical: ${heapPercentage.toFixed(1)}%`);
-  }
-
-  return { healthy, reasons };
-}
 
 /**
  * Prometheus metrics endpoint handler.
@@ -212,72 +166,11 @@ export async function getPrometheusMetrics(req: Request, res: Response): Promise
     const metrics = await register.metrics();
     res.end(metrics);
   } catch (error) {
-    console.error('Error collecting Prometheus metrics:', error);
+    logger.error('Error collecting Prometheus metrics', { error });
     res.status(500).end('Error collecting metrics');
   }
 }
 
-/**
- * Trigger rollback if health checks fail.
- */
-export async function checkAndTriggerRollback(): Promise<void> {
-  const health = checkDeploymentHealth();
-
-  if (!health.healthy) {
-    console.error('DEPLOYMENT UNHEALTHY - TRIGGERING ROLLBACK');
-    console.error('Reasons:', health.reasons);
-
-    if (process.env.SLACK_WEBHOOK_URL) {
-      try {
-        await fetch(process.env.SLACK_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: 'AUTOMATIC ROLLBACK TRIGGERED',
-            blocks: [
-              {
-                type: 'section',
-                text: {
-                  type: 'mrkdwn',
-                  text: `*Deployment Health Check Failed*\n\nReasons:\n${health.reasons.map((r) => `- ${r}`).join('\n')}`,
-                },
-              },
-            ],
-          }),
-        });
-      } catch (error) {
-        console.error('Failed to send Slack alert:', error);
-      }
-    }
-
-    if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPOSITORY) {
-      try {
-        const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        await fetch(
-          `https://api.github.com/repos/${owner}/${repo}/actions/workflows/automated-rollback.yml/dispatches`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ref: 'main',
-              inputs: {
-                environment: process.env.NODE_ENV === 'production' ? 'production' : 'staging',
-                reason: `Automatic rollback: ${health.reasons.join(', ')}`,
-                skip_verification: 'false',
-              },
-            }),
-          }
-        );
-        console.log('Rollback workflow triggered via GitHub Actions');
-      } catch (error) {
-        console.error('Failed to trigger rollback workflow:', error);
-      }
-    }
-  }
-}
 
 // Export the registry for use in tests
 export { register as metricsRegistry };

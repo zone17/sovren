@@ -6,7 +6,7 @@
  * Connection pool management for zero service interruption
  */
 
-import { execSync, execFileSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -230,13 +230,14 @@ class SupabaseCredentialRotation {
 
     // Encrypt credentials before saving
     const iv = crypto.randomBytes(16);
+    const salt = crypto.randomBytes(16);
     const key = crypto.scryptSync(
       (() => {
         const key = process.env.BACKUP_ENCRYPTION_KEY;
         if (!key) throw new Error('BACKUP_ENCRYPTION_KEY environment variable is required');
         return key;
       })(),
-      'salt',
+      salt,
       32
     );
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
@@ -246,6 +247,7 @@ class SupabaseCredentialRotation {
 
     const data = {
       iv: iv.toString('hex'),
+      salt: salt.toString('hex'),
       encrypted,
       timestamp,
       type: 'supabase-credentials',

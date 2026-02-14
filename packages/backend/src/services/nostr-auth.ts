@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { verifyEvent, type Event as NostrEvent } from 'nostr-tools';
 import { z } from 'zod';
+import logger from '../lib/logger';
 
 // 🌐 NOSTR Authentication Schemas (from shared package)
 export const NostrChallengeSchema = z.object({
@@ -22,7 +23,7 @@ export const JWTPayloadSchema = z.object({
   iat: z.number(),
   exp: z.number(),
   signature_verified: z.boolean(),
-  role: z.enum(['creator', 'supporter', 'admin']).optional(),
+  role: z.enum(['creator', 'supporter']).optional(),
 });
 
 export type NostrChallenge = z.infer<typeof NostrChallengeSchema>;
@@ -317,7 +318,7 @@ export class NostrAuthService {
    * 🔐 Generate secure JWT secret if not provided
    */
   private generateSecureSecret(): string {
-    console.warn('⚠️ No JWT_SECRET provided, generating random secret (not suitable for production)');
+    logger.warn('No JWT_SECRET provided, generating random secret (not suitable for production)');
     return randomBytes(64).toString('hex');
   }
 

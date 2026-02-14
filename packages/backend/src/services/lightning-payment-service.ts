@@ -129,7 +129,7 @@ export class LightningPaymentService extends EventEmitter {
     this.analyticsService = new AnalyticsService();
     this.walletProviders = new Map();
     this.paymentMonitors = new Map();
-    this.invoiceCache = new TTLCache({ maxSize: 10_000, ttlMs: 30 * 60 * 1000 }); // 30 min TTL, 10k max
+    this.invoiceCache = new TTLCache({ maxSize: 10_000, ttlMs: 60 * 60 * 1000 }); // 60 min TTL, matches monitor timeout
 
     this.initializeService();
   }

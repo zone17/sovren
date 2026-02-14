@@ -21,6 +21,7 @@ import type {
   PremiumContent,
   SeriesEpisode,
 } from '../types/content';
+import { ValidationError, NotFoundError, ConflictError, ServiceError } from '../utils/errors';
 
 interface ContentManagementServiceConfig {
   supabaseUrl: string;
@@ -84,7 +85,7 @@ export class ContentManagementService {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create content: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to create content: ${error.message}`);
     return result;
   }
 
@@ -109,7 +110,7 @@ export class ContentManagementService {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update content: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to update content: ${error.message}`);
     return data;
   }
 
@@ -123,7 +124,7 @@ export class ContentManagementService {
       .eq('id', id)
       .single();
 
-    if (fetchError) throw new Error(`Content not found: ${fetchError.message}`);
+    if (fetchError) throw new NotFoundError(`Content (${id})`, { details: fetchError.message });
 
     // Validate content before publishing
     this.validateContentForPublishing(content);
@@ -139,7 +140,7 @@ export class ContentManagementService {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to publish content: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to publish content: ${error.message}`);
     return data;
   }
 
@@ -190,7 +191,7 @@ export class ContentManagementService {
     query = query.range(offset, offset + limit - 1);
 
     const { data, error, count } = await query;
-    if (error) throw new Error(`Failed to fetch content: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to fetch content: ${error.message}`);
 
     return {
       items: data || [],
@@ -222,14 +223,14 @@ export class ContentManagementService {
     const filePath = `media/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${filename}`;
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await this.supabase.storage
+    const { error: uploadError } = await this.supabase.storage
       .from('media')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
       });
 
-    if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+    if (uploadError) throw new ServiceError(`Upload failed: ${uploadError.message}`);
 
     // Get public URL
     const { data: urlData } = this.supabase.storage.from('media').getPublicUrl(filePath);
@@ -268,7 +269,7 @@ export class ContentManagementService {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to save media asset: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to save media asset: ${error.message}`);
     return data;
   }
 
@@ -303,7 +304,7 @@ export class ContentManagementService {
     query = query.range(offset, offset + limit - 1);
 
     const { data, error, count } = await query;
-    if (error) throw new Error(`Failed to fetch media assets: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to fetch media assets: ${error.message}`);
 
     return {
       assets: data || [],
@@ -343,7 +344,7 @@ export class ContentManagementService {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create collection: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to create collection: ${error.message}`);
     return result;
   }
 
@@ -358,12 +359,12 @@ export class ContentManagementService {
       .eq('id', collectionId)
       .single();
 
-    if (fetchError) throw new Error(`Collection not found: ${fetchError.message}`);
+    if (fetchError) throw new NotFoundError(`Collection (${collectionId})`, { details: fetchError.message });
 
     // Check if content already exists
     const existingItems = collection.content_items || [];
     if (existingItems.some((item: any) => item.content_id === contentId)) {
-      throw new Error('Content already exists in collection');
+      throw new ConflictError('Content already exists in collection');
     }
 
     // Add new content item
@@ -383,7 +384,7 @@ export class ContentManagementService {
       })
       .eq('id', collectionId);
 
-    if (error) throw new Error(`Failed to add content to collection: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to add content to collection: ${error.message}`);
   }
 
   /**
@@ -400,7 +401,7 @@ export class ContentManagementService {
       .eq('id', collectionId)
       .single();
 
-    if (fetchError) throw new Error(`Collection not found: ${fetchError.message}`);
+    if (fetchError) throw new NotFoundError(`Collection (${collectionId})`, { details: fetchError.message });
 
     const items = [...(collection.content_items || [])];
     const [movedItem] = items.splice(sourceIndex, 1);
@@ -420,7 +421,7 @@ export class ContentManagementService {
       })
       .eq('id', collectionId);
 
-    if (error) throw new Error(`Failed to reorder collection items: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to reorder collection items: ${error.message}`);
   }
 
   // ==================== CONTENT SERIES ====================
@@ -461,7 +462,7 @@ export class ContentManagementService {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create series: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to create series: ${error.message}`);
     return result;
   }
 
@@ -484,7 +485,7 @@ export class ContentManagementService {
       .eq('id', seriesId)
       .single();
 
-    if (fetchError) throw new Error(`Series not found: ${fetchError.message}`);
+    if (fetchError) throw new NotFoundError(`Series (${seriesId})`, { details: fetchError.message });
 
     const episode: SeriesEpisode = {
       id: crypto.randomUUID(),
@@ -508,7 +509,7 @@ export class ContentManagementService {
       })
       .eq('id', seriesId);
 
-    if (error) throw new Error(`Failed to add episode to series: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to add episode to series: ${error.message}`);
   }
 
   // ==================== PREMIUM CONTENT ====================
@@ -540,7 +541,7 @@ export class ContentManagementService {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create premium access: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to create premium access: ${error.message}`);
     return result;
   }
 
@@ -556,7 +557,7 @@ export class ContentManagementService {
       .eq('is_active', true)
       .maybeSingle();
 
-    if (error) throw new Error(`Failed to check premium access: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to check premium access: ${error.message}`);
 
     if (!data) return false;
 
@@ -631,7 +632,7 @@ export class ContentManagementService {
       .gte('timestamp', timeRange.start_date)
       .lte('timestamp', timeRange.end_date);
 
-    if (error) throw new Error(`Failed to fetch analytics: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to fetch analytics: ${error.message}`);
 
     const views = data?.length || 0;
     const uniqueViewers = new Set(data?.map((event) => event.user_id).filter(Boolean)).size;
@@ -669,15 +670,15 @@ export class ContentManagementService {
    */
   private validateContentForPublishing(content: ContentItem): void {
     if (!content.title?.trim()) {
-      throw new Error('Content must have a title');
+      throw new ValidationError('Content must have a title');
     }
 
     if (!content.content_blocks || content.content_blocks.length === 0) {
-      throw new Error('Content must have at least one content block');
+      throw new ValidationError('Content must have at least one content block');
     }
 
     if (content.is_premium && (!content.price || content.price <= 0)) {
-      throw new Error('Premium content must have a valid price');
+      throw new ValidationError('Premium content must have a valid price');
     }
   }
 
@@ -686,11 +687,11 @@ export class ContentManagementService {
    */
   private validateMediaFile(file: File): void {
     if (file.size > this.config.maxFileSize) {
-      throw new Error(`File size exceeds limit of ${this.config.maxFileSize / 1024 / 1024}MB`);
+      throw new ValidationError(`File size exceeds limit of ${this.config.maxFileSize / 1024 / 1024}MB`);
     }
 
     if (!this.config.allowedMimeTypes.includes(file.type)) {
-      throw new Error(`File type ${file.type} is not allowed`);
+      throw new ValidationError(`File type ${file.type} is not allowed`);
     }
   }
 
@@ -763,7 +764,7 @@ export class ContentManagementService {
     searchQuery = searchQuery.order('view_count', { ascending: false });
 
     const { data, error } = await searchQuery;
-    if (error) throw new Error(`Search failed: ${error.message}`);
+    if (error) throw new ServiceError(`Search failed: ${error.message}`);
 
     return data || [];
   }
@@ -795,7 +796,7 @@ export class ContentManagementService {
 
     const { error } = await this.supabase.from('content_versions').insert(version);
 
-    if (error) throw new Error(`Failed to create version: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to create version: ${error.message}`);
   }
 
   /**
@@ -809,7 +810,7 @@ export class ContentManagementService {
       .order('version_number', { ascending: false })
       .limit(1);
 
-    if (error) throw new Error(`Failed to get version number: ${error.message}`);
+    if (error) throw new ServiceError(`Failed to get version number: ${error.message}`);
 
     return (data?.[0]?.version_number || 0) + 1;
   }

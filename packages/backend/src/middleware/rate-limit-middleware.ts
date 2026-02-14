@@ -10,7 +10,7 @@ import rateLimit, { Options, RateLimitRequestHandler } from 'express-rate-limit'
 import RedisStore from 'rate-limit-redis';
 import { Request, Response } from 'express';
 import { RateLimitError } from './error-handler-middleware';
-import { getRedisClient as getSharedRedisClient } from '../lib/redis';
+import { getRedisClient as getSharedRedisClient, isRedisAvailable } from '../lib/redis';
 
 // ============================================================================
 // Rate Limit Configuration
@@ -22,6 +22,27 @@ interface RateLimitConfig {
   message?: string;
   skipSuccessfulRequests?: boolean;
   skipFailedRequests?: boolean;
+}
+
+// ============================================================================
+// Redis Store Factory (with in-memory fallback)
+// ============================================================================
+
+/**
+ * Returns a RedisStore if Redis is connected, otherwise undefined (in-memory default).
+ * This ensures rate limits are shared across instances in production
+ * while gracefully degrading to per-process limits in dev/test.
+ */
+function getStore(): RedisStore | undefined {
+  if (!isRedisAvailable()) return undefined;
+  try {
+    const client = getSharedRedisClient();
+    return new RedisStore({
+      sendCommand: (...args: string[]) => client.call(...(args as [string, ...string[]])),
+    });
+  } catch {
+    return undefined;
+  }
 }
 
 // ============================================================================
@@ -51,6 +72,7 @@ const defaultOptions: Partial<Options> = {
  */
 export const authRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // 10 requests per window
   skipSuccessfulRequests: true, // Don't count successful logins
@@ -62,6 +84,7 @@ export const authRateLimiter: RateLimitRequestHandler = rateLimit({
  */
 export const contentCreationRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 60 * 1000, // 1 minute
   max: 10, // 10 content publishes per minute
   message: 'Too many content publications, please slow down',
@@ -72,6 +95,7 @@ export const contentCreationRateLimiter: RateLimitRequestHandler = rateLimit({
  */
 export const paymentRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 60 * 1000, // 1 minute
   max: 20, // 20 payment operations per minute
   message: 'Too many payment requests, please try again later',
@@ -82,6 +106,7 @@ export const paymentRateLimiter: RateLimitRequestHandler = rateLimit({
  */
 export const readOnlyRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 60 * 1000, // 1 minute
   max: 100, // 100 reads per minute
   message: 'Too many requests, please slow down',
@@ -92,6 +117,7 @@ export const readOnlyRateLimiter: RateLimitRequestHandler = rateLimit({
  */
 export const expensiveOperationRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 60 * 1000, // 1 minute
   max: 20, // 20 operations per minute
   message: 'Too many expensive operations, please try again later',
@@ -102,6 +128,7 @@ export const expensiveOperationRateLimiter: RateLimitRequestHandler = rateLimit(
  */
 export const webhookRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 webhook registrations per 15 minutes
   message: 'Too many webhook registration attempts',
@@ -129,6 +156,7 @@ export const webhookRateLimiter: RateLimitRequestHandler = rateLimit({
 export function createRateLimiter(config: RateLimitConfig): RateLimitRequestHandler {
   return rateLimit({
     ...defaultOptions,
+    store: getStore(),
     ...config,
     message: config.message || 'Too many requests, please try again later',
   });

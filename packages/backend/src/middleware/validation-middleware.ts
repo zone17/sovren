@@ -6,7 +6,8 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
-import { z, ZodError, ZodSchema } from 'zod';
+import { AnyZodObject, z, ZodError, ZodSchema } from 'zod';
+import logger from '../lib/logger';
 
 // ============================================================================
 // Type Definitions
@@ -105,7 +106,7 @@ export const validate = (schemas: ValidationTargets) => {
       next();
     } catch (error) {
       // Unexpected validation error
-      console.error('Validation middleware error:', error);
+      logger.error('Validation middleware error', { error });
 
       res.status(500).json({
         success: false,
@@ -193,7 +194,7 @@ export function parseWithDefault<T>(schema: ZodSchema<T>, data: unknown, default
   try {
     return schema.parse(data);
   } catch (error) {
-    console.warn('Validation failed, using default:', error);
+    logger.warn('Validation failed, using default', { error });
     return defaultValue;
   }
 }
@@ -275,7 +276,7 @@ export const sanitizeInputs = (req: Request, res: Response, next: NextFunction):
 
     next();
   } catch (error) {
-    console.error('Sanitization error:', error);
+    logger.error('Sanitization error', { error });
     next(); // Continue even if sanitization fails
   }
 };
@@ -302,6 +303,28 @@ function sanitizeObject(obj: any): any {
 
   return obj;
 }
+
+// ============================================================================
+// Simple Request Validation (consolidated from validation.ts)
+// ============================================================================
+
+/**
+ * Middleware for validating request body against a Zod schema.
+ * Simpler alternative to `validate()` when only body validation is needed.
+ */
+export const validateRequest = (schema: AnyZodObject) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = await schema.parseAsync(req.body);
+      next();
+    } catch (error: any) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: error.errors || error.message,
+      });
+    }
+  };
+};
 
 // ============================================================================
 // Export Middleware Stack

@@ -10,6 +10,7 @@ import { createServiceRegistry, ServiceRegistry } from './container/ServiceConta
 import type { IServiceContainer } from './interfaces/shared/IServiceRegistry';
 import { TYPES } from './container/types';
 import { getRedisClient } from './lib/redis';
+import logger from './lib/logger';
 
 // Import binding modules
 import { registerSharedServices } from './container/bindings/shared.bindings';
@@ -70,8 +71,7 @@ export async function bootstrapApplication(
   const errors: Error[] = [];
 
   if (fullConfig.logStartup) {
-    console.log('🚀 Bootstrapping Sovren Backend Services...');
-    console.log(`   Environment: ${fullConfig.environment}`);
+    logger.info('Bootstrapping Sovren Backend Services', { environment: fullConfig.environment });
   }
 
   // ======================
@@ -93,8 +93,7 @@ export async function bootstrapApplication(
   const registrationTime = performance.now() - registrationStart;
 
   if (fullConfig.logStartup) {
-    console.log(`✅ Service registration complete (${registrationTime.toFixed(2)}ms)`);
-    console.log(`   Services registered: ${registry.getRegisteredTokens().length}`);
+    logger.info('Service registration complete', { durationMs: registrationTime.toFixed(2), count: registry.getRegisteredTokens().length });
   }
 
   // ======================
@@ -106,9 +105,8 @@ export async function bootstrapApplication(
     const validation = registry.validate();
 
     if (!validation.valid) {
-      console.error('❌ Container validation failed:');
+      logger.error('Container validation failed', { errors: validation.errors.map((e) => e.message) });
       validation.errors.forEach((error) => {
-        console.error(`   - ${error.message}`);
         errors.push(new Error(error.message));
       });
 
@@ -118,10 +116,7 @@ export async function bootstrapApplication(
     }
 
     if (validation.warnings.length > 0 && fullConfig.logStartup) {
-      console.warn('⚠️  Container warnings:');
-      validation.warnings.forEach((warning) => {
-        console.warn(`   - ${warning.message}`);
-      });
+      logger.warn('Container warnings', { warnings: validation.warnings.map((w) => w.message) });
     }
   }
 
@@ -135,7 +130,7 @@ export async function bootstrapApplication(
   const initTime = performance.now() - initStart;
 
   if (fullConfig.logStartup) {
-    console.log(`✅ Container initialized (${initTime.toFixed(2)}ms)`);
+    logger.info('Container initialized', { durationMs: initTime.toFixed(2) });
   }
 
   // ======================
@@ -147,11 +142,11 @@ export async function bootstrapApplication(
     healthCheckResults = await performHealthChecks(container);
 
     if (fullConfig.logStartup) {
-      console.log('🏥 Health Check Results:');
+      const results: Record<string, boolean> = {};
       for (const [service, healthy] of healthCheckResults) {
-        const status = healthy ? '✅' : '❌';
-        console.log(`   ${status} ${service}`);
+        results[service] = healthy;
       }
+      logger.info('Health check results', results);
     }
   }
 
@@ -165,8 +160,7 @@ export async function bootstrapApplication(
   const totalTime = performance.now() - startTime;
 
   if (fullConfig.logStartup) {
-    console.log(`\n✨ Bootstrap complete (${totalTime.toFixed(2)}ms)`);
-    console.log('   Ready to serve requests\n');
+    logger.info('Bootstrap complete', { durationMs: totalTime.toFixed(2) });
   }
 
   return {
@@ -189,28 +183,8 @@ export async function bootstrapApplication(
  * Register infrastructure services (Logger, Config, Database, Redis, etc.)
  */
 function registerInfrastructureServices(registry: ServiceRegistry): void {
-  // Logger (Winston) - structured JSON output for Promtail/Loki ingestion
-  registry.registerSingletonFactory(TYPES.Logger, () => {
-    const winston = require('winston');
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    return winston.createLogger({
-      level: process.env.LOG_LEVEL || 'info',
-      defaultMeta: { service: 'sovren-api' },
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.errors({ stack: true }),
-        winston.format.json()
-      ),
-      transports: [
-        new winston.transports.Console({
-          format: isProduction
-            ? winston.format.combine(winston.format.timestamp(), winston.format.json())
-            : winston.format.combine(winston.format.colorize(), winston.format.simple()),
-        }),
-      ],
-    });
-  });
+  // Logger — reuse the shared structured logger from lib/logger
+  registry.registerSingletonFactory(TYPES.Logger, () => logger);
 
   // Config (Environment variables)
   registry.registerSingletonFactory(TYPES.Config, () => {
@@ -379,14 +353,14 @@ async function performHealthChecks(container: IServiceContainer): Promise<Map<st
  */
 function setupGracefulShutdown(container: IServiceContainer): void {
   const shutdownHandler = async (signal: string) => {
-    console.log(`\n📴 Received ${signal}. Starting graceful shutdown...`);
+    logger.info('Graceful shutdown starting', { signal });
 
     try {
       await container.dispose();
-      console.log('✅ All services disposed successfully');
+      logger.info('All services disposed successfully');
       process.exit(0);
     } catch (error) {
-      console.error('❌ Error during shutdown:', error);
+      logger.error('Error during shutdown', { error });
       process.exit(1);
     }
   };
