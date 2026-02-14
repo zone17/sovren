@@ -2,16 +2,24 @@
  * Simple bounded Map with TTL eviction.
  * Entries expire after ttlMs and the map never exceeds maxSize.
  * On overflow, the oldest entry is evicted (FIFO).
+ * Optional onEvict callback fires when entries are removed by TTL or overflow.
  */
 export class TTLCache<K, V> {
   private map = new Map<K, { value: V; expiresAt: number }>();
   private maxSize: number;
   private ttlMs: number;
   private cleanupInterval: NodeJS.Timeout | null = null;
+  private onEvict?: (key: K, value: V) => void;
 
-  constructor(opts: { maxSize: number; ttlMs: number; cleanupIntervalMs?: number }) {
+  constructor(opts: {
+    maxSize: number;
+    ttlMs: number;
+    cleanupIntervalMs?: number;
+    onEvict?: (key: K, value: V) => void;
+  }) {
     this.maxSize = opts.maxSize;
     this.ttlMs = opts.ttlMs;
+    this.onEvict = opts.onEvict;
 
     const cleanupMs = opts.cleanupIntervalMs ?? Math.min(opts.ttlMs, 60_000);
     this.cleanupInterval = setInterval(() => this.evictExpired(), cleanupMs);
@@ -25,6 +33,7 @@ export class TTLCache<K, V> {
     if (!entry) return undefined;
     if (Date.now() > entry.expiresAt) {
       this.map.delete(key);
+      this.onEvict?.(key, entry.value);
       return undefined;
     }
     return entry.value;
@@ -33,7 +42,11 @@ export class TTLCache<K, V> {
   set(key: K, value: V): void {
     if (this.map.size >= this.maxSize && !this.map.has(key)) {
       const firstKey = this.map.keys().next().value;
-      if (firstKey !== undefined) this.map.delete(firstKey);
+      if (firstKey !== undefined) {
+        const evicted = this.map.get(firstKey);
+        this.map.delete(firstKey);
+        if (evicted) this.onEvict?.(firstKey, evicted.value);
+      }
     }
     this.map.set(key, { value, expiresAt: Date.now() + this.ttlMs });
   }
@@ -43,7 +56,12 @@ export class TTLCache<K, V> {
   }
 
   delete(key: K): boolean {
-    return this.map.delete(key);
+    const entry = this.map.get(key);
+    const deleted = this.map.delete(key);
+    if (deleted && entry) {
+      this.onEvict?.(key, entry.value);
+    }
+    return deleted;
   }
 
   clear(): void {
@@ -60,6 +78,7 @@ export class TTLCache<K, V> {
     for (const [key, entry] of this.map) {
       if (now > entry.expiresAt) {
         this.map.delete(key);
+        this.onEvict?.(key, entry.value);
       } else {
         result.push(entry.value);
       }
@@ -72,6 +91,7 @@ export class TTLCache<K, V> {
     for (const [key, entry] of this.map) {
       if (now > entry.expiresAt) {
         this.map.delete(key);
+        this.onEvict?.(key, entry.value);
       }
     }
   }

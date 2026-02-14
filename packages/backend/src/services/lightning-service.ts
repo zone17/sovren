@@ -155,10 +155,9 @@ export class LightningService extends EventEmitter {
   private static instance: LightningService;
   private config!: LightningConfig;
   private isInitialized = false;
-  private invoiceCache = new TTLCache<string, LightningInvoice>({
-    maxSize: 10_000,
-    ttlMs: 60 * 60 * 1000,
-  }); // 1hr TTL
+  /** Fix #118: Secondary index for O(1) webhook lookup by payment_hash */
+  private paymentHashIndex = new Map<string, string>(); // payment_hash -> invoice_id
+  private invoiceCache: TTLCache<string, LightningInvoice>;
   private paymentCache = new TTLCache<string, LightningPayment>({
     maxSize: 50_000,
     ttlMs: 24 * 60 * 60 * 1000,
@@ -168,6 +167,16 @@ export class LightningService extends EventEmitter {
   private constructor() {
     super();
     this.setMaxListeners(100); // Support many concurrent operations
+    // Fix #118: Clean up paymentHashIndex when invoices are evicted from cache
+    this.invoiceCache = new TTLCache<string, LightningInvoice>({
+      maxSize: 10_000,
+      ttlMs: 60 * 60 * 1000, // 1hr TTL
+      onEvict: (_key, invoice) => {
+        if (invoice.payment_hash) {
+          this.paymentHashIndex.delete(invoice.payment_hash);
+        }
+      },
+    });
   }
 
   /**
@@ -191,11 +200,14 @@ export class LightningService extends EventEmitter {
       // Initialize persistence layer
       this.persistence = new JsonFilePaymentStore();
 
-      // Hydrate caches from persistence
+      // Hydrate caches from persistence and rebuild paymentHashIndex
       const persistedInvoices = await this.persistence.getAllInvoices();
       for (const inv of persistedInvoices) {
         if (inv.status === 'pending' && inv.expires_at > Date.now()) {
           this.invoiceCache.set(inv.id, inv);
+          if (inv.payment_hash) {
+            this.paymentHashIndex.set(inv.payment_hash, inv.id);
+          }
         }
       }
 
@@ -301,8 +313,9 @@ export class LightningService extends EventEmitter {
         },
       };
 
-      // Cache invoice and persist
+      // Cache invoice, update index, and persist
       this.invoiceCache.set(invoiceId, invoice);
+      this.paymentHashIndex.set(invoice.payment_hash, invoiceId);
       await this.persistence.saveInvoice(invoice);
 
       // Emit event
@@ -335,7 +348,22 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      const invoice = this.invoiceCache.get(invoiceId);
+      // Fix #113: Cache fallback — check cache first, then persistence
+      let invoice = this.invoiceCache.get(invoiceId);
+      if (!invoice) {
+        const persisted = await this.persistence.getInvoiceById(invoiceId);
+        if (persisted) {
+          // Re-cache for future lookups
+          this.invoiceCache.set(persisted.id, persisted);
+          if (persisted.payment_hash) {
+            this.paymentHashIndex.set(persisted.payment_hash, persisted.id);
+          }
+          invoice = persisted;
+          console.debug(
+            `[LightningService] Cache miss for invoice ${invoiceId}, recovered from persistence`
+          );
+        }
+      }
       if (!invoice) {
         return {
           success: false,
@@ -354,10 +382,8 @@ export class LightningService extends EventEmitter {
 
       const lnbitsResponse = await this.makeRequest('GET', `/api/v1/payments/${lnbitsId}`);
 
-      // Update invoice status
+      // Update invoice status (Fix #115: persist BEFORE mutating in-memory state)
       if (lnbitsResponse.paid && invoice.status === 'pending') {
-        invoice.status = 'paid';
-
         // Create payment record
         const payment: LightningPayment = {
           id: crypto.randomUUID(),
@@ -372,10 +398,11 @@ export class LightningService extends EventEmitter {
           supporter_id: invoice.metadata?.supporterId || '',
         };
 
-        // Cache payment and persist
+        // Persist first, then update in-memory state
         this.paymentCache.set(payment.id, payment);
         await this.persistence.savePayment(payment);
         await this.persistence.updateInvoiceStatus(invoice.id, 'paid');
+        invoice.status = 'paid';
 
         // Emit events
         this.emit('invoice:paid', payment);
@@ -388,8 +415,9 @@ export class LightningService extends EventEmitter {
         };
       }
 
-      // Check if expired
+      // Check if expired — persist expired status too
       if (Date.now() > invoice.expires_at && invoice.status === 'pending') {
+        await this.persistence.updateInvoiceStatus(invoice.id, 'expired');
         invoice.status = 'expired';
         this.emit('invoice:expired', invoice);
       }
@@ -576,18 +604,24 @@ export class LightningService extends EventEmitter {
 
       // Process payment if it's a payment webhook
       if (payload.type === 'payment' && payload.payment_hash) {
-        // Find matching invoice (cache first, then persistence fallback)
-        let invoice = this.invoiceCache
-          .values()
-          .find((inv) => inv.payment_hash === payload.payment_hash);
+        // Fix #118: O(1) lookup via paymentHashIndex, then cache, then persistence
+        let invoice: LightningInvoice | undefined;
+        const indexedId = this.paymentHashIndex.get(payload.payment_hash);
+        if (indexedId) {
+          invoice = this.invoiceCache.get(indexedId);
+        }
+        // Fix #113: Fall through to persistence on cache miss
         if (!invoice) {
-          invoice = await this.persistence.getInvoiceByPaymentHash(payload.payment_hash) ?? undefined;
+          const persisted = await this.persistence.getInvoiceByPaymentHash(payload.payment_hash);
+          if (persisted) {
+            invoice = persisted;
+            // Re-cache for future lookups
+            this.invoiceCache.set(persisted.id, persisted);
+            this.paymentHashIndex.set(persisted.payment_hash, persisted.id);
+          }
         }
 
         if (invoice && invoice.status === 'pending') {
-          // Update invoice status
-          invoice.status = 'paid';
-
           // Create payment record
           const payment: LightningPayment = {
             id: crypto.randomUUID(),
@@ -602,10 +636,12 @@ export class LightningService extends EventEmitter {
             supporter_id: invoice.metadata?.supporterId || '',
           };
 
-          // Cache payment and persist
+          // Fix #115: Persist BEFORE mutating in-memory state
           this.paymentCache.set(payment.id, payment);
           await this.persistence.savePayment(payment);
           await this.persistence.updateInvoiceStatus(invoice.id, 'paid');
+          // Only update in-memory status after successful persistence
+          invoice.status = 'paid';
 
           // Emit events
           this.emit('invoice:paid', payment);

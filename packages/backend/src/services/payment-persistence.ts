@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync, copyFileSync } from 'fs';
 import path from 'path';
 import type { LightningInvoice, LightningPayment } from './lightning-service';
 
@@ -20,12 +20,14 @@ export interface PaymentPersistence {
 /**
  * JSON file-based persistence for MVP.
  * Writes to data/payments/ directory.
- * Thread-safe for single-instance use (not suitable for multi-instance).
+ *
+ * Fix #112: Atomic writes via temp+rename, write mutex, corruption recovery.
  */
 export class JsonFilePaymentStore implements PaymentPersistence {
   private readonly dataDir: string;
   private invoices: Map<string, LightningInvoice> = new Map();
   private payments: Map<string, LightningPayment> = new Map();
+  private writeMutex: Promise<void> = Promise.resolve();
 
   constructor(dataDir?: string) {
     this.dataDir = dataDir || path.join(process.cwd(), 'data', 'payments');
@@ -37,12 +39,12 @@ export class JsonFilePaymentStore implements PaymentPersistence {
 
   async saveInvoice(invoice: LightningInvoice): Promise<void> {
     this.invoices.set(invoice.id, invoice);
-    this.writeToDisk('invoices');
+    await this.writeToDisk('invoices');
   }
 
   async savePayment(payment: LightningPayment): Promise<void> {
     this.payments.set(payment.id, payment);
-    this.writeToDisk('payments');
+    await this.writeToDisk('payments');
   }
 
   async getInvoiceById(id: string): Promise<LightningInvoice | null> {
@@ -59,9 +61,7 @@ export class JsonFilePaymentStore implements PaymentPersistence {
   }
 
   async getPaymentsByCreator(creatorId: string): Promise<LightningPayment[]> {
-    return Array.from(this.payments.values()).filter(
-      (p) => p.creator_id === creatorId
-    );
+    return Array.from(this.payments.values()).filter((p) => p.creator_id === creatorId);
   }
 
   async getAllPayments(): Promise<LightningPayment[]> {
@@ -75,47 +75,107 @@ export class JsonFilePaymentStore implements PaymentPersistence {
   async updateInvoiceStatus(id: string, status: string): Promise<void> {
     const invoice = this.invoices.get(id);
     if (invoice) {
-      (invoice as any).status = status;
-      this.invoices.set(id, invoice);
-      this.writeToDisk('invoices');
+      const updated = { ...invoice, status } as LightningInvoice;
+      this.invoices.set(id, updated);
+      await this.writeToDisk('invoices');
     }
   }
 
+  /**
+   * Load data from disk with corruption recovery.
+   * If the main file is corrupted, backs it up and attempts recovery from .tmp file.
+   */
   private loadFromDisk(): void {
-    try {
-      const invoicesPath = path.join(this.dataDir, 'invoices.json');
-      if (existsSync(invoicesPath)) {
-        const data = JSON.parse(readFileSync(invoicesPath, 'utf-8'));
-        for (const invoice of data) {
-          this.invoices.set(invoice.id, invoice);
-        }
+    this.loadCollection('invoices', this.invoices);
+    this.loadCollection('payments', this.payments);
+  }
+
+  private loadCollection<T extends { id: string }>(type: string, target: Map<string, T>): void {
+    const filePath = path.join(this.dataDir, `${type}.json`);
+    const tmpPath = `${filePath}.tmp`;
+
+    // Try main file first
+    const mainData = this.tryParseFile(filePath);
+    if (mainData !== null) {
+      for (const item of mainData) {
+        target.set(item.id, item);
       }
-    } catch (err) {
-      console.error('[PaymentPersistence] Failed to load invoices from disk:', err);
+      return;
     }
 
-    try {
-      const paymentsPath = path.join(this.dataDir, 'payments.json');
-      if (existsSync(paymentsPath)) {
-        const data = JSON.parse(readFileSync(paymentsPath, 'utf-8'));
-        for (const payment of data) {
-          this.payments.set(payment.id, payment);
-        }
+    // Main file missing or corrupted — try .tmp recovery
+    if (existsSync(filePath)) {
+      this.backupCorruptedFile(filePath, type);
+    }
+
+    const tmpData = this.tryParseFile(tmpPath);
+    if (tmpData !== null) {
+      console.error(
+        `[PaymentPersistence] Recovered ${type} from .tmp file after main file corruption`
+      );
+      for (const item of tmpData) {
+        target.set(item.id, item);
       }
-    } catch (err) {
-      console.error('[PaymentPersistence] Failed to load payments from disk:', err);
+      return;
+    }
+
+    // Neither file usable — start fresh
+    if (existsSync(filePath) || existsSync(tmpPath)) {
+      console.error(
+        `[PaymentPersistence] WARNING: Both ${type}.json and .tmp are unreadable. Starting with empty ${type}. Data may have been lost.`
+      );
     }
   }
 
-  private writeToDisk(type: 'invoices' | 'payments'): void {
+  private tryParseFile(filePath: string): any[] | null {
     try {
-      const filePath = path.join(this.dataDir, `${type}.json`);
-      const data = type === 'invoices'
-        ? Array.from(this.invoices.values())
-        : Array.from(this.payments.values());
-      writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      if (!existsSync(filePath)) return null;
+      const raw = readFileSync(filePath, 'utf-8');
+      if (raw.length === 0) return null;
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data)) return null;
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
+  private backupCorruptedFile(filePath: string, type: string): void {
+    try {
+      const timestamp = Date.now();
+      const backupPath = `${filePath}.corrupt.${timestamp}`;
+      copyFileSync(filePath, backupPath);
+      console.error(`[PaymentPersistence] Backed up corrupted ${type} file to ${backupPath}`);
     } catch (err) {
-      console.error(`[PaymentPersistence] Failed to write ${type} to disk:`, err);
+      console.error(`[PaymentPersistence] Failed to backup corrupted ${type} file:`, err);
+    }
+  }
+
+  /**
+   * Atomic write: serialize through mutex, write to .tmp, then rename.
+   * Errors are propagated to the caller.
+   */
+  private writeToDisk(type: 'invoices' | 'payments'): Promise<void> {
+    this.writeMutex = this.writeMutex.then(() => this.doWrite(type));
+    return this.writeMutex;
+  }
+
+  private doWrite(type: 'invoices' | 'payments'): Promise<void> {
+    const filePath = path.join(this.dataDir, `${type}.json`);
+    const tmpPath = `${filePath}.tmp`;
+    const data =
+      type === 'invoices' ? Array.from(this.invoices.values()) : Array.from(this.payments.values());
+
+    try {
+      writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+      renameSync(tmpPath, filePath);
+      return Promise.resolve();
+    } catch (err) {
+      console.error(
+        `[PaymentPersistence] Failed to write ${type} to disk (path=${filePath}):`,
+        err
+      );
+      return Promise.reject(err);
     }
   }
 }

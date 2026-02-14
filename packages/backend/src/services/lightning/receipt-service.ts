@@ -1,17 +1,17 @@
 /**
- * ⚡ Lightning Payment Receipt Service
+ * Lightning Payment Receipt Service
  *
  * Comprehensive receipt generation service for Lightning Network payments.
  * Handles PDF generation, email delivery, and receipt verification with
  * cryptographic validation and secure storage.
  *
- * @author Sovren Engineering Team
- * @version 1.0.0
- * @license MIT
+ * Fix #114: Receipts persisted to JSON file (survive restart).
+ * Fix #117: Browser pool for PDF generation (single browser, reused pages).
  */
 
 import * as crypto from 'crypto';
 import { EventEmitter } from 'events';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, copyFileSync } from 'fs';
 import * as fs from 'fs/promises';
 import * as nodemailer from 'nodemailer';
 import * as path from 'path';
@@ -20,12 +20,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
 // ===============================
-// 📋 Interface Definitions
+// Interface Definitions
 // ===============================
 
-/**
- * Creator information for receipt generation
- */
 interface CreatorReceiptInfo {
   id: string;
   name: string;
@@ -39,9 +36,6 @@ interface CreatorReceiptInfo {
   };
 }
 
-/**
- * Supporter information for receipt generation
- */
 interface SupporterReceiptInfo {
   id: string;
   name?: string;
@@ -50,9 +44,6 @@ interface SupporterReceiptInfo {
   message?: string;
 }
 
-/**
- * Payment verification data
- */
 interface PaymentVerification {
   paymentHash: string;
   preimage: string;
@@ -62,9 +53,6 @@ interface PaymentVerification {
   blockHeight?: number;
 }
 
-/**
- * Complete payment receipt data structure
- */
 export interface PaymentReceipt {
   id: string;
   receiptNumber: string;
@@ -75,11 +63,9 @@ export interface PaymentReceipt {
   timestamp: number;
   createdAt: number;
 
-  // Party Information
   creator: CreatorReceiptInfo;
   supporter: SupporterReceiptInfo;
 
-  // Invoice Details
   invoice: {
     bolt11: string;
     description: string;
@@ -87,10 +73,8 @@ export interface PaymentReceipt {
     expiresAt: number;
   };
 
-  // Payment Verification
   verification: PaymentVerification;
 
-  // Receipt Metadata
   receipt: {
     receiptNumber: string;
     pdfGenerated: boolean;
@@ -102,7 +86,6 @@ export interface PaymentReceipt {
     lastAccessedAt?: number;
   };
 
-  // Platform Information
   platform: {
     name: string;
     version: string;
@@ -110,7 +93,6 @@ export interface PaymentReceipt {
     processedBy: string;
   };
 
-  // Security
   security: {
     hash: string;
     signature: string;
@@ -118,11 +100,7 @@ export interface PaymentReceipt {
   };
 }
 
-/**
- * Receipt generation configuration
- */
 interface ReceiptConfig {
-  // PDF Generation
   pdfTemplate: string;
   pdfOptions: {
     format: 'A4' | 'Letter';
@@ -130,23 +108,17 @@ interface ReceiptConfig {
     printBackground: boolean;
     displayHeaderFooter: boolean;
   };
-
-  // Email Configuration
   email: {
     from: string;
     subject: string;
     template: string;
     attachPdf: boolean;
   };
-
-  // Storage Configuration
   storage: {
     provider: 'local' | 's3' | 'gcs';
     basePath: string;
-    retention: number; // days
+    retention: number;
   };
-
-  // Security Configuration
   security: {
     encryptPdf: boolean;
     passwordProtected: boolean;
@@ -154,9 +126,6 @@ interface ReceiptConfig {
   };
 }
 
-/**
- * Receipt generation request
- */
 const ReceiptGenerationRequestSchema = z.object({
   paymentId: z.string().uuid(),
   includeDetailedVerification: z.boolean().default(true),
@@ -174,30 +143,249 @@ const ReceiptGenerationRequestSchema = z.object({
 type ReceiptGenerationRequest = z.infer<typeof ReceiptGenerationRequestSchema>;
 
 // ===============================
-// 🏗️ Receipt Service Implementation
+// Fix #114: Receipt Persistence
 // ===============================
 
 /**
- * ⚡ Lightning Payment Receipt Service
- *
- * Comprehensive service for generating, managing, and delivering payment receipts
- * for Lightning Network transactions with enterprise-grade security and validation.
+ * Atomic JSON file persistence for receipts.
+ * Uses write-to-temp-then-rename pattern matching Fix #112.
  */
+class ReceiptPersistence {
+  private readonly filePath: string;
+  private writeMutex: Promise<void> = Promise.resolve();
+
+  constructor(dataDir: string) {
+    if (!existsSync(dataDir)) {
+      mkdirSync(dataDir, { recursive: true });
+    }
+    this.filePath = path.join(dataDir, 'receipts.json');
+  }
+
+  loadAll(): PaymentReceipt[] {
+    const tmpPath = `${this.filePath}.tmp`;
+
+    // Try main file first
+    const mainData = this.tryParseFile(this.filePath);
+    if (mainData !== null) return mainData;
+
+    // Main file corrupted — backup and try .tmp
+    if (existsSync(this.filePath)) {
+      try {
+        const backupPath = `${this.filePath}.corrupt.${Date.now()}`;
+        copyFileSync(this.filePath, backupPath);
+        console.error(`[ReceiptPersistence] Backed up corrupted receipts file to ${backupPath}`);
+      } catch {
+        // best-effort backup
+      }
+    }
+
+    const tmpData = this.tryParseFile(tmpPath);
+    if (tmpData !== null) {
+      console.error('[ReceiptPersistence] Recovered receipts from .tmp file');
+      return tmpData;
+    }
+
+    if (existsSync(this.filePath) || existsSync(tmpPath)) {
+      console.error(
+        '[ReceiptPersistence] WARNING: Both receipts.json and .tmp unreadable. Starting empty.'
+      );
+    }
+    return [];
+  }
+
+  save(receipts: PaymentReceipt[]): Promise<void> {
+    this.writeMutex = this.writeMutex.then(() => this.doWrite(receipts));
+    return this.writeMutex;
+  }
+
+  private doWrite(receipts: PaymentReceipt[]): Promise<void> {
+    const tmpPath = `${this.filePath}.tmp`;
+    try {
+      writeFileSync(tmpPath, JSON.stringify(receipts, null, 2), 'utf-8');
+      renameSync(tmpPath, this.filePath);
+      return Promise.resolve();
+    } catch (err) {
+      console.error('[ReceiptPersistence] Failed to write receipts to disk:', err);
+      return Promise.reject(err);
+    }
+  }
+
+  private tryParseFile(filePath: string): PaymentReceipt[] | null {
+    try {
+      if (!existsSync(filePath)) return null;
+      const raw = readFileSync(filePath, 'utf-8');
+      if (raw.length === 0) return null;
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data)) return null;
+      return data;
+    } catch {
+      return null;
+    }
+  }
+}
+
+// ===============================
+// Fix #117: Browser Pool
+// ===============================
+
+/**
+ * Manages a single Puppeteer browser instance with page reuse.
+ * Limits concurrent pages and auto-recovers from browser crashes.
+ */
+class BrowserPool {
+  private browser: puppeteer.Browser | null = null;
+  private maxConcurrentPages: number;
+  private activePages = 0;
+  private waitQueue: Array<(value: void) => void> = [];
+  private launching = false;
+
+  constructor(maxConcurrentPages = 5) {
+    this.maxConcurrentPages = maxConcurrentPages;
+  }
+
+  async acquirePage(): Promise<puppeteer.Page> {
+    // Wait if at capacity
+    if (this.activePages >= this.maxConcurrentPages) {
+      await new Promise<void>((resolve) => {
+        this.waitQueue.push(resolve);
+      });
+    }
+
+    const browser = await this.getBrowser();
+    this.activePages++;
+    try {
+      return await browser.newPage();
+    } catch {
+      // Browser likely crashed — relaunch and retry once
+      this.browser = null;
+      const freshBrowser = await this.getBrowser();
+      return await freshBrowser.newPage();
+    }
+  }
+
+  async releasePage(page: puppeteer.Page): Promise<void> {
+    try {
+      if (!page.isClosed()) {
+        await page.close();
+      }
+    } catch {
+      // page already closed or browser crashed
+    }
+    this.activePages--;
+    // Wake next waiter
+    const next = this.waitQueue.shift();
+    if (next) next();
+  }
+
+  private async getBrowser(): Promise<puppeteer.Browser> {
+    if (this.browser && this.browser.connected) {
+      return this.browser;
+    }
+
+    // Prevent multiple concurrent launches
+    if (this.launching) {
+      await new Promise<void>((resolve) => {
+        const check = setInterval(() => {
+          if (this.browser && this.browser.connected) {
+            clearInterval(check);
+            resolve();
+          }
+        }, 50);
+      });
+      return this.browser!;
+    }
+
+    this.launching = true;
+    try {
+      this.browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+
+      // Auto-detect browser disconnection
+      this.browser.on('disconnected', () => {
+        this.browser = null;
+      });
+
+      return this.browser;
+    } finally {
+      this.launching = false;
+    }
+  }
+
+  async shutdown(): Promise<void> {
+    if (this.browser) {
+      try {
+        await this.browser.close();
+      } catch {
+        // best-effort
+      }
+      this.browser = null;
+    }
+  }
+}
+
+// ===============================
+// Receipt Service Implementation
+// ===============================
+
 export class LightningReceiptService extends EventEmitter {
   private config: ReceiptConfig;
   private emailTransporter: nodemailer.Transporter | null = null;
   private templateCache = new Map<string, string>();
   private receiptStorage = new Map<string, PaymentReceipt>();
+  private receiptPersistence: ReceiptPersistence;
+  private browserPool: BrowserPool;
 
   constructor(config: ReceiptConfig) {
     super();
     this.config = config;
+
+    // Fix #114: Initialize persistence and load existing receipts
+    const dataDir = process.env.RECEIPT_DATA_DIR || path.join(process.cwd(), 'data', 'receipts');
+    this.receiptPersistence = new ReceiptPersistence(dataDir);
+    this.loadReceiptsFromDisk();
+
+    // Fix #117: Create browser pool
+    this.browserPool = new BrowserPool(
+      parseInt(process.env.RECEIPT_MAX_CONCURRENT_PAGES || '5', 10)
+    );
+
     this.initializeEmailTransporter();
   }
 
   /**
-   * 📧 Initialize email transporter for receipt delivery
+   * Fix #114: Load persisted receipts into memory maps on startup
    */
+  private loadReceiptsFromDisk(): void {
+    const receipts = this.receiptPersistence.loadAll();
+    for (const receipt of receipts) {
+      // Restore all 3 index keys
+      this.receiptStorage.set(receipt.id, receipt);
+      this.receiptStorage.set(receipt.receiptNumber, receipt);
+      this.receiptStorage.set(receipt.paymentHash, receipt);
+    }
+    if (receipts.length > 0) {
+      console.log(`[ReceiptService] Loaded ${receipts.length} receipts from disk`);
+    }
+  }
+
+  /**
+   * Fix #114: Persist all receipts to disk.
+   * Deduplicates by receipt id before writing.
+   */
+  private async persistReceipts(): Promise<void> {
+    const seen = new Set<string>();
+    const unique: PaymentReceipt[] = [];
+    for (const receipt of this.receiptStorage.values()) {
+      if (!seen.has(receipt.id)) {
+        seen.add(receipt.id);
+        unique.push(receipt);
+      }
+    }
+    await this.receiptPersistence.save(unique);
+  }
+
   private async initializeEmailTransporter(): Promise<void> {
     try {
       this.emailTransporter = nodemailer.createTransport({
@@ -213,38 +401,23 @@ export class LightningReceiptService extends EventEmitter {
         },
       });
 
-      // Verify transporter configuration
       if (this.emailTransporter) {
         await this.emailTransporter.verify();
-        console.log('✅ Email transporter initialized successfully');
+        console.log('Email transporter initialized successfully');
       }
     } catch (error) {
-      console.error('❌ Failed to initialize email transporter:', error);
+      console.error('Failed to initialize email transporter:', error);
       this.emailTransporter = null;
     }
   }
 
-  /**
-   * ⚡ Generate comprehensive payment receipt
-   *
-   * @param request - Receipt generation request
-   * @returns Complete payment receipt with verification
-   */
   async generateReceipt(request: ReceiptGenerationRequest): Promise<PaymentReceipt> {
     try {
-      // Validate request
       const validatedRequest = ReceiptGenerationRequestSchema.parse(request);
-
-      // Fetch payment data (mock implementation - replace with actual data fetching)
       const paymentData = await this.fetchPaymentData(validatedRequest.paymentId);
-
-      // Generate receipt number
       const receiptNumber = this.generateReceiptNumber();
-
-      // Create receipt verification
       const verification = await this.createPaymentVerification(paymentData);
 
-      // Build complete receipt
       const receipt: PaymentReceipt = {
         id: uuidv4(),
         receiptNumber,
@@ -254,19 +427,15 @@ export class LightningReceiptService extends EventEmitter {
         fee: paymentData.fee || 0,
         timestamp: paymentData.timestamp,
         createdAt: Date.now(),
-
         creator: paymentData.creator,
         supporter: paymentData.supporter,
-
         invoice: {
           bolt11: paymentData.invoice.bolt11,
           description: paymentData.invoice.description,
           memo: paymentData.invoice.memo,
           expiresAt: paymentData.invoice.expiresAt,
         },
-
         verification,
-
         receipt: {
           receiptNumber,
           pdfGenerated: false,
@@ -274,14 +443,12 @@ export class LightningReceiptService extends EventEmitter {
           downloadUrl: `/api/lightning/receipt/${receiptNumber}/download`,
           downloadCount: 0,
         },
-
         platform: {
           name: 'Sovren',
           version: process.env.APP_VERSION || '1.0.0',
           environment: process.env.NODE_ENV || 'development',
           processedBy: 'Lightning Receipt Service',
         },
-
         security: {
           hash: '',
           signature: '',
@@ -289,32 +456,28 @@ export class LightningReceiptService extends EventEmitter {
         },
       };
 
-      // Generate security signatures
       receipt.security.hash = this.generateReceiptHash(receipt);
       receipt.security.signature = this.generateReceiptSignature(receipt);
 
-      // Store receipt
+      // Store receipt in memory and persist to disk
       this.receiptStorage.set(receipt.id, receipt);
       this.receiptStorage.set(receipt.receiptNumber, receipt);
       this.receiptStorage.set(receipt.paymentHash, receipt);
+      await this.persistReceipts();
 
-      // Generate PDF if requested
       if (validatedRequest.pdfOptions) {
         await this.generatePdfReceipt(receipt);
       }
 
-      // Send email if requested
       if (validatedRequest.emailReceipt && validatedRequest.emailAddress) {
         await this.emailReceipt(receipt.id, validatedRequest.emailAddress);
       }
 
-      // Emit receipt generated event
       this.emit('receipt:generated', receipt);
-
-      console.log(`✅ Receipt generated: ${receipt.receiptNumber}`);
+      console.log(`Receipt generated: ${receipt.receiptNumber}`);
       return receipt;
     } catch (error) {
-      console.error('❌ Failed to generate receipt:', error);
+      console.error('Failed to generate receipt:', error);
       throw new Error(
         `Receipt generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -322,26 +485,15 @@ export class LightningReceiptService extends EventEmitter {
   }
 
   /**
-   * 📄 Generate PDF receipt document
-   *
-   * @param receipt - Payment receipt data
-   * @returns PDF buffer
+   * Fix #117: Generate PDF using browser pool instead of launching per-receipt
    */
   async generatePdfReceipt(receipt: PaymentReceipt): Promise<Buffer> {
+    let page: puppeteer.Page | null = null;
     try {
-      // Load HTML template
       const htmlTemplate = await this.loadTemplate('receipt-pdf');
-
-      // Render HTML with receipt data
       const html = await this.renderTemplate(htmlTemplate, receipt);
 
-      // Generate PDF using Puppeteer
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
-
-      const page = await browser.newPage();
+      page = await this.browserPool.acquirePage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
 
       const pdfBuffer = await page.pdf({
@@ -349,34 +501,29 @@ export class LightningReceiptService extends EventEmitter {
         printBackground: true,
       });
 
-      await browser.close();
-
-      // Store PDF
       const pdfPath = await this.storePdfReceipt(receipt, pdfBuffer);
       receipt.receipt.pdfGenerated = true;
       receipt.receipt.pdfUrl = pdfPath;
 
-      // Update receipt in storage
       this.receiptStorage.set(receipt.id, receipt);
+      await this.persistReceipts();
 
-      console.log(`✅ PDF receipt generated: ${receipt.receiptNumber}`);
+      console.log(`PDF receipt generated: ${receipt.receiptNumber}`);
       this.emit('receipt:pdf:generated', { receiptId: receipt.id, pdfPath });
 
       return pdfBuffer;
     } catch (error) {
-      console.error('❌ Failed to generate PDF receipt:', error);
+      console.error('Failed to generate PDF receipt:', error);
       throw new Error(
         `PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
+    } finally {
+      if (page) {
+        await this.browserPool.releasePage(page);
+      }
     }
   }
 
-  /**
-   * 📧 Email receipt to user
-   *
-   * @param receiptId - Receipt identifier
-   * @param email - Email address
-   */
   async emailReceipt(receiptId: string, email: string): Promise<void> {
     try {
       if (!this.emailTransporter) {
@@ -388,11 +535,9 @@ export class LightningReceiptService extends EventEmitter {
         throw new Error('Receipt not found');
       }
 
-      // Load email template
       const emailTemplate = await this.loadTemplate('receipt-email');
       const emailHtml = await this.renderTemplate(emailTemplate, receipt);
 
-      // Prepare email attachments
       const attachments = [];
       if (this.config.email.attachPdf && receipt.receipt.pdfGenerated && receipt.receipt.pdfUrl) {
         const pdfBuffer = await this.loadPdfReceipt(receipt.receipt.pdfUrl);
@@ -403,7 +548,6 @@ export class LightningReceiptService extends EventEmitter {
         });
       }
 
-      // Send email
       const emailResult = await this.emailTransporter.sendMail({
         from: this.config.email.from,
         to: email,
@@ -412,52 +556,34 @@ export class LightningReceiptService extends EventEmitter {
         attachments,
       });
 
-      // Update receipt status
+      // Fix #114: Persist email delivery metadata
       receipt.receipt.emailSent = true;
       receipt.receipt.emailDeliveredAt = Date.now();
       this.receiptStorage.set(receipt.id, receipt);
+      await this.persistReceipts();
 
-      console.log(`✅ Receipt emailed: ${receipt.receiptNumber} to ${email}`);
+      console.log(`Receipt emailed: ${receipt.receiptNumber} to ${email}`);
       this.emit('receipt:email:sent', {
         receiptId: receipt.id,
         email,
         messageId: emailResult.messageId,
       });
     } catch (error) {
-      console.error('❌ Failed to email receipt:', error);
+      console.error('Failed to email receipt:', error);
       throw new Error(
         `Email delivery failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }
 
-  /**
-   * 🔍 Get receipt by payment hash
-   *
-   * @param paymentHash - Payment hash
-   * @returns Payment receipt
-   */
   async getReceiptByPaymentHash(paymentHash: string): Promise<PaymentReceipt | null> {
     return this.receiptStorage.get(paymentHash) || null;
   }
 
-  /**
-   * 🔍 Get receipt by receipt number
-   *
-   * @param receiptNumber - Receipt number
-   * @returns Payment receipt
-   */
   async getReceiptByNumber(receiptNumber: string): Promise<PaymentReceipt | null> {
     return this.receiptStorage.get(receiptNumber) || null;
   }
 
-  /**
-   * ✅ Verify receipt authenticity
-   *
-   * @param receiptId - Receipt identifier
-   * @param verificationCode - Verification code
-   * @returns Verification result
-   */
   async verifyReceipt(
     receiptId: string,
     verificationCode?: string
@@ -474,24 +600,20 @@ export class LightningReceiptService extends EventEmitter {
 
       const errors: string[] = [];
 
-      // Verify receipt hash
       const expectedHash = this.generateReceiptHash(receipt);
       if (receipt.security.hash !== expectedHash) {
         errors.push('Receipt hash verification failed');
       }
 
-      // Verify receipt signature
       const expectedSignature = this.generateReceiptSignature(receipt);
       if (receipt.security.signature !== expectedSignature) {
         errors.push('Receipt signature verification failed');
       }
 
-      // Verify verification code if provided
       if (verificationCode && receipt.security.verificationCode !== verificationCode) {
         errors.push('Verification code mismatch');
       }
 
-      // Verify payment hash and preimage
       const preimageHash = crypto
         .createHash('sha256')
         .update(Buffer.from(receipt.verification.preimage, 'hex'))
@@ -501,14 +623,13 @@ export class LightningReceiptService extends EventEmitter {
       }
 
       const valid = errors.length === 0;
-
       return {
         valid,
         receipt: valid ? receipt : undefined,
         errors,
       };
     } catch (error) {
-      console.error('❌ Receipt verification failed:', error);
+      console.error('Receipt verification failed:', error);
       return {
         valid: false,
         errors: [`Verification error: ${error instanceof Error ? error.message : 'Unknown error'}`],
@@ -516,29 +637,27 @@ export class LightningReceiptService extends EventEmitter {
     }
   }
 
+  /**
+   * Graceful shutdown: close browser pool
+   */
+  async shutdown(): Promise<void> {
+    await this.browserPool.shutdown();
+  }
+
   // ===============================
-  // 🔧 Private Helper Methods
+  // Private Helper Methods
   // ===============================
 
-  /**
-   * Generate unique receipt number
-   */
   private generateReceiptNumber(): string {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
     return `SVR-${timestamp}-${random}`.toUpperCase();
   }
 
-  /**
-   * Generate verification code for receipt
-   */
   private generateVerificationCode(): string {
     return crypto.randomBytes(4).toString('hex').toUpperCase();
   }
 
-  /**
-   * Generate receipt hash for integrity verification
-   */
   private generateReceiptHash(receipt: PaymentReceipt): string {
     const hashData = {
       receiptNumber: receipt.receiptNumber,
@@ -547,25 +666,17 @@ export class LightningReceiptService extends EventEmitter {
       timestamp: receipt.timestamp,
       creatorId: receipt.creator.id,
     };
-
     return crypto.createHash('sha256').update(JSON.stringify(hashData)).digest('hex');
   }
 
-  /**
-   * Generate receipt signature for authenticity verification
-   */
   private generateReceiptSignature(receipt: PaymentReceipt): string {
     const secret = process.env.RECEIPT_SIGNATURE_SECRET || 'sovren-receipt-secret';
     const signatureData = `${receipt.receiptNumber}:${receipt.paymentHash}:${receipt.amount}`;
-
     return crypto.createHmac('sha256', secret).update(signatureData).digest('hex');
   }
 
-  /**
-   * Create payment verification data
-   */
   private async createPaymentVerification(paymentData: any): Promise<PaymentVerification> {
-    const verification: PaymentVerification = {
+    return {
       paymentHash: paymentData.paymentHash,
       preimage: paymentData.preimage,
       verified: true,
@@ -575,13 +686,8 @@ export class LightningReceiptService extends EventEmitter {
         .update(`${paymentData.paymentHash}:${paymentData.preimage}`)
         .digest('hex'),
     };
-
-    return verification;
   }
 
-  /**
-   * Fetch payment data (mock implementation)
-   */
   private async fetchPaymentData(paymentId: string): Promise<any> {
     // Mock payment data - replace with actual database fetch
     return {
@@ -612,14 +718,11 @@ export class LightningReceiptService extends EventEmitter {
           'lnbc10m1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpusp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9qrsgqcqpcxr...',
         description: 'Support for amazing content',
         memo: 'Thanks for the great work!',
-        expiresAt: Date.now() + 3600000, // 1 hour from now
+        expiresAt: Date.now() + 3600000,
       },
     };
   }
 
-  /**
-   * Load template from file system
-   */
   private async loadTemplate(templateName: string): Promise<string> {
     if (this.templateCache.has(templateName)) {
       return this.templateCache.get(templateName)!;
@@ -630,15 +733,11 @@ export class LightningReceiptService extends EventEmitter {
       const template = await fs.readFile(templatePath, 'utf-8');
       this.templateCache.set(templateName, template);
       return template;
-    } catch (error) {
-      // Return default template if file not found
+    } catch {
       return this.getDefaultTemplate(templateName);
     }
   }
 
-  /**
-   * Get default template if file not found
-   */
   private getDefaultTemplate(templateName: string): string {
     if (templateName === 'receipt-pdf') {
       return `
@@ -657,7 +756,7 @@ export class LightningReceiptService extends EventEmitter {
         </head>
         <body>
           <div class="header">
-            <h1>⚡ Lightning Payment Receipt</h1>
+            <h1>Lightning Payment Receipt</h1>
             <p>Receipt #{{receiptNumber}}</p>
           </div>
           <div class="receipt-info">
@@ -668,7 +767,7 @@ export class LightningReceiptService extends EventEmitter {
           </div>
           <div class="verification">
             <h3>Payment Verification</h3>
-            <p><strong>Verified:</strong> ✅ Yes</p>
+            <p><strong>Verified:</strong> Yes</p>
             <p><strong>Verification Code:</strong> {{security.verificationCode}}</p>
           </div>
         </body>
@@ -679,7 +778,7 @@ export class LightningReceiptService extends EventEmitter {
     if (templateName === 'receipt-email') {
       return `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>⚡ Lightning Payment Receipt</h2>
+          <h2>Lightning Payment Receipt</h2>
           <p>Thank you for your payment! Here are the details:</p>
           <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Receipt Number:</strong> {{receiptNumber}}</p>
@@ -696,16 +795,10 @@ export class LightningReceiptService extends EventEmitter {
     return '<p>Template not found</p>';
   }
 
-  /**
-   * Render template with data
-   */
   private async renderTemplate(template: string, receipt: PaymentReceipt): Promise<string> {
     let rendered = template;
-
-    // Add formatted date
     const formattedDate = new Date(receipt.timestamp).toLocaleString();
 
-    // Simple template replacement (in production, use a proper template engine)
     rendered = rendered.replace(/\{\{receiptNumber\}\}/g, receipt.receiptNumber);
     rendered = rendered.replace(/\{\{amount\}\}/g, receipt.amount.toString());
     rendered = rendered.replace(/\{\{paymentHash\}\}/g, receipt.paymentHash);
@@ -719,25 +812,14 @@ export class LightningReceiptService extends EventEmitter {
     return rendered;
   }
 
-  /**
-   * Store PDF receipt
-   */
   private async storePdfReceipt(receipt: PaymentReceipt, pdfBuffer: Buffer): Promise<string> {
     const fileName = `receipt-${receipt.receiptNumber}.pdf`;
     const storagePath = path.join(this.config.storage.basePath, fileName);
-
-    // Ensure directory exists
     await fs.mkdir(path.dirname(storagePath), { recursive: true });
-
-    // Write PDF file
     await fs.writeFile(storagePath, pdfBuffer);
-
     return `/receipts/${fileName}`;
   }
 
-  /**
-   * Load PDF receipt from storage
-   */
   private async loadPdfReceipt(pdfPath: string): Promise<Buffer> {
     const fullPath = path.join(process.cwd(), 'public', pdfPath);
     return await fs.readFile(fullPath);
@@ -745,12 +827,9 @@ export class LightningReceiptService extends EventEmitter {
 }
 
 // ===============================
-// 📤 Export Service
+// Export Service
 // ===============================
 
-/**
- * Default receipt service configuration
- */
 const defaultReceiptConfig: ReceiptConfig = {
   pdfTemplate: 'receipt-pdf',
   pdfOptions: {
@@ -768,7 +847,7 @@ const defaultReceiptConfig: ReceiptConfig = {
   storage: {
     provider: 'local',
     basePath: process.env.RECEIPT_STORAGE_PATH || './storage/receipts',
-    retention: 365, // 1 year
+    retention: 365,
   },
   security: {
     encryptPdf: false,
@@ -777,9 +856,6 @@ const defaultReceiptConfig: ReceiptConfig = {
   },
 };
 
-/**
- * Singleton receipt service instance
- */
 export const lightningReceiptService = new LightningReceiptService(defaultReceiptConfig);
 
 export default lightningReceiptService;
