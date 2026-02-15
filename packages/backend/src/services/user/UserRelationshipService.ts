@@ -41,7 +41,7 @@ import type {
 } from '../../types/user-relationship';
 
 import { DomainEventBuilder, DomainEventType as EventType } from '../../interfaces/shared/IEventBus';
-import { createHash } from 'crypto';
+import crypto, { createHash } from 'crypto';
 
 /**
  * In-memory relationship graph for efficient bidirectional queries
@@ -1267,7 +1267,7 @@ export class UserRelationshipService implements IUserRelationshipService {
   }
 
   private generateId(): string {
-    return `rel_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    return `rel_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
   }
 
   private findRelationship(

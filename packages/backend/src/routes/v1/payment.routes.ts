@@ -27,7 +27,29 @@ function getController(): PaymentController {
   return _paymentController;
 }
 
-// Invoice endpoints
+/**
+ * @openapi
+ * /api/v1/payments/invoices:
+ *   post:
+ *     summary: Create a Lightning invoice
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *       - NostrSignature: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateInvoiceRequest'
+ *     responses:
+ *       201:
+ *         description: Invoice created successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
 router.post(
   '/invoices',
   authenticate,
@@ -37,6 +59,26 @@ router.post(
   (req: Request, res: Response, next: NextFunction) => getController().createInvoice(req, res, next)
 );
 
+/**
+ * @openapi
+ * /api/v1/payments/invoices/{id}:
+ *   get:
+ *     summary: Get invoice by ID
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Invoice details
+ *       404:
+ *         description: Invoice not found
+ */
 router.get(
   '/invoices/:id',
   authenticate,
@@ -45,6 +87,35 @@ router.get(
   (req: Request, res: Response, next: NextFunction) => getController().getInvoice(req, res, next)
 );
 
+/**
+ * @openapi
+ * /api/v1/payments/invoices/{id}/pay:
+ *   post:
+ *     summary: Pay a Lightning invoice
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *       - NostrSignature: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PayInvoiceRequest'
+ *     responses:
+ *       200:
+ *         description: Payment processed
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Invoice not found
+ */
 router.post(
   '/invoices/:id/pay',
   authenticate,
@@ -54,7 +125,36 @@ router.post(
   (req: Request, res: Response, next: NextFunction) => getController().payInvoice(req, res, next)
 );
 
-// Currency conversion endpoint
+/**
+ * @openapi
+ * /api/v1/payments/currency/convert:
+ *   get:
+ *     summary: Convert between currencies
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: to
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: amount
+ *         required: true
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Conversion result
+ *       400:
+ *         description: Validation error
+ */
 router.get(
   '/currency/convert',
   authenticate,
@@ -64,7 +164,16 @@ router.get(
     getController().convertCurrency(req, res, next)
 );
 
-// Subscription tier listing (public)
+/**
+ * @openapi
+ * /api/v1/payments/subscriptions/tiers:
+ *   get:
+ *     summary: List available subscription tiers
+ *     tags: [Payments]
+ *     responses:
+ *       200:
+ *         description: List of subscription tiers
+ */
 router.get(
   '/subscriptions/tiers',
   rateLimiters.payment.read,
@@ -72,7 +181,26 @@ router.get(
     getController().getSubscriptionTiers(req, res, next)
 );
 
-// Get specific subscription
+/**
+ * @openapi
+ * /api/v1/payments/subscriptions/{id}:
+ *   get:
+ *     summary: Get subscription by ID
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Subscription details
+ *       404:
+ *         description: Subscription not found
+ */
 router.get(
   '/subscriptions/:id',
   authenticate,
@@ -82,7 +210,27 @@ router.get(
     getController().getSubscription(req, res, next)
 );
 
-// Subscription endpoints
+/**
+ * @openapi
+ * /api/v1/payments/subscriptions:
+ *   post:
+ *     summary: Create a new subscription
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *       - NostrSignature: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateSubscriptionRequest'
+ *     responses:
+ *       201:
+ *         description: Subscription created
+ *       400:
+ *         description: Validation error
+ */
 router.post(
   '/subscriptions',
   authenticate,
@@ -93,6 +241,33 @@ router.post(
     getController().createSubscription(req, res, next)
 );
 
+/**
+ * @openapi
+ * /api/v1/payments/subscriptions/{id}:
+ *   put:
+ *     summary: Update a subscription
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *       - NostrSignature: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateSubscriptionRequest'
+ *     responses:
+ *       200:
+ *         description: Subscription updated
+ *       404:
+ *         description: Subscription not found
+ */
 router.put(
   '/subscriptions/:id',
   authenticate,
@@ -106,6 +281,27 @@ router.put(
     getController().updateSubscription(req, res, next)
 );
 
+/**
+ * @openapi
+ * /api/v1/payments/subscriptions/{id}:
+ *   delete:
+ *     summary: Cancel a subscription
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *       - NostrSignature: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Subscription cancelled
+ *       404:
+ *         description: Subscription not found
+ */
 router.delete(
   '/subscriptions/:id',
   authenticate,
@@ -119,7 +315,27 @@ router.delete(
     getController().cancelSubscription(req, res, next)
 );
 
-// Refund endpoint
+/**
+ * @openapi
+ * /api/v1/payments/refunds:
+ *   post:
+ *     summary: Create a refund
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *       - NostrSignature: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateRefundRequest'
+ *     responses:
+ *       201:
+ *         description: Refund created
+ *       400:
+ *         description: Validation error
+ */
 router.post(
   '/refunds',
   authenticate,
@@ -129,7 +345,18 @@ router.post(
   (req: Request, res: Response, next: NextFunction) => getController().createRefund(req, res, next)
 );
 
-// Analytics endpoint
+/**
+ * @openapi
+ * /api/v1/payments/analytics:
+ *   get:
+ *     summary: Get payment analytics
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Payment analytics data
+ */
 router.get(
   '/analytics',
   authenticate,
@@ -139,7 +366,25 @@ router.get(
     getController().getPaymentAnalytics(req, res, next)
 );
 
-// Webhook endpoints
+/**
+ * @openapi
+ * /api/v1/payments/webhooks:
+ *   post:
+ *     summary: Register a payment webhook
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *       - NostrSignature: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterWebhookRequest'
+ *     responses:
+ *       201:
+ *         description: Webhook registered
+ */
 router.post(
   '/webhooks',
   authenticate,
@@ -150,6 +395,24 @@ router.post(
     getController().registerWebhook(req, res, next)
 );
 
+/**
+ * @openapi
+ * /api/v1/payments/webhooks/{id}:
+ *   put:
+ *     summary: Update a webhook
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Webhook updated
+ */
 router.put(
   '/webhooks/:id',
   authenticate,
@@ -159,6 +422,24 @@ router.put(
     getController().updateWebhook(req, res, next)
 );
 
+/**
+ * @openapi
+ * /api/v1/payments/webhooks/{id}:
+ *   delete:
+ *     summary: Delete a webhook
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Webhook deleted
+ */
 router.delete(
   '/webhooks/:id',
   authenticate,
@@ -170,7 +451,18 @@ router.delete(
 
 // === Payment API Expansion (Todo 120) ===
 
-// Transaction history
+/**
+ * @openapi
+ * /api/v1/payments/transactions:
+ *   get:
+ *     summary: Get transaction history
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Transaction history
+ */
 router.get(
   '/transactions',
   authenticate,
@@ -180,7 +472,18 @@ router.get(
     getController().getTransactionHistory(req, res, next)
 );
 
-// Balance
+/**
+ * @openapi
+ * /api/v1/payments/balance:
+ *   get:
+ *     summary: Get user balance
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current balance
+ */
 router.get(
   '/balance',
   authenticate,
@@ -189,7 +492,18 @@ router.get(
     getController().getBalance(req, res, next)
 );
 
-// Invoice listing
+/**
+ * @openapi
+ * /api/v1/payments/invoices:
+ *   get:
+ *     summary: List all invoices
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of invoices
+ */
 router.get(
   '/invoices',
   authenticate,
@@ -198,7 +512,26 @@ router.get(
     getController().listInvoices(req, res, next)
 );
 
-// Invoice retry
+/**
+ * @openapi
+ * /api/v1/payments/invoices/{id}/retry:
+ *   post:
+ *     summary: Retry a failed invoice payment
+ *     tags: [Payments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Invoice retried
+ *       404:
+ *         description: Invoice not found
+ */
 router.post(
   '/invoices/:id/retry',
   authenticate,

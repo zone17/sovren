@@ -117,8 +117,11 @@ export class LightningPaymentService extends EventEmitter {
   private notificationService: NotificationService;
   private analyticsService: AnalyticsService;
   private walletProviders: Map<string, WalletProvider>;
-  private paymentMonitors: Map<string, NodeJS.Timeout>; // Self-cleaning via 1hr timeout in startPaymentMonitoring
+  private paymentMonitors: Map<string, { interval: NodeJS.Timeout; timeout: NodeJS.Timeout }>; // Self-cleaning via maxPollingDuration timeout
   private invoiceCache: TTLCache<string, LightningInvoice>;
+  private cleanupIntervalId: NodeJS.Timeout | null = null;
+  private initialized = false;
+  private static readonly MAX_POLLING_DURATION_MS = 3_600_000; // 1 hour
 
   constructor() {
     super();
@@ -130,20 +133,21 @@ export class LightningPaymentService extends EventEmitter {
     this.walletProviders = new Map();
     this.paymentMonitors = new Map();
     this.invoiceCache = new TTLCache({ maxSize: 10_000, ttlMs: 60 * 60 * 1000 }); // 60 min TTL, matches monitor timeout
-
-    this.initializeService();
   }
 
   /**
-   * Initialize Lightning Payment Service
-   * Sets up wallet providers, payment monitoring, and cleanup routines
+   * Initialize Lightning Payment Service.
+   * Must be called after construction and awaited before using the service.
+   * Sets up wallet providers, payment monitoring, and cleanup routines.
    */
-  private async initializeService(): Promise<void> {
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
     try {
       await this.loadWalletProviders();
       await this.setupPaymentMonitoring();
       await this.startInvoiceCleanup();
 
+      this.initialized = true;
       this.logger.info('Lightning Payment Service initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize Lightning Payment Service', error);
@@ -647,28 +651,35 @@ export class LightningPaymentService extends EventEmitter {
   }
 
   private async startPaymentMonitoring(payment_hash: string): Promise<void> {
-    const monitor = setInterval(async () => {
+    const interval = setInterval(async () => {
       try {
         const verification = await this.verifyPayment(payment_hash);
         if (verification) {
-          clearInterval(monitor);
-          this.paymentMonitors.delete(payment_hash);
+          this.clearPaymentMonitor(payment_hash);
         }
       } catch (error) {
         this.logger.error(`Payment monitoring error for ${payment_hash}`, error);
       }
     }, 5000); // Check every 5 seconds
 
-    this.paymentMonitors.set(payment_hash, monitor);
-
-    // Set timeout for monitoring
-    setTimeout(() => {
+    // Set timeout to auto-stop polling after maxPollingDuration
+    const timeout = setTimeout(() => {
       if (this.paymentMonitors.has(payment_hash)) {
-        clearInterval(monitor);
-        this.paymentMonitors.delete(payment_hash);
+        this.clearPaymentMonitor(payment_hash);
         this.updatePaymentStatus(payment_hash, 'expired');
       }
-    }, 3600000); // 1 hour timeout
+    }, LightningPaymentService.MAX_POLLING_DURATION_MS);
+
+    this.paymentMonitors.set(payment_hash, { interval, timeout });
+  }
+
+  private clearPaymentMonitor(payment_hash: string): void {
+    const monitor = this.paymentMonitors.get(payment_hash);
+    if (monitor) {
+      clearInterval(monitor.interval);
+      clearTimeout(monitor.timeout);
+      this.paymentMonitors.delete(payment_hash);
+    }
   }
 
   private async setupPaymentMonitoring(): Promise<void> {
@@ -686,7 +697,7 @@ export class LightningPaymentService extends EventEmitter {
 
   private async startInvoiceCleanup(): Promise<void> {
     // Clean up expired invoices every hour
-    setInterval(async () => {
+    this.cleanupIntervalId = setInterval(async () => {
       try {
         const { error } = await supabase
           .from('lightning_invoices')

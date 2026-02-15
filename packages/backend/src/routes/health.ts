@@ -79,11 +79,45 @@ router.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Readiness probe shortcut (redirect to /health/ready)
-router.get('/ready', (req: Request, res: Response) => res.redirect(307, '/health/ready'));
+// Readiness probe shortcut (inline check instead of redirect)
+router.get('/ready', async (req: Request, res: Response) => {
+  try {
+    const dbHealth = await checkDatabase();
+    const redisHealth = await checkRedis();
 
-// Liveness probe shortcut (redirect to /health/live)
-router.get('/live', (req: Request, res: Response) => res.redirect(307, '/health/live'));
+    if (dbHealth.status === 'healthy' && redisHealth.status === 'healthy') {
+      res.status(200).json({
+        status: 'ready',
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      res.status(503).json({
+        status: 'not-ready',
+        timestamp: new Date().toISOString(),
+        issues: {
+          database: dbHealth.status !== 'healthy' ? dbHealth.error : null,
+          redis: redisHealth.status !== 'healthy' ? redisHealth.error : null,
+        },
+      });
+    }
+  } catch (error) {
+    res.status(503).json({
+      status: 'not-ready',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// Liveness probe shortcut (inline check instead of redirect)
+router.get('/live', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'alive',
+    timestamp: new Date().toISOString(),
+    pid: process.pid,
+    uptime: process.uptime(),
+  });
+});
 
 // Comprehensive health check with detailed diagnostics
 router.get('/health/detailed', async (req: Request, res: Response) => {

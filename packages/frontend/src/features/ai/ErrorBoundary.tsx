@@ -1,16 +1,5 @@
-import React from 'react';
-import { ErrorBoundary } from '../../monitoring/ErrorBoundary';
+import { createFeatureErrorBoundary } from '../../monitoring/createFeatureErrorBoundary';
 
-interface AIErrorBoundaryProps {
-  children: React.ReactNode;
-}
-
-export const AIErrorBoundary: React.FC<AIErrorBoundaryProps> = ({ children }) => {
-  return (
-    <ErrorBoundary level="feature" featureName="AI Features">
-      {children}
-    </ErrorBoundary>
-  );
-};
+export const AIErrorBoundary = createFeatureErrorBoundary('AI Features');
 
 export default AIErrorBoundary;

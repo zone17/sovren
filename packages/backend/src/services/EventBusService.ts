@@ -4,6 +4,7 @@
  * Part of Epic 005 - Backend Service Refactoring - Story E5-005
  */
 
+import crypto from 'crypto';
 import {
   IEventBus,
   DomainEvent,
@@ -572,7 +573,7 @@ export class EventBusService implements IEventBus {
    * Generate unique subscription ID
    */
   private generateSubscriptionId(): string {
-    return `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    return `sub_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
   }
 
   /**

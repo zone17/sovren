@@ -34,7 +34,7 @@ import {
   PROFILE_EVENT_TYPES,
   PROFILE_AUDIT_ACTIONS
 } from '../../types/user-profile';
-import { createHash } from 'crypto';
+import crypto, { createHash } from 'crypto';
 import sharp from 'sharp';
 
 /**
@@ -1248,6 +1248,6 @@ export class UserProfileService implements IUserProfileService {
    * Generate unique ID
    */
   private generateId(): string {
-    return `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    return `${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
   }
 }

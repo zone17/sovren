@@ -10,6 +10,7 @@
  * @lastModified 2024-12-29
  */
 
+import crypto from 'crypto';
 import { EventEmitter } from 'events';
 
 // 📊 Monitoring Types
@@ -245,7 +246,7 @@ export class NIP05MonitoringService extends EventEmitter {
    * 🔔 Create Alert
    */
   private createAlert(alertData: Omit<AlertEvent, 'id' | 'timestamp'>): void {
-    const alertId = `alert_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    const alertId = `alert_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
     const alert: AlertEvent = {
       id: alertId,
       ...alertData,

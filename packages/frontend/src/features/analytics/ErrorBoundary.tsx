@@ -1,16 +1,5 @@
-import React from 'react';
-import { ErrorBoundary } from '../../monitoring/ErrorBoundary';
+import { createFeatureErrorBoundary } from '../../monitoring/createFeatureErrorBoundary';
 
-interface AnalyticsErrorBoundaryProps {
-  children: React.ReactNode;
-}
-
-export const AnalyticsErrorBoundary: React.FC<AnalyticsErrorBoundaryProps> = ({ children }) => {
-  return (
-    <ErrorBoundary level="feature" featureName="Analytics">
-      {children}
-    </ErrorBoundary>
-  );
-};
+export const AnalyticsErrorBoundary = createFeatureErrorBoundary('Analytics');
 
 export default AnalyticsErrorBoundary;

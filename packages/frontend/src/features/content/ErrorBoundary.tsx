@@ -1,16 +1,5 @@
-import React from 'react';
-import { ErrorBoundary } from '../../monitoring/ErrorBoundary';
+import { createFeatureErrorBoundary } from '../../monitoring/createFeatureErrorBoundary';
 
-interface ContentErrorBoundaryProps {
-  children: React.ReactNode;
-}
-
-export const ContentErrorBoundary: React.FC<ContentErrorBoundaryProps> = ({ children }) => {
-  return (
-    <ErrorBoundary level="feature" featureName="Content Management">
-      {children}
-    </ErrorBoundary>
-  );
-};
+export const ContentErrorBoundary = createFeatureErrorBoundary('Content Management');
 
 export default ContentErrorBoundary;

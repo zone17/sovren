@@ -229,10 +229,13 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
 
   // Database (Supabase client - placeholder)
   registry.registerSingletonFactory(TYPES.Database, (_container) => {
-    // Return mock database for now
     return {
-      query: async (_sql: string, _params: any[]) => ({ rows: [], rowCount: 0 }),
-      transaction: async (callback: any) => callback(),
+      query: async (_sql: string, _params: any[]) => {
+        throw new Error('Database not configured — resolve TYPES.Database with a real implementation');
+      },
+      transaction: async (_callback: any) => {
+        throw new Error('Database not configured — resolve TYPES.Database with a real implementation');
+      },
     };
   });
 

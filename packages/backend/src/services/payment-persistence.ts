@@ -14,7 +14,7 @@ export interface PaymentPersistence {
   savePayment(payment: LightningPayment): Promise<void>;
   getInvoiceById(id: string): Promise<LightningInvoice | null>;
   getInvoiceByPaymentHash(hash: string): Promise<LightningInvoice | null>;
-  getPaymentsByCreator(creatorId: string): Promise<LightningPayment[]>;
+  getPaymentsByCreator(creatorId: string, filters?: { status?: string }): Promise<LightningPayment[]>;
   getAllPayments(): Promise<LightningPayment[]>;
   getAllInvoices(): Promise<LightningInvoice[]>;
   updateInvoiceStatus(id: string, status: string): Promise<void>;
@@ -66,8 +66,14 @@ export class JsonFilePaymentStore extends EventEmitter implements PaymentPersist
     return null;
   }
 
-  async getPaymentsByCreator(creatorId: string): Promise<LightningPayment[]> {
-    return Array.from(this.payments.values()).filter((p) => p.creator_id === creatorId);
+  async getPaymentsByCreator(creatorId: string, filters?: { status?: string }): Promise<LightningPayment[]> {
+    // TODO: When backed by a real database, apply filters as WHERE clauses in the query
+    // instead of filtering in-memory for better performance at scale
+    return Array.from(this.payments.values()).filter((p) => {
+      if (p.creator_id !== creatorId) return false;
+      if (filters?.status && p.status !== filters.status) return false;
+      return true;
+    });
   }
 
   async getAllPayments(): Promise<LightningPayment[]> {

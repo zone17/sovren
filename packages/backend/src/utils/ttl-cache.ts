@@ -1,11 +1,11 @@
 /**
  * Simple bounded Map with TTL eviction.
  * Entries expire after ttlMs and the map never exceeds maxSize.
- * On overflow, the oldest entry is evicted (FIFO).
+ * On overflow, the least recently accessed entry is evicted (LRU).
  * Optional onEvict callback fires when entries are removed by TTL or overflow.
  */
 export class TTLCache<K, V> {
-  private map = new Map<K, { value: V; expiresAt: number }>();
+  private map = new Map<K, { value: V; expiresAt: number; lastAccessed: number }>();
   private maxSize: number;
   private ttlMs: number;
   private cleanupInterval: NodeJS.Timeout | null = null;
@@ -36,19 +36,29 @@ export class TTLCache<K, V> {
       this.onEvict?.(key, entry.value);
       return undefined;
     }
+    entry.lastAccessed = Date.now();
     return entry.value;
   }
 
   set(key: K, value: V): void {
     if (this.map.size >= this.maxSize && !this.map.has(key)) {
-      const firstKey = this.map.keys().next().value;
-      if (firstKey !== undefined) {
-        const evicted = this.map.get(firstKey);
-        this.map.delete(firstKey);
-        if (evicted) this.onEvict?.(firstKey, evicted.value);
+      // LRU eviction: find entry with oldest lastAccessed
+      let oldestKey: K | undefined;
+      let oldestAccess = Infinity;
+      for (const [k, entry] of this.map) {
+        if (entry.lastAccessed < oldestAccess) {
+          oldestAccess = entry.lastAccessed;
+          oldestKey = k;
+        }
+      }
+      if (oldestKey !== undefined) {
+        const evicted = this.map.get(oldestKey);
+        this.map.delete(oldestKey);
+        if (evicted) this.onEvict?.(oldestKey, evicted.value);
       }
     }
-    this.map.set(key, { value, expiresAt: Date.now() + this.ttlMs });
+    const now = Date.now();
+    this.map.set(key, { value, expiresAt: now + this.ttlMs, lastAccessed: now });
   }
 
   has(key: K): boolean {
@@ -68,31 +78,55 @@ export class TTLCache<K, V> {
     this.map.clear();
   }
 
+  /** Returns the count of non-expired entries. */
   get size(): number {
-    return this.map.size;
+    const now = Date.now();
+    let count = 0;
+    for (const entry of this.map.values()) {
+      if (now <= entry.expiresAt) {
+        count++;
+      }
+    }
+    return count;
   }
 
   values(): V[] {
     const now = Date.now();
     const result: V[] = [];
+    const expiredKeys: K[] = [];
     for (const [key, entry] of this.map) {
       if (now > entry.expiresAt) {
-        this.map.delete(key);
-        this.onEvict?.(key, entry.value);
+        expiredKeys.push(key);
       } else {
         result.push(entry.value);
       }
     }
+    // Delete expired entries after iteration to avoid mutation during iteration
+    for (const key of expiredKeys) {
+      const entry = this.map.get(key);
+      this.map.delete(key);
+      if (entry) this.onEvict?.(key, entry.value);
+    }
     return result;
+  }
+
+  /** Remove all expired entries. */
+  cleanExpired(): void {
+    this.evictExpired();
   }
 
   private evictExpired(): void {
     const now = Date.now();
+    const expiredKeys: K[] = [];
     for (const [key, entry] of this.map) {
       if (now > entry.expiresAt) {
-        this.map.delete(key);
-        this.onEvict?.(key, entry.value);
+        expiredKeys.push(key);
       }
+    }
+    for (const key of expiredKeys) {
+      const entry = this.map.get(key);
+      this.map.delete(key);
+      if (entry) this.onEvict?.(key, entry.value);
     }
   }
 

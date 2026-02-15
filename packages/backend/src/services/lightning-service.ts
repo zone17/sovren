@@ -702,13 +702,11 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      // Read from persistence for complete history
-      let payments = await this.persistence.getPaymentsByCreator(creatorId);
-
-      // Apply status filter
-      if (options?.status) {
-        payments = payments.filter((payment) => payment.status === options.status);
-      }
+      // Read from persistence with query-level filtering
+      const payments = await this.persistence.getPaymentsByCreator(
+        creatorId,
+        options?.status ? { status: options.status } : undefined
+      );
 
       // Sort by settled_at descending
       payments.sort((a, b) => (b.settled_at || 0) - (a.settled_at || 0));

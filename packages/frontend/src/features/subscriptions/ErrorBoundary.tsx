@@ -1,16 +1,5 @@
-import React from 'react';
-import { ErrorBoundary } from '../../monitoring/ErrorBoundary';
+import { createFeatureErrorBoundary } from '../../monitoring/createFeatureErrorBoundary';
 
-interface SubscriptionsErrorBoundaryProps {
-  children: React.ReactNode;
-}
-
-export const SubscriptionsErrorBoundary: React.FC<SubscriptionsErrorBoundaryProps> = ({ children }) => {
-  return (
-    <ErrorBoundary level="feature" featureName="Subscriptions">
-      {children}
-    </ErrorBoundary>
-  );
-};
+export const SubscriptionsErrorBoundary = createFeatureErrorBoundary('Subscriptions');
 
 export default SubscriptionsErrorBoundary;

@@ -120,6 +120,8 @@ function handleZodError(error: ZodError, req: Request, res: Response, requestId:
     field: err.path.join('.'),
     message: err.message,
     code: err.code,
+    ...('expected' in err && { expected: err.expected }),
+    ...('received' in err && { received: err.received }),
   }));
 
   const response: ErrorResponse = {

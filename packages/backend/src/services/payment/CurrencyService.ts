@@ -5,6 +5,7 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
+import crypto from 'crypto';
 import type { ICurrencyService } from '../../interfaces/payment/ICurrencyService';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../interfaces/shared/ILogger';
@@ -779,7 +780,7 @@ export class CurrencyService implements ICurrencyService {
   subscribeToRateUpdates(
     callback: (event: ExchangeRateUpdateEvent) => void | Promise<void>
   ): string {
-    const subscriptionId = `sub-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const subscriptionId = `sub-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
     this.eventSubscriptions.set(subscriptionId, callback);
     return subscriptionId;
   }

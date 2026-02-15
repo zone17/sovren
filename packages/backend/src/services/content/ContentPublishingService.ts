@@ -85,6 +85,72 @@ export class ContentPublishingService implements IContentPublishingService {
   }
 
   /**
+   * Recovers scheduled publish jobs after service restart.
+   * Queries for content with status='scheduled' and re-registers timers.
+   */
+  async recoverScheduledJobs(): Promise<void> {
+    try {
+      this.logger.info('Recovering scheduled publish jobs');
+
+      const result = await this.db.query<any>(
+        `SELECT cs.schedule_id, cs.content_id, cs.scheduled_for
+         FROM content_schedule cs
+         JOIN content c ON c.id = cs.content_id
+         WHERE c.status = 'scheduled'
+           AND cs.scheduled_for > $1`,
+        [new Date()]
+      );
+
+      for (const row of result.rows) {
+        const publishAt = new Date(row.scheduled_for);
+        const delay = publishAt.getTime() - Date.now();
+
+        if (delay <= 0) {
+          // Past due — publish immediately
+          this.logger.info('Executing overdue scheduled publish', {
+            contentId: row.content_id,
+            scheduleId: row.schedule_id,
+          });
+          this.publish(row.content_id, { immediate: true }).catch(error => {
+            this.logger.error('Failed to execute overdue publish', {
+              contentId: row.content_id,
+              error,
+            });
+          });
+          continue;
+        }
+
+        const timeout = setTimeout(async () => {
+          try {
+            await this.publish(row.content_id, { immediate: true });
+            this.scheduledJobs.delete(row.schedule_id);
+          } catch (error) {
+            this.logger.error('Recovered scheduled publish failed', {
+              contentId: row.content_id,
+              scheduleId: row.schedule_id,
+              error,
+            });
+          }
+        }, delay);
+
+        this.scheduledJobs.set(row.schedule_id, {
+          scheduleId: row.schedule_id,
+          contentId: row.content_id,
+          publishAt,
+          options: { immediate: true },
+          timeout,
+        });
+      }
+
+      this.logger.info('Scheduled job recovery complete', {
+        recoveredCount: result.rows.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to recover scheduled jobs', error);
+    }
+  }
+
+  /**
    * Publishes content immediately with optional Nostr distribution
    * Implements idempotent publishing to prevent duplicates
    *

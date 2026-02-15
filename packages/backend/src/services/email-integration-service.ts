@@ -21,6 +21,7 @@
  * @since 2024-01-15
  */
 
+import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import * as nodemailer from 'nodemailer';
 import {
@@ -251,7 +252,7 @@ class EmailAnalyticsTracker {
 
     if (!analytics) {
       analytics = EmailAnalyticsSchema.parse({
-        id: `analytics_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        id: `analytics_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
         email_id: emailId,
         open_count: 0,
         click_count: 0,
@@ -497,7 +498,7 @@ export class EmailIntegrationService extends EventEmitter implements EmailServic
 
       // Create notification record with rendered content
       const notification = EmailNotificationSchema.parse({
-        id: `notification_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        id: `notification_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
         user_id: request.user_id,
         type: request.type,
         priority: request.priority || 'normal',
@@ -605,7 +606,7 @@ export class EmailIntegrationService extends EventEmitter implements EmailServic
       this.logger.info(`Creating newsletter for creator: ${creatorId}`);
 
       const newsletter = NewsletterSchema.parse({
-        id: `newsletter_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        id: `newsletter_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
         creator_id: creatorId,
         title: request.title,
         subject: request.subject,
@@ -742,7 +743,7 @@ export class EmailIntegrationService extends EventEmitter implements EmailServic
     if (!preferences) {
       // Create default preferences
       preferences = NotificationPreferencesSchema.parse({
-        id: `pref_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        id: `pref_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
         user_id: userId,
         unsubscribe_token: this.generateUnsubscribeToken(userId),
         created_at: new Date(),

@@ -41,7 +41,7 @@ import type {
 } from '../../types/refund';
 import type { PaymentStatus, PaymentTransaction, Currency } from '../../types/payment';
 import { DomainEventType, DomainEventBuilder } from '../../interfaces/shared/IEventBus';
-import { createHash, randomBytes } from 'crypto';
+import crypto, { createHash, randomBytes } from 'crypto';
 import { performance } from 'perf_hooks';
 
 /**
@@ -1530,7 +1530,7 @@ export class RefundService implements IRefundService {
     eventType: RefundWebhookEvent['type'],
     callback: (event: RefundWebhookEvent) => void | Promise<void>
   ): string {
-    const subscriptionId = `sub-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const subscriptionId = `sub-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
     this.eventSubscriptions.set(subscriptionId, callback);
     return subscriptionId;
   }

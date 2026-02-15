@@ -18,8 +18,15 @@ export const SENSITIVE_FIELDS = [
   'nsec',
   'cookie',
   'x-api-key',
-  'auth',
-  'key',
+  'authToken',
+  'authSecret',
+  'accessToken',
+  'refreshToken',
+  'sessionToken',
+  'encryptionKey',
+  'signingKey',
+  'secretKey',
+  'secret_key',
 ] as const;
 
 const SENSITIVE_REGEX = new RegExp(

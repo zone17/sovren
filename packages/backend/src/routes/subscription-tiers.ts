@@ -18,6 +18,9 @@ const router = express.Router();
 
 // Initialize services
 const lightningService = new LightningPaymentService();
+lightningService.initialize().catch(err => {
+  console.error('Failed to initialize LightningPaymentService:', err);
+});
 const subscriptionService = new SubscriptionManagementService(lightningService);
 
 // Validation schemas

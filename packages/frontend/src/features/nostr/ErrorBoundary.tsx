@@ -1,16 +1,5 @@
-import React from 'react';
-import { ErrorBoundary } from '../../monitoring/ErrorBoundary';
+import { createFeatureErrorBoundary } from '../../monitoring/createFeatureErrorBoundary';
 
-interface NostrErrorBoundaryProps {
-  children: React.ReactNode;
-}
-
-export const NostrErrorBoundary: React.FC<NostrErrorBoundaryProps> = ({ children }) => {
-  return (
-    <ErrorBoundary level="feature" featureName="NOSTR Protocol">
-      {children}
-    </ErrorBoundary>
-  );
-};
+export const NostrErrorBoundary = createFeatureErrorBoundary('NOSTR Protocol');
 
 export default NostrErrorBoundary;

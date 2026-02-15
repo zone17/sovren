@@ -87,6 +87,8 @@ export class RecommendationService {
         creator.categories?.forEach((cat: string) => userCategories.add(cat));
       });
 
+      // TODO: When scaling, replace multiple sequential queries with a single JOIN query
+      // or a stored procedure to avoid N+1 pattern across follows → creators → follows
       // Find similar creators using collaborative filtering
       const { data: similarUsers } = await supabase
         .from('follows')
