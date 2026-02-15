@@ -2,7 +2,7 @@
 # Multi-stage build with Node.js 20 Alpine runtime
 
 # Stage 1: Dependency installation
-FROM node:20-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ && \
@@ -16,7 +16,7 @@ RUN npm ci --include=dev && \
     rm -rf ~/.npm /tmp/*
 
 # Stage 2: Application build
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -31,7 +31,7 @@ RUN npm run build && \
     npm cache clean --force
 
 # Stage 3: Production runtime
-FROM node:20-alpine AS runtime
+FROM node:25-alpine AS runtime
 
 LABEL org.opencontainers.image.title="Sovren Backend Production" \
       org.opencontainers.image.description="Lightning Network and NOSTR backend service" \

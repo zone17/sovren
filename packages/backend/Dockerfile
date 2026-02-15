@@ -14,7 +14,7 @@
 # Stage 1: Dependencies
 # ========================================
 # WHY: Separate dependency installation for better layer caching
-FROM node:18-alpine AS dependencies
+FROM node:25-alpine AS dependencies
 
 # Install build dependencies for native modules
 RUN apk add --no-cache \
@@ -58,7 +58,7 @@ RUN npm run build && \
 # Stage 3: Production Dependencies
 # ========================================
 # WHY: Install only production dependencies for minimal final image
-FROM node:18-alpine AS prod-dependencies
+FROM node:25-alpine AS prod-dependencies
 
 WORKDIR /app
 
@@ -79,7 +79,7 @@ RUN if [ -f package-lock.json ]; then \
 # Stage 4: Production Runtime
 # ========================================
 # WHY: Minimal final image with only runtime requirements
-FROM node:18-alpine AS production
+FROM node:25-alpine AS production
 
 # Add metadata labels for image tracking
 LABEL org.opencontainers.image.title="Sovren Backend API" \
