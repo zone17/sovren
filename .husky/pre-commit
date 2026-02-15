@@ -14,32 +14,13 @@ npx lint-staged
 #    full type-check impractical at commit time; ESLint + lint-staged catch
 #    most issues). See AD-5 in docs/plans/p2-remediation-architecture.md.
 
-# 3. Run all tests to ensure nothing breaks
-echo "🧪 Running full test suite..."
-npm run test:ci
+# 3. Run backend + shared tests only (frontend tests run in CI)
+echo "🧪 Running backend + shared tests..."
+npm run test:pre-commit
 if [ $? -ne 0 ]; then
-  echo "❌ Tests failed! All tests must pass before committing."
+  echo "❌ Backend/shared tests failed! Tests must pass before committing."
   exit 1
 fi
-
-# 4. Check test coverage threshold (>90%)
-echo "📊 Checking test coverage threshold..."
-cd packages/frontend
-npm run test:coverage -- --passWithNoTests --silent | tail -n 20 > /tmp/coverage-output.txt
-coverage_lines=$(grep "Lines" /tmp/coverage-output.txt | grep -o '[0-9]\+\.[0-9]\+%' | head -1 | sed 's/%//')
-if [ -n "$coverage_lines" ]; then
-  coverage_int=$(echo "$coverage_lines" | cut -d'.' -f1)
-  if [ "$coverage_int" -lt 90 ]; then
-    echo "❌ Test coverage ($coverage_lines%) is below 90% threshold!"
-    echo "📋 Please add tests to maintain our elite coverage standards."
-    exit 1
-  else
-    echo "✅ Test coverage: $coverage_lines% (exceeds 90% threshold)"
-  fi
-else
-  echo "⚠️  Could not determine coverage - proceeding with caution"
-fi
-cd ../..
 
 # 5. Security audit
 echo "🔒 Running security audit..."

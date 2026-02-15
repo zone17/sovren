@@ -1,5 +1,3 @@
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../../container/types';
 import {
   IContentCreationService,
   ContentDraft,
@@ -32,7 +30,6 @@ import path from 'path';
  *
  * @implements IContentCreationService
  */
-@injectable()
 export class ContentCreationService implements IContentCreationService {
   private readonly logger: Logger;
   private readonly autosaveInterval = 30000; // 30 seconds
@@ -58,11 +55,11 @@ export class ContentCreationService implements IContentCreationService {
   });
 
   constructor(
-    @inject(TYPES.Database) private readonly db: IDatabase,
-    @inject(TYPES.Cache) private readonly cache: ICacheService,
-    @inject(TYPES.EventBus) private readonly eventBus: IEventBusService,
-    @inject(TYPES.AuditLog) private readonly auditLog: IAuditLogService,
-    @inject(TYPES.Notification) private readonly notification: INotificationService
+    private readonly db: IDatabase,
+    private readonly cache: ICacheService,
+    private readonly eventBus: IEventBusService,
+    private readonly auditLog: IAuditLogService,
+    private readonly notification: INotificationService
   ) {
     this.logger = new Logger(ContentCreationService.name);
   }
@@ -80,7 +77,7 @@ export class ContentCreationService implements IContentCreationService {
       const validation = await this.validateContent(draft);
       if (!validation.isValid) {
         throw new ServiceError('Content validation failed', {
-          errors: validation.errors,
+          details: { errors: validation.errors },
         });
       }
 

@@ -57,7 +57,7 @@ const DEFAULT_CONFIG: BootstrapConfig = {
   enableHealthChecks: true,
   validateDependencies: true,
   logStartup: true,
-  gracefulShutdown: true,
+  gracefulShutdown: false, // Disabled by default; server.ts owns the signal handlers
 };
 
 /**

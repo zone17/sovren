@@ -18,38 +18,14 @@ import logger from '../lib/logger';
 import { AppError } from '../lib/app-error';
 export { AppError };
 
-export class AuthenticationError extends AppError {
-  constructor(message: string = 'Authentication required', details?: Record<string, unknown> | string) {
-    super(401, 'AUTHENTICATION_ERROR', message, details);
-  }
-}
-
-export class AuthorizationError extends AppError {
-  constructor(message: string = 'Insufficient permissions', details?: Record<string, unknown> | string) {
-    super(403, 'AUTHORIZATION_ERROR', message, details);
-  }
-}
-
 export class RateLimitError extends AppError {
   constructor(message: string = 'Too many requests', details?: Record<string, unknown> | string) {
     super(429, 'RATE_LIMIT_EXCEEDED', message, details);
   }
 }
 
-export class DatabaseError extends AppError {
-  constructor(message: string = 'Database operation failed', details?: Record<string, unknown> | string) {
-    super(500, 'DATABASE_ERROR', message, details, false); // Not operational
-  }
-}
-
-export class ExternalServiceError extends AppError {
-  constructor(service: string, message: string, details?: Record<string, unknown> | string) {
-    super(503, 'EXTERNAL_SERVICE_ERROR', `${service} service unavailable: ${message}`, details);
-  }
-}
-
 // Re-export canonical error classes from utils/errors to avoid duplicate definitions
-export { ValidationError, NotFoundError, ConflictError, ServiceError } from '../utils/errors';
+export { ValidationError, NotFoundError, ConflictError, ServiceError, UnauthorizedError, AuthorizationError } from '../utils/errors';
 
 // ============================================================================
 // Error Response Interface
@@ -299,26 +275,3 @@ export const notFoundHandler = (req: Request, res: Response, next: NextFunction)
   next(error);
 };
 
-// ============================================================================
-// Shutdown Handler
-// ============================================================================
-
-export const handleUnhandledRejections = (): void => {
-  process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
-    console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
-    // In production, you might want to exit the process or alert monitoring
-    if (process.env.NODE_ENV === 'production') {
-      // Alert monitoring service
-      console.error('Production unhandled rejection - alerting monitoring');
-    }
-  });
-
-  process.on('uncaughtException', (error: Error) => {
-    console.error('🔥 Uncaught Exception:', error);
-    // In production, gracefully shutdown
-    if (process.env.NODE_ENV === 'production') {
-      console.error('Production uncaught exception - initiating graceful shutdown');
-      process.exit(1);
-    }
-  });
-};

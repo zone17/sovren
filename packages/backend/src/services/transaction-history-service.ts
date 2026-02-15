@@ -8,6 +8,7 @@ import Redis from 'ioredis';
 import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
+import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 
 // Transaction History Types and Schemas
@@ -124,14 +125,14 @@ export class TransactionHistoryService extends EventEmitter {
   private logger: Logger;
   private redis: Redis;
   private analyticsService: AnalyticsService;
-  private transactionCache: Map<string, Transaction>;
+  private transactionCache: TTLCache<string, Transaction>;
 
   constructor() {
     super();
     this.logger = new Logger('TransactionHistoryService');
     this.redis = getRedisClient();
     this.analyticsService = new AnalyticsService();
-    this.transactionCache = new Map();
+    this.transactionCache = new TTLCache<string, Transaction>({ maxSize: 50_000, ttlMs: 600_000 });
 
     this.initializeService();
   }
@@ -1012,8 +1013,8 @@ export class TransactionHistoryService extends EventEmitter {
    * Cleanup and Shutdown
    */
   async shutdown(): Promise<void> {
-    // Clear caches
-    this.transactionCache.clear();
+    // Destroy TTLCache (clears entries + stops cleanup interval)
+    this.transactionCache.destroy();
 
     // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 

@@ -95,4 +95,127 @@ router.get(
   (req: Request, res: Response, next: NextFunction) => getController().getUserAnalytics(req, res, next)
 );
 
+// === User Relationship Endpoints (Todo 119) ===
+
+// Block/Unblock
+router.post(
+  '/:id/block',
+  authenticate,
+  rateLimiters.user.follow,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().blockUser(req, res, next)
+);
+
+router.delete(
+  '/:id/block',
+  authenticate,
+  rateLimiters.user.follow,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().unblockUser(req, res, next)
+);
+
+// Mute/Unmute
+router.post(
+  '/:id/mute',
+  authenticate,
+  rateLimiters.user.follow,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().muteUser(req, res, next)
+);
+
+router.delete(
+  '/:id/mute',
+  authenticate,
+  rateLimiters.user.follow,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().unmuteUser(req, res, next)
+);
+
+// Followers/Following
+router.get(
+  '/:id/followers',
+  optionalAuth,
+  rateLimiters.user.read,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().getFollowers(req, res, next)
+);
+
+router.get(
+  '/:id/following',
+  optionalAuth,
+  rateLimiters.user.read,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().getFollowing(req, res, next)
+);
+
+// Blocked users (owner-only)
+router.get(
+  '/:id/blocked',
+  authenticate,
+  rateLimiters.user.read,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().getBlockedUsers(req, res, next)
+);
+
+// Relationship stats
+router.get(
+  '/:id/relationships/stats',
+  optionalAuth,
+  rateLimiters.user.read,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().getRelationshipStats(req, res, next)
+);
+
+// Friend requests
+router.post(
+  '/:id/friend-request',
+  authenticate,
+  rateLimiters.user.follow,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().sendFriendRequest(req, res, next)
+);
+
+router.put(
+  '/:id/friend-request',
+  authenticate,
+  rateLimiters.user.follow,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().respondToFriendRequest(req, res, next)
+);
+
+// Recommendations
+router.get(
+  '/:id/recommendations',
+  authenticate,
+  rateLimiters.user.read,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().getRecommendations(req, res, next)
+);
+
+// Export/Import
+router.get(
+  '/:id/relationships/export',
+  authenticate,
+  rateLimiters.user.read,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().exportRelationships(req, res, next)
+);
+
+router.post(
+  '/:id/follows/import',
+  authenticate,
+  rateLimiters.user.follow,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().importFollows(req, res, next)
+);
+
+// Privacy settings
+router.put(
+  '/:id/privacy-settings',
+  authenticate,
+  rateLimiters.user.updateProfile,
+  validate({ params: UserValidators.userIdParam }),
+  (req: Request, res: Response, next: NextFunction) => getController().updatePrivacySettings(req, res, next)
+);
+
 export default router;

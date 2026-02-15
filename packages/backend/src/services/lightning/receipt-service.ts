@@ -676,9 +676,30 @@ export class LightningReceiptService extends EventEmitter {
   }
 
   private generateReceiptSignature(receipt: PaymentReceipt): string {
-    const secret = process.env.RECEIPT_SIGNATURE_SECRET || 'sovren-receipt-secret';
+    const secret = this.getReceiptSigningSecret();
     const signatureData = `${receipt.receiptNumber}:${receipt.paymentHash}:${receipt.amount}`;
     return crypto.createHmac('sha256', secret).update(signatureData).digest('hex');
+  }
+
+  private getReceiptSigningSecret(): string {
+    const secret = process.env.RECEIPT_SIGNATURE_SECRET;
+    if (secret && secret.trim().length > 0) {
+      return secret;
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'RECEIPT_SIGNATURE_SECRET environment variable is required in production. ' +
+        'Set it to a strong random string (32+ characters).'
+      );
+    }
+
+    // Non-production: use a clearly-marked dev-only secret with warning
+    console.warn(
+      '[ReceiptService] WARNING: Using dev-only receipt signing secret. ' +
+      'Set RECEIPT_SIGNATURE_SECRET environment variable for production.'
+    );
+    return 'DEV-ONLY-receipt-secret-DO-NOT-USE-IN-PRODUCTION';
   }
 
   private async createPaymentVerification(paymentData: any): Promise<PaymentVerification> {

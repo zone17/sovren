@@ -6,8 +6,6 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { inject, injectable } from 'inversify';
-import { TYPES } from '../../container/types';
 import {
   ContentPublishingService,
   ContentModerationService,
@@ -35,6 +33,7 @@ import {
   ContentApiResponse,
 } from '../../dtos/content';
 import { asyncHandler } from '../../middleware/error-handler-middleware';
+import { createApiResponse } from '../../utils/api-response';
 
 /**
  * Content Controller
@@ -48,22 +47,14 @@ import { asyncHandler } from '../../middleware/error-handler-middleware';
  * - Content analytics
  * - Version management
  */
-@injectable()
 export class ContentController {
   constructor(
-    @inject(TYPES.ContentPublishingService)
     private publishingService: ContentPublishingService,
-    @inject(TYPES.ContentModerationService)
     private moderationService: ContentModerationService,
-    @inject(TYPES.ContentSearchService)
     private searchService: ContentSearchService,
-    @inject(TYPES.ContentRecommendationService)
     private recommendationService: ContentRecommendationService,
-    @inject(TYPES.ContentAnalyticsService)
     private analyticsService: ContentAnalyticsService,
-    @inject(TYPES.ContentVersioningService)
     private versioningService: ContentVersioningService,
-    @inject(TYPES.ContentCreationService)
     private creationService: ContentCreationService
   ) {}
 
@@ -108,11 +99,7 @@ export class ContentController {
           searchTime: Date.now() - startTime,
           facets: result.facets,
         },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -134,11 +121,7 @@ export class ContentController {
       const response: ContentApiResponse<any> = {
         success: true,
         data: result,
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -161,11 +144,7 @@ export class ContentController {
       const response: ContentApiResponse<any> = {
         success: true,
         data: result,
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -187,11 +166,7 @@ export class ContentController {
       const response: ContentApiResponse<{ deleted: boolean }> = {
         success: true,
         data: { deleted: true },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -225,11 +200,7 @@ export class ContentController {
           publishedAt: result.publishedAt.toISOString(),
           url: `/content/${result.id}`,
         },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(201).json(response);
@@ -267,11 +238,7 @@ export class ContentController {
           moderatedBy: result.moderatorId,
           autoModeration: result.autoModerationData,
         },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -320,11 +287,7 @@ export class ContentController {
           searchTime: Date.now() - startTime,
           facets: result.facets,
         },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -373,11 +336,7 @@ export class ContentController {
           generatedAt: result.timestamp.toISOString(),
           personalizedFor: userId,
         },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -432,11 +391,7 @@ export class ContentController {
             engagement: t.engagement,
           })),
         },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -482,11 +437,7 @@ export class ContentController {
           })),
           totalVersions: result.totalVersions,
         },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);
@@ -526,11 +477,7 @@ export class ContentController {
           revertedAt: result.timestamp.toISOString(),
           revertedBy: result.userId,
         },
-        metadata: {
-          requestId: (req as any).id,
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - startTime,
-        },
+        metadata: createApiResponse(req, null, startTime).metadata,
       };
 
       res.status(200).json(response);

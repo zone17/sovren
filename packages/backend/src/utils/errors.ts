@@ -48,3 +48,10 @@ export class UnauthorizedError extends AppError {
     this.name = 'UnauthorizedError';
   }
 }
+
+export class AuthorizationError extends AppError {
+  constructor(message: string = 'Insufficient permissions', options?: ServiceErrorOptions) {
+    super(403, 'AUTHORIZATION_ERROR', message, options?.details, true, options?.context, options?.cause);
+    this.name = 'AuthorizationError';
+  }
+}

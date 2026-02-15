@@ -3,7 +3,7 @@ import { AppConfig, createApp } from './app';
 import { lightningService } from './services/lightning-service';
 import { lightningReceiptService } from './services/lightning/receipt-service';
 import { connectRedis, disconnectRedis } from './lib/redis';
-import { initializeContainer } from './container';
+import { initializeContainer, container } from './container';
 import logger from './lib/logger';
 
 // Load environment variables
@@ -274,6 +274,14 @@ async function gracefulShutdown(signal: string): Promise<void> {
           }
         });
       });
+    }
+
+    // Dispose DI container (cleanup all registered services)
+    try {
+      await container.dispose();
+      logger.info('DI container disposed');
+    } catch (err) {
+      logger.warn('DI container disposal failed', { error: (err as Error).message });
     }
 
     // Disconnect Redis gracefully

@@ -1,7 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, copyFileSync } from 'fs';
 import { open } from 'fs/promises';
 import path from 'path';
+import { EventEmitter } from 'events';
 import type { LightningInvoice, LightningPayment } from './lightning-service';
+import { Logger } from '../utils/logger';
 
 /**
  * Interface for payment persistence.
@@ -24,13 +26,16 @@ export interface PaymentPersistence {
  *
  * Fix #112: Atomic writes via temp+rename, write mutex, corruption recovery.
  */
-export class JsonFilePaymentStore implements PaymentPersistence {
+export class JsonFilePaymentStore extends EventEmitter implements PaymentPersistence {
   private readonly dataDir: string;
+  private readonly logger = new Logger('PaymentPersistence');
   private invoices: Map<string, LightningInvoice> = new Map();
   private payments: Map<string, LightningPayment> = new Map();
   private writeMutex: Promise<void> = Promise.resolve();
+  public corruptionDetected = false;
 
   constructor(dataDir?: string) {
+    super();
     this.dataDir = dataDir || path.join(process.cwd(), 'data', 'payments');
     if (!existsSync(this.dataDir)) {
       mkdirSync(this.dataDir, { recursive: true });
@@ -106,14 +111,18 @@ export class JsonFilePaymentStore implements PaymentPersistence {
 
     // Main file missing or corrupted — try .tmp recovery
     if (existsSync(filePath)) {
+      this.corruptionDetected = true;
       this.backupCorruptedFile(filePath, type);
+      this.emit('corruption:detected', { type, filePath, recoveredFromTmp: false });
     }
 
     const tmpData = this.tryParseFile(tmpPath);
     if (tmpData !== null) {
-      console.error(
-        `[PaymentPersistence] Recovered ${type} from .tmp file after main file corruption`
+      this.logger.error(
+        `Recovered ${type} from .tmp file after main file corruption`,
+        { type, filePath, tmpPath }
       );
+      this.emit('corruption:detected', { type, filePath, recoveredFromTmp: true });
       for (const item of tmpData) {
         target.set(item.id, item);
       }
@@ -122,9 +131,12 @@ export class JsonFilePaymentStore implements PaymentPersistence {
 
     // Neither file usable — start fresh
     if (existsSync(filePath) || existsSync(tmpPath)) {
-      console.error(
-        `[PaymentPersistence] WARNING: Both ${type}.json and .tmp are unreadable. Starting with empty ${type}. Data may have been lost.`
+      this.corruptionDetected = true;
+      this.logger.error(
+        `Both ${type}.json and .tmp are unreadable. Starting with empty ${type}. Data may have been lost.`,
+        { type, filePath, tmpPath }
       );
+      this.emit('corruption:detected', { type, filePath, recoveredFromTmp: false, dataLost: true });
     }
   }
 
@@ -146,9 +158,9 @@ export class JsonFilePaymentStore implements PaymentPersistence {
       const timestamp = Date.now();
       const backupPath = `${filePath}.corrupt.${timestamp}`;
       copyFileSync(filePath, backupPath);
-      console.error(`[PaymentPersistence] Backed up corrupted ${type} file to ${backupPath}`);
+      this.logger.error(`Backed up corrupted ${type} file`, { backupPath });
     } catch (err) {
-      console.error(`[PaymentPersistence] Failed to backup corrupted ${type} file:`, err);
+      this.logger.error(`Failed to backup corrupted ${type} file`, { filePath, error: err });
     }
   }
 
@@ -177,9 +189,9 @@ export class JsonFilePaymentStore implements PaymentPersistence {
       }
       renameSync(tmpPath, filePath);
     } catch (err) {
-      console.error(
-        `[PaymentPersistence] Failed to write ${type} to disk (path=${filePath}):`,
-        err
+      this.logger.error(
+        `Failed to write ${type} to disk`,
+        { type, filePath, error: err }
       );
       throw err;
     }

@@ -139,7 +139,7 @@ router.get(
     getController().getPaymentAnalytics(req, res, next)
 );
 
-// Webhook endpoint
+// Webhook endpoints
 router.post(
   '/webhooks',
   authenticate,
@@ -148,6 +148,64 @@ router.post(
   validate({ body: PaymentValidators.registerWebhook }),
   (req: Request, res: Response, next: NextFunction) =>
     getController().registerWebhook(req, res, next)
+);
+
+router.put(
+  '/webhooks/:id',
+  authenticate,
+  rateLimiters.payment.webhook,
+  validate({ params: PaymentValidators.webhookIdParam, body: PaymentValidators.updateWebhook }),
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().updateWebhook(req, res, next)
+);
+
+router.delete(
+  '/webhooks/:id',
+  authenticate,
+  rateLimiters.payment.webhook,
+  validate({ params: PaymentValidators.webhookIdParam }),
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().deleteWebhook(req, res, next)
+);
+
+// === Payment API Expansion (Todo 120) ===
+
+// Transaction history
+router.get(
+  '/transactions',
+  authenticate,
+  rateLimiters.payment.read,
+  validate({ query: PaymentValidators.getTransactionHistory }),
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getTransactionHistory(req, res, next)
+);
+
+// Balance
+router.get(
+  '/balance',
+  authenticate,
+  rateLimiters.payment.read,
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getBalance(req, res, next)
+);
+
+// Invoice listing
+router.get(
+  '/invoices',
+  authenticate,
+  rateLimiters.payment.read,
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().listInvoices(req, res, next)
+);
+
+// Invoice retry
+router.post(
+  '/invoices/:id/retry',
+  authenticate,
+  rateLimiters.payment.payInvoice,
+  validate({ params: PaymentValidators.invoiceIdParam }),
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().retryInvoice(req, res, next)
 );
 
 export default router;

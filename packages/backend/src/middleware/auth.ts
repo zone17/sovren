@@ -2,7 +2,7 @@ import { nostrAuth } from '@/services/nostr-auth';
 import { NextFunction, Request, Response } from 'express';
 import logger from '../lib/logger';
 import { AppError } from '../lib/app-error';
-import { UnauthorizedError } from '../utils/errors';
+import { UnauthorizedError, AuthorizationError, ValidationError, ServiceError } from '../utils/errors';
 
 // 🔒 Authentication middleware for JWT verification
 export const authenticate = async (
@@ -61,11 +61,9 @@ export const authenticate = async (
 export const authorize = (allowedRoles: Array<'creator' | 'supporter' | 'admin'>) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({
-        error: 'Authentication required',
-        code: 'UNAUTHENTICATED',
+      next(new UnauthorizedError('Authentication required', {
         details: 'User must be authenticated to access this resource',
-      });
+      }));
       return;
     }
 
@@ -78,10 +76,7 @@ export const authorize = (allowedRoles: Array<'creator' | 'supporter' | 'admin'>
         pubkey: req.user.nostr_pubkey,
         path: req.path,
       });
-      res.status(403).json({
-        error: 'Insufficient permissions',
-        code: 'UNAUTHORIZED',
-      });
+      next(new AuthorizationError('Insufficient permissions'));
       return;
     }
 
@@ -144,21 +139,16 @@ export const requireNostrSignature = async (
 ): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({
-        error: 'Authentication required',
-        code: 'UNAUTHENTICATED',
-      });
+      next(new UnauthorizedError('Authentication required'));
       return;
     }
 
     const { signature, challenge, timestamp } = req.body;
 
     if (!signature || !challenge || !timestamp) {
-      res.status(400).json({
-        error: 'NOSTR signature verification required',
-        code: 'MISSING_SIGNATURE',
+      next(new ValidationError('NOSTR signature verification required', {
         details: 'Required fields: signature, challenge, timestamp',
-      });
+      }));
       return;
     }
 
@@ -175,10 +165,7 @@ export const requireNostrSignature = async (
         pubkey: req.user.nostr_pubkey,
         path: req.path,
       });
-      res.status(403).json({
-        error: 'Invalid NOSTR signature',
-        code: 'INVALID_SIGNATURE',
-      });
+      next(new AuthorizationError('Invalid NOSTR signature'));
       return;
     }
 
@@ -188,10 +175,7 @@ export const requireNostrSignature = async (
       error: error instanceof Error ? error.message : 'Unknown error',
       path: req.path,
     });
-    res.status(500).json({
-      error: 'Signature verification failed',
-      code: 'SIGNATURE_ERROR',
-    });
+    next(new ServiceError('Signature verification failed', { cause: error }));
   }
 };
 
@@ -200,10 +184,7 @@ export const requireNostrSignature = async (
 export const requireOwnership = (resourcePubkeyField: string = 'nostr_pubkey') => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({
-        error: 'Authentication required',
-        code: 'UNAUTHENTICATED',
-      });
+      next(new UnauthorizedError('Authentication required'));
       return;
     }
 
@@ -220,21 +201,15 @@ export const requireOwnership = (resourcePubkeyField: string = 'nostr_pubkey') =
       req.body[resourcePubkeyField];
 
     if (!resourcePubkey) {
-      res.status(400).json({
-        error: 'Resource identifier missing',
-        code: 'MISSING_RESOURCE_ID',
+      next(new ValidationError('Resource identifier missing', {
         details: `Required field: ${resourcePubkeyField}`,
-      });
+      }));
       return;
     }
 
     // Check if user owns the resource
     if (req.user.nostr_pubkey !== resourcePubkey) {
-      res.status(403).json({
-        error: 'Access denied',
-        code: 'NOT_OWNER',
-        details: 'You can only access your own resources',
-      });
+      next(new AuthorizationError('Access denied: you can only access your own resources'));
       return;
     }
 

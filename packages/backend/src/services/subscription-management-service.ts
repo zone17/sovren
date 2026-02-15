@@ -5,6 +5,7 @@ import Redis from 'ioredis';
 import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
+import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 import { LightningPaymentService } from './lightning-payment-service';
 import { NotificationService } from './notification-service';
@@ -127,7 +128,7 @@ export class SubscriptionManagementService extends EventEmitter {
   private analyticsService: AnalyticsService;
   private wsService: WebSocketService;
   private recurringPaymentJobs: Map<string, NodeJS.Timeout>;
-  private subscriptionCache: Map<string, Subscription>;
+  private subscriptionCache: TTLCache<string, Subscription>;
   private recurringPaymentInterval?: NodeJS.Timeout;
   private subscriptionMonitorInterval?: NodeJS.Timeout;
 
@@ -140,7 +141,7 @@ export class SubscriptionManagementService extends EventEmitter {
     this.analyticsService = new AnalyticsService();
     this.wsService = new WebSocketService();
     this.recurringPaymentJobs = new Map();
-    this.subscriptionCache = new Map();
+    this.subscriptionCache = new TTLCache<string, Subscription>({ maxSize: 10_000, ttlMs: 300_000 });
 
     this.initializeService();
   }
@@ -1169,8 +1170,8 @@ export class SubscriptionManagementService extends EventEmitter {
     }
     this.recurringPaymentJobs.clear();
 
-    // Clear caches
-    this.subscriptionCache.clear();
+    // Destroy TTLCache (clears entries + stops cleanup interval)
+    this.subscriptionCache.destroy();
 
     // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
