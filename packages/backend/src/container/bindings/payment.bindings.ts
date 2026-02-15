@@ -30,7 +30,7 @@ export class PaymentServicesModule implements IServiceModule {
     // PaymentProcessingService - SCOPED
     // ===========================
     // Core payment processing (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.PaymentProcessingService,
       (container) => {
         const paymentRepo = container.resolve(TYPES.PaymentRepository);
@@ -60,7 +60,7 @@ export class PaymentServicesModule implements IServiceModule {
     // SubscriptionService - SCOPED
     // ===========================
     // Subscription management (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.SubscriptionService,
       (container) => {
         const subscriptionRepo = container.resolve(TYPES.SubscriptionRepository);
@@ -76,7 +76,7 @@ export class PaymentServicesModule implements IServiceModule {
     // RefundService - SCOPED
     // ===========================
     // Refund processing and tracking (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.RefundService,
       (container) => {
         const paymentRepo = container.resolve(TYPES.PaymentRepository);
@@ -92,7 +92,7 @@ export class PaymentServicesModule implements IServiceModule {
     // PaymentAnalyticsService - SCOPED
     // ===========================
     // Payment analytics and reporting (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.PaymentAnalyticsService,
       (container) => {
         const paymentRepo = container.resolve(TYPES.PaymentRepository);
@@ -107,7 +107,7 @@ export class PaymentServicesModule implements IServiceModule {
     // WebhookService - SCOPED
     // ===========================
     // Webhook management and delivery (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.WebhookService,
       (container) => {
         const database = container.resolve(TYPES.Database);
@@ -122,7 +122,7 @@ export class PaymentServicesModule implements IServiceModule {
     // InvoiceService - SCOPED
     // ===========================
     // Invoice generation and management (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.InvoiceService,
       (container) => {
         const paymentRepo = container.resolve(TYPES.PaymentRepository);

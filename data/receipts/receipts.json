@@ -1,0 +1,59 @@
+[
+  {
+    "id": "ed61d358-3b18-434f-8e59-66c269417bb1",
+    "receiptNumber": "SVR-MLMW4KOC-LRQC1M",
+    "paymentHash": "9dabd85596c3222f3d8a42e8895378d4473c0c79e7598dd3a2f5318b8a8e9b29",
+    "invoiceId": "550e8400-e29b-41d4-a716-446655440001",
+    "amount": 1000,
+    "fee": 10,
+    "timestamp": 1771108256172,
+    "createdAt": 1771108256172,
+    "creator": {
+      "id": "creator-123",
+      "name": "Amazing Creator",
+      "displayName": "Amazing Creator",
+      "lightningAddress": "creator@sovren.com",
+      "profile": {
+        "bio": "Creating amazing content daily",
+        "website": "https://amazingcreator.com"
+      }
+    },
+    "supporter": {
+      "id": "supporter-456",
+      "name": "Generous Supporter",
+      "anonymous": false,
+      "message": "Great content, keep it up!"
+    },
+    "invoice": {
+      "bolt11": "lnbc10m1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpusp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9qrsgqcqpcxr...",
+      "description": "Support for amazing content",
+      "memo": "Thanks for the great work!",
+      "expiresAt": 1771111856172
+    },
+    "verification": {
+      "paymentHash": "9dabd85596c3222f3d8a42e8895378d4473c0c79e7598dd3a2f5318b8a8e9b29",
+      "preimage": "7598dd3a2f5318b8a8e9b299dabd85596c3222f3d8a42e8895378d4473c0c79e",
+      "verified": true,
+      "verifiedAt": 1771108256172,
+      "signature": "1e0565941566b04ececa568485576f57176b90e7dfd6995eb6e697f470c4f704"
+    },
+    "receipt": {
+      "receiptNumber": "SVR-MLMW4KOC-LRQC1M",
+      "pdfGenerated": false,
+      "emailSent": false,
+      "downloadUrl": "/api/lightning/receipt/SVR-MLMW4KOC-LRQC1M/download",
+      "downloadCount": 0
+    },
+    "platform": {
+      "name": "Sovren",
+      "version": "1.0.0",
+      "environment": "test",
+      "processedBy": "Lightning Receipt Service"
+    },
+    "security": {
+      "hash": "d5af3b470ed8361bd22b128130d8024c1bb2f42809ce1c530b22359779f2c534",
+      "signature": "ca04ead70c0509fed5b8eea477e1f3ede7da24f44d56b21526270e71814018fd",
+      "verificationCode": "03982D32"
+    }
+  }
+]

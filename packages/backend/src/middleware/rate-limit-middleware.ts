@@ -5,10 +5,12 @@
  * Prevents abuse and ensures fair resource allocation
  */
 
+import crypto from 'crypto';
 import rateLimit, { Options, RateLimitRequestHandler } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { Request, Response } from 'express';
 import { RateLimitError } from './error-handler-middleware';
+import { getRedisClient as getSharedRedisClient, isRedisAvailable } from '../lib/redis';
 
 // ============================================================================
 // Rate Limit Configuration
@@ -20,6 +22,27 @@ interface RateLimitConfig {
   message?: string;
   skipSuccessfulRequests?: boolean;
   skipFailedRequests?: boolean;
+}
+
+// ============================================================================
+// Redis Store Factory (with in-memory fallback)
+// ============================================================================
+
+/**
+ * Returns a RedisStore if Redis is connected, otherwise undefined (in-memory default).
+ * This ensures rate limits are shared across instances in production
+ * while gracefully degrading to per-process limits in dev/test.
+ */
+function getStore(): RedisStore | undefined {
+  if (!isRedisAvailable()) return undefined;
+  try {
+    const client = getSharedRedisClient();
+    return new RedisStore({
+      sendCommand: (...args: string[]) => client.call(...(args as [string, ...string[]])),
+    });
+  } catch {
+    return undefined;
+  }
 }
 
 // ============================================================================
@@ -49,6 +72,7 @@ const defaultOptions: Partial<Options> = {
  */
 export const authRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // 10 requests per window
   skipSuccessfulRequests: true, // Don't count successful logins
@@ -60,6 +84,7 @@ export const authRateLimiter: RateLimitRequestHandler = rateLimit({
  */
 export const contentCreationRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 60 * 1000, // 1 minute
   max: 10, // 10 content publishes per minute
   message: 'Too many content publications, please slow down',
@@ -70,6 +95,7 @@ export const contentCreationRateLimiter: RateLimitRequestHandler = rateLimit({
  */
 export const paymentRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 60 * 1000, // 1 minute
   max: 20, // 20 payment operations per minute
   message: 'Too many payment requests, please try again later',
@@ -80,6 +106,7 @@ export const paymentRateLimiter: RateLimitRequestHandler = rateLimit({
  */
 export const readOnlyRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 60 * 1000, // 1 minute
   max: 100, // 100 reads per minute
   message: 'Too many requests, please slow down',
@@ -90,6 +117,7 @@ export const readOnlyRateLimiter: RateLimitRequestHandler = rateLimit({
  */
 export const expensiveOperationRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 60 * 1000, // 1 minute
   max: 20, // 20 operations per minute
   message: 'Too many expensive operations, please try again later',
@@ -100,6 +128,7 @@ export const expensiveOperationRateLimiter: RateLimitRequestHandler = rateLimit(
  */
 export const webhookRateLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultOptions,
+  store: getStore(),
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 webhook registrations per 15 minutes
   message: 'Too many webhook registration attempts',
@@ -127,6 +156,7 @@ export const webhookRateLimiter: RateLimitRequestHandler = rateLimit({
 export function createRateLimiter(config: RateLimitConfig): RateLimitRequestHandler {
   return rateLimit({
     ...defaultOptions,
+    store: getStore(),
     ...config,
     message: config.message || 'Too many requests, please try again later',
   });
@@ -141,18 +171,13 @@ export function createRateLimiter(config: RateLimitConfig): RateLimitRequestHand
  * Use this in production when running multiple API instances
  */
 export function createRedisRateLimiter(config: RateLimitConfig): RateLimitRequestHandler {
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+  const client = getSharedRedisClient();
 
   return rateLimit({
     ...defaultOptions,
     ...config,
     store: new RedisStore({
-      // @ts-ignore - Redis client typing issue
-      sendCommand: (...args: string[]) => {
-        // Use ioredis or redis client
-        console.warn('Redis rate limiting not configured');
-        return Promise.resolve(null);
-      },
+      sendCommand: (...args: string[]) => client.call(...(args as [string, ...string[]])),
     }),
     message: config.message || 'Too many requests, please try again later',
   });
@@ -172,7 +197,7 @@ export function createUserRateLimiter(config: RateLimitConfig): RateLimitRequest
     ...config,
     keyGenerator: (req: Request) => {
       // Use user's NOSTR pubkey if authenticated, otherwise fall back to IP
-      const user = (req as any).user;
+      const user = req.user;
       return user?.nostr_pubkey || req.ip || 'unknown';
     },
     message: config.message || 'Too many requests, please try again later',
@@ -254,27 +279,15 @@ export const bypassRateLimitInTest = (req: Request): boolean => {
     return true;
   }
 
-  // Allow bypass with special header in development
+  // Allow bypass with special header in development (timing-safe comparison)
   if (process.env.NODE_ENV === 'development') {
-    return req.headers['x-bypass-rate-limit'] === process.env.RATE_LIMIT_BYPASS_SECRET;
+    const header = req.headers['x-bypass-rate-limit'];
+    const secret = process.env.RATE_LIMIT_BYPASS_SECRET;
+    if (typeof header === 'string' && secret && header.length === secret.length) {
+      return crypto.timingSafeEqual(Buffer.from(header), Buffer.from(secret));
+    }
+    return false;
   }
 
   return false;
-};
-
-// ============================================================================
-// Export Default Rate Limiter
-// ============================================================================
-
-export default {
-  auth: authRateLimiter,
-  contentCreation: contentCreationRateLimiter,
-  payment: paymentRateLimiter,
-  readOnly: readOnlyRateLimiter,
-  expensiveOperation: expensiveOperationRateLimiter,
-  webhook: webhookRateLimiter,
-  custom: createRateLimiter,
-  userBased: createUserRateLimiter,
-  redis: createRedisRateLimiter,
-  limiters: rateLimiters,
 };

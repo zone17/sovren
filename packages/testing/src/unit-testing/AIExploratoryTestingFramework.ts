@@ -590,7 +590,7 @@ export class AIExploratoryTestingFramework extends EventEmitter {
   }
 
   private generateId(): string {
-    return `exploratory-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `exploratory-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
   private calculateComplexity(path: string[]): number {

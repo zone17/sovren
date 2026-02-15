@@ -13,6 +13,8 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
+import { asyncHandler } from '../middleware/error-handler-middleware';
+import { getClientIP } from '../utils/client-ip';
 import { z } from 'zod';
 import { DatabaseSessionManager } from '../services/DatabaseSessionManager';
 import { SessionMetadata, DeviceInfo } from '@shared/services/UnifiedSessionManager';
@@ -141,25 +143,9 @@ const RevokeDeviceSchema = z.object({
 // MIDDLEWARE
 // =====================================================
 
-/**
- * Extract IP address from request
- */
-function getClientIP(req: Request): string | undefined {
-  return (
-    (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() ||
-    (req.headers['x-real-ip'] as string) ||
-    req.socket.remoteAddress
-  );
-}
+// getClientIP imported from '../utils/client-ip'
 
-/**
- * Error handler middleware
- */
-function asyncHandler(fn: Function) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-}
+// asyncHandler imported from '../middleware/error-handler-middleware'
 
 // =====================================================
 // ROUTES

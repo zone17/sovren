@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant Component
+    participant FeatureErrorBoundary
+    participant GlobalErrorBoundary
+    participant Sentry
+    participant UI
+    participant User
+
+    Component->>FeatureErrorBoundary: Throws Error
+    FeatureErrorBoundary->>FeatureErrorBoundary: getDerivedStateFromError()
+    FeatureErrorBoundary->>FeatureErrorBoundary: Set hasError state
+    FeatureErrorBoundary->>Sentry: captureException(error)
+    Sentry-->>FeatureErrorBoundary: Error ID
+    FeatureErrorBoundary->>UI: Render FeatureErrorFallback
+    UI->>User: Display error with retry button
+
+    alt User clicks Retry
+        User->>FeatureErrorBoundary: resetError()
+        FeatureErrorBoundary->>Component: Re-render component
+        alt Component Succeeds
+            Component->>User: Normal rendering
+        else Component Fails Again
+            Component->>GlobalErrorBoundary: Error escalates
+            GlobalErrorBoundary->>Sentry: captureException(error)
+            GlobalErrorBoundary->>UI: Render GlobalErrorFallback
+            UI->>User: Display critical error + Go Home
+        end
+    else User clicks Go Home
+        User->>UI: Navigate to /
+        UI->>User: Home page loads
+    end

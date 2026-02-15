@@ -11,6 +11,20 @@ import { z } from 'zod';
 // Common Schemas
 // ============================================================================
 
+const MetadataValueSchema = z.union([
+  z.string().max(10000),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+
+const MetadataSchema = z
+  .record(z.string(), MetadataValueSchema)
+  .refine((obj) => Object.keys(obj).length <= 50, {
+    message: 'Metadata must have 50 or fewer keys',
+  })
+  .optional();
+
 const PaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -30,7 +44,7 @@ export const PublishContentSchema = z.object({
   content: z.string().min(1).max(1000000),
   contentType: z.enum(['article', 'video', 'audio', 'image', 'nostr-event']),
   tags: z.array(z.string()).max(20).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: MetadataSchema,
   publishToNostr: z.boolean().optional().default(true),
   relayUrls: z.array(z.string().url()).max(20).optional(),
   monetization: z
@@ -119,6 +133,29 @@ export const RevertContentVersionSchema = z.object({
 });
 
 // ============================================================================
+// Content CRUD Validation
+// ============================================================================
+
+export const ListContentSchema = z.object({
+  query: z.string().max(500).optional(),
+  sort: z.enum(['date', 'popularity', 'relevance', 'price']).optional().default('date'),
+  contentType: z.enum(['article', 'video', 'audio', 'image', 'nostr-event']).optional(),
+  tags: z.string().optional(), // comma-separated
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+export const UpdateContentSchema = z.object({
+  title: z.string().min(1).max(500).optional(),
+  content: z.string().min(1).max(1000000).optional(),
+  summary: z.string().max(1000).optional(),
+  tags: z.array(z.string()).max(20).optional(),
+  category: z.string().max(100).optional(),
+  status: z.enum(['draft', 'ready', 'scheduled']).optional(),
+  metadata: MetadataSchema,
+});
+
+// ============================================================================
 // Parameter Validation
 // ============================================================================
 
@@ -149,6 +186,8 @@ export const ContentValidators = {
   revertContentVersion: RevertContentVersionSchema,
   contentIdParam: ContentIdParamSchema,
   contentQuery: ContentQuerySchema,
+  listContent: ListContentSchema,
+  updateContent: UpdateContentSchema,
 } as const;
 
 export type ContentValidatorKeys = keyof typeof ContentValidators;

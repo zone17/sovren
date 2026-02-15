@@ -1,15 +1,18 @@
 import { randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
-import { RedisClient } from '../config/redis';
+import Redis from 'ioredis';
+import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
+import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 import { LightningPaymentService } from './lightning-payment-service';
 import { NotificationService } from './notification-service';
 import { WebSocketService } from './websocket-service';
 
 // Subscription Management Types and Schemas
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const SubscriptionTierSchema = z.object({
   id: z.string(),
   creator_id: z.string().uuid(),
@@ -33,6 +36,7 @@ const SubscriptionStatusSchema = z.enum([
   'suspended',
 ]);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const RecurringPaymentSchema = z.object({
   id: z.string(),
   subscription_id: z.string(),
@@ -118,24 +122,26 @@ interface SubscriptionAnalytics {
  */
 export class SubscriptionManagementService extends EventEmitter {
   private logger: Logger;
-  private redis: RedisClient;
+  private redis: Redis;
   private lightningService: LightningPaymentService;
   private notificationService: NotificationService;
   private analyticsService: AnalyticsService;
   private wsService: WebSocketService;
   private recurringPaymentJobs: Map<string, NodeJS.Timeout>;
-  private subscriptionCache: Map<string, Subscription>;
+  private subscriptionCache: TTLCache<string, Subscription>;
+  private recurringPaymentInterval?: NodeJS.Timeout;
+  private subscriptionMonitorInterval?: NodeJS.Timeout;
 
   constructor(lightningService: LightningPaymentService) {
     super();
     this.logger = new Logger('SubscriptionManagementService');
-    this.redis = new RedisClient();
+    this.redis = getRedisClient();
     this.lightningService = lightningService;
     this.notificationService = new NotificationService();
     this.analyticsService = new AnalyticsService();
     this.wsService = new WebSocketService();
     this.recurringPaymentJobs = new Map();
-    this.subscriptionCache = new Map();
+    this.subscriptionCache = new TTLCache<string, Subscription>({ maxSize: 10_000, ttlMs: 300_000 });
 
     this.initializeService();
   }
@@ -376,60 +382,139 @@ export class SubscriptionManagementService extends EventEmitter {
         },
       };
 
-      // Store subscription
-      const { error: subError } = await supabase.from('subscriptions').insert([
-        {
-          id: subscription.id,
-          user_id: subscription.user_id,
-          tier_id: subscription.tier_id,
-          status: subscription.status,
-          started_at: subscription.started_at.toISOString(),
-          current_period_start: subscription.current_period_start.toISOString(),
-          current_period_end: subscription.current_period_end.toISOString(),
-          cancel_at_period_end: subscription.cancel_at_period_end,
-          trial_end: subscription.trial_end?.toISOString(),
-          metadata: subscription.metadata,
-        },
-      ]);
+      // Fix #116: Compensating transaction — track completed steps for rollback
+      let recurringPaymentId: string | null = null;
+      let subscriptionInserted = false;
+      let tierCountIncremented = false;
+      let createdInvoice: unknown;
 
-      if (subError) throw subError;
-
-      // Create recurring payment schedule
-      await this.createRecurringPayment({
-        subscription_id: subscription.id,
-        amount_msats: tier.price_msats,
-        next_payment_date: trial_end || period_end,
-        payment_method: validated.payment_method || 'lightning',
-      });
-
-      // Generate initial invoice if no trial
-      let initial_invoice;
-      if (!trial_end) {
-        initial_invoice = await this.lightningService.generateBOLT11Invoice({
-          user_id: validated.user_id,
-          amount_msats: tier.price_msats,
-          description: `Subscription to ${tier.name}`,
-          expires_in_seconds: 3600,
-          metadata: {
-            subscription_id: subscription.id,
-            tier_id: tier.id,
-            billing_period: 'initial',
+      try {
+        // Step 1: Insert subscription
+        const { error: subError } = await supabase.from('subscriptions').insert([
+          {
+            id: subscription.id,
+            user_id: subscription.user_id,
+            tier_id: subscription.tier_id,
+            status: subscription.status,
+            started_at: subscription.started_at.toISOString(),
+            current_period_start: subscription.current_period_start.toISOString(),
+            current_period_end: subscription.current_period_end.toISOString(),
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            trial_end: subscription.trial_end?.toISOString(),
+            metadata: subscription.metadata,
           },
+        ]);
+        if (subError) throw subError;
+        subscriptionInserted = true;
+
+        // Step 2: Create recurring payment schedule
+        const recurringPayment = await this.createRecurringPayment({
+          subscription_id: subscription.id,
+          amount_msats: tier.price_msats,
+          next_payment_date: trial_end || period_end,
+          payment_method: validated.payment_method || 'lightning',
         });
+        recurringPaymentId = recurringPayment.id;
 
-        // Update subscription status to pending payment
-        subscription.status = 'pending';
-        await this.updateSubscriptionStatus(subscription.id, 'pending');
+        // Step 3: Generate initial invoice if no trial
+        let initial_invoice;
+        if (!trial_end) {
+          initial_invoice = await this.lightningService.generateBOLT11Invoice({
+            user_id: validated.user_id,
+            amount_msats: tier.price_msats,
+            description: `Subscription to ${tier.name}`,
+            expires_in_seconds: 3600,
+            metadata: {
+              subscription_id: subscription.id,
+              tier_id: tier.id,
+              billing_period: 'initial',
+            },
+          });
+
+          subscription.status = 'pending';
+          await this.updateSubscriptionStatus(subscription.id, 'pending');
+        }
+
+        // Step 4: Update tier subscriber count
+        const { error: tierError } = await supabase
+          .from('subscription_tiers')
+          .update({
+            current_subscribers: supabase.raw('current_subscribers + 1'),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', tier.id);
+        if (tierError) throw tierError;
+        tierCountIncremented = true;
+
+        createdInvoice = initial_invoice;
+      } catch (stepError) {
+        // Compensating rollback in reverse order with retry
+        this.logger.error('Subscription creation step failed, rolling back', stepError);
+
+        if (tierCountIncremented) {
+          const ok = await this.retryOperation(
+            async () => {
+              const { error } = await supabase
+                .from('subscription_tiers')
+                .update({
+                  current_subscribers: supabase.raw('GREATEST(current_subscribers - 1, 0)'),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', tier.id);
+              if (error) throw error;
+            },
+            'Rollback tier count'
+          );
+          if (!ok) {
+            this.logger.error('ALERT: Orphaned tier count increment', {
+              tier_id: tier.id,
+              subscription_id: subscription.id,
+            });
+            this.emit('rollback:failed', { step: 'tier_count', tier_id: tier.id });
+          }
+        }
+
+        if (recurringPaymentId) {
+          const ok = await this.retryOperation(
+            async () => {
+              const { error } = await supabase
+                .from('recurring_payments')
+                .delete()
+                .eq('id', recurringPaymentId);
+              if (error) throw error;
+            },
+            'Rollback recurring payment'
+          );
+          if (!ok) {
+            this.logger.error('ALERT: Orphaned recurring payment', {
+              recurring_payment_id: recurringPaymentId,
+              subscription_id: subscription.id,
+            });
+            this.emit('rollback:failed', { step: 'recurring_payment', id: recurringPaymentId });
+          }
+        }
+
+        if (subscriptionInserted) {
+          const ok = await this.retryOperation(
+            async () => {
+              const { error } = await supabase
+                .from('subscriptions')
+                .delete()
+                .eq('id', subscription.id);
+              if (error) throw error;
+            },
+            'Rollback subscription'
+          );
+          if (!ok) {
+            this.logger.error('ALERT: Orphaned subscription', {
+              subscription_id: subscription.id,
+            });
+            this.emit('rollback:failed', { step: 'subscription', id: subscription.id });
+          }
+        }
+
+        throw stepError;
       }
-
-      // Update tier subscriber count
-      await supabase
-        .from('subscription_tiers')
-        .update({
-          current_subscribers: supabase.raw('current_subscribers + 1'),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', tier.id);
 
       // Cache subscription
       this.subscriptionCache.set(subscription.id, subscription);
@@ -451,10 +536,12 @@ export class SubscriptionManagementService extends EventEmitter {
         has_trial: !!trial_end,
       });
 
-      return { subscription, initial_invoice };
+      return { subscription, initial_invoice: createdInvoice };
     } catch (error) {
       this.logger.error('Failed to create subscription', error);
-      throw new Error(`Subscription creation failed: ${error.message}`);
+      throw new Error(
+        `Subscription creation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -864,7 +951,7 @@ export class SubscriptionManagementService extends EventEmitter {
 
   private async setupRecurringPaymentScheduler(): Promise<void> {
     // Process recurring payments every hour
-    setInterval(async () => {
+    this.recurringPaymentInterval = setInterval(async () => {
       await this.processRecurringPayments();
     }, 3600000); // 1 hour
 
@@ -874,7 +961,7 @@ export class SubscriptionManagementService extends EventEmitter {
 
   private async setupSubscriptionMonitoring(): Promise<void> {
     // Monitor subscription expirations and renewals
-    setInterval(async () => {
+    this.subscriptionMonitorInterval = setInterval(async () => {
       try {
         // Check for expired subscriptions
         await this.checkExpiredSubscriptions();
@@ -973,9 +1060,9 @@ export class SubscriptionManagementService extends EventEmitter {
   }
 
   private async getRevenueAnalytics(
-    creator_id: string,
-    startDate: Date,
-    endDate: Date
+    _creator_id: string,
+    _startDate: Date,
+    _endDate: Date
   ): Promise<{
     mrr: number;
     growth_rate: number;
@@ -993,9 +1080,9 @@ export class SubscriptionManagementService extends EventEmitter {
   }
 
   private async getChurnAnalytics(
-    creator_id: string,
-    startDate: Date,
-    endDate: Date
+    _creator_id: string,
+    _startDate: Date,
+    _endDate: Date
   ): Promise<{
     churn_rate: number;
   }> {
@@ -1003,7 +1090,7 @@ export class SubscriptionManagementService extends EventEmitter {
     return { churn_rate: 0 };
   }
 
-  private async getRetentionAnalytics(creator_id: string): Promise<Record<string, number>> {
+  private async getRetentionAnalytics(_creator_id: string): Promise<Record<string, number>> {
     // This would implement retention rate analysis
     return {
       '1_month': 0.95,
@@ -1011,6 +1098,29 @@ export class SubscriptionManagementService extends EventEmitter {
       '6_months': 0.75,
       '12_months': 0.65,
     };
+  }
+
+  /**
+   * Retry an operation up to maxRetries times with exponential backoff.
+   * Returns true if the operation succeeded, false if all retries exhausted.
+   */
+  private async retryOperation(
+    operation: () => Promise<void>,
+    label: string,
+    maxRetries = 3
+  ): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await operation();
+        return true;
+      } catch (err) {
+        this.logger.warn(`${label} attempt ${attempt}/${maxRetries} failed`, err);
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 100 * attempt));
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -1044,17 +1154,26 @@ export class SubscriptionManagementService extends EventEmitter {
    * Cleanup and Shutdown
    */
   async shutdown(): Promise<void> {
+    // Clear scheduler intervals
+    if (this.recurringPaymentInterval) {
+      clearInterval(this.recurringPaymentInterval);
+      this.recurringPaymentInterval = undefined;
+    }
+    if (this.subscriptionMonitorInterval) {
+      clearInterval(this.subscriptionMonitorInterval);
+      this.subscriptionMonitorInterval = undefined;
+    }
+
     // Clear all recurring payment jobs
-    for (const [id, job] of this.recurringPaymentJobs) {
+    for (const [, job] of this.recurringPaymentJobs) {
       clearInterval(job);
     }
     this.recurringPaymentJobs.clear();
 
-    // Clear caches
-    this.subscriptionCache.clear();
+    // Destroy TTLCache (clears entries + stops cleanup interval)
+    this.subscriptionCache.destroy();
 
-    // Close connections
-    await this.redis.disconnect();
+    // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
     this.logger.info('Subscription Management Service shutdown completed');
   }

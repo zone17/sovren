@@ -246,7 +246,7 @@ export class AutomatedContentModerationServiceImpl implements AutomatedContentMo
       for (const rule of workflow.rules) {
         if (await this.evaluateCondition(rule.condition, contentId)) {
           const action: ModerationAction = {
-            id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: `action_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
             type: rule.action as any,
             reason: `Workflow rule: ${rule.condition}`,
             confidence: 0.95,
@@ -427,7 +427,7 @@ export class AutomatedContentModerationServiceImpl implements AutomatedContentMo
       }
 
       // Generate report ID
-      const reportId = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const reportId = `report_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
       // AI Analysis of the report
       const aiAnalysis = await this.analyzeReport(report);

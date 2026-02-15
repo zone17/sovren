@@ -1,0 +1,32 @@
+graph TD
+    A[App.tsx] --> B[GlobalErrorBoundary]
+    B --> C[AuthProvider]
+    C --> D[Router]
+    D --> E1[Auth Routes]
+    D --> E2[Content Routes]
+    D --> E3[Analytics Routes]
+    D --> E4[Dashboard Routes]
+    D --> E5[Subscription Routes]
+
+    E1 --> F1[AuthErrorBoundary]
+    E2 --> F2[ContentErrorBoundary]
+    E3 --> F3[AnalyticsErrorBoundary]
+    E4 --> F4[DashboardErrorBoundary]
+    E5 --> F5[SubscriptionErrorBoundary]
+
+    F1 --> G1[Auth Components]
+    F2 --> G2[Content Components]
+    F3 --> G3[Analytics Components]
+    F4 --> G4[Dashboard Components]
+    F5 --> G5[Subscription Components]
+
+    style B fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    style F1 fill:#ffd43b,stroke:#fab005
+    style F2 fill:#ffd43b,stroke:#fab005
+    style F3 fill:#ffd43b,stroke:#fab005
+    style F4 fill:#ffd43b,stroke:#fab005
+    style F5 fill:#ffd43b,stroke:#fab005
+
+    classDef global fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef feature fill:#ffd43b,stroke:#fab005
+    classDef component fill:#51cf66,stroke:#2f9e44

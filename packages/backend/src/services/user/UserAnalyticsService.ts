@@ -21,6 +21,7 @@
  * - Privacy-compliant analytics
  */
 
+import crypto from 'crypto';
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../container/types';
 import { IUserAnalyticsService } from '../../interfaces/user/IUserAnalyticsService';
@@ -2006,7 +2007,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
   }
 
   private generateExportId(): string {
-    return `export-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `export-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
   }
 
   private async aggregateUserActivity(startDate: Date, endDate: Date): Promise<void> {

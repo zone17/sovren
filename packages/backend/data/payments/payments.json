@@ -1,0 +1,37 @@
+[
+  {
+    "id": "50874dd3-515a-405a-ac62-3280b2f21491",
+    "invoice_id": "ce866bbf-9f8c-4265-8c03-df3a4444ac4a",
+    "amount": 1000,
+    "fee": 1,
+    "status": "completed",
+    "settled_at": 1771106499630,
+    "preimage": "preimage123",
+    "memo": "Test payment",
+    "creator_id": "creator-123",
+    "supporter_id": "supporter-456"
+  },
+  {
+    "id": "47a89344-6bb3-492e-80e2-10961f9887ea",
+    "invoice_id": "413daea5-70cf-4ccd-92eb-1fa220780fd2",
+    "amount": 1000,
+    "fee": 1,
+    "status": "completed",
+    "settled_at": 1771106499637,
+    "preimage": "preimage123",
+    "memo": "Test payment",
+    "creator_id": "creator-123",
+    "supporter_id": "supporter-456"
+  },
+  {
+    "id": "45268072-3369-4ed6-aa05-3044d8b74279",
+    "invoice_id": "bfe15b8b-eb11-41e9-9e71-69fea47b9644",
+    "amount": 1000,
+    "fee": 0,
+    "status": "completed",
+    "settled_at": 1771106499641,
+    "memo": "Test payment",
+    "creator_id": "creator-123",
+    "supporter_id": "supporter-456"
+  }
+]

@@ -1,0 +1,43 @@
+stateDiagram-v2
+    [*] --> Normal: Component Renders
+    Normal --> ErrorDetected: Error Thrown
+
+    ErrorDetected --> SentryReporting: Capture Error
+    SentryReporting --> ErrorState: Log Complete
+
+    ErrorState --> ShowFeatureFallback: Feature-Level Error
+    ErrorState --> ShowGlobalFallback: App-Level Error
+
+    ShowFeatureFallback --> RetryAttempt: User Clicks Retry
+    ShowFeatureFallback --> NavigateHome: User Clicks Home
+
+    ShowGlobalFallback --> PageReload: User Reloads
+    ShowGlobalFallback --> NavigateHome: User Clicks Home
+
+    RetryAttempt --> Normal: Success
+    RetryAttempt --> ErrorDetected: Failure (max 3 retries)
+
+    NavigateHome --> [*]: Route Change
+    PageReload --> [*]: Full Refresh
+
+    note right of ErrorState
+        Error captured with context:
+        - Component stack
+        - User session
+        - Breadcrumbs
+        - Environment data
+    end note
+
+    note right of ShowFeatureFallback
+        Less severe UI:
+        - Feature name shown
+        - Retry option
+        - Continue using app
+    end note
+
+    note right of ShowGlobalFallback
+        Critical UI:
+        - Full-page error
+        - Reload or go home
+        - All data preserved
+    end note

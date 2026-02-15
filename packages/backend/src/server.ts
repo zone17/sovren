@@ -1,6 +1,10 @@
 import dotenv from 'dotenv';
 import { AppConfig, createApp } from './app';
 import { lightningService } from './services/lightning-service';
+import { lightningReceiptService } from './services/lightning/receipt-service';
+import { connectRedis, disconnectRedis } from './lib/redis';
+import { initializeContainer, container } from './container';
+import logger from './lib/logger';
 
 // Load environment variables
 dotenv.config();
@@ -19,9 +23,9 @@ dotenv.config();
  * container orchestration signals, and unexpected errors gracefully.
  */
 
-// 🔧 Process Configuration
-// WHY: Prevent memory leaks and handle unhandled Promise rejections
-process.setMaxListeners(0);
+// Process listener limit: set above known listener count (~15)
+// to detect genuine leaks without false positives during normal operation.
+process.setMaxListeners(25);
 
 // 📊 Application State
 let server: any = null;
@@ -33,17 +37,31 @@ let isShuttingDown = false;
  */
 async function startServer(): Promise<void> {
   try {
-    console.log('🚀 Starting Sovren API Server...');
+    logger.info('Starting Sovren API Server');
 
     // Validate environment configuration
     if (AppConfig.isProduction && !process.env.JWT_SECRET) {
-      throw new Error('❌ JWT_SECRET environment variable is required in production');
+      throw new Error('JWT_SECRET environment variable is required in production');
     }
 
-    // 🌩️ Initialize Lightning Network Service
+    // Connect Redis eagerly (fail-fast if unavailable)
+    try {
+      await connectRedis();
+    } catch (err) {
+      logger.warn('Redis connection failed — continuing without Redis', { error: (err as Error).message });
+    }
+
+    // Initialize DI container before routes are registered
+    try {
+      await initializeContainer();
+    } catch (err) {
+      logger.warn('DI container initialization failed — continuing without DI', { error: (err as Error).message });
+    }
+
+    // Initialize Lightning Network Service
     await initializeLightningService();
 
-    // 🧾 Initialize Lightning Receipt Service
+    // Initialize Lightning Receipt Service
     await initializeReceiptService();
 
     // Create Express application
@@ -51,13 +69,11 @@ async function startServer(): Promise<void> {
 
     // Start HTTP server
     server = app.listen(AppConfig.port, AppConfig.host, () => {
-      console.log(`✅ Sovren API Server running successfully`);
-      console.log(`📍 Server URL: http://${AppConfig.host}:${AppConfig.port}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔒 Security: ${AppConfig.isProduction ? 'Production' : 'Development'} mode`);
-      console.log(`⚡ Features: NOSTR authentication, Lightning payments, rate limiting`);
-      console.log(`📊 Health Check: http://${AppConfig.host}:${AppConfig.port}/health`);
-      console.log(`📚 API Documentation: http://${AppConfig.host}:${AppConfig.port}/api`);
+      logger.info('Sovren API Server running', {
+        url: `http://${AppConfig.host}:${AppConfig.port}`,
+        environment: process.env.NODE_ENV || 'development',
+        mode: AppConfig.isProduction ? 'production' : 'development',
+      });
     });
 
     // Configure server settings
@@ -67,21 +83,20 @@ async function startServer(): Promise<void> {
     // Handle server errors
     server.on('error', (error: any) => {
       if (error.code === 'EADDRINUSE') {
-        console.error(`❌ Port ${AppConfig.port} is already in use`);
-        console.error('💡 Try a different port or stop the existing server');
+        logger.error('Port already in use', { port: AppConfig.port });
         process.exit(1);
       } else {
-        console.error('❌ Server error:', error);
+        logger.error('Server error', { error });
         throw error;
       }
     });
 
     server.on('clientError', (error: any, socket: any) => {
-      console.warn('⚠️ Client connection error:', error.message);
+      logger.warn('Client connection error', { error: error.message });
       socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    logger.error('Failed to start server', { error });
     process.exit(1);
   }
 }
@@ -99,14 +114,13 @@ async function initializeLightningService(): Promise<void> {
     const webhookSecret = process.env.LIGHTNING_WEBHOOK_SECRET;
 
     if (!lnbitsUrl || !lnbitsApiKey || !lnbitsWalletId || !webhookSecret) {
-      console.warn('⚠️ Lightning Network configuration incomplete - skipping initialization');
-      console.warn(
-        '💡 To enable Lightning payments, set: LNBITS_URL, LNBITS_API_KEY, LNBITS_WALLET_ID, LIGHTNING_WEBHOOK_SECRET'
-      );
+      logger.warn('Lightning Network configuration incomplete - skipping initialization', {
+        hint: 'Set LNBITS_URL, LNBITS_API_KEY, LNBITS_WALLET_ID, LIGHTNING_WEBHOOK_SECRET',
+      });
       return;
     }
 
-    console.log('⚡ Initializing Lightning Network service...');
+    logger.info('Initializing Lightning Network service');
 
     // Initialize Lightning service with configuration
     await lightningService.initialize({
@@ -128,26 +142,17 @@ async function initializeLightningService(): Promise<void> {
     // Set up real-time payment event handlers
     setupLightningEventHandlers();
 
-    console.log('✅ Lightning Network service initialized successfully');
-
-    // Log configuration summary
-    const healthCheck = await lightningService.healthCheck();
-    console.log(`📊 Lightning Status: ${healthCheck.status}`);
-    console.log(`🔗 LNbits URL: ${lnbitsUrl}`);
-    console.log(`💳 Wallet ID: ${lnbitsWalletId}`);
-    console.log(
-      `🔔 Webhooks: ${process.env.ENABLE_LIGHTNING_WEBHOOKS !== 'false' ? 'Enabled' : 'Disabled'}`
-    );
-    console.log(
-      `🔗 LNURL-pay: ${process.env.ENABLE_LNURL_PAY !== 'false' ? 'Enabled' : 'Disabled'}`
-    );
-    console.log(
-      `📧 Lightning Addresses: ${process.env.ENABLE_LIGHTNING_ADDRESSES !== 'false' ? 'Enabled' : 'Disabled'}`
-    );
+    logger.info('Lightning Network service initialized', {
+      status: (await lightningService.healthCheck()).status,
+      lnbitsUrl,
+      walletId: lnbitsWalletId,
+      webhooks: process.env.ENABLE_LIGHTNING_WEBHOOKS !== 'false',
+      lnurlPay: process.env.ENABLE_LNURL_PAY !== 'false',
+      lightningAddresses: process.env.ENABLE_LIGHTNING_ADDRESSES !== 'false',
+    });
   } catch (error) {
-    console.error('❌ Failed to initialize Lightning Network service:', error);
-    console.warn('⚠️ Server will continue without Lightning Network functionality');
-    console.warn('💡 Check your LNbits configuration and network connectivity');
+    logger.error('Failed to initialize Lightning Network service', { error });
+    logger.warn('Server will continue without Lightning Network functionality');
   }
 }
 
@@ -165,19 +170,18 @@ async function initializeReceiptService(): Promise<void> {
     const receiptSignatureSecret = process.env.RECEIPT_SIGNATURE_SECRET;
 
     if (!receiptFromEmail || !smtpHost || !receiptSignatureSecret) {
-      console.warn('⚠️ Receipt service configuration incomplete - using defaults');
-      console.warn(
-        '💡 To enable email receipts, set: RECEIPT_FROM_EMAIL, SMTP_HOST, RECEIPT_SIGNATURE_SECRET'
-      );
+      logger.warn('Receipt service configuration incomplete - using defaults', {
+        hint: 'Set RECEIPT_FROM_EMAIL, SMTP_HOST, RECEIPT_SIGNATURE_SECRET',
+      });
     }
 
     // Initialize receipt service event handlers
     setupReceiptEventHandlers();
 
-    console.log('✅ Lightning Receipt service initialized successfully');
+    logger.info('Lightning Receipt service initialized');
   } catch (error) {
-    console.error('❌ Failed to initialize Lightning Receipt service:', error);
-    console.warn('⚠️ Server will continue without receipt functionality');
+    logger.error('Failed to initialize Lightning Receipt service', { error });
+    logger.warn('Server will continue without receipt functionality');
   }
 }
 
@@ -186,19 +190,16 @@ async function initializeReceiptService(): Promise<void> {
  * WHY: Real-time receipt processing and notifications
  */
 function setupReceiptEventHandlers(): void {
-  // Handle receipt generation events
   lightningReceiptService.on('receipt:generated', (receipt) => {
-    console.log(`🧾 Payment receipt generated: ${receipt.receiptNumber}`);
+    logger.info('Payment receipt generated', { receiptNumber: receipt.receiptNumber });
   });
 
-  // Handle receipt email delivery
   lightningReceiptService.on('receipt:email:sent', (data) => {
-    console.log(`📧 Receipt emailed to: ${data.email}`);
+    logger.info('Receipt emailed', { email: data.email });
   });
 
-  // Handle receipt errors
   lightningReceiptService.on('error', (error) => {
-    console.error('❌ Receipt service error:', error.message);
+    logger.error('Receipt service error', { error: error.message });
   });
 }
 
@@ -207,51 +208,35 @@ function setupReceiptEventHandlers(): void {
  * WHY: Real-time payment processing and notifications
  */
 function setupLightningEventHandlers(): void {
-  // Handle successful payments
   lightningService.on('payment:completed', async (payment) => {
-    console.log(
-      `🎉 Lightning payment completed: ${payment.amount} sats to creator ${payment.creator_id}`
-    );
+    logger.info('Lightning payment completed', { amount: payment.amount, creatorId: payment.creator_id });
 
-    // ✅ Generate payment receipt automatically
     try {
       const receipt = await lightningReceiptService.generateReceipt({
         paymentId: payment.id,
         includeDetailedVerification: true,
-        emailReceipt: false, // Will be sent separately if email is provided
+        emailReceipt: false,
       });
-      console.log(`🧾 Receipt generated: ${receipt.receiptNumber}`);
+      logger.info('Receipt generated', { receiptNumber: receipt.receiptNumber });
     } catch (error) {
-      console.error('❌ Failed to generate receipt:', error);
+      logger.error('Failed to generate receipt', { error });
     }
-
-    // TODO: Add real-time notifications
-    // TODO: Update creator balance
-    // TODO: Trigger NOSTR event publication
-    // TODO: Send email/push notifications
   });
 
-  // Handle expired invoices
   lightningService.on('invoice:expired', (invoice) => {
-    console.log(`⏰ Lightning invoice expired: ${invoice.id}`);
-
-    // TODO: Clean up expired invoices
-    // TODO: Notify user of expiration
+    logger.info('Lightning invoice expired', { invoiceId: invoice.id });
   });
 
-  // Handle invoice creation
   lightningService.on('invoice:created', (invoice) => {
-    console.log(`⚡ Lightning invoice created: ${invoice.amount} sats for ${invoice.description}`);
+    logger.info('Lightning invoice created', { amount: invoice.amount, description: invoice.description });
   });
 
-  // Handle webhook events
   lightningService.on('webhook:received', (data) => {
-    console.log('🔔 Lightning webhook received:', data.type);
+    logger.info('Lightning webhook received', { type: data.type });
   });
 
-  // Handle service errors
   lightningService.on('error', (error) => {
-    console.error('❌ Lightning service error:', error.message);
+    logger.error('Lightning service error', { error: error.message });
   });
 }
 
@@ -262,46 +247,52 @@ function setupLightningEventHandlers(): void {
  */
 async function gracefulShutdown(signal: string): Promise<void> {
   if (isShuttingDown) {
-    console.log('⏳ Shutdown already in progress...');
+    logger.info('Shutdown already in progress');
     return;
   }
 
   isShuttingDown = true;
-  console.log(`\n🛑 Received ${signal}, starting graceful shutdown...`);
+  logger.info('Graceful shutdown starting', { signal });
 
   const shutdownTimeout = setTimeout(() => {
-    console.error('💥 Forced shutdown due to timeout');
+    logger.error('Forced shutdown due to timeout');
     process.exit(1);
-  }, 10000); // 10 second timeout
+  }, 10000);
 
   try {
-    // Stop accepting new connections
     if (server) {
-      console.log('🔌 Closing HTTP server...');
+      logger.info('Closing HTTP server');
 
       await new Promise<void>((resolve, reject) => {
         server.close((error: any) => {
           if (error) {
-            console.error('❌ Error closing server:', error);
+            logger.error('Error closing server', { error });
             reject(error);
           } else {
-            console.log('✅ HTTP server closed successfully');
+            logger.info('HTTP server closed');
             resolve();
           }
         });
       });
     }
 
-    // TODO: Close database connections when implemented
-    // TODO: Finish processing existing requests
-    // TODO: Clear any timers or intervals
+    // Dispose DI container (cleanup all registered services)
+    try {
+      await container.dispose();
+      logger.info('DI container disposed');
+    } catch (err) {
+      logger.warn('DI container disposal failed', { error: (err as Error).message });
+    }
+
+    // Disconnect Redis gracefully
+    await disconnectRedis();
 
     clearTimeout(shutdownTimeout);
-    console.log('✅ Graceful shutdown completed');
+    logger.info('Graceful shutdown completed');
     process.exit(0);
   } catch (error) {
     clearTimeout(shutdownTimeout);
-    console.error('❌ Error during shutdown:', error);
+    logger.error('Error during shutdown', { error });
     process.exit(1);
   }
 }
@@ -311,20 +302,15 @@ async function gracefulShutdown(signal: string): Promise<void> {
  * WHY: Prevent the process from crashing and log critical errors
  */
 process.on('uncaughtException', (error: Error) => {
-  console.error('💥 Uncaught Exception:', error);
-  console.error('Stack:', error.stack);
-  console.error('🚨 Process will exit to prevent undefined behavior');
+  logger.error('Uncaught exception — process will exit', { error: error.message, stack: error.stack });
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
-  console.error('💥 Unhandled Promise Rejection:', reason);
-  console.error('Promise:', promise);
-  console.error('🚨 This should be handled properly in application code');
+process.on('unhandledRejection', (reason: any) => {
+  logger.error('Unhandled promise rejection', { reason });
 
-  // In production, we might want to exit the process
   if (AppConfig.isProduction) {
-    console.error('🚨 Exiting due to unhandled rejection in production');
+    logger.error('Exiting due to unhandled rejection in production');
     process.exit(1);
   }
 });
@@ -347,7 +333,7 @@ if (process.platform === 'win32') {
  */
 if (require.main === module) {
   startServer().catch((error) => {
-    console.error('💥 Failed to start application:', error);
+    logger.error('Failed to start application', { error });
     process.exit(1);
   });
 }

@@ -60,7 +60,7 @@ const createMockContentItem = (overrides: Partial<ContentItem> = {}): ContentIte
 });
 
 const createMockServiceContext = (): ServiceContext => ({
-  requestId: `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  requestId: `test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
   timestamp: new Date(),
   source: 'ContentServiceLayerTest',
 });

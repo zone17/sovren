@@ -4,6 +4,8 @@
  * Part of Epic 005 - Backend Service Refactoring
  */
 
+import crypto from 'crypto';
+
 export enum DomainEventType {
   // Payment Events
   PAYMENT_RECEIVED = 'payment.received',
@@ -139,7 +141,7 @@ export class DomainEventBuilder<T = any> {
   };
 
   private generateId(): string {
-    return `evt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    return `evt_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
   }
 
   withType(type: DomainEventType): this {

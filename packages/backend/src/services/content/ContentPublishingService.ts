@@ -28,6 +28,8 @@ import { IDatabase } from '../../interfaces/IDatabase';
 import { INotificationService } from '../../interfaces/INotificationService';
 import { Logger } from '../../utils/logger';
 import { ServiceError } from '../../utils/errors';
+import { decrypt, isEncrypted } from '../../utils/encryption';
+import { getSecretsService } from '../SecretsService';
 
 /**
  * Job state for scheduled publishing
@@ -80,6 +82,72 @@ export class ContentPublishingService implements IContentPublishingService {
   ) {
     this.logger = new Logger(ContentPublishingService.name);
     this.nostrPool = new SimplePool();
+  }
+
+  /**
+   * Recovers scheduled publish jobs after service restart.
+   * Queries for content with status='scheduled' and re-registers timers.
+   */
+  async recoverScheduledJobs(): Promise<void> {
+    try {
+      this.logger.info('Recovering scheduled publish jobs');
+
+      const result = await this.db.query<any>(
+        `SELECT cs.schedule_id, cs.content_id, cs.scheduled_for
+         FROM content_schedule cs
+         JOIN content c ON c.id = cs.content_id
+         WHERE c.status = 'scheduled'
+           AND cs.scheduled_for > $1`,
+        [new Date()]
+      );
+
+      for (const row of result.rows) {
+        const publishAt = new Date(row.scheduled_for);
+        const delay = publishAt.getTime() - Date.now();
+
+        if (delay <= 0) {
+          // Past due — publish immediately
+          this.logger.info('Executing overdue scheduled publish', {
+            contentId: row.content_id,
+            scheduleId: row.schedule_id,
+          });
+          this.publish(row.content_id, { immediate: true }).catch(error => {
+            this.logger.error('Failed to execute overdue publish', {
+              contentId: row.content_id,
+              error,
+            });
+          });
+          continue;
+        }
+
+        const timeout = setTimeout(async () => {
+          try {
+            await this.publish(row.content_id, { immediate: true });
+            this.scheduledJobs.delete(row.schedule_id);
+          } catch (error) {
+            this.logger.error('Recovered scheduled publish failed', {
+              contentId: row.content_id,
+              scheduleId: row.schedule_id,
+              error,
+            });
+          }
+        }, delay);
+
+        this.scheduledJobs.set(row.schedule_id, {
+          scheduleId: row.schedule_id,
+          contentId: row.content_id,
+          publishAt,
+          options: { immediate: true },
+          timeout,
+        });
+      }
+
+      this.logger.info('Scheduled job recovery complete', {
+        recoveredCount: result.rows.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to recover scheduled jobs', error);
+    }
   }
 
   /**
@@ -765,9 +833,18 @@ export class ContentPublishingService implements IContentPublishingService {
       }
 
       const row = result.rows[0];
+      let privateKey = row.nostr_private_key;
+
+      // Decrypt private key if stored encrypted
+      if (isEncrypted(privateKey)) {
+        const secrets = await getSecretsService();
+        const encryptionKey = await secrets.getSecret('NOSTR_KEY_ENCRYPTION_KEY');
+        privateKey = decrypt(privateKey, encryptionKey);
+      }
+
       return {
         publicKey: row.nostr_public_key,
-        privateKey: row.nostr_private_key,
+        privateKey,
         relays: row.nostr_relays ? JSON.parse(row.nostr_relays) : undefined,
       };
     } catch (error) {

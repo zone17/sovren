@@ -316,7 +316,7 @@ class SyncManager {
   addToQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp'>): void {
     const syncItem: SyncQueueItem = {
       ...item,
-      id: `sync_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `sync_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       timestamp: new Date(),
     };
 

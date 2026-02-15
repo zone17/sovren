@@ -616,7 +616,7 @@ export const RecommendationFeedback: React.FC<RecommendationFeedbackProps> = ({
         setLoading(true);
 
         const feedback: RecommendationFeedback = {
-          id: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: `feedback_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
           userId: 'user_123',
           recommendationId,
           contentId,

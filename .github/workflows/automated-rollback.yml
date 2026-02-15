@@ -21,6 +21,8 @@ on:
         type: boolean
         default: false
 
+permissions: read-all
+
 env:
   ROLLBACK_TIMEOUT: 120 # 2 minutes
 

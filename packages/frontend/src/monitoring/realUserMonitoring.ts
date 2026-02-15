@@ -77,7 +77,7 @@ class RealUserMonitoring {
   }
 
   private initializeSession(): UserSession {
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     return {
       sessionId,

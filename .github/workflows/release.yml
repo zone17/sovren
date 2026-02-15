@@ -23,12 +23,14 @@ on:
           - production
 
 # Ensure only one release can run at a time
+permissions: read-all
+
 concurrency:
   group: release
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '18.x'
+  NODE_VERSION: '20'
 
 jobs:
   # ===============================================

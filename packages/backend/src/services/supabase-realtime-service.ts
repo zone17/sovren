@@ -25,6 +25,7 @@
  * @since 2024-01-20
  */
 
+import crypto from 'crypto';
 import { createClient, RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
@@ -544,7 +545,7 @@ export class SupabaseRealtimeService extends EventEmitter {
   ): void {
     const eventHandler = (type: 'INSERT' | 'UPDATE' | 'DELETE') => (payload: any) => {
       const event: RealtimeEvent = {
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
         type,
         table: config.table,
         schema: payload.schema || 'public',
@@ -732,7 +733,7 @@ export class SupabaseRealtimeService extends EventEmitter {
 
     const batch: RealtimeEventBatch = {
       events: this.eventQueue.splice(0, this.config.batchSize),
-      batchId: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      batchId: `batch_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
       timestamp: new Date(),
       metadata: {
         queueSize: this.eventQueue.length,

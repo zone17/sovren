@@ -124,13 +124,9 @@ export interface ExchangeRateProviderConfig {
   rateLimit?: RateLimitConfig;   // Rate limiting configuration
 }
 
-/**
- * Rate limit configuration
- */
-export interface RateLimitConfig {
-  maxRequests: number;           // Maximum requests
-  windowMs: number;              // Time window in ms
-}
+// RateLimitConfig imported from canonical source
+import type { RateLimitConfig } from '../lib/rate-limiter';
+export type { RateLimitConfig };
 
 /**
  * Currency conversion request

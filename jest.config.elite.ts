@@ -43,6 +43,18 @@ const config: Config = {
     '!packages/*/src/stories/**',
   ],
 
+  // **GLOBALS** - Disable Babel completely, use ts-jest only
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+      tsconfig: {
+        jsx: 'react-jsx',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+      },
+    },
+  },
+
   // **ELITE COVERAGE THRESHOLDS**
   coverageThreshold: {
     global: {
@@ -98,18 +110,31 @@ const config: Config = {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
-        useESM: true,
+        useESM: false,
+        isolatedModules: true,
         tsconfig: {
           jsx: 'react-jsx',
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
         },
       },
     ],
   },
 
-  // **FILE PATTERNS**
+  // **DISABLE BABEL** - Use ts-jest only
+  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))'],
+
+  // **FILE PATTERNS** - Only match files explicitly named .test. or .spec.
   testMatch: [
     '<rootDir>/packages/*/src/**/__tests__/**/*.(test|spec).{ts,tsx}',
     '<rootDir>/packages/*/src/**/*.(test|spec).{ts,tsx}',
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/build/',
+    '/coverage/',
+    '<rootDir>/packages/shared/dist/', // Exclude compiled dist files
   ],
 
   // **REPORTERS**
@@ -139,7 +164,25 @@ const config: Config = {
     {
       displayName: '🎨 Frontend',
       testEnvironment: 'jsdom',
-      testMatch: ['<rootDir>/packages/frontend/src/**/*.(test|spec).{ts,tsx}'],
+      testMatch: [
+        '<rootDir>/packages/frontend/src/**/*.(test|spec).{ts,tsx}',
+      ],
+      testPathIgnorePatterns: [
+        '/node_modules/',
+        '/dist/',
+        '/fixtures/',
+        '/helpers/',
+        '/mocks/',
+        'integration/helpers',
+        'integration/fixtures',
+        '__tests__/integration/helpers',
+        '__tests__/integration/fixtures',
+        '/setup.ts$',
+        '/test-helpers.ts$',
+        '/test-events.ts$',
+        '/relay-fixtures.ts$',
+        '/performance-utils.ts$',
+      ],
       setupFilesAfterEnv: [
         '<rootDir>/test-utils/elite-env-setup.ts',
         '<rootDir>/test-utils/elite-frontend-setup.ts',
@@ -147,9 +190,26 @@ const config: Config = {
         '@testing-library/jest-dom',
       ],
       moduleNameMapper: {
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         '^@/(.*)$': '<rootDir>/packages/frontend/src/$1',
         '^@shared/(.*)$': '<rootDir>/packages/shared/src/$1',
         '^@test-utils/(.*)$': '<rootDir>/test-utils/$1',
+        '^../../../services/nostr/EventPublisherService$':
+          '<rootDir>/packages/frontend/src/services/nostr/EventPublisherService',
+      },
+      transform: {
+        '^.+\\.(ts|tsx)$': [
+          'ts-jest',
+          {
+            useESM: false,
+            isolatedModules: true,
+            tsconfig: {
+              jsx: 'react-jsx',
+              esModuleInterop: true,
+              allowSyntheticDefaultImports: true,
+            },
+          },
+        ],
       },
     },
 
@@ -158,6 +218,17 @@ const config: Config = {
       displayName: '🔧 Backend',
       testEnvironment: 'node',
       testMatch: ['<rootDir>/packages/backend/src/**/*.(test|spec).{ts,tsx}'],
+      testPathIgnorePatterns: [
+        '/node_modules/',
+        '/dist/',
+        '/fixtures/',
+        '/helpers/',
+        '/mocks/',
+        'integration/helpers',
+        'integration/fixtures',
+        '__tests__/integration/helpers',
+        '__tests__/integration/fixtures',
+      ],
       setupFilesAfterEnv: [
         '<rootDir>/test-utils/elite-backend-setup.ts',
         '<rootDir>/test-utils/elite-custom-matchers.ts',
@@ -171,6 +242,8 @@ const config: Config = {
         '^.+\\.ts$': [
           'ts-jest',
           {
+            useESM: false,
+            isolatedModules: true,
             tsconfig: '<rootDir>/packages/backend/tsconfig.test.json',
           },
         ],
@@ -182,16 +255,28 @@ const config: Config = {
       displayName: '🔗 Shared',
       testEnvironment: 'node',
       testMatch: ['<rootDir>/packages/shared/src/**/*.(test|spec).{ts,tsx}'],
+      testPathIgnorePatterns: ['/node_modules/', '/dist/', '<rootDir>/packages/shared/dist/'],
       setupFilesAfterEnv: ['<rootDir>/test-utils/elite-custom-matchers.ts'],
       moduleNameMapper: {
         '^@shared/(.*)$': '<rootDir>/packages/shared/src/$1',
         '^@test-utils/(.*)$': '<rootDir>/test-utils/$1',
       },
+      transform: {
+        '^.+\\.ts$': [
+          'ts-jest',
+          {
+            useESM: false,
+            isolatedModules: true,
+          },
+        ],
+      },
     },
   ],
 
-  // **IGNORE PATTERNS**
-  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/build/', '/coverage/'],
+  // **IGNORE PATTERNS** (duplicate removed - already defined at line 134)
+
+  // **MODULE PATH IGNORE PATTERNS** - Exclude from transformation
+  modulePathIgnorePatterns: ['<rootDir>/packages/shared/dist/'],
 
   // **PERFORMANCE OPTIMIZATION**
   maxWorkers: '50%',

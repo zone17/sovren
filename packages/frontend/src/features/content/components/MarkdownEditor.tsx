@@ -11,6 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import DOMPurify from 'dompurify';
 import { useAppDispatch, useAppSelector } from '../../../store';
 import { updateCurrentContent } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
 
@@ -537,7 +538,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             <div
               className="p-4 prose max-w-none h-full overflow-y-auto"
               style={{ minHeight: `${minHeight}px` }}
-              dangerouslySetInnerHTML={{ __html: convertMarkdownToHTML(markdown) }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(convertMarkdownToHTML(markdown)) }}
             />
           </div>
         )}

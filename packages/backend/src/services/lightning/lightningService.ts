@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { TTLCache } from '../../utils/ttl-cache';
 import {
   CreateInvoiceRequest,
   LightningInvoice,
@@ -22,6 +23,10 @@ import {
 export class LightningService {
   private lndClient: any; // In production, this would be a proper LND client
   private db: any; // In production, this would be a Supabase client or similar
+  private payoutIdempotencyCache = new TTLCache<string, LightningPayout>({
+    maxSize: 10_000,
+    ttlMs: 24 * 60 * 60 * 1000, // 24 hours
+  });
 
   constructor(lndClient: any, db: any) {
     this.lndClient = lndClient;
@@ -286,9 +291,18 @@ export class LightningService {
   async processPayout(
     creatorId: string,
     amount: number,
-    destination: string
+    destination: string,
+    idempotencyKey?: string
   ): Promise<LightningPayout> {
     try {
+      // Check idempotency cache — return cached result for duplicate requests
+      if (idempotencyKey) {
+        const cached = this.payoutIdempotencyCache.get(idempotencyKey);
+        if (cached) {
+          return cached;
+        }
+      }
+
       const now = Math.floor(Date.now() / 1000);
 
       // In production, this would call the actual LND API to send payment
@@ -313,6 +327,11 @@ export class LightningService {
       };
 
       // In production, we would store this in the database
+
+      // Cache payout result for idempotency
+      if (idempotencyKey) {
+        this.payoutIdempotencyCache.set(idempotencyKey, payout);
+      }
 
       return payout;
     } catch (error) {

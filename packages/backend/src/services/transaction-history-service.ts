@@ -4,9 +4,11 @@ import { EventEmitter } from 'events';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { z } from 'zod';
-import { RedisClient } from '../config/redis';
+import Redis from 'ioredis';
+import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
+import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 
 // Transaction History Types and Schemas
@@ -121,16 +123,16 @@ interface ExportOptions {
  */
 export class TransactionHistoryService extends EventEmitter {
   private logger: Logger;
-  private redis: RedisClient;
+  private redis: Redis;
   private analyticsService: AnalyticsService;
-  private transactionCache: Map<string, Transaction>;
+  private transactionCache: TTLCache<string, Transaction>;
 
   constructor() {
     super();
     this.logger = new Logger('TransactionHistoryService');
-    this.redis = new RedisClient();
+    this.redis = getRedisClient();
     this.analyticsService = new AnalyticsService();
-    this.transactionCache = new Map();
+    this.transactionCache = new TTLCache<string, Transaction>({ maxSize: 50_000, ttlMs: 600_000 });
 
     this.initializeService();
   }
@@ -653,7 +655,7 @@ export class TransactionHistoryService extends EventEmitter {
 
       if (validated.metadata) {
         updateData.metadata = supabase.raw(
-          `metadata || '${JSON.stringify(validated.metadata)}'::jsonb`
+          `metadata || ?::jsonb`, [JSON.stringify(validated.metadata)]
         );
       }
 
@@ -1011,11 +1013,10 @@ export class TransactionHistoryService extends EventEmitter {
    * Cleanup and Shutdown
    */
   async shutdown(): Promise<void> {
-    // Clear caches
-    this.transactionCache.clear();
+    // Destroy TTLCache (clears entries + stops cleanup interval)
+    this.transactionCache.destroy();
 
-    // Close connections
-    await this.redis.disconnect();
+    // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
     this.logger.info('Transaction History Service shutdown completed');
   }

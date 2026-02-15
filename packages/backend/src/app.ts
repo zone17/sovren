@@ -1,6 +1,6 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { z } from 'zod';
 
@@ -9,6 +9,17 @@ import authRouter from './routes/auth';
 import lightningRoutes from './routes/lightning';
 import lightningReceiptRoutes from './routes/lightning-receipts';
 import userRouter from './routes/users';
+import healthRouter from './routes/health';
+import v1Routes from './routes/v1';
+import contentDiscoveryRoutes from './routes/content-discovery';
+import subscriptionTiersRoutes from './routes/subscription-tiers';
+import { csrfProtection } from './middleware/csrf';
+import { deploymentMonitoring, getPrometheusMetrics } from './middleware/deployment-monitoring';
+import { correlationIdMiddleware, getCorrelationId } from './middleware/correlation-id';
+import { createRateLimiter } from './middleware/rate-limit-middleware';
+import { errorHandler, notFoundHandler } from './middleware/error-handler-middleware';
+import logger from './lib/logger';
+import { initSentry } from './lib/sentry';
 
 /**
  * 🚀 Elite Express.js Application Factory
@@ -29,7 +40,13 @@ import userRouter from './routes/users';
  * ```
  */
 export function createApp(): Express {
+  // Initialize Sentry before Express (required for @sentry/node to hook into HTTP)
+  initSentry();
+
   const app = express();
+
+  // Correlation ID middleware (must be first - before all other middleware)
+  app.use(correlationIdMiddleware);
 
   // 🔒 Security Middleware Stack
   // WHY: Defense in depth - multiple layers protect against common attacks
@@ -38,7 +55,7 @@ export function createApp(): Express {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'"],
           scriptSrc: ["'self'"],
           imgSrc: ["'self'", 'data:', 'https:'],
           connectSrc: ["'self'", 'wss:', 'https:'],
@@ -63,47 +80,58 @@ export function createApp(): Express {
   // WHY: Enable secure cross-origin requests for our frontend applications
   app.use(
     cors({
-      origin:
-        process.env.NODE_ENV === 'production'
-          ? ['https://sovren.app', 'https://www.sovren.app']
-          : ['http://localhost:3000', 'http://localhost:5173'],
+      origin: (origin, callback) => {
+        // Allow requests with no Origin header (non-browser clients, agents, curl)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins =
+          process.env.NODE_ENV === 'production'
+            ? ['https://sovren.app', 'https://www.sovren.app']
+            : ['http://localhost:3000', 'http://localhost:5173'];
+
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      },
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+      exposedHeaders: [
+        'X-CSRF-Token',
+        'X-Correlation-ID',
+        'RateLimit-Limit',
+        'RateLimit-Remaining',
+        'RateLimit-Reset',
+        'RateLimit-Policy',
+        'Retry-After',
+      ],
       credentials: true,
       maxAge: 86400, // 24 hours preflight cache
     })
   );
 
-  // ⚡ Rate Limiting
-  // WHY: Prevent abuse and ensure fair resource allocation
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Generous limit for authenticated users
-    message: {
-      success: false,
-      error: 'Too many requests from this IP, please try again later',
-      code: 'RATE_LIMIT_EXCEEDED',
-      retryAfter: 900, // 15 minutes in seconds
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-  app.use(limiter);
+  // ⚡ Rate Limiting (via rate-limit-middleware)
+  app.use(createRateLimiter({ windowMs: 15 * 60 * 1000, max: 1000 }));
 
-  // 📝 Request Processing Middleware
+  // Request Processing Middleware
   app.use(
     express.json({
-      limit: '10mb', // Allow for image uploads
+      limit: '1mb',
       verify: (req, res, buf) => {
-        // WHY: Store raw body for signature verification
-        (req as any).rawBody = buf;
+        // Store raw body for signature verification
+        (req as Request).rawBody = buf;
       },
     })
   );
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
-  // 📊 Request Logging Middleware
-  // WHY: Observability for debugging and monitoring
+  // Cookie parser (required for CSRF double-submit cookie pattern)
+  app.use(cookieParser());
+
+  // CSRF protection (double-submit cookie pattern)
+  app.use(csrfProtection());
+
+  // Structured Request Logging Middleware with correlation IDs
   app.use((req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
 
@@ -113,22 +141,62 @@ export function createApp(): Express {
         method: req.method,
         url: req.url,
         status: res.statusCode,
-        duration: `${duration}ms`,
+        durationMs: duration,
         userAgent: req.get('User-Agent'),
         ip: req.ip,
-        timestamp: new Date().toISOString(),
+        correlationId: getCorrelationId(),
       };
 
-      // Log errors and slow requests for monitoring
-      if (res.statusCode >= 400 || duration > 1000) {
-        console.warn('🚨 API Request Warning:', logData);
+      if (res.statusCode >= 500) {
+        logger.error('Request completed with server error', logData);
+      } else if (res.statusCode >= 400) {
+        logger.warn('Request completed with client error', logData);
+      } else if (duration > 1000) {
+        logger.warn('Slow request detected', logData);
       } else {
-        console.log('📊 API Request:', logData);
+        logger.info('Request completed', logData);
       }
     });
 
     next();
   });
+
+  // Deployment monitoring middleware (tracks request metrics for Prometheus)
+  app.use(deploymentMonitoring);
+
+  // Prometheus metrics endpoint (scraped by Prometheus) — protected by token or IP allowlist
+  app.get('/metrics', (req, res) => {
+    // Allow requests with a valid metrics token
+    const metricsToken = process.env.METRICS_AUTH_TOKEN;
+    const authHeader = req.headers.authorization;
+    if (metricsToken && authHeader === `Bearer ${metricsToken}`) {
+      getPrometheusMetrics(req, res);
+      return;
+    }
+
+    // Allow requests from trusted internal IPs (Prometheus scraper)
+    const allowedIPs = (process.env.METRICS_ALLOWED_IPS || '127.0.0.1,::1,::ffff:127.0.0.1').split(',');
+    const clientIP = req.ip || req.socket.remoteAddress || '';
+    if (allowedIPs.includes(clientIP)) {
+      getPrometheusMetrics(req, res);
+      return;
+    }
+
+    // In development/test, allow all (no token configured)
+    if (!metricsToken && process.env.NODE_ENV !== 'production') {
+      getPrometheusMetrics(req, res);
+      return;
+    }
+
+    res.status(403).json({
+      success: false,
+      error: 'Forbidden',
+      code: 'METRICS_AUTH_REQUIRED',
+    });
+  });
+
+  // Comprehensive health check routes (checks DB, Redis, Lightning, NOSTR)
+  app.use('/', healthRouter);
 
   // 🎯 API Routes
   // WHY: Organized route structure following RESTful principles
@@ -137,83 +205,12 @@ export function createApp(): Express {
   app.use('/api/lightning', lightningRoutes);
   app.use('/api/lightning/receipt', lightningReceiptRoutes);
 
-  // 🏥 Health Check Endpoints
-  // WHY: Kubernetes and container orchestrators use different health check types
+  // API v1 Routes (DI-based controllers for content, users, payments)
+  app.use('/api/v1', v1Routes);
 
-  // /health - Overall health status (general health check)
-  app.get('/health', (req: Request, res: Response) => {
-    res.json({
-      success: true,
-      data: {
-        status: 'healthy',
-        service: 'sovren-api',
-        version: process.env.npm_package_version || '1.0.0',
-        timestamp: Date.now(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development',
-      },
-    });
-  });
-
-  // /ready - Readiness probe (ready to receive traffic)
-  // WHY: Indicates the service is ready to handle requests (DB connected, dependencies available)
-  app.get('/ready', async (req: Request, res: Response) => {
-    try {
-      // Check if critical dependencies are available
-      // TODO: Add database connectivity check when implemented
-      // TODO: Add Redis connectivity check when implemented
-      // TODO: Add external service dependency checks
-
-      const checks = {
-        server: true,
-        uptime: process.uptime() > 10, // At least 10 seconds uptime
-        memory: process.memoryUsage().heapUsed < process.memoryUsage().heapTotal * 0.9, // < 90% memory
-      };
-
-      const isReady = Object.values(checks).every((check) => check === true);
-
-      if (isReady) {
-        res.status(200).json({
-          success: true,
-          data: {
-            status: 'ready',
-            checks,
-            timestamp: Date.now(),
-          },
-        });
-      } else {
-        res.status(503).json({
-          success: false,
-          data: {
-            status: 'not_ready',
-            checks,
-            timestamp: Date.now(),
-          },
-        });
-      }
-    } catch (error) {
-      res.status(503).json({
-        success: false,
-        error: 'Service not ready',
-        timestamp: Date.now(),
-      });
-    }
-  });
-
-  // /live - Liveness probe (process is alive)
-  // WHY: Indicates the application is running and not deadlocked
-  app.get('/live', (req: Request, res: Response) => {
-    // Simple liveness check - if we can respond, we're alive
-    res.status(200).json({
-      success: true,
-      data: {
-        status: 'alive',
-        pid: process.pid,
-        uptime: process.uptime(),
-        timestamp: Date.now(),
-      },
-    });
-  });
+  // Content discovery and subscription tier routes
+  app.use('/api/discovery', contentDiscoveryRoutes);
+  app.use('/api/subscription-tiers', subscriptionTiersRoutes);
 
   // 🎯 API Root Endpoint
   // WHY: Provide API information and available endpoints
@@ -227,6 +224,9 @@ export function createApp(): Express {
         endpoints: {
           authentication: '/api/auth',
           users: '/api/users',
+          content: '/api/v1/content',
+          payments: '/api/v1/payments',
+          lightning: '/api/lightning',
           health: '/health',
         },
         documentation: 'https://docs.sovren.app/api',
@@ -235,72 +235,13 @@ export function createApp(): Express {
     });
   });
 
-  // 🚫 404 Handler
-  // WHY: Provide consistent error response for unknown endpoints
-  app.use('*', (req: Request, res: Response) => {
-    res.status(404).json({
-      success: false,
-      error: 'Endpoint not found',
-      code: 'NOT_FOUND',
-      path: req.originalUrl,
-      method: req.method,
-      suggestion: 'Check the API documentation for available endpoints',
-    });
-  });
+  // 404 Handler — catch-all for unmatched routes.
+  // Uses notFoundHandler which creates an AppError and passes to error middleware via next().
+  app.use(notFoundHandler);
 
-  // 🔥 Global Error Handler
-  // WHY: Centralized error handling with security considerations
-  app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-    console.error('🔥 API Error:', {
-      error: error.message,
-      stack: error.stack,
-      url: req.url,
-      method: req.method,
-      body: req.body,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Validation errors from Zod
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        code: 'VALIDATION_ERROR',
-        details: error.errors.map((err) => ({
-          field: err.path.join('.'),
-          message: err.message,
-        })),
-      });
-    }
-
-    // JWT errors
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid authentication token',
-        code: 'AUTHENTICATION_ERROR',
-      });
-    }
-
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication token expired',
-        code: 'TOKEN_EXPIRED',
-      });
-    }
-
-    // Default server error
-    // WHY: Never expose internal error details in production
-    const isDevelopment = process.env.NODE_ENV === 'development';
-
-    return res.status(error.status || 500).json({
-      success: false,
-      error: isDevelopment ? error.message : 'Internal server error',
-      code: 'INTERNAL_ERROR',
-      ...(isDevelopment && { stack: error.stack }),
-    });
-  });
+  // Global Error Handler (Sentry + structured logging in error-handler-middleware)
+  // MUST be registered AFTER all routes and the 404 handler so it catches all errors.
+  app.use(errorHandler);
 
   return app;
 }
@@ -345,14 +286,14 @@ export const AppConfig = {
       if (process.env.NODE_ENV === 'production') {
         throw new Error('JWT_SECRET environment variable is required in production');
       }
-      console.warn('⚠️ Using default JWT_SECRET - not suitable for production');
+      logger.warn('Using default JWT_SECRET - not suitable for production');
       return 'development-only-secret-key';
     })(),
 
   // API limits
   rateLimitWindow: 15 * 60 * 1000, // 15 minutes
   rateLimitMax: 1000,
-  maxRequestSize: '10mb',
+  maxRequestSize: '1mb',
 
   // Performance
   responseTimeout: 30000, // 30 seconds

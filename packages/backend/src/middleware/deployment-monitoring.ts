@@ -1,427 +1,176 @@
 /**
- * 📊 Deployment Monitoring Middleware
+ * Deployment Monitoring Middleware
  *
- * Tracks deployment health metrics and error rates to support
- * automated rollback decisions.
+ * Real Prometheus metrics via prom-client for production observability.
  *
  * Metrics Tracked:
- * - HTTP error rates (4xx, 5xx)
- * - Response times (P50, P95, P99)
- * - Request throughput
- * - Active connections
- * - Memory usage trends
+ * - HTTP request counters (by method, route, status code)
+ * - Request duration histograms (P50, P95, P99 via bucket boundaries)
+ * - Active connections gauge
+ * - Node.js process metrics (memory, CPU, event loop lag)
  *
  * @module deployment-monitoring
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { createClient } from '@supabase/supabase-js';
+import client, { Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom-client';
+import logger from '../lib/logger';
 
-interface RequestMetrics {
-  timestamp: number;
-  method: string;
-  path: string;
-  statusCode: number;
-  duration: number;
-  memoryUsed: number;
+// Use the global default registry
+const register = client.register;
+
+// Collect default Node.js metrics (memory, CPU, event loop lag, GC, etc.)
+let metricsInitialized = false;
+export function initMetrics(): void {
+  if (metricsInitialized) return;
+  collectDefaultMetrics({ register, prefix: 'sovren_' });
+  metricsInitialized = true;
 }
 
-interface AggregatedMetrics {
-  totalRequests: number;
-  errorCount: number;
-  errorRate: number;
-  responseTimes: {
-    p50: number;
-    p95: number;
-    p99: number;
-    avg: number;
-  };
-  statusCodes: {
-    '2xx': number;
-    '3xx': number;
-    '4xx': number;
-    '5xx': number;
-  };
-  lastUpdated: string;
-}
+// Auto-initialize on import for backward compatibility
+initMetrics();
 
-class DeploymentMonitor {
-  private metrics: RequestMetrics[] = [];
-  private readonly maxMetricsSize = 1000;
-  private readonly aggregationInterval = 60000; // 1 minute
-  private aggregatedMetrics: AggregatedMetrics;
+// --- HTTP Request Metrics ---
 
-  constructor() {
-    this.aggregatedMetrics = this.getEmptyMetrics();
-    // Only start aggregation in non-test environments
-    if (process.env.NODE_ENV !== 'test') {
-      this.startAggregation();
-    }
-  }
+const httpRequestsTotal = new Counter({
+  name: 'sovren_http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code'] as const,
+  registers: [register],
+});
 
-  private getEmptyMetrics(): AggregatedMetrics {
-    return {
-      totalRequests: 0,
-      errorCount: 0,
-      errorRate: 0,
-      responseTimes: {
-        p50: 0,
-        p95: 0,
-        p99: 0,
-        avg: 0,
-      },
-      statusCodes: {
-        '2xx': 0,
-        '3xx': 0,
-        '4xx': 0,
-        '5xx': 0,
-      },
-      lastUpdated: new Date().toISOString(),
-    };
-  }
+const httpRequestDuration = new Histogram({
+  name: 'sovren_http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'route', 'status_code'] as const,
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
+  registers: [register],
+});
 
-  /**
-   * Record a request metric
-   */
-  recordRequest(metric: RequestMetrics): void {
-    this.metrics.push(metric);
+const httpActiveConnections = new Gauge({
+  name: 'sovren_http_active_connections',
+  help: 'Number of active HTTP connections',
+  registers: [register],
+});
 
-    // Keep only recent metrics
-    if (this.metrics.length > this.maxMetricsSize) {
-      this.metrics = this.metrics.slice(-this.maxMetricsSize);
-    }
-  }
+// --- Business Metrics ---
 
-  /**
-   * Get current error rate (percentage)
-   */
-  getErrorRate(): number {
-    return this.aggregatedMetrics.errorRate;
-  }
+const httpRequestErrors = new Counter({
+  name: 'sovren_http_request_errors_total',
+  help: 'Total HTTP errors (4xx + 5xx)',
+  labelNames: ['method', 'route', 'status_code'] as const,
+  registers: [register],
+});
 
-  /**
-   * Get P95 response time
-   */
-  getP95ResponseTime(): number {
-    return this.aggregatedMetrics.responseTimes.p95;
-  }
+// --- Database Metrics ---
 
-  /**
-   * Get P99 response time
-   */
-  getP99ResponseTime(): number {
-    return this.aggregatedMetrics.responseTimes.p99;
-  }
+export const dbQueryDuration = new Histogram({
+  name: 'sovren_db_query_duration_seconds',
+  help: 'Database query duration in seconds',
+  labelNames: ['operation', 'table'] as const,
+  buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5],
+  registers: [register],
+});
 
-  /**
-   * Get all aggregated metrics
-   */
-  getMetrics(): AggregatedMetrics {
-    return { ...this.aggregatedMetrics };
-  }
+export const dbConnectionsActive = new Gauge({
+  name: 'sovren_db_connections_active',
+  help: 'Number of active database connections',
+  registers: [register],
+});
 
-  /**
-   * Check if deployment is healthy based on SLO thresholds
-   */
-  isHealthy(): {
-    healthy: boolean;
-    reasons: string[];
-  } {
-    const reasons: string[] = [];
-    let healthy = true;
+// --- Cache Metrics ---
 
-    // Error rate threshold: 5%
-    if (this.aggregatedMetrics.errorRate > 5) {
-      healthy = false;
-      reasons.push(`Error rate too high: ${this.aggregatedMetrics.errorRate.toFixed(2)}%`);
-    }
+export const cacheOperations = new Counter({
+  name: 'sovren_cache_operations_total',
+  help: 'Total cache operations',
+  labelNames: ['operation', 'result'] as const,
+  registers: [register],
+});
 
-    // P95 response time threshold: 1000ms
-    if (this.aggregatedMetrics.responseTimes.p95 > 1000) {
-      healthy = false;
-      reasons.push(
-        `P95 response time too high: ${this.aggregatedMetrics.responseTimes.p95.toFixed(0)}ms`
-      );
-    }
+// --- Queue Metrics (BullMQ) ---
 
-    // P99 response time threshold: 2000ms
-    if (this.aggregatedMetrics.responseTimes.p99 > 2000) {
-      healthy = false;
-      reasons.push(
-        `P99 response time too high: ${this.aggregatedMetrics.responseTimes.p99.toFixed(0)}ms`
-      );
-    }
+export const queueJobsTotal = new Counter({
+  name: 'sovren_queue_jobs_total',
+  help: 'Total queue jobs processed',
+  labelNames: ['queue', 'status'] as const,
+  registers: [register],
+});
 
-    // 5xx error threshold: >10% of total requests
-    const serverErrorRate =
-      (this.aggregatedMetrics.statusCodes['5xx'] / this.aggregatedMetrics.totalRequests) * 100;
-    if (serverErrorRate > 10) {
-      healthy = false;
-      reasons.push(`Server error rate too high: ${serverErrorRate.toFixed(2)}%`);
-    }
+export const queueJobDuration = new Histogram({
+  name: 'sovren_queue_job_duration_seconds',
+  help: 'Queue job processing duration in seconds',
+  labelNames: ['queue'] as const,
+  buckets: [0.1, 0.5, 1, 2.5, 5, 10, 30, 60],
+  registers: [register],
+});
 
-    return { healthy, reasons };
-  }
-
-  /**
-   * Aggregate metrics from raw data
-   */
-  private aggregateMetrics(): void {
-    if (this.metrics.length === 0) {
-      return;
-    }
-
-    const now = Date.now();
-    const timeWindow = 5 * 60 * 1000; // 5 minutes
-    const recentMetrics = this.metrics.filter((m) => now - m.timestamp < timeWindow);
-
-    if (recentMetrics.length === 0) {
-      return;
-    }
-
-    // Calculate total requests and errors
-    const totalRequests = recentMetrics.length;
-    const errorCount = recentMetrics.filter((m) => m.statusCode >= 400).length;
-    const errorRate = (errorCount / totalRequests) * 100;
-
-    // Calculate response time percentiles
-    const sortedDurations = recentMetrics.map((m) => m.duration).sort((a, b) => a - b);
-    const p50Index = Math.floor(sortedDurations.length * 0.5);
-    const p95Index = Math.floor(sortedDurations.length * 0.95);
-    const p99Index = Math.floor(sortedDurations.length * 0.99);
-
-    const responseTimes = {
-      p50: sortedDurations[p50Index] || 0,
-      p95: sortedDurations[p95Index] || 0,
-      p99: sortedDurations[p99Index] || 0,
-      avg:
-        sortedDurations.reduce((sum, d) => sum + d, 0) / sortedDurations.length || 0,
-    };
-
-    // Count status codes
-    const statusCodes = {
-      '2xx': recentMetrics.filter((m) => m.statusCode >= 200 && m.statusCode < 300).length,
-      '3xx': recentMetrics.filter((m) => m.statusCode >= 300 && m.statusCode < 400).length,
-      '4xx': recentMetrics.filter((m) => m.statusCode >= 400 && m.statusCode < 500).length,
-      '5xx': recentMetrics.filter((m) => m.statusCode >= 500).length,
-    };
-
-    this.aggregatedMetrics = {
-      totalRequests,
-      errorCount,
-      errorRate,
-      responseTimes,
-      statusCodes,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    // Log health status
-    const health = this.isHealthy();
-    if (!health.healthy) {
-      console.warn('🚨 Deployment health check failed:', health.reasons);
-    }
-  }
-
-  /**
-   * Start periodic aggregation
-   */
-  private startAggregation(): void {
-    setInterval(() => {
-      this.aggregateMetrics();
-    }, this.aggregationInterval);
-  }
-
-  /**
-   * Force metric aggregation (for testing)
-   */
-  forceAggregation(): void {
-    this.aggregateMetrics();
-  }
-
-  /**
-   * Reset metrics (used for testing)
-   */
-  reset(): void {
-    this.metrics = [];
-    this.aggregatedMetrics = this.getEmptyMetrics();
-  }
-}
-
-// Singleton instance
-const monitor = new DeploymentMonitor();
+export const queueDepth = new Gauge({
+  name: 'sovren_queue_depth',
+  help: 'Current queue depth (waiting jobs)',
+  labelNames: ['queue'] as const,
+  registers: [register],
+});
 
 /**
- * Express middleware to track request metrics
+ * Normalize route paths to avoid high-cardinality labels.
+ * Replaces dynamic segments (UUIDs, hex strings, numeric IDs) with placeholders.
  */
-export function deploymentMonitoring(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const startTime = Date.now();
-  const startMemory = process.memoryUsage().heapUsed;
+function normalizeRoute(path: string): string {
+  return path
+    .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '/:uuid')
+    .replace(/\/[0-9a-f]{64}/gi, '/:pubkey')
+    .replace(/\/\d+/g, '/:id');
+}
 
-  // Capture response
-  const originalSend = res.send;
-  res.send = function (data: any): Response {
-    const duration = Date.now() - startTime;
-    const memoryUsed = process.memoryUsage().heapUsed - startMemory;
+/**
+ * Express middleware to track request metrics via prom-client.
+ */
+export function deploymentMonitoring(req: Request, res: Response, next: NextFunction): void {
+  // Skip metrics endpoint to avoid recursion
+  if (req.path === '/metrics') {
+    next();
+    return;
+  }
 
-    // Record metrics
-    monitor.recordRequest({
-      timestamp: startTime,
-      method: req.method,
-      path: req.path,
-      statusCode: res.statusCode,
-      duration,
-      memoryUsed,
-    });
+  const end = httpRequestDuration.startTimer();
 
-    return originalSend.call(this, data);
-  };
+  httpActiveConnections.inc();
+
+  res.on('finish', () => {
+    const route = req.route?.path
+      ? normalizeRoute(req.route.path)
+      : '/unmatched';
+    const statusCode = res.statusCode.toString();
+    const labels = { method: req.method, route, status_code: statusCode };
+
+    end(labels);
+    httpRequestsTotal.inc(labels);
+    httpActiveConnections.dec();
+
+    if (res.statusCode >= 400) {
+      httpRequestErrors.inc(labels);
+    }
+  });
 
   next();
 }
 
-/**
- * Health check endpoint handler
- */
-export function getDeploymentHealth(req: Request, res: Response): void {
-  const metrics = monitor.getMetrics();
-  const health = monitor.isHealthy();
-
-  const statusCode = health.healthy ? 200 : 503;
-
-  res.status(statusCode).json({
-    status: health.healthy ? 'healthy' : 'unhealthy',
-    timestamp: new Date().toISOString(),
-    metrics: {
-      errorRate: metrics.errorRate.toFixed(2) + '%',
-      totalRequests: metrics.totalRequests,
-      errorCount: metrics.errorCount,
-      responseTimes: {
-        p50: Math.round(metrics.responseTimes.p50) + 'ms',
-        p95: Math.round(metrics.responseTimes.p95) + 'ms',
-        p99: Math.round(metrics.responseTimes.p99) + 'ms',
-        avg: Math.round(metrics.responseTimes.avg) + 'ms',
-      },
-      statusCodes: metrics.statusCodes,
-      lastUpdated: metrics.lastUpdated,
-    },
-    health: {
-      healthy: health.healthy,
-      issues: health.reasons,
-    },
-  });
-}
 
 /**
- * Prometheus-style metrics endpoint
+ * Prometheus metrics endpoint handler.
+ * Returns metrics in the standard Prometheus exposition format.
  */
-export function getPrometheusMetrics(req: Request, res: Response): void {
-  const metrics = monitor.getMetrics();
-
-  const prometheusFormat = `
-# HELP http_requests_total Total number of HTTP requests
-# TYPE http_requests_total counter
-http_requests_total ${metrics.totalRequests}
-
-# HELP http_requests_errors_total Total number of HTTP errors (4xx + 5xx)
-# TYPE http_requests_errors_total counter
-http_requests_errors_total ${metrics.errorCount}
-
-# HELP http_request_error_rate Error rate percentage
-# TYPE http_request_error_rate gauge
-http_request_error_rate ${metrics.errorRate}
-
-# HELP http_request_duration_p50_milliseconds P50 response time in milliseconds
-# TYPE http_request_duration_p50_milliseconds gauge
-http_request_duration_p50_milliseconds ${metrics.responseTimes.p50}
-
-# HELP http_request_duration_p95_milliseconds P95 response time in milliseconds
-# TYPE http_request_duration_p95_milliseconds gauge
-http_request_duration_p95_milliseconds ${metrics.responseTimes.p95}
-
-# HELP http_request_duration_p99_milliseconds P99 response time in milliseconds
-# TYPE http_request_duration_p99_milliseconds gauge
-http_request_duration_p99_milliseconds ${metrics.responseTimes.p99}
-
-# HELP http_requests_by_status Total requests by status code range
-# TYPE http_requests_by_status counter
-http_requests_by_status{code="2xx"} ${metrics.statusCodes['2xx']}
-http_requests_by_status{code="3xx"} ${metrics.statusCodes['3xx']}
-http_requests_by_status{code="4xx"} ${metrics.statusCodes['4xx']}
-http_requests_by_status{code="5xx"} ${metrics.statusCodes['5xx']}
-  `.trim();
-
-  res.set('Content-Type', 'text/plain; version=0.0.4');
-  res.send(prometheusFormat);
-}
-
-/**
- * Trigger rollback if health checks fail
- */
-export async function checkAndTriggerRollback(): Promise<void> {
-  const health = monitor.isHealthy();
-
-  if (!health.healthy) {
-    console.error('🚨 DEPLOYMENT UNHEALTHY - TRIGGERING ROLLBACK 🚨');
-    console.error('Reasons:', health.reasons);
-
-    // Send alert to Slack
-    if (process.env.SLACK_WEBHOOK_URL) {
-      try {
-        await fetch(process.env.SLACK_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: '🚨 AUTOMATIC ROLLBACK TRIGGERED 🚨',
-            blocks: [
-              {
-                type: 'section',
-                text: {
-                  type: 'mrkdwn',
-                  text: `*Deployment Health Check Failed*\n\nReasons:\n${health.reasons.map((r) => `• ${r}`).join('\n')}`,
-                },
-              },
-            ],
-          }),
-        });
-      } catch (error) {
-        console.error('Failed to send Slack alert:', error);
-      }
-    }
-
-    // Trigger GitHub Actions rollback workflow
-    if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPOSITORY) {
-      try {
-        const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-        await fetch(
-          `https://api.github.com/repos/${owner}/${repo}/actions/workflows/automated-rollback.yml/dispatches`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ref: 'main',
-              inputs: {
-                environment: process.env.NODE_ENV === 'production' ? 'production' : 'staging',
-                reason: `Automatic rollback: ${health.reasons.join(', ')}`,
-                skip_verification: 'false',
-              },
-            }),
-          }
-        );
-
-        console.log('✅ Rollback workflow triggered via GitHub Actions');
-      } catch (error) {
-        console.error('Failed to trigger rollback workflow:', error);
-      }
-    }
+export async function getPrometheusMetrics(req: Request, res: Response): Promise<void> {
+  try {
+    res.set('Content-Type', register.contentType);
+    const metrics = await register.metrics();
+    res.end(metrics);
+  } catch (error) {
+    logger.error('Error collecting Prometheus metrics', { error });
+    res.status(500).end('Error collecting metrics');
   }
 }
 
-// Export monitor instance for testing
-export { monitor as deploymentMonitor };
+
+// Export the registry for use in tests
+export { register as metricsRegistry };

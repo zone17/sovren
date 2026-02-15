@@ -1,0 +1,81 @@
+sequenceDiagram
+    participant App as Application
+    participant Pool as DatabasePool
+    participant Conn as Connection
+    participant PG as PostgreSQL
+
+    Note over App,PG: Normal Query Flow
+
+    App->>Pool: query(sql, params)
+    Pool->>Pool: Check not shutting down
+    Pool->>Conn: Acquire from pool
+
+    alt Connection available
+        Conn-->>Pool: Connection ready
+    else Pool saturated
+        Note over Pool: Wait in queue
+        Conn-->>Pool: Connection ready (after wait)
+    end
+
+    Pool->>PG: Execute query
+    PG-->>Pool: Result
+    Pool->>Pool: Track metrics<br/>(duration, count)
+    Pool->>Pool: Emit 'query' event
+    Pool-->>App: Return result
+    Pool->>Conn: Return to idle pool
+
+    Note over App,PG: Transaction Flow
+
+    App->>Pool: getClient()
+    Pool->>Conn: Acquire connection
+    Pool->>Pool: Track checkout time
+    Pool->>Pool: Emit 'clientAcquired'
+    Conn-->>App: Client
+
+    App->>Conn: query('BEGIN')
+    Conn->>PG: BEGIN
+    PG-->>Conn: OK
+
+    App->>Conn: query('UPDATE ...')
+    Conn->>PG: UPDATE
+    PG-->>Conn: OK
+
+    App->>Conn: query('COMMIT')
+    Conn->>PG: COMMIT
+    PG-->>Conn: OK
+
+    App->>Conn: release()
+    Conn->>Pool: Return to pool
+    Pool->>Pool: Emit 'clientReleased'
+    Pool->>Conn: Add to idle connections
+
+    Note over App,PG: Error Handling
+
+    App->>Pool: query(invalid_sql)
+    Pool->>PG: Execute query
+    PG-->>Pool: Error
+    Pool->>Pool: Increment error count
+    Pool->>Pool: Emit 'error' event
+    Pool-->>App: Throw error
+    Pool->>Conn: Return to idle pool
+
+    Note over App,PG: Graceful Shutdown
+
+    App->>Pool: gracefulShutdown(30000)
+    Pool->>Pool: Set isShuttingDown = true
+    Pool->>Pool: Emit 'shuttingDown'
+
+    loop Wait for active clients (max 30s)
+        Pool->>Pool: Check activeClients.size
+        alt All clients released
+            Note over Pool: Proceed to close
+        else Timeout exceeded
+            Pool->>Conn: Force release clients
+            Pool->>Pool: Emit 'forcedClientRelease'
+        end
+    end
+
+    Pool->>Conn: Close all connections
+    Conn->>PG: Close
+    Pool->>Pool: Emit 'shutdown' event
+    Pool-->>App: Shutdown complete

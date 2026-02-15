@@ -41,7 +41,7 @@ export const CreateInvoiceSchema = z.object({
       contentId: z.string().uuid().optional(),
       subscriptionId: z.string().uuid().optional(),
       orderId: z.string().optional(),
-      customData: z.record(z.any()).optional(),
+      customData: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
     })
     .optional(),
   expiresIn: z.number().int().min(60).max(86400).optional().default(3600), // 1 hour default
@@ -90,9 +90,9 @@ export const CreateSubscriptionSchema = z.object({
   }),
   paymentMethod: z.object({
     type: z.enum(['lightning', 'card']),
-    details: z.record(z.any()).optional(),
+    details: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   }),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
 export const UpdateSubscriptionSchema = z.object({
@@ -103,7 +103,7 @@ export const UpdateSubscriptionSchema = z.object({
     paymentMethod: z
       .object({
         type: z.string(),
-        details: z.record(z.any()).optional(),
+        details: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
       })
       .optional(),
   }),
@@ -124,7 +124,7 @@ export const CreateRefundSchema = z.object({
   amount: z.number().positive().optional(), // Optional for partial refunds
   reason: z.string().min(1).max(1000),
   refundType: z.enum(['full', 'partial']).optional().default('full'),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
 // ============================================================================
@@ -147,7 +147,7 @@ export const RegisterWebhookSchema = z.object({
   events: z.array(z.string()).min(1).max(50),
   secret: z.string().min(32).max(256).optional(),
   description: z.string().max(500).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
 export const UpdateWebhookSchema = z.object({

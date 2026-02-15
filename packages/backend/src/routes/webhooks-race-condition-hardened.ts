@@ -29,6 +29,7 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import { getClientIP } from '../utils/client-ip';
 import { PaymentStateMachine } from '../services/payment/PaymentStateMachine';
 import { createClient } from '@supabase/supabase-js';
 import {
@@ -59,17 +60,7 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 100;
 
-/**
- * Extract client IP address from request
- * Handles proxied requests and X-Forwarded-For header
- */
-function getClientIp(req: Request): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') {
-    return forwarded.split(',')[0].trim();
-  }
-  return req.socket.remoteAddress || 'unknown';
-}
+// getClientIP imported from '../utils/client-ip'
 
 /**
  * Generate idempotency key from webhook data
@@ -106,7 +97,7 @@ function generateIdempotencyKey(
  * Limits webhooks to 100 requests per minute per IP address
  */
 function rateLimitWebhook(req: Request, res: Response, next: NextFunction) {
-  const clientIp = getClientIp(req);
+  const clientIp = getClientIP(req);
   const now = Date.now();
 
   // Get or create rate limit entry for this IP
@@ -181,7 +172,7 @@ function verifySignature(payload: string, signature: string): boolean {
  * - IP address logging for failed verifications
  */
 function verifyWebhookSignature(req: Request, res: Response, next: NextFunction) {
-  const clientIp = getClientIp(req);
+  const clientIp = getClientIP(req);
 
   try {
     const signature = req.headers['x-webhook-signature'] as string;
@@ -273,7 +264,7 @@ router.post(
   async (req: Request, res: Response) => {
     const processingStartTime = Date.now();
     let webhookId: string | null = null;
-    const clientIp = getClientIp(req);
+    const clientIp = getClientIP(req);
 
     try {
       const { event, paymentHash, preimage, amount, error, timestamp } = req.body;

@@ -1,73 +1,63 @@
-# Elite Production Dockerfile for Sovren Backend
-# Following security-first principles with distroless runtime
+# Production Dockerfile for Sovren Backend
+# Multi-stage build with Node.js 20 Alpine runtime
 
 # Stage 1: Dependency installation
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Install security updates and build dependencies
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/cache/apk/* /tmp/*
+RUN apk add --no-cache python3 make g++ && \
+    rm -rf /var/cache/apk/*
 
-# Copy dependency files for optimal layer caching
 COPY package*.json ./
 COPY tsconfig*.json ./
 
-# Install all dependencies for build
 RUN npm ci --include=dev && \
     npm cache clean --force && \
     rm -rf ~/.npm /tmp/*
 
 # Stage 2: Application build
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package*.json ./
 COPY --from=deps /app/tsconfig*.json ./
-
-# Copy source code
 COPY src/ ./src/
 COPY *.json ./
 COPY *.js ./
 
-# Build TypeScript application
 RUN npm run build && \
     npm prune --production && \
     npm cache clean --force
 
-# Stage 3: Distroless production runtime
-FROM gcr.io/distroless/nodejs18-debian11:nonroot AS runtime
+# Stage 3: Production runtime
+FROM node:20-alpine AS runtime
 
-# Metadata labels for container management
-LABEL org.opencontainers.image.title="Sovren Backend Production"
-LABEL org.opencontainers.image.description="Elite Lightning Network and NOSTR backend service - Production"
-LABEL org.opencontainers.image.version="1.0.0"
-LABEL org.opencontainers.image.authors="Sovren Development Team"
-LABEL org.opencontainers.image.source="https://github.com/sovren/backend"
-LABEL org.opencontainers.image.vendor="Sovren"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.created="BUILD_DATE"
-LABEL org.opencontainers.image.revision="GIT_COMMIT"
+LABEL org.opencontainers.image.title="Sovren Backend Production" \
+      org.opencontainers.image.description="Lightning Network and NOSTR backend service" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.vendor="Sovren" \
+      org.opencontainers.image.licenses="MIT"
 
-# Set working directory
+RUN apk add --no-cache dumb-init curl ca-certificates && \
+    rm -rf /tmp/* /var/cache/apk/*
+
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S backend -u 1001 -G nodejs
+
 WORKDIR /app
+RUN chown -R backend:nodejs /app
 
-# Copy only production dependencies and built application
-COPY --from=builder --chown=nonroot:nonroot /app/node_modules ./node_modules
-COPY --from=builder --chown=nonroot:nonroot /app/dist ./dist
-COPY --from=builder --chown=nonroot:nonroot /app/package*.json ./
+COPY --from=builder --chown=backend:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=backend:nodejs /app/dist ./dist
+COPY --chown=backend:nodejs package*.json ./
 
-# Expose application port (non-privileged port)
+USER backend
+
 EXPOSE 3001
 
-# Use distroless nonroot user (UID 65532)
-USER nonroot
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3001/health || exit 1
 
-# Start application
-CMD ["dist/server.js"]
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "dist/server.js"]

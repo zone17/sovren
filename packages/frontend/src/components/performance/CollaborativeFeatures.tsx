@@ -292,7 +292,7 @@ class CollaborationWebSocketManager {
     if (this.ws?.readyState === WebSocket.OPEN) return;
 
     try {
-      this.sessionId = `collab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.sessionId = `collab_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       const wsUrl = this.buildWebSocketUrl(userId, documentId, token);
       
       this.ws = new WebSocket(wsUrl);
@@ -663,7 +663,7 @@ export const CollaborativeFeatures: React.FC<CollaborativeFeaturesProps> = ({
     if (!otEngineRef.current || !wsManagerRef.current) return;
 
     const operation: Operation = {
-      id: `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `op_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       type: 'replace',
       documentId,
       userId,
@@ -689,7 +689,7 @@ export const CollaborativeFeatures: React.FC<CollaborativeFeaturesProps> = ({
     if (!newComment.trim() || !selectedText || !wsManagerRef.current) return;
 
     const comment: Partial<Comment> = {
-      id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `comment_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       documentId,
       userId,
       content: newComment,

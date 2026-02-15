@@ -112,7 +112,7 @@ const demoAuthService: TempAuthService = {
 
   generateNostrChallenge: async () => {
     return {
-      challenge: 'demo-challenge-' + Date.now() + Math.random().toString(36).substr(2, 9),
+      challenge: 'demo-challenge-' + Date.now() + Math.random().toString(36).substring(2, 11),
     };
   },
 

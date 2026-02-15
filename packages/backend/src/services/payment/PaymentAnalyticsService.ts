@@ -7,6 +7,7 @@
  * CRITICAL: 100% test coverage required for payment services
  */
 
+import crypto from 'crypto';
 import { injectable, inject } from 'inversify';
 import type { IPaymentAnalyticsService } from '../../interfaces/payment/IPaymentAnalyticsService';
 import type { IPaymentProcessingService } from '../../interfaces/payment/IPaymentProcessingService';
@@ -1276,7 +1277,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
   subscribeToRealtimeUpdates(
     callback: (metrics: RealtimeDashboardMetrics) => void | Promise<void>
   ): string {
-    const subscriptionId = `realtime_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const subscriptionId = `realtime_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
     this.realtimeSubscriptions.set(subscriptionId, callback);
 
     // Trigger initial update
@@ -1298,7 +1299,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
   async exportAnalytics(request: AnalyticsExportRequest): Promise<AnalyticsExportResult> {
     this.totalExports++;
 
-    const exportId = `export_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const exportId = `export_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
 
     // Get analytics data based on type
     let data: any;
@@ -1423,7 +1424,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
     startDate?: Date,
     endDate?: Date
   ): Promise<string> {
-    const jobId = `agg_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const jobId = `agg_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
 
     this.aggregationJobs.set(jobId, {
       status: 'running',
@@ -1512,7 +1513,7 @@ export class PaymentAnalyticsService implements IPaymentAnalyticsService {
     eventType: string,
     callback: (event: PaymentAnalyticsEvent) => void | Promise<void>
   ): string {
-    const subscriptionId = `event_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const subscriptionId = `event_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
     this.eventSubscriptions.set(subscriptionId, callback);
     return subscriptionId;
   }

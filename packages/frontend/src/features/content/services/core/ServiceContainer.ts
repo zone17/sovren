@@ -146,7 +146,7 @@ export class ServiceContainer {
    * Create a new scope for scoped services
    */
   createScope(): { scope: string; dispose: () => void } {
-    const scope = `scope_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const scope = `scope_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     this.scopedInstances.set(scope, new Map());
 
     return {

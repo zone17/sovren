@@ -12,7 +12,8 @@ on:
       - 'supabase/functions/**'
       - '.github/workflows/edge-functions.yml'
 
-# Environment variables
+permissions: read-all
+
 env:
   DENO_VERSION: '1.40.x'
   SUPABASE_CLI_VERSION: '1.120.x'

@@ -1,14 +1,17 @@
 import { createHash, randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
-import { RedisClient } from '../config/redis';
+import Redis from 'ioredis';
+import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
+import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 import { NotificationService } from './notification-service';
 import { WebSocketService } from './websocket-service';
 
 // Lightning Network Types and Schemas
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LightningInvoiceSchema = z.object({
   payment_request: z.string().min(1),
   payment_hash: z.string().length(64),
@@ -109,38 +112,42 @@ interface PaymentStatusUpdate {
  */
 export class LightningPaymentService extends EventEmitter {
   private logger: Logger;
-  private redis: RedisClient;
+  private redis: Redis;
   private wsService: WebSocketService;
   private notificationService: NotificationService;
   private analyticsService: AnalyticsService;
   private walletProviders: Map<string, WalletProvider>;
-  private paymentMonitors: Map<string, NodeJS.Timeout>;
-  private invoiceCache: Map<string, LightningInvoice>;
+  private paymentMonitors: Map<string, { interval: NodeJS.Timeout; timeout: NodeJS.Timeout }>; // Self-cleaning via maxPollingDuration timeout
+  private invoiceCache: TTLCache<string, LightningInvoice>;
+  private cleanupIntervalId: NodeJS.Timeout | null = null;
+  private initialized = false;
+  private static readonly MAX_POLLING_DURATION_MS = 3_600_000; // 1 hour
 
   constructor() {
     super();
     this.logger = new Logger('LightningPaymentService');
-    this.redis = new RedisClient();
+    this.redis = getRedisClient();
     this.wsService = new WebSocketService();
     this.notificationService = new NotificationService();
     this.analyticsService = new AnalyticsService();
     this.walletProviders = new Map();
     this.paymentMonitors = new Map();
-    this.invoiceCache = new Map();
-
-    this.initializeService();
+    this.invoiceCache = new TTLCache({ maxSize: 10_000, ttlMs: 60 * 60 * 1000 }); // 60 min TTL, matches monitor timeout
   }
 
   /**
-   * Initialize Lightning Payment Service
-   * Sets up wallet providers, payment monitoring, and cleanup routines
+   * Initialize Lightning Payment Service.
+   * Must be called after construction and awaited before using the service.
+   * Sets up wallet providers, payment monitoring, and cleanup routines.
    */
-  private async initializeService(): Promise<void> {
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
     try {
       await this.loadWalletProviders();
       await this.setupPaymentMonitoring();
       await this.startInvoiceCleanup();
 
+      this.initialized = true;
       this.logger.info('Lightning Payment Service initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize Lightning Payment Service', error);
@@ -635,8 +642,8 @@ export class LightningPaymentService extends EventEmitter {
   }
 
   private async verifyWithProvider(
-    provider: WalletProvider,
-    payment_hash: string
+    _provider: WalletProvider,
+    _payment_hash: string
   ): Promise<PaymentVerification | null> {
     // This would integrate with actual provider APIs
     // Mock implementation for now
@@ -644,28 +651,35 @@ export class LightningPaymentService extends EventEmitter {
   }
 
   private async startPaymentMonitoring(payment_hash: string): Promise<void> {
-    const monitor = setInterval(async () => {
+    const interval = setInterval(async () => {
       try {
         const verification = await this.verifyPayment(payment_hash);
         if (verification) {
-          clearInterval(monitor);
-          this.paymentMonitors.delete(payment_hash);
+          this.clearPaymentMonitor(payment_hash);
         }
       } catch (error) {
         this.logger.error(`Payment monitoring error for ${payment_hash}`, error);
       }
     }, 5000); // Check every 5 seconds
 
-    this.paymentMonitors.set(payment_hash, monitor);
-
-    // Set timeout for monitoring
-    setTimeout(() => {
+    // Set timeout to auto-stop polling after maxPollingDuration
+    const timeout = setTimeout(() => {
       if (this.paymentMonitors.has(payment_hash)) {
-        clearInterval(monitor);
-        this.paymentMonitors.delete(payment_hash);
+        this.clearPaymentMonitor(payment_hash);
         this.updatePaymentStatus(payment_hash, 'expired');
       }
-    }, 3600000); // 1 hour timeout
+    }, LightningPaymentService.MAX_POLLING_DURATION_MS);
+
+    this.paymentMonitors.set(payment_hash, { interval, timeout });
+  }
+
+  private clearPaymentMonitor(payment_hash: string): void {
+    const monitor = this.paymentMonitors.get(payment_hash);
+    if (monitor) {
+      clearInterval(monitor.interval);
+      clearTimeout(monitor.timeout);
+      this.paymentMonitors.delete(payment_hash);
+    }
   }
 
   private async setupPaymentMonitoring(): Promise<void> {
@@ -683,7 +697,7 @@ export class LightningPaymentService extends EventEmitter {
 
   private async startInvoiceCleanup(): Promise<void> {
     // Clean up expired invoices every hour
-    setInterval(async () => {
+    this.cleanupIntervalId = setInterval(async () => {
       try {
         const { error } = await supabase
           .from('lightning_invoices')
@@ -716,7 +730,7 @@ export class LightningPaymentService extends EventEmitter {
         status,
         updated_at: updated_at.toISOString(),
         metadata: metadata
-          ? supabase.raw(`metadata || '${JSON.stringify(metadata)}'::jsonb`)
+          ? supabase.raw(`metadata || ?::jsonb`, [JSON.stringify(metadata)])
           : undefined,
       })
       .eq('payment_hash', payment_hash);
@@ -822,16 +836,15 @@ export class LightningPaymentService extends EventEmitter {
    */
   async shutdown(): Promise<void> {
     // Clear all payment monitors
-    for (const [hash, monitor] of this.paymentMonitors) {
+    for (const [, monitor] of this.paymentMonitors) {
       clearInterval(monitor);
     }
     this.paymentMonitors.clear();
 
     // Clear caches
-    this.invoiceCache.clear();
+    this.invoiceCache.destroy();
 
-    // Close connections
-    await this.redis.disconnect();
+    // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
     this.logger.info('Lightning Payment Service shutdown completed');
   }

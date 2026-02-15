@@ -1,0 +1,73 @@
+# Dependencies
+node_modules
+.npm
+.pnp
+.pnp.js
+
+# Build output
+dist
+build
+.next
+out
+
+# Testing
+coverage
+playwright-report
+test-results
+
+# Development
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Documentation
+docs
+*.md
+!README.md
+LICENSE
+
+# CI/CD
+.github
+.circleci
+.travis.yml
+
+# Misc
+.husky
+.storybook
+storybook-static
+scripts
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+__mocks__
+jest.config.*
+vitest.config.*
+playwright.config.*
+tsconfig*.json
+eslint*
+.prettier*
+.editorconfig

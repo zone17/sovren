@@ -8,9 +8,14 @@ import App from './App';
 import './index.css';
 import ErrorBoundary from './monitoring/ErrorBoundary';
 import { initMonitoring } from './monitoring/simpleMonitoring';
+import { initSentry } from './monitoring/sentry';
+import { reportWebVitals } from './monitoring/web-vitals';
 import { store } from './store';
 
-// Initialize monitoring
+// Initialize Sentry first (before React renders)
+initSentry();
+
+// Initialize simple monitoring (breadcrumbs, local error tracking)
 initMonitoring();
 
 // Create QueryClient with optimized configuration for analytics
@@ -40,16 +45,14 @@ if (typeof globalThis !== 'undefined' && globalThis.window) {
   });
 }
 
-// Enhanced monitoring and optimization for production
-if (import.meta.env.NODE_ENV === 'production') {
-  // Production optimizations
-}
+// Report Web Vitals (LCP, FID/INP, CLS) to Sentry performance
+reportWebVitals();
 
 const rootElement = globalThis.document?.getElementById('root');
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <ErrorBoundary level="page" name="Application">
+      <ErrorBoundary level="global" name="Application">
         <Provider store={store}>
           <QueryClientProvider client={queryClient}>
             <BrowserRouter

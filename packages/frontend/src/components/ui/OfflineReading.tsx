@@ -103,7 +103,7 @@ class ReadingProgressManager {
   }
 
   startReadingSession(articleId: string): string {
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     this.currentSession = {
       id: sessionId,
@@ -345,7 +345,7 @@ class BookmarkManager {
   }
 
   addBookmark(articleId: string, position: number, note?: string, tags: string[] = []): string {
-    const bookmarkId = `bookmark_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const bookmarkId = `bookmark_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     const bookmark: Bookmark = {
       id: bookmarkId,

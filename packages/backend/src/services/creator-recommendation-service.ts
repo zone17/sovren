@@ -4,6 +4,7 @@
  * Part of US-099 through US-102 implementation
  */
 
+import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import {
   CreatorDiscoveryRequest,
@@ -453,7 +454,7 @@ export class CreatorRecommendationService {
 
           return {
             recommendation: {
-              id: rec.id || `rec_${Date.now()}_${Math.random()}`,
+              id: rec.id || `rec_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
               userId: request.userId,
               recommendedCreatorId: rec.recommended_creator_id,
               algorithmUsed: request.algorithm || RecommendationAlgorithm.HYBRID,

@@ -1,7 +1,8 @@
 import { randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
-import { RedisClient } from '../config/redis';
+import Redis from 'ioredis';
+import { getRedisClient } from '../lib/redis';
 import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
 import { AnalyticsService } from './analytics-service';
@@ -80,13 +81,15 @@ interface PayoutSchedule {
  */
 export class PayoutManagementService extends EventEmitter {
   private logger: Logger;
-  private redis: RedisClient;
+  private redis: Redis;
   private lightningService: LightningPaymentService;
   private transactionService: TransactionHistoryService;
   private notificationService: NotificationService;
   private analyticsService: AnalyticsService;
   private payoutJobs: Map<string, NodeJS.Timeout>;
   private earningsCache: Map<string, CreatorEarnings>;
+  private payoutSchedulerInterval?: NodeJS.Timeout;
+  private earningsCalculationInterval?: NodeJS.Timeout;
 
   constructor(
     lightningService: LightningPaymentService,
@@ -94,7 +97,7 @@ export class PayoutManagementService extends EventEmitter {
   ) {
     super();
     this.logger = new Logger('PayoutManagementService');
-    this.redis = new RedisClient();
+    this.redis = getRedisClient();
     this.lightningService = lightningService;
     this.transactionService = transactionService;
     this.notificationService = new NotificationService();
@@ -799,7 +802,7 @@ export class PayoutManagementService extends EventEmitter {
 
   private async setupPayoutScheduler(): Promise<void> {
     // Process automated payouts every hour
-    setInterval(async () => {
+    this.payoutSchedulerInterval = setInterval(async () => {
       await this.processAutomatedPayouts();
     }, 3600000); // 1 hour
 
@@ -809,7 +812,7 @@ export class PayoutManagementService extends EventEmitter {
 
   private async setupEarningsCalculation(): Promise<void> {
     // Update earnings cache every 5 minutes
-    setInterval(async () => {
+    this.earningsCalculationInterval = setInterval(async () => {
       try {
         await this.updateEarningsCache();
       } catch (error) {
@@ -867,8 +870,18 @@ export class PayoutManagementService extends EventEmitter {
    * Cleanup and Shutdown
    */
   async shutdown(): Promise<void> {
+    // Clear scheduler intervals
+    if (this.payoutSchedulerInterval) {
+      clearInterval(this.payoutSchedulerInterval);
+      this.payoutSchedulerInterval = undefined;
+    }
+    if (this.earningsCalculationInterval) {
+      clearInterval(this.earningsCalculationInterval);
+      this.earningsCalculationInterval = undefined;
+    }
+
     // Clear all payout jobs
-    for (const [id, job] of this.payoutJobs) {
+    for (const [, job] of this.payoutJobs) {
       clearTimeout(job);
     }
     this.payoutJobs.clear();
@@ -876,8 +889,7 @@ export class PayoutManagementService extends EventEmitter {
     // Clear caches
     this.earningsCache.clear();
 
-    // Close connections
-    await this.redis.disconnect();
+    // Shared Redis client — managed by lib/redis.ts disconnectRedis()
 
     this.logger.info('Payout Management Service shutdown completed');
   }

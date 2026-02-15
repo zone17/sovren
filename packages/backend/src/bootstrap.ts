@@ -9,12 +9,16 @@ import { performance } from 'perf_hooks';
 import { createServiceRegistry, ServiceRegistry } from './container/ServiceContainer';
 import type { IServiceContainer } from './interfaces/shared/IServiceRegistry';
 import { TYPES } from './container/types';
+import { getRedisClient } from './lib/redis';
+import logger from './lib/logger';
+import { SecretsService } from './services/SecretsService';
 
 // Import binding modules
 import { registerSharedServices } from './container/bindings/shared.bindings';
 import { registerContentServices } from './container/bindings/content.bindings';
 import { registerUserServices } from './container/bindings/user.bindings';
 import { registerPaymentServices } from './container/bindings/payment.bindings';
+import { registerControllers } from './container/bindings/controller.bindings';
 
 /**
  * Bootstrap configuration
@@ -53,7 +57,7 @@ const DEFAULT_CONFIG: BootstrapConfig = {
   enableHealthChecks: true,
   validateDependencies: true,
   logStartup: true,
-  gracefulShutdown: true,
+  gracefulShutdown: false, // Disabled by default; server.ts owns the signal handlers
 };
 
 /**
@@ -68,8 +72,7 @@ export async function bootstrapApplication(
   const errors: Error[] = [];
 
   if (fullConfig.logStartup) {
-    console.log('🚀 Bootstrapping Sovren Backend Services...');
-    console.log(`   Environment: ${fullConfig.environment}`);
+    logger.info('Bootstrapping Sovren Backend Services', { environment: fullConfig.environment });
   }
 
   // ======================
@@ -86,12 +89,15 @@ export async function bootstrapApplication(
   registerContentServices(registry);
   registerUserServices(registry);
   registerPaymentServices(registry);
+  registerControllers(registry);
 
   const registrationTime = performance.now() - registrationStart;
 
   if (fullConfig.logStartup) {
-    console.log(`✅ Service registration complete (${registrationTime.toFixed(2)}ms)`);
-    console.log(`   Services registered: ${registry.getRegisteredTokens().length}`);
+    logger.info('Service registration complete', {
+      durationMs: registrationTime.toFixed(2),
+      count: registry.getRegisteredTokens().length,
+    });
   }
 
   // ======================
@@ -103,22 +109,20 @@ export async function bootstrapApplication(
     const validation = registry.validate();
 
     if (!validation.valid) {
-      console.error('❌ Container validation failed:');
-      validation.errors.forEach(error => {
-        console.error(`   - ${error.message}`);
+      logger.error('Container validation failed', {
+        errors: validation.errors.map((e) => e.message),
+      });
+      validation.errors.forEach((error) => {
         errors.push(new Error(error.message));
       });
 
-      if (validation.errors.some(e => e.type === 'circular_dependency')) {
+      if (validation.errors.some((e) => e.type === 'circular_dependency')) {
         throw new Error('Circular dependencies detected. Cannot start application.');
       }
     }
 
     if (validation.warnings.length > 0 && fullConfig.logStartup) {
-      console.warn('⚠️  Container warnings:');
-      validation.warnings.forEach(warning => {
-        console.warn(`   - ${warning.message}`);
-      });
+      logger.warn('Container warnings', { warnings: validation.warnings.map((w) => w.message) });
     }
   }
 
@@ -132,7 +136,7 @@ export async function bootstrapApplication(
   const initTime = performance.now() - initStart;
 
   if (fullConfig.logStartup) {
-    console.log(`✅ Container initialized (${initTime.toFixed(2)}ms)`);
+    logger.info('Container initialized', { durationMs: initTime.toFixed(2) });
   }
 
   // ======================
@@ -144,11 +148,11 @@ export async function bootstrapApplication(
     healthCheckResults = await performHealthChecks(container);
 
     if (fullConfig.logStartup) {
-      console.log('🏥 Health Check Results:');
+      const results: Record<string, boolean> = {};
       for (const [service, healthy] of healthCheckResults) {
-        const status = healthy ? '✅' : '❌';
-        console.log(`   ${status} ${service}`);
+        results[service] = healthy;
       }
+      logger.info('Health check results', results);
     }
   }
 
@@ -162,8 +166,7 @@ export async function bootstrapApplication(
   const totalTime = performance.now() - startTime;
 
   if (fullConfig.logStartup) {
-    console.log(`\n✨ Bootstrap complete (${totalTime.toFixed(2)}ms)`);
-    console.log('   Ready to serve requests\n');
+    logger.info('Bootstrap complete', { durationMs: totalTime.toFixed(2) });
   }
 
   return {
@@ -186,23 +189,8 @@ export async function bootstrapApplication(
  * Register infrastructure services (Logger, Config, Database, Redis, etc.)
  */
 function registerInfrastructureServices(registry: ServiceRegistry): void {
-  // Logger (Winston)
-  registry.registerSingletonFactory(TYPES.Logger, () => {
-    const winston = require('winston');
-    return winston.createLogger({
-      level: process.env.LOG_LEVEL || 'info',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.errors({ stack: true }),
-        winston.format.json()
-      ),
-      transports: [
-        new winston.transports.Console({
-          format: winston.format.simple(),
-        }),
-      ],
-    });
-  });
+  // Logger — reuse the shared structured logger from lib/logger
+  registry.registerSingletonFactory(TYPES.Logger, () => logger);
 
   // Config (Environment variables)
   registry.registerSingletonFactory(TYPES.Config, () => {
@@ -229,35 +217,33 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
     };
   });
 
+  // SecretsService — AWS Secrets Manager with env fallback
+  registry.registerSingletonFactory(TYPES.SecretsService, () => {
+    const secretsService = new SecretsService({
+      environment: (process.env.NODE_ENV as any) || 'development',
+      useAwsSecrets: process.env.USE_AWS_SECRETS === 'true',
+      awsRegion: process.env.AWS_REGION || 'us-east-1',
+    });
+    return secretsService;
+  });
+
   // Database (Supabase client - placeholder)
-  registry.registerSingletonFactory(TYPES.Database, (container) => {
-    const config = container.resolve(TYPES.Config);
-    // Return mock database for now
+  registry.registerSingletonFactory(TYPES.Database, (_container) => {
     return {
-      query: async (sql: string, params: any[]) => ({ rows: [], rowCount: 0 }),
-      transaction: async (callback: any) => callback(),
+      query: async (_sql: string, _params: any[]) => {
+        throw new Error('Database not configured — resolve TYPES.Database with a real implementation');
+      },
+      transaction: async (_callback: any) => {
+        throw new Error('Database not configured — resolve TYPES.Database with a real implementation');
+      },
     };
   });
 
-  // Redis (ioredis client)
-  registry.registerSingletonFactory(TYPES.Redis, (container) => {
-    const config = container.resolve(TYPES.Config);
-    const Redis = require('ioredis');
-
-    return new Redis({
-      host: config.get('REDIS_HOST', 'localhost'),
-      port: config.getInt('REDIS_PORT', 6379),
-      password: config.get('REDIS_PASSWORD'),
-      db: config.getInt('REDIS_DB', 0),
-      retryStrategy: (times: number) => {
-        return Math.min(times * 50, 2000);
-      },
-    });
-  });
+  // Redis (ioredis client) - shared singleton from lib/redis
+  registry.registerSingletonFactory(TYPES.Redis, () => getRedisClient());
 
   // Elasticsearch client (placeholder)
-  registry.registerSingletonFactory(TYPES.ElasticsearchService, (container) => {
-    const config = container.resolve(TYPES.Config);
+  registry.registerSingletonFactory(TYPES.ElasticsearchService, (_container) => {
     // Return mock for now
     return {
       search: async () => ({ hits: { hits: [] } }),
@@ -266,8 +252,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   });
 
   // Lightning Service (placeholder)
-  registry.registerSingletonFactory(TYPES.LightningService, (container) => {
-    const logger = container.resolve(TYPES.Logger);
+  registry.registerSingletonFactory(TYPES.LightningService, (_container) => {
     // Return mock for now
     return {
       createInvoice: async () => ({ payment_request: 'lnbc...' }),
@@ -276,8 +261,7 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   });
 
   // NOSTR Service (placeholder)
-  registry.registerSingletonFactory(TYPES.NostrService, (container) => {
-    const logger = container.resolve(TYPES.Logger);
+  registry.registerSingletonFactory(TYPES.NostrService, (_container) => {
     // Return mock for now
     return {
       publishEvent: async () => ({ success: true }),
@@ -288,47 +272,42 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   // Validation Service (placeholder)
   registry.registerTransient(TYPES.ValidationService, () => {
     return {
-      validate: (schema: any, data: any) => ({ valid: true, errors: [] }),
+      validate: (_schema: any, _data: any) => ({ valid: true, errors: [] }),
     };
   });
 
   // Repositories (placeholders)
-  registry.registerSingletonFactory(TYPES.ContentRepository, (container) => {
-    const db = container.resolve(TYPES.Database);
+  registry.registerSingletonFactory(TYPES.ContentRepository, (_container) => {
     return {
-      findById: async (id: string) => null,
+      findById: async (_id: string) => null,
       save: async (entity: any) => entity,
     };
   });
 
-  registry.registerSingletonFactory(TYPES.UserRepository, (container) => {
-    const db = container.resolve(TYPES.Database);
+  registry.registerSingletonFactory(TYPES.UserRepository, (_container) => {
     return {
-      findById: async (id: string) => null,
+      findById: async (_id: string) => null,
       save: async (entity: any) => entity,
     };
   });
 
-  registry.registerSingletonFactory(TYPES.PaymentRepository, (container) => {
-    const db = container.resolve(TYPES.Database);
+  registry.registerSingletonFactory(TYPES.PaymentRepository, (_container) => {
     return {
-      findById: async (id: string) => null,
+      findById: async (_id: string) => null,
       save: async (entity: any) => entity,
     };
   });
 
-  registry.registerSingletonFactory(TYPES.SubscriptionRepository, (container) => {
-    const db = container.resolve(TYPES.Database);
+  registry.registerSingletonFactory(TYPES.SubscriptionRepository, (_container) => {
     return {
-      findById: async (id: string) => null,
+      findById: async (_id: string) => null,
       save: async (entity: any) => entity,
     };
   });
 
-  registry.registerSingletonFactory(TYPES.UserPreferencesRepository, (container) => {
-    const db = container.resolve(TYPES.Database);
+  registry.registerSingletonFactory(TYPES.UserPreferencesRepository, (_container) => {
     return {
-      findByUserId: async (userId: string) => null,
+      findByUserId: async (_userId: string) => null,
       save: async (entity: any) => entity,
     };
   });
@@ -367,8 +346,20 @@ async function performHealthChecks(container: IServiceContainer): Promise<Map<st
       name: 'Database',
       check: async () => {
         try {
-          const db = container.resolve(TYPES.Database);
+          container.resolve(TYPES.Database);
           return true; // Placeholder
+        } catch {
+          return false;
+        }
+      },
+    },
+    {
+      name: 'SecretsService',
+      check: async () => {
+        try {
+          const secrets = container.resolve(TYPES.SecretsService) as SecretsService;
+          await secrets.initialize();
+          return true;
         } catch {
           return false;
         }
@@ -393,14 +384,14 @@ async function performHealthChecks(container: IServiceContainer): Promise<Map<st
  */
 function setupGracefulShutdown(container: IServiceContainer): void {
   const shutdownHandler = async (signal: string) => {
-    console.log(`\n📴 Received ${signal}. Starting graceful shutdown...`);
+    logger.info('Graceful shutdown starting', { signal });
 
     try {
       await container.dispose();
-      console.log('✅ All services disposed successfully');
+      logger.info('All services disposed successfully');
       process.exit(0);
     } catch (error) {
-      console.error('❌ Error during shutdown:', error);
+      logger.error('Error during shutdown', { error });
       process.exit(1);
     }
   };
@@ -418,9 +409,12 @@ export function getDependencyGraph(registry: ServiceRegistry): string {
   let mermaid = 'graph TD\n';
 
   for (const node of graph.nodes) {
-    const shape = node.lifetime === 'singleton' ? '[[' + node.token + ']]' :
-                  node.lifetime === 'scoped' ? '[' + node.token + ']' :
-                  '(' + node.token + ')';
+    const shape =
+      node.lifetime === 'singleton'
+        ? '[[' + node.token + ']]'
+        : node.lifetime === 'scoped'
+          ? '[' + node.token + ']'
+          : '(' + node.token + ')';
     mermaid += `  ${node.id}${shape}\n`;
   }
 

@@ -4,18 +4,24 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'packages/frontend/package.json'
-      - 'packages/frontend/package-lock.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'packages/*/package.json'
+      - 'packages/*/package-lock.json'
       - '.github/workflows/dependency-audit.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'packages/frontend/package.json'
-      - 'packages/frontend/package-lock.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'packages/*/package.json'
+      - 'packages/*/package-lock.json'
   schedule:
     # Run daily at 6 AM UTC
     - cron: '0 6 * * *'
   workflow_dispatch:
+
+permissions: read-all
 
 jobs:
   dependency-audit:
@@ -33,7 +39,7 @@ jobs:
       - name: 📋 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: packages/frontend/package-lock.json
 
@@ -42,7 +48,6 @@ jobs:
 
       - name: 🔍 Run comprehensive dependency audit
         run: node ../../scripts/dependency-audit.cjs
-        continue-on-error: true
 
       - name: 🔒 NPM Security Audit
         run: |
@@ -60,7 +65,6 @@ jobs:
           else
             echo "✅ No security vulnerabilities found" >> audit-results.md
           fi
-        continue-on-error: true
 
       - name: 📊 License Compliance Check
         run: |
@@ -79,7 +83,6 @@ jobs:
             cat license-check.json >> audit-results.md
             echo "\`\`\`" >> audit-results.md
           fi
-        continue-on-error: true
 
       - name: 📦 Bundle Size Analysis
         run: |
@@ -96,7 +99,6 @@ jobs:
             grep "dist/assets" build-output.log >> audit-results.md
             echo "\`\`\`" >> audit-results.md
           fi
-        continue-on-error: true
 
       - name: 🔄 Dependency Tree Analysis
         run: |
@@ -121,7 +123,6 @@ jobs:
           else
             echo "- ✅ No peer dependency issues" >> audit-results.md
           fi
-        continue-on-error: true
 
       - name: 🚨 Critical Vulnerability Check
         id: vuln-check
@@ -140,7 +141,6 @@ jobs:
             echo "fail-build=false" >> $GITHUB_OUTPUT
             echo "✅ No critical security issues" >> audit-results.md
           fi
-        continue-on-error: true
 
       - name: 📄 Generate Audit Report
         run: |
@@ -209,8 +209,42 @@ jobs:
           echo "Please review the audit report and fix critical vulnerabilities before proceeding."
           exit 1
 
+  # Workspace-level audit covering all packages (backend, shared, etc.)
+  workspace-audit:
+    name: Workspace Dependency Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run workspace-level npm audit
+        run: |
+          echo "## Workspace NPM Audit" >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level=high 2>&1 | tee workspace-audit.txt || true
+
+          CRITICAL=$(npm audit --json 2>/dev/null | jq -r '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(npm audit --json 2>/dev/null | jq -r '.metadata.vulnerabilities.high // 0')
+
+          echo "- Critical: $CRITICAL" >> $GITHUB_STEP_SUMMARY
+          echo "- High: $HIGH" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "Critical vulnerabilities found in workspace"
+            exit 1
+          fi
+
   dependency-update-check:
-    name: 📦 Dependency Update Check
+    name: Dependency Update Check
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
 
@@ -225,7 +259,7 @@ jobs:
       - name: 📋 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: packages/frontend/package-lock.json
 

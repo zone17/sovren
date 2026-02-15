@@ -131,7 +131,7 @@ class ContentStreamManager {
     if (this.isConnected) return;
 
     try {
-      this.streamId = `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.streamId = `stream_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       const wsUrl = this.buildStreamUrl(userId, filter);
       
       this.ws = new WebSocket(wsUrl);

@@ -910,7 +910,7 @@ export class ErrorHandlingService extends BaseService {
 
   private createServiceContext(source: string = 'ErrorHandlingService'): ServiceContext {
     return {
-      requestId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      requestId: `error-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       timestamp: new Date(),
       source,
     };

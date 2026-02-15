@@ -1,0 +1,124 @@
+graph TB
+    subgraph "Week 1: Sequential Foundation"
+        direction TB
+        W1_1["Fix Tests<br/>#5,#6,#11<br/>1 developer<br/>13 hours"]
+    end
+
+    subgraph "Week 2: NOSTR Auth - Sequential Design"
+        direction TB
+        W2_1["Design Phase<br/>#12-16<br/>design-ux-specialist<br/>2 days"]
+        W2_2["Implementation<br/>#17-21<br/>elite-frontend-dev<br/>2 days"]
+        W2_3["Testing<br/>#22-26<br/>test-automation-engineer<br/>1 day"]
+
+        W2_1 --> W2_2 --> W2_3
+    end
+
+    subgraph "Week 3-4: Parallel Development Streams"
+        direction LR
+
+        subgraph "Stream A: Content Creation"
+            direction TB
+            SA1["Design<br/>#27-31<br/>2 days"]
+            SA2["Implement<br/>#32-36<br/>3 days"]
+            SA3["Test<br/>#37-41<br/>1 day"]
+            SA1 --> SA2 --> SA3
+        end
+
+        subgraph "Stream B: Lightning Payments"
+            direction TB
+            SB1["Design<br/>#42-46<br/>2 days"]
+            SB2["Implement<br/>#47-51<br/>3 days"]
+            SB3["Validate<br/>#52<br/>0.5 days"]
+            SB1 --> SB2 --> SB3
+        end
+
+        subgraph "Stream C: Subscription Tiers"
+            direction TB
+            SC1["Design<br/>#48-49<br/>1 day"]
+            SC2["Implement<br/>#50<br/>1 day"]
+            SC3["Test<br/>#51-52<br/>0.5 days"]
+            SC1 --> SC2 --> SC3
+        end
+    end
+
+    subgraph "Week 5: Parallel Integration Streams"
+        direction LR
+
+        subgraph "Stream D: E2E Testing"
+            direction TB
+            SD1["Critical Flows<br/>#53-57<br/>3 days"]
+            SD2["NOSTR Validation<br/>#58<br/>1 day"]
+            SD1 --> SD2
+        end
+
+        subgraph "Stream E: Accessibility"
+            direction TB
+            SE1["A11y Audit<br/>#59-62<br/>2 days"]
+        end
+    end
+
+    subgraph "Week 6: Parallel Production Streams"
+        direction LR
+
+        subgraph "Stream F: Security & Performance"
+            direction TB
+            SF1["Security Audit<br/>#63-65<br/>2 days"]
+            SF2["Performance<br/>#66-68<br/>2 days"]
+            SF1 --> SF2
+        end
+
+        subgraph "Stream G: Infrastructure"
+            direction TB
+            SG1["Monitoring<br/>#69<br/>2 days"]
+            SG2["API Docs<br/>#70<br/>1 day"]
+            SG1 -.- SG2
+        end
+    end
+
+    subgraph "Final"
+        FINAL["Final Review<br/>#71<br/>1 day"]
+    end
+
+    %% Sequential Flow
+    W1_1 --> W2_1
+    W2_3 --> SA1
+    W2_3 --> SB1
+
+    %% Parallel streams in Week 3-4
+    SA1 -.->|"Parallel"| SB1
+    SA2 -.->|"Parallel"| SB2
+    SA3 -.->|"Parallel"| SC1
+
+    %% Convergence to Week 5
+    SA3 --> SD1
+    SB3 --> SD1
+    SC3 --> SD1
+
+    %% Parallel in Week 5
+    SD1 -.->|"Parallel"| SE1
+
+    %% Week 6 parallel
+    SD2 --> SF1
+    SE1 --> SF1
+    SF1 -.->|"Parallel"| SG1
+
+    %% Final
+    SF2 --> FINAL
+    SG2 --> FINAL
+
+    %% Styling
+    classDef streamA fill:#e3f2fd,stroke:#2196f3,color:#000
+    classDef streamB fill:#f3e5f5,stroke:#9c27b0,color:#000
+    classDef streamC fill:#fff3e0,stroke:#ff9800,color:#000
+    classDef streamD fill:#e8f5e9,stroke:#4caf50,color:#000
+    classDef streamE fill:#fce4ec,stroke:#e91e63,color:#000
+    classDef streamF fill:#ffebee,stroke:#f44336,color:#000
+    classDef streamG fill:#e0f2f1,stroke:#009688,color:#000
+
+    class SA1,SA2,SA3 streamA
+    class SB1,SB2,SB3 streamB
+    class SC1,SC2,SC3 streamC
+    class SD1,SD2 streamD
+    class SE1 streamE
+    class SF1,SF2 streamF
+    class SG1,SG2 streamG

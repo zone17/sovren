@@ -30,7 +30,7 @@ export class ContentServicesModule implements IServiceModule {
     // ContentPublishingService - SCOPED
     // ===========================
     // Content publishing workflow (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.ContentPublishingService,
       (container) => {
         const contentRepo = container.resolve(TYPES.ContentRepository);
@@ -46,7 +46,7 @@ export class ContentServicesModule implements IServiceModule {
     // ContentModerationService - SCOPED
     // ===========================
     // Content moderation and filtering (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.ContentModerationService,
       (container) => {
         const contentRepo = container.resolve(TYPES.ContentRepository);
@@ -61,7 +61,7 @@ export class ContentServicesModule implements IServiceModule {
     // ContentSearchService - SCOPED
     // ===========================
     // Full-text content search (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.ContentSearchService,
       (container) => {
         const elasticsearch = container.resolve(TYPES.ElasticsearchService);
@@ -76,7 +76,7 @@ export class ContentServicesModule implements IServiceModule {
     // ContentRecommendationService - SCOPED
     // ===========================
     // AI-powered content recommendations (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.ContentRecommendationService,
       (container) => {
         const contentRepo = container.resolve(TYPES.ContentRepository);
@@ -92,7 +92,7 @@ export class ContentServicesModule implements IServiceModule {
     // ContentAnalyticsService - SCOPED
     // ===========================
     // Content analytics and metrics (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.ContentAnalyticsService,
       (container) => {
         const contentRepo = container.resolve(TYPES.ContentRepository);
@@ -107,7 +107,7 @@ export class ContentServicesModule implements IServiceModule {
     // ContentVersioningService - SCOPED
     // ===========================
     // Content version control (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.ContentVersioningService,
       (container) => {
         const contentRepo = container.resolve(TYPES.ContentRepository);
@@ -121,7 +121,7 @@ export class ContentServicesModule implements IServiceModule {
     // ContentCreationService - SCOPED
     // ===========================
     // Content creation and editing (per request)
-    registry.registerScoped(
+    registry.registerSingleton(
       TYPES.ContentCreationService,
       (container) => {
         const contentRepo = container.resolve(TYPES.ContentRepository);

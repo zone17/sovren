@@ -1,0 +1,49 @@
+graph TB
+    subgraph "Application Layer"
+        APP[Application Code]
+        ROUTES[API Routes]
+        SERVICES[Service Layer]
+    end
+
+    subgraph "Database Client Layer"
+        SUPABASE[Supabase Client<br/>- Auth<br/>- Realtime<br/>- RLS]
+        POOL[PostgreSQL Pool<br/>- Direct SQL<br/>- Transactions<br/>- Bulk Ops]
+    end
+
+    subgraph "Connection Pool"
+        POOL --> |manages| CONNECTIONS[Connection Pool<br/>max: 20<br/>min: 5]
+        CONNECTIONS --> IDLE[Idle Connections<br/>Ready for use]
+        CONNECTIONS --> ACTIVE[Active Connections<br/>Executing queries]
+        CONNECTIONS --> WAITING[Waiting Queue<br/>Pending requests]
+    end
+
+    subgraph "Monitoring & Health"
+        METRICS[Pool Metrics<br/>- Active/Idle<br/>- Query duration<br/>- Error rate]
+        HEALTH[Health Checks<br/>- Connection test<br/>- Latency<br/>- Pool status]
+        EVENTS[Event Emitters<br/>- query<br/>- error<br/>- potentialLeak]
+    end
+
+    subgraph "PostgreSQL Database"
+        PG[(PostgreSQL<br/>Database)]
+        PGSTAT[pg_stat_activity<br/>Connection monitoring]
+    end
+
+    APP --> ROUTES
+    ROUTES --> SERVICES
+    SERVICES --> SUPABASE
+    SERVICES --> POOL
+
+    SUPABASE --> PG
+    CONNECTIONS --> PG
+
+    POOL --> METRICS
+    POOL --> HEALTH
+    POOL --> EVENTS
+
+    PG --> PGSTAT
+
+    style POOL fill:#4CAF50,stroke:#388E3C,stroke-width:3px,color:#fff
+    style CONNECTIONS fill:#2196F3,stroke:#1976D2,stroke-width:2px,color:#fff
+    style PG fill:#336791,stroke:#23527c,stroke-width:2px,color:#fff
+    style METRICS fill:#FF9800,stroke:#F57C00,stroke-width:2px,color:#fff
+    style HEALTH fill:#FF9800,stroke:#F57C00,stroke-width:2px,color:#fff

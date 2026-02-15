@@ -14,7 +14,6 @@
  */
 
 // Components
-export { ErrorBoundary } from './ErrorBoundary';
 export { ErrorMessage } from './ErrorMessage';
 export { ErrorToastContainer, useErrorToast, errorToast } from './ErrorToast';
 export { ConnectionErrorDisplay } from './ConnectionErrorDisplay';

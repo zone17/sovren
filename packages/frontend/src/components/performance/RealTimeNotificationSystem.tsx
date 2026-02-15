@@ -142,7 +142,7 @@ class WebSocketNotificationManager {
     }
 
     this.isConnecting = true;
-    this.connectionId = `conn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.connectionId = `conn_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     try {
       const wsUrl = this.buildWebSocketUrl(userId, token);

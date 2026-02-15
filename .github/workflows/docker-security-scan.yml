@@ -19,6 +19,8 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
+permissions: read-all
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -41,10 +43,9 @@ jobs:
           dockerfile: docker/security/Dockerfile.secure-base
           format: sarif
           output-file: hadolint-results.sarif
-          no-fail: true
 
       - name: Upload Hadolint results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: hadolint-results.sarif
@@ -56,10 +57,9 @@ jobs:
           framework: dockerfile
           output_format: sarif
           output_file_path: checkov-dockerfile-results.sarif
-          soft_fail: true
 
       - name: Upload Checkov results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: checkov-dockerfile-results.sarif
@@ -108,7 +108,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
@@ -131,21 +131,21 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results-${{ matrix.image.name }}.sarif'
 
-          - name: Run Grype vulnerability scanner
-      uses: anchore/scan-action@v3
-      id: grype-scan
-      with:
-        image: ${{ steps.meta.outputs.tags }}
-        severity-cutoff: medium
-        output-format: sarif
+      - name: Run Grype vulnerability scanner
+        uses: anchore/scan-action@v3
+        id: grype-scan
+        with:
+          image: ${{ steps.meta.outputs.tags }}
+          severity-cutoff: medium
+          output-format: sarif
 
       - name: Upload Grype scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: grype-results-${{ matrix.image.name }}.sarif
@@ -160,7 +160,7 @@ jobs:
           summary: true
 
       - name: Upload Docker Scout scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always() && github.actor != 'dependabot[bot]'
         with:
           sarif_file: scout-results-${{ matrix.image.name }}.sarif
@@ -181,7 +181,7 @@ jobs:
 
       - name: Push image to registry (if main branch)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.dockerfile }}
@@ -213,10 +213,9 @@ jobs:
           framework: docker_compose
           output_format: sarif
           output_file_path: checkov-compose-results.sarif
-          soft_fail: true
 
       - name: Upload Checkov Docker Compose results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: checkov-compose-results.sarif

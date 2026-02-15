@@ -50,7 +50,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.sovren.dev wss: ws:; img-src 'self' data: https:; font-src 'self' data:;"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.sovren.dev wss:; img-src 'self' data: https:; font-src 'self' data:;"
         }
       ]
     },

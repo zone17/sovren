@@ -1,6 +1,9 @@
 import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
+import { TTLCache } from '../utils/ttl-cache';
+import { JsonFilePaymentStore, type PaymentPersistence } from './payment-persistence';
+import { verifyWebhookHmac } from '../lib/webhook-security';
 
 // 🌩️ ELITE LIGHTNING NETWORK SERVICE
 // Comprehensive Bitcoin Lightning Network integration for Sovren
@@ -68,18 +71,22 @@ export const LnurlPayResponseSchema = z.object({
   metadata: z.string(),
   tag: z.literal('payRequest'),
   commentAllowed: z.number().nonnegative().default(0),
-  payerData: z.object({
-    name: z.object({ mandatory: z.boolean().default(false) }),
-    email: z.object({ mandatory: z.boolean().default(false) }),
-    pubkey: z.object({ mandatory: z.boolean().default(false) }),
-  }).optional(),
+  payerData: z
+    .object({
+      name: z.object({ mandatory: z.boolean().default(false) }),
+      email: z.object({ mandatory: z.boolean().default(false) }),
+      pubkey: z.object({ mandatory: z.boolean().default(false) }),
+    })
+    .optional(),
 });
 
 /**
  * Lightning Address Schema
  */
 export const LightningAddressSchema = z.object({
-  identifier: z.string().regex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid Lightning address format'),
+  identifier: z
+    .string()
+    .regex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid Lightning address format'),
   domain: z.string(),
   user: z.string(),
   active: z.boolean().default(true),
@@ -104,7 +111,7 @@ export interface LightningServiceEvents {
   'payment:completed': (payment: LightningPayment) => void;
   'payment:failed': (payment: LightningPayment) => void;
   'webhook:received': (data: any) => void;
-  'error': (error: Error) => void;
+  error: (error: Error) => void;
 }
 
 /**
@@ -148,12 +155,29 @@ export class LightningService extends EventEmitter {
   private static instance: LightningService;
   private config!: LightningConfig;
   private isInitialized = false;
-  private invoiceCache = new Map<string, LightningInvoice>();
-  private paymentCache = new Map<string, LightningPayment>();
+  /** Fix #118: Secondary index for O(1) webhook lookup by payment_hash */
+  private paymentHashIndex = new Map<string, string>(); // payment_hash -> invoice_id
+  private invoiceCache: TTLCache<string, LightningInvoice>;
+  private paymentCache = new TTLCache<string, LightningPayment>({
+    maxSize: 50_000,
+    ttlMs: 24 * 60 * 60 * 1000,
+  }); // 24hr TTL
+  private persistence!: PaymentPersistence;
+  private pendingLookups = new Map<string, Promise<LightningInvoice | null>>();
 
   private constructor() {
     super();
     this.setMaxListeners(100); // Support many concurrent operations
+    // Fix #118: Clean up paymentHashIndex when invoices are evicted from cache
+    this.invoiceCache = new TTLCache<string, LightningInvoice>({
+      maxSize: 10_000,
+      ttlMs: 60 * 60 * 1000, // 1hr TTL
+      onEvict: (_key, invoice) => {
+        if (invoice.payment_hash) {
+          this.paymentHashIndex.delete(invoice.payment_hash);
+        }
+      },
+    });
   }
 
   /**
@@ -174,6 +198,20 @@ export class LightningService extends EventEmitter {
       // Validate configuration
       this.config = LightningConfigSchema.parse(config);
 
+      // Initialize persistence layer
+      this.persistence = new JsonFilePaymentStore();
+
+      // Hydrate caches from persistence and rebuild paymentHashIndex
+      const persistedInvoices = await this.persistence.getAllInvoices();
+      for (const inv of persistedInvoices) {
+        if (inv.status === 'pending' && inv.expires_at > Date.now()) {
+          this.invoiceCache.set(inv.id, inv);
+          if (inv.payment_hash) {
+            this.paymentHashIndex.set(inv.payment_hash, inv.id);
+          }
+        }
+      }
+
       // Test LNbits connection
       await this.testConnection();
 
@@ -182,11 +220,14 @@ export class LightningService extends EventEmitter {
       console.log(`📡 Connected to LNbits: ${this.config.lnbitsUrl}`);
       console.log(`💳 Wallet ID: ${this.config.lnbitsWalletId}`);
       console.log(`🔗 LNURL-pay: ${this.config.enableLnurlPay ? 'Enabled' : 'Disabled'}`);
-      console.log(`📧 Lightning Address: ${this.config.enableLightningAddress ? 'Enabled' : 'Disabled'}`);
-
+      console.log(
+        `📧 Lightning Address: ${this.config.enableLightningAddress ? 'Enabled' : 'Disabled'}`
+      );
     } catch (error) {
       console.error('❌ Failed to initialize Lightning service:', error);
-      throw new Error(`Lightning service initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Lightning service initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -201,8 +242,39 @@ export class LightningService extends EventEmitter {
       }
       console.log(`✅ LNbits connection verified - Wallet: ${response.name}`);
     } catch (error) {
-      throw new Error(`LNbits connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `LNbits connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
+  }
+
+  /**
+   * Get invoice with request coalescing to prevent cache stampede.
+   * Concurrent cache misses for the same key share a single persistence read.
+   */
+  private async getInvoiceWithFallback(id: string): Promise<LightningInvoice | null> {
+    let invoice = this.invoiceCache.get(id);
+    if (invoice) return invoice;
+
+    const pending = this.pendingLookups.get(id);
+    if (pending) return pending;
+
+    const lookup = this.persistence.getInvoiceById(id).then(result => {
+      this.pendingLookups.delete(id);
+      if (result) {
+        this.invoiceCache.set(result.id, result);
+        if (result.payment_hash) {
+          this.paymentHashIndex.set(result.payment_hash, result.id);
+        }
+      }
+      return result;
+    }).catch(err => {
+      this.pendingLookups.delete(id);
+      throw err;
+    });
+
+    this.pendingLookups.set(id, lookup);
+    return lookup;
   }
 
   /**
@@ -225,7 +297,10 @@ export class LightningService extends EventEmitter {
       this.requireInitialization();
 
       // Validate amount
-      if (params.amount < this.config.minInvoiceAmount || params.amount > this.config.maxInvoiceAmount) {
+      if (
+        params.amount < this.config.minInvoiceAmount ||
+        params.amount > this.config.maxInvoiceAmount
+      ) {
         return {
           success: false,
           error: `Amount must be between ${this.config.minInvoiceAmount} and ${this.config.maxInvoiceAmount} satoshis`,
@@ -243,7 +318,9 @@ export class LightningService extends EventEmitter {
         amount: params.amount,
         memo,
         expiry: expiryMinutes * 60, // Convert to seconds
-        webhook: this.config.enableWebhooks ? `${process.env.WEBHOOK_BASE_URL}/api/lightning/webhook` : undefined,
+        webhook: this.config.enableWebhooks
+          ? `${process.env.WEBHOOK_BASE_URL}/api/lightning/webhook`
+          : undefined,
         internal: false,
       });
 
@@ -254,7 +331,7 @@ export class LightningService extends EventEmitter {
         amount: params.amount,
         description: params.description,
         created_at: Date.now(),
-        expires_at: Date.now() + (expiryMinutes * 60 * 1000),
+        expires_at: Date.now() + expiryMinutes * 60 * 1000,
         status: 'pending',
         payment_hash: lnbitsResponse.payment_hash,
         payment_request: lnbitsResponse.payment_request,
@@ -266,8 +343,10 @@ export class LightningService extends EventEmitter {
         },
       };
 
-      // Cache invoice
+      // Cache invoice, update index, and persist
       this.invoiceCache.set(invoiceId, invoice);
+      this.paymentHashIndex.set(invoice.payment_hash, invoiceId);
+      await this.persistence.saveInvoice(invoice);
 
       // Emit event
       this.emit('invoice:created', invoice);
@@ -278,7 +357,6 @@ export class LightningService extends EventEmitter {
         success: true,
         invoice,
       };
-
     } catch (error) {
       console.error('❌ Failed to create Lightning invoice:', error);
       return {
@@ -300,7 +378,8 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      const invoice = this.invoiceCache.get(invoiceId);
+      // Fix #113 + Fix #139: Cache fallback with request coalescing
+      let invoice = await this.getInvoiceWithFallback(invoiceId);
       if (!invoice) {
         return {
           success: false,
@@ -319,10 +398,8 @@ export class LightningService extends EventEmitter {
 
       const lnbitsResponse = await this.makeRequest('GET', `/api/v1/payments/${lnbitsId}`);
 
-      // Update invoice status
+      // Update invoice status (Fix #115: persist BEFORE mutating in-memory state)
       if (lnbitsResponse.paid && invoice.status === 'pending') {
-        invoice.status = 'paid';
-
         // Create payment record
         const payment: LightningPayment = {
           id: crypto.randomUUID(),
@@ -337,8 +414,11 @@ export class LightningService extends EventEmitter {
           supporter_id: invoice.metadata?.supporterId || '',
         };
 
-        // Cache payment
+        // Persist first, then update in-memory state
         this.paymentCache.set(payment.id, payment);
+        await this.persistence.savePayment(payment);
+        await this.persistence.updateInvoiceStatus(invoice.id, 'paid');
+        invoice.status = 'paid';
 
         // Emit events
         this.emit('invoice:paid', payment);
@@ -351,8 +431,9 @@ export class LightningService extends EventEmitter {
         };
       }
 
-      // Check if expired
+      // Check if expired — persist expired status too
       if (Date.now() > invoice.expires_at && invoice.status === 'pending') {
+        await this.persistence.updateInvoiceStatus(invoice.id, 'expired');
         invoice.status = 'expired';
         this.emit('invoice:expired', invoice);
       }
@@ -361,7 +442,6 @@ export class LightningService extends EventEmitter {
         success: true,
         invoice,
       };
-
     } catch (error) {
       console.error('❌ Failed to check invoice status:', error);
       return {
@@ -404,13 +484,17 @@ export class LightningService extends EventEmitter {
       const callbackUrl = `${baseUrl}/api/lightning/lnurl-pay/${params.creatorId}`;
 
       // Create LNURL-pay response data
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const lnurlData: LnurlPayResponse = {
         callback: callbackUrl,
         maxSendable: maxAmount * 1000, // Convert to millisatoshis
         minSendable: minAmount * 1000, // Convert to millisatoshis
         metadata: JSON.stringify([
           ['text/plain', `Support creator on Sovren`],
-          ['text/long-desc', `Send Bitcoin Lightning payment to support this creator on the Sovren platform.`],
+          [
+            'text/long-desc',
+            `Send Bitcoin Lightning payment to support this creator on the Sovren platform.`,
+          ],
         ]),
         tag: 'payRequest',
         commentAllowed: params.commentAllowed || 280,
@@ -431,7 +515,6 @@ export class LightningService extends EventEmitter {
         lnurl: lnurlString,
         qrCode: await this.generateQrCode(lnurlString),
       };
-
     } catch (error) {
       console.error('❌ Failed to generate LNURL-pay:', error);
       return {
@@ -485,13 +568,14 @@ export class LightningService extends EventEmitter {
         updated_at: Date.now(),
       };
 
-      console.log(`📧 Created Lightning address: ${lightningAddressString} for creator: ${params.creatorId}`);
+      console.log(
+        `📧 Created Lightning address: ${lightningAddressString} for creator: ${params.creatorId}`
+      );
 
       return {
         success: true,
         lightningAddress,
       };
-
     } catch (error) {
       console.error('❌ Failed to create Lightning address:', error);
       return {
@@ -504,7 +588,10 @@ export class LightningService extends EventEmitter {
   /**
    * Process Lightning webhook
    */
-  public async processWebhook(payload: any, signature?: string): Promise<{
+  public async processWebhook(
+    payload: any,
+    signature?: string
+  ): Promise<{
     success: boolean;
     payment?: LightningPayment;
     error?: string;
@@ -512,14 +599,15 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      // Verify webhook signature if provided
+      // Verify webhook signature if provided (constant-time comparison)
       if (signature && this.config.webhookSecret) {
-        const expectedSignature = crypto
-          .createHmac('sha256', this.config.webhookSecret)
-          .update(JSON.stringify(payload))
-          .digest('hex');
+        const isValid = verifyWebhookHmac(
+          JSON.stringify(payload),
+          signature,
+          this.config.webhookSecret
+        );
 
-        if (signature !== expectedSignature) {
+        if (!isValid) {
           return {
             success: false,
             error: 'Invalid webhook signature',
@@ -532,14 +620,23 @@ export class LightningService extends EventEmitter {
 
       // Process payment if it's a payment webhook
       if (payload.type === 'payment' && payload.payment_hash) {
-        // Find matching invoice
-        const invoice = Array.from(this.invoiceCache.values())
-          .find(inv => inv.payment_hash === payload.payment_hash);
+        // Fix #118 + Fix #139: O(1) lookup via index, then coalesced persistence fallback
+        let invoice: LightningInvoice | undefined;
+        const indexedId = this.paymentHashIndex.get(payload.payment_hash);
+        if (indexedId) {
+          invoice = this.invoiceCache.get(indexedId) ?? (await this.getInvoiceWithFallback(indexedId)) ?? undefined;
+        }
+        // Fall through to persistence by payment_hash on cache miss
+        if (!invoice) {
+          const persisted = await this.persistence.getInvoiceByPaymentHash(payload.payment_hash);
+          if (persisted) {
+            invoice = persisted;
+            this.invoiceCache.set(persisted.id, persisted);
+            this.paymentHashIndex.set(persisted.payment_hash, persisted.id);
+          }
+        }
 
         if (invoice && invoice.status === 'pending') {
-          // Update invoice status
-          invoice.status = 'paid';
-
           // Create payment record
           const payment: LightningPayment = {
             id: crypto.randomUUID(),
@@ -554,8 +651,12 @@ export class LightningService extends EventEmitter {
             supporter_id: invoice.metadata?.supporterId || '',
           };
 
-          // Cache payment
+          // Fix #115: Persist BEFORE mutating in-memory state
           this.paymentCache.set(payment.id, payment);
+          await this.persistence.savePayment(payment);
+          await this.persistence.updateInvoiceStatus(invoice.id, 'paid');
+          // Only update in-memory status after successful persistence
+          invoice.status = 'paid';
 
           // Emit events
           this.emit('invoice:paid', payment);
@@ -573,7 +674,6 @@ export class LightningService extends EventEmitter {
       return {
         success: true,
       };
-
     } catch (error) {
       console.error('❌ Failed to process Lightning webhook:', error);
       return {
@@ -586,11 +686,14 @@ export class LightningService extends EventEmitter {
   /**
    * Get creator payment history
    */
-  public async getCreatorPayments(creatorId: string, options?: {
-    limit?: number;
-    offset?: number;
-    status?: 'pending' | 'completed' | 'failed';
-  }): Promise<{
+  public async getCreatorPayments(
+    creatorId: string,
+    options?: {
+      limit?: number;
+      offset?: number;
+      status?: 'pending' | 'completed' | 'failed';
+    }
+  ): Promise<{
     success: boolean;
     payments?: LightningPayment[];
     total?: number;
@@ -599,14 +702,11 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      // Filter payments by creator
-      let payments = Array.from(this.paymentCache.values())
-        .filter(payment => payment.creator_id === creatorId);
-
-      // Apply status filter
-      if (options?.status) {
-        payments = payments.filter(payment => payment.status === options.status);
-      }
+      // Read from persistence with query-level filtering
+      const payments = await this.persistence.getPaymentsByCreator(
+        creatorId,
+        options?.status ? { status: options.status } : undefined
+      );
 
       // Sort by settled_at descending
       payments.sort((a, b) => (b.settled_at || 0) - (a.settled_at || 0));
@@ -621,7 +721,6 @@ export class LightningService extends EventEmitter {
         payments: paginatedPayments,
         total: payments.length,
       };
-
     } catch (error) {
       console.error('❌ Failed to get creator payments:', error);
       return {
@@ -649,13 +748,13 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      const invoices = Array.from(this.invoiceCache.values());
-      const payments = Array.from(this.paymentCache.values());
+      const invoices = await this.persistence.getAllInvoices();
+      const payments = await this.persistence.getAllPayments();
 
       const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
       const averageAmount = payments.length > 0 ? totalAmount / payments.length : 0;
       const successRate = invoices.length > 0 ? (payments.length / invoices.length) * 100 : 0;
-      const activeInvoices = invoices.filter(inv => inv.status === 'pending').length;
+      const activeInvoices = invoices.filter((inv) => inv.status === 'pending').length;
 
       return {
         success: true,
@@ -668,7 +767,6 @@ export class LightningService extends EventEmitter {
           activeInvoices,
         },
       };
-
     } catch (error) {
       console.error('❌ Failed to get Lightning stats:', error);
       return {
@@ -727,7 +825,6 @@ export class LightningService extends EventEmitter {
         status,
         checks,
       };
-
     } catch (error) {
       return {
         success: false,
@@ -750,7 +847,11 @@ export class LightningService extends EventEmitter {
     }
   }
 
-  private async makeRequest(method: 'GET' | 'POST' | 'PUT' | 'DELETE', endpoint: string, data?: any): Promise<any> {
+  private async makeRequest(
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    endpoint: string,
+    data?: any
+  ): Promise<any> {
     const url = `${this.config.lnbitsUrl}${endpoint}`;
     const headers: Record<string, string> = {
       'X-Api-Key': this.config.lnbitsApiKey,

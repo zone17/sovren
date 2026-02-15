@@ -96,6 +96,7 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - DATABASE_URL=${DATABASE_URL}
+      - DB_SSL=true
       - REDIS_URL=${REDIS_URL}
       - JWT_SECRET=${JWT_SECRET}
     networks:
@@ -154,8 +155,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data:rw
       - postgres_logs:/var/log/postgresql:rw
-      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      # Config files mounted when available (create postgresql.conf and pg_hba.conf in docker/security/)
+      # - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      # - ./pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-sovren}
       - POSTGRES_USER=${POSTGRES_USER:-sovren}
@@ -164,11 +166,9 @@ services:
     networks:
       - sovren-secure
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     command: >
       postgres
-      -c config_file=/etc/postgresql/postgresql.conf
-      -c hba_file=/etc/postgresql/pg_hba.conf
       -c log_destination=stderr
       -c log_statement=all
       -c log_min_duration_statement=1000
@@ -220,13 +220,14 @@ services:
     volumes:
       - redis_data:/data:rw
       - redis_logs:/var/log/redis:rw
-      - ./redis.conf:/etc/redis/redis.conf:ro
+      # Config file mounted when available (create redis.conf in docker/security/)
+      # - ./redis.conf:/etc/redis/redis.conf:ro
     networks:
       - sovren-secure
     ports:
-      - '6379:6379'
+      - '127.0.0.1:6379:6379'
     command: >
-      redis-server /etc/redis/redis.conf
+      redis-server
       --requirepass ${REDIS_PASSWORD}
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
@@ -244,7 +245,7 @@ services:
           memory: 256M
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      test: ['CMD-SHELL', 'REDISCLI_AUTH=$REDIS_PASSWORD redis-cli ping']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -258,7 +259,7 @@ services:
 
   # Nginx reverse proxy with security hardening
   nginx:
-    image: nginx:1.24-alpine
+    image: nginx:1.27-alpine
     container_name: sovren-nginx-secure
     hostname: sovren-nginx
     user: '101:101'
@@ -282,8 +283,9 @@ services:
       - /var/run:noexec,nosuid,size=50m
     volumes:
       - nginx_logs:/var/log/nginx:rw
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      # Config files mounted when available (create nginx.conf and ssl/ in docker/security/)
+      # - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # - ./ssl:/etc/nginx/ssl:ro
     networks:
       - sovren-secure
     ports:

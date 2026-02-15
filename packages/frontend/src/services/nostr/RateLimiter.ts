@@ -989,7 +989,7 @@ export class RateLimiter extends EventEmitter {
   private emitAlert(alert: Omit<RateLimitAlert, 'id' | 'timestamp'>): void {
     const fullAlert: RateLimitAlert = {
       ...alert,
-      id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `alert_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       timestamp: Date.now(),
     };
 

@@ -1,0 +1,50 @@
+graph TD
+    START[Start: Determine Pool Size]
+
+    START --> WORKLOAD{Workload Type?}
+
+    WORKLOAD -->|CPU-bound| CPU_CALC[Formula: cores × 2]
+    WORKLOAD -->|I/O-bound| IO_CALC[Formula: cores × 4]
+    WORKLOAD -->|Mixed| MIXED_CALC[Formula: cores × 3]
+
+    CPU_CALC --> CORES{Server Cores?}
+    IO_CALC --> CORES
+    MIXED_CALC --> CORES
+
+    CORES -->|1 core| SMALL[max: 4-8<br/>min: 1-2]
+    CORES -->|2 cores| MEDIUM[max: 8-12<br/>min: 2-3]
+    CORES -->|4 cores| STANDARD[max: 16-20<br/>min: 4-5]
+    CORES -->|8 cores| LARGE[max: 32-35<br/>min: 8]
+    CORES -->|16+ cores| XLARGE[max: 60-65<br/>min: 15-16]
+
+    SMALL --> MONITOR[Monitor Metrics]
+    MEDIUM --> MONITOR
+    STANDARD --> MONITOR
+    LARGE --> MONITOR
+    XLARGE --> MONITOR
+
+    MONITOR --> METRICS{Check Metrics}
+
+    METRICS -->|waiting > 5| SATURATED[Pool Saturated<br/>Increase max]
+    METRICS -->|idle > 10| OVERSIZED[Too Many Idle<br/>Decrease min]
+    METRICS -->|avg wait > 100ms| SLOW_ACQUIRE[Slow Acquisition<br/>Increase max]
+    METRICS -->|error rate > 5%| ERRORS[DB Issues<br/>Check database]
+    METRICS -->|All good| OPTIMAL[Optimal Size ✓]
+
+    SATURATED --> ADJUST_UP[Increase max by 25%]
+    OVERSIZED --> ADJUST_DOWN[Decrease min by 25%]
+    SLOW_ACQUIRE --> ADJUST_UP
+    ERRORS --> CHECK_DB[Investigate DB<br/>- Slow queries<br/>- Resource limits<br/>- Network issues]
+
+    ADJUST_UP --> MONITOR
+    ADJUST_DOWN --> MONITOR
+    CHECK_DB --> MONITOR
+
+    OPTIMAL --> PRODUCTION[Deploy to Production]
+
+    style START fill:#4CAF50,stroke:#388E3C,stroke-width:3px,color:#fff
+    style OPTIMAL fill:#4CAF50,stroke:#388E3C,stroke-width:3px,color:#fff
+    style PRODUCTION fill:#2196F3,stroke:#1976D2,stroke-width:3px,color:#fff
+    style SATURATED fill:#FF9800,stroke:#F57C00,stroke-width:2px,color:#fff
+    style ERRORS fill:#F44336,stroke:#C62828,stroke-width:2px,color:#fff
+    style STANDARD fill:#2196F3,stroke:#1976D2,stroke-width:2px,color:#fff

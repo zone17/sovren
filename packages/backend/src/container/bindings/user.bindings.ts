@@ -25,10 +25,10 @@ export class UserServicesModule implements IServiceModule {
 
   register(registry: IServiceRegistry): void {
     // ===========================
-    // UserProfileService - SCOPED
+    // UserProfileService - SINGLETON
     // ===========================
-    // User profile management (per request)
-    registry.registerScoped(
+    // User profile management (singleton)
+    registry.registerSingleton(
       TYPES.UserProfileService,
       (container) => {
         const userRepo = container.resolve(TYPES.UserRepository);
@@ -41,10 +41,10 @@ export class UserServicesModule implements IServiceModule {
     );
 
     // ===========================
-    // UserPreferencesService - SCOPED
+    // UserPreferencesService - SINGLETON
     // ===========================
-    // User preferences and settings (per request)
-    registry.registerScoped(
+    // User preferences and settings (singleton)
+    registry.registerSingleton(
       TYPES.UserPreferencesService,
       (container) => {
         const preferencesRepo = container.resolve(TYPES.UserPreferencesRepository);
@@ -56,10 +56,10 @@ export class UserServicesModule implements IServiceModule {
     );
 
     // ===========================
-    // UserActivityService - SCOPED
+    // UserActivityService - SINGLETON
     // ===========================
-    // User activity tracking (per request)
-    registry.registerScoped(
+    // User activity tracking (singleton)
+    registry.registerSingleton(
       TYPES.UserActivityService,
       (container) => {
         const database = container.resolve(TYPES.Database);
@@ -71,10 +71,10 @@ export class UserServicesModule implements IServiceModule {
     );
 
     // ===========================
-    // UserRelationshipService - SCOPED
+    // UserRelationshipService - SINGLETON
     // ===========================
-    // User relationships and follows (per request)
-    registry.registerScoped(
+    // User relationships and follows (singleton)
+    registry.registerSingleton(
       TYPES.UserRelationshipService,
       (container) => {
         const userRepo = container.resolve(TYPES.UserRepository);
@@ -87,10 +87,10 @@ export class UserServicesModule implements IServiceModule {
     );
 
     // ===========================
-    // UserAnalyticsService - SCOPED
+    // UserAnalyticsService - SINGLETON
     // ===========================
-    // User behavior analytics (per request)
-    registry.registerScoped(
+    // User behavior analytics (singleton)
+    registry.registerSingleton(
       TYPES.UserAnalyticsService,
       (container) => {
         const database = container.resolve(TYPES.Database);
