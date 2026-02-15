@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate } from '../middleware/auth';
+import { authenticate, requireCreator } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation-middleware';
 import { lightningService } from '../services/lightning/lightningService';
 import { CreateInvoiceRequestSchema } from '../types/lightning';
@@ -164,8 +164,13 @@ router.get('/user/subscriptions', authenticate, async (req, res) => {
  * @desc Process a payout to a creator
  * @access Private (Creator only)
  */
-router.post('/creator/payout', authenticate, async (req, res) => {
+router.post('/creator/payout', authenticate, requireCreator, async (req, res) => {
   try {
+    const idempotencyKey = req.headers['idempotency-key'] as string | undefined;
+    if (!idempotencyKey) {
+      return res.status(400).json({ error: 'Idempotency-Key header is required for payout requests' });
+    }
+
     const { amount, destination } = req.body;
 
     // Validate required fields
@@ -173,9 +178,7 @@ router.post('/creator/payout', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // In a real implementation, we would check if the user is a creator
-    // For now, we'll use the authenticated user's ID
-    const payout = await lightningService.processPayout(req.user.id, amount, destination);
+    const payout = await lightningService.processPayout(req.user.id, amount, destination, idempotencyKey);
     res.json(payout);
   } catch (error) {
     console.error('Error processing payout:', error);
@@ -188,10 +191,8 @@ router.post('/creator/payout', authenticate, async (req, res) => {
  * @desc Get payout history for the authenticated creator
  * @access Private (Creator only)
  */
-router.get('/creator/payouts', authenticate, async (req, res) => {
+router.get('/creator/payouts', authenticate, requireCreator, async (req, res) => {
   try {
-    // In a real implementation, we would check if the user is a creator
-    // For now, we'll use the authenticated user's ID
     const payouts = await lightningService.getCreatorPayoutHistory(req.user.id);
     res.json(payouts);
   } catch (error) {
@@ -205,10 +206,8 @@ router.get('/creator/payouts', authenticate, async (req, res) => {
  * @desc Get subscribers for the authenticated creator
  * @access Private (Creator only)
  */
-router.get('/creator/subscribers', authenticate, async (req, res) => {
+router.get('/creator/subscribers', authenticate, requireCreator, async (req, res) => {
   try {
-    // In a real implementation, we would check if the user is a creator
-    // For now, we'll use the authenticated user's ID
     const subscribers = await lightningService.getCreatorSubscribers(req.user.id);
     res.json(subscribers);
   } catch (error) {

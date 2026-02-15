@@ -11,6 +11,20 @@ import { z } from 'zod';
 // Common Schemas
 // ============================================================================
 
+const MetadataValueSchema = z.union([
+  z.string().max(10000),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+
+const MetadataSchema = z
+  .record(z.string(), MetadataValueSchema)
+  .refine((obj) => Object.keys(obj).length <= 50, {
+    message: 'Metadata must have 50 or fewer keys',
+  })
+  .optional();
+
 const PaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -30,7 +44,7 @@ export const PublishContentSchema = z.object({
   content: z.string().min(1).max(1000000),
   contentType: z.enum(['article', 'video', 'audio', 'image', 'nostr-event']),
   tags: z.array(z.string()).max(20).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: MetadataSchema,
   publishToNostr: z.boolean().optional().default(true),
   relayUrls: z.array(z.string().url()).max(20).optional(),
   monetization: z
@@ -138,7 +152,7 @@ export const UpdateContentSchema = z.object({
   tags: z.array(z.string()).max(20).optional(),
   category: z.string().max(100).optional(),
   status: z.enum(['draft', 'ready', 'scheduled']).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: MetadataSchema,
 });
 
 // ============================================================================

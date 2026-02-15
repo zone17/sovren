@@ -11,8 +11,9 @@
 
 import * as crypto from 'crypto';
 import { EventEmitter } from 'events';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, copyFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, copyFileSync } from 'fs';
 import * as fs from 'fs/promises';
+import { open as fsOpen } from 'fs/promises';
 import * as nodemailer from 'nodemailer';
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
@@ -198,15 +199,20 @@ class ReceiptPersistence {
     return this.writeMutex;
   }
 
-  private doWrite(receipts: PaymentReceipt[]): Promise<void> {
+  private async doWrite(receipts: PaymentReceipt[]): Promise<void> {
     const tmpPath = `${this.filePath}.tmp`;
     try {
-      writeFileSync(tmpPath, JSON.stringify(receipts, null, 2), 'utf-8');
+      const handle = await fsOpen(tmpPath, 'w');
+      try {
+        await handle.writeFile(JSON.stringify(receipts, null, 2), 'utf-8');
+        await handle.datasync();
+      } finally {
+        await handle.close();
+      }
       renameSync(tmpPath, this.filePath);
-      return Promise.resolve();
     } catch (err) {
       console.error('[ReceiptPersistence] Failed to write receipts to disk:', err);
-      return Promise.reject(err);
+      throw err;
     }
   }
 

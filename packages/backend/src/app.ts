@@ -116,14 +116,14 @@ export function createApp(): Express {
   // Request Processing Middleware
   app.use(
     express.json({
-      limit: '10mb', // Allow for image uploads
+      limit: '1mb',
       verify: (req, res, buf) => {
         // Store raw body for signature verification
         (req as Request).rawBody = buf;
       },
     })
   );
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
   // Cookie parser (required for CSRF double-submit cookie pattern)
   app.use(cookieParser());
@@ -293,7 +293,7 @@ export const AppConfig = {
   // API limits
   rateLimitWindow: 15 * 60 * 1000, // 15 minutes
   rateLimitMax: 1000,
-  maxRequestSize: '10mb',
+  maxRequestSize: '1mb',
 
   // Performance
   responseTimeout: 30000, // 30 seconds

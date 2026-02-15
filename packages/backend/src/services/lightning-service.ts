@@ -163,6 +163,7 @@ export class LightningService extends EventEmitter {
     ttlMs: 24 * 60 * 60 * 1000,
   }); // 24hr TTL
   private persistence!: PaymentPersistence;
+  private pendingLookups = new Map<string, Promise<LightningInvoice | null>>();
 
   private constructor() {
     super();
@@ -245,6 +246,35 @@ export class LightningService extends EventEmitter {
         `LNbits connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
+  }
+
+  /**
+   * Get invoice with request coalescing to prevent cache stampede.
+   * Concurrent cache misses for the same key share a single persistence read.
+   */
+  private async getInvoiceWithFallback(id: string): Promise<LightningInvoice | null> {
+    let invoice = this.invoiceCache.get(id);
+    if (invoice) return invoice;
+
+    const pending = this.pendingLookups.get(id);
+    if (pending) return pending;
+
+    const lookup = this.persistence.getInvoiceById(id).then(result => {
+      this.pendingLookups.delete(id);
+      if (result) {
+        this.invoiceCache.set(result.id, result);
+        if (result.payment_hash) {
+          this.paymentHashIndex.set(result.payment_hash, result.id);
+        }
+      }
+      return result;
+    }).catch(err => {
+      this.pendingLookups.delete(id);
+      throw err;
+    });
+
+    this.pendingLookups.set(id, lookup);
+    return lookup;
   }
 
   /**
@@ -348,22 +378,8 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      // Fix #113: Cache fallback — check cache first, then persistence
-      let invoice = this.invoiceCache.get(invoiceId);
-      if (!invoice) {
-        const persisted = await this.persistence.getInvoiceById(invoiceId);
-        if (persisted) {
-          // Re-cache for future lookups
-          this.invoiceCache.set(persisted.id, persisted);
-          if (persisted.payment_hash) {
-            this.paymentHashIndex.set(persisted.payment_hash, persisted.id);
-          }
-          invoice = persisted;
-          console.debug(
-            `[LightningService] Cache miss for invoice ${invoiceId}, recovered from persistence`
-          );
-        }
-      }
+      // Fix #113 + Fix #139: Cache fallback with request coalescing
+      let invoice = await this.getInvoiceWithFallback(invoiceId);
       if (!invoice) {
         return {
           success: false,
@@ -604,18 +620,17 @@ export class LightningService extends EventEmitter {
 
       // Process payment if it's a payment webhook
       if (payload.type === 'payment' && payload.payment_hash) {
-        // Fix #118: O(1) lookup via paymentHashIndex, then cache, then persistence
+        // Fix #118 + Fix #139: O(1) lookup via index, then coalesced persistence fallback
         let invoice: LightningInvoice | undefined;
         const indexedId = this.paymentHashIndex.get(payload.payment_hash);
         if (indexedId) {
-          invoice = this.invoiceCache.get(indexedId);
+          invoice = this.invoiceCache.get(indexedId) ?? (await this.getInvoiceWithFallback(indexedId)) ?? undefined;
         }
-        // Fix #113: Fall through to persistence on cache miss
+        // Fall through to persistence by payment_hash on cache miss
         if (!invoice) {
           const persisted = await this.persistence.getInvoiceByPaymentHash(payload.payment_hash);
           if (persisted) {
             invoice = persisted;
-            // Re-cache for future lookups
             this.invoiceCache.set(persisted.id, persisted);
             this.paymentHashIndex.set(persisted.payment_hash, persisted.id);
           }

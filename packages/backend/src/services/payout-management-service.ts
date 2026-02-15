@@ -88,6 +88,8 @@ export class PayoutManagementService extends EventEmitter {
   private analyticsService: AnalyticsService;
   private payoutJobs: Map<string, NodeJS.Timeout>;
   private earningsCache: Map<string, CreatorEarnings>;
+  private payoutSchedulerInterval?: NodeJS.Timeout;
+  private earningsCalculationInterval?: NodeJS.Timeout;
 
   constructor(
     lightningService: LightningPaymentService,
@@ -800,7 +802,7 @@ export class PayoutManagementService extends EventEmitter {
 
   private async setupPayoutScheduler(): Promise<void> {
     // Process automated payouts every hour
-    setInterval(async () => {
+    this.payoutSchedulerInterval = setInterval(async () => {
       await this.processAutomatedPayouts();
     }, 3600000); // 1 hour
 
@@ -810,7 +812,7 @@ export class PayoutManagementService extends EventEmitter {
 
   private async setupEarningsCalculation(): Promise<void> {
     // Update earnings cache every 5 minutes
-    setInterval(async () => {
+    this.earningsCalculationInterval = setInterval(async () => {
       try {
         await this.updateEarningsCache();
       } catch (error) {
@@ -868,8 +870,18 @@ export class PayoutManagementService extends EventEmitter {
    * Cleanup and Shutdown
    */
   async shutdown(): Promise<void> {
+    // Clear scheduler intervals
+    if (this.payoutSchedulerInterval) {
+      clearInterval(this.payoutSchedulerInterval);
+      this.payoutSchedulerInterval = undefined;
+    }
+    if (this.earningsCalculationInterval) {
+      clearInterval(this.earningsCalculationInterval);
+      this.earningsCalculationInterval = undefined;
+    }
+
     // Clear all payout jobs
-    for (const [id, job] of this.payoutJobs) {
+    for (const [, job] of this.payoutJobs) {
       clearTimeout(job);
     }
     this.payoutJobs.clear();

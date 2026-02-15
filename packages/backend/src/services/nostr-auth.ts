@@ -37,11 +37,14 @@ export class NostrAuthService {
   private readonly CHALLENGE_TTL: number;
   private readonly challenges: Map<string, NostrChallenge>;
   private cleanupInterval?: NodeJS.Timeout;
+  private usedSignatures: Map<string, number>;
+  private userRoleFetcher?: (pubkey: string) => Promise<string | undefined>;
 
   constructor(
     jwtSecret?: string,
     jwtExpiresIn: string = '24h',
-    challengeTTL: number = 300000 // 5 minutes
+    challengeTTL: number = 300000, // 5 minutes
+    userRoleFetcher?: (pubkey: string) => Promise<string | undefined>
   ) {
     if (jwtSecret) {
       if (jwtSecret.length < 32) {
@@ -62,10 +65,15 @@ export class NostrAuthService {
     this.JWT_EXPIRES_IN = jwtExpiresIn;
     this.CHALLENGE_TTL = challengeTTL;
     this.challenges = new Map();
+    this.usedSignatures = new Map();
+    this.userRoleFetcher = userRoleFetcher;
 
-    // Clean up expired challenges every minute (only in production)
+    // Clean up expired challenges and signatures every minute (only in production)
     if (process.env.NODE_ENV !== 'test') {
-      this.cleanupInterval = setInterval(() => this.cleanupExpiredChallenges(), 60000);
+      this.cleanupInterval = setInterval(() => {
+        this.cleanupExpiredChallenges();
+        this.cleanupExpiredSignatures();
+      }, 60000);
     }
   }
 
@@ -140,6 +148,16 @@ export class NostrAuthService {
         };
       }
 
+      // Replay protection: reject already-used signatures
+      const sigHash = createHash('sha256').update(signature).digest('hex');
+      if (this.usedSignatures.has(sigHash)) {
+        return {
+          valid: false,
+          pubkey,
+          error: 'Signature already used',
+        };
+      }
+
       // Create message to verify (challenge + timestamp)
       const message = this.createSignatureMessage(challenge, timestamp);
       const messageHash = createHash('sha256').update(message).digest('hex');
@@ -159,7 +177,8 @@ export class NostrAuthService {
       const isValidSignature = verifyEvent(event);
 
       if (isValidSignature) {
-        // Remove used challenge to prevent replay
+        // Track used signature and remove used challenge to prevent replay
+        this.usedSignatures.set(sigHash, Date.now());
         this.challenges.delete(challenge);
 
         return {
@@ -269,13 +288,27 @@ export class NostrAuthService {
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const newTimestamp = currentTimestamp + 1;
 
-      // Generate new token with forced different timestamp
+      // Re-query current role from database instead of using stale token role
+      let currentRole = verification.payload.role;
+      if (this.userRoleFetcher) {
+        const freshRole = await this.userRoleFetcher(verification.payload.nostr_pubkey);
+        if (freshRole === undefined) {
+          // User not found in DB — refuse refresh
+          return {
+            success: false,
+            error: 'User not found',
+          };
+        }
+        currentRole = freshRole as 'creator' | 'supporter';
+      }
+
+      // Generate new token with fresh role
       const payload: JWTPayload = {
         nostr_pubkey: verification.payload.nostr_pubkey,
         iat: newTimestamp,
         exp: newTimestamp + this.parseJWTExpiration(),
         signature_verified: true,
-        role: verification.payload.role,
+        role: currentRole,
       };
 
       // Validate payload
@@ -303,6 +336,19 @@ export class NostrAuthService {
     for (const [challenge, data] of this.challenges.entries()) {
       if (now > data.expires_at) {
         this.challenges.delete(challenge);
+      }
+    }
+  }
+
+  /**
+   * 🧹 Clean up expired used signatures (older than 5 minutes)
+   */
+  private cleanupExpiredSignatures(): void {
+    const now = Date.now();
+    const signatureWindow = 300000; // 5 minutes — matches timestamp window
+    for (const [sigHash, usedAt] of this.usedSignatures.entries()) {
+      if (now - usedAt > signatureWindow) {
+        this.usedSignatures.delete(sigHash);
       }
     }
   }
@@ -383,11 +429,30 @@ export class NostrAuthService {
       this.cleanupInterval = undefined;
     }
     this.challenges.clear();
+    this.usedSignatures.clear();
   }
 }
 
 // 🏭 Singleton instance for application use
-export const nostrAuth = new NostrAuthService(process.env.JWT_SECRET);
+export const nostrAuth = new NostrAuthService(
+  process.env.JWT_SECRET,
+  '24h',
+  300000,
+  async (pubkey: string): Promise<string | undefined> => {
+    try {
+      // Lazy import to avoid circular dependency at module init
+      const { supabase } = await import('../config/supabase');
+      const { data } = await supabase
+        .from('users')
+        .select('role')
+        .eq('nostr_pubkey', pubkey)
+        .single();
+      return data?.role || 'supporter';
+    } catch {
+      return 'supporter';
+    }
+  }
+);
 
 // 🎯 Export utility functions
 export const createSignatureMessage = (challenge: string, timestamp: number): string => {

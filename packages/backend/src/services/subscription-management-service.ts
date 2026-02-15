@@ -128,6 +128,8 @@ export class SubscriptionManagementService extends EventEmitter {
   private wsService: WebSocketService;
   private recurringPaymentJobs: Map<string, NodeJS.Timeout>;
   private subscriptionCache: Map<string, Subscription>;
+  private recurringPaymentInterval?: NodeJS.Timeout;
+  private subscriptionMonitorInterval?: NodeJS.Timeout;
 
   constructor(lightningService: LightningPaymentService) {
     super();
@@ -445,36 +447,69 @@ export class SubscriptionManagementService extends EventEmitter {
 
         createdInvoice = initial_invoice;
       } catch (stepError) {
-        // Compensating rollback in reverse order
+        // Compensating rollback in reverse order with retry
         this.logger.error('Subscription creation step failed, rolling back', stepError);
 
         if (tierCountIncremented) {
-          await supabase
-            .from('subscription_tiers')
-            .update({
-              current_subscribers: supabase.raw('GREATEST(current_subscribers - 1, 0)'),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', tier.id)
-            .catch((e: any) => this.logger.error('Rollback: failed to decrement tier count', e));
+          const ok = await this.retryOperation(
+            async () => {
+              const { error } = await supabase
+                .from('subscription_tiers')
+                .update({
+                  current_subscribers: supabase.raw('GREATEST(current_subscribers - 1, 0)'),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', tier.id);
+              if (error) throw error;
+            },
+            'Rollback tier count'
+          );
+          if (!ok) {
+            this.logger.error('ALERT: Orphaned tier count increment', {
+              tier_id: tier.id,
+              subscription_id: subscription.id,
+            });
+            this.emit('rollback:failed', { step: 'tier_count', tier_id: tier.id });
+          }
         }
 
         if (recurringPaymentId) {
-          await supabase
-            .from('recurring_payments')
-            .delete()
-            .eq('id', recurringPaymentId)
-            .catch((e: any) =>
-              this.logger.error('Rollback: failed to delete recurring payment', e)
-            );
+          const ok = await this.retryOperation(
+            async () => {
+              const { error } = await supabase
+                .from('recurring_payments')
+                .delete()
+                .eq('id', recurringPaymentId);
+              if (error) throw error;
+            },
+            'Rollback recurring payment'
+          );
+          if (!ok) {
+            this.logger.error('ALERT: Orphaned recurring payment', {
+              recurring_payment_id: recurringPaymentId,
+              subscription_id: subscription.id,
+            });
+            this.emit('rollback:failed', { step: 'recurring_payment', id: recurringPaymentId });
+          }
         }
 
         if (subscriptionInserted) {
-          await supabase
-            .from('subscriptions')
-            .delete()
-            .eq('id', subscription.id)
-            .catch((e: any) => this.logger.error('Rollback: failed to delete subscription', e));
+          const ok = await this.retryOperation(
+            async () => {
+              const { error } = await supabase
+                .from('subscriptions')
+                .delete()
+                .eq('id', subscription.id);
+              if (error) throw error;
+            },
+            'Rollback subscription'
+          );
+          if (!ok) {
+            this.logger.error('ALERT: Orphaned subscription', {
+              subscription_id: subscription.id,
+            });
+            this.emit('rollback:failed', { step: 'subscription', id: subscription.id });
+          }
         }
 
         throw stepError;
@@ -915,7 +950,7 @@ export class SubscriptionManagementService extends EventEmitter {
 
   private async setupRecurringPaymentScheduler(): Promise<void> {
     // Process recurring payments every hour
-    setInterval(async () => {
+    this.recurringPaymentInterval = setInterval(async () => {
       await this.processRecurringPayments();
     }, 3600000); // 1 hour
 
@@ -925,7 +960,7 @@ export class SubscriptionManagementService extends EventEmitter {
 
   private async setupSubscriptionMonitoring(): Promise<void> {
     // Monitor subscription expirations and renewals
-    setInterval(async () => {
+    this.subscriptionMonitorInterval = setInterval(async () => {
       try {
         // Check for expired subscriptions
         await this.checkExpiredSubscriptions();
@@ -1065,6 +1100,29 @@ export class SubscriptionManagementService extends EventEmitter {
   }
 
   /**
+   * Retry an operation up to maxRetries times with exponential backoff.
+   * Returns true if the operation succeeded, false if all retries exhausted.
+   */
+  private async retryOperation(
+    operation: () => Promise<void>,
+    label: string,
+    maxRetries = 3
+  ): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await operation();
+        return true;
+      } catch (err) {
+        this.logger.warn(`${label} attempt ${attempt}/${maxRetries} failed`, err);
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 100 * attempt));
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
    * Health Check and Monitoring
    */
   async getServiceHealth(): Promise<{
@@ -1095,6 +1153,16 @@ export class SubscriptionManagementService extends EventEmitter {
    * Cleanup and Shutdown
    */
   async shutdown(): Promise<void> {
+    // Clear scheduler intervals
+    if (this.recurringPaymentInterval) {
+      clearInterval(this.recurringPaymentInterval);
+      this.recurringPaymentInterval = undefined;
+    }
+    if (this.subscriptionMonitorInterval) {
+      clearInterval(this.subscriptionMonitorInterval);
+      this.subscriptionMonitorInterval = undefined;
+    }
+
     // Clear all recurring payment jobs
     for (const [, job] of this.recurringPaymentJobs) {
       clearInterval(job);

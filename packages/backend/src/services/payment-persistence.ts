@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync, copyFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, copyFileSync } from 'fs';
+import { open } from 'fs/promises';
 import path from 'path';
 import type { LightningInvoice, LightningPayment } from './lightning-service';
 
@@ -160,22 +161,27 @@ export class JsonFilePaymentStore implements PaymentPersistence {
     return this.writeMutex;
   }
 
-  private doWrite(type: 'invoices' | 'payments'): Promise<void> {
+  private async doWrite(type: 'invoices' | 'payments'): Promise<void> {
     const filePath = path.join(this.dataDir, `${type}.json`);
     const tmpPath = `${filePath}.tmp`;
     const data =
       type === 'invoices' ? Array.from(this.invoices.values()) : Array.from(this.payments.values());
 
     try {
-      writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+      const handle = await open(tmpPath, 'w');
+      try {
+        await handle.writeFile(JSON.stringify(data, null, 2), 'utf-8');
+        await handle.datasync();
+      } finally {
+        await handle.close();
+      }
       renameSync(tmpPath, filePath);
-      return Promise.resolve();
     } catch (err) {
       console.error(
         `[PaymentPersistence] Failed to write ${type} to disk (path=${filePath}):`,
         err
       );
-      return Promise.reject(err);
+      throw err;
     }
   }
 }
