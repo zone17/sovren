@@ -630,26 +630,6 @@ class SupabaseCredentialRotation {
     }
   }
 
-  private async updateAWSSecrets(newPassword: string): Promise<void> {
-    const currentSecret = this.getAWSSecret();
-    const updatedSecret = {
-      ...currentSecret,
-      password: newPassword,
-      lastRotated: new Date().toISOString(),
-    };
-
-    try {
-      execFileSync('aws', [
-        'secretsmanager', 'update-secret',
-        '--secret-id', this.secretName,
-        '--secret-string', JSON.stringify(updatedSecret),
-        '--region', this.awsRegion,
-      ], { stdio: 'pipe' });
-    } catch (error) {
-      throw new Error('Failed to update AWS Secrets Manager');
-    }
-  }
-
   private getAWSSecret(): any {
     try {
       const result = execFileSync('aws', [
@@ -688,39 +668,6 @@ class SupabaseCredentialRotation {
     });
 
     fs.writeFileSync(envPath, envContent);
-  }
-
-  private async verifyConnection(password: string): Promise<boolean> {
-    try {
-      // Use pg library to test connection
-      const { Client } = require('pg');
-      const secret = this.getAWSSecret();
-
-      const client = new Client({
-        user: secret.username,
-        password: password,
-        host: secret.host,
-        port: secret.port,
-        database: secret.database,
-        ssl: { rejectUnauthorized: false },
-      });
-
-      await client.connect();
-      await client.query('SELECT 1');
-      await client.end();
-
-      return true;
-    } catch (error) {
-      console.error('Connection verification failed:', error);
-      return false;
-    }
-  }
-
-  private async runVerificationTests(): Promise<void> {
-    const scriptPath = path.join(__dirname, 'verify-credential-rotation.ts');
-    if (fs.existsSync(scriptPath)) {
-      execFileSync('ts-node', [scriptPath], { stdio: 'inherit' });
-    }
   }
 
   private async createRotationIssue(success: boolean, errorMessage?: string): Promise<void> {

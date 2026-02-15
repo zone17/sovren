@@ -2006,7 +2006,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
   }
 
   private generateExportId(): string {
-    return `export-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `export-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
   private async aggregateUserActivity(startDate: Date, endDate: Date): Promise<void> {

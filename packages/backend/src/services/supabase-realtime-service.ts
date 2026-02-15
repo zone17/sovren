@@ -544,7 +544,7 @@ export class SupabaseRealtimeService extends EventEmitter {
   ): void {
     const eventHandler = (type: 'INSERT' | 'UPDATE' | 'DELETE') => (payload: any) => {
       const event: RealtimeEvent = {
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         type,
         table: config.table,
         schema: payload.schema || 'public',
@@ -732,7 +732,7 @@ export class SupabaseRealtimeService extends EventEmitter {
 
     const batch: RealtimeEventBatch = {
       events: this.eventQueue.splice(0, this.config.batchSize),
-      batchId: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      batchId: `batch_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       timestamp: new Date(),
       metadata: {
         queueSize: this.eventQueue.length,

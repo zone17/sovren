@@ -462,7 +462,7 @@ export class E2ETestDataManager extends EventEmitter {
     }
 
     return {
-      id: `record_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `record_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       data,
       tags: [],
       created: new Date(),
@@ -532,7 +532,7 @@ export class E2ETestDataManager extends EventEmitter {
    */
   private generateEmail(): string {
     const domains = ['example.com', 'test.org', 'demo.net'];
-    const username = Math.random().toString(36).substr(2, 8);
+    const username = Math.random().toString(36).substring(2, 10);
     const domain = domains[Math.floor(Math.random() * domains.length)];
     return `${username}@${domain}`;
   }

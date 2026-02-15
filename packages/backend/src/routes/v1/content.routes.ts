@@ -20,10 +20,12 @@ const router = Router();
  * The container is initialized asynchronously at server startup,
  * so we resolve on first request rather than at module import time.
  */
-let _contentController: any = null;
-function getController() {
+import type { ContentController } from '../../controllers/content/ContentController';
+
+let _contentController: ContentController | null = null;
+function getController(): ContentController {
   if (!_contentController) {
-    _contentController = container.get(TYPES.ContentController);
+    _contentController = container.resolve(TYPES.ContentController);
   }
   return _contentController;
 }

@@ -424,7 +424,7 @@ export class PerformanceMonitoringService extends BaseService {
     threshold: number
   ): Promise<void> {
     const alert: PerformanceAlert = {
-      id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `alert_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       level,
       metric,
       message,
@@ -1003,7 +1003,7 @@ export class PerformanceMonitoringService extends BaseService {
 
   private createServiceContext(source: string = 'PerformanceMonitoringService'): ServiceContext {
     return {
-      requestId: `perf-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      requestId: `perf-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       timestamp: new Date(),
       source,
     };

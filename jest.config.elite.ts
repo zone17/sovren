@@ -134,7 +134,6 @@ const config: Config = {
     '/dist/',
     '/build/',
     '/coverage/',
-    '<rootDir>/monitoring/', // Exclude monitoring dashboard
     '<rootDir>/packages/shared/dist/', // Exclude compiled dist files
   ],
 
@@ -167,7 +166,6 @@ const config: Config = {
       testEnvironment: 'jsdom',
       testMatch: [
         '<rootDir>/packages/frontend/src/**/*.(test|spec).{ts,tsx}',
-        '<rootDir>/monitoring/dashboard/packages/frontend/src/**/*.(test|spec).{ts,tsx}',
       ],
       testPathIgnorePatterns: [
         '/node_modules/',
@@ -278,7 +276,7 @@ const config: Config = {
   // **IGNORE PATTERNS** (duplicate removed - already defined at line 134)
 
   // **MODULE PATH IGNORE PATTERNS** - Exclude from transformation
-  modulePathIgnorePatterns: ['<rootDir>/monitoring/', '<rootDir>/packages/shared/dist/'],
+  modulePathIgnorePatterns: ['<rootDir>/packages/shared/dist/'],
 
   // **PERFORMANCE OPTIMIZATION**
   maxWorkers: '50%',

@@ -2,8 +2,14 @@
  * Canonical Error Classes
  *
  * Single source of truth for all application error types.
- * These extend AppError from the error-handler-middleware and are
- * re-exported from there for backward compatibility.
+ * These extend AppError from lib/app-error.
+ *
+ * NOTE: This file imports from lib/app-error.ts, which is also imported by
+ * error-handler-middleware.ts. The error-handler-middleware re-exports from
+ * this file, creating a circular reference. This is SAFE because:
+ * - All references are function-level (resolved at call time, not module init)
+ * - TypeScript handles the module initialization order correctly
+ * - Verified safe in P2 remediation sprint (2026-02-13)
  */
 
 import { AppError } from '../lib/app-error';

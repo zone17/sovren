@@ -1,0 +1,2631 @@
+[
+  {
+    "id": "IMMED-001",
+    "title": "Fix Jest Configuration Collision",
+    "priority": "CRITICAL",
+    "estimated_hours": 2.0,
+    "agent": "None (direct fix)",
+    "dependencies": [],
+    "description": "Resolve Jest configuration collision between root and dashboard that's preventing test suite execution. Remove duplicate configurations and ensure TypeScript tests run properly.",
+    "subtasks": [
+      "- [ ] Remove duplicate `monitoring/dashboard-backup` directory causing config collision",
+      "- [ ] Update `jest.config.elite.ts` to properly handle TypeScript files with ts-jest",
+      "- [ ] Verify no conflicting jest.config files in subdirectories",
+      "- [ ] Run `npm run test:coverage` to verify all tests pass",
+      "- [ ] Update project board status to completed"
+    ],
+    "definition_of_done": [
+      "- [ ] All tests pass without Jest configuration errors",
+      "- [ ] Test coverage report generates successfully (\u226585% global)",
+      "- [ ] No duplicate Jest config files in repository",
+      "- [ ] TypeScript tests execute without transpilation errors",
+      "- [ ] CI/CD test pipeline passes",
+      "- [ ] Documentation updated in CHANGELOG.md"
+    ],
+    "epic": "EPIC-IMMEDIATE",
+    "labels": [
+      "user-story",
+      "epic:immediate",
+      "priority:critical"
+    ]
+  },
+  {
+    "id": "IMMED-002",
+    "title": "Fix pool.test.ts Syntax Error",
+    "priority": "CRITICAL",
+    "estimated_hours": 1.0,
+    "agent": "None (direct fix)",
+    "dependencies": [
+      "IMMED-001"
+    ],
+    "description": "Fix syntax error in database pool test file that's causing test failures. Ensure proper TypeScript typing and test structure.",
+    "subtasks": [
+      "- [ ] Locate syntax error in `packages/backend/src/database/__tests__/pool.test.ts`",
+      "- [ ] Fix TypeScript typing issues or missing imports",
+      "- [ ] Verify test follows proper Arrange-Act-Assert pattern",
+      "- [ ] Run test in isolation: `npm test -- pool.test.ts`",
+      "- [ ] Verify test passes and provides meaningful assertions",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] pool.test.ts executes without syntax errors",
+      "- [ ] All assertions in pool.test.ts passing",
+      "- [ ] Test coverage for pool.ts \u226595%",
+      "- [ ] TypeScript strict mode compliance",
+      "- [ ] Test follows project testing standards (AAA pattern)",
+      "- [ ] Documentation updated in CHANGELOG.md"
+    ],
+    "epic": "EPIC-IMMEDIATE",
+    "labels": [
+      "user-story",
+      "epic:immediate",
+      "priority:critical",
+      "testing"
+    ]
+  },
+  {
+    "id": "IMMED-003",
+    "title": "Rotate Exposed GitHub Token",
+    "priority": "CRITICAL",
+    "estimated_hours": 1.0,
+    "agent": "security-engineer",
+    "dependencies": [],
+    "description": "Rotate the exposed GitHub personal access token ([REDACTED - ROTATED]) that was committed to the repository. Update all CI/CD references.",
+    "subtasks": [
+      "- [ ] Revoke exposed GitHub token: [REDACTED - ROTATED]",
+      "- [ ] Generate new GitHub personal access token with minimal required scopes",
+      "- [ ] Update GitHub Actions secrets (GITHUB_TOKEN)",
+      "- [ ] Update any local .env files referencing old token",
+      "- [ ] Verify CI/CD pipelines run successfully with new token",
+      "- [ ] Document token rotation in security audit log",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] Old token revoked and no longer functional",
+      "- [ ] New token generated with principle of least privilege (minimal scopes)",
+      "- [ ] All GitHub Actions workflows passing with new token",
+      "- [ ] No references to old token in codebase or documentation",
+      "- [ ] Token stored securely in GitHub Secrets (not in code)",
+      "- [ ] Security audit log updated with rotation timestamp",
+      "- [ ] CHANGELOG.md updated with security fix entry"
+    ],
+    "epic": "EPIC-IMMEDIATE",
+    "labels": [
+      "user-story",
+      "epic:immediate",
+      "priority:critical"
+    ]
+  },
+  {
+    "id": "IMMED-004",
+    "title": "Rotate Supabase Database Credentials",
+    "priority": "CRITICAL",
+    "estimated_hours": 2.0,
+    "agent": "security-engineer",
+    "dependencies": [],
+    "description": "Rotate Supabase database credentials and ensure all references are updated in AWS Secrets Manager and application configuration. Verify zero-downtime rotation.",
+    "subtasks": [
+      "- [ ] Generate new Supabase database password in Supabase dashboard",
+      "- [ ] Update AWS Secrets Manager with new credentials (use SecretsService)",
+      "- [ ] Update backend `.env.production` reference to AWS secret ARN",
+      "- [ ] Deploy updated credentials to staging environment",
+      "- [ ] Verify application connectivity with new credentials",
+      "- [ ] Update production environment with new credentials",
+      "- [ ] Verify zero-downtime rotation (connection pool handles gracefully)",
+      "- [ ] Document rotation in security audit log",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] New Supabase credentials generated and tested",
+      "- [ ] AWS Secrets Manager updated with new credentials",
+      "- [ ] Staging environment using new credentials successfully",
+      "- [ ] Production environment using new credentials successfully",
+      "- [ ] Zero downtime during rotation (connection pool handled gracefully)",
+      "- [ ] Old credentials deactivated in Supabase",
+      "- [ ] Security audit log updated",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-IMMEDIATE",
+    "labels": [
+      "user-story",
+      "epic:immediate",
+      "priority:critical",
+      "backend"
+    ]
+  },
+  {
+    "id": "IMMED-005",
+    "title": "Update npm Dependencies (Security Vulnerabilities)",
+    "priority": "HIGH",
+    "estimated_hours": 3.0,
+    "agent": "None (direct fix with testing)",
+    "dependencies": [
+      "IMMED-001",
+      "IMMED-002"
+    ],
+    "description": "Update npm dependencies to resolve 6 moderate vulnerabilities in esbuild and vite packages. Ensure no breaking changes affect build process.",
+    "subtasks": [
+      "- [ ] Run `npm audit` to identify exact vulnerable packages",
+      "- [ ] Update esbuild to latest stable version (patch/minor)",
+      "- [ ] Update vite to latest stable version (patch/minor)",
+      "- [ ] Run `npm audit fix` for automated safe fixes",
+      "- [ ] Review CHANGELOG for esbuild and vite for breaking changes",
+      "- [ ] Run full build: `npm run build` (verify no build errors)",
+      "- [ ] Run full test suite: `npm run test:coverage` (verify no test failures)",
+      "- [ ] Verify frontend development server works: `npm run dev`",
+      "- [ ] Verify production build size hasn't increased significantly (<5%)",
+      "- [ ] Run `npm audit` to confirm 0 vulnerabilities remaining",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] `npm audit` shows 0 moderate/high/critical vulnerabilities",
+      "- [ ] All tests passing (85%+ coverage)",
+      "- [ ] Production build successful with no errors",
+      "- [ ] Bundle sizes within acceptable limits (<250KB per chunk)",
+      "- [ ] Development server runs without errors",
+      "- [ ] No breaking changes introduced",
+      "- [ ] package-lock.json updated and committed",
+      "- [ ] CHANGELOG.md updated with dependency updates"
+    ],
+    "epic": "EPIC-IMMEDIATE",
+    "labels": [
+      "user-story",
+      "epic:immediate",
+      "priority:high",
+      "security"
+    ]
+  },
+  {
+    "id": "IMMED-006",
+    "title": "Code Review US-007 Staged Changes",
+    "priority": "HIGH",
+    "estimated_hours": 3.0,
+    "agent": "code-review-specialist",
+    "dependencies": [
+      "IMMED-001",
+      "IMMED-002"
+    ],
+    "description": "Comprehensive code review of 77 staged files for US-007 error boundaries implementation. Verify quality gates, test coverage, and implementation correctness before merge.",
+    "subtasks": [
+      "- [ ] Run `git diff --cached --stat` to list all 77 staged files",
+      "- [ ] Review error boundary implementation patterns (React best practices)",
+      "- [ ] Verify test coverage \u226595% for error boundary components",
+      "- [ ] Check Sentry integration configuration and error reporting",
+      "- [ ] Validate TypeScript strict mode compliance (no `any` types)",
+      "- [ ] Verify accessibility (ARIA labels, keyboard navigation)",
+      "- [ ] Review Mermaid diagrams in docs/architecture/diagrams/error-boundaries/",
+      "- [ ] Check CHANGELOG.md entry is complete and accurate",
+      "- [ ] Run ESLint: `npm run lint` (expect 0 errors)",
+      "- [ ] Run full test suite with coverage: `npm run test:coverage`",
+      "- [ ] Generate review report with approval recommendation",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] All 77 files reviewed with no critical issues",
+      "- [ ] Test coverage \u226595% for error boundary code",
+      "- [ ] Zero ESLint/Prettier violations",
+      "- [ ] Sentry integration tested and working",
+      "- [ ] All Mermaid diagrams present and accurate",
+      "- [ ] TypeScript strict mode compliant",
+      "- [ ] Accessibility standards met (WCAG AA)",
+      "- [ ] Documentation complete (CHANGELOG, feature docs)",
+      "- [ ] Review report generated with approval or change requests",
+      "- [ ] PR ready for merge or issues documented for fixes"
+    ],
+    "epic": "EPIC-IMMEDIATE",
+    "labels": [
+      "user-story",
+      "epic:immediate",
+      "priority:high"
+    ]
+  },
+  {
+    "id": "IMMED-007",
+    "title": "Merge US-007 to Main Branch",
+    "priority": "HIGH",
+    "estimated_hours": 1.0,
+    "agent": "None (direct merge)",
+    "dependencies": [
+      "IMMED-006"
+    ],
+    "description": "Create PR, verify CI/CD checks pass, and merge US-007 error boundaries implementation to main branch. Ensure staging deployment succeeds.",
+    "subtasks": [
+      "- [ ] Create PR: `gh pr create --title \"feat(US-007): Error boundaries with Sentry integration\"`",
+      "- [ ] Verify all CI/CD checks passing (tests, lint, build, security)",
+      "- [ ] Ensure at least 1 approval (from code review)",
+      "- [ ] Squash and merge to main: `gh pr merge --squash`",
+      "- [ ] Monitor CI/CD deployment to staging: `gh run watch`",
+      "- [ ] Verify staging deployment successful: `curl https://sovren-staging.vercel.app/health`",
+      "- [ ] Run smoke tests on staging environment",
+      "- [ ] Close feature branch: `git branch -d feature/US-007-error-boundaries`",
+      "- [ ] Update project board: Move US-007 to \"Done\"",
+      "- [ ] Update project board status for IMMED-007"
+    ],
+    "definition_of_done": [
+      "- [ ] PR created with complete description",
+      "- [ ] All CI/CD checks passing (green checkmarks)",
+      "- [ ] Code review approval received",
+      "- [ ] PR merged to main branch",
+      "- [ ] Staging deployment successful",
+      "- [ ] Smoke tests passing on staging",
+      "- [ ] Feature branch deleted",
+      "- [ ] US-007 marked as complete in project board",
+      "- [ ] Team notified of merge (Slack/GitHub Discussions)"
+    ],
+    "epic": "EPIC-IMMEDIATE",
+    "labels": [
+      "user-story",
+      "epic:immediate",
+      "priority:high"
+    ]
+  },
+  {
+    "id": "FE-001",
+    "title": "Design NOSTR Auth User Flows",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [],
+    "description": "Create comprehensive user flow diagrams for NOSTR authentication covering extension-based auth, manual key input, first-time onboarding, and returning user login.",
+    "subtasks": [
+      "- [ ] Create user flow diagram: Extension-based authentication (Alby, nos2x detection)",
+      "- [ ] Create user flow diagram: Manual public/private key input",
+      "- [ ] Create user flow diagram: First-time user onboarding with role selection",
+      "- [ ] Create user flow diagram: Returning user login with session restoration",
+      "- [ ] Document decision points, error states, and happy paths",
+      "- [ ] Export diagrams as Mermaid files to docs/design/us-001-nostr-auth/flows/",
+      "- [ ] Create visual exports (PNG) for non-technical stakeholders",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] 4 user flow diagrams completed (extension, manual, first-time, returning)",
+      "- [ ] All diagrams in Mermaid format (.mmd files)",
+      "- [ ] PNG exports generated for presentations",
+      "- [ ] Decision points and error states documented",
+      "- [ ] Flows reviewed by product owner",
+      "- [ ] Files committed to docs/design/us-001-nostr-auth/flows/",
+      "- [ ] CHANGELOG.md updated with design deliverable"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-002",
+    "title": "Design NOSTR Auth Wireframes",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-001"
+    ],
+    "description": "Create low-fidelity wireframes for all NOSTR authentication screens including extension detection, manual key input, role selection, and error states.",
+    "subtasks": [
+      "- [ ] Wireframe: Auth modal component (container structure)",
+      "- [ ] Wireframe: Extension detection UI (Alby, nos2x availability indicators)",
+      "- [ ] Wireframe: Manual key input form (public/private key fields with validation)",
+      "- [ ] Wireframe: Role selection screen (Creator vs Supporter cards)",
+      "- [ ] Wireframe: Error states (no extension, invalid key, network error)",
+      "- [ ] Wireframe: Loading states (extension checking, auth in progress)",
+      "- [ ] Add annotations for interactions, validation rules, and error messages",
+      "- [ ] Export wireframes as images to docs/design/us-001-nostr-auth/wireframes/",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] 6 wireframe screens completed",
+      "- [ ] Annotations for all interactive elements",
+      "- [ ] Error state wireframes included",
+      "- [ ] Loading state wireframes included",
+      "- [ ] Validation rules documented on wireframes",
+      "- [ ] Files exported to docs/design/us-001-nostr-auth/wireframes/",
+      "- [ ] Wireframes reviewed by frontend team",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-003",
+    "title": "Design NOSTR Auth High-Fidelity Mockups",
+    "priority": "CRITICAL",
+    "estimated_hours": 8.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-002"
+    ],
+    "description": "Create high-fidelity mockups with visual design, typography, colors, and micro-interactions for NOSTR authentication UI. Design for light/dark modes and mobile responsiveness.",
+    "subtasks": [
+      "- [ ] High-fidelity mockup: Auth modal (light and dark modes)",
+      "- [ ] High-fidelity mockup: Extension detection (with Alby/nos2x logos)",
+      "- [ ] High-fidelity mockup: Manual key input form (styled inputs with validation)",
+      "- [ ] High-fidelity mockup: Role selection cards (Creator/Supporter)",
+      "- [ ] High-fidelity mockup: Error states (styled error messages)",
+      "- [ ] High-fidelity mockup: Loading states (skeleton screens, spinners)",
+      "- [ ] Create mobile responsive versions for all screens (320px, 768px, 1024px)",
+      "- [ ] Document color palette, typography, spacing system",
+      "- [ ] Create component specifications (props, states, variants)",
+      "- [ ] Add accessibility annotations (WCAG AA contrast, focus states)",
+      "- [ ] Export mockups to docs/design/us-001-nostr-auth/mockups/",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] High-fidelity mockups for all 6 screens",
+      "- [ ] Light and dark mode versions",
+      "- [ ] Mobile responsive designs (3 breakpoints)",
+      "- [ ] Design system documented (colors, typography, spacing)",
+      "- [ ] Component specifications written",
+      "- [ ] Accessibility annotations (contrast ratios, focus indicators)",
+      "- [ ] Files exported to docs/design/us-001-nostr-auth/mockups/",
+      "- [ ] Mockups approved by product owner",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-004",
+    "title": "Create NOSTR Auth Component Architecture Diagrams",
+    "priority": "HIGH",
+    "estimated_hours": 3.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-003"
+    ],
+    "description": "Create Mermaid diagrams documenting component hierarchy, data flow, state management, and service integration for NOSTR authentication feature.",
+    "subtasks": [
+      "- [ ] Create component hierarchy diagram (parent-child relationships)",
+      "- [ ] Create data flow diagram (props flow, event bubbling)",
+      "- [ ] Create state management diagram (local state vs Redux)",
+      "- [ ] Create service integration diagram (AuthContext, API calls, NOSTR extension)",
+      "- [ ] Create error handling flow diagram",
+      "- [ ] Export all diagrams as .mmd files to docs/architecture/diagrams/us-001-auth/",
+      "- [ ] Generate PNG renders for documentation",
+      "- [ ] Link diagrams in docs/features/nostr-authentication.md",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] 5 Mermaid diagrams created (hierarchy, data flow, state, services, errors)",
+      "- [ ] All diagrams in .mmd format",
+      "- [ ] PNG renders generated",
+      "- [ ] Diagrams linked in feature documentation with GitHub rendering",
+      "- [ ] Files committed to docs/architecture/diagrams/us-001-auth/",
+      "- [ ] Diagrams reviewed by frontend architect",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-005",
+    "title": "Implement NOSTRAuthButton Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-004"
+    ],
+    "description": "Implement the main authentication button component with automatic extension detection (Alby, nos2x), loading states, and error handling.",
+    "subtasks": [
+      "- [ ] Create component file: packages/frontend/src/features/auth/components/NOSTRAuthButton.tsx",
+      "- [ ] Implement extension detection logic (check window.nostr)",
+      "- [ ] Add loading state UI (spinner, disabled button)",
+      "- [ ] Add error state UI (error message display)",
+      "- [ ] Implement onClick handler to trigger auth flow",
+      "- [ ] Add TypeScript interfaces for props (onSuccess, onError callbacks)",
+      "- [ ] Style component following design mockups (light/dark mode)",
+      "- [ ] Add accessibility attributes (aria-label, aria-busy)",
+      "- [ ] Create Storybook story: NOSTRAuthButton.stories.tsx",
+      "- [ ] Write JSDoc documentation for component",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] NOSTRAuthButton component implemented",
+      "- [ ] Extension detection working (Alby, nos2x, Nostrum)",
+      "- [ ] Loading and error states implemented",
+      "- [ ] TypeScript strict mode compliant (no `any`)",
+      "- [ ] Styled per design mockups (light/dark mode)",
+      "- [ ] Accessibility: ARIA attributes, keyboard navigation",
+      "- [ ] Storybook story created and interactive",
+      "- [ ] JSDoc documentation complete",
+      "- [ ] Code compiles with zero ESLint errors",
+      "- [ ] Component exported from features/auth/index.ts"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-006",
+    "title": "Implement AuthModal Container Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-005"
+    ],
+    "description": "Implement modal container component that manages authentication flow state and renders appropriate sub-components (extension auth, manual input, role selection).",
+    "subtasks": [
+      "- [ ] Create component file: packages/frontend/src/features/auth/components/AuthModal.tsx",
+      "- [ ] Implement modal open/close state management",
+      "- [ ] Create step management state (extension \u2192 manual \u2192 role)",
+      "- [ ] Implement modal overlay and backdrop (with click-outside-to-close)",
+      "- [ ] Add modal animations (fade in/out, slide up)",
+      "- [ ] Add accessibility: focus trap, ESC key to close, ARIA dialog",
+      "- [ ] Style modal container per design mockups",
+      "- [ ] Integrate NOSTRAuthButton as trigger",
+      "- [ ] Create Storybook story: AuthModal.stories.tsx",
+      "- [ ] Write JSDoc documentation",
+      "- [ ] Update project board status"
+    ],
+    "definition_of_done": [
+      "- [ ] AuthModal component implemented",
+      "- [ ] Multi-step flow management (extension \u2192 manual \u2192 role)",
+      "- [ ] Modal overlay with backdrop",
+      "- [ ] Animations smooth (fade, slide)",
+      "- [ ] Accessibility: focus trap, ESC key, ARIA dialog role",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] Styled per mockups (responsive)",
+      "- [ ] Storybook story interactive",
+      "- [ ] JSDoc complete",
+      "- [ ] Exported from features/auth/index.ts"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-007",
+    "title": "Implement ExtensionAuth Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-006"
+    ],
+    "description": "Implement browser extension authentication component that detects and authenticates via Alby, nos2x, or Nostrum extensions using NIP-07 protocol.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/auth/components/ExtensionAuth.tsx",
+      "- [ ] Implement extension detection (window.nostr.getPublicKey)",
+      "- [ ] Add extension selection UI (if multiple detected)",
+      "- [ ] Implement NIP-07 signing flow",
+      "- [ ] Handle extension errors (user rejected, no extension)",
+      "- [ ] Add loading spinner during authentication",
+      "- [ ] Style per mockups (extension logos, status indicators)",
+      "- [ ] Add accessibility (ARIA live regions for status)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] ExtensionAuth component working with Alby, nos2x, Nostrum",
+      "- [ ] Multi-extension selection UI",
+      "- [ ] Error handling (user rejection, timeout)",
+      "- [ ] Loading states implemented",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible",
+      "- [ ] Storybook story interactive",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-008",
+    "title": "Implement ManualKeyInput Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-006"
+    ],
+    "description": "Implement manual public/private key input form with real-time validation for npub/nsec formats and security warnings.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/auth/components/ManualKeyInput.tsx",
+      "- [ ] Implement npub/nsec validation (bech32 decoding)",
+      "- [ ] Add real-time validation feedback (green checkmark, red X)",
+      "- [ ] Implement security warning modal for private key input",
+      "- [ ] Add \"Show/Hide\" toggle for private key field",
+      "- [ ] Add copy-paste functionality",
+      "- [ ] Style per mockups (input fields, validation states)",
+      "- [ ] Add accessibility (error announcements, labels)",
+      "- [ ] Create Storybook story with validation examples",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] npub/nsec validation working (bech32)",
+      "- [ ] Real-time validation feedback",
+      "- [ ] Security warning for private keys",
+      "- [ ] Show/hide private key toggle",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible (error announcements)",
+      "- [ ] Storybook story with edge cases",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-009",
+    "title": "Implement RoleSelector Component",
+    "priority": "HIGH",
+    "estimated_hours": 3.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-007",
+      "FE-008"
+    ],
+    "description": "Implement role selection component allowing users to choose Creator or Supporter role after authentication.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/auth/components/RoleSelector.tsx",
+      "- [ ] Implement Creator card (icon, description, \"Choose Creator\" button)",
+      "- [ ] Implement Supporter card (icon, description, \"Choose Supporter\" button)",
+      "- [ ] Add card hover effects and selection state",
+      "- [ ] Implement role selection logic (save to Redux + backend)",
+      "- [ ] Style per mockups (responsive cards)",
+      "- [ ] Add accessibility (keyboard navigation, selection announcement)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Creator and Supporter cards implemented",
+      "- [ ] Hover effects and selection state",
+      "- [ ] Role saved to Redux and backend API",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] Responsive design (mobile-friendly)",
+      "- [ ] WCAG AA accessible (keyboard navigation)",
+      "- [ ] Storybook story interactive",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-010",
+    "title": "Integrate NOSTR Auth with Backend API",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-007",
+      "FE-008",
+      "FE-009"
+    ],
+    "description": "Integrate NOSTR authentication UI with backend API endpoints, Redux store, and session management.",
+    "subtasks": [
+      "- [ ] Connect ExtensionAuth to backend /api/auth/authenticate endpoint",
+      "- [ ] Connect ManualKeyInput to backend /api/auth/authenticate endpoint",
+      "- [ ] Implement JWT token storage (localStorage + httpOnly cookie)",
+      "- [ ] Integrate with Redux authSlice (user state, session)",
+      "- [ ] Implement session restoration on app load",
+      "- [ ] Add error handling for API failures",
+      "- [ ] Add success redirect after authentication",
+      "- [ ] Test integration with backend services",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Extension auth calls backend API successfully",
+      "- [ ] Manual key auth calls backend API successfully",
+      "- [ ] JWT tokens stored securely",
+      "- [ ] Redux authSlice updated on auth success",
+      "- [ ] Session restoration working (page refresh)",
+      "- [ ] Error handling for network failures",
+      "- [ ] Success redirect to dashboard/feed",
+      "- [ ] Integration tests passing"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend",
+      "backend"
+    ]
+  },
+  {
+    "id": "FE-011",
+    "title": "Write NOSTR Auth Unit Tests",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "test-automation-engineer",
+    "dependencies": [
+      "FE-010"
+    ],
+    "description": "Create comprehensive unit tests for all NOSTR authentication components and services with 95%+ coverage.",
+    "subtasks": [
+      "- [ ] Test: NOSTRAuthButton extension detection logic",
+      "- [ ] Test: ExtensionAuth NIP-07 signing flow",
+      "- [ ] Test: ManualKeyInput npub/nsec validation",
+      "- [ ] Test: RoleSelector role selection logic",
+      "- [ ] Test: AuthModal state management (step transitions)",
+      "- [ ] Test: Error handling for all failure scenarios",
+      "- [ ] Test: Loading states for all async operations",
+      "- [ ] Mock window.nostr for extension tests",
+      "- [ ] Mock backend API with MSW",
+      "- [ ] Verify 95%+ coverage: npm run test:coverage",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 95%+ test coverage for auth feature",
+      "- [ ] All components have unit tests",
+      "- [ ] All services have unit tests",
+      "- [ ] Edge cases tested (no extension, invalid key, network error)",
+      "- [ ] Mocks properly implemented (window.nostr, API)",
+      "- [ ] All tests passing",
+      "- [ ] Test report generated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "testing",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-012",
+    "title": "Write NOSTR Auth Integration Tests",
+    "priority": "HIGH",
+    "estimated_hours": 4.0,
+    "agent": "test-automation-engineer",
+    "dependencies": [
+      "FE-011"
+    ],
+    "description": "Create integration tests for complete NOSTR authentication flows including extension auth, manual auth, and role selection.",
+    "subtasks": [
+      "- [ ] Integration test: Extension-based auth flow (end-to-end)",
+      "- [ ] Integration test: Manual key auth flow (end-to-end)",
+      "- [ ] Integration test: Role selection after auth",
+      "- [ ] Integration test: Session persistence across page refresh",
+      "- [ ] Integration test: Redux state updates correctly",
+      "- [ ] Integration test: API integration with backend",
+      "- [ ] Use MSW to mock backend responses",
+      "- [ ] Verify tests pass: npm run test:integration",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Integration tests for extension auth flow",
+      "- [ ] Integration tests for manual auth flow",
+      "- [ ] Integration tests for role selection",
+      "- [ ] Integration tests for session persistence",
+      "- [ ] Redux integration tested",
+      "- [ ] API integration tested with MSW",
+      "- [ ] All integration tests passing",
+      "- [ ] Test coverage maintained at 95%+"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "testing",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-013",
+    "title": "Design Content Creation User Flows",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [],
+    "description": "Create user flow diagrams for content creation covering new content, edit existing, publish, save draft, and auto-save recovery.",
+    "subtasks": [
+      "- [ ] User flow: Create new content from dashboard",
+      "- [ ] User flow: Edit existing content",
+      "- [ ] User flow: Publish content to NOSTR",
+      "- [ ] User flow: Save as draft (manual + auto-save)",
+      "- [ ] User flow: Auto-save recovery after browser crash",
+      "- [ ] Export flows to docs/design/us-002-content-creation/flows/",
+      "- [ ] Create PNG exports",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 5 user flow diagrams in Mermaid format",
+      "- [ ] PNG exports for presentations",
+      "- [ ] Decision points and error states documented",
+      "- [ ] Flows reviewed by product owner",
+      "- [ ] Files committed to repository",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-014",
+    "title": "Design Content Editor Wireframes",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-013"
+    ],
+    "description": "Create wireframes for content editor interface including rich text editor, media uploader, premium toggle, and publishing options.",
+    "subtasks": [
+      "- [ ] Wireframe: Content editor main interface",
+      "- [ ] Wireframe: Rich text toolbar (formatting options)",
+      "- [ ] Wireframe: Media uploader (drag-drop area)",
+      "- [ ] Wireframe: Premium content toggle",
+      "- [ ] Wireframe: Tag selector with autocomplete",
+      "- [ ] Wireframe: Preview modal",
+      "- [ ] Wireframe: Publishing confirmation",
+      "- [ ] Export to docs/design/us-002-content-creation/wireframes/",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 7 wireframe screens completed",
+      "- [ ] Annotations for all interactions",
+      "- [ ] Error and loading states included",
+      "- [ ] Files exported to design folder",
+      "- [ ] Wireframes reviewed by team",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-015",
+    "title": "Design Content Editor High-Fidelity Mockups",
+    "priority": "CRITICAL",
+    "estimated_hours": 8.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-014"
+    ],
+    "description": "Create high-fidelity mockups for content editor with visual design, typography, and responsive layouts for desktop and mobile.",
+    "subtasks": [
+      "- [ ] High-fidelity: Editor main interface (light/dark mode)",
+      "- [ ] High-fidelity: Rich text toolbar (icons, tooltips)",
+      "- [ ] High-fidelity: Media uploader (drag-drop, progress)",
+      "- [ ] High-fidelity: Premium toggle with pricing display",
+      "- [ ] High-fidelity: Tag selector (dropdown, chips)",
+      "- [ ] High-fidelity: Preview modal (content rendering)",
+      "- [ ] High-fidelity: Publishing confirmation dialog",
+      "- [ ] Mobile responsive versions (320px, 768px, 1024px)",
+      "- [ ] Document design system (editor-specific components)",
+      "- [ ] Export to docs/design/us-002-content-creation/mockups/",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] High-fidelity mockups for all 7 screens",
+      "- [ ] Light and dark mode versions",
+      "- [ ] Mobile responsive designs",
+      "- [ ] Design system documented",
+      "- [ ] Accessibility annotations (WCAG AA)",
+      "- [ ] Files exported",
+      "- [ ] Mockups approved",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-016",
+    "title": "Create Content Editor Architecture Diagrams",
+    "priority": "HIGH",
+    "estimated_hours": 3.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-015"
+    ],
+    "description": "Create Mermaid diagrams for content editor architecture including component hierarchy, data flow, auto-save mechanism, and NOSTR publishing.",
+    "subtasks": [
+      "- [ ] Diagram: Component hierarchy (editor, toolbar, uploader)",
+      "- [ ] Diagram: Data flow (content state, media uploads)",
+      "- [ ] Diagram: Auto-save mechanism (30s timer, debounce)",
+      "- [ ] Diagram: NOSTR publishing flow (NIP-23 events)",
+      "- [ ] Diagram: Error handling and recovery",
+      "- [ ] Export to docs/architecture/diagrams/us-002-content/",
+      "- [ ] Generate PNG renders",
+      "- [ ] Link in feature documentation",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 5 Mermaid diagrams created",
+      "- [ ] All diagrams in .mmd format",
+      "- [ ] PNG renders generated",
+      "- [ ] Diagrams linked in docs/features/content-creation.md",
+      "- [ ] Files committed",
+      "- [ ] Diagrams reviewed",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-017",
+    "title": "Implement ContentEditor Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 8.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-016"
+    ],
+    "description": "Implement main content editor component with rich text editing using Draft.js or Slate, markdown support, and auto-save functionality.",
+    "subtasks": [
+      "- [ ] Evaluate and choose: Draft.js vs Slate.js for rich text",
+      "- [ ] Create: packages/frontend/src/features/content/components/ContentEditor.tsx",
+      "- [ ] Implement rich text editor with formatting (bold, italic, headings)",
+      "- [ ] Implement markdown support (write markdown, preview HTML)",
+      "- [ ] Implement auto-save logic (debounce 30s, save to localStorage + API)",
+      "- [ ] Add character/word count display",
+      "- [ ] Add editor toolbar with formatting buttons",
+      "- [ ] Style per mockups (clean, distraction-free)",
+      "- [ ] Add accessibility (keyboard shortcuts, ARIA)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] ContentEditor component implemented with chosen library",
+      "- [ ] Rich text formatting working (bold, italic, headings, lists)",
+      "- [ ] Markdown support implemented",
+      "- [ ] Auto-save working (30s interval, no data loss)",
+      "- [ ] Character/word count displayed",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible",
+      "- [ ] Storybook story interactive",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-018",
+    "title": "Implement MediaUploader Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-017"
+    ],
+    "description": "Implement drag-and-drop media uploader for images, videos, and audio with progress indicators and Supabase Storage integration.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/content/components/MediaUploader.tsx",
+      "- [ ] Implement drag-and-drop file upload",
+      "- [ ] Implement click-to-browse file selection",
+      "- [ ] Add file type validation (images: jpg/png/webp, video: mp4, audio: mp3)",
+      "- [ ] Add file size validation (images <5MB, video <50MB, audio <10MB)",
+      "- [ ] Implement upload progress indicator (percentage, speed)",
+      "- [ ] Integrate with Supabase Storage API",
+      "- [ ] Implement image optimization (compression, WebP conversion)",
+      "- [ ] Add thumbnail preview for uploaded media",
+      "- [ ] Style per mockups (drag-drop area, progress bars)",
+      "- [ ] Add accessibility (file input label, status announcements)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Drag-and-drop upload working",
+      "- [ ] File type and size validation",
+      "- [ ] Upload progress indicator showing",
+      "- [ ] Supabase Storage integration working",
+      "- [ ] Image optimization (compression, WebP)",
+      "- [ ] Thumbnail previews displayed",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible",
+      "- [ ] Storybook story with examples",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-019",
+    "title": "Implement PremiumToggle Component",
+    "priority": "HIGH",
+    "estimated_hours": 3.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-017"
+    ],
+    "description": "Implement premium content toggle component allowing creators to designate content as free or premium with pricing display.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/content/components/PremiumToggle.tsx",
+      "- [ ] Implement toggle switch (Free \u2194 Premium)",
+      "- [ ] Add pricing input field (sats) when premium enabled",
+      "- [ ] Add description field for premium benefits",
+      "- [ ] Add visual indicator (lock icon for premium)",
+      "- [ ] Integrate with content state (Redux slice)",
+      "- [ ] Style per mockups (toggle, pricing fields)",
+      "- [ ] Add accessibility (toggle label, price input label)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Toggle switch working (Free/Premium)",
+      "- [ ] Pricing input enabled when premium",
+      "- [ ] Premium benefits description field",
+      "- [ ] Visual indicators (lock icon)",
+      "- [ ] Redux state integration",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible",
+      "- [ ] Storybook story interactive",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-020",
+    "title": "Implement ContentPreview Component",
+    "priority": "HIGH",
+    "estimated_hours": 4.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-017",
+      "FE-018"
+    ],
+    "description": "Implement content preview modal showing how content will appear to readers before publishing.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/content/components/ContentPreview.tsx",
+      "- [ ] Implement modal component (full-screen or large modal)",
+      "- [ ] Render markdown to HTML for preview",
+      "- [ ] Display embedded media in preview",
+      "- [ ] Show premium indicator if premium content",
+      "- [ ] Add \"Edit\" and \"Publish\" buttons in preview",
+      "- [ ] Style per mockups (reader view styling)",
+      "- [ ] Add accessibility (modal focus trap, ESC to close)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Preview modal displays content accurately",
+      "- [ ] Markdown rendered to HTML",
+      "- [ ] Embedded media displayed correctly",
+      "- [ ] Premium indicator shown if applicable",
+      "- [ ] Edit/Publish buttons functional",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible (modal focus)",
+      "- [ ] Storybook story interactive",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-021",
+    "title": "Implement TagSelector Component",
+    "priority": "MEDIUM",
+    "estimated_hours": 4.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-017"
+    ],
+    "description": "Implement tag selector with autocomplete for content categorization and tagging.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/content/components/TagSelector.tsx",
+      "- [ ] Implement tag input with autocomplete (from existing tags)",
+      "- [ ] Add tag creation (if tag doesn't exist)",
+      "- [ ] Display selected tags as chips (removable)",
+      "- [ ] Limit to 5 tags maximum",
+      "- [ ] Integrate with backend API (fetch existing tags)",
+      "- [ ] Style per mockups (input, chips, autocomplete dropdown)",
+      "- [ ] Add accessibility (combobox pattern, tag removal)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Tag input with autocomplete working",
+      "- [ ] New tag creation supported",
+      "- [ ] Selected tags displayed as chips",
+      "- [ ] 5 tag limit enforced",
+      "- [ ] Backend API integration for tag suggestions",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible (combobox ARIA)",
+      "- [ ] Storybook story interactive",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:medium",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-022",
+    "title": "Integrate Content Editor with NOSTR Publishing",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-017",
+      "FE-018",
+      "FE-019",
+      "FE-020"
+    ],
+    "description": "Integrate content editor with backend NOSTR publishing service and content management API.",
+    "subtasks": [
+      "- [ ] Connect editor to backend /api/content-management endpoints",
+      "- [ ] Implement publish flow (validate \u2192 save \u2192 NOSTR sync)",
+      "- [ ] Implement NIP-23 long-form content event generation",
+      "- [ ] Add NOSTR relay publishing (multi-relay for redundancy)",
+      "- [ ] Implement draft save (localStorage + API)",
+      "- [ ] Implement auto-save recovery on page load",
+      "- [ ] Add success/error notifications (toast messages)",
+      "- [ ] Add loading indicators during publish",
+      "- [ ] Test integration with backend services",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Content saves to backend API successfully",
+      "- [ ] Content publishes to NOSTR relays (NIP-23)",
+      "- [ ] Multi-relay publishing working",
+      "- [ ] Draft save/recovery working",
+      "- [ ] Auto-save no data loss",
+      "- [ ] Success/error notifications displayed",
+      "- [ ] Loading states during async operations",
+      "- [ ] Integration tests passing"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-023",
+    "title": "Write Content Editor Unit Tests",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "test-automation-engineer",
+    "dependencies": [
+      "FE-022"
+    ],
+    "description": "Create comprehensive unit tests for content editor components with 95%+ coverage.",
+    "subtasks": [
+      "- [ ] Test: ContentEditor formatting functionality",
+      "- [ ] Test: MediaUploader file validation and upload",
+      "- [ ] Test: PremiumToggle state changes",
+      "- [ ] Test: ContentPreview rendering",
+      "- [ ] Test: TagSelector autocomplete logic",
+      "- [ ] Test: Auto-save mechanism (timer, debounce)",
+      "- [ ] Test: Error handling for all components",
+      "- [ ] Mock Supabase Storage API",
+      "- [ ] Mock backend content API with MSW",
+      "- [ ] Verify 95%+ coverage",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 95%+ test coverage for content feature",
+      "- [ ] All components have unit tests",
+      "- [ ] Auto-save logic thoroughly tested",
+      "- [ ] Media upload mocked and tested",
+      "- [ ] Edge cases tested",
+      "- [ ] All tests passing",
+      "- [ ] Test report generated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "testing",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-024",
+    "title": "Write Content Editor Integration Tests",
+    "priority": "HIGH",
+    "estimated_hours": 4.0,
+    "agent": "test-automation-engineer",
+    "dependencies": [
+      "FE-023"
+    ],
+    "description": "Create integration tests for complete content creation and publishing flows.",
+    "subtasks": [
+      "- [ ] Integration test: Create content \u2192 save draft",
+      "- [ ] Integration test: Create content \u2192 publish to NOSTR",
+      "- [ ] Integration test: Edit existing content \u2192 update",
+      "- [ ] Integration test: Media upload \u2192 embed in content \u2192 publish",
+      "- [ ] Integration test: Premium content \u2192 set pricing \u2192 publish",
+      "- [ ] Integration test: Auto-save recovery after page refresh",
+      "- [ ] Use MSW to mock backend responses",
+      "- [ ] Verify tests pass",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Integration tests for content creation flow",
+      "- [ ] Integration tests for publishing flow",
+      "- [ ] Integration tests for media upload",
+      "- [ ] Integration tests for auto-save recovery",
+      "- [ ] API integration tested with MSW",
+      "- [ ] All integration tests passing",
+      "- [ ] Test coverage maintained at 95%+"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "testing",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-025",
+    "title": "Design Lightning Payment User Flows",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [],
+    "description": "Create user flow diagrams for Lightning payment covering wallet connection, subscription payment, one-time payment, and payment failure recovery.",
+    "subtasks": [
+      "- [ ] User flow: Connect Lightning wallet (WebLN)",
+      "- [ ] User flow: Subscribe to creator (generate invoice \u2192 pay)",
+      "- [ ] User flow: One-time payment for content",
+      "- [ ] User flow: Payment failure and retry",
+      "- [ ] User flow: View transaction history",
+      "- [ ] Export to docs/design/us-007-lightning-payments/flows/",
+      "- [ ] Create PNG exports",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 5 user flow diagrams in Mermaid format",
+      "- [ ] PNG exports for presentations",
+      "- [ ] Decision points and error states documented",
+      "- [ ] Flows reviewed by Lightning specialist",
+      "- [ ] Files committed",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-026",
+    "title": "Design Lightning Payment Wireframes",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-025"
+    ],
+    "description": "Create wireframes for Lightning payment interface including wallet connection, invoice display, QR codes, and transaction history.",
+    "subtasks": [
+      "- [ ] Wireframe: Wallet connection button/modal",
+      "- [ ] Wireframe: Invoice display with QR code",
+      "- [ ] Wireframe: Payment status modal (pending, confirmed, failed)",
+      "- [ ] Wireframe: Transaction history list",
+      "- [ ] Wireframe: Payment receipt",
+      "- [ ] Wireframe: Error states (payment failed, wallet disconnected)",
+      "- [ ] Export to docs/design/us-007-lightning-payments/wireframes/",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 6 wireframe screens completed",
+      "- [ ] Annotations for all interactions",
+      "- [ ] QR code placement defined",
+      "- [ ] Error states wireframed",
+      "- [ ] Files exported",
+      "- [ ] Wireframes reviewed",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-027",
+    "title": "Design Lightning Payment High-Fidelity Mockups",
+    "priority": "CRITICAL",
+    "estimated_hours": 8.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-026"
+    ],
+    "description": "Create high-fidelity mockups for Lightning payment UI with Bitcoin branding, QR codes, and mobile-optimized payment flow.",
+    "subtasks": [
+      "- [ ] High-fidelity: Wallet connection UI (WebLN, manual)",
+      "- [ ] High-fidelity: Invoice display with QR code (branded)",
+      "- [ ] High-fidelity: Payment status modal (pending, success, failed)",
+      "- [ ] High-fidelity: Sats to USD converter display",
+      "- [ ] High-fidelity: Transaction history (list, filters)",
+      "- [ ] High-fidelity: Payment receipt (downloadable)",
+      "- [ ] Mobile responsive versions (320px, 768px)",
+      "- [ ] Document Bitcoin/Lightning design patterns",
+      "- [ ] Export to docs/design/us-007-lightning-payments/mockups/",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] High-fidelity mockups for all 6 screens",
+      "- [ ] Bitcoin branding applied",
+      "- [ ] QR codes styled properly",
+      "- [ ] Mobile responsive designs",
+      "- [ ] Design system documented",
+      "- [ ] Accessibility annotations",
+      "- [ ] Files exported",
+      "- [ ] Mockups approved",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-028",
+    "title": "Create Lightning Payment Architecture Diagrams",
+    "priority": "HIGH",
+    "estimated_hours": 3.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-027"
+    ],
+    "description": "Create Mermaid diagrams for Lightning payment architecture including WebLN integration, invoice generation, payment verification, and webhook handling.",
+    "subtasks": [
+      "- [ ] Diagram: Component hierarchy (wallet, invoice, status)",
+      "- [ ] Diagram: WebLN integration flow",
+      "- [ ] Diagram: Invoice generation and QR code display",
+      "- [ ] Diagram: Payment verification polling",
+      "- [ ] Diagram: Webhook handling for payment confirmations",
+      "- [ ] Export to docs/architecture/diagrams/us-007-payments/",
+      "- [ ] Generate PNG renders",
+      "- [ ] Link in feature documentation",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 5 Mermaid diagrams created",
+      "- [ ] All diagrams in .mmd format",
+      "- [ ] PNG renders generated",
+      "- [ ] Diagrams linked in docs/features/lightning-payments.md",
+      "- [ ] Files committed",
+      "- [ ] Diagrams reviewed by Lightning specialist",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-029",
+    "title": "Implement LightningWalletConnect Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 5.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-028"
+    ],
+    "description": "Implement Lightning wallet connection component with WebLN support and fallback to manual invoice payment.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/payments/components/LightningWalletConnect.tsx",
+      "- [ ] Implement WebLN detection (window.webln)",
+      "- [ ] Implement WebLN.enable() for wallet connection",
+      "- [ ] Add fallback for no WebLN (manual invoice payment)",
+      "- [ ] Display connected wallet info (wallet name, icon)",
+      "- [ ] Add disconnect wallet functionality",
+      "- [ ] Style per mockups (connection button, status)",
+      "- [ ] Add accessibility (connection status announcement)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] WebLN wallet connection working (Alby, Zeus, etc.)",
+      "- [ ] Fallback to manual payment if no WebLN",
+      "- [ ] Connected wallet info displayed",
+      "- [ ] Disconnect functionality working",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible",
+      "- [ ] Storybook story interactive",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-030",
+    "title": "Implement InvoiceDisplay Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 5.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-029"
+    ],
+    "description": "Implement BOLT11 invoice display component with QR code generation, copy-to-clipboard, and amount display in sats and fiat.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/payments/components/InvoiceDisplay.tsx",
+      "- [ ] Implement BOLT11 invoice parsing (amount, expiry)",
+      "- [ ] Generate QR code from invoice (use qrcode.react)",
+      "- [ ] Add copy-to-clipboard button for invoice string",
+      "- [ ] Display amount in sats and USD equivalent",
+      "- [ ] Show invoice expiry countdown timer",
+      "- [ ] Add \"Open in Wallet\" button (universal Lightning URL)",
+      "- [ ] Style per mockups (QR code, invoice details)",
+      "- [ ] Add accessibility (QR code alt text, copy button)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] BOLT11 invoice displayed correctly",
+      "- [ ] QR code generated and scannable",
+      "- [ ] Copy-to-clipboard working",
+      "- [ ] Sats and USD amounts displayed",
+      "- [ ] Expiry countdown timer accurate",
+      "- [ ] \"Open in Wallet\" button working",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible",
+      "- [ ] Storybook story with examples",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-031",
+    "title": "Implement PaymentStatus Component",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-030"
+    ],
+    "description": "Implement real-time payment status component showing pending, confirmed, and failed states with polling and webhook support.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/payments/components/PaymentStatus.tsx",
+      "- [ ] Implement status polling (check payment every 2s)",
+      "- [ ] Implement webhook listener for instant confirmations",
+      "- [ ] Display status: pending (spinner), confirmed (checkmark), failed (X)",
+      "- [ ] Add status messages for each state",
+      "- [ ] Add retry button for failed payments",
+      "- [ ] Stop polling after confirmation or timeout",
+      "- [ ] Style per mockups (status modal, animations)",
+      "- [ ] Add accessibility (status announcements)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Payment status polling working (2s interval)",
+      "- [ ] Webhook support for instant updates",
+      "- [ ] All states displayed correctly (pending, confirmed, failed)",
+      "- [ ] Retry button for failed payments",
+      "- [ ] Polling stops after confirmation/timeout",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible (live region)",
+      "- [ ] Storybook story with all states",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-032",
+    "title": "Implement TransactionHistory Component",
+    "priority": "HIGH",
+    "estimated_hours": 4.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-031"
+    ],
+    "description": "Implement transaction history component showing past Lightning payments with filters and sorting.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/payments/components/TransactionHistory.tsx",
+      "- [ ] Fetch transaction history from backend API",
+      "- [ ] Display transactions in list/table format",
+      "- [ ] Add filters (date range, status, amount)",
+      "- [ ] Add sorting (date, amount)",
+      "- [ ] Implement pagination (10 per page)",
+      "- [ ] Add export to CSV functionality",
+      "- [ ] Style per mockups (table/list, responsive)",
+      "- [ ] Add accessibility (table headers, sort buttons)",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Transaction history fetched from API",
+      "- [ ] Transactions displayed in table/list",
+      "- [ ] Filters and sorting working",
+      "- [ ] Pagination implemented",
+      "- [ ] CSV export working",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible (table semantics)",
+      "- [ ] Storybook story with data",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-033",
+    "title": "Implement SatsConverter Utility",
+    "priority": "MEDIUM",
+    "estimated_hours": 3.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [],
+    "description": "Implement utility component/hook for converting satoshis to USD and vice versa with real-time exchange rates.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/payments/utils/satsConverter.ts",
+      "- [ ] Fetch BTC/USD exchange rate from API (CoinGecko or similar)",
+      "- [ ] Implement satsToUSD conversion function",
+      "- [ ] Implement USDToSats conversion function",
+      "- [ ] Create custom hook: useSatsConverter",
+      "- [ ] Implement exchange rate caching (refresh every 5 min)",
+      "- [ ] Add error handling for API failures",
+      "- [ ] Write unit tests for conversion logic",
+      "- [ ] Document API usage",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] satsToUSD and USDToSats functions working",
+      "- [ ] Exchange rate fetched from API",
+      "- [ ] Custom hook useSatsConverter implemented",
+      "- [ ] Exchange rate cached (5 min refresh)",
+      "- [ ] Error handling for API failures",
+      "- [ ] Unit tests passing (100% coverage)",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:medium",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-034",
+    "title": "Integrate Lightning Payments with Backend API",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "elite-frontend-dev + lightning-network-specialist",
+    "dependencies": [
+      "FE-029",
+      "FE-030",
+      "FE-031"
+    ],
+    "description": "Integrate Lightning payment UI with backend Lightning service, invoice generation, and payment verification endpoints.",
+    "subtasks": [
+      "- [ ] Connect wallet to backend /api/lightning/connect endpoint",
+      "- [ ] Implement invoice generation: POST /api/lightning/invoice",
+      "- [ ] Implement payment verification: GET /api/lightning/payment-status/:id",
+      "- [ ] Integrate WebLN.sendPayment for instant payments",
+      "- [ ] Implement webhook listener for payment confirmations",
+      "- [ ] Add error handling for all API failures",
+      "- [ ] Add loading states during async operations",
+      "- [ ] Test integration with backend Lightning service",
+      "- [ ] Verify Lightning protocol compliance (BOLT11)",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Wallet connection API working",
+      "- [ ] Invoice generation API working",
+      "- [ ] Payment verification API working",
+      "- [ ] WebLN.sendPayment integrated",
+      "- [ ] Webhook listener functional",
+      "- [ ] Error handling comprehensive",
+      "- [ ] Loading states implemented",
+      "- [ ] Lightning protocol compliant (BOLT11)",
+      "- [ ] Integration tests passing"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "frontend",
+      "backend"
+    ]
+  },
+  {
+    "id": "FE-035",
+    "title": "Write Lightning Payment Unit Tests",
+    "priority": "CRITICAL",
+    "estimated_hours": 8.0,
+    "agent": "test-automation-engineer",
+    "dependencies": [
+      "FE-034"
+    ],
+    "description": "Create comprehensive unit tests for Lightning payment components with 100% coverage (financial critical code).",
+    "subtasks": [
+      "- [ ] Test: LightningWalletConnect WebLN integration",
+      "- [ ] Test: InvoiceDisplay BOLT11 parsing",
+      "- [ ] Test: InvoiceDisplay QR code generation",
+      "- [ ] Test: PaymentStatus polling logic",
+      "- [ ] Test: PaymentStatus webhook handling",
+      "- [ ] Test: TransactionHistory filters and sorting",
+      "- [ ] Test: SatsConverter conversion accuracy",
+      "- [ ] Test: Error handling for all failure scenarios",
+      "- [ ] Mock window.webln for tests",
+      "- [ ] Mock backend API with MSW",
+      "- [ ] Verify 100% coverage (financial critical)",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 100% test coverage for payments feature",
+      "- [ ] All components have unit tests",
+      "- [ ] BOLT11 parsing thoroughly tested",
+      "- [ ] WebLN integration mocked and tested",
+      "- [ ] Edge cases tested (payment timeout, network failure)",
+      "- [ ] All tests passing",
+      "- [ ] Test report generated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "testing",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-036",
+    "title": "Write Lightning Payment Integration Tests",
+    "priority": "CRITICAL",
+    "estimated_hours": 5.0,
+    "agent": "test-automation-engineer",
+    "dependencies": [
+      "FE-035"
+    ],
+    "description": "Create integration tests for complete Lightning payment flows including subscription payment and one-time payment.",
+    "subtasks": [
+      "- [ ] Integration test: Subscribe to creator (full flow)",
+      "- [ ] Integration test: One-time payment for content",
+      "- [ ] Integration test: Payment failure and retry",
+      "- [ ] Integration test: WebLN instant payment",
+      "- [ ] Integration test: Manual invoice payment",
+      "- [ ] Integration test: Transaction history updates after payment",
+      "- [ ] Use MSW to mock backend responses",
+      "- [ ] Mock WebLN for testing",
+      "- [ ] Verify tests pass",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Integration tests for subscription flow",
+      "- [ ] Integration tests for one-time payment",
+      "- [ ] Integration tests for payment failure/retry",
+      "- [ ] Integration tests for WebLN payment",
+      "- [ ] API integration tested with MSW",
+      "- [ ] WebLN mocked properly",
+      "- [ ] All integration tests passing",
+      "- [ ] Test coverage maintained at 100%"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:critical",
+      "testing",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-037",
+    "title": "Design Subscription Tier Management Flows",
+    "priority": "HIGH",
+    "estimated_hours": 3.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [],
+    "description": "Create user flow diagrams for subscription tier management including create tier, edit tier, delete tier, and preview.",
+    "subtasks": [
+      "- [ ] User flow: Create new subscription tier",
+      "- [ ] User flow: Edit existing tier",
+      "- [ ] User flow: Delete tier (with confirmation)",
+      "- [ ] User flow: Preview tier display to supporters",
+      "- [ ] Export to docs/design/us-003-subscription-tiers/flows/",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 4 user flow diagrams in Mermaid format",
+      "- [ ] PNG exports",
+      "- [ ] Files committed",
+      "- [ ] Flows reviewed",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-038",
+    "title": "Design Subscription Tier Wireframes & Mockups",
+    "priority": "HIGH",
+    "estimated_hours": 5.0,
+    "agent": "design-ux-specialist",
+    "dependencies": [
+      "FE-037"
+    ],
+    "description": "Create wireframes and high-fidelity mockups for subscription tier CRUD interface.",
+    "subtasks": [
+      "- [ ] Wireframe: Tier management dashboard",
+      "- [ ] Wireframe: Create/edit tier form",
+      "- [ ] Wireframe: Tier preview card",
+      "- [ ] High-fidelity: Tier management UI (all states)",
+      "- [ ] Mobile responsive versions",
+      "- [ ] Export to docs/design/us-003-subscription-tiers/",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Wireframes and mockups completed",
+      "- [ ] Mobile responsive designs",
+      "- [ ] Files exported",
+      "- [ ] Designs approved",
+      "- [ ] CHANGELOG.md updated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "design",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-039",
+    "title": "Implement SubscriptionTierManager Component",
+    "priority": "HIGH",
+    "estimated_hours": 6.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "FE-038"
+    ],
+    "description": "Implement subscription tier management interface with CRUD operations for tiers.",
+    "subtasks": [
+      "- [ ] Create: packages/frontend/src/features/subscriptions/components/SubscriptionTierManager.tsx",
+      "- [ ] Implement tier list display",
+      "- [ ] Implement create tier form (name, price, benefits, billing period)",
+      "- [ ] Implement edit tier functionality",
+      "- [ ] Implement delete tier with confirmation",
+      "- [ ] Integrate with backend /api/subscription-tiers API",
+      "- [ ] Add tier preview card",
+      "- [ ] Style per mockups",
+      "- [ ] Add accessibility",
+      "- [ ] Create Storybook story",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Tier CRUD operations working",
+      "- [ ] API integration complete",
+      "- [ ] Tier preview accurate",
+      "- [ ] TypeScript strict compliant",
+      "- [ ] WCAG AA accessible",
+      "- [ ] Storybook story",
+      "- [ ] JSDoc complete"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-040",
+    "title": "Write Subscription Tier Unit Tests",
+    "priority": "HIGH",
+    "estimated_hours": 4.0,
+    "agent": "test-automation-engineer",
+    "dependencies": [
+      "FE-039"
+    ],
+    "description": "Create unit tests for subscription tier management with 95%+ coverage.",
+    "subtasks": [
+      "- [ ] Test: Tier create form validation",
+      "- [ ] Test: Tier edit functionality",
+      "- [ ] Test: Tier delete confirmation",
+      "- [ ] Test: API integration (mock with MSW)",
+      "- [ ] Verify 95%+ coverage",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] 95%+ test coverage",
+      "- [ ] All CRUD operations tested",
+      "- [ ] API mocked and tested",
+      "- [ ] All tests passing",
+      "- [ ] Test report generated"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:high",
+      "testing",
+      "frontend"
+    ]
+  },
+  {
+    "id": "FE-041",
+    "title": "Write Subscription Tier Integration Tests",
+    "priority": "MEDIUM",
+    "estimated_hours": 3.0,
+    "agent": "test-automation-engineer",
+    "dependencies": [
+      "FE-040"
+    ],
+    "description": "Create integration tests for tier management flows.",
+    "subtasks": [
+      "- [ ] Integration test: Create tier \u2192 verify in list",
+      "- [ ] Integration test: Edit tier \u2192 verify changes",
+      "- [ ] Integration test: Delete tier \u2192 verify removal",
+      "- [ ] Use MSW for API mocking",
+      "- [ ] Verify tests pass",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Integration tests passing",
+      "- [ ] API integration tested",
+      "- [ ] Test coverage maintained at 95%+"
+    ],
+    "epic": "EPIC-FRONTEND",
+    "labels": [
+      "user-story",
+      "epic:frontend",
+      "priority:medium",
+      "testing",
+      "frontend"
+    ]
+  },
+  {
+    "id": "INT-001",
+    "title": "Set Up Playwright E2E Test Infrastructure",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "e2e-testing-specialist",
+    "dependencies": [
+      "FE-036",
+      "FE-041"
+    ],
+    "description": "Set up Playwright test infrastructure with proper configuration for Chromium, Firefox, and WebKit.",
+    "subtasks": [
+      "- [ ] Install Playwright: npm install -D @playwright/test",
+      "- [ ] Initialize Playwright config: npx playwright install",
+      "- [ ] Create playwright.config.ts with browser configs",
+      "- [ ] Set up test environment (staging URL, test users)",
+      "- [ ] Create test utilities and helpers",
+      "- [ ] Set up visual regression testing (playwright-screenshots)",
+      "- [ ] Configure CI/CD integration (GitHub Actions)",
+      "- [ ] Document test execution commands",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Playwright installed and configured",
+      "- [ ] 3 browsers configured (Chromium, Firefox, WebKit)",
+      "- [ ] Test environment set up",
+      "- [ ] Test utilities created",
+      "- [ ] CI/CD integration ready",
+      "- [ ] Documentation complete"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:critical",
+      "testing"
+    ]
+  },
+  {
+    "id": "INT-002",
+    "title": "E2E Test - Creator Onboarding Flow",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "e2e-testing-specialist",
+    "dependencies": [
+      "INT-001"
+    ],
+    "description": "Create end-to-end test for complete creator onboarding flow from authentication to first content publish.",
+    "subtasks": [
+      "- [ ] Create test file: e2e/creator-onboarding.spec.ts",
+      "- [ ] Test: Navigate to app \u2192 click \"Sign Up\"",
+      "- [ ] Test: NOSTR auth via extension (mock extension)",
+      "- [ ] Test: Select \"Creator\" role",
+      "- [ ] Test: Complete profile creation",
+      "- [ ] Test: Navigate to content creation",
+      "- [ ] Test: Create first content with media",
+      "- [ ] Test: Set as premium with pricing",
+      "- [ ] Test: Publish content",
+      "- [ ] Test: Verify content appears in feed",
+      "- [ ] Add assertions at each step",
+      "- [ ] Add visual regression checks",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] E2E test passing on 3 browsers",
+      "- [ ] All assertions passing",
+      "- [ ] Visual regression tests included",
+      "- [ ] Test execution time <2 minutes",
+      "- [ ] Screenshots captured on failure",
+      "- [ ] Test documented"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:critical",
+      "testing"
+    ]
+  },
+  {
+    "id": "INT-003",
+    "title": "E2E Test - Supporter Subscription Flow",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "e2e-testing-specialist",
+    "dependencies": [
+      "INT-001"
+    ],
+    "description": "Create end-to-end test for supporter discovering creator, subscribing with Lightning, and accessing premium content.",
+    "subtasks": [
+      "- [ ] Create test file: e2e/supporter-subscription.spec.ts",
+      "- [ ] Test: NOSTR auth as supporter",
+      "- [ ] Test: Discover creator via search",
+      "- [ ] Test: View creator profile and tiers",
+      "- [ ] Test: Select subscription tier",
+      "- [ ] Test: Generate Lightning invoice",
+      "- [ ] Test: Mock Lightning payment (testnet or mock)",
+      "- [ ] Test: Verify payment confirmation",
+      "- [ ] Test: Access premium content",
+      "- [ ] Test: Verify paywall removed after subscription",
+      "- [ ] Add assertions at each step",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] E2E test passing on 3 browsers",
+      "- [ ] Lightning payment flow tested (mocked)",
+      "- [ ] Premium content access verified",
+      "- [ ] Test execution time <2 minutes",
+      "- [ ] Test documented"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:critical",
+      "testing"
+    ]
+  },
+  {
+    "id": "INT-004",
+    "title": "E2E Test - Content Creation Flow",
+    "priority": "HIGH",
+    "estimated_hours": 5.0,
+    "agent": "e2e-testing-specialist",
+    "dependencies": [
+      "INT-001"
+    ],
+    "description": "Create end-to-end test for content creation workflow including editor, media upload, and NOSTR publishing.",
+    "subtasks": [
+      "- [ ] Create test file: e2e/content-creation.spec.ts",
+      "- [ ] Test: Login as creator",
+      "- [ ] Test: Navigate to content editor",
+      "- [ ] Test: Write content with rich text formatting",
+      "- [ ] Test: Upload media (image)",
+      "- [ ] Test: Add tags",
+      "- [ ] Test: Set as premium with pricing",
+      "- [ ] Test: Preview content",
+      "- [ ] Test: Publish to NOSTR",
+      "- [ ] Test: Verify content in creator's feed",
+      "- [ ] Add auto-save recovery test",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] E2E test passing on 3 browsers",
+      "- [ ] Content creation flow tested",
+      "- [ ] Media upload tested",
+      "- [ ] NOSTR publishing verified",
+      "- [ ] Auto-save recovery tested",
+      "- [ ] Test documented"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:high",
+      "testing"
+    ]
+  },
+  {
+    "id": "INT-005",
+    "title": "E2E Test - Lightning Payment Flow",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "e2e-testing-specialist",
+    "dependencies": [
+      "INT-001"
+    ],
+    "description": "Create end-to-end test for Lightning payment flow including WebLN and manual invoice payment.",
+    "subtasks": [
+      "- [ ] Create test file: e2e/lightning-payment.spec.ts",
+      "- [ ] Test: View creator profile",
+      "- [ ] Test: Select subscription tier",
+      "- [ ] Test: Generate Lightning invoice",
+      "- [ ] Test: Display QR code",
+      "- [ ] Test: Copy invoice to clipboard",
+      "- [ ] Test: Mock WebLN payment (window.webln)",
+      "- [ ] Test: Poll payment status",
+      "- [ ] Test: Verify payment confirmation",
+      "- [ ] Test: View transaction in history",
+      "- [ ] Test: Payment failure and retry",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] E2E test passing on 3 browsers",
+      "- [ ] WebLN payment mocked",
+      "- [ ] Invoice display tested",
+      "- [ ] Payment status polling tested",
+      "- [ ] Payment failure recovery tested",
+      "- [ ] Test documented"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:critical",
+      "testing"
+    ]
+  },
+  {
+    "id": "INT-006",
+    "title": "E2E Test - Error Recovery Flow",
+    "priority": "HIGH",
+    "estimated_hours": 5.0,
+    "agent": "e2e-testing-specialist",
+    "dependencies": [
+      "INT-001"
+    ],
+    "description": "Create end-to-end test for error recovery scenarios including network failures, auto-save recovery, and session expiry.",
+    "subtasks": [
+      "- [ ] Create test file: e2e/error-recovery.spec.ts",
+      "- [ ] Test: Network failure during content publish",
+      "- [ ] Test: Auto-save recovery after browser crash (simulate)",
+      "- [ ] Test: Session expiry and re-authentication",
+      "- [ ] Test: Payment timeout and retry",
+      "- [ ] Test: NOSTR relay failure with fallback",
+      "- [ ] Test: Error boundary catch and display",
+      "- [ ] Add network throttling tests",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] E2E test passing on 3 browsers",
+      "- [ ] Network failure scenarios tested",
+      "- [ ] Auto-save recovery verified",
+      "- [ ] Session expiry handled",
+      "- [ ] Error boundaries tested",
+      "- [ ] Test documented"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:high",
+      "testing"
+    ]
+  },
+  {
+    "id": "INT-007",
+    "title": "NOSTR Protocol Validation",
+    "priority": "HIGH",
+    "estimated_hours": 6.0,
+    "agent": "nostr-protocol-specialist",
+    "dependencies": [],
+    "description": "Validate complete NOSTR integration for compliance with NIP-01, NIP-23, NIP-05 and multi-relay publishing.",
+    "subtasks": [
+      "- [ ] Validate NIP-01: Event structure and signatures",
+      "- [ ] Validate NIP-23: Long-form content events",
+      "- [ ] Validate NIP-05: Verification integration",
+      "- [ ] Test multi-relay publishing (redundancy)",
+      "- [ ] Test relay fallback logic",
+      "- [ ] Verify event signing correctness",
+      "- [ ] Test key management (no private key leakage)",
+      "- [ ] Generate NOSTR compliance report",
+      "- [ ] Document any issues or recommendations",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] NIP-01 compliance verified",
+      "- [ ] NIP-23 long-form content validated",
+      "- [ ] NIP-05 verification working",
+      "- [ ] Multi-relay publishing tested",
+      "- [ ] Compliance report generated",
+      "- [ ] Zero critical NOSTR issues",
+      "- [ ] Recommendations documented"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:high"
+    ]
+  },
+  {
+    "id": "INT-008",
+    "title": "Accessibility Audit - Automated Testing",
+    "priority": "HIGH",
+    "estimated_hours": 4.0,
+    "agent": "accessibility-specialist",
+    "dependencies": [],
+    "description": "Run automated accessibility testing using Lighthouse, axe-core, and WAVE to identify WCAG violations.",
+    "subtasks": [
+      "- [ ] Run Lighthouse accessibility audit on all pages",
+      "- [ ] Run axe-core tests using @axe-core/playwright",
+      "- [ ] Run WAVE tests on critical pages",
+      "- [ ] Test keyboard navigation (tab order, focus indicators)",
+      "- [ ] Test screen reader compatibility (check ARIA labels)",
+      "- [ ] Test color contrast (4.5:1 text, 3:1 UI)",
+      "- [ ] Generate accessibility report with all violations",
+      "- [ ] Prioritize violations (critical, high, medium, low)",
+      "- [ ] Document remediation steps",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Lighthouse score \u226590 for accessibility",
+      "- [ ] axe-core tests passing (0 critical violations)",
+      "- [ ] WAVE tests passing",
+      "- [ ] Keyboard navigation working",
+      "- [ ] Color contrast meeting WCAG AA",
+      "- [ ] Accessibility report generated",
+      "- [ ] Remediation plan documented"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:high",
+      "testing",
+      "security"
+    ]
+  },
+  {
+    "id": "INT-009",
+    "title": "Accessibility Audit - Manual Testing",
+    "priority": "HIGH",
+    "estimated_hours": 6.0,
+    "agent": "accessibility-specialist",
+    "dependencies": [
+      "INT-008"
+    ],
+    "description": "Perform manual accessibility testing with screen readers (NVDA, JAWS, VoiceOver) and keyboard-only navigation.",
+    "subtasks": [
+      "- [ ] Test with NVDA (Windows screen reader)",
+      "- [ ] Test with JAWS (Windows screen reader)",
+      "- [ ] Test with VoiceOver (macOS screen reader)",
+      "- [ ] Test keyboard-only navigation (no mouse)",
+      "- [ ] Test form validation announcements",
+      "- [ ] Test error message announcements",
+      "- [ ] Test loading state announcements",
+      "- [ ] Test modal focus traps",
+      "- [ ] Test dynamic content updates (live regions)",
+      "- [ ] Document accessibility issues found",
+      "- [ ] Create remediation tickets for issues",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Screen reader testing complete (3 readers)",
+      "- [ ] Keyboard-only navigation verified",
+      "- [ ] Form accessibility validated",
+      "- [ ] Error announcements working",
+      "- [ ] Modal focus traps working",
+      "- [ ] Live regions announcing properly",
+      "- [ ] Issues documented and prioritized",
+      "- [ ] WCAG 2.1 AA compliance achieved"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:high",
+      "testing",
+      "security"
+    ]
+  },
+  {
+    "id": "INT-010",
+    "title": "Fix Critical Accessibility Issues",
+    "priority": "HIGH",
+    "estimated_hours": 8.0,
+    "agent": "elite-frontend-dev",
+    "dependencies": [
+      "INT-008",
+      "INT-009"
+    ],
+    "description": "Fix all critical accessibility issues identified in audits to achieve WCAG 2.1 AA compliance.",
+    "subtasks": [
+      "- [ ] Fix color contrast violations",
+      "- [ ] Fix missing ARIA labels",
+      "- [ ] Fix keyboard navigation issues",
+      "- [ ] Fix focus indicator issues",
+      "- [ ] Fix form validation announcements",
+      "- [ ] Fix modal focus traps",
+      "- [ ] Fix live region announcements",
+      "- [ ] Re-run Lighthouse tests (verify 90+ score)",
+      "- [ ] Re-run axe-core tests (verify 0 critical)",
+      "- [ ] Re-test with screen readers",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] All critical accessibility issues fixed",
+      "- [ ] Lighthouse score \u226590",
+      "- [ ] axe-core 0 critical violations",
+      "- [ ] Screen reader testing passes",
+      "- [ ] Keyboard navigation working",
+      "- [ ] WCAG 2.1 AA compliant",
+      "- [ ] Fixes documented in CHANGELOG.md"
+    ],
+    "epic": "EPIC-INTEGRATION",
+    "labels": [
+      "user-story",
+      "epic:integration",
+      "priority:high"
+    ]
+  },
+  {
+    "id": "PROD-001",
+    "title": "Security Audit - Frontend",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "security-engineer",
+    "dependencies": [],
+    "description": "Perform comprehensive security audit of frontend code focusing on XSS, CSRF, secrets exposure, and dependency vulnerabilities.",
+    "subtasks": [
+      "- [ ] Audit for XSS vulnerabilities (user input rendering)",
+      "- [ ] Audit for CSRF protection (API calls)",
+      "- [ ] Audit for secrets in localStorage/sessionStorage",
+      "- [ ] Scan dependencies: npm audit",
+      "- [ ] Check Content Security Policy headers",
+      "- [ ] Audit authentication flows (token handling)",
+      "- [ ] Check for sensitive data in browser console",
+      "- [ ] Review third-party dependencies for risks",
+      "- [ ] Generate frontend security report",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] XSS audit complete (0 vulnerabilities)",
+      "- [ ] CSRF protection verified",
+      "- [ ] No secrets in browser storage",
+      "- [ ] npm audit 0 critical/high vulnerabilities",
+      "- [ ] CSP headers configured",
+      "- [ ] Authentication flows secure",
+      "- [ ] Security report generated",
+      "- [ ] Score \u226595/100"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:critical",
+      "security",
+      "frontend"
+    ]
+  },
+  {
+    "id": "PROD-002",
+    "title": "Security Audit - Backend",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "security-engineer",
+    "dependencies": [
+      "PROD-001"
+    ],
+    "description": "Perform comprehensive security audit of backend focusing on authentication, authorization, input validation, and SQL injection prevention.",
+    "subtasks": [
+      "- [ ] Audit authentication endpoints (JWT validation)",
+      "- [ ] Audit authorization checks (RBAC enforcement)",
+      "- [ ] Audit input validation (all endpoints)",
+      "- [ ] Test for SQL injection vulnerabilities",
+      "- [ ] Audit rate limiting configuration",
+      "- [ ] Check for sensitive data in logs",
+      "- [ ] Review API security headers",
+      "- [ ] Audit AWS Secrets Manager integration",
+      "- [ ] Generate backend security report",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Authentication audit complete",
+      "- [ ] Authorization properly enforced",
+      "- [ ] Input validation comprehensive",
+      "- [ ] SQL injection prevention verified",
+      "- [ ] Rate limiting configured",
+      "- [ ] No sensitive data in logs",
+      "- [ ] Security headers configured",
+      "- [ ] Secrets Manager secure",
+      "- [ ] Score \u226595/100"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:critical",
+      "security",
+      "backend"
+    ]
+  },
+  {
+    "id": "PROD-003",
+    "title": "Security Audit - NOSTR & Lightning",
+    "priority": "CRITICAL",
+    "estimated_hours": 4.0,
+    "agent": "security-engineer + lightning-network-specialist",
+    "dependencies": [
+      "PROD-002"
+    ],
+    "description": "Perform security audit of NOSTR key handling and Lightning payment processing focusing on private key security and payment validation.",
+    "subtasks": [
+      "- [ ] Audit NOSTR private key handling (never sent to server)",
+      "- [ ] Audit NOSTR event signing (no key leakage)",
+      "- [ ] Audit Lightning invoice validation",
+      "- [ ] Audit payment amount verification",
+      "- [ ] Audit webhook signature validation",
+      "- [ ] Check for payment replay attacks",
+      "- [ ] Test payment timeout handling",
+      "- [ ] Generate NOSTR/Lightning security report",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Private keys never exposed",
+      "- [ ] Event signing secure",
+      "- [ ] Invoice validation working",
+      "- [ ] Payment amounts validated",
+      "- [ ] Webhook signatures verified",
+      "- [ ] No replay attack vulnerabilities",
+      "- [ ] Security report generated",
+      "- [ ] 0 critical issues"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:critical",
+      "security"
+    ]
+  },
+  {
+    "id": "PROD-004",
+    "title": "Performance Optimization - Bundle Size",
+    "priority": "HIGH",
+    "estimated_hours": 6.0,
+    "agent": "performance-optimization-engineer",
+    "dependencies": [],
+    "description": "Optimize frontend bundle sizes using code splitting, tree shaking, and lazy loading to meet <250KB per chunk target.",
+    "subtasks": [
+      "- [ ] Analyze bundle: npm run build && npx vite-bundle-analyzer",
+      "- [ ] Implement lazy loading for routes (React.lazy)",
+      "- [ ] Split large dependencies into separate chunks",
+      "- [ ] Remove unused dependencies",
+      "- [ ] Optimize images (WebP, compression)",
+      "- [ ] Enable tree shaking (verify vite config)",
+      "- [ ] Implement dynamic imports for heavy features",
+      "- [ ] Verify bundle sizes <250KB per chunk",
+      "- [ ] Test production build load times",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] All chunks <250KB",
+      "- [ ] Lazy loading implemented",
+      "- [ ] Tree shaking verified",
+      "- [ ] Images optimized",
+      "- [ ] Production build tested",
+      "- [ ] Load time improved by \u226520%",
+      "- [ ] Bundle analysis report generated"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:high"
+    ]
+  },
+  {
+    "id": "PROD-005",
+    "title": "Performance Optimization - Core Web Vitals",
+    "priority": "HIGH",
+    "estimated_hours": 6.0,
+    "agent": "performance-optimization-engineer",
+    "dependencies": [
+      "PROD-004"
+    ],
+    "description": "Optimize frontend performance to meet Core Web Vitals targets (LCP <2.5s, FID <100ms, CLS <0.1).",
+    "subtasks": [
+      "- [ ] Measure baseline Core Web Vitals (Lighthouse)",
+      "- [ ] Optimize LCP: preload critical resources, lazy load images",
+      "- [ ] Optimize FID: reduce JavaScript execution time",
+      "- [ ] Optimize CLS: set image dimensions, avoid layout shifts",
+      "- [ ] Implement resource hints (preconnect, prefetch)",
+      "- [ ] Optimize font loading (font-display: swap)",
+      "- [ ] Implement service worker for caching",
+      "- [ ] Measure improvements with Lighthouse",
+      "- [ ] Verify targets met (LCP <2.5s, FID <100ms, CLS <0.1)",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] LCP <2.5s",
+      "- [ ] FID <100ms",
+      "- [ ] CLS <0.1",
+      "- [ ] Lighthouse performance score \u226590",
+      "- [ ] Service worker implemented",
+      "- [ ] Performance report generated",
+      "- [ ] All targets met"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:high"
+    ]
+  },
+  {
+    "id": "PROD-006",
+    "title": "React Performance Optimization",
+    "priority": "MEDIUM",
+    "estimated_hours": 5.0,
+    "agent": "performance-optimization-engineer",
+    "dependencies": [
+      "PROD-005"
+    ],
+    "description": "Optimize React component rendering using React.memo, useMemo, useCallback to eliminate unnecessary re-renders.",
+    "subtasks": [
+      "- [ ] Profile components with React DevTools Profiler",
+      "- [ ] Identify components with unnecessary re-renders",
+      "- [ ] Implement React.memo for expensive components",
+      "- [ ] Implement useMemo for expensive calculations",
+      "- [ ] Implement useCallback for callback props",
+      "- [ ] Optimize Redux selectors with reselect",
+      "- [ ] Verify re-render improvements with Profiler",
+      "- [ ] Document optimization patterns",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] React DevTools Profiler shows no unnecessary re-renders",
+      "- [ ] React.memo applied where beneficial",
+      "- [ ] useMemo/useCallback applied appropriately",
+      "- [ ] Redux selectors optimized",
+      "- [ ] Component render time reduced by \u226530%",
+      "- [ ] Optimization patterns documented"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:medium"
+    ]
+  },
+  {
+    "id": "PROD-007",
+    "title": "Implement Production Monitoring",
+    "priority": "CRITICAL",
+    "estimated_hours": 8.0,
+    "agent": "monitoring-observability-architect",
+    "dependencies": [],
+    "description": "Implement production monitoring with error tracking, performance monitoring, and business metrics dashboards.",
+    "subtasks": [
+      "- [ ] Configure Sentry for error tracking (already integrated, verify)",
+      "- [ ] Set up performance monitoring (Core Web Vitals to Sentry)",
+      "- [ ] Create CloudWatch dashboard for backend metrics",
+      "- [ ] Create business metrics dashboard (signups, payments, content)",
+      "- [ ] Set up alerting rules (error rate, payment failures, downtime)",
+      "- [ ] Configure log aggregation (CloudWatch Logs)",
+      "- [ ] Set up uptime monitoring (Pingdom or UptimeRobot)",
+      "- [ ] Create runbook documentation for common issues",
+      "- [ ] Test alerting (trigger test alerts)",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] Sentry error tracking working",
+      "- [ ] Performance monitoring enabled",
+      "- [ ] CloudWatch dashboard created",
+      "- [ ] Business metrics dashboard created",
+      "- [ ] Alerting rules configured and tested",
+      "- [ ] Log aggregation working",
+      "- [ ] Uptime monitoring enabled",
+      "- [ ] Runbook documentation complete"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:critical"
+    ]
+  },
+  {
+    "id": "PROD-008",
+    "title": "Update API Documentation",
+    "priority": "HIGH",
+    "estimated_hours": 6.0,
+    "agent": "api-documentation-engineer",
+    "dependencies": [],
+    "description": "Update OpenAPI 3.0 specification for all API endpoints and deploy interactive Swagger UI documentation.",
+    "subtasks": [
+      "- [ ] Review all backend API endpoints",
+      "- [ ] Update OpenAPI spec: docs/api/openapi.yaml",
+      "- [ ] Document request/response schemas",
+      "- [ ] Document authentication flows (JWT)",
+      "- [ ] Document error codes and responses",
+      "- [ ] Generate TypeScript types from OpenAPI spec",
+      "- [ ] Set up Swagger UI (deploy to /api/docs)",
+      "- [ ] Write developer quick start guide",
+      "- [ ] Write integration guides (auth, payments, content)",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] OpenAPI spec complete for all endpoints",
+      "- [ ] Request/response schemas documented",
+      "- [ ] Authentication documented",
+      "- [ ] Error codes documented",
+      "- [ ] TypeScript types generated",
+      "- [ ] Swagger UI deployed and accessible",
+      "- [ ] Developer guides written",
+      "- [ ] Documentation reviewed and approved"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:high",
+      "documentation"
+    ]
+  },
+  {
+    "id": "PROD-009",
+    "title": "Final Production Readiness Review",
+    "priority": "CRITICAL",
+    "estimated_hours": 6.0,
+    "agent": "code-review-specialist + project-orchestrator",
+    "dependencies": [],
+    "description": "Conduct final production readiness review covering all quality gates, security, performance, and documentation before certification.",
+    "subtasks": [
+      "- [ ] Review all Epic 1-4 completion status",
+      "- [ ] Verify all tests passing (unit, integration, E2E)",
+      "- [ ] Verify test coverage (85%+ global, 95%+ backend, 100%+ payments)",
+      "- [ ] Verify security audit (95/100 score, 0 critical issues)",
+      "- [ ] Verify performance targets met (Core Web Vitals)",
+      "- [ ] Verify accessibility (WCAG 2.1 AA, 90+ Lighthouse)",
+      "- [ ] Verify monitoring and alerting configured",
+      "- [ ] Verify API documentation complete",
+      "- [ ] Review CHANGELOG.md completeness",
+      "- [ ] Generate production readiness certification or blocker list",
+      "- [ ] Update project board"
+    ],
+    "definition_of_done": [
+      "- [ ] All stories in Epic 1-4 completed",
+      "- [ ] All tests passing (100% pass rate)",
+      "- [ ] Test coverage targets met",
+      "- [ ] Security score \u226595/100, 0 critical issues",
+      "- [ ] Performance targets met (LCP, FID, CLS)",
+      "- [ ] WCAG 2.1 AA compliant",
+      "- [ ] Monitoring configured",
+      "- [ ] API docs complete",
+      "- [ ] CHANGELOG.md updated",
+      "- [ ] Production readiness certified OR blocker list documented"
+    ],
+    "epic": "EPIC-PRODUCTION",
+    "labels": [
+      "user-story",
+      "epic:production",
+      "priority:critical"
+    ]
+  }
+]

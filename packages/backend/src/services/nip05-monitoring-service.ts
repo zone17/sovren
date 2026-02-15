@@ -245,7 +245,7 @@ export class NIP05MonitoringService extends EventEmitter {
    * 🔔 Create Alert
    */
   private createAlert(alertData: Omit<AlertEvent, 'id' | 'timestamp'>): void {
-    const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const alertId = `alert_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const alert: AlertEvent = {
       id: alertId,
       ...alertData,

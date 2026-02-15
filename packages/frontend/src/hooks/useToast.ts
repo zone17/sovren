@@ -85,7 +85,7 @@ class ToastManager {
   private timers: Map<string, NodeJS.Timeout> = new Map();
 
   private generateId(): string {
-    return `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `toast_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   private notifyListeners(): void {

@@ -142,7 +142,7 @@ export function csrfProtection(
     // For state-changing methods: validate the double-submit
     const cookieToken = req.cookies?.[CSRF_COOKIE_NAME];
     const submittedToken =
-      (req.headers[CSRF_HEADER_NAME] as string) ||
+      req.get(CSRF_HEADER_NAME) ||
       (req.body && typeof req.body === 'object' ? req.body[CSRF_BODY_FIELD] : undefined);
 
     if (!cookieToken || !submittedToken) {

@@ -229,7 +229,7 @@ export abstract class BaseService implements IService {
    */
   protected createInternalContext(operation: string): ServiceContext {
     return {
-      requestId: `internal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      requestId: `internal_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       timestamp: new Date(),
       source: `${this.name}.${operation}`,
       metadata: {

@@ -441,7 +441,7 @@ export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsPr
   const trackInteraction = useCallback(
     (type: UserInteraction['type'], contentId: string, metadata?: any) => {
       const interaction: UserInteraction = {
-        id: `interaction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `interaction_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         userId,
         contentId,
         type,

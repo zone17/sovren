@@ -51,9 +51,7 @@ export function getCorrelationId(): string {
 const VALID_CORRELATION_ID = /^[a-zA-Z0-9-]{1,128}$/;
 
 export function correlationIdMiddleware(req: Request, res: Response, next: NextFunction): void {
-  const rawId =
-    (req.headers['x-correlation-id'] as string) ||
-    (req.headers['x-request-id'] as string);
+  const rawId = req.get('x-correlation-id') || req.get('x-request-id');
   const correlationId =
     rawId && VALID_CORRELATION_ID.test(rawId) ? rawId : randomUUID();
 

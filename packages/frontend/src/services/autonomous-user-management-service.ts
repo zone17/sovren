@@ -57,7 +57,7 @@ class MockAutonomousUserManagementService implements AutonomousUserManagementSer
   async executeAccountOperation(
     operation: Partial<UserAccountOperation>
   ): Promise<UserAccountOperation> {
-    const operationId = `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const operationId = `op_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     // Simulate AI-powered risk assessment
     const riskScore = this.calculateOperationRiskScore(operation);
@@ -159,7 +159,7 @@ class MockAutonomousUserManagementService implements AutonomousUserManagementSer
   }
 
   async createRole(role: Partial<RoleDefinition>): Promise<RoleDefinition> {
-    const roleId = `role_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const roleId = `role_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     const fullRole: RoleDefinition = {
       id: roleId,
@@ -204,7 +204,7 @@ class MockAutonomousUserManagementService implements AutonomousUserManagementSer
   }
 
   async assignRole(userId: string, roleId: string, reason: string): Promise<UserRoleAssignment> {
-    const assignmentId = `assignment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const assignmentId = `assignment_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     // AI-powered confidence calculation
     const confidence = this.calculateRoleAssignmentConfidence(userId, roleId);
@@ -270,7 +270,7 @@ class MockAutonomousUserManagementService implements AutonomousUserManagementSer
   // === US-173: AI-Powered User Behavior Analytics ===
 
   async trackBehaviorEvent(event: Partial<UserBehaviorEvent>): Promise<UserBehaviorEvent> {
-    const eventId = `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const eventId = `event_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     // AI-powered risk and anomaly scoring
     const riskScore = this.calculateEventRiskScore(event);
@@ -376,7 +376,7 @@ class MockAutonomousUserManagementService implements AutonomousUserManagementSer
   // === US-174: Autonomous Bulk Operations Tools ===
 
   async createBulkOperation(operation: Partial<BulkOperation>): Promise<BulkOperation> {
-    const operationId = `bulk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const operationId = `bulk_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     const fullOperation: BulkOperation = {
       id: operationId,
@@ -646,7 +646,7 @@ class MockAutonomousUserManagementService implements AutonomousUserManagementSer
   }
 
   private async createBehaviorAnomaly(event: UserBehaviorEvent): Promise<void> {
-    const anomalyId = `anomaly_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const anomalyId = `anomaly_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     const anomaly: BehaviorAnomaly = {
       id: anomalyId,

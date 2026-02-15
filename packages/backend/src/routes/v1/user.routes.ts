@@ -18,10 +18,12 @@ const router = Router();
 /**
  * Lazily resolve the UserController from the DI container.
  */
-let _userController: any = null;
-function getController() {
+import type { UserController } from '../../controllers/user/UserController';
+
+let _userController: UserController | null = null;
+function getController(): UserController {
   if (!_userController) {
-    _userController = container.get(TYPES.UserController);
+    _userController = container.resolve(TYPES.UserController);
   }
   return _userController;
 }

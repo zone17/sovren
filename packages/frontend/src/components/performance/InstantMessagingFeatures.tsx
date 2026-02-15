@@ -274,7 +274,7 @@ class MessagingWebSocketManager {
     if (this.ws?.readyState === WebSocket.OPEN) return;
 
     try {
-      this.connectionId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.connectionId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       const wsUrl = this.buildWebSocketUrl(userId, token);
       
       this.ws = new WebSocket(wsUrl);
@@ -653,7 +653,7 @@ export const InstantMessagingFeatures: React.FC<InstantMessagingFeaturesProps> =
     if (!currentMessage.trim() || !currentConversationId || !wsManagerRef.current) return;
 
     const message: Partial<Message> = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       conversationId: currentConversationId,
       senderId: userId,
       recipientId: 'recipient', // In real app, this would be determined from conversation

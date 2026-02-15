@@ -38,7 +38,7 @@ class ErrorToastManager {
   }
 
   private generateId(): string {
-    return `error_toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `error_toast_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   private notifyListeners(): void {

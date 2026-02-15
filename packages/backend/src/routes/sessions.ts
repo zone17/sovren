@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import express, { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
@@ -426,7 +427,7 @@ async function getCurrentSessionId(req: Request): Promise<string | null> {
     if (!authHeader) return null;
 
     const token = authHeader.substring(7); // Remove 'Bearer '
-    const tokenHash = require('crypto').createHash('sha256').update(token).digest('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
     const result = await sessionService.getSessionByTokenHash(tokenHash);
     return result.session?.id || null;

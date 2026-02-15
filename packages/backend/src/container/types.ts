@@ -8,6 +8,7 @@
  */
 
 import { ServiceToken } from '../interfaces/shared/IServiceRegistry';
+import type { IServiceContainer } from '../interfaces/shared/IServiceRegistry';
 
 // Type-only imports for service interfaces (no runtime dependency)
 import type { ILogger } from '../interfaces/shared/ILogger';
@@ -58,12 +59,12 @@ export const TYPES = {
   /**
    * Core DI Infrastructure
    */
-  ServiceContainer: new ServiceToken<any>('ServiceContainer', 'Main DI container'),
-  ServiceFactory: new ServiceToken<any>('ServiceFactory', 'Service factory orchestrator'),
+  ServiceContainer: new ServiceToken<IServiceContainer>('ServiceContainer', 'Main DI container'),
+  ServiceFactory: new ServiceToken<Record<string, unknown>>('ServiceFactory', 'Service factory orchestrator'),
   EventBusService: new ServiceToken<IEventBus>('EventBusService', 'Central event bus'),
-  RepositoryFactory: new ServiceToken<any>('RepositoryFactory', 'Repository factory'),
-  MigrationService: new ServiceToken<any>('MigrationService', 'Database migration service'),
-  DependencyAnalyzer: new ServiceToken<any>('DependencyAnalyzer', 'Dependency graph analyzer'),
+  RepositoryFactory: new ServiceToken<Record<string, unknown>>('RepositoryFactory', 'Repository factory'),
+  MigrationService: new ServiceToken<Record<string, unknown>>('MigrationService', 'Database migration service'),
+  DependencyAnalyzer: new ServiceToken<Record<string, unknown>>('DependencyAnalyzer', 'Dependency graph analyzer'),
 
   // ======================
   // PHASE 2: Shared Services (4 services)
@@ -188,21 +189,21 @@ export const TYPES = {
    * Common Dependencies
    */
   Logger: new ServiceToken<ILogger>('Logger', 'Application logger'),
-  Config: new ServiceToken<any>('Config', 'Configuration service'),
-  Database: new ServiceToken<any>('Database', 'Database connection pool'),
-  Redis: new ServiceToken<any>('Redis', 'Redis client'),
+  Config: new ServiceToken<Record<string, unknown>>('Config', 'Configuration service'),
+  Database: new ServiceToken<Record<string, unknown>>('Database', 'Database connection pool'),
+  Redis: new ServiceToken<Record<string, unknown>>('Redis', 'Redis client'),
 
   /**
    * Repositories (Data Access Layer)
    */
-  UserRepository: new ServiceToken<any>('UserRepository', 'User data access'),
-  ContentRepository: new ServiceToken<any>('ContentRepository', 'Content data access'),
-  PaymentRepository: new ServiceToken<any>('PaymentRepository', 'Payment data access'),
-  SubscriptionRepository: new ServiceToken<any>(
+  UserRepository: new ServiceToken<Record<string, unknown>>('UserRepository', 'User data access'),
+  ContentRepository: new ServiceToken<Record<string, unknown>>('ContentRepository', 'Content data access'),
+  PaymentRepository: new ServiceToken<Record<string, unknown>>('PaymentRepository', 'Payment data access'),
+  SubscriptionRepository: new ServiceToken<Record<string, unknown>>(
     'SubscriptionRepository',
     'Subscription data access'
   ),
-  UserPreferencesRepository: new ServiceToken<any>(
+  UserPreferencesRepository: new ServiceToken<Record<string, unknown>>(
     'UserPreferencesRepository',
     'User preferences data access'
   ),
@@ -210,22 +211,22 @@ export const TYPES = {
   /**
    * External Service Integrations
    */
-  LightningService: new ServiceToken<any>(
+  LightningService: new ServiceToken<Record<string, unknown>>(
     'LightningService',
     'Bitcoin Lightning Network integration'
   ),
-  NostrService: new ServiceToken<any>('NostrService', 'NOSTR protocol integration'),
-  ElasticsearchService: new ServiceToken<any>('ElasticsearchService', 'Elasticsearch client'),
+  NostrService: new ServiceToken<Record<string, unknown>>('NostrService', 'NOSTR protocol integration'),
+  ElasticsearchService: new ServiceToken<Record<string, unknown>>('ElasticsearchService', 'Elasticsearch client'),
 
   /**
    * Middleware & Utilities
    */
-  ValidationService: new ServiceToken<any>('ValidationService', 'Input validation'),
+  ValidationService: new ServiceToken<Record<string, unknown>>('ValidationService', 'Input validation'),
   AuthenticationService: new ServiceToken<IUserAuthenticationService>(
     'AuthenticationService',
     'Authentication and authorization'
   ),
-  RateLimitService: new ServiceToken<any>('RateLimitService', 'API rate limiting'),
+  RateLimitService: new ServiceToken<Record<string, unknown>>('RateLimitService', 'API rate limiting'),
 
   // ======================
   // CONTROLLERS (API Layer)
@@ -256,6 +257,9 @@ export const TYPES = {
  */
 export const SERVICE_LIFETIMES = {
   // Singleton: Single instance shared across entire application
+  // Note: All services formerly registered as "scoped" have been reclassified as
+  // singletons because no per-request scoping middleware exists. Services resolve
+  // from the root container, making scoped registrations behave as singletons.
   singleton: [
     'ServiceContainer',
     'EventBusService',
@@ -268,10 +272,6 @@ export const SERVICE_LIFETIMES = {
     'NostrService',
     'ElasticsearchService',
     'SecretsService',
-  ],
-
-  // Scoped: One instance per request/transaction
-  scoped: [
     'UserProfileService',
     'UserPreferencesService',
     'UserActivityService',
@@ -405,12 +405,9 @@ export const SERVICE_TAGS = {
 /**
  * Get service lifetime for a given service name
  */
-export function getServiceLifetime(serviceName: string): 'singleton' | 'scoped' | 'transient' {
+export function getServiceLifetime(serviceName: string): 'singleton' | 'transient' {
   if (SERVICE_LIFETIMES.singleton.includes(serviceName)) {
     return 'singleton';
-  }
-  if (SERVICE_LIFETIMES.scoped.includes(serviceName)) {
-    return 'scoped';
   }
   return 'transient';
 }

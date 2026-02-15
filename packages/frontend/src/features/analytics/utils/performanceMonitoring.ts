@@ -78,7 +78,7 @@ class AnalyticsPerformanceMonitor {
 
   // 📊 **START TRACKING OPERATION**
   startOperation(operation: string): string {
-    const operationId = `${operation}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const operationId = `${operation}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
     const metric: PerformanceMetric = {
       operation,

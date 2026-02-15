@@ -308,7 +308,7 @@ class PersonalizedRecommendationEngine {
         const content = await this.getContentMetadata(contentId);
         if (content) {
           recommendations.push({
-            id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: `rec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
             userId,
             contentId,
             title: content.title,
@@ -840,7 +840,7 @@ class PersonalizedRecommendationEngine {
         userId: request.userId,
         recommendations: diversifiedRecs.slice(0, request.preferences.maxResults),
         metadata: {
-          requestId: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          requestId: `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
           algorithmUsed: 'hybrid-ensemble-v1',
           totalCandidates: allRecommendations.length,
           processingTime,

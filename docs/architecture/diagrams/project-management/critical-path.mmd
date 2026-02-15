@@ -1,0 +1,44 @@
+graph LR
+    START([Project Start<br/>Nov 4]) --> CP1
+
+    CP1["Week 1: Fix Tests<br/>#5 → #6 → #11<br/>Critical Path<br/>13 hours"]
+
+    CP1 --> CP2
+
+    CP2["Week 2: NOSTR Auth<br/>#12 → #17 → #22<br/>Design → Impl → Test<br/>5 days"]
+
+    CP2 --> CP3
+
+    CP3["Week 3: Content Creation<br/>#27 → #32 → #37<br/>Design → Impl → Test<br/>6 days"]
+
+    CP3 --> CP4
+
+    CP4["Week 4: Lightning Pay<br/>#42 → #47 → #52<br/>Design → Impl → Valid<br/>5.5 days"]
+
+    CP4 --> CP5
+
+    CP5["Week 5: E2E Testing<br/>#53 → #58<br/>Integration Tests<br/>4 days"]
+
+    CP5 --> CP6
+
+    CP6["Week 6: Production<br/>#63 → #66 → #69 → #71<br/>Audit → Perf → Monitor<br/>7 days"]
+
+    CP6 --> END
+
+    END([Production Launch<br/>Dec 13])
+
+    %% Parallel Paths (not on critical path)
+    CP1 -.->|"Parallel"| P1["#7-8: Cleanup<br/>4 hours"]
+    CP2 -.->|"Parallel"| P2["Other Design Work"]
+    CP3 -.->|"Parallel"| P3["Subscription Tiers<br/>#48-52"]
+    CP5 -.->|"Parallel"| P4["#59-62: A11y Audit<br/>2 days"]
+    CP6 -.->|"Parallel"| P5["#70: API Docs<br/>1 day"]
+
+    %% Styling
+    classDef critical fill:#ff6b6b,stroke:#c92a2a,color:#fff,stroke-width:4px
+    classDef parallel fill:#90ee90,stroke:#228b22,color:#000
+    classDef milestone fill:#ffd700,stroke:#daa520,color:#000
+
+    class CP1,CP2,CP3,CP4,CP5,CP6 critical
+    class P1,P2,P3,P4,P5 parallel
+    class START,END milestone

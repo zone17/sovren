@@ -1,0 +1,82 @@
+[
+  {
+    "id": "aba46d6f-87a1-414d-9d26-2cef44739217",
+    "bolt11": "lnbc1000n1...",
+    "amount": 1000,
+    "description": "Test payment",
+    "created_at": 1771106499625,
+    "expires_at": 1771110099625,
+    "status": "pending",
+    "payment_hash": "abc123",
+    "payment_request": "lnbc1000n1...",
+    "metadata": {
+      "creatorId": "creator-123",
+      "supporterId": "supporter-456",
+      "lnbitsId": "check123"
+    }
+  },
+  {
+    "id": "f6fbdcc3-e0ef-45a6-ba36-f94bd7d73d63",
+    "bolt11": "lnbc1000n1...",
+    "amount": 1000,
+    "description": "Test payment",
+    "created_at": 1771106499628,
+    "expires_at": 1771110099628,
+    "status": "pending",
+    "payment_hash": "abc123",
+    "payment_request": "lnbc1000n1...",
+    "metadata": {
+      "creatorId": "creator-123",
+      "supporterId": "supporter-456",
+      "lnbitsId": "check123"
+    }
+  },
+  {
+    "id": "ce866bbf-9f8c-4265-8c03-df3a4444ac4a",
+    "bolt11": "lnbc1000n1...",
+    "amount": 1000,
+    "description": "Test payment",
+    "created_at": 1771106499630,
+    "expires_at": 1771110099630,
+    "status": "paid",
+    "payment_hash": "abc123",
+    "payment_request": "lnbc1000n1...",
+    "metadata": {
+      "creatorId": "creator-123",
+      "supporterId": "supporter-456",
+      "lnbitsId": "check123"
+    }
+  },
+  {
+    "id": "413daea5-70cf-4ccd-92eb-1fa220780fd2",
+    "bolt11": "lnbc1000n1...",
+    "amount": 1000,
+    "description": "Test payment",
+    "created_at": 1771106499637,
+    "expires_at": 1771110099637,
+    "status": "paid",
+    "payment_hash": "abc123",
+    "payment_request": "lnbc1000n1...",
+    "metadata": {
+      "creatorId": "creator-123",
+      "supporterId": "supporter-456",
+      "lnbitsId": "check123"
+    }
+  },
+  {
+    "id": "bfe15b8b-eb11-41e9-9e71-69fea47b9644",
+    "bolt11": "lnbc1000n1...",
+    "amount": 1000,
+    "description": "Test payment",
+    "created_at": 1771106499641,
+    "expires_at": 1771110099641,
+    "status": "paid",
+    "payment_hash": "abc123",
+    "payment_request": "lnbc1000n1...",
+    "metadata": {
+      "creatorId": "creator-123",
+      "supporterId": "supporter-456",
+      "lnbitsId": "check123"
+    }
+  }
+]

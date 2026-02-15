@@ -53,7 +53,7 @@ export const authenticate = async (
       ip: req.ip,
       path: req.path,
     });
-    next(new AppError(500, 'AUTH_ERROR', 'Authentication failed'));
+    next(new AppError({ statusCode: 500, code: 'AUTH_ERROR', message: 'Authentication failed' }));
   }
 };
 

@@ -1,0 +1,69 @@
+graph LR
+    subgraph "Pool Events"
+        QUERY[Query Event<br/>sql, duration, rows]
+        ERROR[Error Event<br/>sql, error]
+        ACQUIRE[Client Acquired]
+        RELEASE[Client Released]
+        LEAK[Potential Leak<br/>duration, message]
+        CONN_ERR[Connection Error]
+    end
+
+    subgraph "Metrics Collection"
+        COUNTER[Query Counter<br/>totalQueries++]
+        DURATION[Duration Tracker<br/>avgQueryDuration]
+        ERROR_RATE[Error Rate<br/>errors/total]
+        POOL_STATE[Pool State<br/>active/idle/waiting]
+    end
+
+    subgraph "Health Monitoring"
+        HEALTH_CHECK[Health Check Endpoint<br/>/health/db]
+        METRICS_ENDPOINT[Metrics Endpoint<br/>/metrics/pool]
+        PROMETHEUS[Prometheus Metrics]
+    end
+
+    subgraph "Alerting"
+        HIGH_ERROR[High Error Rate<br/>> 5%]
+        SATURATION[Pool Saturation<br/>waiting > 5]
+        SLOW_QUERY[Slow Query<br/>> 1000ms]
+        LEAK_ALERT[Connection Leak<br/>> 30s held]
+    end
+
+    subgraph "Actions"
+        LOG[Application Logs]
+        ALERT[PagerDuty Alert]
+        DASHBOARD[Grafana Dashboard]
+        NOTIFICATION[Slack Notification]
+    end
+
+    QUERY --> COUNTER
+    QUERY --> DURATION
+    ERROR --> ERROR_RATE
+    ACQUIRE --> POOL_STATE
+    RELEASE --> POOL_STATE
+
+    COUNTER --> METRICS_ENDPOINT
+    DURATION --> METRICS_ENDPOINT
+    ERROR_RATE --> METRICS_ENDPOINT
+    POOL_STATE --> METRICS_ENDPOINT
+
+    METRICS_ENDPOINT --> HEALTH_CHECK
+    METRICS_ENDPOINT --> PROMETHEUS
+
+    ERROR_RATE --> HIGH_ERROR
+    POOL_STATE --> SATURATION
+    QUERY --> SLOW_QUERY
+    LEAK --> LEAK_ALERT
+
+    HIGH_ERROR --> ALERT
+    SATURATION --> DASHBOARD
+    SATURATION --> NOTIFICATION
+    SLOW_QUERY --> LOG
+    LEAK_ALERT --> ALERT
+
+    PROMETHEUS --> DASHBOARD
+
+    style QUERY fill:#4CAF50,stroke:#388E3C,stroke-width:2px,color:#fff
+    style ERROR fill:#F44336,stroke:#C62828,stroke-width:2px,color:#fff
+    style LEAK fill:#FF9800,stroke:#F57C00,stroke-width:2px,color:#fff
+    style ALERT fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    style DASHBOARD fill:#2196F3,stroke:#1976D2,stroke-width:2px,color:#fff

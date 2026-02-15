@@ -1,4 +1,4 @@
-import { SupabaseDatabase } from '../config/database';
+import { SupabaseDatabase, getDatabase } from '../config/database';
 import { validateNostrPubkey } from '../services/nostr-auth';
 import { CreateUserProfile, UpdateUserProfile, UserProfile } from '../services/user-service';
 
@@ -26,7 +26,7 @@ export class UserRepository {
   private db: SupabaseDatabase;
 
   constructor(database?: SupabaseDatabase) {
-    this.db = database || require('../config/database').getDatabase();
+    this.db = database || getDatabase();
   }
 
   /**

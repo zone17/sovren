@@ -447,7 +447,7 @@ export class TestReportingEngine {
 
   // 🔧 **PRIVATE HELPER METHODS**
   private generateId(): string {
-    return `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `report_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   private getEnvironmentInfo(): TestEnvironment {
@@ -877,7 +877,7 @@ export const createTestResult = (
   duration: number,
   error?: TestError
 ): TestResult => ({
-  id: `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+  id: `test_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
   name,
   status,
   duration,

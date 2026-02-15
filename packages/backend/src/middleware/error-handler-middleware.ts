@@ -38,7 +38,7 @@ export interface ErrorResponse {
   details?: Record<string, unknown> | string | Array<Record<string, unknown>>;
   stack?: string;
   metadata: {
-    requestId: string;
+    correlationId: string;
     timestamp: string;
     path: string;
     method: string;
