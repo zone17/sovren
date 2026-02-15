@@ -2,7 +2,7 @@
 # Multi-stage build with nginx for static file serving
 
 # Stage 1: Dependency installation
-FROM node:20-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ && \
@@ -14,7 +14,7 @@ RUN npm ci --include=dev && \
     rm -rf ~/.npm /tmp/*
 
 # Stage 2: Application build
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
