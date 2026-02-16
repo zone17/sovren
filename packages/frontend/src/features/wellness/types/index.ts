@@ -1,174 +1,71 @@
-// Wellness Feature Types — matching Phase 7 API spec
+// Wellness Feature Types — re-exported from @sovren/shared with frontend aliases
+// See packages/shared/src/types/wellness.ts for canonical definitions.
 
-export type ActivityType = 'content_creation' | 'engagement' | 'management';
-export type BurnoutLevel = 'low' | 'moderate' | 'high' | 'critical';
-export type Sensitivity = 'relaxed' | 'normal' | 'sensitive';
-export type AvailabilityStatus = 'available' | 'creating' | 'offline' | 'hidden';
+// Re-export shared types directly (names match)
+export type {
+  BurnoutLevel,
+  BurnoutFactor,
+  BufferStatus,
+  DayOfWeek,
+  ProductiveWindow,
+  PulseCheckIn,
+  PulseTrend,
+  PulseHistory,
+  HeatmapData,
+  AvailabilityStatus,
+  WellnessBenchmark,
+  PercentileBreakdown,
+} from '@sovren/shared/types/wellness';
+
+// Re-export shared types with frontend aliases (names differ between packages)
+export type { WorkActivityType as ActivityType } from '@sovren/shared/types/wellness';
+export type { SensitivityLevel as Sensitivity } from '@sovren/shared/types/wellness';
+export type { PulseTrendDirection as TrendDirection } from '@sovren/shared/types/wellness';
+export type { WorkPattern as WorkPatternEntry } from '@sovren/shared/types/wellness';
+export type { DailyWorkPattern as DailyPattern } from '@sovren/shared/types/wellness';
+export type { WorkPatternAggregation as WorkPatterns } from '@sovren/shared/types/wellness';
+export type { HeatmapEntry as HeatmapCell } from '@sovren/shared/types/wellness';
+export type { BurnoutHistoryEntry as BurnoutScoreHistory } from '@sovren/shared/types/wellness';
+export type { BurnoutRiskScore as BurnoutScore } from '@sovren/shared/types/wellness';
+export type { ScheduleRecommendation as ScheduleRecommendations } from '@sovren/shared/types/wellness';
+export type { FocusHours as FocusHoursConfig } from '@sovren/shared/types/wellness';
+export type { DndMode as DNDMode } from '@sovren/shared/types/wellness';
+export type { CreatorBoundaries as BoundaryConfig } from '@sovren/shared/types/wellness';
+
+// --- Frontend-only types (UI state, form payloads, component props) ---
+
+/** Period filter for pulse history queries */
 export type PulsePeriod = '30d' | '90d' | 'all';
+
+/** Period filter for work pattern queries */
 export type PatternPeriod = '7d' | '30d' | '90d';
+
+/** Period filter for heatmap queries */
 export type HeatmapPeriod = '7d' | '30d';
-export type TrendDirection = 'improving' | 'stable' | 'declining';
-export type BufferStatus = 'below_threshold' | 'at_threshold' | 'above_threshold';
-export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
-// --- API Response Types ---
-
-export interface WorkPatternEntry {
-  id: string;
-  creator_id: string;
-  type: ActivityType;
-  duration_mins: number;
-  timestamp: string;
-  created_at: string;
-}
-
+/** Inline breakdown used in WorkPatterns.breakdown */
 export interface ActivityBreakdown {
   hours: number;
   percentage: number;
 }
 
-export interface DailyPattern {
-  date: string;
-  total_hours: number;
-  content_creation_mins: number;
-  engagement_mins: number;
-  management_mins: number;
-}
-
-export interface WorkPatterns {
-  period: PatternPeriod;
-  total_hours: number;
-  daily_average_hours: number;
-  breakdown: {
-    content_creation: ActivityBreakdown;
-    engagement: ActivityBreakdown;
-    management: ActivityBreakdown;
-  };
-  daily: DailyPattern[];
-  rest_days: number;
-  baseline_established: boolean;
-}
-
-export interface HeatmapCell {
-  day: number;
-  hour: number;
-  intensity: number;
-  total_mins: number;
-}
-
-export interface HeatmapData {
-  period: HeatmapPeriod;
-  heatmap: HeatmapCell[];
-  peak_hours: number[];
-  quiet_hours: number[];
-}
-
-export interface BurnoutFactor {
-  value: number;
-  weight: number;
-  detail: string;
-}
-
-export interface BurnoutScoreHistory {
-  week: string;
-  score: number;
-  level: BurnoutLevel;
-}
-
-export interface BurnoutScore {
-  score: number | null;
-  level: BurnoutLevel;
-  factors: {
-    work_hours_trend: BurnoutFactor;
-    posting_frequency: BurnoutFactor;
-    engagement_drop: BurnoutFactor;
-    hour_regularity: BurnoutFactor;
-    rest_day_deficit: BurnoutFactor;
-  };
-  baseline_ready: boolean;
-  baseline_days_remaining: number;
-  history: BurnoutScoreHistory[];
-  recommendations: string[];
-  updated_at: string;
-}
-
-export interface ProductiveWindow {
-  day: DayOfWeek;
-  start: string;
-  end: string;
-  energy_score: number;
-}
-
-export interface ScheduleRecommendations {
-  recommended_posts_per_week: number;
-  current_posts_per_week: number;
-  optimal_days: DayOfWeek[];
-  optimal_hours: number[];
-  productive_windows: ProductiveWindow[];
-  content_buffer_days: number;
-  buffer_threshold: number;
-  buffer_status: BufferStatus;
-}
-
-export interface FocusHoursConfig {
-  enabled: boolean;
-  start: string;
-  end: string;
-  timezone: string;
-  days: DayOfWeek[];
-}
-
-export interface DNDMode {
-  active: boolean;
-  auto_response_enabled: boolean;
-  auto_response_template: string;
-}
-
-export interface BoundaryConfig {
-  focus_hours: FocusHoursConfig;
-  weekly_engagement_budget_mins: number;
-  engagement_used_mins: number;
-  dnd_mode: DNDMode;
-  availability_status: AvailabilityStatus;
-  availability_public: boolean;
-  notification_batching: boolean;
-}
-
+/** Payload for updating boundary settings (partial update) */
 export interface BoundaryUpdatePayload {
-  focus_hours?: Partial<FocusHoursConfig>;
+  focus_hours?: Partial<import('@sovren/shared/types/wellness').FocusHours>;
   weekly_engagement_budget_mins?: number;
-  dnd_mode?: Partial<DNDMode>;
-  availability_status?: AvailabilityStatus;
+  dnd_mode?: Partial<import('@sovren/shared/types/wellness').DndMode>;
+  availability_status?: import('@sovren/shared/types/wellness').AvailabilityStatus;
   notification_batching?: boolean;
 }
 
-export interface PulseCheckIn {
-  id: string;
-  energy: number;
-  motivation: number;
-  stress: number;
-  composite_score: number;
-  created_at: string;
-}
-
-export interface PulseTrend {
-  direction: TrendDirection;
-  average_composite: number;
-  change_from_previous_period: number;
-}
-
-export interface PulseHistory {
-  entries: PulseCheckIn[];
-  trend: PulseTrend;
-}
-
+/** Payload for submitting a pulse check-in */
 export interface PulseSubmission {
   energy: number;
   motivation: number;
   stress: number;
 }
 
-// --- Resource Types (static) ---
+// --- Resource types (static, frontend-only) ---
 
 export type ResourceCategory = 'communities' | 'articles' | 'tools' | 'crisis';
 
@@ -180,7 +77,7 @@ export interface WellnessResource {
   url: string;
 }
 
-// --- API Wrapper ---
+// --- API wrapper (frontend-only) ---
 
 export interface ApiResponse<T> {
   success: boolean;

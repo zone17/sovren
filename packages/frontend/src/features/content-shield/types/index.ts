@@ -1,72 +1,30 @@
-// Content Shield Feature Types — matching Phase 7 API spec
+// Content Shield Feature Types — re-exported from @sovren/shared with frontend aliases
+// See packages/shared/src/types/provenance.ts for canonical definitions.
 
-export type VerificationStatus = 'verified' | 'unverified' | 'disputed';
-export type AlertStatus = 'new' | 'reviewed' | 'resolved' | 'false_positive' | 'reported';
-export type MatchLevel = 'exact_copy' | 'derivative' | 'coincidental';
-export type HashType = 'simhash' | 'phash';
+// Re-export shared types directly (names match)
+export type {
+  VerificationStatus,
+  AlertStatus,
+  MatchLevel,
+  HashType,
+  RelayConfirmation,
+  ContentAlert,
+  AlertDetail,
+  Pagination,
+} from '@sovren/shared/types/provenance';
+
+// Re-export shared types with frontend aliases (names differ between packages)
+export type { ProvenanceRecord as ProvenanceData } from '@sovren/shared/types/provenance';
+export type { Fingerprint as FingerprintEntry } from '@sovren/shared/types/provenance';
+export type { FingerprintRegistry as FingerprintCoverageData } from '@sovren/shared/types/provenance';
+export type { DmcaReport as DMCAReport } from '@sovren/shared/types/provenance';
+
+// --- Frontend-only types (UI state, component props) ---
+
+/** Report format for DMCA report generation */
 export type ReportFormat = 'json' | 'pdf';
 
-// --- Provenance Types ---
-
-export interface RelayConfirmation {
-  relay: string;
-  confirmed_at: string;
-}
-
-export interface ProvenanceData {
-  content_id: string;
-  author_pubkey: string;
-  created_at: string;
-  signature: string;
-  nostr_event_id: string;
-  content_hash: string;
-  relay_confirmations: RelayConfirmation[];
-  verification_status: VerificationStatus;
-  nip05_verified: boolean;
-}
-
-// --- Fingerprint Types ---
-
-export interface FingerprintEntry {
-  content_id: string;
-  content_title: string;
-  hash_type: HashType;
-  hash_value: string;
-  created_at: string;
-}
-
-export interface FingerprintCoverageData {
-  total_fingerprinted: number;
-  total_content: number;
-  coverage_percentage: number;
-  fingerprints: FingerprintEntry[];
-}
-
-export interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
-
-// --- Alert Types ---
-
-export interface ContentAlert {
-  id: string;
-  original_content_id: string;
-  original_title: string;
-  detected_copy_url: string;
-  detected_author_pubkey: string;
-  similarity_score: number;
-  match_level: MatchLevel;
-  hash_type: HashType;
-  status: AlertStatus;
-  detected_at: string;
-  relay: string;
-}
-
+// Sub-interfaces extracted from AlertDetail for component convenience
 export interface AlertOriginal {
   content_id: string;
   title: string;
@@ -87,22 +45,12 @@ export interface AlertDetected {
 
 export interface AlertComparison {
   similarity_score: number;
-  match_level: MatchLevel;
-  hash_type: HashType;
+  match_level: import('@sovren/shared/types/provenance').MatchLevel;
+  hash_type: import('@sovren/shared/types/provenance').HashType;
   highlighted_sections: string[];
 }
 
-export interface AlertDetail {
-  id: string;
-  original: AlertOriginal;
-  detected: AlertDetected;
-  comparison: AlertComparison;
-  status: AlertStatus;
-  detected_at: string;
-}
-
-// --- DMCA Report Types ---
-
+// Sub-interfaces extracted from DMCAReport for component convenience
 export interface DMCAClaimant {
   pubkey: string;
   nip05: string;
@@ -115,7 +63,7 @@ export interface DMCAOriginalContent {
   provenance_signature: string;
   nostr_event_id: string;
   content_hash: string;
-  relay_confirmations: RelayConfirmation[];
+  relay_confirmations: import('@sovren/shared/types/provenance').RelayConfirmation[];
 }
 
 export interface DMCAInfringingContent {
@@ -123,19 +71,10 @@ export interface DMCAInfringingContent {
   author_pubkey: string;
   detected_at: string;
   similarity_score: number;
-  match_level: MatchLevel;
+  match_level: import('@sovren/shared/types/provenance').MatchLevel;
 }
 
-export interface DMCAReport {
-  title: string;
-  generated_at: string;
-  claimant: DMCAClaimant;
-  original_content: DMCAOriginalContent;
-  infringing_content: DMCAInfringingContent;
-  verification_url: string;
-}
-
-// --- API Wrapper ---
+// --- API wrappers (frontend-only) ---
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -146,5 +85,5 @@ export interface ApiResponse<T> {
 export interface PaginatedApiResponse<T> {
   success: boolean;
   data: T;
-  pagination: Pagination;
+  pagination: import('@sovren/shared/types/provenance').Pagination;
 }
