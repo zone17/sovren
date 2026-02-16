@@ -2,6 +2,13 @@
  * WellnessService
  * Work pattern CRUD, pulse check-ins, data deletion
  * EPIC-007: Creator Wellness System (US-E7-001, US-E7-002)
+ *
+ * TODO: Decompose into focused sub-services when adding new features:
+ *   - WellnessSnapshotService (pulse check-ins, composite scoring)
+ *   - WorkPatternService (recording, aggregation, heatmap)
+ *   - WellnessDataService (deletion, benchmarks, resource library)
+ * Keep WellnessService as thin orchestrator delegating to sub-services.
+ * See: todos/172-*-p3-wellness-service-god-object-decomposition.md
  */
 
 import type {

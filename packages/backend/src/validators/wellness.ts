@@ -14,7 +14,11 @@ export const RecordWorkPatternSchema = z.object({
   type: z.enum(['content_creation', 'engagement', 'management']),
   duration_mins: z.number().int().positive().max(1440),
   timestamp: z.string().datetime(),
-  metadata: z.record(z.string(), z.string()).optional(),
+  metadata: z.record(z.string(), z.string())
+    .refine((obj) => JSON.stringify(obj).length <= 10000, {
+      message: 'Metadata must be less than 10KB',
+    })
+    .optional(),
 });
 
 export const GetWorkPatternsQuerySchema = z.object({

@@ -5,6 +5,7 @@
  */
 
 import type { IServiceRegistry, IServiceModule } from '../../interfaces/shared/IServiceRegistry';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import { TYPES } from '../types';
 
 // Wellness service implementations
@@ -35,25 +36,25 @@ export class Phase7ServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.WellnessService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new WellnessService(db as any, logger as any);
+      return new WellnessService(db as ISupabaseClient, logger);
     });
 
     registry.registerSingletonFactory(TYPES.BurnoutScoringService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new BurnoutScoringService(db as any, logger as any);
+      return new BurnoutScoringService(db as ISupabaseClient, logger);
     });
 
     registry.registerSingletonFactory(TYPES.ScheduleService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new ScheduleService(db as any, logger as any);
+      return new ScheduleService(db as ISupabaseClient, logger);
     });
 
     registry.registerSingletonFactory(TYPES.BoundaryService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new BoundaryService(db as any, logger as any);
+      return new BoundaryService(db as ISupabaseClient, logger);
     });
 
     // ===========================
@@ -63,25 +64,25 @@ export class Phase7ServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.ProvenanceService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new ProvenanceService(db as any, logger as any);
+      return new ProvenanceService(db as ISupabaseClient, logger);
     });
 
     registry.registerSingletonFactory(TYPES.FingerprintService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new FingerprintService(db as any, logger as any);
+      return new FingerprintService(db as ISupabaseClient, logger);
     });
 
     registry.registerSingletonFactory(TYPES.AlertService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new AlertService(db as any, logger as any);
+      return new AlertService(db as ISupabaseClient, logger);
     });
 
     registry.registerSingletonFactory(TYPES.DmcaService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new DmcaService(db as any, logger as any);
+      return new DmcaService(db as ISupabaseClient, logger);
     });
   }
 }
