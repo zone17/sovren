@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -56,16 +56,20 @@ export const WellnessTrend: React.FC<WellnessTrendProps> = ({ period: initialPer
   }
 
   const trendConfig = TREND_CONFIG[data.trend.direction];
-  const chartData = data.entries
-    .slice()
-    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    .map((entry) => ({
-      date: new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      score: entry.composite_score,
-      energy: entry.energy,
-      motivation: entry.motivation,
-      stress: entry.stress,
-    }));
+  const chartData = useMemo(
+    () =>
+      data.entries
+        .slice()
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+        .map((entry) => ({
+          date: new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          score: entry.composite_score,
+          energy: entry.energy,
+          motivation: entry.motivation,
+          stress: entry.stress,
+        })),
+    [data.entries]
+  );
 
   return (
     <Card>

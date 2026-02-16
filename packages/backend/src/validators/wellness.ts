@@ -67,7 +67,17 @@ export const UpdateBoundariesSchema = z.object({
   dnd_mode: z
     .object({
       auto_response_enabled: z.boolean(),
-      auto_response_template: z.string().max(500),
+      auto_response_template: z.string().max(500).transform((val) => {
+        // Decode HTML entities first to prevent double-encoding bypass
+        const decoded = val
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/&#x27;/g, "'");
+        // Strip HTML tags
+        return decoded.replace(/<[^>]*>/g, '');
+      }),
     })
     .optional(),
   availability_status: z.enum(['hidden', 'available', 'creating', 'offline']).optional(),

@@ -64,4 +64,24 @@ export const shieldApi = {
       format,
     });
   },
+
+  // -- DMCA Reports List --
+
+  getDmcaReports(
+    creatorId: string,
+    page = 1,
+    limit = 20
+  ): Promise<PaginatedApiResponse<DMCAReport[]>> {
+    return apiClient['request']('GET', `${BASE}/dmca/reports`, undefined, {
+      creatorId,
+      page,
+      limit,
+    });
+  },
+
+  // -- Provenance Verification --
+
+  getProvenanceVerification(contentId: string): Promise<ApiResponse<ProvenanceData>> {
+    return apiClient['request']('GET', `${BASE}/provenance/${contentId}`);
+  },
 };

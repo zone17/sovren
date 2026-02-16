@@ -13,6 +13,8 @@ import type {
   PulseSubmission,
   ScheduleRecommendations,
   Sensitivity,
+  WellnessBenchmark,
+  WellnessResource,
   WorkPatterns,
 } from '../types';
 
@@ -67,5 +69,17 @@ export const wellnessApi = {
 
   deletePulseHistory(): Promise<ApiResponse<{ deleted_count: number }>> {
     return apiClient['request']('DELETE', `${BASE}/pulse`);
+  },
+
+  // -- Benchmarks --
+
+  getBenchmarks(): Promise<ApiResponse<WellnessBenchmark | null>> {
+    return apiClient['request']('GET', `${BASE}/benchmark`);
+  },
+
+  // -- Resource Library --
+
+  getResourceLibrary(): Promise<ApiResponse<WellnessResource[]>> {
+    return apiClient['request']('GET', `${BASE}/resources`);
   },
 };

@@ -1,12 +1,38 @@
 import React from 'react';
+import { useAuth } from '@/features/auth';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ContentShieldErrorBoundary } from '../ErrorBoundary';
 import AlertsFeed from './AlertsFeed';
 import FingerprintCoverage from './FingerprintCoverage';
 
-// Placeholder for creator ID — in production this comes from auth context
-const PLACEHOLDER_CREATOR_ID = 'current-creator';
-
 export const ShieldDashboard: React.FC = () => {
+  const { user, isLoading } = useAuth();
+  const creatorId = user?.nostr_pubkey;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 p-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (!creatorId) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-sm text-gray-500">
+              Please log in to view your Content Shield dashboard.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <ContentShieldErrorBoundary>
       <div className="space-y-6 p-6 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 min-h-screen">
@@ -19,7 +45,7 @@ export const ShieldDashboard: React.FC = () => {
         </div>
 
         {/* Coverage */}
-        <FingerprintCoverage creatorId={PLACEHOLDER_CREATOR_ID} />
+        <FingerprintCoverage creatorId={creatorId} />
 
         {/* Alerts */}
         <AlertsFeed />

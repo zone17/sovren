@@ -73,10 +73,11 @@ export const BoundarySettings: React.FC = () => {
     });
   };
 
-  const engagementPercent = Math.min(
-    (form.engagement_used_mins / form.weekly_engagement_budget_mins) * 100,
-    100
-  );
+  const safeMax = Number(form.weekly_engagement_budget_mins) || 0;
+  const safeCurrent = Number(form.engagement_used_mins) || 0;
+  const engagementPercent = safeMax > 0
+    ? Math.min(Math.max((safeCurrent / safeMax) * 100, 0), 100)
+    : 0;
 
   return (
     <Card>
