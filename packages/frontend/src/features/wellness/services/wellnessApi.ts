@@ -63,8 +63,15 @@ export const wellnessApi = {
     return apiClient['request']('POST', `${BASE}/pulse`, data);
   },
 
-  getPulseHistory(period: PulsePeriod = '90d'): Promise<ApiResponse<PulseHistory>> {
-    return apiClient['request']('GET', `${BASE}/pulse/history`, undefined, { period });
+  getPulseHistory(
+    period: PulsePeriod = '90d',
+    pagination?: { limit?: number; offset?: number }
+  ): Promise<ApiResponse<PulseHistory & { total?: number; limit?: number; offset?: number }>> {
+    return apiClient['request']('GET', `${BASE}/pulse/history`, undefined, {
+      period,
+      limit: pagination?.limit,
+      offset: pagination?.offset,
+    });
   },
 
   deletePulseHistory(): Promise<ApiResponse<{ deleted_count: number }>> {
