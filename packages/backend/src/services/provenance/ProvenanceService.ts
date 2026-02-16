@@ -75,4 +75,35 @@ export class ProvenanceService implements IProvenanceService {
       verification_url: `https://sovren.dev/verify/${contentId}`,
     };
   }
+
+  /**
+   * Soft-revoke a provenance record by updating only the status column.
+   * The DB trigger (enforce_provenance_immutability) allows UPDATE on status only.
+   * Full DELETE is blocked at the database level for all roles.
+   */
+  async revokeProvenance(contentId: string, creatorId: string): Promise<{ content_id: string; status: string; revoked_at: string }> {
+    const provenance = await this.getProvenanceChain(contentId);
+
+    if (!provenance) {
+      throw new NotFoundError(`Provenance record for content ${contentId}`);
+    }
+
+    if (provenance.author_pubkey !== creatorId) {
+      throw new NotFoundError(`Provenance record for content ${contentId}`);
+    }
+
+    const { error } = await this.db
+      .from('provenance_records')
+      .update({ status: 'revoked' })
+      .eq('content_id', contentId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to revoke provenance record', { contentId, error });
+      throw error;
+    }
+
+    this.logger.info('Provenance record revoked', { contentId, creatorId });
+    return { content_id: contentId, status: 'revoked', revoked_at: new Date().toISOString() };
+  }
 }

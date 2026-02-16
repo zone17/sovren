@@ -9,6 +9,10 @@ import { container } from '../../container';
 import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, optionalAuth } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
+import {
+  readOnlyRateLimiter,
+  createUserRateLimiter,
+} from '../../middleware/rate-limit-middleware';
 import { ShieldValidators } from '../../validators/shield';
 import type { IProvenanceService } from '../../interfaces/provenance/IProvenanceService';
 import type { IFingerprintService } from '../../interfaces/provenance/IFingerprintService';
@@ -17,6 +21,13 @@ import type { IDmcaService } from '../../interfaces/provenance/IDmcaService';
 import type { AlertStatus } from '@sovren/shared/types/provenance';
 
 const router = Router();
+
+// Rate limiting: baseline read limit for all GET endpoints
+router.use(readOnlyRateLimiter);
+
+// Stricter rate limiters for mutations and expensive operations
+const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 20 });
+const expensiveRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 5 });
 
 // Lazy service resolution
 let _provenanceService: IProvenanceService | null = null;
@@ -98,6 +109,7 @@ router.post(
   '/fingerprint',
   authenticate,
   requireCreator,
+  mutationRateLimiter,
   validate({ body: ShieldValidators.createFingerprint }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -144,6 +156,7 @@ router.post(
   '/compare',
   authenticate,
   requireCreator,
+  expensiveRateLimiter,
   validate({ body: ShieldValidators.compare }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -196,6 +209,7 @@ router.put(
   '/alerts/:id',
   authenticate,
   requireCreator,
+  mutationRateLimiter,
   validate({
     params: ShieldValidators.alertIdParam,
     body: ShieldValidators.updateAlertStatus,
@@ -222,6 +236,7 @@ router.post(
   '/alerts/:id/dmca-report',
   authenticate,
   requireCreator,
+  expensiveRateLimiter,
   validate({
     params: ShieldValidators.alertIdParam,
     query: ShieldValidators.dmcaReportQuery,

@@ -72,17 +72,32 @@ export class WellnessService implements IWellnessService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const { data: patterns, error } = await this.db
-      .from('creator_work_patterns')
-      .select('*')
-      .eq('creator_id', creatorId)
-      .gte('date', startDate.toISOString().split('T')[0])
-      .order('date', { ascending: true });
+    // Parallelize independent queries: patterns + baseline count
+    const [patternsResult, countResult] = await Promise.allSettled([
+      this.db
+        .from('creator_work_patterns')
+        .select('*')
+        .eq('creator_id', creatorId)
+        .gte('date', startDate.toISOString().split('T')[0])
+        .order('date', { ascending: true }),
+      this.db
+        .from('creator_work_patterns')
+        .select('*', { count: 'exact', head: true })
+        .eq('creator_id', creatorId),
+    ]);
 
+    if (patternsResult.status === 'rejected') {
+      this.logger.error('Failed to get work patterns', { creatorId, error: patternsResult.reason });
+      throw patternsResult.reason;
+    }
+
+    const { data: patterns, error } = patternsResult.value;
     if (error) {
       this.logger.error('Failed to get work patterns', { creatorId, error });
       throw error;
     }
+
+    const count = countResult.status === 'fulfilled' ? countResult.value.count : 0;
 
     const rows = patterns || [];
     const totalContentMins = rows.reduce((s: number, r: any) => s + (r.content_time_mins || 0), 0);
@@ -100,12 +115,6 @@ export class WellnessService implements IWellnessService {
     // Count rest days (days with < 30 mins activity)
     const activeDays = new Set(rows.map((r: any) => r.date));
     const restDays = days - activeDays.size;
-
-    // Check if baseline is established (14+ days of data)
-    const { count } = await this.db
-      .from('creator_work_patterns')
-      .select('*', { count: 'exact', head: true })
-      .eq('creator_id', creatorId);
 
     const daily: DailyWorkPattern[] = rows.map((r: any) => ({
       date: r.date,
@@ -250,7 +259,22 @@ export class WellnessService implements IWellnessService {
     };
   }
 
-  async getPulseHistory(creatorId: string, period: '30d' | '90d' | 'all'): Promise<PulseHistory> {
+  async getPulseHistory(
+    creatorId: string,
+    period: '30d' | '90d' | 'all',
+    limit = 50,
+    offset = 0
+  ): Promise<PulseHistory> {
+    // Enforce max limit to prevent abuse
+    const boundedLimit = Math.min(Math.max(1, limit), 200);
+    const boundedOffset = Math.max(0, offset);
+
+    // Get total count for pagination metadata
+    let countQuery = this.db
+      .from('wellness_snapshots')
+      .select('*', { count: 'exact', head: true })
+      .eq('creator_id', creatorId);
+
     let query = this.db
       .from('wellness_snapshots')
       .select('*')
@@ -262,9 +286,21 @@ export class WellnessService implements IWellnessService {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       query = query.gte('created_at', startDate.toISOString());
+      countQuery = countQuery.gte('created_at', startDate.toISOString());
     }
 
-    const { data, error } = await query;
+    // Apply pagination
+    query = query.range(boundedOffset, boundedOffset + boundedLimit - 1);
+
+    const [dataResult, countResult] = await Promise.allSettled([query, countQuery]);
+
+    if (dataResult.status === 'rejected') {
+      this.logger.error('Failed to get pulse history', { creatorId, error: dataResult.reason });
+      throw dataResult.reason;
+    }
+
+    const { data, error } = dataResult.value;
+    const total = countResult.status === 'fulfilled' ? (countResult.value.count || 0) : 0;
 
     if (error) {
       this.logger.error('Failed to get pulse history', { creatorId, error });
@@ -304,6 +340,9 @@ export class WellnessService implements IWellnessService {
         average_composite: Math.round(avgComposite * 100) / 100,
         change_from_previous_period: change,
       },
+      total,
+      limit: boundedLimit,
+      offset: boundedOffset,
     };
   }
 
@@ -350,7 +389,7 @@ export class WellnessService implements IWellnessService {
   }
 
   async getBenchmark(): Promise<WellnessBenchmark | null> {
-    // Query the materialized view for anonymous benchmarks
+    // Query the materialized view for anonymous work-hours benchmarks
     const { data, error } = await this.db.from('wellness_benchmarks').select('*').single();
 
     if (error || !data) {
@@ -363,29 +402,34 @@ export class WellnessService implements IWellnessService {
       return null;
     }
 
-    // For composite score benchmarks, query pulse data aggregates
-    const { data: pulseData } = await this.db.from('wellness_snapshots').select('composite_score');
+    // Use RPC aggregate function for composite score benchmarks (no individual data returned)
+    const { data: benchmarkData, error: rpcError } = await this.db.rpc('get_wellness_benchmark');
 
-    const scores = (pulseData || [])
-      .map((r: any) => parseFloat(r.composite_score))
-      .sort((a: number, b: number) => a - b);
-    const avgComposite =
-      scores.length > 0 ? scores.reduce((s: number, v: number) => s + v, 0) / scores.length : 0;
+    if (rpcError) {
+      this.logger.warn('Benchmark RPC failed, returning work-hours only', { error: rpcError });
+    }
+
+    const row = Array.isArray(benchmarkData) ? benchmarkData[0] : benchmarkData;
+    const hasSufficientData = row && row.sample_count > 0;
 
     return {
       average_weekly_hours: parseFloat(data.avg_weekly_hours),
-      average_composite_score: Math.round(avgComposite * 10) / 10,
+      average_composite_score: hasSufficientData
+        ? Math.round(parseFloat(row.avg_score) * 10) / 10
+        : 0,
       percentile_breakdowns: {
         work_hours: {
           p25: parseFloat(data.p25_hours),
           p50: parseFloat(data.p50_hours),
           p75: parseFloat(data.p75_hours),
         },
-        composite_score: {
-          p25: scores.length > 0 ? scores[Math.floor(scores.length * 0.25)] : 0,
-          p50: scores.length > 0 ? scores[Math.floor(scores.length * 0.5)] : 0,
-          p75: scores.length > 0 ? scores[Math.floor(scores.length * 0.75)] : 0,
-        },
+        composite_score: hasSufficientData
+          ? {
+              p25: Math.round(parseFloat(row.p25_score) * 10) / 10,
+              p50: Math.round(parseFloat(row.p50_score) * 10) / 10,
+              p75: Math.round(parseFloat(row.p75_score) * 10) / 10,
+            }
+          : { p25: 0, p50: 0, p75: 0 },
       },
       sample_size: data.sample_size,
       updated_at: new Date().toISOString(),

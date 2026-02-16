@@ -9,6 +9,10 @@ import { container } from '../../container';
 import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, optionalAuth } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
+import {
+  readOnlyRateLimiter,
+  createUserRateLimiter,
+} from '../../middleware/rate-limit-middleware';
 import { WellnessValidators } from '../../validators/wellness';
 import type { IWellnessService } from '../../interfaces/wellness/IWellnessService';
 import type { IBurnoutScoringService } from '../../interfaces/wellness/IBurnoutScoringService';
@@ -16,6 +20,13 @@ import type { IScheduleService } from '../../interfaces/wellness/IScheduleServic
 import type { IBoundaryService } from '../../interfaces/wellness/IBoundaryService';
 
 const router = Router();
+
+// Rate limiting: baseline read limit for all GET endpoints
+router.use(readOnlyRateLimiter);
+
+// Stricter rate limiters for mutations and expensive operations
+const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 20 });
+const expensiveRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 5 });
 
 // Lazy service resolution
 let _wellnessService: IWellnessService | null = null;
@@ -48,6 +59,7 @@ router.post(
   '/patterns',
   authenticate,
   requireCreator,
+  mutationRateLimiter,
   validate({ body: WellnessValidators.recordWorkPattern }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -117,6 +129,7 @@ router.put(
   '/risk-score/sensitivity',
   authenticate,
   requireCreator,
+  mutationRateLimiter,
   validate({ body: WellnessValidators.setSensitivity }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -182,6 +195,7 @@ router.put(
   '/boundaries',
   authenticate,
   requireCreator,
+  mutationRateLimiter,
   validate({ body: WellnessValidators.updateBoundaries }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -201,6 +215,7 @@ router.post(
   '/pulse',
   authenticate,
   requireCreator,
+  mutationRateLimiter,
   validate({ body: WellnessValidators.recordPulse }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -219,9 +234,13 @@ router.get(
   validate({ query: WellnessValidators.getPulseHistory }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
       const data = await getWellnessService().getPulseHistory(
         req.user!.nostr_pubkey,
-        req.query.period as '30d' | '90d' | 'all'
+        req.query.period as '30d' | '90d' | 'all',
+        limit,
+        offset
       );
       res.json({ success: true, data });
     } catch (err) {
@@ -233,6 +252,7 @@ router.get(
 router.get(
   '/benchmark',
   optionalAuth,
+  expensiveRateLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await getWellnessService().getBenchmark();
@@ -255,6 +275,7 @@ router.delete(
   '/pulse',
   authenticate,
   requireCreator,
+  mutationRateLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const deleted_count = await getWellnessService().deletePulseHistory(req.user!.nostr_pubkey);
@@ -269,6 +290,7 @@ router.delete(
   '/data',
   authenticate,
   requireCreator,
+  expensiveRateLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const deleted = await getWellnessService().deleteAllWellnessData(req.user!.nostr_pubkey);

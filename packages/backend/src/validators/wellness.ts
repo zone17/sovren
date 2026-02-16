@@ -69,14 +69,20 @@ export const UpdateBoundariesSchema = z.object({
       auto_response_enabled: z.boolean(),
       auto_response_template: z.string().max(500).transform((val) => {
         // Decode HTML entities first to prevent double-encoding bypass
-        const decoded = val
+        let decoded = val
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
           .replace(/&amp;/g, '&')
           .replace(/&quot;/g, '"')
-          .replace(/&#x27;/g, "'");
+          .replace(/&#x27;/g, "'")
+          .replace(/&#039;/g, "'");
         // Strip HTML tags
-        return decoded.replace(/<[^>]*>/g, '');
+        decoded = decoded.replace(/<[^>]*>/g, '');
+        // Remove event handler patterns (onmouseover=, onclick=, etc.)
+        decoded = decoded.replace(/\bon\w+\s*=/gi, '');
+        // Remove javascript: URIs
+        decoded = decoded.replace(/javascript\s*:/gi, '');
+        return decoded;
       }),
     })
     .optional(),
