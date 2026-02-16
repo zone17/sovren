@@ -63,6 +63,20 @@ const Layout: React.FC<LayoutProps> = ({ children }): JSX.Element => {
                         >
                           Dashboard
                         </Link>
+                        {/* @ts-expect-error - React Router Link type compatibility */}
+                        <Link
+                          to="/wellness"
+                          className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                          Wellness
+                        </Link>
+                        {/* @ts-expect-error - React Router Link type compatibility */}
+                        <Link
+                          to="/shield"
+                          className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                          Shield
+                        </Link>
                       </>
                     )}
 

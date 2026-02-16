@@ -8,6 +8,8 @@ export * from './nostr-key-management';
 export * from './api-handlers';
 export * from './payment-state';
 export * from './nostr-service';
+export * from './wellness';
+export * from './provenance';
 
 // Export config utilities
 export * from '../config';
