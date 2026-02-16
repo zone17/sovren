@@ -11,6 +11,7 @@ import lightningReceiptRoutes from './routes/lightning-receipts';
 import userRouter from './routes/users';
 import healthRouter from './routes/health';
 import v1Routes from './routes/v1';
+import v2Routes from './routes/v2';
 import contentDiscoveryRoutes from './routes/content-discovery';
 import subscriptionTiersRoutes from './routes/subscription-tiers';
 import { csrfProtection } from './middleware/csrf';
@@ -175,7 +176,9 @@ export function createApp(): Express {
     }
 
     // Allow requests from trusted internal IPs (Prometheus scraper)
-    const allowedIPs = (process.env.METRICS_ALLOWED_IPS || '127.0.0.1,::1,::ffff:127.0.0.1').split(',');
+    const allowedIPs = (process.env.METRICS_ALLOWED_IPS || '127.0.0.1,::1,::ffff:127.0.0.1').split(
+      ','
+    );
     const clientIP = req.ip || req.socket.remoteAddress || '';
     if (allowedIPs.includes(clientIP)) {
       getPrometheusMetrics(req, res);
@@ -207,6 +210,9 @@ export function createApp(): Express {
 
   // API v1 Routes (DI-based controllers for content, users, payments)
   app.use('/api/v1', v1Routes);
+
+  // API v2 Routes (Phase 7: Creator Safety Net — wellness & content shield)
+  app.use('/api/v2', v2Routes);
 
   // Content discovery and subscription tier routes
   app.use('/api/discovery', contentDiscoveryRoutes);

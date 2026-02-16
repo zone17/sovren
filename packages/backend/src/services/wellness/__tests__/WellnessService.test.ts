@@ -8,7 +8,19 @@ import { WellnessService } from '../WellnessService';
 function createMockDb() {
   const mockChain: any = {};
 
-  const methods = ['select', 'eq', 'gte', 'gt', 'lt', 'order', 'range', 'single', 'insert', 'upsert', 'delete'];
+  const methods = [
+    'select',
+    'eq',
+    'gte',
+    'gt',
+    'lt',
+    'order',
+    'range',
+    'single',
+    'insert',
+    'upsert',
+    'delete',
+  ];
   for (const method of methods) {
     mockChain[method] = jest.fn().mockReturnValue(mockChain);
   }
@@ -18,6 +30,7 @@ function createMockDb() {
 
   return {
     from: jest.fn().mockReturnValue(mockChain),
+    rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
     _chain: mockChain,
   };
 }
@@ -36,6 +49,181 @@ describe('WellnessService', () => {
     mockDb = createMockDb();
     service = new WellnessService(mockDb as any, mockLogger);
     jest.clearAllMocks();
+  });
+
+  describe('recordWorkPattern', () => {
+    it('should call upsert_work_pattern RPC with correct params for content_creation', async () => {
+      const mockRow = {
+        id: 'pattern-id-1',
+        creator_id: 'creator-123',
+        date: '2026-02-15',
+        content_time_mins: 45,
+        engagement_time_mins: 0,
+        management_time_mins: 0,
+        post_count: 1,
+        total_hours: 0.75,
+        first_activity_at: '2026-02-15T10:00:00Z',
+        last_activity_at: '2026-02-15T10:00:00Z',
+        created_at: '2026-02-15T10:00:00Z',
+        updated_at: '2026-02-15T10:00:00Z',
+      };
+
+      mockDb.rpc = jest.fn().mockResolvedValue({ data: [mockRow], error: null });
+
+      const result = await service.recordWorkPattern('creator-123', {
+        type: 'content_creation',
+        duration_mins: 45,
+        timestamp: '2026-02-15T10:00:00Z',
+      });
+
+      expect(mockDb.rpc).toHaveBeenCalledWith('upsert_work_pattern', {
+        p_creator_id: 'creator-123',
+        p_date: '2026-02-15',
+        p_content_time_mins: 45,
+        p_engagement_time_mins: 0,
+        p_management_time_mins: 0,
+        p_post_count: 1,
+        p_activity_at: '2026-02-15T10:00:00Z',
+      });
+
+      expect(result.id).toBe('pattern-id-1');
+      expect(result.creator_id).toBe('creator-123');
+      expect(result.type).toBe('content_creation');
+      expect(result.duration_mins).toBe(45);
+      expect(result.created_at).toBe('2026-02-15T10:00:00Z');
+    });
+
+    it('should call upsert_work_pattern RPC with correct params for engagement', async () => {
+      const mockRow = {
+        id: 'pattern-id-2',
+        creator_id: 'creator-123',
+        date: '2026-02-15',
+        content_time_mins: 0,
+        engagement_time_mins: 30,
+        management_time_mins: 0,
+        post_count: 0,
+        total_hours: 0.5,
+        first_activity_at: '2026-02-15T14:00:00Z',
+        last_activity_at: '2026-02-15T14:00:00Z',
+        created_at: '2026-02-15T14:00:00Z',
+        updated_at: '2026-02-15T14:00:00Z',
+      };
+
+      mockDb.rpc = jest.fn().mockResolvedValue({ data: [mockRow], error: null });
+
+      const result = await service.recordWorkPattern('creator-123', {
+        type: 'engagement',
+        duration_mins: 30,
+        timestamp: '2026-02-15T14:00:00Z',
+      });
+
+      expect(mockDb.rpc).toHaveBeenCalledWith('upsert_work_pattern', {
+        p_creator_id: 'creator-123',
+        p_date: '2026-02-15',
+        p_content_time_mins: 0,
+        p_engagement_time_mins: 30,
+        p_management_time_mins: 0,
+        p_post_count: 0,
+        p_activity_at: '2026-02-15T14:00:00Z',
+      });
+
+      expect(result.type).toBe('engagement');
+      expect(result.duration_mins).toBe(30);
+    });
+
+    it('should call upsert_work_pattern RPC with correct params for management', async () => {
+      const mockRow = {
+        id: 'pattern-id-3',
+        creator_id: 'creator-123',
+        date: '2026-02-15',
+        content_time_mins: 0,
+        engagement_time_mins: 0,
+        management_time_mins: 20,
+        post_count: 0,
+        total_hours: 0.33,
+        first_activity_at: '2026-02-15T16:00:00Z',
+        last_activity_at: '2026-02-15T16:00:00Z',
+        created_at: '2026-02-15T16:00:00Z',
+        updated_at: '2026-02-15T16:00:00Z',
+      };
+
+      mockDb.rpc = jest.fn().mockResolvedValue({ data: [mockRow], error: null });
+
+      const result = await service.recordWorkPattern('creator-123', {
+        type: 'management',
+        duration_mins: 20,
+        timestamp: '2026-02-15T16:00:00Z',
+      });
+
+      expect(mockDb.rpc).toHaveBeenCalledWith('upsert_work_pattern', {
+        p_creator_id: 'creator-123',
+        p_date: '2026-02-15',
+        p_content_time_mins: 0,
+        p_engagement_time_mins: 0,
+        p_management_time_mins: 20,
+        p_post_count: 0,
+        p_activity_at: '2026-02-15T16:00:00Z',
+      });
+
+      expect(result.type).toBe('management');
+      expect(result.duration_mins).toBe(20);
+    });
+
+    it('should throw on RPC error', async () => {
+      const dbError = { message: 'function not found' };
+      mockDb.rpc = jest.fn().mockResolvedValue({ data: null, error: dbError });
+
+      await expect(
+        service.recordWorkPattern('creator-123', {
+          type: 'content_creation',
+          duration_mins: 45,
+          timestamp: '2026-02-15T10:00:00Z',
+        })
+      ).rejects.toEqual(dbError);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to record work pattern',
+        expect.objectContaining({ creatorId: 'creator-123' })
+      );
+    });
+
+    it('should preserve metadata in returned object', async () => {
+      const mockRow = {
+        id: 'pattern-id-4',
+        creator_id: 'creator-123',
+        created_at: '2026-02-15T10:00:00Z',
+      };
+
+      mockDb.rpc = jest.fn().mockResolvedValue({ data: [mockRow], error: null });
+
+      const result = await service.recordWorkPattern('creator-123', {
+        type: 'content_creation',
+        duration_mins: 45,
+        timestamp: '2026-02-15T10:00:00Z',
+        metadata: { source: 'auto-tracker', platform: 'web' },
+      });
+
+      expect(result.metadata).toEqual({ source: 'auto-tracker', platform: 'web' });
+    });
+
+    it('should handle non-array RPC response (single object)', async () => {
+      // Some Supabase versions may return a single object instead of an array
+      const mockRow = {
+        id: 'pattern-id-5',
+        creator_id: 'creator-123',
+        created_at: '2026-02-15T10:00:00Z',
+      };
+
+      mockDb.rpc = jest.fn().mockResolvedValue({ data: mockRow, error: null });
+
+      const result = await service.recordWorkPattern('creator-123', {
+        type: 'content_creation',
+        duration_mins: 60,
+        timestamp: '2026-02-15T10:00:00Z',
+      });
+
+      expect(result.id).toBe('pattern-id-5');
+    });
   });
 
   describe('recordPulse', () => {
@@ -128,21 +316,76 @@ describe('WellnessService', () => {
   });
 
   describe('deleteAllWellnessData', () => {
-    it('should delete from all wellness tables', async () => {
-      mockDb._chain.delete = jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          count: 10,
-          error: null,
-        }),
+    it('should call RPC function for atomic deletion', async () => {
+      mockDb.rpc = jest.fn().mockResolvedValue({
+        data: {
+          wellness_snapshots: 5,
+          creator_work_patterns: 3,
+          burnout_risk_history: 2,
+          creator_boundaries: 1,
+        },
+        error: null,
       });
 
       const result = await service.deleteAllWellnessData('creator-123');
 
-      // Should have called from() for each of the 4 tables
-      expect(mockDb.from).toHaveBeenCalledWith('wellness_snapshots');
-      expect(mockDb.from).toHaveBeenCalledWith('creator_work_patterns');
-      expect(mockDb.from).toHaveBeenCalledWith('burnout_risk_history');
-      expect(mockDb.from).toHaveBeenCalledWith('creator_boundaries');
+      expect(mockDb.rpc).toHaveBeenCalledWith('delete_all_wellness_data', {
+        p_creator_id: 'creator-123',
+      });
+      expect(result).toEqual({
+        wellness_snapshots: 5,
+        creator_work_patterns: 3,
+        burnout_risk_history: 2,
+        creator_boundaries: 1,
+      });
+    });
+
+    it('should throw clear error on RPC failure (no partial deletion)', async () => {
+      mockDb.rpc = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'connection timeout' },
+      });
+
+      await expect(service.deleteAllWellnessData('creator-123')).rejects.toThrow(
+        'GDPR deletion failed for creator creator-123: connection timeout. No data was deleted.'
+      );
+    });
+
+    it('should return zero counts when no data exists', async () => {
+      mockDb.rpc = jest.fn().mockResolvedValue({
+        data: {
+          wellness_snapshots: 0,
+          creator_work_patterns: 0,
+          burnout_risk_history: 0,
+          creator_boundaries: 0,
+        },
+        error: null,
+      });
+
+      const result = await service.deleteAllWellnessData('creator-no-data');
+
+      expect(result).toEqual({
+        wellness_snapshots: 0,
+        creator_work_patterns: 0,
+        burnout_risk_history: 0,
+        creator_boundaries: 0,
+      });
+    });
+
+    it('should handle null data fields gracefully', async () => {
+      mockDb.rpc = jest.fn().mockResolvedValue({
+        data: {},
+        error: null,
+      });
+
+      const result = await service.deleteAllWellnessData('creator-123');
+
+      expect(result).toEqual({
+        wellness_snapshots: 0,
+        creator_work_patterns: 0,
+        burnout_risk_history: 0,
+        creator_boundaries: 0,
+      });
     });
   });
 });

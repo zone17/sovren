@@ -26,10 +26,10 @@ interface SupabaseClient {
 
 const FACTOR_WEIGHTS = {
   work_hours_trend: 0.25,
-  posting_frequency: 0.20,
-  engagement_drop: 0.20,
+  posting_frequency: 0.2,
+  engagement_drop: 0.2,
   hour_regularity: 0.15,
-  rest_day_deficit: 0.20,
+  rest_day_deficit: 0.2,
 } as const;
 
 // Sensitivity multipliers for trigger thresholds
@@ -57,10 +57,18 @@ export class BurnoutScoringService implements IBurnoutScoringService {
 
   async calculateScore(creatorId: string): Promise<BurnoutRiskScore> {
     // Check if baseline is established (14+ days of data)
-    const { count: totalDays } = await this.db
+    const { count: totalDays, error: countError } = await this.db
       .from('creator_work_patterns')
       .select('*', { count: 'exact', head: true })
       .eq('creator_id', creatorId);
+
+    if (countError) {
+      this.logger.error('Failed to fetch work pattern count for burnout scoring', {
+        error: countError instanceof Error ? countError.message : String(countError),
+        creatorId,
+      });
+      throw countError;
+    }
 
     if ((totalDays || 0) < 14) {
       return {
@@ -87,20 +95,37 @@ export class BurnoutScoringService implements IBurnoutScoringService {
     const baselineStart = new Date(now);
     baselineStart.setDate(baselineStart.getDate() - 35);
 
-    const { data: currentWeek } = await this.db
+    const { data: currentWeek, error: currentWeekError } = await this.db
       .from('creator_work_patterns')
       .select('*')
       .eq('creator_id', creatorId)
       .gte('date', weekAgo.toISOString().split('T')[0])
       .order('date', { ascending: true });
 
-    const { data: baselineData } = await this.db
+    if (currentWeekError) {
+      this.logger.error('Failed to fetch current week work patterns for burnout scoring', {
+        error:
+          currentWeekError instanceof Error ? currentWeekError.message : String(currentWeekError),
+        creatorId,
+      });
+      throw currentWeekError;
+    }
+
+    const { data: baselineData, error: baselineError } = await this.db
       .from('creator_work_patterns')
       .select('*')
       .eq('creator_id', creatorId)
       .gte('date', baselineStart.toISOString().split('T')[0])
       .lt('date', weekAgo.toISOString().split('T')[0])
       .order('date', { ascending: true });
+
+    if (baselineError) {
+      this.logger.error('Failed to fetch baseline work patterns for burnout scoring', {
+        error: baselineError instanceof Error ? baselineError.message : String(baselineError),
+        creatorId,
+      });
+      throw baselineError;
+    }
 
     const current = currentWeek || [];
     const baseline = baselineData || [];
@@ -122,12 +147,20 @@ export class BurnoutScoringService implements IBurnoutScoringService {
     const level = getLevel(clampedScore);
 
     // Get history
-    const { data: historyData } = await this.db
+    const { data: historyData, error: historyError } = await this.db
       .from('burnout_risk_history')
       .select('week, score, level')
       .eq('creator_id', creatorId)
       .order('week', { ascending: false })
       .limit(8);
+
+    if (historyError) {
+      this.logger.error('Failed to fetch burnout risk history', {
+        error: historyError instanceof Error ? historyError.message : String(historyError),
+        creatorId,
+      });
+      throw historyError;
+    }
 
     const history: BurnoutHistoryEntry[] = (historyData || []).map((h: any) => ({
       week: h.week,
@@ -140,18 +173,25 @@ export class BurnoutScoringService implements IBurnoutScoringService {
 
     // Save current week's score to history
     const isoWeek = this.getISOWeek(now);
-    await this.db
-      .from('burnout_risk_history')
-      .upsert(
-        {
-          creator_id: creatorId,
-          week: isoWeek,
-          score: clampedScore,
-          level,
-          factors: JSON.stringify(factors),
-        },
-        { onConflict: 'creator_id,week' }
-      );
+    const { error: upsertError } = await this.db.from('burnout_risk_history').upsert(
+      {
+        creator_id: creatorId,
+        week: isoWeek,
+        score: clampedScore,
+        level,
+        factors: JSON.stringify(factors),
+      },
+      { onConflict: 'creator_id,week' }
+    );
+
+    if (upsertError) {
+      this.logger.error('Failed to save burnout risk score to history', {
+        error: upsertError instanceof Error ? upsertError.message : String(upsertError),
+        creatorId,
+        week: isoWeek,
+      });
+      throw upsertError;
+    }
 
     return {
       score: clampedScore,
@@ -181,22 +221,31 @@ export class BurnoutScoringService implements IBurnoutScoringService {
 
   private computeFactors(current: any[], baseline: any[], multiplier: number): BurnoutFactors {
     // Factor 1: Work hours trend
-    const currentHours = current.reduce((s: number, r: any) => s + parseFloat(r.total_hours || 0), 0);
+    const currentHours = current.reduce(
+      (s: number, r: any) => s + parseFloat(r.total_hours || 0),
+      0
+    );
     const baselineWeeks = Math.max(1, Math.ceil(baseline.length / 7));
-    const baselineHoursPerWeek = baseline.reduce((s: number, r: any) => s + parseFloat(r.total_hours || 0), 0) / baselineWeeks;
+    const baselineHoursPerWeek =
+      baseline.reduce((s: number, r: any) => s + parseFloat(r.total_hours || 0), 0) / baselineWeeks;
     const hoursRatio = baselineHoursPerWeek > 0 ? currentHours / baselineHoursPerWeek : 0;
     const workHoursValue = Math.min(1.0, Math.max(0, (hoursRatio - 1.0 * multiplier) / 0.5));
 
     // Factor 2: Posting frequency spike
     const currentPosts = current.reduce((s: number, r: any) => s + (r.post_count || 0), 0);
-    const baselinePostsPerWeek = baseline.reduce((s: number, r: any) => s + (r.post_count || 0), 0) / baselineWeeks;
+    const baselinePostsPerWeek =
+      baseline.reduce((s: number, r: any) => s + (r.post_count || 0), 0) / baselineWeeks;
     const postRatio = baselinePostsPerWeek > 0 ? currentPosts / baselinePostsPerWeek : 0;
     const postFreqValue = Math.min(1.0, Math.max(0, (postRatio - 1.0 * multiplier) / 1.0));
 
     // Factor 3: Engagement drop (approximated from activity patterns)
     // Since we track activity, we use engagement time as a proxy
-    const currentEngagement = current.reduce((s: number, r: any) => s + (r.engagement_time_mins || 0), 0);
-    const baselineEngPerWeek = baseline.reduce((s: number, r: any) => s + (r.engagement_time_mins || 0), 0) / baselineWeeks;
+    const currentEngagement = current.reduce(
+      (s: number, r: any) => s + (r.engagement_time_mins || 0),
+      0
+    );
+    const baselineEngPerWeek =
+      baseline.reduce((s: number, r: any) => s + (r.engagement_time_mins || 0), 0) / baselineWeeks;
     const engRatio = baselineEngPerWeek > 0 ? currentEngagement / baselineEngPerWeek : 1;
     const engDropValue = Math.min(1.0, Math.max(0, (1.0 - engRatio) / (0.3 * multiplier)));
 
@@ -207,7 +256,9 @@ export class BurnoutScoringService implements IBurnoutScoringService {
     let stddevHours = 0;
     if (startHours.length > 1) {
       const mean = startHours.reduce((s: number, h: number) => s + h, 0) / startHours.length;
-      const variance = startHours.reduce((s: number, h: number) => s + Math.pow(h - mean, 2), 0) / startHours.length;
+      const variance =
+        startHours.reduce((s: number, h: number) => s + Math.pow(h - mean, 2), 0) /
+        startHours.length;
       stddevHours = Math.sqrt(variance);
     }
     const hourRegValue = Math.min(1.0, Math.max(0, (stddevHours - 1.0 * multiplier) / 3.0));
@@ -215,7 +266,10 @@ export class BurnoutScoringService implements IBurnoutScoringService {
     // Factor 5: Rest day deficit
     const activeDays = new Set(current.map((r: any) => r.date)).size;
     const restDays = 7 - activeDays;
-    const restDeficitValue = Math.min(1.0, Math.max(0, (2 * multiplier - restDays) / (2 * multiplier)));
+    const restDeficitValue = Math.min(
+      1.0,
+      Math.max(0, (2 * multiplier - restDays) / (2 * multiplier))
+    );
 
     return {
       work_hours_trend: {
@@ -277,11 +331,31 @@ export class BurnoutScoringService implements IBurnoutScoringService {
 
   private emptyFactors(): BurnoutFactors {
     return {
-      work_hours_trend: { value: 0, weight: FACTOR_WEIGHTS.work_hours_trend, detail: 'Baseline not ready' },
-      posting_frequency: { value: 0, weight: FACTOR_WEIGHTS.posting_frequency, detail: 'Baseline not ready' },
-      engagement_drop: { value: 0, weight: FACTOR_WEIGHTS.engagement_drop, detail: 'Baseline not ready' },
-      hour_regularity: { value: 0, weight: FACTOR_WEIGHTS.hour_regularity, detail: 'Baseline not ready' },
-      rest_day_deficit: { value: 0, weight: FACTOR_WEIGHTS.rest_day_deficit, detail: 'Baseline not ready' },
+      work_hours_trend: {
+        value: 0,
+        weight: FACTOR_WEIGHTS.work_hours_trend,
+        detail: 'Baseline not ready',
+      },
+      posting_frequency: {
+        value: 0,
+        weight: FACTOR_WEIGHTS.posting_frequency,
+        detail: 'Baseline not ready',
+      },
+      engagement_drop: {
+        value: 0,
+        weight: FACTOR_WEIGHTS.engagement_drop,
+        detail: 'Baseline not ready',
+      },
+      hour_regularity: {
+        value: 0,
+        weight: FACTOR_WEIGHTS.hour_regularity,
+        detail: 'Baseline not ready',
+      },
+      rest_day_deficit: {
+        value: 0,
+        weight: FACTOR_WEIGHTS.rest_day_deficit,
+        detail: 'Baseline not ready',
+      },
     };
   }
 

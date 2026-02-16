@@ -4,7 +4,12 @@
  * EPIC-008: Content Shield (US-E8-004b)
  */
 
-import type { ContentAlert, AlertDetail, AlertStatus, Pagination } from '@sovren/shared/types/provenance';
+import type {
+  ContentAlert,
+  AlertDetail,
+  AlertStatus,
+  Pagination,
+} from '@sovren/shared/types/provenance';
 import { ALERT_STATUS_TRANSITIONS } from '@sovren/shared/types/provenance';
 import type { IAlertService } from '../../interfaces/provenance/IAlertService';
 import { NotFoundError, ConflictError } from '../../utils/errors';
@@ -131,42 +136,64 @@ export class AlertService implements IAlertService {
     alertId: string,
     newStatus: AlertStatus
   ): Promise<{ id: string; status: AlertStatus; updated_at: string }> {
-    // Get current alert
-    const { data: alert, error: fetchError } = await this.db
-      .from('content_alerts')
-      .select('status')
-      .eq('id', alertId)
-      .eq('creator_id', creatorId)
-      .single();
-
-    if (fetchError || !alert) {
-      throw new NotFoundError(`Alert ${alertId}`);
+    // Compute which statuses can transition to the requested newStatus (reverse lookup).
+    // This avoids a separate read query — the database enforces atomicity.
+    const validFromStatuses: AlertStatus[] = [];
+    for (const [fromStatus, allowed] of Object.entries(ALERT_STATUS_TRANSITIONS)) {
+      if (allowed.includes(newStatus)) {
+        validFromStatuses.push(fromStatus as AlertStatus);
+      }
     }
 
-    // Validate status transition
-    const currentStatus = alert.status as AlertStatus;
-    const allowedTransitions = ALERT_STATUS_TRANSITIONS[currentStatus];
-
-    if (!allowedTransitions || !allowedTransitions.includes(newStatus)) {
+    // If no status can transition to newStatus, it's always invalid
+    if (validFromStatuses.length === 0) {
       throw new ConflictError(
-        `Cannot transition alert from '${currentStatus}' to '${newStatus}'. Allowed: ${allowedTransitions?.join(', ') || 'none'}`
+        `Cannot transition alert to '${newStatus}'. No valid source status exists.`
       );
     }
 
     const now = new Date().toISOString();
 
-    const { error: updateError } = await this.db
+    // Atomic conditional update — only succeeds if the alert exists, belongs to
+    // the creator, AND is currently in one of the valid source statuses.
+    // This eliminates the TOCTOU race: the database handles concurrency.
+    const { data, error: updateError } = await this.db
       .from('content_alerts')
       .update({ status: newStatus, updated_at: now })
       .eq('id', alertId)
-      .eq('creator_id', creatorId);
+      .eq('creator_id', creatorId)
+      .in('status', validFromStatuses)
+      .select()
+      .single();
 
-    if (updateError) {
-      this.logger.error('Failed to update alert status', { alertId, error: updateError });
-      throw updateError;
+    if (updateError || !data) {
+      // The atomic update matched 0 rows. Determine why:
+      // 1) Alert doesn't exist / wrong creator → NotFoundError
+      // 2) Alert exists but status doesn't allow this transition → ConflictError
+      const { data: existing } = await this.db
+        .from('content_alerts')
+        .select('status')
+        .eq('id', alertId)
+        .eq('creator_id', creatorId)
+        .single();
+
+      if (!existing) {
+        throw new NotFoundError(`Alert ${alertId}`);
+      }
+
+      const currentStatus = existing.status as AlertStatus;
+      const allowedFromCurrent = ALERT_STATUS_TRANSITIONS[currentStatus] || [];
+      throw new ConflictError(
+        `Cannot transition alert from '${currentStatus}' to '${newStatus}'. ` +
+          `Allowed: ${allowedFromCurrent.join(', ') || 'none'}`
+      );
     }
 
-    this.logger.info('Alert status updated', { alertId, from: currentStatus, to: newStatus });
+    this.logger.info('Alert status updated', {
+      alertId,
+      from: '(atomic)',
+      to: newStatus,
+    });
 
     return { id: alertId, status: newStatus, updated_at: now };
   }

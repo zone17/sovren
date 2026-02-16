@@ -20,7 +20,6 @@ import type {
   CreateWorkPatternInput,
   PulseInput,
 } from '../../interfaces/wellness/IWellnessService';
-import { NotFoundError, ValidationError } from '../../utils/errors';
 
 interface SupabaseClient {
   from(table: string): any;
@@ -34,44 +33,44 @@ export class WellnessService implements IWellnessService {
   ) {}
 
   async recordWorkPattern(creatorId: string, input: CreateWorkPatternInput): Promise<WorkPattern> {
-    const id = crypto.randomUUID();
     const now = new Date().toISOString();
 
-    // Record the individual work pattern entry
-    const { data, error } = await this.db
-      .from('creator_work_patterns')
-      .upsert(
-        {
-          creator_id: creatorId,
-          date: input.timestamp.split('T')[0],
-          [`${this.activityColumn(input.type)}`]: input.duration_mins,
-          post_count: input.type === 'content_creation' ? 1 : 0,
-          first_activity_at: input.timestamp,
-          last_activity_at: input.timestamp,
-          updated_at: now,
-        },
-        { onConflict: 'creator_id,date', ignoreDuplicates: false }
-      )
-      .select()
-      .single();
+    // Use RPC to accumulate work pattern data instead of overwriting.
+    // The upsert_work_pattern Postgres function uses ON CONFLICT DO UPDATE
+    // to sum durations and post counts when multiple sessions occur on the same day.
+    const { data, error } = await this.db.rpc('upsert_work_pattern', {
+      p_creator_id: creatorId,
+      p_date: input.timestamp.split('T')[0],
+      p_content_time_mins: input.type === 'content_creation' ? input.duration_mins : 0,
+      p_engagement_time_mins: input.type === 'engagement' ? input.duration_mins : 0,
+      p_management_time_mins: input.type === 'management' ? input.duration_mins : 0,
+      p_post_count: input.type === 'content_creation' ? 1 : 0,
+      p_activity_at: input.timestamp,
+    });
 
     if (error) {
       this.logger.error('Failed to record work pattern', { creatorId, error });
       throw error;
     }
 
+    // RPC returns an array from RETURNS SETOF; take the first (and only) row
+    const row = Array.isArray(data) ? data[0] : data;
+
     return {
-      id: data.id,
+      id: row.id,
       creator_id: creatorId,
       type: input.type,
       duration_mins: input.duration_mins,
       timestamp: input.timestamp,
       metadata: input.metadata,
-      created_at: now,
+      created_at: row.created_at ?? now,
     };
   }
 
-  async getWorkPatterns(creatorId: string, period: '7d' | '30d' | '90d'): Promise<WorkPatternAggregation> {
+  async getWorkPatterns(
+    creatorId: string,
+    period: '7d' | '30d' | '90d'
+  ): Promise<WorkPatternAggregation> {
     const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -90,8 +89,14 @@ export class WellnessService implements IWellnessService {
 
     const rows = patterns || [];
     const totalContentMins = rows.reduce((s: number, r: any) => s + (r.content_time_mins || 0), 0);
-    const totalEngagementMins = rows.reduce((s: number, r: any) => s + (r.engagement_time_mins || 0), 0);
-    const totalManagementMins = rows.reduce((s: number, r: any) => s + (r.management_time_mins || 0), 0);
+    const totalEngagementMins = rows.reduce(
+      (s: number, r: any) => s + (r.engagement_time_mins || 0),
+      0
+    );
+    const totalManagementMins = rows.reduce(
+      (s: number, r: any) => s + (r.management_time_mins || 0),
+      0
+    );
     const totalMins = totalContentMins + totalEngagementMins + totalManagementMins;
     const totalHours = totalMins / 60;
 
@@ -144,7 +149,9 @@ export class WellnessService implements IWellnessService {
 
     const { data: patterns, error } = await this.db
       .from('creator_work_patterns')
-      .select('date, content_time_mins, engagement_time_mins, management_time_mins, first_activity_at, last_activity_at')
+      .select(
+        'date, content_time_mins, engagement_time_mins, management_time_mins, first_activity_at, last_activity_at'
+      )
       .eq('creator_id', creatorId)
       .gte('date', startDate.toISOString().split('T')[0])
       .order('date', { ascending: true });
@@ -162,7 +169,10 @@ export class WellnessService implements IWellnessService {
     for (const row of patterns || []) {
       const date = new Date(row.date);
       const dayOfWeek = (date.getDay() + 6) % 7; // 0=Monday
-      const totalMins = (row.content_time_mins || 0) + (row.engagement_time_mins || 0) + (row.management_time_mins || 0);
+      const totalMins =
+        (row.content_time_mins || 0) +
+        (row.engagement_time_mins || 0) +
+        (row.management_time_mins || 0);
 
       if (totalMins === 0) continue;
 
@@ -214,7 +224,8 @@ export class WellnessService implements IWellnessService {
   }
 
   async recordPulse(creatorId: string, input: PulseInput): Promise<PulseCheckIn> {
-    const compositeScore = Math.round(((input.energy + input.motivation + (6 - input.stress)) / 3) * 100) / 100;
+    const compositeScore =
+      Math.round(((input.energy + input.motivation + (6 - input.stress)) / 3) * 100) / 100;
 
     const { data, error } = await this.db
       .from('wellness_snapshots')
@@ -273,9 +284,8 @@ export class WellnessService implements IWellnessService {
     }));
 
     // Calculate trend
-    const avgComposite = entries.length > 0
-      ? entries.reduce((s, e) => s + e.composite_score, 0) / entries.length
-      : 0;
+    const avgComposite =
+      entries.length > 0 ? entries.reduce((s, e) => s + e.composite_score, 0) / entries.length : 0;
 
     // Compare first half to second half for trend direction
     const half = Math.floor(entries.length / 2);
@@ -284,7 +294,8 @@ export class WellnessService implements IWellnessService {
 
     if (entries.length >= 4) {
       const recentAvg = entries.slice(0, half).reduce((s, e) => s + e.composite_score, 0) / half;
-      const olderAvg = entries.slice(half).reduce((s, e) => s + e.composite_score, 0) / (entries.length - half);
+      const olderAvg =
+        entries.slice(half).reduce((s, e) => s + e.composite_score, 0) / (entries.length - half);
       change = Math.round((recentAvg - olderAvg) * 100) / 100;
       direction = change > 0.1 ? 'improving' : change < -0.1 ? 'declining' : 'stable';
     }
@@ -314,34 +325,36 @@ export class WellnessService implements IWellnessService {
   }
 
   async deleteAllWellnessData(creatorId: string): Promise<Record<string, number>> {
-    const results: Record<string, number> = {};
+    // GDPR right to erasure: all wellness deletes MUST be atomic.
+    // Uses a Postgres function to wrap all DELETEs in a single transaction.
+    // If any delete fails, the entire operation rolls back — no partial state.
+    const { data, error } = await this.db.rpc('delete_all_wellness_data', {
+      p_creator_id: creatorId,
+    });
 
-    // Delete from each wellness table
-    const tables = ['wellness_snapshots', 'creator_work_patterns', 'burnout_risk_history', 'creator_boundaries'];
-
-    for (const table of tables) {
-      const { count, error } = await this.db
-        .from(table)
-        .delete({ count: 'exact' })
-        .eq('creator_id', creatorId);
-
-      if (error) {
-        this.logger.error(`Failed to delete from ${table}`, { creatorId, error });
-        throw error;
-      }
-
-      results[table] = count || 0;
+    if (error) {
+      this.logger.error('Failed to atomically delete all wellness data', { creatorId, error });
+      throw new Error(
+        `GDPR deletion failed for creator ${creatorId}: ${error.message || 'Unknown database error'}. No data was deleted.`
+      );
     }
+
+    // RPC returns JSONB with per-table counts
+    const results: Record<string, number> = {
+      wellness_snapshots: data?.wellness_snapshots ?? 0,
+      creator_work_patterns: data?.creator_work_patterns ?? 0,
+      burnout_risk_history: data?.burnout_risk_history ?? 0,
+      creator_boundaries: data?.creator_boundaries ?? 0,
+    };
+
+    this.logger.info('Atomically deleted all wellness data', { creatorId, results });
 
     return results;
   }
 
   async getBenchmark(): Promise<WellnessBenchmark | null> {
     // Query the materialized view for anonymous benchmarks
-    const { data, error } = await this.db
-      .from('wellness_benchmarks')
-      .select('*')
-      .single();
+    const { data, error } = await this.db.from('wellness_benchmarks').select('*').single();
 
     if (error || !data) {
       this.logger.warn('Benchmark data not available', { error });
@@ -354,12 +367,13 @@ export class WellnessService implements IWellnessService {
     }
 
     // For composite score benchmarks, query pulse data aggregates
-    const { data: pulseData } = await this.db
-      .from('wellness_snapshots')
-      .select('composite_score');
+    const { data: pulseData } = await this.db.from('wellness_snapshots').select('composite_score');
 
-    const scores = (pulseData || []).map((r: any) => parseFloat(r.composite_score)).sort((a: number, b: number) => a - b);
-    const avgComposite = scores.length > 0 ? scores.reduce((s: number, v: number) => s + v, 0) / scores.length : 0;
+    const scores = (pulseData || [])
+      .map((r: any) => parseFloat(r.composite_score))
+      .sort((a: number, b: number) => a - b);
+    const avgComposite =
+      scores.length > 0 ? scores.reduce((s: number, v: number) => s + v, 0) / scores.length : 0;
 
     return {
       average_weekly_hours: parseFloat(data.avg_weekly_hours),
