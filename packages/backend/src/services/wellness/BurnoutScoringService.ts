@@ -19,10 +19,8 @@ import type {
   SensitivityLevel,
 } from '@sovren/shared/types/wellness';
 import type { IBurnoutScoringService } from '../../interfaces/wellness/IBurnoutScoringService';
-
-interface SupabaseClient {
-  from(table: string): any;
-}
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { ILogger } from '../../interfaces/shared/ILogger';
 
 const FACTOR_WEIGHTS = {
   work_hours_trend: 0.25,
@@ -51,8 +49,8 @@ export class BurnoutScoringService implements IBurnoutScoringService {
   private sensitivitySettings: Map<string, SensitivityLevel> = new Map();
 
   constructor(
-    private readonly db: SupabaseClient,
-    private readonly logger: { info: Function; error: Function; warn: Function }
+    private readonly db: ISupabaseClient,
+    private readonly logger: ILogger
   ) {}
 
   async calculateScore(creatorId: string): Promise<BurnoutRiskScore> {

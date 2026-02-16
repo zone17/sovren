@@ -20,16 +20,13 @@ import type {
   CreateWorkPatternInput,
   PulseInput,
 } from '../../interfaces/wellness/IWellnessService';
-
-interface SupabaseClient {
-  from(table: string): any;
-  rpc(fn: string, params?: any): any;
-}
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { ILogger } from '../../interfaces/shared/ILogger';
 
 export class WellnessService implements IWellnessService {
   constructor(
-    private readonly db: SupabaseClient,
-    private readonly logger: { info: Function; error: Function; warn: Function }
+    private readonly db: ISupabaseClient,
+    private readonly logger: ILogger
   ) {}
 
   async recordWorkPattern(creatorId: string, input: CreateWorkPatternInput): Promise<WorkPattern> {

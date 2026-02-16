@@ -12,17 +12,15 @@ import type {
   ProductiveWindow,
 } from '@sovren/shared/types/wellness';
 import type { IScheduleService } from '../../interfaces/wellness/IScheduleService';
-
-interface SupabaseClient {
-  from(table: string): any;
-}
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { ILogger } from '../../interfaces/shared/ILogger';
 
 const DAY_NAMES: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export class ScheduleService implements IScheduleService {
   constructor(
-    private readonly db: SupabaseClient,
-    private readonly logger: { info: Function; error: Function; warn: Function }
+    private readonly db: ISupabaseClient,
+    private readonly logger: ILogger
   ) {}
 
   async getRecommendations(creatorId: string): Promise<ScheduleRecommendation> {

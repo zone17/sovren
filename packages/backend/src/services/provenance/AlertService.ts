@@ -12,16 +12,14 @@ import type {
 } from '@sovren/shared/types/provenance';
 import { ALERT_STATUS_TRANSITIONS } from '@sovren/shared/types/provenance';
 import type { IAlertService } from '../../interfaces/provenance/IAlertService';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { ILogger } from '../../interfaces/shared/ILogger';
 import { NotFoundError, ConflictError } from '../../utils/errors';
-
-interface SupabaseClient {
-  from(table: string): any;
-}
 
 export class AlertService implements IAlertService {
   constructor(
-    private readonly db: SupabaseClient,
-    private readonly logger: { info: Function; error: Function; warn: Function }
+    private readonly db: ISupabaseClient,
+    private readonly logger: ILogger
   ) {}
 
   async getAlerts(

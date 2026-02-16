@@ -22,15 +22,13 @@ import type {
   CreateFingerprintInput,
   CompareInput,
 } from '../../interfaces/provenance/IFingerprintService';
-
-interface SupabaseClient {
-  from(table: string): any;
-}
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { ILogger } from '../../interfaces/shared/ILogger';
 
 export class FingerprintService implements IFingerprintService {
   constructor(
-    private readonly db: SupabaseClient,
-    private readonly logger: { info: Function; error: Function; warn: Function }
+    private readonly db: ISupabaseClient,
+    private readonly logger: ILogger
   ) {}
 
   async createFingerprint(

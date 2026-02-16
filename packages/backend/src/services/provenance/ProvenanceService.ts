@@ -6,16 +6,14 @@
 
 import type { ProvenanceRecord, ProvenanceCertificate } from '@sovren/shared/types/provenance';
 import type { IProvenanceService } from '../../interfaces/provenance/IProvenanceService';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { ILogger } from '../../interfaces/shared/ILogger';
 import { NotFoundError } from '../../utils/errors';
-
-interface SupabaseClient {
-  from(table: string): any;
-}
 
 export class ProvenanceService implements IProvenanceService {
   constructor(
-    private readonly db: SupabaseClient,
-    private readonly logger: { info: Function; error: Function; warn: Function }
+    private readonly db: ISupabaseClient,
+    private readonly logger: ILogger
   ) {}
 
   async getProvenanceChain(contentId: string): Promise<ProvenanceRecord | null> {

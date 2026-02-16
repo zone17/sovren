@@ -6,16 +6,14 @@
 
 import type { DmcaReport } from '@sovren/shared/types/provenance';
 import type { IDmcaService } from '../../interfaces/provenance/IDmcaService';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { ILogger } from '../../interfaces/shared/ILogger';
 import { NotFoundError } from '../../utils/errors';
-
-interface SupabaseClient {
-  from(table: string): any;
-}
 
 export class DmcaService implements IDmcaService {
   constructor(
-    private readonly db: SupabaseClient,
-    private readonly logger: { info: Function; error: Function; warn: Function }
+    private readonly db: ISupabaseClient,
+    private readonly logger: ILogger
   ) {}
 
   async generateReport(creatorId: string, alertId: string): Promise<DmcaReport> {

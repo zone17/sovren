@@ -6,10 +6,8 @@
 
 import type { CreatorBoundaries, AvailabilityStatus, DayOfWeek } from '@sovren/shared/types/wellness';
 import type { IBoundaryService, BoundaryUpdateInput } from '../../interfaces/wellness/IBoundaryService';
-
-interface SupabaseClient {
-  from(table: string): any;
-}
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { ILogger } from '../../interfaces/shared/ILogger';
 
 const DEFAULT_BOUNDARIES: CreatorBoundaries = {
   focus_hours: {
@@ -33,8 +31,8 @@ const DEFAULT_BOUNDARIES: CreatorBoundaries = {
 
 export class BoundaryService implements IBoundaryService {
   constructor(
-    private readonly db: SupabaseClient,
-    private readonly logger: { info: Function; error: Function; warn: Function }
+    private readonly db: ISupabaseClient,
+    private readonly logger: ILogger
   ) {}
 
   async getBoundaries(creatorId: string): Promise<CreatorBoundaries> {
