@@ -143,12 +143,28 @@ export class FingerprintService implements IFingerprintService {
   }
 
   async compare(creatorId: string, input: CompareInput): Promise<CompareResult> {
-    // Get all fingerprints of the same hash type for this creator
-    const { data: fpData, error } = await this.db
+    // Time-window filter: default 90 days, configurable via input or env
+    const windowDays = (input as any).windowDays
+      || parseInt(process.env.FINGERPRINT_COMPARE_WINDOW_DAYS || '90', 10);
+    const fullScan = (input as any).fullScan === true;
+
+    let query = this.db
       .from('content_fingerprints')
       .select('*')
       .eq('creator_id', creatorId)
       .eq('hash_type', input.hash_type);
+
+    // Apply time-window filter unless full scan is requested (admin/DMCA investigation)
+    if (!fullScan) {
+      const windowStart = new Date();
+      windowStart.setDate(windowStart.getDate() - windowDays);
+      query = query.gte('created_at', windowStart.toISOString());
+    }
+
+    // Bound the result set to prevent unbounded memory usage
+    query = query.limit(1000);
+
+    const { data: fpData, error } = await query;
 
     if (error) {
       this.logger.error('Failed to compare fingerprints', { creatorId, error });
@@ -168,7 +184,8 @@ export class FingerprintService implements IFingerprintService {
         };
       })
       .filter((m: any) => m.similarity >= input.threshold)
-      .sort((a: any, b: any) => b.similarity - a.similarity);
+      .sort((a: any, b: any) => b.similarity - a.similarity)
+      .slice(0, 20); // Return top 20 matches
 
     return {
       matches,

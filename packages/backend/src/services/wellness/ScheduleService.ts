@@ -137,12 +137,7 @@ export class ScheduleService implements IScheduleService {
     const bufferDays = scheduled.filter((r: any) => r.post_count > 0).length;
     const threshold = 5;
 
-    let status: BufferStatus = 'below_threshold';
-    if (bufferDays >= threshold) {
-      status = 'above_threshold';
-    } else if (bufferDays === threshold) {
-      status = 'at_threshold';
-    }
+    const status: BufferStatus = bufferDays >= threshold ? 'above_threshold' : 'below_threshold';
 
     return {
       buffer_days: bufferDays,

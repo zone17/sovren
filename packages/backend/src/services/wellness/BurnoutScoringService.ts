@@ -45,8 +45,10 @@ function getLevel(score: number): BurnoutLevel {
 }
 
 export class BurnoutScoringService implements IBurnoutScoringService {
-  // In-memory sensitivity cache per creator (would be in DB for production)
-  private sensitivitySettings: Map<string, SensitivityLevel> = new Map();
+  // TTL-based cache backed by database (creator_boundaries.sensitivity_level)
+  private sensitivityCache = new Map<string, { level: SensitivityLevel; expiresAt: number }>();
+  private static readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private static readonly DEFAULT_SENSITIVITY: SensitivityLevel = 'normal';
 
   constructor(
     private readonly db: ISupabaseClient,
@@ -207,14 +209,66 @@ export class BurnoutScoringService implements IBurnoutScoringService {
     creatorId: string,
     sensitivity: SensitivityLevel
   ): Promise<{ sensitivity: SensitivityLevel; updated_at: string }> {
-    this.sensitivitySettings.set(creatorId, sensitivity);
-    const updated_at = new Date().toISOString();
+    const now = new Date().toISOString();
+
+    // Persist to database via upsert on creator_boundaries
+    const { error } = await this.db
+      .from('creator_boundaries')
+      .upsert(
+        { creator_id: creatorId, sensitivity_level: sensitivity, updated_at: now },
+        { onConflict: 'creator_id' }
+      );
+
+    if (error) {
+      this.logger.error('Failed to persist sensitivity setting', { creatorId, error });
+      throw error;
+    }
+
+    // Update cache
+    this.sensitivityCache.set(creatorId, {
+      level: sensitivity,
+      expiresAt: Date.now() + BurnoutScoringService.CACHE_TTL,
+    });
+
     this.logger.info('Burnout sensitivity updated', { creatorId, sensitivity });
-    return { sensitivity, updated_at };
+    return { sensitivity, updated_at: now };
   }
 
   async getSensitivity(creatorId: string): Promise<SensitivityLevel> {
-    return this.sensitivitySettings.get(creatorId) || 'normal';
+    // Check cache first
+    const cached = this.sensitivityCache.get(creatorId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.level;
+    }
+
+    // Read from database
+    try {
+      const { data, error } = await this.db
+        .from('creator_boundaries')
+        .select('sensitivity_level')
+        .eq('creator_id', creatorId)
+        .single();
+
+      if (error || !data) {
+        return BurnoutScoringService.DEFAULT_SENSITIVITY;
+      }
+
+      const level = (data.sensitivity_level as SensitivityLevel) || BurnoutScoringService.DEFAULT_SENSITIVITY;
+
+      // Cache the result
+      this.sensitivityCache.set(creatorId, {
+        level,
+        expiresAt: Date.now() + BurnoutScoringService.CACHE_TTL,
+      });
+
+      return level;
+    } catch {
+      // Graceful degradation: use cached value if available, otherwise default
+      if (cached) {
+        return cached.level;
+      }
+      return BurnoutScoringService.DEFAULT_SENSITIVITY;
+    }
   }
 
   private computeFactors(current: any[], baseline: any[], multiplier: number): BurnoutFactors {
