@@ -38,7 +38,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { getEventHash, finalizeEvent } from 'nostr-tools';
+import { finalizeEvent } from 'nostr-tools/pure';
 import type {
   NostrEvent,
   UnsignedNostrEvent,

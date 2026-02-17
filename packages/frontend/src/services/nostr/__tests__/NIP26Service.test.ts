@@ -7,25 +7,33 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from '@jest/globals';
-import { getPublicKey, generatePrivateKey, finalizeEvent } from 'nostr-tools';
+import { getPublicKey, generateSecretKey, finalizeEvent } from 'nostr-tools/pure';
 import { NIP26Service } from '../NIP26Service';
 import type { NostrEvent, DelegationConditions } from '@shared/types/nostr';
 
 describe('NIP26Service', () => {
   let service: NIP26Service;
+  let delegatorPrivateKeyBytes: Uint8Array;
   let delegatorPrivateKey: string;
   let delegatorPublicKey: string;
+  let delegateePrivateKeyBytes: Uint8Array;
   let delegateePrivateKey: string;
   let delegateePublicKey: string;
+
+  function bytesToHex(bytes: Uint8Array): string {
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 
   beforeEach(() => {
     service = NIP26Service.getInstance();
 
     // Generate test keys
-    delegatorPrivateKey = generatePrivateKey();
-    delegatorPublicKey = getPublicKey(delegatorPrivateKey);
-    delegateePrivateKey = generatePrivateKey();
-    delegateePublicKey = getPublicKey(delegateePrivateKey);
+    delegatorPrivateKeyBytes = generateSecretKey();
+    delegatorPrivateKey = bytesToHex(delegatorPrivateKeyBytes);
+    delegatorPublicKey = getPublicKey(delegatorPrivateKeyBytes);
+    delegateePrivateKeyBytes = generateSecretKey();
+    delegateePrivateKey = bytesToHex(delegateePrivateKeyBytes);
+    delegateePublicKey = getPublicKey(delegateePrivateKeyBytes);
   });
 
   describe('getInstance', () => {
@@ -174,7 +182,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       const result = await service.validateDelegation(event);
@@ -194,7 +202,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       const result = await service.validateDelegation(event);
@@ -212,7 +220,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       const result = await service.validateDelegation(event);
@@ -237,7 +245,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       const result = await service.validateDelegation(event);
@@ -267,7 +275,7 @@ describe('NIP26Service', () => {
           created_at: now, // Before valid range
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       const result = await service.validateDelegation(event);
@@ -307,7 +315,7 @@ describe('NIP26Service', () => {
         delegatorPrivateKey
       );
 
-      const wrongPrivateKey = generatePrivateKey();
+      const wrongPrivateKey = bytesToHex(generateSecretKey());
 
       await expect(
         service.signDelegatedEvent(
@@ -370,7 +378,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       const extracted = service.extractDelegation(event);
@@ -390,7 +398,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       const extracted = service.extractDelegation(event);
@@ -416,7 +424,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       expect(service.isDelegatedEvent(event)).toBe(true);
@@ -431,7 +439,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       expect(service.isDelegatedEvent(event)).toBe(false);
@@ -488,7 +496,7 @@ describe('NIP26Service', () => {
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },
-        delegateePrivateKey
+        delegateePrivateKeyBytes
       ) as NostrEvent;
 
       const result = await service.validateDelegation(event);

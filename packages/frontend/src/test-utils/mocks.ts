@@ -288,21 +288,21 @@ export const createSupabaseMock = (): unknown => {
 
 // 🔗 **NOSTR Tools Mocks**
 export const createNostrMock = (): unknown => ({
-  generatePrivateKey: jest.fn().mockReturnValue('a'.repeat(64)),
+  generateSecretKey: jest.fn().mockReturnValue(new Uint8Array(32).fill(1)),
   getPublicKey: jest.fn().mockReturnValue('b'.repeat(64)),
 
-  signEvent: jest.fn().mockImplementation(
-    (event: NostrEvent, _privateKey: string): NostrEvent => ({
+  finalizeEvent: jest.fn().mockImplementation(
+    (event: NostrEvent, _privateKey: Uint8Array): NostrEvent => ({
       ...event,
+      pubkey: 'b'.repeat(64),
       sig: 'c'.repeat(128),
+      id: 'd'.repeat(64),
     })
   ),
 
-  verifySignature: jest.fn().mockReturnValue(true),
+  verifyEvent: jest.fn().mockReturnValue(true),
 
   validateEvent: jest.fn().mockReturnValue(true),
-
-  getEventHash: jest.fn().mockReturnValue('d'.repeat(64)),
 
   nip19: {
     encode: jest
@@ -323,26 +323,13 @@ export const createNostrMock = (): unknown => ({
     EventDeletion: 5,
   },
 
-  relayInit: jest.fn().mockReturnValue({
-    url: 'wss://test-relay.com',
-    connect: jest.fn().mockResolvedValue(undefined),
-    close: jest.fn(),
-    sub: jest.fn().mockReturnValue({
-      on: jest.fn(),
-      unsub: jest.fn(),
-    }),
-    publish: jest.fn().mockResolvedValue(undefined),
-    auth: jest.fn().mockResolvedValue(undefined),
-  }),
-
   SimplePool: jest.fn().mockImplementation(() => ({
-    sub: jest.fn().mockReturnValue({
-      on: jest.fn(),
-      unsub: jest.fn(),
+    subscribeMany: jest.fn().mockReturnValue({
+      close: jest.fn(),
     }),
     publish: jest.fn().mockResolvedValue(['ok']),
     close: jest.fn(),
-    seenOn: jest.fn().mockReturnValue([]),
+    ensureRelay: jest.fn().mockResolvedValue(undefined),
   })),
 });
 
@@ -359,7 +346,6 @@ export const createNostrPureMock = (): unknown => ({
       id: 'd'.repeat(64),
     })
   ),
-  getEventHash: jest.fn().mockReturnValue('d'.repeat(64)),
   verifyEvent: jest.fn().mockReturnValue(true),
 });
 
@@ -515,6 +501,24 @@ export function setupAllMocks(): void {
   // 🔗 NOSTR Tools Mocks
   jest.mock('nostr-tools', () => createNostrMock());
   jest.mock('nostr-tools/pure', () => createNostrPureMock());
+  jest.mock('nostr-tools/pool', () => ({
+    SimplePool: jest.fn().mockImplementation(() => ({
+      subscribeMany: jest.fn().mockReturnValue({ close: jest.fn() }),
+      publish: jest.fn().mockResolvedValue(['ok']),
+      close: jest.fn(),
+      ensureRelay: jest.fn().mockResolvedValue(undefined),
+    })),
+  }));
+  jest.mock('nostr-tools/nip04', () => ({
+    encrypt: jest.fn().mockResolvedValue('encrypted-content?iv=base64iv'),
+    decrypt: jest.fn().mockResolvedValue('decrypted-content'),
+  }));
+  jest.mock('nostr-tools/nip19', () => ({
+    nip19: {
+      encode: jest.fn().mockImplementation((prefix: string) => `${prefix}1test123456789`),
+      decode: jest.fn().mockImplementation(() => ({ type: 'npub', data: 'decoded-data' })),
+    },
+  }));
 
   // 🏪 Arweave Mock
   jest.mock('arweave', () => createArweaveMock());

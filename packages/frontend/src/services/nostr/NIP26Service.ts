@@ -37,7 +37,7 @@
  * ```
  */
 
-import { getPublicKey, getSignature, getEventHash } from 'nostr-tools';
+import { getPublicKey, finalizeEvent } from 'nostr-tools/pure';
 import * as secp256k1 from '@noble/secp256k1';
 import type {
   NostrEvent,
@@ -121,7 +121,8 @@ export class NIP26Service {
     this.validateConditions(conditions);
 
     // Get delegator public key
-    const delegatorPublicKey = getPublicKey(delegatorPrivateKey);
+    const delegatorKeyBytes = this.hexToBytes(delegatorPrivateKey);
+    const delegatorPublicKey = getPublicKey(delegatorKeyBytes);
 
     // Build conditions string
     const conditionsString = this.buildConditionsString(conditions);
@@ -265,7 +266,8 @@ export class NIP26Service {
     this.validatePrivateKey(delegateePrivateKey);
 
     // Get delegatee public key
-    const delegateePubkey = getPublicKey(delegateePrivateKey);
+    const delegateeKeyBytes = this.hexToBytes(delegateePrivateKey);
+    const delegateePubkey = getPublicKey(delegateeKeyBytes);
 
     // Verify delegatee matches delegation
     if (delegateePubkey !== delegation.token.delegatee) {
@@ -296,8 +298,7 @@ export class NIP26Service {
     }
 
     // Sign the event
-    const { getEventHash, finalizeEvent } = await import('nostr-tools');
-    const signedEvent = finalizeEvent(unsignedEvent, delegateePrivateKey) as DelegatedEvent;
+    const signedEvent = finalizeEvent(unsignedEvent, delegateeKeyBytes) as DelegatedEvent;
 
     return signedEvent;
   }
@@ -433,6 +434,17 @@ export class NIP26Service {
     return new Uint8Array(hashBuffer);
   }
 
+
+  /**
+   * Convert hex string to Uint8Array
+   */
+  private hexToBytes(hex: string): Uint8Array {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < bytes.length; i++) {
+      bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+  }
 
   /**
    * Validate public key format
