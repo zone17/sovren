@@ -20,6 +20,7 @@ import { registerUserServices } from './container/bindings/user.bindings';
 import { registerPaymentServices } from './container/bindings/payment.bindings';
 import { registerControllers } from './container/bindings/controller.bindings';
 import { registerPhase7Services } from './container/bindings/phase7.bindings';
+import { registerPhase8Services } from './container/bindings/phase8.bindings';
 import { registerQueueServices } from './container/bindings/queue.bindings';
 
 /**
@@ -92,6 +93,7 @@ export async function bootstrapApplication(
   registerUserServices(registry);
   registerPaymentServices(registry);
   registerPhase7Services(registry);
+  registerPhase8Services(registry);
   registerQueueServices(registry);
   registerControllers(registry);
 

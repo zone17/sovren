@@ -106,6 +106,7 @@ router.post(
   authenticate,
   requireCreator,
   mutationRateLimiter,
+  validate({ body: ShieldValidators.signProvenanceBody }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await getProvenanceService().signContent({

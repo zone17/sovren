@@ -3,6 +3,14 @@
 // Error Boundary
 export { DistributionErrorBoundary } from './ErrorBoundary';
 
+// Components
+export { MultiPlatformDashboard } from './components/MultiPlatformDashboard';
+export { default as PlatformConnector } from './components/PlatformConnector';
+export { default as DistributionPanel } from './components/DistributionPanel';
+export { default as UnifiedInbox } from './components/UnifiedInbox';
+export { default as CrossPlatformAnalytics } from './components/CrossPlatformAnalytics';
+export { default as RepurposePreview } from './components/RepurposePreview';
+
 // Hooks
 export { usePlatformStatus, useConnectPlatform, useDisconnectPlatform } from './hooks/usePlatformConnections';
 export { usePublish, usePublishStatus, useRepurpose, useRepurposed, useApproveRepurposed } from './hooks/useCrossPost';

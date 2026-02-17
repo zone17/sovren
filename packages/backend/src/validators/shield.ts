@@ -70,12 +70,25 @@ export const DmcaReportQuerySchema = z.object({
 });
 
 // ============================================================================
+// Provenance Sign
+// ============================================================================
+
+export const SignProvenanceBodySchema = z.object({
+  content_id: z.string().min(1).max(255),
+  content_body: z.string().min(1).max(1_000_000), // 1MB limit
+  nostr_event_id: z.string().min(1).max(255),
+  signature: z.string().min(1).max(2048),
+  relays: z.array(z.string().url()).max(20).optional().default([]),
+});
+
+// ============================================================================
 // Aggregated exports for route use
 // ============================================================================
 
 export const ShieldValidators = {
   contentIdParam: ContentIdParamSchema,
   certificateQuery: CertificateQuerySchema,
+  signProvenanceBody: SignProvenanceBodySchema,
   createFingerprint: CreateFingerprintSchema,
   getFingerprintsParam: GetFingerprintsParamSchema,
   getFingerprintsQuery: GetFingerprintsQuerySchema,

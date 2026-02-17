@@ -95,6 +95,17 @@ export class PlatformConnectionService implements IPlatformConnectionService {
   ): Promise<{ authorization_url: string }> {
     const adapter = this.getAdapter(platform);
 
+    // Prevent unbounded growth of state store (DoS protection)
+    if (oauthStateStore.size >= 10000) {
+      // Evict oldest entries
+      const entries = [...oauthStateStore.entries()];
+      entries.sort((a, b) => a[1].expiresAt - b[1].expiresAt);
+      const toDelete = entries.slice(0, entries.length - 5000);
+      for (const [key] of toDelete) {
+        oauthStateStore.delete(key);
+      }
+    }
+
     // Generate CSRF state token
     const state = randomBytes(32).toString('hex');
     oauthStateStore.set(state, {
@@ -249,7 +260,7 @@ export class PlatformConnectionService implements IPlatformConnectionService {
 
     const { data, error } = await this.db
       .from('platform_connections')
-      .select('id, creator_id, platform, refresh_token_encrypted, token_iv, token_auth_tag')
+      .select('id, creator_id, platform, refresh_token_encrypted, refresh_token_iv, refresh_token_auth_tag')
       .eq('status', 'connected')
       .not('expires_at', 'is', null)
       .lt('expires_at', oneHourFromNow);
@@ -270,8 +281,8 @@ export class PlatformConnectionService implements IPlatformConnectionService {
         const refreshToken = decryptToken(
           Buffer.from(connection.refresh_token_encrypted),
           key,
-          Buffer.from(connection.token_iv),
-          Buffer.from(connection.token_auth_tag)
+          Buffer.from(connection.refresh_token_iv),
+          Buffer.from(connection.refresh_token_auth_tag)
         );
 
         const adapter = this.getAdapter(connection.platform);
@@ -325,6 +336,8 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       token_iv: accessEncrypted.iv,
       token_auth_tag: accessEncrypted.authTag,
       refresh_token_encrypted: refreshEncrypted?.encrypted || null,
+      refresh_token_iv: refreshEncrypted?.iv || null,
+      refresh_token_auth_tag: refreshEncrypted?.authTag || null,
       scopes: tokens.scopes,
       expires_at: tokens.expires_at,
       status: 'connected',

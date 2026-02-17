@@ -3,6 +3,17 @@
 // Error Boundary
 export { WellnessErrorBoundary } from './ErrorBoundary';
 
+// Components
+export { WellnessDashboard } from './components/WellnessDashboard';
+export { BurnoutRiskGauge } from './components/BurnoutRiskGauge';
+export { BoundarySettings } from './components/BoundarySettings';
+export { SustainableScheduler } from './components/SustainableScheduler';
+export { WellnessPulseModal } from './components/WellnessPulseModal';
+export { WorkPatternHeatmap } from './components/WorkPatternHeatmap';
+export { WellnessTrend } from './components/WellnessTrend';
+export { WellnessResources } from './components/WellnessResources';
+export { RestDayTracker } from './components/RestDayTracker';
+
 // Hooks
 export { useGetBenchmarks } from './hooks/useBenchmarks';
 export { useBoundaries, useUpdateBoundaries } from './hooks/useBoundaries';
