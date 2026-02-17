@@ -16,14 +16,21 @@ CREATE TABLE IF NOT EXISTS repurposed_content (
 );
 
 -- Indexes
-CREATE INDEX idx_repurposed_creator ON repurposed_content(creator_id);
-CREATE INDEX idx_repurposed_source ON repurposed_content(source_content_id);
+CREATE INDEX IF NOT EXISTS idx_repurposed_creator ON repurposed_content(creator_id);
+CREATE INDEX IF NOT EXISTS idx_repurposed_source ON repurposed_content(source_content_id);
+
+-- NOTE: RLS policies use current_setting('app.current_user_id', true) for defense-in-depth.
+-- The backend uses the Supabase service role key which bypasses RLS.
+-- These policies protect against direct database access (e.g., Supabase Dashboard, SQL editor).
+-- For application-level authorization, the backend uses authenticate + requireCreator middleware.
 
 -- RLS
 ALTER TABLE repurposed_content ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Creators can only access own repurposed content" ON repurposed_content;
 CREATE POLICY "Creators can only access own repurposed content"
   ON repurposed_content FOR ALL
-  USING (creator_id = current_setting('app.current_user_id', true));
+  USING (creator_id = current_setting('app.current_user_id', true))
+  WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
 -- Down migration:
 -- DROP TABLE IF EXISTS repurposed_content CASCADE;

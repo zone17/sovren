@@ -7,8 +7,9 @@ import { v4 as uuidv4 } from 'uuid';
 import type { ICrossPostService, PublishRequest } from '../../interfaces/distribution/ICrossPostService';
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { CrossPostEntry, SupportedPlatform } from '@sovren/shared/types/distribution';
-import type { PlatformConnectionService } from './PlatformConnectionService';
+import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 
 export interface CrossPublishJobData {
   crossPostId: string;
@@ -21,15 +22,15 @@ export interface CrossPublishJobData {
 const QUEUE_NAME = 'cross-publish';
 
 export class CrossPostService implements ICrossPostService {
-  private readonly db: any;
+  private readonly db: ISupabaseClient;
   private readonly queueService: IQueueService;
-  private readonly platformService: PlatformConnectionService;
+  private readonly platformService: IPlatformConnectionService;
   private readonly logger: ILogger;
 
   constructor(
-    db: any,
+    db: ISupabaseClient,
     queueService: IQueueService,
-    platformService: PlatformConnectionService,
+    platformService: IPlatformConnectionService,
     logger: ILogger
   ) {
     this.db = db;
@@ -52,64 +53,67 @@ export class CrossPostService implements ICrossPostService {
     creatorId: string,
     request: PublishRequest
   ): Promise<{ job_id: string; platforms: CrossPostEntry[] }> {
-    const entries: CrossPostEntry[] = [];
     const batchJobId = uuidv4();
 
-    for (const platform of request.platforms) {
-      const crossPostId = uuidv4();
+    // Build all cross_posts rows upfront
+    const crossPostRows = request.platforms.map(platform => {
       const scheduledAt = request.schedule?.[platform] || null;
-      const status = scheduledAt ? 'scheduled' : 'queued';
-
-      // Insert cross_posts record
-      const { error } = await this.db.from('cross_posts').insert({
-        id: crossPostId,
+      return {
+        id: uuidv4(),
         creator_id: creatorId,
         content_id: request.content_id,
         platform,
-        status,
+        status: scheduledAt ? 'scheduled' : 'queued',
         scheduled_at: scheduledAt,
         bullmq_job_id: batchJobId,
-      });
+      };
+    });
 
-      if (error) {
-        throw error;
-      }
+    // Batch insert all rows in a single DB round-trip
+    const { data: inserted, error } = await this.db
+      .from('cross_posts')
+      .insert(crossPostRows)
+      .select('id, platform, status, scheduled_at');
 
-      // Calculate delay for scheduled posts
+    if (error) {
+      throw error;
+    }
+
+    // Queue BullMQ jobs for each inserted row
+    for (const row of inserted || []) {
       let delay = 0;
-      if (scheduledAt) {
-        const scheduledTime = new Date(scheduledAt).getTime();
+      if (row.scheduled_at) {
+        const scheduledTime = new Date(row.scheduled_at).getTime();
         delay = Math.max(0, scheduledTime - Date.now());
       }
 
-      // Add job to BullMQ queue
       const jobData: CrossPublishJobData = {
-        crossPostId,
+        crossPostId: row.id,
         contentId: request.content_id,
         creatorId,
-        platform,
+        platform: row.platform,
         useRepurposed: request.use_repurposed || false,
       };
 
       await this.queueService.addJob<CrossPublishJobData>(
         QUEUE_NAME,
-        `publish-${platform}`,
+        `publish-${row.platform}`,
         jobData,
         { delay }
       );
-
-      entries.push({
-        id: crossPostId,
-        content_id: request.content_id,
-        platform,
-        status,
-        platform_post_id: null,
-        platform_url: null,
-        scheduled_at: scheduledAt,
-        published_at: null,
-        error_message: null,
-      });
     }
+
+    const entries: CrossPostEntry[] = (inserted || []).map(row => ({
+      id: row.id,
+      content_id: request.content_id,
+      platform: row.platform,
+      status: row.status,
+      platform_post_id: null,
+      platform_url: null,
+      scheduled_at: row.scheduled_at,
+      published_at: null,
+      error_message: null,
+    }));
 
     this.logger.info('[CrossPostService] Content queued for publishing', {
       creatorId,

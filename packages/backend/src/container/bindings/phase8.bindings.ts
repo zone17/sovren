@@ -5,7 +5,7 @@
  */
 
 import type { IServiceRegistry, IServiceModule } from '../../interfaces/shared/IServiceRegistry';
-import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import { TYPES } from '../types';
 
 // Distribution service implementations
@@ -31,7 +31,7 @@ export class Phase8ServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.PlatformConnectionService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new PlatformConnectionService(db as ISupabaseClient, logger);
+      return new PlatformConnectionService(db, logger);
     });
 
     registry.registerSingletonFactory(TYPES.CrossPostService, (container) => {
@@ -39,27 +39,27 @@ export class Phase8ServicesModule implements IServiceModule {
       const queueService = container.resolve(TYPES.QueueService);
       const platformService = container.resolve(TYPES.PlatformConnectionService);
       const logger = container.resolve(TYPES.Logger);
-      return new CrossPostService(db as ISupabaseClient, queueService, platformService as PlatformConnectionService, logger);
+      return new CrossPostService(db, queueService, platformService as IPlatformConnectionService, logger);
     });
 
     registry.registerSingletonFactory(TYPES.RepurposingService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new RepurposingService(db as ISupabaseClient, logger);
+      return new RepurposingService(db, logger);
     });
 
     registry.registerSingletonFactory(TYPES.UnifiedInboxService, (container) => {
       const db = container.resolve(TYPES.Database);
       const platformService = container.resolve(TYPES.PlatformConnectionService);
       const logger = container.resolve(TYPES.Logger);
-      return new UnifiedInboxService(db as ISupabaseClient, platformService as PlatformConnectionService, logger);
+      return new UnifiedInboxService(db, platformService as IPlatformConnectionService, logger);
     });
 
     registry.registerSingletonFactory(TYPES.CrossPlatformAnalyticsService, (container) => {
       const db = container.resolve(TYPES.Database);
       const platformService = container.resolve(TYPES.PlatformConnectionService);
       const logger = container.resolve(TYPES.Logger);
-      return new CrossPlatformAnalyticsService(db as ISupabaseClient, platformService as PlatformConnectionService, logger);
+      return new CrossPlatformAnalyticsService(db, platformService as IPlatformConnectionService, logger);
     });
   }
 }

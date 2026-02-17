@@ -4,8 +4,12 @@
  */
 
 import type { PlatformStatus, SupportedPlatform } from '@sovren/shared/types/distribution';
+import type { IPlatformAdapter } from '../../services/distribution/adapters/IPlatformAdapter';
 
 export interface IPlatformConnectionService {
+  /** Get the platform adapter for a given platform */
+  getAdapter(platform: SupportedPlatform): IPlatformAdapter;
+
   /** Initiate OAuth flow and return authorization URL */
   initiateConnection(
     creatorId: string,

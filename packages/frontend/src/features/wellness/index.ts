@@ -18,7 +18,6 @@ export { RestDayTracker } from './components/RestDayTracker';
 export { useGetBenchmarks } from './hooks/useBenchmarks';
 export { useBoundaries, useUpdateBoundaries } from './hooks/useBoundaries';
 export { useBurnoutScore, useUpdateSensitivity } from './hooks/useBurnoutScore';
-export { useGetResourceLibrary } from './hooks/useResourceLibrary';
 export { useScheduleRecommendations } from './hooks/useScheduleRecommendations';
 export { useWellnessHeatmap, useWellnessPatterns } from './hooks/useWellnessPatterns';
 export { useSubmitPulse, useWellnessPulseHistory } from './hooks/useWellnessPulse';

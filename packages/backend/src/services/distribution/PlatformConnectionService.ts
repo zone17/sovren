@@ -12,6 +12,7 @@ import { randomBytes } from 'crypto';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import type { IPlatformAdapter } from './adapters/IPlatformAdapter';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { PlatformStatus, SupportedPlatform, OAuthTokens } from '@sovren/shared/types/distribution';
 import { encryptToken, decryptToken, getEncryptionKey } from './crypto';
 import { MastodonAdapter } from './adapters/MastodonAdapter';
@@ -19,28 +20,22 @@ import { BlueskyAdapter } from './adapters/BlueskyAdapter';
 import { TwitterAdapter } from './adapters/TwitterAdapter';
 import { YouTubeAdapter } from './adapters/YouTubeAdapter';
 
-// In-memory state store for OAuth CSRF protection
-// In production, use Redis-backed session store
-const oauthStateStore = new Map<string, { creatorId: string; platform: SupportedPlatform; expiresAt: number }>();
-
-// Clean up expired state tokens every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of oauthStateStore) {
-    if (value.expiresAt < now) {
-      oauthStateStore.delete(key);
-    }
-  }
-}, 5 * 60 * 1000);
-
 export class PlatformConnectionService implements IPlatformConnectionService {
   private readonly adapters: Map<SupportedPlatform, IPlatformAdapter>;
   private readonly logger: ILogger;
-  private readonly db: any; // Supabase client
+  private readonly db: ISupabaseClient;
 
-  constructor(db: any, logger: ILogger) {
+  // In-memory state store for OAuth CSRF protection
+  // In production, use Redis-backed session store
+  private readonly oauthStateStore = new Map<string, { creatorId: string; platform: SupportedPlatform; expiresAt: number }>();
+  private cleanupTimer: ReturnType<typeof setInterval> | null = null;
+
+  constructor(db: ISupabaseClient, logger: ILogger) {
     this.db = db;
     this.logger = logger;
+
+    // Start periodic cleanup of expired OAuth state tokens
+    this.startStateCleanup();
 
     // Initialize platform adapters
     this.adapters = new Map();
@@ -80,6 +75,30 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     }
   }
 
+  /**
+   * Start periodic cleanup of expired OAuth state tokens (every 5 minutes).
+   */
+  private startStateCleanup(): void {
+    this.cleanupTimer = setInterval(() => {
+      const now = Date.now();
+      for (const [key, value] of this.oauthStateStore) {
+        if (value.expiresAt < now) {
+          this.oauthStateStore.delete(key);
+        }
+      }
+    }, 5 * 60 * 1000);
+  }
+
+  /**
+   * Stop the periodic state cleanup timer. Call on shutdown for graceful cleanup.
+   */
+  stopStateCleanup(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
+  }
+
   getAdapter(platform: SupportedPlatform): IPlatformAdapter {
     const adapter = this.adapters.get(platform);
     if (!adapter) {
@@ -96,19 +115,19 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     const adapter = this.getAdapter(platform);
 
     // Prevent unbounded growth of state store (DoS protection)
-    if (oauthStateStore.size >= 10000) {
+    if (this.oauthStateStore.size >= 10000) {
       // Evict oldest entries
-      const entries = [...oauthStateStore.entries()];
+      const entries = [...this.oauthStateStore.entries()];
       entries.sort((a, b) => a[1].expiresAt - b[1].expiresAt);
       const toDelete = entries.slice(0, entries.length - 5000);
       for (const [key] of toDelete) {
-        oauthStateStore.delete(key);
+        this.oauthStateStore.delete(key);
       }
     }
 
     // Generate CSRF state token
     const state = randomBytes(32).toString('hex');
-    oauthStateStore.set(state, {
+    this.oauthStateStore.set(state, {
       creatorId,
       platform,
       expiresAt: Date.now() + 10 * 60 * 1000, // 10 minute expiry
@@ -131,7 +150,7 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     state: string
   ): Promise<{ creator_id: string; platform: SupportedPlatform }> {
     // Validate CSRF state token
-    const stateData = oauthStateStore.get(state);
+    const stateData = this.oauthStateStore.get(state);
     if (!stateData) {
       this.logger.warn('[PlatformConnectionService] Invalid OAuth state parameter — potential CSRF', {
         platform,
@@ -144,12 +163,12 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     }
 
     if (stateData.expiresAt < Date.now()) {
-      oauthStateStore.delete(state);
+      this.oauthStateStore.delete(state);
       throw new Error('OAuth state parameter has expired');
     }
 
     // Remove used state token (one-time use)
-    oauthStateStore.delete(state);
+    this.oauthStateStore.delete(state);
 
     const adapter = this.getAdapter(platform);
     const tokens = await adapter.exchangeCodeForTokens(code);
@@ -178,6 +197,14 @@ export class PlatformConnectionService implements IPlatformConnectionService {
         platform,
       });
     }
+
+    // Cancel queued/scheduled cross-posts for this platform before removing the connection
+    await this.db
+      .from('cross_posts')
+      .update({ status: 'cancelled', error_message: 'Platform disconnected' })
+      .eq('creator_id', creatorId)
+      .eq('platform', platform)
+      .in('status', ['queued', 'scheduled']);
 
     // Delete connection from database
     const { error } = await this.db
@@ -271,42 +298,59 @@ export class PlatformConnectionService implements IPlatformConnectionService {
 
     let refreshedCount = 0;
 
-    for (const connection of data) {
-      try {
-        if (!connection.refresh_token_encrypted) {
-          continue;
+    // Process tokens in parallel batches of 5 for controlled concurrency
+    const batchSize = 5;
+    for (let i = 0; i < data.length; i += batchSize) {
+      const batch = data.slice(i, i + batchSize);
+      const results = await Promise.allSettled(
+        batch.map(async (connection) => {
+          if (!connection.refresh_token_encrypted) {
+            return;
+          }
+
+          try {
+            const key = getEncryptionKey();
+            const refreshToken = decryptToken(
+              Buffer.from(connection.refresh_token_encrypted),
+              key,
+              Buffer.from(connection.refresh_token_iv),
+              Buffer.from(connection.refresh_token_auth_tag)
+            );
+
+            const adapter = this.getAdapter(connection.platform);
+            const newTokens = await adapter.refreshTokens(refreshToken);
+
+            await this.storeEncryptedTokens(connection.creator_id, connection.platform, newTokens);
+
+            this.logger.info('[PlatformConnectionService] Token refreshed', {
+              creatorId: connection.creator_id,
+              platform: connection.platform,
+            });
+
+            return true; // Signal success for counting
+          } catch (err) {
+            this.logger.error('[PlatformConnectionService] Token refresh failed', {
+              creatorId: connection.creator_id,
+              platform: connection.platform,
+              error: (err as Error).message,
+            });
+
+            // Mark connection as expired
+            await this.db
+              .from('platform_connections')
+              .update({ status: 'token_expired', error_message: 'Token refresh failed' })
+              .eq('id', connection.id);
+
+            return false;
+          }
+        })
+      );
+
+      // Count fulfilled results that returned true (successful refreshes)
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value === true) {
+          refreshedCount++;
         }
-
-        const key = getEncryptionKey();
-        const refreshToken = decryptToken(
-          Buffer.from(connection.refresh_token_encrypted),
-          key,
-          Buffer.from(connection.refresh_token_iv),
-          Buffer.from(connection.refresh_token_auth_tag)
-        );
-
-        const adapter = this.getAdapter(connection.platform);
-        const newTokens = await adapter.refreshTokens(refreshToken);
-
-        await this.storeEncryptedTokens(connection.creator_id, connection.platform, newTokens);
-        refreshedCount++;
-
-        this.logger.info('[PlatformConnectionService] Token refreshed', {
-          creatorId: connection.creator_id,
-          platform: connection.platform,
-        });
-      } catch (err) {
-        this.logger.error('[PlatformConnectionService] Token refresh failed', {
-          creatorId: connection.creator_id,
-          platform: connection.platform,
-          error: (err as Error).message,
-        });
-
-        // Mark connection as expired
-        await this.db
-          .from('platform_connections')
-          .update({ status: 'token_expired', error_message: 'Token refresh failed' })
-          .eq('id', connection.id);
       }
     }
 

@@ -12,6 +12,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { IRepurposingService } from '../../interfaces/distribution/IRepurposingService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type {
   RepurposedContent,
   SupportedPlatform,
@@ -33,10 +34,10 @@ const PLATFORM_FORMAT_MAP: Record<SupportedPlatform, RepurposeFormatType> = {
 };
 
 export class RepurposingService implements IRepurposingService {
-  private readonly db: any;
+  private readonly db: ISupabaseClient;
   private readonly logger: ILogger;
 
-  constructor(db: any, logger: ILogger) {
+  constructor(db: ISupabaseClient, logger: ILogger) {
     this.db = db;
     this.logger = logger;
   }

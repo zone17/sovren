@@ -16,6 +16,21 @@ import type { SupportedPlatform } from '@sovren/shared/types/distribution';
 
 const router = Router();
 
+/**
+ * Get the validated frontend URL for OAuth redirects.
+ * Enforces HTTPS in production to prevent open redirect attacks.
+ */
+function getValidatedFrontendUrl(): string {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  if (process.env.NODE_ENV === 'production') {
+    const parsed = new URL(frontendUrl);
+    if (parsed.protocol !== 'https:') {
+      throw new Error('FRONTEND_URL must use HTTPS in production');
+    }
+  }
+  return frontendUrl;
+}
+
 router.use(readOnlyRateLimiter);
 
 const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 10 });
@@ -71,10 +86,10 @@ router.get(
       await getPlatformService().handleCallback(platform, code, state);
 
       // Redirect to frontend success page
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = getValidatedFrontendUrl();
       res.redirect(`${frontendUrl}/settings/platforms?connected=${platform}`);
     } catch (err) {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = getValidatedFrontendUrl();
       res.redirect(`${frontendUrl}/settings/platforms?error=oauth_failed`);
     }
   }

@@ -14,10 +14,8 @@ export { ContentShieldErrorBoundary } from './ErrorBoundary';
 // Hooks
 export { useAlertDetail, useAlerts, useUpdateAlertStatus } from './hooks/useAlerts';
 export { useDmcaReport } from './hooks/useDmcaReport';
-export { useGetDmcaReports } from './hooks/useDmcaReports';
 export { useFingerprintCoverage } from './hooks/useFingerprintCoverage';
 export { useProvenanceChain } from './hooks/useProvenanceChain';
-export { useGetProvenanceVerification } from './hooks/useProvenanceVerification';
 
 // API Service
 export { shieldApi } from './services/shieldApi';

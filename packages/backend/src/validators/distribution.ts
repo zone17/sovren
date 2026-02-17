@@ -54,6 +54,10 @@ export const RepurposedIdParamSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const CrossPostIdParamSchema = z.object({
+  crossPostId: z.string().uuid(),
+});
+
 // ============================================================================
 // Inbox Validators
 // ============================================================================
@@ -87,6 +91,24 @@ export const AnalyticsContentIdParamSchema = z.object({
 });
 
 // ============================================================================
+// Inferred types for route handlers
+// ============================================================================
+
+export type PlatformParam = z.infer<typeof PlatformParamSchema>;
+export type ConnectBody = z.infer<typeof ConnectBodySchema>;
+export type CallbackQuery = z.infer<typeof CallbackQuerySchema>;
+export type PublishBody = z.infer<typeof PublishBodySchema>;
+export type RepurposeBody = z.infer<typeof RepurposeBodySchema>;
+export type ContentIdParam = z.infer<typeof ContentIdParamSchema>;
+export type RepurposedIdParam = z.infer<typeof RepurposedIdParamSchema>;
+export type CrossPostIdParam = z.infer<typeof CrossPostIdParamSchema>;
+export type InboxQuery = z.infer<typeof InboxQuerySchema>;
+export type MessageIdParam = z.infer<typeof MessageIdParamSchema>;
+export type ReplyBody = z.infer<typeof ReplyBodySchema>;
+export type BatchBody = z.infer<typeof BatchBodySchema>;
+export type AnalyticsContentIdParam = z.infer<typeof AnalyticsContentIdParamSchema>;
+
+// ============================================================================
 // Aggregated exports for route use
 // ============================================================================
 
@@ -98,6 +120,7 @@ export const DistributionValidators = {
   repurposeBody: RepurposeBodySchema,
   contentIdParam: ContentIdParamSchema,
   repurposedIdParam: RepurposedIdParamSchema,
+  crossPostIdParam: CrossPostIdParamSchema,
   inboxQuery: InboxQuerySchema,
   messageIdParam: MessageIdParamSchema,
   replyBody: ReplyBodySchema,

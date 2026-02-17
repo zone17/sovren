@@ -19,17 +19,24 @@ CREATE TABLE IF NOT EXISTS inbox_messages (
 );
 
 -- Indexes
-CREATE INDEX idx_inbox_creator ON inbox_messages(creator_id);
-CREATE INDEX idx_inbox_creator_unread ON inbox_messages(creator_id, is_read)
+CREATE INDEX IF NOT EXISTS idx_inbox_creator ON inbox_messages(creator_id);
+CREATE INDEX IF NOT EXISTS idx_inbox_creator_unread ON inbox_messages(creator_id, is_read)
   WHERE is_read = false AND is_archived = false;
-CREATE INDEX idx_inbox_creator_platform ON inbox_messages(creator_id, platform);
-CREATE INDEX idx_inbox_fetched ON inbox_messages(fetched_at DESC);
+CREATE INDEX IF NOT EXISTS idx_inbox_creator_platform ON inbox_messages(creator_id, platform);
+CREATE INDEX IF NOT EXISTS idx_inbox_fetched ON inbox_messages(fetched_at DESC);
+
+-- NOTE: RLS policies use current_setting('app.current_user_id', true) for defense-in-depth.
+-- The backend uses the Supabase service role key which bypasses RLS.
+-- These policies protect against direct database access (e.g., Supabase Dashboard, SQL editor).
+-- For application-level authorization, the backend uses authenticate + requireCreator middleware.
 
 -- RLS
 ALTER TABLE inbox_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Creators can only access own inbox" ON inbox_messages;
 CREATE POLICY "Creators can only access own inbox"
   ON inbox_messages FOR ALL
-  USING (creator_id = current_setting('app.current_user_id', true));
+  USING (creator_id = current_setting('app.current_user_id', true))
+  WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
 -- Down migration:
 -- DROP TABLE IF EXISTS inbox_messages CASCADE;

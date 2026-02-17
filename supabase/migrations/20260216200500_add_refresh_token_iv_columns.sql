@@ -1,7 +1,4 @@
--- Add separate IV and auth tag columns for refresh token encryption
--- P2-002: Each encrypted token needs its own IV and auth tag for AES-256-GCM
-ALTER TABLE platform_connections
-  ADD COLUMN IF NOT EXISTS refresh_token_iv BYTEA,
-  ADD COLUMN IF NOT EXISTS refresh_token_auth_tag BYTEA;
-
--- Down: ALTER TABLE platform_connections DROP COLUMN IF EXISTS refresh_token_iv, DROP COLUMN IF EXISTS refresh_token_auth_tag;
+-- SUPERSEDED: refresh_token_iv and refresh_token_auth_tag columns have been
+-- merged into the original table creation in 20260216200000_epic009_platform_connections.sql.
+-- Since these are new tables with no existing data, a separate ALTER TABLE is unnecessary.
+-- This file is intentionally left as a no-op.

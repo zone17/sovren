@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS platform_connections (
   refresh_token_encrypted BYTEA,
   token_iv BYTEA NOT NULL,
   token_auth_tag BYTEA NOT NULL,
+  refresh_token_iv BYTEA,
+  refresh_token_auth_tag BYTEA,
   scopes TEXT[] NOT NULL DEFAULT '{}',
   instance_url TEXT,
   connected_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -23,16 +25,23 @@ CREATE TABLE IF NOT EXISTS platform_connections (
 );
 
 -- Indexes
-CREATE INDEX idx_platform_connections_creator ON platform_connections(creator_id);
-CREATE INDEX idx_platform_connections_status ON platform_connections(status);
-CREATE INDEX idx_platform_connections_expires ON platform_connections(expires_at)
+CREATE INDEX IF NOT EXISTS idx_platform_connections_creator ON platform_connections(creator_id);
+CREATE INDEX IF NOT EXISTS idx_platform_connections_status ON platform_connections(status);
+CREATE INDEX IF NOT EXISTS idx_platform_connections_expires ON platform_connections(expires_at)
   WHERE expires_at IS NOT NULL AND status = 'connected';
+
+-- NOTE: RLS policies use current_setting('app.current_user_id', true) for defense-in-depth.
+-- The backend uses the Supabase service role key which bypasses RLS.
+-- These policies protect against direct database access (e.g., Supabase Dashboard, SQL editor).
+-- For application-level authorization, the backend uses authenticate + requireCreator middleware.
 
 -- RLS
 ALTER TABLE platform_connections ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Creators can only access own connections" ON platform_connections;
 CREATE POLICY "Creators can only access own connections"
   ON platform_connections FOR ALL
-  USING (creator_id = current_setting('app.current_user_id', true));
+  USING (creator_id = current_setting('app.current_user_id', true))
+  WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
 -- Down migration:
 -- DROP TABLE IF EXISTS platform_connections CASCADE;

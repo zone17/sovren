@@ -43,7 +43,7 @@ export interface PublishPayload {
 /** Payload for repurposing content */
 export interface RepurposePayload {
   content_id: string;
-  platforms: Array<'mastodon' | 'bluesky' | 'twitter' | 'youtube'>;
+  target_platforms: Array<'mastodon' | 'bluesky' | 'twitter' | 'youtube'>;
 }
 
 /** Payload for replying to an inbox message */

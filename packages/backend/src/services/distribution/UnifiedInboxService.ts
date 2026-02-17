@@ -5,19 +5,20 @@
 
 import type { IUnifiedInboxService, InboxQuery } from '../../interfaces/distribution/IUnifiedInboxService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type {
   InboxMessage,
   DistributionPagination,
   SupportedPlatform,
 } from '@sovren/shared/types/distribution';
-import type { PlatformConnectionService } from './PlatformConnectionService';
+import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 
 export class UnifiedInboxService implements IUnifiedInboxService {
-  private readonly db: any;
-  private readonly platformService: PlatformConnectionService;
+  private readonly db: ISupabaseClient;
+  private readonly platformService: IPlatformConnectionService;
   private readonly logger: ILogger;
 
-  constructor(db: any, platformService: PlatformConnectionService, logger: ILogger) {
+  constructor(db: ISupabaseClient, platformService: IPlatformConnectionService, logger: ILogger) {
     this.db = db;
     this.platformService = platformService;
     this.logger = logger;
@@ -185,27 +186,26 @@ export class UnifiedInboxService implements IUnifiedInboxService {
           since
         );
 
-        // Upsert messages (deduplicate by platform_message_id)
-        for (const msg of messages) {
+        // Batch upsert messages (deduplicate by platform_message_id)
+        if (messages.length > 0) {
+          const allRows = messages.map(msg => ({
+            creator_id: creatorId,
+            platform: msg.platform,
+            platform_message_id: msg.id,
+            author: msg.author,
+            content: msg.content,
+            type: msg.type,
+            parent_post_id: msg.parent_post_id,
+            is_read: msg.is_read,
+            platform_created_at: msg.created_at,
+          }));
+
           const { error } = await this.db
             .from('inbox_messages')
-            .upsert(
-              {
-                creator_id: creatorId,
-                platform: msg.platform,
-                platform_message_id: msg.id,
-                author: msg.author,
-                content: msg.content,
-                type: msg.type,
-                parent_post_id: msg.parent_post_id,
-                is_read: msg.is_read,
-                platform_created_at: msg.created_at,
-              },
-              { onConflict: 'creator_id,platform,platform_message_id' }
-            );
+            .upsert(allRows, { onConflict: 'creator_id,platform,platform_message_id' });
 
           if (!error) {
-            totalNew++;
+            totalNew += messages.length;
           }
         }
       } catch (err) {

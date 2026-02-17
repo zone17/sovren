@@ -11,8 +11,13 @@ export function usePlatformStatus() {
 }
 
 export function useConnectPlatform() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (platform: string) => distributionApi.connectPlatform(platform),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['distribution', 'platform-status'] });
+    },
   });
 }
 

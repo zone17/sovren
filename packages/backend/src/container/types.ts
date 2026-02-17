@@ -497,7 +497,7 @@ export const SERVICE_DEPENDENCIES = {
   DmcaService: ['AlertService', 'ProvenanceService', 'Logger'],
 
   // Phase 8: Distribution Services (EPIC-009)
-  PlatformConnectionService: ['Database', 'SecretsService', 'QueueService', 'Logger'],
+  PlatformConnectionService: ['Database', 'Logger'],
   CrossPostService: ['PlatformConnectionService', 'QueueService', 'Logger'],
   RepurposingService: ['Database', 'Logger'],
   UnifiedInboxService: ['PlatformConnectionService', 'QueueService', 'Database', 'Logger'],
@@ -579,7 +579,7 @@ export function getServiceLifetime(serviceName: string): 'singleton' | 'transien
  * Get dependencies for a given service name
  */
 export function getServiceDependencies(serviceName: string): string[] {
-  return (SERVICE_DEPENDENCIES as any)[serviceName] || [];
+  return SERVICE_DEPENDENCIES[serviceName as keyof typeof SERVICE_DEPENDENCIES] || [];
 }
 
 /**

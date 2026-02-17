@@ -82,6 +82,22 @@ export const SignProvenanceBodySchema = z.object({
 });
 
 // ============================================================================
+// Inferred types for route handlers
+// ============================================================================
+
+export type ContentIdParams = z.infer<typeof ContentIdParamSchema>;
+export type CertificateQuery = z.infer<typeof CertificateQuerySchema>;
+export type SignProvenanceBody = z.infer<typeof SignProvenanceBodySchema>;
+export type CreateFingerprintBody = z.infer<typeof CreateFingerprintSchema>;
+export type GetFingerprintsParams = z.infer<typeof GetFingerprintsParamSchema>;
+export type GetFingerprintsQuery = z.infer<typeof GetFingerprintsQuerySchema>;
+export type CompareBody = z.infer<typeof CompareSchema>;
+export type GetAlertsQuery = z.infer<typeof GetAlertsQuerySchema>;
+export type AlertIdParams = z.infer<typeof AlertIdParamSchema>;
+export type UpdateAlertStatusBody = z.infer<typeof UpdateAlertStatusSchema>;
+export type DmcaReportQuery = z.infer<typeof DmcaReportQuerySchema>;
+
+// ============================================================================
 // Aggregated exports for route use
 // ============================================================================
 

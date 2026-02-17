@@ -77,6 +77,26 @@ router.get(
 );
 
 // ============================================================================
+// POST /:crossPostId/cancel — Cancel a pending/scheduled cross-post
+// ============================================================================
+
+router.post(
+  '/:crossPostId/cancel',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  validate({ params: DistributionValidators.crossPostIdParam }),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await getCrossPostService().cancel(req.user!.nostr_pubkey, req.params.crossPostId);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// ============================================================================
 // POST /repurpose — Generate platform-optimized versions
 // ============================================================================
 

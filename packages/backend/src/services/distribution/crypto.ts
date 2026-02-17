@@ -59,22 +59,24 @@ export function decryptToken(
 }
 
 /**
- * Get the encryption key from environment variable.
+ * Get the encryption key.
+ * Accepts an optional hex string parameter (e.g. from DI / SecretsService),
+ * falling back to process.env.PLATFORM_TOKEN_ENCRYPTION_KEY for backward compatibility.
  * Must be a 64-character hex string (32 bytes).
  */
-export function getEncryptionKey(): Buffer {
-  const keyHex = process.env.PLATFORM_TOKEN_ENCRYPTION_KEY;
-  if (!keyHex) {
+export function getEncryptionKey(keyHex?: string): Buffer {
+  const key = keyHex || process.env.PLATFORM_TOKEN_ENCRYPTION_KEY;
+  if (!key) {
     throw new Error(
-      'PLATFORM_TOKEN_ENCRYPTION_KEY environment variable is required for OAuth token encryption'
+      'PLATFORM_TOKEN_ENCRYPTION_KEY not configured (pass as parameter or set environment variable)'
     );
   }
 
-  if (keyHex.length !== 64) {
+  if (key.length !== 64) {
     throw new Error(
       'PLATFORM_TOKEN_ENCRYPTION_KEY must be a 64-character hex string (32 bytes / 256 bits)'
     );
   }
 
-  return Buffer.from(keyHex, 'hex');
+  return Buffer.from(key, 'hex');
 }

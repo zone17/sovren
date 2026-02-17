@@ -21,17 +21,24 @@ CREATE TABLE IF NOT EXISTS cross_posts (
 );
 
 -- Indexes
-CREATE INDEX idx_cross_posts_creator ON cross_posts(creator_id);
-CREATE INDEX idx_cross_posts_content ON cross_posts(content_id);
-CREATE INDEX idx_cross_posts_status ON cross_posts(status);
-CREATE INDEX idx_cross_posts_scheduled ON cross_posts(scheduled_at)
+CREATE INDEX IF NOT EXISTS idx_cross_posts_creator ON cross_posts(creator_id);
+CREATE INDEX IF NOT EXISTS idx_cross_posts_content ON cross_posts(content_id);
+CREATE INDEX IF NOT EXISTS idx_cross_posts_status ON cross_posts(status);
+CREATE INDEX IF NOT EXISTS idx_cross_posts_scheduled ON cross_posts(scheduled_at)
   WHERE status = 'scheduled' AND scheduled_at IS NOT NULL;
+
+-- NOTE: RLS policies use current_setting('app.current_user_id', true) for defense-in-depth.
+-- The backend uses the Supabase service role key which bypasses RLS.
+-- These policies protect against direct database access (e.g., Supabase Dashboard, SQL editor).
+-- For application-level authorization, the backend uses authenticate + requireCreator middleware.
 
 -- RLS
 ALTER TABLE cross_posts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Creators can only access own cross-posts" ON cross_posts;
 CREATE POLICY "Creators can only access own cross-posts"
   ON cross_posts FOR ALL
-  USING (creator_id = current_setting('app.current_user_id', true));
+  USING (creator_id = current_setting('app.current_user_id', true))
+  WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
 -- Down migration:
 -- DROP TABLE IF EXISTS cross_posts CASCADE;

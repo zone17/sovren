@@ -3,6 +3,7 @@
  * EPIC-009: AT Protocol / Bluesky integration
  */
 
+import { createHash, randomBytes } from 'crypto';
 import type {
   SupportedPlatform,
   OAuthTokens,
@@ -28,12 +29,18 @@ export class BlueskyAdapter implements IPlatformAdapter {
   };
 
   private readonly config: PlatformAdapterConfig;
+  private readonly pkceStore = new Map<string, string>();
 
   constructor(config: PlatformAdapterConfig) {
     this.config = config;
   }
 
   getAuthorizationUrl(state: string): string {
+    // Generate PKCE code_verifier and code_challenge (RFC 7636)
+    const codeVerifier = randomBytes(32).toString('base64url');
+    const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+    this.pkceStore.set(state, codeVerifier);
+
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: this.config.callbackUrl,
@@ -41,11 +48,20 @@ export class BlueskyAdapter implements IPlatformAdapter {
       scope: 'atproto transition:generic',
       state,
       code_challenge_method: 'S256',
+      code_challenge: codeChallenge,
     });
     return `https://bsky.social/oauth/authorize?${params.toString()}`;
   }
 
-  async exchangeCodeForTokens(code: string): Promise<OAuthTokens> {
+  async exchangeCodeForTokens(code: string, options?: { state?: string }): Promise<OAuthTokens> {
+    // Retrieve the PKCE code_verifier for this OAuth flow
+    const state = options?.state;
+    let codeVerifier: string | undefined;
+    if (state) {
+      codeVerifier = this.pkceStore.get(state);
+      this.pkceStore.delete(state);
+    }
+
     const response = await fetch('https://bsky.social/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -55,6 +71,7 @@ export class BlueskyAdapter implements IPlatformAdapter {
         redirect_uri: this.config.callbackUrl,
         grant_type: 'authorization_code',
         code,
+        ...(codeVerifier ? { code_verifier: codeVerifier } : {}),
       }),
     });
 

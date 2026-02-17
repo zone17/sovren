@@ -5,32 +5,36 @@
 
 import type { ICrossPlatformAnalyticsService } from '../../interfaces/distribution/ICrossPlatformAnalyticsService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type {
   PlatformOverview,
   ContentComparison,
   PlatformROI,
   SupportedPlatform,
 } from '@sovren/shared/types/distribution';
-import type { PlatformConnectionService } from './PlatformConnectionService';
+import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 
 export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsService {
-  private readonly db: any;
-  private readonly platformService: PlatformConnectionService;
+  private readonly db: ISupabaseClient;
+  private readonly platformService: IPlatformConnectionService;
   private readonly logger: ILogger;
 
-  constructor(db: any, platformService: PlatformConnectionService, logger: ILogger) {
+  constructor(db: ISupabaseClient, platformService: IPlatformConnectionService, logger: ILogger) {
     this.db = db;
     this.platformService = platformService;
     this.logger = logger;
   }
 
   async getOverview(creatorId: string): Promise<PlatformOverview> {
-    // Get latest metrics for each platform
+    // Get latest metrics for each platform (bounded to last 30 days)
+    const metricsThirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data: metrics, error } = await this.db
       .from('platform_metrics_history')
       .select('platform, followers, engagement_rate, impressions_30d, recorded_at')
       .eq('creator_id', creatorId)
-      .order('recorded_at', { ascending: false });
+      .gte('recorded_at', metricsThirtyDaysAgo)
+      .order('recorded_at', { ascending: false })
+      .limit(500);
 
     if (error) {
       throw error;

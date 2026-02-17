@@ -5,8 +5,9 @@
 
 import type { IJobProcessor, JobContext } from '../../interfaces/queue/IJobProcessor';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { CrossPublishJobData } from './CrossPostService';
-import type { PlatformConnectionService } from './PlatformConnectionService';
+import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import type { FormattedContent } from '@sovren/shared/types/distribution';
 
 export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData> {
@@ -14,11 +15,11 @@ export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData>
   readonly queueName = 'cross-publish';
   readonly concurrency = 5;
 
-  private readonly db: any;
-  private readonly platformService: PlatformConnectionService;
+  private readonly db: ISupabaseClient;
+  private readonly platformService: IPlatformConnectionService;
   private readonly logger: ILogger;
 
-  constructor(db: any, platformService: PlatformConnectionService, logger: ILogger) {
+  constructor(db: ISupabaseClient, platformService: IPlatformConnectionService, logger: ILogger) {
     this.db = db;
     this.platformService = platformService;
     this.logger = logger;
@@ -33,21 +34,16 @@ export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData>
       platform,
     });
 
-    // Update status to publishing
-    await this.db
+    // Conditional update: only transition to 'publishing' if not already cancelled (avoids TOCTOU race)
+    const { data: updated } = await this.db
       .from('cross_posts')
       .update({ status: 'publishing', attempt_count: job.attemptsMade + 1, updated_at: new Date().toISOString() })
-      .eq('id', crossPostId);
-
-    // Check if cross-post was cancelled while queued
-    const { data: crossPost } = await this.db
-      .from('cross_posts')
-      .select('status')
       .eq('id', crossPostId)
-      .single();
+      .neq('status', 'cancelled')
+      .select('id');
 
-    if (crossPost?.status === 'cancelled') {
-      this.logger.info('[CrossPublishProcessor] Job cancelled, skipping', { crossPostId });
+    if (!updated || updated.length === 0) {
+      this.logger.info('[CrossPublishProcessor] Job was cancelled, skipping', { crossPostId });
       return;
     }
 
@@ -127,7 +123,7 @@ export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData>
     });
   }
 
-  static async recoverStaleJobs(db: any, logger: ILogger, staleCutoffMinutes = 10): Promise<number> {
+  static async recoverStaleJobs(db: ISupabaseClient, logger: ILogger, staleCutoffMinutes = 10): Promise<number> {
     const cutoff = new Date(Date.now() - staleCutoffMinutes * 60 * 1000).toISOString();
 
     const { data, error } = await db
