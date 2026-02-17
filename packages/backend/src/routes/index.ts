@@ -7,11 +7,13 @@
 
 import { Router } from 'express';
 import v1Routes from './v1';
+import v2Routes from './v2';
 
 const router = Router();
 
 // Mount API version routers
 router.use('/v1', v1Routes);
+router.use('/v2', v2Routes);
 
 // Default to v1 for backward compatibility
 router.use('/', v1Routes);
@@ -23,10 +25,11 @@ router.get('/', (req, res) => {
     data: {
       name: 'Sovren API',
       version: 'latest',
-      availableVersions: ['v1'],
+      availableVersions: ['v1', 'v2'],
       defaultVersion: 'v1',
       endpoints: {
         v1: '/api/v1',
+        v2: '/api/v2',
         docs: '/api/docs',
         health: '/health',
       },

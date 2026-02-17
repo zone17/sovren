@@ -19,6 +19,7 @@ import { registerContentServices } from './container/bindings/content.bindings';
 import { registerUserServices } from './container/bindings/user.bindings';
 import { registerPaymentServices } from './container/bindings/payment.bindings';
 import { registerControllers } from './container/bindings/controller.bindings';
+import { registerPhase7Services } from './container/bindings/phase7.bindings';
 
 /**
  * Bootstrap configuration
@@ -89,6 +90,7 @@ export async function bootstrapApplication(
   registerContentServices(registry);
   registerUserServices(registry);
   registerPaymentServices(registry);
+  registerPhase7Services(registry);
   registerControllers(registry);
 
   const registrationTime = performance.now() - registrationStart;

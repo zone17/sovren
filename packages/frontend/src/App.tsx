@@ -9,6 +9,8 @@ import { AnalyticsErrorBoundary } from './features/analytics/ErrorBoundary';
 import { DashboardErrorBoundary } from './features/dashboard/ErrorBoundary';
 import { SubscriptionsErrorBoundary } from './features/subscriptions/ErrorBoundary';
 import { NostrErrorBoundary } from './features/nostr/ErrorBoundary';
+import { WellnessErrorBoundary } from './features/wellness/ErrorBoundary';
+import { ContentShieldErrorBoundary } from './features/content-shield/ErrorBoundary';
 
 // 🎯 **LAZY LOADING**
 const Home = React.lazy(() =>
@@ -83,6 +85,18 @@ const CreatorProfilePage = React.lazy(() =>
 const RevenueAnalytics = React.lazy(() =>
   import('./features/analytics/components/RevenueAnalytics').then((module) => ({
     default: module.RevenueAnalytics,
+  }))
+);
+
+// Phase 7: Creator Safety Net
+const WellnessDashboard = React.lazy(() =>
+  import('./features/wellness/components/WellnessDashboard').then((module) => ({
+    default: module.WellnessDashboard,
+  }))
+);
+const ShieldDashboard = React.lazy(() =>
+  import('./features/content-shield/components/ShieldDashboard').then((module) => ({
+    default: module.ShieldDashboard,
   }))
 );
 
@@ -264,6 +278,34 @@ function App(): React.ReactElement {
                     <AnalyticsErrorBoundary>
                       <RevenueAnalytics />
                     </AnalyticsErrorBoundary>
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+
+            {/* Wellness Dashboard */}
+            <Route
+              path="/wellness"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <WellnessErrorBoundary>
+                      <WellnessDashboard />
+                    </WellnessErrorBoundary>
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+
+            {/* Content Shield Dashboard */}
+            <Route
+              path="/shield"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <ContentShieldErrorBoundary>
+                      <ShieldDashboard />
+                    </ContentShieldErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }

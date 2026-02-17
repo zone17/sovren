@@ -4,7 +4,7 @@
  * User Story: US-E5-032 - Wire Services Through DI Container
  * Part of Epic 005 - Backend Service Refactoring - Phase 6
  *
- * Total Services: 30 (Phases 1-5 complete + SecretsService)
+ * Total Services: 39 (Phases 1-5 complete + SecretsService + Phase 7)
  */
 
 import { ServiceToken } from '../interfaces/shared/IServiceRegistry';
@@ -47,6 +47,16 @@ import type { ContentController } from '../controllers/content/ContentController
 import type { UserController } from '../controllers/user/UserController';
 import type { PaymentController } from '../controllers/payment/PaymentController';
 import type { SecretsService } from '../services/SecretsService';
+
+// Phase 7: Creator Safety Net interfaces
+import type { IWellnessService } from '../interfaces/wellness/IWellnessService';
+import type { IBurnoutScoringService } from '../interfaces/wellness/IBurnoutScoringService';
+import type { IScheduleService } from '../interfaces/wellness/IScheduleService';
+import type { IBoundaryService } from '../interfaces/wellness/IBoundaryService';
+import type { IProvenanceService } from '../interfaces/provenance/IProvenanceService';
+import type { IFingerprintService } from '../interfaces/provenance/IFingerprintService';
+import type { IAlertService } from '../interfaces/provenance/IAlertService';
+import type { IDmcaService } from '../interfaces/provenance/IDmcaService';
 
 /**
  * Service type identifiers organized by domain
@@ -182,6 +192,50 @@ export const TYPES = {
   ),
 
   // ======================
+  // PHASE 7: Creator Safety Net (9 services)
+  // ======================
+
+  /**
+   * Wellness Services (EPIC-007)
+   */
+  WellnessService: new ServiceToken<IWellnessService>(
+    'WellnessService',
+    'Work pattern CRUD and pulse check-ins'
+  ),
+  BurnoutScoringService: new ServiceToken<IBurnoutScoringService>(
+    'BurnoutScoringService',
+    'Weighted 5-factor burnout scoring per ADR-019'
+  ),
+  ScheduleService: new ServiceToken<IScheduleService>(
+    'ScheduleService',
+    'Sustainable cadence recommendations'
+  ),
+  BoundaryService: new ServiceToken<IBoundaryService>(
+    'BoundaryService',
+    'Focus hours, DND, auto-responses'
+  ),
+
+  /**
+   * Provenance / Content Shield Services (EPIC-008)
+   */
+  ProvenanceService: new ServiceToken<IProvenanceService>(
+    'ProvenanceService',
+    'Content signing with NOSTR keys, chain retrieval'
+  ),
+  FingerprintService: new ServiceToken<IFingerprintService>(
+    'FingerprintService',
+    'SimHash text + pHash image hashing per ADR-020'
+  ),
+  AlertService: new ServiceToken<IAlertService>(
+    'AlertService',
+    'Copy detection alert CRUD and status transitions'
+  ),
+  DmcaService: new ServiceToken<IDmcaService>(
+    'DmcaService',
+    'DMCA report generation (JSON + PDF)'
+  ),
+
+  // ======================
   // Supporting Infrastructure
   // ======================
 
@@ -291,6 +345,15 @@ export const SERVICE_LIFETIMES = {
     'WebhookService',
     'InvoiceService',
     'AuthenticationService',
+    // Phase 7: Creator Safety Net
+    'WellnessService',
+    'BurnoutScoringService',
+    'ScheduleService',
+    'BoundaryService',
+    'ProvenanceService',
+    'FingerprintService',
+    'AlertService',
+    'DmcaService',
   ],
 
   // Transient: New instance for each resolution
@@ -359,6 +422,18 @@ export const SERVICE_DEPENDENCIES = {
 
   // Secrets
   SecretsService: ['Config', 'Logger'],
+
+  // Phase 7: Wellness Services
+  WellnessService: ['Database', 'EventBusService', 'Logger'],
+  BurnoutScoringService: ['WellnessService', 'Logger'],
+  ScheduleService: ['WellnessService', 'Logger'],
+  BoundaryService: ['Database', 'Logger'],
+
+  // Phase 7: Provenance Services
+  ProvenanceService: ['Database', 'NostrService', 'Logger'],
+  FingerprintService: ['Database', 'Logger'],
+  AlertService: ['Database', 'Logger'],
+  DmcaService: ['AlertService', 'ProvenanceService', 'Logger'],
 } as const;
 
 /**
@@ -400,6 +475,18 @@ export const SERVICE_TAGS = {
   ],
   analytics: ['ContentAnalyticsService', 'UserAnalyticsService', 'PaymentAnalyticsService'],
   blockchain: ['LightningService', 'NostrService'],
+  wellness: [
+    'WellnessService',
+    'BurnoutScoringService',
+    'ScheduleService',
+    'BoundaryService',
+  ],
+  provenance: [
+    'ProvenanceService',
+    'FingerprintService',
+    'AlertService',
+    'DmcaService',
+  ],
 } as const;
 
 /**
