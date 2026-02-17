@@ -1,13 +1,14 @@
 /**
  * QueueService Implementation
  * Wraps BullMQ Queue and Worker classes for centralized queue management
- * Reuses the shared Redis connection from lib/redis.ts
+ * Reuses the shared Redis connection config from lib/redis.ts
  * Part of E0-001: BullMQ Infrastructure
  */
 
-import { Queue, Worker, QueueOptions, JobsOptions, Job } from 'bullmq';
-import type { IQueueService } from '../../interfaces/queue/IQueueService';
-import type { IJobProcessor } from '../../interfaces/queue/IJobProcessor';
+import { Queue, Worker, Job } from 'bullmq';
+import Redis from 'ioredis';
+import type { IQueueService, QueueCreateOptions, QueueJobOptions } from '../../interfaces/queue/IQueueService';
+import type { IJobProcessor, JobContext } from '../../interfaces/queue/IJobProcessor';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import { getRedisClient } from '../../lib/redis';
 
@@ -16,6 +17,24 @@ let singletonInstance: QueueService | null = null;
 
 export function getQueueServiceInstance(): QueueService | null {
   return singletonInstance;
+}
+
+/**
+ * Create a BullMQ-compatible Redis connection.
+ * BullMQ workers use blocking commands (BRPOPLPUSH, BLMOVE) that require
+ * maxRetriesPerRequest: null — the shared client's default won't work.
+ */
+function createBullMQConnection(): Redis {
+  const baseClient = getRedisClient();
+  const opts = baseClient.options;
+  return new Redis({
+    host: opts.host,
+    port: opts.port,
+    password: opts.password,
+    db: opts.db,
+    maxRetriesPerRequest: null, // Required for BullMQ blocking commands
+    enableReadyCheck: false,
+  });
 }
 
 export class QueueService implements IQueueService {
@@ -28,20 +47,19 @@ export class QueueService implements IQueueService {
     singletonInstance = this;
   }
 
-  createQueue(name: string, options?: Partial<QueueOptions>): void {
+  createQueue(name: string, options?: QueueCreateOptions): void {
     if (this.queues.has(name)) {
       this.logger.warn(`[QueueService] Queue "${name}" already exists, skipping creation`);
       return;
     }
 
-    const redis = getRedisClient();
     const queue = new Queue(name, {
-      connection: redis.duplicate(),
+      connection: createBullMQConnection(),
       defaultJobOptions: {
         removeOnComplete: { count: 1000 },
         removeOnFail: { count: 5000 },
+        ...options?.defaultJobOptions,
       },
-      ...options,
     });
 
     this.queues.set(name, queue);
@@ -52,7 +70,7 @@ export class QueueService implements IQueueService {
     queueName: string,
     jobName: string,
     data: T,
-    options?: JobsOptions
+    options?: QueueJobOptions
   ): Promise<string> {
     const queue = this.queues.get(queueName);
     if (!queue) {
@@ -66,6 +84,10 @@ export class QueueService implements IQueueService {
     return job.id!;
   }
 
+  /**
+   * Get the underlying BullMQ Queue for admin tooling (Bull Board).
+   * NOT on the IQueueService interface — this is an implementation detail.
+   */
   getQueue(name: string): Queue | undefined {
     return this.queues.get(name);
   }
@@ -76,7 +98,7 @@ export class QueueService implements IQueueService {
 
   /**
    * Register a job processor and create a Worker for it.
-   * The worker uses a duplicate of the shared Redis connection.
+   * Adapts the framework-agnostic IJobProcessor to BullMQ's Worker.
    */
   registerProcessor<T>(processor: IJobProcessor<T>): void {
     if (this.workers.has(processor.name)) {
@@ -91,19 +113,18 @@ export class QueueService implements IQueueService {
       this.createQueue(processor.queueName);
     }
 
-    const redis = getRedisClient();
     const worker = new Worker<T>(
       processor.queueName,
-      async (job: Job<T>) => processor.process(job),
+      async (job: Job<T>) => processor.process(toJobContext(job)),
       {
-        connection: redis.duplicate(),
+        connection: createBullMQConnection(),
         concurrency: processor.concurrency ?? 1,
       }
     );
 
     if (processor.onCompleted) {
       worker.on('completed', (job: Job<T>) => {
-        processor.onCompleted!(job).catch((err) => {
+        processor.onCompleted!(toJobContext(job)).catch((err) => {
           this.logger.error(
             `[QueueService] onCompleted handler error for "${processor.name}"`,
             { error: err.message }
@@ -115,7 +136,7 @@ export class QueueService implements IQueueService {
     if (processor.onFailed) {
       worker.on('failed', (job: Job<T> | undefined, err: Error) => {
         if (job) {
-          processor.onFailed!(job, err).catch((handlerErr) => {
+          processor.onFailed!(toJobContext(job), err).catch((handlerErr) => {
             this.logger.error(
               `[QueueService] onFailed handler error for "${processor.name}"`,
               { error: handlerErr.message }
@@ -139,8 +160,7 @@ export class QueueService implements IQueueService {
 
   async isHealthy(): Promise<boolean> {
     try {
-      for (const [name, queue] of this.queues) {
-        // Attempt to get waiting count as a connectivity check
+      for (const [, queue] of this.queues) {
         await queue.getWaitingCount();
       }
       return true;
@@ -186,4 +206,13 @@ export class QueueService implements IQueueService {
 
     this.logger.info('[QueueService] All queues and workers closed');
   }
+}
+
+/** Adapt a BullMQ Job to our framework-agnostic JobContext */
+function toJobContext<T>(job: Job<T>): JobContext<T> {
+  return {
+    id: job.id ?? '',
+    data: job.data,
+    attemptsMade: job.attemptsMade,
+  };
 }

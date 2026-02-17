@@ -28,8 +28,7 @@ import type {
 import { EventEmitter } from 'events';
 import * as webpush from 'web-push';
 import { createHash } from 'crypto';
-import type { QueueService } from './queue/QueueService';
-import type { Job } from 'bullmq';
+import type { JobContext } from '../interfaces/queue/IJobProcessor';
 
 /**
  * Channel handler interface
@@ -733,18 +732,16 @@ export class NotificationService implements INotificationService {
       return;
     }
 
-    const qs = this.queueService as QueueService;
-
     // Create the notifications queue and dead-letter queue
-    qs.createQueue(NOTIFICATION_QUEUE);
-    qs.createQueue(NOTIFICATION_DLQ);
+    this.queueService.createQueue(NOTIFICATION_QUEUE);
+    this.queueService.createQueue(NOTIFICATION_DLQ);
 
     // Register worker processor
-    qs.registerProcessor<{ notification: Notification; channels: NotificationChannel[] }>({
+    this.queueService.registerProcessor<{ notification: Notification; channels: NotificationChannel[] }>({
       name: 'notification-processor',
       queueName: NOTIFICATION_QUEUE,
       concurrency: 5,
-      process: async (job: Job<{ notification: Notification; channels: NotificationChannel[] }>) => {
+      process: async (job: JobContext<{ notification: Notification; channels: NotificationChannel[] }>) => {
         const { notification, channels } = job.data;
         this.logger.info(`[NotificationService] Processing queued notification job ${job.id}`);
 

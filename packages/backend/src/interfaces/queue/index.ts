@@ -1,2 +1,2 @@
-export type { IQueueService } from './IQueueService';
-export type { IJobProcessor } from './IJobProcessor';
+export type { IQueueService, QueueJobOptions, QueueCreateOptions } from './IQueueService';
+export type { IJobProcessor, JobContext } from './IJobProcessor';

@@ -1,10 +1,17 @@
 /**
  * Job Processor Interface
- * Defines the contract for BullMQ job processors
+ * Framework-agnostic contract for job processors
  * Part of E0-001: BullMQ Infrastructure
  */
 
-import type { Job } from 'bullmq';
+export interface JobContext<T = unknown> {
+  /** Unique job ID */
+  id: string;
+  /** Job data payload */
+  data: T;
+  /** Number of attempts so far */
+  attemptsMade: number;
+}
 
 export interface IJobProcessor<T = unknown> {
   /** Unique processor name */
@@ -17,11 +24,11 @@ export interface IJobProcessor<T = unknown> {
   readonly concurrency?: number;
 
   /** Process a single job */
-  process(job: Job<T>): Promise<void>;
+  process(job: JobContext<T>): Promise<void>;
 
   /** Called when a job completes successfully */
-  onCompleted?(job: Job<T>): Promise<void>;
+  onCompleted?(job: JobContext<T>): Promise<void>;
 
   /** Called when a job fails after all retries */
-  onFailed?(job: Job<T>, error: Error): Promise<void>;
+  onFailed?(job: JobContext<T>, error: Error): Promise<void>;
 }

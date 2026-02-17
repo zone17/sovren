@@ -19,9 +19,10 @@ import { deploymentMonitoring, getPrometheusMetrics } from './middleware/deploym
 import { correlationIdMiddleware, getCorrelationId } from './middleware/correlation-id';
 import { createRateLimiter } from './middleware/rate-limit-middleware';
 import { errorHandler, notFoundHandler } from './middleware/error-handler-middleware';
+import { authenticate, authorize } from './middleware/auth';
 import logger from './lib/logger';
 import { initSentry } from './lib/sentry';
-import type { IQueueService } from './interfaces/queue/IQueueService';
+import type { QueueService } from './services/queue/QueueService';
 import { createBullBoardRouter } from './routes/admin/bull-board';
 
 /**
@@ -312,8 +313,8 @@ export const AppConfig = {
  * Mount Bull Board admin UI on an existing Express app.
  * Call after bootstrap when QueueService is available and queues have been created.
  */
-export function mountBullBoard(app: Express, queueService: IQueueService): void {
+export function mountBullBoard(app: Express, queueService: QueueService): void {
   const adminRouter = createBullBoardRouter(queueService);
-  app.use('/admin/queues', adminRouter);
-  logger.info('[BullBoard] Admin UI mounted at /admin/queues');
+  app.use('/admin/queues', authenticate, authorize(['admin']), adminRouter);
+  logger.info('[BullBoard] Admin UI mounted at /admin/queues (admin-only)');
 }

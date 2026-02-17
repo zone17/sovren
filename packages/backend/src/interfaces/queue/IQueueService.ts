@@ -1,27 +1,41 @@
 /**
  * Queue Service Interface
- * Provides abstraction over BullMQ queue management
+ * Framework-agnostic abstraction over job queue management
  * Part of E0-001: BullMQ Infrastructure
  */
 
-import type { Queue, QueueOptions, JobsOptions } from 'bullmq';
+import type { IJobProcessor } from './IJobProcessor';
+
+export interface QueueJobOptions {
+  jobId?: string;
+  priority?: number;
+  attempts?: number;
+  backoff?: { type: string; delay: number };
+  delay?: number;
+  removeOnComplete?: boolean | { count: number };
+  removeOnFail?: boolean | { count: number };
+}
+
+export interface QueueCreateOptions {
+  defaultJobOptions?: QueueJobOptions;
+}
 
 export interface IQueueService {
   /**
    * Create a named queue with optional configuration
    */
-  createQueue(name: string, options?: Partial<QueueOptions>): void;
+  createQueue(name: string, options?: QueueCreateOptions): void;
 
   /**
    * Add a job to a named queue
    * @returns The job ID
    */
-  addJob<T>(queueName: string, jobName: string, data: T, options?: JobsOptions): Promise<string>;
+  addJob<T>(queueName: string, jobName: string, data: T, options?: QueueJobOptions): Promise<string>;
 
   /**
-   * Get a queue by name
+   * Register a job processor (worker) for a queue
    */
-  getQueue(name: string): Queue | undefined;
+  registerProcessor<T>(processor: IJobProcessor<T>): void;
 
   /**
    * Get all registered queue names
