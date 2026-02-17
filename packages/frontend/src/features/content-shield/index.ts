@@ -1,5 +1,13 @@
 // Content Shield Feature Module Exports
 
+// Components
+export { ShieldDashboard } from './components/ShieldDashboard';
+export { AuthenticityBadge } from './components/AuthenticityBadge';
+export { AlertsFeed } from './components/AlertsFeed';
+export { FingerprintCoverage } from './components/FingerprintCoverage';
+export { ProvenanceChainViewer } from './components/ProvenanceChainViewer';
+export { DMCAReportButton } from './components/DMCAReportButton';
+
 // Error Boundary
 export { ContentShieldErrorBoundary } from './ErrorBoundary';
 

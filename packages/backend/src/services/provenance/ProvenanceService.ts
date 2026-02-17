@@ -4,8 +4,9 @@
  * EPIC-008: Content Shield (US-E8-002, US-E8-007)
  */
 
+import { createHash } from 'crypto';
 import type { ProvenanceRecord, ProvenanceCertificate } from '@sovren/shared/types/provenance';
-import type { IProvenanceService } from '../../interfaces/provenance/IProvenanceService';
+import type { IProvenanceService, SignContentInput } from '../../interfaces/provenance/IProvenanceService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import { NotFoundError } from '../../utils/errors';
@@ -73,6 +74,62 @@ export class ProvenanceService implements IProvenanceService {
       },
       generated_at: new Date().toISOString(),
       verification_url: `https://sovren.dev/verify/${contentId}`,
+    };
+  }
+
+  /**
+   * Sign content at publish time.
+   * Creates a SHA-256 hash of the content body, stores the provenance record
+   * with the creator's NOSTR signature, event ID, and relay confirmations.
+   * Called by the content publish pipeline (US-E8-007).
+   */
+  async signContent(input: SignContentInput): Promise<ProvenanceRecord> {
+    const contentHash = createHash('sha256').update(input.contentBody).digest('hex');
+
+    const relayConfirmations = input.relays.map((relay) => ({
+      relay,
+      confirmed_at: new Date().toISOString(),
+    }));
+
+    const { data, error } = await this.db
+      .from('provenance_records')
+      .upsert(
+        {
+          content_id: input.contentId,
+          creator_id: input.creatorId,
+          signature: input.signature,
+          nostr_event_id: input.nostrEventId,
+          content_hash: contentHash,
+          relay_confirmations: relayConfirmations,
+          verification_status: 'verified',
+          status: 'active',
+        },
+        { onConflict: 'content_id' }
+      )
+      .select()
+      .single();
+
+    if (error) {
+      this.logger.error('Failed to sign content', { contentId: input.contentId, error });
+      throw error;
+    }
+
+    this.logger.info('Content signed with provenance', {
+      contentId: input.contentId,
+      creatorId: input.creatorId,
+      eventId: input.nostrEventId,
+    });
+
+    return {
+      content_id: data.content_id,
+      author_pubkey: data.creator_id,
+      created_at: data.created_at,
+      signature: data.signature,
+      nostr_event_id: data.nostr_event_id,
+      content_hash: data.content_hash,
+      relay_confirmations: data.relay_confirmations || [],
+      verification_status: data.verification_status,
+      nip05_verified: true,
     };
   }
 

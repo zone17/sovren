@@ -101,6 +101,47 @@ router.get(
   }
 );
 
+router.post(
+  '/provenance/sign',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await getProvenanceService().signContent({
+        contentId: req.body.content_id,
+        creatorId: req.user!.nostr_pubkey,
+        contentBody: req.body.content_body,
+        nostrEventId: req.body.nostr_event_id,
+        signature: req.body.signature,
+        relays: req.body.relays || [],
+      });
+      res.status(201).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.post(
+  '/provenance/:contentId/revoke',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  validate({ params: ShieldValidators.contentIdParam }),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await getProvenanceService().revokeProvenance(
+        req.params.contentId,
+        req.user!.nostr_pubkey
+      );
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // ============================================================================
 // Fingerprinting
 // ============================================================================
