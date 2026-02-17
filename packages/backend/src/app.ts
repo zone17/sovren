@@ -21,6 +21,8 @@ import { createRateLimiter } from './middleware/rate-limit-middleware';
 import { errorHandler, notFoundHandler } from './middleware/error-handler-middleware';
 import logger from './lib/logger';
 import { initSentry } from './lib/sentry';
+import type { IQueueService } from './interfaces/queue/IQueueService';
+import { createBullBoardRouter } from './routes/admin/bull-board';
 
 /**
  * 🚀 Elite Express.js Application Factory
@@ -198,7 +200,7 @@ export function createApp(): Express {
     });
   });
 
-  // Comprehensive health check routes (checks DB, Redis, Lightning, NOSTR)
+  // Comprehensive health check routes (checks DB, Redis, Lightning, NOSTR, Queues)
   app.use('/', healthRouter);
 
   // 🎯 API Routes
@@ -305,3 +307,13 @@ export const AppConfig = {
   responseTimeout: 30000, // 30 seconds
   keepAliveTimeout: 65000, // 65 seconds (higher than ALB idle timeout)
 } as const;
+
+/**
+ * Mount Bull Board admin UI on an existing Express app.
+ * Call after bootstrap when QueueService is available and queues have been created.
+ */
+export function mountBullBoard(app: Express, queueService: IQueueService): void {
+  const adminRouter = createBullBoardRouter(queueService);
+  app.use('/admin/queues', adminRouter);
+  logger.info('[BullBoard] Admin UI mounted at /admin/queues');
+}

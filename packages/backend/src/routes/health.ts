@@ -30,6 +30,7 @@ interface HealthCheckResult {
     redis: ServiceHealth;
     lightning: ServiceHealth;
     nostr: ServiceHealth;
+    queues: ServiceHealth;
   };
   metrics: {
     memory: {
@@ -133,6 +134,7 @@ router.get('/health/detailed', async (req: Request, res: Response) => {
         redis: await checkRedis(),
         lightning: await checkLightning(),
         nostr: await checkNostr(),
+        queues: await checkQueues(),
       },
       metrics: getSystemMetrics(),
       dependencies: {
@@ -385,6 +387,46 @@ async function checkNostr(): Promise<ServiceHealth> {
       responseTime: Date.now() - startTime,
       lastChecked: new Date().toISOString(),
       error: error instanceof Error ? error.message : 'NOSTR relay connection failed',
+    };
+  }
+}
+
+async function checkQueues(): Promise<ServiceHealth> {
+  const startTime = Date.now();
+
+  try {
+    // Dynamically import to avoid circular dependency at module load time
+    const { getQueueServiceInstance } = await import('../services/queue/QueueService');
+    const queueService = getQueueServiceInstance();
+
+    if (!queueService) {
+      return {
+        status: 'degraded',
+        responseTime: 0,
+        lastChecked: new Date().toISOString(),
+        error: 'QueueService not initialized yet',
+      };
+    }
+
+    const healthy = await queueService.isHealthy();
+    const responseTime = Date.now() - startTime;
+
+    return {
+      status: healthy ? (responseTime < 1000 ? 'healthy' : 'degraded') : 'unhealthy',
+      responseTime,
+      lastChecked: new Date().toISOString(),
+      details: {
+        queueCount: queueService.getQueueNames().length,
+        queues: queueService.getQueueNames(),
+        responseTime: `${responseTime}ms`,
+      },
+    };
+  } catch (error) {
+    return {
+      status: 'degraded',
+      responseTime: Date.now() - startTime,
+      lastChecked: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Queue health check failed',
     };
   }
 }

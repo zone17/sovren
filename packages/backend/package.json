@@ -40,6 +40,8 @@
     "docker:monitor": "node ../../scripts/docker-dev-scripts.js monitor"
   },
   "dependencies": {
+    "@bull-board/api": "^6.18.2",
+    "@bull-board/express": "^6.18.2",
     "@elastic/elasticsearch": "^9.2.0",
     "@noble/secp256k1": "^2.2.3",
     "@scure/bip32": "^1.7.0",
@@ -58,6 +60,7 @@
     "@types/uuid": "^9.0.7",
     "@vercel/node": "^5.2.0",
     "bcryptjs": "^2.4.3",
+    "bullmq": "^5.69.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dompurify": "^3.0.8",
