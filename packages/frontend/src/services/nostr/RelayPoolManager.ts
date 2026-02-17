@@ -27,7 +27,8 @@
  */
 
 import { EventEmitter } from 'events';
-import { SimplePool, Event as NostrEvent, Filter } from 'nostr-tools';
+import { SimplePool } from 'nostr-tools/pool';
+import type { Event as NostrEvent, Filter } from 'nostr-tools/pure';
 import { RelayConfig } from '@shared/config/relay-config';
 import {
   RelayPoolConfig,

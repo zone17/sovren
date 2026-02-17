@@ -3,11 +3,11 @@ import {
     finalizeEvent,
     generateSecretKey,
     getPublicKey,
-    nip04,
-    Event as NostrToolsEvent,
-    SimplePool,
     verifyEvent
-} from 'nostr-tools';
+} from 'nostr-tools/pure';
+import type { Event as NostrToolsEvent } from 'nostr-tools/pure';
+import * as nip04 from 'nostr-tools/nip04';
+import { SimplePool } from 'nostr-tools/pool';
 import { parseFeatureFlags, FeatureFlags } from '../../../shared/src/featureFlags';
 import {
     NostrContact,

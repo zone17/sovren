@@ -89,16 +89,23 @@ export class SharedServicesModule implements IServiceModule {
     // ===========================
     // NotificationService - TRANSIENT
     // ===========================
-    // Multi-channel notification dispatch
-    // Stateless: Delegates to other services
+    // Multi-channel notification dispatch with BullMQ queue backend
     registry.registerTransient(
       TYPES.NotificationService,
       (container) => {
-        const emailService = container.resolve(TYPES.EmailService);
         const eventBus = container.resolve(TYPES.EventBusService);
         const logger = container.resolve(TYPES.Logger);
+        const cache = container.resolveOptional(TYPES.CacheService);
+        const emailService = container.resolveOptional(TYPES.EmailService);
+        const queueService = container.resolveOptional(TYPES.QueueService);
 
-        return new NotificationService(emailService, eventBus, logger);
+        return new NotificationService(
+          eventBus,
+          logger,
+          cache ?? undefined,
+          emailService ?? undefined,
+          queueService ?? undefined
+        );
       }
     );
 

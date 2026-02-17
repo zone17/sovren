@@ -58,6 +58,9 @@ import type { IFingerprintService } from '../interfaces/provenance/IFingerprintS
 import type { IAlertService } from '../interfaces/provenance/IAlertService';
 import type { IDmcaService } from '../interfaces/provenance/IDmcaService';
 
+// Queue infrastructure
+import type { IQueueService } from '../interfaces/queue/IQueueService';
+
 /**
  * Service type identifiers organized by domain
  */
@@ -236,6 +239,18 @@ export const TYPES = {
   ),
 
   // ======================
+  // Queue Infrastructure
+  // ======================
+
+  /**
+   * BullMQ Queue Service (ADR-022)
+   */
+  QueueService: new ServiceToken<IQueueService>(
+    'QueueService',
+    'BullMQ job queue management'
+  ),
+
+  // ======================
   // Supporting Infrastructure
   // ======================
 
@@ -345,6 +360,8 @@ export const SERVICE_LIFETIMES = {
     'WebhookService',
     'InvoiceService',
     'AuthenticationService',
+    // Queue Infrastructure
+    'QueueService',
     // Phase 7: Creator Safety Net
     'WellnessService',
     'BurnoutScoringService',
@@ -378,7 +395,7 @@ export const SERVICE_LIFETIMES = {
 export const SERVICE_DEPENDENCIES = {
   // Shared Services
   EmailService: ['Config', 'Logger'],
-  NotificationService: ['EmailService', 'EventBusService', 'Logger'],
+  NotificationService: ['EmailService', 'EventBusService', 'Logger', 'QueueService'],
   AuditLogService: ['Database', 'Logger'],
   CacheService: ['Redis', 'EventBusService', 'Logger'],
 
@@ -423,6 +440,9 @@ export const SERVICE_DEPENDENCIES = {
   // Secrets
   SecretsService: ['Config', 'Logger'],
 
+  // Queue Infrastructure
+  QueueService: ['Redis', 'Logger'],
+
   // Phase 7: Wellness Services
   WellnessService: ['Database', 'EventBusService', 'Logger'],
   BurnoutScoringService: ['WellnessService', 'Logger'],
@@ -447,6 +467,7 @@ export const SERVICE_TAGS = {
     'Logger',
     'Config',
     'SecretsService',
+    'QueueService',
   ],
   communication: ['EmailService', 'NotificationService', 'WebhookService'],
   content: [

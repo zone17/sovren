@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
-import { verifyEvent, type Event as NostrEvent } from 'nostr-tools';
+import { verifyEvent, type Event as NostrEvent } from 'nostr-tools/pure';
 import { z } from 'zod';
 import logger from '../lib/logger';
 

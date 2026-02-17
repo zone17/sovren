@@ -2,8 +2,9 @@
  * 📝 Test Event Generators for E2E Tests
  * Creates valid NOSTR events for testing
  */
-import { finalizeEvent, generateSecretKey, getPublicKey, nip04 } from 'nostr-tools';
-import type { Event as NostrEvent, UnsignedEvent } from 'nostr-tools';
+import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import * as nip04 from 'nostr-tools/nip04';
+import type { Event as NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
 
 export interface TestUser {
   privateKey: Uint8Array;

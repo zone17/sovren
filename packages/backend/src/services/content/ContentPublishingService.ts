@@ -11,7 +11,9 @@
  */
 
 import { injectable, inject } from 'inversify';
-import { Event as NostrEvent, SimplePool, getEventHash, signEvent, getPublicKey } from 'nostr-tools';
+import { finalizeEvent, type VerifiedEvent } from 'nostr-tools/pure';
+import { SimplePool } from 'nostr-tools/pool';
+import { hexToBytes } from '@noble/hashes/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { TYPES } from '../../container/types';
 import {
@@ -479,7 +481,7 @@ export class ContentPublishingService implements IContentPublishingService {
 
       // Create Nostr event (kind 1 = short text note, kind 30023 = long-form article)
       const isLongForm = content.content.length > 280;
-      const event: Partial<NostrEvent> = {
+      const eventTemplate = {
         kind: isLongForm ? 30023 : 1,
         pubkey: nostrKeys.publicKey,
         created_at: Math.floor(Date.now() / 1000),
@@ -489,7 +491,7 @@ export class ContentPublishingService implements IContentPublishingService {
 
       // Sign the event
       const signedEvent = await this.signNostrEvent(
-        event as NostrEvent,
+        eventTemplate,
         nostrKeys.privateKey
       );
 
@@ -888,14 +890,18 @@ export class ContentPublishingService implements IContentPublishingService {
   }
 
   /**
-   * Signs a Nostr event
+   * Signs a Nostr event using finalizeEvent (nostr-tools v2.23.0)
    */
   private async signNostrEvent(
-    event: NostrEvent,
+    event: { kind: number; pubkey: string; created_at: number; tags: string[][]; content: string },
     privateKey: string
-  ): Promise<NostrEvent> {
-    event.id = getEventHash(event);
-    event.sig = signEvent(event, privateKey);
-    return event;
+  ): Promise<VerifiedEvent> {
+    const secretKey = hexToBytes(privateKey);
+    return finalizeEvent({
+      kind: event.kind,
+      created_at: event.created_at,
+      tags: event.tags,
+      content: event.content,
+    }, secretKey);
   }
 }

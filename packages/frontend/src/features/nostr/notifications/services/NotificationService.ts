@@ -4,7 +4,7 @@
  */
 
 import type { Event as NostrEvent, Filter } from 'nostr-tools';
-import { getEventHash, nip19 } from 'nostr-tools';
+import * as nip19 from 'nostr-tools/nip19';
 import {
   Notification,
   NotificationType,

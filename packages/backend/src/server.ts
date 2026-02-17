@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
-import { AppConfig, createApp } from './app';
+import { AppConfig, createApp, mountBullBoard } from './app';
 import { lightningService } from './services/lightning-service';
 import { lightningReceiptService } from './services/lightning/receipt-service';
 import { connectRedis, disconnectRedis } from './lib/redis';
 import { initializeContainer, container } from './container';
+import { getQueueServiceInstance } from './services/queue';
 import logger from './lib/logger';
 
 // Load environment variables
@@ -66,6 +67,12 @@ async function startServer(): Promise<void> {
 
     // Create Express application
     const app = createApp();
+
+    // Mount Bull Board admin UI if QueueService is available
+    const queueService = getQueueServiceInstance();
+    if (queueService) {
+      mountBullBoard(app, queueService);
+    }
 
     // Start HTTP server
     server = app.listen(AppConfig.port, AppConfig.host, () => {
@@ -274,6 +281,17 @@ async function gracefulShutdown(signal: string): Promise<void> {
           }
         });
       });
+    }
+
+    // Close BullMQ queues and workers
+    const qs = getQueueServiceInstance();
+    if (qs) {
+      try {
+        await qs.closeAll();
+        logger.info('BullMQ queues and workers closed');
+      } catch (err) {
+        logger.warn('BullMQ shutdown failed', { error: (err as Error).message });
+      }
     }
 
     // Dispose DI container (cleanup all registered services)

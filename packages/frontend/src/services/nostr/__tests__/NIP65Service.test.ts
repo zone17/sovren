@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { generatePrivateKey, getPublicKey, finalizeEvent } from 'nostr-tools';
+import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools/pure';
 import { NIP65Service } from '../NIP65Service';
 import { KeyManagementService } from '../KeyManagementService';
 import { RelayPoolManager } from '../RelayPoolManager';
@@ -33,8 +33,9 @@ describe('NIP65Service', () => {
     jest.clearAllMocks();
 
     // Generate test keys
-    testPrivateKey = generatePrivateKey();
-    testPublicKey = getPublicKey(testPrivateKey);
+    const testKeyBytes = generateSecretKey();
+    testPrivateKey = Array.from(testKeyBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    testPublicKey = getPublicKey(testKeyBytes);
 
     // Setup mocks
     keyManagement = KeyManagementService.getInstance();
@@ -135,7 +136,8 @@ describe('NIP65Service', () => {
     });
 
     it('should use provided private key', async () => {
-      const customPrivateKey = generatePrivateKey();
+      const customKeyBytes = generateSecretKey();
+      const customPrivateKey = Array.from(customKeyBytes).map(b => b.toString(16).padStart(2, '0')).join('');
       const relays: RelayMetadata[] = [
         { url: 'wss://relay.damus.io', read: true, write: true },
       ];

@@ -116,7 +116,7 @@
     "eslint-plugin-prettier": "^5.4.0",
     "jsonwebtoken": "^9.0.2",
     "node-vault": "^0.10.9",
-    "nostr-tools": "^2.13.2",
+    "nostr-tools": "2.23.0",
     "pg": "^8.11.3",
     "sodium-native": "^4.0.4"
   },

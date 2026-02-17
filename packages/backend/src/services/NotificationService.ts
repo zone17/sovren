@@ -10,6 +10,7 @@ import type { IEventBus } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
 import type { ICacheService } from '../interfaces/shared/ICacheService';
 import type { IEmailService } from '../interfaces/communication/IEmailService';
+import type { IQueueService } from '../interfaces/queue/IQueueService';
 import type {
   Notification,
   NotificationChannel,
@@ -27,6 +28,7 @@ import type {
 import { EventEmitter } from 'events';
 import * as webpush from 'web-push';
 import { createHash } from 'crypto';
+import type { JobContext } from '../interfaces/queue/IJobProcessor';
 
 /**
  * Channel handler interface
@@ -37,20 +39,11 @@ interface IChannelHandler {
   getPriority(): number;
 }
 
-/**
- * Notification queue item
- */
-interface NotificationQueueItem {
-  id: string;
-  notification: Notification;
-  channels: NotificationChannel[];
-  attemptedChannels: NotificationChannel[];
-  createdAt: Date;
-  priority: NotificationPriority;
-  retries: number;
-  maxRetries: number;
-  error?: string;
-}
+/** BullMQ queue name for notification jobs */
+const NOTIFICATION_QUEUE = 'notifications';
+
+/** BullMQ dead-letter queue for permanently failed notifications */
+const NOTIFICATION_DLQ = 'notifications-dlq';
 
 /**
  * Concrete implementation of NotificationService
@@ -60,24 +53,24 @@ export class NotificationService implements INotificationService {
   private readonly logger: ILogger;
   private readonly cache?: ICacheService;
   private readonly emailService?: IEmailService;
+  private readonly queueService?: IQueueService;
   private readonly channelHandlers: Map<NotificationChannel, IChannelHandler> = new Map();
   private readonly templates: Map<string, NotificationTemplate> = new Map();
-  private readonly queue: NotificationQueueItem[] = [];
   private readonly userPreferences: Map<string, NotificationPreferences> = new Map();
   private readonly metrics: NotificationMetrics;
-  private isProcessing = false;
-  private processInterval?: NodeJS.Timeout;
 
   constructor(
     eventBus: IEventBus,
     logger: ILogger,
     cache?: ICacheService,
-    emailService?: IEmailService
+    emailService?: IEmailService,
+    queueService?: IQueueService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.cache = cache;
     this.emailService = emailService;
+    this.queueService = queueService;
 
     // Initialize metrics
     this.metrics = {
@@ -98,8 +91,8 @@ export class NotificationService implements INotificationService {
     // Initialize channel handlers
     this.initializeChannelHandlers();
 
-    // Start queue processor
-    this.startQueueProcessor();
+    // Initialize BullMQ queue and worker
+    this.initializeQueue();
   }
 
   async send(notification: Notification): Promise<NotificationResult> {
@@ -438,40 +431,45 @@ export class NotificationService implements INotificationService {
   }
 
   async getMetrics(): Promise<NotificationMetrics> {
+    let pending = 0;
+    if (this.queueService) {
+      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      if (queue) {
+        pending = await queue.getWaitingCount() + await queue.getActiveCount();
+      }
+    }
+
     return {
       ...this.metrics,
-      pending: this.queue.length
+      pending
     };
   }
 
   async retryFailed(): Promise<void> {
-    const failedItems = this.queue.filter(item => item.retries > 0);
-
-    for (const item of failedItems) {
-      item.retries = 0;
-      item.attemptedChannels = [];
+    if (this.queueService) {
+      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      if (queue) {
+        const failed = await queue.getFailed();
+        for (const job of failed) {
+          await job.retry();
+        }
+        this.logger.info(`Retried ${failed.length} failed notification jobs`);
+      }
     }
-
-    // Process immediately
-    await this.processQueue();
   }
 
   async clearQueue(): Promise<void> {
-    const queueSize = this.queue.length;
-    this.queue.length = 0;
-
-    this.logger.info(`Notification queue cleared: ${queueSize} items removed`);
+    if (this.queueService) {
+      const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
+      if (queue) {
+        await queue.obliterate({ force: true });
+        this.logger.info('Notification queue cleared');
+      }
+    }
   }
 
   async dispose(): Promise<void> {
-    // Stop queue processor
-    if (this.processInterval) {
-      clearInterval(this.processInterval);
-    }
-
-    // Clear queue
-    await this.clearQueue();
-
+    // QueueService.closeAll() handles worker/queue cleanup
     this.logger.info('NotificationService disposed');
   }
 
@@ -687,104 +685,105 @@ export class NotificationService implements INotificationService {
     notification: Notification,
     channels: NotificationChannel[]
   ): Promise<void> {
-    const item: NotificationQueueItem = {
-      id: notification.id || this.getNotificationHash(notification),
-      notification,
-      channels,
-      attemptedChannels: [],
-      createdAt: new Date(),
-      priority: notification.priority || 'normal',
-      retries: 0,
-      maxRetries: 3
-    };
-
-    this.queue.push(item);
-
-    // Sort queue by priority
-    this.queue.sort((a, b) => {
-      const priorities: NotificationPriority[] = ['urgent', 'high', 'normal', 'low'];
-      return priorities.indexOf(a.priority) - priorities.indexOf(b.priority);
-    });
-
-    this.logger.info(`Notification added to retry queue: ${item.id}`);
-  }
-
-  private startQueueProcessor(): void {
-    this.processInterval = setInterval(() => {
-      if (!this.isProcessing) {
-        this.processQueue().catch(error => {
-          this.logger.error('Queue processing error', error);
-        });
-      }
-    }, 5000); // Process every 5 seconds
-  }
-
-  private async processQueue(): Promise<void> {
-    if (this.isProcessing || this.queue.length === 0) {
+    if (!this.queueService) {
+      this.logger.warn('QueueService not available, dropping notification retry');
       return;
     }
 
-    this.isProcessing = true;
+    const jobId = notification.id || this.getNotificationHash(notification);
 
-    try {
-      // Process up to 10 items at once
-      const items = this.queue.slice(0, 10);
+    // Map notification priority to BullMQ priority (lower = higher priority)
+    const priorityMap: Record<string, number> = {
+      urgent: 1,
+      high: 2,
+      normal: 3,
+      low: 4,
+    };
 
-      for (const item of items) {
-        try {
-          // Filter out attempted channels
-          const remainingChannels = item.channels.filter(
-            c => !item.attemptedChannels.includes(c)
-          );
-
-          if (remainingChannels.length === 0) {
-            // All channels attempted
-            item.retries++;
-
-            if (item.retries >= item.maxRetries) {
-              // Max retries reached
-              const index = this.queue.indexOf(item);
-              if (index > -1) {
-                this.queue.splice(index, 1);
-              }
-
-              await this.eventBus.emit('notification.permanentFailure', {
-                notification: item.notification,
-                error: item.error,
-                retries: item.retries
-              });
-
-              continue;
-            }
-
-            // Reset for retry
-            item.attemptedChannels = [];
-          }
-
-          // Try sending
-          const result = await this.send({
-            ...item.notification,
-            channels: remainingChannels
-          });
-
-          if (result.success) {
-            // Remove from queue
-            const index = this.queue.indexOf(item);
-            if (index > -1) {
-              this.queue.splice(index, 1);
-            }
-          } else {
-            // Mark attempted channels
-            item.attemptedChannels.push(...(result.channels || []));
-            item.error = result.error;
-          }
-        } catch (error) {
-          item.error = error.message;
-          item.retries++;
-        }
+    await this.queueService.addJob(
+      NOTIFICATION_QUEUE,
+      'send-notification',
+      {
+        notification,
+        channels,
+      },
+      {
+        jobId,
+        priority: priorityMap[notification.priority || 'normal'] ?? 3,
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000, // 2s, 4s, 8s
+        },
       }
-    } finally {
-      this.isProcessing = false;
+    );
+
+    this.logger.info(`Notification added to BullMQ retry queue: ${jobId}`);
+  }
+
+  /**
+   * Initialize BullMQ queue and register the notification worker processor.
+   */
+  private initializeQueue(): void {
+    if (!this.queueService) {
+      this.logger.warn(
+        '[NotificationService] QueueService not provided — BullMQ queue disabled, falling back to direct send only'
+      );
+      return;
     }
+
+    // Create the notifications queue and dead-letter queue
+    this.queueService.createQueue(NOTIFICATION_QUEUE);
+    this.queueService.createQueue(NOTIFICATION_DLQ);
+
+    // Register worker processor
+    this.queueService.registerProcessor<{ notification: Notification; channels: NotificationChannel[] }>({
+      name: 'notification-processor',
+      queueName: NOTIFICATION_QUEUE,
+      concurrency: 5,
+      process: async (job: JobContext<{ notification: Notification; channels: NotificationChannel[] }>) => {
+        const { notification, channels } = job.data;
+        this.logger.info(`[NotificationService] Processing queued notification job ${job.id}`);
+
+        const result = await this.send({
+          ...notification,
+          channels,
+          retryOnFailure: false, // Prevent re-queuing from within the worker
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || 'All channels failed');
+        }
+      },
+      onCompleted: async (job) => {
+        this.logger.info(`[NotificationService] Notification job ${job.id} completed`);
+      },
+      onFailed: async (job, error) => {
+        this.logger.error(`[NotificationService] Notification job ${job.id} failed permanently`, {
+          error: error.message,
+        });
+
+        // Move to dead-letter queue
+        await this.queueService!.addJob(
+          NOTIFICATION_DLQ,
+          'dead-letter',
+          {
+            originalJobId: job.id,
+            notification: job.data.notification,
+            channels: job.data.channels,
+            error: error.message,
+            failedAt: new Date().toISOString(),
+          }
+        );
+
+        await this.eventBus.emit('notification.permanentFailure', {
+          notification: job.data.notification,
+          error: error.message,
+          retries: job.attemptsMade,
+        });
+      },
+    });
+
+    this.logger.info('[NotificationService] BullMQ queue and worker initialized');
   }
 }

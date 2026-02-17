@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 // Core NOSTR imports
-import { getEventHash, verifyEvent } from 'nostr-tools';
+import { verifyEvent } from 'nostr-tools/pure';
 
 // Internal imports
 import { useAuth } from '../../features/auth/services/AuthContext';
@@ -209,11 +209,10 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
           errors.push('Invalid signature format');
         }
 
-        // Event ID validation
+        // Event ID and signature validation via verifyEvent (validates hash + sig)
         if (errors.length === 0) {
-          const computedId = getEventHash(event);
-          if (computedId !== event.id) {
-            errors.push('Event ID does not match computed hash');
+          if (!verifyEvent(event)) {
+            errors.push('Event ID or signature verification failed');
           }
         }
 
