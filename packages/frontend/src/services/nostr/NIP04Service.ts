@@ -17,7 +17,7 @@
  * https://github.com/nostr-protocol/nips/blob/master/04.md
  */
 
-import { getPublicKey, finalizeEvent } from 'nostr-tools/pure';
+import { finalizeEvent } from 'nostr-tools/pure';
 import * as nip04 from 'nostr-tools/nip04';
 import type { KeyManagementService } from './KeyManagementService';
 import type { NostrEvent } from '@sovren/shared/types/nostr/events';
