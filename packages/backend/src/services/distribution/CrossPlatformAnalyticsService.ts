@@ -176,43 +176,4 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
     return roiList;
   }
 
-  async snapshotMetrics(creatorId: string): Promise<void> {
-    const statuses = await this.platformService.getStatus(creatorId);
-
-    for (const status of statuses) {
-      if (!status.connected) continue;
-
-      try {
-        const adapter = this.platformService.getAdapter(status.platform);
-        const accessToken = await this.platformService.getDecryptedToken(creatorId, status.platform);
-
-        const metrics = await adapter.getMetrics({
-          access_token: accessToken,
-          refresh_token: null,
-          expires_at: null,
-          scopes: [],
-        });
-
-        await this.db.from('platform_metrics_history').upsert(
-          {
-            creator_id: creatorId,
-            platform: status.platform,
-            followers: metrics.followers,
-            following: metrics.following,
-            posts: metrics.posts,
-            engagement_rate: metrics.engagement_rate,
-            impressions_30d: metrics.impressions_30d,
-            recorded_at: new Date().toISOString().split('T')[0],
-          },
-          { onConflict: 'creator_id,platform,recorded_at' }
-        );
-      } catch (err) {
-        this.logger.error('[CrossPlatformAnalyticsService] Metrics snapshot failed', {
-          creatorId,
-          platform: status.platform,
-          error: (err as Error).message,
-        });
-      }
-    }
-  }
 }

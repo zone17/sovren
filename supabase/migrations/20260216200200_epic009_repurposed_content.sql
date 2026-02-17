@@ -32,5 +32,11 @@ CREATE POLICY "Creators can only access own repurposed content"
   USING (creator_id = current_setting('app.current_user_id', true))
   WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
--- Down migration:
+-- Down migration (execute manually to rollback):
+-- BEGIN;
+-- DROP TRIGGER IF EXISTS trigger_repurposed_content_updated_at ON repurposed_content;
+-- DROP POLICY IF EXISTS "Creators can only access own repurposed content" ON repurposed_content;
+-- DROP INDEX IF EXISTS idx_repurposed_creator;
+-- DROP INDEX IF EXISTS idx_repurposed_source;
 -- DROP TABLE IF EXISTS repurposed_content CASCADE;
+-- COMMIT;

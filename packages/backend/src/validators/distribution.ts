@@ -15,11 +15,6 @@ export const PlatformParamSchema = z.object({
   platform: platformEnum,
 });
 
-export const ConnectBodySchema = z.object({
-  instance_url: z.string().url().optional(),
-  scopes: z.array(z.string()).optional(),
-}).optional();
-
 export const CallbackQuerySchema = z.object({
   code: z.string().min(1),
   state: z.string().min(1),
@@ -83,19 +78,10 @@ export const BatchBodySchema = z.object({
 });
 
 // ============================================================================
-// Analytics Validators
-// ============================================================================
-
-export const AnalyticsContentIdParamSchema = z.object({
-  contentId: z.string().uuid(),
-});
-
-// ============================================================================
 // Inferred types for route handlers
 // ============================================================================
 
 export type PlatformParam = z.infer<typeof PlatformParamSchema>;
-export type ConnectBody = z.infer<typeof ConnectBodySchema>;
 export type CallbackQuery = z.infer<typeof CallbackQuerySchema>;
 export type PublishBody = z.infer<typeof PublishBodySchema>;
 export type RepurposeBody = z.infer<typeof RepurposeBodySchema>;
@@ -106,7 +92,6 @@ export type InboxQuery = z.infer<typeof InboxQuerySchema>;
 export type MessageIdParam = z.infer<typeof MessageIdParamSchema>;
 export type ReplyBody = z.infer<typeof ReplyBodySchema>;
 export type BatchBody = z.infer<typeof BatchBodySchema>;
-export type AnalyticsContentIdParam = z.infer<typeof AnalyticsContentIdParamSchema>;
 
 // ============================================================================
 // Aggregated exports for route use
@@ -114,7 +99,6 @@ export type AnalyticsContentIdParam = z.infer<typeof AnalyticsContentIdParamSche
 
 export const DistributionValidators = {
   platformParam: PlatformParamSchema,
-  connectBody: ConnectBodySchema,
   callbackQuery: CallbackQuerySchema,
   publishBody: PublishBodySchema,
   repurposeBody: RepurposeBodySchema,
@@ -125,5 +109,4 @@ export const DistributionValidators = {
   messageIdParam: MessageIdParamSchema,
   replyBody: ReplyBodySchema,
   batchBody: BatchBodySchema,
-  analyticsContentIdParam: AnalyticsContentIdParamSchema,
 };

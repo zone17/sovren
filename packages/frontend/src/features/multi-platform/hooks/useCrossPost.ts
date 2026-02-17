@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { distributionApi } from '../services/distributionApi';
-import type { PublishPayload, RepurposePayload } from '../types';
+import type { CrossPostStatus, PublishPayload, RepurposePayload } from '../types';
+
+const TERMINAL_STATUSES: ReadonlySet<CrossPostStatus> = new Set(['published', 'failed', 'cancelled']);
 
 export function usePublish() {
   const queryClient = useQueryClient();
@@ -21,7 +23,12 @@ export function usePublishStatus(contentId: string) {
     queryFn: () => distributionApi.getPublishStatus(contentId),
     select: (res) => res.data,
     enabled: !!contentId,
-    refetchInterval: 10_000, // Poll every 10s to track progress
+    refetchInterval: (query) => {
+      const entries = query.state.data?.data;
+      if (!entries || entries.length === 0) return 10_000;
+      const allTerminal = entries.every((entry) => TERMINAL_STATUSES.has(entry.status));
+      return allTerminal ? false : 10_000;
+    },
   });
 }
 

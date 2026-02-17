@@ -172,5 +172,24 @@ export async function getPrometheusMetrics(req: Request, res: Response): Promise
 }
 
 
+/**
+ * Returns all Prometheus metrics as a structured JSON object.
+ * Designed for agent/bot consumption — avoids text-format parsing.
+ */
+export async function getJsonMetrics(): Promise<Record<string, unknown>> {
+  const metricsJson = await register.getMetricsAsJSON();
+
+  const result: Record<string, unknown> = {};
+  for (const metric of metricsJson) {
+    result[metric.name] = {
+      help: metric.help,
+      type: metric.type,
+      values: metric.values,
+    };
+  }
+
+  return result;
+}
+
 // Export the registry for use in tests
 export { register as metricsRegistry };

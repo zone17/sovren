@@ -7,15 +7,13 @@ import type {
   SupportedPlatform,
   OAuthTokens,
   PublishResult,
-  PlatformMessage,
-  PlatformMetrics,
   ContentConstraints,
   FormattedContent,
-  PostMetrics,
 } from '@sovren/shared/types/distribution';
-import type { IPlatformAdapter, PlatformAdapterConfig } from './IPlatformAdapter';
+import type { PlatformAdapterConfig } from './IPlatformAdapter';
+import { BasePlatformAdapter } from './BasePlatformAdapter';
 
-export class MastodonAdapter implements IPlatformAdapter {
+export class MastodonAdapter extends BasePlatformAdapter {
   readonly platform: SupportedPlatform = 'mastodon';
   readonly constraints: ContentConstraints = {
     max_text_length: 500,
@@ -27,10 +25,8 @@ export class MastodonAdapter implements IPlatformAdapter {
     max_video_length_seconds: 60,
   };
 
-  private readonly config: PlatformAdapterConfig;
-
   constructor(config: PlatformAdapterConfig) {
-    this.config = config;
+    super(config);
   }
 
   /**
@@ -124,13 +120,7 @@ export class MastodonAdapter implements IPlatformAdapter {
     throw new Error('Mastodon tokens do not support refresh');
   }
 
-  async revokeTokens(accessToken: string): Promise<void> {
-    // Mastodon doesn't have a standard revoke endpoint for all instances
-    // The token is effectively revoked by deleting from our database
-    void accessToken;
-  }
-
-  async publish(tokens: OAuthTokens, content: FormattedContent): Promise<PublishResult> {
+  async publish(_tokens: OAuthTokens, _content: FormattedContent): Promise<PublishResult> {
     // In production, this would call the Mastodon API
     // For now, return a structured result for the queue worker
     const postId = `mastodon_${Date.now()}`;
@@ -139,39 +129,5 @@ export class MastodonAdapter implements IPlatformAdapter {
       url: `https://mastodon.social/@user/${postId}`,
       published_at: new Date().toISOString(),
     };
-  }
-
-  async deletePost(tokens: OAuthTokens, platformPostId: string): Promise<void> {
-    void tokens;
-    void platformPostId;
-  }
-
-  async getMessages(tokens: OAuthTokens, since: string): Promise<PlatformMessage[]> {
-    void tokens;
-    void since;
-    return [];
-  }
-
-  async sendReply(tokens: OAuthTokens, messageId: string, content: string): Promise<void> {
-    void tokens;
-    void messageId;
-    void content;
-  }
-
-  async getMetrics(tokens: OAuthTokens): Promise<PlatformMetrics> {
-    void tokens;
-    return {
-      followers: 0,
-      following: 0,
-      posts: 0,
-      engagement_rate: 0,
-      impressions_30d: 0,
-    };
-  }
-
-  async getPostMetrics(tokens: OAuthTokens, postId: string): Promise<PostMetrics> {
-    void tokens;
-    void postId;
-    return { views: 0, likes: 0, shares: 0, comments: 0, engagement_rate: 0 };
   }
 }

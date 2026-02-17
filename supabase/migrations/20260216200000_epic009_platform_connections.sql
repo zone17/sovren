@@ -43,5 +43,11 @@ CREATE POLICY "Creators can only access own connections"
   USING (creator_id = current_setting('app.current_user_id', true))
   WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
--- Down migration:
+-- Down migration (execute manually to rollback):
+-- BEGIN;
+-- DROP POLICY IF EXISTS "Creators can only access own connections" ON platform_connections;
+-- DROP INDEX IF EXISTS idx_platform_connections_creator;
+-- DROP INDEX IF EXISTS idx_platform_connections_status;
+-- DROP INDEX IF EXISTS idx_platform_connections_expires;
 -- DROP TABLE IF EXISTS platform_connections CASCADE;
+-- COMMIT;

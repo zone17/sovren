@@ -32,7 +32,4 @@ export interface IUnifiedInboxService {
     messageIds: string[],
     action: 'mark_read' | 'mark_unread' | 'archive'
   ): Promise<number>;
-
-  /** Poll connected platforms for new messages */
-  pollMessages(creatorId: string): Promise<number>;
 }

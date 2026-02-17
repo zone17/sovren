@@ -119,6 +119,7 @@ export class QueueService implements IQueueService {
       {
         connection: createBullMQConnection(),
         concurrency: processor.concurrency ?? 1,
+        ...(processor.limiter && { limiter: processor.limiter }),
       }
     );
 

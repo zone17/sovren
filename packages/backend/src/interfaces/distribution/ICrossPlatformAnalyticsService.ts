@@ -18,7 +18,4 @@ export interface ICrossPlatformAnalyticsService {
 
   /** Get ROI (engagement per hour) per platform */
   getROI(creatorId: string): Promise<PlatformROI[]>;
-
-  /** Snapshot current metrics for trend analysis */
-  snapshotMetrics(creatorId: string): Promise<void>;
 }

@@ -185,6 +185,82 @@ Disclosed to user: "Payment routed through Sovren for splitting"
 
 The brief custodial fallback window should be documented in terms of service. Legal counsel should review whether automated, seconds-long forwarding constitutes "money transmission" in relevant jurisdictions. The primary multi-invoice path avoids this question entirely.
 
+## Migration Strategy
+
+The current codebase uses a single-invoice model via `LightningService` backed by LNbits. Migrating to the hybrid HODL + multi-invoice model described in this ADR should be done incrementally across three phases, with each phase independently deployable and backward-compatible.
+
+### Phase 1: Multi-Invoice Revenue Splitting
+
+**Goal**: Enable collaborative content payments without changing the existing single-creator payment flow.
+
+**Changes required**:
+
+1. **Extend `LightningService.createInvoice`** to accept an array of split recipients (`{ creatorId, ratio }[]`) alongside the existing single-creator parameters. When a single creator is specified, behavior is unchanged.
+2. **Add a `createMultiInvoice` method** that generates one BOLT11 invoice per split recipient (including the platform fee invoice) and returns them as a batch. The `PaymentPersistence` interface gains a `saveInvoiceBatch` method that persists all invoices atomically.
+3. **Implement the single-invoice fallback path**: When the supporter's wallet does not support multi-pay (detected via WebLN capability probing or user opt-in), generate a single invoice to the platform wallet, then forward splits via `LightningService.makePayment`. Record the brief custodial window in the payment metadata (`{ custodialFallback: true, forwardedAt: timestamp }`).
+4. **Add split tracking to `PaymentPersistence`**: New `PaymentSplit` record type linking a parent payment to its child forwarded payments, with status tracking (`pending | forwarded | failed`).
+
+**Data migration**: None. Existing invoices and payments remain valid. New fields are additive.
+
+**Backward compatibility**: All existing single-invoice payment flows (tips, subscriptions, content purchases) continue to work without modification. The split logic only activates for collaborative content with multiple creators.
+
+**Rollback**: Remove the multi-invoice code paths. Since Phase 1 is additive and existing flows are untouched, rollback is a code revert with no data migration needed.
+
+### Phase 2: HODL Invoice Escrow for Marketplace
+
+**Goal**: Add protocol-enforced escrow for creator marketplace service purchases.
+
+**Prerequisites**: LND 0.15+ deployed with HODL invoice RPC support (`AddHoldInvoice`, `SettleInvoice`, `CancelInvoice`). This is an infrastructure change — the current LNbits integration does not support HODL invoices natively.
+
+**Changes required**:
+
+1. **Add an LND gRPC client** alongside the existing LNbits HTTP client. The `LightningService` constructor accepts an optional `lndGrpcClient` for HODL invoice operations. LNbits remains the default for standard invoices.
+2. **Add `createHodlInvoice` method** that generates a HODL invoice via LND, stores the preimage securely (encrypted at rest), and tracks the HTLC state (`held | settled | canceled | expired`).
+3. **Extend `PaymentPersistence`** with `saveHodlInvoice` and `updateHodlState` methods. HODL invoices are stored separately from standard invoices to avoid conflating their lifecycle states.
+4. **Add an escrow resolution service** that handles: (a) creator marks service delivered -- platform reveals preimage to settle; (b) supporter confirms receipt -- same settlement flow; (c) timeout expiry -- platform cancels the invoice (HTLC auto-refunds); (d) dispute -- platform withholds preimage until resolution.
+5. **Add HTLC monitoring**: A background job polls or subscribes to LND's `SubscribeInvoices` stream to detect timeout expirations and update escrow state accordingly.
+
+**Data migration**: New `hodl_invoices` and `escrow_states` persistence collections. No modification to existing invoice/payment data.
+
+**Backward compatibility**: Standard payments (tips, subscriptions, collaborative splits from Phase 1) continue through LNbits unchanged. HODL invoices are only created for marketplace escrow transactions. The two payment paths are isolated.
+
+**Rollback**: Disable marketplace escrow feature flag. Any in-flight HODL invoices will either settle (if service is delivered before rollback) or expire via HTLC timeout (funds auto-return to supporter). No funds are at risk during rollback.
+
+### Phase 3: Full Custodial Support (Optional, Conditional)
+
+**Goal**: If regulatory and business conditions warrant it, add optional platform custody for creators who prefer asynchronous payout over direct Lightning payments.
+
+**This phase is intentionally deferred.** It should only proceed if:
+- Legal counsel confirms Money Transmitter License requirements are met or exemptions apply
+- Creator demand for asynchronous payouts justifies the compliance cost
+- The platform has sufficient operational maturity for secure fund management
+
+**High-level changes** (to be detailed in a follow-up ADR if pursued):
+
+1. Platform wallet with per-creator balance tracking in the database
+2. Creator withdrawal flow (on-demand or scheduled payouts via existing `processPayout`)
+3. Transparent accounting dashboard showing held balances, pending payouts, and fee deductions
+4. Regular automated reconciliation between Lightning node balance and database balance records
+5. Security audit of fund management: hot/cold wallet split, withdrawal limits, multi-sig for large amounts
+
+**Data migration**: Would require migrating creator payment preferences and building balance ledger tables. Detailed in a future ADR.
+
+**Backward compatibility**: Opt-in only. Creators who prefer non-custodial (Phase 1/2) flows retain their existing behavior.
+
+### Migration Sequence Summary
+
+```
+Current State          Phase 1                Phase 2                Phase 3
+─────────────          ───────                ───────                ───────
+Single invoice    →    + Multi-invoice    →   + HODL invoices   →   + Platform custody
+per payment            for splits             for escrow             (opt-in)
+LNbits only            LNbits only            + LND gRPC             + Balance ledger
+No splits              Collaborative splits   Marketplace escrow     Async payouts
+No escrow              Fallback path          Direct settlement      Creator withdrawals
+```
+
+Each phase can be deployed independently. Phase 2 does not depend on Phase 1 being complete (they address different features), though deploying Phase 1 first is recommended to validate the multi-payment infrastructure before adding HODL complexity. Phase 3 is conditional and requires a separate ADR.
+
 ## References
 
 - Architect Review, Risk 2: "Lightning Payment Custodial Design Conflicts -- HIGH"

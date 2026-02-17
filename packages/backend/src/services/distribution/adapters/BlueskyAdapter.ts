@@ -8,15 +8,13 @@ import type {
   SupportedPlatform,
   OAuthTokens,
   PublishResult,
-  PlatformMessage,
-  PlatformMetrics,
   ContentConstraints,
   FormattedContent,
-  PostMetrics,
 } from '@sovren/shared/types/distribution';
-import type { IPlatformAdapter, PlatformAdapterConfig } from './IPlatformAdapter';
+import type { PlatformAdapterConfig } from './IPlatformAdapter';
+import { BasePlatformAdapter } from './BasePlatformAdapter';
 
-export class BlueskyAdapter implements IPlatformAdapter {
+export class BlueskyAdapter extends BasePlatformAdapter {
   readonly platform: SupportedPlatform = 'bluesky';
   readonly constraints: ContentConstraints = {
     max_text_length: 300,
@@ -28,11 +26,10 @@ export class BlueskyAdapter implements IPlatformAdapter {
     max_video_length_seconds: 0,
   };
 
-  private readonly config: PlatformAdapterConfig;
   private readonly pkceStore = new Map<string, string>();
 
   constructor(config: PlatformAdapterConfig) {
-    this.config = config;
+    super(config);
   }
 
   getAuthorizationUrl(state: string): string {
@@ -117,50 +114,12 @@ export class BlueskyAdapter implements IPlatformAdapter {
     };
   }
 
-  async revokeTokens(accessToken: string): Promise<void> {
-    void accessToken;
-  }
-
-  async publish(tokens: OAuthTokens, content: FormattedContent): Promise<PublishResult> {
+  async publish(_tokens: OAuthTokens, _content: FormattedContent): Promise<PublishResult> {
     const postId = `bsky_${Date.now()}`;
     return {
       platform_post_id: postId,
       url: `https://bsky.app/profile/user/post/${postId}`,
       published_at: new Date().toISOString(),
     };
-  }
-
-  async deletePost(tokens: OAuthTokens, platformPostId: string): Promise<void> {
-    void tokens;
-    void platformPostId;
-  }
-
-  async getMessages(tokens: OAuthTokens, since: string): Promise<PlatformMessage[]> {
-    void tokens;
-    void since;
-    return [];
-  }
-
-  async sendReply(tokens: OAuthTokens, messageId: string, content: string): Promise<void> {
-    void tokens;
-    void messageId;
-    void content;
-  }
-
-  async getMetrics(tokens: OAuthTokens): Promise<PlatformMetrics> {
-    void tokens;
-    return {
-      followers: 0,
-      following: 0,
-      posts: 0,
-      engagement_rate: 0,
-      impressions_30d: 0,
-    };
-  }
-
-  async getPostMetrics(tokens: OAuthTokens, postId: string): Promise<PostMetrics> {
-    void tokens;
-    void postId;
-    return { views: 0, likes: 0, shares: 0, comments: 0, engagement_rate: 0 };
   }
 }

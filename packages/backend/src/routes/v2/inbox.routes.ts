@@ -4,10 +4,10 @@
  * EPIC-009: Multi-platform inbox aggregation
  */
 
-import { Request, Response, NextFunction, Router } from 'express';
+import { Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator } from '../../middleware/auth';
+import { authenticate, requireCreator, AuthenticatedRequest } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { DistributionValidators } from '../../validators/distribution';
@@ -36,7 +36,7 @@ router.get(
   authenticate,
   requireCreator,
   validate({ query: DistributionValidators.inboxQuery }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const query = {
         platform: (req.query.platform as string) || 'all',
@@ -45,7 +45,7 @@ router.get(
         limit: parseInt(req.query.limit as string) || 20,
       };
 
-      const result = await getInboxService().getMessages(req.user!.nostr_pubkey, query as any);
+      const result = await getInboxService().getMessages(req.user.nostr_pubkey, query as any);
       res.json({ success: true, data: result.messages, pagination: result.pagination });
     } catch (err) {
       next(err);
@@ -66,10 +66,10 @@ router.post(
     params: DistributionValidators.messageIdParam,
     body: DistributionValidators.replyBody,
   }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       await getInboxService().reply(
-        req.user!.nostr_pubkey,
+        req.user.nostr_pubkey,
         req.params.messageId,
         req.body.content
       );
@@ -90,10 +90,10 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   validate({ body: DistributionValidators.batchBody }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const updated = await getInboxService().batchAction(
-        req.user!.nostr_pubkey,
+        req.user.nostr_pubkey,
         req.body.message_ids,
         req.body.action
       );

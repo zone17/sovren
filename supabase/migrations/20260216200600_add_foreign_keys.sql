@@ -22,3 +22,11 @@ ALTER TABLE cross_posts
 ALTER TABLE platform_connections
   ADD CONSTRAINT chk_creator_id_format
   CHECK (LENGTH(creator_id) = 64 AND creator_id ~ '^[0-9a-f]+$');
+
+-- Down migration (execute manually to rollback):
+-- BEGIN;
+-- ALTER TABLE platform_connections DROP CONSTRAINT IF EXISTS chk_creator_id_format;
+-- ALTER TABLE cross_posts DROP CONSTRAINT IF EXISTS fk_cross_posts_platform_connection;
+-- ALTER TABLE repurposed_content DROP CONSTRAINT IF EXISTS fk_repurposed_content_source;
+-- ALTER TABLE cross_posts DROP CONSTRAINT IF EXISTS fk_cross_posts_content;
+-- COMMIT;

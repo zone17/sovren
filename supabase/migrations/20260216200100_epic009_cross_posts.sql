@@ -40,5 +40,13 @@ CREATE POLICY "Creators can only access own cross-posts"
   USING (creator_id = current_setting('app.current_user_id', true))
   WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
--- Down migration:
+-- Down migration (execute manually to rollback):
+-- BEGIN;
+-- DROP TRIGGER IF EXISTS trigger_cross_posts_updated_at ON cross_posts;
+-- DROP POLICY IF EXISTS "Creators can only access own cross-posts" ON cross_posts;
+-- DROP INDEX IF EXISTS idx_cross_posts_creator;
+-- DROP INDEX IF EXISTS idx_cross_posts_content;
+-- DROP INDEX IF EXISTS idx_cross_posts_status;
+-- DROP INDEX IF EXISTS idx_cross_posts_scheduled;
 -- DROP TABLE IF EXISTS cross_posts CASCADE;
+-- COMMIT;

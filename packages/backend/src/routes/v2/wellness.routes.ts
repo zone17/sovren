@@ -7,7 +7,7 @@
 import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator, optionalAuth } from '../../middleware/auth';
+import { authenticate, requireCreator, optionalAuth, AuthenticatedRequest } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import {
   readOnlyRateLimiter,
@@ -61,9 +61,9 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ body: WellnessValidators.recordWorkPattern }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getWellnessService().recordWorkPattern(req.user!.nostr_pubkey, req.body);
+      const data = await getWellnessService().recordWorkPattern(req.user.nostr_pubkey, req.body);
       res.status(201).json({ success: true, data });
     } catch (err) {
       next(err);
@@ -76,10 +76,10 @@ router.get(
   authenticate,
   requireCreator,
   validate({ query: WellnessValidators.getWorkPatterns }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const data = await getWellnessService().getWorkPatterns(
-        req.user!.nostr_pubkey,
+        req.user.nostr_pubkey,
         req.query.period as '7d' | '30d' | '90d'
       );
       res.json({ success: true, data });
@@ -94,10 +94,10 @@ router.get(
   authenticate,
   requireCreator,
   validate({ query: WellnessValidators.getHeatmap }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const data = await getWellnessService().getHeatmap(
-        req.user!.nostr_pubkey,
+        req.user.nostr_pubkey,
         req.query.period as '7d' | '30d'
       );
       res.json({ success: true, data });
@@ -115,9 +115,9 @@ router.get(
   '/risk-score',
   authenticate,
   requireCreator,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getBurnoutService().calculateScore(req.user!.nostr_pubkey);
+      const data = await getBurnoutService().calculateScore(req.user.nostr_pubkey);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -131,9 +131,9 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   validate({ body: WellnessValidators.setSensitivity }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getBurnoutService().setSensitivity(req.user!.nostr_pubkey, req.body.sensitivity);
+      const data = await getBurnoutService().setSensitivity(req.user.nostr_pubkey, req.body.sensitivity);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -149,9 +149,9 @@ router.get(
   '/schedule/recommendations',
   authenticate,
   requireCreator,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getScheduleService().getRecommendations(req.user!.nostr_pubkey);
+      const data = await getScheduleService().getRecommendations(req.user.nostr_pubkey);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -163,9 +163,9 @@ router.get(
   '/buffer-depth',
   authenticate,
   requireCreator,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getScheduleService().getBufferDepth(req.user!.nostr_pubkey);
+      const data = await getScheduleService().getBufferDepth(req.user.nostr_pubkey);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -181,9 +181,9 @@ router.get(
   '/boundaries',
   authenticate,
   requireCreator,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getBoundaryService().getBoundaries(req.user!.nostr_pubkey);
+      const data = await getBoundaryService().getBoundaries(req.user.nostr_pubkey);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -197,9 +197,9 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   validate({ body: WellnessValidators.updateBoundaries }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getBoundaryService().updateBoundaries(req.user!.nostr_pubkey, req.body);
+      const data = await getBoundaryService().updateBoundaries(req.user.nostr_pubkey, req.body);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -217,9 +217,9 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ body: WellnessValidators.recordPulse }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getWellnessService().recordPulse(req.user!.nostr_pubkey, req.body);
+      const data = await getWellnessService().recordPulse(req.user.nostr_pubkey, req.body);
       res.status(201).json({ success: true, data });
     } catch (err) {
       next(err);
@@ -232,12 +232,12 @@ router.get(
   authenticate,
   requireCreator,
   validate({ query: WellnessValidators.getPulseHistory }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = parseInt(req.query.offset as string) || 0;
       const data = await getWellnessService().getPulseHistory(
-        req.user!.nostr_pubkey,
+        req.user.nostr_pubkey,
         req.query.period as '30d' | '90d' | 'all',
         limit,
         offset
@@ -276,9 +276,9 @@ router.delete(
   authenticate,
   requireCreator,
   mutationRateLimiter,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const deleted_count = await getWellnessService().deletePulseHistory(req.user!.nostr_pubkey);
+      const deleted_count = await getWellnessService().deletePulseHistory(req.user.nostr_pubkey);
       res.json({ success: true, data: { deleted_count } });
     } catch (err) {
       next(err);
@@ -291,9 +291,9 @@ router.delete(
   authenticate,
   requireCreator,
   expensiveRateLimiter,
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const deleted = await getWellnessService().deleteAllWellnessData(req.user!.nostr_pubkey);
+      const deleted = await getWellnessService().deleteAllWellnessData(req.user.nostr_pubkey);
       res.json({ success: true, data: { deleted } });
     } catch (err) {
       next(err);

@@ -42,8 +42,10 @@ interface IChannelHandler {
 /** BullMQ queue name for notification jobs */
 const NOTIFICATION_QUEUE = 'notifications';
 
-/** BullMQ dead-letter queue for permanently failed notifications */
-const NOTIFICATION_DLQ = 'notifications-dlq';
+/** Rate limit: max notifications per window (configurable via env) */
+const NOTIFICATION_RATE_LIMIT_MAX = parseInt(process.env.NOTIFICATION_RATE_LIMIT_MAX || '50', 10);
+/** Rate limit window in milliseconds (default: 60 seconds) */
+const NOTIFICATION_RATE_LIMIT_DURATION = parseInt(process.env.NOTIFICATION_RATE_LIMIT_DURATION || '60000', 10);
 
 /**
  * Concrete implementation of NotificationService
@@ -732,15 +734,19 @@ export class NotificationService implements INotificationService {
       return;
     }
 
-    // Create the notifications queue and dead-letter queue
+    // Create the notifications queue (BullMQ's built-in removeOnFail retention
+    // keeps failed jobs — no separate DLQ queue needed)
     this.queueService.createQueue(NOTIFICATION_QUEUE);
-    this.queueService.createQueue(NOTIFICATION_DLQ);
 
-    // Register worker processor
+    // Register worker processor with rate limiting to prevent thundering herd
     this.queueService.registerProcessor<{ notification: Notification; channels: NotificationChannel[] }>({
       name: 'notification-processor',
       queueName: NOTIFICATION_QUEUE,
       concurrency: 5,
+      limiter: {
+        max: NOTIFICATION_RATE_LIMIT_MAX,
+        duration: NOTIFICATION_RATE_LIMIT_DURATION,
+      },
       process: async (job: JobContext<{ notification: Notification; channels: NotificationChannel[] }>) => {
         const { notification, channels } = job.data;
         this.logger.info(`[NotificationService] Processing queued notification job ${job.id}`);
@@ -763,19 +769,8 @@ export class NotificationService implements INotificationService {
           error: error.message,
         });
 
-        // Move to dead-letter queue
-        await this.queueService!.addJob(
-          NOTIFICATION_DLQ,
-          'dead-letter',
-          {
-            originalJobId: job.id,
-            notification: job.data.notification,
-            channels: job.data.channels,
-            error: error.message,
-            failedAt: new Date().toISOString(),
-          }
-        );
-
+        // Failed jobs are retained by BullMQ's built-in removeOnFail: { count: 5000 }
+        // (set in QueueService defaults) and visible via Bull Board — no manual DLQ needed.
         await this.eventBus.emit('notification.permanentFailure', {
           notification: job.data.notification,
           error: error.message,

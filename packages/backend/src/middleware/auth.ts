@@ -4,6 +4,27 @@ import logger from '../lib/logger';
 import { AppError } from '../lib/app-error';
 import { UnauthorizedError, AuthorizationError, ValidationError, ServiceError } from '../utils/errors';
 
+/**
+ * Request type for handlers behind the `authenticate` middleware.
+ * `user` is guaranteed non-null, eliminating the need for `req.user!` assertions.
+ * Todo 217: P3 Type Safety
+ */
+export interface AuthenticatedRequest extends Request {
+  user: Express.AuthenticatedUser;
+}
+
+/**
+ * Type guard that narrows a Request to AuthenticatedRequest.
+ * Throws a 401 UnauthorizedError if user is missing (defensive — should never
+ * happen behind `authenticate` middleware, but gives a clear error instead of crash).
+ */
+export function getAuthUser(req: Request): Express.AuthenticatedUser {
+  if (!req.user) {
+    throw new UnauthorizedError('Authentication required');
+  }
+  return req.user;
+}
+
 // 🔒 Authentication middleware for JWT verification
 export const authenticate = async (
   req: Request,

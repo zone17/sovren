@@ -31,5 +31,10 @@ CREATE POLICY "Creators can only access own metrics"
   USING (creator_id = current_setting('app.current_user_id', true))
   WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
--- Down migration:
+-- Down migration (execute manually to rollback):
+-- BEGIN;
+-- DROP POLICY IF EXISTS "Creators can only access own metrics" ON platform_metrics_history;
+-- DROP INDEX IF EXISTS idx_platform_metrics_creator;
+-- DROP INDEX IF EXISTS idx_platform_metrics_recorded;
 -- DROP TABLE IF EXISTS platform_metrics_history CASCADE;
+-- COMMIT;

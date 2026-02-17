@@ -123,28 +123,6 @@ export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData>
     });
   }
 
-  static async recoverStaleJobs(db: ISupabaseClient, logger: ILogger, staleCutoffMinutes = 10): Promise<number> {
-    const cutoff = new Date(Date.now() - staleCutoffMinutes * 60 * 1000).toISOString();
-
-    const { data, error } = await db
-      .from('cross_posts')
-      .update({ status: 'queued', error_message: 'Recovered from stale publishing state', updated_at: new Date().toISOString() })
-      .eq('status', 'publishing')
-      .lt('updated_at', cutoff)
-      .select('id');
-
-    if (error) {
-      logger.error('[CrossPublishProcessor] Failed to recover stale jobs', { error: error.message });
-      return 0;
-    }
-
-    const count = data?.length || 0;
-    if (count > 0) {
-      logger.warn('[CrossPublishProcessor] Recovered stale publishing jobs', { count });
-    }
-    return count;
-  }
-
   async onFailed(job: JobContext<CrossPublishJobData>, error: Error): Promise<void> {
     const { crossPostId, platform } = job.data;
 

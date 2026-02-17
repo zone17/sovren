@@ -38,5 +38,12 @@ CREATE POLICY "Creators can only access own inbox"
   USING (creator_id = current_setting('app.current_user_id', true))
   WITH CHECK (creator_id = current_setting('app.current_user_id', true));
 
--- Down migration:
+-- Down migration (execute manually to rollback):
+-- BEGIN;
+-- DROP POLICY IF EXISTS "Creators can only access own inbox" ON inbox_messages;
+-- DROP INDEX IF EXISTS idx_inbox_creator;
+-- DROP INDEX IF EXISTS idx_inbox_creator_unread;
+-- DROP INDEX IF EXISTS idx_inbox_creator_platform;
+-- DROP INDEX IF EXISTS idx_inbox_fetched;
 -- DROP TABLE IF EXISTS inbox_messages CASCADE;
+-- COMMIT;

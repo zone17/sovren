@@ -7,7 +7,7 @@
 import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator, optionalAuth } from '../../middleware/auth';
+import { authenticate, requireCreator, optionalAuth, AuthenticatedRequest } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import {
   readOnlyRateLimiter,
@@ -87,11 +87,11 @@ router.get(
     params: ShieldValidators.contentIdParam,
     query: ShieldValidators.certificateQuery,
   }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const certificate = await getProvenanceService().getCertificate(
         req.params.contentId,
-        req.user!.nostr_pubkey
+        req.user.nostr_pubkey
       );
       // PDF format not implemented yet — return JSON
       res.json({ success: true, data: { certificate } });
@@ -107,11 +107,11 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ body: ShieldValidators.signProvenanceBody }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const data = await getProvenanceService().signContent({
         contentId: req.body.content_id,
-        creatorId: req.user!.nostr_pubkey,
+        creatorId: req.user.nostr_pubkey,
         contentBody: req.body.content_body,
         nostrEventId: req.body.nostr_event_id,
         signature: req.body.signature,
@@ -130,11 +130,11 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ params: ShieldValidators.contentIdParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const data = await getProvenanceService().revokeProvenance(
         req.params.contentId,
-        req.user!.nostr_pubkey
+        req.user.nostr_pubkey
       );
       res.json({ success: true, data });
     } catch (err) {
@@ -153,9 +153,9 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ body: ShieldValidators.createFingerprint }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getFingerprintService().createFingerprint(req.user!.nostr_pubkey, req.body);
+      const data = await getFingerprintService().createFingerprint(req.user.nostr_pubkey, req.body);
       res.status(201).json({ success: true, data });
     } catch (err) {
       next(err);
@@ -171,10 +171,10 @@ router.get(
     params: ShieldValidators.getFingerprintsParam,
     query: ShieldValidators.getFingerprintsQuery,
   }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       // Enforce creator can only view own registry
-      if (req.params.creatorId !== req.user!.nostr_pubkey) {
+      if (req.params.creatorId !== req.user.nostr_pubkey) {
         res.status(403).json({
           success: false,
           error: 'FORBIDDEN',
@@ -186,7 +186,7 @@ router.get(
 
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const result = await getFingerprintService().getRegistry(req.user!.nostr_pubkey, page, limit);
+      const result = await getFingerprintService().getRegistry(req.user.nostr_pubkey, page, limit);
       res.json({ success: true, data: result.data, pagination: result.pagination });
     } catch (err) {
       next(err);
@@ -200,9 +200,9 @@ router.post(
   requireCreator,
   expensiveRateLimiter,
   validate({ body: ShieldValidators.compare }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getFingerprintService().compare(req.user!.nostr_pubkey, req.body);
+      const data = await getFingerprintService().compare(req.user.nostr_pubkey, req.body);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -219,12 +219,12 @@ router.get(
   authenticate,
   requireCreator,
   validate({ query: ShieldValidators.getAlertsQuery }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const status = (req.query.status as AlertStatus) || 'new';
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const result = await getAlertService().getAlerts(req.user!.nostr_pubkey, status, page, limit);
+      const result = await getAlertService().getAlerts(req.user.nostr_pubkey, status, page, limit);
       res.json({ success: true, data: result.data, pagination: result.pagination });
     } catch (err) {
       next(err);
@@ -237,9 +237,9 @@ router.get(
   authenticate,
   requireCreator,
   validate({ params: ShieldValidators.alertIdParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getAlertService().getAlertDetail(req.user!.nostr_pubkey, req.params.id);
+      const data = await getAlertService().getAlertDetail(req.user.nostr_pubkey, req.params.id);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -256,10 +256,10 @@ router.put(
     params: ShieldValidators.alertIdParam,
     body: ShieldValidators.updateAlertStatus,
   }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const data = await getAlertService().updateAlertStatus(
-        req.user!.nostr_pubkey,
+        req.user.nostr_pubkey,
         req.params.id,
         req.body.status
       );
@@ -283,9 +283,9 @@ router.post(
     params: ShieldValidators.alertIdParam,
     query: ShieldValidators.dmcaReportQuery,
   }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const report = await getDmcaService().generateReport(req.user!.nostr_pubkey, req.params.id);
+      const report = await getDmcaService().generateReport(req.user.nostr_pubkey, req.params.id);
       // PDF format not implemented yet — return JSON
       res.status(201).json({ success: true, data: { report } });
     } catch (err) {

@@ -9,6 +9,7 @@ import { Router } from 'express';
 import contentRoutes from './content.routes';
 import userRoutes from './user.routes';
 import paymentRoutes from './payment.routes';
+import metricsRoutes from './metrics.routes';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ const router = Router();
 router.use('/content', contentRoutes);
 router.use('/users', userRoutes);
 router.use('/payments', paymentRoutes);
+router.use('/metrics', metricsRoutes);
 
 /**
  * API v1 Info Endpoint
@@ -33,6 +35,7 @@ router.get('/', (req, res) => {
         content: '/api/v1/content',
         users: '/api/v1/users',
         payments: '/api/v1/payments',
+        metrics: '/api/v1/metrics',
       },
       documentation: '/api/docs',
       timestamp: new Date().toISOString(),
