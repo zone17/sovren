@@ -14,6 +14,21 @@ import type {
 } from '@sovren/shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 
+interface MetricsHistoryRow {
+  platform: string;
+  followers: number;
+  engagement_rate: string;
+  impressions_30d: number;
+  recorded_at: string;
+}
+
+interface CrossPostRow {
+  platform: string;
+  platform_post_id: string | null;
+  published_at: string;
+  metrics_json: Record<string, number> | null;
+}
+
 export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsService {
   private readonly db: ISupabaseClient;
   private readonly platformService: IPlatformConnectionService;
@@ -29,7 +44,7 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
     // Get latest metrics for each platform (bounded to last 30 days)
     const metricsThirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data: metrics, error } = await this.db
-      .from('platform_metrics_history')
+      .from<MetricsHistoryRow>('platform_metrics_history')
       .select('platform, followers, engagement_rate, impressions_30d, recorded_at')
       .eq('creator_id', creatorId)
       .gte('recorded_at', metricsThirtyDaysAgo)
@@ -41,7 +56,7 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
     }
 
     // Get unique latest entry per platform
-    const latestByPlatform = new Map<string, any>();
+    const latestByPlatform = new Map<string, MetricsHistoryRow>();
     for (const row of metrics || []) {
       if (!latestByPlatform.has(row.platform)) {
         latestByPlatform.set(row.platform, row);
@@ -49,15 +64,17 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
     }
 
     // Calculate 30-day growth per platform
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
     const { data: oldMetrics } = await this.db
-      .from('platform_metrics_history')
+      .from<MetricsHistoryRow>('platform_metrics_history')
       .select('platform, followers')
       .eq('creator_id', creatorId)
       .lte('recorded_at', thirtyDaysAgo)
       .order('recorded_at', { ascending: false });
 
-    const oldByPlatform = new Map<string, any>();
+    const oldByPlatform = new Map<string, MetricsHistoryRow>();
     for (const row of oldMetrics || []) {
       if (!oldByPlatform.has(row.platform)) {
         oldByPlatform.set(row.platform, row);
@@ -70,15 +87,16 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
 
     for (const [platform, latest] of latestByPlatform) {
       const oldData = oldByPlatform.get(platform);
-      const growth = oldData && oldData.followers > 0
-        ? ((latest.followers - oldData.followers) / oldData.followers) * 100
-        : 0;
+      const growth =
+        oldData && oldData.followers > 0
+          ? ((latest.followers - oldData.followers) / oldData.followers) * 100
+          : 0;
 
       totalFollowers += latest.followers || 0;
       totalEngagement += latest.impressions_30d || 0;
 
       platforms.push({
-        platform: platform as any,
+        platform: platform as SupportedPlatform,
         followers: latest.followers || 0,
         engagement_rate: parseFloat(latest.engagement_rate) || 0,
         impressions_30d: latest.impressions_30d || 0,
@@ -96,7 +114,7 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
 
   async getContentComparison(creatorId: string, contentId: string): Promise<ContentComparison[]> {
     const { data: crossPosts, error } = await this.db
-      .from('cross_posts')
+      .from<CrossPostRow>('cross_posts')
       .select('platform, platform_post_id, published_at, metrics_json')
       .eq('creator_id', creatorId)
       .eq('content_id', contentId)
@@ -106,10 +124,10 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
       throw error;
     }
 
-    return (crossPosts || []).map((post: any) => {
+    return (crossPosts || []).map((post: CrossPostRow) => {
       const metrics = post.metrics_json || {};
       return {
-        platform: post.platform,
+        platform: post.platform as SupportedPlatform,
         platform_post_id: post.platform_post_id || '',
         views: metrics.views || 0,
         likes: metrics.likes || 0,
@@ -122,14 +140,17 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
   }
 
   async getROI(creatorId: string): Promise<PlatformROI[]> {
-    // Get latest metrics per platform
+    // Get latest metrics per platform (bounded to last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data: metrics } = await this.db
-      .from('platform_metrics_history')
+      .from<MetricsHistoryRow>('platform_metrics_history')
       .select('platform, impressions_30d, engagement_rate')
       .eq('creator_id', creatorId)
-      .order('recorded_at', { ascending: false });
+      .gte('recorded_at', thirtyDaysAgo)
+      .order('recorded_at', { ascending: false })
+      .limit(500);
 
-    const latestByPlatform = new Map<string, any>();
+    const latestByPlatform = new Map<string, MetricsHistoryRow>();
     for (const row of metrics || []) {
       if (!latestByPlatform.has(row.platform)) {
         latestByPlatform.set(row.platform, row);
@@ -139,7 +160,7 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
     // Get work patterns to estimate hours per platform
     // (For MVP, use a simple estimate based on cross-post count)
     const { data: crossPosts } = await this.db
-      .from('cross_posts')
+      .from<CrossPostRow>('cross_posts')
       .select('platform')
       .eq('creator_id', creatorId)
       .eq('status', 'published')
@@ -159,7 +180,7 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
       const estimatedHours = postCount * 0.5;
 
       roiList.push({
-        platform: platform as any,
+        platform: platform as SupportedPlatform,
         engagement_per_hour: estimatedHours > 0 ? Math.round(totalEngagement / estimatedHours) : 0,
         total_engagement_30d: totalEngagement,
         estimated_hours_30d: estimatedHours,
@@ -175,5 +196,4 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
 
     return roiList;
   }
-
 }

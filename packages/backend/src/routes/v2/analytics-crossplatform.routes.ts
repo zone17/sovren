@@ -4,10 +4,10 @@
  * EPIC-009: Aggregate cross-platform metrics
  */
 
-import { Response, NextFunction, Router } from 'express';
+import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator, AuthenticatedRequest } from '../../middleware/auth';
+import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { DistributionValidators } from '../../validators/distribution';
@@ -21,7 +21,8 @@ router.use(readOnlyRateLimiter);
 let _analyticsService: ICrossPlatformAnalyticsService | null = null;
 
 function getAnalyticsService(): ICrossPlatformAnalyticsService {
-  if (!_analyticsService) _analyticsService = container.resolve(TYPES.CrossPlatformAnalyticsService);
+  if (!_analyticsService)
+    _analyticsService = container.resolve(TYPES.CrossPlatformAnalyticsService);
   return _analyticsService;
 }
 
@@ -33,9 +34,9 @@ router.get(
   '/overview',
   authenticate,
   requireCreator,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await getAnalyticsService().getOverview(req.user.nostr_pubkey);
+      const data = await getAnalyticsService().getOverview(getAuthUser(req).nostr_pubkey);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -52,10 +53,10 @@ router.get(
   authenticate,
   requireCreator,
   validate({ params: DistributionValidators.contentIdParam }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await getAnalyticsService().getContentComparison(
-        req.user.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         req.params.contentId
       );
       res.json({ success: true, data });
@@ -73,9 +74,9 @@ router.get(
   '/roi',
   authenticate,
   requireCreator,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await getAnalyticsService().getROI(req.user.nostr_pubkey);
+      const data = await getAnalyticsService().getROI(getAuthUser(req).nostr_pubkey);
       res.json({ success: true, data });
     } catch (err) {
       next(err);

@@ -20,6 +20,11 @@ import { FingerprintService } from '../../services/provenance/FingerprintService
 import { AlertService } from '../../services/provenance/AlertService';
 import { DmcaService } from '../../services/provenance/DmcaService';
 
+/** Cast container-resolved DB to ISupabaseClient via unknown (safe DI pattern) */
+function asDb(resolved: unknown): ISupabaseClient {
+  return resolved as ISupabaseClient;
+}
+
 /**
  * Phase 7 Services Module
  * Creator Safety Net: Wellness (4 services) + Content Shield (4 services)
@@ -36,25 +41,25 @@ export class Phase7ServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.WellnessService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new WellnessService(db as ISupabaseClient, logger);
+      return new WellnessService(asDb(db), logger);
     });
 
     registry.registerSingletonFactory(TYPES.BurnoutScoringService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new BurnoutScoringService(db as ISupabaseClient, logger);
+      return new BurnoutScoringService(asDb(db), logger);
     });
 
     registry.registerSingletonFactory(TYPES.ScheduleService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new ScheduleService(db as ISupabaseClient, logger);
+      return new ScheduleService(asDb(db), logger);
     });
 
     registry.registerSingletonFactory(TYPES.BoundaryService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new BoundaryService(db as ISupabaseClient, logger);
+      return new BoundaryService(asDb(db), logger);
     });
 
     // ===========================
@@ -64,25 +69,25 @@ export class Phase7ServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.ProvenanceService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new ProvenanceService(db as ISupabaseClient, logger);
+      return new ProvenanceService(asDb(db), logger);
     });
 
     registry.registerSingletonFactory(TYPES.FingerprintService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new FingerprintService(db as ISupabaseClient, logger);
+      return new FingerprintService(asDb(db), logger);
     });
 
     registry.registerSingletonFactory(TYPES.AlertService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new AlertService(db as ISupabaseClient, logger);
+      return new AlertService(asDb(db), logger);
     });
 
     registry.registerSingletonFactory(TYPES.DmcaService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new DmcaService(db as ISupabaseClient, logger);
+      return new DmcaService(asDb(db), logger);
     });
   }
 }

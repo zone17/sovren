@@ -4,10 +4,10 @@
  * EPIC-009: Cross-post, repurpose, status
  */
 
-import { Response, NextFunction, Router } from 'express';
+import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator, AuthenticatedRequest } from '../../middleware/auth';
+import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { DistributionValidators } from '../../validators/distribution';
@@ -44,9 +44,9 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ body: DistributionValidators.publishBody }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await getCrossPostService().publish(req.user.nostr_pubkey, req.body);
+      const result = await getCrossPostService().publish(getAuthUser(req).nostr_pubkey, req.body);
       res.status(202).json({ success: true, data: result });
     } catch (err) {
       next(err);
@@ -63,10 +63,10 @@ router.get(
   authenticate,
   requireCreator,
   validate({ params: DistributionValidators.contentIdParam }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await getCrossPostService().getStatus(
-        req.user.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         req.params.contentId
       );
       res.json({ success: true, data });
@@ -86,9 +86,12 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ params: DistributionValidators.crossPostIdParam }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await getCrossPostService().cancel(req.user.nostr_pubkey, req.params.crossPostId);
+      const data = await getCrossPostService().cancel(
+        getAuthUser(req).nostr_pubkey,
+        req.params.crossPostId
+      );
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -106,10 +109,10 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ body: DistributionValidators.repurposeBody }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await getRepurposingService().repurpose(
-        req.user.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         req.body.content_id,
         req.body.target_platforms
       );
@@ -129,10 +132,10 @@ router.get(
   authenticate,
   requireCreator,
   validate({ params: DistributionValidators.contentIdParam }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await getRepurposingService().getRepurposed(
-        req.user.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         req.params.contentId
       );
       res.json({ success: true, data });
@@ -152,10 +155,10 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   validate({ params: DistributionValidators.repurposedIdParam }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await getRepurposingService().approve(
-        req.user.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         req.params.id
       );
       res.json({ success: true, data });

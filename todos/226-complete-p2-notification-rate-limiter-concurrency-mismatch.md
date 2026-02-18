@@ -1,8 +1,11 @@
 # Todo 226 — P2: Rate limiter and concurrency mismatch in notification worker
 
 ## Priority: P2 (Performance / Correctness)
+
 ## Status: pending
+
 ## Found by: performance-review agent
+
 ## Commit: d928918
 
 ## Description
@@ -35,4 +38,5 @@ The rate limit of 50 notifications/minute means during bulk notification sends (
 3. Make the rate limit configurable (already done via env vars — good)
 
 ## File
+
 `packages/backend/src/services/NotificationService.ts:742-749`

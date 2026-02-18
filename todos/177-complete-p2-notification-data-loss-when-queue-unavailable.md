@@ -3,6 +3,7 @@
 ## Priority: P2 (Important)
 
 ## Source
+
 PR #83 — Review Agent: data-integrity-guardian
 
 ## Description
@@ -34,9 +35,11 @@ Similarly, the `initializeQueue()` method (line 728-733) gracefully degrades to 
 ## Fix
 
 Options (in order of preference):
+
 1. **Fall back to in-memory queue** when BullMQ is unavailable (keep the old array-based queue as degraded mode)
 2. **Throw an error** instead of silently dropping, so callers know the retry failed
 3. **Log at ERROR level** (not WARN) and emit a metric/event so monitoring can detect notification loss
 
 ## Impact
+
 Data integrity — notifications silently lost when Redis/BullMQ unavailable.

@@ -42,5 +42,6 @@ The extra `options` parameter on `MastodonAdapter` is not in the interface contr
 ## Recommended Fix
 
 Either:
+
 1. Add `options?: { instance_url?: string }` to the `IPlatformAdapter` interface's `refreshTokens` method (and `BasePlatformAdapter`)
 2. Or store the `instance_url` during `exchangeCodeForTokens` and reuse it in `refreshTokens` without requiring it as a parameter

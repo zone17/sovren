@@ -1,7 +1,9 @@
 # Todo 256: /metrics/health always returns "healthy" — no actual health checks (P2)
 
 ## Priority: P2 — Correctness / Agent Reliability
+
 ## Found in: review-agent-native (commit d928918)
+
 ## File: packages/backend/src/routes/v1/metrics.routes.ts
 
 ## Problem
@@ -25,15 +27,19 @@ The existing health endpoints (`/health`, `/ready`, `/live`) at the root level a
 ## Fix
 
 At minimum, add a `checks` object with database reachability:
+
 ```ts
 const checks = {
   database: await pingDatabase(), // returns { status: 'up'|'down', latencyMs }
-  queue: await pingRedis(),       // returns { status: 'up'|'down', latencyMs }
+  queue: await pingRedis(), // returns { status: 'up'|'down', latencyMs }
 };
-const overallStatus = Object.values(checks).every(c => c.status === 'up') ? 'healthy' : 'degraded';
+const overallStatus = Object.values(checks).every((c) => c.status === 'up')
+  ? 'healthy'
+  : 'degraded';
 ```
 
 Alternatively, proxy the existing `/detailed` health endpoint data through the v1 JSON envelope.
 
 ## Files to Change
+
 - `packages/backend/src/routes/v1/metrics.routes.ts` (lines 69-84)

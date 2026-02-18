@@ -5,6 +5,7 @@
  */
 
 import type { IServiceRegistry, IServiceModule } from '../../interfaces/shared/IServiceRegistry';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import { TYPES } from '../types';
 
@@ -14,6 +15,11 @@ import { CrossPostService } from '../../services/distribution/CrossPostService';
 import { RepurposingService } from '../../services/distribution/RepurposingService';
 import { UnifiedInboxService } from '../../services/distribution/UnifiedInboxService';
 import { CrossPlatformAnalyticsService } from '../../services/distribution/CrossPlatformAnalyticsService';
+
+/** Cast container-resolved DB to ISupabaseClient via unknown (safe DI pattern) */
+function asDb(resolved: unknown): ISupabaseClient {
+  return resolved as ISupabaseClient;
+}
 
 /**
  * Phase 8 Services Module
@@ -31,7 +37,7 @@ export class Phase8ServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.PlatformConnectionService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new PlatformConnectionService(db, logger);
+      return new PlatformConnectionService(asDb(db), logger);
     });
 
     registry.registerSingletonFactory(TYPES.CrossPostService, (container) => {
@@ -39,27 +45,40 @@ export class Phase8ServicesModule implements IServiceModule {
       const queueService = container.resolve(TYPES.QueueService);
       const platformService = container.resolve(TYPES.PlatformConnectionService);
       const logger = container.resolve(TYPES.Logger);
-      return new CrossPostService(db, queueService, platformService as IPlatformConnectionService, logger);
+      return new CrossPostService(
+        asDb(db),
+        queueService,
+        platformService as IPlatformConnectionService,
+        logger
+      );
     });
 
     registry.registerSingletonFactory(TYPES.RepurposingService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new RepurposingService(db, logger);
+      return new RepurposingService(asDb(db), logger);
     });
 
     registry.registerSingletonFactory(TYPES.UnifiedInboxService, (container) => {
       const db = container.resolve(TYPES.Database);
       const platformService = container.resolve(TYPES.PlatformConnectionService);
       const logger = container.resolve(TYPES.Logger);
-      return new UnifiedInboxService(db, platformService as IPlatformConnectionService, logger);
+      return new UnifiedInboxService(
+        asDb(db),
+        platformService as IPlatformConnectionService,
+        logger
+      );
     });
 
     registry.registerSingletonFactory(TYPES.CrossPlatformAnalyticsService, (container) => {
       const db = container.resolve(TYPES.Database);
       const platformService = container.resolve(TYPES.PlatformConnectionService);
       const logger = container.resolve(TYPES.Logger);
-      return new CrossPlatformAnalyticsService(db, platformService as IPlatformConnectionService, logger);
+      return new CrossPlatformAnalyticsService(
+        asDb(db),
+        platformService as IPlatformConnectionService,
+        logger
+      );
     });
   }
 }

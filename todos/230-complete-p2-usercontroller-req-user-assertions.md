@@ -19,6 +19,7 @@ Todo 217 introduced `AuthenticatedRequest` and `getAuthUser()` to eliminate non-
 ## Fix
 
 Either:
+
 1. Use `getAuthUser(req)` in each handler (preferred for v1 controller pattern), or
 2. Type the handler parameter as `AuthenticatedRequest` if the route is behind `authenticate` middleware
 

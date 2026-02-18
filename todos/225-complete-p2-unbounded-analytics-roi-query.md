@@ -1,8 +1,11 @@
 # Todo 225 — P2: Unbounded query in CrossPlatformAnalyticsService.getROI()
 
 ## Priority: P2 (Performance)
+
 ## Status: pending
+
 ## Found by: performance-review agent
+
 ## Commit: d928918
 
 ## Description
@@ -43,4 +46,5 @@ const { data: metrics } = await this.db
 ```
 
 ## File
+
 `packages/backend/src/services/distribution/CrossPlatformAnalyticsService.ts:126-137`

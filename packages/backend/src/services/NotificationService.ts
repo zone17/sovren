@@ -22,11 +22,10 @@ import type {
   NotificationMetrics,
   BulkNotificationRequest,
   BulkNotificationResult,
-  NotificationHistory
+  NotificationHistory,
 } from '../types/notification';
 
-import { EventEmitter } from 'events';
-import * as webpush from 'web-push';
+// EventEmitter and webpush imported when push notification channel is implemented
 import { createHash } from 'crypto';
 import type { JobContext } from '../interfaces/queue/IJobProcessor';
 
@@ -45,7 +44,10 @@ const NOTIFICATION_QUEUE = 'notifications';
 /** Rate limit: max notifications per window (configurable via env) */
 const NOTIFICATION_RATE_LIMIT_MAX = parseInt(process.env.NOTIFICATION_RATE_LIMIT_MAX || '50', 10);
 /** Rate limit window in milliseconds (default: 60 seconds) */
-const NOTIFICATION_RATE_LIMIT_DURATION = parseInt(process.env.NOTIFICATION_RATE_LIMIT_DURATION || '60000', 10);
+const NOTIFICATION_RATE_LIMIT_DURATION = parseInt(
+  process.env.NOTIFICATION_RATE_LIMIT_DURATION || '60000',
+  10
+);
 
 /**
  * Concrete implementation of NotificationService
@@ -86,8 +88,8 @@ export class NotificationService implements INotificationService {
         email: { sent: 0, failed: 0 },
         push: { sent: 0, failed: 0 },
         inApp: { sent: 0, failed: 0 },
-        sms: { sent: 0, failed: 0 }
-      }
+        sms: { sent: 0, failed: 0 },
+      },
     };
 
     // Initialize channel handlers
@@ -110,7 +112,7 @@ export class NotificationService implements INotificationService {
         return {
           success: false,
           error: 'User has disabled notifications',
-          channels: []
+          channels: [],
         };
       }
 
@@ -121,7 +123,7 @@ export class NotificationService implements INotificationService {
           return {
             success: false,
             error: `User has disabled ${notification.type} notifications`,
-            channels: []
+            channels: [],
           };
         }
       }
@@ -134,7 +136,7 @@ export class NotificationService implements INotificationService {
         return {
           success: false,
           error: 'Duplicate notification',
-          channels: []
+          channels: [],
         };
       }
 
@@ -172,7 +174,7 @@ export class NotificationService implements INotificationService {
               notificationId: notification.id,
               userId: notification.userId,
               channel,
-              type: notification.type
+              type: notification.type,
             });
 
             // Cache for deduplication
@@ -196,7 +198,7 @@ export class NotificationService implements INotificationService {
           results.push({
             success: false,
             error: error.message,
-            channels: [channel]
+            channels: [channel],
           });
         }
       }
@@ -206,7 +208,7 @@ export class NotificationService implements INotificationService {
           success: true,
           channels: [successfulChannel],
           messageId: notification.id,
-          deliveredAt: new Date()
+          deliveredAt: new Date(),
         };
       }
 
@@ -218,7 +220,7 @@ export class NotificationService implements INotificationService {
           success: false,
           error: 'All channels failed, added to retry queue',
           channels,
-          queued: true
+          queued: true,
         };
       }
 
@@ -227,16 +229,15 @@ export class NotificationService implements INotificationService {
       return {
         success: false,
         error: 'All channels failed',
-        channels
+        channels,
       };
-
     } catch (error) {
       this.logger.error('Failed to send notification', error);
 
       return {
         success: false,
         error: error.message,
-        channels: []
+        channels: [],
       };
     }
   }
@@ -267,7 +268,7 @@ export class NotificationService implements INotificationService {
 
         // Send batch in parallel
         const batchResults = await Promise.allSettled(
-          batch.map(notification => this.send(notification))
+          batch.map((notification) => this.send(notification))
         );
 
         // Collect results
@@ -278,29 +279,29 @@ export class NotificationService implements INotificationService {
             results.push({
               success: false,
               error: result.reason?.message || 'Unknown error',
-              channels: []
+              channels: [],
             });
           }
         }
 
         // Delay between batches
         if (i + batchSize < notifications.length) {
-          await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
+          await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
         }
       }
     }
 
     // Calculate summary
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-    const queued = results.filter(r => r.queued).length;
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+    const queued = results.filter((r) => r.queued).length;
 
     return {
       totalSent: successful,
       totalFailed: failed,
       totalQueued: queued,
       results,
-      duration: Date.now() - Date.now() // Would track actual duration
+      duration: Date.now() - Date.now(), // Would track actual duration
     };
   }
 
@@ -326,9 +327,9 @@ export class NotificationService implements INotificationService {
           enabled: false,
           start: '22:00',
           end: '08:00',
-          timezone: 'UTC'
+          timezone: 'UTC',
         },
-        types: {}
+        types: {},
       };
     }
 
@@ -366,7 +367,7 @@ export class NotificationService implements INotificationService {
     // Emit event
     await this.eventBus.emit('notification.preferencesUpdated', {
       userId,
-      preferences: updated
+      preferences: updated,
     });
 
     this.logger.info(`Notification preferences updated for user: ${userId}`);
@@ -387,20 +388,15 @@ export class NotificationService implements INotificationService {
       status: 'delivered',
       deliveredAt: new Date(),
       channel: 'email',
-      events: []
+      events: [],
     };
   }
 
-  async getHistory(
-    userId: string,
-    limit: number = 50
-  ): Promise<NotificationHistory[]> {
+  async getHistory(userId: string, limit: number = 50): Promise<NotificationHistory[]> {
     // In production, this would query a database
     // For now, return from cache if available
     if (this.cache) {
-      const history = await this.cache.get<NotificationHistory[]>(
-        `notification:history:${userId}`
-      );
+      const history = await this.cache.get<NotificationHistory[]>(`notification:history:${userId}`);
       return history?.slice(0, limit) || [];
     }
 
@@ -414,16 +410,12 @@ export class NotificationService implements INotificationService {
     // Emit event
     await this.eventBus.emit('notification.read', {
       notificationId,
-      readAt: new Date()
+      readAt: new Date(),
     });
 
     // Update in cache
     if (this.cache) {
-      await this.cache.set(
-        `notification:read:${notificationId}`,
-        { readAt: new Date() },
-        86400
-      );
+      await this.cache.set(`notification:read:${notificationId}`, { readAt: new Date() }, 86400);
     }
   }
 
@@ -437,13 +429,13 @@ export class NotificationService implements INotificationService {
     if (this.queueService) {
       const queue = this.queueService.getQueue(NOTIFICATION_QUEUE);
       if (queue) {
-        pending = await queue.getWaitingCount() + await queue.getActiveCount();
+        pending = (await queue.getWaitingCount()) + (await queue.getActiveCount());
       }
     }
 
     return {
       ...this.metrics,
-      pending
+      pending,
     };
   }
 
@@ -486,18 +478,18 @@ export class NotificationService implements INotificationService {
             to: notification.email || '',
             subject: notification.title,
             text: notification.body,
-            html: notification.data?.html
+            html: notification.data?.html,
           });
 
           return {
             success: result.success,
             error: result.error,
             channels: ['email'],
-            messageId: result.messageId
+            messageId: result.messageId,
           };
         },
         isAvailable: async () => true,
-        getPriority: () => 1
+        getPriority: () => 1,
       });
     }
 
@@ -508,11 +500,11 @@ export class NotificationService implements INotificationService {
         return {
           success: true,
           channels: ['push'],
-          messageId: notification.id
+          messageId: notification.id,
         };
       },
       isAvailable: async () => true,
-      getPriority: () => 2
+      getPriority: () => 2,
     });
 
     // In-app notification handler
@@ -530,25 +522,25 @@ export class NotificationService implements INotificationService {
         return {
           success: true,
           channels: ['inApp'],
-          messageId: notification.id
+          messageId: notification.id,
         };
       },
       isAvailable: async () => true,
-      getPriority: () => 3
+      getPriority: () => 3,
     });
 
     // SMS handler (stub)
     this.channelHandlers.set('sms', {
-      send: async (notification) => {
+      send: async (_notification) => {
         // Would integrate with Twilio or similar
         return {
           success: false,
           error: 'SMS not configured',
-          channels: ['sms']
+          channels: ['sms'],
         };
       },
       isAvailable: async () => false,
-      getPriority: () => 4
+      getPriority: () => 4,
     });
   }
 
@@ -576,7 +568,7 @@ export class NotificationService implements INotificationService {
     // Check quiet hours
     if (preferences.quiet?.enabled && this.isQuietHours(preferences.quiet)) {
       // Filter out noisy channels during quiet hours
-      channels = channels.filter(c => c === 'email' || c === 'inApp');
+      channels = channels.filter((c) => c === 'email' || c === 'inApp');
     }
 
     // Sort by priority
@@ -623,7 +615,7 @@ export class NotificationService implements INotificationService {
       userId: notification.userId,
       title: notification.title,
       body: notification.body,
-      type: notification.type
+      type: notification.type,
     });
 
     return createHash('md5').update(data).digest('hex');
@@ -643,7 +635,7 @@ export class NotificationService implements INotificationService {
       title: this.renderTemplate(template.title, notification.data || {}),
       body: this.renderTemplate(template.body, notification.data || {}),
       channels: notification.channels || template.channels,
-      priority: notification.priority || template.priority
+      priority: notification.priority || template.priority,
     };
   }
 
@@ -666,12 +658,12 @@ export class NotificationService implements INotificationService {
       channel,
       status,
       sentAt: new Date(),
-      type: notification.type
+      type: notification.type,
     };
 
     if (this.cache) {
       const key = `notification:history:${notification.userId}`;
-      const existing = await this.cache.get<NotificationHistory[]>(key) || [];
+      const existing = (await this.cache.get<NotificationHistory[]>(key)) || [];
       existing.unshift(history);
 
       // Keep last 100 items
@@ -688,7 +680,25 @@ export class NotificationService implements INotificationService {
     channels: NotificationChannel[]
   ): Promise<void> {
     if (!this.queueService) {
-      this.logger.warn('QueueService not available, dropping notification retry');
+      // ERROR level: this is data loss, not a transient warning.
+      // Callers expecting retry behaviour will silently lose the notification.
+      this.logger.error(
+        '[NotificationService] QueueService unavailable — notification retry DROPPED (data loss)',
+        {
+          notificationId: notification.id,
+          userId: notification.userId,
+          channels,
+        }
+      );
+
+      // Emit a countable event so monitoring dashboards/alerting can track drops.
+      await this.eventBus.emit('notification.queueUnavailable', {
+        notificationId: notification.id,
+        userId: notification.userId,
+        channels,
+        droppedAt: new Date(),
+      });
+
       return;
     }
 
@@ -738,16 +748,44 @@ export class NotificationService implements INotificationService {
     // keeps failed jobs — no separate DLQ queue needed)
     this.queueService.createQueue(NOTIFICATION_QUEUE);
 
-    // Register worker processor with rate limiting to prevent thundering herd
-    this.queueService.registerProcessor<{ notification: Notification; channels: NotificationChannel[] }>({
+    // Register worker processor with rate limiting to prevent thundering herd.
+    //
+    // RATE LIMITER BEHAVIOUR (BullMQ Redis-global):
+    // BullMQ's Worker `limiter` option is backed by Redis and is therefore
+    // GLOBAL across all worker instances sharing the same Redis connection —
+    // not per-process. A 50/min limit here means at most 50 jobs/min total,
+    // regardless of how many replicas are running. This is correct behaviour
+    // for thundering-herd protection.
+    //
+    // SENDБULK() INTERACTION:
+    // `sendBulk()` calls `this.send()` for each notification, which tries
+    // direct delivery first and only calls `addToQueue()` if ALL channels fail.
+    // Bulk notifications that succeed on direct delivery never enter the queue,
+    // so the BullMQ rate limiter only throttles retries. The in-method batching
+    // in sendBulk() (batchSize: 10, delayMs: 100) is therefore NOT redundant —
+    // it throttles direct delivery concurrency, while the BullMQ limiter throttles
+    // queue-based retries. Both limits can apply simultaneously to a single bulk
+    // send if the direct delivery fails, which is intentional conservative backpressure.
+    //
+    // CONCURRENCY NOTE:
+    // concurrency: 5 means 5 jobs processed in parallel per worker instance.
+    // Each job calls this.send() which loops channels sequentially, so at most
+    // 5 concurrent SMTP/push connections per worker. This is safe for typical
+    // email providers (most allow 10+ concurrent connections).
+    this.queueService.registerProcessor<{
+      notification: Notification;
+      channels: NotificationChannel[];
+    }>({
       name: 'notification-processor',
       queueName: NOTIFICATION_QUEUE,
       concurrency: 5,
       limiter: {
-        max: NOTIFICATION_RATE_LIMIT_MAX,
-        duration: NOTIFICATION_RATE_LIMIT_DURATION,
+        max: NOTIFICATION_RATE_LIMIT_MAX, // Configurable via NOTIFICATION_RATE_LIMIT_MAX env var (default: 50)
+        duration: NOTIFICATION_RATE_LIMIT_DURATION, // Configurable via NOTIFICATION_RATE_LIMIT_DURATION env var (default: 60000ms)
       },
-      process: async (job: JobContext<{ notification: Notification; channels: NotificationChannel[] }>) => {
+      process: async (
+        job: JobContext<{ notification: Notification; channels: NotificationChannel[] }>
+      ) => {
         const { notification, channels } = job.data;
         this.logger.info(`[NotificationService] Processing queued notification job ${job.id}`);
 
@@ -767,15 +805,31 @@ export class NotificationService implements INotificationService {
       onFailed: async (job, error) => {
         this.logger.error(`[NotificationService] Notification job ${job.id} failed permanently`, {
           error: error.message,
+          retries: job.attemptsMade,
+          notificationId: job.data.notification.id,
+          userId: job.data.notification.userId,
         });
 
         // Failed jobs are retained by BullMQ's built-in removeOnFail: { count: 5000 }
-        // (set in QueueService defaults) and visible via Bull Board — no manual DLQ needed.
-        await this.eventBus.emit('notification.permanentFailure', {
-          notification: job.data.notification,
-          error: error.message,
-          retries: job.attemptsMade,
-        });
+        // (set in QueueService defaults) and inspectable via Bull Board — no manual DLQ needed.
+        // The job data is NOT lost even if the event emission below fails.
+        try {
+          await this.eventBus.emit('notification.permanentFailure', {
+            notification: job.data.notification,
+            error: error.message,
+            retries: job.attemptsMade,
+          });
+        } catch (emitError) {
+          // Log at ERROR so this secondary failure is observable. The job data
+          // is still retained in BullMQ's failed set — this is not additional data loss.
+          this.logger.error(
+            '[NotificationService] Failed to emit notification.permanentFailure event',
+            {
+              jobId: job.id,
+              emitError: (emitError as Error).message,
+            }
+          );
+        }
       },
     });
 

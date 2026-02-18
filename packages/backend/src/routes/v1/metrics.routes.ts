@@ -8,11 +8,13 @@
  * All routes use /api/v1/metrics prefix
  */
 
-import { Request, Response, Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import { authenticate } from '../../middleware/auth';
 import { rateLimiters } from '../../middleware/rate-limit-middleware';
 import { getJsonMetrics } from '../../middleware/deployment-monitoring';
 import { createApiResponse } from '../../utils/api-response';
+import { getDatabase } from '../../config/database';
+import { getRedisClient, isRedisAvailable } from '../../lib/redis';
 
 const router = Router();
 
@@ -35,10 +37,14 @@ router.get(
   '/',
   authenticate,
   rateLimiters.content.read,
-  async (req: Request, res: Response) => {
-    const startTime = Date.now();
-    const metrics = await getJsonMetrics();
-    res.json(createApiResponse(req, { metrics }, startTime));
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const startTime = Date.now();
+      const metrics = await getJsonMetrics();
+      res.json(createApiResponse(req, metrics, startTime));
+    } catch (err) {
+      next(err);
+    }
   }
 );
 
@@ -61,29 +67,68 @@ router.get(
   '/health',
   authenticate,
   rateLimiters.content.read,
-  async (req: Request, res: Response) => {
-    const startTime = Date.now();
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const startTime = Date.now();
 
-    const memUsage = process.memoryUsage();
+      const memUsage = process.memoryUsage();
 
-    const health = {
-      status: 'healthy' as const,
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      memory: {
-        heapUsedMB: Math.round(memUsage.heapUsed / 1024 / 1024),
-        heapTotalMB: Math.round(memUsage.heapTotal / 1024 / 1024),
-        percentage: Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100),
-      },
-      process: {
-        pid: process.pid,
-        nodeVersion: process.version,
-      },
-    };
+      // Database health check
+      const dbCheckStart = Date.now();
+      let databaseStatus: { status: 'up' | 'down'; latencyMs: number };
+      try {
+        const db = getDatabase();
+        const healthy = await db.isHealthy();
+        databaseStatus = { status: healthy ? 'up' : 'down', latencyMs: Date.now() - dbCheckStart };
+      } catch {
+        databaseStatus = { status: 'down', latencyMs: Date.now() - dbCheckStart };
+      }
 
-    res.json(createApiResponse(req, health, startTime));
+      // Queue/Redis health check
+      const redisCheckStart = Date.now();
+      let queueStatus: { status: 'up' | 'down'; latencyMs: number };
+      try {
+        if (isRedisAvailable()) {
+          const client = getRedisClient();
+          await client.ping();
+          queueStatus = { status: 'up', latencyMs: Date.now() - redisCheckStart };
+        } else {
+          queueStatus = { status: 'down', latencyMs: Date.now() - redisCheckStart };
+        }
+      } catch {
+        queueStatus = { status: 'down', latencyMs: Date.now() - redisCheckStart };
+      }
+
+      const checks = {
+        database: databaseStatus,
+        queue: queueStatus,
+      };
+
+      const overallStatus = Object.values(checks).every((c) => c.status === 'up')
+        ? ('healthy' as const)
+        : ('degraded' as const);
+
+      const health = {
+        status: overallStatus,
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env.NODE_ENV || 'development',
+        memory: {
+          heapUsedMB: Math.round(memUsage.heapUsed / 1024 / 1024),
+          heapTotalMB: Math.round(memUsage.heapTotal / 1024 / 1024),
+          percentage: Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100),
+        },
+        process: {
+          nodeVersion: process.version,
+        },
+        checks,
+      };
+
+      res.json(createApiResponse(req, health, startTime));
+    } catch (err) {
+      next(err);
+    }
   }
 );
 

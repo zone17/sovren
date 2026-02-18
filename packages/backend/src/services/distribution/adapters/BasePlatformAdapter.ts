@@ -14,15 +14,33 @@ import type {
   PostMetrics,
 } from '@sovren/shared/types/distribution';
 import type { IPlatformAdapter, PlatformAdapterConfig } from './IPlatformAdapter';
+import { TTLCache } from '../../../utils/ttl-cache';
+
+/** TTL for PKCE verifiers: 10 minutes matches standard OAuth flow timeout */
+const PKCE_TTL_MS = 10 * 60 * 1000;
+const PKCE_MAX_ENTRIES = 1000;
 
 export abstract class BasePlatformAdapter implements IPlatformAdapter {
   abstract readonly platform: SupportedPlatform;
   abstract readonly constraints: ContentConstraints;
 
   protected readonly config: PlatformAdapterConfig;
+  /**
+   * Bounded TTL cache for PKCE code_verifier values.
+   * Entries expire after 10 minutes; max 1000 concurrent OAuth flows.
+   */
+  protected readonly pkceStore = new TTLCache<string, string>({
+    maxSize: PKCE_MAX_ENTRIES,
+    ttlMs: PKCE_TTL_MS,
+  });
 
   constructor(config: PlatformAdapterConfig) {
     this.config = config;
+  }
+
+  /** Release the PKCE store's background cleanup timer. Call on adapter shutdown. */
+  destroy(): void {
+    this.pkceStore.destroy();
   }
 
   // OAuth — must be implemented per platform
@@ -31,7 +49,10 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
     code: string,
     options?: { instance_url?: string; state?: string }
   ): Promise<OAuthTokens>;
-  abstract refreshTokens(refreshToken: string): Promise<OAuthTokens>;
+  abstract refreshTokens(
+    refreshToken: string,
+    options?: { instance_url?: string }
+  ): Promise<OAuthTokens>;
 
   async revokeTokens(_accessToken: string): Promise<void> {
     // Default no-op; override in adapters that support token revocation

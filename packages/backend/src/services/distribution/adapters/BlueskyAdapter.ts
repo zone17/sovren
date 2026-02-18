@@ -26,8 +26,6 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     max_video_length_seconds: 0,
   };
 
-  private readonly pkceStore = new Map<string, string>();
-
   constructor(config: PlatformAdapterConfig) {
     super(config);
   }

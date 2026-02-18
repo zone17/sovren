@@ -4,14 +4,17 @@
  * EPIC-009: Multi-platform inbox aggregation
  */
 
-import { Response, NextFunction, Router } from 'express';
+import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator, AuthenticatedRequest } from '../../middleware/auth';
+import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { DistributionValidators } from '../../validators/distribution';
-import type { IUnifiedInboxService } from '../../interfaces/distribution/IUnifiedInboxService';
+import type {
+  IUnifiedInboxService,
+  InboxQuery,
+} from '../../interfaces/distribution/IUnifiedInboxService';
 
 const router = Router();
 
@@ -36,16 +39,16 @@ router.get(
   authenticate,
   requireCreator,
   validate({ query: DistributionValidators.inboxQuery }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const query = {
-        platform: (req.query.platform as string) || 'all',
-        status: (req.query.status as string) || 'unread',
+      const query: InboxQuery = {
+        platform: ((req.query.platform as string) || 'all') as InboxQuery['platform'],
+        status: ((req.query.status as string) || 'unread') as InboxQuery['status'],
         page: parseInt(req.query.page as string) || 1,
         limit: parseInt(req.query.limit as string) || 20,
       };
 
-      const result = await getInboxService().getMessages(req.user.nostr_pubkey, query as any);
+      const result = await getInboxService().getMessages(getAuthUser(req).nostr_pubkey, query);
       res.json({ success: true, data: result.messages, pagination: result.pagination });
     } catch (err) {
       next(err);
@@ -66,10 +69,10 @@ router.post(
     params: DistributionValidators.messageIdParam,
     body: DistributionValidators.replyBody,
   }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       await getInboxService().reply(
-        req.user.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         req.params.messageId,
         req.body.content
       );
@@ -90,10 +93,10 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   validate({ body: DistributionValidators.batchBody }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const updated = await getInboxService().batchAction(
-        req.user.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         req.body.message_ids,
         req.body.action
       );

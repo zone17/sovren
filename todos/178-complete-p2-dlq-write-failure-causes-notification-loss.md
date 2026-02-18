@@ -3,6 +3,7 @@
 ## Priority: P2 (Important)
 
 ## Source
+
 PR #83 — Review Agent: data-integrity-guardian
 
 ## Description
@@ -13,6 +14,7 @@ In the `onFailed` handler of the notification processor (`NotificationService.ts
 2. Emits a `notification.permanentFailure` event
 
 If step 1 fails (Redis down, DLQ queue not found, connection error), the error is caught by the outer `.catch()` in `QueueService.ts:108-112` and only logged. At this point:
+
 - The job is already removed from the main `notifications` queue (BullMQ removes it after max retries)
 - The DLQ write failed, so the job data is not in the DLQ either
 - The notification is permanently lost with only a log line as evidence
@@ -33,4 +35,5 @@ The `onFailed` callback itself could throw, which the QueueService catches and l
 **Note**: The default `removeOnFail: { count: 5000 }` in `QueueService.ts:41` means BullMQ already retains up to 5000 failed jobs. The manual DLQ is redundant if this default is relied upon. Clarify the intent.
 
 ## Impact
+
 Data integrity — failed notifications can be permanently lost if DLQ write fails.

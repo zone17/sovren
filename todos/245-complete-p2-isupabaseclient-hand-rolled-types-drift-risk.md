@@ -10,6 +10,7 @@
 The `ISupabaseClient` interface (`packages/backend/src/interfaces/shared/ISupabaseClient.ts`) was expanded from 2 lines to 55+ lines of hand-written `SupabaseQueryBuilder<T>` and `SupabaseFilterBuilder<T>` interfaces that attempt to replicate the Supabase PostgREST client API.
 
 This creates several issues:
+
 1. **Vendor type duplication**: `@supabase/supabase-js` already exports fully generic, battle-tested types. The hand-rolled version will drift as Supabase releases updates.
 2. **Incomplete API surface**: Missing methods (`textSearch`, `overlaps`, `match`, `csv`, etc.) and a duplicate `select()` method on `SupabaseFilterBuilder` that conflicts with `SupabaseQueryBuilder.select()`.
 3. **False safety**: `column: string` parameters remain stringly-typed -- no compile-time protection against nonexistent column names. The `any`-to-`Record<string, unknown>` swap provides minimal real value over a lint rule.

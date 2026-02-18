@@ -13,6 +13,7 @@ The `supabase/migrations/down/README.md` documents rollback order for only 6 scr
 - `20260217000100_add_updated_at_triggers_down.sql` (drops updated_at triggers)
 
 An operator following the README would execute rollbacks in this order:
+
 1. Foreign keys
 2. Drop tables
 

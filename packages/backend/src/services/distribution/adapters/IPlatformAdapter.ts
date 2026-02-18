@@ -27,7 +27,7 @@ export interface IPlatformAdapter {
   // OAuth
   getAuthorizationUrl(state: string, options?: { instance_url?: string }): string;
   exchangeCodeForTokens(code: string, options?: { instance_url?: string }): Promise<OAuthTokens>;
-  refreshTokens(refreshToken: string): Promise<OAuthTokens>;
+  refreshTokens(refreshToken: string, options?: { instance_url?: string }): Promise<OAuthTokens>;
   revokeTokens(accessToken: string): Promise<void>;
 
   // Publishing

@@ -7,7 +7,7 @@
 import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator, AuthenticatedRequest } from '../../middleware/auth';
+import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { DistributionValidators } from '../../validators/distribution';
@@ -53,11 +53,11 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ params: DistributionValidators.platformParam }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const platform = req.params.platform as SupportedPlatform;
       const result = await getPlatformService().initiateConnection(
-        req.user.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         platform,
         req.body
       );
@@ -78,7 +78,7 @@ router.get(
     params: DistributionValidators.platformParam,
     query: DistributionValidators.callbackQuery,
   }),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const platform = req.params.platform as SupportedPlatform;
       const { code, state } = req.query as { code: string; state: string };
@@ -105,10 +105,10 @@ router.delete(
   requireCreator,
   mutationRateLimiter,
   validate({ params: DistributionValidators.platformParam }),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const platform = req.params.platform as SupportedPlatform;
-      await getPlatformService().disconnect(req.user.nostr_pubkey, platform);
+      await getPlatformService().disconnect(getAuthUser(req).nostr_pubkey, platform);
       res.json({ success: true, data: { disconnected: true } });
     } catch (err) {
       next(err);
@@ -124,9 +124,9 @@ router.get(
   '/status',
   authenticate,
   requireCreator,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await getPlatformService().getStatus(req.user.nostr_pubkey);
+      const data = await getPlatformService().getStatus(getAuthUser(req).nostr_pubkey);
       res.json({ success: true, data });
     } catch (err) {
       next(err);

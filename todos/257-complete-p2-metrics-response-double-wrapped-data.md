@@ -1,17 +1,21 @@
 # Todo 257: Metrics endpoint double-wraps data field (P2)
 
 ## Priority: P2 — Agent DX / API Consistency
+
 ## Found in: review-agent-native (commit d928918)
+
 ## File: packages/backend/src/routes/v1/metrics.routes.ts
 
 ## Problem
 
 The `GET /api/v1/metrics` handler calls:
+
 ```ts
 res.json(createApiResponse(req, { metrics }, startTime));
 ```
 
 `createApiResponse` wraps the second argument in `{ success: true, data: <arg>, metadata: {...} }`. This produces:
+
 ```json
 {
   "success": true,
@@ -36,4 +40,5 @@ The `/metrics/health` endpoint does this correctly — passing the `health` obje
 Change to `createApiResponse(req, metrics, startTime)` to match the health endpoint pattern.
 
 ## Files to Change
+
 - `packages/backend/src/routes/v1/metrics.routes.ts` (line 41)
