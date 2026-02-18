@@ -21,6 +21,8 @@ import { registerPaymentServices } from './container/bindings/payment.bindings';
 import { registerControllers } from './container/bindings/controller.bindings';
 import { registerPhase7Services } from './container/bindings/phase7.bindings';
 import { registerPhase8Services } from './container/bindings/phase8.bindings';
+import { registerCommunityServices } from './container/bindings/community.bindings';
+import { registerFinanceServices } from './container/bindings/finance.bindings';
 import { registerQueueServices } from './container/bindings/queue.bindings';
 
 /**
@@ -94,6 +96,8 @@ export async function bootstrapApplication(
   registerPaymentServices(registry);
   registerPhase7Services(registry);
   registerPhase8Services(registry);
+  registerCommunityServices(registry);
+  registerFinanceServices(registry);
   registerQueueServices(registry);
   registerControllers(registry);
 
@@ -237,10 +241,14 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   registry.registerSingletonFactory(TYPES.Database, (_container) => {
     return {
       query: async (_sql: string, _params: any[]) => {
-        throw new Error('Database not configured — resolve TYPES.Database with a real implementation');
+        throw new Error(
+          'Database not configured — resolve TYPES.Database with a real implementation'
+        );
       },
       transaction: async (_callback: any) => {
-        throw new Error('Database not configured — resolve TYPES.Database with a real implementation');
+        throw new Error(
+          'Database not configured — resolve TYPES.Database with a real implementation'
+        );
       },
     };
   });

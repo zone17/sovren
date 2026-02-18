@@ -2,7 +2,7 @@
  * API v2 Route Aggregator
  *
  * Combines all v2 API routes into a single router
- * Phase 7: Creator Safety Net + Phase 8: Multi-Platform Hub
+ * Phase 7: Creator Safety Net + Phase 8: Multi-Platform Hub + Wave 2
  */
 
 import { Router } from 'express';
@@ -12,6 +12,16 @@ import platformsRoutes from './platforms.routes';
 import distributeRoutes from './distribute.routes';
 import inboxRoutes from './inbox.routes';
 import crossPlatformAnalyticsRoutes from './analytics-crossplatform.routes';
+// EPIC-010: Creator Network
+import circlesRoutes from './circles.routes';
+import mentorshipRoutes from './mentorship.routes';
+import collaborationRoutes from './collaboration.routes';
+import marketplaceRoutes from './marketplace.routes';
+// EPIC-011: Business Manager
+import contractRoutes from './business-contracts.routes';
+import invoiceRoutes from './business-invoices.routes';
+import revenueRoutes from './business-revenue.routes';
+import taxRoutes from './business-tax.routes';
 
 const router = Router();
 
@@ -27,6 +37,18 @@ router.use('/distribute', distributeRoutes);
 router.use('/inbox', inboxRoutes);
 router.use('/analytics/cross-platform', crossPlatformAnalyticsRoutes);
 
+// EPIC-010: Creator Network
+router.use('/circles', circlesRoutes);
+router.use('/mentorship', mentorshipRoutes);
+router.use('/content', collaborationRoutes);
+router.use('/marketplace', marketplaceRoutes);
+
+// EPIC-011: Business Manager
+router.use('/business/contracts', contractRoutes);
+router.use('/business/invoices', invoiceRoutes);
+router.use('/business/revenue', revenueRoutes);
+router.use('/business/tax', taxRoutes);
+
 /**
  * API v2 Info Endpoint
  */
@@ -36,7 +58,7 @@ router.get('/', (req, res) => {
     data: {
       version: 'v2',
       name: 'Sovren API',
-      description: 'Creator Safety Net — Wellness, Content Shield & Multi-Platform Hub',
+      description: 'Creator Safety Net — Wellness, Content Shield, Multi-Platform Hub & Wave 2',
       endpoints: {
         wellness: '/api/v2/wellness',
         shield: '/api/v2/shield',
@@ -44,6 +66,14 @@ router.get('/', (req, res) => {
         distribute: '/api/v2/distribute',
         inbox: '/api/v2/inbox',
         analytics_crossplatform: '/api/v2/analytics/cross-platform',
+        circles: '/api/v2/circles',
+        mentorship: '/api/v2/mentorship',
+        collaboration: '/api/v2/content',
+        marketplace: '/api/v2/marketplace',
+        business_contracts: '/api/v2/business/contracts',
+        business_invoices: '/api/v2/business/invoices',
+        business_revenue: '/api/v2/business/revenue',
+        business_tax: '/api/v2/business/tax',
       },
       timestamp: new Date().toISOString(),
     },

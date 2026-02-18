@@ -68,6 +68,22 @@ import type { IRepurposingService } from '../interfaces/distribution/IRepurposin
 import type { IUnifiedInboxService } from '../interfaces/distribution/IUnifiedInboxService';
 import type { ICrossPlatformAnalyticsService } from '../interfaces/distribution/ICrossPlatformAnalyticsService';
 
+// EPIC-009B: Unified Inbox Polling + NOSTR Reply
+import type { IInboxPollingService } from '../interfaces/distribution/IInboxPollingService';
+import type { INostrReplyAdapter } from '../interfaces/distribution/INostrReplyAdapter';
+
+// EPIC-010: Creator Network (Community)
+import type { ICreatorCircleService } from '../interfaces/community/ICreatorCircleService';
+import type { IMentorshipService } from '../interfaces/community/IMentorshipService';
+import type { ICollaborativeContentService } from '../interfaces/community/ICollaborativeContentService';
+import type { IMarketplaceService } from '../interfaces/community/IMarketplaceService';
+
+// EPIC-011: Business Manager (Finance)
+import type { IContractService } from '../interfaces/finance/IContractService';
+import type { IBusinessInvoiceService } from '../interfaces/finance/IBusinessInvoiceService';
+import type { IRevenueService } from '../interfaces/finance/IRevenueService';
+import type { ITaxService } from '../interfaces/finance/ITaxService';
+
 /**
  * Service type identifiers organized by domain
  */
@@ -80,11 +96,23 @@ export const TYPES = {
    * Core DI Infrastructure
    */
   ServiceContainer: new ServiceToken<IServiceContainer>('ServiceContainer', 'Main DI container'),
-  ServiceFactory: new ServiceToken<Record<string, unknown>>('ServiceFactory', 'Service factory orchestrator'),
+  ServiceFactory: new ServiceToken<Record<string, unknown>>(
+    'ServiceFactory',
+    'Service factory orchestrator'
+  ),
   EventBusService: new ServiceToken<IEventBus>('EventBusService', 'Central event bus'),
-  RepositoryFactory: new ServiceToken<Record<string, unknown>>('RepositoryFactory', 'Repository factory'),
-  MigrationService: new ServiceToken<Record<string, unknown>>('MigrationService', 'Database migration service'),
-  DependencyAnalyzer: new ServiceToken<Record<string, unknown>>('DependencyAnalyzer', 'Dependency graph analyzer'),
+  RepositoryFactory: new ServiceToken<Record<string, unknown>>(
+    'RepositoryFactory',
+    'Repository factory'
+  ),
+  MigrationService: new ServiceToken<Record<string, unknown>>(
+    'MigrationService',
+    'Database migration service'
+  ),
+  DependencyAnalyzer: new ServiceToken<Record<string, unknown>>(
+    'DependencyAnalyzer',
+    'Dependency graph analyzer'
+  ),
 
   // ======================
   // PHASE 2: Shared Services (4 services)
@@ -240,10 +268,7 @@ export const TYPES = {
     'AlertService',
     'Copy detection alert CRUD and status transitions'
   ),
-  DmcaService: new ServiceToken<IDmcaService>(
-    'DmcaService',
-    'DMCA report generation (JSON + PDF)'
-  ),
+  DmcaService: new ServiceToken<IDmcaService>('DmcaService', 'DMCA report generation (JSON + PDF)'),
 
   // ======================
   // PHASE 8: Multi-Platform Hub (5 services, EPIC-009)
@@ -280,10 +305,7 @@ export const TYPES = {
   /**
    * BullMQ Queue Service (ADR-022)
    */
-  QueueService: new ServiceToken<IQueueService>(
-    'QueueService',
-    'BullMQ job queue management'
-  ),
+  QueueService: new ServiceToken<IQueueService>('QueueService', 'BullMQ job queue management'),
 
   // ======================
   // Supporting Infrastructure
@@ -301,8 +323,14 @@ export const TYPES = {
    * Repositories (Data Access Layer)
    */
   UserRepository: new ServiceToken<Record<string, unknown>>('UserRepository', 'User data access'),
-  ContentRepository: new ServiceToken<Record<string, unknown>>('ContentRepository', 'Content data access'),
-  PaymentRepository: new ServiceToken<Record<string, unknown>>('PaymentRepository', 'Payment data access'),
+  ContentRepository: new ServiceToken<Record<string, unknown>>(
+    'ContentRepository',
+    'Content data access'
+  ),
+  PaymentRepository: new ServiceToken<Record<string, unknown>>(
+    'PaymentRepository',
+    'Payment data access'
+  ),
   SubscriptionRepository: new ServiceToken<Record<string, unknown>>(
     'SubscriptionRepository',
     'Subscription data access'
@@ -319,18 +347,30 @@ export const TYPES = {
     'LightningService',
     'Bitcoin Lightning Network integration'
   ),
-  NostrService: new ServiceToken<Record<string, unknown>>('NostrService', 'NOSTR protocol integration'),
-  ElasticsearchService: new ServiceToken<Record<string, unknown>>('ElasticsearchService', 'Elasticsearch client'),
+  NostrService: new ServiceToken<Record<string, unknown>>(
+    'NostrService',
+    'NOSTR protocol integration'
+  ),
+  ElasticsearchService: new ServiceToken<Record<string, unknown>>(
+    'ElasticsearchService',
+    'Elasticsearch client'
+  ),
 
   /**
    * Middleware & Utilities
    */
-  ValidationService: new ServiceToken<Record<string, unknown>>('ValidationService', 'Input validation'),
+  ValidationService: new ServiceToken<Record<string, unknown>>(
+    'ValidationService',
+    'Input validation'
+  ),
   AuthenticationService: new ServiceToken<IUserAuthenticationService>(
     'AuthenticationService',
     'Authentication and authorization'
   ),
-  RateLimitService: new ServiceToken<Record<string, unknown>>('RateLimitService', 'API rate limiting'),
+  RateLimitService: new ServiceToken<Record<string, unknown>>(
+    'RateLimitService',
+    'API rate limiting'
+  ),
 
   // ======================
   // CONTROLLERS (API Layer)
@@ -352,6 +392,58 @@ export const TYPES = {
   PaymentController: new ServiceToken<PaymentController>(
     'PaymentController',
     'Payment API controller'
+  ),
+
+  // ======================
+  // WAVE 2: EPIC-009B (Unified Inbox Polling)
+  // ======================
+  InboxPollingService: new ServiceToken<IInboxPollingService>(
+    'InboxPollingService',
+    'BullMQ batch polling for unified inbox'
+  ),
+  NostrReplyAdapter: new ServiceToken<INostrReplyAdapter>(
+    'NostrReplyAdapter',
+    'NOSTR kind:1 reply with NIP-10 threading'
+  ),
+
+  // ======================
+  // WAVE 2: EPIC-010 (Creator Network)
+  // ======================
+  CreatorCircleService: new ServiceToken<ICreatorCircleService>(
+    'CreatorCircleService',
+    'Creator circles and community management'
+  ),
+  MentorshipService: new ServiceToken<IMentorshipService>(
+    'MentorshipService',
+    'Mentorship matching and tracking'
+  ),
+  CollaborativeContentService: new ServiceToken<ICollaborativeContentService>(
+    'CollaborativeContentService',
+    'Co-authoring with revenue splits'
+  ),
+  MarketplaceService: new ServiceToken<IMarketplaceService>(
+    'MarketplaceService',
+    'Creator marketplace with Lightning escrow'
+  ),
+
+  // ======================
+  // WAVE 2: EPIC-011 (Business Manager)
+  // ======================
+  ContractService: new ServiceToken<IContractService>(
+    'ContractService',
+    'Contract templates and red flag analysis'
+  ),
+  BusinessInvoiceService: new ServiceToken<IBusinessInvoiceService>(
+    'BusinessInvoiceService',
+    'Business invoicing with LNURL-pay'
+  ),
+  RevenueService: new ServiceToken<IRevenueService>(
+    'RevenueService',
+    'Revenue tracking and diversification'
+  ),
+  TaxService: new ServiceToken<ITaxService>(
+    'TaxService',
+    'Tax preparation and expense categorization'
   ),
 } as const;
 
@@ -412,6 +504,19 @@ export const SERVICE_LIFETIMES = {
     'RepurposingService',
     'UnifiedInboxService',
     'CrossPlatformAnalyticsService',
+    // Wave 2: EPIC-009B
+    'InboxPollingService',
+    'NostrReplyAdapter',
+    // Wave 2: EPIC-010
+    'CreatorCircleService',
+    'MentorshipService',
+    'CollaborativeContentService',
+    'MarketplaceService',
+    // Wave 2: EPIC-011
+    'ContractService',
+    'BusinessInvoiceService',
+    'RevenueService',
+    'TaxService',
   ],
 
   // Transient: New instance for each resolution
@@ -502,6 +607,22 @@ export const SERVICE_DEPENDENCIES = {
   RepurposingService: ['Database', 'Logger'],
   UnifiedInboxService: ['PlatformConnectionService', 'QueueService', 'Database', 'Logger'],
   CrossPlatformAnalyticsService: ['PlatformConnectionService', 'Database', 'Logger'],
+
+  // Wave 2: EPIC-009B
+  InboxPollingService: ['PlatformConnectionService', 'QueueService', 'Database', 'Logger'],
+  NostrReplyAdapter: ['NostrService', 'Logger'],
+
+  // Wave 2: EPIC-010
+  CreatorCircleService: ['Database', 'Logger'],
+  MentorshipService: ['Database', 'Logger'],
+  CollaborativeContentService: ['Database', 'NostrService', 'EventBusService', 'Logger'],
+  MarketplaceService: ['Database', 'LightningService', 'QueueService', 'EventBusService', 'Logger'],
+
+  // Wave 2: EPIC-011
+  ContractService: ['Database', 'Logger'],
+  BusinessInvoiceService: ['Database', 'LightningService', 'QueueService', 'Logger'],
+  RevenueService: ['Database', 'CacheService', 'Logger'],
+  TaxService: ['Database', 'CacheService', 'Logger'],
 } as const;
 
 /**
@@ -544,25 +665,24 @@ export const SERVICE_TAGS = {
   ],
   analytics: ['ContentAnalyticsService', 'UserAnalyticsService', 'PaymentAnalyticsService'],
   blockchain: ['LightningService', 'NostrService'],
-  wellness: [
-    'WellnessService',
-    'BurnoutScoringService',
-    'ScheduleService',
-    'BoundaryService',
-  ],
-  provenance: [
-    'ProvenanceService',
-    'FingerprintService',
-    'AlertService',
-    'DmcaService',
-  ],
+  wellness: ['WellnessService', 'BurnoutScoringService', 'ScheduleService', 'BoundaryService'],
+  provenance: ['ProvenanceService', 'FingerprintService', 'AlertService', 'DmcaService'],
   distribution: [
     'PlatformConnectionService',
     'CrossPostService',
     'RepurposingService',
     'UnifiedInboxService',
     'CrossPlatformAnalyticsService',
+    'InboxPollingService',
+    'NostrReplyAdapter',
   ],
+  community: [
+    'CreatorCircleService',
+    'MentorshipService',
+    'CollaborativeContentService',
+    'MarketplaceService',
+  ],
+  finance: ['ContractService', 'BusinessInvoiceService', 'RevenueService', 'TaxService'],
 } as const;
 
 /**
