@@ -6,6 +6,11 @@
 export interface IContractService {
   getTemplates(category?: string): Promise<any[]>;
   getTemplate(templateId: string): Promise<any>;
+  /** M-2: User-created templates; sets created_by = creatorId so RLS restricts to owner */
+  createTemplate(
+    creatorId: string,
+    data: { name: string; category: string; templateText: string }
+  ): Promise<{ id: string }>;
   createContract(
     creatorId: string,
     data: { templateId?: string; counterparty: string; filledText: string }

@@ -1,15 +1,17 @@
 /**
  * Cross-Platform Analytics Routes (v2)
  * /api/v2/analytics/cross-platform/*
- * EPIC-009: Aggregate cross-platform metrics
+ * EPIC-009 + EPIC-009B: Aggregate cross-platform metrics, ROI, content comparison
  */
 
-import { Request, Response, NextFunction, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import { asyncHandler } from '../../utils/asyncHandler';
+import { createApiResponse } from '../../utils/api-response';
 import { DistributionValidators } from '../../validators/distribution';
 import type { ICrossPlatformAnalyticsService } from '../../interfaces/distribution/ICrossPlatformAnalyticsService';
 
@@ -27,25 +29,22 @@ function getAnalyticsService(): ICrossPlatformAnalyticsService {
 }
 
 // ============================================================================
-// GET /overview — Aggregate followers/engagement
+// GET /overview — Aggregate followers/engagement across all platforms
+// Uses Supabase DISTINCT ON via service layer to avoid N+1 queries
 // ============================================================================
 
 router.get(
   '/overview',
   authenticate,
   requireCreator,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getAnalyticsService().getOverview(getAuthUser(req).nostr_pubkey);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req: Request, res: Response) => {
+    const data = await getAnalyticsService().getOverview(getAuthUser(req).nostr_pubkey);
+    res.json(createApiResponse(req, data));
+  })
 );
 
 // ============================================================================
-// GET /comparison/:contentId — Same content, different platforms
+// GET /comparison/:contentId — Same content performance across platforms
 // ============================================================================
 
 router.get(
@@ -53,17 +52,13 @@ router.get(
   authenticate,
   requireCreator,
   validate({ params: DistributionValidators.contentIdParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getAnalyticsService().getContentComparison(
-        getAuthUser(req).nostr_pubkey,
-        req.params.contentId
-      );
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req: Request, res: Response) => {
+    const data = await getAnalyticsService().getContentComparison(
+      getAuthUser(req).nostr_pubkey,
+      req.params.contentId
+    );
+    res.json(createApiResponse(req, data));
+  })
 );
 
 // ============================================================================
@@ -74,14 +69,10 @@ router.get(
   '/roi',
   authenticate,
   requireCreator,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getAnalyticsService().getROI(getAuthUser(req).nostr_pubkey);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req: Request, res: Response) => {
+    const data = await getAnalyticsService().getROI(getAuthUser(req).nostr_pubkey);
+    res.json(createApiResponse(req, data));
+  })
 );
 
 export default router;
