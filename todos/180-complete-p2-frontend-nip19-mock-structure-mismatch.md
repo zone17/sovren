@@ -3,6 +3,7 @@
 ## Priority: P2 (Important)
 
 ## Source
+
 PR #83 — Review Agent: pattern-recognition-specialist
 
 ## Description
@@ -40,4 +41,5 @@ jest.mock('nostr-tools/nip19', () => ({
 ```
 
 ## Impact
+
 Testing — mock structure doesn't match real module; tests may pass incorrectly.

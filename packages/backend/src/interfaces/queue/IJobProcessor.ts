@@ -23,6 +23,14 @@ export interface IJobProcessor<T = unknown> {
   /** Concurrency limit for this processor (default: 1) */
   readonly concurrency?: number;
 
+  /** Rate limiter for this processor (BullMQ Worker limiter) */
+  readonly limiter?: {
+    /** Maximum number of jobs to process in the duration window */
+    max: number;
+    /** Duration of the rate limit window in milliseconds */
+    duration: number;
+  };
+
   /** Process a single job */
   process(job: JobContext<T>): Promise<void>;
 

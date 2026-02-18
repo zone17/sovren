@@ -514,10 +514,11 @@ export function setupAllMocks(): void {
     decrypt: jest.fn().mockResolvedValue('decrypted-content'),
   }));
   jest.mock('nostr-tools/nip19', () => ({
-    nip19: {
-      encode: jest.fn().mockImplementation((prefix: string) => `${prefix}1test123456789`),
-      decode: jest.fn().mockImplementation(() => ({ type: 'npub', data: 'decoded-data' })),
-    },
+    npubEncode: jest.fn().mockImplementation((hex: string) => `npub1${hex.slice(0, 20)}`),
+    npubDecode: jest.fn().mockReturnValue({ type: 'npub', data: 'decoded-data' }),
+    nsecEncode: jest.fn().mockImplementation((hex: string) => `nsec1${hex.slice(0, 20)}`),
+    nprofileEncode: jest.fn(),
+    decode: jest.fn().mockImplementation(() => ({ type: 'npub', data: 'decoded-data' })),
   }));
 
   // 🏪 Arweave Mock

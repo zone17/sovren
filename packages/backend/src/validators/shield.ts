@@ -70,12 +70,41 @@ export const DmcaReportQuerySchema = z.object({
 });
 
 // ============================================================================
+// Provenance Sign
+// ============================================================================
+
+export const SignProvenanceBodySchema = z.object({
+  content_id: z.string().min(1).max(255),
+  content_body: z.string().min(1).max(1_000_000), // 1MB limit
+  nostr_event_id: z.string().min(1).max(255),
+  signature: z.string().min(1).max(2048),
+  relays: z.array(z.string().url()).max(20).optional().default([]),
+});
+
+// ============================================================================
+// Inferred types for route handlers
+// ============================================================================
+
+export type ContentIdParams = z.infer<typeof ContentIdParamSchema>;
+export type CertificateQuery = z.infer<typeof CertificateQuerySchema>;
+export type SignProvenanceBody = z.infer<typeof SignProvenanceBodySchema>;
+export type CreateFingerprintBody = z.infer<typeof CreateFingerprintSchema>;
+export type GetFingerprintsParams = z.infer<typeof GetFingerprintsParamSchema>;
+export type GetFingerprintsQuery = z.infer<typeof GetFingerprintsQuerySchema>;
+export type CompareBody = z.infer<typeof CompareSchema>;
+export type GetAlertsQuery = z.infer<typeof GetAlertsQuerySchema>;
+export type AlertIdParams = z.infer<typeof AlertIdParamSchema>;
+export type UpdateAlertStatusBody = z.infer<typeof UpdateAlertStatusSchema>;
+export type DmcaReportQuery = z.infer<typeof DmcaReportQuerySchema>;
+
+// ============================================================================
 // Aggregated exports for route use
 // ============================================================================
 
 export const ShieldValidators = {
   contentIdParam: ContentIdParamSchema,
   certificateQuery: CertificateQuerySchema,
+  signProvenanceBody: SignProvenanceBodySchema,
   createFingerprint: CreateFingerprintSchema,
   getFingerprintsParam: GetFingerprintsParamSchema,
   getFingerprintsQuery: GetFingerprintsQuerySchema,

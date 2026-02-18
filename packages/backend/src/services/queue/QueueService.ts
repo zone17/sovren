@@ -7,14 +7,23 @@
 
 import { Queue, Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
-import type { IQueueService, QueueCreateOptions, QueueJobOptions } from '../../interfaces/queue/IQueueService';
+import type {
+  IQueueService,
+  QueueCreateOptions,
+  QueueJobOptions,
+} from '../../interfaces/queue/IQueueService';
 import type { IJobProcessor, JobContext } from '../../interfaces/queue/IJobProcessor';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import { getRedisClient } from '../../lib/redis';
 
-/** Module-level singleton reference for health-check access without DI */
+/**
+ * Module-level singleton reference — kept for backward compatibility.
+ * @deprecated Resolve IQueueService from the DI container via TYPES.QueueService instead.
+ * TODO: Remove getInstance() shim after all consumers migrate to DI
+ */
 let singletonInstance: QueueService | null = null;
 
+/** @deprecated Use the DI container to resolve IQueueService (TYPES.QueueService). */
 export function getQueueServiceInstance(): QueueService | null {
   return singletonInstance;
 }
@@ -102,9 +111,7 @@ export class QueueService implements IQueueService {
    */
   registerProcessor<T>(processor: IJobProcessor<T>): void {
     if (this.workers.has(processor.name)) {
-      this.logger.warn(
-        `[QueueService] Processor "${processor.name}" already registered, skipping`
-      );
+      this.logger.warn(`[QueueService] Processor "${processor.name}" already registered, skipping`);
       return;
     }
 
@@ -119,16 +126,16 @@ export class QueueService implements IQueueService {
       {
         connection: createBullMQConnection(),
         concurrency: processor.concurrency ?? 1,
+        ...(processor.limiter && { limiter: processor.limiter }),
       }
     );
 
     if (processor.onCompleted) {
       worker.on('completed', (job: Job<T>) => {
         processor.onCompleted!(toJobContext(job)).catch((err) => {
-          this.logger.error(
-            `[QueueService] onCompleted handler error for "${processor.name}"`,
-            { error: err.message }
-          );
+          this.logger.error(`[QueueService] onCompleted handler error for "${processor.name}"`, {
+            error: err.message,
+          });
         });
       });
     }
@@ -137,10 +144,9 @@ export class QueueService implements IQueueService {
       worker.on('failed', (job: Job<T> | undefined, err: Error) => {
         if (job) {
           processor.onFailed!(toJobContext(job), err).catch((handlerErr) => {
-            this.logger.error(
-              `[QueueService] onFailed handler error for "${processor.name}"`,
-              { error: handlerErr.message }
-            );
+            this.logger.error(`[QueueService] onFailed handler error for "${processor.name}"`, {
+              error: handlerErr.message,
+            });
           });
         }
       });
@@ -173,38 +179,36 @@ export class QueueService implements IQueueService {
     this.logger.info('[QueueService] Closing all queues and workers...');
 
     // Close workers first so no new jobs are picked up
-    const workerClosePromises = Array.from(this.workers.entries()).map(
-      async ([name, worker]) => {
-        try {
-          await worker.close();
-          this.logger.info(`[QueueService] Worker "${name}" closed`);
-        } catch (err) {
-          this.logger.error(`[QueueService] Error closing worker "${name}"`, {
-            error: (err as Error).message,
-          });
-        }
+    const workerClosePromises = Array.from(this.workers.entries()).map(async ([name, worker]) => {
+      try {
+        await worker.close();
+        this.logger.info(`[QueueService] Worker "${name}" closed`);
+      } catch (err) {
+        this.logger.error(`[QueueService] Error closing worker "${name}"`, {
+          error: (err as Error).message,
+        });
       }
-    );
+    });
     await Promise.all(workerClosePromises);
     this.workers.clear();
 
     // Then close queues
-    const queueClosePromises = Array.from(this.queues.entries()).map(
-      async ([name, queue]) => {
-        try {
-          await queue.close();
-          this.logger.info(`[QueueService] Queue "${name}" closed`);
-        } catch (err) {
-          this.logger.error(`[QueueService] Error closing queue "${name}"`, {
-            error: (err as Error).message,
-          });
-        }
+    const queueClosePromises = Array.from(this.queues.entries()).map(async ([name, queue]) => {
+      try {
+        await queue.close();
+        this.logger.info(`[QueueService] Queue "${name}" closed`);
+      } catch (err) {
+        this.logger.error(`[QueueService] Error closing queue "${name}"`, {
+          error: (err as Error).message,
+        });
       }
-    );
+    });
     await Promise.all(queueClosePromises);
     this.queues.clear();
 
     this.logger.info('[QueueService] All queues and workers closed');
+    // Clear the backward-compat singleton so a disposed instance is never returned
+    singletonInstance = null;
   }
 }
 

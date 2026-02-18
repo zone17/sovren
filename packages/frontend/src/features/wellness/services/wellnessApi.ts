@@ -14,7 +14,6 @@ import type {
   ScheduleRecommendations,
   Sensitivity,
   WellnessBenchmark,
-  WellnessResource,
   WorkPatterns,
 } from '../types';
 
@@ -85,8 +84,6 @@ export const wellnessApi = {
   },
 
   // -- Resource Library --
-
-  getResourceLibrary(): Promise<ApiResponse<WellnessResource[]>> {
-    return apiClient['request']('GET', `${BASE}/resources`);
-  },
+  // Removed: getResourceLibrary — no corresponding backend route (GET /resources) exists.
+  // Re-add when backend implements the /api/v2/wellness/resources endpoint.
 };

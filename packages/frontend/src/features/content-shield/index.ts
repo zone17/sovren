@@ -1,15 +1,21 @@
 // Content Shield Feature Module Exports
 
+// Components
+export { ShieldDashboard } from './components/ShieldDashboard';
+export { AuthenticityBadge } from './components/AuthenticityBadge';
+export { AlertsFeed } from './components/AlertsFeed';
+export { FingerprintCoverage } from './components/FingerprintCoverage';
+export { ProvenanceChainViewer } from './components/ProvenanceChainViewer';
+export { DMCAReportButton } from './components/DMCAReportButton';
+
 // Error Boundary
 export { ContentShieldErrorBoundary } from './ErrorBoundary';
 
 // Hooks
 export { useAlertDetail, useAlerts, useUpdateAlertStatus } from './hooks/useAlerts';
 export { useDmcaReport } from './hooks/useDmcaReport';
-export { useGetDmcaReports } from './hooks/useDmcaReports';
 export { useFingerprintCoverage } from './hooks/useFingerprintCoverage';
 export { useProvenanceChain } from './hooks/useProvenanceChain';
-export { useGetProvenanceVerification } from './hooks/useProvenanceVerification';
 
 // API Service
 export { shieldApi } from './services/shieldApi';

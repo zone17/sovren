@@ -7,12 +7,9 @@
 import { Request, Response, NextFunction, Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator, optionalAuth } from '../../middleware/auth';
+import { authenticate, requireCreator, optionalAuth, getAuthUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
-import {
-  readOnlyRateLimiter,
-  createUserRateLimiter,
-} from '../../middleware/rate-limit-middleware';
+import { readOnlyRateLimiter, createUserRateLimiter } from '../../middleware/rate-limit-middleware';
 import { ShieldValidators } from '../../validators/shield';
 import type { IProvenanceService } from '../../interfaces/provenance/IProvenanceService';
 import type { IFingerprintService } from '../../interfaces/provenance/IFingerprintService';
@@ -91,10 +88,52 @@ router.get(
     try {
       const certificate = await getProvenanceService().getCertificate(
         req.params.contentId,
-        req.user!.nostr_pubkey
+        getAuthUser(req).nostr_pubkey
       );
       // PDF format not implemented yet — return JSON
       res.json({ success: true, data: { certificate } });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.post(
+  '/provenance/sign',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  validate({ body: ShieldValidators.signProvenanceBody }),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await getProvenanceService().signContent({
+        contentId: req.body.content_id,
+        creatorId: getAuthUser(req).nostr_pubkey,
+        contentBody: req.body.content_body,
+        nostrEventId: req.body.nostr_event_id,
+        signature: req.body.signature,
+        relays: req.body.relays || [],
+      });
+      res.status(201).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.post(
+  '/provenance/:contentId/revoke',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  validate({ params: ShieldValidators.contentIdParam }),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await getProvenanceService().revokeProvenance(
+        req.params.contentId,
+        getAuthUser(req).nostr_pubkey
+      );
+      res.json({ success: true, data });
     } catch (err) {
       next(err);
     }
@@ -113,7 +152,10 @@ router.post(
   validate({ body: ShieldValidators.createFingerprint }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await getFingerprintService().createFingerprint(req.user!.nostr_pubkey, req.body);
+      const data = await getFingerprintService().createFingerprint(
+        getAuthUser(req).nostr_pubkey,
+        req.body
+      );
       res.status(201).json({ success: true, data });
     } catch (err) {
       next(err);
@@ -132,7 +174,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Enforce creator can only view own registry
-      if (req.params.creatorId !== req.user!.nostr_pubkey) {
+      if (req.params.creatorId !== getAuthUser(req).nostr_pubkey) {
         res.status(403).json({
           success: false,
           error: 'FORBIDDEN',
@@ -144,7 +186,11 @@ router.get(
 
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const result = await getFingerprintService().getRegistry(req.user!.nostr_pubkey, page, limit);
+      const result = await getFingerprintService().getRegistry(
+        getAuthUser(req).nostr_pubkey,
+        page,
+        limit
+      );
       res.json({ success: true, data: result.data, pagination: result.pagination });
     } catch (err) {
       next(err);
@@ -160,7 +206,7 @@ router.post(
   validate({ body: ShieldValidators.compare }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await getFingerprintService().compare(req.user!.nostr_pubkey, req.body);
+      const data = await getFingerprintService().compare(getAuthUser(req).nostr_pubkey, req.body);
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -182,7 +228,12 @@ router.get(
       const status = (req.query.status as AlertStatus) || 'new';
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const result = await getAlertService().getAlerts(req.user!.nostr_pubkey, status, page, limit);
+      const result = await getAlertService().getAlerts(
+        getAuthUser(req).nostr_pubkey,
+        status,
+        page,
+        limit
+      );
       res.json({ success: true, data: result.data, pagination: result.pagination });
     } catch (err) {
       next(err);
@@ -197,7 +248,10 @@ router.get(
   validate({ params: ShieldValidators.alertIdParam }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await getAlertService().getAlertDetail(req.user!.nostr_pubkey, req.params.id);
+      const data = await getAlertService().getAlertDetail(
+        getAuthUser(req).nostr_pubkey,
+        req.params.id
+      );
       res.json({ success: true, data });
     } catch (err) {
       next(err);
@@ -217,7 +271,7 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await getAlertService().updateAlertStatus(
-        req.user!.nostr_pubkey,
+        getAuthUser(req).nostr_pubkey,
         req.params.id,
         req.body.status
       );
@@ -243,7 +297,10 @@ router.post(
   }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const report = await getDmcaService().generateReport(req.user!.nostr_pubkey, req.params.id);
+      const report = await getDmcaService().generateReport(
+        getAuthUser(req).nostr_pubkey,
+        req.params.id
+      );
       // PDF format not implemented yet — return JSON
       res.status(201).json({ success: true, data: { report } });
     } catch (err) {

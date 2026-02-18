@@ -1,0 +1,4 @@
+-- SUPERSEDED: refresh_token_iv and refresh_token_auth_tag columns have been
+-- merged into the original table creation in 20260216200000_epic009_platform_connections.sql.
+-- Since these are new tables with no existing data, a separate ALTER TABLE is unnecessary.
+-- This file is intentionally left as a no-op.

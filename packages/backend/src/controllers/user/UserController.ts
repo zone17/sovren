@@ -5,7 +5,7 @@
  * Integrates with User Services via DI container
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import {
   UserProfileService,
   UserPreferencesService,
@@ -15,6 +15,7 @@ import {
 } from '../../services/user';
 import { asyncHandler } from '../../middleware/error-handler-middleware';
 import { createApiResponse } from '../../utils/api-response';
+import { getAuthUser } from '../../middleware/auth';
 
 export class UserController {
   constructor(
@@ -102,7 +103,7 @@ export class UserController {
   public blockUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const targetId = req.params.id;
-    const userId = req.user!.nostr_pubkey;
+    const userId = getAuthUser(req).nostr_pubkey;
 
     const result = await this.relationshipService.block({ userId, targetId });
     res.status(201).json(createApiResponse(req, result, startTime));
@@ -111,7 +112,7 @@ export class UserController {
   public unblockUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const targetId = req.params.id;
-    const userId = req.user!.nostr_pubkey;
+    const userId = getAuthUser(req).nostr_pubkey;
 
     const result = await this.relationshipService.unblock({ userId, targetId });
     res.status(200).json(createApiResponse(req, result, startTime));
@@ -120,7 +121,7 @@ export class UserController {
   public muteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const targetId = req.params.id;
-    const userId = req.user!.nostr_pubkey;
+    const userId = getAuthUser(req).nostr_pubkey;
 
     const result = await this.relationshipService.mute({ userId, targetId });
     res.status(201).json(createApiResponse(req, result, startTime));
@@ -129,7 +130,7 @@ export class UserController {
   public unmuteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const targetId = req.params.id;
-    const userId = req.user!.nostr_pubkey;
+    const userId = getAuthUser(req).nostr_pubkey;
 
     const result = await this.relationshipService.unmute({ userId, targetId });
     res.status(200).json(createApiResponse(req, result, startTime));
@@ -174,20 +175,30 @@ export class UserController {
   public sendFriendRequest = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
     const targetId = req.params.id;
-    const userId = req.user!.nostr_pubkey;
+    const userId = getAuthUser(req).nostr_pubkey;
 
-    const result = await this.relationshipService.sendFriendRequest({ userId, targetId, ...req.body });
+    const result = await this.relationshipService.sendFriendRequest({
+      userId,
+      targetId,
+      ...req.body,
+    });
     res.status(201).json(createApiResponse(req, result, startTime));
   });
 
-  public respondToFriendRequest = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const startTime = Date.now();
-    const targetId = req.params.id;
-    const userId = req.user!.nostr_pubkey;
+  public respondToFriendRequest = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const startTime = Date.now();
+      const targetId = req.params.id;
+      const userId = getAuthUser(req).nostr_pubkey;
 
-    const result = await this.relationshipService.respondToFriendRequest({ userId, targetId, ...req.body });
-    res.status(200).json(createApiResponse(req, result, startTime));
-  });
+      const result = await this.relationshipService.respondToFriendRequest({
+        userId,
+        targetId,
+        ...req.body,
+      });
+      res.status(200).json(createApiResponse(req, result, startTime));
+    }
+  );
 
   public getRecommendations = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();
@@ -213,11 +224,13 @@ export class UserController {
     res.status(200).json(createApiResponse(req, result, startTime));
   });
 
-  public updatePrivacySettings = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const startTime = Date.now();
-    const userId = req.params.id;
+  public updatePrivacySettings = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const startTime = Date.now();
+      const userId = req.params.id;
 
-    const result = await this.relationshipService.updatePrivacySettings(userId, req.body);
-    res.status(200).json(createApiResponse(req, result, startTime));
-  });
+      const result = await this.relationshipService.updatePrivacySettings(userId, req.body);
+      res.status(200).json(createApiResponse(req, result, startTime));
+    }
+  );
 }

@@ -61,6 +61,13 @@ import type { IDmcaService } from '../interfaces/provenance/IDmcaService';
 // Queue infrastructure
 import type { IQueueService } from '../interfaces/queue/IQueueService';
 
+// Phase 8: Multi-Platform Hub interfaces (EPIC-009)
+import type { IPlatformConnectionService } from '../interfaces/distribution/IPlatformConnectionService';
+import type { ICrossPostService } from '../interfaces/distribution/ICrossPostService';
+import type { IRepurposingService } from '../interfaces/distribution/IRepurposingService';
+import type { IUnifiedInboxService } from '../interfaces/distribution/IUnifiedInboxService';
+import type { ICrossPlatformAnalyticsService } from '../interfaces/distribution/ICrossPlatformAnalyticsService';
+
 /**
  * Service type identifiers organized by domain
  */
@@ -239,6 +246,34 @@ export const TYPES = {
   ),
 
   // ======================
+  // PHASE 8: Multi-Platform Hub (5 services, EPIC-009)
+  // ======================
+
+  /**
+   * Distribution Services (EPIC-009)
+   */
+  PlatformConnectionService: new ServiceToken<IPlatformConnectionService>(
+    'PlatformConnectionService',
+    'OAuth connections, token encryption, token refresh'
+  ),
+  CrossPostService: new ServiceToken<ICrossPostService>(
+    'CrossPostService',
+    'Cross-platform publishing queue via BullMQ'
+  ),
+  RepurposingService: new ServiceToken<IRepurposingService>(
+    'RepurposingService',
+    'Content format conversion for different platforms'
+  ),
+  UnifiedInboxService: new ServiceToken<IUnifiedInboxService>(
+    'UnifiedInboxService',
+    'Multi-platform message aggregation and routing'
+  ),
+  CrossPlatformAnalyticsService: new ServiceToken<ICrossPlatformAnalyticsService>(
+    'CrossPlatformAnalyticsService',
+    'Aggregate cross-platform metrics'
+  ),
+
+  // ======================
   // Queue Infrastructure
   // ======================
 
@@ -371,6 +406,12 @@ export const SERVICE_LIFETIMES = {
     'FingerprintService',
     'AlertService',
     'DmcaService',
+    // Phase 8: Multi-Platform Hub
+    'PlatformConnectionService',
+    'CrossPostService',
+    'RepurposingService',
+    'UnifiedInboxService',
+    'CrossPlatformAnalyticsService',
   ],
 
   // Transient: New instance for each resolution
@@ -454,6 +495,13 @@ export const SERVICE_DEPENDENCIES = {
   FingerprintService: ['Database', 'Logger'],
   AlertService: ['Database', 'Logger'],
   DmcaService: ['AlertService', 'ProvenanceService', 'Logger'],
+
+  // Phase 8: Distribution Services (EPIC-009)
+  PlatformConnectionService: ['Database', 'Logger'],
+  CrossPostService: ['PlatformConnectionService', 'QueueService', 'Logger'],
+  RepurposingService: ['Database', 'Logger'],
+  UnifiedInboxService: ['PlatformConnectionService', 'QueueService', 'Database', 'Logger'],
+  CrossPlatformAnalyticsService: ['PlatformConnectionService', 'Database', 'Logger'],
 } as const;
 
 /**
@@ -508,6 +556,13 @@ export const SERVICE_TAGS = {
     'AlertService',
     'DmcaService',
   ],
+  distribution: [
+    'PlatformConnectionService',
+    'CrossPostService',
+    'RepurposingService',
+    'UnifiedInboxService',
+    'CrossPlatformAnalyticsService',
+  ],
 } as const;
 
 /**
@@ -524,7 +579,7 @@ export function getServiceLifetime(serviceName: string): 'singleton' | 'transien
  * Get dependencies for a given service name
  */
 export function getServiceDependencies(serviceName: string): string[] {
-  return (SERVICE_DEPENDENCIES as any)[serviceName] || [];
+  return SERVICE_DEPENDENCIES[serviceName as keyof typeof SERVICE_DEPENDENCIES] || [];
 }
 
 /**

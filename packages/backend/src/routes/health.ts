@@ -3,6 +3,8 @@ import { Request, Response, Router } from 'express';
 import WebSocket from 'ws';
 import os from 'os';
 import { getRedisClient } from '../lib/redis';
+import { container } from '../container';
+import { TYPES } from '../container/types';
 
 const router = Router();
 
@@ -395,9 +397,8 @@ async function checkQueues(): Promise<ServiceHealth> {
   const startTime = Date.now();
 
   try {
-    // Dynamically import to avoid circular dependency at module load time
-    const { getQueueServiceInstance } = await import('../services/queue/QueueService');
-    const queueService = getQueueServiceInstance();
+    // Resolve from DI container — returns null if container is not yet initialized
+    const queueService = container.resolveOptional(TYPES.QueueService);
 
     if (!queueService) {
       return {

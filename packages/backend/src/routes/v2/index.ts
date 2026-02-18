@@ -2,12 +2,16 @@
  * API v2 Route Aggregator
  *
  * Combines all v2 API routes into a single router
- * Phase 7: Creator Safety Net
+ * Phase 7: Creator Safety Net + Phase 8: Multi-Platform Hub
  */
 
 import { Router } from 'express';
 import wellnessRoutes from './wellness.routes';
 import shieldRoutes from './shield.routes';
+import platformsRoutes from './platforms.routes';
+import distributeRoutes from './distribute.routes';
+import inboxRoutes from './inbox.routes';
+import crossPlatformAnalyticsRoutes from './analytics-crossplatform.routes';
 
 const router = Router();
 
@@ -16,6 +20,12 @@ const router = Router();
  */
 router.use('/wellness', wellnessRoutes);
 router.use('/shield', shieldRoutes);
+
+// EPIC-009: Multi-Platform Hub
+router.use('/platforms', platformsRoutes);
+router.use('/distribute', distributeRoutes);
+router.use('/inbox', inboxRoutes);
+router.use('/analytics/cross-platform', crossPlatformAnalyticsRoutes);
 
 /**
  * API v2 Info Endpoint
@@ -26,10 +36,14 @@ router.get('/', (req, res) => {
     data: {
       version: 'v2',
       name: 'Sovren API',
-      description: 'Creator Safety Net — Wellness & Content Shield',
+      description: 'Creator Safety Net — Wellness, Content Shield & Multi-Platform Hub',
       endpoints: {
         wellness: '/api/v2/wellness',
         shield: '/api/v2/shield',
+        platforms: '/api/v2/platforms',
+        distribute: '/api/v2/distribute',
+        inbox: '/api/v2/inbox',
+        analytics_crossplatform: '/api/v2/analytics/cross-platform',
       },
       timestamp: new Date().toISOString(),
     },

@@ -3,6 +3,7 @@
 ## Priority: P2 (Important)
 
 ## Source
+
 PR #83 — Review Agent: security-sentinel
 
 ## Description
@@ -18,11 +19,13 @@ export function getQueueServiceInstance(): QueueService | null {
 ```
 
 The constructor sets `singletonInstance = this` (line 29). This singleton is accessed in:
+
 - `packages/backend/src/routes/health.ts:399` — health check
 - `packages/backend/src/server.ts:73` — Bull Board mounting
 - `packages/backend/src/server.ts:288` — graceful shutdown
 
 This creates a parallel access path outside the DI container. Problems:
+
 1. If the DI container disposes/recreates the QueueService, the singleton still points to the old instance
 2. Health checks and shutdown bypass container lifecycle management
 3. The singleton is never cleared on `closeAll()`, so a disposed QueueService is still accessible
@@ -41,4 +44,5 @@ This creates a parallel access path outside the DI container. Problems:
 3. If the singleton pattern is kept, clear it in `closeAll()`: `singletonInstance = null`
 
 ## Impact
+
 Architecture — DI bypass creates lifecycle management issues and testability problems.

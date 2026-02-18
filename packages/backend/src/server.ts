@@ -4,7 +4,8 @@ import { lightningService } from './services/lightning-service';
 import { lightningReceiptService } from './services/lightning/receipt-service';
 import { connectRedis, disconnectRedis } from './lib/redis';
 import { initializeContainer, container } from './container';
-import { getQueueServiceInstance } from './services/queue';
+import { TYPES } from './container/types';
+import type { QueueService } from './services/queue/QueueService';
 import logger from './lib/logger';
 
 // Load environment variables
@@ -49,14 +50,18 @@ async function startServer(): Promise<void> {
     try {
       await connectRedis();
     } catch (err) {
-      logger.warn('Redis connection failed — continuing without Redis', { error: (err as Error).message });
+      logger.warn('Redis connection failed — continuing without Redis', {
+        error: (err as Error).message,
+      });
     }
 
     // Initialize DI container before routes are registered
     try {
       await initializeContainer();
     } catch (err) {
-      logger.warn('DI container initialization failed — continuing without DI', { error: (err as Error).message });
+      logger.warn('DI container initialization failed — continuing without DI', {
+        error: (err as Error).message,
+      });
     }
 
     // Initialize Lightning Network Service
@@ -68,8 +73,9 @@ async function startServer(): Promise<void> {
     // Create Express application
     const app = createApp();
 
-    // Mount Bull Board admin UI if QueueService is available
-    const queueService = getQueueServiceInstance();
+    // Mount Bull Board admin UI if QueueService is available in the DI container.
+    // Cast to concrete QueueService because mountBullBoard needs getQueue() (an implementation detail).
+    const queueService = container.resolveOptional(TYPES.QueueService) as QueueService | null;
     if (queueService) {
       mountBullBoard(app, queueService);
     }
@@ -216,7 +222,10 @@ function setupReceiptEventHandlers(): void {
  */
 function setupLightningEventHandlers(): void {
   lightningService.on('payment:completed', async (payment) => {
-    logger.info('Lightning payment completed', { amount: payment.amount, creatorId: payment.creator_id });
+    logger.info('Lightning payment completed', {
+      amount: payment.amount,
+      creatorId: payment.creator_id,
+    });
 
     try {
       const receipt = await lightningReceiptService.generateReceipt({
@@ -235,7 +244,10 @@ function setupLightningEventHandlers(): void {
   });
 
   lightningService.on('invoice:created', (invoice) => {
-    logger.info('Lightning invoice created', { amount: invoice.amount, description: invoice.description });
+    logger.info('Lightning invoice created', {
+      amount: invoice.amount,
+      description: invoice.description,
+    });
   });
 
   lightningService.on('webhook:received', (data) => {
@@ -283,8 +295,8 @@ async function gracefulShutdown(signal: string): Promise<void> {
       });
     }
 
-    // Close BullMQ queues and workers
-    const qs = getQueueServiceInstance();
+    // Close BullMQ queues and workers via the DI-managed instance
+    const qs = container.resolveOptional(TYPES.QueueService);
     if (qs) {
       try {
         await qs.closeAll();
@@ -320,7 +332,10 @@ async function gracefulShutdown(signal: string): Promise<void> {
  * WHY: Prevent the process from crashing and log critical errors
  */
 process.on('uncaughtException', (error: Error) => {
-  logger.error('Uncaught exception — process will exit', { error: error.message, stack: error.stack });
+  logger.error('Uncaught exception — process will exit', {
+    error: error.message,
+    stack: error.stack,
+  });
   process.exit(1);
 });
 

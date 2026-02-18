@@ -1,11 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
-import { wellnessApi } from '../services/wellnessApi';
-
-export function useGetResourceLibrary() {
-  return useQuery({
-    queryKey: ['wellness', 'resources'],
-    queryFn: () => wellnessApi.getResourceLibrary(),
-    select: (res) => res.data,
-    staleTime: 60 * 60 * 1000, // 1 hour — static resources change infrequently
-  });
-}
+// Removed: useGetResourceLibrary called wellnessApi.getResourceLibrary()
+// which targets GET /api/v2/wellness/resources — a route that does not exist in the backend.
+// Re-add when backend implements the endpoint.
