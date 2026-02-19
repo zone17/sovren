@@ -20,9 +20,11 @@ import { container } from '../../container';
 import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
+import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import {
   CreateListingSchema,
+  UpdateListingSchema,
   PlaceOrderSchema,
   ReviewOrderSchema,
 } from '../../validators/community';
@@ -68,6 +70,7 @@ function getDb(): ISupabaseClient {
 /**
  * C-7: Verify the authenticated user is the buyer of the specified order.
  * #275: Actually checks order ownership instead of being a noop.
+ * #351: Stores fetched order on res.locals.order to avoid redundant DB query in handler.
  */
 const requireBuyer = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const userId = getAuthUser(req).nostr_pubkey;
@@ -75,7 +78,7 @@ const requireBuyer = asyncHandler(async (req: Request, res: Response, next: Next
 
   const { data: order, error } = await getDb()
     .from('service_orders')
-    .select('buyer_id')
+    .select('id, buyer_id, seller_id, status, amount_sats, release_status, release_attempts')
     .eq('id', orderId)
     .single();
 
@@ -87,12 +90,14 @@ const requireBuyer = asyncHandler(async (req: Request, res: Response, next: Next
     res.status(403).json({ success: false, error: 'Only the buyer can perform this action' });
     return;
   }
+  res.locals.order = order;
   next();
 });
 
 /**
  * C-7: Verify the authenticated user is the seller of the specified order.
  * #275: Actually checks order ownership instead of being a noop.
+ * #351: Stores fetched order on res.locals.order to avoid redundant DB query in handler.
  */
 const requireSeller = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const userId = getAuthUser(req).nostr_pubkey;
@@ -100,7 +105,7 @@ const requireSeller = asyncHandler(async (req: Request, res: Response, next: Nex
 
   const { data: order, error } = await getDb()
     .from('service_orders')
-    .select('seller_id')
+    .select('id, buyer_id, seller_id, status, amount_sats, release_status, release_attempts')
     .eq('id', orderId)
     .single();
 
@@ -112,6 +117,7 @@ const requireSeller = asyncHandler(async (req: Request, res: Response, next: Nex
     res.status(403).json({ success: false, error: 'Only the seller can perform this action' });
     return;
   }
+  res.locals.order = order;
   next();
 });
 
@@ -142,13 +148,13 @@ router.post(
       getAuthUser(req).nostr_pubkey,
       result.data
     );
-    res.status(201).json({ success: true, data });
+    res.status(201).json(createApiResponse(req, data));
   })
 );
 
 /**
  * GET /api/v2/marketplace/listings
- * Browse listings with optional filters
+ * Browse listings with optional filters and pagination (#339)
  */
 router.get(
   '/listings',
@@ -164,17 +170,100 @@ router.get(
       filters.active = req.query.active === 'true';
     }
 
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+
     const data = await getMarketplaceService().getListings(
-      Object.keys(filters).length > 0 ? filters : undefined
+      Object.keys(filters).length > 0 ? filters : undefined,
+      { page, limit }
     );
 
-    res.json({ success: true, data });
+    res.json(createApiResponse(req, data));
+  })
+);
+
+/**
+ * GET /api/v2/marketplace/listings/:id
+ * Get a single listing by ID (#338)
+ */
+router.get(
+  '/listings/:id',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const data = await getMarketplaceService().getListing(req.params.id);
+    if (!data) {
+      res.status(404).json({ success: false, error: 'Listing not found' });
+      return;
+    }
+    res.json(createApiResponse(req, data));
+  })
+);
+
+/**
+ * PUT /api/v2/marketplace/listings/:id
+ * Update a listing (#344)
+ */
+router.put(
+  '/listings/:id',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  asyncHandler(async (req, res) => {
+    const result = UpdateListingSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
+      return;
+    }
+
+    await getMarketplaceService().updateListing(
+      req.params.id,
+      getAuthUser(req).nostr_pubkey,
+      result.data
+    );
+    res.json(createApiResponse(req, { updated: true }));
+  })
+);
+
+/**
+ * DELETE /api/v2/marketplace/listings/:id
+ * Deactivate a listing (soft delete) (#344)
+ */
+router.delete(
+  '/listings/:id',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  asyncHandler(async (req, res) => {
+    await getMarketplaceService().deleteListing(req.params.id, getAuthUser(req).nostr_pubkey);
+    res.json(createApiResponse(req, { deleted: true }));
   })
 );
 
 // ============================================================================
 // Orders
 // ============================================================================
+
+/**
+ * GET /api/v2/marketplace/orders
+ * List orders for the authenticated user (#337)
+ * Supports ?role=buyer|seller and pagination
+ */
+router.get(
+  '/orders',
+  authenticate,
+  requireCreator,
+  asyncHandler(async (req, res) => {
+    const userId = getAuthUser(req).nostr_pubkey;
+    const role = (req.query.role as string) === 'seller' ? 'seller' : 'buyer';
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+
+    const data = await getMarketplaceService().getOrders(userId, role, { page, limit });
+    res.json(createApiResponse(req, data));
+  })
+);
 
 /**
  * POST /api/v2/marketplace/orders
@@ -201,7 +290,7 @@ router.post(
       result.data.idempotencyKey
     );
 
-    res.status(201).json({ success: true, data });
+    res.status(201).json(createApiResponse(req, data));
   })
 );
 
@@ -218,7 +307,7 @@ router.put(
   requireSeller, // C-7: belt-and-suspenders auth check
   asyncHandler(async (req, res) => {
     await getMarketplaceService().startOrder(req.params.id, getAuthUser(req).nostr_pubkey);
-    res.json({ success: true });
+    res.json(createApiResponse(req, { started: true }));
   })
 );
 
@@ -236,7 +325,7 @@ router.put(
   requireBuyer, // C-7: belt-and-suspenders auth check
   asyncHandler(async (req, res) => {
     await getMarketplaceService().completeOrder(req.params.id, getAuthUser(req).nostr_pubkey);
-    res.json({ success: true });
+    res.json(createApiResponse(req, { completed: true }));
   })
 );
 
@@ -252,7 +341,7 @@ router.put(
   orderTransitionRateLimiter,
   asyncHandler(async (req, res) => {
     await getMarketplaceService().disputeOrder(req.params.id, getAuthUser(req).nostr_pubkey);
-    res.json({ success: true });
+    res.json(createApiResponse(req, { disputed: true }));
   })
 );
 
@@ -279,7 +368,7 @@ router.post(
       getAuthUser(req).nostr_pubkey,
       result.data
     );
-    res.status(201).json({ success: true, data });
+    res.status(201).json(createApiResponse(req, data));
   })
 );
 

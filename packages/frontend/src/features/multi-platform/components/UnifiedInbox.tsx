@@ -9,7 +9,7 @@ const UnifiedInbox: React.FC = () => {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
+  const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useInboxMessages({
     platform: platformFilter,
@@ -38,13 +38,18 @@ const UnifiedInbox: React.FC = () => {
   };
 
   const handleReply = (messageId: string) => {
-    if (!replyText.trim()) return;
+    const text = replyTexts[messageId] ?? '';
+    if (!text.trim()) return;
     replyMutation.mutate(
-      { messageId, data: { content: replyText } },
+      { messageId, data: { content: text } },
       {
         onSuccess: () => {
           setReplyingTo(null);
-          setReplyText('');
+          setReplyTexts((prev) => {
+            const next = { ...prev };
+            delete next[messageId];
+            return next;
+          });
         },
       }
     );
@@ -156,8 +161,10 @@ const UnifiedInbox: React.FC = () => {
                           type="text"
                           className="flex-1 rounded-md border px-3 py-1.5 text-sm"
                           placeholder="Write a reply..."
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
+                          value={replyTexts[msg.id] ?? ''}
+                          onChange={(e) =>
+                            setReplyTexts((prev) => ({ ...prev, [msg.id]: e.target.value }))
+                          }
                         />
                         <button
                           className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
@@ -170,7 +177,11 @@ const UnifiedInbox: React.FC = () => {
                           className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
                           onClick={() => {
                             setReplyingTo(null);
-                            setReplyText('');
+                            setReplyTexts((prev) => {
+                              const next = { ...prev };
+                              delete next[msg.id];
+                              return next;
+                            });
                           }}
                         >
                           Cancel

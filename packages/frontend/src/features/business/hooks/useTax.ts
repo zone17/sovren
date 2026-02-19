@@ -29,6 +29,9 @@ export function useCreateTaxCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, 'categories'] });
     },
+    onError: (error) => {
+      console.error('Create tax category failed:', error);
+    },
   });
 }
 
@@ -36,5 +39,8 @@ export function useExportTax() {
   return useMutation({
     mutationFn: ({ format, year }: { format: 'csv' | 'json'; year?: number }) =>
       taxApi.exportTax(format, year),
+    onError: (error) => {
+      console.error('Export tax data failed:', error);
+    },
   });
 }

@@ -71,9 +71,9 @@ function makeCache() {
 function makeDb() {
   const db: any = {
     // Results that tests can override
-    _revenueResult: { data: [], error: null },  // for revenue_entries .lte() termination
-    _expenseResult: { data: [], error: null },  // for expenses .lte() termination
-    _orderResult: { data: [], error: null },    // for .order() termination
+    _revenueResult: { data: [], error: null }, // for revenue_entries .lte() termination
+    _expenseResult: { data: [], error: null }, // for expenses .lte() termination
+    _orderResult: { data: [], error: null }, // for .order() termination
     _singleResult: { data: null, error: null }, // for .single() termination
     _currentTable: '',
 
@@ -107,9 +107,16 @@ function makeDb() {
       if (db._currentTable === 'expenses') return Promise.resolve(db._expenseResult);
       return Promise.resolve(db._orderResult);
     }),
-    // order() is terminal for getExpenses and getExpenseCategories
-    order: jest.fn().mockImplementation(() => Promise.resolve(db._orderResult)),
-    // single() is terminal for addExpense, createExpenseCategory, getExpenses.single (never called)
+    // order() returns a chainable + thenable object:
+    //   - getExpenseCategories: await .order() (uses .then)
+    //   - getExpenses: .order().limit() (uses .limit)
+    order: jest.fn().mockImplementation(() => {
+      return {
+        then: (res: any, rej: any) => Promise.resolve(db._orderResult).then(res, rej),
+        limit: jest.fn().mockImplementation(() => Promise.resolve(db._orderResult)),
+      };
+    }),
+    // single() is terminal for addExpense, createExpenseCategory
     single: jest.fn().mockImplementation(() => Promise.resolve(db._singleResult)),
   };
   return db;
@@ -270,12 +277,14 @@ describe('TaxService', () => {
       expect(mockDb.lte).toHaveBeenCalledWith('recorded_at', '2026-12-31T23:59:59Z');
     });
 
-    it('throws when the revenue query returns a database error', async () => {
+    it('throws a sanitized error when the revenue query returns a database error', async () => {
       const dbError = { message: 'Revenue query failed' };
       mockDb._revenueResult = { data: null, error: dbError };
       mockDb._expenseResult = { data: [], error: null };
 
-      await expect(service.getQuarterlySummary('creator-1', 2026, 1)).rejects.toEqual(dbError);
+      await expect(service.getQuarterlySummary('creator-1', 2026, 1)).rejects.toThrow(
+        'Failed to fetch quarterly revenue'
+      );
     });
 
     it('uses cached BTC rate when available (no fetch call)', async () => {
@@ -335,7 +344,9 @@ describe('TaxService', () => {
       const result = await service.getExpenses('creator-1');
 
       expect(mockDb.from).toHaveBeenCalledWith('expenses');
-      expect(mockDb.select).toHaveBeenCalledWith('*, expense_categories(name, type)');
+      expect(mockDb.select).toHaveBeenCalledWith(
+        'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)'
+      );
       expect(mockDb.eq).toHaveBeenCalledWith('creator_id', 'creator-1');
       expect(mockDb.order).toHaveBeenCalledWith('expense_date', { ascending: false });
       expect(result).toEqual(expenses);
@@ -379,11 +390,11 @@ describe('TaxService', () => {
       expect(await service.getExpenses('creator-1')).toEqual([]);
     });
 
-    it('throws when the database returns an error', async () => {
+    it('throws a sanitized error when the database returns an error', async () => {
       const dbError = { message: 'Access denied' };
       mockDb._orderResult = { data: null, error: dbError };
 
-      await expect(service.getExpenses('creator-1')).rejects.toEqual(dbError);
+      await expect(service.getExpenses('creator-1')).rejects.toThrow('Failed to fetch expenses');
     });
   });
 
@@ -513,13 +524,13 @@ describe('TaxService', () => {
       ).rejects.toThrow('Failed to add expense');
     });
 
-    it('throws the database error when insert fails', async () => {
+    it('throws a sanitized error when insert fails', async () => {
       const dbError = { message: 'FK violation', code: '23503' };
       mockDb._singleResult = { data: null, error: dbError };
 
       await expect(
         service.addExpense('creator-1', { description: 'Test', amountSats: 1000 })
-      ).rejects.toEqual(dbError);
+      ).rejects.toThrow('Failed to add expense');
     });
   });
 
@@ -550,11 +561,13 @@ describe('TaxService', () => {
       expect(result).toEqual([]);
     });
 
-    it('throws when database returns an error', async () => {
+    it('throws a sanitized error when database returns an error', async () => {
       const dbError = { message: 'Permission denied' };
       mockDb._orderResult = { data: null, error: dbError };
 
-      await expect(service.getExpenseCategories('creator-1')).rejects.toEqual(dbError);
+      await expect(service.getExpenseCategories('creator-1')).rejects.toThrow(
+        'Failed to fetch expense categories'
+      );
     });
   });
 
@@ -588,13 +601,13 @@ describe('TaxService', () => {
       ).rejects.toThrow('Failed to create expense category');
     });
 
-    it('throws the database error when insert fails', async () => {
+    it('throws a sanitized error when insert fails', async () => {
       const dbError = { message: 'Duplicate name', code: '23505' };
       mockDb._singleResult = { data: null, error: dbError };
 
       await expect(
         service.createExpenseCategory('creator-1', { name: 'Software', type: 'software' })
-      ).rejects.toEqual(dbError);
+      ).rejects.toThrow('Failed to create expense category');
     });
   });
 
@@ -708,7 +721,7 @@ describe('TaxService', () => {
             description: 'Domain renewal',
             expense_categories: { name: 'Software' },
             amount_sats: 5000,
-            usd_at_time: 3.00,
+            usd_at_time: 3.0,
           },
         ],
         error: null,
@@ -730,7 +743,7 @@ describe('TaxService', () => {
             description: 'Misc purchase',
             expense_categories: null,
             amount_sats: 1000,
-            usd_at_time: 0.60,
+            usd_at_time: 0.6,
           },
         ],
         error: null,
@@ -763,7 +776,7 @@ describe('TaxService', () => {
       const csv = await service.exportTaxReport('creator-1', 2026, 'csv');
 
       // The description cell must contain the single-quote-prefixed value
-      expect(csv).toContain("\"'=SUM(A1:A10)\"");
+      expect(csv).toContain('"\'=SUM(A1:A10)"');
       // The raw formula must NOT appear as an unescaped cell value
       expect(csv).not.toMatch(/,"=SUM/);
     });
@@ -783,7 +796,7 @@ describe('TaxService', () => {
       };
 
       const csv = await service.exportTaxReport('creator-1', 2026, 'csv');
-      expect(csv).toContain("\"'+1234567890\"");
+      expect(csv).toContain('"\'+1234567890"');
     });
 
     it('prefixes "-" injection with a single quote', async () => {
@@ -801,7 +814,7 @@ describe('TaxService', () => {
       };
 
       const csv = await service.exportTaxReport('creator-1', 2026, 'csv');
-      expect(csv).toContain("\"'-1+2\"");
+      expect(csv).toContain('"\'-1+2"');
     });
 
     it('prefixes "@" injection with a single quote', async () => {
@@ -819,7 +832,7 @@ describe('TaxService', () => {
       };
 
       const csv = await service.exportTaxReport('creator-1', 2026, 'csv');
-      expect(csv).toContain("\"'@SUM(A1:A10)\"");
+      expect(csv).toContain('"\'@SUM(A1:A10)"');
     });
 
     it('does not prefix clean description values with a single quote', async () => {
@@ -839,7 +852,27 @@ describe('TaxService', () => {
       const csv = await service.exportTaxReport('creator-1', 2026, 'csv');
       // Clean description must appear without single-quote prefix
       expect(csv).toContain('"Domain renewal"');
-      expect(csv).not.toContain("\"'Domain renewal\"");
+      expect(csv).not.toContain('"\'Domain renewal"');
+    });
+
+    it('escapes double quotes as "" per RFC 4180 (#346)', async () => {
+      mockDb._orderResult = {
+        data: [
+          {
+            expense_date: '2026-02-15',
+            description: 'Item with "quotes" inside',
+            expense_categories: null,
+            amount_sats: 1000,
+            usd_at_time: null,
+          },
+        ],
+        error: null,
+      };
+
+      const csv = await service.exportTaxReport('creator-1', 2026, 'csv');
+
+      // Double quotes inside the field must be escaped as ""
+      expect(csv).toContain('"Item with ""quotes"" inside"');
     });
 
     it('fetches expenses for the full year (Jan 1 to Dec 31)', async () => {
@@ -915,8 +948,8 @@ describe('TaxService', () => {
       const staleRate = 55000;
       const staleEntry = { rate: staleRate, fetchedAt: '2026-02-17T00:00:00.000Z' };
       mockCache.get
-        .mockResolvedValueOnce(null)         // primary cache miss
-        .mockResolvedValueOnce(staleEntry);  // stale cache hit
+        .mockResolvedValueOnce(null) // primary cache miss
+        .mockResolvedValueOnce(staleEntry); // stale cache hit
 
       mockDb._singleResult = { data: { id: 'exp-stale' }, error: null };
 

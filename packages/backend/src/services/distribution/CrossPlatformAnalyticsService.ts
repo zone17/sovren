@@ -67,12 +67,14 @@ export class CrossPlatformAnalyticsService implements ICrossPlatformAnalyticsSer
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0];
+    // #352: Bound old metrics query — only need one entry per platform for growth calc
     const { data: oldMetrics } = await this.db
       .from<MetricsHistoryRow>('platform_metrics_history')
       .select('platform, followers')
       .eq('creator_id', creatorId)
       .lte('recorded_at', thirtyDaysAgo)
-      .order('recorded_at', { ascending: false });
+      .order('recorded_at', { ascending: false })
+      .limit(500);
 
     const oldByPlatform = new Map<string, MetricsHistoryRow>();
     for (const row of oldMetrics || []) {

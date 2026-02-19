@@ -27,6 +27,9 @@ export function useRegisterMentor() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'mentors'] });
     },
+    onError: (error) => {
+      console.error('Register mentor failed:', error);
+    },
   });
 }
 
@@ -37,6 +40,9 @@ export function useRequestMentorship() {
     mutationFn: mentorshipApi.requestMentorship,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'my-mentorships'] });
+    },
+    onError: (error) => {
+      console.error('Request mentorship failed:', error);
     },
   });
 }
@@ -49,6 +55,9 @@ export function useRespondToMentorship() {
       mentorshipApi.respondToMentorship(id, { accept }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'my-mentorships'] });
+    },
+    onError: (error) => {
+      console.error('Respond to mentorship failed:', error);
     },
   });
 }

@@ -38,6 +38,9 @@ export function useCreateContract() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
+    onError: (error) => {
+      console.error('Create contract failed:', error);
+    },
   });
 }
 
@@ -49,11 +52,17 @@ export function useUpdateContract() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
+    onError: (error) => {
+      console.error('Update contract failed:', error);
+    },
   });
 }
 
 export function useAnalyzeContract() {
   return useMutation({
     mutationFn: (text: string) => contractsApi.analyzeContract(text),
+    onError: (error) => {
+      console.error('Analyze contract failed:', error);
+    },
   });
 }

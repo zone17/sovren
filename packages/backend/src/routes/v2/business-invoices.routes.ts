@@ -122,6 +122,22 @@ router.put(
 );
 
 /**
+ * DELETE /business/invoices/:id
+ * Delete a draft invoice (#344)
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  mutationRateLimiter,
+  requireCreator,
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    await getInvoiceService().deleteInvoice(req.params.id, creatorId);
+    res.json(createApiResponse(req, { deleted: true }));
+  })
+);
+
+/**
  * POST /business/invoices/:id/payment-link
  * Generate LNURL-pay link (dynamic BOLT11 on each scan — no expiry issues)
  */

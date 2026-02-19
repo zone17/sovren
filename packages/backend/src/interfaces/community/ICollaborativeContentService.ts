@@ -24,4 +24,9 @@ export interface ICollaborativeContentService {
     contentId: string,
     totalSats: number
   ): Promise<Array<{ creatorId: string; amountSats: number }>>;
+  recordRevenueSplitLedger(
+    contentId: string,
+    initiatedBy: string,
+    allocations: Array<{ creatorId: string; amountSats: number }>
+  ): Promise<{ ledgerId: string }>;
 }

@@ -19,6 +19,7 @@ export interface IBusinessInvoiceService {
   ): Promise<{ id: string; lnurlPay?: string }>;
   getInvoices(creatorId: string, filters?: { status?: string }): Promise<BusinessInvoice[]>;
   getInvoice(invoiceId: string, creatorId: string): Promise<BusinessInvoice>;
+  deleteInvoice(invoiceId: string, creatorId: string): Promise<void>;
   updateInvoiceStatus(invoiceId: string, creatorId: string, status: string): Promise<void>;
   generatePaymentLink(invoiceId: string, creatorId: string): Promise<{ lnurlPay: string }>;
 }

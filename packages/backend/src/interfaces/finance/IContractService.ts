@@ -24,5 +24,7 @@ export interface IContractService {
     creatorId: string,
     data: { filledText?: string; status?: string }
   ): Promise<void>;
+  deleteContract(contractId: string, creatorId: string): Promise<void>;
+  deleteTemplate(templateId: string, creatorId: string): Promise<void>;
   analyzeRedFlags(text: string): Promise<RedFlag[]>;
 }

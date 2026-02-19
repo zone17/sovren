@@ -25,6 +25,9 @@ export function useReplyToMessage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['distribution', 'inbox'] });
     },
+    onError: (error) => {
+      console.error('Reply to message failed:', error);
+    },
   });
 }
 
@@ -35,6 +38,9 @@ export function useBatchAction() {
     mutationFn: (data: BatchActionPayload) => distributionApi.batchAction(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['distribution', 'inbox'] });
+    },
+    onError: (error) => {
+      console.error('Batch action failed:', error);
     },
   });
 }

@@ -24,7 +24,7 @@ export const CreateCircleSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(MAX_CONTENT).optional(),
   niche: z.string().max(100).optional(),
-  maxMembers: z.number().int().positive().max(10000).optional(),
+  maxMembers: z.number().int().min(5).max(20).optional(),
 });
 
 export const CreateCirclePostSchema = z.object({
@@ -51,6 +51,17 @@ export const RequestMentorshipSchema = z.object({
 export const RespondMentorshipSchema = z.object({
   accept: z.boolean(),
 });
+
+export const UpdateMentorProfileSchema = z
+  .object({
+    niche: z.string().min(1).max(100).optional(),
+    audienceSizeRange: z.enum(['0-1k', '1k-10k', '10k-100k', '100k+']).optional(),
+    bio: z.string().max(MAX_BIO).optional(),
+    maxMentees: z.number().int().positive().max(100).optional(),
+  })
+  .refine((d) => Object.values(d).some((v) => v !== undefined), {
+    message: 'At least one field must be provided',
+  });
 
 // ============================================================================
 // Collaboration — EPIC-010
@@ -89,6 +100,18 @@ export const CreateListingSchema = z.object({
   priceSats: z.number().int().positive(),
   portfolioUrls: z.array(z.string().url().startsWith('https://')).max(10).optional(),
 });
+
+export const UpdateListingSchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    description: z.string().max(MAX_CONTENT).optional(),
+    priceSats: z.number().int().positive().optional(),
+    portfolioUrls: z.array(z.string().url().startsWith('https://')).max(10).optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((d) => Object.values(d).some((v) => v !== undefined), {
+    message: 'At least one field must be provided',
+  });
 
 export const PlaceOrderSchema = z.object({
   listingId: z.string().min(1).max(200),

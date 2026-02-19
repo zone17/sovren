@@ -67,7 +67,6 @@ export interface CreateContractPayload {
 }
 
 export interface UpdateContractPayload {
-  counterparty?: string;
   filledText?: string;
   status?: string;
 }
@@ -75,7 +74,6 @@ export interface UpdateContractPayload {
 export interface CreateInvoicePayload {
   clientName: string;
   lineItems: Array<{ description: string; quantity: number; unitPriceSats: number }>;
-  totalSats: number;
   dueDate?: string;
   recurringInterval?: string;
 }

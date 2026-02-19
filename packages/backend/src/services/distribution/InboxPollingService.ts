@@ -325,9 +325,12 @@ export class InboxPollingService implements IInboxPollingService {
   }
 
   private async fetchPlatformMessages(_conn: PlatformConnectionRow): Promise<ExternalMessage[]> {
-    // Stub — platform adapters will expose fetchMessages() in adapter read support phase.
-    // When implemented, the BYOK key is decrypted here via decryptByokKey(conn) and
-    // used for the duration of the single fetch call, never stored or logged.
+    // TODO(EPIC-009B): Implement platform adapter read support.
+    // Platform adapters will expose fetchMessages() — the BYOK key is decrypted
+    // here via decryptByokKey(conn) and used for the duration of a single fetch
+    // call, never stored or logged. Until then, polling jobs run but produce no
+    // results. This is intentional: the polling infrastructure is pre-wired so
+    // enabling reads requires only implementing this method per-platform.
     return [];
   }
 

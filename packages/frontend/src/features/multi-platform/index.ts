@@ -23,10 +23,28 @@ export { default as AudienceOverlap } from './components/AudienceOverlap';
 export { BYOKSetup } from './components/BYOKSetup';
 
 // Hooks (EPIC-009A — existing)
-export { usePlatformStatus, useConnectPlatform, useDisconnectPlatform } from './hooks/usePlatformConnections';
-export { usePublish, usePublishStatus, useRepurpose, useRepurposed, useApproveRepurposed } from './hooks/useCrossPost';
-export { useInboxMessages as useLegacyInboxMessages, useReplyToMessage as useLegacyReply, useBatchAction } from './hooks/useInbox';
-export { useAnalyticsOverview, useContentComparison, useROI } from './hooks/useDistributionAnalytics';
+export {
+  usePlatformStatus,
+  useConnectPlatform,
+  useDisconnectPlatform,
+} from './hooks/usePlatformConnections';
+export {
+  usePublish,
+  usePublishStatus,
+  useRepurpose,
+  useRepurposed,
+  useApproveRepurposed,
+} from './hooks/useCrossPost';
+export {
+  useInboxMessages as useLegacyInboxMessages,
+  useReplyToMessage as useLegacyReply,
+  useBatchAction,
+} from './hooks/useInbox';
+export {
+  useAnalyticsOverview,
+  useContentComparison,
+  useROI,
+} from './hooks/useDistributionAnalytics';
 
 // Hooks (EPIC-009B — new)
 export { useInboxMessages } from './hooks/useInboxMessages';
@@ -67,7 +85,7 @@ export type {
   ContentComparison,
   PlatformROI as PlatformROIData,
   DistributionPagination,
-  ApiResponse,
+  ApiResponse as DistributionApiResponse,
   InboxPlatformFilter,
   InboxStatusFilter,
   PublishPayload,

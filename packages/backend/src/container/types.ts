@@ -610,17 +610,17 @@ export const SERVICE_DEPENDENCIES = {
 
   // Wave 2: EPIC-009B
   InboxPollingService: ['PlatformConnectionService', 'QueueService', 'Database', 'Logger'],
-  NostrReplyAdapter: ['NostrService', 'Logger'],
+  NostrReplyAdapter: ['Database', 'Logger'],
 
   // Wave 2: EPIC-010
   CreatorCircleService: ['Database', 'Logger'],
   MentorshipService: ['Database', 'Logger'],
-  CollaborativeContentService: ['Database', 'NostrService', 'EventBusService', 'Logger'],
-  MarketplaceService: ['Database', 'LightningService', 'QueueService', 'EventBusService', 'Logger'],
+  CollaborativeContentService: ['Database', 'Logger'],
+  MarketplaceService: ['Database', 'LightningService', 'QueueService', 'Logger'],
 
   // Wave 2: EPIC-011
   ContractService: ['Database', 'Logger'],
-  BusinessInvoiceService: ['Database', 'LightningService', 'QueueService', 'Logger'],
+  BusinessInvoiceService: ['Database', 'QueueService', 'Logger'],
   RevenueService: ['Database', 'CacheService', 'Logger'],
   TaxService: ['Database', 'CacheService', 'Logger'],
 } as const;

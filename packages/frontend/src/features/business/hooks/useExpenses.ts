@@ -22,5 +22,8 @@ export function useAddExpense() {
       // Also invalidate tax summary since expenses affect it
       queryClient.invalidateQueries({ queryKey: ['business', 'tax', 'summary'] });
     },
+    onError: (error) => {
+      console.error('Add expense failed:', error);
+    },
   });
 }

@@ -156,6 +156,26 @@ router.get(
 );
 
 /**
+ * GET /business/contracts/:id
+ * Get a single contract by ID (#338)
+ */
+router.get(
+  '/:id',
+  authenticate,
+  requireCreator,
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    const contracts = await getContractService().getContracts(creatorId);
+    const contract = contracts.find((c) => c.id === req.params.id);
+    if (!contract) {
+      res.status(404).json({ success: false, error: 'Contract not found' });
+      return;
+    }
+    res.json(createApiResponse(req, contract));
+  })
+);
+
+/**
  * PUT /business/contracts/:id
  * Update contract (filledText or status)
  */
@@ -175,6 +195,39 @@ router.put(
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getContractService().updateContract(req.params.id, creatorId, result.data);
     res.json(createApiResponse(req, { updated: true }));
+  })
+);
+
+/**
+ * DELETE /business/contracts/templates/:id
+ * Delete a user-owned contract template (#344)
+ * NOTE: Must be registered before /:id to avoid 'templates' matching as an ID
+ */
+router.delete(
+  '/templates/:id',
+  authenticate,
+  mutationRateLimiter,
+  requireCreator,
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    await getContractService().deleteTemplate(req.params.id, creatorId);
+    res.json(createApiResponse(req, { deleted: true }));
+  })
+);
+
+/**
+ * DELETE /business/contracts/:id
+ * Delete a contract (only draft contracts can be deleted) (#344)
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  mutationRateLimiter,
+  requireCreator,
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    await getContractService().deleteContract(req.params.id, creatorId);
+    res.json(createApiResponse(req, { deleted: true }));
   })
 );
 

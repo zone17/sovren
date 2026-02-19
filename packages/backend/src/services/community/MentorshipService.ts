@@ -30,8 +30,6 @@ interface MentorshipRow {
   created_at: string;
 }
 
-const VALID_AUDIENCE_RANGES = ['0-1k', '1k-10k', '10k-100k', '100k+'] as const;
-
 export class MentorshipService implements IMentorshipService {
   private readonly db: ISupabaseClient;
   private readonly logger: ILogger;
@@ -45,16 +43,8 @@ export class MentorshipService implements IMentorshipService {
     creatorId: string,
     data: { niche: string; audienceSizeRange: string; bio?: string; maxMentees?: number }
   ): Promise<{ id: string }> {
-    if (!data.niche || data.niche.trim().length === 0) {
-      throw new Error('Niche is required');
-    }
-
-    if (!(VALID_AUDIENCE_RANGES as readonly string[]).includes(data.audienceSizeRange)) {
-      throw new Error(
-        `Invalid audience size range. Must be one of: ${VALID_AUDIENCE_RANGES.join(', ')}`
-      );
-    }
-
+    // Input format validation (niche, audienceSizeRange) is handled by Zod at the route layer.
+    // Only business-rule validation (capacity limits, DB-state checks) remains here.
     const maxMentees = data.maxMentees ?? 3;
     if (maxMentees < 1 || maxMentees > 10) {
       throw new Error('max_mentees must be between 1 and 10');
@@ -135,14 +125,16 @@ export class MentorshipService implements IMentorshipService {
     }
 
     // Check mentor has capacity (count active mentorships)
-    const { data: activeMentorships } = await this.db
+    const { count: activeCount, error: countError } = await this.db
       .from<MentorshipRow>('mentorships')
-      .select('id')
+      .select('id', { count: 'exact', head: true })
       .eq('mentor_id', mentorId)
       .eq('status', 'active');
 
-    const activeCount = (activeMentorships ?? []).length;
-    if (activeCount >= mentorProfile.max_mentees) {
+    if (countError) {
+      throw new Error(`Failed to count active mentorships: ${countError.message}`);
+    }
+    if ((activeCount ?? 0) >= mentorProfile.max_mentees) {
       throw new Error('Mentor has reached their maximum mentee capacity');
     }
 
@@ -239,5 +231,35 @@ export class MentorshipService implements IMentorshipService {
     }
 
     return data ?? [];
+  }
+
+  async updateMentorProfile(
+    profileId: string,
+    creatorId: string,
+    data: { niche?: string; audienceSizeRange?: string; bio?: string; maxMentees?: number }
+  ): Promise<void> {
+    this.logger.info('MentorshipService.updateMentorProfile', { profileId, creatorId });
+
+    const updates: Record<string, unknown> = {};
+    if (data.niche !== undefined) updates.niche = data.niche.trim();
+    if (data.audienceSizeRange !== undefined) updates.audience_size_range = data.audienceSizeRange;
+    if (data.bio !== undefined) updates.bio = data.bio;
+    if (data.maxMentees !== undefined) {
+      if (data.maxMentees < 1 || data.maxMentees > 10) {
+        throw new Error('max_mentees must be between 1 and 10');
+      }
+      updates.max_mentees = data.maxMentees;
+    }
+
+    const { error } = await this.db
+      .from<MentorProfileRow>('mentor_profiles')
+      .update(updates)
+      .eq('id', profileId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to update mentor profile', { error, profileId, creatorId });
+      throw new Error('Failed to update mentor profile');
+    }
   }
 }

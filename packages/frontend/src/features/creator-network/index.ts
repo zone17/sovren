@@ -63,7 +63,7 @@ export { marketplaceApi } from './services/marketplaceApi';
 
 // Types
 export type {
-  ApiResponse,
+  ApiResponse as CommunityApiResponse,
   Pagination,
   CircleWithMemberCount,
   MentorWithProfile,

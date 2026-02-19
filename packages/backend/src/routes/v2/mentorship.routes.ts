@@ -9,11 +9,13 @@ import { container } from '../../container';
 import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
+import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import {
   RegisterMentorSchema,
   RequestMentorshipSchema,
   RespondMentorshipSchema,
+  UpdateMentorProfileSchema,
 } from '../../validators/community';
 import type { IMentorshipService } from '../../interfaces/community/IMentorshipService';
 
@@ -56,7 +58,7 @@ router.post(
       getAuthUser(req).nostr_pubkey,
       result.data
     );
-    res.status(201).json({ success: true, data });
+    res.status(201).json(createApiResponse(req, data));
   })
 );
 
@@ -84,7 +86,7 @@ router.get(
       Object.keys(filters).length > 0 ? filters : undefined
     );
 
-    res.json({ success: true, data });
+    res.json(createApiResponse(req, data));
   })
 );
 
@@ -99,7 +101,7 @@ router.get(
   requireCreator,
   asyncHandler(async (req, res) => {
     const data = await getMentorshipService().getMyMentorships(getAuthUser(req).nostr_pubkey);
-    res.json({ success: true, data });
+    res.json(createApiResponse(req, data));
   })
 );
 
@@ -131,7 +133,7 @@ router.post(
       { niche: result.data.niche, goals: result.data.goals }
     );
 
-    res.status(201).json({ success: true, data });
+    res.status(201).json(createApiResponse(req, data));
   })
 );
 
@@ -158,7 +160,34 @@ router.put(
       getAuthUser(req).nostr_pubkey,
       result.data.accept
     );
-    res.json({ success: true });
+    res.json(createApiResponse(req, { accepted: result.data.accept }));
+  })
+);
+
+/**
+ * PUT /api/v2/mentorship/profiles/:id
+ * Update a mentor profile
+ */
+router.put(
+  '/profiles/:id',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  asyncHandler(async (req, res) => {
+    const result = UpdateMentorProfileSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
+      return;
+    }
+
+    await getMentorshipService().updateMentorProfile(
+      req.params.id,
+      getAuthUser(req).nostr_pubkey,
+      result.data
+    );
+    res.json(createApiResponse(req, { updated: true }));
   })
 );
 

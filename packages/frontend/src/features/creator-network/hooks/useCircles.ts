@@ -27,6 +27,9 @@ export function useCreateCircle() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'circles'] });
     },
+    onError: (error) => {
+      console.error('Create circle failed:', error);
+    },
   });
 }
 
@@ -37,6 +40,9 @@ export function useJoinCircle() {
     mutationFn: (circleId: string) => circlesApi.joinCircle(circleId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'circles'] });
+    },
+    onError: (error) => {
+      console.error('Join circle failed:', error);
     },
   });
 }
@@ -49,6 +55,9 @@ export function useRemoveMember() {
       circlesApi.removeMember(circleId, memberId),
     onSuccess: (_data, { circleId }) => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'circles', circleId] });
+    },
+    onError: (error) => {
+      console.error('Remove member failed:', error);
     },
   });
 }
@@ -72,6 +81,9 @@ export function usePostToCircle(circleId: string) {
       queryClient.invalidateQueries({
         queryKey: ['creator-network', 'circles', circleId, 'posts'],
       });
+    },
+    onError: (error) => {
+      console.error('Post to circle failed:', error);
     },
   });
 }

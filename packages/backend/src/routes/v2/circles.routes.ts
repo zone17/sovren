@@ -9,6 +9,7 @@ import { container } from '../../container';
 import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
+import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { CreateCircleSchema, CreateCirclePostSchema } from '../../validators/community';
 import type { ICreatorCircleService } from '../../interfaces/community/ICreatorCircleService';
@@ -49,7 +50,7 @@ router.post(
     }
 
     const data = await getCircleService().createCircle(getAuthUser(req).nostr_pubkey, result.data);
-    res.status(201).json({ success: true, data });
+    res.status(201).json(createApiResponse(req, data));
   })
 );
 
@@ -63,7 +64,7 @@ router.get(
   requireCreator,
   asyncHandler(async (req, res) => {
     const data = await getCircleService().getCircles(getAuthUser(req).nostr_pubkey);
-    res.json({ success: true, data });
+    res.json(createApiResponse(req, data));
   })
 );
 
@@ -78,7 +79,26 @@ router.get(
   requireCreator,
   asyncHandler(async (req, res) => {
     const data = await getCircleService().getSuggestedCircles(getAuthUser(req).nostr_pubkey);
-    res.json({ success: true, data });
+    res.json(createApiResponse(req, data));
+  })
+);
+
+/**
+ * GET /api/v2/circles/:id
+ * Get a single circle by ID
+ */
+router.get(
+  '/:id',
+  authenticate,
+  requireCreator,
+  asyncHandler(async (req, res) => {
+    const circles = await getCircleService().getCircles(getAuthUser(req).nostr_pubkey);
+    const circle = circles.find((c) => c.id === req.params.id);
+    if (!circle) {
+      res.status(404).json({ success: false, error: 'Circle not found' });
+      return;
+    }
+    res.json(createApiResponse(req, circle));
   })
 );
 
@@ -97,7 +117,7 @@ router.post(
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
     await getCircleService().joinCircle(getAuthUser(req).nostr_pubkey, req.params.id);
-    res.json({ success: true });
+    res.json(createApiResponse(req, { joined: true }));
   })
 );
 
@@ -116,7 +136,7 @@ router.delete(
       req.params.memberId,
       getAuthUser(req).nostr_pubkey
     );
-    res.json({ success: true });
+    res.json(createApiResponse(req, { removed: true }));
   })
 );
 
@@ -137,7 +157,7 @@ router.get(
       req.params.id,
       getAuthUser(req).nostr_pubkey
     );
-    res.json({ success: true, data });
+    res.json(createApiResponse(req, data));
   })
 );
 
@@ -164,7 +184,7 @@ router.post(
       getAuthUser(req).nostr_pubkey,
       result.data.content
     );
-    res.status(201).json({ success: true, data });
+    res.status(201).json(createApiResponse(req, data));
   })
 );
 

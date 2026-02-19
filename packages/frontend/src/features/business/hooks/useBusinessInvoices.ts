@@ -29,6 +29,9 @@ export function useCreateBusinessInvoice() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
+    onError: (error) => {
+      console.error('Create invoice failed:', error);
+    },
   });
 }
 
@@ -40,6 +43,9 @@ export function useUpdateInvoiceStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
+    onError: (error) => {
+      console.error('Update invoice status failed:', error);
+    },
   });
 }
 
@@ -49,6 +55,9 @@ export function useGeneratePaymentLink() {
     mutationFn: (id: string) => invoicesApi.generatePaymentLink(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (error) => {
+      console.error('Generate payment link failed:', error);
     },
   });
 }

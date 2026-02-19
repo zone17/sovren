@@ -9,7 +9,7 @@
  * - joinCircle: capacity check, duplicate member, circle not found, DB error
  * - removeMember: admin auth, self-removal guard, circle not found, DB error
  * - getCirclePosts: success, DB error, empty result
- * - createPost: empty content, content too long, DB error, success
+ * - createPost: DB error, success (content validation moved to Zod at route layer per #350)
  */
 
 import { CreatorCircleService } from '../CreatorCircleService';
@@ -619,27 +619,7 @@ describe('CreatorCircleService', () => {
       );
     });
 
-    it('throws when content is empty', async () => {
-      buildService();
-      await expect(service.createPost(CIRCLE_ID, CREATOR_ID, '')).rejects.toThrow(
-        'Post content cannot be empty'
-      );
-    });
-
-    it('throws when content is only whitespace', async () => {
-      buildService();
-      await expect(service.createPost(CIRCLE_ID, CREATOR_ID, '   ')).rejects.toThrow(
-        'Post content cannot be empty'
-      );
-    });
-
-    it('throws when content exceeds 5000 characters', async () => {
-      buildService();
-      const longContent = 'a'.repeat(5001);
-      await expect(service.createPost(CIRCLE_ID, CREATOR_ID, longContent)).rejects.toThrow(
-        'Post content exceeds 5000 character limit'
-      );
-    });
+    // #350: content empty/whitespace/length validation moved to Zod at route layer
 
     it('accepts content of exactly 5000 characters (boundary)', async () => {
       buildService();

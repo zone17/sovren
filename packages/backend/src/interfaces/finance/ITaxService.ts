@@ -31,5 +31,7 @@ export interface ITaxService {
     creatorId: string,
     data: { name: string; type: string }
   ): Promise<{ id: string }>;
+  deleteExpense(expenseId: string, creatorId: string): Promise<void>;
+  deleteExpenseCategory(categoryId: string, creatorId: string): Promise<void>;
   exportTaxReport(creatorId: string, year: number, format: 'csv' | 'json'): Promise<string>;
 }

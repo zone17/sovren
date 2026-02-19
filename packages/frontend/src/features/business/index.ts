@@ -1,5 +1,8 @@
 // Business Manager Feature Module Exports
 
+// Error Boundary
+export { BusinessErrorBoundary } from './ErrorBoundary';
+
 // Components
 export { default as BusinessNav } from './components/BusinessNav';
 export { default as ContractLibrary } from './components/ContractLibrary';
@@ -55,7 +58,7 @@ export { taxApi } from './services/taxApi';
 
 // Types
 export type {
-  ApiResponse,
+  ApiResponse as BusinessApiResponse,
   BusinessPagination,
   RevenueBreakdownEntry,
   RevenueRisk,

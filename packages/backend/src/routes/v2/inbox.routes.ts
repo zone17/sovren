@@ -92,6 +92,33 @@ router.get(
 );
 
 // ============================================================================
+// GET /messages/:id — Single message (#338)
+// ============================================================================
+
+router.get(
+  '/messages/:id',
+  authenticate,
+  requireCreator,
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+
+    const { data: message, error } = await getDb()
+      .from('inbox_messages')
+      .select('*')
+      .eq('id', req.params.id)
+      .eq('creator_id', creatorId)
+      .single();
+
+    if (error || !message) {
+      res.status(404).json({ success: false, error: 'Message not found' });
+      return;
+    }
+
+    res.json(createApiResponse(req, { message }));
+  })
+);
+
+// ============================================================================
 // POST /reply/:messageId — Reply routed to correct platform
 // EPIC-009B: NOSTR replies now use NostrReplyAdapter (fixes silent void bug)
 // ============================================================================

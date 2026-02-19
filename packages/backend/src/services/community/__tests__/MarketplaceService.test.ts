@@ -23,7 +23,7 @@ import { MarketplaceService } from '../MarketplaceService';
 // ---------------------------------------------------------------------------
 // Supabase mock-chain factory
 // ---------------------------------------------------------------------------
-function makeChain(leafResolvedValue: { data: any; error: any }) {
+function makeChain(leafResolvedValue: { data: any; error: any; count?: number | null }) {
   const chain: any = {
     select: jest.fn().mockReturnThis(),
     insert: jest.fn().mockReturnThis(),
@@ -34,6 +34,7 @@ function makeChain(leafResolvedValue: { data: any; error: any }) {
     not: jest.fn().mockReturnThis(),
     order: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
+    range: jest.fn().mockReturnThis(),
     in: jest.fn().mockReturnThis(),
     or: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue(leafResolvedValue),
@@ -242,17 +243,17 @@ describe('MarketplaceService', () => {
   describe('getListings', () => {
     it('returns active listings by default', async () => {
       const listings = [{ id: 'l1', active: true, service_type: 'editing' }];
-      const chain = makeChain({ data: listings, error: null });
+      const chain = makeChain({ data: listings, error: null, count: 1 });
       mockDb.from.mockReturnValueOnce(chain);
 
       const result = await service.getListings();
 
-      expect(result).toEqual(listings);
+      expect(result).toEqual({ items: listings, total: 1 });
       expect(chain.eq).toHaveBeenCalledWith('active', true);
     });
 
     it('applies serviceType filter when provided', async () => {
-      const chain = makeChain({ data: [], error: null });
+      const chain = makeChain({ data: [], error: null, count: 0 });
       mockDb.from.mockReturnValueOnce(chain);
 
       await service.getListings({ serviceType: 'design' });
@@ -261,7 +262,7 @@ describe('MarketplaceService', () => {
     });
 
     it('queries inactive listings when active=false', async () => {
-      const chain = makeChain({ data: [], error: null });
+      const chain = makeChain({ data: [], error: null, count: 0 });
       mockDb.from.mockReturnValueOnce(chain);
 
       await service.getListings({ active: false });
@@ -269,12 +270,12 @@ describe('MarketplaceService', () => {
       expect(chain.eq).toHaveBeenCalledWith('active', false);
     });
 
-    it('returns empty array when no listings exist', async () => {
-      const chain = makeChain({ data: null, error: null });
+    it('returns empty result when no listings exist', async () => {
+      const chain = makeChain({ data: null, error: null, count: 0 });
       mockDb.from.mockReturnValueOnce(chain);
 
       const result = await service.getListings();
-      expect(result).toEqual([]);
+      expect(result).toEqual({ items: [], total: 0 });
     });
 
     it('throws and logs when the DB query fails', async () => {

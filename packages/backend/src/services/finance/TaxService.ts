@@ -12,14 +12,43 @@ import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { Expense, ExpenseCategory } from '@shared/types/finance';
-
-const BTC_RATE_TTL_ACTIVE = 300; // 5 minutes for active tax calculations
-const BTC_RATE_CACHE_KEY = 'btc:usd:rate';
-const RATE_SOURCE = 'coingecko';
+import { getBtcUsdRate, RATE_SOURCE } from '../../utils/btc-rate';
 
 // L-5: Characters that trigger formula execution in spreadsheet apps
 // #271: Added \t and \r to prevent tab/CR-based injection
 const CSV_FORMULA_CHARS = /^[=+\-@\t\r]/;
+
+// #323: Row type interfaces for typed .from<T>() calls
+interface RevenueEntryRow {
+  id: string;
+  creator_id: string;
+  source: string;
+  amount_sats: number;
+  usd_at_time: number | null;
+  rate_source: string | null;
+  rate_timestamp: string | null;
+  recorded_at: string;
+}
+
+interface ExpenseRow {
+  id: string;
+  creator_id: string;
+  category_id: string | null;
+  description: string;
+  amount_sats: number;
+  usd_at_time: number | null;
+  rate_source: string | null;
+  rate_timestamp: string | null;
+  expense_date: string;
+  created_at: string;
+}
+
+interface ExpenseCategoryRow {
+  id: string;
+  creator_id: string;
+  name: string;
+  type: string;
+}
 
 export class TaxService implements ITaxService {
   constructor(
@@ -45,22 +74,38 @@ export class TaxService implements ITaxService {
     const { startDate, endDate } = this.quarterDateRange(year, quarter);
 
     const { data: revenueData, error: revenueError } = await this.db
-      .from('revenue_entries')
+      .from<RevenueEntryRow>('revenue_entries')
       .select('amount_sats, usd_at_time')
       .eq('creator_id', creatorId)
       .gte('recorded_at', startDate)
       .lte('recorded_at', endDate);
 
-    if (revenueError) throw revenueError;
+    if (revenueError) {
+      this.logger.error('Failed to fetch quarterly revenue', {
+        error: revenueError,
+        creatorId,
+        year,
+        quarter,
+      });
+      throw new Error('Failed to fetch quarterly revenue');
+    }
 
     const { data: expenseData, error: expenseError } = await this.db
-      .from('expenses')
+      .from<ExpenseRow>('expenses')
       .select('amount_sats, usd_at_time')
       .eq('creator_id', creatorId)
       .gte('expense_date', startDate.split('T')[0])
       .lte('expense_date', endDate.split('T')[0]);
 
-    if (expenseError) throw expenseError;
+    if (expenseError) {
+      this.logger.error('Failed to fetch quarterly expenses', {
+        error: expenseError,
+        creatorId,
+        year,
+        quarter,
+      });
+      throw new Error('Failed to fetch quarterly expenses');
+    }
 
     const revenues: Array<{ amount_sats: number; usd_at_time: number | null }> = revenueData ?? [];
     const expenses: Array<{ amount_sats: number; usd_at_time: number | null }> = expenseData ?? [];
@@ -70,7 +115,7 @@ export class TaxService implements ITaxService {
 
     // Use recorded usd_at_time (captured at receipt) where available.
     // Fall back to live rate for entries missing USD values — 5-min TTL.
-    const { rate: btcRateUsd } = await this.getBtcUsdRate();
+    const { rate: btcRateUsd } = await getBtcUsdRate(this.cache, this.logger);
 
     const usdRevenue = revenues.reduce((sum, r) => {
       if (r.usd_at_time !== null) return sum + r.usd_at_time;
@@ -99,8 +144,10 @@ export class TaxService implements ITaxService {
     this.logger.info('TaxService.getExpenses', { creatorId, filters });
 
     let query = this.db
-      .from('expenses')
-      .select('*, expense_categories(name, type)')
+      .from<ExpenseRow>('expenses')
+      .select(
+        'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)'
+      )
       .eq('creator_id', creatorId);
 
     if (filters?.categoryId) {
@@ -113,8 +160,12 @@ export class TaxService implements ITaxService {
       query = query.lte('expense_date', filters.endDate);
     }
 
-    const { data, error } = await query.order('expense_date', { ascending: false });
-    if (error) throw error;
+    // #322: Add limit to prevent unbounded result sets
+    const { data, error } = await query.order('expense_date', { ascending: false }).limit(100);
+    if (error) {
+      this.logger.error('Failed to fetch expenses', { error, creatorId });
+      throw new Error('Failed to fetch expenses');
+    }
     return data ?? [];
   }
 
@@ -134,10 +185,10 @@ export class TaxService implements ITaxService {
     }
 
     // H-5: Record rate with provenance — source + timestamp
-    const { rate: btcRateUsd, fetchedAt } = await this.getBtcUsdRate();
+    const { rate: btcRateUsd, fetchedAt } = await getBtcUsdRate(this.cache, this.logger);
     const usdAtTime = (data.amountSats / 100_000_000) * btcRateUsd;
 
-    const row: Record<string, unknown> = {
+    const row: Partial<ExpenseRow> = {
       creator_id: creatorId,
       description: data.description,
       amount_sats: data.amountSats,
@@ -149,26 +200,32 @@ export class TaxService implements ITaxService {
     if (data.categoryId) row.category_id = data.categoryId;
 
     const { data: inserted, error } = await this.db
-      .from('expenses')
+      .from<ExpenseRow>('expenses')
       .insert(row)
       .select('id')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to add expense', { error, creatorId });
+      throw new Error('Failed to add expense');
+    }
     if (!inserted) throw new Error('Failed to add expense');
-    return { id: (inserted as { id: string }).id };
+    return { id: inserted.id };
   }
 
   async getExpenseCategories(creatorId: string): Promise<ExpenseCategory[]> {
     this.logger.info('TaxService.getExpenseCategories', { creatorId });
 
     const { data, error } = await this.db
-      .from('expense_categories')
-      .select('*')
+      .from<ExpenseCategoryRow>('expense_categories')
+      .select('id, creator_id, name, type')
       .eq('creator_id', creatorId)
       .order('name', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to fetch expense categories', { error, creatorId });
+      throw new Error('Failed to fetch expense categories');
+    }
     return data ?? [];
   }
 
@@ -179,14 +236,17 @@ export class TaxService implements ITaxService {
     this.logger.info('TaxService.createExpenseCategory', { creatorId, name: data.name });
 
     const { data: inserted, error } = await this.db
-      .from('expense_categories')
+      .from<ExpenseCategoryRow>('expense_categories')
       .insert({ creator_id: creatorId, name: data.name, type: data.type })
       .select('id')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to create expense category', { error, creatorId });
+      throw new Error('Failed to create expense category');
+    }
     if (!inserted) throw new Error('Failed to create expense category');
-    return { id: (inserted as { id: string }).id };
+    return { id: inserted.id };
   }
 
   async exportTaxReport(creatorId: string, year: number, format: 'csv' | 'json'): Promise<string> {
@@ -211,8 +271,10 @@ export class TaxService implements ITaxService {
     // L-5: CSV injection protection — prefix formula-trigger chars with single quote
     const csvCell = (value: string): string => {
       // #271: Strip embedded tab/CR chars and prefix formula-trigger chars
-      const str = String(value).replace(/[\t\r]/g, ' ');
-      return CSV_FORMULA_CHARS.test(str) ? `'${str}` : str;
+      let str = String(value).replace(/[\t\r]/g, ' ');
+      if (CSV_FORMULA_CHARS.test(str)) str = `'${str}`;
+      // #346: Escape double quotes per RFC 4180 to prevent quote-breakout injection
+      return str.replace(/"/g, '""');
     };
 
     const lines: string[] = [
@@ -247,38 +309,6 @@ export class TaxService implements ITaxService {
   // Private helpers
   // ============================================================================
 
-  /** H-5: Returns rate + metadata for provenance recording */
-  private async getBtcUsdRate(): Promise<{ rate: number; fetchedAt: string }> {
-    const cached = await this.cache.get<{ rate: number; fetchedAt: string }>(BTC_RATE_CACHE_KEY);
-    if (cached !== null) return cached;
-
-    try {
-      const response = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
-      );
-      const json = (await response.json()) as { bitcoin?: { usd?: number } };
-      const rate = json?.bitcoin?.usd;
-
-      if (typeof rate !== 'number' || rate <= 0) {
-        throw new Error('Invalid BTC/USD rate from API');
-      }
-
-      const fetchedAt = new Date().toISOString();
-      const entry = { rate, fetchedAt };
-      await this.cache.set(BTC_RATE_CACHE_KEY, entry, BTC_RATE_TTL_ACTIVE);
-      // Also persist as stale fallback (never expires via set with no TTL arg)
-      await this.cache.set(`${BTC_RATE_CACHE_KEY}:stale`, entry);
-      return entry;
-    } catch (err) {
-      this.logger.error('BTC/USD rate fetch failed, using stale fallback', { err });
-      const stale = await this.cache.get<{ rate: number; fetchedAt: string }>(
-        `${BTC_RATE_CACHE_KEY}:stale`
-      );
-      // Return stale with original timestamp so callers know it's not fresh
-      return stale ?? { rate: 50000, fetchedAt: new Date(0).toISOString() };
-    }
-  }
-
   private quarterDateRange(
     year: number,
     quarter: 1 | 2 | 3 | 4
@@ -296,5 +326,35 @@ export class TaxService implements ITaxService {
       startDate: `${year}-${String(startMonth).padStart(2, '0')}-01T00:00:00Z`,
       endDate: `${year}-${String(endMonth).padStart(2, '0')}-${lastDay}T23:59:59Z`,
     };
+  }
+
+  async deleteExpense(expenseId: string, creatorId: string): Promise<void> {
+    this.logger.info('TaxService.deleteExpense', { expenseId, creatorId });
+
+    const { error } = await this.db
+      .from<ExpenseRow>('expenses')
+      .delete()
+      .eq('id', expenseId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to delete expense', { error, expenseId, creatorId });
+      throw new Error('Failed to delete expense');
+    }
+  }
+
+  async deleteExpenseCategory(categoryId: string, creatorId: string): Promise<void> {
+    this.logger.info('TaxService.deleteExpenseCategory', { categoryId, creatorId });
+
+    const { error } = await this.db
+      .from<ExpenseCategoryRow>('expense_categories')
+      .delete()
+      .eq('id', categoryId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to delete expense category', { error, categoryId, creatorId });
+      throw new Error('Failed to delete expense category');
+    }
   }
 }

@@ -11,12 +11,32 @@ import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { DiversificationGoal } from '@shared/types/finance';
+import { getBtcUsdRate, RATE_SOURCE } from '../../utils/btc-rate';
 
 const CONCENTRATION_WARNING_THRESHOLD = 0.5; // >50% from single source = risk
 const CACHE_TTL_DISPLAY = 3600; // 1h for display contexts
-const BTC_RATE_CACHE_KEY = 'btc:usd:rate';
-const BTC_RATE_TTL = 300; // 5 minutes
-const RATE_SOURCE = 'coingecko';
+
+// #323: Row type interfaces for typed .from<T>() calls
+interface RevenueEntryRow {
+  id: string;
+  creator_id: string;
+  source: string;
+  amount_sats: number;
+  usd_at_time: number | null;
+  rate_source: string | null;
+  rate_timestamp: string | null;
+  description: string | null;
+  recorded_at: string;
+  created_at: string;
+}
+
+interface DiversificationGoalRow {
+  id: string;
+  creator_id: string;
+  target_distribution: Record<string, number>;
+  created_at: string;
+  updated_at: string;
+}
 
 export class RevenueService implements IRevenueService {
   constructor(
@@ -39,7 +59,7 @@ export class RevenueService implements IRevenueService {
     if (cached) return cached;
 
     let query = this.db
-      .from('revenue_entries')
+      .from<RevenueEntryRow>('revenue_entries')
       .select('source, amount_sats')
       .eq('creator_id', creatorId);
 
@@ -50,8 +70,12 @@ export class RevenueService implements IRevenueService {
       query = query.lte('recorded_at', period.end);
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
+    // #318: Add limit to prevent unbounded result sets
+    const { data, error } = await query.limit(1000);
+    if (error) {
+      this.logger.error('Failed to fetch revenue breakdown', { error, creatorId });
+      throw new Error('Failed to fetch revenue breakdown');
+    }
 
     const rows: Array<{ source: string; amount_sats: number }> = data ?? [];
 
@@ -129,12 +153,15 @@ export class RevenueService implements IRevenueService {
     this.logger.info('RevenueService.getDiversificationGoals', { creatorId });
 
     const { data, error } = await this.db
-      .from('diversification_goals')
-      .select('*')
+      .from<DiversificationGoalRow>('diversification_goals')
+      .select('id, creator_id, target_distribution, created_at, updated_at')
       .eq('creator_id', creatorId)
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    if (error && error.code !== 'PGRST116') {
+      this.logger.error('Failed to fetch diversification goals', { error, creatorId });
+      throw new Error('Failed to fetch diversification goals');
+    }
     return data ?? null;
   }
 
@@ -147,7 +174,7 @@ export class RevenueService implements IRevenueService {
       throw new Error(`Diversification targets must sum to 100, got ${total}`);
     }
 
-    const { error } = await this.db.from('diversification_goals').upsert(
+    const { error } = await this.db.from<DiversificationGoalRow>('diversification_goals').upsert(
       {
         creator_id: creatorId,
         target_distribution: targets,
@@ -156,7 +183,10 @@ export class RevenueService implements IRevenueService {
       { onConflict: 'creator_id' }
     );
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to set diversification goals', { error, creatorId });
+      throw new Error('Failed to set diversification goals');
+    }
 
     // Invalidate cache
     await this.cache.invalidate(`revenue:breakdown:${creatorId}:*`);
@@ -173,10 +203,10 @@ export class RevenueService implements IRevenueService {
     }
 
     // H-5: Record BTC/USD rate with provenance — source + timestamp
-    const { rate: btcRateUsd, fetchedAt } = await this.getBtcUsdRate();
+    const { rate: btcRateUsd, fetchedAt } = await getBtcUsdRate(this.cache, this.logger);
     const usdAtTime = (data.amountSats / 100_000_000) * btcRateUsd;
 
-    const row: Record<string, unknown> = {
+    const row: Partial<RevenueEntryRow> = {
       creator_id: creatorId,
       source: data.source,
       amount_sats: data.amountSats,
@@ -187,51 +217,20 @@ export class RevenueService implements IRevenueService {
     if (data.description) row.description = data.description;
 
     const { data: inserted, error } = await this.db
-      .from('revenue_entries')
+      .from<RevenueEntryRow>('revenue_entries')
       .insert(row)
       .select('id')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to record revenue entry', { error, creatorId });
+      throw new Error('Failed to record revenue entry');
+    }
     if (!inserted) throw new Error('Failed to record revenue entry');
 
     // Invalidate cached breakdown
     await this.cache.invalidate(`revenue:breakdown:${creatorId}:*`);
 
-    return { id: (inserted as { id: string }).id };
-  }
-
-  // ============================================================================
-  // Private helpers
-  // ============================================================================
-
-  /** H-5: Returns rate + metadata for provenance recording */
-  private async getBtcUsdRate(): Promise<{ rate: number; fetchedAt: string }> {
-    const cached = await this.cache.get<{ rate: number; fetchedAt: string }>(BTC_RATE_CACHE_KEY);
-    if (cached !== null) return cached;
-
-    try {
-      const response = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
-      );
-      const json = (await response.json()) as { bitcoin?: { usd?: number } };
-      const rate = json?.bitcoin?.usd;
-
-      if (typeof rate !== 'number' || rate <= 0) {
-        throw new Error('Invalid BTC/USD rate from API');
-      }
-
-      const fetchedAt = new Date().toISOString();
-      const entry = { rate, fetchedAt };
-      await this.cache.set(BTC_RATE_CACHE_KEY, entry, BTC_RATE_TTL);
-      await this.cache.set(`${BTC_RATE_CACHE_KEY}:stale`, entry);
-      return entry;
-    } catch (err) {
-      this.logger.error('BTC/USD rate fetch failed, using stale fallback', { err });
-      const stale = await this.cache.get<{ rate: number; fetchedAt: string }>(
-        `${BTC_RATE_CACHE_KEY}:stale`
-      );
-      return stale ?? { rate: 50000, fetchedAt: new Date(0).toISOString() };
-    }
+    return { id: inserted.id };
   }
 }

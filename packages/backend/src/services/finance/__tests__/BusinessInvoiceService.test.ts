@@ -30,7 +30,7 @@ function makeLogger() {
 
 function makeQueueService() {
   return {
-    createQueue: jest.fn(),
+    createQueue: jest.fn().mockResolvedValue(undefined),
     addJob: jest.fn().mockResolvedValue('job-id-1'),
     registerProcessor: jest.fn(),
     getQueueNames: jest.fn().mockReturnValue([]),
@@ -105,16 +105,9 @@ describe('BusinessInvoiceService', () => {
   // =========================================================================
 
   describe('constructor', () => {
-    it('creates the recurring-invoices queue with exponential-backoff options', () => {
-      expect(mockQueue.createQueue).toHaveBeenCalledWith(
-        'recurring-invoices',
-        expect.objectContaining({
-          defaultJobOptions: expect.objectContaining({
-            attempts: 3,
-            backoff: expect.objectContaining({ type: 'exponential' }),
-          }),
-        })
-      );
+    it('does NOT create the recurring-invoices queue eagerly (#320 lazy init)', () => {
+      // #320: Queue creation is now lazy — constructor should not call createQueue
+      expect(mockQueue.createQueue).not.toHaveBeenCalled();
     });
   });
 
@@ -279,13 +272,13 @@ describe('BusinessInvoiceService', () => {
       ).rejects.toThrow('Failed to create invoice');
     });
 
-    it('throws the database error when insert fails', async () => {
+    it('throws a sanitized error when insert fails', async () => {
       const dbError = { message: 'Insert failed', code: '23505' };
       mockDb._singleResult = { data: null, error: dbError };
 
       await expect(
         service.createInvoice('creator-1', { clientName: 'Client', lineItems: singleLineItem })
-      ).rejects.toEqual(dbError);
+      ).rejects.toThrow('Failed to create invoice');
     });
 
     it('converts sats to millisats in the LNURL-pay URL (amount = sats * 1000)', async () => {
@@ -347,11 +340,11 @@ describe('BusinessInvoiceService', () => {
       expect(result).toEqual([]);
     });
 
-    it('throws when the database returns an error', async () => {
+    it('throws a sanitized error when the database returns an error', async () => {
       const dbError = { message: 'Permission denied' };
       mockDb._orderResult = { data: null, error: dbError };
 
-      await expect(service.getInvoices('creator-1')).rejects.toEqual(dbError);
+      await expect(service.getInvoices('creator-1')).rejects.toThrow('Failed to fetch invoices');
     });
   });
 
@@ -379,11 +372,13 @@ describe('BusinessInvoiceService', () => {
       );
     });
 
-    it('throws the database error when query fails', async () => {
+    it('throws a sanitized error when query fails', async () => {
       const dbError = { message: 'Not found', code: 'PGRST116' };
       mockDb._singleResult = { data: null, error: dbError };
 
-      await expect(service.getInvoice('inv-x', 'creator-1')).rejects.toEqual(dbError);
+      await expect(service.getInvoice('inv-x', 'creator-1')).rejects.toThrow(
+        'Failed to fetch invoice'
+      );
     });
 
     it('enforces creator ownership by filtering on creator_id', async () => {
@@ -446,13 +441,13 @@ describe('BusinessInvoiceService', () => {
       }
     );
 
-    it('throws the database error when update fails', async () => {
+    it('throws a sanitized error when update fails', async () => {
       const dbError = { message: 'RLS violation' };
       const chain = makeUpdateTerminalChain({ data: null, error: dbError });
       mockDb.from.mockReturnValue(chain);
 
-      await expect(service.updateInvoiceStatus('inv-1', 'creator-1', 'paid')).rejects.toEqual(
-        dbError
+      await expect(service.updateInvoiceStatus('inv-1', 'creator-1', 'paid')).rejects.toThrow(
+        'Failed to update invoice status'
       );
     });
   });
@@ -495,11 +490,13 @@ describe('BusinessInvoiceService', () => {
       );
     });
 
-    it('throws when getInvoice returns a database error', async () => {
+    it('throws a sanitized error when getInvoice returns a database error', async () => {
       const dbError = { message: 'Not found', code: 'PGRST116' };
       mockDb._singleResult = { data: null, error: dbError };
 
-      await expect(service.generatePaymentLink('inv-x', 'wrong-creator')).rejects.toEqual(dbError);
+      await expect(service.generatePaymentLink('inv-x', 'wrong-creator')).rejects.toThrow(
+        'Failed to fetch invoice'
+      );
     });
   });
 

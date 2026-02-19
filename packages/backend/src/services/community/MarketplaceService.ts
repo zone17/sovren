@@ -25,6 +25,7 @@ import type { IMarketplaceService } from '../../interfaces/community/IMarketplac
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
+import { validateSsrfUrl } from '../../utils/ssrf';
 
 const VALID_SERVICE_TYPES = ['editing', 'writing', 'design', 'consulting', 'other'] as const;
 const ESCROW_EXPIRE_DAYS = 30;
@@ -128,6 +129,7 @@ export class MarketplaceService implements IMarketplaceService {
     }
 
     // H-4: Validate portfolio URLs — must be https:// only (no http, no data URIs)
+    // #347: SSRF validation — reject URLs pointing to internal/private IPs
     if (data.portfolioUrls && data.portfolioUrls.length > 0) {
       for (const url of data.portfolioUrls) {
         if (typeof url !== 'string' || !url.startsWith('https://')) {
@@ -142,6 +144,8 @@ export class MarketplaceService implements IMarketplaceService {
         } catch {
           throw new Error(`Invalid portfolio URL: "${url}". Must be a valid https:// URL`);
         }
+        // #347: SSRF check — blocks internal IPs, DNS rebinding, decimal IPs, etc.
+        await validateSsrfUrl(url);
       }
     }
 
@@ -168,11 +172,35 @@ export class MarketplaceService implements IMarketplaceService {
     return { id: rows.id };
   }
 
-  async getListings(filters?: { serviceType?: string; active?: boolean }): Promise<ListingRow[]> {
-    let query = this.db
+  async getListing(listingId: string): Promise<ListingRow | null> {
+    const { data, error } = await this.db
       .from<ListingRow>('service_listings')
       .select(
         'id, creator_id, service_type, title, description, price_sats, portfolio_urls, active, created_at, updated_at'
+      )
+      .eq('id', listingId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+    return data;
+  }
+
+  async getListings(
+    filters?: { serviceType?: string; active?: boolean },
+    pagination?: { page: number; limit: number }
+  ): Promise<{ items: ListingRow[]; total: number }> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = this.db
+      .from<ListingRow>('service_listings')
+      .select(
+        'id, creator_id, service_type, title, description, price_sats, portfolio_urls, active, created_at, updated_at',
+        { count: 'exact' }
       );
 
     // Default to active listings
@@ -183,14 +211,102 @@ export class MarketplaceService implements IMarketplaceService {
       query = query.eq('service_type', filters.serviceType);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false }).limit(50);
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
     if (error) {
       this.logger.error('Failed to get listings', { error, filters });
       throw new Error(`Failed to get listings: ${error.message}`);
     }
 
-    return data ?? [];
+    return { items: data ?? [], total: count ?? 0 };
+  }
+
+  async updateListing(
+    listingId: string,
+    creatorId: string,
+    data: {
+      title?: string;
+      description?: string;
+      priceSats?: number;
+      portfolioUrls?: string[];
+      active?: boolean;
+    }
+  ): Promise<void> {
+    const updates: Record<string, unknown> = {};
+    if (data.title !== undefined) updates.title = data.title.trim();
+    if (data.description !== undefined) updates.description = data.description;
+    if (data.priceSats !== undefined) updates.price_sats = data.priceSats;
+    if (data.portfolioUrls !== undefined) {
+      // H-4: Validate portfolio URLs
+      for (const url of data.portfolioUrls) {
+        if (typeof url !== 'string' || !url.startsWith('https://')) {
+          throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
+        }
+        await validateSsrfUrl(url);
+      }
+      updates.portfolio_urls = data.portfolioUrls;
+    }
+    if (data.active !== undefined) updates.active = data.active;
+
+    const { error, count } = await this.db
+      .from<ListingRow>('service_listings')
+      .update(updates)
+      .eq('id', listingId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to update listing', { error, listingId });
+      throw new Error(`Failed to update listing: ${error.message}`);
+    }
+    if (count === 0) {
+      throw new Error('Listing not found or not owned by user');
+    }
+  }
+
+  async deleteListing(listingId: string, creatorId: string): Promise<void> {
+    // Soft delete — set active=false
+    const { error, count } = await this.db
+      .from<ListingRow>('service_listings')
+      .update({ active: false })
+      .eq('id', listingId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to delete listing', { error, listingId });
+      throw new Error(`Failed to delete listing: ${error.message}`);
+    }
+    if (count === 0) {
+      throw new Error('Listing not found or not owned by user');
+    }
+  }
+
+  async getOrders(
+    userId: string,
+    role: 'buyer' | 'seller',
+    pagination?: { page: number; limit: number }
+  ): Promise<{ items: OrderRow[]; total: number }> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const column = role === 'buyer' ? 'buyer_id' : 'seller_id';
+
+    const { data, error, count } = await this.db
+      .from<OrderRow>('service_orders')
+      .select('*', { count: 'exact' })
+      .eq(column, userId)
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      this.logger.error('Failed to get orders', { error, userId, role });
+      throw new Error(`Failed to get orders: ${error.message}`);
+    }
+
+    return { items: data ?? [], total: count ?? 0 };
   }
 
   async placeOrder(

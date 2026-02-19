@@ -9,6 +9,7 @@ import { container } from '../../container';
 import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
+import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import {
   InviteCollaboratorSchema,
@@ -63,7 +64,7 @@ router.post(
       result.data.revenueSplitBps
     );
 
-    res.status(201).json({ success: true, data });
+    res.status(201).json(createApiResponse(req, data));
   })
 );
 
@@ -92,7 +93,7 @@ router.put(
       result.data.splits
     );
 
-    res.json({ success: true });
+    res.json(createApiResponse(req, { updated: true }));
   })
 );
 
@@ -120,7 +121,7 @@ router.put(
       result.data.accept
     );
 
-    res.json({ success: true, data: { accepted: result.data.accept } });
+    res.json(createApiResponse(req, { accepted: result.data.accept }));
   })
 );
 
@@ -137,7 +138,7 @@ router.get(
       req.params.id,
       getAuthUser(req).nostr_pubkey
     );
-    res.json({ success: true, data });
+    res.json(createApiResponse(req, data));
   })
 );
 

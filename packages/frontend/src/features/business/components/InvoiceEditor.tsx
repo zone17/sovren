@@ -20,10 +20,7 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [paymentLink, setPaymentLink] = useState<{ lnurlPay: string; qrCode: string } | null>(null);
 
-  const totalSats = lineItems.reduce(
-    (sum, item) => sum + item.quantity * item.unitPriceSats,
-    0
-  );
+  const totalSats = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceSats, 0);
 
   const updateLineItem = (index: number, field: keyof LineItem, value: string | number) => {
     setLineItems((prev) =>
@@ -44,7 +41,6 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
       {
         clientName,
         lineItems,
-        totalSats,
         dueDate: dueDate || undefined,
         recurringInterval: recurringInterval || undefined,
       },

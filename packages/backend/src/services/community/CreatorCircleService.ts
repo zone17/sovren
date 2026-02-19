@@ -226,14 +226,7 @@ export class CreatorCircleService implements ICreatorCircleService {
   }
 
   async createPost(circleId: string, authorId: string, content: string): Promise<{ id: string }> {
-    if (!content || content.trim().length === 0) {
-      throw new Error('Post content cannot be empty');
-    }
-
-    if (content.length > 5000) {
-      throw new Error('Post content exceeds 5000 character limit');
-    }
-
+    // Input validation (empty, length) is handled by Zod at the route layer.
     const { data: rows, error } = await this.db
       .from<CirclePostRow>('circle_posts')
       .insert({

@@ -121,6 +121,11 @@ function makeDb() {
       return db;
     }),
 
+    // #318: limit() is now called on breakdown queries
+    limit: jest.fn().mockImplementation(function () {
+      return Promise.resolve(db._breakdownResult);
+    }),
+
     single: jest.fn().mockImplementation(function () {
       // single() is always terminal — override _resolveWith
       return Promise.resolve(db._singleResult);
@@ -152,7 +157,9 @@ describe('RevenueService', () => {
   // =========================================================================
 
   describe('getRevenueBreakdown', () => {
-    beforeEach(() => { mockDb._mode = 'breakdown'; });
+    beforeEach(() => {
+      mockDb._mode = 'breakdown';
+    });
 
     it('returns cached result without hitting the database on cache hit', async () => {
       const cached = [{ source: 'tips', totalSats: 1000, percentage: 100 }];
@@ -254,16 +261,16 @@ describe('RevenueService', () => {
 
       await service.getRevenueBreakdown('creator-1', { start: '2026-01-01', end: '2026-03-31' });
 
-      expect(mockCache.get).toHaveBeenCalledWith(
-        expect.stringContaining('2026-01-01')
-      );
+      expect(mockCache.get).toHaveBeenCalledWith(expect.stringContaining('2026-01-01'));
     });
 
     it('throws when the database returns an error', async () => {
       const dbError = { message: 'Row-level security violation' };
       mockDb._breakdownResult = { data: null, error: dbError };
 
-      await expect(service.getRevenueBreakdown('creator-1')).rejects.toEqual(dbError);
+      await expect(service.getRevenueBreakdown('creator-1')).rejects.toThrow(
+        'Failed to fetch revenue breakdown'
+      );
     });
 
     it('queries the revenue_entries table with source and amount_sats columns', async () => {
@@ -281,7 +288,9 @@ describe('RevenueService', () => {
   // =========================================================================
 
   describe('getConcentrationRisk', () => {
-    beforeEach(() => { mockDb._mode = 'breakdown'; });
+    beforeEach(() => {
+      mockDb._mode = 'breakdown';
+    });
 
     it('returns riskLevel=high when dominant source is >50% of total', async () => {
       mockDb._breakdownResult = {
@@ -435,7 +444,9 @@ describe('RevenueService', () => {
   // =========================================================================
 
   describe('getDiversificationGoals', () => {
-    beforeEach(() => { mockDb._mode = 'single'; });
+    beforeEach(() => {
+      mockDb._mode = 'single';
+    });
 
     it('returns the goals when found', async () => {
       const goals = {
@@ -470,7 +481,9 @@ describe('RevenueService', () => {
       const dbError = { code: '42501', message: 'Permission denied' };
       mockDb._singleResult = { data: null, error: dbError };
 
-      await expect(service.getDiversificationGoals('creator-1')).rejects.toEqual(dbError);
+      await expect(service.getDiversificationGoals('creator-1')).rejects.toThrow(
+        'Failed to fetch diversification goals'
+      );
     });
   });
 
@@ -479,7 +492,9 @@ describe('RevenueService', () => {
   // =========================================================================
 
   describe('setDiversificationGoals', () => {
-    beforeEach(() => { mockDb._mode = 'upsert'; });
+    beforeEach(() => {
+      mockDb._mode = 'upsert';
+    });
 
     it('throws when targets sum to less than 100', async () => {
       await expect(
@@ -537,18 +552,16 @@ describe('RevenueService', () => {
 
       await service.setDiversificationGoals('creator-1', { subscriptions: 60, tips: 40 });
 
-      expect(mockCache.invalidate).toHaveBeenCalledWith(
-        expect.stringContaining('creator-1')
-      );
+      expect(mockCache.invalidate).toHaveBeenCalledWith(expect.stringContaining('creator-1'));
     });
 
-    it('throws the database error when upsert fails', async () => {
+    it('throws a sanitized error when upsert fails', async () => {
       const dbError = { message: 'Constraint violation' };
       mockDb._upsertResult = { error: dbError };
 
       await expect(
         service.setDiversificationGoals('creator-1', { subscriptions: 60, tips: 40 })
-      ).rejects.toEqual(dbError);
+      ).rejects.toThrow('Failed to set diversification goals');
     });
   });
 
@@ -557,7 +570,9 @@ describe('RevenueService', () => {
   // =========================================================================
 
   describe('recordRevenue', () => {
-    beforeEach(() => { mockDb._mode = 'single'; });
+    beforeEach(() => {
+      mockDb._mode = 'single';
+    });
 
     it('throws when amountSats is 0', async () => {
       await expect(
@@ -618,9 +633,7 @@ describe('RevenueService', () => {
 
       await service.recordRevenue('creator-1', { source: 'tips', amountSats: 1000 });
 
-      expect(mockCache.invalidate).toHaveBeenCalledWith(
-        expect.stringContaining('creator-1')
-      );
+      expect(mockCache.invalidate).toHaveBeenCalledWith(expect.stringContaining('creator-1'));
     });
 
     it('throws "Failed to record revenue entry" when insert returns null data', async () => {
@@ -631,19 +644,24 @@ describe('RevenueService', () => {
       ).rejects.toThrow('Failed to record revenue entry');
     });
 
-    it('throws the database error when insert fails', async () => {
+    it('throws a sanitized error when insert fails', async () => {
       const dbError = { message: 'Foreign key violation', code: '23503' };
       mockDb._singleResult = { data: null, error: dbError };
 
       await expect(
         service.recordRevenue('creator-1', { source: 'tips', amountSats: 1000 })
-      ).rejects.toEqual(dbError);
+      ).rejects.toThrow('Failed to record revenue entry');
     });
 
     it('accepts all defined revenue source types without error', async () => {
       const sources = [
-        'subscriptions', 'tips', 'sponsorships',
-        'services', 'affiliate', 'marketplace', 'other',
+        'subscriptions',
+        'tips',
+        'sponsorships',
+        'services',
+        'affiliate',
+        'marketplace',
+        'other',
       ];
 
       for (const source of sources) {

@@ -81,7 +81,7 @@ describe('ContractService', () => {
       const result = await service.getTemplates();
 
       expect(mockDb.from).toHaveBeenCalledWith('contract_templates');
-      expect(chain.select).toHaveBeenCalledWith('*');
+      expect(chain.select).toHaveBeenCalledWith('id, name, category, template_text, created_at');
       expect(chain.eq).not.toHaveBeenCalled();
       expect(chain.order).toHaveBeenCalledWith('created_at', { ascending: false });
       expect(result).toEqual(templates);
@@ -118,13 +118,13 @@ describe('ContractService', () => {
       expect(result).toEqual([]);
     });
 
-    it('throws the database error when query fails', async () => {
+    it('throws a sanitized error when query fails', async () => {
       const dbError = { message: 'Connection refused', code: '08000' };
       const chain = makeChain({ data: null, error: dbError });
       mockDb.from.mockReturnValue(chain);
       service = new ContractService(mockDb, mockLogger);
 
-      await expect(service.getTemplates()).rejects.toEqual(dbError);
+      await expect(service.getTemplates()).rejects.toThrow('Failed to fetch contract templates');
     });
 
     it('logs the call with the category parameter', async () => {
@@ -167,13 +167,15 @@ describe('ContractService', () => {
       await expect(service.getTemplate('missing')).rejects.toThrow('Template not found: missing');
     });
 
-    it('throws the database error when query fails', async () => {
+    it('throws a sanitized error when query fails', async () => {
       const dbError = { message: 'Permission denied' };
       const chain = makeChain({ data: null, error: dbError });
       mockDb.from.mockReturnValue(chain);
       service = new ContractService(mockDb, mockLogger);
 
-      await expect(service.getTemplate('tpl-x')).rejects.toEqual(dbError);
+      await expect(service.getTemplate('tpl-x')).rejects.toThrow(
+        'Failed to fetch contract template'
+      );
     });
   });
 
@@ -242,7 +244,7 @@ describe('ContractService', () => {
       ).rejects.toThrow('Failed to create contract');
     });
 
-    it('throws the database error when insert fails', async () => {
+    it('throws a sanitized error when insert fails', async () => {
       const dbError = { message: 'Unique violation', code: '23505' };
       const chain = makeChain({ data: null, error: dbError });
       mockDb.from.mockReturnValue(chain);
@@ -250,7 +252,7 @@ describe('ContractService', () => {
 
       await expect(
         service.createContract('creator-1', { counterparty: 'X', filledText: 'y' })
-      ).rejects.toEqual(dbError);
+      ).rejects.toThrow('Failed to create contract');
     });
 
     it('uses the contracts table for insertion', async () => {
@@ -283,7 +285,9 @@ describe('ContractService', () => {
 
       const result = await service.getContracts('creator-1');
 
-      expect(chain.select).toHaveBeenCalledWith('*, contract_templates(name, category)');
+      expect(chain.select).toHaveBeenCalledWith(
+        'id, creator_id, template_id, counterparty, filled_text, status, signed_at, created_at, updated_at, contract_templates(name, category)'
+      );
       expect(chain.eq).toHaveBeenCalledWith('creator_id', 'creator-1');
       expect(result).toEqual(contracts);
     });
@@ -306,13 +310,13 @@ describe('ContractService', () => {
       expect(await service.getContracts('creator-1')).toEqual([]);
     });
 
-    it('throws when database returns an error', async () => {
+    it('throws a sanitized error when database returns an error', async () => {
       const dbError = { message: 'Permission denied' };
       const chain = makeChain({ data: null, error: dbError });
       mockDb.from.mockReturnValue(chain);
       service = new ContractService(mockDb, mockLogger);
 
-      await expect(service.getContracts('creator-1')).rejects.toEqual(dbError);
+      await expect(service.getContracts('creator-1')).rejects.toThrow('Failed to fetch contracts');
     });
   });
 
@@ -407,7 +411,7 @@ describe('ContractService', () => {
       expect(updateArg).toHaveProperty('filled_text', 'Updated text');
     });
 
-    it('throws when database returns an error', async () => {
+    it('throws a sanitized error when database returns an error', async () => {
       const dbError = { message: 'Update blocked by RLS' };
       const chain = makeUpdateChain({ data: null, error: dbError });
       mockDb.from.mockReturnValue(chain);
@@ -415,7 +419,7 @@ describe('ContractService', () => {
 
       await expect(
         service.updateContract('contract-1', 'creator-1', { status: 'sent' })
-      ).rejects.toEqual(dbError);
+      ).rejects.toThrow('Failed to update contract');
     });
   });
 

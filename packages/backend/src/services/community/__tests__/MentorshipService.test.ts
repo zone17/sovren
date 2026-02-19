@@ -3,8 +3,8 @@
  * EPIC-010: Community Services — Mentor registration, matching, and relationship management
  *
  * Coverage targets:
- * - registerMentor: niche validation, audienceSizeRange validation, maxMentees bounds,
- *   upsert on conflict, DB error
+ * - registerMentor: maxMentees bounds, upsert on conflict, DB error
+ *   (niche & audienceSizeRange validation moved to Zod at route layer per #350)
  * - getMentors: no filters, niche filter, audienceSizeRange filter, combined, DB error, empty
  * - requestMentorship: self-request guard, mentor not found, capacity check,
  *   duplicate request guard, DB error, success
@@ -125,17 +125,7 @@ describe('MentorshipService', () => {
       );
     });
 
-    it('throws when niche is empty', async () => {
-      await expect(
-        service.registerMentor(MENTOR_ID, { niche: '', audienceSizeRange: '0-1k' })
-      ).rejects.toThrow('Niche is required');
-    });
-
-    it('throws when niche is only whitespace', async () => {
-      await expect(
-        service.registerMentor(MENTOR_ID, { niche: '   ', audienceSizeRange: '0-1k' })
-      ).rejects.toThrow('Niche is required');
-    });
+    // #350: niche empty/whitespace validation moved to Zod at route layer
 
     it.each(['0-1k', '1k-10k', '10k-100k', '100k+'])(
       'accepts valid audienceSizeRange: %s',
@@ -152,11 +142,7 @@ describe('MentorshipService', () => {
       }
     );
 
-    it('throws when audienceSizeRange is invalid', async () => {
-      await expect(
-        service.registerMentor(MENTOR_ID, { niche: 'tech', audienceSizeRange: 'huge' })
-      ).rejects.toThrow('Invalid audience size range');
-    });
+    // #350: audienceSizeRange validation moved to Zod at route layer
 
     it('throws when maxMentees is 0 (below minimum)', async () => {
       await expect(
@@ -213,9 +199,7 @@ describe('MentorshipService', () => {
   // -------------------------------------------------------------------------
   describe('getMentors', () => {
     it('returns all active mentors with no filters', async () => {
-      const mentors = [
-        { id: 'm1', creator_id: MENTOR_ID, niche: 'tech', active: true },
-      ];
+      const mentors = [{ id: 'm1', creator_id: MENTOR_ID, niche: 'tech', active: true }];
       const chain = makeChain({ data: mentors, error: null });
       mockDb.from.mockReturnValueOnce(chain);
 
@@ -315,27 +299,27 @@ describe('MentorshipService', () => {
     });
 
     it('throws when mentee attempts to request mentorship from themselves', async () => {
-      await expect(
-        service.requestMentorship(MENTOR_ID, MENTOR_ID, {})
-      ).rejects.toThrow('Cannot request mentorship from yourself');
+      await expect(service.requestMentorship(MENTOR_ID, MENTOR_ID, {})).rejects.toThrow(
+        'Cannot request mentorship from yourself'
+      );
     });
 
     it('throws when mentor profile is not found or not active', async () => {
       const notFoundChain = makeChain({ data: null, error: null });
       mockDb.from.mockReturnValueOnce(notFoundChain);
 
-      await expect(
-        service.requestMentorship(MENTEE_ID, MENTOR_ID, {})
-      ).rejects.toThrow('Mentor not found or not accepting requests');
+      await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
+        'Mentor not found or not accepting requests'
+      );
     });
 
     it('throws when mentor profile lookup returns an error', async () => {
       const errorChain = makeChain({ data: null, error: { message: 'lookup failed' } });
       mockDb.from.mockReturnValueOnce(errorChain);
 
-      await expect(
-        service.requestMentorship(MENTEE_ID, MENTOR_ID, {})
-      ).rejects.toThrow('Mentor not found or not accepting requests');
+      await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
+        'Mentor not found or not accepting requests'
+      );
     });
 
     it('throws when mentor is at maximum mentee capacity', async () => {
@@ -343,19 +327,19 @@ describe('MentorshipService', () => {
         data: { id: 'mp-1', max_mentees: 2, active: true },
         error: null,
       });
-      // 2 active mentorships === max_mentees
+      // #354: count query with head:true — 2 active mentorships === max_mentees
       const activeMentorshipsChain = makeChain({
-        data: [{ id: 'ms-1' }, { id: 'ms-2' }],
+        count: 2,
         error: null,
-      });
+      } as any);
 
       mockDb.from
         .mockReturnValueOnce(mentorProfileChain)
         .mockReturnValueOnce(activeMentorshipsChain);
 
-      await expect(
-        service.requestMentorship(MENTEE_ID, MENTOR_ID, {})
-      ).rejects.toThrow('Mentor has reached their maximum mentee capacity');
+      await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
+        'Mentor has reached their maximum mentee capacity'
+      );
     });
 
     it('throws when a pending mentorship request already exists', async () => {
@@ -374,9 +358,9 @@ describe('MentorshipService', () => {
         .mockReturnValueOnce(activeMentorshipsChain)
         .mockReturnValueOnce(existingRequestChain);
 
-      await expect(
-        service.requestMentorship(MENTEE_ID, MENTOR_ID, {})
-      ).rejects.toThrow('Mentorship request already pending');
+      await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
+        'Mentorship request already pending'
+      );
     });
 
     it('throws when an active mentorship already exists', async () => {
@@ -395,9 +379,9 @@ describe('MentorshipService', () => {
         .mockReturnValueOnce(activeMentorshipsChain)
         .mockReturnValueOnce(existingRequestChain);
 
-      await expect(
-        service.requestMentorship(MENTEE_ID, MENTOR_ID, {})
-      ).rejects.toThrow('Mentorship request already active');
+      await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
+        'Mentorship request already active'
+      );
     });
 
     it('throws and logs when the DB insert fails', async () => {
@@ -416,9 +400,9 @@ describe('MentorshipService', () => {
         .mockReturnValueOnce(existingRequestChain)
         .mockReturnValueOnce(insertChain);
 
-      await expect(
-        service.requestMentorship(MENTEE_ID, MENTOR_ID, {})
-      ).rejects.toThrow('Failed to request mentorship: insert failed');
+      await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
+        'Failed to request mentorship: insert failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to create mentorship request',
@@ -481,9 +465,7 @@ describe('MentorshipService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(
         service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)
@@ -505,9 +487,7 @@ describe('MentorshipService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(
         service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, false)
@@ -525,9 +505,7 @@ describe('MentorshipService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true);
 
@@ -543,9 +521,7 @@ describe('MentorshipService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, false);
 
@@ -557,9 +533,9 @@ describe('MentorshipService', () => {
       const notFoundChain = makeChain({ data: null, error: { message: 'not found' } });
       mockDb.from.mockReturnValueOnce(notFoundChain);
 
-      await expect(
-        service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)
-      ).rejects.toThrow('Mentorship not found');
+      await expect(service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)).rejects.toThrow(
+        'Mentorship not found'
+      );
     });
 
     it('throws when requester is not the mentor', async () => {
@@ -569,9 +545,9 @@ describe('MentorshipService', () => {
       });
       mockDb.from.mockReturnValueOnce(findChain);
 
-      await expect(
-        service.respondToRequest(MENTORSHIP_ID, 'not-the-mentor', true)
-      ).rejects.toThrow('Only the mentor can respond to mentorship requests');
+      await expect(service.respondToRequest(MENTORSHIP_ID, 'not-the-mentor', true)).rejects.toThrow(
+        'Only the mentor can respond to mentorship requests'
+      );
     });
 
     it('throws when mentorship is not in pending status', async () => {
@@ -581,9 +557,9 @@ describe('MentorshipService', () => {
       });
       mockDb.from.mockReturnValueOnce(findChain);
 
-      await expect(
-        service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)
-      ).rejects.toThrow("Cannot respond to a mentorship in 'active' status");
+      await expect(service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)).rejects.toThrow(
+        "Cannot respond to a mentorship in 'active' status"
+      );
     });
 
     it('throws when mentorship is in declined status', async () => {
@@ -593,9 +569,9 @@ describe('MentorshipService', () => {
       });
       mockDb.from.mockReturnValueOnce(findChain);
 
-      await expect(
-        service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)
-      ).rejects.toThrow("Cannot respond to a mentorship in 'declined' status");
+      await expect(service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)).rejects.toThrow(
+        "Cannot respond to a mentorship in 'declined' status"
+      );
     });
 
     it('throws and logs when the DB update fails', async () => {
@@ -606,13 +582,11 @@ describe('MentorshipService', () => {
       const dbError = { message: 'update failed' };
       const updateChain = makeChain({ data: null, error: dbError });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
-      await expect(
-        service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)
-      ).rejects.toThrow('Failed to respond to mentorship: update failed');
+      await expect(service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)).rejects.toThrow(
+        'Failed to respond to mentorship: update failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to respond to mentorship',
@@ -636,9 +610,7 @@ describe('MentorshipService', () => {
       const result = await service.getMyMentorships(MENTOR_ID);
 
       expect(result).toEqual(mentorships);
-      expect(chain.or).toHaveBeenCalledWith(
-        `mentor_id.eq.${MENTOR_ID},mentee_id.eq.${MENTOR_ID}`
-      );
+      expect(chain.or).toHaveBeenCalledWith(`mentor_id.eq.${MENTOR_ID},mentee_id.eq.${MENTOR_ID}`);
     });
 
     it('returns empty array when no mentorships exist', async () => {

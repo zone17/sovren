@@ -63,9 +63,8 @@ export class RepurposingService implements IRepurposingService {
     const title = content.title || '';
     const backlink = `${process.env.FRONTEND_URL || 'https://sovren.app'}/content/${contentId}`;
 
-    const results: RepurposedContent[] = [];
-
-    for (const platform of targetPlatforms) {
+    // Build all rows (pure computation — no I/O)
+    const rows = targetPlatforms.map((platform) => {
       const formatType = PLATFORM_FORMAT_MAP[platform];
       const charLimit = PLATFORM_CHAR_LIMITS[platform];
 
@@ -87,9 +86,8 @@ export class RepurposingService implements IRepurposingService {
           text = this.toShortPost(title, sourceText, backlink, charLimit);
       }
 
-      const id = uuidv4();
-      const row = {
-        id,
+      return {
+        id: uuidv4(),
         creator_id: creatorId,
         source_content_id: contentId,
         platform,
@@ -99,26 +97,13 @@ export class RepurposingService implements IRepurposingService {
         approved: false,
         backlink_url: backlink,
       };
+    });
 
-      const { error: insertError } = await this.db
-        .from('repurposed_content')
-        .insert(row);
+    // Single bulk insert instead of sequential per-platform inserts
+    const { error: insertError } = await this.db.from('repurposed_content').insert(rows);
 
-      if (insertError) {
-        throw insertError;
-      }
-
-      results.push({
-        id,
-        source_content_id: contentId,
-        platform,
-        format_type: formatType,
-        text,
-        character_count: text.length,
-        character_limit: charLimit,
-        approved: false,
-        backlink_url: backlink,
-      });
+    if (insertError) {
+      throw insertError;
     }
 
     this.logger.info('[RepurposingService] Content repurposed', {
@@ -127,13 +112,25 @@ export class RepurposingService implements IRepurposingService {
       platforms: targetPlatforms,
     });
 
-    return results;
+    return rows.map((row) => ({
+      id: row.id,
+      source_content_id: contentId,
+      platform: row.platform,
+      format_type: row.format_type,
+      text: row.text,
+      character_count: row.character_count,
+      character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform],
+      approved: false,
+      backlink_url: row.backlink_url,
+    }));
   }
 
   async getRepurposed(creatorId: string, contentId: string): Promise<RepurposedContent[]> {
     const { data, error } = await this.db
       .from('repurposed_content')
-      .select('id, source_content_id, platform, format_type, text, character_count, approved, backlink_url')
+      .select(
+        'id, source_content_id, platform, format_type, text, character_count, approved, backlink_url'
+      )
       .eq('creator_id', creatorId)
       .eq('source_content_id', contentId)
       .order('created_at', { ascending: false });
@@ -142,7 +139,7 @@ export class RepurposingService implements IRepurposingService {
       throw error;
     }
 
-    return (data || []).map((row: any) => ({
+    return (data || []).map((row: RepurposedContent & { platform: string }) => ({
       ...row,
       character_limit: PLATFORM_CHAR_LIMITS[row.platform as SupportedPlatform] || 500,
     }));
@@ -154,7 +151,9 @@ export class RepurposingService implements IRepurposingService {
       .update({ approved: true, updated_at: new Date().toISOString() })
       .eq('id', repurposedId)
       .eq('creator_id', creatorId)
-      .select('id, source_content_id, platform, format_type, text, character_count, approved, backlink_url')
+      .select(
+        'id, source_content_id, platform, format_type, text, character_count, approved, backlink_url'
+      )
       .single();
 
     if (error || !data) {
@@ -208,7 +207,10 @@ export class RepurposingService implements IRepurposingService {
     // Extract heading-like lines (lines that look like h2/h3)
     const headings = body
       .split('\n')
-      .filter((line) => line.match(/^#{2,3}\s/) || (line.length < 80 && line.length > 5 && !line.endsWith('.')))
+      .filter(
+        (line) =>
+          line.match(/^#{2,3}\s/) || (line.length < 80 && line.length > 5 && !line.endsWith('.'))
+      )
       .map((h) => h.replace(/^#{2,3}\s/, '').trim())
       .slice(0, 5);
 

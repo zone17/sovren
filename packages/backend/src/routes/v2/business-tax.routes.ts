@@ -44,12 +44,13 @@ router.get(
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     const year = parseInt(req.query.year as string) || new Date().getFullYear();
-    const quarter = (parseInt(req.query.quarter as string) || 1) as 1 | 2 | 3 | 4;
+    const rawQuarter = parseInt(req.query.quarter as string) || 1;
 
-    if (![1, 2, 3, 4].includes(quarter)) {
+    if (rawQuarter < 1 || rawQuarter > 4 || !Number.isInteger(rawQuarter)) {
       res.status(400).json({ success: false, error: 'quarter must be 1, 2, 3, or 4' });
       return;
     }
+    const quarter = rawQuarter as 1 | 2 | 3 | 4;
 
     const data = await getTaxService().getQuarterlySummary(creatorId, year, quarter);
     res.json(createApiResponse(req, data));
@@ -148,6 +149,38 @@ router.post(
     const creatorId = getAuthUser(req).nostr_pubkey;
     const data = await getTaxService().createExpenseCategory(creatorId, result.data);
     res.status(201).json(createApiResponse(req, data));
+  })
+);
+
+/**
+ * DELETE /business/tax/expenses/:id
+ * Delete an expense
+ */
+router.delete(
+  '/expenses/:id',
+  authenticate,
+  mutationRateLimiter,
+  requireCreator,
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    await getTaxService().deleteExpense(req.params.id, creatorId);
+    res.json(createApiResponse(req, { deleted: true }));
+  })
+);
+
+/**
+ * DELETE /business/tax/categories/:id
+ * Delete an expense category
+ */
+router.delete(
+  '/categories/:id',
+  authenticate,
+  mutationRateLimiter,
+  requireCreator,
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    await getTaxService().deleteExpenseCategory(req.params.id, creatorId);
+    res.json(createApiResponse(req, { deleted: true }));
   })
 );
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useReplyTemplates } from '../hooks/useInboxActions';
 import { PLATFORM_DISPLAY } from '../types';
 
@@ -22,6 +22,27 @@ export const ReplyComposer: React.FC<ReplyComposerProps> = ({
   const [content, setContent] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
   const { data: templates } = useReplyTemplates();
+  const templateMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showTemplates) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (templateMenuRef.current && !templateMenuRef.current.contains(e.target as Node)) {
+        setShowTemplates(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowTemplates(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showTemplates]);
 
   const platformInfo = PLATFORM_DISPLAY[platform];
   const charLimit = platform === 'twitter' ? 280 : undefined;
@@ -85,7 +106,7 @@ export const ReplyComposer: React.FC<ReplyComposerProps> = ({
             </span>
           )}
           {templates && templates.length > 0 && (
-            <div className="relative">
+            <div className="relative" ref={templateMenuRef}>
               <button
                 type="button"
                 className="text-xs text-indigo-600 hover:underline focus:outline-none"

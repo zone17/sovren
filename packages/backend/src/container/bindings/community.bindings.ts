@@ -54,8 +54,8 @@ export class CommunityServicesModule implements IServiceModule {
       const logger = container.resolve(TYPES.Logger);
       return new MarketplaceService(
         asDb(db),
-        lightning as any,
-        queue,
+        lightning as ConstructorParameters<typeof MarketplaceService>[1],
+        queue as ConstructorParameters<typeof MarketplaceService>[2],
         logger
       );
     });

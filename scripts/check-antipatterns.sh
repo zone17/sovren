@@ -40,9 +40,9 @@ fi
 # Check 3: Route files using req.body without Zod validation
 if [ -n "$ROUTE_FILES" ]; then
   for f in $ROUTE_FILES; do
-    HAS_BODY=$(grep -c 'req\.body' "$f" 2>/dev/null || echo 0)
-    HAS_VALIDATE=$(grep -cE 'validateRequest|zodValidate|\.safeParse|\.parse\(' "$f" 2>/dev/null || echo 0)
-    if [ "$HAS_BODY" -gt 0 ] && [ "$HAS_VALIDATE" -eq 0 ]; then
+    HAS_BODY=$(grep -c 'req\.body' "$f" 2>/dev/null | head -1 || echo 0)
+    HAS_VALIDATE=$(grep -cE 'validateRequest|zodValidate|\bvalidate\b|\.safeParse|\.parse\(' "$f" 2>/dev/null | head -1 || echo 0)
+    if [ "${HAS_BODY:-0}" -gt 0 ] && [ "${HAS_VALIDATE:-0}" -eq 0 ]; then
       echo "⚠️  $f: Uses req.body without Zod validation"
       ERRORS=$((ERRORS + 1))
     fi
@@ -52,9 +52,9 @@ fi
 # Check 4: Mutation routes without rate limiter
 if [ -n "$ROUTE_FILES" ]; then
   for f in $ROUTE_FILES; do
-    HAS_MUTATION=$(grep -cE '\.(post|put|delete)\(' "$f" 2>/dev/null || echo 0)
-    HAS_LIMITER=$(grep -cE 'rateLimiter|RateLimiter' "$f" 2>/dev/null || echo 0)
-    if [ "$HAS_MUTATION" -gt 0 ] && [ "$HAS_LIMITER" -eq 0 ]; then
+    HAS_MUTATION=$(grep -cE '\.(post|put|delete)\(' "$f" 2>/dev/null | head -1 || echo 0)
+    HAS_LIMITER=$(grep -cE 'rateLimiter|RateLimiter' "$f" 2>/dev/null | head -1 || echo 0)
+    if [ "${HAS_MUTATION:-0}" -gt 0 ] && [ "${HAS_LIMITER:-0}" -eq 0 ]; then
       echo "⚠️  $f: Mutation routes without rate limiter"
       ERRORS=$((ERRORS + 1))
     fi

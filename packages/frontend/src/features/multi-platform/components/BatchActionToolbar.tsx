@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useReplyTemplates } from '../hooks/useInboxActions';
 
 interface BatchActionToolbarProps {
@@ -22,6 +22,27 @@ export const BatchActionToolbar: React.FC<BatchActionToolbarProps> = ({
 }) => {
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const { data: templates } = useReplyTemplates();
+  const templateMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showTemplateMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (templateMenuRef.current && !templateMenuRef.current.contains(e.target as Node)) {
+        setShowTemplateMenu(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowTemplateMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showTemplateMenu]);
 
   if (selectedCount === 0) return null;
 
@@ -69,7 +90,7 @@ export const BatchActionToolbar: React.FC<BatchActionToolbarProps> = ({
       </button>
 
       {templates && templates.length > 0 && (
-        <div className="relative">
+        <div className="relative" ref={templateMenuRef}>
           <button
             type="button"
             className={btnClass}

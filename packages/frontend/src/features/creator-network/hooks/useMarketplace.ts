@@ -19,6 +19,9 @@ export function useCreateListing() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'listings'] });
     },
+    onError: (error) => {
+      console.error('Create listing failed:', error);
+    },
   });
 }
 
@@ -31,6 +34,9 @@ export function usePlaceOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
     },
+    onError: (error) => {
+      console.error('Place order failed:', error);
+    },
   });
 }
 
@@ -41,6 +47,9 @@ export function useStartOrder() {
     mutationFn: (orderId: string) => marketplaceApi.startOrder(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
+    },
+    onError: (error) => {
+      console.error('Start order failed:', error);
     },
   });
 }
@@ -53,6 +62,9 @@ export function useCompleteOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
     },
+    onError: (error) => {
+      console.error('Complete order failed:', error);
+    },
   });
 }
 
@@ -64,6 +76,9 @@ export function useDisputeOrder() {
       marketplaceApi.disputeOrder(orderId, { reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
+    },
+    onError: (error) => {
+      console.error('Dispute order failed:', error);
     },
   });
 }
@@ -83,6 +98,9 @@ export function useReviewOrder() {
     }) => marketplaceApi.reviewOrder(orderId, { rating, reviewText }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'marketplace', 'orders'] });
+    },
+    onError: (error) => {
+      console.error('Review order failed:', error);
     },
   });
 }

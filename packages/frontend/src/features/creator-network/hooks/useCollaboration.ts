@@ -36,6 +36,9 @@ export function useInviteCollaborators(contentId: string) {
         queryKey: ['creator-network', 'collaborators', contentId],
       });
     },
+    onError: (error) => {
+      console.error('Invite collaborators failed:', error);
+    },
   });
 }
 
@@ -53,6 +56,9 @@ export function useUpdateRevenueSplit(contentId: string) {
         queryKey: ['creator-network', 'collaborators', contentId],
       });
     },
+    onError: (error) => {
+      console.error('Update revenue split failed:', error);
+    },
   });
 }
 
@@ -65,6 +71,9 @@ export function useRespondToCollaboration() {
       collaborationApi.respondToInvitation(invitationId, accept),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creator-network', 'collaborators'] });
+    },
+    onError: (error) => {
+      console.error('Respond to collaboration failed:', error);
     },
   });
 }

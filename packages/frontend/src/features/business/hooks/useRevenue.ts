@@ -39,6 +39,9 @@ export function useUpdateDiversificationGoals() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, 'goals'] });
     },
+    onError: (error) => {
+      console.error('Update diversification goals failed:', error);
+    },
   });
 }
 
@@ -48,6 +51,9 @@ export function useAddRevenueEntry() {
     mutationFn: (data: CreateRevenueEntryPayload) => revenueApi.addRevenueEntry(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (error) => {
+      console.error('Add revenue entry failed:', error);
     },
   });
 }

@@ -16,6 +16,7 @@ import { createApiResponse } from '../../utils/api-response';
 import { DistributionValidators } from '../../validators/distribution';
 import { encryptToken, getEncryptionKey } from '../../services/distribution/crypto';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { SupportedPlatform } from '@sovren/shared/types/distribution';
 
 const router = Router();
@@ -33,6 +34,20 @@ function getValidatedFrontendUrl(): string {
     }
   }
   return frontendUrl;
+}
+
+/**
+ * #336: Validate that a redirect URL is safe (same-origin or allowed domain).
+ * Prevents open redirect attacks by only allowing redirects to the configured frontend URL.
+ */
+function isAllowedRedirectUrl(redirectUrl: string): boolean {
+  try {
+    const allowed = new URL(getValidatedFrontendUrl());
+    const target = new URL(redirectUrl);
+    return target.origin === allowed.origin;
+  } catch {
+    return false;
+  }
 }
 
 router.use(readOnlyRateLimiter);
@@ -98,17 +113,23 @@ router.get(
     query: DistributionValidators.callbackQuery,
   }),
   async (req: Request, res: Response, _next: NextFunction) => {
+    const frontendUrl = getValidatedFrontendUrl();
+
     try {
       const platform = req.params.platform as SupportedPlatform;
       const { code, state } = req.query as { code: string; state: string };
 
       await getPlatformService().handleCallback(platform, code, state);
 
-      // Redirect to frontend success page
-      const frontendUrl = getValidatedFrontendUrl();
-      res.redirect(`${frontendUrl}/settings/platforms?connected=${platform}`);
+      // #336: Build redirect URL and validate against allowlist
+      const successUrl = `${frontendUrl}/settings/platforms?connected=${encodeURIComponent(platform)}`;
+      if (!isAllowedRedirectUrl(successUrl)) {
+        console.error('[OAuth] Blocked redirect to non-allowed URL', { successUrl });
+        res.redirect(`${frontendUrl}/settings/platforms?error=invalid_redirect`);
+        return;
+      }
+      res.redirect(successUrl);
     } catch (err) {
-      const frontendUrl = getValidatedFrontendUrl();
       res.redirect(`${frontendUrl}/settings/platforms?error=oauth_failed`);
     }
   }
@@ -174,13 +195,14 @@ router.post(
     const encryptionKey = getEncryptionKey(process.env.BYOK_ENCRYPTION_KEY);
 
     // Validate the key first by making a test read call to Twitter API
-    // H-2: any error thrown here must NOT include the key value
+    // H-2: errors thrown here must NOT include the key value
     await validateTwitterApiKey(req.body.api_key);
 
     // Encrypt with BYOK-specific key
     const { encrypted, iv, authTag } = encryptToken(req.body.api_key, encryptionKey);
 
-    const { error } = await (container.resolve(TYPES.Database) as any)
+    const db = container.resolve(TYPES.Database) as ISupabaseClient;
+    const { error } = await db
       .from('platform_connections')
       .update({
         api_key_encrypted: encrypted.toString('hex'),
@@ -214,7 +236,8 @@ router.delete(
 
     const creatorId = getAuthUser(req).nostr_pubkey;
 
-    const { error } = await (container.resolve(TYPES.Database) as any)
+    const db = container.resolve(TYPES.Database) as ISupabaseClient;
+    const { error } = await db
       .from('platform_connections')
       .update({
         api_key_encrypted: null,

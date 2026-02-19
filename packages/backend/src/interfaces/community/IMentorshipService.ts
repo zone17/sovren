@@ -19,4 +19,9 @@ export interface IMentorshipService {
   ): Promise<{ id: string }>;
   respondToRequest(mentorshipId: string, creatorId: string, accept: boolean): Promise<void>;
   getMyMentorships(creatorId: string): Promise<Mentorship[]>;
+  updateMentorProfile(
+    profileId: string,
+    creatorId: string,
+    data: { niche?: string; audienceSizeRange?: string; bio?: string; maxMentees?: number }
+  ): Promise<void>;
 }

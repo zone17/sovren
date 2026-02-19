@@ -29,21 +29,51 @@ const MAX_RECURRENCE_COUNT: Record<string, number> = {
   quarterly: 4,
 };
 
+// #323: Row type interface for typed .from<T>() calls
+interface BusinessInvoiceRow {
+  id: string;
+  creator_id: string;
+  client_name: string;
+  line_items: LineItem[];
+  total_sats: number;
+  status: string;
+  due_date: string | null;
+  recurring_interval: string | null;
+  recurrence_end_date: string | null;
+  lnurl_pay: string | null;
+  lightning_payment_link: string | null;
+  created_at: string;
+  paid_at: string | null;
+}
+
 export class BusinessInvoiceService implements IBusinessInvoiceService {
+  // #320: Lazy queue initialization — no constructor side effect
+  private queueInitPromise: Promise<void> | null = null;
+
   constructor(
     private readonly db: ISupabaseClient,
     private readonly queueService: IQueueService,
     private readonly logger: ILogger
-  ) {
-    // Ensure the recurring invoice queue exists
-    this.queueService.createQueue(RECURRING_QUEUE, {
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 10000 },
-        removeOnComplete: { count: 1000 },
-        removeOnFail: { count: 5000 },
-      },
-    });
+  ) {}
+
+  // #320: Ensure queue exists lazily on first use
+  private async ensureQueue(): Promise<void> {
+    if (this.queueInitPromise) return this.queueInitPromise;
+    this.queueInitPromise = this.queueService
+      .createQueue(RECURRING_QUEUE, {
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 10000 },
+          removeOnComplete: { count: 1000 },
+          removeOnFail: { count: 5000 },
+        },
+      })
+      .then(() => {})
+      .catch((err) => {
+        this.queueInitPromise = null;
+        throw err;
+      });
+    return this.queueInitPromise;
   }
 
   async createInvoice(
@@ -78,7 +108,7 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       throw new Error('Invoice total must be greater than 0 sats');
     }
 
-    const row: Record<string, unknown> = {
+    const row: Partial<BusinessInvoiceRow> = {
       creator_id: creatorId,
       client_name: data.clientName,
       line_items: data.lineItems,
@@ -91,15 +121,18 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     if (data.recurrenceEndDate) row.recurrence_end_date = data.recurrenceEndDate;
 
     const { data: inserted, error } = await this.db
-      .from('business_invoices')
+      .from<BusinessInvoiceRow>('business_invoices')
       .insert(row)
       .select('id')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to create invoice', { error, creatorId });
+      throw new Error('Failed to create invoice');
+    }
     if (!inserted) throw new Error('Failed to create invoice');
 
-    const invoiceId = (inserted as { id: string }).id;
+    const invoiceId = inserted.id;
 
     // Schedule recurring invoice generation if interval specified
     if (data.recurringInterval) {
@@ -115,7 +148,10 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     const lnurlPay = await this.generateLnurlPayLink(invoiceId, creatorId, totalSats);
 
     if (lnurlPay) {
-      await this.db.from('business_invoices').update({ lnurl_pay: lnurlPay }).eq('id', invoiceId);
+      await this.db
+        .from<BusinessInvoiceRow>('business_invoices')
+        .update({ lnurl_pay: lnurlPay })
+        .eq('id', invoiceId);
     }
 
     return { id: invoiceId, lnurlPay: lnurlPay ?? undefined };
@@ -124,7 +160,12 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
   async getInvoices(creatorId: string, filters?: { status?: string }): Promise<BusinessInvoice[]> {
     this.logger.info('BusinessInvoiceService.getInvoices', { creatorId, filters });
 
-    let query = this.db.from('business_invoices').select('*').eq('creator_id', creatorId);
+    let query = this.db
+      .from<BusinessInvoiceRow>('business_invoices')
+      .select(
+        'id, creator_id, client_name, line_items, total_sats, status, due_date, recurring_interval, recurrence_end_date, lnurl_pay, lightning_payment_link, created_at, paid_at'
+      )
+      .eq('creator_id', creatorId);
 
     if (filters?.status) {
       query = query.eq('status', filters.status);
@@ -132,7 +173,10 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
 
     // #278: Add default limit to prevent unbounded result sets
     const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to fetch invoices', { error, creatorId });
+      throw new Error('Failed to fetch invoices');
+    }
     return data ?? [];
   }
 
@@ -140,13 +184,18 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     this.logger.info('BusinessInvoiceService.getInvoice', { invoiceId, creatorId });
 
     const { data, error } = await this.db
-      .from('business_invoices')
-      .select('*')
+      .from<BusinessInvoiceRow>('business_invoices')
+      .select(
+        'id, creator_id, client_name, line_items, total_sats, status, due_date, recurring_interval, recurrence_end_date, lnurl_pay, lightning_payment_link, created_at, paid_at'
+      )
       .eq('id', invoiceId)
       .eq('creator_id', creatorId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to fetch invoice', { error, invoiceId, creatorId });
+      throw new Error('Failed to fetch invoice');
+    }
     if (!data) throw new Error(`Invoice not found: ${invoiceId}`);
     return data;
   }
@@ -161,12 +210,15 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     const updates: Record<string, unknown> = { status };
 
     const { error } = await this.db
-      .from('business_invoices')
+      .from<BusinessInvoiceRow>('business_invoices')
       .update(updates)
       .eq('id', invoiceId)
       .eq('creator_id', creatorId);
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to update invoice status', { error, invoiceId, creatorId });
+      throw new Error('Failed to update invoice status');
+    }
   }
 
   async generatePaymentLink(invoiceId: string, creatorId: string): Promise<{ lnurlPay: string }> {
@@ -181,7 +233,7 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
 
     // Persist the payment link
     await this.db
-      .from('business_invoices')
+      .from<BusinessInvoiceRow>('business_invoices')
       .update({ lnurl_pay: lnurlPay, lightning_payment_link: lnurlPay })
       .eq('id', invoiceId)
       .eq('creator_id', creatorId);
@@ -238,6 +290,9 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       return;
     }
 
+    // #320: Lazily create queue on first use
+    await this.ensureQueue();
+
     await this.queueService.addJob(
       RECURRING_QUEUE,
       'generate-recurring',
@@ -275,5 +330,20 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       quarterly: 90 * 24 * 60 * 60 * 1000,
     };
     return map[interval] ?? 0;
+  }
+
+  async deleteInvoice(invoiceId: string, creatorId: string): Promise<void> {
+    this.logger.info('BusinessInvoiceService.deleteInvoice', { invoiceId, creatorId });
+
+    const { error } = await this.db
+      .from<BusinessInvoiceRow>('business_invoices')
+      .delete()
+      .eq('id', invoiceId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to delete invoice', { error, invoiceId, creatorId });
+      throw new Error('Failed to delete invoice');
+    }
   }
 }

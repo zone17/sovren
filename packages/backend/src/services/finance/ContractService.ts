@@ -42,6 +42,28 @@ const RED_FLAG_SUGGESTIONS: Record<RedFlagType, string> = {
     'IP assignment transfers ownership. Negotiate for a license grant instead of full assignment.',
 };
 
+// #323: Row type interfaces for typed .from<T>() calls
+interface ContractTemplateRow {
+  id: string;
+  created_by: string | null;
+  name: string;
+  category: string;
+  template_text: string;
+  created_at: string;
+}
+
+interface ContractRow {
+  id: string;
+  creator_id: string;
+  template_id: string | null;
+  counterparty: string;
+  filled_text: string;
+  status: string;
+  signed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export class ContractService implements IContractService {
   constructor(
     private readonly db: ISupabaseClient,
@@ -51,14 +73,19 @@ export class ContractService implements IContractService {
   async getTemplates(category?: string): Promise<ContractTemplate[]> {
     this.logger.info('ContractService.getTemplates', { category });
 
-    let query: ReturnType<typeof this.db.from> = this.db.from('contract_templates').select('*');
+    let query = this.db
+      .from<ContractTemplateRow>('contract_templates')
+      .select('id, name, category, template_text, created_at');
     if (category) {
       query = query.eq('category', category);
     }
 
     // #278: Add default limit to prevent unbounded result sets
     const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to fetch contract templates', { error, category });
+      throw new Error('Failed to fetch contract templates');
+    }
     return data ?? [];
   }
 
@@ -66,12 +93,15 @@ export class ContractService implements IContractService {
     this.logger.info('ContractService.getTemplate', { templateId });
 
     const { data, error } = await this.db
-      .from('contract_templates')
-      .select('*')
+      .from<ContractTemplateRow>('contract_templates')
+      .select('id, name, category, template_text, created_at')
       .eq('id', templateId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to fetch contract template', { error, templateId });
+      throw new Error('Failed to fetch contract template');
+    }
     if (!data) throw new Error(`Template not found: ${templateId}`);
     return data;
   }
@@ -84,7 +114,7 @@ export class ContractService implements IContractService {
     this.logger.info('ContractService.createTemplate', { creatorId, name: data.name });
 
     const { data: inserted, error } = await this.db
-      .from('contract_templates')
+      .from<ContractTemplateRow>('contract_templates')
       .insert({
         created_by: creatorId,
         name: data.name,
@@ -94,9 +124,12 @@ export class ContractService implements IContractService {
       .select('id')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to create contract template', { error, creatorId });
+      throw new Error('Failed to create contract template');
+    }
     if (!inserted) throw new Error('Failed to create template');
-    return { id: (inserted as { id: string }).id };
+    return { id: inserted.id };
   }
 
   async createContract(
@@ -108,7 +141,7 @@ export class ContractService implements IContractService {
       counterparty: data.counterparty,
     });
 
-    const row: Record<string, unknown> = {
+    const row: Partial<ContractRow> = {
       creator_id: creatorId,
       counterparty: data.counterparty,
       filled_text: data.filledText,
@@ -117,14 +150,17 @@ export class ContractService implements IContractService {
     if (data.templateId) row.template_id = data.templateId;
 
     const { data: inserted, error } = await this.db
-      .from('contracts')
+      .from<ContractRow>('contracts')
       .insert(row)
       .select('id')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to create contract', { error, creatorId });
+      throw new Error('Failed to create contract');
+    }
     if (!inserted) throw new Error('Failed to create contract');
-    return { id: (inserted as { id: string }).id };
+    return { id: inserted.id };
   }
 
   async getContracts(creatorId: string): Promise<Contract[]> {
@@ -132,13 +168,18 @@ export class ContractService implements IContractService {
 
     // #278: Add default limit to prevent unbounded result sets
     const { data, error } = await this.db
-      .from('contracts')
-      .select('*, contract_templates(name, category)')
+      .from<ContractRow>('contracts')
+      .select(
+        'id, creator_id, template_id, counterparty, filled_text, status, signed_at, created_at, updated_at, contract_templates(name, category)'
+      )
       .eq('creator_id', creatorId)
       .order('created_at', { ascending: false })
       .limit(100);
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to fetch contracts', { error, creatorId });
+      throw new Error('Failed to fetch contracts');
+    }
     return data ?? [];
   }
 
@@ -155,12 +196,15 @@ export class ContractService implements IContractService {
     if (data.status === 'signed') updates.signed_at = new Date().toISOString();
 
     const { error } = await this.db
-      .from('contracts')
+      .from<ContractRow>('contracts')
       .update(updates)
       .eq('id', contractId)
       .eq('creator_id', creatorId);
 
-    if (error) throw error;
+    if (error) {
+      this.logger.error('Failed to update contract', { error, contractId, creatorId });
+      throw new Error('Failed to update contract');
+    }
   }
 
   async analyzeRedFlags(text: string): Promise<RedFlagMatch[]> {
@@ -187,5 +231,35 @@ export class ContractService implements IContractService {
     }
 
     return findings;
+  }
+
+  async deleteContract(contractId: string, creatorId: string): Promise<void> {
+    this.logger.info('ContractService.deleteContract', { contractId, creatorId });
+
+    const { error } = await this.db
+      .from<ContractRow>('contracts')
+      .delete()
+      .eq('id', contractId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to delete contract', { error, contractId, creatorId });
+      throw new Error('Failed to delete contract');
+    }
+  }
+
+  async deleteTemplate(templateId: string, creatorId: string): Promise<void> {
+    this.logger.info('ContractService.deleteTemplate', { templateId, creatorId });
+
+    const { error } = await this.db
+      .from<ContractTemplateRow>('contract_templates')
+      .delete()
+      .eq('id', templateId)
+      .eq('created_by', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to delete template', { error, templateId, creatorId });
+      throw new Error('Failed to delete template');
+    }
   }
 }
