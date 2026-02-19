@@ -21,7 +21,7 @@
     "test": "jest --config jest.config.elite.ts --verbose",
     "test:watch": "jest --config jest.config.elite.ts --watch",
     "test:ci": "jest --config jest.config.elite.ts --ci --coverage --watchAll=false --maxWorkers=2",
-    "test:pre-commit": "cd packages/backend && npx jest --config jest.community.config.js --ci --watchAll=false --maxWorkers=2 && npx jest --config jest.finance.config.js --ci --watchAll=false --maxWorkers=2",
+    "test:pre-commit": "cd packages/backend && npx jest --config jest.utils.config.js --ci --watchAll=false --maxWorkers=2 && npx jest --config jest.community.config.js --ci --watchAll=false --maxWorkers=2 && npx jest --config jest.finance.config.js --ci --watchAll=false --maxWorkers=2",
     "test:unit": "jest --selectProjects backend frontend shared",
     "test:integration": "jest --selectProjects integration --runInBand",
     "test:e2e": "cd packages/frontend && npx playwright test",

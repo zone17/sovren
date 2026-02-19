@@ -187,6 +187,39 @@ Add to `/Users/fp/Desktop/Sovren/CLAUDE.md` under Git Workflow:
 
 ---
 
+## Phase 3: DB Row → API Response Transform Layer
+
+**What**: A utility that transforms snake_case Supabase rows to camelCase API responses, matching the shared type contract. Integrated into `createApiResponse()` so all routes automatically return camelCase data.
+
+**Why**: PR #86 Review Round 4 found snake_case DB rows flowing unchanged to the frontend, mismatching the camelCase shared types (finding #367). Frontend-backend key mismatches (`targetDistribution` vs `targets`, `revenueSplitBps` vs `bps`) were found as P1s that should be caught at compile time.
+
+**Where**: `packages/backend/src/utils/case-transform.ts` (new), `packages/backend/src/utils/api-response.ts` (modified)
+
+### Implementation
+
+1. Create `packages/backend/src/utils/case-transform.ts`:
+
+   - `snakeToCamel(obj)` — deep recursive transform for reads (DB → API)
+   - `camelToSnake(obj)` — deep recursive transform for writes (API → DB)
+   - Handle arrays, nulls, nested objects, Date objects
+   - Preserve non-object primitives
+
+2. Update `createApiResponse()` in `packages/backend/src/utils/api-response.ts`:
+
+   - Apply `snakeToCamel()` to the `data` parameter by default
+   - Add optional `{ raw: true }` flag for endpoints that already return camelCase
+
+3. Update backend brief to mention the transform layer
+
+### Files to Create/Modify
+
+- [x] Create `packages/backend/src/utils/case-transform.ts` (new, ~60 lines)
+- [x] Create `packages/backend/src/utils/__tests__/case-transform.test.ts` (new, ~80 lines)
+- [x] Modify `packages/backend/src/utils/api-response.ts` (integrate snakeToCamel)
+- [x] Edit `~/.claude/skills/team-builder/briefs/backend.md` (add transform layer note)
+
+---
+
 ## Acceptance Criteria
 
 - [x] `scripts/check-antipatterns.sh` exists and is executable
@@ -200,6 +233,12 @@ Add to `/Users/fp/Desktop/Sovren/CLAUDE.md` under Git Workflow:
 - [x] `backend.md` brief template includes DOMAIN PATTERNS pointer
 - [x] `--no-verify` bypass works for emergencies
 - [x] Sovren CLAUDE.md has Branch Scope section
+- [x] `case-transform.ts` exports `snakeToCamel()` and `camelToSnake()` functions
+- [x] Transform handles nested objects, arrays, nulls, Date objects, primitives
+- [x] `createApiResponse()` applies `snakeToCamel()` by default
+- [x] `createApiResponse()` accepts `{ raw: true }` option to skip transform
+- [x] Unit tests cover all edge cases (nested, arrays, null, empty, already camelCase)
+- [x] Backend brief mentions transform layer
 
 ## Dependencies & Risks
 
