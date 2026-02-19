@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { useStartOrder, useCompleteOrder, useDisputeOrder, useReviewOrder } from '../hooks/useMarketplace';
+import {
+  useStartOrder,
+  useCompleteOrder,
+  useDisputeOrder,
+  useReviewOrder,
+} from '../hooks/useMarketplace';
 import EscrowStatus from './EscrowStatus';
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from '../types/community';
 import type { ServiceOrder } from '@shared/types/community';
@@ -21,11 +26,23 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
   const disputeMutation = useDisputeOrder();
   const reviewMutation = useReviewOrder();
 
+  // #301: Disable all action buttons when any mutation is in-flight
+  const anyActionPending =
+    startMutation.isPending ||
+    completeMutation.isPending ||
+    disputeMutation.isPending ||
+    reviewMutation.isPending;
+
   const handleDispute = () => {
     if (!disputeReason.trim()) return;
     disputeMutation.mutate(
       { orderId: order.id, reason: disputeReason.trim() },
-      { onSuccess: () => { setShowDisputeForm(false); setDisputeReason(''); } }
+      {
+        onSuccess: () => {
+          setShowDisputeForm(false);
+          setDisputeReason('');
+        },
+      }
     );
   };
 
@@ -68,7 +85,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
         {role === 'seller' && order.status === 'escrow_funded' && (
           <button
             onClick={() => startMutation.mutate(order.id)}
-            disabled={startMutation.isPending}
+            disabled={anyActionPending}
             className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             {startMutation.isPending ? 'Starting...' : 'Start Work'}
@@ -79,7 +96,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
         {role === 'buyer' && order.status === 'in_progress' && (
           <button
             onClick={() => completeMutation.mutate(order.id)}
-            disabled={completeMutation.isPending}
+            disabled={anyActionPending}
             className="rounded-md bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-50"
           >
             {completeMutation.isPending ? 'Completing...' : 'Mark Complete'}
@@ -90,7 +107,8 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
         {(order.status === 'escrow_funded' || order.status === 'in_progress') && (
           <button
             onClick={() => setShowDisputeForm(true)}
-            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+            disabled={anyActionPending}
+            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
           >
             Dispute
           </button>
@@ -100,7 +118,8 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
         {role === 'buyer' && order.status === 'completed' && (
           <button
             onClick={() => setShowReviewForm(true)}
-            className="rounded-md border border-yellow-300 px-3 py-1.5 text-sm text-yellow-700 hover:bg-yellow-50"
+            disabled={anyActionPending}
+            className="rounded-md border border-yellow-300 px-3 py-1.5 text-sm text-yellow-700 hover:bg-yellow-50 disabled:opacity-50"
           >
             Leave Review
           </button>
@@ -122,13 +141,16 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
           <div className="flex gap-2">
             <button
               onClick={handleDispute}
-              disabled={!disputeReason.trim() || disputeMutation.isPending}
+              disabled={!disputeReason.trim() || anyActionPending}
               className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-50"
             >
               Submit Dispute
             </button>
             <button
-              onClick={() => { setShowDisputeForm(false); setDisputeReason(''); }}
+              onClick={() => {
+                setShowDisputeForm(false);
+                setDisputeReason('');
+              }}
               className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
             >
               Cancel
@@ -169,7 +191,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
           <div className="flex gap-2">
             <button
               onClick={handleReview}
-              disabled={reviewMutation.isPending}
+              disabled={anyActionPending}
               className="rounded-md bg-yellow-600 px-3 py-1.5 text-sm text-white hover:bg-yellow-700 disabled:opacity-50"
             >
               Submit Review

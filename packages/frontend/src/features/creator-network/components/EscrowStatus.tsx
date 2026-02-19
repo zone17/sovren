@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { OrderStatus } from '@shared/types/community';
 
 const ESCROW_STAGES: Array<{ status: OrderStatus; label: string }> = [
@@ -38,6 +38,19 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
   const isTerminal = TERMINAL_STATUSES.includes(status);
   const isNegativeTerminal = status === 'refunded' || status === 'expired' || status === 'disputed';
 
+  // #289: Live countdown that ticks every second
+  const [timeDisplay, setTimeDisplay] = useState(() =>
+    expiresAt ? getTimeRemaining(expiresAt) : ''
+  );
+
+  useEffect(() => {
+    if (!expiresAt || isTerminal) return;
+    const tick = () => setTimeDisplay(getTimeRemaining(expiresAt));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt, isTerminal]);
+
   return (
     <div
       className="rounded-lg border bg-white p-4 space-y-4"
@@ -55,9 +68,7 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
       {isNegativeTerminal && (
         <div
           className={`rounded-md px-3 py-2 text-sm font-medium ${
-            status === 'disputed'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-gray-100 text-gray-700'
+            status === 'disputed' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'
           }`}
         >
           {status === 'disputed' && 'Order disputed — awaiting resolution'}
@@ -81,8 +92,8 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
                         isDone
                           ? 'bg-green-500 border-green-500 text-white'
                           : isCurrent
-                          ? 'bg-indigo-600 border-indigo-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-400'
+                            ? 'bg-indigo-600 border-indigo-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-400'
                       }`}
                       aria-label={`${stage.label}${isDone ? ' (done)' : isCurrent ? ' (current)' : ''}`}
                     >
@@ -90,7 +101,11 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
                     </div>
                     <span
                       className={`mt-1 text-xs ${
-                        isCurrent ? 'text-indigo-700 font-semibold' : isDone ? 'text-green-600' : 'text-gray-400'
+                        isCurrent
+                          ? 'text-indigo-700 font-semibold'
+                          : isDone
+                            ? 'text-green-600'
+                            : 'text-gray-400'
                       }`}
                     >
                       {stage.label}
@@ -108,11 +123,9 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
         </div>
       )}
 
-      {/* Time remaining for non-terminal orders */}
+      {/* Time remaining for non-terminal orders — #289: live countdown */}
       {!isTerminal && expiresAt && (
-        <p className="text-xs text-gray-500">
-          Auto-expires: {getTimeRemaining(expiresAt)}
-        </p>
+        <p className="text-xs text-gray-500">Auto-expires: {timeDisplay}</p>
       )}
 
       {/* Custodial notice */}

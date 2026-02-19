@@ -39,8 +39,7 @@ function makeChain(leafResolvedValue: { data: any; error: any }) {
     single: jest.fn().mockResolvedValue(leafResolvedValue),
     maybeSingle: jest.fn().mockResolvedValue(leafResolvedValue),
   };
-  chain.then = (res: any, rej: any) =>
-    Promise.resolve(leafResolvedValue).then(res, rej);
+  chain.then = (res: any, rej: any) => Promise.resolve(leafResolvedValue).then(res, rej);
   chain.catch = (fn: any) => Promise.resolve(leafResolvedValue).catch(fn);
   return chain;
 }
@@ -78,6 +77,7 @@ describe('MarketplaceService', () => {
       createInvoice: jest.fn().mockResolvedValue(DEFAULT_INVOICE),
       payToAddress: jest.fn().mockResolvedValue({ paymentHash: 'payout-hash' }),
       getInvoiceStatus: jest.fn().mockResolvedValue({ paid: false }),
+      getSellerLightningAddress: jest.fn().mockResolvedValue('seller@ln.example.com'),
     };
 
     mockQueue = {
@@ -350,13 +350,11 @@ describe('MarketplaceService', () => {
       const idemChain = makeChain({ data: null, error: null });
       const notFoundChain = makeChain({ data: null, error: { message: 'not found' } });
 
-      mockDb.from
-        .mockReturnValueOnce(idemChain)
-        .mockReturnValueOnce(notFoundChain);
+      mockDb.from.mockReturnValueOnce(idemChain).mockReturnValueOnce(notFoundChain);
 
-      await expect(
-        service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)
-      ).rejects.toThrow('Listing not found');
+      await expect(service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)).rejects.toThrow(
+        'Listing not found'
+      );
     });
 
     it('throws when the listing is inactive', async () => {
@@ -366,13 +364,11 @@ describe('MarketplaceService', () => {
         error: null,
       });
 
-      mockDb.from
-        .mockReturnValueOnce(idemChain)
-        .mockReturnValueOnce(listingChain);
+      mockDb.from.mockReturnValueOnce(idemChain).mockReturnValueOnce(listingChain);
 
-      await expect(
-        service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)
-      ).rejects.toThrow('This listing is no longer active');
+      await expect(service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)).rejects.toThrow(
+        'This listing is no longer active'
+      );
     });
 
     it('throws when buyer tries to purchase their own listing', async () => {
@@ -382,13 +378,11 @@ describe('MarketplaceService', () => {
         error: null,
       });
 
-      mockDb.from
-        .mockReturnValueOnce(idemChain)
-        .mockReturnValueOnce(listingChain);
+      mockDb.from.mockReturnValueOnce(idemChain).mockReturnValueOnce(listingChain);
 
-      await expect(
-        service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)
-      ).rejects.toThrow('Cannot place an order on your own listing');
+      await expect(service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)).rejects.toThrow(
+        'Cannot place an order on your own listing'
+      );
     });
 
     it('throws and logs when the DB insert fails after invoice creation', async () => {
@@ -405,9 +399,9 @@ describe('MarketplaceService', () => {
         .mockReturnValueOnce(listingChain)
         .mockReturnValueOnce(insertChain);
 
-      await expect(
-        service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)
-      ).rejects.toThrow('Failed to create order: insert failed');
+      await expect(service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)).rejects.toThrow(
+        'Failed to create order: insert failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to create order',
@@ -454,9 +448,7 @@ describe('MarketplaceService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(service.startOrder(ORDER_ID, SELLER_ID)).resolves.toBeUndefined();
 
@@ -531,9 +523,7 @@ describe('MarketplaceService', () => {
       const dbError = { message: 'update failed' };
       const updateChain = makeChain({ data: null, error: dbError });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(service.startOrder(ORDER_ID, SELLER_ID)).rejects.toThrow(
         'Failed to start order: update failed'
@@ -557,19 +547,31 @@ describe('MarketplaceService', () => {
           seller_id: SELLER_ID,
           status: 'in_progress',
           amount_sats: 5000,
+          release_status: 'pending',
+          release_attempts: 0,
         },
         error: null,
       });
-      const updateChain = makeChain({ data: null, error: null });
+      // Atomic guard: returns updated row (processing lock acquired)
+      const guardChain = makeChain({ data: [{ id: ORDER_ID }], error: null });
+      // Final status update
+      const completeChain = makeChain({ data: null, error: null });
 
       mockDb.from
         .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+        .mockReturnValueOnce(guardChain)
+        .mockReturnValueOnce(completeChain);
 
       await expect(service.completeOrder(ORDER_ID, BUYER_ID)).resolves.toBeUndefined();
 
-      expect(updateChain.update).toHaveBeenCalledWith({ status: 'completed' });
-      expect(updateChain.eq).toHaveBeenCalledWith('status', 'in_progress');
+      expect(guardChain.update).toHaveBeenCalledWith({
+        release_status: 'processing',
+        release_attempts: 1,
+      });
+      expect(completeChain.update).toHaveBeenCalledWith({
+        status: 'completed',
+        release_status: 'completed',
+      });
     });
 
     it('logs payout intent on completion', async () => {
@@ -580,19 +582,23 @@ describe('MarketplaceService', () => {
           seller_id: SELLER_ID,
           status: 'in_progress',
           amount_sats: 5000,
+          release_status: 'pending',
+          release_attempts: 0,
         },
         error: null,
       });
-      const updateChain = makeChain({ data: null, error: null });
+      const guardChain = makeChain({ data: [{ id: ORDER_ID }], error: null });
+      const completeChain = makeChain({ data: null, error: null });
 
       mockDb.from
         .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+        .mockReturnValueOnce(guardChain)
+        .mockReturnValueOnce(completeChain);
 
       await service.completeOrder(ORDER_ID, BUYER_ID);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Order completed — payout triggered',
+        'Order completed — payout released',
         expect.objectContaining({
           orderId: ORDER_ID,
           buyerId: BUYER_ID,
@@ -629,7 +635,13 @@ describe('MarketplaceService', () => {
 
     it('throws when order is in "pending" status', async () => {
       const findChain = makeChain({
-        data: { id: ORDER_ID, buyer_id: BUYER_ID, seller_id: SELLER_ID, status: 'pending', amount_sats: 5000 },
+        data: {
+          id: ORDER_ID,
+          buyer_id: BUYER_ID,
+          seller_id: SELLER_ID,
+          status: 'pending',
+          amount_sats: 5000,
+        },
         error: null,
       });
       mockDb.from.mockReturnValueOnce(findChain);
@@ -641,7 +653,13 @@ describe('MarketplaceService', () => {
 
     it('throws when order is in "escrow_funded" status (not yet started)', async () => {
       const findChain = makeChain({
-        data: { id: ORDER_ID, buyer_id: BUYER_ID, seller_id: SELLER_ID, status: 'escrow_funded', amount_sats: 5000 },
+        data: {
+          id: ORDER_ID,
+          buyer_id: BUYER_ID,
+          seller_id: SELLER_ID,
+          status: 'escrow_funded',
+          amount_sats: 5000,
+        },
         error: null,
       });
       mockDb.from.mockReturnValueOnce(findChain);
@@ -651,23 +669,29 @@ describe('MarketplaceService', () => {
       );
     });
 
-    it('throws and logs when the DB update fails', async () => {
+    it('throws and logs when the atomic guard DB update fails', async () => {
       const findChain = makeChain({
-        data: { id: ORDER_ID, buyer_id: BUYER_ID, seller_id: SELLER_ID, status: 'in_progress', amount_sats: 1000 },
+        data: {
+          id: ORDER_ID,
+          buyer_id: BUYER_ID,
+          seller_id: SELLER_ID,
+          status: 'in_progress',
+          amount_sats: 1000,
+          release_status: 'pending',
+          release_attempts: 0,
+        },
         error: null,
       });
       const dbError = { message: 'update failed' };
-      const updateChain = makeChain({ data: null, error: dbError });
+      const guardChain = makeChain({ data: null, error: dbError });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(guardChain);
 
       await expect(service.completeOrder(ORDER_ID, BUYER_ID)).rejects.toThrow(
-        'Failed to complete order: update failed'
+        'Failed to initiate payout: update failed'
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to complete order',
+        'Failed to mark order release as processing',
         expect.objectContaining({ error: dbError, orderId: ORDER_ID })
       );
     });
@@ -684,9 +708,7 @@ describe('MarketplaceService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(service.disputeOrder(ORDER_ID, BUYER_ID)).resolves.toBeUndefined();
 
@@ -704,9 +726,7 @@ describe('MarketplaceService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(service.disputeOrder(ORDER_ID, SELLER_ID)).resolves.toBeUndefined();
     });
@@ -718,9 +738,7 @@ describe('MarketplaceService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(service.disputeOrder(ORDER_ID, BUYER_ID)).resolves.toBeUndefined();
     });
@@ -732,16 +750,11 @@ describe('MarketplaceService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await service.disputeOrder(ORDER_ID, BUYER_ID);
 
-      expect(updateChain.in).toHaveBeenCalledWith(
-        'status',
-        ['escrow_funded', 'in_progress']
-      );
+      expect(updateChain.in).toHaveBeenCalledWith('status', ['escrow_funded', 'in_progress']);
     });
 
     it('throws when a third party attempts to dispute', async () => {
@@ -807,9 +820,7 @@ describe('MarketplaceService', () => {
       const dbError = { message: 'update failed' };
       const updateChain = makeChain({ data: null, error: dbError });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(service.disputeOrder(ORDER_ID, BUYER_ID)).rejects.toThrow(
         'Failed to dispute order: update failed'
@@ -832,9 +843,7 @@ describe('MarketplaceService', () => {
       });
       const insertChain = makeChain({ data: { id: 'review-uuid' }, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(orderChain)
-        .mockReturnValueOnce(insertChain);
+      mockDb.from.mockReturnValueOnce(orderChain).mockReturnValueOnce(insertChain);
 
       const result = await service.reviewOrder(ORDER_ID, BUYER_ID, {
         rating: 5,
@@ -868,9 +877,7 @@ describe('MarketplaceService', () => {
       });
       const insertChain = makeChain({ data: { id: 'review-no-text' }, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(orderChain)
-        .mockReturnValueOnce(insertChain);
+      mockDb.from.mockReturnValueOnce(orderChain).mockReturnValueOnce(insertChain);
 
       await service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 3 });
 
@@ -886,39 +893,37 @@ describe('MarketplaceService', () => {
       });
       const insertChain = makeChain({ data: { id: `review-${rating}` }, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(orderChain)
-        .mockReturnValueOnce(insertChain);
+      mockDb.from.mockReturnValueOnce(orderChain).mockReturnValueOnce(insertChain);
 
       const result = await service.reviewOrder(ORDER_ID, BUYER_ID, { rating });
       expect(result.id).toBeDefined();
     });
 
     it('throws when rating is 0', async () => {
-      await expect(
-        service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 0 })
-      ).rejects.toThrow('Rating must be an integer between 1 and 5');
+      await expect(service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 0 })).rejects.toThrow(
+        'Rating must be an integer between 1 and 5'
+      );
     });
 
     it('throws when rating is 6', async () => {
-      await expect(
-        service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 6 })
-      ).rejects.toThrow('Rating must be an integer between 1 and 5');
+      await expect(service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 6 })).rejects.toThrow(
+        'Rating must be an integer between 1 and 5'
+      );
     });
 
     it('throws when rating is a float', async () => {
-      await expect(
-        service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 4.5 })
-      ).rejects.toThrow('Rating must be an integer between 1 and 5');
+      await expect(service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 4.5 })).rejects.toThrow(
+        'Rating must be an integer between 1 and 5'
+      );
     });
 
     it('throws when order is not found', async () => {
       const notFoundChain = makeChain({ data: null, error: { message: 'not found' } });
       mockDb.from.mockReturnValueOnce(notFoundChain);
 
-      await expect(
-        service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 5 })
-      ).rejects.toThrow('Order not found');
+      await expect(service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 5 })).rejects.toThrow(
+        'Order not found'
+      );
     });
 
     it('throws when reviewer is not the buyer', async () => {
@@ -928,9 +933,9 @@ describe('MarketplaceService', () => {
       });
       mockDb.from.mockReturnValueOnce(orderChain);
 
-      await expect(
-        service.reviewOrder(ORDER_ID, SELLER_ID, { rating: 5 })
-      ).rejects.toThrow('Only the buyer can review a completed order');
+      await expect(service.reviewOrder(ORDER_ID, SELLER_ID, { rating: 5 })).rejects.toThrow(
+        'Only the buyer can review a completed order'
+      );
     });
 
     it('throws when order is not completed (status: in_progress)', async () => {
@@ -940,9 +945,9 @@ describe('MarketplaceService', () => {
       });
       mockDb.from.mockReturnValueOnce(orderChain);
 
-      await expect(
-        service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 5 })
-      ).rejects.toThrow('Can only review completed orders');
+      await expect(service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 5 })).rejects.toThrow(
+        'Can only review completed orders'
+      );
     });
 
     it('throws when order is not completed (status: pending)', async () => {
@@ -952,9 +957,9 @@ describe('MarketplaceService', () => {
       });
       mockDb.from.mockReturnValueOnce(orderChain);
 
-      await expect(
-        service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 5 })
-      ).rejects.toThrow('Can only review completed orders');
+      await expect(service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 5 })).rejects.toThrow(
+        'Can only review completed orders'
+      );
     });
 
     it('throws "already been reviewed" when unique constraint (code 23505) is violated', async () => {
@@ -965,13 +970,11 @@ describe('MarketplaceService', () => {
       const dupError = { code: '23505', message: 'duplicate key' };
       const insertChain = makeChain({ data: null, error: dupError });
 
-      mockDb.from
-        .mockReturnValueOnce(orderChain)
-        .mockReturnValueOnce(insertChain);
+      mockDb.from.mockReturnValueOnce(orderChain).mockReturnValueOnce(insertChain);
 
-      await expect(
-        service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 4 })
-      ).rejects.toThrow('Order has already been reviewed');
+      await expect(service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 4 })).rejects.toThrow(
+        'Order has already been reviewed'
+      );
     });
 
     it('throws and logs on a generic DB insert error', async () => {
@@ -982,13 +985,11 @@ describe('MarketplaceService', () => {
       const dbError = { code: '50000', message: 'insert failed' };
       const insertChain = makeChain({ data: null, error: dbError });
 
-      mockDb.from
-        .mockReturnValueOnce(orderChain)
-        .mockReturnValueOnce(insertChain);
+      mockDb.from.mockReturnValueOnce(orderChain).mockReturnValueOnce(insertChain);
 
-      await expect(
-        service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 4 })
-      ).rejects.toThrow('Failed to create review: insert failed');
+      await expect(service.reviewOrder(ORDER_ID, BUYER_ID, { rating: 4 })).rejects.toThrow(
+        'Failed to create review: insert failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to create review',

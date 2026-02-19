@@ -49,8 +49,10 @@ export class MentorshipService implements IMentorshipService {
       throw new Error('Niche is required');
     }
 
-    if (!VALID_AUDIENCE_RANGES.includes(data.audienceSizeRange as any)) {
-      throw new Error(`Invalid audience size range. Must be one of: ${VALID_AUDIENCE_RANGES.join(', ')}`);
+    if (!(VALID_AUDIENCE_RANGES as readonly string[]).includes(data.audienceSizeRange)) {
+      throw new Error(
+        `Invalid audience size range. Must be one of: ${VALID_AUDIENCE_RANGES.join(', ')}`
+      );
     }
 
     const maxMentees = data.maxMentees ?? 3;
@@ -84,7 +86,10 @@ export class MentorshipService implements IMentorshipService {
     return { id: rows.id };
   }
 
-  async getMentors(filters?: { niche?: string; audienceSizeRange?: string }): Promise<MentorProfileRow[]> {
+  async getMentors(filters?: {
+    niche?: string;
+    audienceSizeRange?: string;
+  }): Promise<MentorProfileRow[]> {
     let query = this.db
       .from<MentorProfileRow>('mentor_profiles')
       .select('id, creator_id, niche, audience_size_range, bio, max_mentees, active, created_at')
@@ -195,13 +200,9 @@ export class MentorshipService implements IMentorshipService {
     }
 
     const newStatus = accept ? 'active' : 'declined';
-    const updates: Partial<MentorshipRow> = {
-      status: newStatus,
-    };
-
-    if (accept) {
-      (updates as any).started_at = new Date().toISOString();
-    }
+    const updates: Partial<MentorshipRow> = accept
+      ? { status: newStatus, started_at: new Date().toISOString() }
+      : { status: newStatus };
 
     const { error } = await this.db
       .from<MentorshipRow>('mentorships')
@@ -218,11 +219,19 @@ export class MentorshipService implements IMentorshipService {
   }
 
   async getMyMentorships(creatorId: string): Promise<MentorshipRow[]> {
+    // #260: Validate creatorId format to prevent .or() filter injection
+    if (!/^[a-zA-Z0-9_-]+$/.test(creatorId)) {
+      throw new Error('Invalid creator ID format');
+    }
+
     const { data, error } = await this.db
       .from<MentorshipRow>('mentorships')
-      .select('id, mentor_id, mentee_id, niche, goals, status, started_at, completed_at, created_at')
+      .select(
+        'id, mentor_id, mentee_id, niche, goals, status, started_at, completed_at, created_at'
+      )
       .or(`mentor_id.eq.${creatorId},mentee_id.eq.${creatorId}`)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) {
       this.logger.error('Failed to get mentorships', { error, creatorId });

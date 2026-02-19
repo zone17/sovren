@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { revenueApi } from '../services/revenueApi';
-import type { CreateRevenuEntryPayload } from '../types';
+import type { CreateRevenueEntryPayload } from '../types';
 
 const QUERY_KEY = ['business', 'revenue'];
 
@@ -45,7 +45,7 @@ export function useUpdateDiversificationGoals() {
 export function useAddRevenueEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateRevenuEntryPayload) => revenueApi.addRevenueEntry(data),
+    mutationFn: (data: CreateRevenueEntryPayload) => revenueApi.addRevenueEntry(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

@@ -101,6 +101,9 @@ export interface ServiceOrder {
   escrowPaymentHash?: string;
   amountSats: number;
   idempotencyKey: string;
+  // #286: Fields added by epic010_security_hardening migration
+  releaseStatus?: 'idle' | 'processing' | 'released' | 'failed';
+  releaseAttempts?: number;
   createdAt: string;
   fundedAt?: string;
   completedAt?: string;

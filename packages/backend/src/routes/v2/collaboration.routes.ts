@@ -10,6 +10,11 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import {
+  InviteCollaboratorSchema,
+  RespondCollaborationSchema,
+  UpdateRevenueSplitSchema,
+} from '../../validators/community';
 import type { ICollaborativeContentService } from '../../interfaces/community/ICollaborativeContentService';
 
 const router = Router();
@@ -43,30 +48,19 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    const { contentId, collaboratorId, revenueSplitBps } = req.body;
-
-    if (!contentId || typeof contentId !== 'string') {
-      res.status(400).json({ success: false, error: 'contentId is required' });
-      return;
-    }
-
-    if (!collaboratorId || typeof collaboratorId !== 'string') {
-      res.status(400).json({ success: false, error: 'collaboratorId is required' });
-      return;
-    }
-
-    if (!Number.isInteger(revenueSplitBps) || revenueSplitBps <= 0) {
+    const result = InviteCollaboratorSchema.safeParse(req.body);
+    if (!result.success) {
       res
         .status(400)
-        .json({ success: false, error: 'revenueSplitBps must be a positive integer (1-10000)' });
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
     const data = await getCollaborationService().inviteCollaborator(
-      contentId,
+      result.data.contentId,
       getAuthUser(req).nostr_pubkey,
-      collaboratorId,
-      revenueSplitBps
+      result.data.collaboratorId,
+      result.data.revenueSplitBps
     );
 
     res.status(201).json({ success: true, data });
@@ -84,32 +78,49 @@ router.put(
   requireCreator,
   revenueSplitRateLimiter, // H-6: 10/min — stricter than general mutations
   asyncHandler(async (req, res) => {
-    const { splits } = req.body;
-
-    if (!Array.isArray(splits) || splits.length === 0) {
-      res.status(400).json({ success: false, error: 'splits must be a non-empty array' });
+    const result = UpdateRevenueSplitSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
-    }
-
-    for (const split of splits) {
-      if (!split.creatorId || !Number.isInteger(split.bps)) {
-        res
-          .status(400)
-          .json({
-            success: false,
-            error: 'Each split must have creatorId (string) and bps (integer)',
-          });
-        return;
-      }
     }
 
     await getCollaborationService().updateRevenueSplit(
       req.params.id,
       getAuthUser(req).nostr_pubkey,
-      splits
+      result.data.splits
     );
 
     res.json({ success: true });
+  })
+);
+
+/**
+ * PUT /api/v2/content/collaborations/:id/respond
+ * Accept or decline a collaboration invitation (#266)
+ */
+router.put(
+  '/collaborations/:id/respond',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  asyncHandler(async (req, res) => {
+    const result = RespondCollaborationSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
+      return;
+    }
+
+    await getCollaborationService().respondToInvitation(
+      req.params.id,
+      getAuthUser(req).nostr_pubkey,
+      result.data.accept
+    );
+
+    res.json({ success: true, data: { accepted: result.data.accept } });
   })
 );
 

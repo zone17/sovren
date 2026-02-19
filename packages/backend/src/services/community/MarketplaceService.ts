@@ -74,15 +74,17 @@ interface ReviewRow {
 
 // LightningService interface (subset used by marketplace)
 interface ILightningService {
-  createInvoice(amountSats: number, memo: string): Promise<{ invoiceId: string; paymentRequest: string; paymentHash: string }>;
-  payToAddress(lightningAddress: string, amountSats: number, memo: string): Promise<{ paymentHash: string }>;
+  createInvoice(
+    amountSats: number,
+    memo: string
+  ): Promise<{ invoiceId: string; paymentRequest: string; paymentHash: string }>;
+  payToAddress(
+    lightningAddress: string,
+    amountSats: number,
+    memo: string
+  ): Promise<{ paymentHash: string }>;
   getInvoiceStatus(invoiceId: string): Promise<{ paid: boolean; paymentHash?: string }>;
   getSellerLightningAddress(sellerId: string): Promise<string | null>;
-}
-
-// Creator profile row for resolving Lightning address
-interface CreatorProfileRow {
-  lightning_address: string | null;
 }
 
 export class MarketplaceService implements IMarketplaceService {
@@ -113,7 +115,7 @@ export class MarketplaceService implements IMarketplaceService {
       portfolioUrls?: string[];
     }
   ): Promise<{ id: string }> {
-    if (!VALID_SERVICE_TYPES.includes(data.serviceType as any)) {
+    if (!(VALID_SERVICE_TYPES as readonly string[]).includes(data.serviceType)) {
       throw new Error(`Invalid service type. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}`);
     }
 
@@ -169,7 +171,9 @@ export class MarketplaceService implements IMarketplaceService {
   async getListings(filters?: { serviceType?: string; active?: boolean }): Promise<ListingRow[]> {
     let query = this.db
       .from<ListingRow>('service_listings')
-      .select('id, creator_id, service_type, title, description, price_sats, portfolio_urls, active, created_at, updated_at');
+      .select(
+        'id, creator_id, service_type, title, description, price_sats, portfolio_urls, active, created_at, updated_at'
+      );
 
     // Default to active listings
     const showActive = filters?.active !== false;
@@ -204,7 +208,11 @@ export class MarketplaceService implements IMarketplaceService {
 
     if (existing) {
       // Return the existing order — do not recreate invoice
-      this.logger.info('Idempotent order lookup', { orderId: existing.id, idempotencyKey, buyerId });
+      this.logger.info('Idempotent order lookup', {
+        orderId: existing.id,
+        idempotencyKey,
+        buyerId,
+      });
       return {
         id: existing.id,
         invoicePaymentRequest: `cached:${existing.escrow_invoice_id}`,
@@ -303,7 +311,9 @@ export class MarketplaceService implements IMarketplaceService {
     }
 
     if (order.status !== 'escrow_funded') {
-      throw new Error(`Cannot start order in '${order.status}' status. Order must be escrow_funded.`);
+      throw new Error(
+        `Cannot start order in '${order.status}' status. Order must be escrow_funded.`
+      );
     }
 
     const { error } = await this.db
@@ -343,22 +353,40 @@ export class MarketplaceService implements IMarketplaceService {
     }
 
     if (order.status !== 'in_progress') {
-      throw new Error(`Cannot complete order in '${order.status}' status. Order must be in_progress.`);
+      throw new Error(
+        `Cannot complete order in '${order.status}' status. Order must be in_progress.`
+      );
     }
 
-    // C-1: Begin release — mark as processing before attempting payout
-    const { error: processingError } = await this.db
+    // #262: Atomic guard — only one caller can acquire the 'processing' lock.
+    // The .neq('release_status', 'processing') ensures the second concurrent
+    // request gets 0 rows updated and is safely rejected.
+    const { data: updatedRows, error: processingError } = await this.db
       .from<OrderRow>('service_orders')
       .update({
         release_status: 'processing',
         release_attempts: (order.release_attempts ?? 0) + 1,
       })
       .eq('id', orderId)
-      .eq('status', 'in_progress'); // Atomic status guard
+      .eq('status', 'in_progress')
+      .neq('release_status', 'processing') // Atomic guard: reject if already processing
+      .select('id');
 
     if (processingError) {
-      this.logger.error('Failed to mark order release as processing', { error: processingError, orderId });
+      this.logger.error('Failed to mark order release as processing', {
+        error: processingError,
+        orderId,
+      });
       throw new Error(`Failed to initiate payout: ${processingError.message}`);
+    }
+
+    // If no rows were updated, another request already acquired the processing lock
+    if (!updatedRows || updatedRows.length === 0) {
+      this.logger.warn('Double-payout race prevented: release already in progress', {
+        orderId,
+        buyerId,
+      });
+      throw new Error('Payout is already being processed for this order');
     }
 
     // C-1: Fetch seller's Lightning address and attempt payout
@@ -407,12 +435,13 @@ export class MarketplaceService implements IMarketplaceService {
       await this.db
         .from<OrderRow>('service_orders')
         .update({
-          release_status: isFinalFailure ? 'failed' : 'failed',
+          release_status: isFinalFailure ? 'permanently_failed' : 'failed',
           release_attempts: currentAttempts,
         })
         .eq('id', orderId);
 
-      const errorMessage = payoutError instanceof Error ? payoutError.message : 'Unknown payout error';
+      const errorMessage =
+        payoutError instanceof Error ? payoutError.message : 'Unknown payout error';
       this.logger.error('Escrow payout failed', {
         orderId,
         sellerId: order.seller_id,
@@ -436,7 +465,11 @@ export class MarketplaceService implements IMarketplaceService {
             removeOnComplete: { count: 100 },
           }
         );
-        this.logger.info('Payout retry scheduled', { orderId, backoffMs, attempt: currentAttempts });
+        this.logger.info('Payout retry scheduled', {
+          orderId,
+          backoffMs,
+          attempt: currentAttempts,
+        });
       }
 
       throw new Error(`Payout to seller failed: ${errorMessage}. Order remains in_progress.`);
@@ -529,7 +562,12 @@ export class MarketplaceService implements IMarketplaceService {
       throw new Error(`Failed to create review: ${error?.message}`);
     }
 
-    this.logger.info('Order reviewed', { reviewId: rows.id, orderId, reviewerId, rating: data.rating });
+    this.logger.info('Order reviewed', {
+      reviewId: rows.id,
+      orderId,
+      reviewerId,
+      rating: data.rating,
+    });
     return { id: rows.id };
   }
 
@@ -544,9 +582,7 @@ export class MarketplaceService implements IMarketplaceService {
    */
   verifyWebhookSignature(rawBody: Buffer, signature: string, webhookSecret: string): boolean {
     // C-3: Compute expected HMAC-SHA256 digest
-    const expected = createHmac('sha256', webhookSecret)
-      .update(rawBody)
-      .digest('hex');
+    const expected = createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
 
     // C-3: Use timingSafeEqual to prevent timing attacks — NEVER use === for HMAC comparison
     try {
@@ -600,12 +636,18 @@ export class MarketplaceService implements IMarketplaceService {
 
     if (order.status !== 'pending') {
       // Already funded or in another terminal state — idempotent response
-      this.logger.info('Webhook received for non-pending order — ignoring', { orderId, status: order.status });
+      this.logger.info('Webhook received for non-pending order — ignoring', {
+        orderId,
+        status: order.status,
+      });
       return;
     }
 
     // C-3: Step 3 — Cross-verify by polling Lightning node directly (ground truth)
-    const invoiceStatus = await this.lightning.getInvoiceStatus(order.escrow_invoice_id!);
+    if (!order.escrow_invoice_id) {
+      throw new Error('Order missing escrow invoice ID');
+    }
+    const invoiceStatus = await this.lightning.getInvoiceStatus(order.escrow_invoice_id);
     if (!invoiceStatus.paid) {
       this.logger.warn('Webhook claimed payment but Lightning node reports unpaid', {
         orderId,

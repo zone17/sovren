@@ -28,7 +28,7 @@ export const TemplateManager: React.FC = () => {
   const handleCreate = () => {
     if (!formName.trim() || !formContent.trim()) return;
     createMutation.mutate(
-      { name: formName.trim(), content: formContent.trim() },
+      { name: formName.trim(), template_text: formContent.trim() },
       { onSuccess: resetForm }
     );
   };
@@ -36,14 +36,14 @@ export const TemplateManager: React.FC = () => {
   const handleEdit = (template: ReplyTemplate) => {
     setEditingId(template.id);
     setFormName(template.name);
-    setFormContent(template.content);
+    setFormContent(template.template_text);
     setIsCreating(false);
   };
 
   const handleUpdate = () => {
     if (!editingId || !formName.trim() || !formContent.trim()) return;
     updateMutation.mutate(
-      { id: editingId, data: { name: formName.trim(), content: formContent.trim() } },
+      { id: editingId, data: { name: formName.trim(), template_text: formContent.trim() } },
       { onSuccess: resetForm }
     );
   };
@@ -158,14 +158,13 @@ export const TemplateManager: React.FC = () => {
           </p>
         ) : (
           templates.map((template) => (
-            <div
-              key={template.id}
-              className="rounded-md border border-gray-200 p-3"
-            >
+            <div key={template.id} className="rounded-md border border-gray-200 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{template.name}</p>
-                  <p className="mt-0.5 text-sm text-gray-500 line-clamp-2">{template.content}</p>
+                  <p className="mt-0.5 text-sm text-gray-500 line-clamp-2">
+                    {template.template_text}
+                  </p>
                 </div>
                 <div className="flex shrink-0 gap-1">
                   <button

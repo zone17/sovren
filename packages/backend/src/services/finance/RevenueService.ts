@@ -10,21 +10,13 @@ import type { IRevenueService } from '../../interfaces/finance/IRevenueService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { DiversificationGoal } from '@shared/types/finance';
 
 const CONCENTRATION_WARNING_THRESHOLD = 0.5; // >50% from single source = risk
 const CACHE_TTL_DISPLAY = 3600; // 1h for display contexts
 const BTC_RATE_CACHE_KEY = 'btc:usd:rate';
 const BTC_RATE_TTL = 300; // 5 minutes
 const RATE_SOURCE = 'coingecko';
-
-type RevenueSource =
-  | 'subscriptions'
-  | 'tips'
-  | 'sponsorships'
-  | 'services'
-  | 'affiliate'
-  | 'marketplace'
-  | 'other';
 
 export class RevenueService implements IRevenueService {
   constructor(
@@ -40,7 +32,10 @@ export class RevenueService implements IRevenueService {
     this.logger.info('RevenueService.getRevenueBreakdown', { creatorId, period });
 
     const cacheKey = `revenue:breakdown:${creatorId}:${period?.start ?? 'all'}:${period?.end ?? 'all'}`;
-    const cached = await this.cache.get<Array<{ source: string; totalSats: number; percentage: number }>>(cacheKey);
+    const cached =
+      await this.cache.get<Array<{ source: string; totalSats: number; percentage: number }>>(
+        cacheKey
+      );
     if (cached) return cached;
 
     let query = this.db
@@ -49,16 +44,16 @@ export class RevenueService implements IRevenueService {
       .eq('creator_id', creatorId);
 
     if (period?.start) {
-      query = (query as any).gte('recorded_at', period.start);
+      query = query.gte('recorded_at', period.start);
     }
     if (period?.end) {
-      query = (query as any).lte('recorded_at', period.end);
+      query = query.lte('recorded_at', period.end);
     }
 
     const { data, error } = await query;
     if (error) throw error;
 
-    const rows = (data ?? []) as Array<{ source: string; amount_sats: number }>;
+    const rows: Array<{ source: string; amount_sats: number }> = data ?? [];
 
     // Aggregate by source
     const sourceTotals = new Map<string, number>();
@@ -130,7 +125,7 @@ export class RevenueService implements IRevenueService {
     };
   }
 
-  async getDiversificationGoals(creatorId: string): Promise<any> {
+  async getDiversificationGoals(creatorId: string): Promise<DiversificationGoal | null> {
     this.logger.info('RevenueService.getDiversificationGoals', { creatorId });
 
     const { data, error } = await this.db
@@ -143,10 +138,7 @@ export class RevenueService implements IRevenueService {
     return data ?? null;
   }
 
-  async setDiversificationGoals(
-    creatorId: string,
-    targets: Record<string, number>
-  ): Promise<void> {
+  async setDiversificationGoals(creatorId: string, targets: Record<string, number>): Promise<void> {
     this.logger.info('RevenueService.setDiversificationGoals', { creatorId });
 
     // Validate targets sum to 100 (percentages)
@@ -155,7 +147,7 @@ export class RevenueService implements IRevenueService {
       throw new Error(`Diversification targets must sum to 100, got ${total}`);
     }
 
-    const { error } = await (this.db.from('diversification_goals') as any).upsert(
+    const { error } = await this.db.from('diversification_goals').upsert(
       {
         creator_id: creatorId,
         target_distribution: targets,
@@ -206,7 +198,7 @@ export class RevenueService implements IRevenueService {
     // Invalidate cached breakdown
     await this.cache.invalidate(`revenue:breakdown:${creatorId}:*`);
 
-    return { id: (inserted as any).id };
+    return { id: (inserted as { id: string }).id };
   }
 
   // ============================================================================

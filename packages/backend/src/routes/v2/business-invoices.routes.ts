@@ -15,10 +15,14 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
+import { readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { InvoiceSchema, UpdateInvoiceStatusSchema } from '../../validators/finance';
 import type { IBusinessInvoiceService } from '../../interfaces/finance/IBusinessInvoiceService';
 
 const router = Router();
+
+// #261: Apply rate limiters
+router.use(readOnlyRateLimiter);
 
 let _invoiceService: IBusinessInvoiceService | null = null;
 function getInvoiceService(): IBusinessInvoiceService {
@@ -43,7 +47,9 @@ router.post(
   asyncHandler(async (req: Request, res: Response) => {
     const result = InvoiceSchema.safeParse(req.body);
     if (!result.success) {
-      res.status(400).json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
@@ -101,7 +107,9 @@ router.put(
   asyncHandler(async (req: Request, res: Response) => {
     const result = UpdateInvoiceStatusSchema.safeParse(req.body);
     if (!result.success) {
-      res.status(400).json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
     const creatorId = getAuthUser(req).nostr_pubkey;

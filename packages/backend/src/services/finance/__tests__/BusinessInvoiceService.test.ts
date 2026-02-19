@@ -71,7 +71,8 @@ function makeDb() {
   };
 
   // Bind `this` so the closures above reference the same object
-  db.order = jest.fn().mockImplementation(() => Promise.resolve(db._orderResult));
+  db.order = jest.fn().mockReturnValue(db);
+  db.limit = jest.fn().mockImplementation(() => Promise.resolve(db._orderResult));
   db.single = jest.fn().mockImplementation(() => Promise.resolve(db._singleResult));
 
   return db;
@@ -135,9 +136,7 @@ describe('BusinessInvoiceService', () => {
       await service.createInvoice('creator-1', { clientName: 'Acme', lineItems });
 
       // 2*50000 + 1*100000 = 200000
-      expect(mockDb.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ total_sats: 200000 })
-      );
+      expect(mockDb.insert).toHaveBeenCalledWith(expect.objectContaining({ total_sats: 200000 }));
     });
 
     it('rejects with an error when total sats is 0 (zero-quantity item)', async () => {
@@ -163,9 +162,7 @@ describe('BusinessInvoiceService', () => {
 
       await service.createInvoice('creator-1', { clientName: 'Client', lineItems: singleLineItem });
 
-      expect(mockDb.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'draft' })
-      );
+      expect(mockDb.insert).toHaveBeenCalledWith(expect.objectContaining({ status: 'draft' }));
     });
 
     it('includes due_date in the row when dueDate is provided', async () => {
@@ -454,9 +451,9 @@ describe('BusinessInvoiceService', () => {
       const chain = makeUpdateTerminalChain({ data: null, error: dbError });
       mockDb.from.mockReturnValue(chain);
 
-      await expect(
-        service.updateInvoiceStatus('inv-1', 'creator-1', 'paid')
-      ).rejects.toEqual(dbError);
+      await expect(service.updateInvoiceStatus('inv-1', 'creator-1', 'paid')).rejects.toEqual(
+        dbError
+      );
     });
   });
 
@@ -493,18 +490,16 @@ describe('BusinessInvoiceService', () => {
     it('throws "Invoice not found" when getInvoice returns null', async () => {
       mockDb._singleResult = { data: null, error: null };
 
-      await expect(
-        service.generatePaymentLink('inv-missing', 'creator-1')
-      ).rejects.toThrow('Invoice not found: inv-missing');
+      await expect(service.generatePaymentLink('inv-missing', 'creator-1')).rejects.toThrow(
+        'Invoice not found: inv-missing'
+      );
     });
 
     it('throws when getInvoice returns a database error', async () => {
       const dbError = { message: 'Not found', code: 'PGRST116' };
       mockDb._singleResult = { data: null, error: dbError };
 
-      await expect(
-        service.generatePaymentLink('inv-x', 'wrong-creator')
-      ).rejects.toEqual(dbError);
+      await expect(service.generatePaymentLink('inv-x', 'wrong-creator')).rejects.toEqual(dbError);
     });
   });
 

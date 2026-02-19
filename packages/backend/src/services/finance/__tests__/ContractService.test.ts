@@ -31,9 +31,12 @@ function makeChain(resolvedValue: { data: any; error: any }) {
     update: jest.fn().mockReturnThis(),
     delete: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
-    order: jest.fn().mockResolvedValue(resolvedValue),
+    order: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockResolvedValue(resolvedValue),
     single: jest.fn().mockResolvedValue(resolvedValue),
   };
+  chain.then = (res: any, rej: any) => Promise.resolve(resolvedValue).then(res, rej);
+  chain.catch = (fn: any) => Promise.resolve(resolvedValue).catch(fn);
   return chain;
 }
 
@@ -161,9 +164,7 @@ describe('ContractService', () => {
       mockDb.from.mockReturnValue(chain);
       service = new ContractService(mockDb, mockLogger);
 
-      await expect(service.getTemplate('missing')).rejects.toThrow(
-        'Template not found: missing'
-      );
+      await expect(service.getTemplate('missing')).rejects.toThrow('Template not found: missing');
     });
 
     it('throws the database error when query fails', async () => {
@@ -270,7 +271,11 @@ describe('ContractService', () => {
   describe('getContracts', () => {
     it('returns contracts with joined template data for the given creatorId', async () => {
       const contracts = [
-        { id: 'c-1', creator_id: 'creator-1', contract_templates: { name: 'NDA', category: 'legal' } },
+        {
+          id: 'c-1',
+          creator_id: 'creator-1',
+          contract_templates: { name: 'NDA', category: 'legal' },
+        },
       ];
       const chain = makeChain({ data: contracts, error: null });
       mockDb.from.mockReturnValue(chain);
@@ -442,10 +447,12 @@ describe('ContractService', () => {
     // --- Exclusivity ---
 
     it('detects exclusivity via "exclusive" keyword', async () => {
-      const flags = await service.analyzeRedFlags('The creator grants exclusive rights to the brand.');
+      const flags = await service.analyzeRedFlags(
+        'The creator grants exclusive rights to the brand.'
+      );
       const f = flags.find((x) => x.type === 'exclusivity');
       expect(f).toBeDefined();
-      expect(f!.severity).toBe('critical');
+      expect(f!.severity).toBe('high');
       expect(f!.suggestion).toMatch(/exclusivity window/i);
       expect(f!.match.toLowerCase()).toContain('exclusive');
     });
@@ -456,22 +463,28 @@ describe('ContractService', () => {
     });
 
     it('detects exclusivity via "non-compete" phrase', async () => {
-      const flags = await service.analyzeRedFlags('Creator must abide by a non-compete clause for 12 months.');
+      const flags = await service.analyzeRedFlags(
+        'Creator must abide by a non-compete clause for 12 months.'
+      );
       expect(flags.some((f) => f.type === 'exclusivity')).toBe(true);
     });
 
     // --- Perpetual ---
 
     it('detects perpetual via "perpetuity" keyword', async () => {
-      const flags = await service.analyzeRedFlags('License granted in perpetuity across all territories.');
+      const flags = await service.analyzeRedFlags(
+        'License granted in perpetuity across all territories.'
+      );
       const f = flags.find((x) => x.type === 'perpetual');
       expect(f).toBeDefined();
-      expect(f!.severity).toBe('critical');
+      expect(f!.severity).toBe('high');
       expect(f!.suggestion).toMatch(/fixed term/i);
     });
 
     it('detects perpetual via "perpetual" keyword', async () => {
-      const flags = await service.analyzeRedFlags('A perpetual, irrevocable license is hereby granted.');
+      const flags = await service.analyzeRedFlags(
+        'A perpetual, irrevocable license is hereby granted.'
+      );
       expect(flags.some((f) => f.type === 'perpetual')).toBe(true);
     });
 
@@ -481,7 +494,9 @@ describe('ContractService', () => {
     });
 
     it('detects perpetual via "in perpetuity" exact phrase', async () => {
-      const flags = await service.analyzeRedFlags('Rights are licensed in perpetuity to the client.');
+      const flags = await service.analyzeRedFlags(
+        'Rights are licensed in perpetuity to the client.'
+      );
       expect(flags.some((f) => f.type === 'perpetual')).toBe(true);
     });
 
@@ -491,7 +506,7 @@ describe('ContractService', () => {
       const flags = await service.analyzeRedFlags('Invoices payable Net 90 days after receipt.');
       const f = flags.find((x) => x.type === 'delayed_payment');
       expect(f).toBeDefined();
-      expect(f!.severity).toBe('warning');
+      expect(f!.severity).toBe('medium');
       expect(f!.suggestion).toMatch(/Net-30|Net-45/);
     });
 
@@ -533,7 +548,7 @@ describe('ContractService', () => {
       );
       const f = flags.find((x) => x.type === 'ip_assignment');
       expect(f).toBeDefined();
-      expect(f!.severity).toBe('critical');
+      expect(f!.severity).toBe('high');
       expect(f!.suggestion).toMatch(/license grant/i);
     });
 
@@ -594,7 +609,7 @@ describe('ContractService', () => {
       for (const flag of flags) {
         expect(typeof flag.type).toBe('string');
         expect(typeof flag.match).toBe('string');
-        expect(flag.severity).toMatch(/^(warning|critical)$/);
+        expect(flag.severity).toMatch(/^(high|medium|low)$/);
         expect(typeof flag.suggestion).toBe('string');
         expect(flag.suggestion.length).toBeGreaterThan(0);
       }

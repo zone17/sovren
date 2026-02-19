@@ -11,13 +11,15 @@ import type { ITaxService } from '../../interfaces/finance/ITaxService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { Expense, ExpenseCategory } from '@shared/types/finance';
 
-const BTC_RATE_TTL_ACTIVE = 300;   // 5 minutes for active tax calculations
+const BTC_RATE_TTL_ACTIVE = 300; // 5 minutes for active tax calculations
 const BTC_RATE_CACHE_KEY = 'btc:usd:rate';
 const RATE_SOURCE = 'coingecko';
 
 // L-5: Characters that trigger formula execution in spreadsheet apps
-const CSV_FORMULA_CHARS = /^[=+\-@]/;
+// #271: Added \t and \r to prevent tab/CR-based injection
+const CSV_FORMULA_CHARS = /^[=+\-@\t\r]/;
 
 export class TaxService implements ITaxService {
   constructor(
@@ -60,8 +62,8 @@ export class TaxService implements ITaxService {
 
     if (expenseError) throw expenseError;
 
-    const revenues = (revenueData ?? []) as Array<{ amount_sats: number; usd_at_time: number | null }>;
-    const expenses = (expenseData ?? []) as Array<{ amount_sats: number; usd_at_time: number | null }>;
+    const revenues: Array<{ amount_sats: number; usd_at_time: number | null }> = revenueData ?? [];
+    const expenses: Array<{ amount_sats: number; usd_at_time: number | null }> = expenseData ?? [];
 
     const totalRevenueSats = revenues.reduce((sum, r) => sum + r.amount_sats, 0);
     const totalExpenseSats = expenses.reduce((sum, e) => sum + e.amount_sats, 0);
@@ -93,7 +95,7 @@ export class TaxService implements ITaxService {
   async getExpenses(
     creatorId: string,
     filters?: { categoryId?: string; startDate?: string; endDate?: string }
-  ): Promise<any[]> {
+  ): Promise<Expense[]> {
     this.logger.info('TaxService.getExpenses', { creatorId, filters });
 
     let query = this.db
@@ -102,16 +104,16 @@ export class TaxService implements ITaxService {
       .eq('creator_id', creatorId);
 
     if (filters?.categoryId) {
-      query = (query as any).eq('category_id', filters.categoryId);
+      query = query.eq('category_id', filters.categoryId);
     }
     if (filters?.startDate) {
-      query = (query as any).gte('expense_date', filters.startDate);
+      query = query.gte('expense_date', filters.startDate);
     }
     if (filters?.endDate) {
-      query = (query as any).lte('expense_date', filters.endDate);
+      query = query.lte('expense_date', filters.endDate);
     }
 
-    const { data, error } = await (query as any).order('expense_date', { ascending: false });
+    const { data, error } = await query.order('expense_date', { ascending: false });
     if (error) throw error;
     return data ?? [];
   }
@@ -154,10 +156,10 @@ export class TaxService implements ITaxService {
 
     if (error) throw error;
     if (!inserted) throw new Error('Failed to add expense');
-    return { id: (inserted as any).id };
+    return { id: (inserted as { id: string }).id };
   }
 
-  async getExpenseCategories(creatorId: string): Promise<any[]> {
+  async getExpenseCategories(creatorId: string): Promise<ExpenseCategory[]> {
     this.logger.info('TaxService.getExpenseCategories', { creatorId });
 
     const { data, error } = await this.db
@@ -184,7 +186,7 @@ export class TaxService implements ITaxService {
 
     if (error) throw error;
     if (!inserted) throw new Error('Failed to create expense category');
-    return { id: (inserted as any).id };
+    return { id: (inserted as { id: string }).id };
   }
 
   async exportTaxReport(creatorId: string, year: number, format: 'csv' | 'json'): Promise<string> {
@@ -208,24 +210,34 @@ export class TaxService implements ITaxService {
 
     // L-5: CSV injection protection — prefix formula-trigger chars with single quote
     const csvCell = (value: string): string => {
-      const str = String(value);
+      // #271: Strip embedded tab/CR chars and prefix formula-trigger chars
+      const str = String(value).replace(/[\t\r]/g, ' ');
       return CSV_FORMULA_CHARS.test(str) ? `'${str}` : str;
     };
 
     const lines: string[] = [
       'Quarter,Revenue (sats),Expenses (sats),Net (sats),Revenue (USD),Expenses (USD),Net (USD)',
-      ...quarters.map(({ quarter, summary }) =>
-        `Q${quarter},${summary.revenue},${summary.expenses},${summary.net},` +
-        `${summary.usdRevenue},${summary.usdExpenses},${summary.usdNet}`
+      ...quarters.map(
+        ({ quarter, summary }) =>
+          `Q${quarter},${summary.revenue},${summary.expenses},${summary.net},` +
+          `${summary.usdRevenue},${summary.usdExpenses},${summary.usdNet}`
       ),
       '',
       'Date,Description,Category,Amount (sats),Amount (USD)',
-      ...expenses.map((e: any) => {
-        const date = csvCell(e.expense_date ?? '');
-        const desc = csvCell(e.description ?? '');
-        const category = csvCell(e.expense_categories?.name ?? 'Uncategorized');
-        return `${date},"${desc}","${category}",${e.amount_sats},${e.usd_at_time ?? ''}`;
-      }),
+      ...expenses.map(
+        (e: {
+          expense_date?: string;
+          description?: string;
+          expense_categories?: { name: string; type: string } | null;
+          amount_sats: number;
+          usd_at_time?: number | null;
+        }) => {
+          const date = csvCell(e.expense_date ?? '');
+          const desc = csvCell(e.description ?? '');
+          const category = csvCell(e.expense_categories?.name ?? 'Uncategorized');
+          return `${date},"${desc}","${category}",${e.amount_sats},${e.usd_at_time ?? ''}`;
+        }
+      ),
     ];
 
     return lines.join('\n');

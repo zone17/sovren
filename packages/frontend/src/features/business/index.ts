@@ -38,7 +38,12 @@ export {
   useAddRevenueEntry,
 } from './hooks/useRevenue';
 
-export { useTaxSummary, useTaxCategories, useCreateTaxCategory, useExportTax } from './hooks/useTax';
+export {
+  useTaxSummary,
+  useTaxCategories,
+  useCreateTaxCategory,
+  useExportTax,
+} from './hooks/useTax';
 
 export { useExpenses, useAddExpense } from './hooks/useExpenses';
 
@@ -59,6 +64,6 @@ export type {
   UpdateContractPayload,
   CreateInvoicePayload,
   CreateExpensePayload,
-  CreateRevenuEntryPayload,
+  CreateRevenueEntryPayload,
   BusinessTab,
 } from './types';

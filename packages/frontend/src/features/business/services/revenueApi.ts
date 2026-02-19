@@ -1,5 +1,10 @@
 import apiClient from '@/services/api/apiClient';
-import type { ApiResponse, RevenueBreakdownEntry, RevenueRisk, CreateRevenuEntryPayload } from '../types';
+import type {
+  ApiResponse,
+  RevenueBreakdownEntry,
+  RevenueRisk,
+  CreateRevenueEntryPayload,
+} from '../types';
 import type { DiversificationGoal, RevenueEntry } from '@shared/types/finance';
 
 const BASE = '/api/v2/business/revenue';
@@ -23,7 +28,7 @@ export const revenueApi = {
     return apiClient['request']('PUT', `${BASE}/goals`, { targetDistribution });
   },
 
-  addRevenueEntry(data: CreateRevenuEntryPayload): Promise<ApiResponse<RevenueEntry>> {
+  addRevenueEntry(data: CreateRevenueEntryPayload): Promise<ApiResponse<RevenueEntry>> {
     return apiClient['request']('POST', BASE, data);
   },
 };

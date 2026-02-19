@@ -11,6 +11,7 @@ import type { IBusinessInvoiceService } from '../../interfaces/finance/IBusiness
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
+import type { BusinessInvoice } from '@shared/types/finance';
 
 interface LineItem {
   description: string;
@@ -60,10 +61,18 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       clientName: data.clientName,
     });
 
-    const totalSats = data.lineItems.reduce(
-      (sum, item) => sum + item.quantity * item.unitPriceSats,
-      0
-    );
+    // #272: Use safe integer check to prevent silent precision loss on large invoices
+    let totalSats = 0;
+    for (const item of data.lineItems) {
+      const lineTotal = item.quantity * item.unitPriceSats;
+      if (!Number.isSafeInteger(lineTotal)) {
+        throw new Error(`Line item total exceeds safe integer range: ${item.description}`);
+      }
+      totalSats += lineTotal;
+      if (!Number.isSafeInteger(totalSats)) {
+        throw new Error('Invoice total exceeds safe integer range (max ~9 quadrillion sats)');
+      }
+    }
 
     if (totalSats <= 0) {
       throw new Error('Invoice total must be greater than 0 sats');
@@ -90,7 +99,7 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     if (error) throw error;
     if (!inserted) throw new Error('Failed to create invoice');
 
-    const invoiceId = (inserted as any).id;
+    const invoiceId = (inserted as { id: string }).id;
 
     // Schedule recurring invoice generation if interval specified
     if (data.recurringInterval) {
@@ -106,33 +115,28 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     const lnurlPay = await this.generateLnurlPayLink(invoiceId, creatorId, totalSats);
 
     if (lnurlPay) {
-      await this.db
-        .from('business_invoices')
-        .update({ lnurl_pay: lnurlPay })
-        .eq('id', invoiceId);
+      await this.db.from('business_invoices').update({ lnurl_pay: lnurlPay }).eq('id', invoiceId);
     }
 
     return { id: invoiceId, lnurlPay: lnurlPay ?? undefined };
   }
 
-  async getInvoices(creatorId: string, filters?: { status?: string }): Promise<any[]> {
+  async getInvoices(creatorId: string, filters?: { status?: string }): Promise<BusinessInvoice[]> {
     this.logger.info('BusinessInvoiceService.getInvoices', { creatorId, filters });
 
-    let query = this.db
-      .from('business_invoices')
-      .select('*')
-      .eq('creator_id', creatorId);
+    let query = this.db.from('business_invoices').select('*').eq('creator_id', creatorId);
 
     if (filters?.status) {
-      query = (query as any).eq('status', filters.status);
+      query = query.eq('status', filters.status);
     }
 
-    const { data, error } = await (query as any).order('created_at', { ascending: false });
+    // #278: Add default limit to prevent unbounded result sets
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
     if (error) throw error;
     return data ?? [];
   }
 
-  async getInvoice(invoiceId: string, creatorId: string): Promise<any> {
+  async getInvoice(invoiceId: string, creatorId: string): Promise<BusinessInvoice> {
     this.logger.info('BusinessInvoiceService.getInvoice', { invoiceId, creatorId });
 
     const { data, error } = await this.db
@@ -147,12 +151,12 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     return data;
   }
 
-  async updateInvoiceStatus(
-    invoiceId: string,
-    creatorId: string,
-    status: string
-  ): Promise<void> {
-    this.logger.info('BusinessInvoiceService.updateInvoiceStatus', { invoiceId, creatorId, status });
+  async updateInvoiceStatus(invoiceId: string, creatorId: string, status: string): Promise<void> {
+    this.logger.info('BusinessInvoiceService.updateInvoiceStatus', {
+      invoiceId,
+      creatorId,
+      status,
+    });
 
     const updates: Record<string, unknown> = { status };
 
@@ -165,10 +169,7 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     if (error) throw error;
   }
 
-  async generatePaymentLink(
-    invoiceId: string,
-    creatorId: string
-  ): Promise<{ lnurlPay: string }> {
+  async generatePaymentLink(invoiceId: string, creatorId: string): Promise<{ lnurlPay: string }> {
     this.logger.info('BusinessInvoiceService.generatePaymentLink', { invoiceId, creatorId });
 
     const invoice = await this.getInvoice(invoiceId, creatorId);

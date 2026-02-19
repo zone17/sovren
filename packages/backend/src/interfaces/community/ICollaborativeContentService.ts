@@ -1,7 +1,10 @@
 /**
  * Collaborative Content Service Interface
  * EPIC-010: Creator Network — Co-authoring with revenue splits
+ * #276: Typed return values instead of any[]
  */
+
+import type { ContentCollaborator } from '@shared/types/community';
 
 export interface ICollaborativeContentService {
   inviteCollaborator(
@@ -16,7 +19,7 @@ export interface ICollaborativeContentService {
     ownerId: string,
     splits: Array<{ creatorId: string; bps: number }>
   ): Promise<void>;
-  getCollaborators(contentId: string, requesterId: string): Promise<any[]>;
+  getCollaborators(contentId: string, requesterId: string): Promise<ContentCollaborator[]>;
   allocateRevenue(
     contentId: string,
     totalSats: number

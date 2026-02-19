@@ -6,6 +6,7 @@
 import type { IContractService } from '../../interfaces/finance/IContractService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ContractTemplate, Contract } from '@shared/types/finance';
 
 type RedFlagType = 'exclusivity' | 'perpetual' | 'delayed_payment' | 'ip_assignment';
 
@@ -19,22 +20,16 @@ interface RedFlagMatch {
 const RED_FLAG_PATTERNS: Record<RedFlagType, RegExp[]> = {
   exclusivity: [/exclusive/i, /sole\s+right/i, /non-compete/i],
   perpetual: [/perpetuity/i, /perpetual/i, /irrevocable/i, /in\s+perpetuity/i],
-  delayed_payment: [
-    /net\s+(6[1-9]|[7-9]\d|\d{3,})/i,
-    /within\s+(6[1-9]|[7-9]\d|\d{3,})\s+days/i,
-  ],
-  ip_assignment: [
-    /assign.*intellectual\s+property/i,
-    /transfer.*copyright/i,
-    /work\s+for\s+hire/i,
-  ],
+  delayed_payment: [/net\s+(6[1-9]|[7-9]\d|\d{3,})/i, /within\s+(6[1-9]|[7-9]\d|\d{3,})\s+days/i],
+  ip_assignment: [/assign.*intellectual\s+property/i, /transfer.*copyright/i, /work\s+for\s+hire/i],
 };
 
-const RED_FLAG_SEVERITY: Record<RedFlagType, 'warning' | 'critical'> = {
-  exclusivity: 'critical',
-  perpetual: 'critical',
-  delayed_payment: 'warning',
-  ip_assignment: 'critical',
+// #277: Align severity values with shared RedFlag type ('high'|'medium'|'low')
+const RED_FLAG_SEVERITY: Record<RedFlagType, 'high' | 'medium' | 'low'> = {
+  exclusivity: 'high',
+  perpetual: 'high',
+  delayed_payment: 'medium',
+  ip_assignment: 'high',
 };
 
 const RED_FLAG_SUGGESTIONS: Record<RedFlagType, string> = {
@@ -42,8 +37,7 @@ const RED_FLAG_SUGGESTIONS: Record<RedFlagType, string> = {
     'Consider negotiating a limited exclusivity window (e.g., 30-90 days) rather than broad exclusivity.',
   perpetual:
     'Avoid perpetual licenses. Negotiate for a fixed term (e.g., 2 years) with renewal options.',
-  delayed_payment:
-    'Payment terms beyond 60 days are unusual. Request Net-30 or Net-45 terms.',
+  delayed_payment: 'Payment terms beyond 60 days are unusual. Request Net-30 or Net-45 terms.',
   ip_assignment:
     'IP assignment transfers ownership. Negotiate for a license grant instead of full assignment.',
 };
@@ -54,20 +48,21 @@ export class ContractService implements IContractService {
     private readonly logger: ILogger
   ) {}
 
-  async getTemplates(category?: string): Promise<any[]> {
+  async getTemplates(category?: string): Promise<ContractTemplate[]> {
     this.logger.info('ContractService.getTemplates', { category });
 
-    let query = this.db.from('contract_templates').select('*');
+    let query: ReturnType<typeof this.db.from> = this.db.from('contract_templates').select('*');
     if (category) {
-      query = (query as any).eq('category', category);
+      query = query.eq('category', category);
     }
 
-    const { data, error } = await (query as any).order('created_at', { ascending: false });
+    // #278: Add default limit to prevent unbounded result sets
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
     if (error) throw error;
     return data ?? [];
   }
 
-  async getTemplate(templateId: string): Promise<any> {
+  async getTemplate(templateId: string): Promise<ContractTemplate> {
     this.logger.info('ContractService.getTemplate', { templateId });
 
     const { data, error } = await this.db
@@ -101,14 +96,17 @@ export class ContractService implements IContractService {
 
     if (error) throw error;
     if (!inserted) throw new Error('Failed to create template');
-    return { id: (inserted as any).id };
+    return { id: (inserted as { id: string }).id };
   }
 
   async createContract(
     creatorId: string,
     data: { templateId?: string; counterparty: string; filledText: string }
   ): Promise<{ id: string }> {
-    this.logger.info('ContractService.createContract', { creatorId, counterparty: data.counterparty });
+    this.logger.info('ContractService.createContract', {
+      creatorId,
+      counterparty: data.counterparty,
+    });
 
     const row: Record<string, unknown> = {
       creator_id: creatorId,
@@ -126,17 +124,19 @@ export class ContractService implements IContractService {
 
     if (error) throw error;
     if (!inserted) throw new Error('Failed to create contract');
-    return { id: (inserted as any).id };
+    return { id: (inserted as { id: string }).id };
   }
 
-  async getContracts(creatorId: string): Promise<any[]> {
+  async getContracts(creatorId: string): Promise<Contract[]> {
     this.logger.info('ContractService.getContracts', { creatorId });
 
+    // #278: Add default limit to prevent unbounded result sets
     const { data, error } = await this.db
       .from('contracts')
       .select('*, contract_templates(name, category)')
       .eq('creator_id', creatorId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) throw error;
     return data ?? [];
@@ -168,7 +168,10 @@ export class ContractService implements IContractService {
 
     const findings: RedFlagMatch[] = [];
 
-    for (const [flagType, patterns] of Object.entries(RED_FLAG_PATTERNS) as [RedFlagType, RegExp[]][]) {
+    for (const [flagType, patterns] of Object.entries(RED_FLAG_PATTERNS) as [
+      RedFlagType,
+      RegExp[],
+    ][]) {
       for (const pattern of patterns) {
         const match = text.match(pattern);
         if (match) {

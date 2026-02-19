@@ -4,7 +4,7 @@
  * EPIC-009 + EPIC-009B: Multi-platform inbox aggregation, templates
  */
 
-import { Request, Response, NextFunction, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
@@ -19,6 +19,7 @@ import type {
   InboxQuery,
 } from '../../interfaces/distribution/IUnifiedInboxService';
 import type { INostrReplyAdapter } from '../../interfaces/distribution/INostrReplyAdapter';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 
 const router = Router();
 
@@ -32,6 +33,7 @@ const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 30 });
 
 let _inboxService: IUnifiedInboxService | null = null;
 let _nostrReplyAdapter: INostrReplyAdapter | null = null;
+let _db: ISupabaseClient | null = null;
 
 function getInboxService(): IUnifiedInboxService {
   if (!_inboxService) _inboxService = container.resolve(TYPES.UnifiedInboxService);
@@ -43,6 +45,11 @@ function getNostrReplyAdapter(): INostrReplyAdapter {
   return _nostrReplyAdapter;
 }
 
+function getDb(): ISupabaseClient {
+  if (!_db) _db = container.resolve(TYPES.Database) as unknown as ISupabaseClient;
+  return _db;
+}
+
 // ============================================================================
 // Validation schemas — EPIC-009B additions
 // ============================================================================
@@ -51,6 +58,16 @@ const CreateTemplateBodySchema = z.object({
   name: z.string().min(1).max(100),
   template_text: z.string().min(1).max(2000),
 });
+
+// #265: Schema for updating a template
+const UpdateTemplateBodySchema = z
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    template_text: z.string().min(1).max(2000).optional(),
+  })
+  .refine((d) => d.name !== undefined || d.template_text !== undefined, {
+    message: 'At least one of name or template_text must be provided',
+  });
 
 // ============================================================================
 // GET /messages — Aggregated inbox
@@ -94,7 +111,7 @@ router.post(
     const { content } = req.body;
 
     // Determine platform before routing
-    const { data: message } = await (container.resolve(TYPES.Database) as any)
+    const { data: message } = await getDb()
       .from('inbox_messages')
       .select('platform, platform_message_id')
       .eq('id', messageId)
@@ -149,7 +166,7 @@ router.get(
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
 
-    const { data, error } = await (container.resolve(TYPES.Database) as any)
+    const { data, error } = await getDb()
       .from('reply_templates')
       .select('id, name, template_text, created_at')
       .eq('creator_id', creatorId)
@@ -177,7 +194,7 @@ router.post(
     const creatorId = getAuthUser(req).nostr_pubkey;
     const { name, template_text } = req.body;
 
-    const { data, error } = await (container.resolve(TYPES.Database) as any)
+    const { data, error } = await getDb()
       .from('reply_templates')
       .insert({ creator_id: creatorId, name, template_text })
       .select('id, name, template_text, created_at')
@@ -188,6 +205,68 @@ router.post(
     }
 
     res.status(201).json(createApiResponse(req, { template: data }));
+  })
+);
+
+// ============================================================================
+// PUT /templates/:id — Update template (#265)
+// ============================================================================
+
+router.put(
+  '/templates/:id',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  validate({ body: UpdateTemplateBodySchema }),
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    const templateId = req.params.id;
+    const updates: Record<string, unknown> = {};
+    if (req.body.name !== undefined) updates.name = req.body.name;
+    if (req.body.template_text !== undefined) updates.template_text = req.body.template_text;
+
+    const { data, error } = await getDb()
+      .from('reply_templates')
+      .update(updates)
+      .eq('id', templateId)
+      .eq('creator_id', creatorId)
+      .select('id, name, template_text, created_at')
+      .single();
+
+    if (error) throw error;
+    if (!data) {
+      res.status(404).json({ success: false, error: 'Template not found' });
+      return;
+    }
+    res.json(createApiResponse(req, { template: data }));
+  })
+);
+
+// ============================================================================
+// DELETE /templates/:id — Delete template (#265)
+// ============================================================================
+
+router.delete(
+  '/templates/:id',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  asyncHandler(async (req: Request, res: Response) => {
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    const templateId = req.params.id;
+
+    const { error, count } = await getDb()
+      .from('reply_templates')
+      .delete()
+      .eq('id', templateId)
+      .eq('creator_id', creatorId);
+
+    if (error) throw error;
+    if (count === 0) {
+      res.status(404).json({ success: false, error: 'Template not found' });
+      return;
+    }
+    res.json(createApiResponse(req, { deleted: true }));
   })
 );
 

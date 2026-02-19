@@ -12,22 +12,22 @@ export interface InboxFilters {
   limit: number;
 }
 
+// #287: Field names aligned with SQL schema (template_text, not content)
 export interface ReplyTemplate {
   id: string;
   name: string;
-  content: string;
+  template_text: string;
   created_at: string;
-  updated_at: string;
 }
 
 export interface CreateTemplatePayload {
   name: string;
-  content: string;
+  template_text: string;
 }
 
 export interface UpdateTemplatePayload {
   name?: string;
-  content?: string;
+  template_text?: string;
 }
 
 export interface BYOKSubmitPayload {

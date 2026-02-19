@@ -79,11 +79,7 @@ export class InboxPollingService implements IInboxPollingService {
   private queue: Queue | null = null;
   private worker: Worker | null = null;
 
-  constructor(
-    db: ISupabaseClient,
-    platformService: IPlatformConnectionService,
-    logger: ILogger
-  ) {
+  constructor(db: ISupabaseClient, platformService: IPlatformConnectionService, logger: ILogger) {
     this.db = db;
     this.platformService = platformService;
     this.logger = logger;
@@ -197,11 +193,9 @@ export class InboxPollingService implements IInboxPollingService {
     }
 
     // M-7: enqueue with identifiers only — the worker fetches credentials at runtime
-    await this.queue.add(
-      'manual-poll',
-      { platform, interval: 'active' } satisfies PollJobData,
-      { priority: 1 }
-    );
+    await this.queue.add('manual-poll', { platform, interval: 'active' } satisfies PollJobData, {
+      priority: 1,
+    });
 
     this.logger.info('[InboxPollingService] Manual poll triggered', { creatorId, platform });
   }
@@ -246,9 +240,17 @@ export class InboxPollingService implements IInboxPollingService {
       creatorCount: (connections || []).length,
     });
 
-    await Promise.allSettled(
-      (connections || []).map((conn) => this.pollCreatorPlatform(conn))
-    );
+    // #303: Stagger polls with random jitter to avoid burst traffic to external APIs
+    const conns = connections || [];
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < conns.length; i += BATCH_SIZE) {
+      const batch = conns.slice(i, i + BATCH_SIZE);
+      await Promise.allSettled(batch.map((conn) => this.pollCreatorPlatform(conn)));
+      if (i + BATCH_SIZE < conns.length) {
+        // Random jitter between batches: 100-500ms
+        await new Promise((r) => setTimeout(r, 100 + Math.random() * 400));
+      }
+    }
   }
 
   private async pollCreatorPlatform(conn: PlatformConnectionRow): Promise<void> {
@@ -257,7 +259,7 @@ export class InboxPollingService implements IInboxPollingService {
     try {
       // M-1: Validate any user-supplied instance URL before making outbound requests
       if (conn.instance_url) {
-        validateSsrfUrl(conn.instance_url);
+        await validateSsrfUrl(conn.instance_url);
       }
 
       // C-5 + X/Twitter BYOK: use BYOK key if present, skip if absent (write-only fallback)

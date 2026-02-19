@@ -22,6 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Essential Commands
 
 ### Development
+
 ```bash
 # Install dependencies
 npm install
@@ -37,6 +38,7 @@ npm run preview
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 npm test
@@ -60,6 +62,7 @@ jest path/to/test.test.ts
 ```
 
 ### Code Quality
+
 ```bash
 # Lint code
 npm run lint
@@ -78,6 +81,7 @@ npm run quality:full
 ```
 
 ### Docker Operations (Backend)
+
 ```bash
 # Frontend package has docker scripts
 cd packages/frontend
@@ -91,6 +95,7 @@ npm run docker:status
 ## Architecture Overview
 
 ### Monorepo Structure
+
 ```
 packages/
 ├── frontend/          # React app with elite feature-based architecture
@@ -139,7 +144,9 @@ Path Aliases:
 **Key Principle**: When adding new features, create a self-contained feature module with its own components, services, types, and tests. Export through barrel files (`index.ts`) for clean imports.
 
 ### Backend Architecture
+
 Located in `packages/backend/src/`:
+
 - `services/` - Business logic and service layer
 - `repositories/` - Data access layer
 - `routes/` - API endpoint definitions
@@ -149,12 +156,14 @@ Located in `packages/backend/src/`:
 ### NOSTR & Lightning Integration
 
 **NOSTR Protocol**: The platform uses NOSTR for decentralized identity and content distribution
+
 - Keys managed via browser extensions (Alby, nos2x) or manual input
 - Events published to multiple relays for redundancy
 - NIP-05 verification for identity
 - Encrypted DMs using NOSTR protocol
 
 **Lightning Network**: Direct creator monetization with minimal fees
+
 - BOLT11 invoice generation
 - WebLN support for wallet connections
 - Payment verification and subscription management
@@ -167,6 +176,7 @@ Located in `packages/backend/src/`:
 **Every code change MUST include documentation updates**. This is enforced in CI/CD.
 
 1. **Mermaid Diagrams**: ALL user story implementations MUST include:
+
    - Architecture Overview Diagram
    - Component Interaction Diagram
    - Data Flow Diagram
@@ -174,11 +184,13 @@ Located in `packages/backend/src/`:
    - Implementation-specific diagrams (as needed)
 
 2. **Mermaid Diagram Linking**: All diagrams must be:
+
    - Saved as `.mmd` files in `/docs/architecture/diagrams/`
    - Linked with visual rendering: `![Name](github.com/owner/repo/blob/main/path/to/diagram.mmd)`
    - Provided in multiple formats (GitHub visual, interactive editor, source)
 
 3. **CHANGELOG.md**: Every commit requires a CHANGELOG entry with:
+
    - Type prefix (feat:, fix:, docs:, refactor:, test:, chore:)
    - Clear description of changes
    - Reference to user story/issue
@@ -191,6 +203,7 @@ Located in `packages/backend/src/`:
 All code changes must pass these gates before merge:
 
 **Pre-Commit:**
+
 - Zero ESLint errors/warnings
 - Code formatted with Prettier
 - Unit tests passing
@@ -198,6 +211,7 @@ All code changes must pass these gates before merge:
 - Mermaid diagrams validated
 
 **CI/CD Pipeline:**
+
 - Integration tests passing
 - Security scans clean (no high/critical vulnerabilities)
 - Performance benchmarks met
@@ -205,6 +219,7 @@ All code changes must pass these gates before merge:
 - Test coverage ≥ 85% globally
 
 **Code Review:**
+
 - Minimum 1 approving review
 - Architecture review for significant changes
 - All Mermaid diagrams present and clear
@@ -213,6 +228,7 @@ All code changes must pass these gates before merge:
 ### TypeScript Standards
 
 **Strict Mode**: The project uses `strict: true` with comprehensive type safety
+
 - Eliminate all `any` types
 - Use proper type definitions, not type assertions
 - Prefer interfaces over types for object shapes
@@ -224,11 +240,13 @@ All code changes must pass these gates before merge:
 **Write tests BEFORE implementation** (Red-Green-Refactor cycle)
 
 Coverage Requirements:
+
 - Services/repositories/store: 95% minimum
 - Global: 85% minimum
 - New code: 95%+ required
 
 Test Structure:
+
 ```typescript
 // Feature-specific test patterns
 describe('Feature Name', () => {
@@ -243,6 +261,7 @@ describe('Feature Name', () => {
 ```
 
 Use the multi-project Jest configuration:
+
 - Frontend tests: jsdom environment
 - Backend tests: node environment
 - Shared tests: node environment
@@ -250,6 +269,7 @@ Use the multi-project Jest configuration:
 ### Git Workflow
 
 **Conventional Commits** (mandatory):
+
 ```
 <type>: <description>
 
@@ -261,25 +281,35 @@ Use the multi-project Jest configuration:
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
 
 **Every commit must**:
+
 - Include CHANGELOG.md update
 - Include documentation updates
 - Pass pre-commit hooks (lint, format, test, docs)
 - Reference issue/ticket in footer
+
+### Branch Scope
+
+- **One epic per branch.** Multi-epic branches produce 3x more review findings.
+- Pre-flight shared infrastructure (types, DI tokens, route stubs) goes to main first.
+- Each branch gets its own `/workflows:review` cycle.
 
 ## Common Workflows
 
 ### Adding a New Feature
 
 1. **Create Feature Module**:
+
    ```bash
    mkdir -p packages/frontend/src/features/my-feature/{components,services,types}
    ```
 
 2. **Design with Mermaid Diagrams** (BEFORE coding):
+
    - Create all required diagrams in `/docs/architecture/diagrams/`
    - Get design review approval
 
 3. **Write Tests First** (TDD):
+
    ```typescript
    // src/features/my-feature/__tests__/MyFeature.test.tsx
    describe('MyFeature', () => {
@@ -290,15 +320,22 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
    ```
 
 4. **Implement Feature**:
+
    ```typescript
    // src/features/my-feature/types/index.ts
-   export interface MyFeatureData { /* ... */ }
+   export interface MyFeatureData {
+     /* ... */
+   }
 
    // src/features/my-feature/services/useMyFeature.ts
-   export const useMyFeature = () => { /* ... */ }
+   export const useMyFeature = () => {
+     /* ... */
+   };
 
    // src/features/my-feature/components/MyFeatureComponent.tsx
-   export const MyFeatureComponent = () => { /* ... */ }
+   export const MyFeatureComponent = () => {
+     /* ... */
+   };
 
    // src/features/my-feature/index.ts
    export * from './components';
@@ -307,17 +344,20 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
    ```
 
 5. **Update Documentation**:
+
    - CHANGELOG.md
    - Feature documentation in `/docs/features/`
    - ADR if architectural decision made
 
 6. **Verify Quality Gates**:
+
    ```bash
    npm run quality:check
    npm run test:coverage
    ```
 
 7. **Deploy & Validate** (MANDATORY - Post Epic 006):
+
    ```bash
    # Create PR with deployment checklist
    gh pr create --title "feat(US-XXX): Feature description"
@@ -339,6 +379,7 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
    ```
 
    **Story NOT complete until**:
+
    - ✅ CI/CD quality gates passing
    - ✅ Staging deployment successful
    - ✅ Health checks passing
@@ -349,6 +390,7 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
 ### Working with NOSTR
 
 Key imports and patterns:
+
 ```typescript
 import { SimplePool, Event, getPublicKey, getEventHash, signEvent } from 'nostr-tools';
 
@@ -367,6 +409,7 @@ Relay configuration is in shared package configuration.
 ### Building for Production
 
 The Vite build uses advanced optimizations:
+
 - Manual chunk splitting (14 chunks for optimal caching)
 - esbuild minification with tree shaking
 - Gzip + Brotli compression
@@ -374,6 +417,7 @@ The Vite build uses advanced optimizations:
 - Bundle size limits: JS chunks <250kb, CSS <50kb
 
 Build artifacts:
+
 ```
 dist/
 ├── assets/
@@ -410,6 +454,7 @@ dist/
 ### Automated CI/CD Pipeline
 
 **CI/CD Maturity**: **100%** (Backend: 100%, Frontend: 95%)
+
 - Zero manual deployment steps
 - Automatic staging deployment on main merge
 - Manual production approval with blue-green deployment
@@ -418,6 +463,7 @@ dist/
 ### Deployment Workflows
 
 **Staging (Automatic)**:
+
 ```bash
 # Triggers automatically on merge to main
 git push origin main
@@ -430,6 +476,7 @@ curl https://api-staging.sovren.dev/health
 ```
 
 **Production (Manual Approval)**:
+
 ```bash
 # Trigger production deployment
 gh workflow run backend-deployment.yml -f environment=production
@@ -445,6 +492,7 @@ curl https://api.sovren.dev/health
 ```
 
 **Emergency Rollback**:
+
 ```bash
 # Rollback in < 2 minutes
 gh workflow run automated-rollback.yml -f environment=production
@@ -453,6 +501,7 @@ gh workflow run automated-rollback.yml -f environment=production
 ### Frontend Deployment
 
 **Vercel** (95% automated):
+
 - Environment: `packages/frontend/.env`
 - Build command: `npm run vercel-build`
 - Output: `packages/frontend/dist`
@@ -462,6 +511,7 @@ gh workflow run automated-rollback.yml -f environment=production
 ### Backend Deployment
 
 **Docker Containers** (100% automated):
+
 - Development: `docker-compose.dev.yml` (local)
 - Production: Blue-green deployment with GitHub Actions
 - Multi-stage builds (image size < 150MB)
@@ -503,6 +553,7 @@ curl https://api-staging.sovren.dev/live
 ## Project Philosophy
 
 This codebase follows **Elite Engineering Standards** (11 Commandments):
+
 1. Code is for humans first, machines second
 2. Duplication is the root of all evil
 3. Simplicity over cleverness

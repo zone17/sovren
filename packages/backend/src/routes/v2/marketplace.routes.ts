@@ -21,7 +21,13 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import {
+  CreateListingSchema,
+  PlaceOrderSchema,
+  ReviewOrderSchema,
+} from '../../validators/community';
 import type { IMarketplaceService } from '../../interfaces/community/IMarketplaceService';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 
 const router = Router();
 
@@ -41,9 +47,16 @@ const orderTransitionRateLimiter = createUserRateLimiter({ windowMs: 60000, max:
 
 // Lazy service resolution
 let _marketplaceService: IMarketplaceService | null = null;
+let _db: ISupabaseClient | null = null;
+
 function getMarketplaceService(): IMarketplaceService {
   if (!_marketplaceService) _marketplaceService = container.resolve(TYPES.MarketplaceService);
   return _marketplaceService;
+}
+
+function getDb(): ISupabaseClient {
+  if (!_db) _db = container.resolve(TYPES.Database) as unknown as ISupabaseClient;
+  return _db;
 }
 
 // ============================================================================
@@ -54,34 +67,53 @@ function getMarketplaceService(): IMarketplaceService {
 
 /**
  * C-7: Verify the authenticated user is the buyer of the specified order.
- * Fetches order from DB and attaches it to res.locals for downstream use.
+ * #275: Actually checks order ownership instead of being a noop.
  */
-function requireBuyer(req: Request, res: Response, next: NextFunction): void {
-  const service = getMarketplaceService();
+const requireBuyer = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const userId = getAuthUser(req).nostr_pubkey;
   const orderId = req.params.id;
 
-  // We load the order in the service anyway — here we do an early check using
-  // the service's verifyOrderParticipant helper if available, or skip to service
-  // The service enforces this check authoritatively; this is belt-and-suspenders.
-  // Note: full early-fetch would duplicate the DB call — we rely on service layer
-  // for the authoritative check and use this middleware for documentation clarity.
-  // The service throws a specific error message that maps to 403.
-  void service; // used in the handler below
-  void userId;
-  void orderId;
+  const { data: order, error } = await getDb()
+    .from('service_orders')
+    .select('buyer_id')
+    .eq('id', orderId)
+    .single();
+
+  if (error || !order) {
+    res.status(404).json({ success: false, error: 'Order not found' });
+    return;
+  }
+  if (order.buyer_id !== userId) {
+    res.status(403).json({ success: false, error: 'Only the buyer can perform this action' });
+    return;
+  }
   next();
-}
+});
 
 /**
  * C-7: Verify the authenticated user is the seller of the specified order.
- * Same pattern as requireBuyer — authoritative check in service, this is belt-and-suspenders.
+ * #275: Actually checks order ownership instead of being a noop.
  */
-function requireSeller(req: Request, res: Response, next: NextFunction): void {
-  void req;
-  void res;
+const requireSeller = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const userId = getAuthUser(req).nostr_pubkey;
+  const orderId = req.params.id;
+
+  const { data: order, error } = await getDb()
+    .from('service_orders')
+    .select('seller_id')
+    .eq('id', orderId)
+    .single();
+
+  if (error || !order) {
+    res.status(404).json({ success: false, error: 'Order not found' });
+    return;
+  }
+  if (order.seller_id !== userId) {
+    res.status(403).json({ success: false, error: 'Only the seller can perform this action' });
+    return;
+  }
   next();
-}
+});
 
 // ============================================================================
 // Service Listings
@@ -98,37 +130,18 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    const { serviceType, title, description, priceSats, portfolioUrls } = req.body;
-
-    if (!serviceType || typeof serviceType !== 'string') {
-      res.status(400).json({ success: false, error: 'serviceType is required' });
+    const result = CreateListingSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
-    if (!title || typeof title !== 'string') {
-      res.status(400).json({ success: false, error: 'title is required' });
-      return;
-    }
-
-    if (!Number.isInteger(priceSats) || priceSats <= 0) {
-      res.status(400).json({ success: false, error: 'priceSats must be a positive integer' });
-      return;
-    }
-
-    // H-4: portfolioUrls type check before service validates https:// requirement
-    if (portfolioUrls !== undefined && !Array.isArray(portfolioUrls)) {
-      res.status(400).json({ success: false, error: 'portfolioUrls must be an array' });
-      return;
-    }
-
-    const data = await getMarketplaceService().createListing(getAuthUser(req).nostr_pubkey, {
-      serviceType,
-      title,
-      description,
-      priceSats,
-      portfolioUrls,
-    });
-
+    const data = await getMarketplaceService().createListing(
+      getAuthUser(req).nostr_pubkey,
+      result.data
+    );
     res.status(201).json({ success: true, data });
   })
 );
@@ -174,22 +187,18 @@ router.post(
   requireCreator,
   escrowCreationRateLimiter, // H-6: 5/min — tighter than general mutations
   asyncHandler(async (req, res) => {
-    const { listingId, idempotencyKey } = req.body;
-
-    if (!listingId || typeof listingId !== 'string') {
-      res.status(400).json({ success: false, error: 'listingId is required' });
-      return;
-    }
-
-    if (!idempotencyKey || typeof idempotencyKey !== 'string') {
-      res.status(400).json({ success: false, error: 'idempotencyKey is required (UUID)' });
+    const result = PlaceOrderSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
     const data = await getMarketplaceService().placeOrder(
       getAuthUser(req).nostr_pubkey,
-      listingId,
-      idempotencyKey
+      result.data.listingId,
+      result.data.idempotencyKey
     );
 
     res.status(201).json({ success: true, data });
@@ -257,18 +266,19 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    const { rating, reviewText } = req.body;
-
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      res.status(400).json({ success: false, error: 'rating must be an integer between 1 and 5' });
+    const result = ReviewOrderSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
-    const data = await getMarketplaceService().reviewOrder(req.params.id, getAuthUser(req).nostr_pubkey, {
-      rating,
-      reviewText,
-    });
-
+    const data = await getMarketplaceService().reviewOrder(
+      req.params.id,
+      getAuthUser(req).nostr_pubkey,
+      result.data
+    );
     res.status(201).json({ success: true, data });
   })
 );

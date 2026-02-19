@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useListings, usePlaceOrder } from '../hooks/useMarketplace';
 import { SERVICE_TYPE_LABELS } from '../types/community';
 import type { ServiceType, ServiceListing } from '@shared/types/community';
@@ -18,13 +18,33 @@ const MarketplaceBrowser: React.FC = () => {
 
   const placeOrderMutation = usePlaceOrder();
 
+  // #267: Generate idempotency key once per listing intent, not per click
+  const idempotencyKeys = useRef<Map<string, string>>(new Map());
+  const getIdempotencyKey = useCallback((listingId: string): string => {
+    const existing = idempotencyKeys.current.get(listingId);
+    if (existing) return existing;
+    const key = crypto.randomUUID();
+    idempotencyKeys.current.set(listingId, key);
+    return key;
+  }, []);
+
   const handleOrder = (listing: ServiceListing) => {
-    const idempotencyKey = crypto.randomUUID();
+    if (placeOrderMutation.isPending) return; // Guard against double-click
+    const idempotencyKey = getIdempotencyKey(listing.id);
+    setOrderingId(listing.id);
     placeOrderMutation.mutate(
       { listingId: listing.id, idempotencyKey },
-      { onSuccess: () => setOrderingId(null) }
+      {
+        onSuccess: () => {
+          setOrderingId(null);
+          idempotencyKeys.current.delete(listing.id); // Clear for future orders
+        },
+        onError: () => {
+          setOrderingId(null);
+          // Keep idempotency key so retry uses same key
+        },
+      }
     );
-    setOrderingId(listing.id);
   };
 
   if (isError) {
@@ -39,14 +59,19 @@ const MarketplaceBrowser: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Creator Marketplace</h2>
-        <p className="text-sm text-gray-500">Hire creators for editing, writing, design, and more</p>
+        <p className="text-sm text-gray-500">
+          Hire creators for editing, writing, design, and more
+        </p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <select
           value={serviceTypeFilter}
-          onChange={(e) => { setServiceTypeFilter(e.target.value as ServiceType | ''); setPage(1); }}
+          onChange={(e) => {
+            setServiceTypeFilter(e.target.value as ServiceType | '');
+            setPage(1);
+          }}
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
           aria-label="Filter by service type"
         >
@@ -67,9 +92,7 @@ const MarketplaceBrowser: React.FC = () => {
           ))}
         </div>
       ) : listings.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-8">
-          No listings match your filters.
-        </p>
+        <p className="text-sm text-gray-500 text-center py-8">No listings match your filters.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {listings.map((listing) => (
@@ -109,7 +132,7 @@ const MarketplaceBrowser: React.FC = () => {
                 </span>
                 <button
                   onClick={() => handleOrder(listing)}
-                  disabled={placeOrderMutation.isPending && orderingId === listing.id}
+                  disabled={placeOrderMutation.isPending}
                   className="rounded-md bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
                   aria-label={`Order ${listing.title}`}
                 >

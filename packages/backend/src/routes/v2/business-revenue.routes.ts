@@ -14,10 +14,14 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
+import { readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { RecordRevenueSchema, SetDiversificationGoalsSchema } from '../../validators/finance';
 import type { IRevenueService } from '../../interfaces/finance/IRevenueService';
 
 const router = Router();
+
+// #261: Apply rate limiters
+router.use(readOnlyRateLimiter);
 
 let _revenueService: IRevenueService | null = null;
 function getRevenueService(): IRevenueService {
@@ -88,7 +92,9 @@ router.put(
   asyncHandler(async (req: Request, res: Response) => {
     const result = SetDiversificationGoalsSchema.safeParse(req.body);
     if (!result.success) {
-      res.status(400).json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
@@ -108,7 +114,9 @@ router.post(
   asyncHandler(async (req: Request, res: Response) => {
     const result = RecordRevenueSchema.safeParse(req.body);
     if (!result.success) {
-      res.status(400).json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
     const creatorId = getAuthUser(req).nostr_pubkey;

@@ -88,7 +88,7 @@ export interface CreateExpensePayload {
   expenseDate: string;
 }
 
-export interface CreateRevenuEntryPayload {
+export interface CreateRevenueEntryPayload {
   source: string;
   amountSats: number;
   usdAtTime?: number;

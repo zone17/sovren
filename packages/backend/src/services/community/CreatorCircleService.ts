@@ -53,38 +53,31 @@ export class CreatorCircleService implements ICreatorCircleService {
       throw new Error('Circle size must be between 5 and 20 members');
     }
 
-    const { data: rows, error } = await this.db
-      .from<CircleRow>('creator_circles')
-      .insert({
-        name: data.name,
-        description: data.description ?? null,
-        niche: data.niche ?? null,
-        max_members: maxMembers,
-        created_by: creatorId,
-      })
-      .select('id')
-      .single();
+    // #264: Atomic creation via RPC — circle + admin member in one transaction
+    const { data: circleId, error } = await this.db.rpc<string>('create_circle_atomic', {
+      p_name: data.name,
+      p_description: data.description ?? null,
+      p_niche: data.niche ?? null,
+      p_max_members: maxMembers,
+      p_created_by: creatorId,
+    });
 
-    if (error || !rows) {
+    if (error || !circleId) {
       this.logger.error('Failed to create circle', { error, creatorId });
       throw new Error(`Failed to create circle: ${error?.message}`);
     }
 
-    // Auto-join creator as admin
-    await this.db.from<CircleMemberRow>('circle_members').insert({
-      circle_id: rows.id,
-      creator_id: creatorId,
-      role: 'admin',
-    });
-
-    this.logger.info('Circle created', { circleId: rows.id, creatorId });
-    return { id: rows.id };
+    this.logger.info('Circle created', { circleId, creatorId });
+    return { id: circleId };
   }
 
   async getCircles(creatorId: string): Promise<CircleRow[]> {
+    // #278: Add default limit to prevent unbounded result sets
     const { data, error } = await this.db
       .from<CircleRow>('creator_circles')
-      .select('id, name, description, niche, max_members, created_by, created_at, updated_at');
+      .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) {
       this.logger.error('Failed to get circles', { error, creatorId });
@@ -150,14 +143,16 @@ export class CreatorCircleService implements ICreatorCircleService {
       throw new Error('Circle not found');
     }
 
-    // Count current members
-    const { data: memberCount } = await this.db
+    // #304: Use Supabase count instead of fetching all rows
+    const { count: currentCount, error: countError } = await this.db
       .from<CircleMemberRow>('circle_members')
-      .select('id')
+      .select('id', { count: 'exact', head: true })
       .eq('circle_id', circleId);
 
-    const currentCount = (memberCount ?? []).length;
-    if (currentCount >= circle.max_members) {
+    if (countError) {
+      throw new Error(`Failed to count circle members: ${countError.message}`);
+    }
+    if ((currentCount ?? 0) >= circle.max_members) {
       throw new Error(`Circle is full (max ${circle.max_members} members)`);
     }
 

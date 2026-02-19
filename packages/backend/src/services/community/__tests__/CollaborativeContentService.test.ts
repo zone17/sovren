@@ -41,8 +41,7 @@ function makeChain(leafResolvedValue: { data: any; error: any }) {
     maybeSingle: jest.fn().mockResolvedValue(leafResolvedValue),
   };
   // Allow `await chain` (used by update chains that resolve directly)
-  chain.then = (res: any, rej: any) =>
-    Promise.resolve(leafResolvedValue).then(res, rej);
+  chain.then = (res: any, rej: any) => Promise.resolve(leafResolvedValue).then(res, rej);
   chain.catch = (fn: any) => Promise.resolve(leafResolvedValue).catch(fn);
   return chain;
 }
@@ -88,12 +87,7 @@ describe('CollaborativeContentService', () => {
         .mockReturnValueOnce(existingChain)
         .mockReturnValueOnce(insertChain);
 
-      const result = await service.inviteCollaborator(
-        CONTENT_ID,
-        OWNER_ID,
-        COLLABORATOR_ID,
-        3000
-      );
+      const result = await service.inviteCollaborator(CONTENT_ID, OWNER_ID, COLLABORATOR_ID, 3000);
 
       expect(result).toEqual({ id: COLLAB_ROW_ID });
       expect(insertChain.insert).toHaveBeenCalledWith(
@@ -146,7 +140,10 @@ describe('CollaborativeContentService', () => {
     });
 
     it('accepts boundary value 1 for revenue_split_bps', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
       const existingChain = makeChain({ data: null, error: null });
       const insertChain = makeChain({ data: { id: 'collab-1bps' }, error: null });
 
@@ -160,7 +157,10 @@ describe('CollaborativeContentService', () => {
     });
 
     it('accepts boundary value 10000 for revenue_split_bps', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
       const existingChain = makeChain({ data: null, error: null });
       const insertChain = makeChain({ data: { id: 'collab-10000bps' }, error: null });
 
@@ -204,12 +204,13 @@ describe('CollaborativeContentService', () => {
     });
 
     it('throws when a collaboration already exists with status "invited"', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
       const existingChain = makeChain({ data: { id: 'existing', status: 'invited' }, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(contentChain)
-        .mockReturnValueOnce(existingChain);
+      mockDb.from.mockReturnValueOnce(contentChain).mockReturnValueOnce(existingChain);
 
       await expect(
         service.inviteCollaborator(CONTENT_ID, OWNER_ID, COLLABORATOR_ID, 5000)
@@ -217,12 +218,16 @@ describe('CollaborativeContentService', () => {
     });
 
     it('throws when a collaboration already exists with status "accepted"', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
-      const existingChain = makeChain({ data: { id: 'existing', status: 'accepted' }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
+      const existingChain = makeChain({
+        data: { id: 'existing', status: 'accepted' },
+        error: null,
+      });
 
-      mockDb.from
-        .mockReturnValueOnce(contentChain)
-        .mockReturnValueOnce(existingChain);
+      mockDb.from.mockReturnValueOnce(contentChain).mockReturnValueOnce(existingChain);
 
       await expect(
         service.inviteCollaborator(CONTENT_ID, OWNER_ID, COLLABORATOR_ID, 5000)
@@ -230,7 +235,10 @@ describe('CollaborativeContentService', () => {
     });
 
     it('re-throws DB trigger error when revenue splits would exceed 10000 bps total', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
       const existingChain = makeChain({ data: null, error: null });
       const triggerError = {
         message: 'Revenue splits cannot exceed 10000 bps for a single content item',
@@ -248,7 +256,10 @@ describe('CollaborativeContentService', () => {
     });
 
     it('throws and logs on a generic DB insert error', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
       const existingChain = makeChain({ data: null, error: null });
       const dbError = { message: 'insert failed' };
       const insertChain = makeChain({ data: null, error: dbError });
@@ -280,9 +291,7 @@ describe('CollaborativeContentService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(
         service.respondToInvitation(COLLAB_ROW_ID, COLLABORATOR_ID, true)
@@ -308,9 +317,7 @@ describe('CollaborativeContentService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await service.respondToInvitation(COLLAB_ROW_ID, COLLABORATOR_ID, true);
 
@@ -326,9 +333,7 @@ describe('CollaborativeContentService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(
         service.respondToInvitation(COLLAB_ROW_ID, COLLABORATOR_ID, false)
@@ -346,9 +351,7 @@ describe('CollaborativeContentService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await service.respondToInvitation(COLLAB_ROW_ID, COLLABORATOR_ID, false);
 
@@ -363,9 +366,7 @@ describe('CollaborativeContentService', () => {
       });
       const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await service.respondToInvitation(COLLAB_ROW_ID, COLLABORATOR_ID, true);
 
@@ -388,9 +389,9 @@ describe('CollaborativeContentService', () => {
       });
       mockDb.from.mockReturnValueOnce(findChain);
 
-      await expect(
-        service.respondToInvitation(COLLAB_ROW_ID, 'interloper', true)
-      ).rejects.toThrow('Only the invited collaborator can respond');
+      await expect(service.respondToInvitation(COLLAB_ROW_ID, 'interloper', true)).rejects.toThrow(
+        'Only the invited collaborator can respond'
+      );
     });
 
     it('throws when collaboration status is not "invited"', async () => {
@@ -425,9 +426,7 @@ describe('CollaborativeContentService', () => {
       const dbError = { message: 'update failed' };
       const updateChain = makeChain({ data: null, error: dbError });
 
-      mockDb.from
-        .mockReturnValueOnce(findChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(
         service.respondToInvitation(COLLAB_ROW_ID, COLLABORATOR_ID, true)
@@ -445,12 +444,18 @@ describe('CollaborativeContentService', () => {
   // -------------------------------------------------------------------------
   describe('updateRevenueSplit', () => {
     it('updates splits successfully when sum equals exactly 10000 bps', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
+      // L-3: beforeState query for audit log
+      const beforeStateChain = makeChain({ data: [], error: null });
       const update1 = makeChain({ data: null, error: null });
       const update2 = makeChain({ data: null, error: null });
 
       mockDb.from
         .mockReturnValueOnce(contentChain)
+        .mockReturnValueOnce(beforeStateChain)
         .mockReturnValueOnce(update1)
         .mockReturnValueOnce(update2);
 
@@ -464,17 +469,22 @@ describe('CollaborativeContentService', () => {
       ).resolves.toBeUndefined();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Revenue splits updated',
-        expect.objectContaining({ contentId: CONTENT_ID, splits })
+        'Revenue splits updated — audit trail',
+        expect.objectContaining({ contentId: CONTENT_ID, audit: true })
       );
     });
 
     it('accepts a single-collaborator split with 10000 bps', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
+      const beforeStateChain = makeChain({ data: [], error: null });
       const updateChain = makeChain({ data: null, error: null });
 
       mockDb.from
         .mockReturnValueOnce(contentChain)
+        .mockReturnValueOnce(beforeStateChain)
         .mockReturnValueOnce(updateChain);
 
       await expect(
@@ -504,7 +514,10 @@ describe('CollaborativeContentService', () => {
     });
 
     it('throws when splits sum to less than 10000 bps', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
       mockDb.from.mockReturnValueOnce(contentChain);
 
       await expect(
@@ -518,7 +531,10 @@ describe('CollaborativeContentService', () => {
     });
 
     it('throws when splits sum to more than 10000 bps', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
       mockDb.from.mockReturnValueOnce(contentChain);
 
       await expect(
@@ -530,7 +546,10 @@ describe('CollaborativeContentService', () => {
     });
 
     it('throws when an individual bps value is zero', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
       mockDb.from.mockReturnValueOnce(contentChain);
 
       // Sum is 10000 but one split is zero (invalid individually)
@@ -543,12 +562,17 @@ describe('CollaborativeContentService', () => {
     });
 
     it('throws and logs when a DB update query fails', async () => {
-      const contentChain = makeChain({ data: { id: CONTENT_ID, creator_id: OWNER_ID }, error: null });
+      const contentChain = makeChain({
+        data: { id: CONTENT_ID, creator_id: OWNER_ID },
+        error: null,
+      });
+      const beforeStateChain = makeChain({ data: [], error: null });
       const dbError = { message: 'update failed' };
       const updateChain = makeChain({ data: null, error: dbError });
 
       mockDb.from
         .mockReturnValueOnce(contentChain)
+        .mockReturnValueOnce(beforeStateChain)
         .mockReturnValueOnce(updateChain);
 
       await expect(

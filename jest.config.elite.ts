@@ -162,11 +162,9 @@ const config: Config = {
   projects: [
     // Frontend React Testing
     {
-      displayName: '🎨 Frontend',
+      displayName: 'frontend',
       testEnvironment: 'jsdom',
-      testMatch: [
-        '<rootDir>/packages/frontend/src/**/*.(test|spec).{ts,tsx}',
-      ],
+      testMatch: ['<rootDir>/packages/frontend/src/**/*.(test|spec).{ts,tsx}'],
       testPathIgnorePatterns: [
         '/node_modules/',
         '/dist/',
@@ -215,7 +213,7 @@ const config: Config = {
 
     // Backend Node.js Testing
     {
-      displayName: '🔧 Backend',
+      displayName: 'backend',
       testEnvironment: 'node',
       testMatch: ['<rootDir>/packages/backend/src/**/*.(test|spec).{ts,tsx}'],
       testPathIgnorePatterns: [
@@ -252,7 +250,7 @@ const config: Config = {
 
     // Shared Package Testing
     {
-      displayName: '🔗 Shared',
+      displayName: 'shared',
       testEnvironment: 'node',
       testMatch: ['<rootDir>/packages/shared/src/**/*.(test|spec).{ts,tsx}'],
       testPathIgnorePatterns: ['/node_modules/', '/dist/', '<rootDir>/packages/shared/dist/'],

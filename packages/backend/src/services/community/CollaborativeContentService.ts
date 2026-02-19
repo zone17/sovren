@@ -62,7 +62,7 @@ interface SplitPaymentRow {
 function allocateSats(totalSats: number, splitsBps: number[]): number[] {
   const exact = splitsBps.map((bps) => (totalSats * bps) / 10000);
   const floored = exact.map(Math.floor);
-  let remainder = totalSats - floored.reduce((a, b) => a + b, 0);
+  const remainder = totalSats - floored.reduce((a, b) => a + b, 0);
   const fractions = exact.map((e, i) => ({ i, frac: e - floored[i] }));
   fractions.sort((a, b) => b.frac - a.frac);
   for (let j = 0; j < remainder; j++) {
@@ -136,7 +136,9 @@ export class CollaborativeContentService implements ICollaborativeContentService
     if (error || !rows) {
       // Check if DB trigger blocked due to sum exceeding 10000
       if (error?.message?.includes('exceed 10000 bps')) {
-        throw new Error(`Cannot add collaborator: total revenue splits would exceed 100% (10000 bps). ${error.message}`);
+        throw new Error(
+          `Cannot add collaborator: total revenue splits would exceed 100% (10000 bps). ${error.message}`
+        );
       }
       this.logger.error('Failed to invite collaborator', { error, contentId, collaboratorId });
       throw new Error(`Failed to invite collaborator: ${error?.message}`);
@@ -151,7 +153,11 @@ export class CollaborativeContentService implements ICollaborativeContentService
     return { id: rows.id };
   }
 
-  async respondToInvitation(collaborationId: string, creatorId: string, accept: boolean): Promise<void> {
+  async respondToInvitation(
+    collaborationId: string,
+    creatorId: string,
+    accept: boolean
+  ): Promise<void> {
     const { data: collab, error: findError } = await this.db
       .from<CollaboratorRow>('content_collaborators')
       .select('id, creator_id, status')
@@ -171,10 +177,9 @@ export class CollaborativeContentService implements ICollaborativeContentService
     }
 
     const newStatus = accept ? 'accepted' : 'declined';
-    const updates: Partial<CollaboratorRow> = { status: newStatus };
-    if (accept) {
-      (updates as any).accepted_at = new Date().toISOString();
-    }
+    const updates: Partial<CollaboratorRow> = accept
+      ? { status: newStatus, accepted_at: new Date().toISOString() }
+      : { status: newStatus };
 
     const { error } = await this.db
       .from<CollaboratorRow>('content_collaborators')
@@ -256,7 +261,10 @@ export class CollaborativeContentService implements ICollaborativeContentService
       audit: true,
       contentId,
       updatedBy: ownerId,
-      before: (beforeState ?? []).map((r) => ({ creatorId: r.creator_id, bps: r.revenue_split_bps })),
+      before: (beforeState ?? []).map((r) => ({
+        creatorId: r.creator_id,
+        bps: r.revenue_split_bps,
+      })),
       after: splits.map((s) => ({ creatorId: s.creatorId, bps: s.bps })),
       changedAt: new Date().toISOString(),
     });

@@ -34,9 +34,7 @@ export const BatchActionToolbar: React.FC<BatchActionToolbarProps> = ({
       aria-label={`Batch actions for ${selectedCount} selected messages`}
       className="flex flex-wrap items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2"
     >
-      <span className="text-sm font-medium text-indigo-700">
-        {selectedCount} selected
-      </span>
+      <span className="text-sm font-medium text-indigo-700">{selectedCount} selected</span>
 
       <div className="h-4 w-px bg-indigo-200" aria-hidden="true" />
 
@@ -97,7 +95,7 @@ export const BatchActionToolbar: React.FC<BatchActionToolbarProps> = ({
                   type="button"
                   className="block w-full truncate px-3 py-2 text-left text-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
                   onClick={() => {
-                    onTemplateReply(t.content);
+                    onTemplateReply(t.template_text);
                     setShowTemplateMenu(false);
                   }}
                 >

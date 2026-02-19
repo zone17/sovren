@@ -96,9 +96,7 @@ export class NostrReplyAdapter implements INostrReplyAdapter {
 
     // Publish to all configured relays
     try {
-      await Promise.allSettled(
-        this.relays.map((relay) => this.pool.publish([relay], signedEvent))
-      );
+      await Promise.allSettled(this.relays.map((relay) => this.pool.publish([relay], signedEvent)));
     } catch (err) {
       this.logger.warn('[NostrReplyAdapter] Relay publish partial failure', {
         eventId: signedEvent.id,
@@ -126,7 +124,9 @@ export class NostrReplyAdapter implements INostrReplyAdapter {
     // This follows the same decryption pattern as PlatformConnectionService.
     const { data, error } = await this.db
       .from<NostrKeyRow>('user_profiles')
-      .select('nostr_private_key_encrypted, nostr_private_key_iv, nostr_private_key_auth_tag, nostr_pubkey')
+      .select(
+        'nostr_private_key_encrypted, nostr_private_key_iv, nostr_private_key_auth_tag, nostr_pubkey'
+      )
       .eq('id', creatorId)
       .single();
 
@@ -134,9 +134,11 @@ export class NostrReplyAdapter implements INostrReplyAdapter {
       throw new Error(`NOSTR private key not found for creator ${creatorId}`);
     }
 
-    // If key is stored in plaintext hex (dev/test), return directly
-    if (data.nostr_private_key_encrypted && !data.nostr_private_key_iv) {
-      return data.nostr_private_key_encrypted;
+    // #269: Reject incomplete encryption state — never fall back to plaintext
+    if (!data.nostr_private_key_iv || !data.nostr_private_key_auth_tag) {
+      throw new Error(
+        'NOSTR private key encryption data is incomplete. Key must be re-stored with proper encryption.'
+      );
     }
 
     // Decrypt AES-256-GCM encrypted key

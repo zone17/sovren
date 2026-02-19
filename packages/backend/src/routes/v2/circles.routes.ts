@@ -10,6 +10,7 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import { CreateCircleSchema, CreateCirclePostSchema } from '../../validators/community';
 import type { ICreatorCircleService } from '../../interfaces/community/ICreatorCircleService';
 
 const router = Router();
@@ -39,20 +40,15 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    const { name, description, niche, maxMembers } = req.body;
-
-    if (!name || typeof name !== 'string') {
-      res.status(400).json({ success: false, error: 'name is required' });
+    const result = CreateCircleSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
-    const data = await getCircleService().createCircle(getAuthUser(req).nostr_pubkey, {
-      name,
-      description,
-      niche,
-      maxMembers: maxMembers ? Number(maxMembers) : undefined,
-    });
-
+    const data = await getCircleService().createCircle(getAuthUser(req).nostr_pubkey, result.data);
     res.status(201).json({ success: true, data });
   })
 );
@@ -137,7 +133,10 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const data = await getCircleService().getCirclePosts(req.params.id, getAuthUser(req).nostr_pubkey);
+    const data = await getCircleService().getCirclePosts(
+      req.params.id,
+      getAuthUser(req).nostr_pubkey
+    );
     res.json({ success: true, data });
   })
 );
@@ -152,14 +151,19 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    const { content } = req.body;
-
-    if (!content || typeof content !== 'string') {
-      res.status(400).json({ success: false, error: 'content is required' });
+    const result = CreateCirclePostSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
-    const data = await getCircleService().createPost(req.params.id, getAuthUser(req).nostr_pubkey, content);
+    const data = await getCircleService().createPost(
+      req.params.id,
+      getAuthUser(req).nostr_pubkey,
+      result.data.content
+    );
     res.status(201).json({ success: true, data });
   })
 );

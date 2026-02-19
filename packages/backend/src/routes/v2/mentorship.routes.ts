@@ -10,6 +10,11 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import {
+  RegisterMentorSchema,
+  RequestMentorshipSchema,
+  RespondMentorshipSchema,
+} from '../../validators/community';
 import type { IMentorshipService } from '../../interfaces/community/IMentorshipService';
 
 const router = Router();
@@ -39,25 +44,18 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    const { niche, audienceSizeRange, bio, maxMentees } = req.body;
-
-    if (!niche || typeof niche !== 'string') {
-      res.status(400).json({ success: false, error: 'niche is required' });
+    const result = RegisterMentorSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
-    if (!audienceSizeRange || typeof audienceSizeRange !== 'string') {
-      res.status(400).json({ success: false, error: 'audienceSizeRange is required' });
-      return;
-    }
-
-    const data = await getMentorshipService().registerMentor(getAuthUser(req).nostr_pubkey, {
-      niche,
-      audienceSizeRange,
-      bio,
-      maxMentees: maxMentees ? Number(maxMentees) : undefined,
-    });
-
+    const data = await getMentorshipService().registerMentor(
+      getAuthUser(req).nostr_pubkey,
+      result.data
+    );
     res.status(201).json({ success: true, data });
   })
 );
@@ -119,17 +117,18 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    const { mentorId, niche, goals } = req.body;
-
-    if (!mentorId || typeof mentorId !== 'string') {
-      res.status(400).json({ success: false, error: 'mentorId is required' });
+    const result = RequestMentorshipSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
     const data = await getMentorshipService().requestMentorship(
       getAuthUser(req).nostr_pubkey,
-      mentorId,
-      { niche, goals }
+      result.data.mentorId,
+      { niche: result.data.niche, goals: result.data.goals }
     );
 
     res.status(201).json({ success: true, data });
@@ -146,14 +145,19 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    const { accept } = req.body;
-
-    if (typeof accept !== 'boolean') {
-      res.status(400).json({ success: false, error: 'accept (boolean) is required' });
+    const result = RespondMentorshipSchema.safeParse(req.body);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
-    await getMentorshipService().respondToRequest(req.params.id, getAuthUser(req).nostr_pubkey, accept);
+    await getMentorshipService().respondToRequest(
+      req.params.id,
+      getAuthUser(req).nostr_pubkey,
+      result.data.accept
+    );
     res.json({ success: true });
   })
 );

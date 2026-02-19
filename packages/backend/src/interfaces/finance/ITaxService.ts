@@ -3,6 +3,8 @@
  * EPIC-011: Business Manager — Tax preparation and expense categorization
  */
 
+import type { Expense, ExpenseCategory } from '@shared/types/finance';
+
 export interface ITaxService {
   getQuarterlySummary(
     creatorId: string,
@@ -19,12 +21,12 @@ export interface ITaxService {
   getExpenses(
     creatorId: string,
     filters?: { categoryId?: string; startDate?: string; endDate?: string }
-  ): Promise<any[]>;
+  ): Promise<Expense[]>;
   addExpense(
     creatorId: string,
     data: { categoryId?: string; description: string; amountSats: number; expenseDate?: string }
   ): Promise<{ id: string }>;
-  getExpenseCategories(creatorId: string): Promise<any[]>;
+  getExpenseCategories(creatorId: string): Promise<ExpenseCategory[]>;
   createExpenseCategory(
     creatorId: string,
     data: { name: string; type: string }

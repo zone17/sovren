@@ -108,7 +108,7 @@ export const ReplyComposer: React.FC<ReplyComposerProps> = ({
                       aria-selected={false}
                       type="button"
                       className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
-                      onClick={() => applyTemplate(t.content)}
+                      onClick={() => applyTemplate(t.template_text)}
                     >
                       {t.name}
                     </button>
