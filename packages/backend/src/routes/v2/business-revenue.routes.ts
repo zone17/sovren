@@ -14,7 +14,7 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
-import { readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { RecordRevenueSchema, SetDiversificationGoalsSchema } from '../../validators/finance';
 import type { IRevenueService } from '../../interfaces/finance/IRevenueService';
 
@@ -22,6 +22,7 @@ const router = Router();
 
 // #261: Apply rate limiters
 router.use(readOnlyRateLimiter);
+const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 20 });
 
 let _revenueService: IRevenueService | null = null;
 function getRevenueService(): IRevenueService {
@@ -88,6 +89,7 @@ router.get(
 router.put(
   '/goals',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = SetDiversificationGoalsSchema.safeParse(req.body);
@@ -110,6 +112,7 @@ router.put(
 router.post(
   '/',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = RecordRevenueSchema.safeParse(req.body);

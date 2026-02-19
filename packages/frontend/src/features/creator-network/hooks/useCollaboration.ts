@@ -11,12 +11,26 @@ export function useCollaborators(contentId: string) {
   });
 }
 
+/**
+ * #312: Backend expects flat shape per collaborator (not array).
+ * Sends one POST per collaborator sequentially.
+ */
 export function useInviteCollaborators(contentId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (collaborators: Array<{ creatorId: string; revenueSplitBps: number }>) =>
-      collaborationApi.inviteCollaborators(contentId, { collaborators }),
+    mutationFn: async (collaborators: Array<{ creatorId: string; revenueSplitBps: number }>) => {
+      const results = [];
+      for (const c of collaborators) {
+        const result = await collaborationApi.inviteCollaborator(
+          contentId,
+          c.creatorId,
+          c.revenueSplitBps
+        );
+        results.push(result);
+      }
+      return results;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['creator-network', 'collaborators', contentId],
@@ -25,16 +39,32 @@ export function useInviteCollaborators(contentId: string) {
   });
 }
 
+/** #311: Backend expects { splits: [{ creatorId, bps }] }, not revenueSplitBps */
 export function useUpdateRevenueSplit(contentId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (splits: Array<{ creatorId: string; revenueSplitBps: number }>) =>
-      collaborationApi.updateRevenueSplit(contentId, { splits }),
+      collaborationApi.updateRevenueSplit(contentId, {
+        splits: splits.map((s) => ({ creatorId: s.creatorId, bps: s.revenueSplitBps })),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['creator-network', 'collaborators', contentId],
       });
+    },
+  });
+}
+
+/** #313: Hook for responding to collaboration invitations */
+export function useRespondToCollaboration() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ invitationId, accept }: { invitationId: string; accept: boolean }) =>
+      collaborationApi.respondToInvitation(invitationId, accept),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['creator-network', 'collaborators'] });
     },
   });
 }

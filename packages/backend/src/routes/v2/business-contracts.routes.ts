@@ -14,7 +14,7 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
-import { readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import {
   CreateContractSchema,
   UpdateContractSchema,
@@ -27,6 +27,7 @@ const router = Router();
 
 // #261: Apply rate limiters to all routes
 router.use(readOnlyRateLimiter);
+const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 20 });
 
 // Lazy service resolution
 let _contractService: IContractService | null = null;
@@ -59,6 +60,7 @@ router.get(
 router.post(
   '/templates',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = CreateTemplateSchema.safeParse(req.body);
@@ -97,6 +99,7 @@ router.get(
 router.post(
   '/analyze',
   authenticate,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = AnalyzeContractSchema.safeParse(req.body);
     if (!result.success) {
@@ -121,6 +124,7 @@ router.post(
 router.post(
   '/',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = CreateContractSchema.safeParse(req.body);
@@ -158,6 +162,7 @@ router.get(
 router.put(
   '/:id',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = UpdateContractSchema.safeParse(req.body);

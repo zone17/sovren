@@ -15,7 +15,7 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
-import { readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { InvoiceSchema, UpdateInvoiceStatusSchema } from '../../validators/finance';
 import type { IBusinessInvoiceService } from '../../interfaces/finance/IBusinessInvoiceService';
 
@@ -23,6 +23,7 @@ const router = Router();
 
 // #261: Apply rate limiters
 router.use(readOnlyRateLimiter);
+const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 20 });
 
 let _invoiceService: IBusinessInvoiceService | null = null;
 function getInvoiceService(): IBusinessInvoiceService {
@@ -43,6 +44,7 @@ function getInvoiceService(): IBusinessInvoiceService {
 router.post(
   '/',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = InvoiceSchema.safeParse(req.body);
@@ -103,6 +105,7 @@ router.get(
 router.put(
   '/:id/status',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = UpdateInvoiceStatusSchema.safeParse(req.body);
@@ -125,6 +128,7 @@ router.put(
 router.post(
   '/:id/payment-link',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;

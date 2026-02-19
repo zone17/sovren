@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   useStartOrder,
   useCompleteOrder,
@@ -21,20 +21,24 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
   const [reviewText, setReviewText] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
 
+  const inFlightRef = useRef(false);
+
   const startMutation = useStartOrder();
   const completeMutation = useCompleteOrder();
   const disputeMutation = useDisputeOrder();
   const reviewMutation = useReviewOrder();
 
-  // #301: Disable all action buttons when any mutation is in-flight
+  // #301 + #316: Synchronous ref guard + React Query isPending for belt-and-suspenders
   const anyActionPending =
+    inFlightRef.current ||
     startMutation.isPending ||
     completeMutation.isPending ||
     disputeMutation.isPending ||
     reviewMutation.isPending;
 
   const handleDispute = () => {
-    if (!disputeReason.trim()) return;
+    if (!disputeReason.trim() || inFlightRef.current) return;
+    inFlightRef.current = true;
     disputeMutation.mutate(
       { orderId: order.id, reason: disputeReason.trim() },
       {
@@ -42,14 +46,24 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
           setShowDisputeForm(false);
           setDisputeReason('');
         },
+        onSettled: () => {
+          inFlightRef.current = false;
+        },
       }
     );
   };
 
   const handleReview = () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     reviewMutation.mutate(
       { orderId: order.id, rating, reviewText: reviewText.trim() || undefined },
-      { onSuccess: () => setShowReviewForm(false) }
+      {
+        onSuccess: () => setShowReviewForm(false),
+        onSettled: () => {
+          inFlightRef.current = false;
+        },
+      }
     );
   };
 
@@ -84,7 +98,15 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
         {/* Seller: start work */}
         {role === 'seller' && order.status === 'escrow_funded' && (
           <button
-            onClick={() => startMutation.mutate(order.id)}
+            onClick={() => {
+              if (inFlightRef.current) return;
+              inFlightRef.current = true;
+              startMutation.mutate(order.id, {
+                onSettled: () => {
+                  inFlightRef.current = false;
+                },
+              });
+            }}
             disabled={anyActionPending}
             className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
           >
@@ -95,7 +117,15 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
         {/* Buyer: mark complete */}
         {role === 'buyer' && order.status === 'in_progress' && (
           <button
-            onClick={() => completeMutation.mutate(order.id)}
+            onClick={() => {
+              if (inFlightRef.current) return;
+              inFlightRef.current = true;
+              completeMutation.mutate(order.id, {
+                onSettled: () => {
+                  inFlightRef.current = false;
+                },
+              });
+            }}
             disabled={anyActionPending}
             className="rounded-md bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-50"
           >

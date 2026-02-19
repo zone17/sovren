@@ -22,10 +22,8 @@ export const revenueApi = {
     return apiClient['request']('GET', `${BASE}/goals`);
   },
 
-  updateGoals(
-    targetDistribution: Record<string, number>
-  ): Promise<ApiResponse<DiversificationGoal>> {
-    return apiClient['request']('PUT', `${BASE}/goals`, { targetDistribution });
+  updateGoals(targets: Record<string, number>): Promise<ApiResponse<DiversificationGoal>> {
+    return apiClient['request']('PUT', `${BASE}/goals`, { targets });
   },
 
   addRevenueEntry(data: CreateRevenueEntryPayload): Promise<ApiResponse<RevenueEntry>> {

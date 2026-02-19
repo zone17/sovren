@@ -13,7 +13,7 @@ import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
-import { readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { ExpenseSchema, CreateExpenseCategorySchema } from '../../validators/finance';
 import type { ITaxService } from '../../interfaces/finance/ITaxService';
 
@@ -21,6 +21,7 @@ const router = Router();
 
 // #261: Apply rate limiters
 router.use(readOnlyRateLimiter);
+const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 20 });
 
 let _taxService: ITaxService | null = null;
 function getTaxService(): ITaxService {
@@ -86,6 +87,7 @@ router.get(
 router.post(
   '/expenses',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = ExpenseSchema.safeParse(req.body);
@@ -133,6 +135,7 @@ router.get(
 router.post(
   '/categories',
   authenticate,
+  mutationRateLimiter,
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const result = CreateExpenseCategorySchema.safeParse(req.body);

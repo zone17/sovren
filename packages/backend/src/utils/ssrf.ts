@@ -56,6 +56,21 @@ function isPrivateIPv6(ip: string): boolean {
 }
 
 /**
+ * Check if hostname is a decimal integer IP (e.g., 2130706433 = 127.0.0.1).
+ * Browsers and some HTTP clients resolve these to IPv4 addresses.
+ */
+function isDecimalIntegerIp(hostname: string): boolean {
+  if (!/^\d+$/.test(hostname)) return false;
+  const num = Number(hostname);
+  if (!Number.isInteger(num) || num < 0 || num > 0xffffffff) return false;
+  const a = (num >>> 24) & 0xff;
+  const b = (num >>> 16) & 0xff;
+  const c = (num >>> 8) & 0xff;
+  const d = num & 0xff;
+  return isPrivateIPv4(`${a}.${b}.${c}.${d}`);
+}
+
+/**
  * Validates that a URL is safe for server-side outbound requests.
  * Performs DNS resolution to catch rebinding attacks.
  *
@@ -93,6 +108,11 @@ export async function validateSsrfUrl(url: string): Promise<void> {
   // Block octal/hex IP notation (e.g. 0x7f000001, 0177.0.0.1)
   if (isOctalOrHexIp(hostname)) {
     throw new Error('URL cannot use octal or hex IP notation');
+  }
+
+  // Block decimal integer IP notation (e.g. 2130706433 = 127.0.0.1)
+  if (isDecimalIntegerIp(hostname)) {
+    throw new Error('URL cannot use decimal integer IP notation');
   }
 
   // Block private IPv4 ranges (string-based check)
@@ -160,6 +180,11 @@ export function validateSsrfUrlSync(url: string): void {
 
   if (isOctalOrHexIp(hostname)) {
     throw new Error('URL cannot use octal or hex IP notation');
+  }
+
+  // Block decimal integer IP notation (e.g. 2130706433 = 127.0.0.1)
+  if (isDecimalIntegerIp(hostname)) {
+    throw new Error('URL cannot use decimal integer IP notation');
   }
 
   if (isPrivateIPv4(hostname)) {

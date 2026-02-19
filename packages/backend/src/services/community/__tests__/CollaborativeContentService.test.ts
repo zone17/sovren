@@ -66,7 +66,7 @@ describe('CollaborativeContentService', () => {
       debug: jest.fn(),
     };
 
-    mockDb = { from: jest.fn() };
+    mockDb = { from: jest.fn(), rpc: jest.fn() };
     service = new CollaborativeContentService(mockDb, mockLogger);
   });
 
@@ -450,14 +450,10 @@ describe('CollaborativeContentService', () => {
       });
       // L-3: beforeState query for audit log
       const beforeStateChain = makeChain({ data: [], error: null });
-      const update1 = makeChain({ data: null, error: null });
-      const update2 = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(contentChain)
-        .mockReturnValueOnce(beforeStateChain)
-        .mockReturnValueOnce(update1)
-        .mockReturnValueOnce(update2);
+      mockDb.from.mockReturnValueOnce(contentChain).mockReturnValueOnce(beforeStateChain);
+      // #317: Service now uses atomic RPC instead of individual updates
+      mockDb.rpc.mockResolvedValueOnce({ data: null, error: null });
 
       const splits = [
         { creatorId: 'creator-a', bps: 6000 },
@@ -467,6 +463,14 @@ describe('CollaborativeContentService', () => {
       await expect(
         service.updateRevenueSplit(CONTENT_ID, OWNER_ID, splits)
       ).resolves.toBeUndefined();
+
+      expect(mockDb.rpc).toHaveBeenCalledWith('update_revenue_split_atomic', {
+        p_content_id: CONTENT_ID,
+        p_splits: [
+          { creator_id: 'creator-a', bps: 6000 },
+          { creator_id: 'creator-b', bps: 4000 },
+        ],
+      });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Revenue splits updated — audit trail',
@@ -480,12 +484,10 @@ describe('CollaborativeContentService', () => {
         error: null,
       });
       const beforeStateChain = makeChain({ data: [], error: null });
-      const updateChain = makeChain({ data: null, error: null });
 
-      mockDb.from
-        .mockReturnValueOnce(contentChain)
-        .mockReturnValueOnce(beforeStateChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(contentChain).mockReturnValueOnce(beforeStateChain);
+      // #317: Service now uses atomic RPC instead of individual updates
+      mockDb.rpc.mockResolvedValueOnce({ data: null, error: null });
 
       await expect(
         service.updateRevenueSplit(CONTENT_ID, OWNER_ID, [{ creatorId: 'solo', bps: 10000 }])
@@ -561,26 +563,24 @@ describe('CollaborativeContentService', () => {
       ).rejects.toThrow('Invalid bps value 0');
     });
 
-    it('throws and logs when a DB update query fails', async () => {
+    it('throws and logs when the RPC update fails', async () => {
       const contentChain = makeChain({
         data: { id: CONTENT_ID, creator_id: OWNER_ID },
         error: null,
       });
       const beforeStateChain = makeChain({ data: [], error: null });
       const dbError = { message: 'update failed' };
-      const updateChain = makeChain({ data: null, error: dbError });
 
-      mockDb.from
-        .mockReturnValueOnce(contentChain)
-        .mockReturnValueOnce(beforeStateChain)
-        .mockReturnValueOnce(updateChain);
+      mockDb.from.mockReturnValueOnce(contentChain).mockReturnValueOnce(beforeStateChain);
+      // #317: RPC returns error
+      mockDb.rpc.mockResolvedValueOnce({ data: null, error: dbError });
 
       await expect(
         service.updateRevenueSplit(CONTENT_ID, OWNER_ID, [{ creatorId: 'a', bps: 10000 }])
-      ).rejects.toThrow('Failed to update split for creator a: update failed');
+      ).rejects.toThrow('Failed to update revenue splits: update failed');
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to update revenue split',
+        'Failed to update revenue splits atomically',
         expect.objectContaining({ error: dbError, contentId: CONTENT_ID })
       );
     });

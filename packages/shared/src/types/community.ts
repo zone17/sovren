@@ -102,7 +102,8 @@ export interface ServiceOrder {
   amountSats: number;
   idempotencyKey: string;
   // #286: Fields added by epic010_security_hardening migration
-  releaseStatus?: 'idle' | 'processing' | 'released' | 'failed';
+  // #308: Aligned with DB CHECK constraint and MarketplaceService usage
+  releaseStatus?: 'pending' | 'processing' | 'completed' | 'failed' | 'permanently_failed';
   releaseAttempts?: number;
   createdAt: string;
   fundedAt?: string;

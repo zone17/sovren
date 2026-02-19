@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useBusinessInvoices, useUpdateInvoiceStatus } from '../hooks/useBusinessInvoices';
 import type { InvoiceStatus } from '@shared/types/finance';
 
@@ -24,8 +24,25 @@ function formatSats(sats: number): string {
 
 const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onViewInvoice }) => {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all');
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const inFlightRef = useRef(false);
   const { data: invoices, isLoading } = useBusinessInvoices();
   const updateStatus = useUpdateInvoiceStatus();
+
+  const handleMarkPaid = (invoiceId: string) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    setPendingId(invoiceId);
+    updateStatus.mutate(
+      { id: invoiceId, status: 'paid' },
+      {
+        onSettled: () => {
+          inFlightRef.current = false;
+          setPendingId(null);
+        },
+      }
+    );
+  };
 
   const filtered =
     invoices?.filter((inv) => statusFilter === 'all' || inv.status === statusFilter) ?? [];
@@ -127,11 +144,11 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
                 </span>
                 {invoice.status === 'sent' && (
                   <button
-                    className="text-xs text-green-600 hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-green-500 rounded"
-                    onClick={() => updateStatus.mutate({ id: invoice.id, status: 'paid' })}
-                    disabled={updateStatus.isPending}
+                    className="text-xs text-green-600 hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-green-500 rounded disabled:opacity-50"
+                    onClick={() => handleMarkPaid(invoice.id)}
+                    disabled={pendingId !== null}
                   >
-                    Mark Paid
+                    {pendingId === invoice.id ? 'Processing...' : 'Mark Paid'}
                   </button>
                 )}
               </div>

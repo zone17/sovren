@@ -241,19 +241,16 @@ export class CollaborativeContentService implements ICollaborativeContentService
       .eq('content_id', contentId)
       .in('status', ['invited', 'accepted']);
 
-    // Update splits for each collaborator
-    for (const split of splits) {
-      const { error } = await this.db
-        .from<CollaboratorRow>('content_collaborators')
-        .update({ revenue_split_bps: split.bps })
-        .eq('content_id', contentId)
-        .eq('creator_id', split.creatorId)
-        .in('status', ['invited', 'accepted']);
+    // #317: Atomic RPC replaces non-atomic loop of individual updates.
+    // update_revenue_split_atomic deletes + re-inserts all splits in one transaction.
+    const { error } = await this.db.rpc('update_revenue_split_atomic', {
+      p_content_id: contentId,
+      p_splits: splits.map((s) => ({ creator_id: s.creatorId, bps: s.bps })),
+    });
 
-      if (error) {
-        this.logger.error('Failed to update revenue split', { error, contentId, split });
-        throw new Error(`Failed to update split for creator ${split.creatorId}: ${error.message}`);
-      }
+    if (error) {
+      this.logger.error('Failed to update revenue splits atomically', { error, contentId });
+      throw new Error(`Failed to update revenue splits: ${error.message}`);
     }
 
     // L-3: Emit structured audit log with before/after state for dispute resolution
