@@ -144,11 +144,15 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
                 </span>
                 {invoice.status === 'sent' && (
                   <button
-                    className="text-xs text-green-600 hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-green-500 rounded disabled:opacity-50"
+                    className="text-xs text-green-600 hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-green-500 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleMarkPaid(invoice.id)}
-                    disabled={pendingId !== null}
+                    disabled={pendingId !== null || updateStatus.isPending}
+                    aria-busy={pendingId === invoice.id || updateStatus.isPending}
                   >
-                    {pendingId === invoice.id ? 'Processing...' : 'Mark Paid'}
+                    {pendingId === invoice.id ||
+                    (updateStatus.isPending && pendingId === invoice.id)
+                      ? 'Processing...'
+                      : 'Mark Paid'}
                   </button>
                 )}
               </div>

@@ -7,6 +7,7 @@ import type { IContractService } from '../../interfaces/finance/IContractService
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ContractTemplate, Contract } from '@shared/types/finance';
+import { ConflictError } from '../../utils/errors';
 
 type RedFlagType = 'exclusivity' | 'perpetual' | 'delayed_payment' | 'ip_assignment';
 
@@ -235,6 +236,24 @@ export class ContractService implements IContractService {
 
   async deleteContract(contractId: string, creatorId: string): Promise<void> {
     this.logger.info('ContractService.deleteContract', { contractId, creatorId });
+
+    // #360: Status guard — only draft contracts can be deleted
+    const { data: contract, error: fetchError } = await this.db
+      .from<ContractRow>('contracts')
+      .select('id, status')
+      .eq('id', contractId)
+      .eq('creator_id', creatorId)
+      .single();
+
+    if (fetchError || !contract) {
+      throw new Error(`Contract not found: ${contractId}`);
+    }
+
+    if (contract.status !== 'draft') {
+      throw new ConflictError(
+        `Cannot delete contract with status '${contract.status}'. Only draft contracts can be deleted.`
+      );
+    }
 
     const { error } = await this.db
       .from<ContractRow>('contracts')

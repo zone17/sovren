@@ -318,12 +318,15 @@ describe('MarketplaceService', () => {
         data: { id: LISTING_ID, creator_id: SELLER_ID, price_sats: 5000, active: true },
         error: null,
       });
+      // #363: Atomic claim — deactivate listing with active=true guard
+      const claimChain = makeChain({ data: [{ id: LISTING_ID }], error: null });
       const insertChain = makeChain({ data: { id: ORDER_ID }, error: null });
 
       mockDb.from
-        .mockReturnValueOnce(idemChain)
-        .mockReturnValueOnce(listingChain)
-        .mockReturnValueOnce(insertChain);
+        .mockReturnValueOnce(idemChain) // idempotency check
+        .mockReturnValueOnce(listingChain) // listing lookup
+        .mockReturnValueOnce(claimChain) // atomic claim (deactivate listing)
+        .mockReturnValueOnce(insertChain); // order insert
 
       const result = await service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY);
 
@@ -392,13 +395,19 @@ describe('MarketplaceService', () => {
         data: { id: LISTING_ID, creator_id: SELLER_ID, price_sats: 5000, active: true },
         error: null,
       });
+      // #363: Atomic claim succeeds
+      const claimChain = makeChain({ data: [{ id: LISTING_ID }], error: null });
       const dbError = { message: 'insert failed' };
       const insertChain = makeChain({ data: null, error: dbError });
+      // #363: Rollback listing claim on failure — re-activate listing
+      const rollbackChain = makeChain({ data: null, error: null });
 
       mockDb.from
-        .mockReturnValueOnce(idemChain)
-        .mockReturnValueOnce(listingChain)
-        .mockReturnValueOnce(insertChain);
+        .mockReturnValueOnce(idemChain) // idempotency check
+        .mockReturnValueOnce(listingChain) // listing lookup
+        .mockReturnValueOnce(claimChain) // atomic claim (deactivate listing)
+        .mockReturnValueOnce(insertChain) // order insert fails
+        .mockReturnValueOnce(rollbackChain); // rollback listing claim
 
       await expect(service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY)).rejects.toThrow(
         'Failed to create order: insert failed'
@@ -416,12 +425,15 @@ describe('MarketplaceService', () => {
         data: { id: LISTING_ID, creator_id: SELLER_ID, price_sats: 2000, active: true },
         error: null,
       });
+      // #363: Atomic claim — deactivate listing
+      const claimChain = makeChain({ data: [{ id: LISTING_ID }], error: null });
       const insertChain = makeChain({ data: { id: ORDER_ID }, error: null });
 
       mockDb.from
-        .mockReturnValueOnce(idemChain)
-        .mockReturnValueOnce(listingChain)
-        .mockReturnValueOnce(insertChain);
+        .mockReturnValueOnce(idemChain) // idempotency check
+        .mockReturnValueOnce(listingChain) // listing lookup
+        .mockReturnValueOnce(claimChain) // atomic claim (deactivate listing)
+        .mockReturnValueOnce(insertChain); // order insert
 
       await service.placeOrder(BUYER_ID, LISTING_ID, IDEMPOTENCY_KEY);
 

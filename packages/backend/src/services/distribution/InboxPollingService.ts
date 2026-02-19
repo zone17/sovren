@@ -86,6 +86,19 @@ export class InboxPollingService implements IInboxPollingService {
   }
 
   async startPolling(): Promise<void> {
+    // EPIC-009B: fetchPlatformMessages() is not yet implemented — the stub
+    // returns [] for every poll.  Until platform adapter read support lands,
+    // the BullMQ worker would only consume Redis connections and CPU cycles
+    // with no useful work.  Guard behind ENABLE_INBOX_POLLING so the worker
+    // is not created unless explicitly opted-in.
+    if (process.env.ENABLE_INBOX_POLLING !== 'true') {
+      this.logger.warn(
+        '[InboxPollingService] Inbox polling disabled — fetchPlatformMessages not yet implemented. ' +
+          'Set ENABLE_INBOX_POLLING=true to enable once platform adapters support message fetching.'
+      );
+      return;
+    }
+
     const redisHost = process.env.REDIS_HOST || 'localhost';
     const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
     const connection = { host: redisHost, port: redisPort };

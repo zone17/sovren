@@ -58,30 +58,25 @@ function makeCache() {
  * Build a Supabase mock that handles all RevenueService query shapes.
  *
  * Query termination patterns (by method that resolves the Promise):
- *   getRevenueBreakdown (no period)   → ... eq('creator_id') awaited directly
- *   getRevenueBreakdown (with period) → ... lte() awaited
- *   getDiversificationGoals           → ... single() after eq
- *   setDiversificationGoals           → upsert()
- *   recordRevenue                     → ... single() after insert.select
+ *   getRevenueBreakdown → ... .order().range() resolves via pagination loop
+ *     - First call returns _breakdownResult data, second call returns empty
+ *       array to terminate the pagination loop.
+ *   getDiversificationGoals → ... single() after eq
+ *   setDiversificationGoals → upsert()
+ *   recordRevenue           → ... single() after insert.select
  *
  * Strategy:
  *   All filter methods (eq, gte, lte) always return `this` so chains compose.
- *   The query chain is "lazy": it only resolves when awaited.
- *   We make the entire `db` object PromiseLike so that `await db.xxx().yyy()`
- *   resolves at the end of the chain — using the last `_resolveWith` value.
- *
- *   Different terminal contexts set `_resolveWith` before returning `this`:
- *     - eq sets _resolveWith = _breakdownResult in breakdown mode
- *     - lte sets _resolveWith = _breakdownResult (period queries)
- *     - single sets _resolveWith = _singleResult
- *     - upsert resolves immediately with _upsertResult
- *
- *   When the chain is awaited (via `then`), it uses _resolveWith.
+ *   .order() returns `this` so .range() can be called.
+ *   .range() is the terminal for paginated breakdown queries — it returns a
+ *   Promise that resolves with _breakdownResult on the first call, then
+ *   { data: [], error: null } on subsequent calls to stop the pagination loop.
  *
  * Mode flag (`_mode`): 'breakdown' | 'single' | 'upsert'
- *   Controls what eq sets as _resolveWith so the right result is used.
  */
 function makeDb() {
+  let _rangeCallCount = 0;
+
   const db: any = {
     _breakdownResult: { data: [], error: null },
     _singleResult: { data: null, error: null },
@@ -103,11 +98,6 @@ function makeDb() {
     }),
 
     eq: jest.fn().mockImplementation(function () {
-      // In breakdown mode, eq is the terminal for no-period queries
-      // Set _resolveWith so `await` on this chain returns the breakdown result
-      if (db._mode === 'breakdown') db._resolveWith = db._breakdownResult;
-      // In single mode, single() will override _resolveWith when called
-      // In all modes, return `this` so further chaining (gte, lte, single) works
       return db;
     }),
 
@@ -116,9 +106,22 @@ function makeDb() {
     }),
 
     lte: jest.fn().mockImplementation(function () {
-      // lte is terminal for period-filtered breakdown queries
-      db._resolveWith = db._breakdownResult;
       return db;
+    }),
+
+    // #366: order() returns `this` so .range() can chain after it
+    order: jest.fn().mockImplementation(function () {
+      return db;
+    }),
+
+    // #366: range() is terminal for paginated queries.
+    // First call returns _breakdownResult, subsequent calls return empty to stop pagination.
+    range: jest.fn().mockImplementation(function () {
+      _rangeCallCount++;
+      if (_rangeCallCount === 1) {
+        return Promise.resolve(db._breakdownResult);
+      }
+      return Promise.resolve({ data: [], error: null });
     }),
 
     // #318: limit() is now called on breakdown queries
@@ -130,6 +133,11 @@ function makeDb() {
       // single() is always terminal — override _resolveWith
       return Promise.resolve(db._singleResult);
     }),
+
+    // Reset the range call counter (called in beforeEach)
+    _resetRangeCount() {
+      _rangeCallCount = 0;
+    },
   };
   return db;
 }
@@ -149,6 +157,7 @@ describe('RevenueService', () => {
     mockLogger = makeLogger();
     mockCache = makeCache();
     mockDb = makeDb();
+    mockDb._resetRangeCount();
     service = new RevenueService(mockDb as any, mockCache as any, mockLogger as any);
   });
 

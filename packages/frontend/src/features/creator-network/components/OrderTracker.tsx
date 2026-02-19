@@ -108,7 +108,8 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
               });
             }}
             disabled={anyActionPending}
-            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
+            aria-busy={startMutation.isPending}
+            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {startMutation.isPending ? 'Starting...' : 'Start Work'}
           </button>
@@ -127,7 +128,8 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
               });
             }}
             disabled={anyActionPending}
-            className="rounded-md bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+            aria-busy={completeMutation.isPending}
+            className="rounded-md bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {completeMutation.isPending ? 'Completing...' : 'Mark Complete'}
           </button>
@@ -138,9 +140,10 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
           <button
             onClick={() => setShowDisputeForm(true)}
             disabled={anyActionPending}
-            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+            aria-busy={disputeMutation.isPending}
+            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Dispute
+            {disputeMutation.isPending ? 'Processing...' : 'Dispute'}
           </button>
         )}
 
@@ -149,9 +152,10 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
           <button
             onClick={() => setShowReviewForm(true)}
             disabled={anyActionPending}
-            className="rounded-md border border-yellow-300 px-3 py-1.5 text-sm text-yellow-700 hover:bg-yellow-50 disabled:opacity-50"
+            aria-busy={reviewMutation.isPending}
+            className="rounded-md border border-yellow-300 px-3 py-1.5 text-sm text-yellow-700 hover:bg-yellow-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Leave Review
+            {reviewMutation.isPending ? 'Processing...' : 'Leave Review'}
           </button>
         )}
       </div>
@@ -172,9 +176,10 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
             <button
               onClick={handleDispute}
               disabled={!disputeReason.trim() || anyActionPending}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+              aria-busy={disputeMutation.isPending}
+              className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit Dispute
+              {disputeMutation.isPending ? 'Submitting...' : 'Submit Dispute'}
             </button>
             <button
               onClick={() => {
@@ -222,9 +227,10 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ order, role }) => {
             <button
               onClick={handleReview}
               disabled={anyActionPending}
-              className="rounded-md bg-yellow-600 px-3 py-1.5 text-sm text-white hover:bg-yellow-700 disabled:opacity-50"
+              aria-busy={reviewMutation.isPending}
+              className="rounded-md bg-yellow-600 px-3 py-1.5 text-sm text-white hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit Review
+              {reviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
             </button>
             <button
               onClick={() => setShowReviewForm(false)}

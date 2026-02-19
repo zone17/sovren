@@ -59,21 +59,28 @@ function makeCache() {
 }
 
 /**
- * Build a Supabase mock that handles three distinct query termination patterns:
+ * Build a Supabase mock that handles four distinct query termination patterns:
  *
- *   1. getQuarterlySummary  → terminates with .lte()  (revenue_entries & expenses tables)
- *   2. getExpenses / getExpenseCategories → terminates with .order()
- *   3. addExpense / createExpenseCategory → terminates with .single()
+ *   1. getQuarterlySummary  → terminates with .order().range() (paginated)
+ *      - revenue_entries: .from().select().eq().gte().lte().order().range()
+ *      - expenses: .from().select().eq().gte().lte().order().range()
+ *      - First range() call returns data, second returns empty to stop pagination.
+ *   2. getExpenses          → terminates with .order().limit()
+ *   3. getExpenseCategories → terminates with .order() (thenable)
+ *   4. addExpense / createExpenseCategory → terminates with .single()
  *
  * We track the current table via .from() so different result sets can be returned
  * for revenue_entries vs expenses within the same test.
+ *
+ * order() returns a unified chain object with .range(), .limit(), and .then()
+ * so all downstream patterns work without mode flags.
  */
 function makeDb() {
   const db: any = {
     // Results that tests can override
-    _revenueResult: { data: [], error: null }, // for revenue_entries .lte() termination
-    _expenseResult: { data: [], error: null }, // for expenses .lte() termination
-    _orderResult: { data: [], error: null }, // for .order() termination
+    _revenueResult: { data: [], error: null }, // for revenue_entries paginated queries
+    _expenseResult: { data: [], error: null }, // for expenses paginated queries
+    _orderResult: { data: [], error: null }, // for .order() termination (getExpenses, getExpenseCategories)
     _singleResult: { data: null, error: null }, // for .single() termination
     _currentTable: '',
 
@@ -85,36 +92,35 @@ function makeDb() {
     insert: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
     gte: jest.fn().mockReturnThis(),
-    // lte is terminal for getQuarterlySummary queries; returns `this` for getExpenses
-    lte: jest.fn().mockImplementation(function (column: string) {
-      // In getQuarterlySummary both the revenue and expense sub-queries terminate here.
-      // In getExpenses, endDate filter also calls lte — but then order() is called after,
-      // so we must return `this` in that case. We distinguish by the column name:
-      //   - 'recorded_at'    → revenue_entries termination
-      //   - 'expense_date' AND after lte is followed by order() → order() terminates
-      // The simplest approach: always return `this` from lte when the table is 'expenses'
-      // and the column is 'expense_date' AND we are inside getExpenses (not getQuarterlySummary).
-      // For getQuarterlySummary the expense query uses column 'expense_date' and there is NO
-      // subsequent .order() call — so we resolve.
-      //
-      // We use `_inGetExpenses` flag set by the test when calling getExpenses directly.
-      if (db._inGetExpenses && column === 'expense_date') {
-        // getExpenses path — lte returns `this` so order() can terminate
-        return db;
-      }
-      // getQuarterlySummary path — lte is terminal
-      if (db._currentTable === 'revenue_entries') return Promise.resolve(db._revenueResult);
-      if (db._currentTable === 'expenses') return Promise.resolve(db._expenseResult);
-      return Promise.resolve(db._orderResult);
-    }),
-    // order() returns a chainable + thenable object:
-    //   - getExpenseCategories: await .order() (uses .then)
-    //   - getExpenses: .order().limit() (uses .limit)
-    order: jest.fn().mockImplementation(() => {
-      return {
-        then: (res: any, rej: any) => Promise.resolve(db._orderResult).then(res, rej),
+    // lte always returns `this` — it is no longer terminal for any query path.
+    // getQuarterlySummary chains .order().range() after .lte().
+    // getExpenses chains .order().limit() after .lte().
+    lte: jest.fn().mockReturnThis(),
+    // order() returns a unified chainable object that supports all downstream patterns:
+    //   - .range() for getQuarterlySummary paginated queries
+    //   - .limit() for getExpenses
+    //   - thenable (await) for getExpenseCategories
+    // This eliminates the need for _inGetExpenses flag.
+    order: jest.fn().mockImplementation(function () {
+      const orderChain: any = {
+        // range() is terminal for paginated queries (getQuarterlySummary).
+        // Test data is always < PAGE_SIZE (500) rows, so the pagination loop
+        // calls range() once per table and exits (rows.length < 500 → hasMore=false).
+        range: jest.fn().mockImplementation(function () {
+          if (db._currentTable === 'revenue_entries') {
+            return Promise.resolve(db._revenueResult);
+          }
+          if (db._currentTable === 'expenses') {
+            return Promise.resolve(db._expenseResult);
+          }
+          return Promise.resolve({ data: [], error: null });
+        }),
+        // limit() is terminal for getExpenses
         limit: jest.fn().mockImplementation(() => Promise.resolve(db._orderResult)),
+        // thenable for getExpenseCategories (await .order())
+        then: (res: any, rej: any) => Promise.resolve(db._orderResult).then(res, rej),
       };
+      return orderChain;
     }),
     // single() is terminal for addExpense, createExpenseCategory
     single: jest.fn().mockImplementation(() => Promise.resolve(db._singleResult)),

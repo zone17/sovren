@@ -6,6 +6,7 @@
 import type { IMentorshipService } from '../../interfaces/community/IMentorshipService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import { ConflictError } from '../../utils/errors';
 
 interface MentorProfileRow {
   id: string;
@@ -205,6 +206,54 @@ export class MentorshipService implements IMentorshipService {
     if (error) {
       this.logger.error('Failed to respond to mentorship', { error, mentorshipId, accept });
       throw new Error(`Failed to respond to mentorship: ${error.message}`);
+    }
+
+    // #362: Accept-then-verify to prevent TOCTOU race on mentor capacity.
+    // After atomically accepting, count active mentorships. If over capacity,
+    // revert this acceptance back to 'pending' and return 409.
+    if (accept) {
+      const { data: mentorProfile, error: profileError } = await this.db
+        .from<MentorProfileRow>('mentor_profiles')
+        .select('max_mentees')
+        .eq('creator_id', creatorId)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (profileError || !mentorProfile) {
+        // Revert: mentor profile disappeared — roll back acceptance
+        await this.db
+          .from<MentorshipRow>('mentorships')
+          .update({ status: 'pending', started_at: null })
+          .eq('id', mentorshipId)
+          .eq('status', 'active');
+        throw new Error('Mentor profile not found — acceptance reverted');
+      }
+
+      const { count: activeCount, error: countError } = await this.db
+        .from<MentorshipRow>('mentorships')
+        .select('id', { count: 'exact', head: true })
+        .eq('mentor_id', creatorId)
+        .eq('status', 'active');
+
+      if (countError) {
+        // Revert on count failure
+        await this.db
+          .from<MentorshipRow>('mentorships')
+          .update({ status: 'pending', started_at: null })
+          .eq('id', mentorshipId)
+          .eq('status', 'active');
+        throw new Error(`Failed to verify mentor capacity: ${countError.message}`);
+      }
+
+      if ((activeCount ?? 0) > mentorProfile.max_mentees) {
+        // Over capacity — revert acceptance and return 409
+        await this.db
+          .from<MentorshipRow>('mentorships')
+          .update({ status: 'pending', started_at: null })
+          .eq('id', mentorshipId)
+          .eq('status', 'active');
+        throw new ConflictError('Mentor has reached their maximum mentee capacity');
+      }
     }
 
     this.logger.info('Mentorship response recorded', { mentorshipId, accept, newStatus });

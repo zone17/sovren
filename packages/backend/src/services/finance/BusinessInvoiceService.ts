@@ -12,6 +12,7 @@ import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
 import type { BusinessInvoice } from '@shared/types/finance';
+import { ConflictError } from '../../utils/errors';
 
 interface LineItem {
   description: string;
@@ -91,6 +92,9 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       clientName: data.clientName,
     });
 
+    // #364: Calculate total from line_items BEFORE the insert to ensure consistency.
+    // line_items is a JSONB column on business_invoices, so the row insert (line_items +
+    // total_sats) is a single atomic DB operation — no multi-table transaction needed.
     // #272: Use safe integer check to prevent silent precision loss on large invoices
     let totalSats = 0;
     for (const item of data.lineItems) {
@@ -108,6 +112,15 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       throw new Error('Invoice total must be greater than 0 sats');
     }
 
+    // #364: Validate total matches sum of line items (defense-in-depth)
+    const verifyTotal = data.lineItems.reduce(
+      (sum, item) => sum + item.quantity * item.unitPriceSats,
+      0
+    );
+    if (verifyTotal !== totalSats) {
+      throw new Error('Invoice total mismatch: computed total does not match line item sum');
+    }
+
     const row: Partial<BusinessInvoiceRow> = {
       creator_id: creatorId,
       client_name: data.clientName,
@@ -120,6 +133,7 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
     // M-8: Persist end-date and count so scheduler can halt when limits are reached
     if (data.recurrenceEndDate) row.recurrence_end_date = data.recurrenceEndDate;
 
+    // #364: Atomic insert — line_items (JSONB) and total_sats in one row, no separate table
     const { data: inserted, error } = await this.db
       .from<BusinessInvoiceRow>('business_invoices')
       .insert(row)
@@ -144,7 +158,9 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
       );
     }
 
-    // Generate LNURL-pay link immediately for the invoice
+    // #364: Payment link generation is outside the core insert but is idempotent —
+    // calling generateLnurlPayLink with the same invoiceId always produces the same URL.
+    // If the update fails, the link can be regenerated via POST /:id/payment-link.
     const lnurlPay = await this.generateLnurlPayLink(invoiceId, creatorId, totalSats);
 
     if (lnurlPay) {
@@ -334,6 +350,14 @@ export class BusinessInvoiceService implements IBusinessInvoiceService {
 
   async deleteInvoice(invoiceId: string, creatorId: string): Promise<void> {
     this.logger.info('BusinessInvoiceService.deleteInvoice', { invoiceId, creatorId });
+
+    // #360: Status guard — only draft invoices can be deleted
+    const invoice = await this.getInvoice(invoiceId, creatorId);
+    if (invoice.status !== 'draft') {
+      throw new ConflictError(
+        `Cannot delete invoice with status '${invoice.status}'. Only draft invoices can be deleted.`
+      );
+    }
 
     const { error } = await this.db
       .from<BusinessInvoiceRow>('business_invoices')

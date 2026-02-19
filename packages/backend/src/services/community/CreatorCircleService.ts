@@ -6,6 +6,7 @@
 import type { ICreatorCircleService } from '../../interfaces/community/ICreatorCircleService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import { AuthorizationError, ConflictError } from '../../utils/errors';
 
 interface CircleRow {
   id: string;
@@ -132,7 +133,7 @@ export class CreatorCircleService implements ICreatorCircleService {
   }
 
   async joinCircle(creatorId: string, circleId: string): Promise<void> {
-    // Check circle exists and has capacity
+    // Check circle exists
     const { data: circle, error: circleError } = await this.db
       .from<CircleRow>('creator_circles')
       .select('id, max_members')
@@ -143,32 +144,49 @@ export class CreatorCircleService implements ICreatorCircleService {
       throw new Error('Circle not found');
     }
 
-    // #304: Use Supabase count instead of fetching all rows
+    // #361: Atomic insert-then-verify to prevent TOCTOU race on member count.
+    // Step 1: INSERT the member (unique constraint prevents duplicates).
+    // Step 2: Immediately count. If over capacity, DELETE and return 409.
+    // This eliminates the race window between SELECT count and INSERT.
+    const { error: insertError } = await this.db.from<CircleMemberRow>('circle_members').insert({
+      circle_id: circleId,
+      creator_id: creatorId,
+      role: 'member',
+    });
+
+    if (insertError) {
+      // Unique constraint violation means already a member
+      if (insertError.code === '23505') {
+        throw new Error('Already a member of this circle');
+      }
+      this.logger.error('Failed to join circle', { error: insertError, circleId, creatorId });
+      throw new Error(`Failed to join circle: ${insertError.message}`);
+    }
+
+    // Step 2: Count members AFTER insert — if over capacity, rollback
     const { count: currentCount, error: countError } = await this.db
       .from<CircleMemberRow>('circle_members')
       .select('id', { count: 'exact', head: true })
       .eq('circle_id', circleId);
 
     if (countError) {
+      // Cleanup the just-inserted row on count failure
+      await this.db
+        .from<CircleMemberRow>('circle_members')
+        .delete()
+        .eq('circle_id', circleId)
+        .eq('creator_id', creatorId);
       throw new Error(`Failed to count circle members: ${countError.message}`);
     }
-    if ((currentCount ?? 0) >= circle.max_members) {
-      throw new Error(`Circle is full (max ${circle.max_members} members)`);
-    }
 
-    const { error } = await this.db.from<CircleMemberRow>('circle_members').insert({
-      circle_id: circleId,
-      creator_id: creatorId,
-      role: 'member',
-    });
-
-    if (error) {
-      // Unique constraint violation means already a member
-      if (error.code === '23505') {
-        throw new Error('Already a member of this circle');
-      }
-      this.logger.error('Failed to join circle', { error, circleId, creatorId });
-      throw new Error(`Failed to join circle: ${error.message}`);
+    if ((currentCount ?? 0) > circle.max_members) {
+      // Over capacity — remove the just-inserted member and return 409
+      await this.db
+        .from<CircleMemberRow>('circle_members')
+        .delete()
+        .eq('circle_id', circleId)
+        .eq('creator_id', creatorId);
+      throw new ConflictError(`Circle is full (max ${circle.max_members} members)`);
     }
 
     this.logger.info('Creator joined circle', { circleId, creatorId });
@@ -209,7 +227,31 @@ export class CreatorCircleService implements ICreatorCircleService {
   }
 
   async getCirclePosts(circleId: string, creatorId: string): Promise<CirclePostRow[]> {
-    // Verify requester is a circle member (RLS handles this, but explicit check for clarity)
+    // #359: Verify requester is the circle creator OR a circle member before returning posts
+    const { data: circle, error: circleError } = await this.db
+      .from<CircleRow>('creator_circles')
+      .select('id, created_by')
+      .eq('id', circleId)
+      .single();
+
+    if (circleError || !circle) {
+      throw new Error('Circle not found');
+    }
+
+    // Allow circle creator without membership row
+    if (circle.created_by !== creatorId) {
+      const { data: membership } = await this.db
+        .from<CircleMemberRow>('circle_members')
+        .select('id')
+        .eq('circle_id', circleId)
+        .eq('creator_id', creatorId)
+        .maybeSingle();
+
+      if (!membership) {
+        throw new AuthorizationError('You must be a member of this circle to view posts');
+      }
+    }
+
     const { data, error } = await this.db
       .from<CirclePostRow>('circle_posts')
       .select('id, circle_id, author_id, content, created_at')

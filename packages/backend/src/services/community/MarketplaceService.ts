@@ -26,6 +26,7 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
 import { validateSsrfUrl } from '../../utils/ssrf';
+import { ConflictError } from '../../utils/errors';
 
 const VALID_SERVICE_TYPES = ['editing', 'writing', 'design', 'consulting', 'other'] as const;
 const ESCROW_EXPIRE_DAYS = 30;
@@ -335,7 +336,7 @@ export class MarketplaceService implements IMarketplaceService {
       };
     }
 
-    // Fetch listing
+    // Fetch listing (read-only, for validation and price)
     const { data: listing, error: listingError } = await this.db
       .from<ListingRow>('service_listings')
       .select('id, creator_id, price_sats, active')
@@ -354,61 +355,101 @@ export class MarketplaceService implements IMarketplaceService {
       throw new Error('Cannot place an order on your own listing');
     }
 
-    // Create custodial escrow invoice: buyer pays → Sovren wallet
-    const memo = `Marketplace escrow for order on listing ${listingId}`;
-    const invoice = await this.lightning.createInvoice(listing.price_sats, memo);
+    // #363: Atomic claim — deactivate listing with active=true guard to prevent double-booking.
+    // If another buyer concurrently places an order, only one UPDATE will match (active=true).
+    // The loser gets 0 rows affected and a 409 Conflict.
+    const { data: claimedRows, error: claimError } = await this.db
+      .from<ListingRow>('service_listings')
+      .update({ active: false })
+      .eq('id', listingId)
+      .eq('active', true)
+      .select('id');
 
-    // Persist order (persist before mutating external state)
-    const expiresAt = new Date(Date.now() + ESCROW_EXPIRE_DAYS * 24 * 60 * 60 * 1000).toISOString();
-
-    const { data: rows, error } = await this.db
-      .from<OrderRow>('service_orders')
-      .insert({
-        listing_id: listingId,
-        buyer_id: buyerId,
-        seller_id: listing.creator_id,
-        status: 'pending',
-        escrow_invoice_id: invoice.invoiceId,
-        escrow_payment_hash: invoice.paymentHash,
-        amount_sats: listing.price_sats,
-        idempotency_key: idempotencyKey,
-        expires_at: expiresAt,
-        release_status: 'pending',
-        release_attempts: 0,
-      })
-      .select('id')
-      .single();
-
-    if (error || !rows) {
-      this.logger.error('Failed to create order', { error, listingId, buyerId });
-      throw new Error(`Failed to create order: ${error?.message}`);
+    if (claimError) {
+      this.logger.error('Failed to claim listing', { error: claimError, listingId, buyerId });
+      throw new Error(`Failed to claim listing: ${claimError.message}`);
     }
 
-    // Schedule 30-day auto-expire: pending → expired (no funds held)
-    // If escrow_funded before expiry, the job transitions to 'refunded' instead
-    const expireDelayMs = ESCROW_EXPIRE_DAYS * 24 * 60 * 60 * 1000;
-    await this.queue.addJob(
-      'marketplace',
-      'expire-order',
-      { orderId: rows.id },
-      {
-        jobId: `expire-order-${rows.id}`,
-        delay: expireDelayMs,
-        removeOnComplete: { count: 100 },
+    if (!claimedRows || claimedRows.length === 0) {
+      throw new ConflictError('Listing is no longer available — another order was placed first');
+    }
+
+    // #363: All subsequent operations are wrapped in try/catch.
+    // If invoice creation or order insert fails after we claimed the listing,
+    // we must re-activate the listing to avoid permanently locking it.
+    try {
+      // Create custodial escrow invoice: buyer pays → Sovren wallet
+      const memo = `Marketplace escrow for order on listing ${listingId}`;
+      const invoice = await this.lightning.createInvoice(listing.price_sats, memo);
+
+      // Persist order (persist before mutating external state)
+      const expiresAt = new Date(
+        Date.now() + ESCROW_EXPIRE_DAYS * 24 * 60 * 60 * 1000
+      ).toISOString();
+
+      const { data: rows, error } = await this.db
+        .from<OrderRow>('service_orders')
+        .insert({
+          listing_id: listingId,
+          buyer_id: buyerId,
+          seller_id: listing.creator_id,
+          status: 'pending',
+          escrow_invoice_id: invoice.invoiceId,
+          escrow_payment_hash: invoice.paymentHash,
+          amount_sats: listing.price_sats,
+          idempotency_key: idempotencyKey,
+          expires_at: expiresAt,
+          release_status: 'pending',
+          release_attempts: 0,
+        })
+        .select('id')
+        .single();
+
+      if (error || !rows) {
+        this.logger.error('Failed to create order', { error, listingId, buyerId });
+        throw new Error(`Failed to create order: ${error?.message}`);
       }
-    );
 
-    this.logger.info('Order placed', {
-      orderId: rows.id,
-      listingId,
-      buyerId,
-      amountSats: listing.price_sats,
-    });
+      // Schedule 30-day auto-expire: pending → expired (no funds held)
+      // If escrow_funded before expiry, the job transitions to 'refunded' instead
+      const expireDelayMs = ESCROW_EXPIRE_DAYS * 24 * 60 * 60 * 1000;
+      await this.queue.addJob(
+        'marketplace',
+        'expire-order',
+        { orderId: rows.id },
+        {
+          jobId: `expire-order-${rows.id}`,
+          delay: expireDelayMs,
+          removeOnComplete: { count: 100 },
+        }
+      );
 
-    return {
-      id: rows.id,
-      invoicePaymentRequest: invoice.paymentRequest,
-    };
+      this.logger.info('Order placed', {
+        orderId: rows.id,
+        listingId,
+        buyerId,
+        amountSats: listing.price_sats,
+      });
+
+      return {
+        id: rows.id,
+        invoicePaymentRequest: invoice.paymentRequest,
+      };
+    } catch (orderError) {
+      // #363: Rollback listing claim — re-activate listing so it's available again
+      this.logger.warn('Rolling back listing claim after order creation failure', {
+        listingId,
+        buyerId,
+        error: orderError instanceof Error ? orderError.message : 'Unknown error',
+      });
+      await this.db
+        .from<ListingRow>('service_listings')
+        .update({ active: true })
+        .eq('id', listingId)
+        .eq('active', false);
+
+      throw orderError;
+    }
   }
 
   async startOrder(orderId: string, sellerId: string): Promise<void> {

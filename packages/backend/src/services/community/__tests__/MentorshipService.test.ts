@@ -464,8 +464,19 @@ describe('MentorshipService', () => {
         error: null,
       });
       const updateChain = makeChain({ data: null, error: null });
+      // #362: Accept-then-verify — mentor profile lookup after accepting
+      const mentorProfileChain = makeChain({
+        data: { max_mentees: 5 },
+        error: null,
+      });
+      // #362: Count active mentorships (under capacity)
+      const activeCountChain = makeChain({ data: null, error: null, count: 1 } as any);
 
-      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
+      mockDb.from
+        .mockReturnValueOnce(findChain) // find mentorship
+        .mockReturnValueOnce(updateChain) // update status to active
+        .mockReturnValueOnce(mentorProfileChain) // mentor profile lookup
+        .mockReturnValueOnce(activeCountChain); // count active mentorships
 
       await expect(
         service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)
@@ -504,8 +515,19 @@ describe('MentorshipService', () => {
         error: null,
       });
       const updateChain = makeChain({ data: null, error: null });
+      // #362: Accept-then-verify — mentor profile lookup after accepting
+      const mentorProfileChain = makeChain({
+        data: { max_mentees: 5 },
+        error: null,
+      });
+      // #362: Count active mentorships (under capacity)
+      const activeCountChain = makeChain({ data: null, error: null, count: 1 } as any);
 
-      mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
+      mockDb.from
+        .mockReturnValueOnce(findChain) // find mentorship
+        .mockReturnValueOnce(updateChain) // update status to active
+        .mockReturnValueOnce(mentorProfileChain) // mentor profile lookup
+        .mockReturnValueOnce(activeCountChain); // count active mentorships
 
       await service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true);
 

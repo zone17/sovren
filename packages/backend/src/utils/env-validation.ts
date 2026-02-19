@@ -49,6 +49,20 @@ const envSchema = z.object({
 
   ENCRYPTION_KEY: z.string().min(32, 'Encryption key must be at least 32 characters'),
 
+  // Platform token & BYOK encryption keys (C-5: must be separate keys)
+  // Used by PlatformConnectionService (OAuth tokens) and InboxPollingService (BYOK API keys)
+  PLATFORM_TOKEN_ENCRYPTION_KEY: z
+    .string()
+    .regex(
+      /^[0-9a-f]{64}$/i,
+      'PLATFORM_TOKEN_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)'
+    )
+    .optional(),
+  BYOK_ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/i, 'BYOK_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)')
+    .optional(),
+
   // Lightning Network configuration
   LIGHTNING_NETWORK: z.enum(['mainnet', 'testnet', 'regtest']).default('testnet'),
   LIGHTNING_MIN_AMOUNT: stringToNumber('1000'),
@@ -192,6 +206,33 @@ function validateSecurity(env: ValidatedEnv): void {
     if (env.ENCRYPTION_KEY.includes('development') || env.ENCRYPTION_KEY.includes('test')) {
       securityIssues.push('ENCRYPTION_KEY appears to be a development/test key');
     }
+  }
+
+  // C-5: Validate BYOK_ENCRYPTION_KEY is present and differs from PLATFORM_TOKEN_ENCRYPTION_KEY
+  // Both keys are required for multi-platform distribution features.
+  // In production, these MUST be set; in dev/test they are optional to ease local setup.
+  if (env.NODE_ENV === 'production') {
+    if (!env.PLATFORM_TOKEN_ENCRYPTION_KEY) {
+      securityIssues.push(
+        'PLATFORM_TOKEN_ENCRYPTION_KEY is required in production (generate with: openssl rand -hex 32)'
+      );
+    }
+    if (!env.BYOK_ENCRYPTION_KEY) {
+      securityIssues.push(
+        'BYOK_ENCRYPTION_KEY is required in production (generate with: openssl rand -hex 32)'
+      );
+    }
+  }
+
+  if (
+    env.BYOK_ENCRYPTION_KEY &&
+    env.PLATFORM_TOKEN_ENCRYPTION_KEY &&
+    env.BYOK_ENCRYPTION_KEY.toLowerCase() === env.PLATFORM_TOKEN_ENCRYPTION_KEY.toLowerCase()
+  ) {
+    securityIssues.push(
+      'BYOK_ENCRYPTION_KEY must differ from PLATFORM_TOKEN_ENCRYPTION_KEY (security requirement C-5). ' +
+        'Generate a separate key with: openssl rand -hex 32'
+    );
   }
 
   // Check for insecure configurations

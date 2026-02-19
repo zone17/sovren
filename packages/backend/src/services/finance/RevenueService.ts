@@ -58,35 +58,48 @@ export class RevenueService implements IRevenueService {
       );
     if (cached) return cached;
 
-    let query = this.db
-      .from<RevenueEntryRow>('revenue_entries')
-      .select('source, amount_sats')
-      .eq('creator_id', creatorId);
-
-    if (period?.start) {
-      query = query.gte('recorded_at', period.start);
-    }
-    if (period?.end) {
-      query = query.lte('recorded_at', period.end);
-    }
-
-    // #318: Add limit to prevent unbounded result sets
-    const { data, error } = await query.limit(1000);
-    if (error) {
-      this.logger.error('Failed to fetch revenue breakdown', { error, creatorId });
-      throw new Error('Failed to fetch revenue breakdown');
-    }
-
-    const rows: Array<{ source: string; amount_sats: number }> = data ?? [];
-
-    // Aggregate by source
+    // #366: Paginated accumulation replaces .limit(1000) + client-side aggregation.
+    // The old approach silently truncated results at 1000 rows, producing incorrect
+    // breakdowns for creators with >1000 revenue entries. Now we page through all
+    // rows in bounded batches, accumulating totals without loading everything at once.
+    const PAGE_SIZE = 500;
     const sourceTotals = new Map<string, number>();
     let grandTotal = 0;
+    let offset = 0;
+    let hasMore = true;
 
-    for (const row of rows) {
-      const prev = sourceTotals.get(row.source) ?? 0;
-      sourceTotals.set(row.source, prev + row.amount_sats);
-      grandTotal += row.amount_sats;
+    while (hasMore) {
+      let query = this.db
+        .from<RevenueEntryRow>('revenue_entries')
+        .select('source, amount_sats')
+        .eq('creator_id', creatorId);
+
+      if (period?.start) {
+        query = query.gte('recorded_at', period.start);
+      }
+      if (period?.end) {
+        query = query.lte('recorded_at', period.end);
+      }
+
+      const { data, error } = await query
+        .order('recorded_at', { ascending: true })
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      if (error) {
+        this.logger.error('Failed to fetch revenue breakdown', { error, creatorId });
+        throw new Error('Failed to fetch revenue breakdown');
+      }
+
+      const rows: Array<{ source: string; amount_sats: number }> = data ?? [];
+
+      for (const row of rows) {
+        const prev = sourceTotals.get(row.source) ?? 0;
+        sourceTotals.set(row.source, prev + row.amount_sats);
+        grandTotal += row.amount_sats;
+      }
+
+      hasMore = rows.length === PAGE_SIZE;
+      offset += PAGE_SIZE;
     }
 
     const breakdown = Array.from(sourceTotals.entries()).map(([source, totalSats]) => ({

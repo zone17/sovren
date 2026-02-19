@@ -73,59 +73,88 @@ export class TaxService implements ITaxService {
 
     const { startDate, endDate } = this.quarterDateRange(year, quarter);
 
-    const { data: revenueData, error: revenueError } = await this.db
-      .from<RevenueEntryRow>('revenue_entries')
-      .select('amount_sats, usd_at_time')
-      .eq('creator_id', creatorId)
-      .gte('recorded_at', startDate)
-      .lte('recorded_at', endDate);
-
-    if (revenueError) {
-      this.logger.error('Failed to fetch quarterly revenue', {
-        error: revenueError,
-        creatorId,
-        year,
-        quarter,
-      });
-      throw new Error('Failed to fetch quarterly revenue');
-    }
-
-    const { data: expenseData, error: expenseError } = await this.db
-      .from<ExpenseRow>('expenses')
-      .select('amount_sats, usd_at_time')
-      .eq('creator_id', creatorId)
-      .gte('expense_date', startDate.split('T')[0])
-      .lte('expense_date', endDate.split('T')[0]);
-
-    if (expenseError) {
-      this.logger.error('Failed to fetch quarterly expenses', {
-        error: expenseError,
-        creatorId,
-        year,
-        quarter,
-      });
-      throw new Error('Failed to fetch quarterly expenses');
-    }
-
-    const revenues: Array<{ amount_sats: number; usd_at_time: number | null }> = revenueData ?? [];
-    const expenses: Array<{ amount_sats: number; usd_at_time: number | null }> = expenseData ?? [];
-
-    const totalRevenueSats = revenues.reduce((sum, r) => sum + r.amount_sats, 0);
-    const totalExpenseSats = expenses.reduce((sum, e) => sum + e.amount_sats, 0);
+    // #365: Paginated accumulation to prevent OOM on large datasets.
+    // Instead of loading all rows into memory, fetch in bounded pages and
+    // accumulate totals incrementally. Each page is GC-eligible after processing.
+    const PAGE_SIZE = 500;
 
     // Use recorded usd_at_time (captured at receipt) where available.
     // Fall back to live rate for entries missing USD values — 5-min TTL.
     const { rate: btcRateUsd } = await getBtcUsdRate(this.cache, this.logger);
 
-    const usdRevenue = revenues.reduce((sum, r) => {
-      if (r.usd_at_time !== null) return sum + r.usd_at_time;
-      return sum + (r.amount_sats / 100_000_000) * btcRateUsd;
-    }, 0);
+    // Accumulate revenue totals via pagination
+    let totalRevenueSats = 0;
+    let usdRevenue = 0;
+    let revenueOffset = 0;
+    let hasMoreRevenue = true;
 
-    const usdExpenses = expenses.reduce((sum, e) => {
-      if (e.usd_at_time !== null) return sum + e.usd_at_time;
-      return sum + (e.amount_sats / 100_000_000) * btcRateUsd;
-    }, 0);
+    while (hasMoreRevenue) {
+      const { data: revPage, error: revenueError } = await this.db
+        .from<RevenueEntryRow>('revenue_entries')
+        .select('amount_sats, usd_at_time')
+        .eq('creator_id', creatorId)
+        .gte('recorded_at', startDate)
+        .lte('recorded_at', endDate)
+        .order('recorded_at', { ascending: true })
+        .range(revenueOffset, revenueOffset + PAGE_SIZE - 1);
+
+      if (revenueError) {
+        this.logger.error('Failed to fetch quarterly revenue', {
+          error: revenueError,
+          creatorId,
+          year,
+          quarter,
+        });
+        throw new Error('Failed to fetch quarterly revenue');
+      }
+
+      const rows = revPage ?? [];
+      for (const r of rows) {
+        totalRevenueSats += r.amount_sats;
+        usdRevenue +=
+          r.usd_at_time !== null ? r.usd_at_time : (r.amount_sats / 100_000_000) * btcRateUsd;
+      }
+
+      hasMoreRevenue = rows.length === PAGE_SIZE;
+      revenueOffset += PAGE_SIZE;
+    }
+
+    // Accumulate expense totals via pagination
+    let totalExpenseSats = 0;
+    let usdExpenses = 0;
+    let expenseOffset = 0;
+    let hasMoreExpenses = true;
+
+    while (hasMoreExpenses) {
+      const { data: expPage, error: expenseError } = await this.db
+        .from<ExpenseRow>('expenses')
+        .select('amount_sats, usd_at_time')
+        .eq('creator_id', creatorId)
+        .gte('expense_date', startDate.split('T')[0])
+        .lte('expense_date', endDate.split('T')[0])
+        .order('expense_date', { ascending: true })
+        .range(expenseOffset, expenseOffset + PAGE_SIZE - 1);
+
+      if (expenseError) {
+        this.logger.error('Failed to fetch quarterly expenses', {
+          error: expenseError,
+          creatorId,
+          year,
+          quarter,
+        });
+        throw new Error('Failed to fetch quarterly expenses');
+      }
+
+      const rows = expPage ?? [];
+      for (const e of rows) {
+        totalExpenseSats += e.amount_sats;
+        usdExpenses +=
+          e.usd_at_time !== null ? e.usd_at_time : (e.amount_sats / 100_000_000) * btcRateUsd;
+      }
+
+      hasMoreExpenses = rows.length === PAGE_SIZE;
+      expenseOffset += PAGE_SIZE;
+    }
 
     return {
       revenue: totalRevenueSats,

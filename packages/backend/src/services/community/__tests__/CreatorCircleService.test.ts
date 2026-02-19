@@ -362,10 +362,18 @@ describe('CreatorCircleService', () => {
       buildService();
 
       const circleChain = makeChain({ data: { id: CIRCLE_ID, max_members: 3 }, error: null });
-      // #304: count query — 3 existing members === max_members
-      const countChain = makeChain({ data: null, error: null, count: 3 } as any);
+      // #361: insert-then-verify — insert succeeds first
+      const insertChain = makeChain({ data: null, error: null });
+      // Count returns 4 (one more than max_members=3, since we just inserted)
+      const countChain = makeChain({ data: null, error: null, count: 4 } as any);
+      // Cleanup: delete the just-inserted member
+      const deleteChain = makeChain({ data: null, error: null });
 
-      mockDb.from.mockReturnValueOnce(circleChain).mockReturnValueOnce(countChain);
+      mockDb.from
+        .mockReturnValueOnce(circleChain) // circle lookup
+        .mockReturnValueOnce(insertChain) // insert member
+        .mockReturnValueOnce(countChain) // count members after insert
+        .mockReturnValueOnce(deleteChain); // delete over-capacity member
 
       await expect(service.joinCircle(CREATOR_ID, CIRCLE_ID)).rejects.toThrow(
         'Circle is full (max 3 members)'
@@ -376,16 +384,15 @@ describe('CreatorCircleService', () => {
       buildService();
 
       const circleChain = makeChain({ data: { id: CIRCLE_ID, max_members: 20 }, error: null });
-      const countChain = makeChain({ data: null, error: null, count: 0 } as any);
+      // #361: insert-then-verify — insert fails immediately with unique constraint
       const dupInsertChain = makeChain({
         data: null,
         error: { code: '23505', message: 'duplicate key' },
       });
 
       mockDb.from
-        .mockReturnValueOnce(circleChain)
-        .mockReturnValueOnce(countChain)
-        .mockReturnValueOnce(dupInsertChain);
+        .mockReturnValueOnce(circleChain) // circle lookup
+        .mockReturnValueOnce(dupInsertChain); // insert fails with 23505
 
       await expect(service.joinCircle(CREATOR_ID, CIRCLE_ID)).rejects.toThrow(
         'Already a member of this circle'
@@ -396,14 +403,13 @@ describe('CreatorCircleService', () => {
       buildService();
 
       const circleChain = makeChain({ data: { id: CIRCLE_ID, max_members: 20 }, error: null });
-      const countChain = makeChain({ data: null, error: null, count: 0 } as any);
+      // #361: insert-then-verify — insert fails immediately with non-duplicate error
       const dbError = { code: '50000', message: 'insert failed' };
       const insertChain = makeChain({ data: null, error: dbError });
 
       mockDb.from
-        .mockReturnValueOnce(circleChain)
-        .mockReturnValueOnce(countChain)
-        .mockReturnValueOnce(insertChain);
+        .mockReturnValueOnce(circleChain) // circle lookup
+        .mockReturnValueOnce(insertChain); // insert fails
 
       await expect(service.joinCircle(CREATOR_ID, CIRCLE_ID)).rejects.toThrow(
         'Failed to join circle: insert failed'
@@ -530,6 +536,12 @@ describe('CreatorCircleService', () => {
     it('returns posts for a circle in descending order', async () => {
       buildService();
 
+      // #359: Circle membership check — circle lookup first
+      const circleChain = makeChain({
+        data: { id: CIRCLE_ID, created_by: CREATOR_ID },
+        error: null,
+      });
+
       const posts = [
         {
           id: 'p2',
@@ -546,19 +558,30 @@ describe('CreatorCircleService', () => {
           created_at: '2025-02-01',
         },
       ];
-      const chain = makeChain({ data: posts, error: null });
-      mockDb.from.mockReturnValueOnce(chain);
+      const postsChain = makeChain({ data: posts, error: null });
+      mockDb.from
+        .mockReturnValueOnce(circleChain) // circle lookup (creator matches — skip membership)
+        .mockReturnValueOnce(postsChain); // posts query
 
       const result = await service.getCirclePosts(CIRCLE_ID, CREATOR_ID);
       expect(result).toEqual(posts);
-      expect(chain.order).toHaveBeenCalledWith('created_at', { ascending: false });
-      expect(chain.limit).toHaveBeenCalledWith(50);
+      expect(postsChain.order).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(postsChain.limit).toHaveBeenCalledWith(50);
     });
 
     it('returns empty array when no posts exist', async () => {
       buildService();
-      const chain = makeChain({ data: null, error: null });
-      mockDb.from.mockReturnValueOnce(chain);
+
+      // #359: Circle membership check — circle lookup first
+      const circleChain = makeChain({
+        data: { id: CIRCLE_ID, created_by: CREATOR_ID },
+        error: null,
+      });
+      const emptyPostsChain = makeChain({ data: null, error: null });
+
+      mockDb.from
+        .mockReturnValueOnce(circleChain) // circle lookup (creator matches)
+        .mockReturnValueOnce(emptyPostsChain); // posts query returns null
 
       const result = await service.getCirclePosts(CIRCLE_ID, CREATOR_ID);
       expect(result).toEqual([]);
@@ -566,9 +589,18 @@ describe('CreatorCircleService', () => {
 
     it('throws and logs when the DB query fails', async () => {
       buildService();
+
+      // #359: Circle membership check — circle lookup first
+      const circleChain = makeChain({
+        data: { id: CIRCLE_ID, created_by: CREATOR_ID },
+        error: null,
+      });
       const dbError = { message: 'posts query failed' };
-      const chain = makeChain({ data: null, error: dbError });
-      mockDb.from.mockReturnValueOnce(chain);
+      const failChain = makeChain({ data: null, error: dbError });
+
+      mockDb.from
+        .mockReturnValueOnce(circleChain) // circle lookup (creator matches)
+        .mockReturnValueOnce(failChain); // posts query fails
 
       await expect(service.getCirclePosts(CIRCLE_ID, CREATOR_ID)).rejects.toThrow(
         'Failed to get circle posts: posts query failed'
