@@ -1,6 +1,6 @@
 ---
 title: Common Solutions — Reusable Fixes for Recurring Issues
-date: '2026-02-19'
+date: '2026-02-20'
 category: patterns
 purpose: Consolidated solutions for P2/P3 patterns that recur across sprints. Prevents re-invention.
 usage: Reference when implementing features. Check if a solution already exists here before writing new code.
@@ -8,7 +8,7 @@ usage: Reference when implementing features. Check if a solution already exists 
 
 # Common Solutions
 
-Reusable solutions extracted from 162 P2/P3 findings across 8 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
+Reusable solutions extracted from 162 P2/P3 findings across 9 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
 
 ---
 
@@ -23,15 +23,18 @@ const [pendingId, setPendingId] = useState<string | null>(null);
 const inFlightRef = useRef(false);
 
 const handleAction = (id: string) => {
-  if (inFlightRef.current) return;       // Synchronous guard (before re-render)
+  if (inFlightRef.current) return; // Synchronous guard (before re-render)
   inFlightRef.current = true;
   setPendingId(id);
-  mutation.mutate({ id }, {
-    onSettled: () => {
-      inFlightRef.current = false;
-      setPendingId(null);
-    },
-  });
+  mutation.mutate(
+    { id },
+    {
+      onSettled: () => {
+        inFlightRef.current = false;
+        setPendingId(null);
+      },
+    }
+  );
 };
 
 // JSX — all three attributes required
@@ -42,15 +45,17 @@ const handleAction = (id: string) => {
   className="disabled:opacity-50 disabled:cursor-not-allowed"
 >
   {pendingId === item.id ? 'Processing...' : 'Submit'}
-</button>
+</button>;
 ```
 
 **Why both `useRef` AND `disabled`?**
+
 - `useRef` fires synchronously — catches clicks before React re-renders
 - `disabled` provides visual feedback and accessibility
 - Either alone has a race window
 
 **Checklist for every financial button:**
+
 - [ ] `disabled={mutation.isPending}` or `disabled={pendingId !== null}`
 - [ ] `aria-busy={mutation.isPending}`
 - [ ] Loading text change during pending
@@ -71,7 +76,7 @@ class TTLCache<K, V> {
   private cleanupInterval: NodeJS.Timeout;
 
   constructor(
-    private readonly ttlMs: number = 300_000,      // 5 min default
+    private readonly ttlMs: number = 300_000, // 5 min default
     private readonly maxSize: number = 10_000,
     cleanupIntervalMs: number = 60_000
   ) {
@@ -81,7 +86,10 @@ class TTLCache<K, V> {
   get(key: K): V | undefined {
     const entry = this.cache.get(key);
     if (!entry) return undefined;
-    if (Date.now() > entry.expires) { this.cache.delete(key); return undefined; }
+    if (Date.now() > entry.expires) {
+      this.cache.delete(key);
+      return undefined;
+    }
     return entry.value;
   }
 
@@ -94,7 +102,9 @@ class TTLCache<K, V> {
     this.cache.set(key, { value, expires: Date.now() + this.ttlMs });
   }
 
-  delete(key: K): boolean { return this.cache.delete(key); }
+  delete(key: K): boolean {
+    return this.cache.delete(key);
+  }
 
   private cleanup(): void {
     const now = Date.now();
@@ -103,7 +113,9 @@ class TTLCache<K, V> {
     }
   }
 
-  destroy(): void { clearInterval(this.cleanupInterval); }
+  destroy(): void {
+    clearInterval(this.cleanupInterval);
+  }
 }
 ```
 
@@ -138,6 +150,7 @@ if (env.MY_NEW_KEY && env.OTHER_KEY &&
 ```
 
 **Checklist for every new env var:**
+
 - [ ] Added to root `.env` with comment
 - [ ] Added to `packages/backend/.env.example` with generation instructions
 - [ ] Added to Zod schema in `env-validation.ts`
@@ -162,10 +175,10 @@ res.json(createApiResponse({ data: result, startTime }));
 res.json(createApiResponse({ data: result, startTime, raw: true }));
 
 // Error — use error classes, let middleware handle
-throw new NotFoundError('Invoice not found');      // 404
-throw new ConflictError('Already claimed');         // 409
-throw new AuthorizationError('Not authorized');     // 403
-throw new ValidationError('Invalid input');         // 400
+throw new NotFoundError('Invoice not found'); // 404
+throw new ConflictError('Already claimed'); // 409
+throw new AuthorizationError('Not authorized'); // 403
+throw new ValidationError('Invalid input'); // 400
 // Never: res.status(500).json({ error: ... })
 ```
 
@@ -213,6 +226,7 @@ async startService(): Promise<void> {
 ```
 
 **Rules:**
+
 - Use opt-IN (`ENABLE_X=true`) not opt-OUT (`DISABLE_X=true`)
 - Log a warning (not error) on early return
 - Include the env var name in the log message
@@ -228,21 +242,43 @@ async startService(): Promise<void> {
 ### Standard Pattern: Chainable Mock Builder
 
 ```typescript
+import { vi } from 'vitest';
+
 function createMockChain(terminalData: any = []) {
   const chain: any = {};
   // Chainable methods return `chain`
-  ['from', 'select', 'insert', 'update', 'delete',
-   'eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'in', 'is',
-   'order', 'not', 'or', 'filter', 'match',
-  ].forEach(method => { chain[method] = jest.fn().mockReturnValue(chain); });
+  [
+    'from',
+    'select',
+    'insert',
+    'update',
+    'delete',
+    'eq',
+    'neq',
+    'gt',
+    'gte',
+    'lt',
+    'lte',
+    'in',
+    'is',
+    'order',
+    'not',
+    'or',
+    'filter',
+    'match',
+    'limit',
+    'maybeSingle',
+  ].forEach((method) => {
+    chain[method] = vi.fn().mockReturnValue(chain);
+  });
 
   // Terminal methods return data
-  chain.single = jest.fn().mockResolvedValue({ data: terminalData, error: null });
-  chain.range = jest.fn().mockResolvedValue({ data: terminalData, error: null });
+  chain.single = vi.fn().mockResolvedValue({ data: terminalData, error: null });
+  chain.range = vi.fn().mockResolvedValue({ data: terminalData, error: null });
   chain.then = undefined; // Prevent Promise detection
 
   // For count queries
-  chain.select = jest.fn().mockImplementation((_cols: string, opts?: any) => {
+  chain.select = vi.fn().mockImplementation((_cols: string, opts?: any) => {
     if (opts?.count === 'exact') {
       return { ...chain, data: null, count: terminalData.length ?? 0, error: null };
     }
@@ -253,7 +289,7 @@ function createMockChain(terminalData: any = []) {
 }
 
 // Usage in test
-const mockDb = { from: jest.fn().mockReturnValue(createMockChain(mockData)) };
+const mockDb = { from: vi.fn().mockReturnValue(createMockChain(mockData)) };
 ```
 
 ### Pagination Mock (for paginated accumulation)
@@ -262,7 +298,7 @@ const mockDb = { from: jest.fn().mockReturnValue(createMockChain(mockData)) };
 function createPaginatedMock(allRows: any[], pageSize = 500) {
   let callCount = 0;
   const chain = createMockChain();
-  chain.range = jest.fn().mockImplementation((start: number, end: number) => {
+  chain.range = vi.fn().mockImplementation((start: number, end: number) => {
     const page = allRows.slice(start, end + 1);
     callCount++;
     return Promise.resolve({ data: page, error: null });
@@ -341,9 +377,56 @@ container.register('db', { useValue: supabaseClient as ISupabaseClient });
 ```
 
 **Rules:**
+
 - Never `db: any` in constructors — use `ISupabaseClient`
 - Use `import type` for DI registry imports (prevents circular deps)
 - Never `as unknown as T` — if the cast is needed, the interface is wrong
+
+---
+
+## 11. Vitest OOM Prevention
+
+**Recurrence:** 3 agent crashes during quality pipeline migration (02-20). Default `pool: 'forks'` spawns one worker per CPU core, each consuming ~4GB for large codebases.
+
+### Standard Pattern: Cap maxForks
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: 2, // Workers × 4GB = total RAM. Cap to avoid OOM.
+      },
+    },
+  },
+});
+```
+
+**Rule:** Always set `maxForks` explicitly. Formula: `maxForks = Math.floor(availableRAM / 4) - 1`. For 24GB machines, use `maxForks: 2`. For CI runners with 8GB, use `maxForks: 1`.
+
+**Agent briefs:** Include `maxForks: 2` and `timeout: 120000` constraints when assigning test migration tasks.
+
+---
+
+## 12. Git Diff for Hooks (Pre-Commit vs Pre-Push)
+
+**Recurrence:** 5 instances of wrong `git diff` variant in hooks (02-20). `git diff --cached` is empty at push time because files are already committed.
+
+### Standard Pattern: Match diff to hook type
+
+```bash
+# Pre-commit (staged files — not yet committed):
+git diff --cached --name-only
+
+# Pre-push (committed files vs remote):
+git diff origin/main...HEAD --name-only
+```
+
+**Rule:** `--cached` is for pre-commit ONLY. At push time, files are committed, so `--cached` returns nothing. Use `origin/main...HEAD` to compare committed changes against the remote branch.
+
+**Detection:** Grep for `git diff --cached` in any file under `.husky/pre-push` or hook scripts that run at push time.
 
 ---
 
@@ -362,22 +445,24 @@ CONTEXT TO LOAD:
 
 ## Index: Which Pattern Solves Which Issue
 
-| Issue You're Seeing | Pattern # | File |
-|---------------------|-----------|------|
-| Race condition on capacity/count | 1a-1c | critical-patterns.md |
-| User can access others' data | 2 | critical-patterns.md |
-| Query loads too much into memory | 3 | critical-patterns.md |
-| Two inserts, second might fail | 4 | critical-patterns.md |
-| Payment data could be lost | 5 | critical-patterns.md |
-| URL from user input fetched server-side | 6 | critical-patterns.md |
-| Can delete a paid/active entity | 7 | critical-patterns.md |
-| Button fires duplicate mutations | 1 | common-solutions.md |
-| Map grows without bound | 2 | common-solutions.md |
-| New env var not validated | 3 | common-solutions.md |
-| Inconsistent error responses | 4 | common-solutions.md |
-| snake_case in API response | 5 | common-solutions.md |
-| Worker running for stub function | 6 | common-solutions.md |
-| Tests break after service change | 7 | common-solutions.md |
-| New routes missing rate limit | 8 | common-solutions.md |
-| Named route not matching | 9 | common-solutions.md |
-| `db: any` in constructor | 10 | common-solutions.md |
+| Issue You're Seeing                     | Pattern # | File                 |
+| --------------------------------------- | --------- | -------------------- |
+| Race condition on capacity/count        | 1a-1c     | critical-patterns.md |
+| User can access others' data            | 2         | critical-patterns.md |
+| Query loads too much into memory        | 3         | critical-patterns.md |
+| Two inserts, second might fail          | 4         | critical-patterns.md |
+| Payment data could be lost              | 5         | critical-patterns.md |
+| URL from user input fetched server-side | 6         | critical-patterns.md |
+| Can delete a paid/active entity         | 7         | critical-patterns.md |
+| Button fires duplicate mutations        | 1         | common-solutions.md  |
+| Map grows without bound                 | 2         | common-solutions.md  |
+| New env var not validated               | 3         | common-solutions.md  |
+| Inconsistent error responses            | 4         | common-solutions.md  |
+| snake_case in API response              | 5         | common-solutions.md  |
+| Worker running for stub function        | 6         | common-solutions.md  |
+| Tests break after service change        | 7         | common-solutions.md  |
+| New routes missing rate limit           | 8         | common-solutions.md  |
+| Named route not matching                | 9         | common-solutions.md  |
+| `db: any` in constructor                | 10        | common-solutions.md  |
+| Vitest OOM / worker crashes             | 11        | common-solutions.md  |
+| `git diff --cached` empty at push       | 12        | common-solutions.md  |
