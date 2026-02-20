@@ -136,7 +136,7 @@ export function createMockStore(initialState: DeepPartial<MockStoreState> = {}) 
     },
   };
 
-  const mockDispatch = jest.fn().mockImplementation((action) => {
+  const mockDispatch = vi.fn().mockImplementation((action) => {
     // For async thunks, return a promise-like object
     if (typeof action === 'function') {
       return action(mockDispatch, () => mergedState, undefined);
@@ -145,8 +145,8 @@ export function createMockStore(initialState: DeepPartial<MockStoreState> = {}) 
     // For regular actions, return the action with additional promise methods
     return {
       ...action,
-      unwrap: jest.fn().mockResolvedValue(action.payload || {}),
-      abort: jest.fn(),
+      unwrap: vi.fn().mockResolvedValue(action.payload || {}),
+      abort: vi.fn(),
       requestId: 'mock-request-id',
       meta: {
         requestId: 'mock-request-id',
