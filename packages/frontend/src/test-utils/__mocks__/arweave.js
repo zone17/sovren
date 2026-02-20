@@ -1,24 +1,21 @@
 /**
  * Arweave Mock for Testing
  *
- * Provides a complete mock implementation of the Arweave client
+ * Vitest mock implementation of the Arweave client
  * for testing purposes without requiring actual blockchain connections.
- *
- * @fileoverview Mock implementation matching Arweave API surface
- * @version 2024.12
  */
 
 // Mock Arweave client with all required methods
 const mockArweave = {
   // Core API methods
   api: {
-    get: jest.fn().mockResolvedValue({ data: 'mock-response' }),
-    post: jest.fn().mockResolvedValue({ data: 'mock-response' }),
+    get: vi.fn().mockResolvedValue({ data: 'mock-response' }),
+    post: vi.fn().mockResolvedValue({ data: 'mock-response' }),
   },
 
   // Wallet operations
   wallets: {
-    generate: jest.fn().mockResolvedValue({
+    generate: vi.fn().mockResolvedValue({
       kty: 'RSA',
       n: 'mock-key-n',
       e: 'AQAB',
@@ -29,34 +26,34 @@ const mockArweave = {
       dq: 'mock-key-dq',
       qi: 'mock-key-qi',
     }),
-    jwkToAddress: jest.fn().mockResolvedValue('mock-wallet-address'),
-    getBalance: jest.fn().mockResolvedValue('1000000000'), // 1 AR in winston
-    getLastTransactionID: jest.fn().mockResolvedValue('mock-transaction-id'),
+    jwkToAddress: vi.fn().mockResolvedValue('mock-wallet-address'),
+    getBalance: vi.fn().mockResolvedValue('1000000000'), // 1 AR in winston
+    getLastTransactionID: vi.fn().mockResolvedValue('mock-transaction-id'),
   },
 
   // Transaction operations
   transactions: {
-    get: jest.fn().mockResolvedValue({
+    get: vi.fn().mockResolvedValue({
       id: 'mock-transaction-id',
       data: 'mock-data',
       tags: [],
     }),
-    sign: jest.fn().mockResolvedValue(undefined),
-    post: jest.fn().mockResolvedValue({ status: 200, statusText: 'OK' }),
-    getData: jest.fn().mockResolvedValue(Buffer.from('mock-data')),
-    getUploader: jest.fn().mockReturnValue({
-      uploadChunk: jest.fn().mockResolvedValue(true),
+    sign: vi.fn().mockResolvedValue(undefined),
+    post: vi.fn().mockResolvedValue({ status: 200, statusText: 'OK' }),
+    getData: vi.fn().mockResolvedValue(Buffer.from('mock-data')),
+    getUploader: vi.fn().mockReturnValue({
+      uploadChunk: vi.fn().mockResolvedValue(true),
       isComplete: true,
     }),
   },
 
   // Block operations
   blocks: {
-    getCurrent: jest.fn().mockResolvedValue({
+    getCurrent: vi.fn().mockResolvedValue({
       height: 123456,
       indep_hash: 'mock-block-hash',
     }),
-    get: jest.fn().mockResolvedValue({
+    get: vi.fn().mockResolvedValue({
       height: 123456,
       indep_hash: 'mock-block-hash',
     }),
@@ -64,7 +61,7 @@ const mockArweave = {
 
   // Network operations
   network: {
-    getInfo: jest.fn().mockResolvedValue({
+    getInfo: vi.fn().mockResolvedValue({
       network: 'arweave.N.1',
       version: 5,
       release: 58,
@@ -75,12 +72,12 @@ const mockArweave = {
       queue_length: 0,
       node_state_latency: 1,
     }),
-    getPeers: jest.fn().mockResolvedValue(['peer1', 'peer2', 'peer3']),
+    getPeers: vi.fn().mockResolvedValue(['peer1', 'peer2', 'peer3']),
   },
 
   // Chunk operations
   chunks: {
-    getChunkData: jest.fn().mockResolvedValue({
+    getChunkData: vi.fn().mockResolvedValue({
       chunk: 'mock-chunk-data',
       data_path: 'mock-data-path',
       tx_path: 'mock-tx-path',
@@ -90,19 +87,19 @@ const mockArweave = {
   // Utility methods
   utils: {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    concatBuffers: jest.fn().mockImplementation((buffers) => Buffer.concat(buffers)),
+    concatBuffers: vi.fn().mockImplementation((buffers) => Buffer.concat(buffers)),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    b64UrlToBuffer: jest.fn().mockImplementation((str) => Buffer.from(str, 'base64url')),
+    b64UrlToBuffer: vi.fn().mockImplementation((str) => Buffer.from(str, 'base64url')),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    bufferTob64Url: jest.fn().mockImplementation((buffer) => buffer.toString('base64url')),
+    bufferTob64Url: vi.fn().mockImplementation((buffer) => buffer.toString('base64url')),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    stringToBuffer: jest.fn().mockImplementation((str) => Buffer.from(str)),
+    stringToBuffer: vi.fn().mockImplementation((str) => Buffer.from(str)),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    bufferToString: jest.fn().mockImplementation((buffer) => buffer.toString()),
+    bufferToString: vi.fn().mockImplementation((buffer) => buffer.toString()),
   },
 
   // Create transaction helper
-  createTransaction: jest.fn().mockResolvedValue({
+  createTransaction: vi.fn().mockResolvedValue({
     id: 'mock-new-transaction-id',
     data: '',
     target: '',
@@ -110,15 +107,15 @@ const mockArweave = {
     reward: '1000000',
     last_tx: 'mock-last-tx',
     tags: [],
-    addTag: jest.fn(),
-    get: jest.fn(),
+    addTag: vi.fn(),
+    get: vi.fn(),
   }),
 
   // AR unit conversion
   ar: {
-    winstonToAr: jest.fn().mockImplementation((winston) => (winston / 1000000000000).toString()),
+    winstonToAr: vi.fn().mockImplementation((winston) => (winston / 1000000000000).toString()),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    arToWinston: jest.fn().mockImplementation((ar) => (parseFloat(ar) * 1000000000000).toString()),
+    arToWinston: vi.fn().mockImplementation((ar) => (parseFloat(ar) * 1000000000000).toString()),
   },
 
   // Configuration
@@ -132,14 +129,14 @@ const mockArweave = {
 };
 
 // Default export as constructor function (how Arweave is typically imported)
-const Arweave = jest.fn().mockImplementation(() => mockArweave);
+const Arweave = vi.fn().mockImplementation(() => mockArweave);
 
 // Named exports for specific use cases
-Arweave.init = jest.fn().mockReturnValue(mockArweave);
+Arweave.init = vi.fn().mockReturnValue(mockArweave);
 Arweave.crypto = {
-  hash: jest.fn().mockResolvedValue(Buffer.from('mock-hash')),
-  verify: jest.fn().mockResolvedValue(true),
-  sign: jest.fn().mockResolvedValue(Buffer.from('mock-signature')),
+  hash: vi.fn().mockResolvedValue(Buffer.from('mock-hash')),
+  verify: vi.fn().mockResolvedValue(true),
+  sign: vi.fn().mockResolvedValue(Buffer.from('mock-signature')),
 };
 
 // Attach methods to constructor for static access

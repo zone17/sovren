@@ -21,7 +21,7 @@
       "@/*": ["src/*"],
       "@shared/*": ["../shared/src/*"]
     },
-    "types": ["vite/client", "jest", "@testing-library/jest-dom", "node"]
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom", "node"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

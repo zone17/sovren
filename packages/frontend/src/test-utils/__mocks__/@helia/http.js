@@ -1,32 +1,31 @@
 /**
- * 🎭 **Helia HTTP Mock**
+ * Helia HTTP Mock
  *
- * Jest-compatible mock for @helia/http package
- * Following TDD/BDD best practices with realistic responses
+ * Vitest mock for @helia/http package
  */
 
 const createHeliaHttpMock = () => ({
-  add: jest.fn().mockResolvedValue({
+  add: vi.fn().mockResolvedValue({
     cid: 'QmTestCidHash123456789',
     size: 1024,
     path: '/test/path',
   }),
-  get: jest.fn().mockResolvedValue([
+  get: vi.fn().mockResolvedValue([
     {
       path: '/test/path',
       content: new Uint8Array([1, 2, 3, 4, 5]),
     },
   ]),
   pin: {
-    add: jest.fn().mockResolvedValue(undefined),
-    rm: jest.fn().mockResolvedValue(undefined),
-    ls: jest.fn().mockResolvedValue([]),
+    add: vi.fn().mockResolvedValue(undefined),
+    rm: vi.fn().mockResolvedValue(undefined),
+    ls: vi.fn().mockResolvedValue([]),
   },
-  stop: jest.fn().mockResolvedValue(undefined),
+  stop: vi.fn().mockResolvedValue(undefined),
 });
 
 module.exports = {
-  createHeliaHttp: jest.fn().mockResolvedValue(createHeliaHttpMock()),
+  createHeliaHttp: vi.fn().mockResolvedValue(createHeliaHttpMock()),
   __esModule: true,
   default: createHeliaHttpMock,
 };

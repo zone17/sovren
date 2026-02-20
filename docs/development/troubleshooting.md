@@ -9,11 +9,13 @@
 ### Database Connection Failed
 
 **Symptoms**:
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:5432
 ```
 
 **Solutions**:
+
 ```bash
 # 1. Check PostgreSQL is running
 pg_isready
@@ -34,11 +36,13 @@ telnet localhost 5432
 ### Redis Connection Failed
 
 **Symptoms**:
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:6379
 ```
 
 **Solutions**:
+
 ```bash
 # 1. Check Redis is running
 redis-cli ping
@@ -57,11 +61,13 @@ redis-cli CONFIG GET requirepass
 ### Port Already in Use
 
 **Symptoms**:
+
 ```
 Error: listen EADDRINUSE: address already in use :::3001
 ```
 
 **Solutions**:
+
 ```bash
 # Find process using port
 lsof -i :3001
@@ -84,9 +90,10 @@ PORT=3002 npm run dev
 **Symptoms**: Tests fail locally but pass in CI
 
 **Solutions**:
+
 ```bash
-# 1. Clear Jest cache
-npm test -- --clearCache
+# 1. Clear Vitest cache
+npx vitest run --clearCache
 
 # 2. Delete node_modules
 rm -rf node_modules package-lock.json
@@ -106,6 +113,7 @@ npm run test:ci
 **Symptoms**: Tests pass/fail inconsistently
 
 **Solutions**:
+
 ```typescript
 // ✅ GOOD: Proper async handling
 it('should complete payment', async () => {
@@ -117,7 +125,7 @@ it('should complete payment', async () => {
 it('should complete payment', async () => {
   const payment = await service.createPayment(data);
   setTimeout(() => {
-    expect(payment.status).toBe('completed');  // Flaky!
+    expect(payment.status).toBe('completed'); // Flaky!
   }, 100);
 });
 ```
@@ -129,6 +137,7 @@ it('should complete payment', async () => {
 **Symptoms**: Coverage below threshold
 
 **Solutions**:
+
 ```bash
 # 1. Generate coverage report
 npm run test:coverage
@@ -149,6 +158,7 @@ npm test -- --collectCoverageFrom='src/services/MyService.ts'
 **Symptoms**: API responses take > 1s
 
 **Solutions**:
+
 ```sql
 -- 1. Analyze query
 EXPLAIN ANALYZE SELECT * FROM payments WHERE user_id = 'abc';
@@ -169,6 +179,7 @@ CREATE INDEX idx_payments_user_id ON payments(user_id);
 **Symptoms**: Memory usage grows over time
 
 **Solutions**:
+
 ```bash
 # 1. Profile with Node.js inspector
 node --inspect dist/server.js
@@ -189,6 +200,7 @@ node --inspect dist/server.js
 **Symptoms**: CPU at 100% constantly
 
 **Solutions**:
+
 ```bash
 # 1. Profile with clinic.js
 npx clinic doctor -- node dist/server.js
@@ -205,11 +217,13 @@ npx clinic doctor -- node dist/server.js
 ### Lightning Node Unreachable
 
 **Symptoms**:
+
 ```
 Error: 14 UNAVAILABLE: failed to connect to all addresses
 ```
 
 **Solutions**:
+
 ```bash
 # 1. Check LND is running
 lncli getinfo
@@ -231,6 +245,7 @@ curl --insecure https://localhost:8080/v1/getinfo
 **Symptoms**: Events not publishing
 
 **Solutions**:
+
 ```typescript
 // 1. Test relay connection
 const testConnection = async () => {
@@ -240,11 +255,7 @@ const testConnection = async () => {
 };
 
 // 2. Use multiple relays for redundancy
-const RELAYS = [
-  'wss://relay.damus.io',
-  'wss://nostr.wine',
-  'wss://relay.nostr.band'
-];
+const RELAYS = ['wss://relay.damus.io', 'wss://nostr.wine', 'wss://relay.nostr.band'];
 
 // 3. Implement retry logic
 const publishWithRetry = async (event, maxRetries = 3) => {
@@ -268,6 +279,7 @@ const publishWithRetry = async (event, maxRetries = 3) => {
 **Symptoms**: 500 errors spike in production
 
 **Solutions**:
+
 ```bash
 # 1. Check logs
 kubectl logs -f deployment/backend --tail=100
@@ -285,11 +297,13 @@ kubectl rollout undo deployment/backend
 ### Database Deadlocks
 
 **Symptoms**:
+
 ```
 ERROR: deadlock detected
 ```
 
 **Solutions**:
+
 ```sql
 -- 1. Check for long-running queries
 SELECT pid, now() - pg_stat_activity.query_start AS duration, query
@@ -312,16 +326,17 @@ SELECT pg_cancel_backend(pid);
 **Symptoms**: Stale data shown to users
 
 **Solutions**:
+
 ```typescript
 // 1. Implement cache invalidation
 await this.cache.delete(`user:${userId}:profile`);
 
 // 2. Use cache versioning
-const version = await this.cache.get('cache:version') || 1;
+const version = (await this.cache.get('cache:version')) || 1;
 const key = `user:${userId}:profile:v${version}`;
 
 // 3. Set appropriate TTLs
-await this.cache.set(key, data, 300);  // 5 minutes
+await this.cache.set(key, data, 300); // 5 minutes
 
 // 4. Use write-through caching
 await this.repository.update(id, data);
@@ -335,11 +350,13 @@ await this.cache.set(key, data, ttl);
 ### Type Errors
 
 **Symptoms**:
+
 ```
 error TS2345: Argument of type 'X' is not assignable to parameter of type 'Y'
 ```
 
 **Solutions**:
+
 ```bash
 # 1. Check TypeScript version
 npx tsc --version
@@ -358,11 +375,13 @@ npm run build
 ### Import Errors
 
 **Symptoms**:
+
 ```
 Cannot find module '@/services/MyService'
 ```
 
 **Solutions**:
+
 ```json
 // tsconfig.json - verify paths
 {
@@ -398,6 +417,7 @@ Cannot find module '@/services/MyService'
 Clear description of the problem
 
 **Steps to Reproduce**:
+
 1. Run command X
 2. Observe error Y
 

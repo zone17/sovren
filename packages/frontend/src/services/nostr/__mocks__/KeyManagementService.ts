@@ -2,14 +2,14 @@
  * Mock for KeyManagementService
  */
 
-export const KeyManagementService = jest.fn().mockImplementation(() => ({
-  getPrivateKey: jest.fn(),
-  getPublicKey: jest.fn(),
-  isInitialized: jest.fn().mockReturnValue(true),
+export const KeyManagementService = vi.fn().mockImplementation(() => ({
+  getPrivateKey: vi.fn(),
+  getPublicKey: vi.fn(),
+  isInitialized: vi.fn().mockReturnValue(true),
 }));
 
 const mockInstance = new KeyManagementService();
 
-KeyManagementService.getInstance = jest.fn().mockReturnValue(mockInstance);
+KeyManagementService.getInstance = vi.fn().mockReturnValue(mockInstance);
 
 export const keyManagementService = mockInstance;

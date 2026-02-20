@@ -780,37 +780,34 @@ export const WithError = () => (
 
 ### Test Environment Setup
 
-**Jest Configuration:**
+**Vitest Configuration:**
 
-```javascript
-// jest.config.js
-module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/*.stories.{ts,tsx}',
-    '!src/main.tsx',
-    '!src/vite-env.d.ts',
-  ],
-  coverageThreshold: {
-    global: {
-      branches: 90,
-      functions: 90,
-      lines: 90,
-      statements: 90,
+```typescript
+// vitest.config.ts (multi-project configuration at project root)
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/setupTests.ts'],
+    include: ['src/**/__tests__/**/*.{ts,tsx}', 'src/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.d.ts', 'src/**/*.stories.{ts,tsx}', 'src/main.tsx', 'src/vite-env.d.ts'],
+      thresholds: {
+        branches: 90,
+        functions: 90,
+        lines: 90,
+        statements: 90,
+      },
     },
   },
-  moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+  resolve: {
+    alias: {
+      '@': './src',
+    },
   },
-  testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.{ts,tsx}',
-    '<rootDir>/src/**/*.{test,spec}.{ts,tsx}',
-  ],
-};
+});
 ```
 
 ### CI/CD Testing Pipeline

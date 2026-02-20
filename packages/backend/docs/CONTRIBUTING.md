@@ -180,7 +180,7 @@ describe('User Repository', () => {
     // Given
     const userData = {
       nostr_pubkey: 'valid64characterhexstring...',
-      username: 'testuser'
+      username: 'testuser',
     };
 
     // When
@@ -235,9 +235,7 @@ describe('Database Integration', () => {
 // Test HTTP endpoints
 describe('Authentication API', () => {
   it('POST /api/auth/challenge should generate challenge', async () => {
-    const response = await request(app)
-      .post('/api/auth/challenge')
-      .expect(200);
+    const response = await request(app).post('/api/auth/challenge').expect(200);
 
     expect(response.body.success).toBe(true);
     expect(response.body.data.challenge).toHaveLength(64);
@@ -312,8 +310,8 @@ interface UserProfile {}
 type CreateUserRequest = {};
 
 // Files: kebab-case
-user-repository.ts
-nostr-auth.service.ts
+user - repository.ts;
+nostr - auth.service.ts;
 ```
 
 #### 2. Function Structure
@@ -337,7 +335,7 @@ async function findByNostrPubkey(nostrPubkey: string): Promise<{
   if (!validateNostrPubkey(nostrPubkey)) {
     return {
       success: false,
-      error: 'Invalid NOSTR public key format'
+      error: 'Invalid NOSTR public key format',
     };
   }
 
@@ -359,7 +357,7 @@ async function findByNostrPubkey(nostrPubkey: string): Promise<{
     // Comprehensive error handling
     return {
       success: false,
-      error: `User lookup failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `User lookup failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 }
@@ -385,7 +383,7 @@ try {
     return {
       success: false,
       error: error.message,
-      code: 'VALIDATION_ERROR'
+      code: 'VALIDATION_ERROR',
     };
   }
 
@@ -393,7 +391,7 @@ try {
     return {
       success: false,
       error: 'Database operation failed',
-      code: 'DATABASE_ERROR'
+      code: 'DATABASE_ERROR',
     };
   }
 
@@ -401,7 +399,7 @@ try {
   return {
     success: false,
     error: 'Operation failed',
-    code: 'UNKNOWN_ERROR'
+    code: 'UNKNOWN_ERROR',
   };
 }
 ```
@@ -438,24 +436,30 @@ export class UserRepository {
 
 When adding features, update relevant documentation:
 
-```markdown
+````markdown
 ## New Feature Documentation
 
 ### 🎯 Feature Name
+
 Brief description of what it does and why it's important.
 
 ### 📋 Usage
+
 ```typescript
 // Code examples showing how to use the feature
 const result = await newFeature.performAction();
 ```
+````
 
 ### ⚙️ Configuration
+
 Any environment variables or configuration options.
 
 ### 🧪 Testing
+
 How to test the feature and what test cases exist.
-```
+
+````
 
 ---
 
@@ -499,7 +503,7 @@ catch (error) {
     error: 'User creation failed' // Generic message
   };
 }
-```
+````
 
 ---
 
@@ -532,9 +536,7 @@ const getCachedUser = (pubkey: string) => {
 };
 
 // ✅ Batch operations when possible
-const users = await Promise.all(
-  pubkeys.map(pubkey => userService.findByNostrPubkey(pubkey))
-);
+const users = await Promise.all(pubkeys.map((pubkey) => userService.findByNostrPubkey(pubkey)));
 ```
 
 ---
@@ -616,31 +618,37 @@ Every pull request must include:
 
 ```markdown
 ## 🎯 Description
+
 Brief description of changes and motivation.
 
 ## 🔧 Type of Change
+
 - [ ] Bug fix (non-breaking change that fixes an issue)
 - [ ] New feature (non-breaking change that adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
 
 ## 🧪 Testing
+
 - [ ] Tests pass locally with my changes
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 
 ## 📚 Documentation
+
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have made corresponding changes to the documentation
 
 ## 🔒 Security
+
 - [ ] My changes don't introduce security vulnerabilities
 - [ ] I have considered the security implications of my changes
 - [ ] Input validation is properly implemented
 
 ## ⚡ Performance
+
 - [ ] My changes don't negatively impact performance
 - [ ] I have considered the performance implications
 - [ ] Added appropriate caching where beneficial
@@ -678,24 +686,24 @@ NODE_OPTIONS="--inspect" npm start
 logger.info('User created successfully', {
   userId: user.id,
   nostrPubkey: user.nostr_pubkey,
-  role: user.role
+  role: user.role,
 });
 
 logger.warn('Unusual authentication pattern detected', {
   nostrPubkey: pubkey,
   attempts: attemptCount,
-  timeWindow: '15min'
+  timeWindow: '15min',
 });
 
 logger.error('Database connection failed', {
   error: error.message,
   connectionString: 'redacted',
-  retryAttempt: retryCount
+  retryAttempt: retryCount,
 });
 
 // ❌ Never log sensitive information
-logger.debug('JWT token: ' + token);  // BAD!
-logger.debug('Processing authentication for user');  // GOOD!
+logger.debug('JWT token: ' + token); // BAD!
+logger.debug('Processing authentication for user'); // GOOD!
 ```
 
 ---
@@ -714,7 +722,7 @@ if (duration > PERFORMANCE_THRESHOLD) {
   logger.warn('Slow operation detected', {
     operation: 'criticalOperation',
     duration,
-    threshold: PERFORMANCE_THRESHOLD
+    threshold: PERFORMANCE_THRESHOLD,
   });
 }
 ```
@@ -725,7 +733,7 @@ if (duration > PERFORMANCE_THRESHOLD) {
 // Track important business events
 metrics.increment('user.created', {
   role: user.role,
-  source: 'api'
+  source: 'api',
 });
 
 metrics.timing('auth.challenge.generation', duration);
@@ -749,7 +757,7 @@ metrics.gauge('database.connections.active', activeConnections);
 
 - **VS Code Extensions**:
   - TypeScript Importer
-  - Jest Runner
+  - Vitest Runner
   - GitLens
   - Thunder Client (API testing)
   - Error Lens
@@ -793,27 +801,34 @@ Focus areas during review:
 
 ### Review Comments
 
-```markdown
+````markdown
 # Constructive feedback examples
 
 ## 🎯 Suggestion
+
 Consider extracting this logic into a separate function for better testability:
+
 ```typescript
 // Extract this complex validation logic
 const isValidUserData = (userData) => {
   // validation logic here
 };
 ```
+````
 
 ## 🔒 Security Concern
+
 This endpoint should require authentication. Consider adding the `requireAuth` middleware.
 
 ## ⚡ Performance Note
+
 This N+1 query could be optimized with a batch operation or eager loading.
 
 ## 📚 Documentation
+
 Consider adding a comment explaining why we use this specific algorithm here.
-```
+
+````
 
 ---
 
@@ -844,7 +859,7 @@ What you expected to happen.
 
 ### Additional Context
 Add any other context about the problem here.
-```
+````
 
 ### Feature Requests
 
@@ -852,15 +867,19 @@ Add any other context about the problem here.
 ## 🚀 Feature Request
 
 ### Is your feature request related to a problem?
+
 A clear description of what the problem is.
 
 ### Describe the solution you'd like
+
 A clear description of what you want to happen.
 
 ### Describe alternatives you've considered
+
 Alternative solutions or features you've considered.
 
 ### Additional Context
+
 Any other context or screenshots about the feature request.
 ```
 
@@ -933,4 +952,4 @@ Every contribution, whether it's code, documentation, bug reports, or feedback, 
 
 ---
 
-*Contributing Guide v1.0.0 - Last Updated: Phase 1 Completion*
+_Contributing Guide v1.0.0 - Last Updated: Phase 1 Completion_

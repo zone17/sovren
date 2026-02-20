@@ -49,8 +49,8 @@ repos:
         args: [--noEmit]
         pass_filenames: false
 
-      - id: jest-unit-tests
-        name: Jest Unit Tests
+      - id: vitest-unit-tests
+        name: Vitest Unit Tests
         entry: npm run test:unit
         language: node
         types: [javascript, typescript, tsx]

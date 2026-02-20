@@ -7,24 +7,29 @@
 ## Quick Navigation
 
 ### Getting Started
+
 - [Setup and Installation](./setup-and-installation.md) - Environment setup, prerequisites, first run
 - [Development Workflow](./development-workflow.md) - Daily development process, git workflow, quality gates
 
 ### Core Development
+
 - [Service Development](./service-development.md) - Creating production-grade services with DI, events, caching
 - [API Development](./api-development.md) - RESTful APIs, validation, middleware, error handling
 - [Testing Guide](./testing-guide.md) - Unit, integration, E2E testing strategies
 
 ### Architecture & Infrastructure
+
 - [Database Guide](./database-guide.md) - Schema design, migrations, query optimization, transactions
 - [Event Bus Guide](./event-bus-guide.md) - Event-driven architecture, publishing, subscribing
 - [Caching Guide](./caching-guide.md) - Multi-layer caching strategy, invalidation patterns
 
 ### Domain-Specific
+
 - [Payment System Guide](./payment-system-guide.md) - Lightning Network, subscriptions, currency conversion
 - [Deployment Guide](./deployment-guide.md) - Docker, database migrations, monitoring, scaling
 
 ### Support
+
 - [Troubleshooting](./troubleshooting.md) - Common issues and solutions
 - [Contributing](./contributing.md) - Code style, PR process, commit standards
 
@@ -33,11 +38,13 @@
 ## Documentation Overview
 
 ### 1. Setup and Installation
+
 **Target Audience**: New developers
 **Time to Complete**: 30-60 minutes
 **Prerequisites**: Node.js 18+, PostgreSQL 14+, Redis 6+
 
 **Covers**:
+
 - System requirements and software installation
 - Repository setup and dependency installation
 - Database and Redis configuration
@@ -49,11 +56,13 @@
 ---
 
 ### 2. Development Workflow
+
 **Target Audience**: All developers
 **Time to Master**: 1-2 days
 **Prerequisites**: Completed setup
 
 **Covers**:
+
 - Feature development process (TDD approach)
 - Git workflow and branch strategies
 - Code quality gates (lint, format, type-check, test)
@@ -64,11 +73,13 @@
 ---
 
 ### 3. Service Development
+
 **Target Audience**: Backend developers
 **Time to Master**: 2-3 days
 **Prerequisites**: TypeScript, dependency injection concepts
 
 **Covers**:
+
 - Service architecture and patterns
 - Interface-first development
 - Dependency injection with InversifyJS
@@ -85,11 +96,13 @@
 ---
 
 ### 4. API Development
+
 **Target Audience**: Backend developers
 **Time to Master**: 1-2 days
 **Prerequisites**: Express.js, REST principles
 
 **Covers**:
+
 - RESTful API design principles
 - Route definition and organization
 - Controller implementation patterns
@@ -106,11 +119,13 @@
 ---
 
 ### 5. Testing Guide
+
 **Target Audience**: All developers
 **Time to Master**: 2-3 days
-**Prerequisites**: Jest, testing concepts
+**Prerequisites**: Vitest, testing concepts
 
 **Covers**:
+
 - Testing philosophy (Test Pyramid)
 - Unit testing with mocks and fixtures
 - Integration testing with test databases
@@ -127,11 +142,13 @@
 ---
 
 ### 6. Database Guide
+
 **Target Audience**: Backend developers
 **Time to Master**: 1-2 days
 **Prerequisites**: PostgreSQL, SQL
 
 **Covers**:
+
 - Schema design and entity relationships
 - Database migrations (creation, execution, rollback)
 - Query optimization and indexing
@@ -145,11 +162,13 @@
 ---
 
 ### 7. Event Bus Guide
+
 **Target Audience**: Backend developers
 **Time to Master**: 1 day
 **Prerequisites**: Event-driven architecture concepts
 
 **Covers**:
+
 - Domain event definitions
 - Event publishing patterns
 - Event subscription and handlers
@@ -163,11 +182,13 @@
 ---
 
 ### 8. Caching Guide
+
 **Target Audience**: Backend developers
 **Time to Master**: 1 day
 **Prerequisites**: Redis, caching concepts
 
 **Covers**:
+
 - Multi-layer caching (Memory → Redis → Database)
 - TTL configuration by data type
 - Cache key naming conventions
@@ -180,11 +201,13 @@
 ---
 
 ### 9. Payment System Guide
+
 **Target Audience**: Payment developers
 **Time to Master**: 2-3 days
 **Prerequisites**: Lightning Network basics, Bitcoin
 
 **Covers**:
+
 - Lightning Network integration (LND, Voltage)
 - Invoice generation and verification
 - Subscription creation and management
@@ -199,11 +222,13 @@
 ---
 
 ### 10. Deployment Guide
+
 **Target Audience**: DevOps, senior developers
 **Time to Master**: 2-3 days
 **Prerequisites**: Docker, Kubernetes basics
 
 **Covers**:
+
 - Production environment configuration
 - Multi-stage Docker builds
 - Database migration in production
@@ -219,10 +244,12 @@
 ---
 
 ### 11. Troubleshooting
+
 **Target Audience**: All developers
 **Reference Guide**: Consult as needed
 
 **Covers**:
+
 - Development issues (database, Redis, ports)
 - Testing issues (failures, flaky tests, coverage)
 - Performance issues (slow queries, memory leaks, CPU)
@@ -236,10 +263,12 @@
 ---
 
 ### 12. Contributing
+
 **Target Audience**: All contributors
 **Reference Guide**: Review before first PR
 
 **Covers**:
+
 - Code style conventions
 - Branch and commit standards
 - Pull request process and template
@@ -256,6 +285,7 @@
 ## Quick Start Paths
 
 ### Path 1: New Backend Developer
+
 **Estimated Time**: 5-7 days
 
 1. [Setup and Installation](./setup-and-installation.md) - Day 1
@@ -271,6 +301,7 @@
 ---
 
 ### Path 2: Payment/Lightning Developer
+
 **Estimated Time**: 4-5 days
 
 1. [Setup and Installation](./setup-and-installation.md) - Day 1
@@ -285,6 +316,7 @@
 ---
 
 ### Path 3: DevOps/Infrastructure
+
 **Estimated Time**: 3-4 days
 
 1. [Setup and Installation](./setup-and-installation.md) - Day 1
@@ -297,6 +329,7 @@
 ---
 
 ### Path 4: Contributing to Existing Features
+
 **Estimated Time**: 2-3 days
 
 1. [Setup and Installation](./setup-and-installation.md) - Day 1
@@ -311,27 +344,28 @@
 
 ## Documentation Statistics
 
-| Guide | Pages | Code Examples | Diagrams |
-|-------|-------|---------------|----------|
-| Setup and Installation | 8 | 35+ | 2 |
-| Development Workflow | 12 | 25+ | 3 |
-| Service Development | 15 | 40+ | 4 |
-| API Development | 10 | 30+ | 2 |
-| Testing Guide | 12 | 35+ | 2 |
-| Database Guide | 6 | 20+ | 1 |
-| Event Bus Guide | 4 | 12+ | 1 |
-| Caching Guide | 3 | 10+ | 1 |
-| Payment System Guide | 6 | 18+ | 2 |
-| Deployment Guide | 7 | 15+ | 3 |
-| Troubleshooting | 8 | 25+ | 0 |
-| Contributing | 6 | 15+ | 0 |
-| **TOTAL** | **97** | **280+** | **21** |
+| Guide                  | Pages  | Code Examples | Diagrams |
+| ---------------------- | ------ | ------------- | -------- |
+| Setup and Installation | 8      | 35+           | 2        |
+| Development Workflow   | 12     | 25+           | 3        |
+| Service Development    | 15     | 40+           | 4        |
+| API Development        | 10     | 30+           | 2        |
+| Testing Guide          | 12     | 35+           | 2        |
+| Database Guide         | 6      | 20+           | 1        |
+| Event Bus Guide        | 4      | 12+           | 1        |
+| Caching Guide          | 3      | 10+           | 1        |
+| Payment System Guide   | 6      | 18+           | 2        |
+| Deployment Guide       | 7      | 15+           | 3        |
+| Troubleshooting        | 8      | 25+           | 0        |
+| Contributing           | 6      | 15+           | 0        |
+| **TOTAL**              | **97** | **280+**      | **21**   |
 
 ---
 
 ## Epic 005 Service Implementations
 
 ### Core Services (Phases 1-3)
+
 - ✅ EventBusService
 - ✅ CacheService
 - ✅ AuditLogService
@@ -340,12 +374,14 @@
 - ✅ DatabaseSessionManager
 
 ### Content Services (Phase 4)
+
 - ✅ ContentSearchService
 - ✅ ContentModerationService
 - ✅ ContentAnalyticsService
 - ✅ ContentRecommendationService
 
 ### Payment Services (Phase 5)
+
 - ✅ PaymentProcessingService
 - ✅ RefundService
 - ✅ SubscriptionService
@@ -359,15 +395,17 @@
 ## Additional Resources
 
 ### External Documentation
+
 - [Express.js Guide](https://expressjs.com/en/guide/routing.html)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
-- [Jest Documentation](https://jestjs.io/docs/getting-started)
+- [Vitest Documentation](https://vitest.dev/guide/)
 - [PostgreSQL Tutorial](https://www.postgresql.org/docs/14/tutorial.html)
 - [Redis Documentation](https://redis.io/documentation)
 - [Lightning Network Specs](https://github.com/lightning/bolts)
 - [NOSTR Protocol](https://github.com/nostr-protocol/nips)
 
 ### Project Documentation
+
 - [CLAUDE.md](/CLAUDE.md) - Project overview and philosophy
 - [SOVREN_PRD.md](/SOVREN_PRD.md) - Product requirements
 - [Architecture Documentation](/docs/architecture/) - System architecture
@@ -379,6 +417,7 @@
 ## Feedback and Improvements
 
 This documentation is a living resource. If you find:
+
 - **Errors**: Create issue with label `documentation`
 - **Gaps**: Suggest improvements via PR
 - **Unclear sections**: Ask in #engineering Slack

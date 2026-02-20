@@ -124,12 +124,11 @@ export class MyService implements IMyService {
       // 6. Emit event
       await this.eventBus.emit('my.created', {
         id: result.id,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       this.logger.info('MyService.myMethod completed', { resultId: result.id });
       return result;
-
     } catch (error) {
       this.logger.error('MyService.myMethod failed', { error, params });
       throw new ServiceError('Failed to execute myMethod', error);
@@ -303,9 +302,7 @@ export interface IContentRepository {
 // packages/backend/src/repositories/ContentRepository.ts
 @injectable()
 export class ContentRepository implements IContentRepository {
-  constructor(
-    @inject('DatabaseConnection') private readonly db: DatabaseConnection
-  ) {}
+  constructor(@inject('DatabaseConnection') private readonly db: DatabaseConnection) {}
 
   async create(data: CreateContentData): Promise<Content> {
     const result = await this.db.query(
@@ -318,10 +315,7 @@ export class ContentRepository implements IContentRepository {
   }
 
   async findById(id: string): Promise<Content | null> {
-    const result = await this.db.query(
-      `SELECT * FROM content WHERE id = $1`,
-      [id]
-    );
+    const result = await this.db.query(`SELECT * FROM content WHERE id = $1`, [id]);
     return result.rows[0] ? this.mapToContent(result.rows[0]) : null;
   }
 
@@ -332,7 +326,7 @@ export class ContentRepository implements IContentRepository {
       body: row.body,
       userId: row.user_id,
       createdAt: row.created_at,
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at,
     };
   }
 }
@@ -364,7 +358,7 @@ export class SubscriptionService implements ISubscriptionService {
       userId: subscription.userId,
       creatorId: subscription.creatorId,
       amount: subscription.amount,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return subscription;
@@ -375,7 +369,7 @@ export class SubscriptionService implements ISubscriptionService {
 
     await this.eventBus.emit('subscription.canceled', {
       subscriptionId: id,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 }
@@ -399,7 +393,7 @@ export class NotificationService implements INotificationService {
     await this.sendNotification({
       userId: event.userId,
       type: 'subscription_created',
-      data: event
+      data: event,
     });
   }
 }
@@ -440,9 +434,9 @@ export interface PaymentCompletedEvent extends DomainEvent {
 ```typescript
 export class ContentService implements IContentService {
   private readonly CACHE_TTL = {
-    CONTENT: 3600,      // 1 hour
-    CONTENT_LIST: 300,  // 5 minutes
-    USER_CONTENT: 600   // 10 minutes
+    CONTENT: 3600, // 1 hour
+    CONTENT_LIST: 300, // 5 minutes
+    USER_CONTENT: 600, // 10 minutes
   };
 
   async getContent(id: string): Promise<Content | null> {
@@ -562,27 +556,21 @@ export class PaymentService implements IPaymentService {
       // Update payment
       return await this.repository.update(paymentId, {
         status: 'completed',
-        preimage: result.preimage
+        preimage: result.preimage,
       });
-
     } catch (error) {
       this.logger.error('Payment processing failed', {
         paymentId,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       if (error instanceof ServiceError) {
-        throw error;  // Re-throw known errors
+        throw error; // Re-throw known errors
       }
 
       // Wrap unknown errors
-      throw new ServiceError(
-        'Payment processing failed',
-        'PAYMENT_ERROR',
-        500,
-        error
-      );
+      throw new ServiceError('Payment processing failed', 'PAYMENT_ERROR', 500, error);
     }
   }
 }
@@ -601,7 +589,7 @@ export class SubscriptionService implements ISubscriptionService {
 
     this.logger.info('Subscription renewal started', {
       subscriptionId: id,
-      operation: 'renew'
+      operation: 'renew',
     });
 
     try {
@@ -610,7 +598,7 @@ export class SubscriptionService implements ISubscriptionService {
       this.logger.debug('Subscription loaded', {
         subscriptionId: id,
         status: subscription.status,
-        expiresAt: subscription.expiresAt
+        expiresAt: subscription.expiresAt,
       });
 
       // Renewal logic...
@@ -619,17 +607,16 @@ export class SubscriptionService implements ISubscriptionService {
       this.logger.info('Subscription renewed successfully', {
         subscriptionId: id,
         duration,
-        newExpiresAt: subscription.expiresAt
+        newExpiresAt: subscription.expiresAt,
       });
 
       return subscription;
-
     } catch (error) {
       this.logger.error('Subscription renewal failed', {
         subscriptionId: id,
         error: error.message,
         stack: error.stack,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       });
       throw error;
     }
@@ -639,13 +626,13 @@ export class SubscriptionService implements ISubscriptionService {
 
 ### Log Levels
 
-| Level | Usage | Example |
-|-------|-------|---------|
-| **error** | Unrecoverable errors | Payment processing failed |
-| **warn** | Recoverable issues | Cache miss, retry attempt |
-| **info** | Important events | User created, subscription renewed |
-| **debug** | Detailed flow | Cache hit, validation passed |
-| **trace** | Extremely detailed | Function entry/exit, variable values |
+| Level     | Usage                | Example                              |
+| --------- | -------------------- | ------------------------------------ |
+| **error** | Unrecoverable errors | Payment processing failed            |
+| **warn**  | Recoverable issues   | Cache miss, retry attempt            |
+| **info**  | Important events     | User created, subscription renewed   |
+| **debug** | Detailed flow        | Cache hit, validation passed         |
+| **trace** | Extremely detailed   | Function entry/exit, variable values |
 
 ---
 
@@ -661,35 +648,30 @@ import { MockLogger } from '@/test-utils/mocks';
 
 describe('MyService', () => {
   let service: MyService;
-  let mockRepository: jest.Mocked<MyRepository>;
+  let mockRepository: Mocked<MyRepository>;
   let mockLogger: MockLogger;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockCache: jest.Mocked<ICacheService>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockCache: Mocked<ICacheService>;
 
   beforeEach(() => {
     // Create mocks
     mockRepository = {
-      create: jest.fn(),
-      findById: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
+      create: vi.fn(),
+      findById: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     } as any;
 
     mockLogger = new MockLogger();
-    mockEventBus = { emit: jest.fn(), on: jest.fn() } as any;
-    mockCache = { get: jest.fn(), set: jest.fn(), delete: jest.fn() } as any;
+    mockEventBus = { emit: vi.fn(), on: vi.fn() } as any;
+    mockCache = { get: vi.fn(), set: vi.fn(), delete: vi.fn() } as any;
 
     // Create service instance
-    service = new MyService(
-      mockRepository,
-      mockLogger,
-      mockEventBus,
-      mockCache
-    );
+    service = new MyService(mockRepository, mockLogger, mockEventBus, mockCache);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('myMethod', () => {
@@ -786,17 +768,17 @@ const result = await myService.myMethod({ id: '123', data: 'test' });
 ```typescript
 // ✅ GOOD: Single responsibility
 class UserAuthenticationService {
-  async login(credentials: Credentials): Promise<AuthToken> { }
-  async logout(token: string): Promise<void> { }
-  async refreshToken(token: string): Promise<AuthToken> { }
+  async login(credentials: Credentials): Promise<AuthToken> {}
+  async logout(token: string): Promise<void> {}
+  async refreshToken(token: string): Promise<AuthToken> {}
 }
 
 // ❌ BAD: Multiple responsibilities
 class UserService {
-  async login() { }
-  async createUser() { }
-  async sendEmail() { }
-  async processPayment() { }
+  async login() {}
+  async createUser() {}
+  async sendEmail() {}
+  async processPayment() {}
 }
 ```
 

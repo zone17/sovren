@@ -5,6 +5,7 @@ Comprehensive test suite for the automated deployment pipeline with >90% coverag
 ## Overview
 
 This test suite validates the entire deployment pipeline including:
+
 - End-to-end deployment flows
 - Automatic rollback scenarios
 - Service health check validation
@@ -36,16 +37,19 @@ tests/deployment/
 ## Running Tests
 
 ### All Deployment Tests
+
 ```bash
 npm run test:deployment
 ```
 
 ### With Coverage Report
+
 ```bash
 npm run test:deployment:coverage
 ```
 
 ### Watch Mode
+
 ```bash
 npm run test:deployment:watch
 ```
@@ -53,31 +57,37 @@ npm run test:deployment:watch
 ### Specific Test Suites
 
 **E2E Deployment Tests:**
+
 ```bash
 npm run test:deployment:e2e
 ```
 
 **Automatic Rollback Tests:**
+
 ```bash
 npm run test:deployment:rollback
 ```
 
 **Health Check Tests:**
+
 ```bash
 npm run test:deployment:health
 ```
 
 **Multi-Service Coordination:**
+
 ```bash
 npm run test:deployment:multi-service
 ```
 
 **Performance Regression:**
+
 ```bash
 npm run test:deployment:performance
 ```
 
 **Load Testing:**
+
 ```bash
 npm run test:deployment:load
 ```
@@ -89,6 +99,7 @@ npm run test:deployment:load
 **File:** `e2e/successful-deployment.test.ts`
 
 Tests complete deployment flows:
+
 - ✅ Deploy all 29 services to staging
 - ✅ Blue-green deployment strategy
 - ✅ Database migrations before deployment
@@ -98,11 +109,12 @@ Tests complete deployment flows:
 - ✅ Deployment performance < 10 minutes
 
 **Key Test Cases:**
+
 ```typescript
-it('should deploy all 29 services to staging')
-it('should perform blue-green deployment')
-it('should run database migrations before deployment')
-it('should complete deployment within SLA (< 10 minutes)')
+it('should deploy all 29 services to staging');
+it('should perform blue-green deployment');
+it('should run database migrations before deployment');
+it('should complete deployment within SLA (< 10 minutes)');
 ```
 
 ### 2. Automatic Rollback Tests
@@ -110,6 +122,7 @@ it('should complete deployment within SLA (< 10 minutes)')
 **File:** `rollback/automatic-rollback.test.ts`
 
 Tests automatic rollback triggers:
+
 - ✅ High error rate detection (> 5% threshold)
 - ✅ Health check failure detection (3 consecutive failures)
 - ✅ Deployment timeout handling
@@ -118,18 +131,20 @@ Tests automatic rollback triggers:
 - ✅ State restoration to previous version
 
 **Rollback Triggers:**
+
 - Error rate > 5%
 - 3+ consecutive health check failures
 - Deployment timeout exceeded
 - Manual rollback via ChatOps
 
 **Key Test Cases:**
+
 ```typescript
-it('should rollback on high error rate')
-it('should rollback on health check failure')
-it('should rollback on timeout')
-it('should complete rollback in less than 2 minutes')
-it('should send alerts on rollback')
+it('should rollback on high error rate');
+it('should rollback on health check failure');
+it('should rollback on timeout');
+it('should complete rollback in less than 2 minutes');
+it('should send alerts on rollback');
 ```
 
 ### 3. Health Check Validation Tests
@@ -137,6 +152,7 @@ it('should send alerts on rollback')
 **File:** `health-checks/service-health.test.ts`
 
 Tests health checks for all 29 services:
+
 - ✅ `/health` endpoint validation
 - ✅ `/ready` endpoint validation
 - ✅ `/live` endpoint validation
@@ -145,6 +161,7 @@ Tests health checks for all 29 services:
 - ✅ Service-specific health checks
 
 **All 29 Services Tested:**
+
 ```
 email, notification, audit, cache,
 content-publishing, content-moderation, content-analytics,
@@ -158,11 +175,12 @@ monitoring, logging, alerting, health-check
 ```
 
 **Key Test Cases:**
+
 ```typescript
-services.forEach(service => {
-  it(`should have /health endpoint for ${service}`)
-  it(`should check if ${service} is ready`)
-  it(`should verify ${service} is alive`)
+services.forEach((service) => {
+  it(`should have /health endpoint for ${service}`);
+  it(`should check if ${service} is ready`);
+  it(`should verify ${service} is alive`);
 });
 ```
 
@@ -171,6 +189,7 @@ services.forEach(service => {
 **File:** `multi-service/coordination.test.ts`
 
 Tests deployment coordination across services:
+
 - ✅ Dependency-based deployment ordering
 - ✅ Partial failure handling with rollback
 - ✅ Traffic shifting synchronization
@@ -179,17 +198,19 @@ Tests deployment coordination across services:
 - ✅ Atomic deployment guarantees
 
 **Deployment Order Priority:**
+
 1. Database migrations (first)
 2. Infrastructure services (cache, Redis)
 3. Shared services (email, notification)
 4. Application services (content, payments)
 
 **Key Test Cases:**
+
 ```typescript
-it('should deploy services in dependency order')
-it('should handle partial deployment failure')
-it('should coordinate traffic shifting across services')
-it('should rollback in reverse dependency order')
+it('should deploy services in dependency order');
+it('should handle partial deployment failure');
+it('should coordinate traffic shifting across services');
+it('should rollback in reverse dependency order');
 ```
 
 ### 5. Performance Regression Tests
@@ -197,6 +218,7 @@ it('should rollback in reverse dependency order')
 **File:** `performance/regression.test.ts`
 
 Tests performance metrics across deployments:
+
 - ✅ Response time monitoring (P95 < 500ms)
 - ✅ Error rate tracking (< 1%)
 - ✅ Memory usage validation (< 2GB, max 15% increase)
@@ -205,17 +227,19 @@ Tests performance metrics across deployments:
 - ✅ Baseline comparison
 
 **Performance Thresholds:**
+
 - Response time: Max 10% increase
 - Error rate: Max 20% increase
 - Memory: Max 15% increase
 - Throughput: Max 5% decrease
 
 **Key Test Cases:**
+
 ```typescript
-it('should not increase response time')
-it('should not increase error rate')
-it('should not increase memory usage')
-it('should maintain throughput')
+it('should not increase response time');
+it('should not increase error rate');
+it('should not increase memory usage');
+it('should maintain throughput');
 ```
 
 ### 6. Load Testing
@@ -223,6 +247,7 @@ it('should maintain throughput')
 **File:** `load/stress-test.test.ts`
 
 Tests deployment under load:
+
 - ✅ Peak traffic deployment (1000 req/sec)
 - ✅ Auto-scaling during deployment (3-10 replicas)
 - ✅ Concurrent request handling
@@ -231,17 +256,19 @@ Tests deployment under load:
 - ✅ Sustained high load (> 2 minutes)
 
 **Load Test Scenarios:**
+
 - 1000 req/sec for 5 minutes
 - 2000 req/sec burst for 30 seconds
 - Concurrent multi-service deployments
 - Auto-scaling validation
 
 **Key Test Cases:**
+
 ```typescript
-it('should handle deployment during peak traffic')
-it('should auto-scale during deployment')
-it('should maintain SLA during high traffic deployment')
-it('should not drop requests during traffic spike')
+it('should handle deployment during peak traffic');
+it('should auto-scale during deployment');
+it('should maintain SLA during high traffic deployment');
+it('should not drop requests during traffic spike');
 ```
 
 ## Deployment Simulator Framework
@@ -253,19 +280,20 @@ Comprehensive simulation framework for testing deployments without actual infras
 ### Key Features
 
 **Deployment Simulation:**
+
 ```typescript
 const simulator = new DeploymentSimulator();
 
 // Deploy to staging
 await simulator.deployToStaging({
   version: '1.2.3',
-  services: 'all'
+  services: 'all',
 });
 
 // Blue-green deployment
 await simulator.deployWithBlueGreen({
   environment: 'production',
-  version: '1.2.3'
+  version: '1.2.3',
 });
 
 // Deploy with migrations
@@ -273,6 +301,7 @@ await simulator.deployWithMigrations();
 ```
 
 **Failure Simulation:**
+
 ```typescript
 // Simulate error rate
 await simulator.simulateErrorRate(10); // 10% errors
@@ -288,6 +317,7 @@ await simulator.simulateDatabaseDown('payment-processing');
 ```
 
 **Metrics Measurement:**
+
 ```typescript
 // Measure response time
 const p95 = await simulator.measureResponseTime('1.2.3');
@@ -303,12 +333,13 @@ const throughput = await simulator.measureThroughput('1.2.3');
 ```
 
 **Load Testing:**
+
 ```typescript
 const loadGenerator = new LoadTestGenerator();
 
 const load = await loadGenerator.startLoadTest({
   rps: 1000,
-  duration: 300000 // 5 minutes
+  duration: 300000, // 5 minutes
 });
 
 const metrics = await loadGenerator.getMetrics();
@@ -320,6 +351,7 @@ const metrics = await loadGenerator.getMetrics();
 ### Overall Target: >90%
 
 **Current Coverage by Category:**
+
 - E2E Deployment: 95%
 - Automatic Rollback: 100%
 - Health Checks: 100%
@@ -332,17 +364,20 @@ const metrics = await loadGenerator.getMetrics();
 ### Coverage Requirements
 
 **Minimum Coverage Thresholds:**
+
 - Lines: ≥90%
 - Functions: ≥90%
 - Branches: ≥85%
 - Statements: ≥90%
 
 **Run Coverage Report:**
+
 ```bash
 npm run test:deployment:coverage
 ```
 
 **View Coverage Report:**
+
 ```bash
 open coverage/deployment/lcov-report/index.html
 ```
@@ -354,11 +389,13 @@ open coverage/deployment/lcov-report/index.html
 **File:** `.github/workflows/test-deployment.yml`
 
 Automated testing on:
+
 - Pull requests affecting deployment code
 - Push to main branch
 - Manual workflow dispatch
 
 **Jobs:**
+
 1. **test-deployment-logic** - Run all deployment tests
 2. **test-rollback** - Validate automatic rollback
 3. **test-health-checks** - Validate all 29 service health checks
@@ -369,6 +406,7 @@ Automated testing on:
 8. **test-summary** - Generate comprehensive test summary
 
 **Workflow Triggers:**
+
 ```yaml
 on:
   pull_request:
@@ -384,6 +422,7 @@ on:
 ### Quality Gates
 
 **All tests must pass before merge:**
+
 - ✅ Coverage ≥ 90%
 - ✅ Rollback time < 2 minutes
 - ✅ All 29 services have health checks
@@ -403,12 +442,7 @@ it('should deploy services in dependency order', async () => {
   const deployment = await simulator.deployMultipleServices(services);
 
   // Assert
-  expect(deployment.deploymentOrder).toEqual([
-    'database-migration',
-    'cache',
-    'email',
-    'content'
-  ]);
+  expect(deployment.deploymentOrder).toEqual(['database-migration', 'cache', 'email', 'content']);
 });
 ```
 
@@ -453,14 +487,15 @@ it('should handle deployment', async () => {
 **Problem:** Tests exceed timeout limits
 
 **Solution:**
+
 ```typescript
 // Increase timeout for specific test
 it('should handle long deployment', async () => {
   // Test code
 }, 30000); // 30 second timeout
 
-// Or increase globally in jest.config
-testTimeout: 30000
+// Or increase globally in vitest.config.ts
+testTimeout: 30000;
 ```
 
 ### Flaky Tests
@@ -468,6 +503,7 @@ testTimeout: 30000
 **Problem:** Tests fail intermittently
 
 **Solution:**
+
 - Use `waitFor` for async operations
 - Reset simulator state in `afterEach`
 - Avoid race conditions with proper awaits
@@ -478,6 +514,7 @@ testTimeout: 30000
 **Problem:** Coverage < 90%
 
 **Solution:**
+
 ```bash
 # Find uncovered code
 npm run test:deployment:coverage
@@ -493,6 +530,7 @@ open coverage/deployment/lcov-report/index.html
 ### 1. Test Independence
 
 Each test should be independent:
+
 ```typescript
 beforeEach(() => {
   simulator = new DeploymentSimulator();
@@ -506,17 +544,19 @@ afterEach(() => {
 ### 2. Descriptive Test Names
 
 Use clear, descriptive test names:
+
 ```typescript
 // ✅ Good
-it('should rollback on high error rate (> 5% threshold)')
+it('should rollback on high error rate (> 5% threshold)');
 
 // ❌ Bad
-it('should rollback')
+it('should rollback');
 ```
 
 ### 3. Test Edge Cases
 
 Cover all scenarios:
+
 - ✅ Happy path
 - ✅ Error cases
 - ✅ Edge cases
@@ -525,20 +565,20 @@ Cover all scenarios:
 ### 4. Mocking External Dependencies
 
 Mock external services:
+
 ```typescript
 const mockAlertHandler = vi.fn();
 await simulator.deployWithRollback({
   onAlert: mockAlertHandler,
-  shouldFail: true
+  shouldFail: true,
 });
-expect(mockAlertHandler).toHaveBeenCalledWith(
-  expect.objectContaining({ type: 'rollback' })
-);
+expect(mockAlertHandler).toHaveBeenCalledWith(expect.objectContaining({ type: 'rollback' }));
 ```
 
 ### 5. Performance Testing
 
 Keep tests fast:
+
 - Use simulation instead of real deployments
 - Run integration tests in parallel where possible
 - Use `--runInBand` for tests that share state
@@ -557,6 +597,7 @@ Keep tests fast:
 ### Updating Simulator
 
 When adding features to deployment pipeline:
+
 1. Update DeploymentSimulator class
 2. Add corresponding test methods
 3. Update type definitions
@@ -566,6 +607,7 @@ When adding features to deployment pipeline:
 ### Monitoring Coverage
 
 Regular coverage checks:
+
 ```bash
 # Weekly coverage check
 npm run test:deployment:coverage
@@ -585,7 +627,7 @@ npm run test:deployment:coverage -- --coverageThreshold='{
 
 - [Epic 006: Deployment Automation](../../docs/refactoring/EPIC-006-deployment-automation.md)
 - [GitHub Actions Workflow](../../.github/workflows/test-deployment.yml)
-- [Jest Documentation](https://jestjs.io/)
+- [Vitest Documentation](https://vitest.dev/)
 - [Vitest Documentation](https://vitest.dev/)
 
 ## Success Criteria
@@ -603,11 +645,13 @@ npm run test:deployment:coverage -- --coverageThreshold='{
 ## Next Steps
 
 1. **Integration with Real Infrastructure**
+
    - Connect to actual Docker containers
    - Test against staging environment
    - Validate production deployment
 
 2. **Enhanced Monitoring**
+
    - Add distributed tracing
    - Implement real-time metrics
    - Create deployment dashboard

@@ -1,31 +1,30 @@
 /**
- * 🎭 **Helia Core Mock**
+ * Helia Core Mock
  *
- * Jest-compatible mock for helia package
- * Following TDD/BDD best practices with realistic responses
+ * Vitest mock for helia package
  */
 
 module.exports = {
-  createHelia: jest.fn().mockResolvedValue({
+  createHelia: vi.fn().mockResolvedValue({
     pins: {
-      add: jest.fn().mockResolvedValue(undefined),
-      rm: jest.fn().mockResolvedValue(undefined),
-      ls: jest.fn().mockReturnValue([]),
+      add: vi.fn().mockResolvedValue(undefined),
+      rm: vi.fn().mockResolvedValue(undefined),
+      ls: vi.fn().mockReturnValue([]),
     },
-    stop: jest.fn().mockResolvedValue(undefined),
+    stop: vi.fn().mockResolvedValue(undefined),
     libp2p: {
-      start: jest.fn().mockResolvedValue(undefined),
-      stop: jest.fn().mockResolvedValue(undefined),
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue(undefined),
     },
     blockstore: {
-      put: jest.fn().mockResolvedValue(undefined),
-      get: jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
-      has: jest.fn().mockResolvedValue(true),
+      put: vi.fn().mockResolvedValue(undefined),
+      get: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
+      has: vi.fn().mockResolvedValue(true),
     },
     datastore: {
-      put: jest.fn().mockResolvedValue(undefined),
-      get: jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
-      has: jest.fn().mockResolvedValue(true),
+      put: vi.fn().mockResolvedValue(undefined),
+      get: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
+      has: vi.fn().mockResolvedValue(true),
     },
   }),
   __esModule: true,

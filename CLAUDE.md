@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Protocols**: NOSTR (via nostr-tools), Bitcoin Lightning Network
 - **Database/Auth**: Supabase
 - **Deployment**: Vercel (frontend), Docker (backend)
-- **Testing**: Jest + React Testing Library + Playwright
+- **Testing**: Vitest + React Testing Library + Playwright
 - **Monorepo**: npm workspaces
 
 ## Essential Commands
@@ -58,7 +58,7 @@ npm run test:security         # Security tests
 npm run test:a11y             # Accessibility tests
 
 # Run single test file
-jest path/to/test.test.ts
+npx vitest run path/to/test.test.ts
 ```
 
 ### Code Quality
@@ -174,7 +174,7 @@ Located in `packages/backend/src/`:
 Before writing any code in this repository, read these canonical pattern files:
 
 - **`docs/solutions/patterns/critical-patterns.md`** — 7 P1-class patterns (TOCTOU, auth, pagination, atomic writes, SSRF, status guards, payment persistence). Extracted from 50 P1 findings across 6 sprints. **Violating these patterns WILL produce P1 review findings.**
-- **`docs/solutions/patterns/common-solutions.md`** — 10 P2/P3-class patterns (double-submit, TTLCache, env validation, error format, case-transform, feature flags, mock chains, rate limiting, route ordering, DI types). Prevents re-inventing solutions that already exist.
+- **`docs/solutions/patterns/common-solutions.md`** — 12 P2/P3-class patterns (double-submit, TTLCache, env validation, error format, case-transform, feature flags, mock chains, rate limiting, route ordering, DI types, Vitest OOM prevention, git diff for hooks). Prevents re-inventing solutions that already exist.
 
 These files are the single source of truth. Sprint-specific docs in `docs/solutions/` provide historical context but the patterns files are the canonical reference.
 
@@ -269,11 +269,19 @@ describe('Feature Name', () => {
 });
 ```
 
-Use the multi-project Jest configuration:
+Use the multi-project Vitest configuration (`vitest.config.ts`):
 
 - Frontend tests: jsdom environment
 - Backend tests: node environment
 - Shared tests: node environment
+
+Vitest notes:
+
+- Use `vi.fn()`, `vi.mock()`, `vi.spyOn()` (not `jest.*`)
+- `vi.mock()` factories hoist differently — use `vi.hoisted()` for class declarations in mock factories
+- `vi.importActual()` returns a Promise (must `await`)
+- Use `import { Enum }` not `import type { Enum }` for runtime enum values (esbuild strips `import type`)
+- Cap workers with `maxForks: 2` to prevent OOM on machines with <32GB RAM
 
 ### Git Workflow
 

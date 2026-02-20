@@ -1,13 +1,16 @@
 # ADR-008: Jest for Testing
 
+**SUPERSEDED (2026-02-20):** This project migrated from Jest to Vitest. See `vitest.config.ts` for current configuration. The migration was driven by ESM/CJS conflicts with nostr-tools and @noble packages that ship ESM-only. See `docs/solutions/infrastructure-issues/quality-pipeline-vitest-migration-20260220.md` for details.
+
 **Date**: 2025-10-27
-**Status**: Accepted
+**Status**: Superseded by Vitest migration
 **Epic**: Epic 005 - Backend Service Refactoring
 **Related ADRs**: [ADR-006 (TypeScript Strict Mode)](./ADR-006-typescript-strict-mode.md)
 
 ## Context
 
 We needed a comprehensive testing framework that supports:
+
 - Unit tests for services and repositories
 - Integration tests for API endpoints
 - TypeScript support with minimal configuration
@@ -20,6 +23,7 @@ We needed a comprehensive testing framework that supports:
 We will use **Jest** with ts-jest for all backend and frontend testing.
 
 **Configuration**:
+
 ```typescript
 // jest.config.ts
 export default {
@@ -30,18 +34,15 @@ export default {
       branches: 85,
       functions: 85,
       lines: 85,
-      statements: 85
-    }
+      statements: 85,
+    },
   },
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.test.ts',
-    '!src/**/__tests__/**'
-  ]
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.test.ts', '!src/**/__tests__/**'],
 };
 ```
 
 **Key Features**:
+
 1. **Zero Config TypeScript**: ts-jest handles compilation
 2. **Snapshot Testing**: UI component regression testing
 3. **Mock Functions**: `jest.fn()` for dependency mocking
@@ -88,14 +89,13 @@ describe('PaymentService', () => {
 
   it('should create payment invoice', async () => {
     const invoice = await service.createInvoice(100);
-    expect(mockRepo.create).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 100 })
-    );
+    expect(mockRepo.create).toHaveBeenCalledWith(expect.objectContaining({ amount: 100 }));
   });
 });
 ```
 
 **Coverage Requirements**:
+
 - Services/Repositories: 95% minimum
 - Global: 85% minimum
 - New code: 95%+ required

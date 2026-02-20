@@ -21,7 +21,7 @@
         "ms-vscode.vscode-node-azure-pack",
 
         // Testing
-        "orta.vscode-jest",
+        "vitest.explorer",
         "ms-playwright.playwright",
 
         // Git
@@ -100,9 +100,7 @@
           }
         },
 
-        "jest.testEnvironment": "jsdom",
-        "jest.rootPath": "packages/backend",
-        "jest.jestCommandLine": "npm test",
+        "vitest.commandLine": "npx vitest",
 
         "debug.node.autoAttach": "on",
         "debug.javascript.autoAttachFilter": "onlyWithFlag",

@@ -51,7 +51,7 @@ This document establishes comprehensive dependency management standards for Sovr
 
 **Criteria**: Build tools, testing frameworks, development utilities
 
-- **Examples**: Jest, ESLint, Webpack, Vite
+- **Examples**: Vitest, ESLint, Webpack, Vite
 - **Update Schedule**: Quarterly review cycle
 - **Testing**: Build and test validation required
 - **Approval**: Developer discretion with review

@@ -33,7 +33,7 @@ graph TB
     end
 
     subgraph "Testing Tools"
-        M[Jest] --> C
+        M[Vitest] --> C
         N[Playwright] --> E
         O[Lighthouse] --> G
         P[axe-core] --> H
@@ -53,12 +53,12 @@ graph TB
 ```mermaid
 graph LR
     subgraph "Unit Testing Infrastructure"
-        A[Jest Config] --> B[Test Environment]
+        A[Vitest Config] --> B[Test Environment]
         B --> C[Mock System]
         C --> D[Coverage Analysis]
         D --> E[Report Generation]
 
-        F[TypeScript] --> G[ts-jest]
+        F[TypeScript] --> G[vite-node]
         G --> H[Source Maps]
         H --> I[Debug Support]
 

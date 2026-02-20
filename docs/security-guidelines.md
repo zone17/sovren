@@ -100,7 +100,7 @@ interface ApprovedDependencies {
   development: {
     eslint: 'latest'; // Code quality
     prettier: 'latest'; // Code formatting
-    jest: 'latest'; // Testing framework
+    vitest: 'latest'; // Testing framework
     '@testing-library/react': 'latest'; // Safe testing utilities
   };
   security: {

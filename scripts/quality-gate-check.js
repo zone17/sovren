@@ -177,7 +177,7 @@ class QualityGateValidator {
     const requiredFiles = [
       '.eslintrc.json',
       '.prettierrc.json',
-      'jest.config.js',
+      'vitest.config.ts',
       'tsconfig.json',
       'package.json',
       'CHANGELOG.md',
