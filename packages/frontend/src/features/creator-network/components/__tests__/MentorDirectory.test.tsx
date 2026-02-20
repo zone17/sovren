@@ -4,10 +4,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import MentorDirectory from '../MentorDirectory';
 
 // --- Hook mocks ---
-const mockUseMentors = jest.fn();
-const mockUseRequestMentorship = jest.fn();
+const mockUseMentors = vi.fn();
+const mockUseRequestMentorship = vi.fn();
 
-jest.mock('../../hooks/useMentorship', () => ({
+vi.mock('../../hooks/useMentorship', () => ({
   useMentors: () => mockUseMentors(),
   useRequestMentorship: () => mockUseRequestMentorship(),
 }));
@@ -20,7 +20,7 @@ function createWrapper() {
   );
 }
 
-const defaultMutateFn = jest.fn();
+const defaultMutateFn = vi.fn();
 
 const idleRequestMutation = {
   mutate: defaultMutateFn,
@@ -50,7 +50,7 @@ const mentorNoFilter = {
 // --- Tests ---
 describe('MentorDirectory', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseMentors.mockReturnValue({ data: [], isLoading: false });
     mockUseRequestMentorship.mockReturnValue(idleRequestMutation);
   });
@@ -212,7 +212,7 @@ describe('MentorDirectory', () => {
     });
 
     it('calls requestMutation.mutate with mentorId and goals when Send Request is clicked', () => {
-      const mutate = jest.fn();
+      const mutate = vi.fn();
       mockUseRequestMentorship.mockReturnValue({ ...idleRequestMutation, mutate });
       mockUseMentors.mockReturnValue({ data: [sampleMentor], isLoading: false });
 

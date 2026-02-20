@@ -211,8 +211,8 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
 
   beforeAll(async () => {
     // Setup global mocks
-    global.indexedDB = mockIndexedDB as any;
-    global.crypto = mockCrypto as any;
+    Object.defineProperty(globalThis, "indexedDB", { value: mockIndexedDB as any, writable: true, configurable: true });
+    Object.defineProperty(globalThis, "crypto", { value: mockCrypto as any, writable: true, configurable: true });
 
     // Initialize all services
     keyManagement = KeyManagementService.getInstance();

@@ -6,7 +6,6 @@
  */
 
 import type {
-  AnalyticsPeriod,
   AnalyticsQuery,
   AnalyticsExportRequest,
   AnalyticsExportResult,
@@ -28,8 +27,15 @@ import type {
   PaymentAnalyticsEvent,
   TimeSeriesDataPoint
 } from '../../types/payment-analytics';
-import type { Currency } from '../../types/currency';
-import type { PaymentMethod } from '../../types/payment';
+import {
+  AnalyticsPeriod,
+} from '../../types/payment-analytics';
+import {
+  Currency,
+} from '../../types/currency';
+import {
+  PaymentMethod,
+} from '../../types/payment';
 
 /**
  * Payment Analytics Service Interface

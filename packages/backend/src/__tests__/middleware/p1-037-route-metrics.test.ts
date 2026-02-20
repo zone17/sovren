@@ -16,7 +16,7 @@
 import { Request, Response } from 'express';
 
 beforeEach(async () => {
-  jest.resetModules();
+  vi.resetModules();
   const { register } = await import('prom-client');
   register.clear();
 });
@@ -40,12 +40,12 @@ describe('P1-037: Route Metrics Fix', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
 
@@ -75,12 +75,12 @@ describe('P1-037: Route Metrics Fix', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 404,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       // req.route remains undefined (e.g., 404 for unknown route)
@@ -108,12 +108,12 @@ describe('P1-037: Route Metrics Fix', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -138,12 +138,12 @@ describe('P1-037: Route Metrics Fix', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -170,12 +170,12 @@ describe('P1-037: Route Metrics Fix', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 201,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
 

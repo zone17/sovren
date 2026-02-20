@@ -37,16 +37,16 @@ const TestComponent: React.FC<{ options: ErrorToastOptions }> = ({ options }) =>
 };
 
 describe('ErrorToast', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   beforeEach(() => {
-    jest.clearAllTimers();
+    vi.clearAllTimers();
     // Clear any existing toasts
     errorToast.dismissAll();
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
+    vi.clearAllTimers();
   });
 
   describe('useErrorToast Hook', () => {
@@ -183,7 +183,7 @@ describe('ErrorToast', () => {
 
       // Advance time past auto-dismiss duration (3s for INFO)
       act(() => {
-        jest.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(3000);
       });
 
       await waitFor(() => {
@@ -204,7 +204,7 @@ describe('ErrorToast', () => {
 
       // Advance time significantly
       act(() => {
-        jest.advanceTimersByTime(30000);
+        vi.advanceTimersByTime(30000);
       });
 
       // Should still be visible
@@ -256,7 +256,7 @@ describe('ErrorToast', () => {
   describe('Retry Functionality', () => {
     it('shows retry button when retryable and onRetry provided', () => {
       const error = createMockError();
-      const onRetry = jest.fn();
+      const onRetry = vi.fn();
 
       render(<ErrorToastContainer />);
 
@@ -269,7 +269,7 @@ describe('ErrorToast', () => {
 
     it('calls onRetry when retry button is clicked', async () => {
       const error = createMockError();
-      const onRetry = jest.fn().mockResolvedValue(undefined);
+      const onRetry = vi.fn().mockResolvedValue(undefined);
 
       render(<ErrorToastContainer />);
 
@@ -286,7 +286,7 @@ describe('ErrorToast', () => {
 
     it('dismisses toast on successful retry', async () => {
       const error = createMockError();
-      const onRetry = jest.fn().mockResolvedValue(undefined);
+      const onRetry = vi.fn().mockResolvedValue(undefined);
 
       render(<ErrorToastContainer />);
 
@@ -305,7 +305,7 @@ describe('ErrorToast', () => {
 
     it('disables retry button while retrying', async () => {
       const error = createMockError();
-      const onRetry = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+      const onRetry = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
 
       render(<ErrorToastContainer />);
 
@@ -348,7 +348,7 @@ describe('ErrorToast', () => {
 
     it('calls onDismiss callback when dismissed', async () => {
       const error = createMockError();
-      const onDismiss = jest.fn();
+      const onDismiss = vi.fn();
 
       render(<ErrorToastContainer />);
 
@@ -381,7 +381,7 @@ describe('ErrorToast', () => {
 
     it('has accessible button labels', () => {
       const error = createMockError();
-      const onRetry = jest.fn();
+      const onRetry = vi.fn();
 
       render(<ErrorToastContainer />);
 
@@ -394,5 +394,5 @@ describe('ErrorToast', () => {
     });
   });
 
-  jest.useRealTimers();
+  vi.useRealTimers();
 });

@@ -383,7 +383,7 @@ describe('Test Reporting System Demonstration', () => {
       // Mock console.log to capture output
       const originalLog = console.log;
       const logs: string[] = [];
-      console.log = jest.fn((message: string) => logs.push(message));
+      console.log = vi.fn((message: string) => logs.push(message));
 
       const options: ReportOptions = {
         format: 'console',

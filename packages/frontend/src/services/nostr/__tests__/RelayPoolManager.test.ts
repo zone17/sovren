@@ -20,14 +20,14 @@ import { RelayPoolManager, RelayHealth, RelayStatus } from '../RelayPoolManager'
 import type { Event as NostrEvent } from 'nostr-tools';
 
 // Mock nostr-tools
-jest.mock('nostr-tools', () => ({
-  SimplePool: jest.fn().mockImplementation(() => ({
-    ensureRelay: jest.fn().mockResolvedValue(undefined),
-    subscribeMany: jest.fn().mockReturnValue({
-      close: jest.fn(),
+vi.mock('nostr-tools', () => ({
+  SimplePool: vi.fn().mockImplementation(() => ({
+    ensureRelay: vi.fn().mockResolvedValue(undefined),
+    subscribeMany: vi.fn().mockReturnValue({
+      close: vi.fn(),
     }),
-    publish: jest.fn().mockResolvedValue([]),
-    close: jest.fn(),
+    publish: vi.fn().mockResolvedValue([]),
+    close: vi.fn(),
   })),
 }));
 
@@ -42,13 +42,13 @@ describe('RelayPoolManager', () => {
   beforeEach(() => {
     // Reset singleton instance before each test
     (RelayPoolManager as any).instance = undefined;
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
   // ============================================
@@ -260,9 +260,9 @@ describe('RelayPoolManager', () => {
     });
 
     it('should run periodic health checks', async () => {
-      const healthCheckSpy = jest.spyOn(manager as any, 'performHealthCheck');
+      const healthCheckSpy = vi.spyOn(manager as any, 'performHealthCheck');
 
-      jest.advanceTimersByTime(30000); // 30 seconds
+      vi.advanceTimersByTime(30000); // 30 seconds
 
       expect(healthCheckSpy).toHaveBeenCalled();
     });
@@ -286,7 +286,7 @@ describe('RelayPoolManager', () => {
       manager.handleRelayDisconnect(relayUrl);
 
       // Wait for reconnection attempt
-      jest.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1000);
 
       const status = manager.getRelayStatus(relayUrl);
       expect(status).toBe(RelayStatus.RECONNECTING);
@@ -299,13 +299,13 @@ describe('RelayPoolManager', () => {
       // Simulate multiple failed reconnection attempts
       manager.handleRelayDisconnect(relayUrl);
 
-      jest.advanceTimersByTime(1000); // First retry: 1s
+      vi.advanceTimersByTime(1000); // First retry: 1s
       expect(manager.getReconnectAttempts(relayUrl)).toBe(1);
 
-      jest.advanceTimersByTime(2000); // Second retry: 2s
+      vi.advanceTimersByTime(2000); // Second retry: 2s
       expect(manager.getReconnectAttempts(relayUrl)).toBe(2);
 
-      jest.advanceTimersByTime(4000); // Third retry: 4s
+      vi.advanceTimersByTime(4000); // Third retry: 4s
       expect(manager.getReconnectAttempts(relayUrl)).toBe(3);
     });
 
@@ -317,7 +317,7 @@ describe('RelayPoolManager', () => {
 
       // Simulate max reconnection attempts (5)
       for (let i = 0; i < 5; i++) {
-        jest.advanceTimersByTime(Math.pow(2, i) * 1000);
+        vi.advanceTimersByTime(Math.pow(2, i) * 1000);
       }
 
       const status = manager.getRelayStatus(relayUrl);
@@ -329,7 +329,7 @@ describe('RelayPoolManager', () => {
       await manager.connect(relayUrl);
 
       manager.handleRelayDisconnect(relayUrl);
-      jest.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1000);
 
       await manager.connect(relayUrl);
 
@@ -392,7 +392,7 @@ describe('RelayPoolManager', () => {
     });
 
     it('should retry publishing on transient failures', async () => {
-      const publishSpy = jest.spyOn(manager as any, 'publishToRelay');
+      const publishSpy = vi.spyOn(manager as any, 'publishToRelay');
 
       await manager.publishEventWithRetry(mockEvent, 3);
 
@@ -415,14 +415,14 @@ describe('RelayPoolManager', () => {
     });
 
     it('should create subscription across all relays', () => {
-      const subId = manager.subscribe(mockFilters, jest.fn());
+      const subId = manager.subscribe(mockFilters, vi.fn());
 
       expect(subId).toBeDefined();
       expect(manager.getActiveSubscriptions()).toContain(subId);
     });
 
     it('should aggregate events from multiple relays', () => {
-      const onEvent = jest.fn();
+      const onEvent = vi.fn();
 
       const subId = manager.subscribe(mockFilters, onEvent);
 
@@ -431,7 +431,7 @@ describe('RelayPoolManager', () => {
     });
 
     it('should deduplicate events by ID', () => {
-      const onEvent = jest.fn();
+      const onEvent = vi.fn();
 
       const subId = manager.subscribe(mockFilters, onEvent);
 
@@ -440,7 +440,7 @@ describe('RelayPoolManager', () => {
     });
 
     it('should unsubscribe from all relays', () => {
-      const subId = manager.subscribe(mockFilters, jest.fn());
+      const subId = manager.subscribe(mockFilters, vi.fn());
 
       manager.unsubscribe(subId);
 
@@ -448,9 +448,9 @@ describe('RelayPoolManager', () => {
     });
 
     it('should call onEose callback when subscription completes', () => {
-      const onEose = jest.fn();
+      const onEose = vi.fn();
 
-      manager.subscribe(mockFilters, jest.fn(), onEose);
+      manager.subscribe(mockFilters, vi.fn(), onEose);
 
       // onEose will be called by the pool when subscription ends
       expect(onEose).toBeDefined();
@@ -460,7 +460,7 @@ describe('RelayPoolManager', () => {
       const invalidFilters = [{ kinds: 'invalid' }] as any;
 
       expect(() => {
-        manager.subscribe(invalidFilters, jest.fn());
+        manager.subscribe(invalidFilters, vi.fn());
       }).not.toThrow();
     });
   });
@@ -588,7 +588,7 @@ describe('RelayPoolManager', () => {
     });
 
     it('should emit error events on connection failure', async () => {
-      const errorHandler = jest.fn();
+      const errorHandler = vi.fn();
       manager.on('relay:error', errorHandler);
 
       const invalidRelay = 'wss://invalid.relay.test';
@@ -606,7 +606,7 @@ describe('RelayPoolManager', () => {
       manager.handleRelayDisconnect(mockRelays[0]);
 
       // Simulate network recovery
-      jest.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1000);
 
       const status = manager.getRelayStatus(mockRelays[0]);
       expect(status).not.toBe(RelayStatus.FAILED);
@@ -642,7 +642,7 @@ describe('RelayPoolManager', () => {
     it('should clear all timers on destroy', async () => {
       await manager.connectAll();
 
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
       await manager.destroy();
 
@@ -665,9 +665,9 @@ describe('RelayPoolManager', () => {
     it('should batch health checks for efficiency', async () => {
       await manager.connectAll();
 
-      const healthCheckSpy = jest.spyOn(manager as any, 'performHealthCheck');
+      const healthCheckSpy = vi.spyOn(manager as any, 'performHealthCheck');
 
-      jest.advanceTimersByTime(30000);
+      vi.advanceTimersByTime(30000);
 
       // Should batch check all relays, not check individually
       expect(healthCheckSpy).toHaveBeenCalledTimes(1);

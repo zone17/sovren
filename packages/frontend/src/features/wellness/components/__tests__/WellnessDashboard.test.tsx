@@ -4,35 +4,35 @@ import React from 'react';
 import WellnessDashboard from '../WellnessDashboard';
 
 // Mock all child components to test WellnessDashboard in isolation
-jest.mock('../WorkPatternHeatmap', () => ({
+vi.mock('../WorkPatternHeatmap', () => ({
   __esModule: true,
   default: () => <div data-testid="work-pattern-heatmap">WorkPatternHeatmap</div>,
 }));
-jest.mock('../BurnoutRiskGauge', () => ({
+vi.mock('../BurnoutRiskGauge', () => ({
   __esModule: true,
   default: () => <div data-testid="burnout-risk-gauge">BurnoutRiskGauge</div>,
 }));
-jest.mock('../RestDayTracker', () => ({
+vi.mock('../RestDayTracker', () => ({
   __esModule: true,
   default: () => <div data-testid="rest-day-tracker">RestDayTracker</div>,
 }));
-jest.mock('../SustainableScheduler', () => ({
+vi.mock('../SustainableScheduler', () => ({
   __esModule: true,
   default: () => <div data-testid="sustainable-scheduler">SustainableScheduler</div>,
 }));
-jest.mock('../WellnessTrend', () => ({
+vi.mock('../WellnessTrend', () => ({
   __esModule: true,
   default: () => <div data-testid="wellness-trend">WellnessTrend</div>,
 }));
-jest.mock('../BoundarySettings', () => ({
+vi.mock('../BoundarySettings', () => ({
   __esModule: true,
   default: () => <div data-testid="boundary-settings">BoundarySettings</div>,
 }));
-jest.mock('../WellnessResources', () => ({
+vi.mock('../WellnessResources', () => ({
   __esModule: true,
   default: () => <div data-testid="wellness-resources">WellnessResources</div>,
 }));
-jest.mock('../WellnessPulseModal', () => ({
+vi.mock('../WellnessPulseModal', () => ({
   __esModule: true,
   default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
@@ -41,7 +41,7 @@ jest.mock('../WellnessPulseModal', () => ({
       </div>
     ) : null,
 }));
-jest.mock('../../ErrorBoundary', () => ({
+vi.mock('../../ErrorBoundary', () => ({
   WellnessErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 

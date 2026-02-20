@@ -24,7 +24,7 @@ function createMockReq(overrides: Partial<Request> = {}): Request {
 function createMockRes(): Response & { _headers: Record<string, string> } {
   const res: any = {
     _headers: {},
-    setHeader: jest.fn(function (name: string, value: string) {
+    setHeader: vi.fn(function (name: string, value: string) {
       res._headers[name] = value;
       return res;
     }),

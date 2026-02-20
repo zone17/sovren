@@ -67,7 +67,7 @@ describe('FilterBuilder', () => {
   describe('Filter Building', () => {
     it('builds filter with event IDs', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       const idsInput = screen.getByLabelText(/event ids/i);
@@ -85,7 +85,7 @@ describe('FilterBuilder', () => {
 
     it('builds filter with authors', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       const authorsInput = screen.getByLabelText(/authors/i);
@@ -98,7 +98,7 @@ describe('FilterBuilder', () => {
 
     it('builds filter with event kinds', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       const kindsSelect = screen.getByLabelText(/event kinds/i);
@@ -116,7 +116,7 @@ describe('FilterBuilder', () => {
 
     it('builds filter with time range', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       const sinceInput = screen.getByLabelText(/since/i);
@@ -134,7 +134,7 @@ describe('FilterBuilder', () => {
 
     it('builds filter with limit', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       const limitInput = screen.getByLabelText(/limit/i);
@@ -152,7 +152,7 @@ describe('FilterBuilder', () => {
 
     it('builds filter with tag filters', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       const tagTypeSelect = screen.getByLabelText(/tag type/i);
@@ -178,7 +178,7 @@ describe('FilterBuilder', () => {
   describe('Preset Functionality', () => {
     it('applies user notes preset', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       const testPubkey = 'abcd1234567890abcd1234567890abcd1234567890abcd1234567890abcd1234';
 
       render(<FilterBuilder onFilterChange={onFilterChange} currentPubkey={testPubkey} />);
@@ -198,7 +198,7 @@ describe('FilterBuilder', () => {
 
     it('applies mentions preset', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       const testPubkey = 'abcd1234567890abcd1234567890abcd1234567890abcd1234567890abcd1234';
 
       render(<FilterBuilder onFilterChange={onFilterChange} currentPubkey={testPubkey} />);
@@ -218,7 +218,7 @@ describe('FilterBuilder', () => {
 
     it('applies global feed preset', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
 
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
@@ -345,7 +345,7 @@ describe('FilterBuilder', () => {
 
     it('imports valid filter JSON', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       const validFilter: NostrFilter = {
@@ -379,7 +379,7 @@ describe('FilterBuilder', () => {
 
     it('copies filter to clipboard', async () => {
       const user = userEvent.setup();
-      const writeText = jest.fn().mockResolvedValue(undefined);
+      const writeText = vi.fn().mockResolvedValue(undefined);
       Object.assign(navigator, {
         clipboard: { writeText },
       });
@@ -421,7 +421,7 @@ describe('FilterBuilder', () => {
 
     it('loads saved template', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
 
       // Pre-save a template
       const template = {
@@ -467,7 +467,7 @@ describe('FilterBuilder', () => {
   describe('Interactions', () => {
     it('resets filter to empty state', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       // Apply a preset
@@ -581,7 +581,7 @@ describe('FilterBuilder', () => {
   // ========================================
   describe('Edge Cases', () => {
     it('handles empty filter', () => {
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       render(<FilterBuilder onFilterChange={onFilterChange} />);
 
       expect(screen.getByRole('region', { name: /filter builder/i })).toBeInTheDocument();
@@ -614,7 +614,7 @@ describe('FilterBuilder', () => {
     it('handles localStorage unavailability', () => {
       // Mock localStorage error
       const originalSetItem = Storage.prototype.setItem;
-      Storage.prototype.setItem = jest.fn(() => {
+      Storage.prototype.setItem = vi.fn(() => {
         throw new Error('QuotaExceededError');
       });
 
@@ -628,7 +628,7 @@ describe('FilterBuilder', () => {
 
     it('handles multiple rapid preset changes', async () => {
       const user = userEvent.setup();
-      const onFilterChange = jest.fn();
+      const onFilterChange = vi.fn();
       const testPubkey = 'abcd1234567890abcd1234567890abcd1234567890abcd1234567890abcd1234';
 
       render(<FilterBuilder onFilterChange={onFilterChange} currentPubkey={testPubkey} />);

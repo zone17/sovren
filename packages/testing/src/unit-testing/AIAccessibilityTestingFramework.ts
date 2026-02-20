@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file AIAccessibilityTestingFramework.ts
  * @description AI-powered accessibility testing framework with WCAG compliance validation

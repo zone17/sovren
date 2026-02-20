@@ -12,24 +12,24 @@ function createMockDb() {
   const chain: any = {};
   const methods = ['select', 'eq', 'in', 'limit', 'single', 'insert', 'from'];
   for (const method of methods) {
-    chain[method] = jest.fn().mockReturnValue(chain);
+    chain[method] = vi.fn().mockReturnValue(chain);
   }
-  return { from: jest.fn().mockReturnValue(chain), _chain: chain };
+  return { from: vi.fn().mockReturnValue(chain), _chain: chain };
 }
 
 const mockFingerprintService = {
-  createFingerprint: jest.fn(),
-  getRegistry: jest.fn(),
-  compare: jest.fn(),
-  computeSimHash: jest.fn().mockReturnValue('abcdef0123456789'),
-  computeHammingDistance: jest.fn().mockReturnValue(5),
-  computeSimilarity: jest.fn().mockReturnValue(0.92),
+  createFingerprint: vi.fn(),
+  getRegistry: vi.fn(),
+  compare: vi.fn(),
+  computeSimHash: vi.fn().mockReturnValue('abcdef0123456789'),
+  computeHammingDistance: vi.fn().mockReturnValue(5),
+  computeSimilarity: vi.fn().mockReturnValue(0.92),
 };
 
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
 };
 
 describe('ContentScannerProcessor', () => {
@@ -43,7 +43,7 @@ describe('ContentScannerProcessor', () => {
       mockDb as any,
       mockLogger
     );
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('processor metadata', () => {
@@ -76,7 +76,7 @@ describe('ContentScannerProcessor', () => {
 
     it('should skip scan when creator has no fingerprints', async () => {
       // Load fingerprints returns empty
-      mockDb._chain.limit = jest.fn().mockReturnValue({
+      mockDb._chain.limit = vi.fn().mockReturnValue({
         then: undefined,
         data: [],
         error: null,
@@ -84,10 +84,10 @@ describe('ContentScannerProcessor', () => {
 
       // Override the chain to return empty data
       const selectChain: any = {};
-      selectChain.eq = jest.fn().mockReturnValue(selectChain);
-      selectChain.in = jest.fn().mockReturnValue(selectChain);
-      selectChain.limit = jest.fn().mockResolvedValue({ data: [], error: null });
-      mockDb.from.mockReturnValue({ select: jest.fn().mockReturnValue(selectChain) });
+      selectChain.eq = vi.fn().mockReturnValue(selectChain);
+      selectChain.in = vi.fn().mockReturnValue(selectChain);
+      selectChain.limit = vi.fn().mockResolvedValue({ data: [], error: null });
+      mockDb.from.mockReturnValue({ select: vi.fn().mockReturnValue(selectChain) });
 
       await processor.process(makeJob());
 
@@ -100,10 +100,10 @@ describe('ContentScannerProcessor', () => {
     it('should log start and completion of scan', async () => {
       // Mock fingerprints loading → empty (triggers early return)
       const selectChain: any = {};
-      selectChain.eq = jest.fn().mockReturnValue(selectChain);
-      selectChain.in = jest.fn().mockReturnValue(selectChain);
-      selectChain.limit = jest.fn().mockResolvedValue({ data: [], error: null });
-      mockDb.from.mockReturnValue({ select: jest.fn().mockReturnValue(selectChain) });
+      selectChain.eq = vi.fn().mockReturnValue(selectChain);
+      selectChain.in = vi.fn().mockReturnValue(selectChain);
+      selectChain.limit = vi.fn().mockResolvedValue({ data: [], error: null });
+      mockDb.from.mockReturnValue({ select: vi.fn().mockReturnValue(selectChain) });
 
       await processor.process(makeJob());
 

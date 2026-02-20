@@ -32,10 +32,10 @@ import type {
 } from '@shared/types/nostr';
 
 // Mock dependencies
-jest.mock('../EventPublisherService');
-jest.mock('../KeyManagementService');
-jest.mock('../RelayPoolManager');
-jest.mock('../EventCacheService');
+vi.mock('../EventPublisherService');
+vi.mock('../KeyManagementService');
+vi.mock('../RelayPoolManager');
+vi.mock('../EventCacheService');
 
 describe('SovrenNIPService', () => {
   let service: SovrenNIPService;
@@ -47,7 +47,7 @@ describe('SovrenNIPService', () => {
   beforeEach(() => {
     // Setup mocks
     mockPublisher = {
-      publishEvent: jest.fn().mockResolvedValue({
+      publishEvent: vi.fn().mockResolvedValue({
         success: true,
         event: {
           id: 'event123',
@@ -62,17 +62,17 @@ describe('SovrenNIPService', () => {
     };
 
     mockKeyManager = {
-      getPublicKey: jest.fn().mockResolvedValue('pubkey123'),
+      getPublicKey: vi.fn().mockResolvedValue('pubkey123'),
     };
 
     mockRelayPool = {
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
     };
 
     mockCache = {
-      add: jest.fn().mockResolvedValue(undefined),
-      get: jest.fn().mockResolvedValue(null),
+      add: vi.fn().mockResolvedValue(undefined),
+      get: vi.fn().mockResolvedValue(null),
     };
 
     service = new SovrenNIPService(
@@ -89,7 +89,7 @@ describe('SovrenNIPService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ========================================

@@ -17,30 +17,30 @@ import { LightningReceiptService, PaymentReceipt } from '../../services/lightnin
 // ===============================
 
 // Mock external dependencies
-jest.mock('puppeteer', () => ({
-  launch: jest.fn().mockResolvedValue({
-    newPage: jest.fn().mockResolvedValue({
-      setContent: jest.fn(),
-      pdf: jest.fn().mockResolvedValue(Buffer.from('Mock PDF content')),
+vi.mock('puppeteer', () => ({
+  launch: vi.fn().mockResolvedValue({
+    newPage: vi.fn().mockResolvedValue({
+      setContent: vi.fn(),
+      pdf: vi.fn().mockResolvedValue(Buffer.from('Mock PDF content')),
     }),
-    close: jest.fn(),
+    close: vi.fn(),
   }),
 }));
 
-jest.mock('nodemailer', () => ({
-  createTransport: jest.fn().mockReturnValue({
-    verify: jest.fn().mockResolvedValue(true),
-    sendMail: jest.fn().mockResolvedValue({
+vi.mock('nodemailer', () => ({
+  createTransport: vi.fn().mockReturnValue({
+    verify: vi.fn().mockResolvedValue(true),
+    sendMail: vi.fn().mockResolvedValue({
       messageId: 'test-message-id',
       accepted: ['test@example.com'],
     }),
   }),
 }));
 
-jest.mock('fs/promises', () => ({
-  readFile: jest.fn(),
-  writeFile: jest.fn(),
-  mkdir: jest.fn(),
+vi.mock('fs/promises', () => ({
+  readFile: vi.fn(),
+  writeFile: vi.fn(),
+  mkdir: vi.fn(),
 }));
 
 // Test configuration
@@ -115,7 +115,7 @@ describe('LightningReceiptService', () => {
     receiptService = new LightningReceiptService(testConfig);
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock environment variables
     process.env.RECEIPT_SIGNATURE_SECRET = 'test-secret';
@@ -242,8 +242,8 @@ describe('LightningReceiptService', () => {
 
     it('should generate PDF receipt successfully', async () => {
       // Mock fs operations
-      (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
-      (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+      (fs.mkdir as any).mockResolvedValue(undefined);
+      (fs.writeFile as any).mockResolvedValue(undefined);
 
       const pdfBuffer = await receiptService.generatePdfReceipt(mockReceipt);
 
@@ -254,8 +254,8 @@ describe('LightningReceiptService', () => {
     });
 
     it('should update receipt after PDF generation', async () => {
-      (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
-      (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+      (fs.mkdir as any).mockResolvedValue(undefined);
+      (fs.writeFile as any).mockResolvedValue(undefined);
 
       const initialPdfStatus = mockReceipt.receipt.pdfGenerated;
 
@@ -559,10 +559,10 @@ describe('LightningReceiptService', () => {
     });
 
     it('should render PDF template with receipt data', async () => {
-      const renderTemplateSpy = jest.spyOn(receiptService as any, 'renderTemplate');
+      const renderTemplateSpy = vi.spyOn(receiptService as any, 'renderTemplate');
 
-      (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
-      (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+      (fs.mkdir as any).mockResolvedValue(undefined);
+      (fs.writeFile as any).mockResolvedValue(undefined);
 
       await receiptService.generatePdfReceipt(mockReceipt);
 
@@ -576,13 +576,13 @@ describe('LightningReceiptService', () => {
     });
 
     it('should use default template when file not found', async () => {
-      (fs.readFile as jest.Mock).mockRejectedValue(new Error('File not found'));
+      (fs.readFile as any).mockRejectedValue(new Error('File not found'));
 
-      const loadTemplateSpy = jest.spyOn(receiptService as any, 'loadTemplate');
-      const getDefaultTemplateSpy = jest.spyOn(receiptService as any, 'getDefaultTemplate');
+      const loadTemplateSpy = vi.spyOn(receiptService as any, 'loadTemplate');
+      const getDefaultTemplateSpy = vi.spyOn(receiptService as any, 'getDefaultTemplate');
 
-      (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
-      (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+      (fs.mkdir as any).mockResolvedValue(undefined);
+      (fs.writeFile as any).mockResolvedValue(undefined);
 
       await receiptService.generatePdfReceipt(mockReceipt);
 
@@ -604,7 +604,7 @@ describe('LightningReceiptService', () => {
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
-      const eventListener = jest.fn();
+      const eventListener = vi.fn();
       receiptService.on('receipt:generated', eventListener);
 
       await receiptService.generateReceipt({
@@ -629,11 +629,11 @@ describe('LightningReceiptService', () => {
         paymentId: 'test-payment-id',
       });
 
-      const eventListener = jest.fn();
+      const eventListener = vi.fn();
       receiptService.on('receipt:pdf:generated', eventListener);
 
-      (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
-      (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+      (fs.mkdir as any).mockResolvedValue(undefined);
+      (fs.writeFile as any).mockResolvedValue(undefined);
 
       await receiptService.generatePdfReceipt(receipt);
 
@@ -655,7 +655,7 @@ describe('LightningReceiptService', () => {
         paymentId: 'test-payment-id',
       });
 
-      const eventListener = jest.fn();
+      const eventListener = vi.fn();
       receiptService.on('receipt:email:sent', eventListener);
 
       const email = 'test@example.com';
@@ -767,5 +767,5 @@ describe('LightningReceiptService', () => {
 
 afterAll(() => {
   // Clean up any test artifacts
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });

@@ -2,7 +2,7 @@ import { TTLCache } from '../ttl-cache';
 
 describe('TTLCache onEvict callback (Fix #118 support)', () => {
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('should fire onEvict when entry is deleted', () => {
@@ -41,7 +41,7 @@ describe('TTLCache onEvict callback (Fix #118 support)', () => {
   });
 
   it('should fire onEvict on TTL expiry during get()', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     const evicted: Array<[string, number]> = [];
     const cache = new TTLCache<string, number>({
@@ -54,7 +54,7 @@ describe('TTLCache onEvict callback (Fix #118 support)', () => {
     cache.set('x', 42);
 
     // Advance past TTL
-    jest.advanceTimersByTime(1100);
+    vi.advanceTimersByTime(1100);
 
     // get() should trigger eviction
     const result = cache.get('x');
@@ -64,7 +64,7 @@ describe('TTLCache onEvict callback (Fix #118 support)', () => {
   });
 
   it('should fire onEvict for expired entries during values() call', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     const evicted: Array<[string, number]> = [];
     const cache = new TTLCache<string, number>({
@@ -78,7 +78,7 @@ describe('TTLCache onEvict callback (Fix #118 support)', () => {
     cache.set('fresh', 2);
 
     // Advance just past first TTL, then add 'fresh' again
-    jest.advanceTimersByTime(1100);
+    vi.advanceTimersByTime(1100);
     cache.set('fresh', 2); // Re-set to extend TTL
 
     const vals = cache.values();

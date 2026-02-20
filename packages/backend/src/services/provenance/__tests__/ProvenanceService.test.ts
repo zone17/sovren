@@ -10,15 +10,15 @@ function createMockDb() {
   const chain: any = {};
   const methods = ['select', 'eq', 'single', 'upsert', 'update', 'from'];
   for (const method of methods) {
-    chain[method] = jest.fn().mockReturnValue(chain);
+    chain[method] = vi.fn().mockReturnValue(chain);
   }
-  return { from: jest.fn().mockReturnValue(chain), _chain: chain };
+  return { from: vi.fn().mockReturnValue(chain), _chain: chain };
 }
 
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
 };
 
 describe('ProvenanceService', () => {
@@ -28,7 +28,7 @@ describe('ProvenanceService', () => {
   beforeEach(() => {
     mockDb = createMockDb();
     service = new ProvenanceService(mockDb as any, mockLogger);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getProvenanceChain', () => {
@@ -298,10 +298,10 @@ describe('ProvenanceService', () => {
 
       // Second call: update → succeeds
       mockDb._chain.eq.mockReturnValue(mockDb._chain);
-      mockDb._chain.update = jest.fn().mockReturnValue(mockDb._chain);
+      mockDb._chain.update = vi.fn().mockReturnValue(mockDb._chain);
       // Make the update's eq chain return no error
       const updateChain: any = {};
-      updateChain.eq = jest.fn().mockReturnValue(updateChain);
+      updateChain.eq = vi.fn().mockReturnValue(updateChain);
       mockDb._chain.update.mockReturnValue(updateChain);
       updateChain.eq.mockReturnValue({ error: null });
 

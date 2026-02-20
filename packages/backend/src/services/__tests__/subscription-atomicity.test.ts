@@ -7,65 +7,65 @@
  */
 
 // Mock all external dependencies before imports
-jest.mock(
+vi.mock(
   '../../config/supabase',
   () => ({
     supabase: {
-      from: jest.fn(),
-      raw: jest.fn((val: string) => val),
+      from: vi.fn(),
+      raw: vi.fn((val: string) => val),
     },
   }),
   { virtual: true }
 );
 
-jest.mock('../../lib/redis', () => ({
-  getRedisClient: jest.fn(() => ({
-    setex: jest.fn().mockResolvedValue('OK'),
-    get: jest.fn().mockResolvedValue(null),
-    del: jest.fn().mockResolvedValue(1),
-    ping: jest.fn().mockResolvedValue('PONG'),
+vi.mock('../../lib/redis', () => ({
+  getRedisClient: vi.fn(() => ({
+    setex: vi.fn().mockResolvedValue('OK'),
+    get: vi.fn().mockResolvedValue(null),
+    del: vi.fn().mockResolvedValue(1),
+    ping: vi.fn().mockResolvedValue('PONG'),
   })),
 }));
 
-jest.mock(
+vi.mock(
   '../notification-service',
   () => ({
-    NotificationService: jest.fn().mockImplementation(() => ({
-      sendNotification: jest.fn().mockResolvedValue(undefined),
+    NotificationService: vi.fn().mockImplementation(() => ({
+      sendNotification: vi.fn().mockResolvedValue(undefined),
     })),
   }),
   { virtual: true }
 );
 
-jest.mock(
+vi.mock(
   '../analytics-service',
   () => ({
-    AnalyticsService: jest.fn().mockImplementation(() => ({
-      track: jest.fn().mockResolvedValue(undefined),
+    AnalyticsService: vi.fn().mockImplementation(() => ({
+      track: vi.fn().mockResolvedValue(undefined),
     })),
   }),
   { virtual: true }
 );
 
-jest.mock(
+vi.mock(
   '../websocket-service',
   () => ({
-    WebSocketService: jest.fn().mockImplementation(() => ({})),
+    WebSocketService: vi.fn().mockImplementation(() => ({})),
   }),
   { virtual: true }
 );
 
-jest.mock('../../utils/logger', () => ({
-  Logger: jest.fn().mockImplementation(() => ({
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
+vi.mock('../../utils/logger', () => ({
+  Logger: vi.fn().mockImplementation(() => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
   })),
 }));
 
-jest.mock('../lightning-payment-service', () => ({
-  LightningPaymentService: jest.fn(),
+vi.mock('../lightning-payment-service', () => ({
+  LightningPaymentService: vi.fn(),
 }));
 
 import { SubscriptionManagementService } from '../subscription-management-service';
@@ -74,16 +74,16 @@ import { supabase } from '../../config/supabase';
 // Helper to create chainable Supabase mock
 function mockSupabaseChain(data: any = null, error: any = null) {
   const chain: any = {
-    insert: jest.fn().mockReturnValue({ error }),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue({ data, error }),
-    lte: jest.fn().mockReturnThis(),
-    lt: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnValue({ error }),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data, error }),
+    lte: vi.fn().mockReturnThis(),
+    lt: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
     then: undefined, // prevent Jest from treating as Promise
   };
   // Make insert/update/delete also return chain for .eq() calls
@@ -92,7 +92,7 @@ function mockSupabaseChain(data: any = null, error: any = null) {
   chain.delete.mockReturnValue(chain);
   // For eq after delete/update, return resolved
   const terminalChain = { ...chain };
-  terminalChain.eq = jest.fn().mockResolvedValue({ error: null });
+  terminalChain.eq = vi.fn().mockResolvedValue({ error: null });
   chain.delete.mockReturnValue(terminalChain);
 
   return chain;
@@ -103,52 +103,52 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
   let mockLightningService: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockLightningService = {
-      generateBOLT11Invoice: jest.fn().mockResolvedValue({
+      generateBOLT11Invoice: vi.fn().mockResolvedValue({
         payment_request: 'lnbc_test',
         payment_hash: 'hash_test',
       }),
     };
 
     // Mock processRecurringPayments to avoid startup processing
-    const fromMock = supabase.from as jest.Mock;
+    const fromMock = supabase.from as any;
     fromMock.mockImplementation((table: string) => {
       if (table === 'recurring_payments') {
         return {
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          lte: jest.fn().mockReturnThis(),
-          lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-          insert: jest.fn().mockResolvedValue({ error: null }),
-          delete: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null }),
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          lte: vi.fn().mockReturnThis(),
+          lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+          insert: vi.fn().mockResolvedValue({ error: null }),
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
           }),
         };
       }
       if (table === 'subscriptions') {
         return {
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          single: jest.fn().mockResolvedValue({ data: null, error: null }),
-          insert: jest.fn().mockResolvedValue({ error: null }),
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null }),
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({ data: null, error: null }),
+          insert: vi.fn().mockResolvedValue({ error: null }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
           }),
-          delete: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null }),
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
           }),
-          lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-          gte: jest.fn().mockReturnThis(),
-          lte: jest.fn().mockResolvedValue({ data: [], error: null }),
+          lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+          gte: vi.fn().mockReturnThis(),
+          lte: vi.fn().mockResolvedValue({ data: [], error: null }),
         };
       }
       if (table === 'subscription_tiers') {
         return {
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          single: jest.fn().mockResolvedValue({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
             data: {
               id: 'tier_test',
               creator_id: 'creator_test',
@@ -164,8 +164,8 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
             },
             error: null,
           }),
-          update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
           }),
         };
       }
@@ -185,7 +185,7 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
     });
 
     it('should roll back subscription on step 2 failure (recurring payment)', async () => {
-      const fromMock = supabase.from as jest.Mock;
+      const fromMock = supabase.from as any;
 
       // Step 1 succeeds
       // Step 2 fails (recurring payment insert throws)
@@ -194,43 +194,43 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
       fromMock.mockImplementation((table: string) => {
         if (table === 'subscriptions') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            insert: jest.fn().mockResolvedValue({ error: null }), // Step 1 succeeds
-            delete: jest.fn().mockReturnValue({
-              eq: jest.fn().mockImplementation(() => {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            insert: vi.fn().mockResolvedValue({ error: null }), // Step 1 succeeds
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockImplementation(() => {
                 subscriptionDeleteCalled = true;
                 return Promise.resolve({ error: null });
               }),
             }),
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ error: null }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            gte: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockResolvedValue({ data: [], error: null }),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            gte: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockResolvedValue({ data: [], error: null }),
           };
         }
         if (table === 'recurring_payments') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockReturnThis(),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            insert: jest.fn().mockResolvedValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockReturnThis(),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            insert: vi.fn().mockResolvedValue({
               error: { message: 'DB constraint violation' },
             }), // Step 2 fails
-            delete: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ error: null }),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
           };
         }
         if (table === 'subscription_tiers') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
               data: {
                 id: 'tier_test',
                 creator_id: 'creator_test',
@@ -246,8 +246,8 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
               },
               error: null,
             }),
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ error: null }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
           };
         }
@@ -266,7 +266,7 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
     });
 
     it('should roll back subscription and recurring payment on step 3 failure (invoice)', async () => {
-      const fromMock = supabase.from as jest.Mock;
+      const fromMock = supabase.from as any;
 
       let subscriptionDeleteCalled = false;
       let recurringPaymentDeleteCalled = false;
@@ -274,33 +274,33 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
       fromMock.mockImplementation((table: string) => {
         if (table === 'subscriptions') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            insert: jest.fn().mockResolvedValue({ error: null }),
-            delete: jest.fn().mockReturnValue({
-              eq: jest.fn().mockImplementation(() => {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            insert: vi.fn().mockResolvedValue({ error: null }),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockImplementation(() => {
                 subscriptionDeleteCalled = true;
                 return Promise.resolve({ error: null });
               }),
             }),
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ error: null }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            gte: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockResolvedValue({ data: [], error: null }),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            gte: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockResolvedValue({ data: [], error: null }),
           };
         }
         if (table === 'recurring_payments') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockReturnThis(),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            insert: jest.fn().mockResolvedValue({ error: null }), // Step 2 succeeds
-            delete: jest.fn().mockReturnValue({
-              eq: jest.fn().mockImplementation(() => {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockReturnThis(),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            insert: vi.fn().mockResolvedValue({ error: null }), // Step 2 succeeds
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockImplementation(() => {
                 recurringPaymentDeleteCalled = true;
                 return Promise.resolve({ error: null });
               }),
@@ -309,9 +309,9 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
         }
         if (table === 'subscription_tiers') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
               data: {
                 id: 'tier_test',
                 creator_id: 'creator_test',
@@ -327,8 +327,8 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
               },
               error: null,
             }),
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ error: null }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
           };
         }
@@ -353,7 +353,7 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
     });
 
     it('should roll back all three steps on step 4 failure (tier count)', async () => {
-      const fromMock = supabase.from as jest.Mock;
+      const fromMock = supabase.from as any;
 
       let subscriptionDeleteCalled = false;
       let recurringPaymentDeleteCalled = false;
@@ -361,33 +361,33 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
       fromMock.mockImplementation((table: string) => {
         if (table === 'subscriptions') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            insert: jest.fn().mockResolvedValue({ error: null }),
-            delete: jest.fn().mockReturnValue({
-              eq: jest.fn().mockImplementation(() => {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            insert: vi.fn().mockResolvedValue({ error: null }),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockImplementation(() => {
                 subscriptionDeleteCalled = true;
                 return Promise.resolve({ error: null });
               }),
             }),
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ error: null }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            gte: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockResolvedValue({ data: [], error: null }),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            gte: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockResolvedValue({ data: [], error: null }),
           };
         }
         if (table === 'recurring_payments') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockReturnThis(),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            insert: jest.fn().mockResolvedValue({ error: null }),
-            delete: jest.fn().mockReturnValue({
-              eq: jest.fn().mockImplementation(() => {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockReturnThis(),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            insert: vi.fn().mockResolvedValue({ error: null }),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockImplementation(() => {
                 recurringPaymentDeleteCalled = true;
                 return Promise.resolve({ error: null });
               }),
@@ -397,9 +397,9 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
         if (table === 'subscription_tiers') {
           let callCount = 0;
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
               data: {
                 id: 'tier_test',
                 creator_id: 'creator_test',
@@ -415,8 +415,8 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
               },
               error: null,
             }),
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockImplementation(() => {
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockImplementation(() => {
                 callCount++;
                 if (callCount === 1) {
                   // Step 4 fails
@@ -447,46 +447,46 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
 
   describe('Rollback error isolation', () => {
     it('should not throw from rollback operations even if they fail', async () => {
-      const fromMock = supabase.from as jest.Mock;
+      const fromMock = supabase.from as any;
 
       fromMock.mockImplementation((table: string) => {
         if (table === 'subscriptions') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({ data: null, error: null }),
-            insert: jest.fn().mockResolvedValue({ error: null }),
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            insert: vi.fn().mockResolvedValue({ error: null }),
             // Rollback delete also fails
-            delete: jest.fn().mockReturnValue({
-              eq: jest.fn().mockRejectedValue(new Error('Rollback failed too')),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockRejectedValue(new Error('Rollback failed too')),
             }),
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ error: null }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            gte: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockResolvedValue({ data: [], error: null }),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            gte: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockResolvedValue({ data: [], error: null }),
           };
         }
         if (table === 'recurring_payments') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockReturnThis(),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            insert: jest.fn().mockResolvedValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockReturnThis(),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            insert: vi.fn().mockResolvedValue({
               error: { message: 'Step 2 fails' },
             }),
-            delete: jest.fn().mockReturnValue({
-              eq: jest.fn().mockRejectedValue(new Error('Rollback failed')),
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockRejectedValue(new Error('Rollback failed')),
             }),
           };
         }
         if (table === 'subscription_tiers') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
               data: {
                 id: 'tier_test',
                 creator_id: 'creator_test',
@@ -502,8 +502,8 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
               },
               error: null,
             }),
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({ error: null }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
           };
         }
@@ -523,39 +523,39 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
   describe('GREATEST to prevent negative subscriber count', () => {
     it('should use GREATEST(current_subscribers - 1, 0) in rollback', () => {
       // Verify the raw SQL call uses GREATEST
-      const rawMock = supabase.raw as jest.Mock;
+      const rawMock = supabase.raw as any;
       // The service calls supabase.raw('GREATEST(current_subscribers - 1, 0)')
       // during rollback. We verify the mock records this call pattern.
       rawMock.mockImplementation((val: string) => val);
 
-      const result = (supabase.raw as jest.Mock)('GREATEST(current_subscribers - 1, 0)');
+      const result = (supabase.raw as any)('GREATEST(current_subscribers - 1, 0)');
       expect(result).toBe('GREATEST(current_subscribers - 1, 0)');
     });
   });
 
   describe('Duplicate subscription prevention', () => {
     it('should reject duplicate subscription for same user+tier', async () => {
-      const fromMock = supabase.from as jest.Mock;
+      const fromMock = supabase.from as any;
 
       fromMock.mockImplementation((table: string) => {
         if (table === 'subscriptions') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
               data: { id: 'existing_sub' }, // Already exists!
               error: null,
             }),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
-            gte: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockResolvedValue({ data: [], error: null }),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
+            gte: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockResolvedValue({ data: [], error: null }),
           };
         }
         if (table === 'subscription_tiers') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
               data: {
                 id: 'tier_test',
                 creator_id: 'creator_test',
@@ -575,10 +575,10 @@ describe('Fix #116: Non-Atomic Subscription Creation — Compensating Transactio
         }
         if (table === 'recurring_payments') {
           return {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            lte: jest.fn().mockReturnThis(),
-            lt: jest.fn().mockResolvedValue({ data: [], error: null }),
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockReturnThis(),
+            lt: vi.fn().mockResolvedValue({ data: [], error: null }),
           };
         }
         return mockSupabaseChain();

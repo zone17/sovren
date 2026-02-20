@@ -58,7 +58,7 @@ describe('Deployment Smoke Tests', () => {
 
     beforeEach(() => {
       // Import fresh instance for each test
-      jest.resetModules();
+      vi.resetModules();
       const monitoring = require('../middleware/deployment-monitoring');
       deploymentMonitor = monitoring.deploymentMonitor;
       deploymentMonitor.reset();
@@ -272,7 +272,7 @@ describe('Deployment Smoke Tests', () => {
     it('should initialize monitoring within acceptable time', () => {
       const start = Date.now();
 
-      jest.resetModules();
+      vi.resetModules();
       require('../middleware/deployment-monitoring');
 
       const duration = Date.now() - start;

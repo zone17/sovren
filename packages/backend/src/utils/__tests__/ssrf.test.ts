@@ -6,8 +6,8 @@
 import { validateSsrfUrl } from '../ssrf';
 
 // Mock DNS lookup to avoid real network calls in tests
-jest.mock('dns/promises', () => ({
-  lookup: jest.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]),
+vi.mock('dns/promises', () => ({
+  lookup: vi.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]),
 }));
 
 describe('validateSsrfUrl', () => {

@@ -1,7 +1,7 @@
 import { apiClient, ApiError } from '../apiClient';
 
 // Mock fetch globally
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('ApiClient', () => {

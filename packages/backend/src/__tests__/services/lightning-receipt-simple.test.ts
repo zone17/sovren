@@ -5,28 +5,28 @@
  */
 
 // Mock dependencies
-jest.mock('puppeteer', () => ({
-  launch: jest.fn().mockResolvedValue({
-    newPage: jest.fn().mockResolvedValue({
-      setContent: jest.fn(),
-      pdf: jest.fn().mockResolvedValue(Buffer.from('mock-pdf-content')),
-      close: jest.fn(),
+vi.mock('puppeteer', () => ({
+  launch: vi.fn().mockResolvedValue({
+    newPage: vi.fn().mockResolvedValue({
+      setContent: vi.fn(),
+      pdf: vi.fn().mockResolvedValue(Buffer.from('mock-pdf-content')),
+      close: vi.fn(),
     }),
-    close: jest.fn(),
+    close: vi.fn(),
   }),
 }));
 
-jest.mock('nodemailer', () => ({
-  createTransport: jest.fn().mockReturnValue({
-    sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' }),
-    verify: jest.fn().mockResolvedValue(true),
+vi.mock('nodemailer', () => ({
+  createTransport: vi.fn().mockReturnValue({
+    sendMail: vi.fn().mockResolvedValue({ messageId: 'test-message-id' }),
+    verify: vi.fn().mockResolvedValue(true),
   }),
 }));
 
-jest.mock('fs/promises', () => ({
-  writeFile: jest.fn().mockResolvedValue(undefined),
-  readFile: jest.fn().mockResolvedValue('mock-template-content'),
-  mkdir: jest.fn().mockResolvedValue(undefined),
+vi.mock('fs/promises', () => ({
+  writeFile: vi.fn().mockResolvedValue(undefined),
+  readFile: vi.fn().mockResolvedValue('mock-template-content'),
+  mkdir: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Import after mocks

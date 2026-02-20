@@ -4,7 +4,7 @@ import lightningRoutes from '../../routes/lightning';
 import { lightningService } from '../../services/lightning/lightningService';
 
 // Mock the authentication middleware
-jest.mock('../../middleware/auth', () => ({
+vi.mock('../../middleware/auth', () => ({
   authenticate: (req: any, res: any, next: any) => {
     // Add a mock user to the request
     req.user = {
@@ -16,19 +16,19 @@ jest.mock('../../middleware/auth', () => ({
 }));
 
 // Mock the lightning service
-jest.mock('../../services/lightning/lightningService', () => ({
+vi.mock('../../services/lightning/lightningService', () => ({
   lightningService: {
-    getNodeInfo: jest.fn(),
-    createInvoice: jest.fn(),
-    checkInvoiceStatus: jest.fn(),
-    makePayment: jest.fn(),
-    createSubscription: jest.fn(),
-    cancelSubscription: jest.fn(),
-    getUserPaymentHistory: jest.fn(),
-    getUserSubscriptions: jest.fn(),
-    processPayout: jest.fn(),
-    getCreatorPayoutHistory: jest.fn(),
-    getCreatorSubscribers: jest.fn(),
+    getNodeInfo: vi.fn(),
+    createInvoice: vi.fn(),
+    checkInvoiceStatus: vi.fn(),
+    makePayment: vi.fn(),
+    createSubscription: vi.fn(),
+    cancelSubscription: vi.fn(),
+    getUserPaymentHistory: vi.fn(),
+    getUserSubscriptions: vi.fn(),
+    processPayout: vi.fn(),
+    getCreatorPayoutHistory: vi.fn(),
+    getCreatorSubscribers: vi.fn(),
   },
 }));
 
@@ -41,7 +41,7 @@ describe('Lightning API Routes', () => {
     app.use('/api/lightning', lightningRoutes);
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('GET /api/lightning/node-info', () => {
@@ -58,7 +58,7 @@ describe('Lightning API Routes', () => {
         totalCapacity: 50000000,
       };
 
-      (lightningService.getNodeInfo as jest.Mock).mockResolvedValue(mockNodeInfo);
+      (lightningService.getNodeInfo as any).mockResolvedValue(mockNodeInfo);
 
       const response = await request(app).get('/api/lightning/node-info').expect(200);
 
@@ -68,7 +68,7 @@ describe('Lightning API Routes', () => {
 
     it('should handle errors', async () => {
       // Mock service error
-      (lightningService.getNodeInfo as jest.Mock).mockRejectedValue(
+      (lightningService.getNodeInfo as any).mockRejectedValue(
         new Error('Failed to get node info')
       );
 
@@ -100,7 +100,7 @@ describe('Lightning API Routes', () => {
         settled: false,
       };
 
-      (lightningService.createInvoice as jest.Mock).mockResolvedValue(mockInvoice);
+      (lightningService.createInvoice as any).mockResolvedValue(mockInvoice);
 
       const response = await request(app)
         .post('/api/lightning/invoice')
@@ -146,7 +146,7 @@ describe('Lightning API Routes', () => {
         preimage: '9dabd85596c3222f3d8a42e8895378d4473c0c79e7598dd3a2f5318b8a8e9b29',
       };
 
-      (lightningService.checkInvoiceStatus as jest.Mock).mockResolvedValue(mockInvoice);
+      (lightningService.checkInvoiceStatus as any).mockResolvedValue(mockInvoice);
 
       const response = await request(app).get(`/api/lightning/invoice/${paymentHash}`).expect(200);
 
@@ -171,7 +171,7 @@ describe('Lightning API Routes', () => {
         fee: 10,
       };
 
-      (lightningService.makePayment as jest.Mock).mockResolvedValue(mockPaymentResponse);
+      (lightningService.makePayment as any).mockResolvedValue(mockPaymentResponse);
 
       const response = await request(app)
         .post('/api/lightning/payment')
@@ -217,7 +217,7 @@ describe('Lightning API Routes', () => {
         },
       };
 
-      (lightningService.createSubscription as jest.Mock).mockResolvedValue(mockSubscription);
+      (lightningService.createSubscription as any).mockResolvedValue(mockSubscription);
 
       const response = await request(app)
         .post('/api/lightning/subscription')
@@ -292,7 +292,7 @@ describe('Lightning API Routes', () => {
         },
       };
 
-      (lightningService.cancelSubscription as jest.Mock).mockResolvedValue(mockSubscription);
+      (lightningService.cancelSubscription as any).mockResolvedValue(mockSubscription);
 
       const response = await request(app)
         .put(`/api/lightning/subscription/${subscriptionId}/cancel`)
@@ -326,7 +326,7 @@ describe('Lightning API Routes', () => {
         },
       ];
 
-      (lightningService.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningService.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       const response = await request(app).get('/api/lightning/user/payments').expect(200);
 
@@ -357,7 +357,7 @@ describe('Lightning API Routes', () => {
         },
       ];
 
-      (lightningService.getUserSubscriptions as jest.Mock).mockResolvedValue(mockSubscriptions);
+      (lightningService.getUserSubscriptions as any).mockResolvedValue(mockSubscriptions);
 
       const response = await request(app).get('/api/lightning/user/subscriptions').expect(200);
 
@@ -393,7 +393,7 @@ describe('Lightning API Routes', () => {
         },
       };
 
-      (lightningService.processPayout as jest.Mock).mockResolvedValue(mockPayout);
+      (lightningService.processPayout as any).mockResolvedValue(mockPayout);
 
       const response = await request(app)
         .post('/api/lightning/creator/payout')

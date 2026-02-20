@@ -11,31 +11,31 @@ import { FeedTimeline } from '../components/FeedTimeline';
 import type { FeedTimelineProps } from '../types';
 
 // Mock the hooks
-jest.mock('../hooks/useFeedSubscription', () => ({
-  useFeedSubscription: jest.fn(() => ({
+vi.mock('../hooks/useFeedSubscription', () => ({
+  useFeedSubscription: vi.fn(() => ({
     events: [],
     isLoading: false,
     error: null,
     hasMore: true,
     subscriptionId: null,
     isSubscribed: false,
-    subscribe: jest.fn(),
-    unsubscribe: jest.fn(),
-    refresh: jest.fn(),
-    addOptimisticUpdate: jest.fn(),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    refresh: vi.fn(),
+    addOptimisticUpdate: vi.fn(),
   })),
 }));
 
-jest.mock('../hooks/useFeedFilters', () => ({
-  useFeedFilters: jest.fn(() => ({
+vi.mock('../hooks/useFeedFilters', () => ({
+  useFeedFilters: vi.fn(() => ({
     filters: { kinds: [1, 6, 7] },
-    updateFilters: jest.fn(),
-    clearFilters: jest.fn(),
-    addAuthor: jest.fn(),
-    removeAuthor: jest.fn(),
-    addHashtag: jest.fn(),
-    removeHashtag: jest.fn(),
-    setDateRange: jest.fn(),
+    updateFilters: vi.fn(),
+    clearFilters: vi.fn(),
+    addAuthor: vi.fn(),
+    removeAuthor: vi.fn(),
+    addHashtag: vi.fn(),
+    removeHashtag: vi.fn(),
+    setDateRange: vi.fn(),
   })),
 }));
 
@@ -47,7 +47,7 @@ describe('FeedTimeline', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering', () => {
@@ -78,10 +78,10 @@ describe('FeedTimeline', () => {
         isLoading: true,
         error: null,
         hasMore: true,
-        subscribe: jest.fn(),
-        unsubscribe: jest.fn(),
-        refresh: jest.fn(),
-        addOptimisticUpdate: jest.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        refresh: vi.fn(),
+        addOptimisticUpdate: vi.fn(),
       });
 
       render(<FeedTimeline {...defaultProps} />);
@@ -107,10 +107,10 @@ describe('FeedTimeline', () => {
         isLoading: false,
         error: errorMessage,
         hasMore: false,
-        subscribe: jest.fn(),
-        unsubscribe: jest.fn(),
-        refresh: jest.fn(),
-        addOptimisticUpdate: jest.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        refresh: vi.fn(),
+        addOptimisticUpdate: vi.fn(),
       });
 
       render(<FeedTimeline {...defaultProps} />);
@@ -121,16 +121,16 @@ describe('FeedTimeline', () => {
   describe('Interactions', () => {
     it('calls refresh when refresh button is clicked', async () => {
       const { useFeedSubscription } = require('../hooks/useFeedSubscription');
-      const mockRefresh = jest.fn();
+      const mockRefresh = vi.fn();
       useFeedSubscription.mockReturnValue({
         events: [],
         isLoading: false,
         error: null,
         hasMore: true,
-        subscribe: jest.fn(),
-        unsubscribe: jest.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
         refresh: mockRefresh,
-        addOptimisticUpdate: jest.fn(),
+        addOptimisticUpdate: vi.fn(),
         subscriptionId: null,
         isSubscribed: false,
       });
@@ -150,10 +150,10 @@ describe('FeedTimeline', () => {
         isLoading: true,
         error: null,
         hasMore: true,
-        subscribe: jest.fn(),
-        unsubscribe: jest.fn(),
-        refresh: jest.fn(),
-        addOptimisticUpdate: jest.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        refresh: vi.fn(),
+        addOptimisticUpdate: vi.fn(),
         subscriptionId: null,
         isSubscribed: false,
       });
@@ -171,10 +171,10 @@ describe('FeedTimeline', () => {
         isLoading: false,
         error: null,
         hasMore: true,
-        subscribe: jest.fn(),
-        unsubscribe: jest.fn(),
-        refresh: jest.fn(),
-        addOptimisticUpdate: jest.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        refresh: vi.fn(),
+        addOptimisticUpdate: vi.fn(),
         subscriptionId: null,
         isSubscribed: false,
       });
@@ -206,10 +206,10 @@ describe('FeedTimeline', () => {
         isLoading: true,
         error: null,
         hasMore: true,
-        subscribe: jest.fn(),
-        unsubscribe: jest.fn(),
-        refresh: jest.fn(),
-        addOptimisticUpdate: jest.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        refresh: vi.fn(),
+        addOptimisticUpdate: vi.fn(),
       });
 
       render(<FeedTimeline {...defaultProps} />);
@@ -224,10 +224,10 @@ describe('FeedTimeline', () => {
         isLoading: false,
         error: null,
         hasMore: true,
-        subscribe: jest.fn(),
-        unsubscribe: jest.fn(),
-        refresh: jest.fn(),
-        addOptimisticUpdate: jest.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+        refresh: vi.fn(),
+        addOptimisticUpdate: vi.fn(),
         subscriptionId: null,
         isSubscribed: false,
       });
@@ -254,16 +254,16 @@ describe('FeedTimeline', () => {
 
     it('unsubscribes on unmount', () => {
       const { useFeedSubscription } = require('../hooks/useFeedSubscription');
-      const mockUnsubscribe = jest.fn();
+      const mockUnsubscribe = vi.fn();
       useFeedSubscription.mockReturnValue({
         events: [],
         isLoading: false,
         error: null,
         hasMore: true,
-        subscribe: jest.fn(),
+        subscribe: vi.fn(),
         unsubscribe: mockUnsubscribe,
-        refresh: jest.fn(),
-        addOptimisticUpdate: jest.fn(),
+        refresh: vi.fn(),
+        addOptimisticUpdate: vi.fn(),
       });
 
       const { unmount } = render(<FeedTimeline {...defaultProps} />);

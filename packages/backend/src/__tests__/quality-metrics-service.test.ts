@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import {
   BugMetric,
   CodeQualityMetric,
@@ -246,7 +246,7 @@ describe('Quality Metrics Service Test Suite', () => {
 
     beforeEach(() => {
       coverageService = new AutomatedCoverageTrackingService();
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     describe('Coverage Tracking (US-159)', () => {
@@ -254,7 +254,7 @@ describe('Quality Metrics Service Test Suite', () => {
         const startTime = performance.now();
 
         // Mock the service methods
-        jest.spyOn(coverageService, 'getCoverage').mockResolvedValue(mockCoverageData);
+        vi.spyOn(coverageService, 'getCoverage').mockResolvedValue(mockCoverageData);
 
         const result = await coverageService.getCoverage(mockProjectId);
         const endTime = performance.now();
@@ -266,7 +266,7 @@ describe('Quality Metrics Service Test Suite', () => {
       }, 10000);
 
       it('should generate comprehensive coverage report', async () => {
-        jest.spyOn(coverageService, 'generateReport').mockResolvedValue({
+        vi.spyOn(coverageService, 'generateReport').mockResolvedValue({
           id: 'report-1',
           generatedAt: new Date().toISOString(),
           metrics: mockCoverageData,
@@ -295,8 +295,8 @@ describe('Quality Metrics Service Test Suite', () => {
       it('should update thresholds with AI optimization', async () => {
         const newThresholds = { minimum: 85, target: 95, adaptive: true };
 
-        jest.spyOn(coverageService, 'updateThresholds').mockResolvedValue(undefined);
-        jest.spyOn(coverageService, 'getCoverage').mockResolvedValue({
+        vi.spyOn(coverageService, 'updateThresholds').mockResolvedValue(undefined);
+        vi.spyOn(coverageService, 'getCoverage').mockResolvedValue({
           ...mockCoverageData,
           threshold: { ...mockCoverageData.threshold, ...newThresholds },
         });
@@ -319,7 +319,7 @@ describe('Quality Metrics Service Test Suite', () => {
           { ...mockCoverageData, timestamp: new Date().toISOString(), coveragePercentage: 85.0 },
         ];
 
-        jest.spyOn(coverageService, 'trackTrends').mockResolvedValue(trendData);
+        vi.spyOn(coverageService, 'trackTrends').mockResolvedValue(trendData);
 
         const trends = await coverageService.trackTrends(mockProjectId, 7);
 
@@ -347,14 +347,14 @@ describe('Quality Metrics Service Test Suite', () => {
 
     beforeEach(() => {
       qualityService = new AutomatedCodeQualityService();
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     describe('Code Quality Metrics (US-160)', () => {
       it('should fetch quality metrics with AI analysis', async () => {
         const startTime = performance.now();
 
-        jest.spyOn(qualityService, 'getQualityMetrics').mockResolvedValue(mockQualityData);
+        vi.spyOn(qualityService, 'getQualityMetrics').mockResolvedValue(mockQualityData);
 
         const result = await qualityService.getQualityMetrics(mockProjectId);
         const endTime = performance.now();
@@ -399,7 +399,7 @@ describe('Quality Metrics Service Test Suite', () => {
           ],
         };
 
-        jest.spyOn(qualityService, 'getDashboard').mockResolvedValue(mockDashboard);
+        vi.spyOn(qualityService, 'getDashboard').mockResolvedValue(mockDashboard);
 
         const dashboard = await qualityService.getDashboard(mockProjectId);
 
@@ -409,7 +409,7 @@ describe('Quality Metrics Service Test Suite', () => {
       });
 
       it('should enforce quality gates correctly', async () => {
-        jest.spyOn(qualityService, 'enforceGates').mockResolvedValue(true);
+        vi.spyOn(qualityService, 'enforceGates').mockResolvedValue(true);
 
         const gatesPassed = await qualityService.enforceGates(mockProjectId);
 
@@ -427,7 +427,7 @@ describe('Quality Metrics Service Test Suite', () => {
           },
         ];
 
-        jest.spyOn(qualityService, 'getRefactoringSuggestions').mockResolvedValue(suggestions);
+        vi.spyOn(qualityService, 'getRefactoringSuggestions').mockResolvedValue(suggestions);
 
         const result = await qualityService.getRefactoringSuggestions(mockProjectId);
 
@@ -455,14 +455,14 @@ describe('Quality Metrics Service Test Suite', () => {
 
     beforeEach(() => {
       bugService = new AutomatedBugTrackingService();
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     describe('Bug Tracking and Resolution (US-161)', () => {
       it('should fetch bug metrics with AI classification', async () => {
         const startTime = performance.now();
 
-        jest.spyOn(bugService, 'getBugMetrics').mockResolvedValue(mockBugData);
+        vi.spyOn(bugService, 'getBugMetrics').mockResolvedValue(mockBugData);
 
         const result = await bugService.getBugMetrics(mockProjectId);
         const endTime = performance.now();
@@ -507,7 +507,7 @@ describe('Quality Metrics Service Test Suite', () => {
           ],
         };
 
-        jest.spyOn(bugService, 'getDashboard').mockResolvedValue(mockDashboard);
+        vi.spyOn(bugService, 'getDashboard').mockResolvedValue(mockDashboard);
 
         const dashboard = await bugService.getDashboard(mockProjectId);
 
@@ -531,7 +531,7 @@ describe('Quality Metrics Service Test Suite', () => {
           confidence: 0.92,
         };
 
-        jest.spyOn(bugService, 'classifyBug').mockResolvedValue(classification);
+        vi.spyOn(bugService, 'classifyBug').mockResolvedValue(classification);
 
         const result = await bugService.classifyBug(mockBug);
 
@@ -541,7 +541,7 @@ describe('Quality Metrics Service Test Suite', () => {
       });
 
       it('should optimize bug resolution workflows', async () => {
-        jest.spyOn(bugService, 'optimizeWorkflows').mockResolvedValue(undefined);
+        vi.spyOn(bugService, 'optimizeWorkflows').mockResolvedValue(undefined);
 
         await expect(bugService.optimizeWorkflows(mockProjectId)).resolves.not.toThrow();
       });
@@ -566,14 +566,14 @@ describe('Quality Metrics Service Test Suite', () => {
 
     beforeEach(() => {
       performanceService = new AutomatedPerformanceBenchmarkingService();
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     describe('Performance Benchmarking (US-162)', () => {
       it('should fetch performance benchmarks with baseline comparison', async () => {
         const startTime = performance.now();
 
-        jest.spyOn(performanceService, 'getBenchmarks').mockResolvedValue(mockPerformanceData);
+        vi.spyOn(performanceService, 'getBenchmarks').mockResolvedValue(mockPerformanceData);
 
         const result = await performanceService.getBenchmarks(mockProjectId);
         const endTime = performance.now();
@@ -618,7 +618,7 @@ describe('Quality Metrics Service Test Suite', () => {
           ],
         };
 
-        jest.spyOn(performanceService, 'getDashboard').mockResolvedValue(mockDashboard);
+        vi.spyOn(performanceService, 'getDashboard').mockResolvedValue(mockDashboard);
 
         const dashboard = await performanceService.getDashboard(mockProjectId);
 
@@ -639,7 +639,7 @@ describe('Quality Metrics Service Test Suite', () => {
           },
         ];
 
-        jest.spyOn(performanceService, 'detectAnomalies').mockResolvedValue(anomalies);
+        vi.spyOn(performanceService, 'detectAnomalies').mockResolvedValue(anomalies);
 
         const result = await performanceService.detectAnomalies(mockProjectId);
 
@@ -658,7 +658,7 @@ describe('Quality Metrics Service Test Suite', () => {
           },
         ];
 
-        jest.spyOn(performanceService, 'optimizePerformance').mockResolvedValue(optimizations);
+        vi.spyOn(performanceService, 'optimizePerformance').mockResolvedValue(optimizations);
 
         const result = await performanceService.optimizePerformance(mockProjectId);
 
@@ -686,7 +686,7 @@ describe('Quality Metrics Service Test Suite', () => {
 
     beforeEach(() => {
       unifiedService = new UnifiedQualityMetricsService();
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     describe('Unified Dashboard Integration', () => {
@@ -740,7 +740,7 @@ describe('Quality Metrics Service Test Suite', () => {
           ],
         };
 
-        jest.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue(mockUnifiedDashboard);
+        vi.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue(mockUnifiedDashboard);
 
         const dashboard = await unifiedService.getUnifiedDashboard(mockProjectId);
 
@@ -783,10 +783,10 @@ describe('Quality Metrics Service Test Suite', () => {
       ];
 
       // Mock all service methods
-      jest.spyOn(services[0], 'getCoverage').mockResolvedValue(mockCoverageData);
-      jest.spyOn(services[1], 'getQualityMetrics').mockResolvedValue(mockQualityData);
-      jest.spyOn(services[2], 'getBugMetrics').mockResolvedValue(mockBugData);
-      jest.spyOn(services[3], 'getBenchmarks').mockResolvedValue(mockPerformanceData);
+      vi.spyOn(services[0], 'getCoverage').mockResolvedValue(mockCoverageData);
+      vi.spyOn(services[1], 'getQualityMetrics').mockResolvedValue(mockQualityData);
+      vi.spyOn(services[2], 'getBugMetrics').mockResolvedValue(mockBugData);
+      vi.spyOn(services[3], 'getBenchmarks').mockResolvedValue(mockPerformanceData);
 
       const startTime = performance.now();
 
@@ -814,7 +814,7 @@ describe('Quality Metrics Service Test Suite', () => {
       const unifiedService = new UnifiedQualityMetricsService();
 
       // Mock the unified dashboard
-      jest.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue({
+      vi.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue({
         id: 'unified-test',
         projectId: mockProjectId,
         timestamp: new Date().toISOString(),
@@ -851,7 +851,7 @@ describe('Quality Metrics Service Test Suite', () => {
     it('should handle network timeouts gracefully', async () => {
       const coverageService = new AutomatedCoverageTrackingService();
 
-      jest.spyOn(coverageService, 'getCoverage').mockRejectedValue(new Error('Network timeout'));
+      vi.spyOn(coverageService, 'getCoverage').mockRejectedValue(new Error('Network timeout'));
 
       await expect(coverageService.getCoverage(mockProjectId)).rejects.toThrow('Network timeout');
     });
@@ -872,7 +872,7 @@ describe('Quality Metrics Service Test Suite', () => {
       const unifiedService = new UnifiedQualityMetricsService();
 
       // Mock partial failure scenario
-      jest.spyOn(unifiedService, 'getUnifiedDashboard').mockImplementation(async () => {
+      vi.spyOn(unifiedService, 'getUnifiedDashboard').mockImplementation(async () => {
         // Simulate partial failure where some services succeed and others fail
         throw new Error('Partial service failure');
       });
@@ -885,7 +885,7 @@ describe('Quality Metrics Service Test Suite', () => {
     it('should validate input parameters', async () => {
       const coverageService = new AutomatedCoverageTrackingService();
 
-      jest.spyOn(coverageService, 'getCoverage').mockImplementation(async (projectId) => {
+      vi.spyOn(coverageService, 'getCoverage').mockImplementation(async (projectId) => {
         if (!projectId || projectId.trim() === '') {
           throw new Error('Project ID is required');
         }
@@ -905,7 +905,7 @@ describe('Quality Metrics Service Test Suite', () => {
       const unifiedService = new UnifiedQualityMetricsService();
 
       // Mock successful integration
-      jest.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue({
+      vi.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue({
         id: 'integration-test',
         projectId: mockProjectId,
         timestamp: new Date().toISOString(),
@@ -944,7 +944,7 @@ describe('Quality Metrics Service Test Suite', () => {
     it('should maintain data consistency across services', async () => {
       const unifiedService = new UnifiedQualityMetricsService();
 
-      jest.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue({
+      vi.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue({
         id: 'consistency-test',
         projectId: mockProjectId,
         timestamp: new Date().toISOString(),
@@ -973,7 +973,7 @@ describe('Quality Metrics Service Test Suite', () => {
    * Cleanup
    */
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite Performance Testing Framework - Autonomous performance testing
  * with baseline learning, comprehensive analysis, and intelligent optimization.

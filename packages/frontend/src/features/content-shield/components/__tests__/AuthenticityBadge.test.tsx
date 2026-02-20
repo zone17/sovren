@@ -17,11 +17,11 @@ const mockProvenance = {
   nip05_verified: true,
 };
 
-jest.mock('../../hooks/useProvenanceChain', () => ({
-  useProvenanceChain: jest.fn(),
+vi.mock('../../hooks/useProvenanceChain', () => ({
+  useProvenanceChain: vi.fn(),
 }));
 
-jest.mock('../ProvenanceChainViewer', () => ({
+vi.mock('../ProvenanceChainViewer', () => ({
   __esModule: true,
   default: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="provenance-viewer">
@@ -31,7 +31,7 @@ jest.mock('../ProvenanceChainViewer', () => ({
 }));
 
 import { useProvenanceChain } from '../../hooks/useProvenanceChain';
-const mockUseProvenanceChain = useProvenanceChain as jest.Mock;
+const mockUseProvenanceChain = useProvenanceChain as any;
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -44,7 +44,7 @@ function createWrapper() {
 
 describe('AuthenticityBadge', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('shows loading spinner while loading', () => {

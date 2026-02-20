@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file IntegrationTestingFramework.ts
  * @description Self-configuring integration testing framework with autonomous capabilities

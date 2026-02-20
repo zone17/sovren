@@ -16,26 +16,26 @@ describe('CrossPlatformAnalyticsService', () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
     mockPlatformService = {
-      getAdapter: jest.fn(),
-      getDecryptedToken: jest.fn().mockResolvedValue('decrypted-token'),
-      getStatus: jest.fn(),
+      getAdapter: vi.fn(),
+      getDecryptedToken: vi.fn().mockResolvedValue('decrypted-token'),
+      getStatus: vi.fn(),
     };
 
     mockDb = {
-      from: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      lte: jest.fn().mockReturnThis(),
-      gte: jest.fn().mockReturnThis(),
-      order: jest.fn(),
-      upsert: jest.fn().mockResolvedValue({ error: null }),
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      lte: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      order: vi.fn(),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     service = new CrossPlatformAnalyticsService(mockDb, mockPlatformService, mockLogger);

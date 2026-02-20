@@ -6,14 +6,14 @@
 import { PlatformConnectionService } from '../PlatformConnectionService';
 
 // Mock the crypto module
-jest.mock('../crypto', () => ({
-  encryptToken: jest.fn().mockReturnValue({
+vi.mock('../crypto', () => ({
+  encryptToken: vi.fn().mockReturnValue({
     encrypted: Buffer.from('encrypted'),
     iv: Buffer.from('iv-value-16bytes'),
     authTag: Buffer.from('authtag-16bytes!'),
   }),
-  decryptToken: jest.fn().mockReturnValue('decrypted-access-token'),
-  getEncryptionKey: jest.fn().mockReturnValue(Buffer.alloc(32, 'a')),
+  decryptToken: vi.fn().mockReturnValue('decrypted-access-token'),
+  getEncryptionKey: vi.fn().mockReturnValue(Buffer.alloc(32, 'a')),
 }));
 
 describe('PlatformConnectionService', () => {
@@ -32,22 +32,22 @@ describe('PlatformConnectionService', () => {
     process.env.API_BASE_URL = 'http://localhost:3001';
 
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
     mockDb = {
-      from: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn(),
-      delete: jest.fn().mockReturnThis(),
-      upsert: jest.fn(),
-      update: jest.fn().mockReturnThis(),
-      not: jest.fn().mockReturnThis(),
-      lt: jest.fn(),
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      delete: vi.fn().mockReturnThis(),
+      upsert: vi.fn(),
+      update: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
+      lt: vi.fn(),
     };
 
     service = new PlatformConnectionService(mockDb, mockLogger);

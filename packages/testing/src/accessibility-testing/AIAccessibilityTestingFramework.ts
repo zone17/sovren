@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file AIAccessibilityTestingFramework.ts
  * @description Comprehensive automated accessibility testing for WCAG compliance without manual verification

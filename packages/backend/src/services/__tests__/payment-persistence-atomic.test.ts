@@ -169,7 +169,7 @@ describe('Fix #112: Atomic Writes for Payment Persistence', () => {
       writeFileSync(filePath, '{{{{bad', 'utf-8');
       writeFileSync(tmpPath, '{{{{also bad', 'utf-8');
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
       const store = new JsonFilePaymentStore(TEST_DIR);
       const all = await store.getAllInvoices();
       expect(all.length).toBe(0);

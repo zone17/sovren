@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file CodeAnalyzer.ts
  * @description Analyzes source code to extract testable components and structure

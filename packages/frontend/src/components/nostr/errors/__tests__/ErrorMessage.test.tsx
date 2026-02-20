@@ -150,7 +150,7 @@ describe('ErrorMessage', () => {
   describe('Actions', () => {
     it('renders retry button when onRetry is provided', () => {
       const error = createMockError();
-      const onRetry = jest.fn();
+      const onRetry = vi.fn();
 
       render(<ErrorMessage error={error} onRetry={onRetry} />);
 
@@ -160,7 +160,7 @@ describe('ErrorMessage', () => {
 
     it('calls onRetry when retry button is clicked', async () => {
       const error = createMockError();
-      const onRetry = jest.fn().mockResolvedValue(undefined);
+      const onRetry = vi.fn().mockResolvedValue(undefined);
 
       render(<ErrorMessage error={error} onRetry={onRetry} />);
 
@@ -173,7 +173,7 @@ describe('ErrorMessage', () => {
 
     it('disables retry button while retrying', async () => {
       const error = createMockError();
-      const onRetry = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+      const onRetry = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
 
       render(<ErrorMessage error={error} onRetry={onRetry} />);
 
@@ -186,7 +186,7 @@ describe('ErrorMessage', () => {
 
     it('renders dismiss button when onDismiss is provided', () => {
       const error = createMockError();
-      const onDismiss = jest.fn();
+      const onDismiss = vi.fn();
 
       render(<ErrorMessage error={error} onDismiss={onDismiss} />);
 
@@ -195,7 +195,7 @@ describe('ErrorMessage', () => {
 
     it('calls onDismiss when dismiss button is clicked', () => {
       const error = createMockError();
-      const onDismiss = jest.fn();
+      const onDismiss = vi.fn();
 
       render(<ErrorMessage error={error} onDismiss={onDismiss} />);
 
@@ -219,8 +219,8 @@ describe('ErrorMessage', () => {
 
     it('has accessible button labels', () => {
       const error = createMockError();
-      const onRetry = jest.fn();
-      const onDismiss = jest.fn();
+      const onRetry = vi.fn();
+      const onDismiss = vi.fn();
 
       render(<ErrorMessage error={error} onRetry={onRetry} onDismiss={onDismiss} />);
 

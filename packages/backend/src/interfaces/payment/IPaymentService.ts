@@ -4,7 +4,9 @@
  * Part of Epic 005 - Backend Service Refactoring
  */
 
-import type { Currency } from '@/types/payment';
+import {
+  Currency,
+} from '@/types/payment';
 
 export enum PaymentStatus {
   PENDING = 'pending',

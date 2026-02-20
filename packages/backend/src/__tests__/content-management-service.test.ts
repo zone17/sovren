@@ -10,7 +10,7 @@
  * - Error handling validation
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import {
   ContentManagementService,
   createContentManagementService,
@@ -18,11 +18,11 @@ import {
 
 // Mock Supabase client
 const mockSupabaseClient = {
-  from: jest.fn(),
+  from: vi.fn(),
   storage: {
-    from: jest.fn(),
+    from: vi.fn(),
   },
-  sql: jest.fn(),
+  sql: vi.fn(),
 };
 
 // Mock configuration
@@ -40,37 +40,37 @@ describe('ContentManagementService', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup mock query chain
     mockQuery = {
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      neq: jest.fn().mockReturnThis(),
-      gt: jest.fn().mockReturnThis(),
-      gte: jest.fn().mockReturnThis(),
-      lt: jest.fn().mockReturnThis(),
-      lte: jest.fn().mockReturnThis(),
-      like: jest.fn().mockReturnThis(),
-      ilike: jest.fn().mockReturnThis(),
-      overlaps: jest.fn().mockReturnThis(),
-      or: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
-      range: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-      single: jest.fn(),
-      maybeSingle: jest.fn(),
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      gt: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      lt: vi.fn().mockReturnThis(),
+      lte: vi.fn().mockReturnThis(),
+      like: vi.fn().mockReturnThis(),
+      ilike: vi.fn().mockReturnThis(),
+      overlaps: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      range: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      maybeSingle: vi.fn(),
     };
 
     mockSupabaseClient.from.mockReturnValue(mockQuery);
 
     // Mock storage
     const mockStorage = {
-      upload: jest.fn(),
-      getPublicUrl: jest.fn(),
+      upload: vi.fn(),
+      getPublicUrl: vi.fn(),
     };
     mockSupabaseClient.storage.from.mockReturnValue(mockStorage);
 
@@ -79,7 +79,7 @@ describe('ContentManagementService', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   // ==================== CONTENT ITEMS TESTS ====================
@@ -397,11 +397,11 @@ describe('ContentManagementService', () => {
 
         // Mock storage upload
         const mockStorageQuery = {
-          upload: jest.fn().mockResolvedValue({
+          upload: vi.fn().mockResolvedValue({
             data: { path: 'media/2024/1/test-uuid.jpg' },
             error: null,
           }),
-          getPublicUrl: jest.fn().mockReturnValue({
+          getPublicUrl: vi.fn().mockReturnValue({
             data: { publicUrl: 'https://storage.test.com/media/2024/1/test-uuid.jpg' },
           }),
         };
@@ -428,7 +428,7 @@ describe('ContentManagementService', () => {
         });
 
         // Mock image dimensions
-        jest.spyOn(service as any, 'getImageDimensions').mockResolvedValue({
+        vi.spyOn(service as any, 'getImageDimensions').mockResolvedValue({
           width: 800,
           height: 600,
         });
@@ -481,7 +481,7 @@ describe('ContentManagementService', () => {
         const metadata = { author_id: 'user-123' };
 
         const mockStorageQuery = {
-          upload: jest.fn().mockResolvedValue({
+          upload: vi.fn().mockResolvedValue({
             data: null,
             error: { message: 'Upload failed' },
           }),

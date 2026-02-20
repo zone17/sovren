@@ -28,29 +28,29 @@ import { RevenueService } from '../RevenueService';
 
 function makeLogger() {
   return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   };
 }
 
 function makeCache() {
   return {
-    get: jest.fn().mockResolvedValue(null),
-    set: jest.fn().mockResolvedValue(undefined),
-    delete: jest.fn().mockResolvedValue(true),
-    invalidate: jest.fn().mockResolvedValue(0),
-    exists: jest.fn().mockResolvedValue(false),
-    invalidateByTags: jest.fn().mockResolvedValue(0),
-    flush: jest.fn().mockResolvedValue(undefined),
-    getTtl: jest.fn().mockResolvedValue(0),
-    setTtl: jest.fn().mockResolvedValue(true),
-    getMany: jest.fn().mockResolvedValue(new Map()),
-    setMany: jest.fn().mockResolvedValue(undefined),
-    remember: jest.fn(),
-    healthCheck: jest.fn().mockResolvedValue(true),
-    dispose: jest.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(true),
+    invalidate: vi.fn().mockResolvedValue(0),
+    exists: vi.fn().mockResolvedValue(false),
+    invalidateByTags: vi.fn().mockResolvedValue(0),
+    flush: vi.fn().mockResolvedValue(undefined),
+    getTtl: vi.fn().mockResolvedValue(0),
+    setTtl: vi.fn().mockResolvedValue(true),
+    getMany: vi.fn().mockResolvedValue(new Map()),
+    setMany: vi.fn().mockResolvedValue(undefined),
+    remember: vi.fn(),
+    healthCheck: vi.fn().mockResolvedValue(true),
+    dispose: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -85,38 +85,38 @@ function makeDb() {
     _resolveWith: null as any,
 
     // PromiseLike: allows `await db.xxx()` to resolve the chain
-    then: jest.fn().mockImplementation(function (resolve: any, reject: any) {
+    then: vi.fn().mockImplementation(function (resolve: any, reject: any) {
       return Promise.resolve(db._resolveWith).then(resolve, reject);
     }),
 
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
 
-    upsert: jest.fn().mockImplementation(() => {
+    upsert: vi.fn().mockImplementation(() => {
       return Promise.resolve(db._upsertResult);
     }),
 
-    eq: jest.fn().mockImplementation(function () {
+    eq: vi.fn().mockImplementation(function () {
       return db;
     }),
 
-    gte: jest.fn().mockImplementation(function () {
+    gte: vi.fn().mockImplementation(function () {
       return db;
     }),
 
-    lte: jest.fn().mockImplementation(function () {
+    lte: vi.fn().mockImplementation(function () {
       return db;
     }),
 
     // #366: order() returns `this` so .range() can chain after it
-    order: jest.fn().mockImplementation(function () {
+    order: vi.fn().mockImplementation(function () {
       return db;
     }),
 
     // #366: range() is terminal for paginated queries.
     // First call returns _breakdownResult, subsequent calls return empty to stop pagination.
-    range: jest.fn().mockImplementation(function () {
+    range: vi.fn().mockImplementation(function () {
       _rangeCallCount++;
       if (_rangeCallCount === 1) {
         return Promise.resolve(db._breakdownResult);
@@ -125,11 +125,11 @@ function makeDb() {
     }),
 
     // #318: limit() is now called on breakdown queries
-    limit: jest.fn().mockImplementation(function () {
+    limit: vi.fn().mockImplementation(function () {
       return Promise.resolve(db._breakdownResult);
     }),
 
-    single: jest.fn().mockImplementation(function () {
+    single: vi.fn().mockImplementation(function () {
       // single() is always terminal — override _resolveWith
       return Promise.resolve(db._singleResult);
     }),
@@ -153,7 +153,7 @@ describe('RevenueService', () => {
   let service: RevenueService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLogger = makeLogger();
     mockCache = makeCache();
     mockDb = makeDb();
@@ -674,7 +674,7 @@ describe('RevenueService', () => {
       ];
 
       for (const source of sources) {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         mockDb._singleResult = { data: { id: `rev-${source}` }, error: null };
 
         await expect(

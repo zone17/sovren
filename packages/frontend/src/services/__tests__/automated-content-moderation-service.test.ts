@@ -9,7 +9,7 @@ import {
 } from '../automated-content-moderation-service';
 
 // Mock timers for consistent testing
-jest.useFakeTimers();
+vi.useFakeTimers();
 
 // Helper function for Jest expectations
 expect.extend({
@@ -42,12 +42,12 @@ describe('AutomatedContentModerationService', () => {
 
   beforeEach(() => {
     service = new AutomatedContentModerationServiceImpl();
-    jest.clearAllTimers();
+    vi.clearAllTimers();
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
   // === US-167: AI-Powered Content Moderation Tools Tests ===
@@ -58,12 +58,12 @@ describe('AutomatedContentModerationService', () => {
         const contentType = 'post';
 
         // Use real timers for this test to avoid timeout issues
-        jest.useRealTimers();
+        vi.useRealTimers();
 
         const result = await service.analyzeContent(contentId, contentType);
 
         // Restore fake timers
-        jest.useFakeTimers();
+        vi.useFakeTimers();
 
         expect(result).toBeDefined();
         expect(result.contentId).toBe(contentId);
@@ -87,7 +87,7 @@ describe('AutomatedContentModerationService', () => {
       it('should handle spam content detection', async () => {
         // Mock content retrieval to return spam content
         const originalRetrieveContent = service['retrieveContent'];
-        service['retrieveContent'] = jest.fn().mockResolvedValue({
+        service['retrieveContent'] = vi.fn().mockResolvedValue({
           id: 'spam_content',
           text: 'Buy now! Limited time offer! Click here for free money!',
           images: [],
@@ -107,7 +107,7 @@ describe('AutomatedContentModerationService', () => {
 
       it('should handle hate speech detection', async () => {
         const originalRetrieveContent = service['retrieveContent'];
-        service['retrieveContent'] = jest.fn().mockResolvedValue({
+        service['retrieveContent'] = vi.fn().mockResolvedValue({
           id: 'hate_content',
           text: 'I hate this terrible content, it is disgusting',
           images: [],
@@ -133,7 +133,7 @@ describe('AutomatedContentModerationService', () => {
         const originalRetrieveContent = service['retrieveContent'];
         const originalAnalyzeMultimodal = service['aiAnalyzer']['analyzeMultimodalContent'];
 
-        service['retrieveContent'] = jest.fn().mockResolvedValue({
+        service['retrieveContent'] = vi.fn().mockResolvedValue({
           id: 'multimodal_content',
           text: 'Sample text content',
           images: ['image1.jpg', 'image2.jpg'],
@@ -141,7 +141,7 @@ describe('AutomatedContentModerationService', () => {
         });
 
         // Mock the multimodal analyzer to ensure it returns the correct model version
-        service['aiAnalyzer']['analyzeMultimodalContent'] = jest.fn().mockResolvedValue({
+        service['aiAnalyzer']['analyzeMultimodalContent'] = vi.fn().mockResolvedValue({
           violations: [],
           confidence: 0.8,
           severity: 'low',
@@ -160,7 +160,7 @@ describe('AutomatedContentModerationService', () => {
 
       it('should throw error on analysis failure', async () => {
         const originalRetrieveContent = service['retrieveContent'];
-        service['retrieveContent'] = jest.fn().mockRejectedValue(new Error('Content not found'));
+        service['retrieveContent'] = vi.fn().mockRejectedValue(new Error('Content not found'));
 
         await expect(service.analyzeContent('invalid_content', 'post')).rejects.toThrow(
           AutomatedModerationError
@@ -173,7 +173,7 @@ describe('AutomatedContentModerationService', () => {
         const startTime = Date.now();
 
         const promise = service.analyzeContent('perf_test_content', 'post');
-        jest.advanceTimersByTime(300); // Simulate processing time
+        vi.advanceTimersByTime(300); // Simulate processing time
 
         await promise;
         const endTime = Date.now();
@@ -204,7 +204,7 @@ describe('AutomatedContentModerationService', () => {
       it('should handle workflow processing errors', async () => {
         // Mock getWorkflow to throw an error
         const originalGetWorkflow = service['getWorkflow'];
-        service['getWorkflow'] = jest.fn().mockRejectedValue(new Error('Workflow not found'));
+        service['getWorkflow'] = vi.fn().mockRejectedValue(new Error('Workflow not found'));
 
         await expect(service.processWorkflow('invalid_workflow', 'content')).rejects.toThrow(
           AutomatedModerationError
@@ -244,7 +244,7 @@ describe('AutomatedContentModerationService', () => {
       it('should handle escalation errors', async () => {
         // Mock a scenario that would actually cause an error
         const originalEscalateContent = service.escalateContent;
-        service.escalateContent = jest.fn().mockRejectedValue(new Error('Escalation failed'));
+        service.escalateContent = vi.fn().mockRejectedValue(new Error('Escalation failed'));
 
         await expect(service.escalateContent('invalid_content', 'test reason')).rejects.toThrow();
 
@@ -362,7 +362,7 @@ describe('AutomatedContentModerationService', () => {
       it('should process valid user report', async () => {
         // Mock lower confidence to prevent auto-resolve
         const originalAnalyzeReport = service['analyzeReport'];
-        service['analyzeReport'] = jest.fn().mockResolvedValue({
+        service['analyzeReport'] = vi.fn().mockResolvedValue({
           legitimacy: 0.7,
           severity: 0.6, // Number for aiAnalysis
           severityEnum: 'medium', // String for UserReport
@@ -407,7 +407,7 @@ describe('AutomatedContentModerationService', () => {
       it('should auto-resolve high-confidence reports', async () => {
         // Mock high confidence analysis to trigger auto-resolve
         const originalAnalyzeReport = service['analyzeReport'];
-        service['analyzeReport'] = jest.fn().mockResolvedValue({
+        service['analyzeReport'] = vi.fn().mockResolvedValue({
           legitimacy: 0.95,
           severity: 0.9, // Number for aiAnalysis
           severityEnum: 'high', // String for UserReport

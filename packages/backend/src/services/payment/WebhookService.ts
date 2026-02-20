@@ -6,7 +6,12 @@
  */
 
 import type { IWebhookService } from '../../interfaces/payment/IWebhookService';
-import type { IEventBus, DomainEventType } from '../../interfaces/shared/IEventBus';
+import type {
+  IEventBus
+} from '../../interfaces/shared/IEventBus';
+import {
+  DomainEventType,
+} from '../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { IAuditLogService } from '../../interfaces/shared/IAuditLogService';

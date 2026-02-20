@@ -18,9 +18,9 @@ import type {
 import { SupabaseRealtimeService } from '../services/supabase-realtime-service';
 
 // Mock Supabase client
-jest.mock('@supabase/supabase-js');
+vi.mock('@supabase/supabase-js');
 
-const mockCreateClient = createClient as jest.MockedFunction<typeof createClient>;
+const mockCreateClient = createClient as anyedFunction<typeof createClient>;
 
 // Test configuration
 const testConfig: RealtimeConfig = {
@@ -41,33 +41,33 @@ const testConfig: RealtimeConfig = {
 
 // Mock channel
 const mockChannel = {
-  on: jest.fn(),
-  off: jest.fn(),
-  subscribe: jest.fn(),
-  unsubscribe: jest.fn(),
-  send: jest.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
+  send: vi.fn(),
 };
 
 // Mock Supabase client
 const mockSupabaseClient = {
-  channel: jest.fn().mockReturnValue(mockChannel),
-  from: jest.fn().mockReturnValue({
-    select: jest.fn().mockReturnValue({
-      limit: jest.fn().mockResolvedValue({
+  channel: vi.fn().mockReturnValue(mockChannel),
+  from: vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      limit: vi.fn().mockResolvedValue({
         data: [],
         error: null,
       }),
     }),
   }),
-  removeAllChannels: jest.fn(),
-  getChannels: jest.fn().mockReturnValue([]),
+  removeAllChannels: vi.fn(),
+  getChannels: vi.fn().mockReturnValue([]),
 };
 
 describe('SupabaseRealtimeService', () => {
   let service: SupabaseRealtimeService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockCreateClient.mockReturnValue(mockSupabaseClient as any);
     service = new SupabaseRealtimeService(testConfig);
   });
@@ -107,8 +107,8 @@ describe('SupabaseRealtimeService', () => {
 
     it('should handle initialization errors', async () => {
       mockSupabaseClient.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          limit: jest.fn().mockRejectedValue(new Error('Connection failed')),
+        select: vi.fn().mockReturnValue({
+          limit: vi.fn().mockRejectedValue(new Error('Connection failed')),
         }),
       });
 
@@ -126,10 +126,10 @@ describe('SupabaseRealtimeService', () => {
     };
 
     const callbacks = {
-      onInsert: jest.fn(),
-      onUpdate: jest.fn(),
-      onDelete: jest.fn(),
-      onError: jest.fn(),
+      onInsert: vi.fn(),
+      onUpdate: vi.fn(),
+      onDelete: vi.fn(),
+      onError: vi.fn(),
     };
 
     beforeEach(async () => {
@@ -219,10 +219,10 @@ describe('SupabaseRealtimeService', () => {
     };
 
     const callbacks = {
-      onInsert: jest.fn(),
-      onUpdate: jest.fn(),
-      onDelete: jest.fn(),
-      onError: jest.fn(),
+      onInsert: vi.fn(),
+      onUpdate: vi.fn(),
+      onDelete: vi.fn(),
+      onError: vi.fn(),
     };
 
     const eventFilter: EventFilter = {
@@ -306,7 +306,7 @@ describe('SupabaseRealtimeService', () => {
     });
 
     it('should emit global events', async () => {
-      const globalEventHandler = jest.fn();
+      const globalEventHandler = vi.fn();
       service.on('event:received', globalEventHandler);
 
       await service.subscribe('test-channel', channelConfig, callbacks);
@@ -350,7 +350,7 @@ describe('SupabaseRealtimeService', () => {
     });
 
     it('should handle connection state changes', async () => {
-      const stateHandler = jest.fn();
+      const stateHandler = vi.fn();
       service.on('connection:state-changed', stateHandler);
 
       await service.connect();
@@ -364,7 +364,7 @@ describe('SupabaseRealtimeService', () => {
     });
 
     it('should perform heartbeat monitoring', async () => {
-      const heartbeatHandler = jest.fn();
+      const heartbeatHandler = vi.fn();
       service.on('heartbeat:sent', heartbeatHandler);
 
       await service.connect();
@@ -382,7 +382,7 @@ describe('SupabaseRealtimeService', () => {
     });
 
     it('should handle reconnection attempts', async () => {
-      const reconnectHandler = jest.fn();
+      const reconnectHandler = vi.fn();
       service.on('connection:reconnecting', reconnectHandler);
 
       // Simulate connection failure
@@ -395,7 +395,7 @@ describe('SupabaseRealtimeService', () => {
       const attempts: number[] = [];
       const originalSetTimeout = setTimeout;
 
-      jest.spyOn(global, 'setTimeout').mockImplementation((callback, delay) => {
+      vi.spyOn(global, 'setTimeout').mockImplementation((callback, delay) => {
         attempts.push(delay as number);
         return originalSetTimeout(callback, 0);
       });
@@ -413,7 +413,7 @@ describe('SupabaseRealtimeService', () => {
     });
 
     it('should handle maximum reconnection attempts', async () => {
-      const failedHandler = jest.fn();
+      const failedHandler = vi.fn();
       service.on('connection:failed', failedHandler);
 
       // Simulate exceeding max attempts
@@ -431,15 +431,15 @@ describe('SupabaseRealtimeService', () => {
     });
 
     it('should batch events for performance', async () => {
-      const batchHandler = jest.fn();
+      const batchHandler = vi.fn();
       service.on('batch:processed', batchHandler);
 
       // Simulate multiple events
       const callbacks = {
-        onInsert: jest.fn(),
-        onUpdate: jest.fn(),
-        onDelete: jest.fn(),
-        onError: jest.fn(),
+        onInsert: vi.fn(),
+        onUpdate: vi.fn(),
+        onDelete: vi.fn(),
+        onError: vi.fn(),
       };
 
       const fullChannelConfig: ChannelConfig = {
@@ -483,10 +483,10 @@ describe('SupabaseRealtimeService', () => {
       await throttledService.initialize();
 
       const callbacks = {
-        onInsert: jest.fn(),
-        onUpdate: jest.fn(),
-        onDelete: jest.fn(),
-        onError: jest.fn(),
+        onInsert: vi.fn(),
+        onUpdate: vi.fn(),
+        onDelete: vi.fn(),
+        onError: vi.fn(),
       };
 
       const fullChannelConfig: ChannelConfig = {
@@ -534,15 +534,15 @@ describe('SupabaseRealtimeService', () => {
       };
 
       const callbacks = {
-        onInsert: jest.fn(),
-        onUpdate: jest.fn(),
-        onDelete: jest.fn(),
-        onError: jest.fn(),
+        onInsert: vi.fn(),
+        onUpdate: vi.fn(),
+        onDelete: vi.fn(),
+        onError: vi.fn(),
       };
 
       await service.subscribe('test-channel', channelConfig, callbacks);
 
-      const shutdownHandler = jest.fn();
+      const shutdownHandler = vi.fn();
       service.on('shutdown:complete', shutdownHandler);
 
       await service.shutdown();
@@ -580,10 +580,10 @@ describe('SupabaseRealtimeService', () => {
 
       await expect(
         service.subscribe('test-channel', channelConfig, {
-          onInsert: jest.fn(),
-          onUpdate: jest.fn(),
-          onDelete: jest.fn(),
-          onError: jest.fn(),
+          onInsert: vi.fn(),
+          onUpdate: vi.fn(),
+          onDelete: vi.fn(),
+          onError: vi.fn(),
         })
       ).rejects.toThrow('Service is shutting down');
     });
@@ -594,17 +594,17 @@ describe('SupabaseRealtimeService', () => {
       await service.initialize();
 
       const userCallbacks = {
-        onInsert: jest.fn(),
-        onUpdate: jest.fn(),
-        onDelete: jest.fn(),
-        onError: jest.fn(),
+        onInsert: vi.fn(),
+        onUpdate: vi.fn(),
+        onDelete: vi.fn(),
+        onError: vi.fn(),
       };
 
       const contentCallbacks = {
-        onInsert: jest.fn(),
-        onUpdate: jest.fn(),
-        onDelete: jest.fn(),
-        onError: jest.fn(),
+        onInsert: vi.fn(),
+        onUpdate: vi.fn(),
+        onDelete: vi.fn(),
+        onError: vi.fn(),
       };
 
       const userChannelConfig: ChannelConfig = {

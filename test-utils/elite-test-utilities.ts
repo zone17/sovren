@@ -249,11 +249,11 @@ export const userInteractions = {
 
 export const apiMocks = {
   mockFetch: (response: any, status: number = 200) => {
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       ok: status >= 200 && status < 300,
       status,
-      json: jest.fn().mockResolvedValue(response),
-      text: jest.fn().mockResolvedValue(JSON.stringify(response)),
+      json: vi.fn().mockResolvedValue(response),
+      text: vi.fn().mockResolvedValue(JSON.stringify(response)),
       headers: new Headers({
         'content-type': 'application/json',
       }),
@@ -261,21 +261,21 @@ export const apiMocks = {
   },
 
   mockFetchError: (error: string) => {
-    global.fetch = jest.fn().mockRejectedValue(new Error(error));
+    global.fetch = vi.fn().mockRejectedValue(new Error(error));
   },
 
   mockFetchSequence: (responses: Array<{ data: any; status?: number }>) => {
     const mockResponses = responses.map(({ data, status = 200 }) => ({
       ok: status >= 200 && status < 300,
       status,
-      json: jest.fn().mockResolvedValue(data),
-      text: jest.fn().mockResolvedValue(JSON.stringify(data)),
+      json: vi.fn().mockResolvedValue(data),
+      text: vi.fn().mockResolvedValue(JSON.stringify(data)),
       headers: new Headers({
         'content-type': 'application/json',
       }),
     }));
 
-    global.fetch = jest.fn()
+    global.fetch = vi.fn()
       .mockResolvedValueOnce(mockResponses[0])
       .mockResolvedValueOnce(mockResponses[1])
       .mockResolvedValueOnce(mockResponses[2]);
@@ -434,10 +434,10 @@ export const nostrTestUtils = {
   mockRelay: () => ({
     url: 'wss://test-relay.example.com',
     status: 'connected',
-    send: jest.fn(),
-    close: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
+    send: vi.fn(),
+    close: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
   }),
 
   validateEvent: (event: any) => {
@@ -459,15 +459,15 @@ export const lightningTestUtils = {
   }),
 
   mockLNbits: () => ({
-    createInvoice: jest.fn().mockResolvedValue({
+    createInvoice: vi.fn().mockResolvedValue({
       payment_hash: 'a'.repeat(64),
       payment_request: 'lnbc1000n1...',
     }),
-    checkInvoice: jest.fn().mockResolvedValue({
+    checkInvoice: vi.fn().mockResolvedValue({
       paid: true,
       preimage: 'b'.repeat(64),
     }),
-    getWalletInfo: jest.fn().mockResolvedValue({
+    getWalletInfo: vi.fn().mockResolvedValue({
       balance: 50000,
       name: 'Test Wallet',
     }),
@@ -518,7 +518,7 @@ export const dataGenerators = {
 
 export const cleanupUtils = {
   clearAllMocks: () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   },
 
   resetAllMocks: () => {

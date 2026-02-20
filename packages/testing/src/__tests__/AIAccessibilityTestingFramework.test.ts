@@ -10,12 +10,12 @@ import {
 } from '../accessibility-testing/AIAccessibilityTestingFramework';
 
 // Mock Logger
-jest.mock('../common/Logger', () => ({
-  Logger: jest.fn().mockImplementation(() => ({
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
+vi.mock('../common/Logger', () => ({
+  Logger: vi.fn().mockImplementation(() => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
   })),
 }));
 
@@ -107,7 +107,7 @@ describe('AIAccessibilityTestingFramework', () => {
 
   afterEach(() => {
     framework.stopMonitoring();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Framework Initialization', () => {
@@ -159,8 +159,8 @@ describe('AIAccessibilityTestingFramework', () => {
     beforeEach(() => {
       mockElement = {
         tagName: 'IMG',
-        getAttribute: jest.fn().mockReturnValue('alt text'),
-        hasAttribute: jest.fn().mockReturnValue(true),
+        getAttribute: vi.fn().mockReturnValue('alt text'),
+        hasAttribute: vi.fn().mockReturnValue(true),
         textContent: 'Sample text',
       } as any;
     });
@@ -390,8 +390,8 @@ describe('AIAccessibilityTestingFramework', () => {
     test('should perform complete accessibility testing cycle', async () => {
       const mockElement = {
         tagName: 'BUTTON',
-        getAttribute: jest.fn().mockReturnValue('Submit'),
-        hasAttribute: jest.fn().mockReturnValue(true),
+        getAttribute: vi.fn().mockReturnValue('Submit'),
+        hasAttribute: vi.fn().mockReturnValue(true),
         textContent: 'Submit Form',
       } as any;
 
@@ -439,8 +439,8 @@ describe('AIAccessibilityTestingFramework', () => {
       const promises = Array.from({ length: 10 }, (_, i) => {
         const mockElement = {
           tagName: 'DIV',
-          getAttribute: jest.fn().mockReturnValue(`element-${i}`),
-          hasAttribute: jest.fn().mockReturnValue(true),
+          getAttribute: vi.fn().mockReturnValue(`element-${i}`),
+          hasAttribute: vi.fn().mockReturnValue(true),
           textContent: `Element ${i}`,
         } as any;
 
@@ -459,15 +459,15 @@ describe('AIAccessibilityTestingFramework', () => {
     test('should handle concurrent accessibility audits', async () => {
       const mockElement1 = {
         tagName: 'INPUT',
-        getAttribute: jest.fn().mockReturnValue('email'),
-        hasAttribute: jest.fn().mockReturnValue(true),
+        getAttribute: vi.fn().mockReturnValue('email'),
+        hasAttribute: vi.fn().mockReturnValue(true),
         textContent: '',
       } as any;
 
       const mockElement2 = {
         tagName: 'LABEL',
-        getAttribute: jest.fn().mockReturnValue('email-label'),
-        hasAttribute: jest.fn().mockReturnValue(true),
+        getAttribute: vi.fn().mockReturnValue('email-label'),
+        hasAttribute: vi.fn().mockReturnValue(true),
         textContent: 'Email Address',
       } as any;
 

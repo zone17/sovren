@@ -28,9 +28,9 @@ import { performanceMonitor } from '../../utils/performanceMonitoring';
 declare global {
   namespace NodeJS {
     interface Global {
-      fetch: jest.MockedFunction<typeof fetch>;
-      WebSocket: jest.MockedClass<typeof WebSocket>;
-      setTimeout: jest.MockedFunction<typeof setTimeout>;
+      fetch: vi.MockedFunction<typeof fetch>;
+      WebSocket: anyedClass<typeof WebSocket>;
+      setTimeout: vi.MockedFunction<typeof setTimeout>;
     }
   }
 }
@@ -116,30 +116,30 @@ const createWrapper = (queryClient: QueryClient) => {
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 // Mock fetch
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch as any;
 
 // Mock WebSocket
 const mockWebSocket = {
-  send: jest.fn(),
-  close: jest.fn(),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
+  send: vi.fn(),
+  close: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
   readyState: WebSocket.OPEN,
   onopen: null,
   onmessage: null,
   onerror: null,
   onclose: null,
 };
-global.WebSocket = jest.fn(() => mockWebSocket) as any;
+global.WebSocket = vi.fn(() => mockWebSocket) as any;
 
 // 🎯 **TEST SETUP**
 describe('📊 Analytics Service Comprehensive Tests', () => {
@@ -149,7 +149,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     queryClient = createMockQueryClient();
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorageMock.getItem.mockClear();
     mockFetch.mockClear();
 

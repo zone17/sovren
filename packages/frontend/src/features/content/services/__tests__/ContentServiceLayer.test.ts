@@ -222,7 +222,7 @@ describe('Content Service Layer', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(async () => {
@@ -598,7 +598,7 @@ describe('Content Service Layer', () => {
 
     it('should execute operations with retry', async () => {
       let attemptCount = 0;
-      const flakyOperation = jest.fn().mockImplementation(async () => {
+      const flakyOperation = vi.fn().mockImplementation(async () => {
         attemptCount++;
         if (attemptCount < 3) {
           throw new Error('Network timeout');
@@ -615,8 +615,8 @@ describe('Content Service Layer', () => {
     });
 
     it('should execute with fallback', async () => {
-      const primaryOperation = jest.fn().mockRejectedValue(new Error('Primary failed'));
-      const fallbackOperation = jest.fn().mockResolvedValue('fallback result');
+      const primaryOperation = vi.fn().mockRejectedValue(new Error('Primary failed'));
+      const fallbackOperation = vi.fn().mockResolvedValue('fallback result');
 
       const result = await errorHandlingService.executeWithFallback(
         primaryOperation,
@@ -978,7 +978,7 @@ describe('Content Service Layer', () => {
     it('should handle database connection failures', async () => {
       // Mock database failure
       const originalSave = mockDatabase.save;
-      mockDatabase.save = jest.fn().mockRejectedValue(new Error('Database connection lost'));
+      mockDatabase.save = vi.fn().mockRejectedValue(new Error('Database connection lost'));
 
       await expect(
         crudService.create(
@@ -999,7 +999,7 @@ describe('Content Service Layer', () => {
 
     it('should handle service unavailability gracefully', async () => {
       // Test with error handling service
-      const unavailableOperation = jest.fn().mockRejectedValue(new Error('Service unavailable'));
+      const unavailableOperation = vi.fn().mockRejectedValue(new Error('Service unavailable'));
 
       const result = await errorHandlingService.executeWithFallback(
         unavailableOperation,

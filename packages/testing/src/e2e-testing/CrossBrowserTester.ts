@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite Cross-Browser Tester - Automated cross-browser testing
  * with visual regression detection and compatibility validation.

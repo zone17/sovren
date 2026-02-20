@@ -8,26 +8,26 @@ import { Notification, NotificationType, NotificationPreferences } from '../type
 
 // Mock IndexedDB
 class MockIDBDatabase {
-  objectStoreNames = { contains: jest.fn(() => false) };
-  close = jest.fn();
-  createObjectStore = jest.fn(() => ({
-    createIndex: jest.fn(),
+  objectStoreNames = { contains: vi.fn(() => false) };
+  close = vi.fn();
+  createObjectStore = vi.fn(() => ({
+    createIndex: vi.fn(),
   }));
-  transaction = jest.fn(() => ({
-    objectStore: jest.fn(() => ({
-      add: jest.fn(() => ({ onsuccess: null, onerror: null })),
-      get: jest.fn(() => ({ onsuccess: null, onerror: null, result: null })),
-      put: jest.fn(() => ({ onsuccess: null, onerror: null })),
-      delete: jest.fn(() => ({ onsuccess: null, onerror: null })),
-      index: jest.fn(() => ({
-        openCursor: jest.fn(() => ({ onsuccess: null, onerror: null })),
+  transaction = vi.fn(() => ({
+    objectStore: vi.fn(() => ({
+      add: vi.fn(() => ({ onsuccess: null, onerror: null })),
+      get: vi.fn(() => ({ onsuccess: null, onerror: null, result: null })),
+      put: vi.fn(() => ({ onsuccess: null, onerror: null })),
+      delete: vi.fn(() => ({ onsuccess: null, onerror: null })),
+      index: vi.fn(() => ({
+        openCursor: vi.fn(() => ({ onsuccess: null, onerror: null })),
       })),
     })),
   }));
 }
 
 const mockIndexedDB = {
-  open: jest.fn(() => {
+  open: vi.fn(() => {
     const request = {
       onsuccess: null as any,
       onerror: null as any,
@@ -42,7 +42,7 @@ const mockIndexedDB = {
 };
 
 // @ts-ignore
-global.indexedDB = mockIndexedDB;
+Object.defineProperty(globalThis, "indexedDB", { value: mockIndexedDB, writable: true, configurable: true });
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -64,28 +64,28 @@ const localStorageMock = (() => {
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 // Mock Notification API
-const mockNotification = jest.fn();
+const mockNotification = vi.fn();
 Object.defineProperty(window, 'Notification', {
   value: mockNotification,
   configurable: true,
 });
 mockNotification.permission = 'granted';
-mockNotification.requestPermission = jest.fn(() => Promise.resolve('granted'));
+mockNotification.requestPermission = vi.fn(() => Promise.resolve('granted'));
 
 // Mock AudioContext
 class MockAudioContext {
-  createOscillator = jest.fn(() => ({
-    connect: jest.fn(),
+  createOscillator = vi.fn(() => ({
+    connect: vi.fn(),
     frequency: { value: 0 },
     type: 'sine',
-    start: jest.fn(),
-    stop: jest.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
   }));
-  createGain = jest.fn(() => ({
-    connect: jest.fn(),
+  createGain = vi.fn(() => ({
+    connect: vi.fn(),
     gain: {
       value: 0,
-      exponentialRampToValueAtTime: jest.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
     },
   }));
   destination = {};
@@ -99,7 +99,7 @@ describe('NotificationService', () => {
   let service: NotificationService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorageMock.clear();
     service = new NotificationService();
   });
@@ -482,7 +482,7 @@ describe('NotificationService', () => {
 
   describe('State Subscription', () => {
     it('should notify subscribers of state changes', async () => {
-      const listener = jest.fn();
+      const listener = vi.fn();
       const unsubscribe = service.subscribe(listener);
 
       const notification: Notification = {
@@ -513,7 +513,7 @@ describe('NotificationService', () => {
     });
 
     it('should unsubscribe correctly', () => {
-      const listener = jest.fn();
+      const listener = vi.fn();
       const unsubscribe = service.subscribe(listener);
 
       unsubscribe();

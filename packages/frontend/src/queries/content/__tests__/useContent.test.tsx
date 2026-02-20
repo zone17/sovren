@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { useContent } from '../useContent';
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('useContent', () => {
   let queryClient: QueryClient;
@@ -19,7 +19,7 @@ describe('useContent', () => {
         queries: { retry: false },
       },
     });
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should fetch content with infinite query', async () => {
@@ -52,7 +52,7 @@ describe('useContent', () => {
       },
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockData,
     });
@@ -77,7 +77,7 @@ describe('useContent', () => {
       },
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockData,
     });
@@ -122,7 +122,7 @@ describe('useContent', () => {
       },
     };
 
-    (global.fetch as jest.Mock)
+    (global.fetch as any)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => page1,
@@ -148,7 +148,7 @@ describe('useContent', () => {
   });
 
   it('should handle fetch errors', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: false,
       statusText: 'Internal Server Error',
     });

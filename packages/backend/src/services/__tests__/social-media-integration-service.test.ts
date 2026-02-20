@@ -15,7 +15,7 @@
  * - Security testing
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import {
   CreateSocialPostRequest,
   GetAnalyticsRequest,
@@ -35,20 +35,20 @@ import { SocialMediaIntegrationService } from '../social-media-integration-servi
 
 // Mock dependencies
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
 } as unknown as Logger;
 
 const mockRedis = {
-  setex: jest.fn(),
-  get: jest.fn(),
-  del: jest.fn(),
+  setex: vi.fn(),
+  get: vi.fn(),
+  del: vi.fn(),
 } as unknown as RedisService;
 
 const mockAnalytics = {
-  track: jest.fn(),
+  track: vi.fn(),
 } as unknown as AnalyticsService;
 
 const mockConfig = {
@@ -112,7 +112,7 @@ describe('SocialMediaIntegrationService', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create service instance
     service = new SocialMediaIntegrationService(
@@ -123,16 +123,16 @@ describe('SocialMediaIntegrationService', () => {
     );
 
     // Mock private methods
-    (service as any).getContentForSharing = jest.fn().mockResolvedValue(mockContent);
-    (service as any).getUserSocialAccount = jest.fn().mockResolvedValue(mockSocialAccount);
-    (service as any).storeSocialShare = jest.fn().mockResolvedValue(undefined);
-    (service as any).storeCrossPlatformPost = jest.fn().mockResolvedValue(undefined);
-    (service as any).updateCrossPlatformPost = jest.fn().mockResolvedValue(undefined);
-    (service as any).getCrossPlatformPost = jest.fn();
-    (service as any).storeSocialAccount = jest.fn().mockResolvedValue(undefined);
-    (service as any).getSocialAccount = jest.fn().mockResolvedValue(mockSocialAccount);
-    (service as any).updateSocialAccount = jest.fn().mockResolvedValue(undefined);
-    (service as any).getSocialLoginProvider = jest.fn().mockResolvedValue({
+    (service as any).getContentForSharing = vi.fn().mockResolvedValue(mockContent);
+    (service as any).getUserSocialAccount = vi.fn().mockResolvedValue(mockSocialAccount);
+    (service as any).storeSocialShare = vi.fn().mockResolvedValue(undefined);
+    (service as any).storeCrossPlatformPost = vi.fn().mockResolvedValue(undefined);
+    (service as any).updateCrossPlatformPost = vi.fn().mockResolvedValue(undefined);
+    (service as any).getCrossPlatformPost = vi.fn();
+    (service as any).storeSocialAccount = vi.fn().mockResolvedValue(undefined);
+    (service as any).getSocialAccount = vi.fn().mockResolvedValue(mockSocialAccount);
+    (service as any).updateSocialAccount = vi.fn().mockResolvedValue(undefined);
+    (service as any).getSocialLoginProvider = vi.fn().mockResolvedValue({
       platform: SocialPlatform.TWITTER,
       clientId: 'test_client',
       enabled: true,
@@ -140,7 +140,7 @@ describe('SocialMediaIntegrationService', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   // =====================================================
@@ -159,7 +159,7 @@ describe('SocialMediaIntegrationService', () => {
 
         // Mock platform adapter
         const mockAdapter = {
-          postContent: jest.fn().mockResolvedValue({
+          postContent: vi.fn().mockResolvedValue({
             postId: 'post_123',
             postUrl: 'https://twitter.com/user/status/123',
           }),
@@ -207,7 +207,7 @@ describe('SocialMediaIntegrationService', () => {
           platform: SocialPlatform.FACEBOOK,
         };
 
-        (service as any).getUserSocialAccount = jest.fn().mockResolvedValue(null);
+        (service as any).getUserSocialAccount = vi.fn().mockResolvedValue(null);
 
         // Act
         const result = await service.shareContent(mockUserId, shareRequest);
@@ -221,7 +221,7 @@ describe('SocialMediaIntegrationService', () => {
         // Arrange
         const longContent = 'A'.repeat(300); // Exceeds Twitter limit
         const mockLongContent = { ...mockContent, content: longContent };
-        (service as any).getContentForSharing = jest.fn().mockResolvedValue(mockLongContent);
+        (service as any).getContentForSharing = vi.fn().mockResolvedValue(mockLongContent);
 
         const shareRequest: SocialShareRequest = {
           contentId: mockContentId,
@@ -229,7 +229,7 @@ describe('SocialMediaIntegrationService', () => {
         };
 
         const mockAdapter = {
-          postContent: jest.fn().mockResolvedValue({
+          postContent: vi.fn().mockResolvedValue({
             postId: 'post_123',
             postUrl: 'https://twitter.com/status/123',
           }),
@@ -260,13 +260,13 @@ describe('SocialMediaIntegrationService', () => {
         };
 
         const mockAdapter = {
-          postContent: jest.fn().mockResolvedValue({
+          postContent: vi.fn().mockResolvedValue({
             postId: 'scheduled_post_123',
             postUrl: 'https://twitter.com/scheduled/123',
           }),
         };
         (service as any).platformAdapters.set(SocialPlatform.TWITTER, mockAdapter);
-        (service as any).schedulePost = jest.fn().mockResolvedValue({
+        (service as any).schedulePost = vi.fn().mockResolvedValue({
           postId: 'scheduled_post_123',
           postUrl: 'https://twitter.com/scheduled/123',
         });
@@ -326,7 +326,7 @@ describe('SocialMediaIntegrationService', () => {
         (service as any).processMediaAssets = jest
           .fn()
           .mockResolvedValue([{ type: 'image', url: 'https://example.com/image.jpg' }]);
-        (service as any).generatePlatformCustomizations = jest.fn().mockResolvedValue({
+        (service as any).generatePlatformCustomizations = vi.fn().mockResolvedValue({
           [SocialPlatform.TWITTER]: { content: 'Twitter version' },
           [SocialPlatform.FACEBOOK]: { content: 'Facebook version' },
         });
@@ -353,9 +353,9 @@ describe('SocialMediaIntegrationService', () => {
           scheduledAt: futureDate,
         };
 
-        (service as any).processMediaAssets = jest.fn().mockResolvedValue([]);
-        (service as any).generatePlatformCustomizations = jest.fn().mockResolvedValue({});
-        (service as any).schedulePostPublication = jest.fn().mockResolvedValue(undefined);
+        (service as any).processMediaAssets = vi.fn().mockResolvedValue([]);
+        (service as any).generatePlatformCustomizations = vi.fn().mockResolvedValue({});
+        (service as any).schedulePostPublication = vi.fn().mockResolvedValue(undefined);
 
         // Act
         const result = await service.createCrossPlatformPost(mockUserId, postRequest);
@@ -378,7 +378,7 @@ describe('SocialMediaIntegrationService', () => {
           status: PostStatus.DRAFT,
         };
 
-        (service as any).getCrossPlatformPost = jest.fn().mockResolvedValue(mockPost);
+        (service as any).getCrossPlatformPost = vi.fn().mockResolvedValue(mockPost);
         (service as any).getPlatformSpecificContent = jest
           .fn()
           .mockResolvedValueOnce({ content: 'Twitter content' })
@@ -419,7 +419,7 @@ describe('SocialMediaIntegrationService', () => {
           status: PostStatus.DRAFT,
         };
 
-        (service as any).getCrossPlatformPost = jest.fn().mockResolvedValue(mockPost);
+        (service as any).getCrossPlatformPost = vi.fn().mockResolvedValue(mockPost);
         (service as any).getPlatformSpecificContent = jest
           .fn()
           .mockResolvedValue({ content: 'Content' });
@@ -430,7 +430,7 @@ describe('SocialMediaIntegrationService', () => {
             .mockResolvedValue({ postId: 'twitter_123', postUrl: 'https://twitter.com/123' }),
         };
         const mockFacebookAdapter = {
-          postContent: jest.fn().mockRejectedValue(new Error('Facebook API error')),
+          postContent: vi.fn().mockRejectedValue(new Error('Facebook API error')),
         };
 
         (service as any).platformAdapters.set(SocialPlatform.TWITTER, mockTwitterAdapter);
@@ -459,7 +459,7 @@ describe('SocialMediaIntegrationService', () => {
           isActive: true,
         };
 
-        (service as any).storePostingSchedule = jest.fn().mockResolvedValue(undefined);
+        (service as any).storePostingSchedule = vi.fn().mockResolvedValue(undefined);
 
         // Act
         const result = await service.createPostingSchedule(mockUserId, scheduleData);
@@ -523,14 +523,14 @@ describe('SocialMediaIntegrationService', () => {
             metrics: { ...mockTwitterMetrics.metrics, impressions: 1500 },
           });
 
-        (service as any).calculateAggregatedMetrics = jest.fn().mockReturnValue({
+        (service as any).calculateAggregatedMetrics = vi.fn().mockReturnValue({
           totalImpressions: 2500,
           totalEngagement: 100,
           averageEngagementRate: 4.0,
         });
 
-        (service as any).analyzeTrends = jest.fn().mockResolvedValue([]);
-        (service as any).cacheAnalytics = jest.fn().mockResolvedValue(undefined);
+        (service as any).analyzeTrends = vi.fn().mockResolvedValue([]);
+        (service as any).cacheAnalytics = vi.fn().mockResolvedValue(undefined);
 
         // Act
         const result = await service.getSocialMediaAnalytics(mockUserId, analyticsRequest);
@@ -550,7 +550,7 @@ describe('SocialMediaIntegrationService', () => {
           platforms: [SocialPlatform.INSTAGRAM], // Not connected
         };
 
-        (service as any).getUserSocialAccount = jest.fn().mockResolvedValue(null);
+        (service as any).getUserSocialAccount = vi.fn().mockResolvedValue(null);
 
         // Act
         const result = await service.getSocialMediaAnalytics(mockUserId, analyticsRequest);
@@ -572,14 +572,14 @@ describe('SocialMediaIntegrationService', () => {
           generatedAt: new Date(),
         };
 
-        (service as any).getSocialMediaAnalytics = jest.fn().mockResolvedValue(mockAnalytics);
+        (service as any).getSocialMediaAnalytics = vi.fn().mockResolvedValue(mockAnalytics);
         (service as any).generateReportSections = jest
           .fn()
           .mockResolvedValue([{ title: 'Overview', type: 'overview', data: {} }]);
         (service as any).generateInsights = jest
           .fn()
           .mockResolvedValue([{ type: 'opportunity', message: 'Test insight' }]);
-        (service as any).storeAnalyticsReport = jest.fn().mockResolvedValue(undefined);
+        (service as any).storeAnalyticsReport = vi.fn().mockResolvedValue(undefined);
 
         // Act
         const result = await service.generateAnalyticsReport(mockUserId, 'monthly');
@@ -614,7 +614,7 @@ describe('SocialMediaIntegrationService', () => {
           enabled: true,
         };
 
-        (service as any).getSocialLoginProvider = jest.fn().mockResolvedValue(mockProvider);
+        (service as any).getSocialLoginProvider = vi.fn().mockResolvedValue(mockProvider);
         (service as any).generateAuthorizationUrl = jest
           .fn()
           .mockResolvedValue(
@@ -639,7 +639,7 @@ describe('SocialMediaIntegrationService', () => {
           enabled: false,
         };
 
-        (service as any).getSocialLoginProvider = jest.fn().mockResolvedValue(mockProvider);
+        (service as any).getSocialLoginProvider = vi.fn().mockResolvedValue(mockProvider);
 
         // Act & Assert
         await expect(service.initiateOAuthFlow(platform, 'callback', ['read'])).rejects.toThrow(
@@ -672,11 +672,11 @@ describe('SocialMediaIntegrationService', () => {
         };
 
         const mockAdapter = {
-          authenticate: jest.fn().mockResolvedValue({
+          authenticate: vi.fn().mockResolvedValue({
             accessToken: 'access_token_123',
             refreshToken: 'refresh_token_123',
           }),
-          getUserProfile: jest.fn().mockResolvedValue({
+          getUserProfile: vi.fn().mockResolvedValue({
             id: 'twitter_user_123',
             username: 'testuser',
             displayName: 'Test User',
@@ -685,7 +685,7 @@ describe('SocialMediaIntegrationService', () => {
           }),
         };
 
-        (service as any).getSocialLoginProvider = jest.fn().mockResolvedValue(mockProvider);
+        (service as any).getSocialLoginProvider = vi.fn().mockResolvedValue(mockProvider);
         (service as any).platformAdapters.set(SocialPlatform.TWITTER, mockAdapter);
 
         const loginRequest: SocialLoginRequest = {
@@ -754,7 +754,7 @@ describe('SocialMediaIntegrationService', () => {
         const accountId = 'account_123';
 
         const mockAdapter = {
-          getUserProfile: jest.fn().mockResolvedValue({
+          getUserProfile: vi.fn().mockResolvedValue({
             username: 'updated_username',
             displayName: 'Updated Display Name',
             bio: 'Updated bio',
@@ -764,7 +764,7 @@ describe('SocialMediaIntegrationService', () => {
         };
 
         (service as any).platformAdapters.set(SocialPlatform.TWITTER, mockAdapter);
-        (service as any).storeSocialProfileSync = jest.fn().mockResolvedValue(undefined);
+        (service as any).storeSocialProfileSync = vi.fn().mockResolvedValue(undefined);
 
         // Act
         const result = await service.syncSocialProfile(accountId);
@@ -781,7 +781,7 @@ describe('SocialMediaIntegrationService', () => {
 
       it('should handle account not found', async () => {
         // Arrange
-        (service as any).getSocialAccount = jest.fn().mockResolvedValue(null);
+        (service as any).getSocialAccount = vi.fn().mockResolvedValue(null);
 
         // Act & Assert
         await expect(service.syncSocialProfile('nonexistent_account')).rejects.toThrow(
@@ -804,7 +804,7 @@ describe('SocialMediaIntegrationService', () => {
       }));
 
       const mockAdapter = {
-        postContent: jest.fn().mockResolvedValue({
+        postContent: vi.fn().mockResolvedValue({
           postId: 'post_123',
           postUrl: 'https://twitter.com/123',
         }),
@@ -842,7 +842,7 @@ describe('SocialMediaIntegrationService', () => {
       };
 
       const mockAdapter = {
-        postContent: jest.fn().mockResolvedValue({
+        postContent: vi.fn().mockResolvedValue({
           postId: 'post_123',
           postUrl: 'https://twitter.com/123',
         }),
@@ -877,7 +877,7 @@ describe('SocialMediaIntegrationService', () => {
     it('should handle rate limiting gracefully', async () => {
       // Arrange
       const mockAdapter = {
-        postContent: jest.fn().mockRejectedValue(new Error('Rate limit exceeded')),
+        postContent: vi.fn().mockRejectedValue(new Error('Rate limit exceeded')),
       };
       (service as any).platformAdapters.set(SocialPlatform.TWITTER, mockAdapter);
 
@@ -903,7 +903,7 @@ describe('SocialMediaIntegrationService', () => {
     it('should handle network timeouts gracefully', async () => {
       // Arrange
       const mockAdapter = {
-        postContent: jest.fn().mockRejectedValue(new Error('Network timeout')),
+        postContent: vi.fn().mockRejectedValue(new Error('Network timeout')),
       };
       (service as any).platformAdapters.set(SocialPlatform.TWITTER, mockAdapter);
 
@@ -923,7 +923,7 @@ describe('SocialMediaIntegrationService', () => {
 
     it('should recover from Redis connection failures', async () => {
       // Arrange
-      mockRedis.setex = jest.fn().mockRejectedValue(new Error('Redis connection failed'));
+      mockRedis.setex = vi.fn().mockRejectedValue(new Error('Redis connection failed'));
 
       const analyticsRequest: GetAnalyticsRequest = {
         platforms: [SocialPlatform.TWITTER],

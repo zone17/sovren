@@ -11,7 +11,7 @@ import { Request, Response } from 'express';
 // We need to reset the prom-client registry between tests to avoid
 // "metric already registered" errors
 beforeEach(async () => {
-  jest.resetModules();
+  vi.resetModules();
   const { register } = await import('prom-client');
   register.clear();
 });
@@ -30,12 +30,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
 
@@ -57,12 +57,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
 
@@ -87,12 +87,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 201,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -115,12 +115,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 404,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -143,12 +143,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 500,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -171,12 +171,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -202,10 +202,10 @@ describe('Deployment Monitoring Middleware', () => {
       } as unknown as Request;
 
       const res = {
-        on: jest.fn(),
+        on: vi.fn(),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
 
@@ -229,12 +229,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -259,12 +259,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -287,12 +287,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       deploymentMonitoring(req, res, next);
       listeners['finish']();
@@ -318,12 +318,12 @@ describe('Deployment Monitoring Middleware', () => {
       const listeners: Record<string, Function> = {};
       const res = {
         statusCode: 200,
-        on: jest.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: Function) => {
           listeners[event] = cb;
         }),
       } as unknown as Response;
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       // Before request, active connections should be 0
       await metricsRegistry.metrics();
@@ -348,9 +348,9 @@ describe('Deployment Monitoring Middleware', () => {
 
       const req = {} as Request;
       const res = {
-        set: jest.fn(),
-        end: jest.fn(),
-        status: jest.fn().mockReturnThis(),
+        set: vi.fn(),
+        end: vi.fn(),
+        status: vi.fn().mockReturnThis(),
       } as unknown as Response;
 
       await getPrometheusMetrics(req, res);
@@ -358,7 +358,7 @@ describe('Deployment Monitoring Middleware', () => {
       expect(res.set).toHaveBeenCalledWith('Content-Type', expect.stringContaining('text/plain'));
       expect(res.end).toHaveBeenCalledWith(expect.any(String));
 
-      const metricsOutput = (res.end as jest.Mock).mock.calls[0][0];
+      const metricsOutput = (res.end as any).mock.calls[0][0];
       // Valid Prometheus format contains HELP and TYPE lines
       expect(metricsOutput).toContain('# HELP');
       expect(metricsOutput).toContain('# TYPE');
@@ -370,13 +370,13 @@ describe('Deployment Monitoring Middleware', () => {
       );
 
       // Force an error by mocking the registry
-      jest.spyOn(metricsRegistry, 'metrics').mockRejectedValueOnce(new Error('Collection failed'));
+      vi.spyOn(metricsRegistry, 'metrics').mockRejectedValueOnce(new Error('Collection failed'));
 
       const req = {} as Request;
       const res = {
-        set: jest.fn(),
-        end: jest.fn(),
-        status: jest.fn().mockReturnThis(),
+        set: vi.fn(),
+        end: vi.fn(),
+        status: vi.fn().mockReturnThis(),
       } as unknown as Response;
 
       await getPrometheusMetrics(req, res);
@@ -392,8 +392,8 @@ describe('Deployment Monitoring Middleware', () => {
 
       const req = {} as Request;
       const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
       } as unknown as Response;
 
       getDeploymentHealth(req, res);

@@ -6,7 +6,7 @@
  * Coverage: Invoice → Payment → Confirmation → Webhook
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+
 import { PaymentProcessingService } from '../../PaymentProcessingService';
 import { WebhookService } from '../../WebhookService';
 import { CurrencyService } from '../../CurrencyService';

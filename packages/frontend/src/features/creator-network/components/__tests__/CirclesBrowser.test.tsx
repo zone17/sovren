@@ -4,12 +4,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import CirclesBrowser from '../CirclesBrowser';
 
 // --- Hook mocks ---
-const mockUseCircles = jest.fn();
-const mockUseSuggestedCircles = jest.fn();
-const mockUseJoinCircle = jest.fn();
-const mockUseCreateCircle = jest.fn();
+const mockUseCircles = vi.fn();
+const mockUseSuggestedCircles = vi.fn();
+const mockUseJoinCircle = vi.fn();
+const mockUseCreateCircle = vi.fn();
 
-jest.mock('../../hooks/useCircles', () => ({
+vi.mock('../../hooks/useCircles', () => ({
   useCircles: () => mockUseCircles(),
   useSuggestedCircles: () => mockUseSuggestedCircles(),
   useJoinCircle: () => mockUseJoinCircle(),
@@ -24,7 +24,7 @@ function createWrapper() {
   );
 }
 
-const defaultMutateFn = jest.fn();
+const defaultMutateFn = vi.fn();
 
 const idleCreateMutation = {
   mutate: defaultMutateFn,
@@ -61,7 +61,7 @@ const fullCircle = {
 // --- Tests ---
 describe('CirclesBrowser', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseCircles.mockReturnValue({ data: [], isLoading: false });
     mockUseSuggestedCircles.mockReturnValue({ data: [], isLoading: false });
     mockUseJoinCircle.mockReturnValue(idleJoinMutation);
@@ -212,7 +212,7 @@ describe('CirclesBrowser', () => {
     });
 
     it('does not call mutate when name is blank and Create is clicked', () => {
-      const mutate = jest.fn();
+      const mutate = vi.fn();
       mockUseCreateCircle.mockReturnValue({ ...idleCreateMutation, mutate });
 
       render(<CirclesBrowser />, { wrapper: createWrapper() });
@@ -224,7 +224,7 @@ describe('CirclesBrowser', () => {
     });
 
     it('calls createMutation.mutate with name, niche, and maxMembers when submitted', () => {
-      const mutate = jest.fn();
+      const mutate = vi.fn();
       mockUseCreateCircle.mockReturnValue({ ...idleCreateMutation, mutate });
 
       render(<CirclesBrowser />, { wrapper: createWrapper() });
@@ -256,7 +256,7 @@ describe('CirclesBrowser', () => {
 
   describe('Joining circles', () => {
     it('calls joinMutation.mutate with the circle id when Join is clicked', () => {
-      const mutate = jest.fn();
+      const mutate = vi.fn();
       mockUseJoinCircle.mockReturnValue({ ...idleJoinMutation, mutate });
       mockUseSuggestedCircles.mockReturnValue({ data: [sampleCircle], isLoading: false });
 

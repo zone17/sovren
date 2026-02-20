@@ -25,20 +25,20 @@ import { MarketplaceService } from '../MarketplaceService';
 // ---------------------------------------------------------------------------
 function makeChain(leafResolvedValue: { data: any; error: any; count?: number | null }) {
   const chain: any = {
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    neq: jest.fn().mockReturnThis(),
-    not: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    range: jest.fn().mockReturnThis(),
-    in: jest.fn().mockReturnThis(),
-    or: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue(leafResolvedValue),
-    maybeSingle: jest.fn().mockResolvedValue(leafResolvedValue),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    not: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    range: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue(leafResolvedValue),
+    maybeSingle: vi.fn().mockResolvedValue(leafResolvedValue),
   };
   chain.then = (res: any, rej: any) => Promise.resolve(leafResolvedValue).then(res, rej);
   chain.catch = (fn: any) => Promise.resolve(leafResolvedValue).catch(fn);
@@ -65,32 +65,32 @@ describe('MarketplaceService', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
     mockLightning = {
-      createInvoice: jest.fn().mockResolvedValue(DEFAULT_INVOICE),
-      payToAddress: jest.fn().mockResolvedValue({ paymentHash: 'payout-hash' }),
-      getInvoiceStatus: jest.fn().mockResolvedValue({ paid: false }),
-      getSellerLightningAddress: jest.fn().mockResolvedValue('seller@ln.example.com'),
+      createInvoice: vi.fn().mockResolvedValue(DEFAULT_INVOICE),
+      payToAddress: vi.fn().mockResolvedValue({ paymentHash: 'payout-hash' }),
+      getInvoiceStatus: vi.fn().mockResolvedValue({ paid: false }),
+      getSellerLightningAddress: vi.fn().mockResolvedValue('seller@ln.example.com'),
     };
 
     mockQueue = {
-      addJob: jest.fn().mockResolvedValue('job-id'),
-      createQueue: jest.fn(),
-      registerProcessor: jest.fn(),
-      getQueueNames: jest.fn().mockReturnValue([]),
-      isHealthy: jest.fn().mockResolvedValue(true),
-      closeAll: jest.fn().mockResolvedValue(undefined),
+      addJob: vi.fn().mockResolvedValue('job-id'),
+      createQueue: vi.fn(),
+      registerProcessor: vi.fn(),
+      getQueueNames: vi.fn().mockReturnValue([]),
+      isHealthy: vi.fn().mockResolvedValue(true),
+      closeAll: vi.fn().mockResolvedValue(undefined),
     };
 
-    mockDb = { from: jest.fn() };
+    mockDb = { from: vi.fn() };
     service = new MarketplaceService(mockDb, mockLightning, mockQueue, mockLogger);
   });
 

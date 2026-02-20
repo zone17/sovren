@@ -4,7 +4,7 @@
  * Comprehensive testing with 95%+ coverage requirement
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+
 import { EmailService } from '../EmailService';
 import { EventEmitter } from 'events';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
@@ -33,11 +33,11 @@ class MockEventBus extends EventEmitter implements IEventBus {
 }
 
 class MockLogger implements ILogger {
-  debug = jest.fn();
-  info = jest.fn();
-  warn = jest.fn();
-  error = jest.fn();
-  fatal = jest.fn();
+  debug = vi.fn();
+  info = vi.fn();
+  warn = vi.fn();
+  error = vi.fn();
+  fatal = vi.fn();
 }
 
 class MockCacheService implements ICacheService {
@@ -288,7 +288,7 @@ describe('EmailService', () => {
     });
 
     it('should emit events on success', async () => {
-      const emitSpy = jest.spyOn(eventBus, 'emit');
+      const emitSpy = vi.spyOn(eventBus, 'emit');
 
       const message: EmailMessage = {
         to: 'test@test.com',
@@ -431,7 +431,7 @@ describe('EmailService', () => {
 
   describe('Bounce Processing', () => {
     it('should process bounce notifications', async () => {
-      const emitSpy = jest.spyOn(eventBus, 'emit');
+      const emitSpy = vi.spyOn(eventBus, 'emit');
 
       await service.processBounce({
         recipient: 'bounced@test.com',
@@ -509,7 +509,7 @@ describe('EmailService', () => {
 
   describe('Lifecycle', () => {
     it('should dispose resources properly', async () => {
-      const clearQueueSpy = jest.spyOn(service, 'clearQueue');
+      const clearQueueSpy = vi.spyOn(service, 'clearQueue');
 
       await service.dispose();
 

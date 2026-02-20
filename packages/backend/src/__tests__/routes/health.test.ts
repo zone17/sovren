@@ -15,17 +15,17 @@ import { Request, Response } from 'express';
 
 const capturedRoutes: Record<string, Function> = {};
 
-jest.mock('express', () => {
-  const actual = jest.requireActual('express');
+vi.mock('express', async () => {
+  const actual = await vi.importActual('express');
   return {
     ...actual,
     Router: () => {
       const mockRouter: any = {};
-      mockRouter.get = jest.fn((path: string, handler: Function) => {
+      mockRouter.get = vi.fn((path: string, handler: Function) => {
         capturedRoutes[`GET ${path}`] = handler;
         return mockRouter;
       });
-      mockRouter.post = jest.fn((path: string, handler: Function) => {
+      mockRouter.post = vi.fn((path: string, handler: Function) => {
         capturedRoutes[`POST ${path}`] = handler;
         return mockRouter;
       });
@@ -35,21 +35,21 @@ jest.mock('express', () => {
 });
 
 // Mock ioredis
-const mockRedisPing = jest.fn().mockResolvedValue('PONG');
-const mockRedisDisconnect = jest.fn().mockResolvedValue(undefined);
-jest.mock('ioredis', () => {
-  return jest.fn().mockImplementation(() => ({
+const mockRedisPing = vi.fn().mockResolvedValue('PONG');
+const mockRedisDisconnect = vi.fn().mockResolvedValue(undefined);
+vi.mock('ioredis', () => ({
+  default: vi.fn().mockImplementation(() => ({
     ping: mockRedisPing,
     disconnect: mockRedisDisconnect,
-  }));
-});
+  })),
+}));
 
 // Mock @supabase/supabase-js
-const mockSupabaseSelect = jest.fn().mockReturnThis();
-const mockSupabaseLimit = jest.fn().mockResolvedValue({ data: [{ id: 1 }], error: null });
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn().mockReturnValue({
-    from: jest.fn().mockReturnValue({
+const mockSupabaseSelect = vi.fn().mockReturnThis();
+const mockSupabaseLimit = vi.fn().mockResolvedValue({ data: [{ id: 1 }], error: null });
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn().mockReturnValue({
+    from: vi.fn().mockReturnValue({
       select: mockSupabaseSelect,
       limit: mockSupabaseLimit,
     }),
@@ -57,12 +57,12 @@ jest.mock('@supabase/supabase-js', () => ({
 }));
 
 // Mock global fetch for LNbits
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch as any;
 
 // Mock WebSocket for NOSTR relay checks
-const mockWsClose = jest.fn();
-(global as any).WebSocket = jest.fn().mockImplementation(() => {
+const mockWsClose = vi.fn();
+(global as any).WebSocket = vi.fn().mockImplementation(() => {
   const ws: any = {
     close: mockWsClose,
     set onopen(fn: () => void) {
@@ -94,11 +94,11 @@ function createMockRes(): Response & { _status: number; _json: any } {
   const res: any = {
     _status: 200,
     _json: null,
-    status: jest.fn(function (code: number) {
+    status: vi.fn(function (code: number) {
       res._status = code;
       return res;
     }),
-    json: jest.fn(function (body: any) {
+    json: vi.fn(function (body: any) {
       res._json = body;
       return res;
     }),
@@ -108,7 +108,7 @@ function createMockRes(): Response & { _status: number; _json: any } {
 
 describe('Health Routes', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Restore default happy-path mocks
     mockRedisPing.mockResolvedValue('PONG');
     mockRedisDisconnect.mockResolvedValue(undefined);

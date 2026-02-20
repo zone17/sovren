@@ -14,13 +14,13 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { jest } from '@jest/globals';
+
 import SupporterExperience from '../SupporterExperience';
 import { useSupporterExperienceService } from '../../services/supporterExperienceService';
 
 // Mock dependencies
-jest.mock('../../services/supporterExperienceService');
-jest.mock('@/hooks/useFeatureFlags', () => ({
+vi.mock('../../services/supporterExperienceService');
+vi.mock('@/hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => ({
     enablePersonalizedFeed: true,
     enableCategoryBrowsing: true,
@@ -33,7 +33,7 @@ jest.mock('@/hooks/useFeatureFlags', () => ({
   }),
 }));
 
-const mockUseSupporterExperienceService = useSupporterExperienceService as jest.MockedFunction<typeof useSupporterExperienceService>;
+const mockUseSupporterExperienceService = useSupporterExperienceService as anyedFunction<typeof useSupporterExperienceService>;
 
 // Test data
 const mockPersonalizedFeed = {
@@ -172,12 +172,12 @@ const mockTrendingContent = {
 describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
   const defaultProps = {
     userId: 'test-user-id',
-    onContentInteraction: jest.fn(),
-    onSearchQuery: jest.fn(),
+    onContentInteraction: vi.fn(),
+    onSearchQuery: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseSupporterExperienceService.mockReturnValue({
       personalizedFeed: mockPersonalizedFeed,
       categories: mockCategories,
@@ -185,13 +185,13 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       trendingContent: mockTrendingContent,
       isLoading: false,
       error: null,
-      loadPersonalizedFeed: jest.fn(),
-      searchContent: jest.fn(),
-      loadTrendingContent: jest.fn(),
-      loadCategories: jest.fn(),
-      refreshFeed: jest.fn(),
-      clearCache: jest.fn(),
-      prefetchNextPage: jest.fn(),
+      loadPersonalizedFeed: vi.fn(),
+      searchContent: vi.fn(),
+      loadTrendingContent: vi.fn(),
+      loadCategories: vi.fn(),
+      refreshFeed: vi.fn(),
+      clearCache: vi.fn(),
+      prefetchNextPage: vi.fn(),
     });
   });
 
@@ -234,7 +234,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('filters content correctly', async () => {
       const user = userEvent.setup();
-      const mockLoadFeed = jest.fn();
+      const mockLoadFeed = vi.fn();
       mockUseSupporterExperienceService.mockReturnValue({
         ...mockUseSupporterExperienceService(),
         loadPersonalizedFeed: mockLoadFeed,
@@ -260,7 +260,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('loads more content on pagination', async () => {
       const user = userEvent.setup();
-      const mockLoadFeed = jest.fn();
+      const mockLoadFeed = vi.fn();
       mockUseSupporterExperienceService.mockReturnValue({
         ...mockUseSupporterExperienceService(),
         loadPersonalizedFeed: mockLoadFeed,
@@ -280,7 +280,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('handles content interaction correctly', async () => {
       const user = userEvent.setup();
-      const onContentInteraction = jest.fn();
+      const onContentInteraction = vi.fn();
       
       render(<SupporterExperience {...defaultProps} onContentInteraction={onContentInteraction} />);
       
@@ -397,8 +397,8 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('performs search and displays results', async () => {
       const user = userEvent.setup();
-      const mockSearchContent = jest.fn();
-      const onSearchQuery = jest.fn();
+      const mockSearchContent = vi.fn();
+      const onSearchQuery = vi.fn();
       
       mockUseSupporterExperienceService.mockReturnValue({
         ...mockUseSupporterExperienceService(),
@@ -429,7 +429,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('supports keyboard search (Enter key)', async () => {
       const user = userEvent.setup();
-      const mockSearchContent = jest.fn();
+      const mockSearchContent = vi.fn();
       
       mockUseSupporterExperienceService.mockReturnValue({
         ...mockUseSupporterExperienceService(),
@@ -548,7 +548,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('changes timeframe and loads new data', async () => {
       const user = userEvent.setup();
-      const mockLoadTrendingContent = jest.fn();
+      const mockLoadTrendingContent = vi.fn();
       
       mockUseSupporterExperienceService.mockReturnValue({
         ...mockUseSupporterExperienceService(),
@@ -580,7 +580,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('handles trending content interaction', async () => {
       const user = userEvent.setup();
-      const onContentInteraction = jest.fn();
+      const onContentInteraction = vi.fn();
       
       render(<SupporterExperience {...defaultProps} onContentInteraction={onContentInteraction} />);
       
@@ -742,7 +742,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('prevents double-click interactions', async () => {
       const user = userEvent.setup();
-      const onContentInteraction = jest.fn();
+      const onContentInteraction = vi.fn();
       
       render(<SupporterExperience {...defaultProps} onContentInteraction={onContentInteraction} />);
       

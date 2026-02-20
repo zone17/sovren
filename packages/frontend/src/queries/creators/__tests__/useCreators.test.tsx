@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { useCreators } from '../useCreators';
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('useCreators', () => {
   let queryClient: QueryClient;
@@ -19,7 +19,7 @@ describe('useCreators', () => {
         queries: { retry: false },
       },
     });
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should fetch creators successfully', async () => {
@@ -43,7 +43,7 @@ describe('useCreators', () => {
       },
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockData,
     });
@@ -67,7 +67,7 @@ describe('useCreators', () => {
       },
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockData,
     });
@@ -91,7 +91,7 @@ describe('useCreators', () => {
   });
 
   it('should handle fetch errors', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: false,
       statusText: 'Internal Server Error',
     });

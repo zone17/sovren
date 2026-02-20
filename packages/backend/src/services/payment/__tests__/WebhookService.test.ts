@@ -20,82 +20,82 @@ import {
 
 // Mock implementations
 class MockEventBus implements IEventBus {
-  publish = jest.fn().mockResolvedValue(undefined);
-  publishBatch = jest.fn().mockResolvedValue(undefined);
-  subscribe = jest.fn().mockReturnValue('sub-1');
-  subscribeToMany = jest.fn().mockReturnValue('sub-1');
-  subscribeToAll = jest.fn().mockReturnValue('sub-1');
-  subscribeWithFilter = jest.fn().mockReturnValue('sub-1');
-  unsubscribe = jest.fn();
-  unsubscribeAll = jest.fn();
-  getEvent = jest.fn().mockResolvedValue(null);
-  queryEvents = jest.fn().mockResolvedValue([]);
-  replayEvents = jest.fn().mockResolvedValue([]);
-  replayEventsToHandler = jest.fn().mockResolvedValue(undefined);
-  getActiveSubscriptions = jest.fn().mockReturnValue([]);
-  getEventStats = jest.fn().mockResolvedValue({});
-  clearEventStore = jest.fn().mockResolvedValue(undefined);
-  isHealthy = jest.fn().mockResolvedValue(true);
-  dispose = jest.fn().mockResolvedValue(undefined);
+  publish = vi.fn().mockResolvedValue(undefined);
+  publishBatch = vi.fn().mockResolvedValue(undefined);
+  subscribe = vi.fn().mockReturnValue('sub-1');
+  subscribeToMany = vi.fn().mockReturnValue('sub-1');
+  subscribeToAll = vi.fn().mockReturnValue('sub-1');
+  subscribeWithFilter = vi.fn().mockReturnValue('sub-1');
+  unsubscribe = vi.fn();
+  unsubscribeAll = vi.fn();
+  getEvent = vi.fn().mockResolvedValue(null);
+  queryEvents = vi.fn().mockResolvedValue([]);
+  replayEvents = vi.fn().mockResolvedValue([]);
+  replayEventsToHandler = vi.fn().mockResolvedValue(undefined);
+  getActiveSubscriptions = vi.fn().mockReturnValue([]);
+  getEventStats = vi.fn().mockResolvedValue({});
+  clearEventStore = vi.fn().mockResolvedValue(undefined);
+  isHealthy = vi.fn().mockResolvedValue(true);
+  dispose = vi.fn().mockResolvedValue(undefined);
 }
 
 class MockLogger implements ILogger {
-  debug = jest.fn();
-  info = jest.fn();
-  warn = jest.fn();
-  error = jest.fn();
-  setContext = jest.fn();
-  child = jest.fn().mockReturnThis();
+  debug = vi.fn();
+  info = vi.fn();
+  warn = vi.fn();
+  error = vi.fn();
+  setContext = vi.fn();
+  child = vi.fn().mockReturnThis();
 }
 
 class MockCacheService implements ICacheService {
   private cache = new Map<string, any>();
 
-  get = jest.fn(async <T>(key: string): Promise<T | null> => {
+  get = vi.fn(async <T>(key: string): Promise<T | null> => {
     return this.cache.get(key) || null;
   });
 
-  set = jest.fn(async <T>(key: string, value: T): Promise<void> => {
+  set = vi.fn(async <T>(key: string, value: T): Promise<void> => {
     this.cache.set(key, value);
   });
 
-  delete = jest.fn(async (key: string): Promise<void> => {
+  delete = vi.fn(async (key: string): Promise<void> => {
     this.cache.delete(key);
   });
 
-  clear = jest.fn(async (): Promise<void> => {
+  clear = vi.fn(async (): Promise<void> => {
     this.cache.clear();
   });
 
-  has = jest.fn(async (key: string): Promise<boolean> => {
+  has = vi.fn(async (key: string): Promise<boolean> => {
     return this.cache.has(key);
   });
 
-  keys = jest.fn(async (): Promise<string[]> => {
+  keys = vi.fn(async (): Promise<string[]> => {
     return Array.from(this.cache.keys());
   });
 
-  mget = jest.fn(async <T>(keys: string[]): Promise<(T | null)[]> => {
+  mget = vi.fn(async <T>(keys: string[]): Promise<(T | null)[]> => {
     return keys.map(key => this.cache.get(key) || null);
   });
 
-  mset = jest.fn(async <T>(entries: Array<[string, T]>): Promise<void> => {
+  mset = vi.fn(async <T>(entries: Array<[string, T]>): Promise<void> => {
     entries.forEach(([key, value]) => this.cache.set(key, value));
   });
 
-  ttl = jest.fn(async (): Promise<number> => -1);
-  expire = jest.fn(async (): Promise<void> => undefined);
-  persist = jest.fn(async (): Promise<void> => undefined);
-  exists = jest.fn(async (key: string): Promise<boolean> => this.cache.has(key));
-  incr = jest.fn(async (): Promise<number> => 1);
-  decr = jest.fn(async (): Promise<number> => 0);
+  ttl = vi.fn(async (): Promise<number> => -1);
+  expire = vi.fn(async (): Promise<void> => undefined);
+  persist = vi.fn(async (): Promise<void> => undefined);
+  exists = vi.fn(async (key: string): Promise<boolean> => this.cache.has(key));
+  incr = vi.fn(async (): Promise<number> => 1);
+  decr = vi.fn(async (): Promise<number> => 0);
 }
 
 class MockAuditLogService implements IAuditLogService {
-  log = jest.fn().mockResolvedValue(undefined);
-  query = jest.fn().mockResolvedValue([]);
-  getLog = jest.fn().mockResolvedValue(null);
-  dispose = jest.fn().mockResolvedValue(undefined);
+  log = vi.fn().mockResolvedValue(undefined);
+  query = vi.fn().mockResolvedValue([]);
+  getLog = vi.fn().mockResolvedValue(null);
+  dispose = vi.fn().mockResolvedValue(undefined);
 }
 
 describe('WebhookService', () => {
@@ -136,7 +136,7 @@ describe('WebhookService', () => {
 
   afterEach(async () => {
     await service.dispose();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Endpoint Management', () => {
@@ -1188,14 +1188,14 @@ describe('WebhookService', () => {
   describe('Real-time Notifications', () => {
     describe('subscribeToNotifications', () => {
       it('should subscribe to webhook notifications', () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const subscriptionId = service.subscribeToNotifications(callback);
 
         expect(subscriptionId).toMatch(/^wh_sub_/);
       });
 
       it('should receive notifications on delivery success', async () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         service.subscribeToNotifications(callback);
 
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
@@ -1215,7 +1215,7 @@ describe('WebhookService', () => {
 
     describe('unsubscribeFromNotifications', () => {
       it('should unsubscribe from notifications', () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const subscriptionId = service.subscribeToNotifications(callback);
 
         service.unsubscribeFromNotifications(subscriptionId);
@@ -1359,7 +1359,7 @@ describe('WebhookService', () => {
     });
 
     it('should handle notification callback errors gracefully', async () => {
-      const failingCallback = jest.fn(() => {
+      const failingCallback = vi.fn(() => {
         throw new Error('Notification error');
       });
 

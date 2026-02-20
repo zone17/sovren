@@ -5,7 +5,7 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { RefundService } from '../RefundService';
 import type { IPaymentProcessingService } from '../../../interfaces/payment/IPaymentProcessingService';
 import type { ICurrencyService } from '../../../interfaces/payment/ICurrencyService';
@@ -15,88 +15,90 @@ import type { ICacheService } from '../../../interfaces/shared/ICacheService';
 import type { PaymentTransaction } from '../../../types/payment';
 import type {
   Refund,
+  CreateRefundRequest
+} from '../../../types/refund';
+import {
   RefundStatus,
   RefundType,
   RefundReason,
   RefundAuthorizationLevel,
-  CreateRefundRequest
 } from '../../../types/refund';
 
 // Mock implementations
 const createMockPaymentService = (): any => {
   const mock: any = {
-    createInvoice: jest.fn(),
-    getInvoice: jest.fn(),
-    getInvoiceByPaymentHash: jest.fn(),
-    cancelInvoice: jest.fn(),
-    listUserInvoices: jest.fn(),
-    processPayment: jest.fn(),
-    verifyPayment: jest.fn(),
-    checkPaymentStatus: jest.fn(),
-    getTransaction: jest.fn(),
-    retryPayment: jest.fn(),
-    initiateRefund: jest.fn(),
-    getRefund: jest.fn(),
-    listTransactionRefunds: jest.fn(),
-    getPaymentHistory: jest.fn(),
-    getReceipt: jest.fn(),
-    generateReceiptPdf: jest.fn(),
-    getStatistics: jest.fn(),
-    checkIdempotency: jest.fn(),
-    storeIdempotency: jest.fn(),
-    checkExpiredInvoices: jest.fn(),
-    expireInvoice: jest.fn(),
-    subscribeToEvents: jest.fn(),
-    unsubscribeFromEvents: jest.fn(),
-    getSupportedMethods: jest.fn(),
-    isMethodAvailable: jest.fn(),
-    healthCheck: jest.fn(),
-    getMetrics: jest.fn(),
-    dispose: jest.fn()
+    createInvoice: vi.fn(),
+    getInvoice: vi.fn(),
+    getInvoiceByPaymentHash: vi.fn(),
+    cancelInvoice: vi.fn(),
+    listUserInvoices: vi.fn(),
+    processPayment: vi.fn(),
+    verifyPayment: vi.fn(),
+    checkPaymentStatus: vi.fn(),
+    getTransaction: vi.fn(),
+    retryPayment: vi.fn(),
+    initiateRefund: vi.fn(),
+    getRefund: vi.fn(),
+    listTransactionRefunds: vi.fn(),
+    getPaymentHistory: vi.fn(),
+    getReceipt: vi.fn(),
+    generateReceiptPdf: vi.fn(),
+    getStatistics: vi.fn(),
+    checkIdempotency: vi.fn(),
+    storeIdempotency: vi.fn(),
+    checkExpiredInvoices: vi.fn(),
+    expireInvoice: vi.fn(),
+    subscribeToEvents: vi.fn(),
+    unsubscribeFromEvents: vi.fn(),
+    getSupportedMethods: vi.fn(),
+    isMethodAvailable: vi.fn(),
+    healthCheck: vi.fn(),
+    getMetrics: vi.fn(),
+    dispose: vi.fn()
   };
   return mock;
 };
 
 const createMockCurrencyService = (): any => {
   const mock: any = {
-    convert: jest.fn(),
-    convertBatch: jest.fn(),
-    satoshisToFiat: jest.fn(),
-    fiatToSatoshis: jest.fn(),
-    satoshisToBtc: jest.fn(),
-    btcToSatoshis: jest.fn(),
-    getRate: jest.fn(),
-    getRates: jest.fn(),
-    getAllRates: jest.fn(),
-    refreshRates: jest.fn(),
-    setManualRate: jest.fn(),
-    getHistoricalRate: jest.fn(),
-    queryHistoricalRates: jest.fn(),
-    getRateTrend: jest.fn(),
-    format: jest.fn(),
-    formatSatoshis: jest.fn(),
-    formatBtc: jest.fn(),
-    parse: jest.fn(),
-    getSupportedCurrencies: jest.fn(),
-    getCurrencySymbol: jest.fn(),
-    getCurrencyName: jest.fn(),
-    getCurrencyPrecision: jest.fn(),
-    isCurrencySupported: jest.fn(),
-    checkRateStaleness: jest.fn(),
-    getLastRateUpdate: jest.fn(),
-    getActiveProvider: jest.fn(),
-    setActiveProvider: jest.fn(),
-    getAvailableProviders: jest.fn(),
-    testProvider: jest.fn(),
-    getStatistics: jest.fn(),
-    getCacheStats: jest.fn(),
-    subscribeToRateUpdates: jest.fn(),
-    unsubscribeFromRateUpdates: jest.fn(),
-    healthCheck: jest.fn(),
-    clearCache: jest.fn(),
-    warmupCache: jest.fn(),
-    getMetrics: jest.fn(),
-    dispose: jest.fn()
+    convert: vi.fn(),
+    convertBatch: vi.fn(),
+    satoshisToFiat: vi.fn(),
+    fiatToSatoshis: vi.fn(),
+    satoshisToBtc: vi.fn(),
+    btcToSatoshis: vi.fn(),
+    getRate: vi.fn(),
+    getRates: vi.fn(),
+    getAllRates: vi.fn(),
+    refreshRates: vi.fn(),
+    setManualRate: vi.fn(),
+    getHistoricalRate: vi.fn(),
+    queryHistoricalRates: vi.fn(),
+    getRateTrend: vi.fn(),
+    format: vi.fn(),
+    formatSatoshis: vi.fn(),
+    formatBtc: vi.fn(),
+    parse: vi.fn(),
+    getSupportedCurrencies: vi.fn(),
+    getCurrencySymbol: vi.fn(),
+    getCurrencyName: vi.fn(),
+    getCurrencyPrecision: vi.fn(),
+    isCurrencySupported: vi.fn(),
+    checkRateStaleness: vi.fn(),
+    getLastRateUpdate: vi.fn(),
+    getActiveProvider: vi.fn(),
+    setActiveProvider: vi.fn(),
+    getAvailableProviders: vi.fn(),
+    testProvider: vi.fn(),
+    getStatistics: vi.fn(),
+    getCacheStats: vi.fn(),
+    subscribeToRateUpdates: vi.fn(),
+    unsubscribeFromRateUpdates: vi.fn(),
+    healthCheck: vi.fn(),
+    clearCache: vi.fn(),
+    warmupCache: vi.fn(),
+    getMetrics: vi.fn(),
+    dispose: vi.fn()
   };
   // Set default mock implementation
   mock.convert.mockResolvedValue({ convertedAmount: 50, rate: 1 });
@@ -104,28 +106,28 @@ const createMockCurrencyService = (): any => {
 };
 
 const createMockEventBus = (): any => ({
-  publish: jest.fn().mockResolvedValue(undefined as any),
-  subscribe: jest.fn(),
-  unsubscribe: jest.fn(),
-  getSubscriptions: jest.fn(),
-  dispose: jest.fn()
+  publish: vi.fn().mockResolvedValue(undefined as any),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
+  getSubscriptions: vi.fn(),
+  dispose: vi.fn()
 });
 
 const createMockLogger = (): any => ({
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn()
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn()
 });
 
 const createMockCache = (): any => ({
-  get: jest.fn().mockResolvedValue(null as any),
-  set: jest.fn().mockResolvedValue(undefined as any),
-  delete: jest.fn().mockResolvedValue(true as any),
-  clear: jest.fn().mockResolvedValue(undefined as any),
-  has: jest.fn().mockResolvedValue(false as any),
-  ttl: jest.fn().mockResolvedValue(0 as any),
-  keys: jest.fn().mockResolvedValue([] as any)
+  get: vi.fn().mockResolvedValue(null as any),
+  set: vi.fn().mockResolvedValue(undefined as any),
+  delete: vi.fn().mockResolvedValue(true as any),
+  clear: vi.fn().mockResolvedValue(undefined as any),
+  has: vi.fn().mockResolvedValue(false as any),
+  ttl: vi.fn().mockResolvedValue(0 as any),
+  keys: vi.fn().mockResolvedValue([] as any)
 });
 
 const createMockTransaction = (overrides?: Partial<PaymentTransaction>): PaymentTransaction => ({
@@ -173,7 +175,7 @@ describe('RefundService', () => {
 
   afterEach(async () => {
     await refundService.dispose();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Refund Creation & Validation', () => {
@@ -1331,7 +1333,7 @@ describe('RefundService', () => {
 
     describe('subscribeToEvents', () => {
       it('should subscribe to refund events', () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const subscriptionId = refundService.subscribeToEvents('refund.completed', callback as any);
 
         expect(subscriptionId).toBeDefined();
@@ -1341,7 +1343,7 @@ describe('RefundService', () => {
 
     describe('unsubscribeFromEvents', () => {
       it('should unsubscribe from events', () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const subscriptionId = refundService.subscribeToEvents('refund.completed', callback as any);
 
         refundService.unsubscribeFromEvents(subscriptionId);

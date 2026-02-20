@@ -13,26 +13,35 @@ import type { IEventBus } from '../../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../../interfaces/shared/ILogger';
 import type {
   AnalyticsQuery,
+  AnalyticsExportRequest
+} from '../../../types/payment-analytics';
+import {
   AnalyticsPeriod,
   ExportFormat,
-  AnalyticsExportRequest
 } from '../../../types/payment-analytics';
 import type {
   PaymentTransaction,
-  PaymentHistoryQuery,
-  PaymentStatus,
-  PaymentMethod
+  PaymentHistoryQuery
 } from '../../../types/payment';
-import type { Currency, ConversionResult } from '../../../types/currency';
+import {
+  PaymentStatus,
+  PaymentMethod,
+} from '../../../types/payment';
+import type {
+  ConversionResult
+} from '../../../types/currency';
+import {
+  Currency,
+} from '../../../types/currency';
 import { DomainEventType } from '../../../interfaces/shared/IEventBus';
 
 describe('PaymentAnalyticsService', () => {
   let service: PaymentAnalyticsService;
-  let mockPaymentService: jest.Mocked<IPaymentProcessingService>;
-  let mockCurrencyService: jest.Mocked<ICurrencyService>;
-  let mockCacheService: jest.Mocked<ICacheService>;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockLogger: jest.Mocked<ILogger>;
+  let mockPaymentService: vi.Mocked<IPaymentProcessingService>;
+  let mockCurrencyService: vi.Mocked<ICurrencyService>;
+  let mockCacheService: vi.Mocked<ICacheService>;
+  let mockEventBus: vi.Mocked<IEventBus>;
+  let mockLogger: vi.Mocked<ILogger>;
 
   // Sample test data
   const sampleTransactions: PaymentTransaction[] = [
@@ -97,93 +106,93 @@ describe('PaymentAnalyticsService', () => {
   beforeEach(() => {
     // Create mocks
     mockPaymentService = {
-      getPaymentHistory: jest.fn(),
-      getStatistics: jest.fn(),
-      createInvoice: jest.fn(),
-      getInvoice: jest.fn(),
-      getInvoiceByPaymentHash: jest.fn(),
-      cancelInvoice: jest.fn(),
-      listUserInvoices: jest.fn(),
-      processPayment: jest.fn(),
-      verifyPayment: jest.fn(),
-      checkPaymentStatus: jest.fn(),
-      getTransaction: jest.fn(),
-      retryPayment: jest.fn(),
-      initiateRefund: jest.fn(),
-      getRefund: jest.fn(),
-      listTransactionRefunds: jest.fn(),
-      getReceipt: jest.fn(),
-      generateReceiptPdf: jest.fn(),
-      checkIdempotency: jest.fn(),
-      storeIdempotency: jest.fn(),
-      checkExpiredInvoices: jest.fn(),
-      expireInvoice: jest.fn(),
-      subscribeToEvents: jest.fn(),
-      unsubscribeFromEvents: jest.fn(),
-      getSupportedMethods: jest.fn(),
-      isMethodAvailable: jest.fn(),
-      healthCheck: jest.fn(),
-      getMetrics: jest.fn(),
-      dispose: jest.fn()
+      getPaymentHistory: vi.fn(),
+      getStatistics: vi.fn(),
+      createInvoice: vi.fn(),
+      getInvoice: vi.fn(),
+      getInvoiceByPaymentHash: vi.fn(),
+      cancelInvoice: vi.fn(),
+      listUserInvoices: vi.fn(),
+      processPayment: vi.fn(),
+      verifyPayment: vi.fn(),
+      checkPaymentStatus: vi.fn(),
+      getTransaction: vi.fn(),
+      retryPayment: vi.fn(),
+      initiateRefund: vi.fn(),
+      getRefund: vi.fn(),
+      listTransactionRefunds: vi.fn(),
+      getReceipt: vi.fn(),
+      generateReceiptPdf: vi.fn(),
+      checkIdempotency: vi.fn(),
+      storeIdempotency: vi.fn(),
+      checkExpiredInvoices: vi.fn(),
+      expireInvoice: vi.fn(),
+      subscribeToEvents: vi.fn(),
+      unsubscribeFromEvents: vi.fn(),
+      getSupportedMethods: vi.fn(),
+      isMethodAvailable: vi.fn(),
+      healthCheck: vi.fn(),
+      getMetrics: vi.fn(),
+      dispose: vi.fn()
     } as any;
 
     mockCurrencyService = {
-      convert: jest.fn(),
-      getRate: jest.fn(),
-      satoshisToBtc: jest.fn(),
-      btcToSatoshis: jest.fn(),
-      getSupportedCurrencies: jest.fn(),
-      getCurrencySymbol: jest.fn(),
-      getCurrencyName: jest.fn(),
-      getCurrencyPrecision: jest.fn(),
-      isCurrencySupported: jest.fn(),
-      healthCheck: jest.fn(),
-      dispose: jest.fn()
+      convert: vi.fn(),
+      getRate: vi.fn(),
+      satoshisToBtc: vi.fn(),
+      btcToSatoshis: vi.fn(),
+      getSupportedCurrencies: vi.fn(),
+      getCurrencySymbol: vi.fn(),
+      getCurrencyName: vi.fn(),
+      getCurrencyPrecision: vi.fn(),
+      isCurrencySupported: vi.fn(),
+      healthCheck: vi.fn(),
+      dispose: vi.fn()
     } as any;
 
     mockCacheService = {
-      get: jest.fn(),
-      set: jest.fn(),
-      delete: jest.fn(),
-      exists: jest.fn(),
-      invalidate: jest.fn(),
-      invalidateByTags: jest.fn(),
-      flush: jest.fn(),
-      getTtl: jest.fn(),
-      setTtl: jest.fn(),
-      getMany: jest.fn(),
-      setMany: jest.fn(),
-      remember: jest.fn(),
-      healthCheck: jest.fn(),
-      dispose: jest.fn()
+      get: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      invalidate: vi.fn(),
+      invalidateByTags: vi.fn(),
+      flush: vi.fn(),
+      getTtl: vi.fn(),
+      setTtl: vi.fn(),
+      getMany: vi.fn(),
+      setMany: vi.fn(),
+      remember: vi.fn(),
+      healthCheck: vi.fn(),
+      dispose: vi.fn()
     } as any;
 
     mockEventBus = {
-      publish: jest.fn(),
-      publishBatch: jest.fn(),
-      subscribe: jest.fn(),
-      subscribeToMany: jest.fn(),
-      subscribeToAll: jest.fn(),
-      subscribeWithFilter: jest.fn(),
-      unsubscribe: jest.fn(),
-      unsubscribeAll: jest.fn(),
-      getEvent: jest.fn(),
-      queryEvents: jest.fn(),
-      replayEvents: jest.fn(),
-      replayEventsToHandler: jest.fn(),
-      getActiveSubscriptions: jest.fn(),
-      getEventStats: jest.fn(),
-      clearEventStore: jest.fn(),
-      isHealthy: jest.fn(),
-      dispose: jest.fn()
+      publish: vi.fn(),
+      publishBatch: vi.fn(),
+      subscribe: vi.fn(),
+      subscribeToMany: vi.fn(),
+      subscribeToAll: vi.fn(),
+      subscribeWithFilter: vi.fn(),
+      unsubscribe: vi.fn(),
+      unsubscribeAll: vi.fn(),
+      getEvent: vi.fn(),
+      queryEvents: vi.fn(),
+      replayEvents: vi.fn(),
+      replayEventsToHandler: vi.fn(),
+      getActiveSubscriptions: vi.fn(),
+      getEventStats: vi.fn(),
+      clearEventStore: vi.fn(),
+      isHealthy: vi.fn(),
+      dispose: vi.fn()
     } as any;
 
     mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      fatal: jest.fn()
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      fatal: vi.fn()
     } as any;
 
     // Default mock implementations
@@ -213,7 +222,7 @@ describe('PaymentAnalyticsService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Constructor and Initialization', () => {
@@ -708,7 +717,7 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should subscribe to realtime updates', async () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       const subscriptionId = service.subscribeToRealtimeUpdates(callback);
 
       expect(subscriptionId).toBeDefined();
@@ -719,7 +728,7 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should unsubscribe from realtime updates', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       const subscriptionId = service.subscribeToRealtimeUpdates(callback);
 
       service.unsubscribeFromRealtimeUpdates(subscriptionId);
@@ -952,7 +961,7 @@ describe('PaymentAnalyticsService', () => {
 
   describe('Event Subscription', () => {
     it('should subscribe to analytics events', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       const subscriptionId = service.subscribeToEvents('analytics.generated', callback);
 
       expect(subscriptionId).toBeDefined();
@@ -960,7 +969,7 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should unsubscribe from analytics events', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       const subscriptionId = service.subscribeToEvents('analytics.generated', callback);
 
       service.unsubscribeFromEvents(subscriptionId);
@@ -1122,7 +1131,7 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should clear all subscriptions on dispose', async () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       service.subscribeToRealtimeUpdates(callback);
       service.subscribeToEvents('test', callback);
 

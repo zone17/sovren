@@ -3,9 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ReplyComposer } from '../ReplyComposer';
 
-const mockUseReplyTemplates = jest.fn();
+const mockUseReplyTemplates = vi.fn();
 
-jest.mock('../../hooks/useInboxActions', () => ({
+vi.mock('../../hooks/useInboxActions', () => ({
   useReplyTemplates: () => mockUseReplyTemplates(),
 }));
 
@@ -21,13 +21,13 @@ const defaultProps = {
   platform: 'mastodon',
   authorName: '@alice@mastodon.social',
   isPending: false,
-  onSend: jest.fn(),
-  onCancel: jest.fn(),
+  onSend: vi.fn(),
+  onCancel: vi.fn(),
 };
 
 describe('ReplyComposer', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseReplyTemplates.mockReturnValue({ data: [], isLoading: false });
   });
 
@@ -92,7 +92,7 @@ describe('ReplyComposer', () => {
     });
 
     it('calls onSend with trimmed content when send button clicked', () => {
-      const onSend = jest.fn();
+      const onSend = vi.fn();
       render(<ReplyComposer {...defaultProps} onSend={onSend} />, { wrapper: createWrapper() });
 
       fireEvent.change(screen.getByRole('textbox', { name: /reply to/i }), {
@@ -104,7 +104,7 @@ describe('ReplyComposer', () => {
     });
 
     it('calls onCancel when Cancel clicked', () => {
-      const onCancel = jest.fn();
+      const onCancel = vi.fn();
       render(<ReplyComposer {...defaultProps} onCancel={onCancel} />, { wrapper: createWrapper() });
 
       fireEvent.click(screen.getByText('Cancel'));
@@ -113,7 +113,7 @@ describe('ReplyComposer', () => {
     });
 
     it('sends on Ctrl+Enter keyboard shortcut', () => {
-      const onSend = jest.fn();
+      const onSend = vi.fn();
       render(<ReplyComposer {...defaultProps} onSend={onSend} />, { wrapper: createWrapper() });
 
       const textarea = screen.getByRole('textbox', { name: /reply to/i });
@@ -124,7 +124,7 @@ describe('ReplyComposer', () => {
     });
 
     it('cancels on Escape key', () => {
-      const onCancel = jest.fn();
+      const onCancel = vi.fn();
       render(<ReplyComposer {...defaultProps} onCancel={onCancel} />, { wrapper: createWrapper() });
 
       const textarea = screen.getByRole('textbox', { name: /reply to/i });

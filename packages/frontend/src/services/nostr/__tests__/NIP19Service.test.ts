@@ -8,7 +8,7 @@
  * Coverage Target: ≥95%
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+
 import {
   NIP19Service,
   NIP19Error,
@@ -494,7 +494,7 @@ describe('NIP19Service', () => {
         );
 
         // Mock clipboard API
-        const mockWriteText = jest.fn().mockResolvedValue(undefined);
+        const mockWriteText = vi.fn().mockResolvedValue(undefined);
         Object.assign(navigator, {
           clipboard: {
             writeText: mockWriteText,
@@ -813,8 +813,8 @@ describe('NIP19Service', () => {
 
   describe('Security', () => {
     it('should never log private keys', () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       try {
         service.encodePrivkey('invalid');

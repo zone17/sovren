@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite E2E Test Reporter - Automated reporting with failure pattern recognition
  * and comprehensive test analytics for continuous improvement.

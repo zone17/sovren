@@ -4,11 +4,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ContractEditor from '../ContractEditor';
 
 // --- Hook mocks ---
-const mockUseContractTemplate = jest.fn();
-const mockUseCreateContract = jest.fn();
-const mockUseAnalyzeContract = jest.fn();
+const mockUseContractTemplate = vi.fn();
+const mockUseCreateContract = vi.fn();
+const mockUseAnalyzeContract = vi.fn();
 
-jest.mock('../../hooks/useContracts', () => ({
+vi.mock('../../hooks/useContracts', () => ({
   useContractTemplate: () => mockUseContractTemplate(),
   useCreateContract: () => mockUseCreateContract(),
   useAnalyzeContract: () => mockUseAnalyzeContract(),
@@ -22,7 +22,7 @@ function createWrapper() {
   );
 }
 
-const defaultMutateFn = jest.fn();
+const defaultMutateFn = vi.fn();
 
 const idleCreateMutation = {
   mutate: defaultMutateFn,
@@ -55,14 +55,14 @@ const sampleRedFlags = [
 
 const defaultProps = {
   templateId: 'tmpl-1',
-  onSaved: jest.fn(),
-  onCancel: jest.fn(),
+  onSaved: vi.fn(),
+  onCancel: vi.fn(),
 };
 
 // --- Tests ---
 describe('ContractEditor', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseContractTemplate.mockReturnValue({ data: sampleTemplate, isLoading: false });
     mockUseCreateContract.mockReturnValue(idleCreateMutation);
     mockUseAnalyzeContract.mockReturnValue(idleAnalyzeMutation);
@@ -167,7 +167,7 @@ describe('ContractEditor', () => {
     });
 
     it('calls createMutation.mutate with templateId, counterparty, and filledText', () => {
-      const mutate = jest.fn();
+      const mutate = vi.fn();
       mockUseCreateContract.mockReturnValue({ ...idleCreateMutation, mutate });
 
       render(<ContractEditor {...defaultProps} />, { wrapper: createWrapper() });
@@ -208,7 +208,7 @@ describe('ContractEditor', () => {
     });
 
     it('calls onCancel when Cancel button is clicked', () => {
-      const onCancel = jest.fn();
+      const onCancel = vi.fn();
       render(<ContractEditor {...defaultProps} onCancel={onCancel} />, {
         wrapper: createWrapper(),
       });
@@ -238,7 +238,7 @@ describe('ContractEditor', () => {
     });
 
     it('calls analyzeMutation.mutate with the current contract text', () => {
-      const mutate = jest.fn();
+      const mutate = vi.fn();
       mockUseAnalyzeContract.mockReturnValue({ ...idleAnalyzeMutation, mutate });
 
       render(<ContractEditor {...defaultProps} />, { wrapper: createWrapper() });
@@ -271,7 +271,7 @@ describe('ContractEditor', () => {
     it('shows red flag report after successful analysis', () => {
       let analyzeSuccessCallback: ((res: { data: typeof sampleRedFlags }) => void) | null = null;
 
-      const mutate = jest.fn((_text: string, opts: { onSuccess: (res: { data: typeof sampleRedFlags }) => void }) => {
+      const mutate = vi.fn((_text: string, opts: { onSuccess: (res: { data: typeof sampleRedFlags }) => void }) => {
         analyzeSuccessCallback = opts.onSuccess;
       });
 

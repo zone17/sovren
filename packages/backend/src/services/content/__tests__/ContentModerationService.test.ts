@@ -15,12 +15,12 @@
  */
 
 import { ContentModerationService } from '../ContentModerationService.v2';
-import type {
+import {
   ModerationAction,
   ModerationStatus,
   ModerationSeverity,
   ModerationCategory,
-  AppealStatus
+  AppealStatus,
 } from '../../../types/moderation';
 
 describe('ContentModerationService', () => {
@@ -37,28 +37,28 @@ describe('ContentModerationService', () => {
   beforeEach(() => {
     // Initialize mocks
     mockAuditLog = {
-      log: jest.fn().mockResolvedValue(undefined)
+      log: vi.fn().mockResolvedValue(undefined)
     };
 
     mockEventBus = {
-      publish: jest.fn().mockResolvedValue(undefined)
+      publish: vi.fn().mockResolvedValue(undefined)
     };
 
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn()
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn()
     };
 
     mockCache = {
-      get: jest.fn().mockResolvedValue(null),
-      set: jest.fn().mockResolvedValue(undefined),
-      delete: jest.fn().mockResolvedValue(undefined)
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined)
     };
 
     mockAIService = {
-      analyzeContent: jest.fn().mockResolvedValue({
+      analyzeContent: vi.fn().mockResolvedValue({
         categories: [],
         confidence: 0.5,
         details: {}
@@ -66,16 +66,16 @@ describe('ContentModerationService', () => {
     };
 
     mockContentRepo = {
-      getContent: jest.fn().mockResolvedValue({
+      getContent: vi.fn().mockResolvedValue({
         authorId: 'author-123',
         content: 'Test content'
       }),
-      updateContentStatus: jest.fn().mockResolvedValue(undefined)
+      updateContentStatus: vi.fn().mockResolvedValue(undefined)
     };
 
     mockMetrics = {
-      recordHistogram: jest.fn(),
-      incrementCounter: jest.fn()
+      recordHistogram: vi.fn(),
+      incrementCounter: vi.fn()
     };
 
     // Create service instance
@@ -91,7 +91,7 @@ describe('ContentModerationService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // =========================================================================
@@ -231,7 +231,7 @@ describe('ContentModerationService', () => {
 
     it('should return failsafe result on critical error', async () => {
       mockAIService.analyzeContent.mockRejectedValueOnce(new Error('Critical error'));
-      mockLogger.error = jest.fn(); // Suppress error logs
+      mockLogger.error = vi.fn(); // Suppress error logs
 
       const result = await service.moderate('content-12', 'Test content');
 

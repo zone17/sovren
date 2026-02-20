@@ -3,10 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BYOKSetup } from '../BYOKSetup';
 
-const mockUseBYOK = jest.fn();
-const mockUseBYOKStatus = jest.fn();
+const mockUseBYOK = vi.fn();
+const mockUseBYOKStatus = vi.fn();
 
-jest.mock('../../hooks/useBYOK', () => ({
+vi.mock('../../hooks/useBYOK', () => ({
   useBYOK: () => mockUseBYOK(),
   useBYOKStatus: () => mockUseBYOKStatus(),
 }));
@@ -23,14 +23,14 @@ const defaultBYOK = {
   validationResult: undefined,
   isPending: false,
   isRevoking: false,
-  submit: jest.fn(),
-  revoke: jest.fn(),
-  reset: jest.fn(),
+  submit: vi.fn(),
+  revoke: vi.fn(),
+  reset: vi.fn(),
 };
 
 describe('BYOKSetup', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseBYOK.mockReturnValue(defaultBYOK);
     mockUseBYOKStatus.mockReturnValue({ data: null, isLoading: false });
   });
@@ -108,7 +108,7 @@ describe('BYOKSetup', () => {
     });
 
     it('calls submit with all field values on form submit', () => {
-      const submit = jest.fn();
+      const submit = vi.fn();
       mockUseBYOK.mockReturnValue({ ...defaultBYOK, submit });
       render(<BYOKSetup />, { wrapper: createWrapper() });
 

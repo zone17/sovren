@@ -9,18 +9,18 @@ function createMockDb() {
   const mockChain: any = {};
   const methods = ['select', 'eq', 'order', 'range', 'single', 'update', 'from'];
   for (const method of methods) {
-    mockChain[method] = jest.fn().mockReturnValue(mockChain);
+    mockChain[method] = vi.fn().mockReturnValue(mockChain);
   }
   return {
-    from: jest.fn().mockReturnValue(mockChain),
+    from: vi.fn().mockReturnValue(mockChain),
     _chain: mockChain,
   };
 }
 
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
 };
 
 describe('AlertService', () => {
@@ -30,7 +30,7 @@ describe('AlertService', () => {
   beforeEach(() => {
     mockDb = createMockDb();
     service = new AlertService(mockDb as any, mockLogger);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('updateAlertStatus', () => {
@@ -41,9 +41,9 @@ describe('AlertService', () => {
         .mockReturnValueOnce({ data: { status: 'new' }, error: null }) // First call: get current
         .mockReturnValueOnce({ data: null, error: null }); // Update doesn't use single
 
-      mockDb._chain.update = jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({ error: null }),
+      mockDb._chain.update = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({ error: null }),
         }),
       });
 
@@ -53,7 +53,7 @@ describe('AlertService', () => {
     });
 
     it('should reject invalid transition: new -> resolved', async () => {
-      mockDb._chain.single = jest.fn().mockReturnValue({
+      mockDb._chain.single = vi.fn().mockReturnValue({
         data: { status: 'new' },
         error: null,
       });
@@ -64,7 +64,7 @@ describe('AlertService', () => {
     });
 
     it('should reject invalid transition: resolved -> reviewed', async () => {
-      mockDb._chain.single = jest.fn().mockReturnValue({
+      mockDb._chain.single = vi.fn().mockReturnValue({
         data: { status: 'resolved' },
         error: null,
       });
@@ -75,14 +75,14 @@ describe('AlertService', () => {
     });
 
     it('should allow valid transition: reviewed -> reported', async () => {
-      mockDb._chain.single = jest.fn().mockReturnValueOnce({
+      mockDb._chain.single = vi.fn().mockReturnValueOnce({
         data: { status: 'reviewed' },
         error: null,
       });
 
-      mockDb._chain.update = jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({ error: null }),
+      mockDb._chain.update = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({ error: null }),
         }),
       });
 
@@ -91,7 +91,7 @@ describe('AlertService', () => {
     });
 
     it('should throw NotFoundError for non-existent alert', async () => {
-      mockDb._chain.single = jest.fn().mockReturnValue({
+      mockDb._chain.single = vi.fn().mockReturnValue({
         data: null,
         error: { code: 'PGRST116' },
       });

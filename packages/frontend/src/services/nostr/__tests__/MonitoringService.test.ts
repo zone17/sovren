@@ -28,15 +28,15 @@ import { RelayStatus, RelayHealth } from '../types';
 import type { NostrEvent } from '@shared/types/nostr';
 
 // Mock dependencies
-jest.mock('../RelayPoolManager');
-jest.mock('../EventPublisherService');
-jest.mock('../SubscriptionManagerService');
+vi.mock('../RelayPoolManager');
+vi.mock('../EventPublisherService');
+vi.mock('../SubscriptionManagerService');
 
 describe('MonitoringService', () => {
   let monitoringService: MonitoringService;
-  let mockRelayPool: jest.Mocked<RelayPoolManager>;
-  let mockPublisher: jest.Mocked<EventPublisherService>;
-  let mockSubscriptionManager: jest.Mocked<SubscriptionManagerService>;
+  let mockRelayPool: vi.Mocked<RelayPoolManager>;
+  let mockPublisher: vi.Mocked<EventPublisherService>;
+  let mockSubscriptionManager: vi.Mocked<SubscriptionManagerService>;
 
   beforeEach(() => {
     // Clear singleton
@@ -46,10 +46,10 @@ describe('MonitoringService', () => {
     monitoringService = MonitoringService.getInstance();
 
     // Get mocked instances
-    mockRelayPool = RelayPoolManager.getInstance() as jest.Mocked<RelayPoolManager>;
-    mockPublisher = EventPublisherService.getInstance() as jest.Mocked<EventPublisherService>;
+    mockRelayPool = RelayPoolManager.getInstance() as anyed<RelayPoolManager>;
+    mockPublisher = EventPublisherService.getInstance() as anyed<EventPublisherService>;
     mockSubscriptionManager =
-      SubscriptionManagerService.getInstance() as jest.Mocked<SubscriptionManagerService>;
+      SubscriptionManagerService.getInstance() as anyed<SubscriptionManagerService>;
 
     // Setup default mocks
     setupDefaultMocks();
@@ -57,7 +57,7 @@ describe('MonitoringService', () => {
 
   afterEach(async () => {
     await monitoringService.destroy();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ============================================
@@ -83,7 +83,7 @@ describe('MonitoringService', () => {
 
     it('should handle already initialized state', async () => {
       await monitoringService.initialize();
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation();
 
       await monitoringService.initialize();
 
@@ -95,7 +95,7 @@ describe('MonitoringService', () => {
     });
 
     it('should skip initialization if disabled', async () => {
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       await monitoringService.initialize({ enabled: false });
 
@@ -119,7 +119,7 @@ describe('MonitoringService', () => {
     });
 
     it('should set up event listeners on initialization', async () => {
-      const onSpy = jest.spyOn(mockRelayPool, 'on');
+      const onSpy = vi.spyOn(mockRelayPool, 'on');
 
       await monitoringService.initialize();
 
@@ -157,7 +157,7 @@ describe('MonitoringService', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.CONNECTED);
 
       // Trigger relay connected event
-      const connectHandler = (mockRelayPool.on as jest.Mock).mock.calls.find(
+      const connectHandler = (mockRelayPool.on as any).mock.calls.find(
         call => call[0] === 'relay:connected'
       )?.[1];
 
@@ -175,11 +175,11 @@ describe('MonitoringService', () => {
     it('should create alert when relay disconnects', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.DISCONNECTED);
 
-      const alertSpy = jest.fn();
+      const alertSpy = vi.fn();
       monitoringService.on('alert:created', alertSpy);
 
       // Trigger disconnect
-      const disconnectHandler = (mockRelayPool.on as jest.Mock).mock.calls.find(
+      const disconnectHandler = (mockRelayPool.on as any).mock.calls.find(
         call => call[0] === 'relay:disconnected'
       )?.[1];
 
@@ -211,7 +211,7 @@ describe('MonitoringService', () => {
 
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.CONNECTED);
 
-      const connectHandler = (mockRelayPool.on as jest.Mock).mock.calls.find(
+      const connectHandler = (mockRelayPool.on as any).mock.calls.find(
         call => call[0] === 'relay:connected'
       )?.[1];
 
@@ -281,7 +281,7 @@ describe('MonitoringService', () => {
       };
 
       // Trigger publish event
-      const publishHandler = (mockPublisher.on as jest.Mock).mock.calls.find(
+      const publishHandler = (mockPublisher.on as any).mock.calls.find(
         call => call[0] === 'event:published'
       )?.[1];
 
@@ -311,7 +311,7 @@ describe('MonitoringService', () => {
         totalLatency: 100,
       };
 
-      const publishHandler = (mockPublisher.on as jest.Mock).mock.calls.find(
+      const publishHandler = (mockPublisher.on as any).mock.calls.find(
         call => call[0] === 'event:published'
       )?.[1];
 
@@ -337,7 +337,7 @@ describe('MonitoringService', () => {
           totalLatency: latency,
         };
 
-        const publishHandler = (mockPublisher.on as jest.Mock).mock.calls.find(
+        const publishHandler = (mockPublisher.on as any).mock.calls.find(
           call => call[0] === 'event:published'
         )?.[1];
 
@@ -356,7 +356,7 @@ describe('MonitoringService', () => {
     });
 
     it('should create alert for high error rate', () => {
-      const alertSpy = jest.fn();
+      const alertSpy = vi.fn();
       monitoringService.on('alert:created', alertSpy);
 
       // Publish events with high failure rate
@@ -377,7 +377,7 @@ describe('MonitoringService', () => {
           totalLatency: 100,
         };
 
-        const publishHandler = (mockPublisher.on as jest.Mock).mock.calls.find(
+        const publishHandler = (mockPublisher.on as any).mock.calls.find(
           call => call[0] === 'event:published'
         )?.[1];
 
@@ -393,7 +393,7 @@ describe('MonitoringService', () => {
     });
 
     it('should create alert for high latency', () => {
-      const alertSpy = jest.fn();
+      const alertSpy = vi.fn();
       monitoringService.on('alert:created', alertSpy);
 
       // Publish events with increasing latency
@@ -414,7 +414,7 @@ describe('MonitoringService', () => {
           totalLatency: 1000 + i * 10,
         };
 
-        const publishHandler = (mockPublisher.on as jest.Mock).mock.calls.find(
+        const publishHandler = (mockPublisher.on as any).mock.calls.find(
           call => call[0] === 'event:published'
         )?.[1];
 
@@ -509,7 +509,7 @@ describe('MonitoringService', () => {
           totalLatency: latency,
         };
 
-        const publishHandler = (mockPublisher.on as jest.Mock).mock.calls.find(
+        const publishHandler = (mockPublisher.on as any).mock.calls.find(
           call => call[0] === 'event:published'
         )?.[1];
 
@@ -552,12 +552,12 @@ describe('MonitoringService', () => {
     });
 
     it('should create alerts when conditions are met', () => {
-      const alertSpy = jest.fn();
+      const alertSpy = vi.fn();
       monitoringService.on('alert:created', alertSpy);
 
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.DISCONNECTED);
 
-      const disconnectHandler = (mockRelayPool.on as jest.Mock).mock.calls.find(
+      const disconnectHandler = (mockRelayPool.on as any).mock.calls.find(
         call => call[0] === 'relay:disconnected'
       )?.[1];
 
@@ -572,7 +572,7 @@ describe('MonitoringService', () => {
     it('should acknowledge alerts', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.ERROR);
 
-      const errorHandler = (mockRelayPool.on as jest.Mock).mock.calls.find(
+      const errorHandler = (mockRelayPool.on as any).mock.calls.find(
         call => call[0] === 'relay:error'
       )?.[1];
 
@@ -592,7 +592,7 @@ describe('MonitoringService', () => {
     it('should clear all alerts', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.ERROR);
 
-      const errorHandler = (mockRelayPool.on as jest.Mock).mock.calls.find(
+      const errorHandler = (mockRelayPool.on as any).mock.calls.find(
         call => call[0] === 'relay:error'
       )?.[1];
 
@@ -625,7 +625,7 @@ describe('MonitoringService', () => {
 
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.ERROR);
 
-      const errorHandler = (mockRelayPool.on as jest.Mock).mock.calls.find(
+      const errorHandler = (mockRelayPool.on as any).mock.calls.find(
         call => call[0] === 'relay:error'
       )?.[1];
 
@@ -772,7 +772,7 @@ describe('MonitoringService', () => {
         totalLatency: 100,
       };
 
-      const publishHandler = (mockPublisher.on as jest.Mock).mock.calls.find(
+      const publishHandler = (mockPublisher.on as any).mock.calls.find(
         call => call[0] === 'event:published'
       )?.[1];
 

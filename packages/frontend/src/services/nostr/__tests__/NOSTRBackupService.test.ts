@@ -11,11 +11,11 @@ import { BackupContentType as BCType } from '../types/backup';
 import type { BackupFile, RecoveryOptions } from '../types/backup';
 
 // Mock KeyManagementService
-jest.mock('../KeyManagementService');
+vi.mock('../KeyManagementService');
 
 describe('NOSTRBackupService', () => {
   let service: NOSTRBackupService;
-  let keyManagement: jest.Mocked<KeyManagementService>;
+  let keyManagement: vi.Mocked<KeyManagementService>;
 
   beforeEach(async () => {
     // Clear singleton
@@ -23,7 +23,7 @@ describe('NOSTRBackupService', () => {
 
     service = NOSTRBackupService.getInstance();
 
-    keyManagement = KeyManagementService.getInstance() as jest.Mocked<KeyManagementService>;
+    keyManagement = KeyManagementService.getInstance() as anyed<KeyManagementService>;
     keyManagement.isInitialized.mockReturnValue(true);
     keyManagement.listKeys.mockResolvedValue([]);
     keyManagement.getActiveKey.mockReturnValue(null);
@@ -32,7 +32,7 @@ describe('NOSTRBackupService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
   });
 

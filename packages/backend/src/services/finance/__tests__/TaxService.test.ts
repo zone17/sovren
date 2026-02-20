@@ -32,29 +32,29 @@ import { TaxService } from '../TaxService';
 
 function makeLogger() {
   return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   };
 }
 
 function makeCache() {
   return {
-    get: jest.fn().mockResolvedValue(null),
-    set: jest.fn().mockResolvedValue(undefined),
-    delete: jest.fn().mockResolvedValue(true),
-    invalidate: jest.fn().mockResolvedValue(0),
-    exists: jest.fn().mockResolvedValue(false),
-    invalidateByTags: jest.fn().mockResolvedValue(0),
-    flush: jest.fn().mockResolvedValue(undefined),
-    getTtl: jest.fn().mockResolvedValue(0),
-    setTtl: jest.fn().mockResolvedValue(true),
-    getMany: jest.fn().mockResolvedValue(new Map()),
-    setMany: jest.fn().mockResolvedValue(undefined),
-    remember: jest.fn(),
-    healthCheck: jest.fn().mockResolvedValue(true),
-    dispose: jest.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(true),
+    invalidate: vi.fn().mockResolvedValue(0),
+    exists: vi.fn().mockResolvedValue(false),
+    invalidateByTags: vi.fn().mockResolvedValue(0),
+    flush: vi.fn().mockResolvedValue(undefined),
+    getTtl: vi.fn().mockResolvedValue(0),
+    setTtl: vi.fn().mockResolvedValue(true),
+    getMany: vi.fn().mockResolvedValue(new Map()),
+    setMany: vi.fn().mockResolvedValue(undefined),
+    remember: vi.fn(),
+    healthCheck: vi.fn().mockResolvedValue(true),
+    dispose: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -84,29 +84,29 @@ function makeDb() {
     _singleResult: { data: null, error: null }, // for .single() termination
     _currentTable: '',
 
-    from: jest.fn().mockImplementation(function (table: string) {
+    from: vi.fn().mockImplementation(function (table: string) {
       db._currentTable = table;
       return db;
     }),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
     // lte always returns `this` — it is no longer terminal for any query path.
     // getQuarterlySummary chains .order().range() after .lte().
     // getExpenses chains .order().limit() after .lte().
-    lte: jest.fn().mockReturnThis(),
+    lte: vi.fn().mockReturnThis(),
     // order() returns a unified chainable object that supports all downstream patterns:
     //   - .range() for getQuarterlySummary paginated queries
     //   - .limit() for getExpenses
     //   - thenable (await) for getExpenseCategories
     // This eliminates the need for _inGetExpenses flag.
-    order: jest.fn().mockImplementation(function () {
+    order: vi.fn().mockImplementation(function () {
       const orderChain: any = {
         // range() is terminal for paginated queries (getQuarterlySummary).
         // Test data is always < PAGE_SIZE (500) rows, so the pagination loop
         // calls range() once per table and exits (rows.length < 500 → hasMore=false).
-        range: jest.fn().mockImplementation(function () {
+        range: vi.fn().mockImplementation(function () {
           if (db._currentTable === 'revenue_entries') {
             return Promise.resolve(db._revenueResult);
           }
@@ -116,14 +116,14 @@ function makeDb() {
           return Promise.resolve({ data: [], error: null });
         }),
         // limit() is terminal for getExpenses
-        limit: jest.fn().mockImplementation(() => Promise.resolve(db._orderResult)),
+        limit: vi.fn().mockImplementation(() => Promise.resolve(db._orderResult)),
         // thenable for getExpenseCategories (await .order())
         then: (res: any, rej: any) => Promise.resolve(db._orderResult).then(res, rej),
       };
       return orderChain;
     }),
     // single() is terminal for addExpense, createExpenseCategory
-    single: jest.fn().mockImplementation(() => Promise.resolve(db._singleResult)),
+    single: vi.fn().mockImplementation(() => Promise.resolve(db._singleResult)),
   };
   return db;
 }
@@ -142,14 +142,14 @@ describe('TaxService', () => {
   const MOCK_BTC_ENTRY = { rate: MOCK_BTC_RATE, fetchedAt: '2026-02-18T00:00:00.000Z' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLogger = makeLogger();
     mockCache = makeCache();
     mockDb = makeDb();
 
     // Default: global.fetch returns a valid BTC/USD rate
-    (global.fetch as jest.Mock).mockResolvedValue({
-      json: jest.fn().mockResolvedValue({ bitcoin: { usd: MOCK_BTC_RATE } }),
+    (global.fetch as any).mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ bitcoin: { usd: MOCK_BTC_RATE } }),
     });
 
     service = new TaxService(mockDb as any, mockCache as any, mockLogger as any);
@@ -307,7 +307,7 @@ describe('TaxService', () => {
     });
 
     it('falls back to $50,000 when fetch fails and no stale cache exists', async () => {
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      (global.fetch as any).mockRejectedValue(new Error('Network error'));
       mockCache.get.mockResolvedValue(null);
 
       mockDb._revenueResult = {
@@ -947,8 +947,8 @@ describe('TaxService', () => {
     });
 
     it('uses stale cache when API returns an invalid rate (rate <= 0)', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
-        json: jest.fn().mockResolvedValue({ bitcoin: { usd: -1 } }),
+      (global.fetch as any).mockResolvedValue({
+        json: vi.fn().mockResolvedValue({ bitcoin: { usd: -1 } }),
       });
 
       const staleRate = 55000;
@@ -969,7 +969,7 @@ describe('TaxService', () => {
     });
 
     it('falls back to $50,000 when both API and stale cache fail', async () => {
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network unavailable'));
+      (global.fetch as any).mockRejectedValue(new Error('Network unavailable'));
       mockCache.get.mockResolvedValue(null);
 
       mockDb._singleResult = { data: { id: 'exp-fallback' }, error: null };

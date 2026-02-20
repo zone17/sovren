@@ -13,7 +13,7 @@ const defaultFilters: Pick<InboxFilters, 'platform' | 'sentiment' | 'priority' |
 describe('InboxFilterBar', () => {
   describe('Rendering', () => {
     it('renders all four filter selects', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       expect(screen.getByLabelText('Filter by platform')).toBeInTheDocument();
@@ -23,7 +23,7 @@ describe('InboxFilterBar', () => {
     });
 
     it('displays current filter values', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(
         <InboxFilterBar
           filters={{ ...defaultFilters, platform: 'twitter', sentiment: 'positive' }}
@@ -36,7 +36,7 @@ describe('InboxFilterBar', () => {
     });
 
     it('shows all platform options', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       const platformSelect = screen.getByLabelText('Filter by platform');
@@ -55,7 +55,7 @@ describe('InboxFilterBar', () => {
 
   describe('Interactions', () => {
     it('calls onChange with platform update when platform filter changes', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       fireEvent.change(screen.getByLabelText('Filter by platform'), {
@@ -66,7 +66,7 @@ describe('InboxFilterBar', () => {
     });
 
     it('calls onChange with sentiment update when sentiment filter changes', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       fireEvent.change(screen.getByLabelText('Filter by sentiment'), {
@@ -77,7 +77,7 @@ describe('InboxFilterBar', () => {
     });
 
     it('calls onChange with priority update when priority filter changes', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       fireEvent.change(screen.getByLabelText('Filter by priority'), {
@@ -88,7 +88,7 @@ describe('InboxFilterBar', () => {
     });
 
     it('calls onChange with status update when status filter changes', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       fireEvent.change(screen.getByLabelText('Filter by read status'), {
@@ -101,14 +101,14 @@ describe('InboxFilterBar', () => {
 
   describe('Accessibility', () => {
     it('has a group role with accessible label', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       expect(screen.getByRole('group', { name: 'Inbox message filters' })).toBeInTheDocument();
     });
 
     it('each select has an accessible label', () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       expect(screen.getByLabelText('Filter by platform')).toBeInTheDocument();

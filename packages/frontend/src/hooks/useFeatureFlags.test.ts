@@ -4,7 +4,7 @@ import { useFeatureFlags } from './useFeatureFlags';
 
 describe('useFeatureFlags', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Initial state', () => {

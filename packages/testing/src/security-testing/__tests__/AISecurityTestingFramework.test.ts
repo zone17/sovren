@@ -14,12 +14,12 @@
  * - Security testing coverage verification
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { AISecurityTestingFramework } from '../AISecurityTestingFramework';
 import type { AISecurityTestingConfig } from '../types';
 
 // Mock dependencies
-jest.mock('../common/Logger');
+vi.mock('../common/Logger');
 
 describe('AISecurityTestingFramework - US-158 Complete Implementation', () => {
   let framework: AISecurityTestingFramework;
@@ -56,7 +56,7 @@ describe('AISecurityTestingFramework - US-158 Complete Implementation', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Framework Initialization', () => {

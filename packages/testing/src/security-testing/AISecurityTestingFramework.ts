@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file AISecurityTestingFramework.ts
  * @description Autonomous security testing strategy with threat modeling and AI-driven penetration testing

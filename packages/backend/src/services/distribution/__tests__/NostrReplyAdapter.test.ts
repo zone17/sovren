@@ -5,8 +5,8 @@
  */
 
 // Mock nostr-tools to avoid actual network calls
-jest.mock('nostr-tools/pure', () => ({
-  finalizeEvent: jest.fn().mockImplementation((template, _key) => ({
+vi.mock('nostr-tools/pure', () => ({
+  finalizeEvent: vi.fn().mockImplementation((template, _key) => ({
     ...template,
     id: 'mock-event-id-abc123',
     pubkey: 'mock-pubkey',
@@ -14,22 +14,22 @@ jest.mock('nostr-tools/pure', () => ({
   })),
 }));
 
-jest.mock('nostr-tools/pool', () => {
+vi.mock('nostr-tools/pool', () => {
   return {
-    SimplePool: jest.fn().mockImplementation(() => ({
-      publish: jest.fn().mockResolvedValue(undefined),
+    SimplePool: vi.fn().mockImplementation(() => ({
+      publish: vi.fn().mockResolvedValue(undefined),
     })),
   };
 });
 
-jest.mock('@noble/hashes/utils', () => ({
-  hexToBytes: jest.fn().mockReturnValue(new Uint8Array(32)),
+vi.mock('@noble/hashes/utils', () => ({
+  hexToBytes: vi.fn().mockReturnValue(new Uint8Array(32)),
 }));
 
 // Mock the crypto module for private key decryption
-jest.mock('../crypto', () => ({
-  decryptToken: jest.fn().mockReturnValue('decrypted-private-key-hex'),
-  getEncryptionKey: jest.fn().mockReturnValue(Buffer.alloc(32)),
+vi.mock('../crypto', () => ({
+  decryptToken: vi.fn().mockReturnValue('decrypted-private-key-hex'),
+  getEncryptionKey: vi.fn().mockReturnValue(Buffer.alloc(32)),
 }));
 
 import { NostrReplyAdapter } from '../NostrReplyAdapter';
@@ -45,16 +45,16 @@ describe('NostrReplyAdapter', () => {
   const content = 'Hello from Sovren!';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
-    const singleCreatorKey = jest.fn().mockResolvedValue({
+    const singleCreatorKey = vi.fn().mockResolvedValue({
       data: {
         nostr_private_key_encrypted: 'deadbeef',
         nostr_private_key_iv: null, // plaintext mode for tests
@@ -64,7 +64,7 @@ describe('NostrReplyAdapter', () => {
       error: null,
     });
 
-    const singleOriginalMessage = jest.fn().mockResolvedValue({
+    const singleOriginalMessage = vi.fn().mockResolvedValue({
       data: {
         platform_message_id: originalEventId,
         author: 'original-author-pubkey',
@@ -73,10 +73,10 @@ describe('NostrReplyAdapter', () => {
 
     let callCount = 0;
     mockDb = {
-      from: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockImplementation(() => {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockImplementation(() => {
         callCount++;
         return callCount === 1 ? singleCreatorKey() : singleOriginalMessage();
       }),
@@ -108,7 +108,7 @@ describe('NostrReplyAdapter', () => {
     it('should include NIP-10 threading tags with root and reply markers', async () => {
       await adapter.reply(creatorId, originalEventId, content);
 
-      const callArgs = (finalizeEvent as jest.Mock).mock.calls[0][0];
+      const callArgs = (finalizeEvent as any).mock.calls[0][0];
       const tags: string[][] = callArgs.tags;
 
       // NIP-10: ["e", <event-id>, "", "root"]
@@ -121,7 +121,7 @@ describe('NostrReplyAdapter', () => {
     it('should include a "p" tag for the original author pubkey', async () => {
       await adapter.reply(creatorId, originalEventId, content);
 
-      const callArgs = (finalizeEvent as jest.Mock).mock.calls[0][0];
+      const callArgs = (finalizeEvent as any).mock.calls[0][0];
       const tags: string[][] = callArgs.tags;
 
       expect(tags).toContainEqual(['p', 'original-author-pubkey']);
@@ -132,7 +132,7 @@ describe('NostrReplyAdapter', () => {
       await adapter.reply(creatorId, originalEventId, content);
       const after = Math.floor(Date.now() / 1000);
 
-      const callArgs = (finalizeEvent as jest.Mock).mock.calls[0][0];
+      const callArgs = (finalizeEvent as any).mock.calls[0][0];
       expect(callArgs.created_at).toBeGreaterThanOrEqual(before);
       expect(callArgs.created_at).toBeLessThanOrEqual(after);
     });
@@ -163,7 +163,7 @@ describe('NostrReplyAdapter', () => {
 
     it('should handle missing author pubkey gracefully (no "p" tag)', async () => {
       // Reconfigure mockDb to return null for original author
-      const singleKeyCall = jest.fn().mockResolvedValue({
+      const singleKeyCall = vi.fn().mockResolvedValue({
         data: {
           nostr_private_key_encrypted: 'deadbeef',
           nostr_private_key_iv: null,
@@ -173,12 +173,12 @@ describe('NostrReplyAdapter', () => {
         error: null,
       });
 
-      mockDb.single = jest.fn().mockResolvedValue(singleKeyCall());
-      mockDb.maybeSingle = jest.fn().mockResolvedValue({ data: null });
+      mockDb.single = vi.fn().mockResolvedValue(singleKeyCall());
+      mockDb.maybeSingle = vi.fn().mockResolvedValue({ data: null });
 
       await adapter.reply(creatorId, originalEventId, content);
 
-      const callArgs = (finalizeEvent as jest.Mock).mock.calls[0][0];
+      const callArgs = (finalizeEvent as any).mock.calls[0][0];
       const pTags = callArgs.tags.filter((t: string[]) => t[0] === 'p');
       expect(pTags).toHaveLength(0);
     });

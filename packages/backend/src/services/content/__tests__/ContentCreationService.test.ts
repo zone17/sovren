@@ -9,37 +9,37 @@ import { ContentDraft, MediaFile } from '../../../interfaces/content';
 
 // Mock dependencies
 const mockDb = {
-  query: jest.fn(),
+  query: vi.fn(),
 } as unknown as IDatabase;
 
 const mockCache = {
-  get: jest.fn(),
-  set: jest.fn(),
-  delete: jest.fn(),
-  exists: jest.fn(),
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+  exists: vi.fn(),
 } as unknown as ICacheService;
 
 const mockEventBus = {
-  emit: jest.fn(),
-  on: jest.fn(),
-  off: jest.fn(),
+  emit: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
 } as unknown as IEventBusService;
 
 const mockAuditLog = {
-  log: jest.fn(),
-  query: jest.fn(),
+  log: vi.fn(),
+  query: vi.fn(),
 } as unknown as IAuditLogService;
 
 const mockNotification = {
-  send: jest.fn(),
-  sendBulk: jest.fn(),
+  send: vi.fn(),
+  sendBulk: vi.fn(),
 } as unknown as INotificationService;
 
 describe('ContentCreationService', () => {
   let service: ContentCreationService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     service = new ContentCreationService(
       mockDb,
       mockCache,
@@ -63,7 +63,7 @@ describe('ContentCreationService', () => {
 
     it('should create content successfully', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] }) // slug check
         .mockResolvedValueOnce({ rows: [] }); // insert
 
@@ -87,7 +87,7 @@ describe('ContentCreationService', () => {
 
     it('should emit content.created event', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       await service.create(validDraft);
@@ -104,7 +104,7 @@ describe('ContentCreationService', () => {
 
     it('should log content creation to audit trail', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       await service.create(validDraft);
@@ -121,7 +121,7 @@ describe('ContentCreationService', () => {
 
     it('should cache created content', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const result = await service.create(validDraft);
@@ -142,7 +142,7 @@ describe('ContentCreationService', () => {
         ...validDraft,
         collaborators: ['user-456', 'user-789'],
       };
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       await service.create(draftWithCollaborators);
@@ -170,7 +170,7 @@ describe('ContentCreationService', () => {
 
     it('should handle duplicate slug by appending number', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [{ id: 'existing' }] }) // First slug exists
         .mockResolvedValueOnce({ rows: [] }) // Second slug available
         .mockResolvedValueOnce({ rows: [] }); // Insert
@@ -184,7 +184,7 @@ describe('ContentCreationService', () => {
 
     it('should handle database errors gracefully', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockRejectedValue(new Error('DB Error'));
+      (mockDb.query as any).mockRejectedValue(new Error('DB Error'));
 
       // Act & Assert
       await expect(service.create(validDraft)).rejects.toThrow(ServiceError);
@@ -201,7 +201,7 @@ describe('ContentCreationService', () => {
 
     it('should upload image successfully', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const result = await service.uploadMedia(validImageFile);
@@ -218,7 +218,7 @@ describe('ContentCreationService', () => {
 
     it('should emit media.uploaded event', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       await service.uploadMedia(validImageFile);
@@ -234,7 +234,7 @@ describe('ContentCreationService', () => {
 
     it('should log media upload to audit trail', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       await service.uploadMedia(validImageFile);
@@ -278,7 +278,7 @@ describe('ContentCreationService', () => {
         buffer: Buffer.from('fake-video-data'),
         size: 50 * 1024 * 1024, // 50MB
       };
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const result = await service.uploadMedia(videoFile);
@@ -298,7 +298,7 @@ describe('ContentCreationService', () => {
         tags: ['valid', 'tags'],
         authorId: 'user-123',
       };
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const result = await service.validateContent(draft);
@@ -335,7 +335,7 @@ describe('ContentCreationService', () => {
         content: 'Content',
         authorId: 'user-123',
       };
-      (mockDb.query as jest.Mock).mockResolvedValue({
+      (mockDb.query as any).mockResolvedValue({
         rows: [{ id: 'existing-id' }],
       });
 
@@ -360,7 +360,7 @@ describe('ContentCreationService', () => {
         status: 'scheduled',
         authorId: 'user-123',
       };
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const result = await service.validateContent(draft);
@@ -384,7 +384,7 @@ describe('ContentCreationService', () => {
         publishAt: new Date('2020-01-01'), // Past date
         authorId: 'user-123',
       };
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const result = await service.validateContent(draft);
@@ -437,8 +437,8 @@ describe('ContentCreationService', () => {
       // Arrange
       const contentId = 'content-123';
       const draft = { content: 'Updated content' };
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock)
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any)
         .mockResolvedValueOnce({
           rows: [{ id: contentId, title: 'Original' }],
         })
@@ -462,8 +462,8 @@ describe('ContentCreationService', () => {
       // Arrange
       const contentId = 'content-123';
       const draft = { content: 'Updated' };
-      (mockCache.get as jest.Mock).mockResolvedValue({ title: 'Cached' });
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockCache.get as any).mockResolvedValue({ title: 'Cached' });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       await service.autosave(contentId, draft);
@@ -478,8 +478,8 @@ describe('ContentCreationService', () => {
     it('should emit autosaved event', async () => {
       // Arrange
       const contentId = 'content-123';
-      (mockCache.get as jest.Mock).mockResolvedValue({ title: 'Cached' });
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockCache.get as any).mockResolvedValue({ title: 'Cached' });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       await service.autosave(contentId, {});
@@ -493,7 +493,7 @@ describe('ContentCreationService', () => {
 
     it('should not throw on failure', async () => {
       // Arrange
-      (mockCache.get as jest.Mock).mockRejectedValue(new Error('Cache error'));
+      (mockCache.get as any).mockRejectedValue(new Error('Cache error'));
 
       // Act & Assert - Should not throw
       await expect(
@@ -505,7 +505,7 @@ describe('ContentCreationService', () => {
   describe('generateSlug', () => {
     it('should generate slug from title', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const slug = await service.generateSlug('Hello World!');
@@ -516,7 +516,7 @@ describe('ContentCreationService', () => {
 
     it('should handle special characters', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const slug = await service.generateSlug('Hello & Goodbye @ 2024');
@@ -527,7 +527,7 @@ describe('ContentCreationService', () => {
 
     it('should append number for duplicates', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [{ id: '1' }] }) // First exists
         .mockResolvedValueOnce({ rows: [{ id: '2' }] }) // Second exists
         .mockResolvedValueOnce({ rows: [] }); // Third available
@@ -541,7 +541,7 @@ describe('ContentCreationService', () => {
 
     it('should add prefix for short slugs', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const slug = await service.generateSlug('Hi');
@@ -552,7 +552,7 @@ describe('ContentCreationService', () => {
 
     it('should handle infinite loop protection', async () => {
       // Arrange - Always return duplicate
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [{ id: '1' }] });
+      (mockDb.query as any).mockResolvedValue({ rows: [{ id: '1' }] });
 
       // Act
       const slug = await service.generateSlug('Always Duplicate');

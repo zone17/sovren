@@ -102,7 +102,7 @@ describe('FeedItem', () => {
 
   describe('Interactions', () => {
     it('calls onClick when card is clicked', async () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<FeedItem feedEvent={mockFeedEvent} onClick={handleClick} />);
 
       const article = screen.getByRole('article');
@@ -112,7 +112,7 @@ describe('FeedItem', () => {
     });
 
     it('calls onProfileClick when avatar is clicked', async () => {
-      const handleProfileClick = jest.fn();
+      const handleProfileClick = vi.fn();
       render(<FeedItem feedEvent={mockFeedEvent} onProfileClick={handleProfileClick} />);
 
       const avatar = screen.getByRole('button', { name: /view profile/i });
@@ -122,7 +122,7 @@ describe('FeedItem', () => {
     });
 
     it('calls onLike when like button is clicked', async () => {
-      const handleLike = jest.fn();
+      const handleLike = vi.fn();
       render(<FeedItem feedEvent={mockFeedEvent} onLike={handleLike} />);
 
       const likeButton = screen.getByLabelText(/like post/i);
@@ -132,7 +132,7 @@ describe('FeedItem', () => {
     });
 
     it('calls onRepost when repost button is clicked', async () => {
-      const handleRepost = jest.fn();
+      const handleRepost = vi.fn();
       render(<FeedItem feedEvent={mockFeedEvent} onRepost={handleRepost} />);
 
       const repostButton = screen.getByLabelText(/repost/i);
@@ -142,7 +142,7 @@ describe('FeedItem', () => {
     });
 
     it('calls onReply when reply button is clicked', async () => {
-      const handleReply = jest.fn();
+      const handleReply = vi.fn();
       render(<FeedItem feedEvent={mockFeedEvent} onReply={handleReply} />);
 
       const replyButton = screen.getByLabelText(/reply to post/i);
@@ -152,8 +152,8 @@ describe('FeedItem', () => {
     });
 
     it('stops event propagation on action buttons', async () => {
-      const handleClick = jest.fn();
-      const handleLike = jest.fn();
+      const handleClick = vi.fn();
+      const handleLike = vi.fn();
 
       render(
         <FeedItem feedEvent={mockFeedEvent} onClick={handleClick} onLike={handleLike} />

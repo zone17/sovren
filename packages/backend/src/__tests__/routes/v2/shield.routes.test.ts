@@ -22,15 +22,15 @@ interface RouteEntry {
 
 const capturedRoutes: RouteEntry[] = [];
 
-jest.mock('express', () => {
-  const actual = jest.requireActual('express');
+vi.mock('express', async () => {
+  const actual = await vi.importActual('express');
   return {
     ...actual,
     Router: () => {
-      const mockRouter: Record<string, jest.Mock> = {};
+      const mockRouter: Record<string, any> = {};
       const methods = ['get', 'post', 'put', 'delete', 'patch'];
       methods.forEach((method) => {
-        mockRouter[method] = jest.fn((...args: unknown[]) => {
+        mockRouter[method] = vi.fn((...args: unknown[]) => {
           const path = args[0] as string;
           const fns = args.slice(1) as HandlerFn[];
           const handler = fns[fns.length - 1];
@@ -46,31 +46,31 @@ jest.mock('express', () => {
 
 // --- Mock middleware ---
 
-jest.mock('../../../middleware/auth', () => ({
-  authenticate: jest.fn((_req: Request, _res: Response, next: NextFunction) => next()),
-  requireCreator: jest.fn((_req: Request, _res: Response, next: NextFunction) => next()),
-  optionalAuth: jest.fn((_req: Request, _res: Response, next: NextFunction) => next()),
+vi.mock('../../../middleware/auth', () => ({
+  authenticate: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
+  requireCreator: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
+  optionalAuth: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
 }));
 
-jest.mock('../../../middleware/validation-middleware', () => ({
-  validate: jest.fn(() => (_req: Request, _res: Response, next: NextFunction) => next()),
+vi.mock('../../../middleware/validation-middleware', () => ({
+  validate: vi.fn(() => (_req: Request, _res: Response, next: NextFunction) => next()),
 }));
 
 // --- Mock services ---
 
-const mockGetProvenanceChain = jest.fn();
-const mockGetCertificate = jest.fn();
-const mockCreateFingerprint = jest.fn();
-const mockGetRegistry = jest.fn();
-const mockCompare = jest.fn();
-const mockGetAlerts = jest.fn();
-const mockGetAlertDetail = jest.fn();
-const mockUpdateAlertStatus = jest.fn();
-const mockGenerateReport = jest.fn();
+const mockGetProvenanceChain = vi.fn();
+const mockGetCertificate = vi.fn();
+const mockCreateFingerprint = vi.fn();
+const mockGetRegistry = vi.fn();
+const mockCompare = vi.fn();
+const mockGetAlerts = vi.fn();
+const mockGetAlertDetail = vi.fn();
+const mockUpdateAlertStatus = vi.fn();
+const mockGenerateReport = vi.fn();
 
-jest.mock('../../../container', () => ({
+vi.mock('../../../container', () => ({
   container: {
-    resolve: jest.fn((type: symbol) => {
+    resolve: vi.fn((type: symbol) => {
       const typeStr = type.toString();
       if (typeStr.includes('ProvenanceService')) {
         return {
@@ -102,7 +102,7 @@ jest.mock('../../../container', () => ({
   },
 }));
 
-jest.mock('../../../container/types', () => ({
+vi.mock('../../../container/types', () => ({
   TYPES: {
     ProvenanceService: Symbol.for('ProvenanceService'),
     FingerprintService: Symbol.for('FingerprintService'),
@@ -123,9 +123,9 @@ function makeRequest(overrides: Partial<Request> = {}): Request {
   } as unknown as Request;
 }
 
-function makeResponse(): { res: Response; json: jest.Mock; status: jest.Mock } {
-  const json = jest.fn();
-  const statusFn = jest.fn().mockReturnThis();
+function makeResponse(): { res: Response; json: any; status: any } {
+  const json = vi.fn();
+  const statusFn = vi.fn().mockReturnThis();
   const res = {
     json,
     status: statusFn,
@@ -147,10 +147,10 @@ beforeAll(async () => {
 // --- Tests ---
 
 describe('Shield Routes (v2)', () => {
-  const nextFn: NextFunction = jest.fn();
+  const nextFn: NextFunction = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Route Registration', () => {

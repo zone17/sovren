@@ -17,12 +17,12 @@
  * Automatically loaded for backend tests through Jest setupFilesAfterEnv
  */
 
-import { afterEach, beforeEach, jest } from '@jest/globals';
+
 
 // 🧹 **CLEANUP AFTER EACH TEST**
 afterEach(() => {
   // Clear all mocks
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 
   // Reset environment variables
   if (process.env.NODE_ENV !== 'test') {
@@ -36,7 +36,7 @@ beforeEach(() => {
   process.env.NODE_ENV = 'test';
 
   // Reset console mocks for each test
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 // 🗄️ **DATABASE MOCKING**
@@ -73,28 +73,28 @@ export const apiTestUtils = {
 
   mockResponse: () => {
     const res: any = {};
-    res.status = jest.fn<any>().mockReturnValue(res);
-    res.json = jest.fn<any>().mockReturnValue(res);
-    res.send = jest.fn<any>().mockReturnValue(res);
-    res.end = jest.fn<any>().mockReturnValue(res);
-    res.cookie = jest.fn<any>().mockReturnValue(res);
-    res.header = jest.fn<any>().mockReturnValue(res);
+    res.status = vi.fn<any>().mockReturnValue(res);
+    res.json = vi.fn<any>().mockReturnValue(res);
+    res.send = vi.fn<any>().mockReturnValue(res);
+    res.end = vi.fn<any>().mockReturnValue(res);
+    res.cookie = vi.fn<any>().mockReturnValue(res);
+    res.header = vi.fn<any>().mockReturnValue(res);
     return res;
   },
 
-  mockNext: () => jest.fn<any>(),
+  mockNext: () => vi.fn<any>(),
 };
 
 // 🔐 **SECURITY TESTING SETUP**
 export const securityMocks = {
   mockAuth: () => ({
-    verify: jest.fn<any>().mockResolvedValue({ id: 'user-1' }),
-    sign: jest.fn<any>().mockReturnValue('mock-token'),
+    verify: vi.fn<any>().mockResolvedValue({ id: 'user-1' }),
+    sign: vi.fn<any>().mockReturnValue('mock-token'),
   }),
 
   mockEncryption: () => ({
-    encrypt: jest.fn<any>().mockReturnValue('encrypted-data'),
-    decrypt: jest.fn<any>().mockReturnValue('decrypted-data'),
+    encrypt: vi.fn<any>().mockReturnValue('encrypted-data'),
+    decrypt: vi.fn<any>().mockReturnValue('decrypted-data'),
   }),
 };
 

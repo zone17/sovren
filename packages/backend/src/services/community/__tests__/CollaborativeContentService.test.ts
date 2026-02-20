@@ -26,19 +26,19 @@ import { CollaborativeContentService } from '../CollaborativeContentService';
 // ---------------------------------------------------------------------------
 function makeChain(leafResolvedValue: { data: any; error: any }) {
   const chain: any = {
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    neq: jest.fn().mockReturnThis(),
-    not: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    in: jest.fn().mockReturnThis(),
-    or: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue(leafResolvedValue),
-    maybeSingle: jest.fn().mockResolvedValue(leafResolvedValue),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    not: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue(leafResolvedValue),
+    maybeSingle: vi.fn().mockResolvedValue(leafResolvedValue),
   };
   // Allow `await chain` (used by update chains that resolve directly)
   chain.then = (res: any, rej: any) => Promise.resolve(leafResolvedValue).then(res, rej);
@@ -57,16 +57,16 @@ describe('CollaborativeContentService', () => {
   const COLLAB_ROW_ID = 'collab-row-uuid';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
-    mockDb = { from: jest.fn(), rpc: jest.fn() };
+    mockDb = { from: vi.fn(), rpc: vi.fn() };
     service = new CollaborativeContentService(mockDb, mockLogger);
   });
 

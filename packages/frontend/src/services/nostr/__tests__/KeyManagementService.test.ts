@@ -62,8 +62,8 @@ describe('KeyManagementService', () => {
     vi.clearAllMocks();
 
     // Setup global mocks
-    global.crypto = mockCrypto as any;
-    global.indexedDB = mockIndexedDB as any;
+    Object.defineProperty(globalThis, "crypto", { value: mockCrypto as any, writable: true, configurable: true });
+    Object.defineProperty(globalThis, "indexedDB", { value: mockIndexedDB as any, writable: true, configurable: true });
 
     // Create fresh service instance
     service = KeyManagementService.getInstance();

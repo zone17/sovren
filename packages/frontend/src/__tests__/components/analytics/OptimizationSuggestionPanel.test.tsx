@@ -14,7 +14,7 @@
 
 import { OptimizationSuggestionPanel } from '@/components/analytics/OptimizationSuggestionPanel';
 import type { OptimizationSuggestion } from '@/types/engagement-analytics';
-import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -94,9 +94,9 @@ const mockSuggestions: OptimizationSuggestion[] = [
 // MOCK FUNCTIONS
 // =====================================================
 
-const mockOnImplementSuggestion = jest.fn();
-const mockOnDismissSuggestion = jest.fn();
-const mockOnScheduleSuggestion = jest.fn();
+const mockOnImplementSuggestion = vi.fn();
+const mockOnDismissSuggestion = vi.fn();
+const mockOnScheduleSuggestion = vi.fn();
 
 // Mock toast hook
 const mockToast = vi.fn();

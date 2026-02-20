@@ -18,15 +18,15 @@ describe('📊 Elite Analytics Service Tests', () => {
   beforeEach(() => {
     // Clear cache before each test
     mockAnalyticsService.clearCache();
-    jest.clearAllTimers();
-    jest.useFakeTimers();
+    vi.clearAllTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     // Cleanup after each test
     mockAnalyticsService.disconnectRealTime();
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   // 💰 **CREATOR EARNINGS TESTS**
@@ -344,7 +344,7 @@ describe('📊 Elite Analytics Service Tests', () => {
   // 📡 **REAL-TIME ANALYTICS TESTS**
   describe('Real-time Analytics', () => {
     test('should connect to real-time analytics', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await mockAnalyticsService.connectRealTime();
 
@@ -362,7 +362,7 @@ describe('📊 Elite Analytics Service Tests', () => {
       await mockAnalyticsService.connectRealTime();
 
       // Fast forward time to trigger events
-      jest.advanceTimersByTime(10000);
+      vi.advanceTimersByTime(10000);
 
       expect(events.length).toBeGreaterThan(0);
 
@@ -378,7 +378,7 @@ describe('📊 Elite Analytics Service Tests', () => {
     });
 
     test('should disconnect from real-time analytics', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       mockAnalyticsService.disconnectRealTime();
 
@@ -430,7 +430,7 @@ describe('📊 Elite Analytics Service Tests', () => {
   // 🧹 **CLEANUP TESTS**
   describe('Service Cleanup', () => {
     test('should cleanup properly', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await mockAnalyticsService.connectRealTime();
       await mockAnalyticsService.getCreatorEarnings('7d');
@@ -447,7 +447,7 @@ describe('📊 Elite Analytics Service Tests', () => {
   describe('Error Handling', () => {
     test('should handle analytics errors properly', async () => {
       // Mock a validation error by providing invalid data
-      const mockValidate = jest.fn().mockImplementation(() => {
+      const mockValidate = vi.fn().mockImplementation(() => {
         throw new Error('Invalid data');
       });
 
@@ -539,7 +539,7 @@ describe('📊 Elite Analytics Service Tests', () => {
       const initialEarnings = await mockAnalyticsService.getCreatorEarnings('7d');
 
       // Fast forward to get some events
-      jest.advanceTimersByTime(15000);
+      vi.advanceTimersByTime(15000);
 
       expect(events.length).toBeGreaterThan(0);
 

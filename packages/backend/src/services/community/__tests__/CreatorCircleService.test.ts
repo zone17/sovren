@@ -22,19 +22,19 @@ import { CreatorCircleService } from '../CreatorCircleService';
 // ---------------------------------------------------------------------------
 function makeChain(leafResolvedValue: any) {
   const chain: any = {
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    neq: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    in: jest.fn().mockReturnThis(),
-    not: jest.fn().mockReturnThis(),
-    or: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue(leafResolvedValue),
-    maybeSingle: jest.fn().mockResolvedValue(leafResolvedValue),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    not: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue(leafResolvedValue),
+    maybeSingle: vi.fn().mockResolvedValue(leafResolvedValue),
   };
   // Plain-resolved value for chains that terminate without single/maybeSingle
   Object.assign(chain, Promise.resolve(leafResolvedValue));
@@ -52,20 +52,20 @@ describe('CreatorCircleService', () => {
   const CIRCLE_ID = 'circle-xyz';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
     // Default db.from returns a chain that resolves to nothing — tests override
     // per call via mockReturnValueOnce / mockImplementation chains.
     mockDb = {
-      from: jest.fn(),
-      rpc: jest.fn(),
+      from: vi.fn(),
+      rpc: vi.fn(),
     };
   });
 

@@ -22,15 +22,15 @@ interface RouteEntry {
 
 const capturedRoutes: RouteEntry[] = [];
 
-jest.mock('express', () => {
-  const actual = jest.requireActual('express');
+vi.mock('express', async () => {
+  const actual = await vi.importActual('express');
   return {
     ...actual,
     Router: () => {
-      const mockRouter: Record<string, jest.Mock> = {};
+      const mockRouter: Record<string, any> = {};
       const methods = ['get', 'post', 'put', 'delete', 'patch'];
       methods.forEach((method) => {
-        mockRouter[method] = jest.fn((...args: unknown[]) => {
+        mockRouter[method] = vi.fn((...args: unknown[]) => {
           const path = args[0] as string;
           const fns = args.slice(1) as HandlerFn[];
           const handler = fns[fns.length - 1];
@@ -46,36 +46,36 @@ jest.mock('express', () => {
 
 // --- Mock middleware ---
 
-jest.mock('../../../middleware/auth', () => ({
-  authenticate: jest.fn((_req: Request, _res: Response, next: NextFunction) => next()),
-  requireCreator: jest.fn((_req: Request, _res: Response, next: NextFunction) => next()),
-  optionalAuth: jest.fn((_req: Request, _res: Response, next: NextFunction) => next()),
+vi.mock('../../../middleware/auth', () => ({
+  authenticate: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
+  requireCreator: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
+  optionalAuth: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
 }));
 
-jest.mock('../../../middleware/validation-middleware', () => ({
-  validate: jest.fn(() => (_req: Request, _res: Response, next: NextFunction) => next()),
+vi.mock('../../../middleware/validation-middleware', () => ({
+  validate: vi.fn(() => (_req: Request, _res: Response, next: NextFunction) => next()),
 }));
 
 // --- Mock services ---
 
-const mockRecordWorkPattern = jest.fn();
-const mockGetWorkPatterns = jest.fn();
-const mockGetHeatmap = jest.fn();
-const mockRecordPulse = jest.fn();
-const mockGetPulseHistory = jest.fn();
-const mockGetBenchmark = jest.fn();
-const mockDeletePulseHistory = jest.fn();
-const mockDeleteAllWellnessData = jest.fn();
-const mockCalculateScore = jest.fn();
-const mockSetSensitivity = jest.fn();
-const mockGetRecommendations = jest.fn();
-const mockGetBufferDepth = jest.fn();
-const mockGetBoundaries = jest.fn();
-const mockUpdateBoundaries = jest.fn();
+const mockRecordWorkPattern = vi.fn();
+const mockGetWorkPatterns = vi.fn();
+const mockGetHeatmap = vi.fn();
+const mockRecordPulse = vi.fn();
+const mockGetPulseHistory = vi.fn();
+const mockGetBenchmark = vi.fn();
+const mockDeletePulseHistory = vi.fn();
+const mockDeleteAllWellnessData = vi.fn();
+const mockCalculateScore = vi.fn();
+const mockSetSensitivity = vi.fn();
+const mockGetRecommendations = vi.fn();
+const mockGetBufferDepth = vi.fn();
+const mockGetBoundaries = vi.fn();
+const mockUpdateBoundaries = vi.fn();
 
-jest.mock('../../../container', () => ({
+vi.mock('../../../container', () => ({
   container: {
-    resolve: jest.fn((type: symbol) => {
+    resolve: vi.fn((type: symbol) => {
       const typeStr = type.toString();
       if (typeStr.includes('WellnessService')) {
         return {
@@ -112,7 +112,7 @@ jest.mock('../../../container', () => ({
   },
 }));
 
-jest.mock('../../../container/types', () => ({
+vi.mock('../../../container/types', () => ({
   TYPES: {
     WellnessService: Symbol.for('WellnessService'),
     BurnoutScoringService: Symbol.for('BurnoutScoringService'),
@@ -133,9 +133,9 @@ function makeRequest(overrides: Partial<Request> = {}): Request {
   } as unknown as Request;
 }
 
-function makeResponse(): { res: Response; json: jest.Mock; status: jest.Mock } {
-  const json = jest.fn();
-  const statusFn = jest.fn().mockReturnThis();
+function makeResponse(): { res: Response; json: any; status: any } {
+  const json = vi.fn();
+  const statusFn = vi.fn().mockReturnThis();
   const res = {
     json,
     status: statusFn,
@@ -157,10 +157,10 @@ beforeAll(async () => {
 // --- Tests ---
 
 describe('Wellness Routes (v2)', () => {
-  const nextFn: NextFunction = jest.fn();
+  const nextFn: NextFunction = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Route Registration', () => {

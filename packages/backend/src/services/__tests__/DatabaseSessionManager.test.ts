@@ -11,13 +11,13 @@
  * - Session statistics
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+
 import { DatabaseSessionManager } from '../DatabaseSessionManager';
 import { SessionMetadata, DeviceInfo } from '@shared/services/UnifiedSessionManager';
 import { createClient } from '@supabase/supabase-js';
 
 // Mock Supabase client
-jest.mock('@supabase/supabase-js');
+vi.mock('@supabase/supabase-js');
 
 describe('DatabaseSessionManager', () => {
   let sessionManager: DatabaseSessionManager;
@@ -51,21 +51,21 @@ describe('DatabaseSessionManager', () => {
   beforeEach(() => {
     // Setup mock Supabase client
     mockSupabaseClient = {
-      from: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn(),
-      order: jest.fn().mockReturnThis(),
-      limit: jest.fn(),
-      lt: jest.fn().mockReturnThis(),
-      neq: jest.fn().mockReturnThis(),
-      gte: jest.fn(),
+      from: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn(),
+      lt: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      gte: vi.fn(),
     };
 
-    (createClient as jest.Mock).mockReturnValue(mockSupabaseClient);
+    (createClient as any).mockReturnValue(mockSupabaseClient);
 
     sessionManager = new DatabaseSessionManager({
       supabaseUrl: 'https://test.supabase.co',
@@ -75,7 +75,7 @@ describe('DatabaseSessionManager', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // =====================================================

@@ -4,13 +4,13 @@ import React from 'react';
 import { useInboxMessages } from '../useInboxMessages';
 import { inboxApi } from '../../services/inboxApi';
 
-jest.mock('../../services/inboxApi', () => ({
+vi.mock('../../services/inboxApi', () => ({
   inboxApi: {
-    getMessages: jest.fn(),
+    getMessages: vi.fn(),
   },
 }));
 
-const mockGetMessages = inboxApi.getMessages as jest.Mock;
+const mockGetMessages = inboxApi.getMessages as any;
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -51,7 +51,7 @@ describe('useInboxMessages', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('calls inboxApi.getMessages with correct params', async () => {

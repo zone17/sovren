@@ -4,10 +4,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import InvoiceEditor from '../InvoiceEditor';
 
 // --- Hook mocks ---
-const mockUseCreateBusinessInvoice = jest.fn();
-const mockUseGeneratePaymentLink = jest.fn();
+const mockUseCreateBusinessInvoice = vi.fn();
+const mockUseGeneratePaymentLink = vi.fn();
 
-jest.mock('../../hooks/useBusinessInvoices', () => ({
+vi.mock('../../hooks/useBusinessInvoices', () => ({
   useCreateBusinessInvoice: () => mockUseCreateBusinessInvoice(),
   useGeneratePaymentLink: () => mockUseGeneratePaymentLink(),
 }));
@@ -20,7 +20,7 @@ function createWrapper() {
   );
 }
 
-const defaultMutateFn = jest.fn();
+const defaultMutateFn = vi.fn();
 
 const idleCreateMutation = {
   mutate: defaultMutateFn,
@@ -34,14 +34,14 @@ const idlePaymentLinkMutation = {
 };
 
 const defaultProps = {
-  onSaved: jest.fn(),
-  onCancel: jest.fn(),
+  onSaved: vi.fn(),
+  onCancel: vi.fn(),
 };
 
 // --- Tests ---
 describe('InvoiceEditor', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseCreateBusinessInvoice.mockReturnValue(idleCreateMutation);
     mockUseGeneratePaymentLink.mockReturnValue(idlePaymentLinkMutation);
   });
@@ -257,7 +257,7 @@ describe('InvoiceEditor', () => {
     });
 
     it('calls createMutation.mutate with correct payload on save', () => {
-      const mutate = jest.fn();
+      const mutate = vi.fn();
       mockUseCreateBusinessInvoice.mockReturnValue({ ...idleCreateMutation, mutate });
 
       render(<InvoiceEditor {...defaultProps} />, { wrapper: createWrapper() });
@@ -305,7 +305,7 @@ describe('InvoiceEditor', () => {
     });
 
     it('calls onCancel when Cancel button is clicked', () => {
-      const onCancel = jest.fn();
+      const onCancel = vi.fn();
       render(<InvoiceEditor {...defaultProps} onCancel={onCancel} />, {
         wrapper: createWrapper(),
       });
@@ -328,7 +328,7 @@ describe('InvoiceEditor', () => {
     it('shows Generate Payment Link button after invoice is saved', () => {
       let saveSuccessCallback: ((res: { data: { id: string } }) => void) | null = null;
 
-      const mutate = jest.fn(
+      const mutate = vi.fn(
         (
           _data: unknown,
           opts: { onSuccess: (res: { data: { id: string } }) => void }
@@ -363,7 +363,7 @@ describe('InvoiceEditor', () => {
         (res: { data: { lnurlPay: string; qrCode: string } }) => void
       ) | null = null;
 
-      const payMutate = jest.fn(
+      const payMutate = vi.fn(
         (
           _id: string,
           opts: { onSuccess: (res: { data: { lnurlPay: string; qrCode: string } }) => void }
@@ -373,7 +373,7 @@ describe('InvoiceEditor', () => {
       );
 
       let saveSuccessCallback: ((res: { data: { id: string } }) => void) | null = null;
-      const saveMutate = jest.fn(
+      const saveMutate = vi.fn(
         (
           _data: unknown,
           opts: { onSuccess: (res: { data: { id: string } }) => void }

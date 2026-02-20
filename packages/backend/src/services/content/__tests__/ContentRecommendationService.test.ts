@@ -14,8 +14,8 @@ import type { Content, UserInteraction } from '../../../interfaces/content';
 
 describe('ContentRecommendationService', () => {
   let service: ContentRecommendationService;
-  let mockLogger: jest.Mocked<ILogger>;
-  let mockCache: jest.Mocked<ICacheService>;
+  let mockLogger: vi.Mocked<ILogger>;
+  let mockCache: vi.Mocked<ICacheService>;
   let mockContentRepository: any;
   let mockAnalyticsRepository: any;
   let mockUserRepository: any;
@@ -61,47 +61,47 @@ describe('ContentRecommendationService', () => {
   beforeEach(() => {
     // Setup mocks
     mockLogger = {
-      info: jest.fn(),
-      debug: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn()
+      info: vi.fn(),
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn()
     } as any;
 
     mockCache = {
-      get: jest.fn().mockResolvedValue(null),
-      set: jest.fn().mockResolvedValue(undefined),
-      delete: jest.fn().mockResolvedValue(true),
-      exists: jest.fn().mockResolvedValue(false),
-      invalidate: jest.fn().mockResolvedValue(0),
-      invalidateByTags: jest.fn().mockResolvedValue(0),
-      flush: jest.fn().mockResolvedValue(undefined),
-      getTtl: jest.fn().mockResolvedValue(-1),
-      setTtl: jest.fn().mockResolvedValue(true),
-      getMany: jest.fn().mockResolvedValue(new Map()),
-      setMany: jest.fn().mockResolvedValue(undefined),
-      remember: jest.fn(),
-      getStats: jest.fn(),
-      registerWarmupStrategy: jest.fn(),
-      warmup: jest.fn(),
-      registerInvalidationPattern: jest.fn(),
-      healthCheck: jest.fn().mockResolvedValue(true),
-      dispose: jest.fn().mockResolvedValue(undefined)
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(true),
+      exists: vi.fn().mockResolvedValue(false),
+      invalidate: vi.fn().mockResolvedValue(0),
+      invalidateByTags: vi.fn().mockResolvedValue(0),
+      flush: vi.fn().mockResolvedValue(undefined),
+      getTtl: vi.fn().mockResolvedValue(-1),
+      setTtl: vi.fn().mockResolvedValue(true),
+      getMany: vi.fn().mockResolvedValue(new Map()),
+      setMany: vi.fn().mockResolvedValue(undefined),
+      remember: vi.fn(),
+      getStats: vi.fn(),
+      registerWarmupStrategy: vi.fn(),
+      warmup: vi.fn(),
+      registerInvalidationPattern: vi.fn(),
+      healthCheck: vi.fn().mockResolvedValue(true),
+      dispose: vi.fn().mockResolvedValue(undefined)
     };
 
     mockContentRepository = {
-      findById: jest.fn().mockResolvedValue(mockContent),
-      findByIds: jest.fn().mockResolvedValue([mockContent]),
-      findPublished: jest.fn().mockResolvedValue([mockContent])
+      findById: vi.fn().mockResolvedValue(mockContent),
+      findByIds: vi.fn().mockResolvedValue([mockContent]),
+      findPublished: vi.fn().mockResolvedValue([mockContent])
     };
 
     mockAnalyticsRepository = {
-      getUserInteractions: jest.fn().mockResolvedValue([{
+      getUserInteractions: vi.fn().mockResolvedValue([{
         contentId: testContentId,
         action: 'view',
         timestamp: new Date(),
         duration: 120
       }]),
-      getEngagementMetrics: jest.fn().mockResolvedValue([{
+      getEngagementMetrics: vi.fn().mockResolvedValue([{
         contentId: testContentId,
         views: 100,
         likes: 10,
@@ -109,14 +109,14 @@ describe('ContentRecommendationService', () => {
         comments: 3,
         publishedAt: new Date(Date.now() - 3600000) // 1 hour ago
       }]),
-      getUsersByContent: jest.fn().mockResolvedValue([
+      getUsersByContent: vi.fn().mockResolvedValue([
         { userId: 'user-456' },
         { userId: 'user-789' }
       ])
     };
 
     mockUserRepository = {
-      findById: jest.fn().mockResolvedValue({
+      findById: vi.fn().mockResolvedValue({
         id: testUserId,
         preferences: {
           categories: ['technology'],
@@ -126,7 +126,7 @@ describe('ContentRecommendationService', () => {
           minEngagementScore: 0.5
         }
       }),
-      findPopularUsers: jest.fn().mockResolvedValue([
+      findPopularUsers: vi.fn().mockResolvedValue([
         { id: 'popular-user-1' },
         { id: 'popular-user-2' }
       ])
@@ -142,7 +142,7 @@ describe('ContentRecommendationService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getRecommendations', () => {
@@ -217,7 +217,7 @@ describe('ContentRecommendationService', () => {
     it('should emit events on successful recommendation generation', async () => {
       mockCache.get.mockResolvedValue(null);
 
-      const eventSpy = jest.fn();
+      const eventSpy = vi.fn();
       service.on('recommendations:generated', eventSpy);
 
       await service.getRecommendations(testUserId);
@@ -432,7 +432,7 @@ describe('ContentRecommendationService', () => {
     });
 
     it('should emit model trained event', async () => {
-      const eventSpy = jest.fn();
+      const eventSpy = vi.fn();
       service.on('model:trained', eventSpy);
 
       const interactions = [mockUserInteraction];
@@ -526,8 +526,8 @@ describe('ContentRecommendationService', () => {
 
     it('should emit progress events', async () => {
       mockCache.get.mockResolvedValue(null);
-      const progressSpy = jest.fn();
-      const completedSpy = jest.fn();
+      const progressSpy = vi.fn();
+      const completedSpy = vi.fn();
 
       service.on('precompute:progress', progressSpy);
       service.on('precompute:completed', completedSpy);
@@ -785,7 +785,7 @@ describe('ContentRecommendationService', () => {
   describe('event emission', () => {
     it('should emit cache hit events', async () => {
       mockCache.get.mockResolvedValueOnce([mockContent]);
-      const spy = jest.fn();
+      const spy = vi.fn();
       service.on('recommendations:cache:hit', spy);
 
       await service.getRecommendations(testUserId);
@@ -801,7 +801,7 @@ describe('ContentRecommendationService', () => {
     it('should emit error events', async () => {
       mockCache.get.mockResolvedValue(null);
       mockContentRepository.findByIds.mockRejectedValue(new Error('Test error'));
-      const spy = jest.fn();
+      const spy = vi.fn();
       service.on('recommendations:error', spy);
 
       await service.getRecommendations(testUserId);
@@ -817,7 +817,7 @@ describe('ContentRecommendationService', () => {
 
   describe('shutdown', () => {
     it('should remove all event listeners on shutdown', async () => {
-      const spy = jest.fn();
+      const spy = vi.fn();
       service.on('test-event', spy);
 
       await service.shutdown();

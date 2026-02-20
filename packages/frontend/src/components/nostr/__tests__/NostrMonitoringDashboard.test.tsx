@@ -24,10 +24,10 @@ import {
 } from '@/services/nostr/types/monitoring';
 
 // Mock MonitoringService
-jest.mock('@/services/nostr/MonitoringService');
+vi.mock('@/services/nostr/MonitoringService');
 
 describe('NostrMonitoringDashboard', () => {
-  let mockMonitoring: jest.Mocked<MonitoringService>;
+  let mockMonitoring: vi.Mocked<MonitoringService>;
 
   const mockMetrics = {
     timestamp: Date.now(),
@@ -168,27 +168,27 @@ describe('NostrMonitoringDashboard', () => {
 
   beforeEach(() => {
     // Reset mock
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock instance
     mockMonitoring = {
-      isInitialized: jest.fn().mockReturnValue(true),
-      getMetrics: jest.fn().mockReturnValue(mockMetrics),
-      healthCheck: jest.fn().mockReturnValue(mockHealth),
-      acknowledgeAlert: jest.fn(),
-      on: jest.fn(),
-      off: jest.fn(),
+      isInitialized: vi.fn().mockReturnValue(true),
+      getMetrics: vi.fn().mockReturnValue(mockMetrics),
+      healthCheck: vi.fn().mockReturnValue(mockHealth),
+      acknowledgeAlert: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
     } as any;
 
     // Mock getInstance
-    (MonitoringService.getInstance as jest.Mock).mockReturnValue(mockMonitoring);
+    (MonitoringService.getInstance as any).mockReturnValue(mockMonitoring);
 
     // Mock timers
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   // ============================================
@@ -415,7 +415,7 @@ describe('NostrMonitoringDashboard', () => {
 
       // Fast-forward time
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -423,7 +423,7 @@ describe('NostrMonitoringDashboard', () => {
       });
 
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -442,7 +442,7 @@ describe('NostrMonitoringDashboard', () => {
 
       // Fast-forward and update metrics
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       mockMonitoring.getMetrics.mockReturnValue({
@@ -468,7 +468,7 @@ describe('NostrMonitoringDashboard', () => {
       unmount();
 
       act(() => {
-        jest.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(5000);
       });
 
       // Should not have been called again after unmount

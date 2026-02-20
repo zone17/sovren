@@ -22,54 +22,54 @@ import {
 
 describe('UserRelationshipService', () => {
   let service: UserRelationshipService;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockLogger: jest.Mocked<ILogger>;
-  let mockCache: jest.Mocked<ICacheService>;
+  let mockEventBus: vi.Mocked<IEventBus>;
+  let mockLogger: vi.Mocked<ILogger>;
+  let mockCache: vi.Mocked<ICacheService>;
 
   beforeEach(() => {
     // Create mocks
     mockEventBus = {
-      publish: jest.fn().mockResolvedValue(undefined),
-      publishBatch: jest.fn().mockResolvedValue(undefined),
-      subscribe: jest.fn().mockReturnValue('sub-id'),
-      subscribeToMany: jest.fn().mockReturnValue('sub-id'),
-      subscribeToAll: jest.fn().mockReturnValue('sub-id'),
-      subscribeWithFilter: jest.fn().mockReturnValue('sub-id'),
-      unsubscribe: jest.fn(),
-      unsubscribeAll: jest.fn(),
-      getEvent: jest.fn().mockResolvedValue(null),
-      queryEvents: jest.fn().mockResolvedValue([]),
-      replayEvents: jest.fn().mockResolvedValue([]),
-      replayEventsToHandler: jest.fn().mockResolvedValue(undefined),
-      getActiveSubscriptions: jest.fn().mockReturnValue([]),
-      getEventStats: jest.fn().mockResolvedValue({}),
-      clearEventStore: jest.fn().mockResolvedValue(undefined),
-      isHealthy: jest.fn().mockResolvedValue(true),
-      dispose: jest.fn().mockResolvedValue(undefined)
+      publish: vi.fn().mockResolvedValue(undefined),
+      publishBatch: vi.fn().mockResolvedValue(undefined),
+      subscribe: vi.fn().mockReturnValue('sub-id'),
+      subscribeToMany: vi.fn().mockReturnValue('sub-id'),
+      subscribeToAll: vi.fn().mockReturnValue('sub-id'),
+      subscribeWithFilter: vi.fn().mockReturnValue('sub-id'),
+      unsubscribe: vi.fn(),
+      unsubscribeAll: vi.fn(),
+      getEvent: vi.fn().mockResolvedValue(null),
+      queryEvents: vi.fn().mockResolvedValue([]),
+      replayEvents: vi.fn().mockResolvedValue([]),
+      replayEventsToHandler: vi.fn().mockResolvedValue(undefined),
+      getActiveSubscriptions: vi.fn().mockReturnValue([]),
+      getEventStats: vi.fn().mockResolvedValue({}),
+      clearEventStore: vi.fn().mockResolvedValue(undefined),
+      isHealthy: vi.fn().mockResolvedValue(true),
+      dispose: vi.fn().mockResolvedValue(undefined)
     };
 
     mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn()
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn()
     };
 
     mockCache = {
-      get: jest.fn().mockResolvedValue(null),
-      set: jest.fn().mockResolvedValue(undefined),
-      delete: jest.fn().mockResolvedValue(true),
-      exists: jest.fn().mockResolvedValue(false),
-      invalidate: jest.fn().mockResolvedValue(0),
-      invalidateByTags: jest.fn().mockResolvedValue(0),
-      flush: jest.fn().mockResolvedValue(undefined),
-      getTtl: jest.fn().mockResolvedValue(-1),
-      setTtl: jest.fn().mockResolvedValue(true),
-      getMany: jest.fn().mockResolvedValue(new Map()),
-      setMany: jest.fn().mockResolvedValue(undefined),
-      remember: jest.fn().mockImplementation(async (key, factory) => factory()),
-      healthCheck: jest.fn().mockResolvedValue(true),
-      dispose: jest.fn().mockResolvedValue(undefined)
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(true),
+      exists: vi.fn().mockResolvedValue(false),
+      invalidate: vi.fn().mockResolvedValue(0),
+      invalidateByTags: vi.fn().mockResolvedValue(0),
+      flush: vi.fn().mockResolvedValue(undefined),
+      getTtl: vi.fn().mockResolvedValue(-1),
+      setTtl: vi.fn().mockResolvedValue(true),
+      getMany: vi.fn().mockResolvedValue(new Map()),
+      setMany: vi.fn().mockResolvedValue(undefined),
+      remember: vi.fn().mockImplementation(async (key, factory) => factory()),
+      healthCheck: vi.fn().mockResolvedValue(true),
+      dispose: vi.fn().mockResolvedValue(undefined)
     };
 
     service = new UserRelationshipService(mockEventBus, mockLogger, mockCache);

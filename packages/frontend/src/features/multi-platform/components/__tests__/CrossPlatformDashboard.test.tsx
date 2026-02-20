@@ -3,9 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { CrossPlatformDashboard } from '../CrossPlatformDashboard';
 
-const mockUseCrossPlatformOverview = jest.fn();
+const mockUseCrossPlatformOverview = vi.fn();
 
-jest.mock('../../hooks/useCrossPlatformAnalytics', () => ({
+vi.mock('../../hooks/useCrossPlatformAnalytics', () => ({
   useCrossPlatformOverview: () => mockUseCrossPlatformOverview(),
   usePlatformComparison: () => ({ data: undefined, isLoading: false, isError: false }),
   usePlatformROI: () => ({ data: [], isLoading: false, isError: false }),
@@ -41,7 +41,7 @@ const mockOverview = {
 
 describe('CrossPlatformDashboard', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseCrossPlatformOverview.mockReturnValue({
       data: mockOverview,
       isLoading: false,

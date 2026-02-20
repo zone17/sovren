@@ -20,19 +20,19 @@ import { MentorshipService } from '../MentorshipService';
 // ---------------------------------------------------------------------------
 function makeChain(leafResolvedValue: any) {
   const chain: any = {
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    upsert: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    neq: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    in: jest.fn().mockReturnThis(),
-    or: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue(leafResolvedValue),
-    maybeSingle: jest.fn().mockResolvedValue(leafResolvedValue),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    upsert: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue(leafResolvedValue),
+    maybeSingle: vi.fn().mockResolvedValue(leafResolvedValue),
   };
   chain.then = (res: any, rej: any) => Promise.resolve(leafResolvedValue).then(res, rej);
   chain.catch = (fn: any) => Promise.resolve(leafResolvedValue).catch(fn);
@@ -49,16 +49,16 @@ describe('MentorshipService', () => {
   const MENTORSHIP_ID = 'mentorship-uuid-123';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
-    mockDb = { from: jest.fn() };
+    mockDb = { from: vi.fn() };
     service = new MentorshipService(mockDb, mockLogger);
   });
 

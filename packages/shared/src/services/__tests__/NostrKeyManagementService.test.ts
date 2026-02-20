@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import {
   NostrEnhancedKeyPair,
   NostrEntropySource,
@@ -13,7 +13,7 @@ import { NostrKeyManagementService } from '../NostrKeyManagementService';
 
 // Mock dependencies with proper typing
 const mockStorageService = {
-  initialize: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+  initialize: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
   storeKey: jest
     .fn<(keyPair: NostrEnhancedKeyPair) => Promise<NostrKeyManagementResult<void>>>()
     .mockResolvedValue({ success: true }),
@@ -29,27 +29,27 @@ const mockStorageService = {
   storeBackup: jest
     .fn<(backup: NostrMnemonicBackup) => Promise<NostrKeyManagementResult<void>>>()
     .mockResolvedValue({ success: true }),
-  on: jest.fn(),
+  on: vi.fn(),
 };
 
 const mockCryptoService = {
-  initialize: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+  initialize: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
   calculateChecksum: jest
     .fn<(data: string) => Promise<string>>()
     .mockResolvedValue('mock-checksum'),
-  on: jest.fn(),
+  on: vi.fn(),
 };
 
 const mockAnalyticsService = {
-  recordEvent: jest.fn().mockResolvedValue(undefined),
+  recordEvent: vi.fn().mockResolvedValue(undefined),
 };
 
 const mockMonitoringService = {
-  recordSecurityEvent: jest.fn().mockResolvedValue(undefined),
+  recordSecurityEvent: vi.fn().mockResolvedValue(undefined),
 };
 
 // Mock crypto.getRandomValues for testing
-const mockRandomValues = jest.fn((array: Uint8Array) => {
+const mockRandomValues = vi.fn((array: Uint8Array) => {
   for (let i = 0; i < array.length; i++) {
     array[i] = Math.floor(Math.random() * 256);
   }
@@ -67,7 +67,7 @@ Object.defineProperty(global, 'crypto', {
 Object.defineProperty(global, 'window', {
   value: {
     nostr: {
-      getPublicKey: jest.fn(),
+      getPublicKey: vi.fn(),
     },
   },
 });
@@ -106,7 +106,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -225,7 +225,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should emit key generation event', async () => {
-      const eventSpy = jest.fn();
+      const eventSpy = vi.fn();
       service.on('key:generated', eventSpy);
 
       const result = await service.generateKeyPair();
@@ -235,7 +235,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should handle key generation errors', async () => {
-      (mockStorageService.storeKey as jest.MockedFunction<any>).mockResolvedValueOnce({
+      (mockStorageService.storeKey as anyedFunction<any>).mockResolvedValueOnce({
         success: false,
         error: 'Storage error',
       });
@@ -328,7 +328,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should emit key import event', async () => {
-      const eventSpy = jest.fn();
+      const eventSpy = vi.fn();
       service.on('key:imported', eventSpy);
 
       const privateKey = 'a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890123456';
@@ -379,7 +379,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should emit backup created event', async () => {
-      const eventSpy = jest.fn();
+      const eventSpy = vi.fn();
       service.on('key:backed_up', eventSpy);
 
       const result = await service.createBackup(
@@ -458,7 +458,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should emit rotation event', async () => {
-      const eventSpy = jest.fn();
+      const eventSpy = vi.fn();
       service.on('key:rotated', eventSpy);
 
       const result = await service.rotateKey(testKeyPair.keyId);
@@ -697,7 +697,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should emit security anomaly events for high severity events', async () => {
-      const anomalySpy = jest.fn();
+      const anomalySpy = vi.fn();
       service.on('security:anomaly_detected', anomalySpy);
 
       // This should trigger a high severity event during rotation
@@ -726,7 +726,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should detect nos2x extension when available', async () => {
-      const extensionSpy = jest.fn();
+      const extensionSpy = vi.fn();
       service.on('extension:detected', extensionSpy);
 
       // Re-initialize to trigger extension detection
@@ -756,10 +756,10 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should handle storage service errors gracefully', async () => {
-      const errorSpy = jest.fn();
+      const errorSpy = vi.fn();
       service.on('storage:error', errorSpy);
 
-      (mockStorageService.storeKey as jest.MockedFunction<any>).mockResolvedValueOnce({
+      (mockStorageService.storeKey as anyedFunction<any>).mockResolvedValueOnce({
         success: false,
         error: 'Storage full',
       });
@@ -771,7 +771,7 @@ describe('NostrKeyManagementService', () => {
     });
 
     it('should record failed operations in analytics', async () => {
-      (mockStorageService.storeKey as jest.MockedFunction<any>).mockResolvedValueOnce({
+      (mockStorageService.storeKey as anyedFunction<any>).mockResolvedValueOnce({
         success: false,
         error: 'Storage error',
       });

@@ -11,19 +11,19 @@ import * as jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock dependencies
-jest.mock('argon2');
-jest.mock('speakeasy');
-jest.mock('jsonwebtoken');
-jest.mock('uuid');
-jest.mock('qrcode');
+vi.mock('argon2');
+vi.mock('speakeasy');
+vi.mock('jsonwebtoken');
+vi.mock('uuid');
+vi.mock('qrcode');
 
 describe('UserAuthenticationService', () => {
   let service: UserAuthenticationService;
-  let mockDb: jest.Mocked<IDatabase>;
-  let mockCache: jest.Mocked<ICacheService>;
-  let mockEventBus: jest.Mocked<IEventBusService>;
-  let mockAuditLog: jest.Mocked<IAuditLogService>;
-  let mockNotification: jest.Mocked<INotificationService>;
+  let mockDb: vi.Mocked<IDatabase>;
+  let mockCache: vi.Mocked<ICacheService>;
+  let mockEventBus: vi.Mocked<IEventBusService>;
+  let mockAuditLog: vi.Mocked<IAuditLogService>;
+  let mockNotification: vi.Mocked<INotificationService>;
 
   const mockUser = {
     id: 'user-123',
@@ -45,36 +45,36 @@ describe('UserAuthenticationService', () => {
   beforeEach(() => {
     // Create mock implementations
     mockDb = {
-      query: jest.fn(),
-      transaction: jest.fn(),
+      query: vi.fn(),
+      transaction: vi.fn(),
     } as any;
 
     mockCache = {
-      get: jest.fn(),
-      set: jest.fn(),
-      delete: jest.fn(),
-      exists: jest.fn(),
-      expire: jest.fn(),
-      ttl: jest.fn(),
-      keys: jest.fn(),
-      flush: jest.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      expire: vi.fn(),
+      ttl: vi.fn(),
+      keys: vi.fn(),
+      flush: vi.fn(),
     } as any;
 
     mockEventBus = {
-      emit: jest.fn(),
-      on: jest.fn(),
-      off: jest.fn(),
-      once: jest.fn(),
+      emit: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+      once: vi.fn(),
     } as any;
 
     mockAuditLog = {
-      log: jest.fn(),
-      query: jest.fn(),
+      log: vi.fn(),
+      query: vi.fn(),
     } as any;
 
     mockNotification = {
-      send: jest.fn(),
-      sendBatch: jest.fn(),
+      send: vi.fn(),
+      sendBatch: vi.fn(),
     } as any;
 
     // Create service instance
@@ -87,17 +87,17 @@ describe('UserAuthenticationService', () => {
     );
 
     // Reset all mocks
-    jest.clearAllMocks();
-    (uuidv4 as jest.Mock).mockReturnValue('session-123');
-    (jwt.sign as jest.Mock).mockImplementation((payload, secret, options) =>
+    vi.clearAllMocks();
+    (uuidv4 as any).mockReturnValue('session-123');
+    (jwt.sign as any).mockImplementation((payload, secret, options) =>
       `token-${payload.type}`
     );
-    (jwt.verify as jest.Mock).mockImplementation(() => ({
+    (jwt.verify as any).mockImplementation(() => ({
       userId: 'user-123',
       sessionId: 'session-123',
       type: 'refresh'
     }));
-    (jwt.decode as jest.Mock).mockImplementation(() => ({
+    (jwt.decode as any).mockImplementation(() => ({
       exp: Math.floor(Date.now() / 1000) + 3600
     }));
   });
@@ -107,7 +107,7 @@ describe('UserAuthenticationService', () => {
       // Arrange
       mockCache.get.mockResolvedValue(null); // No rate limiting
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
-      (argon2.verify as jest.Mock).mockResolvedValue(true);
+      (argon2.verify as any).mockResolvedValue(true);
 
       // Act
       const result = await service.login(mockCredentials);
@@ -134,7 +134,7 @@ describe('UserAuthenticationService', () => {
       const mfaUser = { ...mockUser, mfaEnabled: true, mfaTypes: ['totp'] };
       mockCache.get.mockResolvedValue(null);
       mockDb.query.mockResolvedValue({ rows: [mfaUser] });
-      (argon2.verify as jest.Mock).mockResolvedValue(true);
+      (argon2.verify as any).mockResolvedValue(true);
 
       // Act
       const result = await service.login(mockCredentials);
@@ -154,10 +154,10 @@ describe('UserAuthenticationService', () => {
       const credentialsWithMFA = { ...mockCredentials, mfaToken: '123456' };
       mockCache.get.mockResolvedValue(null);
       mockDb.query.mockResolvedValue({ rows: [mfaUser] });
-      (argon2.verify as jest.Mock).mockResolvedValue(true);
+      (argon2.verify as any).mockResolvedValue(true);
 
       // Mock MFA verification
-      const verifyMFASpy = jest.spyOn(service, 'verifyMFA').mockResolvedValue(true);
+      const verifyMFASpy = vi.spyOn(service, 'verifyMFA').mockResolvedValue(true);
 
       // Act
       const result = await service.login(credentialsWithMFA);
@@ -185,7 +185,7 @@ describe('UserAuthenticationService', () => {
         .mockResolvedValueOnce(null) // IP rate limit
         .mockResolvedValueOnce(4); // User attempts (one below max)
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
-      (argon2.verify as jest.Mock).mockResolvedValue(false); // Wrong password
+      (argon2.verify as any).mockResolvedValue(false); // Wrong password
 
       // Act
       await expect(service.login(mockCredentials))
@@ -219,7 +219,7 @@ describe('UserAuthenticationService', () => {
         .mockResolvedValueOnce(null) // Account lock
         .mockResolvedValueOnce([]); // Known devices (empty = new device)
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
-      (argon2.verify as jest.Mock).mockResolvedValue(true);
+      (argon2.verify as any).mockResolvedValue(true);
 
       // Act
       await service.login(mockCredentials);
@@ -280,7 +280,7 @@ describe('UserAuthenticationService', () => {
     it('should verify valid TOTP token', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
-      (speakeasy.totp.verify as jest.Mock).mockReturnValue(true);
+      (speakeasy.totp.verify as any).mockReturnValue(true);
 
       // Act
       const result = await service.verifyMFA('user-123', '123456');
@@ -298,8 +298,8 @@ describe('UserAuthenticationService', () => {
     it('should verify valid backup code and remove it', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
-      (speakeasy.totp.verify as jest.Mock).mockReturnValue(false);
-      (argon2.hash as jest.Mock).mockResolvedValue('hashed-code-1');
+      (speakeasy.totp.verify as any).mockReturnValue(false);
+      (argon2.hash as any).mockResolvedValue('hashed-code-1');
 
       // Act
       const result = await service.verifyMFA('user-123', 'BACKUP1');
@@ -319,8 +319,8 @@ describe('UserAuthenticationService', () => {
         backupCodes: ['hashed-code-1', 'hashed-code-2'], // Only 2 codes
       };
       mockDb.query.mockResolvedValue({ rows: [lowBackupSettings] });
-      (speakeasy.totp.verify as jest.Mock).mockReturnValue(false);
-      (argon2.hash as jest.Mock).mockResolvedValue('hashed-code-1');
+      (speakeasy.totp.verify as any).mockReturnValue(false);
+      (argon2.hash as any).mockResolvedValue('hashed-code-1');
 
       // Act
       await service.verifyMFA('user-123', 'BACKUP1');
@@ -338,8 +338,8 @@ describe('UserAuthenticationService', () => {
     it('should return false for invalid token', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
-      (speakeasy.totp.verify as jest.Mock).mockReturnValue(false);
-      (argon2.hash as jest.Mock).mockResolvedValue('invalid-hash');
+      (speakeasy.totp.verify as any).mockReturnValue(false);
+      (argon2.hash as any).mockResolvedValue('invalid-hash');
 
       // Act
       const result = await service.verifyMFA('user-123', 'invalid');
@@ -353,12 +353,12 @@ describe('UserAuthenticationService', () => {
     it('should setup TOTP with QR code and backup codes', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
-      (speakeasy.generateSecret as jest.Mock).mockReturnValue({
+      (speakeasy.generateSecret as any).mockReturnValue({
         base32: 'SECRET123',
         otpauth_url: 'otpauth://totp/...',
       });
       const QRCode = require('qrcode');
-      QRCode.toDataURL = jest.fn().mockResolvedValue('data:image/png;base64,...');
+      QRCode.toDataURL = vi.fn().mockResolvedValue('data:image/png;base64,...');
 
       // Act
       const result = await service.setupMFA('user-123', 'totp');
@@ -496,7 +496,7 @@ describe('UserAuthenticationService', () => {
       for (let i = 0; i < 9; i++) {
         mockCache.get.mockResolvedValueOnce(i); // Simulate increasing attempts
         mockDb.query.mockResolvedValue({ rows: [mockUser] });
-        (argon2.verify as jest.Mock).mockResolvedValue(false);
+        (argon2.verify as any).mockResolvedValue(false);
 
         await expect(service.login(mockCredentials))
           .rejects.toThrow('Invalid credentials');
@@ -514,7 +514,7 @@ describe('UserAuthenticationService', () => {
         .mockResolvedValueOnce(2) // IP attempts
         .mockResolvedValueOnce(4); // User attempts
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
-      (argon2.verify as jest.Mock).mockResolvedValue(false);
+      (argon2.verify as any).mockResolvedValue(false);
 
       // Act
       await expect(service.login(mockCredentials))
@@ -532,7 +532,7 @@ describe('UserAuthenticationService', () => {
       // Arrange
       mockCache.get.mockResolvedValue(3); // Some failed attempts
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
-      (argon2.verify as jest.Mock).mockResolvedValue(true);
+      (argon2.verify as any).mockResolvedValue(true);
 
       // Act
       await service.login(mockCredentials);
@@ -560,7 +560,7 @@ describe('UserAuthenticationService', () => {
 
     it('should hash passwords with secure parameters', async () => {
       // This is tested indirectly through the hashPassword method
-      const hashSpy = jest.spyOn(argon2, 'hash');
+      const hashSpy = vi.spyOn(argon2, 'hash');
 
       // The service would call this internally
       expect(hashSpy).toHaveBeenCalledWith(
@@ -577,7 +577,7 @@ describe('UserAuthenticationService', () => {
     it('should properly blacklist and check expired tokens', async () => {
       // Arrange
       const expiredToken = 'expired-token';
-      (jwt.decode as jest.Mock).mockReturnValue({
+      (jwt.decode as any).mockReturnValue({
         exp: Math.floor(Date.now() / 1000) - 3600 // Expired 1 hour ago
       });
 

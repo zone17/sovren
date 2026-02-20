@@ -1564,7 +1564,7 @@ describe('SubscriptionService', () => {
 
     describe('subscribeToEvents', () => {
       it('should subscribe to events', () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const subscriptionId = service.subscribeToEvents(SubscriptionEventType.RENEWED, callback);
 
         expect(subscriptionId).toBeDefined();
@@ -1574,7 +1574,7 @@ describe('SubscriptionService', () => {
 
     describe('unsubscribeFromEvents', () => {
       it('should unsubscribe from events', () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const subId = service.subscribeToEvents(SubscriptionEventType.RENEWED, callback);
 
         service.unsubscribeFromEvents(subId);

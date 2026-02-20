@@ -860,7 +860,7 @@ describe('UserPreferencesService', () => {
       const userId = 'user1300';
 
       // Mock repository to throw error
-      jest.spyOn(repository, 'update').mockRejectedValue(new Error('Database error'));
+      vi.spyOn(repository, 'update').mockRejectedValue(new Error('Database error'));
 
       await expect(
         service.updateDisplayPreferences(userId, { theme: 'dark' })
@@ -870,7 +870,7 @@ describe('UserPreferencesService', () => {
     it('should continue on history entry failure', async () => {
       const userId = 'user1301';
 
-      jest.spyOn(repository, 'addHistoryEntry').mockRejectedValue(new Error('History error'));
+      vi.spyOn(repository, 'addHistoryEntry').mockRejectedValue(new Error('History error'));
 
       // Should not throw
       await service.updateDisplayPreferences(userId, { theme: 'dark' });
@@ -881,7 +881,7 @@ describe('UserPreferencesService', () => {
     it('should continue on event emission failure', async () => {
       const userId = 'user1302';
 
-      jest.spyOn(eventBus, 'publish').mockRejectedValue(new Error('Event error'));
+      vi.spyOn(eventBus, 'publish').mockRejectedValue(new Error('Event error'));
 
       // Should not throw
       await service.updateDisplayPreferences(userId, { theme: 'dark' });

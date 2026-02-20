@@ -37,7 +37,7 @@ const BreakpointTestComponent = () => {
 };
 
 // 📱 **Mock MobileNavigation component**
-jest.mock('../../ui/MobileNavigation', () => {
+vi.mock('../../ui/MobileNavigation', () => {
   return {
     __esModule: true,
     default: ({ breadcrumbs, notificationCount }: any) => (
@@ -62,7 +62,7 @@ describe('📱 Mobile Responsive Layout Test Suite', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('🎯 useBreakpoint Hook - US-083.1', () => {

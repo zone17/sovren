@@ -17,7 +17,7 @@
  * Automatically loaded for frontend tests through Jest setupFilesAfterEnv
  */
 
-import { afterEach, beforeEach } from '@jest/globals';
+
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 
@@ -26,7 +26,7 @@ afterEach(() => {
   cleanup();
 
   // Clear all mocks
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 
   // Clear local storage
   if (typeof window !== 'undefined' && window.localStorage) {
@@ -47,7 +47,7 @@ afterEach(() => {
 // 🎯 **FRONTEND-SPECIFIC SETUP**
 beforeEach(() => {
   // Reset console mocks for each test
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 // 🌐 **DOM ENVIRONMENT SETUP**
@@ -79,7 +79,7 @@ export const frontendTestUtils = {
   // Utility to mock React error boundary
   mockErrorBoundary: () => {
     const originalError = console.error;
-    console.error = jest.fn();
+    console.error = vi.fn();
     return () => {
       console.error = originalError;
     };

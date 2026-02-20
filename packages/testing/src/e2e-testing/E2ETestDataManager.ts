@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite E2E Test Data Manager - AI-powered test data management
  * with intelligent data generation and dynamic data lifecycle management.

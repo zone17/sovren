@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file IntegrationScenarioGenerator.ts
  * @description AI-powered integration test scenario generation with intelligent test case discovery

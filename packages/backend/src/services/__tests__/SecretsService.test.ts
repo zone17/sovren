@@ -15,12 +15,12 @@ import {
 } from '@aws-sdk/client-secrets-manager';
 
 // Mock AWS SDK
-jest.mock('@aws-sdk/client-secrets-manager', () => {
+vi.mock('@aws-sdk/client-secrets-manager', () => {
   return {
-    SecretsManagerClient: jest.fn().mockImplementation(() => ({
-      send: jest.fn(),
+    SecretsManagerClient: vi.fn().mockImplementation(() => ({
+      send: vi.fn(),
     })),
-    GetSecretValueCommand: jest.fn().mockImplementation((input) => ({ input })),
+    GetSecretValueCommand: vi.fn().mockImplementation((input) => ({ input })),
     ResourceNotFoundException: class ResourceNotFoundException extends Error {
       constructor(opts: any) {
         super(opts.message);
@@ -45,11 +45,11 @@ jest.mock('@aws-sdk/client-secrets-manager', () => {
   };
 });
 
-const { SecretsManagerClient: MockedSecretsManagerClient } = jest.requireMock('@aws-sdk/client-secrets-manager');
+const MockedSecretsManagerClient = vi.mocked(SecretsManagerClient);
 
 describe('SecretsService', () => {
   let secretsService: SecretsService;
-  let mockSend: jest.Mock;
+  let mockSend: any;
 
   const mockConfig: Partial<SecretsConfig> = {
     awsRegion: 'us-east-1',
@@ -85,11 +85,11 @@ describe('SecretsService', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     resetSecretsService();
 
     // Setup mock send function
-    mockSend = jest.fn();
+    mockSend = vi.fn();
     MockedSecretsManagerClient.mockImplementation(() => ({
       send: mockSend,
     }));
@@ -292,7 +292,7 @@ describe('SecretsService', () => {
         useAwsSecrets: true,
       });
 
-      mockSend = jest.fn();
+      mockSend = vi.fn();
       MockedSecretsManagerClient.mockImplementation(() => ({
         send: mockSend,
       }));
@@ -314,14 +314,14 @@ describe('SecretsService', () => {
         useAwsSecrets: true,
       });
 
-      mockSend = jest.fn();
+      mockSend = vi.fn();
       MockedSecretsManagerClient.mockImplementation(() => ({
         send: mockSend,
       }));
 
       await awsService.initialize();
 
-      const { ResourceNotFoundException } = jest.requireMock('@aws-sdk/client-secrets-manager');
+      // ResourceNotFoundException already available from import above
 
       mockSend.mockRejectedValueOnce(
         new ResourceNotFoundException({
@@ -341,14 +341,14 @@ describe('SecretsService', () => {
         useAwsSecrets: true,
       });
 
-      mockSend = jest.fn();
+      mockSend = vi.fn();
       MockedSecretsManagerClient.mockImplementation(() => ({
         send: mockSend,
       }));
 
       await awsService.initialize();
 
-      const { InvalidRequestException } = jest.requireMock('@aws-sdk/client-secrets-manager');
+      // InvalidRequestException already available from import above
 
       mockSend.mockRejectedValueOnce(
         new InvalidRequestException({
@@ -368,7 +368,7 @@ describe('SecretsService', () => {
         useAwsSecrets: true,
       });
 
-      mockSend = jest.fn();
+      mockSend = vi.fn();
       MockedSecretsManagerClient.mockImplementation(() => ({
         send: mockSend,
       }));
@@ -589,7 +589,7 @@ describe('SecretsService', () => {
       });
 
       // Re-mock for this specific service instance
-      mockSend = jest.fn();
+      mockSend = vi.fn();
       MockedSecretsManagerClient.mockImplementation(() => ({
         send: mockSend,
       }));

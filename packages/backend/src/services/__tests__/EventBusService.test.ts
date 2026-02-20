@@ -13,9 +13,9 @@ describe('EventBusService', () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn()
+      info: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn()
     };
     eventBus = new EventBusService(mockLogger);
   });
@@ -98,7 +98,7 @@ describe('EventBusService', () => {
 
   describe('Event Subscription', () => {
     it('should subscribe to specific event type', async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const subscriptionId = eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, handler);
 
       expect(subscriptionId).toMatch(/^sub_/);
@@ -120,7 +120,7 @@ describe('EventBusService', () => {
     });
 
     it('should subscribe to multiple event types', async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const eventTypes = [
         DomainEventType.CONTENT_CREATED,
         DomainEventType.CONTENT_PUBLISHED
@@ -162,7 +162,7 @@ describe('EventBusService', () => {
     });
 
     it('should subscribe to all events', async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       eventBus.subscribeToAll(handler);
 
       const events = [
@@ -197,7 +197,7 @@ describe('EventBusService', () => {
     });
 
     it('should subscribe with filter', async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const userId = 'user_123';
 
       eventBus.subscribeWithFilter(
@@ -232,7 +232,7 @@ describe('EventBusService', () => {
     });
 
     it('should handle unsubscribe', async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const subscriptionId = eventBus.subscribe(DomainEventType.USER_LOGGED_IN, handler);
 
       eventBus.unsubscribe(subscriptionId);
@@ -252,9 +252,9 @@ describe('EventBusService', () => {
     });
 
     it('should handle unsubscribeAll', () => {
-      eventBus.subscribe(DomainEventType.USER_REGISTERED, jest.fn());
-      eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, jest.fn());
-      eventBus.subscribeToAll(jest.fn());
+      eventBus.subscribe(DomainEventType.USER_REGISTERED, vi.fn());
+      eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, vi.fn());
+      eventBus.subscribeToAll(vi.fn());
 
       expect(eventBus.getActiveSubscriptions()).toHaveLength(3);
 
@@ -358,7 +358,7 @@ describe('EventBusService', () => {
     });
 
     it('should replay events to handler', async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
 
       const events = [
         new DomainEventBuilder()
@@ -419,7 +419,7 @@ describe('EventBusService', () => {
   describe('Error Handling', () => {
     it('should retry failed handlers', async () => {
       let callCount = 0;
-      const handler = jest.fn(() => {
+      const handler = vi.fn(() => {
         callCount++;
         if (callCount === 1) {
           throw new Error('First attempt failed');
@@ -444,7 +444,7 @@ describe('EventBusService', () => {
     });
 
     it('should handle handler timeout', async () => {
-      const handler = jest.fn(async () => {
+      const handler = vi.fn(async () => {
         // Simulate a very long running handler
         await new Promise(resolve => setTimeout(resolve, 60000));
       });
@@ -467,10 +467,10 @@ describe('EventBusService', () => {
     }, 35000); // Increase test timeout
 
     it('should continue processing after handler error', async () => {
-      const failingHandler = jest.fn(() => {
+      const failingHandler = vi.fn(() => {
         throw new Error('Handler error');
       });
-      const workingHandler = jest.fn();
+      const workingHandler = vi.fn();
 
       eventBus.subscribe(DomainEventType.USER_DELETED, failingHandler);
       eventBus.subscribe(DomainEventType.USER_DELETED, workingHandler);
@@ -498,8 +498,8 @@ describe('EventBusService', () => {
     });
 
     it('should get active subscriptions', () => {
-      eventBus.subscribe(DomainEventType.USER_REGISTERED, jest.fn());
-      eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, jest.fn());
+      eventBus.subscribe(DomainEventType.USER_REGISTERED, vi.fn());
+      eventBus.subscribe(DomainEventType.PAYMENT_RECEIVED, vi.fn());
 
       const subscriptions = eventBus.getActiveSubscriptions();
 
@@ -528,7 +528,7 @@ describe('EventBusService', () => {
     });
 
     it('should dispose properly', async () => {
-      eventBus.subscribe(DomainEventType.USER_REGISTERED, jest.fn());
+      eventBus.subscribe(DomainEventType.USER_REGISTERED, vi.fn());
 
       await eventBus.dispose();
 

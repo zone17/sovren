@@ -26,14 +26,14 @@ import { ContractService } from '../ContractService';
  */
 function makeChain(resolvedValue: { data: any; error: any }) {
   const chain: any = {
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockResolvedValue(resolvedValue),
-    single: jest.fn().mockResolvedValue(resolvedValue),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue(resolvedValue),
+    single: vi.fn().mockResolvedValue(resolvedValue),
   };
   chain.then = (res: any, rej: any) => Promise.resolve(resolvedValue).then(res, rej);
   chain.catch = (fn: any) => Promise.resolve(resolvedValue).catch(fn);
@@ -42,10 +42,10 @@ function makeChain(resolvedValue: { data: any; error: any }) {
 
 function makeLogger() {
   return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   };
 }
 
@@ -59,9 +59,9 @@ describe('ContractService', () => {
   let service: ContractService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLogger = makeLogger();
-    mockDb = { from: jest.fn() };
+    mockDb = { from: vi.fn() };
   });
 
   // =========================================================================
@@ -332,8 +332,8 @@ describe('ContractService', () => {
     function makeUpdateChain(resolvedValue: { data: any; error: any }) {
       let callCount = 0;
       const chain: any = {
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockImplementation(() => {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockImplementation(() => {
           callCount++;
           // second eq call terminates the chain (creator_id filter)
           if (callCount >= 2) return Promise.resolve(resolvedValue);

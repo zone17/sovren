@@ -163,14 +163,14 @@ if (typeof global !== 'undefined') {
       platform: 'iPhone',
       maxTouchPoints: 5,
       clipboard: {
-        writeText: jest.fn().mockResolvedValue(undefined),
-        readText: jest.fn().mockResolvedValue(''),
+        writeText: vi.fn().mockResolvedValue(undefined),
+        readText: vi.fn().mockResolvedValue(''),
       },
-      share: jest.fn().mockResolvedValue(undefined),
+      share: vi.fn().mockResolvedValue(undefined),
       geolocation: {
-        getCurrentPosition: jest.fn(),
-        watchPosition: jest.fn(),
-        clearWatch: jest.fn(),
+        getCurrentPosition: vi.fn(),
+        watchPosition: vi.fn(),
+        clearWatch: vi.fn(),
       },
     },
   });
@@ -188,10 +188,10 @@ if (typeof window !== 'undefined') {
         return arr;
       },
       subtle: {
-        digest: jest.fn().mockResolvedValue(new ArrayBuffer(32)),
-        sign: jest.fn().mockResolvedValue(new ArrayBuffer(64)),
-        verify: jest.fn().mockResolvedValue(true),
-        generateKey: jest.fn().mockResolvedValue({
+        digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
+        sign: vi.fn().mockResolvedValue(new ArrayBuffer(64)),
+        verify: vi.fn().mockResolvedValue(true),
+        generateKey: vi.fn().mockResolvedValue({
           privateKey: {},
           publicKey: {},
         }),
@@ -203,11 +203,11 @@ if (typeof window !== 'undefined') {
   // Mock window.localStorage
   Object.defineProperty(window, 'localStorage', {
     value: {
-      getItem: jest.fn(),
-      setItem: jest.fn(),
-      removeItem: jest.fn(),
-      clear: jest.fn(),
-      key: jest.fn(),
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      key: vi.fn(),
       length: 0,
     },
     writable: true,
@@ -216,11 +216,11 @@ if (typeof window !== 'undefined') {
   // Mock window.sessionStorage
   Object.defineProperty(window, 'sessionStorage', {
     value: {
-      getItem: jest.fn(),
-      setItem: jest.fn(),
-      removeItem: jest.fn(),
-      clear: jest.fn(),
-      key: jest.fn(),
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      key: vi.fn(),
       length: 0,
     },
     writable: true,
@@ -238,38 +238,38 @@ if (typeof window !== 'undefined') {
       pathname: '/',
       search: '',
       hash: '',
-      assign: jest.fn(),
-      replace: jest.fn(),
-      reload: jest.fn(),
+      assign: vi.fn(),
+      replace: vi.fn(),
+      reload: vi.fn(),
     },
     writable: true,
   });
 
   // Mock window.ResizeObserver
-  global.ResizeObserver = jest.fn().mockImplementation(() => ({
-    observe: jest.fn(),
-    unobserve: jest.fn(),
-    disconnect: jest.fn(),
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
   }));
 
   // Mock window.IntersectionObserver
-  global.IntersectionObserver = jest.fn().mockImplementation(() => ({
-    observe: jest.fn(),
-    unobserve: jest.fn(),
-    disconnect: jest.fn(),
+  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
   }));
 
   // Mock window.matchMedia
   Object.defineProperty(window, 'matchMedia', {
-    value: jest.fn().mockImplementation((query) => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     })),
     writable: true,
   });
@@ -278,10 +278,10 @@ if (typeof window !== 'undefined') {
 // 🎨 **CSS MOCKS**
 if (typeof window !== 'undefined') {
   // Mock getComputedStyle
-  global.getComputedStyle = jest.fn().mockImplementation(() => ({
-    getPropertyValue: jest.fn().mockReturnValue(''),
-    setProperty: jest.fn(),
-    removeProperty: jest.fn(),
+  global.getComputedStyle = vi.fn().mockImplementation(() => ({
+    getPropertyValue: vi.fn().mockReturnValue(''),
+    setProperty: vi.fn(),
+    removeProperty: vi.fn(),
   }));
 }
 
@@ -289,71 +289,71 @@ if (typeof window !== 'undefined') {
 if (typeof global !== 'undefined') {
   global.performance = {
     ...global.performance,
-    now: jest.fn(() => Date.now()),
-    mark: jest.fn(),
-    measure: jest.fn(),
-    getEntriesByType: jest.fn().mockReturnValue([]),
-    getEntriesByName: jest.fn().mockReturnValue([]),
-    clearMarks: jest.fn(),
-    clearMeasures: jest.fn(),
+    now: vi.fn(() => Date.now()),
+    mark: vi.fn(),
+    measure: vi.fn(),
+    getEntriesByType: vi.fn().mockReturnValue([]),
+    getEntriesByName: vi.fn().mockReturnValue([]),
+    clearMarks: vi.fn(),
+    clearMeasures: vi.fn(),
   };
 }
 
 // 📡 **WEBSOCKET MOCKS**
 if (typeof global !== 'undefined') {
-  global.WebSocket = jest.fn().mockImplementation(() => ({
-    close: jest.fn(),
-    send: jest.fn(),
+  global.WebSocket = vi.fn().mockImplementation(() => ({
+    close: vi.fn(),
+    send: vi.fn(),
     readyState: 1, // OPEN
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   }));
 }
 
 // 🔔 **NOTIFICATION MOCKS**
 if (typeof global !== 'undefined') {
-  global.Notification = jest.fn().mockImplementation(() => ({
-    close: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
+  global.Notification = vi.fn().mockImplementation(() => ({
+    close: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
   }));
 
   // @ts-ignore
   global.Notification.permission = 'granted';
   // @ts-ignore
-  global.Notification.requestPermission = jest.fn().mockResolvedValue('granted');
+  global.Notification.requestPermission = vi.fn().mockResolvedValue('granted');
 }
 
 // 🎯 **CANVAS MOCKS**
 if (typeof global !== 'undefined') {
-  global.HTMLCanvasElement.prototype.getContext = jest.fn().mockImplementation(() => ({
-    fillRect: jest.fn(),
-    clearRect: jest.fn(),
-    getImageData: jest.fn().mockImplementation(() => ({
+  global.HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation(() => ({
+    fillRect: vi.fn(),
+    clearRect: vi.fn(),
+    getImageData: vi.fn().mockImplementation(() => ({
       data: new Array(4).fill(255),
     })),
-    putImageData: jest.fn(),
-    createImageData: jest.fn().mockImplementation(() => []),
-    setTransform: jest.fn(),
-    drawImage: jest.fn(),
-    save: jest.fn(),
-    fillText: jest.fn(),
-    restore: jest.fn(),
-    beginPath: jest.fn(),
-    moveTo: jest.fn(),
-    lineTo: jest.fn(),
-    closePath: jest.fn(),
-    stroke: jest.fn(),
-    translate: jest.fn(),
-    scale: jest.fn(),
-    rotate: jest.fn(),
-    arc: jest.fn(),
-    fill: jest.fn(),
-    measureText: jest.fn().mockReturnValue({ width: 0 }),
-    transform: jest.fn(),
-    rect: jest.fn(),
-    clip: jest.fn(),
+    putImageData: vi.fn(),
+    createImageData: vi.fn().mockImplementation(() => []),
+    setTransform: vi.fn(),
+    drawImage: vi.fn(),
+    save: vi.fn(),
+    fillText: vi.fn(),
+    restore: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    closePath: vi.fn(),
+    stroke: vi.fn(),
+    translate: vi.fn(),
+    scale: vi.fn(),
+    rotate: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
+    measureText: vi.fn().mockReturnValue({ width: 0 }),
+    transform: vi.fn(),
+    rect: vi.fn(),
+    clip: vi.fn(),
   }));
 }
 
@@ -361,11 +361,11 @@ if (typeof global !== 'undefined') {
 if (typeof global !== 'undefined') {
   global.console = {
     ...global.console,
-    error: jest.fn(),
-    warn: jest.fn(),
-    log: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    log: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
   };
 }
 

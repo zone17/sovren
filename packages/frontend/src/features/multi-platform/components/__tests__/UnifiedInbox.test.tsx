@@ -3,11 +3,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import UnifiedInbox from '../UnifiedInbox';
 
-const mockUseInboxMessages = jest.fn();
-const mockUseReplyToMessage = jest.fn();
-const mockUseBatchAction = jest.fn();
+const mockUseInboxMessages = vi.fn();
+const mockUseReplyToMessage = vi.fn();
+const mockUseBatchAction = vi.fn();
 
-jest.mock('../../hooks/useInbox', () => ({
+vi.mock('../../hooks/useInbox', () => ({
   useInboxMessages: (params: any) => mockUseInboxMessages(params),
   useReplyToMessage: () => mockUseReplyToMessage(),
   useBatchAction: () => mockUseBatchAction(),
@@ -56,8 +56,8 @@ describe('UnifiedInbox', () => {
 
   beforeEach(() => {
     mockUseInboxMessages.mockReturnValue({ data: mockMessages, isLoading: false });
-    mockUseReplyToMessage.mockReturnValue({ mutate: jest.fn(), isPending: false });
-    mockUseBatchAction.mockReturnValue({ mutate: jest.fn(), isPending: false });
+    mockUseReplyToMessage.mockReturnValue({ mutate: vi.fn(), isPending: false });
+    mockUseBatchAction.mockReturnValue({ mutate: vi.fn(), isPending: false });
   });
 
   it('renders messages list', () => {

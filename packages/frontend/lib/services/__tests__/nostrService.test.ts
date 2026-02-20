@@ -9,30 +9,30 @@ import {
 import { NostrService } from '../nostrService';
 
 // Mock nostr-tools
-jest.mock('nostr-tools', () => ({
-  generateSecretKey: jest.fn(),
-  getPublicKey: jest.fn(),
-  finalizeEvent: jest.fn(),
-  validateEvent: jest.fn(),
-  verifyEvent: jest.fn(),
+vi.mock('nostr-tools', () => ({
+  generateSecretKey: vi.fn(),
+  getPublicKey: vi.fn(),
+  finalizeEvent: vi.fn(),
+  validateEvent: vi.fn(),
+  verifyEvent: vi.fn(),
   nip04: {
-    encrypt: jest.fn(),
-    decrypt: jest.fn(),
+    encrypt: vi.fn(),
+    decrypt: vi.fn(),
   },
   nip19: {
-    encode: jest.fn(),
-    decode: jest.fn(),
+    encode: vi.fn(),
+    decode: vi.fn(),
   },
-  SimplePool: jest.fn().mockImplementation(() => ({
-    ensureRelay: jest.fn(),
-    subscribeMany: jest.fn(),
-    publish: jest.fn().mockResolvedValue([]),
-    close: jest.fn(),
+  SimplePool: vi.fn().mockImplementation(() => ({
+    ensureRelay: vi.fn(),
+    subscribeMany: vi.fn(),
+    publish: vi.fn().mockResolvedValue([]),
+    close: vi.fn(),
   })),
 }));
 
 // Mock config
-jest.mock('../../config/environment', () => ({
+vi.mock('../../config/environment', () => ({
   config: {
     nostr: {
       relays: ['wss://relay.test.com', 'wss://another.relay.com'],
@@ -47,8 +47,8 @@ jest.mock('../../config/environment', () => ({
 }));
 
 // Mock feature flags
-jest.mock('../../../../shared/src/featureFlags', () => ({
-  parseFeatureFlags: jest.fn().mockReturnValue({
+vi.mock('../../../../shared/src/featureFlags', () => ({
+  parseFeatureFlags: vi.fn().mockReturnValue({
     enableNostrIntegration: true,
     enableNostrKeyGeneration: true,
     enableNostrEventPublishing: true,
@@ -69,7 +69,7 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
     // Reset singleton instance for each test
     (NostrService as any).instance = undefined;
     nostrService = NostrService.getInstance();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -102,7 +102,7 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
         enableNostrIntegration: false,
       });
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
       await nostrService.initialize();
 
@@ -187,7 +187,7 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
 
     it('should connect to relays successfully', async () => {
       const mockPool = nostrService['pool'];
-      const ensureRelaySpy = jest.spyOn(mockPool, 'ensureRelay');
+      const ensureRelaySpy = vi.spyOn(mockPool, 'ensureRelay');
 
       await nostrService.connectToRelays();
 
@@ -198,11 +198,11 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
 
     it('should handle relay connection errors gracefully', async () => {
       const mockPool = nostrService['pool'];
-      jest.spyOn(mockPool, 'ensureRelay').mockImplementation(() => {
+      vi.spyOn(mockPool, 'ensureRelay').mockImplementation(() => {
         throw new Error('Connection failed');
       });
 
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       await nostrService.connectToRelays();
 
@@ -328,12 +328,12 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
 
     it('should create subscription successfully', () => {
       const mockPool = nostrService['pool'];
-      const mockSubscribeMany = jest.spyOn(mockPool, 'subscribeMany').mockReturnValue({
-        on: jest.fn(),
+      const mockSubscribeMany = vi.spyOn(mockPool, 'subscribeMany').mockReturnValue({
+        on: vi.fn(),
       } as any);
 
       const filters = [{ kinds: [NostrEventKind.TEXT_NOTE], limit: 10 }];
-      const onEvent = jest.fn();
+      const onEvent = vi.fn();
 
       const subscriptionId = nostrService.subscribe(filters, onEvent);
 
@@ -346,18 +346,18 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
       const mockPool = nostrService['pool'];
       let eventCallback: any;
 
-      jest.spyOn(mockPool, 'subscribeMany').mockReturnValue({
-        on: jest.fn(),
-        close: jest.fn(),
+      vi.spyOn(mockPool, 'subscribeMany').mockReturnValue({
+        on: vi.fn(),
+        close: vi.fn(),
       } as any).mockImplementation((relays, filters, options) => {
         eventCallback = options.onevent;
-        return { on: jest.fn(), close: jest.fn() };
+        return { on: vi.fn(), close: vi.fn() };
       });
 
       const mockVerifyEvent = require('nostr-tools').verifyEvent;
       mockVerifyEvent.mockReturnValue(true);
 
-      const onEvent = jest.fn();
+      const onEvent = vi.fn();
       const filters = [{ kinds: [NostrEventKind.TEXT_NOTE] }];
 
       nostrService.subscribe(filters, onEvent);
@@ -380,12 +380,12 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
 
     it('should unsubscribe correctly', () => {
       const mockPool = nostrService['pool'];
-      jest.spyOn(mockPool, 'subscribeMany').mockReturnValue({
-        on: jest.fn(),
+      vi.spyOn(mockPool, 'subscribeMany').mockReturnValue({
+        on: vi.fn(),
       } as any);
 
       const filters = [{ kinds: [NostrEventKind.TEXT_NOTE] }];
-      const onEvent = jest.fn();
+      const onEvent = vi.fn();
 
       const subscriptionId = nostrService.subscribe(filters, onEvent);
       nostrService.unsubscribe(subscriptionId);
@@ -403,7 +403,7 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
 
       // Re-initialize with disabled subscription
       expect(() => {
-        nostrService.subscribe([{ kinds: [1] }], jest.fn());
+        nostrService.subscribe([{ kinds: [1] }], vi.fn());
       }).toThrow('Event subscription disabled by feature flag');
     });
   });
@@ -491,7 +491,7 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
 
     it('should disconnect from all relays', async () => {
       const mockPool = nostrService['pool'];
-      const closeSpy = jest.spyOn(mockPool, 'close');
+      const closeSpy = vi.spyOn(mockPool, 'close');
 
       await nostrService.disconnect();
 
@@ -503,11 +503,11 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
     it('should clear all subscriptions on disconnect', async () => {
       // Create a subscription first
       const mockPool = nostrService['pool'];
-      jest.spyOn(mockPool, 'subscribeMany').mockReturnValue({
-        on: jest.fn(),
+      vi.spyOn(mockPool, 'subscribeMany').mockReturnValue({
+        on: vi.fn(),
       } as any);
 
-      const subscriptionId = nostrService.subscribe([{ kinds: [1] }], jest.fn());
+      const subscriptionId = nostrService.subscribe([{ kinds: [1] }], vi.fn());
       expect(nostrService['state'].subscriptions.size).toBe(1);
 
       await nostrService.disconnect();

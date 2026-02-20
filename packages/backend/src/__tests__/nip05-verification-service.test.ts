@@ -1,45 +1,45 @@
-import { jest } from '@jest/globals';
+
 import { SupabaseDatabase } from '../config/database';
 import { createNIP05VerificationService } from '../services/nip05-verification-service';
 
 // 🧪 Mock Dependencies
-jest.mock('../config/database');
-jest.mock('dns');
-jest.mock('crypto');
+vi.mock('../config/database');
+vi.mock('dns');
+vi.mock('crypto');
 
 const mockDatabase = {
   client: {
-    from: jest.fn(),
-    raw: jest.fn(),
+    from: vi.fn(),
+    raw: vi.fn(),
   },
 } as unknown as SupabaseDatabase;
 
 // Mock DNS functions
-const mockDnsLookup = jest.fn();
-const mockDnsResolveTxt = jest.fn();
+const mockDnsLookup = vi.fn();
+const mockDnsResolveTxt = vi.fn();
 
 // Mock fetch globally
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('🔍 NIP-05 Verification Service', () => {
   let service: ReturnType<typeof createNIP05VerificationService>;
   let mockFromChain: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup mock database chain
     mockFromChain = {
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
     };
 
-    (mockDatabase.client.from as jest.Mock).mockReturnValue(mockFromChain);
+    (mockDatabase.client.from as any).mockReturnValue(mockFromChain);
 
     service = createNIP05VerificationService(mockDatabase);
   });
@@ -133,14 +133,14 @@ describe('🔍 NIP-05 Verification Service', () => {
 
       mockFromChain.insert.mockReturnValue({
         ...mockFromChain,
-        single: jest.fn().mockResolvedValue({
+        single: vi.fn().mockResolvedValue({
           data: { id: 'verification-id', ...validRequest },
           error: null,
         }),
       });
 
       // Mock successful HTTP verification
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         status: 200,
         headers: { get: () => 'application/json' },
@@ -196,7 +196,7 @@ describe('🔍 NIP-05 Verification Service', () => {
       // Mock domain limit exceeded
       mockFromChain.select.mockReturnValue({
         ...mockFromChain,
-        eq: jest.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
           ...mockFromChain,
           data: new Array(1001).fill({ id: 'test' }), // Exceed limit
           error: null,
@@ -217,7 +217,7 @@ describe('🔍 NIP-05 Verification Service', () => {
         relays: { ['a'.repeat(64)]: ['wss://relay.example.com'] },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         status: 200,
         headers: { get: () => 'application/json' },
@@ -234,7 +234,7 @@ describe('🔍 NIP-05 Verification Service', () => {
     });
 
     it('should handle HTTP errors', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 404,
         statusText: 'Not Found',
@@ -248,7 +248,7 @@ describe('🔍 NIP-05 Verification Service', () => {
     });
 
     it('should handle invalid JSON responses', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'application/json' },
         json: () => Promise.resolve({ invalid: 'response' }),
@@ -261,7 +261,7 @@ describe('🔍 NIP-05 Verification Service', () => {
     });
 
     it('should handle public key mismatches', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'application/json' },
         json: () =>
@@ -277,7 +277,7 @@ describe('🔍 NIP-05 Verification Service', () => {
     });
 
     it('should handle missing local parts', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'application/json' },
         json: () =>
@@ -293,7 +293,7 @@ describe('🔍 NIP-05 Verification Service', () => {
     });
 
     it('should handle network timeouts', async () => {
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network timeout'));
+      (global.fetch as any).mockRejectedValue(new Error('Network timeout'));
 
       const result = await service.performHTTPVerification('example.com', 'alice', 'a'.repeat(64));
 
@@ -302,7 +302,7 @@ describe('🔍 NIP-05 Verification Service', () => {
     });
 
     it('should validate content type', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'text/html' },
         json: () => Promise.resolve({}),
@@ -318,7 +318,7 @@ describe('🔍 NIP-05 Verification Service', () => {
   describe('🔍 DNS Verification', () => {
     beforeEach(() => {
       // Mock DNS resolution
-      jest.doMock('dns', () => ({
+      vi.doMock('dns', () => ({
         resolveTxt: mockDnsResolveTxt,
         lookup: mockDnsLookup,
       }));
@@ -478,7 +478,7 @@ describe('🔍 NIP-05 Verification Service', () => {
       });
 
       // Mock successful HTTP verification
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'application/json' },
         json: () =>
@@ -574,7 +574,7 @@ describe('🔍 NIP-05 Verification Service', () => {
   describe('⚡ Performance and Caching', () => {
     it('should cache verification results', async () => {
       // Mock successful HTTP verification
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'application/json' },
         json: () =>
@@ -600,7 +600,7 @@ describe('🔍 NIP-05 Verification Service', () => {
       let mockTime = 1000000000000;
       Date.now = () => mockTime;
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'application/json' },
         json: () =>
@@ -689,7 +689,7 @@ describe('🔍 NIP-05 Verification Service', () => {
 
   describe('🔄 Error Handling and Recovery', () => {
     it('should handle network failures gracefully', async () => {
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      (global.fetch as any).mockRejectedValue(new Error('Network error'));
 
       const result = await service.performHTTPVerification('example.com', 'alice', 'a'.repeat(64));
 
@@ -698,7 +698,7 @@ describe('🔍 NIP-05 Verification Service', () => {
     });
 
     it('should handle malformed JSON responses', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'application/json' },
         json: () => Promise.reject(new Error('Invalid JSON')),
@@ -746,7 +746,7 @@ describe('🔍 NIP-05 Verification Service', () => {
 
       mockFromChain.insert.mockReturnValue({
         ...mockFromChain,
-        single: jest.fn().mockRejectedValue({
+        single: vi.fn().mockRejectedValue({
           code: '23505', // Unique constraint violation
           message: 'duplicate key value violates unique constraint',
         }),
@@ -763,7 +763,7 @@ describe('🔍 NIP-05 Verification Service', () => {
     it('should complete verification within performance targets', async () => {
       const startTime = Date.now();
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         headers: { get: () => 'application/json' },
         json: () =>
@@ -780,7 +780,7 @@ describe('🔍 NIP-05 Verification Service', () => {
 
     it('should handle timeout scenarios', async () => {
       // Mock a slow response that times out
-      (global.fetch as jest.Mock).mockImplementation(
+      (global.fetch as any).mockImplementation(
         () =>
           new Promise((resolve) => {
             setTimeout(

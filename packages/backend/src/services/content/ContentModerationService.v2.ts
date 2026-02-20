@@ -40,6 +40,8 @@ import type {
   ContentAnalysisResult,
   AIAnalysisRequest,
   AIAnalysisResponse,
+} from '../../types/moderation';
+import {
   ModerationAction,
   ModerationStatus,
   ModerationSeverity,

@@ -30,9 +30,9 @@ const mockWindow = {
 
 // Mock console to prevent test output noise
 const mockConsole = {
-  log: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
+  log: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
 };
 
 // Setup global mocks
@@ -46,29 +46,29 @@ beforeEach(() => {
   mockWindow.nostr = null;
   mockWindow.webln = null;
   mockWindow.alby = null;
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
   const mockProps = {
-    onExtensionSelected: jest.fn(),
-    onFallbackActivated: jest.fn(),
-    onError: jest.fn(),
+    onExtensionSelected: vi.fn(),
+    onFallbackActivated: vi.fn(),
+    onError: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('✅ US-215.1: nos2x Extension Detection and Integration', () => {
     it('should detect nos2x extension when available', async () => {
       // Mock nos2x extension
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('a'.repeat(64)),
-        signEvent: jest.fn(),
-        encrypt: jest.fn(),
-        decrypt: jest.fn(),
-        getRelays: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('a'.repeat(64)),
+        signEvent: vi.fn(),
+        encrypt: vi.fn(),
+        decrypt: vi.fn(),
+        getRelays: vi.fn(),
         version: '1.0.0',
       };
 
@@ -85,8 +85,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
     it('should connect to nos2x extension successfully', async () => {
       const mockPublicKey = 'a'.repeat(64);
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue(mockPublicKey),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue(mockPublicKey),
+        signEvent: vi.fn(),
         version: '1.0.0',
       };
 
@@ -118,10 +118,10 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
     it('should handle nos2x connection timeout', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockImplementation(
+        getPublicKey: vi.fn().mockImplementation(
           () => new Promise((resolve) => setTimeout(resolve, 15000)) // Longer than 10s timeout
         ),
-        signEvent: jest.fn(),
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -152,15 +152,15 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
     it('should detect Alby extension with WebLN support', async () => {
       // Mock Alby extension
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('b'.repeat(64)),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('b'.repeat(64)),
+        signEvent: vi.fn(),
         alby: true, // Alby identifier
       };
       mockWindow.webln = {
         isAlby: true,
         version: '2.0.0',
-        enable: jest.fn(),
-        sendPayment: jest.fn(),
+        enable: vi.fn(),
+        sendPayment: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -178,8 +178,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
     it('should prioritize Alby over nos2x when both are available', async () => {
       // Mock both extensions
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('c'.repeat(64)),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('c'.repeat(64)),
+        signEvent: vi.fn(),
         alby: true,
       };
       mockWindow.webln = { isAlby: true };
@@ -196,8 +196,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
     it('should connect to Alby extension with Lightning capabilities', async () => {
       const mockPublicKey = 'b'.repeat(64);
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue(mockPublicKey),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue(mockPublicKey),
+        signEvent: vi.fn(),
         alby: true,
       };
       mockWindow.webln = { isAlby: true };
@@ -273,8 +273,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
       // Add extension after initial render
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('d'.repeat(64)),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('d'.repeat(64)),
+        signEvent: vi.fn(),
       };
 
       const refreshButton = screen.getByText('Refresh Detection');
@@ -289,8 +289,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
   describe('🚨 US-215.4: Extension Error Handling', () => {
     it('should handle permission denied errors', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockRejectedValue(new Error('User denied permission')),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockRejectedValue(new Error('User denied permission')),
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -319,8 +319,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
     it('should handle invalid public key responses', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('invalid-key'), // Too short
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('invalid-key'), // Too short
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -344,7 +344,7 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
     it('should display error messages in the UI', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockRejectedValue(new Error('Connection failed')),
+        getPublicKey: vi.fn().mockRejectedValue(new Error('Connection failed')),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -366,8 +366,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
   describe('📊 US-215.5: Extension Analytics', () => {
     it('should track extension detection events', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('e'.repeat(64)),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('e'.repeat(64)),
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -386,8 +386,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
     it('should track connection success events', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('f'.repeat(64)),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('f'.repeat(64)),
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -409,7 +409,7 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
     it('should track error events with metadata', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockRejectedValue(new Error('Test error')),
+        getPublicKey: vi.fn().mockRejectedValue(new Error('Test error')),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -433,8 +433,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
   describe('🔍 US-215.6: Generic Extension Detection', () => {
     it('should detect generic NIP-07 extensions', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('g'.repeat(64)),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('g'.repeat(64)),
+        signEvent: vi.fn(),
         name: 'Custom NOSTR Extension',
         version: '3.0.0',
       };
@@ -458,11 +458,11 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
   describe('⏰ US-215.7: Periodic Detection', () => {
     beforeAll(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterAll(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should periodically re-detect extensions when none are connected', async () => {
@@ -472,7 +472,7 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
       // Fast-forward 30 seconds
       act(() => {
-        jest.advanceTimersByTime(30000);
+        vi.advanceTimersByTime(30000);
       });
 
       // Should have attempted detection again
@@ -483,8 +483,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
     it('should stop periodic detection when extension is connected', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('h'.repeat(64)),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('h'.repeat(64)),
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -503,7 +503,7 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
       // Fast-forward 30 seconds
       act(() => {
-        jest.advanceTimersByTime(30000);
+        vi.advanceTimersByTime(30000);
       });
 
       // Should NOT have attempted detection again
@@ -526,7 +526,7 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
           .mockImplementation(
             () => new Promise((resolve) => setTimeout(() => resolve('i'.repeat(64)), 1000))
           ),
-        signEvent: jest.fn(),
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -544,8 +544,8 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
 
     it('should apply correct styling for different extension states', async () => {
       mockWindow.nostr = {
-        getPublicKey: jest.fn().mockResolvedValue('j'.repeat(64)),
-        signEvent: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('j'.repeat(64)),
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);
@@ -574,7 +574,7 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
     it('should handle missing extension methods gracefully', async () => {
       mockWindow.nostr = {
         // Missing getPublicKey method
-        signEvent: jest.fn(),
+        signEvent: vi.fn(),
       };
 
       render(<ExtensionSelector {...mockProps} />);

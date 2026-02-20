@@ -21,21 +21,21 @@ import { BusinessInvoiceService } from '../BusinessInvoiceService';
 
 function makeLogger() {
   return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   };
 }
 
 function makeQueueService() {
   return {
-    createQueue: jest.fn().mockResolvedValue(undefined),
-    addJob: jest.fn().mockResolvedValue('job-id-1'),
-    registerProcessor: jest.fn(),
-    getQueueNames: jest.fn().mockReturnValue([]),
-    isHealthy: jest.fn().mockResolvedValue(true),
-    closeAll: jest.fn().mockResolvedValue(undefined),
+    createQueue: vi.fn().mockResolvedValue(undefined),
+    addJob: vi.fn().mockResolvedValue('job-id-1'),
+    registerProcessor: vi.fn(),
+    getQueueNames: vi.fn().mockReturnValue([]),
+    isHealthy: vi.fn().mockResolvedValue(true),
+    closeAll: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -57,23 +57,23 @@ function makeDb() {
     _orderResult: { data: [], error: null },
     _updateResult: { data: null, error: null },
 
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    order: jest.fn(function (this: any) {
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    order: vi.fn(function (this: any) {
       return Promise.resolve(this._orderResult);
     }),
-    single: jest.fn(function (this: any) {
+    single: vi.fn(function (this: any) {
       return Promise.resolve(this._singleResult);
     }),
   };
 
   // Bind `this` so the closures above reference the same object
-  db.order = jest.fn().mockReturnValue(db);
-  db.limit = jest.fn().mockImplementation(() => Promise.resolve(db._orderResult));
-  db.single = jest.fn().mockImplementation(() => Promise.resolve(db._singleResult));
+  db.order = vi.fn().mockReturnValue(db);
+  db.limit = vi.fn().mockImplementation(() => Promise.resolve(db._orderResult));
+  db.single = vi.fn().mockImplementation(() => Promise.resolve(db._singleResult));
 
   return db;
 }
@@ -89,7 +89,7 @@ describe('BusinessInvoiceService', () => {
   let service: BusinessInvoiceService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLogger = makeLogger();
     mockQueue = makeQueueService();
     mockDb = makeDb();
@@ -399,8 +399,8 @@ describe('BusinessInvoiceService', () => {
     function makeUpdateTerminalChain(resolvedValue: { data: any; error: any }) {
       let callCount = 0;
       const chain: any = {
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockImplementation(() => {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockImplementation(() => {
           callCount++;
           if (callCount >= 2) return Promise.resolve(resolvedValue);
           return chain;
@@ -521,7 +521,7 @@ describe('BusinessInvoiceService', () => {
     });
 
     it('schedules biweekly interval with 14-day delay', async () => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockQueue = makeQueueService();
       service = new BusinessInvoiceService(mockDb as any, mockQueue as any, mockLogger);
       const delay = await testInterval('biweekly');
@@ -529,7 +529,7 @@ describe('BusinessInvoiceService', () => {
     });
 
     it('schedules monthly interval with 30-day delay', async () => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockQueue = makeQueueService();
       service = new BusinessInvoiceService(mockDb as any, mockQueue as any, mockLogger);
       const delay = await testInterval('monthly');
@@ -537,7 +537,7 @@ describe('BusinessInvoiceService', () => {
     });
 
     it('schedules quarterly interval with 90-day delay', async () => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockQueue = makeQueueService();
       service = new BusinessInvoiceService(mockDb as any, mockQueue as any, mockLogger);
       const delay = await testInterval('quarterly');
@@ -545,7 +545,7 @@ describe('BusinessInvoiceService', () => {
     });
 
     it('does NOT schedule a job for an unknown interval (maps to 0ms)', async () => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockQueue = makeQueueService();
       service = new BusinessInvoiceService(mockDb as any, mockQueue as any, mockLogger);
       mockDb._singleResult = { data: { id: 'inv-unknown' }, error: null };

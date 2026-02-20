@@ -35,7 +35,7 @@ describe('LightningPaymentFlow', () => {
     });
 
     it('renders Cancel button when onCancel is provided', () => {
-      const onCancel = jest.fn();
+      const onCancel = vi.fn();
       render(<LightningPaymentFlow {...defaultProps} onCancel={onCancel} />);
 
       const cancelBtn = screen.getByRole('button', { name: 'Cancel' });
@@ -88,7 +88,7 @@ describe('LightningPaymentFlow', () => {
     });
 
     it('calls onCancel when Cancel button is clicked', () => {
-      const onCancel = jest.fn();
+      const onCancel = vi.fn();
       render(<LightningPaymentFlow {...defaultProps} onCancel={onCancel} />);
 
       const cancelBtn = screen.getByRole('button', { name: 'Cancel' });

@@ -4,17 +4,17 @@ import React from 'react';
 import { useBYOK, useBYOKStatus } from '../useBYOK';
 import { inboxApi } from '../../services/inboxApi';
 
-jest.mock('../../services/inboxApi', () => ({
+vi.mock('../../services/inboxApi', () => ({
   inboxApi: {
-    submitBYOK: jest.fn(),
-    validateBYOK: jest.fn(),
-    revokeBYOK: jest.fn(),
+    submitBYOK: vi.fn(),
+    validateBYOK: vi.fn(),
+    revokeBYOK: vi.fn(),
   },
 }));
 
-const mockSubmitBYOK = inboxApi.submitBYOK as jest.Mock;
-const mockValidateBYOK = inboxApi.validateBYOK as jest.Mock;
-const mockRevokeBYOK = inboxApi.revokeBYOK as jest.Mock;
+const mockSubmitBYOK = inboxApi.submitBYOK as any;
+const mockValidateBYOK = inboxApi.validateBYOK as any;
+const mockRevokeBYOK = inboxApi.revokeBYOK as any;
 
 function createWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -31,7 +31,7 @@ const validKeys = {
 
 describe('useBYOK', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('starts in idle status', () => {

@@ -17,13 +17,13 @@ describe('PKCE store — TwitterAdapter', () => {
   let adapter: TwitterAdapter;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     adapter = new TwitterAdapter(config);
   });
 
   afterEach(() => {
     adapter.destroy();
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('stores a code_verifier and returns it during token exchange', async () => {
@@ -32,7 +32,7 @@ describe('PKCE store — TwitterAdapter', () => {
     adapter.getAuthorizationUrl(state);
 
     // Act: retrieve via exchangeCodeForTokens (spy on fetch to prevent real call)
-    const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValueOnce({
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         access_token: 'at',
@@ -55,7 +55,7 @@ describe('PKCE store — TwitterAdapter', () => {
     adapter.getAuthorizationUrl(state);
 
     // Advance past 10 minutes
-    jest.advanceTimersByTime(10 * 60 * 1000 + 1);
+    vi.advanceTimersByTime(10 * 60 * 1000 + 1);
 
     // pkceStore is protected; access via cast for testing
     const store = (adapter as unknown as { pkceStore: { get: (k: string) => string | undefined } })
@@ -81,7 +81,7 @@ describe('PKCE store — TwitterAdapter', () => {
     const state = 'single-use-state';
     adapter.getAuthorizationUrl(state);
 
-    jest.spyOn(global, 'fetch').mockResolvedValueOnce({
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce({
       ok: true,
       json: async () => ({ access_token: 'at', refresh_token: 'rt', expires_in: 7200, scope: '' }),
     } as Response);
@@ -98,20 +98,20 @@ describe('PKCE store — BlueskyAdapter', () => {
   let adapter: BlueskyAdapter;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     adapter = new BlueskyAdapter(config);
   });
 
   afterEach(() => {
     adapter.destroy();
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('stores a code_verifier and sends it during token exchange', async () => {
     const state = 'test-state-bluesky';
     adapter.getAuthorizationUrl(state);
 
-    const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValueOnce({
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce({
       ok: true,
       json: async () => ({ access_token: 'at', refresh_token: 'rt', expires_in: 7200 }),
     } as Response);
@@ -128,7 +128,7 @@ describe('PKCE store — BlueskyAdapter', () => {
     const state = 'bsky-expired';
     adapter.getAuthorizationUrl(state);
 
-    jest.advanceTimersByTime(10 * 60 * 1000 + 1);
+    vi.advanceTimersByTime(10 * 60 * 1000 + 1);
 
     const store = (adapter as unknown as { pkceStore: { get: (k: string) => string | undefined } })
       .pkceStore;

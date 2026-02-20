@@ -21,8 +21,8 @@ import {
 import type { NostrEvent, EventTemplate } from '@shared/types/nostr';
 
 // Mock dependencies
-jest.mock('../RelayPoolManager');
-jest.mock('../KeyManagementService');
+vi.mock('../RelayPoolManager');
+vi.mock('../KeyManagementService');
 
 describe('RateLimiter Integration Tests', () => {
   let rateLimiter: RateLimiter;
@@ -60,14 +60,14 @@ describe('RateLimiter Integration Tests', () => {
     // Mock key management
     const mockPublicKey = 'a'.repeat(64);
     const mockPrivateKey = 'b'.repeat(64);
-    jest.spyOn(keyManagement, 'getActiveKey').mockReturnValue({
+    vi.spyOn(keyManagement, 'getActiveKey').mockReturnValue({
       keyId: 'test-key',
       publicKey: mockPublicKey,
       type: 'local',
       createdAt: Date.now(),
     });
-    jest.spyOn(keyManagement, 'isInitialized').mockReturnValue(true);
-    jest.spyOn(keyManagement, 'signEvent').mockImplementation(async (keyId, event) => {
+    vi.spyOn(keyManagement, 'isInitialized').mockReturnValue(true);
+    vi.spyOn(keyManagement, 'signEvent').mockImplementation(async (keyId, event) => {
       return {
         ...event,
         id: 'c'.repeat(64),
@@ -75,21 +75,21 @@ describe('RateLimiter Integration Tests', () => {
         pubkey: mockPublicKey,
       } as NostrEvent;
     });
-    jest.spyOn(keyManagement, 'verifyEventSignature').mockResolvedValue(true);
+    vi.spyOn(keyManagement, 'verifyEventSignature').mockResolvedValue(true);
 
     // Mock relay pool
-    jest.spyOn(relayPool, 'isInitialized').mockReturnValue(true);
-    jest.spyOn(relayPool, 'getConnectedRelays').mockReturnValue([
+    vi.spyOn(relayPool, 'isInitialized').mockReturnValue(true);
+    vi.spyOn(relayPool, 'getConnectedRelays').mockReturnValue([
       'wss://relay.damus.io',
       'wss://nos.lol',
     ]);
-    jest.spyOn(relayPool, 'publishEvent').mockResolvedValue([
+    vi.spyOn(relayPool, 'publishEvent').mockResolvedValue([
       { relay: 'wss://relay.damus.io', success: true, latency: 100 },
     ]);
-    jest.spyOn(relayPool, 'publishEventToFastest').mockResolvedValue([
+    vi.spyOn(relayPool, 'publishEventToFastest').mockResolvedValue([
       { relay: 'wss://relay.damus.io', success: true, latency: 50 },
     ]);
-    jest.spyOn(relayPool, 'subscribe').mockReturnValue('sub-123');
+    vi.spyOn(relayPool, 'subscribe').mockReturnValue('sub-123');
 
     // Initialize EventPublisher and SubscriptionManager
     await eventPublisher.initialize();
@@ -99,7 +99,7 @@ describe('RateLimiter Integration Tests', () => {
     await eventPublisher.destroy();
     await rateLimitMonitor.destroy();
     await rateLimiter.destroy();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ========================================
@@ -187,7 +187,7 @@ describe('RateLimiter Integration Tests', () => {
   describe('SubscriptionManager Integration', () => {
     it('should rate limit subscription creation', async () => {
       const filters = [{ kinds: [1], limit: 10 }];
-      const callback = jest.fn();
+      const callback = vi.fn();
 
       // First 2 should succeed
       const sub1 = await subscriptionManager.subscribe(filters, callback);
@@ -208,7 +208,7 @@ describe('RateLimiter Integration Tests', () => {
 
     it('should allow subscriptions after rate limit resets', async () => {
       const filters = [{ kinds: [1], limit: 10 }];
-      const callback = jest.fn();
+      const callback = vi.fn();
 
       // Exhaust rate limit
       const sub1 = await subscriptionManager.subscribe(filters, callback);

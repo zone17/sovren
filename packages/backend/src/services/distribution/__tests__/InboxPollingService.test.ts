@@ -9,26 +9,27 @@
  */
 
 import { InboxPollingService } from '../InboxPollingService';
+import { Queue, Worker } from 'bullmq';
 
 // Mock BullMQ — avoid real Redis connections in tests
-jest.mock('bullmq', () => {
-  const upsertJobScheduler = jest.fn().mockResolvedValue(undefined);
-  const removeJobScheduler = jest.fn().mockResolvedValue(undefined);
-  const addJob = jest.fn().mockResolvedValue('job-id');
-  const closeQueue = jest.fn().mockResolvedValue(undefined);
-  const closeWorker = jest.fn().mockResolvedValue(undefined);
+vi.mock('bullmq', () => {
+  const upsertJobScheduler = vi.fn().mockResolvedValue(undefined);
+  const removeJobScheduler = vi.fn().mockResolvedValue(undefined);
+  const addJob = vi.fn().mockResolvedValue('job-id');
+  const closeQueue = vi.fn().mockResolvedValue(undefined);
+  const closeWorker = vi.fn().mockResolvedValue(undefined);
 
   class MockQueue {
     upsertJobScheduler = upsertJobScheduler;
     removeJobScheduler = removeJobScheduler;
     add = addJob;
     close = closeQueue;
-    on = jest.fn();
+    on = vi.fn();
   }
 
   class MockWorker {
     close = closeWorker;
-    on = jest.fn();
+    on = vi.fn();
   }
 
   return {
@@ -39,15 +40,15 @@ jest.mock('bullmq', () => {
 });
 
 // Mock SSRF utility
-jest.mock('../../../utils/ssrf', () => ({
-  validateSsrfUrl: jest.fn(),
+vi.mock('../../../utils/ssrf', () => ({
+  validateSsrfUrl: vi.fn(),
 }));
 
 // Mock crypto utility for BYOK key decryption
-jest.mock('../crypto', () => ({
-  decryptToken: jest.fn().mockReturnValue('decrypted-byok-key'),
-  getEncryptionKey: jest.fn().mockReturnValue(Buffer.alloc(32)),
-  encryptToken: jest.fn(),
+vi.mock('../crypto', () => ({
+  decryptToken: vi.fn().mockReturnValue('decrypted-byok-key'),
+  getEncryptionKey: vi.fn().mockReturnValue(Buffer.alloc(32)),
+  encryptToken: vi.fn(),
 }));
 
 import { validateSsrfUrl } from '../../../utils/ssrf';
@@ -62,31 +63,31 @@ describe('InboxPollingService', () => {
   const creatorId = 'creator-pubkey-abc';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset BYOK_ENCRYPTION_KEY env for each test
     process.env.BYOK_ENCRYPTION_KEY = 'a'.repeat(64);
 
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
     mockPlatformService = {
-      getAdapter: jest.fn(),
-      getDecryptedToken: jest.fn().mockResolvedValue('token'),
+      getAdapter: vi.fn(),
+      getDecryptedToken: vi.fn().mockResolvedValue('token'),
     };
 
     mockDb = {
-      from: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      or: jest.fn().mockReturnThis(),
-      gte: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      upsert: jest.fn().mockResolvedValue({ error: null }),
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     service = new InboxPollingService(mockDb, mockPlatformService, mockLogger);
@@ -104,7 +105,7 @@ describe('InboxPollingService', () => {
     it('should create 8 batch polling schedulers (4 platforms × 2 intervals)', async () => {
       await service.startPolling();
 
-      const { Queue } = jest.requireMock('bullmq');
+      // Queue already imported from mocked bullmq
       const instance = new Queue();
       expect(instance.upsertJobScheduler).toHaveBeenCalledTimes(8);
     });
@@ -120,7 +121,7 @@ describe('InboxPollingService', () => {
     it('M-7: job scheduler data contains only platform and interval — no credentials', async () => {
       await service.startPolling();
 
-      const { Queue } = jest.requireMock('bullmq');
+      // Queue already imported from mocked bullmq
       const instance = new Queue();
 
       const allCalls = instance.upsertJobScheduler.mock.calls;
@@ -212,7 +213,7 @@ describe('InboxPollingService', () => {
   describe('pollNow', () => {
     it('M-7: enqueued manual poll job data contains only platform and interval', async () => {
       await service.startPolling();
-      const { Queue } = jest.requireMock('bullmq');
+      // Queue already imported from mocked bullmq
       const instance = new Queue();
 
       await service.pollNow(creatorId, 'mastodon');
@@ -228,7 +229,7 @@ describe('InboxPollingService', () => {
 
     it('should enqueue with priority 1', async () => {
       await service.startPolling();
-      const { Queue } = jest.requireMock('bullmq');
+      // Queue already imported from mocked bullmq
       const instance = new Queue();
 
       await service.pollNow(creatorId, 'mastodon');
@@ -264,7 +265,7 @@ describe('InboxPollingService', () => {
         key_version: 1,
       };
 
-      const inboxUpsert = jest.spyOn(mockDb, 'upsert');
+      const inboxUpsert = vi.spyOn(mockDb, 'upsert');
       const svc = service as any;
       await svc.pollCreatorPlatform(conn);
 
@@ -350,7 +351,7 @@ describe('InboxPollingService', () => {
     });
 
     it('catches and logs (without key data) when SSRF validation throws', async () => {
-      (validateSsrfUrl as jest.Mock).mockImplementationOnce(() => {
+      (validateSsrfUrl as any).mockImplementationOnce(() => {
         throw new Error('URL cannot point to a private IP range');
       });
 
@@ -411,7 +412,7 @@ describe('InboxPollingService', () => {
     it('logs only jobId and platform on job failure — not full data blob', async () => {
       await service.startPolling();
 
-      const { Worker } = jest.requireMock('bullmq');
+      // Worker already imported from mocked bullmq
       const workerInstance = new Worker();
 
       // Simulate the 'failed' event

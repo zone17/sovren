@@ -22,9 +22,9 @@ import { PaymentHistory } from './PaymentHistory';
 import { lightningApi, LightningPayment } from '../../lib/api/lightningApi';
 
 // Mock the Lightning API
-jest.mock('../../lib/api/lightningApi', () => ({
+vi.mock('../../lib/api/lightningApi', () => ({
   lightningApi: {
-    getUserPaymentHistory: jest.fn(),
+    getUserPaymentHistory: vi.fn(),
   },
   LightningApiError: class LightningApiError extends Error {
     constructor(message: string, public code: string, public statusCode?: number) {
@@ -35,9 +35,9 @@ jest.mock('../../lib/api/lightningApi', () => ({
 }));
 
 // Mock toast
-jest.mock('../../hooks/use-toast', () => ({
+vi.mock('../../hooks/use-toast', () => ({
   useToast: () => ({
-    toast: jest.fn(),
+    toast: vi.fn(),
   }),
 }));
 
@@ -73,12 +73,12 @@ const createWrapper = () => {
 
 describe('PaymentHistory', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering', () => {
     it('renders loading state initially', () => {
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockImplementation(
+      (lightningApi.getUserPaymentHistory as any).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -88,7 +88,7 @@ describe('PaymentHistory', () => {
     });
 
     it('renders empty state when no payments exist', async () => {
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -103,7 +103,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ description: 'Payment 2', amount: 2000 }),
       ];
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -121,7 +121,7 @@ describe('PaymentHistory', () => {
         paymentHash: 'abc123def456',
       });
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -141,7 +141,7 @@ describe('PaymentHistory', () => {
         paymentHash: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       });
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -153,7 +153,7 @@ describe('PaymentHistory', () => {
 
     it('shows copy button for payment hash', async () => {
       const mockPayment = createMockPayment();
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -174,7 +174,7 @@ describe('PaymentHistory', () => {
 
     it('shows all payments by default', async () => {
       const mockPayments = createPaymentsWithStatuses();
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -190,7 +190,7 @@ describe('PaymentHistory', () => {
     it('filters by paid status', async () => {
       const user = userEvent.setup();
       const mockPayments = createPaymentsWithStatuses();
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -212,7 +212,7 @@ describe('PaymentHistory', () => {
     it('filters by pending status', async () => {
       const user = userEvent.setup();
       const mockPayments = createPaymentsWithStatuses();
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -230,7 +230,7 @@ describe('PaymentHistory', () => {
     it('filters by failed status', async () => {
       const user = userEvent.setup();
       const mockPayments = createPaymentsWithStatuses();
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -248,7 +248,7 @@ describe('PaymentHistory', () => {
     it('resets to all payments when "All" filter is clicked', async () => {
       const user = userEvent.setup();
       const mockPayments = createPaymentsWithStatuses();
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -276,7 +276,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ id: '3', createdAt: 2000, description: 'Middle' }),
       ];
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -296,7 +296,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ id: '3', amount: 1000, description: 'Medium' }),
       ];
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -323,7 +323,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ id: `payment-${i}`, description: `Payment ${i}` })
       );
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -339,7 +339,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ id: `payment-${i}`, description: `Payment ${i}` })
       );
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -363,7 +363,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ id: `payment-${i}`, description: `Payment ${i}` })
       );
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -394,7 +394,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ id: `payment-${i}`, description: `Payment ${i}` })
       );
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -413,7 +413,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ id: `payment-${i}`, description: `Payment ${i}` })
       );
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -445,10 +445,10 @@ describe('PaymentHistory', () => {
         description: 'Test payment',
       });
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       // Mock clipboard API
-      const writeTextMock = jest.fn().mockResolvedValue(undefined);
+      const writeTextMock = vi.fn().mockResolvedValue(undefined);
       Object.assign(navigator, {
         clipboard: {
           writeText: writeTextMock,
@@ -473,7 +473,7 @@ describe('PaymentHistory', () => {
       const user = userEvent.setup();
       const mockPayment = createMockPayment({ id: 'payment-123' });
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -493,7 +493,7 @@ describe('PaymentHistory', () => {
   describe('Error Handling', () => {
     it('displays error message when API call fails', async () => {
       const error = new Error('Network error');
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockRejectedValue(error);
+      (lightningApi.getUserPaymentHistory as any).mockRejectedValue(error);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -507,7 +507,7 @@ describe('PaymentHistory', () => {
 
     it('shows retry button when API call fails', async () => {
       const error = new Error('Network error');
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockRejectedValue(error);
+      (lightningApi.getUserPaymentHistory as any).mockRejectedValue(error);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -524,7 +524,7 @@ describe('PaymentHistory', () => {
       const error = new Error('Network error');
       const mockPayments = [createMockPayment({ description: 'Success payment' })];
 
-      (lightningApi.getUserPaymentHistory as jest.Mock)
+      (lightningApi.getUserPaymentHistory as any)
         .mockRejectedValueOnce(error)
         .mockResolvedValueOnce(mockPayments);
 
@@ -552,7 +552,7 @@ describe('PaymentHistory', () => {
 
   describe('Accessibility', () => {
     it('has proper ARIA labels for filters', async () => {
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -567,7 +567,7 @@ describe('PaymentHistory', () => {
         createMockPayment({ id: `payment-${i}` })
       );
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue(mockPayments);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue(mockPayments);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -579,7 +579,7 @@ describe('PaymentHistory', () => {
 
     it('payment items are keyboard navigable', async () => {
       const mockPayment = createMockPayment();
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -590,7 +590,7 @@ describe('PaymentHistory', () => {
     });
 
     it('has proper heading hierarchy', async () => {
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -607,7 +607,7 @@ describe('PaymentHistory', () => {
   describe('Edge Cases', () => {
     it('handles payments with missing descriptions', async () => {
       const mockPayment = createMockPayment({ description: undefined });
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -619,7 +619,7 @@ describe('PaymentHistory', () => {
 
     it('handles very large amounts correctly', async () => {
       const mockPayment = createMockPayment({ amount: 100000000 }); // 100M sats
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -635,7 +635,7 @@ describe('PaymentHistory', () => {
         expiresAt: Date.now() - 1000,
       });
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -657,7 +657,7 @@ describe('PaymentHistory', () => {
         createdAt: Date.now() - 86400000 * 30, // 30 days ago
       });
 
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([
         recentPayment,
         oldPayment,
       ]);
@@ -680,7 +680,7 @@ describe('PaymentHistory', () => {
       global.dispatchEvent(new Event('resize'));
 
       const mockPayment = createMockPayment();
-      (lightningApi.getUserPaymentHistory as jest.Mock).mockResolvedValue([mockPayment]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([mockPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 

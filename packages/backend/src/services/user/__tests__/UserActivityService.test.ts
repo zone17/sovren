@@ -21,37 +21,37 @@ import { DomainEventType } from '../../../interfaces/shared/IEventBus';
 
 // Mock dependencies
 const mockDatabase = {
-  query: jest.fn(),
+  query: vi.fn(),
 };
 
 const mockCache = {
-  get: jest.fn(),
-  set: jest.fn(),
-  delete: jest.fn(),
-  increment: jest.fn(),
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+  increment: vi.fn(),
 };
 
 const mockEventBus = {
-  publish: jest.fn(),
-  subscribe: jest.fn(),
-  subscribeToMany: jest.fn(),
-  subscribeToAll: jest.fn(),
-  subscribeWithFilter: jest.fn(),
-  unsubscribe: jest.fn(),
-  unsubscribeAll: jest.fn(),
-  getEvent: jest.fn(),
-  queryEvents: jest.fn(),
-  replayEvents: jest.fn(),
-  replayEventsToHandler: jest.fn(),
-  getActiveSubscriptions: jest.fn(),
-  getEventStats: jest.fn(),
-  clearEventStore: jest.fn(),
-  isHealthy: jest.fn(),
-  dispose: jest.fn(),
+  publish: vi.fn(),
+  subscribe: vi.fn(),
+  subscribeToMany: vi.fn(),
+  subscribeToAll: vi.fn(),
+  subscribeWithFilter: vi.fn(),
+  unsubscribe: vi.fn(),
+  unsubscribeAll: vi.fn(),
+  getEvent: vi.fn(),
+  queryEvents: vi.fn(),
+  replayEvents: vi.fn(),
+  replayEventsToHandler: vi.fn(),
+  getActiveSubscriptions: vi.fn(),
+  getEventStats: vi.fn(),
+  clearEventStore: vi.fn(),
+  isHealthy: vi.fn(),
+  dispose: vi.fn(),
 };
 
 const mockAuditLog = {
-  log: jest.fn(),
+  log: vi.fn(),
 };
 
 describe('UserActivityService', () => {
@@ -60,17 +60,17 @@ describe('UserActivityService', () => {
   let intervalCallback: Function;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock setInterval to capture the callback
     originalSetInterval = global.setInterval;
-    global.setInterval = jest.fn((callback: Function, ms: number) => {
+    global.setInterval = vi.fn((callback: Function, ms: number) => {
       intervalCallback = callback;
       return 123 as any;
     }) as any;
 
     // Mock clearInterval
-    global.clearInterval = jest.fn();
+    global.clearInterval = vi.fn();
 
     // Create service instance with mocked dependencies
     service = new (UserActivityService as any)(

@@ -61,6 +61,38 @@ if [ -n "$ROUTE_FILES" ]; then
   done
 fi
 
+# Check 5: Unbounded queries — .findMany() / .find({ without take or limit
+# Per-file check: if file has .findMany( but no take/limit nearby, flag it
+SERVICE_FILES=$(echo "$STAGED_TS_SRC" | grep -E 'services/|repositories/' || true)
+if [ -n "$SERVICE_FILES" ]; then
+  for f in $SERVICE_FILES; do
+    HAS_FINDMANY=$(grep -cE '\.findMany\(|\.find\(\{' "$f" 2>/dev/null | head -1 || echo 0)
+    HAS_LIMIT=$(grep -cE '\btake\b|\blimit\b' "$f" 2>/dev/null | head -1 || echo 0)
+    if [ "${HAS_FINDMANY:-0}" -gt 0 ] && [ "${HAS_LIMIT:-0}" -eq 0 ]; then
+      echo "⚠️  $f: Unbounded query (.findMany/.find without take/limit)"
+      ERRORS=$((ERRORS + 1))
+    fi
+  done
+fi
+
+# Check 6: Auth bypass — route handler without auth middleware
+# Excludes: /health, /metrics, /ready, /live endpoints (legitimately public)
+# Excludes: auth routes (challenge, authenticate — public by design)
+if [ -n "$ROUTE_FILES" ]; then
+  for f in $ROUTE_FILES; do
+    # Skip auth route file itself (login/challenge endpoints are public)
+    case "$f" in *routes/auth.ts|*routes/auth/*) continue ;; esac
+    UNPROTECTED=$(grep -nE 'router\.(get|post|put|delete|patch)\(' "$f" 2>/dev/null \
+      | grep -vE 'authenticate|optionalAuth|authRateLimit|requireAuth' \
+      | grep -vE "'/health'|'/metrics'|'/ready'|'/live'|'/status'" || true)
+    if [ -n "$UNPROTECTED" ]; then
+      echo "⚠️  $f: Route without auth middleware:"
+      echo "$UNPROTECTED"
+      ERRORS=$((ERRORS + 1))
+    fi
+  done
+fi
+
 if [ "$ERRORS" -gt 0 ]; then
   echo ""
   echo "Found $ERRORS anti-pattern(s). Fix before committing."

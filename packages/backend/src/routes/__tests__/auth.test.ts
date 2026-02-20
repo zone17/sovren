@@ -8,19 +8,19 @@ const testJWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-jwt-token';
 const refreshedJWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refreshed-jwt-token';
 const adminJWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.admin-jwt-token';
 
-jest.mock('../../services/nostr-auth', () => ({
+vi.mock('../../services/nostr-auth', () => ({
   nostrAuth: {
-    generateChallenge: jest.fn().mockResolvedValue({
+    generateChallenge: vi.fn().mockResolvedValue({
       challenge: 'a'.repeat(64),
       timestamp: Date.now(),
       expires_at: Date.now() + 900000,
     }),
-    verifySignature: jest.fn().mockResolvedValue({
+    verifySignature: vi.fn().mockResolvedValue({
       valid: true,
       pubkey: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
     }),
-    generateJWT: jest.fn().mockResolvedValue('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-jwt-token'),
-    verifyJWT: jest.fn().mockResolvedValue({
+    generateJWT: vi.fn().mockResolvedValue('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-jwt-token'),
+    verifyJWT: vi.fn().mockResolvedValue({
       valid: true,
       payload: {
         nostr_pubkey: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
@@ -30,11 +30,11 @@ jest.mock('../../services/nostr-auth', () => ({
         exp: Math.floor(Date.now() / 1000) + 86400,
       },
     }),
-    refreshJWT: jest.fn().mockResolvedValue({
+    refreshJWT: vi.fn().mockResolvedValue({
       success: true,
       newToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refreshed-jwt-token',
     }),
-    getStats: jest.fn().mockReturnValue({
+    getStats: vi.fn().mockReturnValue({
       activeChallenges: 1,
     }),
   },
@@ -47,7 +47,7 @@ describe('Authentication API Routes', () => {
 
   beforeEach(() => {
     app = createApp();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset default mocks
     nostrAuth.generateChallenge.mockResolvedValue({
