@@ -7,7 +7,7 @@
 import { Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import { authenticate, requireCreator, optionalAuth, getAuthUser } from '../../middleware/auth';
+import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { readOnlyRateLimiter, createUserRateLimiter } from '../../middleware/rate-limit-middleware';
 import { asyncHandler } from '../../utils/asyncHandler';

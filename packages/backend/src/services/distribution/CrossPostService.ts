@@ -10,7 +10,7 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { CrossPostEntry, SupportedPlatform } from '@sovren/shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
-import { ValidationError } from '../../utils/errors';
+import { ValidationError, AuthorizationError } from '../../utils/errors';
 
 export interface CrossPublishJobData {
   crossPostId: string;
@@ -72,7 +72,7 @@ export class CrossPostService implements ICrossPostService {
       throw new ValidationError('Content not found');
     }
     if (content.creator_id !== creatorId) {
-      throw new ValidationError('Not authorized to cross-post this content');
+      throw new AuthorizationError('Not authorized to cross-post this content');
     }
 
     const batchJobId = uuidv4();
