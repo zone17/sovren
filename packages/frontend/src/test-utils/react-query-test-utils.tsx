@@ -9,6 +9,7 @@
  * - Query state testing utilities
  */
 
+import { vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, RenderOptions } from '@testing-library/react';
 import { ReactElement, ReactNode } from 'react';
@@ -86,18 +87,18 @@ export const createMockResponse = <T = unknown>(data: T, status = 200, ok = true
   ok,
   status,
   statusText: ok ? 'OK' : 'Error',
-  json: jest.fn().mockResolvedValue(data),
-  text: jest.fn().mockResolvedValue(JSON.stringify(data)),
-  blob: jest.fn().mockResolvedValue(new Blob([JSON.stringify(data)])),
+  json: vi.fn().mockResolvedValue(data),
+  text: vi.fn().mockResolvedValue(JSON.stringify(data)),
+  blob: vi.fn().mockResolvedValue(new Blob([JSON.stringify(data)])),
   headers: new Headers(),
   redirected: false,
   type: 'basic' as ResponseType,
   url: '',
   body: null,
   bodyUsed: false,
-  clone: jest.fn(),
-  arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(0)),
-  formData: jest.fn().mockResolvedValue(new FormData()),
+  clone: vi.fn(),
+  arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+  formData: vi.fn().mockResolvedValue(new FormData()),
 });
 
 // Query state assertion utilities with proper types

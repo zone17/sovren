@@ -267,10 +267,20 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
 
   // Lightning Service (placeholder)
   registry.registerSingletonFactory(TYPES.LightningService, (_container) => {
-    // Return mock for now
+    // Return mock for now — matches ILightningService interface
     return {
-      createInvoice: async () => ({ payment_request: 'lnbc...' }),
-      checkInvoice: async () => ({ settled: false }),
+      createInvoice: async (_amountSats: number, _memo: string) => ({
+        invoiceId: 'mock-invoice-id',
+        paymentRequest: 'lnbc...',
+        paymentHash: 'mock-payment-hash',
+      }),
+      payToAddress: async (_address: string, _amountSats: number, _memo: string) => ({
+        paymentHash: 'mock-payment-hash',
+      }),
+      getInvoiceStatus: async (_invoiceId: string) => ({
+        paid: false,
+      }),
+      getSellerLightningAddress: async (_sellerId: string) => null,
     };
   });
 

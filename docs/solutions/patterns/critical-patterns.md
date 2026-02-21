@@ -233,35 +233,110 @@ try {
 
 ---
 
-## 6. SSRF Validation (4 P1s in security sprints)
+## 6. SSRF Validation (6 P1s across 4 security sprints)
 
-**The problem:** User-supplied URLs fetched server-side without validating the resolved IP.
+**The problem:** User-supplied URLs fetched server-side without validating the resolved IP. Additional vectors: IPv6 encodings of private IPs, URL parser normalization hiding bypass forms, DNS TOCTOU between validation and fetch.
 
-**Rule:** Always resolve DNS and check the IP, not just the hostname string.
+**Rule:** Always resolve DNS, check the IP, return resolved IPs for DNS pinning, and test with the **normalized** hostname (not raw input).
+
+### 6a. Validation with DNS Pinning (prevents TOCTOU rebinding)
 
 ```typescript
-import { isIP } from 'net';
-import dns from 'dns/promises';
+import { lookup } from 'dns/promises';
+import https from 'https';
 
-async function validateUrl(url: string): Promise<URL> {
+interface SsrfValidationResult {
+  resolvedIps: Array<{ address: string; family: 4 | 6 }>;
+}
+
+async function validateSsrfUrl(url: string): Promise<SsrfValidationResult> {
   const parsed = new URL(url);
   if (parsed.protocol !== 'https:') throw new Error('HTTPS required');
+  if (parsed.username || parsed.password) throw new Error('Credentials blocked');
 
-  // Resolve DNS to catch rebinding attacks
-  const { address } = await dns.lookup(parsed.hostname);
+  const hostname = parsed.hostname.toLowerCase();
 
-  // Block private/loopback ranges
-  const blocked = /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|0\.|169\.254\.|::1|fc|fd)/;
-  if (blocked.test(address)) throw new Error('Private IP blocked');
+  // Block literal private IPs (IPv4, IPv6, octal, hex, decimal-integer)
+  if (isPrivateIPv4(hostname)) throw new Error('Private IP blocked');
+  if (hostname.startsWith('[') || hostname.includes(':')) {
+    if (isPrivateIPv6(hostname)) throw new Error('Private IPv6 blocked');
+  }
 
-  // Block decimal-encoded IPs (2130706433 = 127.0.0.1)
-  if (/^\d+$/.test(parsed.hostname)) throw new Error('Numeric IP blocked');
-
-  return parsed;
+  // Resolve DNS and check ALL returned IPs
+  const results = await lookup(hostname, { all: true });
+  const resolvedIps: SsrfValidationResult['resolvedIps'] = [];
+  for (const r of results) {
+    if (r.family === 4 && isPrivateIPv4(r.address)) throw new Error('Resolves to private IP');
+    if (r.family === 6 && isPrivateIPv6(r.address)) throw new Error('Resolves to private IPv6');
+    resolvedIps.push({ address: r.address, family: r.family as 4 | 6 });
+  }
+  // MUST return resolved IPs — callers pin DNS to prevent TOCTOU rebinding
+  return { resolvedIps };
 }
 ```
 
-**Detection:** Grep for `fetch(`, `axios(`, `http.get(` where the URL comes from user input without passing through `validateUrl` or `validateSsrfUrl`.
+### 6b. DNS-Pinning Agent (closes TOCTOU gap)
+
+```typescript
+function createSsrfSafeAgent(resolvedIps: SsrfValidationResult['resolvedIps']): https.Agent {
+  let i = 0;
+  return new https.Agent({
+    lookup: (_hostname, _opts, cb) => {
+      const ip = resolvedIps[i++ % resolvedIps.length];
+      cb(null, ip.address, ip.family);
+    },
+  });
+}
+
+// Usage — DNS is pinned to pre-validated IPs
+const { resolvedIps } = await validateSsrfUrl(url);
+const agent = createSsrfSafeAgent(resolvedIps);
+const response = await fetch(url, { agent });
+```
+
+### 6c. IPv6 Private IP Checks (must handle URL parser normalization)
+
+```typescript
+function isPrivateIPv6(ip: string): boolean {
+  const n = ip.toLowerCase().replace(/^\[|\]$/g, '');
+  if (n === '::1' || n === '::') return true;
+  if (n.startsWith('fc') || n.startsWith('fd')) return true; // ULA
+  if (n.startsWith('fe80')) return true; // Link-local
+
+  // IPv4-mapped: ::ffff:x.x.x.x (dotted) and ::ffff:HHHH:HHHH (hex)
+  const mapped = n.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  if (mapped) return isPrivateIPv4(mapped[1]);
+  const hexMapped = n.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (hexMapped) return isPrivateIPv4(hexToIPv4(hexMapped[1], hexMapped[2]));
+
+  // IPv4-compatible: ::x.x.x.x (dotted) and ::HHHH:HHHH (hex)
+  // CRITICAL: URL parser normalizes ::127.0.0.1 → ::7f00:1 (hex, no ffff prefix)
+  const compat = n.match(/^::(\d+\.\d+\.\d+\.\d+)$/);
+  if (compat) return isPrivateIPv4(compat[1]);
+  const hexCompat = n.match(/^::([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (hexCompat) return isPrivateIPv4(hexToIPv4(hexCompat[1], hexCompat[2]));
+
+  return false;
+}
+
+function hexToIPv4(hi: string, lo: string): string {
+  const h = parseInt(hi, 16), l = parseInt(lo, 16);
+  return `${(h >> 8) & 0xff}.${h & 0xff}.${(l >> 8) & 0xff}.${l & 0xff}`;
+}
+```
+
+**URL parser normalization table (must-know for SSRF testing):**
+
+| Input hostname | `new URL().hostname` | Which check catches it |
+|---|---|---|
+| `0177.0.0.1` | `127.0.0.1` | isPrivateIPv4 |
+| `0x7f000001` | `127.0.0.1` | isPrivateIPv4 |
+| `2130706433` | `127.0.0.1` | isPrivateIPv4 |
+| `::ffff:127.0.0.1` | `::ffff:7f00:1` | IPv4-mapped hex check |
+| `::127.0.0.1` | `::7f00:1` | **IPv4-compatible hex check** (PR #91) |
+| `::192.168.1.1` | `::c0a8:101` | **IPv4-compatible hex check** (PR #91) |
+
+**Detection:** Grep for `fetch(`, `axios(`, `http.get(` where the URL comes from user input without passing through `validateSsrfUrl`. Also grep for calls to `validateSsrfUrl` that ignore the return value (TOCTOU risk).
 
 ---
 
@@ -299,7 +374,7 @@ async deleteEntity(id: string, callerId: string): Promise<void> {
 | Service-layer auth | All data access | Membership/ownership query | 403 |
 | Paginated accumulation | Any unbounded SELECT | `PAGE_SIZE=500` + while loop | N/A |
 | Atomic multi-table | 2+ table writes | RPC or compensating tx | 500 |
-| SSRF validation | User-supplied URLs | DNS resolve + IP check | 400 |
+| SSRF validation | User-supplied URLs | DNS resolve + IP check + pin IPs | 400 |
 | Status guard | DELETE/void/cancel | Assert status before write | 409 |
 
 ---

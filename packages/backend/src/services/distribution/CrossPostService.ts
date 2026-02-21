@@ -10,7 +10,7 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { CrossPostEntry, SupportedPlatform } from '@sovren/shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
-import { ValidationError } from '../../utils/errors';
+import { ValidationError, AuthorizationError } from '../../utils/errors';
 
 export interface CrossPublishJobData {
   crossPostId: string;
@@ -59,6 +59,20 @@ export class CrossPostService implements ICrossPostService {
       throw new ValidationError(
         `Cannot cross-post to more than ${MAX_CROSS_POST_TARGETS} platforms at once (received ${request.platforms.length})`
       );
+    }
+
+    // Verify content exists and caller owns it (service-layer auth per critical-patterns.md #2)
+    const { data: content, error: contentError } = await this.db
+      .from('content')
+      .select('id, creator_id')
+      .eq('id', request.content_id)
+      .single();
+
+    if (contentError || !content) {
+      throw new ValidationError('Content not found');
+    }
+    if (content.creator_id !== creatorId) {
+      throw new AuthorizationError('Not authorized to cross-post this content');
     }
 
     const batchJobId = uuidv4();

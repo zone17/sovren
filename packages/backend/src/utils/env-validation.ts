@@ -378,6 +378,12 @@ function applyEnvFallbacks(): void {
   ];
 
   for (const [oldName, newName] of renames) {
+    if (process.env[newName] && process.env[oldName] && process.env[newName] !== process.env[oldName]) {
+      console.warn(
+        `[env-validation] WARNING: Both ${oldName} and ${newName} are set with different values. ` +
+          `Using ${newName}. Remove ${oldName} from your .env file.`
+      );
+    }
     if (!process.env[newName] && process.env[oldName]) {
       process.env[newName] = process.env[oldName];
       console.warn(
@@ -456,8 +462,8 @@ export function getEnvironment(): ValidatedEnv {
 /**
  * Initialize environment validation
  */
-export async function initializeEnvironment(): Promise<ValidatedEnv> {
-  if (!cachedEnv) {
+export async function initializeEnvironment(opts?: { force?: boolean }): Promise<ValidatedEnv> {
+  if (!cachedEnv || opts?.force) {
     cachedEnv = await validateEnvironment();
   }
   return cachedEnv;

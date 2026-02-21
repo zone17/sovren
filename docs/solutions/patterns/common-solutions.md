@@ -702,7 +702,9 @@ CONTEXT TO LOAD:
 | Query loads too much into memory         | 3         | critical-patterns.md |
 | Two inserts, second might fail           | 4         | critical-patterns.md |
 | Payment data could be lost               | 5         | critical-patterns.md |
-| URL from user input fetched server-side  | 6         | critical-patterns.md |
+| URL from user input fetched server-side  | 6a-6c     | critical-patterns.md |
+| DNS TOCTOU between validate and fetch    | 6b        | critical-patterns.md |
+| IPv6 encoding bypasses SSRF check        | 6c        | critical-patterns.md |
 | Can delete a paid/active entity          | 7         | critical-patterns.md |
 | Button fires duplicate mutations         | 1         | common-solutions.md  |
 | Map grows without bound                  | 2         | common-solutions.md  |
