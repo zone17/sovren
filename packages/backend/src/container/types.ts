@@ -83,6 +83,7 @@ import type { IContractService } from '../interfaces/finance/IContractService';
 import type { IBusinessInvoiceService } from '../interfaces/finance/IBusinessInvoiceService';
 import type { IRevenueService } from '../interfaces/finance/IRevenueService';
 import type { ITaxService } from '../interfaces/finance/ITaxService';
+import type { ILightningService } from '../interfaces/finance/ILightningService';
 
 /**
  * Service type identifiers organized by domain
@@ -343,7 +344,7 @@ export const TYPES = {
   /**
    * External Service Integrations
    */
-  LightningService: new ServiceToken<Record<string, unknown>>(
+  LightningService: new ServiceToken<ILightningService>(
     'LightningService',
     'Bitcoin Lightning Network integration'
   ),

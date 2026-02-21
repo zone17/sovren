@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 /**
  * 🧪 **ELITE TEST ENVIRONMENT CONFIGURATION**
  *
@@ -270,7 +272,7 @@ export const TEST_DATA = {
  */
 export function resetTestEnvironment(): void {
   // Clear any test-specific overrides
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 
   // Reset environment to defaults
   setupTestEnvironment();

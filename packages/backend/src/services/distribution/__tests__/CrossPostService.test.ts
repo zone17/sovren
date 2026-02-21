@@ -5,12 +5,34 @@
 
 import { CrossPostService } from '../CrossPostService';
 
+/**
+ * Creates a chainable mock for a specific Supabase table query.
+ * Per common-solutions.md #7 — chainable mock builder pattern.
+ */
+function createMockChain(terminalData: any = []) {
+  const chain: any = {};
+  ['from', 'select', 'insert', 'update', 'delete', 'eq', 'neq', 'in', 'order', 'limit'].forEach(
+    (method) => {
+      chain[method] = vi.fn().mockReturnValue(chain);
+    }
+  );
+  // Terminal methods
+  chain.single = vi.fn().mockResolvedValue({ data: terminalData, error: null });
+  // For insert().select() chains, the final await resolves via the chain itself
+  chain.then = undefined; // Prevent premature Promise detection
+  return chain;
+}
+
 describe('CrossPostService', () => {
   let service: CrossPostService;
   let mockDb: any;
   let mockQueueService: any;
   let mockPlatformService: any;
   let mockLogger: any;
+
+  // Chain mocks for different tables
+  let contentChain: any;
+  let crossPostsChain: any;
 
   const creatorId = 'creator-pubkey-123';
   const contentId = '550e8400-e29b-41d4-a716-446655440000';
@@ -33,14 +55,17 @@ describe('CrossPostService', () => {
       getDecryptedToken: vi.fn(),
     };
 
+    // Content table chain: .from('content').select().eq().single()
+    contentChain = createMockChain({ id: contentId, creator_id: creatorId });
+
+    // Cross-posts table chain: .from('cross_posts').insert().select() / .update().eq()...
+    crossPostsChain = createMockChain();
+
     mockDb = {
-      from: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      update: vi.fn().mockReturnThis(),
-      order: vi.fn(),
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'content') return contentChain;
+        return crossPostsChain;
+      }),
     };
 
     service = new CrossPostService(mockDb, mockQueueService, mockPlatformService, mockLogger);
@@ -60,6 +85,25 @@ describe('CrossPostService', () => {
   });
 
   describe('publish', () => {
+    beforeEach(() => {
+      // Make the cross_posts insert().select() chain resolve with inserted row data.
+      // The service calls: db.from('cross_posts').insert(rows).select('...')
+      // Since insert returns the chain and select returns the chain, we make the
+      // chain awaitable by overriding select to resolve with data for the insert path.
+      crossPostsChain.insert.mockImplementation((rows: any[]) => {
+        const insertedRows = rows.map((r: any) => ({
+          id: r.id,
+          platform: r.platform,
+          status: r.status,
+          scheduled_at: r.scheduled_at,
+        }));
+        const insertChain = {
+          select: vi.fn().mockResolvedValue({ data: insertedRows, error: null }),
+        };
+        return insertChain;
+      });
+    });
+
     it('should create cross-post entries and queue jobs for each platform', async () => {
       const request = {
         content_id: contentId,
@@ -73,7 +117,8 @@ describe('CrossPostService', () => {
       expect(result.platforms[0].status).toBe('queued');
       expect(result.platforms[1].platform).toBe('bluesky');
 
-      expect(mockDb.insert).toHaveBeenCalledTimes(2);
+      // Single batch insert call (not one per platform)
+      expect(crossPostsChain.insert).toHaveBeenCalledTimes(1);
       expect(mockQueueService.addJob).toHaveBeenCalledTimes(2);
     });
 
@@ -112,11 +157,32 @@ describe('CrossPostService', () => {
     });
 
     it('should throw on database error', async () => {
-      mockDb.insert.mockResolvedValue({ error: new Error('DB error') });
+      crossPostsChain.insert.mockImplementation(() => ({
+        select: vi.fn().mockResolvedValue({ data: null, error: new Error('DB error') }),
+      }));
 
       await expect(
         service.publish(creatorId, { content_id: contentId, platforms: ['mastodon'] })
       ).rejects.toThrow();
+    });
+
+    it('should throw when content not found', async () => {
+      contentChain.single.mockResolvedValue({ data: null, error: { code: 'PGRST116' } });
+
+      await expect(
+        service.publish(creatorId, { content_id: 'nonexistent', platforms: ['mastodon'] })
+      ).rejects.toThrow('Content not found');
+    });
+
+    it('should throw when caller does not own the content', async () => {
+      contentChain.single.mockResolvedValue({
+        data: { id: contentId, creator_id: 'other-creator' },
+        error: null,
+      });
+
+      await expect(
+        service.publish(creatorId, { content_id: contentId, platforms: ['mastodon'] })
+      ).rejects.toThrow('Not authorized to cross-post this content');
     });
   });
 
@@ -136,7 +202,7 @@ describe('CrossPostService', () => {
         },
       ];
 
-      mockDb.order.mockResolvedValue({ data: mockData, error: null });
+      crossPostsChain.order.mockResolvedValue({ data: mockData, error: null });
 
       const results = await service.getStatus(creatorId, contentId);
 
@@ -147,7 +213,7 @@ describe('CrossPostService', () => {
 
   describe('cancel', () => {
     it('should cancel a queued cross-post', async () => {
-      mockDb.in.mockResolvedValue({ error: null });
+      crossPostsChain.in.mockResolvedValue({ error: null });
 
       await service.cancel(creatorId, 'cp-1');
 

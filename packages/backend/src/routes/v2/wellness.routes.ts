@@ -215,7 +215,7 @@ router.get(
 
 router.get(
   '/benchmark',
-  optionalAuth,
+  authenticate,
   expensiveRateLimiter,
   asyncHandler(async (req, res) => {
     const data = await getWellnessService().getBenchmark();

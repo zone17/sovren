@@ -28,18 +28,21 @@ export function formatSats(
     return suffix ? '0 sats' : '0';
   }
 
+  // Satoshis are always integers — round to prevent decimal display
+  const safeSats = Math.round(sats);
+
   let formatted: string;
 
   if (abbreviate) {
-    if (sats >= 1_000_000) {
-      formatted = (sats / 1_000_000).toFixed(1) + 'M';
-    } else if (sats >= 1_000) {
-      formatted = (sats / 1_000).toFixed(1) + 'K';
+    if (safeSats >= 1_000_000) {
+      formatted = (safeSats / 1_000_000).toFixed(1) + 'M';
+    } else if (safeSats >= 1_000) {
+      formatted = (safeSats / 1_000).toFixed(1) + 'K';
     } else {
-      formatted = sats.toLocaleString();
+      formatted = safeSats.toLocaleString();
     }
   } else {
-    formatted = sats.toLocaleString();
+    formatted = safeSats.toLocaleString();
   }
 
   return suffix ? formatted + ' sats' : formatted;

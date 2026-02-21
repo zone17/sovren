@@ -61,6 +61,20 @@ export class CrossPostService implements ICrossPostService {
       );
     }
 
+    // Verify content exists and caller owns it (service-layer auth per critical-patterns.md #2)
+    const { data: content, error: contentError } = await this.db
+      .from('content')
+      .select('id, creator_id')
+      .eq('id', request.content_id)
+      .single();
+
+    if (contentError || !content) {
+      throw new ValidationError('Content not found');
+    }
+    if (content.creator_id !== creatorId) {
+      throw new ValidationError('Not authorized to cross-post this content');
+    }
+
     const batchJobId = uuidv4();
 
     // Build all cross_posts rows upfront
