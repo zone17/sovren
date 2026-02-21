@@ -21,6 +21,7 @@ import {
   AnalyzeContractSchema,
   CreateTemplateSchema,
 } from '../../validators/finance';
+import { NotFoundError, ValidationError } from '../../utils/errors';
 import type { IContractService } from '../../interfaces/finance/IContractService';
 
 const router = Router();
@@ -43,13 +44,17 @@ function getContractService(): IContractService {
 /**
  * GET /business/contracts/templates
  * List templates by category
+ * #382: Pagination support
  */
 router.get(
   '/templates',
   asyncHandler(async (req: Request, res: Response) => {
     const category = req.query.category as string | undefined;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getContractService().getTemplates(category);
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -60,15 +65,12 @@ router.get(
 router.post(
   '/templates',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = CreateTemplateSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     const data = await getContractService().createTemplate(creatorId, result.data);
@@ -99,14 +101,11 @@ router.get(
 router.post(
   '/analyze',
   authenticate,
-  mutationRateLimiter,
+  mutationRateLimiter, // No requireCreator: analyze is available to any authenticated user
   asyncHandler(async (req: Request, res: Response) => {
     const result = AnalyzeContractSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const data = await getContractService().analyzeRedFlags(result.data.text);
     res.json(createApiResponse(req, data));
@@ -124,15 +123,12 @@ router.post(
 router.post(
   '/',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = CreateContractSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     const data = await getContractService().createContract(creatorId, result.data);
@@ -143,6 +139,7 @@ router.post(
 /**
  * GET /business/contracts
  * List creator's contracts
+ * #382: Pagination support
  */
 router.get(
   '/',
@@ -150,8 +147,11 @@ router.get(
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getContractService().getContracts(creatorId);
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -168,8 +168,7 @@ router.get(
     const contracts = await getContractService().getContracts(creatorId);
     const contract = contracts.find((c) => c.id === req.params.id);
     if (!contract) {
-      res.status(404).json({ success: false, error: 'Contract not found' });
-      return;
+      throw new NotFoundError('Contract');
     }
     res.json(createApiResponse(req, contract));
   })
@@ -182,15 +181,12 @@ router.get(
 router.put(
   '/:id',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = UpdateContractSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getContractService().updateContract(req.params.id, creatorId, result.data);
@@ -206,8 +202,8 @@ router.put(
 router.delete(
   '/templates/:id',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getContractService().deleteTemplate(req.params.id, creatorId);
@@ -222,8 +218,8 @@ router.delete(
 router.delete(
   '/:id',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getContractService().deleteContract(req.params.id, creatorId);

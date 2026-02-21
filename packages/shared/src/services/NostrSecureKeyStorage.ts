@@ -648,10 +648,9 @@ export class NostrBrowserKeyStorage extends NostrSecureKeyStorage {
 export class NostrMemoryKeyStorage extends EventEmitter implements INostrKeyStorageService {
   private keys: Map<string, NostrEnhancedKeyPair> = new Map();
   private backups: Map<string, NostrMnemonicBackup> = new Map();
-  private config: NostrKeyManagementConfig | null = null;
 
-  async initialize(config: NostrKeyManagementConfig): Promise<void> {
-    this.config = config;
+  async initialize(_config: NostrKeyManagementConfig): Promise<void> {
+    // Memory-only storage — no config needed
   }
 
   async storeKey(keyPair: NostrEnhancedKeyPair): Promise<NostrKeyManagementResult<void>> {
@@ -700,7 +699,6 @@ export class NostrMemoryKeyStorage extends EventEmitter implements INostrKeyStor
   destroy(): void {
     this.keys.clear();
     this.backups.clear();
-    this.config = null;
     this.removeAllListeners();
   }
 }

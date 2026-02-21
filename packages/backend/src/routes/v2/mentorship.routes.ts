@@ -17,6 +17,7 @@ import {
   RespondMentorshipSchema,
   UpdateMentorProfileSchema,
 } from '../../validators/community';
+import { ValidationError } from '../../utils/errors';
 import type { IMentorshipService } from '../../interfaces/community/IMentorshipService';
 
 const router = Router();
@@ -48,10 +49,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const result = RegisterMentorSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getMentorshipService().registerMentor(
@@ -66,6 +64,7 @@ router.post(
  * GET /api/v2/mentorship/mentors
  * Browse mentors with optional niche/audience filters
  * NOTE: Must come before /:id routes to avoid collision
+ * #382: Pagination support
  */
 router.get(
   '/mentors',
@@ -82,11 +81,15 @@ router.get(
       filters.audienceSizeRange = req.query.audienceSizeRange;
     }
 
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
+
     const data = await getMentorshipService().getMentors(
       Object.keys(filters).length > 0 ? filters : undefined
     );
 
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -94,14 +97,18 @@ router.get(
  * GET /api/v2/mentorship/my-mentorships
  * Get all mentorships for the authenticated user (as mentor or mentee)
  * NOTE: Must come before /:id routes to avoid collision
+ * #382: Pagination support
  */
 router.get(
   '/my-mentorships',
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getMentorshipService().getMyMentorships(getAuthUser(req).nostr_pubkey);
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -121,10 +128,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const result = RequestMentorshipSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getMentorshipService().requestMentorship(
@@ -149,10 +153,7 @@ router.put(
   asyncHandler(async (req, res) => {
     const result = RespondMentorshipSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     await getMentorshipService().respondToRequest(
@@ -176,10 +177,7 @@ router.put(
   asyncHandler(async (req, res) => {
     const result = UpdateMentorProfileSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     await getMentorshipService().updateMentorProfile(

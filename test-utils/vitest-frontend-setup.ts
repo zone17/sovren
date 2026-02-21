@@ -34,19 +34,42 @@ beforeEach(() => {
 
 // Browser API mocks
 if (typeof window !== 'undefined') {
-  // ResizeObserver
-  globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  })) as any;
+  // ResizeObserver - use a real class so vi.clearAllMocks() won't break it
+  class MockResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver = MockResizeObserver as any;
 
-  // IntersectionObserver
-  globalThis.IntersectionObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  })) as any;
+  // IntersectionObserver - use a real class so vi.clearAllMocks() won't break it
+  class MockIntersectionObserver {
+    readonly root = null;
+    readonly rootMargin = '';
+    readonly thresholds = [0];
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() { return []; }
+  }
+  globalThis.IntersectionObserver = MockIntersectionObserver as any;
+
+  // scrollIntoView - not available in jsdom
+  Element.prototype.scrollIntoView = function() {};
+
+  // getBoundingClientRect - return non-zero dimensions for recharts
+  if (!Element.prototype.getBoundingClientRect.__mocked) {
+    const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function() {
+      const rect = originalGetBoundingClientRect.call(this);
+      // Return non-zero dimensions if jsdom returns zeros (for recharts ResponsiveContainer)
+      if (rect.width === 0 && rect.height === 0) {
+        return { ...rect, width: 500, height: 300, top: 0, left: 0, bottom: 300, right: 500 };
+      }
+      return rect;
+    };
+    (Element.prototype.getBoundingClientRect as any).__mocked = true;
+  }
 
   // matchMedia
   Object.defineProperty(window, 'matchMedia', {

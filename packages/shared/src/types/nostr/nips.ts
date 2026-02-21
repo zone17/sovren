@@ -415,8 +415,10 @@ export interface ChannelMessageEvent extends NostrEvent {
   kind: 42;
   content: string;
   tags: Array<
-    | ['e', string, (string | undefined)?, ('root' | 'reply' | undefined)?]  // Channel ID or message being replied to
-    | ['p', string]                               // Mentioned pubkeys
+    | ['e', string, string, string]  // Channel ID or message being replied to (relay, marker)
+    | ['e', string, string]          // Channel ID with relay hint
+    | ['e', string]                  // Channel ID only
+    | ['p', string]                  // Mentioned pubkeys
     | string[]
   >;
 }

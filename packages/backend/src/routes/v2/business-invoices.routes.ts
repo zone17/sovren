@@ -17,6 +17,7 @@ import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { InvoiceSchema, UpdateInvoiceStatusSchema } from '../../validators/finance';
+import { ValidationError } from '../../utils/errors';
 import type { IBusinessInvoiceService } from '../../interfaces/finance/IBusinessInvoiceService';
 
 const router = Router();
@@ -44,15 +45,12 @@ function getInvoiceService(): IBusinessInvoiceService {
 router.post(
   '/',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = InvoiceSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     const { clientName, lineItems, dueDate, recurringInterval, recurrenceEndDate } = result.data;
@@ -70,6 +68,7 @@ router.post(
 /**
  * GET /business/invoices
  * List invoices with status filters
+ * #382: Pagination support
  */
 router.get(
   '/',
@@ -78,8 +77,11 @@ router.get(
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     const status = req.query.status as string | undefined;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getInvoiceService().getInvoices(creatorId, { status });
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -105,15 +107,12 @@ router.get(
 router.put(
   '/:id/status',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = UpdateInvoiceStatusSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getInvoiceService().updateInvoiceStatus(req.params.id, creatorId, result.data.status);
@@ -128,8 +127,8 @@ router.put(
 router.delete(
   '/:id',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getInvoiceService().deleteInvoice(req.params.id, creatorId);
@@ -144,8 +143,8 @@ router.delete(
 router.post(
   '/:id/payment-link',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     const data = await getInvoiceService().generatePaymentLink(req.params.id, creatorId);

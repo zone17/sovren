@@ -438,8 +438,8 @@ describe('SubscriptionService', () => {
 
   describe('Subscription Creation', () => {
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
-      await service.createPlan(proPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
+      proPlan = await service.createPlan(proPlan);
     });
 
     describe('createSubscription', () => {
@@ -719,7 +719,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -853,7 +853,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
     });
 
     describe('startTrial', () => {
@@ -971,8 +971,8 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
-      await service.createPlan(proPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
+      proPlan = await service.createPlan(proPlan);
 
       subscription = await service.createSubscription({
         userId: 'user_123',
@@ -1111,7 +1111,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1287,7 +1287,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1372,7 +1372,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1427,7 +1427,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1478,8 +1478,8 @@ describe('SubscriptionService', () => {
 
   describe('Analytics & Reporting', () => {
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
-      await service.createPlan(proPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
+      proPlan = await service.createPlan(proPlan);
     });
 
     describe('calculateMRR', () => {
@@ -1553,7 +1553,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1604,7 +1604,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1640,7 +1640,7 @@ describe('SubscriptionService', () => {
 
   describe('Health & Maintenance', () => {
     beforeEach(async () => {
-      await service.createPlan(creatorPlan);
+      creatorPlan = await service.createPlan(creatorPlan);
     });
 
     describe('healthCheck', () => {

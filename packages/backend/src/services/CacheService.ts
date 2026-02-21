@@ -260,8 +260,8 @@ export class CacheService implements ICacheService {
       try {
         return JSON.parse(value) as T;
       } catch {
-        // Return raw value if not JSON
-        return value as unknown as T;
+        // Raw string value — valid when T is string
+        return value as T & string;
       }
 
     } catch (error) {
@@ -476,7 +476,8 @@ export class CacheService implements ICacheService {
             result.set(key, JSON.parse(value) as T);
             this.stats.hits++;
           } catch {
-            result.set(key, value as unknown as T);
+            // Raw string value — valid when T is string
+            result.set(key, value as T & string);
           }
         } else {
           result.set(key, null);

@@ -19,6 +19,7 @@ import type {
   InboxQuery,
 } from '../../interfaces/distribution/IUnifiedInboxService';
 import type { INostrReplyAdapter } from '../../interfaces/distribution/INostrReplyAdapter';
+import { NotFoundError } from '../../utils/errors';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 
 const router = Router();
@@ -110,8 +111,7 @@ router.get(
       .single();
 
     if (error || !message) {
-      res.status(404).json({ success: false, error: 'Message not found' });
-      return;
+      throw new NotFoundError('Message');
     }
 
     res.json(createApiResponse(req, { message }));
@@ -262,8 +262,7 @@ router.put(
 
     if (error) throw error;
     if (!data) {
-      res.status(404).json({ success: false, error: 'Template not found' });
-      return;
+      throw new NotFoundError('Template');
     }
     res.json(createApiResponse(req, { template: data }));
   })
@@ -290,8 +289,7 @@ router.delete(
 
     if (error) throw error;
     if (count === 0) {
-      res.status(404).json({ success: false, error: 'Template not found' });
-      return;
+      throw new NotFoundError('Template');
     }
     res.json(createApiResponse(req, { deleted: true }));
   })

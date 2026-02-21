@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useMyMentorships, useRespondToMentorship, useRegisterMentor } from '../hooks/useMentorship';
 import { AUDIENCE_SIZE_LABELS } from '../types/community';
 import type { Mentorship } from '@shared/types/community';
@@ -17,10 +17,27 @@ const MentorshipDashboard: React.FC = () => {
     useState<'0-1k' | '1k-10k' | '10k-100k' | '100k+'>('0-1k');
   const [bio, setBio] = useState('');
   const [maxMentees, setMaxMentees] = useState(3);
+  const [pendingRespondId, setPendingRespondId] = useState<string | null>(null);
+  const respondInFlightRef = useRef(false);
 
   const { data: mentorships = [], isLoading } = useMyMentorships();
   const respondMutation = useRespondToMentorship();
   const registerMutation = useRegisterMentor();
+
+  const handleRespond = (id: string, accept: boolean) => {
+    if (respondInFlightRef.current) return;
+    respondInFlightRef.current = true;
+    setPendingRespondId(id);
+    respondMutation.mutate(
+      { id, accept },
+      {
+        onSettled: () => {
+          respondInFlightRef.current = false;
+          setPendingRespondId(null);
+        },
+      }
+    );
+  };
 
   const pending = mentorships.filter((m) => m.status === 'pending');
   const active = mentorships.filter((m) => m.status === 'active');
@@ -135,8 +152,8 @@ const MentorshipDashboard: React.FC = () => {
         <MentorshipSection
           title="Pending Requests"
           mentorships={pending}
-          onRespond={(id, accept) => respondMutation.mutate({ id, accept })}
-          isPending={respondMutation.isPending}
+          onRespond={handleRespond}
+          pendingRespondId={pendingRespondId}
         />
       )}
 
@@ -163,14 +180,14 @@ interface MentorshipSectionProps {
   title: string;
   mentorships: Mentorship[];
   onRespond?: (id: string, accept: boolean) => void;
-  isPending?: boolean;
+  pendingRespondId?: string | null;
 }
 
 const MentorshipSection: React.FC<MentorshipSectionProps> = ({
   title,
   mentorships,
   onRespond,
-  isPending,
+  pendingRespondId,
 }) => (
   <section aria-label={title}>
     <h3 className="text-sm font-semibold text-gray-700 mb-3">{title}</h3>
@@ -204,17 +221,19 @@ const MentorshipSection: React.FC<MentorshipSectionProps> = ({
               <div className="flex gap-2 shrink-0">
                 <button
                   onClick={() => onRespond(m.id, true)}
-                  disabled={isPending}
-                  className="rounded-md bg-green-600 px-3 py-1.5 text-xs text-white hover:bg-green-700 disabled:opacity-50"
+                  disabled={pendingRespondId != null}
+                  aria-busy={pendingRespondId === m.id}
+                  className="rounded-md bg-green-600 px-3 py-1.5 text-xs text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Accept
+                  {pendingRespondId === m.id ? 'Processing...' : 'Accept'}
                 </button>
                 <button
                   onClick={() => onRespond(m.id, false)}
-                  disabled={isPending}
-                  className="rounded-md border border-red-300 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  disabled={pendingRespondId != null}
+                  aria-busy={pendingRespondId === m.id}
+                  className="rounded-md border border-red-300 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Decline
+                  {pendingRespondId === m.id ? 'Processing...' : 'Decline'}
                 </button>
               </div>
             )}

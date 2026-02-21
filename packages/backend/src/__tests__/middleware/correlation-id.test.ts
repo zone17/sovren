@@ -13,12 +13,21 @@ import {
 } from '../../middleware/correlation-id';
 
 function createMockReq(overrides: Partial<Request> = {}): Request {
-  return {
+  const headers: Record<string, string> = {};
+  const req = {
     method: 'GET',
     path: '/api/test',
-    headers: {},
+    headers,
     ...overrides,
-  } as unknown as Request;
+    get(name: string) {
+      const lower = name.toLowerCase();
+      return (overrides.headers as Record<string, string>)?.[lower] ?? headers[lower] ?? (overrides.headers as Record<string, string>)?.[name] ?? headers[name];
+    },
+    header(name: string) {
+      return (req as any).get(name);
+    },
+  };
+  return req as unknown as Request;
 }
 
 function createMockRes(): Response & { _headers: Record<string, string> } {

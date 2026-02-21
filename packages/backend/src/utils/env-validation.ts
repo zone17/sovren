@@ -235,6 +235,24 @@ function validateSecurity(env: ValidatedEnv): void {
     );
   }
 
+  // LNBits configuration: warn in production if missing (invoicing and escrow non-functional)
+  if (env.NODE_ENV === 'production') {
+    const lnbitsWarnings: string[] = [];
+    if (!env.LNBITS_API_URL) {
+      lnbitsWarnings.push('LNBITS_API_URL');
+    }
+    if (!env.LNBITS_ADMIN_KEY) {
+      lnbitsWarnings.push('LNBITS_ADMIN_KEY');
+    }
+    if (lnbitsWarnings.length > 0) {
+      console.warn(
+        `[env-validation] WARNING: ${lnbitsWarnings.join(', ')} not configured. ` +
+          'Invoicing and marketplace escrow features will be non-functional. ' +
+          'Get credentials from your LNBits instance dashboard.'
+      );
+    }
+  }
+
   // Check for insecure configurations
   if (env.NODE_ENV === 'production' && env.LOG_LEVEL === 'debug') {
     securityIssues.push('Debug logging should not be enabled in production');
@@ -458,6 +476,16 @@ export function getEnvironmentHealth(): {
       env.DOCKER_DEV_MODE && env.HOST !== '0.0.0.0'
         ? 'Host should be 0.0.0.0 for Docker'
         : undefined,
+  });
+
+  // LNBits configuration check
+  const hasLnbits = Boolean(env.LNBITS_API_URL && env.LNBITS_ADMIN_KEY);
+  checks.push({
+    name: 'LNBits Configuration',
+    status: hasLnbits ? 'pass' : 'warn',
+    message: hasLnbits
+      ? undefined
+      : 'LNBITS_API_URL and/or LNBITS_ADMIN_KEY missing — invoicing and escrow disabled',
   });
 
   checks.push({

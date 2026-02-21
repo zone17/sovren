@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import { useExpenses, useAddExpense } from '../hooks/useExpenses';
 import { useTaxCategories } from '../hooks/useTax';
 import type { CreateExpensePayload } from '../types';
-
-function formatSats(sats: number): string {
-  return sats.toLocaleString() + ' sats';
-}
+import { formatSats } from '../../../shared/utils/formatSats';
 
 const ExpenseTracker: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');

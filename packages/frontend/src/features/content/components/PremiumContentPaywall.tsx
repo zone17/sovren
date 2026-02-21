@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store';
 import { supportContent } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
 import type { ContentItem } from '../../../types/content';
+import { formatSats } from '../../../shared/utils/formatSats';
 
 // Simple icons without external dependencies
 const LockIcon = () => (
@@ -73,12 +74,6 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
     }
   }, [dispatch, content.id, content.title, selectedAmount, user?.nostr_pubkey, onPaymentComplete]);
 
-  const formatSats = (sats: number): string => {
-    if (sats >= 1000000) return `${(sats / 1000000).toFixed(1)}M sats`;
-    if (sats >= 1000) return `${(sats / 1000).toFixed(1)}K sats`;
-    return `${sats} sats`;
-  };
-
   const predefinedAmounts = [
     content.price_sats || 1000,
     (content.price_sats || 1000) * 2,
@@ -140,7 +135,7 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                {formatSats(amount)}
+                {formatSats(amount, { abbreviate: true })}
               </button>
             ))}
           </div>
@@ -184,7 +179,7 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
           ) : (
             <>
               <ZapIcon />
-              <span className="ml-2">Pay {formatSats(selectedAmount)} with Lightning</span>
+              <span className="ml-2">Pay {formatSats(selectedAmount, { abbreviate: true })} with Lightning</span>
             </>
           )}
         </button>

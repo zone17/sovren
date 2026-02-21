@@ -20,16 +20,23 @@ export function useInviteCollaborators(contentId: string) {
 
   return useMutation({
     mutationFn: async (collaborators: Array<{ creatorId: string; revenueSplitBps: number }>) => {
-      const results = [];
-      for (const c of collaborators) {
-        const result = await collaborationApi.inviteCollaborator(
-          contentId,
-          c.creatorId,
-          c.revenueSplitBps
-        );
-        results.push(result);
+      const results = await Promise.allSettled(
+        collaborators.map((c) =>
+          collaborationApi.inviteCollaborator(contentId, c.creatorId, c.revenueSplitBps)
+        )
+      );
+      const failures = results.filter(
+        (r): r is PromiseRejectedResult => r.status === 'rejected'
+      );
+      if (failures.length > 0) {
+        console.error(`${failures.length}/${results.length} invites failed`);
+        if (failures.length === results.length) {
+          throw new Error('All invites failed');
+        }
       }
-      return results;
+      return results
+        .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+        .map((r) => r.value);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

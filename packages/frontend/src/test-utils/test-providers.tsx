@@ -58,28 +58,34 @@ import { BDD, TEST_DATA } from './test-environment';
 // Import shared types for consistency
 interface TestUser {
   id: string;
+  username: string;
+  display_name: string;
+  bio: string;
+  avatar_url: string;
   email: string;
-  name: string;
-  role: 'creator' | 'supporter' | 'admin';
-  nostr_pubkey?: string;
+  nostr_pubkey: string;
   created_at: string;
+  updated_at: string;
+  role?: string;
 }
 
 interface TestPost {
   id: string;
   title: string;
   content: string;
+  status: string;
   author_id: string;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
+  published_at?: string;
 }
 
 interface TestPayment {
   id: string;
-  user_id: string;
   amount: number;
-  currency: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: string;
+  invoice: string;
+  user_id: string;
   created_at: string;
 }
 
@@ -87,10 +93,11 @@ interface TestContentItem {
   id: string;
   title: string;
   content: string;
-  type: 'post' | 'page' | 'article';
-  status: 'draft' | 'published' | 'archived';
+  status: string;
   author_id: string;
   created_at: string;
+  updated_at: string;
+  published_at?: string;
 }
 
 interface TestCollaborator {
@@ -294,7 +301,7 @@ export function createTestStore(options: TestStoreOptions = {}): Store<RootState
     user: getUserState() as ReturnType<typeof userReducer>,
     posts: getContentState() as ReturnType<typeof postReducer>,
     payments: getPaymentState() as ReturnType<typeof paymentReducer>,
-    cms: getCmsState() as ReturnType<typeof cmsReducer>,
+    cms: getCmsState() as unknown as ReturnType<typeof cmsReducer>,
     ...initialState,
   };
 

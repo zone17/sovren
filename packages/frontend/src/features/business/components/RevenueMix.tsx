@@ -2,6 +2,7 @@ import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useRevenueBreakdown, useRevenueRisk } from '../hooks/useRevenue';
 import type { RevenueBreakdownEntry } from '../types';
+import { formatSats } from '../../../shared/utils/formatSats';
 
 const SOURCE_COLORS: Record<string, string> = {
   subscriptions: '#6366F1',
@@ -12,12 +13,6 @@ const SOURCE_COLORS: Record<string, string> = {
   marketplace: '#3B82F6',
   other: '#6B7280',
 };
-
-function formatSats(sats: number): string {
-  if (sats >= 1_000_000) return (sats / 1_000_000).toFixed(2) + 'M sats';
-  if (sats >= 1_000) return (sats / 1_000).toFixed(1) + 'K sats';
-  return sats + ' sats';
-}
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -30,7 +25,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm text-sm">
       <p className="font-medium capitalize text-gray-900">{entry.source}</p>
-      <p className="text-gray-600">{formatSats(entry.amountSats)}</p>
+      <p className="text-gray-600">{formatSats(entry.amountSats, { abbreviate: true })}</p>
       <p className="text-gray-500">{entry.percentage.toFixed(1)}%</p>
     </div>
   );
@@ -66,7 +61,7 @@ const RevenueMix: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-gray-900">Revenue Mix</h4>
-        <span className="text-sm text-gray-500">Total: {formatSats(totalSats)}</span>
+        <span className="text-sm text-gray-500">Total: {formatSats(totalSats, { abbreviate: true })}</span>
       </div>
 
       {/* Concentration risk warning */}
@@ -133,7 +128,7 @@ const RevenueMix: React.FC = () => {
               <span className="text-sm capitalize text-gray-700">{entry.source}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">{formatSats(entry.amountSats)}</span>
+              <span className="text-gray-500">{formatSats(entry.amountSats, { abbreviate: true })}</span>
               <span className="font-medium text-gray-900 w-12 text-right">
                 {entry.percentage.toFixed(1)}%
               </span>

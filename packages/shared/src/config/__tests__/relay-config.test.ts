@@ -8,9 +8,9 @@
  * Coverage Target: 95%+
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { RelayConfig, getRelayUrls, getRelays, getReadRelays, getWriteRelays } from '../relay-config';
-import type { RelayMetadata } from '@shared/types/nostr';
+import type { RelayMetadata } from '@/types/nostr/nips';
 
 describe('RelayConfig', () => {
   // Store original env

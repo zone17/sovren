@@ -15,6 +15,7 @@ import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { ExpenseSchema, CreateExpenseCategorySchema } from '../../validators/finance';
+import { ValidationError } from '../../utils/errors';
 import type { ITaxService } from '../../interfaces/finance/ITaxService';
 
 const router = Router();
@@ -47,8 +48,7 @@ router.get(
     const rawQuarter = parseInt(req.query.quarter as string) || 1;
 
     if (rawQuarter < 1 || rawQuarter > 4 || !Number.isInteger(rawQuarter)) {
-      res.status(400).json({ success: false, error: 'quarter must be 1, 2, 3, or 4' });
-      return;
+      throw new ValidationError('quarter must be 1, 2, 3, or 4');
     }
     const quarter = rawQuarter as 1 | 2 | 3 | 4;
 
@@ -64,6 +64,7 @@ router.get(
 /**
  * GET /business/tax/expenses
  * Expenses with filters — ?categoryId=...&startDate=...&endDate=...
+ * #382: Pagination support
  */
 router.get(
   '/expenses',
@@ -76,8 +77,11 @@ router.get(
       startDate?: string;
       endDate?: string;
     };
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getTaxService().getExpenses(creatorId, { categoryId, startDate, endDate });
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -88,15 +92,12 @@ router.get(
 router.post(
   '/expenses',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = ExpenseSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     const { categoryId, description, amountSats, expenseDate } = result.data;
@@ -117,6 +118,7 @@ router.post(
 /**
  * GET /business/tax/categories
  * Expense categories
+ * #382: Pagination support
  */
 router.get(
   '/categories',
@@ -124,8 +126,11 @@ router.get(
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getTaxService().getExpenseCategories(creatorId);
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -136,15 +141,12 @@ router.get(
 router.post(
   '/categories',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = CreateExpenseCategorySchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     const data = await getTaxService().createExpenseCategory(creatorId, result.data);
@@ -159,8 +161,8 @@ router.post(
 router.delete(
   '/expenses/:id',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getTaxService().deleteExpense(req.params.id, creatorId);
@@ -175,8 +177,8 @@ router.delete(
 router.delete(
   '/categories/:id',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getTaxService().deleteExpenseCategory(req.params.id, creatorId);

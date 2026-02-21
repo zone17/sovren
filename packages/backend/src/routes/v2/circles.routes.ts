@@ -12,6 +12,7 @@ import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { CreateCircleSchema, CreateCirclePostSchema } from '../../validators/community';
+import { NotFoundError, ValidationError } from '../../utils/errors';
 import type { ICreatorCircleService } from '../../interfaces/community/ICreatorCircleService';
 
 const router = Router();
@@ -43,10 +44,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const result = CreateCircleSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getCircleService().createCircle(getAuthUser(req).nostr_pubkey, result.data);
@@ -57,14 +55,18 @@ router.post(
 /**
  * GET /api/v2/circles
  * List circles (my circles + discoverable)
+ * #382: Pagination support
  */
 router.get(
   '/',
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getCircleService().getCircles(getAuthUser(req).nostr_pubkey);
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -95,8 +97,7 @@ router.get(
     const circles = await getCircleService().getCircles(getAuthUser(req).nostr_pubkey);
     const circle = circles.find((c) => c.id === req.params.id);
     if (!circle) {
-      res.status(404).json({ success: false, error: 'Circle not found' });
-      return;
+      throw new NotFoundError('Circle');
     }
     res.json(createApiResponse(req, circle));
   })
@@ -147,17 +148,21 @@ router.delete(
 /**
  * GET /api/v2/circles/:id/posts
  * Get posts in a circle feed
+ * #382: Pagination support
  */
 router.get(
   '/:id/posts',
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getCircleService().getCirclePosts(
       req.params.id,
       getAuthUser(req).nostr_pubkey
     );
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 
@@ -173,10 +178,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const result = CreateCirclePostSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getCircleService().createPost(

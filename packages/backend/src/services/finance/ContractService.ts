@@ -6,17 +6,8 @@
 import type { IContractService } from '../../interfaces/finance/IContractService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
-import type { ContractTemplate, Contract } from '@shared/types/finance';
+import type { ContractTemplate, Contract, RedFlagType, RedFlag } from '@shared/types/finance';
 import { ConflictError } from '../../utils/errors';
-
-type RedFlagType = 'exclusivity' | 'perpetual' | 'delayed_payment' | 'ip_assignment';
-
-interface RedFlagMatch {
-  type: string;
-  match: string;
-  severity: string;
-  suggestion: string;
-}
 
 const RED_FLAG_PATTERNS: Record<RedFlagType, RegExp[]> = {
   exclusivity: [/exclusive/i, /sole\s+right/i, /non-compete/i],
@@ -208,10 +199,10 @@ export class ContractService implements IContractService {
     }
   }
 
-  async analyzeRedFlags(text: string): Promise<RedFlagMatch[]> {
+  async analyzeRedFlags(text: string): Promise<RedFlag[]> {
     this.logger.info('ContractService.analyzeRedFlags', { textLength: text.length });
 
-    const findings: RedFlagMatch[] = [];
+    const findings: RedFlag[] = [];
 
     for (const [flagType, patterns] of Object.entries(RED_FLAG_PATTERNS) as [
       RedFlagType,

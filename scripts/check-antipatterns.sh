@@ -14,13 +14,56 @@ STAGED_TS_SRC=$(echo "$STAGED_TS" | grep -v '__tests__\|\.test\.ts\|\.spec\.ts' 
 ROUTE_FILES=$(echo "$STAGED_TS_SRC" | grep -E 'routes/' || true)
 ERRORS=0
 
-# Check 1: Unsafe `any` types in source TypeScript files
+# Check 1a: Unsafe `any` types in source TypeScript files
 # Catches: as any, : any, Promise<any>, Promise<any[]>, Array<any>
 if [ -n "$STAGED_TS_SRC" ]; then
   MATCHES=$(echo "$STAGED_TS_SRC" | xargs grep -HnE '(\bas\s+any\b|:\s*any\b|<any>|<any\[)' 2>/dev/null \
     | grep -v '^\s*//' || true)
   if [ -n "$MATCHES" ]; then
     echo "⚠️  Unsafe 'any' type detected (use proper types):"
+    echo "$MATCHES"
+    ERRORS=$((ERRORS + 1))
+  fi
+fi
+
+# Check 1b: console.log in source TypeScript files
+# Legitimate logging should use the logger service, not console.log
+if [ -n "$STAGED_TS_SRC" ]; then
+  MATCHES=$(echo "$STAGED_TS_SRC" | xargs grep -HnE '\bconsole\.(log|debug|info|warn|error)\(' 2>/dev/null \
+    | grep -v '^\s*//' \
+    | grep -v 'env-validation\.ts' \
+    | grep -v 'logger\.ts' || true)
+  if [ -n "$MATCHES" ]; then
+    echo "⚠️  console.log detected in source (use logger service instead):"
+    echo "$MATCHES"
+    ERRORS=$((ERRORS + 1))
+  fi
+fi
+
+# Check 1c: TODO/FIXME comments in staged source files
+if [ -n "$STAGED_TS_SRC" ]; then
+  MATCHES=$(echo "$STAGED_TS_SRC" | xargs grep -HnEi '\b(TODO|FIXME|HACK|XXX)\b' 2>/dev/null \
+    | grep -v '^\s*//' || true)
+  if [ -n "$MATCHES" ]; then
+    echo "⚠️  TODO/FIXME comment detected (resolve before committing):"
+    echo "$MATCHES"
+    ERRORS=$((ERRORS + 1))
+  fi
+fi
+
+# Check 1d: Hardcoded secrets/credentials in source files
+# Catches common patterns: password=, secret=, apikey=, token= with inline values
+if [ -n "$STAGED_TS_SRC" ]; then
+  MATCHES=$(echo "$STAGED_TS_SRC" | xargs grep -HnEi "(password|secret|api_?key|token)\s*[:=]\s*['\"][^'\"]{8,}" 2>/dev/null \
+    | grep -v '^\s*//' \
+    | grep -v '\.env' \
+    | grep -v 'process\.env' \
+    | grep -v '\.test\.' \
+    | grep -v 'example' \
+    | grep -v 'placeholder' \
+    | grep -v 'your-' || true)
+  if [ -n "$MATCHES" ]; then
+    echo "⚠️  Possible hardcoded secret detected (use environment variables):"
     echo "$MATCHES"
     ERRORS=$((ERRORS + 1))
   fi

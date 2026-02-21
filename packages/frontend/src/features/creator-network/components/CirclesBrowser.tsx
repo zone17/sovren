@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useCircles, useSuggestedCircles, useJoinCircle, useCreateCircle } from '../hooks/useCircles';
 import type { CircleWithMemberCount } from '../types/community';
 
@@ -8,11 +8,25 @@ const CirclesBrowser: React.FC = () => {
   const [description, setDescription] = useState('');
   const [niche, setNiche] = useState('');
   const [maxMembers, setMaxMembers] = useState(20);
+  const [pendingJoinId, setPendingJoinId] = useState<string | null>(null);
+  const joinInFlightRef = useRef(false);
 
   const { data: myCircles = [], isLoading: loadingMine } = useCircles();
   const { data: suggested = [], isLoading: loadingSuggested } = useSuggestedCircles();
   const joinMutation = useJoinCircle();
   const createMutation = useCreateCircle();
+
+  const handleJoin = (circleId: string) => {
+    if (joinInFlightRef.current) return;
+    joinInFlightRef.current = true;
+    setPendingJoinId(circleId);
+    joinMutation.mutate(circleId, {
+      onSettled: () => {
+        joinInFlightRef.current = false;
+        setPendingJoinId(null);
+      },
+    });
+  };
 
   const handleCreate = () => {
     if (!name.trim()) return;
@@ -136,8 +150,8 @@ const CirclesBrowser: React.FC = () => {
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Suggested for You</h3>
           <CircleList
             circles={suggested}
-            onJoin={(id) => joinMutation.mutate(id)}
-            joiningId={joinMutation.isPending ? (joinMutation.variables as string) : undefined}
+            onJoin={handleJoin}
+            joiningId={pendingJoinId ?? undefined}
           />
         </section>
       )}
@@ -180,7 +194,8 @@ const CircleList: React.FC<CircleListProps> = ({ circles, onJoin, joiningId }) =
         {onJoin && (
           <button
             onClick={() => onJoin(circle.id)}
-            disabled={circle.memberCount >= circle.maxMembers || joiningId === circle.id}
+            disabled={circle.memberCount >= circle.maxMembers || joiningId != null}
+            aria-busy={joiningId === circle.id}
             className="shrink-0 rounded-md border border-indigo-300 px-3 py-1.5 text-sm text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={`Join ${circle.name}`}
           >

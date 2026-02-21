@@ -29,6 +29,7 @@ import {
   ReviewOrderSchema,
 } from '../../validators/community';
 import type { IMarketplaceService } from '../../interfaces/community/IMarketplaceService';
+import { NotFoundError, AuthorizationError, ValidationError } from '../../utils/errors';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 
 const router = Router();
@@ -83,12 +84,10 @@ const requireBuyer = asyncHandler(async (req: Request, res: Response, next: Next
     .single();
 
   if (error || !order) {
-    res.status(404).json({ success: false, error: 'Order not found' });
-    return;
+    throw new NotFoundError('Order');
   }
   if (order.buyer_id !== userId) {
-    res.status(403).json({ success: false, error: 'Only the buyer can perform this action' });
-    return;
+    throw new AuthorizationError('Only the buyer can perform this action');
   }
   res.locals.order = order;
   next();
@@ -110,12 +109,10 @@ const requireSeller = asyncHandler(async (req: Request, res: Response, next: Nex
     .single();
 
   if (error || !order) {
-    res.status(404).json({ success: false, error: 'Order not found' });
-    return;
+    throw new NotFoundError('Order');
   }
   if (order.seller_id !== userId) {
-    res.status(403).json({ success: false, error: 'Only the seller can perform this action' });
-    return;
+    throw new AuthorizationError('Only the seller can perform this action');
   }
   res.locals.order = order;
   next();
@@ -138,10 +135,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const result = CreateListingSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getMarketplaceService().createListing(
@@ -192,8 +186,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const data = await getMarketplaceService().getListing(req.params.id);
     if (!data) {
-      res.status(404).json({ success: false, error: 'Listing not found' });
-      return;
+      throw new NotFoundError('Listing');
     }
     res.json(createApiResponse(req, data));
   })
@@ -211,10 +204,7 @@ router.put(
   asyncHandler(async (req, res) => {
     const result = UpdateListingSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     await getMarketplaceService().updateListing(
@@ -278,10 +268,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const result = PlaceOrderSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getMarketplaceService().placeOrder(
@@ -357,10 +344,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const result = ReviewOrderSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getMarketplaceService().reviewOrder(

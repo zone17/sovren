@@ -20,6 +20,7 @@ import {
   CreatorEarnings,
   CreatorPerformanceMetrics,
 } from '../types';
+import { formatSats } from '../../../shared/utils/formatSats';
 
 // 📱 **REDUX STATE**
 import { useDispatch } from 'react-redux';
@@ -124,12 +125,6 @@ const EarningsOverview: React.FC<{ earnings: CreatorEarnings; period: string }> 
   earnings,
   period,
 }) => {
-  const formatSats = (sats: number) => {
-    if (sats >= 1000000) return `${(sats / 1000000).toFixed(1)}M`;
-    if (sats >= 1000) return `${(sats / 1000).toFixed(1)}K`;
-    return sats.toLocaleString();
-  };
-
   const formatCurrency = (sats: number, rate = 30000) => {
     return `$${((sats / 100000000) * rate).toFixed(2)}`;
   };
@@ -144,7 +139,7 @@ const EarningsOverview: React.FC<{ earnings: CreatorEarnings; period: string }> 
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-blue-900">
-            ⚡ {formatSats(earnings.lightning.total_sats)}
+            ⚡ {formatSats(earnings.lightning.total_sats, { abbreviate: true, suffix: false })}
           </div>
           <div className="text-xs text-blue-600 mt-1">
             {formatCurrency(earnings.lightning.total_sats)}
@@ -217,12 +212,6 @@ const EarningsChart: React.FC<{ data: AnalyticsChartData; period: string }> = ({
       return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     if (period === '7d') return date.toLocaleDateString('en-US', { weekday: 'short' });
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const formatSats = (value: number) => {
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-    return value.toString();
   };
 
   const chartData = data.earnings.map((point, index) => ({

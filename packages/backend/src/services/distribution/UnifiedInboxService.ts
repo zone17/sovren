@@ -13,6 +13,18 @@ import type {
 } from '@sovren/shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 
+interface InboxMessageRow {
+  id: string;
+  platform: string;
+  author: string;
+  author_avatar_url: string | null;
+  content: string;
+  type: string;
+  parent_post_id: string | null;
+  is_read: boolean;
+  platform_created_at: string;
+}
+
 export class UnifiedInboxService implements IUnifiedInboxService {
   private readonly db: ISupabaseClient;
   private readonly platformService: IPlatformConnectionService;
@@ -57,7 +69,7 @@ export class UnifiedInboxService implements IUnifiedInboxService {
     const total = count || 0;
     const totalPages = Math.ceil(total / query.limit);
 
-    const messages: InboxMessage[] = (data || []).map((row: any) => ({
+    const messages: InboxMessage[] = ((data as InboxMessageRow[]) || []).map((row) => ({
       id: row.id,
       platform: row.platform,
       author: row.author,
@@ -124,7 +136,7 @@ export class UnifiedInboxService implements IUnifiedInboxService {
     messageIds: string[],
     action: 'mark_read' | 'mark_unread' | 'archive'
   ): Promise<number> {
-    let updateData: Record<string, any>;
+    let updateData: Record<string, boolean>;
 
     switch (action) {
       case 'mark_read':
