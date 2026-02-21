@@ -8,17 +8,17 @@ import userSlice from '../store/slices/userSlice';
 import Home from './Home';
 
 // Mock react-router-dom
-const mockNavigate = jest.fn();
-jest.mock(
+const mockNavigate = vi.fn();
+vi.mock(
   'react-router-dom',
-  (): Record<string, unknown> => ({
-    ...jest.requireActual('react-router-dom'),
-    useNavigate: (): jest.Mock => mockNavigate,
+  async (): Promise<Record<string, unknown>> => ({
+    ...(await vi.importActual('react-router-dom')),
+    useNavigate: (): any => mockNavigate,
   })
 );
 
 // Mock components
-jest.mock('../components/ui/Layout', () => ({
+vi.mock('../components/ui/Layout', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }): JSX.Element => (
     <div data-testid="layout">{children}</div>

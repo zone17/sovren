@@ -15,7 +15,7 @@
  * - Continuous effectiveness monitoring
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { AIExploratoryTestingFramework } from '../AIExploratoryTestingFramework';
 import type {
   AIExploratoryTestingConfig,
@@ -29,7 +29,7 @@ import type {
 } from '../types';
 
 // Mock dependencies
-jest.mock('../common/Logger');
+vi.mock('../common/Logger');
 
 describe('AIExploratoryTestingFramework - US-155 Complete Implementation', () => {
   let framework: AIExploratoryTestingFramework;
@@ -102,7 +102,7 @@ describe('AIExploratoryTestingFramework - US-155 Complete Implementation', () =>
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Framework Initialization', () => {

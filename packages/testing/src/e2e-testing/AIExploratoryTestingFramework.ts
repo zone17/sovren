@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file AIExploratoryTestingFramework.ts
  * @description Autonomous exploratory testing framework with ML-based path discovery

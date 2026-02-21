@@ -9,7 +9,7 @@
  * @see Story #002: Implement Payment State Machine Service
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
 import { SupabaseClient } from '@supabase/supabase-js';
 import { PaymentStateMachine, TransitionResult } from '../PaymentStateMachine';
 import {
@@ -23,29 +23,29 @@ import {
 
 // Mock Supabase client
 const createMockSupabase = (): Partial<SupabaseClient> => ({
-  from: jest.fn().mockReturnThis() as unknown as SupabaseClient['from'],
-  select: jest.fn().mockReturnThis() as unknown as ReturnType<SupabaseClient['from']>['select'],
-  eq: jest.fn().mockReturnThis() as unknown as ReturnType<
+  from: vi.fn().mockReturnThis() as unknown as SupabaseClient['from'],
+  select: vi.fn().mockReturnThis() as unknown as ReturnType<SupabaseClient['from']>['select'],
+  eq: vi.fn().mockReturnThis() as unknown as ReturnType<
     ReturnType<SupabaseClient['from']>['select']
   >['eq'],
-  single: jest.fn() as unknown as ReturnType<
+  single: vi.fn() as unknown as ReturnType<
     ReturnType<ReturnType<SupabaseClient['from']>['select']>['eq']
   >['single'],
-  rpc: jest.fn() as unknown as SupabaseClient['rpc'],
-  order: jest.fn().mockReturnThis() as unknown as ReturnType<
+  rpc: vi.fn() as unknown as SupabaseClient['rpc'],
+  order: vi.fn().mockReturnThis() as unknown as ReturnType<
     ReturnType<SupabaseClient['from']>['select']
   >['order'],
-  limit: jest.fn().mockReturnThis() as unknown as ReturnType<
+  limit: vi.fn().mockReturnThis() as unknown as ReturnType<
     ReturnType<ReturnType<SupabaseClient['from']>['select']>['order']
   >['limit'],
 });
 
 // Mock logger
 const createMockLogger = () => ({
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 });
 
 // Helper to create mock payment
@@ -109,34 +109,34 @@ describe('PaymentStateMachine', () => {
         const event = createMockEvent(PaymentState.PROCESSING, PaymentState.PENDING);
         const updatedPayment = createMockPayment(PaymentState.PROCESSING);
 
-        (mockSupabase.from as jest.Mock)
+        (mockSupabase.from as any)
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: payment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({ data: event, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: event, error: null }),
                   }),
                 }),
               }),
             }),
           });
 
-        (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+        (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
         const result = await stateMachine.transition(
           payment.id,
@@ -153,34 +153,34 @@ describe('PaymentStateMachine', () => {
         const event = createMockEvent(PaymentState.EXPIRED, PaymentState.PENDING);
         const updatedPayment = createMockPayment(PaymentState.EXPIRED);
 
-        (mockSupabase.from as jest.Mock)
+        (mockSupabase.from as any)
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: payment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({ data: event, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: event, error: null }),
                   }),
                 }),
               }),
             }),
           });
 
-        (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+        (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
         const result = await stateMachine.transition(payment.id, PaymentState.EXPIRED);
 
@@ -193,34 +193,34 @@ describe('PaymentStateMachine', () => {
         const event = createMockEvent(PaymentState.FAILED, PaymentState.PENDING);
         const updatedPayment = createMockPayment(PaymentState.FAILED);
 
-        (mockSupabase.from as jest.Mock)
+        (mockSupabase.from as any)
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: payment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({ data: event, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: event, error: null }),
                   }),
                 }),
               }),
             }),
           });
 
-        (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+        (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
         const result = await stateMachine.transition(payment.id, PaymentState.FAILED);
 
@@ -235,34 +235,34 @@ describe('PaymentStateMachine', () => {
         const event = createMockEvent(PaymentState.COMPLETED, PaymentState.PROCESSING);
         const updatedPayment = createMockPayment(PaymentState.COMPLETED);
 
-        (mockSupabase.from as jest.Mock)
+        (mockSupabase.from as any)
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: payment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({ data: event, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: event, error: null }),
                   }),
                 }),
               }),
             }),
           });
 
-        (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+        (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
         const result = await stateMachine.transition(payment.id, PaymentState.COMPLETED);
 
@@ -275,34 +275,34 @@ describe('PaymentStateMachine', () => {
         const event = createMockEvent(PaymentState.FAILED, PaymentState.PROCESSING);
         const updatedPayment = createMockPayment(PaymentState.FAILED);
 
-        (mockSupabase.from as jest.Mock)
+        (mockSupabase.from as any)
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: payment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({ data: event, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: event, error: null }),
                   }),
                 }),
               }),
             }),
           });
 
-        (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+        (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
         const result = await stateMachine.transition(payment.id, PaymentState.FAILED);
 
@@ -317,34 +317,34 @@ describe('PaymentStateMachine', () => {
         const event = createMockEvent(PaymentState.REFUNDED, PaymentState.COMPLETED);
         const updatedPayment = createMockPayment(PaymentState.REFUNDED);
 
-        (mockSupabase.from as jest.Mock)
+        (mockSupabase.from as any)
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: payment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({ data: event, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: event, error: null }),
                   }),
                 }),
               }),
             }),
           });
 
-        (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+        (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
         const result = await stateMachine.transition(payment.id, PaymentState.REFUNDED);
 
@@ -359,34 +359,34 @@ describe('PaymentStateMachine', () => {
         const event = createMockEvent(PaymentState.PENDING, PaymentState.FAILED);
         const updatedPayment = createMockPayment(PaymentState.PENDING);
 
-        (mockSupabase.from as jest.Mock)
+        (mockSupabase.from as any)
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: payment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
               }),
             }),
           })
           .mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                order: jest.fn().mockReturnValue({
-                  limit: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({ data: event, error: null }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: event, error: null }),
                   }),
                 }),
               }),
             }),
           });
 
-        (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+        (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
         const result = await stateMachine.transition(payment.id, PaymentState.PENDING);
 
@@ -400,10 +400,10 @@ describe('PaymentStateMachine', () => {
     it('should reject PROCESSING → PENDING', async () => {
       const payment = createMockPayment(PaymentState.PROCESSING);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -416,10 +416,10 @@ describe('PaymentStateMachine', () => {
     it('should reject COMPLETED → FAILED', async () => {
       const payment = createMockPayment(PaymentState.COMPLETED);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -432,10 +432,10 @@ describe('PaymentStateMachine', () => {
     it('should reject EXPIRED → PENDING (terminal state)', async () => {
       const payment = createMockPayment(PaymentState.EXPIRED);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -448,10 +448,10 @@ describe('PaymentStateMachine', () => {
     it('should reject REFUNDED → COMPLETED (terminal state)', async () => {
       const payment = createMockPayment(PaymentState.REFUNDED);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -464,10 +464,10 @@ describe('PaymentStateMachine', () => {
 
   describe('Error Handling', () => {
     it('should throw PaymentNotFoundError for missing payment', async () => {
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: null, error: { message: 'Not found' } }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Not found' } }),
           }),
         }),
       });
@@ -480,15 +480,15 @@ describe('PaymentStateMachine', () => {
     it('should throw StateTransitionError on database error', async () => {
       const payment = createMockPayment(PaymentState.PENDING);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
 
-      (mockSupabase.rpc as jest.Mock).mockResolvedValue({
+      (mockSupabase.rpc as any).mockResolvedValue({
         data: null,
         error: { message: 'Database error' },
       });
@@ -503,10 +503,10 @@ describe('PaymentStateMachine', () => {
     it('should return true for valid transition', async () => {
       const payment = createMockPayment(PaymentState.PENDING);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -518,10 +518,10 @@ describe('PaymentStateMachine', () => {
     it('should return false for invalid transition', async () => {
       const payment = createMockPayment(PaymentState.PROCESSING);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -535,10 +535,10 @@ describe('PaymentStateMachine', () => {
     it('should return allowed transitions for PENDING state', async () => {
       const payment = createMockPayment(PaymentState.PENDING);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -553,10 +553,10 @@ describe('PaymentStateMachine', () => {
     it('should return empty array for terminal state', async () => {
       const payment = createMockPayment(PaymentState.EXPIRED);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -572,34 +572,34 @@ describe('PaymentStateMachine', () => {
       const event = createMockEvent(PaymentState.PROCESSING, PaymentState.PENDING);
       const updatedPayment = createMockPayment(PaymentState.PROCESSING);
 
-      (mockSupabase.from as jest.Mock)
+      (mockSupabase.from as any)
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: payment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({ data: event, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: event, error: null }),
                 }),
               }),
             }),
           }),
         });
 
-      (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+      (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
       await stateMachine.transition(payment.id, PaymentState.PROCESSING);
 
@@ -622,20 +622,20 @@ describe('PaymentStateMachine', () => {
 
       // Mock setup for concurrent calls - provide complete mock chain for all calls
       let callCount = 0;
-      (mockSupabase.from as jest.Mock).mockImplementation(() => ({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockImplementation(() => ({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
-          order: jest.fn().mockReturnValue({
-            limit: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: event, error: null }),
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: event, error: null }),
             }),
           }),
         }),
       }));
 
-      (mockSupabase.rpc as jest.Mock)
+      (mockSupabase.rpc as any)
         .mockResolvedValueOnce({ data: {}, error: null })
         .mockResolvedValueOnce({
           data: null,
@@ -661,16 +661,16 @@ describe('PaymentStateMachine', () => {
     it('should prevent state corruption during concurrent updates', async () => {
       const payment = createMockPayment(PaymentState.PENDING);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
 
       // Second transition should use stored procedure's atomic check
-      (mockSupabase.rpc as jest.Mock)
+      (mockSupabase.rpc as any)
         .mockResolvedValueOnce({ data: {}, error: null })
         .mockResolvedValueOnce({
           data: null,
@@ -725,7 +725,7 @@ describe('PaymentStateMachine', () => {
         },
       ];
 
-      (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: mockHistory, error: null });
+      (mockSupabase.rpc as any).mockResolvedValue({ data: mockHistory, error: null });
 
       const history = await stateMachine.getEventHistory(paymentId);
 
@@ -741,7 +741,7 @@ describe('PaymentStateMachine', () => {
     it('should handle empty event history', async () => {
       const paymentId = '123e4567-e89b-12d3-a456-426614174000';
 
-      (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: [], error: null });
+      (mockSupabase.rpc as any).mockResolvedValue({ data: [], error: null });
 
       const history = await stateMachine.getEventHistory(paymentId);
 
@@ -751,7 +751,7 @@ describe('PaymentStateMachine', () => {
     it('should throw error when history retrieval fails', async () => {
       const paymentId = '123e4567-e89b-12d3-a456-426614174000';
 
-      (mockSupabase.rpc as jest.Mock).mockResolvedValue({
+      (mockSupabase.rpc as any).mockResolvedValue({
         data: null,
         error: { message: 'Database error' },
       });
@@ -764,10 +764,10 @@ describe('PaymentStateMachine', () => {
     it('should prevent any transitions from EXPIRED state', async () => {
       const payment = createMockPayment(PaymentState.EXPIRED);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -791,10 +791,10 @@ describe('PaymentStateMachine', () => {
     it('should prevent any transitions from REFUNDED state', async () => {
       const payment = createMockPayment(PaymentState.REFUNDED);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -819,18 +819,18 @@ describe('PaymentStateMachine', () => {
       const expiredPayment = createMockPayment(PaymentState.EXPIRED);
       const refundedPayment = createMockPayment(PaymentState.REFUNDED);
 
-      (mockSupabase.from as jest.Mock)
+      (mockSupabase.from as any)
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: expiredPayment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: expiredPayment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: refundedPayment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: refundedPayment, error: null }),
             }),
           }),
         });
@@ -851,10 +851,10 @@ describe('PaymentStateMachine', () => {
       ];
 
       // Setup basic mocks for the batch operation
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: null,
               error: { message: 'Not found' },
             }),
@@ -880,10 +880,10 @@ describe('PaymentStateMachine', () => {
     it('should track individual transition failures in batch', async () => {
       const payment = createMockPayment(PaymentState.EXPIRED);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: payment,
               error: null,
             }),
@@ -904,10 +904,10 @@ describe('PaymentStateMachine', () => {
     });
 
     it('should handle complete batch failure', async () => {
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: null,
               error: { message: 'Not found' },
             }),
@@ -933,10 +933,10 @@ describe('PaymentStateMachine', () => {
     it('should return current payment state', async () => {
       const payment = createMockPayment(PaymentState.PROCESSING);
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: payment, error: null }),
           }),
         }),
       });
@@ -947,10 +947,10 @@ describe('PaymentStateMachine', () => {
     });
 
     it('should throw error for nonexistent payment', async () => {
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: null,
               error: { message: 'Not found' },
             }),
@@ -975,34 +975,34 @@ describe('PaymentStateMachine', () => {
       const event = createMockEvent(PaymentState.PROCESSING, PaymentState.PENDING);
       const updatedPayment = createMockPayment(PaymentState.PROCESSING);
 
-      (mockSupabase.from as jest.Mock)
+      (mockSupabase.from as any)
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: payment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({ data: event, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: event, error: null }),
                 }),
               }),
             }),
           }),
         });
 
-      (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+      (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
       await stateMachine.transition(payment.id, PaymentState.PROCESSING, metadata);
 
@@ -1020,34 +1020,34 @@ describe('PaymentStateMachine', () => {
       const event = createMockEvent(PaymentState.PROCESSING, PaymentState.PENDING);
       const updatedPayment = createMockPayment(PaymentState.PROCESSING);
 
-      (mockSupabase.from as jest.Mock)
+      (mockSupabase.from as any)
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: payment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({ data: event, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: event, error: null }),
                 }),
               }),
             }),
           }),
         });
 
-      (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+      (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
       await stateMachine.transition(payment.id, PaymentState.PROCESSING, undefined, userId);
 
@@ -1063,27 +1063,27 @@ describe('PaymentStateMachine', () => {
       const payment = createMockPayment(PaymentState.PENDING);
       const updatedPayment = createMockPayment(PaymentState.PROCESSING);
 
-      (mockSupabase.from as jest.Mock)
+      (mockSupabase.from as any)
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: payment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: payment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: updatedPayment, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: updatedPayment, error: null }),
             }),
           }),
         })
         .mockReturnValueOnce({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
                     data: null,
                     error: { message: 'Event not found' },
                   }),
@@ -1093,7 +1093,7 @@ describe('PaymentStateMachine', () => {
           }),
         });
 
-      (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: {}, error: null });
+      (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
       await expect(
         stateMachine.transition(payment.id, PaymentState.PROCESSING)

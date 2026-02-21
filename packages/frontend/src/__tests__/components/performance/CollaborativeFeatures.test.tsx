@@ -12,11 +12,11 @@ import '@testing-library/jest-dom';
 import { CollaborativeFeatures } from '../../../components/performance/CollaborativeFeatures';
 
 // Mock WebSocket
-global.WebSocket = jest.fn().mockImplementation(() => ({
-  close: jest.fn(),
-  send: jest.fn(),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
+global.WebSocket = vi.fn().mockImplementation(() => ({
+  close: vi.fn(),
+  send: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
   readyState: 1,
   OPEN: 1,
   CLOSED: 0,
@@ -25,7 +25,7 @@ global.WebSocket = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock useFeatureFlags hook
-jest.mock('../../../hooks/useFeatureFlags', () => ({
+vi.mock('../../../hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => ({
     flags: {
       enableCollaborativeFeatures: true,
@@ -45,12 +45,12 @@ describe('CollaborativeFeatures Component', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('Component Rendering', () => {
@@ -94,7 +94,7 @@ describe('CollaborativeFeatures Component', () => {
       
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -106,8 +106,8 @@ describe('CollaborativeFeatures Component', () => {
 
   describe('Document Editing', () => {
     test('handles content changes', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      const onContentChange = jest.fn();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const onContentChange = vi.fn();
       
       render(
         <CollaborativeFeatures 
@@ -118,7 +118,7 @@ describe('CollaborativeFeatures Component', () => {
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -132,13 +132,13 @@ describe('CollaborativeFeatures Component', () => {
     });
 
     test('sends operations to other collaborators', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<CollaborativeFeatures {...defaultProps} />);
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -146,7 +146,7 @@ describe('CollaborativeFeatures Component', () => {
       await user.type(editor, ' - edited');
 
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalledWith(
           expect.stringContaining('operation')
         );
@@ -168,7 +168,7 @@ describe('CollaborativeFeatures Component', () => {
 
   describe('Operational Transform', () => {
     test('receives and applies operations from other users', async () => {
-      const onOperationApplied = jest.fn();
+      const onOperationApplied = vi.fn();
       
       render(
         <CollaborativeFeatures 
@@ -189,7 +189,7 @@ describe('CollaborativeFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'operation',
@@ -233,7 +233,7 @@ describe('CollaborativeFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'operation',
@@ -267,7 +267,7 @@ describe('CollaborativeFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'presence_update',
@@ -292,7 +292,7 @@ describe('CollaborativeFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'cursor_update',
@@ -306,13 +306,13 @@ describe('CollaborativeFeatures Component', () => {
     });
 
     test('sends cursor updates on text selection', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<CollaborativeFeatures {...defaultProps} />);
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -324,11 +324,11 @@ describe('CollaborativeFeatures Component', () => {
 
       // Advance time to trigger throttled cursor update
       act(() => {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
       });
 
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalledWith(
           expect.stringContaining('cursor_update')
         );
@@ -338,7 +338,7 @@ describe('CollaborativeFeatures Component', () => {
 
   describe('Commenting System', () => {
     test('toggles comments panel', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<CollaborativeFeatures {...defaultProps} />);
 
@@ -351,13 +351,13 @@ describe('CollaborativeFeatures Component', () => {
     });
 
     test('creates comments on selected text', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<CollaborativeFeatures {...defaultProps} />);
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -379,7 +379,7 @@ describe('CollaborativeFeatures Component', () => {
       await user.click(commentButton);
 
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalledWith(
           expect.stringContaining('comment')
         );
@@ -406,7 +406,7 @@ describe('CollaborativeFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'comment',
@@ -422,7 +422,7 @@ describe('CollaborativeFeatures Component', () => {
     });
 
     test('prevents commenting with view permission', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(
         <CollaborativeFeatures 
@@ -451,12 +451,12 @@ describe('CollaborativeFeatures Component', () => {
       render(<CollaborativeFeatures {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalledWith(
           expect.stringContaining('request_document_state')
         );
@@ -479,7 +479,7 @@ describe('CollaborativeFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'document_state',
@@ -504,7 +504,7 @@ describe('CollaborativeFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'permission_update',
@@ -551,7 +551,7 @@ describe('CollaborativeFeatures Component', () => {
       // Simulate multiple operations
       for (let i = 0; i < 5; i++) {
         act(() => {
-          const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+          const mockWs = (WebSocket as any).mock.results[0].value;
           mockWs.onmessage({
             data: JSON.stringify({
               type: 'operation',
@@ -580,7 +580,7 @@ describe('CollaborativeFeatures Component', () => {
       render(<CollaborativeFeatures {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onerror(new Error('Connection error'));
       });
 
@@ -589,12 +589,12 @@ describe('CollaborativeFeatures Component', () => {
     });
 
     test('handles malformed operation data', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
       
       render(<CollaborativeFeatures {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'operation',
@@ -620,7 +620,7 @@ describe('CollaborativeFeatures Component', () => {
       render(<CollaborativeFeatures {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'error',
@@ -643,7 +643,7 @@ describe('CollaborativeFeatures Component', () => {
     });
 
     test('supports keyboard navigation', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<CollaborativeFeatures {...defaultProps} />);
 
@@ -660,7 +660,7 @@ describe('CollaborativeFeatures Component', () => {
     });
 
     test('provides tooltip information for collaborators', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<CollaborativeFeatures {...defaultProps} />);
 
@@ -687,17 +687,17 @@ describe('CollaborativeFeatures Component', () => {
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
       // Advance time to trigger heartbeat
       act(() => {
-        jest.advanceTimersByTime(30000);
+        vi.advanceTimersByTime(30000);
       });
 
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalledWith(
           expect.stringContaining('heartbeat')
         );
@@ -708,7 +708,7 @@ describe('CollaborativeFeatures Component', () => {
       render(<CollaborativeFeatures {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'heartbeat',
@@ -725,7 +725,7 @@ describe('CollaborativeFeatures Component', () => {
   describe('Feature Flag Integration', () => {
     test('does not render when feature is disabled', () => {
       // Mock feature flag as disabled
-      jest.mocked(require('../../../hooks/useFeatureFlags').useFeatureFlags).mockReturnValue({
+      vi.mocked(require('../../../hooks/useFeatureFlags').useFeatureFlags).mockReturnValue({
         flags: {
           enableCollaborativeFeatures: false,
         },
@@ -741,7 +741,7 @@ describe('CollaborativeFeatures Component', () => {
     test('cleans up on unmount', () => {
       const { unmount } = render(<CollaborativeFeatures {...defaultProps} />);
       
-      const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+      const mockWs = (WebSocket as any).mock.results[0].value;
       
       unmount();
       
@@ -749,8 +749,8 @@ describe('CollaborativeFeatures Component', () => {
     });
 
     test('clears all timeouts on unmount', () => {
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
       
       const { unmount } = render(<CollaborativeFeatures {...defaultProps} />);
       

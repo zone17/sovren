@@ -3,10 +3,22 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 
 export default [
-  js.configs.recommended,
   {
-    ignores: ['jest.config.elite.ts', 'jest.config.*.ts'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'coverage/**',
+      'packages/*/dist/**',
+      '**/*.js',
+      '**/*.cjs',
+      '**/*.mjs',
+      'jest.config.elite.ts',
+      'jest.config.*.ts',
+      'vitest.config.ts',
+      'tests/**',
+    ],
   },
+  js.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {

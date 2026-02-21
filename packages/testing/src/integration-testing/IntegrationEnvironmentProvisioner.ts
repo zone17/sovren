@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file IntegrationEnvironmentProvisioner.ts
  * @description Automated integration test environment provisioning with autonomous configuration

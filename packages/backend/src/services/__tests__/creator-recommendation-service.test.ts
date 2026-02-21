@@ -4,7 +4,7 @@
  * Comprehensive coverage for US-099 through US-102
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import {
   AudienceLevel,
   ContentStyle,
@@ -24,35 +24,35 @@ import { CreatorRecommendationService } from '../creator-recommendation-service'
 
 // Mock Supabase client
 const mockSupabase = {
-  from: jest.fn(),
-  rpc: jest.fn(),
+  from: vi.fn(),
+  rpc: vi.fn(),
 };
 
 const mockQuery = {
-  select: jest.fn().mockReturnThis(),
-  insert: jest.fn().mockReturnThis(),
-  upsert: jest.fn().mockReturnThis(),
-  update: jest.fn().mockReturnThis(),
-  delete: jest.fn().mockReturnThis(),
-  eq: jest.fn().mockReturnThis(),
-  neq: jest.fn().mockReturnThis(),
-  gt: jest.fn().mockReturnThis(),
-  gte: jest.fn().mockReturnThis(),
-  lt: jest.fn().mockReturnThis(),
-  lte: jest.fn().mockReturnThis(),
-  in: jest.fn().mockReturnThis(),
-  contains: jest.fn().mockReturnThis(),
-  overlaps: jest.fn().mockReturnThis(),
-  order: jest.fn().mockReturnThis(),
-  limit: jest.fn().mockReturnThis(),
-  range: jest.fn().mockReturnThis(),
-  single: jest.fn(),
-  maybeSingle: jest.fn(),
+  select: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockReturnThis(),
+  upsert: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  delete: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  neq: vi.fn().mockReturnThis(),
+  gt: vi.fn().mockReturnThis(),
+  gte: vi.fn().mockReturnThis(),
+  lt: vi.fn().mockReturnThis(),
+  lte: vi.fn().mockReturnThis(),
+  in: vi.fn().mockReturnThis(),
+  contains: vi.fn().mockReturnThis(),
+  overlaps: vi.fn().mockReturnThis(),
+  order: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
+  range: vi.fn().mockReturnThis(),
+  single: vi.fn(),
+  maybeSingle: vi.fn(),
 };
 
 // Mock createClient
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => mockSupabase),
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => mockSupabase),
 }));
 
 describe('CreatorRecommendationService', () => {
@@ -85,14 +85,14 @@ describe('CreatorRecommendationService', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockSupabase.from.mockReturnValue(mockQuery);
     mockSupabase.rpc.mockReturnValue(mockQuery);
     service = new CreatorRecommendationService();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ============================================================================

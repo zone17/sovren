@@ -10,24 +10,24 @@
  */
 
 // Mock ioredis before importing the module under test
-const mockRedisOn = jest.fn().mockReturnThis();
-const mockRedisQuit = jest.fn().mockResolvedValue('OK');
+const mockRedisOn = vi.fn().mockReturnThis();
+const mockRedisQuit = vi.fn().mockResolvedValue('OK');
 
-const MockRedis = jest.fn().mockImplementation((...args: any[]) => ({
+const MockRedis = vi.fn().mockImplementation((...args: any[]) => ({
   on: mockRedisOn,
   quit: mockRedisQuit,
-  ping: jest.fn().mockResolvedValue('PONG'),
+  ping: vi.fn().mockResolvedValue('PONG'),
   _constructorArgs: args,
 }));
 
-jest.mock('ioredis', () => MockRedis);
+vi.mock('ioredis', () => ({ default: MockRedis }));
 
 describe('P1-039: Redis Client Factory', () => {
   let getRedisClient: typeof import('../../lib/redis').getRedisClient;
   let disconnectRedis: typeof import('../../lib/redis').disconnectRedis;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     MockRedis.mockClear();
     mockRedisOn.mockClear();
     mockRedisQuit.mockClear();

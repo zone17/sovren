@@ -52,7 +52,7 @@ describe('Environment Configuration', () => {
 
   beforeEach(() => {
     resetConfig();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validateEnvironment', () => {

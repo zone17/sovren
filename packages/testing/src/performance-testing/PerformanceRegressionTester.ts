@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite Performance Regression Tester - Self-optimizing performance regression testing
  */

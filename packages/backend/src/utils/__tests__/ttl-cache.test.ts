@@ -2,7 +2,7 @@ import { TTLCache } from '../ttl-cache';
 
 describe('TTLCache', () => {
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('should store and retrieve values', () => {
@@ -21,12 +21,12 @@ describe('TTLCache', () => {
   });
 
   it('should expire entries after TTL', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 1000, cleanupIntervalMs: 500 });
     cache.set('a', 1);
     expect(cache.get('a')).toBe(1);
 
-    jest.advanceTimersByTime(1001);
+    vi.advanceTimersByTime(1001);
     expect(cache.get('a')).toBeUndefined();
     cache.destroy();
   });
@@ -73,26 +73,26 @@ describe('TTLCache', () => {
   });
 
   it('should support has()', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 1000, cleanupIntervalMs: 500 });
     cache.set('a', 1);
     expect(cache.has('a')).toBe(true);
     expect(cache.has('b')).toBe(false);
 
-    jest.advanceTimersByTime(1001);
+    vi.advanceTimersByTime(1001);
     expect(cache.has('a')).toBe(false);
     cache.destroy();
   });
 
   it('should return non-expired values from values()', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 1000, cleanupIntervalMs: 5000 });
     cache.set('a', 1);
     cache.set('b', 2);
 
     expect(cache.values()).toEqual([1, 2]);
 
-    jest.advanceTimersByTime(1001);
+    vi.advanceTimersByTime(1001);
     expect(cache.values()).toEqual([]);
     cache.destroy();
   });
@@ -108,13 +108,13 @@ describe('TTLCache', () => {
   });
 
   it('should clean up interval on destroy()', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 1000, cleanupIntervalMs: 500 });
     cache.set('a', 1);
     cache.destroy();
     expect(cache.size).toBe(0);
     // Should not throw when timers advance after destroy
-    jest.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(5000);
   });
 
   it('should delete individual entries', () => {
@@ -127,17 +127,17 @@ describe('TTLCache', () => {
   });
 
   it('should run periodic eviction of expired entries', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 500, cleanupIntervalMs: 300 });
     cache.set('a', 1);
     cache.set('b', 2);
 
     // Entries should still be present before TTL
-    jest.advanceTimersByTime(400);
+    vi.advanceTimersByTime(400);
     expect(cache.size).toBe(2);
 
     // After TTL + cleanup interval, entries should be evicted
-    jest.advanceTimersByTime(200);
+    vi.advanceTimersByTime(200);
     // Cleanup interval at 300ms, 600ms fires cleanup. TTL is 500ms, so entries expired.
     expect(cache.get('a')).toBeUndefined();
     expect(cache.get('b')).toBeUndefined();

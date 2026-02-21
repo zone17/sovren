@@ -46,7 +46,7 @@ npm run type-check
 - **ESLint**: Real-time code quality feedback
 - **Prettier**: Automatic code formatting
 - **TypeScript**: Enhanced type checking
-- **Jest**: Test runner integration
+- **Vitest**: Test runner integration
 - **GitLens**: Git history and blame
 
 #### Recommended IDE Settings (VS Code)
@@ -58,7 +58,7 @@ npm run type-check
     "source.fixAll.eslint": true
   },
   "typescript.preferences.importModuleSpecifier": "relative",
-  "jest.autoRun": "watch",
+  "vitest.enable": true,
   "git.enableSmartCommit": true
 }
 ```
@@ -334,7 +334,7 @@ npm run lighthouse         # Performance audit
 #### Unit Tests (80% of tests)
 
 - **Purpose**: Test individual functions/components
-- **Tools**: Jest, React Testing Library
+- **Tools**: Vitest, React Testing Library
 - **Location**: `*.test.ts` files next to source
 - **Coverage**: 80%+ required
 
@@ -356,7 +356,7 @@ describe('calculatePaymentAmount', () => {
 #### Integration Tests (15% of tests)
 
 - **Purpose**: Test component interactions
-- **Tools**: Jest, Supertest
+- **Tools**: Vitest, Supertest
 - **Location**: `*.integration.test.ts`
 - **Coverage**: Critical user flows
 
@@ -399,8 +399,8 @@ describe('Payment API', () => {
 **Tests Failing Locally**
 
 ```bash
-# Clear Jest cache
-npm run test -- --clearCache
+# Clear Vitest cache
+npx vitest run --clearCache
 
 # Check test database
 cd packages/backend
@@ -645,7 +645,7 @@ vercel rollback [deployment-url]
 
 - **React**: [Official Documentation](https://react.dev/)
 - **TypeScript**: [Handbook](https://www.typescriptlang.org/docs/)
-- **Jest**: [Testing Framework](https://jestjs.io/docs/getting-started)
+- **Vitest**: [Testing Framework](https://vitest.dev/guide/)
 - **Prisma**: [Database Toolkit](https://www.prisma.io/docs/)
 
 ### Escalation Path

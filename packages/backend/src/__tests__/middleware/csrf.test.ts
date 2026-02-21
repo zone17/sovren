@@ -36,19 +36,19 @@ function createMockRes(): Response & {
     _status: 200,
     _json: null,
     locals: {},
-    cookie: jest.fn(function (name: string, value: string, options: any) {
+    cookie: vi.fn(function (name: string, value: string, options: any) {
       res._cookies[name] = { value, options };
       return res;
     }),
-    setHeader: jest.fn(function (name: string, value: string) {
+    setHeader: vi.fn(function (name: string, value: string) {
       res._headers[name] = value;
       return res;
     }),
-    status: jest.fn(function (code: number) {
+    status: vi.fn(function (code: number) {
       res._status = code;
       return res;
     }),
-    json: jest.fn(function (body: any) {
+    json: vi.fn(function (body: any) {
       res._json = body;
       return res;
     }),
@@ -58,11 +58,11 @@ function createMockRes(): Response & {
 
 describe('CSRF Middleware', () => {
   let middleware: (req: Request, res: Response, next: NextFunction) => void;
-  let next: jest.Mock;
+  let next: any;
 
   beforeEach(() => {
     middleware = csrfProtection();
-    next = jest.fn();
+    next = vi.fn();
   });
 
   describe('Token generation on safe methods (GET/HEAD/OPTIONS)', () => {
@@ -356,7 +356,7 @@ describe('CSRF Middleware', () => {
 
   describe('Timing-safe comparison', () => {
     it('should use timing-safe comparison for token matching', () => {
-      const spy = jest.spyOn(crypto, 'timingSafeEqual');
+      const spy = vi.spyOn(crypto, 'timingSafeEqual');
       const token = crypto.randomBytes(32).toString('hex');
       const req = createMockReq({
         method: 'POST',

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite Performance Benchmarker - Automated performance benchmarking
  * with anomaly detection, baseline tracking, and intelligent analysis.

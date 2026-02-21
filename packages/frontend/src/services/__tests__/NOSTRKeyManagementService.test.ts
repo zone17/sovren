@@ -1,26 +1,26 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { NOSTRKeyManagementService } from '../NOSTRKeyManagementService';
 
 // Mock nostr-tools with proper 64-char hex values
-jest.mock('nostr-tools', () => ({
-  generateSecretKey: jest.fn(() => new Uint8Array(32).fill(42)),
-  getPublicKey: jest.fn(() => 'a'.repeat(64)), // 64-character public key
+vi.mock('nostr-tools', () => ({
+  generateSecretKey: vi.fn(() => new Uint8Array(32).fill(42)),
+  getPublicKey: vi.fn(() => 'a'.repeat(64)), // 64-character public key
   nip19: {
-    nsecEncode: jest.fn(() => 'nsec1test'),
-    npubEncode: jest.fn(() => 'npub1test'),
+    nsecEncode: vi.fn(() => 'nsec1test'),
+    npubEncode: vi.fn(() => 'npub1test'),
   },
-  finalizeEvent: jest.fn((event: any, privateKey: any) => ({
+  finalizeEvent: vi.fn((event: any, privateKey: any) => ({
     ...event,
     id: 'test-event-id',
     sig: 'test-signature',
   })),
-  verifyEvent: jest.fn(() => true),
+  verifyEvent: vi.fn(() => true),
 }));
 
 // Mock crypto with proper entropy generation
 Object.defineProperty(global, 'crypto', {
   value: {
-    getRandomValues: jest.fn((arr: any) => {
+    getRandomValues: vi.fn((arr: any) => {
       // Generate values that will pass entropy validation
       for (let i = 0; i < arr.length; i++) {
         arr[i] = Math.floor(Math.random() * 256);
@@ -33,7 +33,7 @@ Object.defineProperty(global, 'crypto', {
 // Mock TextEncoder
 (global as any).TextEncoder = function () {
   return {
-    encode: jest.fn((str: string): Uint8Array => {
+    encode: vi.fn((str: string): Uint8Array => {
       return new Uint8Array(str.split('').map((c) => c.charCodeAt(0)));
     }),
   };
@@ -41,10 +41,10 @@ Object.defineProperty(global, 'crypto', {
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 Object.defineProperty(global, 'localStorage', { value: localStorageMock });
 
@@ -53,14 +53,14 @@ const mockHIDDevice = {
   vendorId: 0x2c97,
   productId: 0x0001,
   productName: 'Ledger Nano S',
-  open: jest.fn().mockResolvedValue(undefined),
-  close: jest.fn().mockResolvedValue(undefined),
+  open: vi.fn().mockResolvedValue(undefined),
+  close: vi.fn().mockResolvedValue(undefined),
 };
 
 // Create proper navigator mock
 const mockNavigator = {
   hid: {
-    requestDevice: jest.fn(),
+    requestDevice: vi.fn(),
   },
 };
 
@@ -74,11 +74,11 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
 
   beforeEach(() => {
     keyManagementService = new NOSTRKeyManagementService();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset navigator.hid mocks
     if (mockNavigator.hid?.requestDevice) {
-      (mockNavigator.hid.requestDevice as jest.Mock).mockReset();
+      (mockNavigator.hid.requestDevice as any).mockReset();
     }
   });
 
@@ -122,7 +122,7 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
     it('should reject key generation with insufficient entropy', async () => {
       // Mock low entropy
       const originalGetRandomValues = global.crypto.getRandomValues;
-      global.crypto.getRandomValues = jest.fn((arr: any) => {
+      global.crypto.getRandomValues = vi.fn((arr: any) => {
         // Return all zeros for low entropy
         arr.fill(0);
         return arr;
@@ -211,7 +211,7 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
   describe('✅ 9.1.4: Add hardware wallet integration for NOSTR signing', () => {
     it('should connect to hardware wallet', async () => {
       // Mock navigator.hid.requestDevice to return mock device
-      (mockNavigator.hid.requestDevice as jest.Mock).mockResolvedValue([mockHIDDevice]);
+      (mockNavigator.hid.requestDevice as any).mockResolvedValue([mockHIDDevice]);
 
       const hardwareWallet = await keyManagementService.connectHardwareWallet();
 
@@ -224,7 +224,7 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
 
     it('should fail when no hardware wallet found', async () => {
       // Mock empty device list
-      (mockNavigator.hid.requestDevice as jest.Mock).mockResolvedValue([]);
+      (mockNavigator.hid.requestDevice as any).mockResolvedValue([]);
 
       await expect(keyManagementService.connectHardwareWallet()).rejects.toThrow(
         'No compatible hardware wallet found'
@@ -254,11 +254,11 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
   describe('✅ 9.1.5: Implement NIP-07 browser extension support', () => {
     it('should connect to browser extension', async () => {
       const mockNostr = {
-        getPublicKey: jest.fn().mockResolvedValue('a'.repeat(64)), // 64-char valid key
-        signEvent: jest.fn(),
-        encrypt: jest.fn(),
-        decrypt: jest.fn(),
-        getRelays: jest.fn(),
+        getPublicKey: vi.fn().mockResolvedValue('a'.repeat(64)), // 64-char valid key
+        signEvent: vi.fn(),
+        encrypt: vi.fn(),
+        decrypt: vi.fn(),
+        getRelays: vi.fn(),
       };
 
       // Mock window.nostr
@@ -282,7 +282,7 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
 
     it('should fail with invalid public key from extension', async () => {
       const mockNostr = {
-        getPublicKey: jest.fn().mockResolvedValue('invalid-short-key'),
+        getPublicKey: vi.fn().mockResolvedValue('invalid-short-key'),
       };
 
       (global as any).window = { nostr: mockNostr };
@@ -411,7 +411,7 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
 
     it('should load from secure storage on initialization', async () => {
       // Mock existing data in localStorage
-      localStorageMock.getItem = jest.fn().mockReturnValue(
+      localStorageMock.getItem = vi.fn().mockReturnValue(
         JSON.stringify({
           privateKey: 'a'.repeat(64),
           publicKey: 'a'.repeat(64),
@@ -435,7 +435,7 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
     it('should handle crypto API failures gracefully', async () => {
       // Mock crypto failure
       const originalGetRandomValues = global.crypto.getRandomValues;
-      global.crypto.getRandomValues = jest.fn(() => {
+      global.crypto.getRandomValues = vi.fn(() => {
         throw new Error('Crypto API not available');
       });
 
@@ -447,7 +447,7 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
 
     it('should handle storage failures gracefully', async () => {
       // Mock storage failure
-      localStorageMock.setItem = jest.fn(() => {
+      localStorageMock.setItem = vi.fn(() => {
         throw new Error('Storage quota exceeded');
       });
 
@@ -457,7 +457,7 @@ describe('🔐 NOSTRKeyManagementService - US-123 Implementation', () => {
 
     it('should handle malformed storage data', async () => {
       // Mock corrupted data
-      localStorageMock.getItem = jest.fn().mockReturnValue('invalid-json');
+      localStorageMock.getItem = vi.fn().mockReturnValue('invalid-json');
 
       // Should not throw, just log error
       await expect(keyManagementService.initialize()).resolves.toBeUndefined();

@@ -28,14 +28,14 @@ import { PaymentStateMachine } from '../PaymentStateMachine';
 import { EmailIntegrationService } from '../../email-integration-service';
 
 // Mock Supabase client
-jest.mock('@supabase/supabase-js');
-jest.mock('../PaymentStateMachine');
-jest.mock('../../email-integration-service');
+vi.mock('@supabase/supabase-js');
+vi.mock('../PaymentStateMachine');
+vi.mock('../../email-integration-service');
 
 describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
-  let mockSupabase: jest.Mocked<SupabaseClient>;
-  let mockStateMachine: jest.Mocked<PaymentStateMachine>;
-  let mockEmailService: jest.Mocked<EmailIntegrationService>;
+  let mockSupabase: vi.Mocked<SupabaseClient>;
+  let mockStateMachine: vi.Mocked<PaymentStateMachine>;
+  let mockEmailService: vi.Mocked<EmailIntegrationService>;
   let retryService: PaymentRetryService;
 
   const mockPayment: Payment = {
@@ -53,43 +53,43 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
   };
 
   const mockLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup mock Supabase client
     const mockChain = {
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      upsert: jest.fn().mockReturnThis(),
-      in: jest.fn().mockReturnThis(),
-      lte: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      upsert: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      lte: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
     };
 
     mockSupabase = {
-      from: jest.fn(() => mockChain),
-      rpc: jest.fn(),
+      from: vi.fn(() => mockChain),
+      rpc: vi.fn(),
     } as any;
 
-    (createClient as jest.Mock).mockReturnValue(mockSupabase);
+    (createClient as any).mockReturnValue(mockSupabase);
 
     mockStateMachine = new PaymentStateMachine({
       supabase: mockSupabase,
-    }) as jest.Mocked<PaymentStateMachine>;
-    mockStateMachine.transition = jest.fn().mockResolvedValue(undefined);
+    }) as anyed<PaymentStateMachine>;
+    mockStateMachine.transition = vi.fn().mockResolvedValue(undefined);
 
-    mockEmailService = new EmailIntegrationService() as jest.Mocked<EmailIntegrationService>;
-    mockEmailService.sendNotification = jest.fn().mockResolvedValue(undefined);
+    mockEmailService = new EmailIntegrationService() as anyed<EmailIntegrationService>;
+    mockEmailService.sendNotification = vi.fn().mockResolvedValue(undefined);
   });
 
   describe('Enhanced Exponential Backoff with Jitter', () => {
@@ -297,7 +297,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
       it('should use Math.random for jitter calculation', () => {
         // Arrange: Spy on Math.random
-        const randomSpy = jest.spyOn(Math, 'random');
+        const randomSpy = vi.spyOn(Math, 'random');
 
         // Act
         (retryService as any).calculateBackoffDelayWithJitter(1);
@@ -310,7 +310,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
       it('should handle edge case of jitter = 0 (Math.random returns 0)', () => {
         // Arrange: Mock Math.random to return 0
-        jest.spyOn(Math, 'random').mockReturnValue(0);
+        vi.spyOn(Math, 'random').mockReturnValue(0);
 
         // Act
         const delay = (retryService as any).calculateBackoffDelayWithJitter(1);
@@ -318,12 +318,12 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         // Assert: Should return 0 (no delay)
         expect(delay).toBe(0);
 
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
       });
 
       it('should handle edge case of jitter = 1 (Math.random returns 0.999999)', () => {
         // Arrange: Mock Math.random to return near 1
-        jest.spyOn(Math, 'random').mockReturnValue(0.999999);
+        vi.spyOn(Math, 'random').mockReturnValue(0.999999);
 
         // Act
         const delay = (retryService as any).calculateBackoffDelayWithJitter(1);
@@ -332,7 +332,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         const expectedMax = 2000; // 1000 * 2^1
         expect(delay).toBeCloseTo(expectedMax, -1); // Within 10ms
 
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
       });
     });
 
@@ -575,7 +575,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
           (retryService as any).recordRetryFailure();
         }
 
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Act: Close circuit
         (retryService as any).recordRetrySuccess();
@@ -627,14 +627,14 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
         // Mock payment retrieval
         const mockChain = {
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          single: jest.fn().mockResolvedValue({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
             data: mockPayment,
             error: null,
           }),
         };
-        mockSupabase.from = jest.fn(() => mockChain) as any;
+        mockSupabase.from = vi.fn(() => mockChain) as any;
 
         // Act & Assert: Should throw circuit breaker error
         await expect(
@@ -738,7 +738,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
     describe('Circuit Breaker Metrics', () => {
       it('should include circuit breaker state in metrics', async () => {
         // Arrange: Mock metrics RPC response
-        mockSupabase.rpc = jest.fn().mockResolvedValue({
+        mockSupabase.rpc = vi.fn().mockResolvedValue({
           data: [{
             total_retries: 100,
             successful_retries: 80,
@@ -767,7 +767,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         }
 
         // Mock metrics
-        mockSupabase.rpc = jest.fn().mockResolvedValue({
+        mockSupabase.rpc = vi.fn().mockResolvedValue({
           data: [{
             circuit_breaker_open: true,
             circuit_breaker_failure_count: 5,
@@ -788,7 +788,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         // Arrange: Circuit opened 30 seconds ago
         const openedAt = new Date(Date.now() - 30000);
 
-        mockSupabase.rpc = jest.fn().mockResolvedValue({
+        mockSupabase.rpc = vi.fn().mockResolvedValue({
           data: [{
             circuit_breaker_open: true,
             circuit_breaker_opened_at: openedAt,
@@ -808,7 +808,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
     describe('Jitter Effectiveness Metrics', () => {
       it('should track average delay with jitter applied', async () => {
         // Arrange: Mock metrics
-        mockSupabase.rpc = jest.fn().mockResolvedValue({
+        mockSupabase.rpc = vi.fn().mockResolvedValue({
           data: [{
             avg_retry_delay_ms: 2500, // Average with jitter
             avg_retry_delay_without_jitter_ms: 5000, // Theoretical without jitter
@@ -829,7 +829,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
     describe('Retry Timing Distribution', () => {
       it('should provide histogram of retry delays', async () => {
         // Arrange: Mock histogram data
-        mockSupabase.rpc = jest.fn().mockResolvedValue({
+        mockSupabase.rpc = vi.fn().mockResolvedValue({
           data: [{
             delay_histogram: {
               '0-1000ms': 20,

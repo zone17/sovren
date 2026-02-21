@@ -178,7 +178,7 @@ export function PaymentButton({
 // ✅ Good: Comprehensive unit test with edge cases
 describe('LightningPaymentProcessor', () => {
   let processor: LightningPaymentProcessor;
-  let mockLNbitsClient: jest.Mocked<LNbitsClient>;
+  let mockLNbitsClient: Mocked<LNbitsClient>;
 
   beforeEach(() => {
     mockLNbitsClient = createMockLNbitsClient();
@@ -430,22 +430,22 @@ export class LightningPaymentProcessor {
 }
 ```
 
-### Jest Configuration
+### Vitest Configuration
 
-```json
+```typescript
+// vitest.config.ts (multi-project configuration at project root)
+// See vitest.config.ts for the full configuration
 {
-  "collectCoverageFrom": [
-    "src/**/*.{ts,tsx}",
-    "!src/**/*.d.ts",
-    "!src/**/*.stories.{ts,tsx}",
-    "!src/**/__tests__/**"
-  ],
-  "coverageThreshold": {
-    "global": {
-      "branches": 90,
-      "functions": 100,
-      "lines": 95,
-      "statements": 95
+  test: {
+    coverage: {
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.d.ts', 'src/**/*.stories.{ts,tsx}', 'src/**/__tests__/**'],
+      thresholds: {
+        branches: 90,
+        functions: 100,
+        lines: 95,
+        statements: 95
+      }
     }
   }
 }

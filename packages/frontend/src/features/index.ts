@@ -26,20 +26,45 @@ export * from './discovery';
 // ⚡ **PAYMENTS FEATURE**
 export * from './payments';
 
-/**
- * 🎯 **FEATURE MODULE ARCHITECTURE**
- *
- * Each feature module contains:
- * - components/ - UI components specific to the feature
- * - hooks/ - Feature-specific React hooks
- * - services/ - Business logic and API calls
- * - stores/ - State management for the feature
- * - types/ - TypeScript type definitions
- * - __tests__/ - Comprehensive test suites
- *
- * This structure promotes:
- * ✅ High cohesion within features
- * ✅ Low coupling between features
- * ✅ Easy testing and maintenance
- * ✅ Clear architectural boundaries
- */
+// BUSINESS MANAGER FEATURE
+export * from './business';
+
+// CREATOR NETWORK FEATURE
+export * from './creator-network';
+
+// MULTI-PLATFORM HUB FEATURE
+export * from './multi-platform';
+
+// WELLNESS FEATURE
+export * from './wellness';
+
+// CONTENT SHIELD FEATURE
+// Note: AlertStatus is aliased to avoid collision with dashboard/AlertStatus
+export {
+  ShieldDashboard,
+  AuthenticityBadge,
+  AlertsFeed,
+  FingerprintCoverage,
+  ProvenanceChainViewer,
+  DMCAReportButton,
+  ContentShieldErrorBoundary,
+  useAlertDetail,
+  useAlerts,
+  useUpdateAlertStatus,
+  useDmcaReport,
+  useFingerprintCoverage,
+  useProvenanceChain,
+  shieldApi,
+} from './content-shield';
+export type {
+  AlertDetail,
+  AlertStatus as ShieldAlertStatus,
+  ContentAlert,
+  DMCAReport,
+  FingerprintCoverageData,
+  FingerprintEntry,
+  MatchLevel,
+  ProvenanceData,
+  RelayConfirmation,
+  VerificationStatus,
+} from './content-shield';

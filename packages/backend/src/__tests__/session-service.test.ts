@@ -1,29 +1,29 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { createHash } from 'crypto';
 import { CreateSessionRequest, DeviceInfo, SessionService } from '../services/session-service';
 
 // 🧪 Mock Database
 const mockDatabase = {
   client: {
-    from: jest.fn(() => ({
-      insert: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(),
+    from: vi.fn(() => ({
+      insert: vi.fn(() => ({
+        select: vi.fn(() => ({
+          single: vi.fn(),
         })),
       })),
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            order: jest.fn(() => ({
-              single: jest.fn(),
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            order: vi.fn(() => ({
+              single: vi.fn(),
             })),
           })),
         })),
       })),
-      update: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            select: jest.fn(),
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            select: vi.fn(),
           })),
         })),
       })),
@@ -62,7 +62,7 @@ describe('🔐 SessionService', () => {
   let sessionService: SessionService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     sessionService = new SessionService(mockDatabase as any);
   });
 

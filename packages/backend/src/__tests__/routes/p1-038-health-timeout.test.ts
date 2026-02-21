@@ -13,17 +13,17 @@ import { Request, Response } from 'express';
 
 const capturedRoutes: Record<string, Function> = {};
 
-jest.mock('express', () => {
-  const actual = jest.requireActual('express');
+vi.mock('express', async () => {
+  const actual = await vi.importActual('express');
   return {
     ...actual,
     Router: () => {
       const mockRouter: any = {};
-      mockRouter.get = jest.fn((path: string, handler: Function) => {
+      mockRouter.get = vi.fn((path: string, handler: Function) => {
         capturedRoutes[`GET ${path}`] = handler;
         return mockRouter;
       });
-      mockRouter.post = jest.fn((path: string, handler: Function) => {
+      mockRouter.post = vi.fn((path: string, handler: Function) => {
         capturedRoutes[`POST ${path}`] = handler;
         return mockRouter;
       });
@@ -33,22 +33,22 @@ jest.mock('express', () => {
 });
 
 // Mock ioredis (used by lib/redis)
-const mockRedisPing = jest.fn().mockResolvedValue('PONG');
-const mockRedisQuit = jest.fn().mockResolvedValue(undefined);
-jest.mock('ioredis', () => {
-  return jest.fn().mockImplementation(() => ({
+const mockRedisPing = vi.fn().mockResolvedValue('PONG');
+const mockRedisQuit = vi.fn().mockResolvedValue(undefined);
+vi.mock('ioredis', () => ({
+  default: vi.fn().mockImplementation(() => ({
     ping: mockRedisPing,
     quit: mockRedisQuit,
-    on: jest.fn(),
-  }));
-});
+    on: vi.fn(),
+  })),
+}));
 
 // Mock @supabase/supabase-js
-const mockSupabaseSelect = jest.fn().mockReturnThis();
-const mockSupabaseLimit = jest.fn().mockResolvedValue({ data: [{ id: 1 }], error: null });
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn().mockReturnValue({
-    from: jest.fn().mockReturnValue({
+const mockSupabaseSelect = vi.fn().mockReturnThis();
+const mockSupabaseLimit = vi.fn().mockResolvedValue({ data: [{ id: 1 }], error: null });
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn().mockReturnValue({
+    from: vi.fn().mockReturnValue({
       select: mockSupabaseSelect,
       limit: mockSupabaseLimit,
     }),
@@ -56,16 +56,16 @@ jest.mock('@supabase/supabase-js', () => ({
 }));
 
 // Mock global fetch for LNbits
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch as any;
 
 // Track WebSocket close calls
-const mockWsClose = jest.fn();
+const mockWsClose = vi.fn();
 let wsInstance: any = null;
 
 // Mock WebSocket for NOSTR relay checks
-jest.mock('ws', () => {
-  return jest.fn().mockImplementation(() => {
+vi.mock('ws', () => {
+  return vi.fn().mockImplementation(() => {
     wsInstance = {
       close: mockWsClose,
       onopen: null as (() => void) | null,
@@ -82,22 +82,22 @@ function createMockRes(): Response & { _status: number; _json: any } {
   const res: any = {
     _status: 200,
     _json: null,
-    status: jest.fn(function (code: number) {
+    status: vi.fn(function (code: number) {
       res._status = code;
       return res;
     }),
-    json: jest.fn(function (body: any) {
+    json: vi.fn(function (body: any) {
       res._json = body;
       return res;
     }),
-    redirect: jest.fn(),
+    redirect: vi.fn(),
   };
   return res;
 }
 
 describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockRedisPing.mockResolvedValue('PONG');
     mockSupabaseSelect.mockReturnThis();
     mockSupabaseLimit.mockResolvedValue({ data: [{ id: 1 }], error: null });
@@ -109,7 +109,7 @@ describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
 
   describe('Database health check timeout (5s)', () => {
     it('should return unhealthy when Supabase query hangs past 5s', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       // Mock Supabase to return a never-resolving promise
       mockSupabaseLimit.mockImplementation(
@@ -126,11 +126,11 @@ describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
       const handlerPromise = handler(req, res);
 
       // Advance time past the 5s timeout
-      jest.advanceTimersByTime(5500);
+      vi.advanceTimersByTime(5500);
 
       await handlerPromise;
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       // The database service should be unhealthy due to timeout
       expect(res._json.services.database.status).toBe('unhealthy');
@@ -227,7 +227,7 @@ describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
     });
 
     it('should close WebSocket on timeout', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       process.env.NOSTR_RELAYS = 'wss://relay.example.com';
 
       const WS = require('ws');
@@ -249,11 +249,11 @@ describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
       const handlerPromise = handler(req, res);
 
       // Advance past the 5s WebSocket timeout
-      jest.advanceTimersByTime(6000);
+      vi.advanceTimersByTime(6000);
 
       await handlerPromise;
 
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       // WebSocket should be closed via finally block even on timeout
       expect(mockWsClose).toHaveBeenCalled();

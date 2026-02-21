@@ -17,30 +17,30 @@ describe('CrossPostService', () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
     mockQueueService = {
-      createQueue: jest.fn(),
-      addJob: jest.fn().mockResolvedValue('job-123'),
+      createQueue: vi.fn(),
+      addJob: vi.fn().mockResolvedValue('job-123'),
     };
 
     mockPlatformService = {
-      getAdapter: jest.fn(),
-      getDecryptedToken: jest.fn(),
+      getAdapter: vi.fn(),
+      getDecryptedToken: vi.fn(),
     };
 
     mockDb = {
-      from: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      in: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockResolvedValue({ error: null }),
-      update: jest.fn().mockReturnThis(),
-      order: jest.fn(),
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+      update: vi.fn().mockReturnThis(),
+      order: vi.fn(),
     };
 
     service = new CrossPostService(mockDb, mockQueueService, mockPlatformService, mockLogger);

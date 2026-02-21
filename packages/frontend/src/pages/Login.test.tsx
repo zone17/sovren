@@ -6,11 +6,11 @@ import { AuthProvider } from '../features/auth';
 import Login from './Login';
 
 // Mock the auth service
-jest.mock('../lib/auth', () => ({
+vi.mock('../lib/auth', () => ({
   authService: {
-    login: jest.fn(),
-    generateNostrChallenge: jest.fn(),
-    authenticateNostr: jest.fn(),
+    login: vi.fn(),
+    generateNostrChallenge: vi.fn(),
+    authenticateNostr: vi.fn(),
   },
 }));
 
@@ -24,7 +24,7 @@ const renderWithProviders = (component: React.ReactElement): void => {
 
 describe('Login Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering', () => {

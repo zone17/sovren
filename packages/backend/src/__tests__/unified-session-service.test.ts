@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import {
   DatabaseSessionManager,
   createDatabaseSessionManager,
@@ -21,21 +21,21 @@ const createMockDatabase = () => {
 
   return {
     client: {
-      from: jest.fn((table: string) => {
+      from: vi.fn((table: string) => {
         if (table === 'unified_sessions') {
           return {
-            insert: jest.fn((data: any) => ({
-              select: jest.fn(() => ({
-                single: jest.fn(async () => {
+            insert: vi.fn((data: any) => ({
+              select: vi.fn(() => ({
+                single: vi.fn(async () => {
                   const id = data.id || `sess_${Date.now()}`;
                   sessionsStore.set(id, { ...data, id });
                   return { data: { ...data, id }, error: null };
                 }),
               })),
             })),
-            select: jest.fn(() => ({
-              eq: jest.fn((col: string, val: any) => ({
-                single: jest.fn(async () => {
+            select: vi.fn(() => ({
+              eq: vi.fn((col: string, val: any) => ({
+                single: vi.fn(async () => {
                   if (col === 'id') {
                     const session = sessionsStore.get(val);
                     return { data: session || null, error: session ? null : { message: 'Not found' } };
@@ -56,20 +56,20 @@ const createMockDatabase = () => {
                   }
                   return { data: null, error: { message: 'Not found' } };
                 }),
-                eq: jest.fn(() => ({
-                  single: jest.fn(async () => ({ data: null, error: null })),
-                  order: jest.fn(() => ({
-                    limit: jest.fn(async () => ({ data: [], error: null })),
+                eq: vi.fn(() => ({
+                  single: vi.fn(async () => ({ data: null, error: null })),
+                  order: vi.fn(() => ({
+                    limit: vi.fn(async () => ({ data: [], error: null })),
                   })),
                 })),
               })),
-              order: jest.fn(() => ({
-                limit: jest.fn(async () => ({ data: Array.from(sessionsStore.values()), error: null })),
+              order: vi.fn(() => ({
+                limit: vi.fn(async () => ({ data: Array.from(sessionsStore.values()), error: null })),
               })),
-              limit: jest.fn(async () => ({ data: [], error: null })),
+              limit: vi.fn(async () => ({ data: [], error: null })),
             })),
-            update: jest.fn((updates: any) => ({
-              eq: jest.fn((col: string, val: any) => {
+            update: vi.fn((updates: any) => ({
+              eq: vi.fn((col: string, val: any) => {
                 const session = sessionsStore.get(val);
                 if (session) {
                   Object.assign(session, updates);
@@ -77,8 +77,8 @@ const createMockDatabase = () => {
                 return Promise.resolve({ data: session, error: null });
               }),
             })),
-            delete: jest.fn(() => ({
-              eq: jest.fn((col: string, val: any) => {
+            delete: vi.fn(() => ({
+              eq: vi.fn((col: string, val: any) => {
                 sessionsStore.delete(val);
                 return Promise.resolve({ error: null });
               }),
@@ -88,14 +88,14 @@ const createMockDatabase = () => {
 
         if (table === 'unified_session_activities') {
           return {
-            insert: jest.fn(async (data: any) => {
+            insert: vi.fn(async (data: any) => {
               activitiesStore.push(data);
               return { data, error: null };
             }),
-            select: jest.fn(() => ({
-              eq: jest.fn(() => ({
-                order: jest.fn(() => ({
-                  limit: jest.fn(async () => ({ data: activitiesStore, error: null })),
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                order: vi.fn(() => ({
+                  limit: vi.fn(async () => ({ data: activitiesStore, error: null })),
                 })),
               })),
             })),

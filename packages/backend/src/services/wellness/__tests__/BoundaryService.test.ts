@@ -10,10 +10,10 @@ import type { ILogger } from '../../../interfaces/shared/ILogger';
 
 function createMockLogger(): ILogger {
   return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   } as unknown as ILogger;
 }
 
@@ -28,17 +28,17 @@ describe('BoundaryService', () => {
   describe('getBoundaries', () => {
     it('returns defaults when no row exists (PGRST116)', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: null,
           error: { code: 'PGRST116' },
         }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);
@@ -77,14 +77,14 @@ describe('BoundaryService', () => {
       };
 
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: dbRow, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: dbRow, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);
@@ -109,17 +109,17 @@ describe('BoundaryService', () => {
 
     it('throws on non-PGRST116 database error', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: null,
           error: { code: 'PGRST500', message: 'Internal error' },
         }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);
@@ -141,14 +141,14 @@ describe('BoundaryService', () => {
       };
 
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: dbRow, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: dbRow, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);
@@ -186,14 +186,14 @@ describe('BoundaryService', () => {
       };
 
       const chainable = {
-        upsert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: returnedRow, error: null }),
+        upsert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: returnedRow, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);
@@ -251,14 +251,14 @@ describe('BoundaryService', () => {
       };
 
       const chainable = {
-        upsert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: returnedRow, error: null }),
+        upsert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: returnedRow, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);
@@ -289,14 +289,14 @@ describe('BoundaryService', () => {
       };
 
       const chainable = {
-        upsert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: returnedRow, error: null }),
+        upsert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: returnedRow, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);
@@ -315,17 +315,17 @@ describe('BoundaryService', () => {
 
     it('throws on database error during upsert', async () => {
       const chainable = {
-        upsert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        upsert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: null,
           error: { message: 'Constraint violation' },
         }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);
@@ -346,14 +346,14 @@ describe('BoundaryService', () => {
       const returnedRow = { creator_id: 'creator-1' };
 
       const chainable = {
-        upsert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: returnedRow, error: null }),
+        upsert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: returnedRow, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BoundaryService(mockDb, mockLogger);

@@ -98,7 +98,7 @@ describe('Button Component - Elite CDD Standards', () => {
 
   describe('Interactions', () => {
     it('calls onClick handler when clicked', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<Button onClick={handleClick}>Clickable</Button>);
 
       const button = screen.getByRole('button');
@@ -108,7 +108,7 @@ describe('Button Component - Elite CDD Standards', () => {
     });
 
     it('does not call onClick when disabled', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(
         <Button onClick={handleClick} disabled>
           Disabled

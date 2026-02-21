@@ -23,13 +23,13 @@ import type {
 } from '@shared/types/nostr';
 
 // Mock dependencies
-jest.mock('../KeyManagementService');
-jest.mock('../RelayPoolManager');
+vi.mock('../KeyManagementService');
+vi.mock('../RelayPoolManager');
 
 describe('EventPublisherService', () => {
   let publisherService: EventPublisherService;
-  let mockKeyManagement: jest.Mocked<KeyManagementService>;
-  let mockRelayPool: jest.Mocked<RelayPoolManager>;
+  let mockKeyManagement: vi.Mocked<KeyManagementService>;
+  let mockRelayPool: vi.Mocked<RelayPoolManager>;
 
   const mockPublicKey = '0'.repeat(64);
   const mockPrivateKey = '1'.repeat(64);
@@ -38,48 +38,48 @@ describe('EventPublisherService', () => {
 
   beforeEach(async () => {
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup KeyManagementService mock with proper prototype
     mockKeyManagement = {
-      isInitialized: jest.fn().mockReturnValue(true),
-      getActiveKey: jest.fn().mockReturnValue({
+      isInitialized: vi.fn().mockReturnValue(true),
+      getActiveKey: vi.fn().mockReturnValue({
         keyId: 'test-key-id',
         publicKey: mockPublicKey,
         privateKey: mockPrivateKey,
         npub: 'npub1test',
         nsec: 'nsec1test',
       }),
-      signEvent: jest.fn().mockImplementation(async (keyId, event) => ({
+      signEvent: vi.fn().mockImplementation(async (keyId, event) => ({
         ...event,
         id: mockEventId,
         sig: mockSignature,
       })),
-      verifyEventSignature: jest.fn().mockResolvedValue(true),
+      verifyEventSignature: vi.fn().mockResolvedValue(true),
     } as any;
 
     // Setup RelayPoolManager mock
     mockRelayPool = {
-      isInitialized: jest.fn().mockReturnValue(true),
-      getConnectedRelays: jest.fn().mockReturnValue([
+      isInitialized: vi.fn().mockReturnValue(true),
+      getConnectedRelays: vi.fn().mockReturnValue([
         'wss://relay.damus.io',
         'wss://nos.lol',
         'wss://relay.nostr.info',
       ]),
-      publishEvent: jest.fn().mockResolvedValue([
+      publishEvent: vi.fn().mockResolvedValue([
         { relay: 'wss://relay.damus.io', success: true, latency: 100 },
         { relay: 'wss://nos.lol', success: true, latency: 150 },
         { relay: 'wss://relay.nostr.info', success: true, latency: 200 },
       ]),
-      publishEventToFastest: jest.fn().mockResolvedValue([
+      publishEventToFastest: vi.fn().mockResolvedValue([
         { relay: 'wss://relay.damus.io', success: true, latency: 100 },
       ]),
-      getFastestRelays: jest.fn().mockReturnValue(['wss://relay.damus.io']),
+      getFastestRelays: vi.fn().mockReturnValue(['wss://relay.damus.io']),
     } as any;
 
     // Mock getInstance methods BEFORE creating service
-    (KeyManagementService.getInstance as jest.Mock).mockReturnValue(mockKeyManagement);
-    (RelayPoolManager.getInstance as jest.Mock).mockReturnValue(mockRelayPool);
+    (KeyManagementService.getInstance as any).mockReturnValue(mockKeyManagement);
+    (RelayPoolManager.getInstance as any).mockReturnValue(mockRelayPool);
 
     // Create service instance
     publisherService = EventPublisherService.getInstance();
@@ -107,7 +107,7 @@ describe('EventPublisherService', () => {
     });
 
     it('should not initialize twice', async () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation();
       await publisherService.initialize();
 
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -509,7 +509,7 @@ describe('EventPublisherService', () => {
       const delays: number[] = [];
       const originalSetTimeout = global.setTimeout;
 
-      global.setTimeout = jest.fn((callback, delay) => {
+      global.setTimeout = vi.fn((callback, delay) => {
         delays.push(delay as number);
         return originalSetTimeout(callback, 0); // Execute immediately for test
       }) as any;
@@ -691,7 +691,7 @@ describe('EventPublisherService', () => {
     });
 
     it('should emit error events', async () => {
-      const errorHandler = jest.fn();
+      const errorHandler = vi.fn();
       publisherService.on('publish:error', errorHandler);
 
       mockRelayPool.publishEvent.mockRejectedValue(new Error('Test error'));

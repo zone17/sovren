@@ -10,15 +10,15 @@ function createMockDb() {
   const chain: any = {};
   const methods = ['select', 'eq', 'single', 'from'];
   for (const method of methods) {
-    chain[method] = jest.fn().mockReturnValue(chain);
+    chain[method] = vi.fn().mockReturnValue(chain);
   }
-  return { from: jest.fn().mockReturnValue(chain), _chain: chain };
+  return { from: vi.fn().mockReturnValue(chain), _chain: chain };
 }
 
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
 };
 
 describe('DmcaService', () => {
@@ -28,7 +28,7 @@ describe('DmcaService', () => {
   beforeEach(() => {
     mockDb = createMockDb();
     service = new DmcaService(mockDb as any, mockLogger);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('generateReport', () => {

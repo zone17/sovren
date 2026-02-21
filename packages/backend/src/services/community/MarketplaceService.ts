@@ -1,0 +1,836 @@
+/**
+ * Marketplace Service
+ * EPIC-010: Creator Network — Service listings with custodial Lightning escrow
+ *
+ * Key design decisions:
+ * - Custodial escrow: buyer pays standard LNbits invoice → Sovren wallet
+ * - Three-layer payment detection: webhook (primary) + BullMQ poll (backup) + user-triggered
+ * - 30-day auto-expire via BullMQ delayed job → transitions escrow_funded to 'refunded'
+ * - Idempotency via client-supplied UUID scoped to buyer (M-6)
+ * - Authorization: only buyer can complete, only seller can start, either can dispute
+ *
+ * Security decisions:
+ * - C-1: Order transitions to 'completed' ONLY after Lightning payout succeeds
+ *   On failure: release_status='failed', BullMQ retry with exponential backoff
+ * - C-3: HMAC-SHA256 webhook verification using crypto.timingSafeEqual
+ *   Cross-verified by polling Lightning node after each webhook
+ * - H-4: portfolioUrls validated — must be https:// only
+ * - M-6: idempotency_key unique per (buyer_id, idempotency_key) not globally
+ *
+ * ADR-025: Custodial escrow is inherently custodial. MSB registration may be required.
+ */
+
+import { createHmac, timingSafeEqual } from 'crypto';
+import type { IMarketplaceService } from '../../interfaces/community/IMarketplaceService';
+import type { ILogger } from '../../interfaces/shared/ILogger';
+import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
+import type { IQueueService } from '../../interfaces/queue/IQueueService';
+import { validateSsrfUrl } from '../../utils/ssrf';
+import { ConflictError } from '../../utils/errors';
+
+const VALID_SERVICE_TYPES = ['editing', 'writing', 'design', 'consulting', 'other'] as const;
+const ESCROW_EXPIRE_DAYS = 30;
+// C-1: max BullMQ retry attempts for Lightning payout before marking permanently failed
+const MAX_PAYOUT_ATTEMPTS = 5;
+
+interface ListingRow {
+  id: string;
+  creator_id: string;
+  service_type: string;
+  title: string;
+  description: string | null;
+  price_sats: number;
+  portfolio_urls: string[];
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface OrderRow {
+  id: string;
+  listing_id: string;
+  buyer_id: string;
+  seller_id: string;
+  status: string;
+  escrow_invoice_id: string | null;
+  escrow_payment_hash: string | null;
+  amount_sats: number;
+  idempotency_key: string;
+  release_status: string;
+  release_attempts: number;
+  created_at: string;
+  funded_at: string | null;
+  completed_at: string | null;
+  disputed_at: string | null;
+  expires_at: string;
+}
+
+interface ReviewRow {
+  id: string;
+  order_id: string;
+  reviewer_id: string;
+  rating: number;
+  review_text: string | null;
+  created_at: string;
+}
+
+// LightningService interface (subset used by marketplace)
+interface ILightningService {
+  createInvoice(
+    amountSats: number,
+    memo: string
+  ): Promise<{ invoiceId: string; paymentRequest: string; paymentHash: string }>;
+  payToAddress(
+    lightningAddress: string,
+    amountSats: number,
+    memo: string
+  ): Promise<{ paymentHash: string }>;
+  getInvoiceStatus(invoiceId: string): Promise<{ paid: boolean; paymentHash?: string }>;
+  getSellerLightningAddress(sellerId: string): Promise<string | null>;
+}
+
+export class MarketplaceService implements IMarketplaceService {
+  private readonly db: ISupabaseClient;
+  private readonly lightning: ILightningService;
+  private readonly queue: IQueueService;
+  private readonly logger: ILogger;
+
+  constructor(
+    db: ISupabaseClient,
+    lightning: ILightningService,
+    queue: IQueueService,
+    logger: ILogger
+  ) {
+    this.db = db;
+    this.lightning = lightning;
+    this.queue = queue;
+    this.logger = logger;
+  }
+
+  async createListing(
+    creatorId: string,
+    data: {
+      serviceType: string;
+      title: string;
+      description?: string;
+      priceSats: number;
+      portfolioUrls?: string[];
+    }
+  ): Promise<{ id: string }> {
+    if (!(VALID_SERVICE_TYPES as readonly string[]).includes(data.serviceType)) {
+      throw new Error(`Invalid service type. Must be one of: ${VALID_SERVICE_TYPES.join(', ')}`);
+    }
+
+    if (!data.title || data.title.trim().length === 0) {
+      throw new Error('Title is required');
+    }
+
+    if (!Number.isInteger(data.priceSats) || data.priceSats <= 0) {
+      throw new Error('price_sats must be a positive integer');
+    }
+
+    // H-4: Validate portfolio URLs — must be https:// only (no http, no data URIs)
+    // #347: SSRF validation — reject URLs pointing to internal/private IPs
+    if (data.portfolioUrls && data.portfolioUrls.length > 0) {
+      for (const url of data.portfolioUrls) {
+        if (typeof url !== 'string' || !url.startsWith('https://')) {
+          throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
+        }
+        // Verify it's a parseable URL (catches malformed inputs)
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol !== 'https:') {
+            throw new Error('Protocol must be https');
+          }
+        } catch {
+          throw new Error(`Invalid portfolio URL: "${url}". Must be a valid https:// URL`);
+        }
+        // #347: SSRF check — blocks internal IPs, DNS rebinding, decimal IPs, etc.
+        await validateSsrfUrl(url);
+      }
+    }
+
+    const { data: rows, error } = await this.db
+      .from<ListingRow>('service_listings')
+      .insert({
+        creator_id: creatorId,
+        service_type: data.serviceType,
+        title: data.title.trim(),
+        description: data.description ?? null,
+        price_sats: data.priceSats,
+        portfolio_urls: data.portfolioUrls ?? [],
+        active: true,
+      })
+      .select('id')
+      .single();
+
+    if (error || !rows) {
+      this.logger.error('Failed to create listing', { error, creatorId });
+      throw new Error(`Failed to create listing: ${error?.message}`);
+    }
+
+    this.logger.info('Service listing created', { listingId: rows.id, creatorId });
+    return { id: rows.id };
+  }
+
+  async getListing(listingId: string): Promise<ListingRow | null> {
+    const { data, error } = await this.db
+      .from<ListingRow>('service_listings')
+      .select(
+        'id, creator_id, service_type, title, description, price_sats, portfolio_urls, active, created_at, updated_at'
+      )
+      .eq('id', listingId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+    return data;
+  }
+
+  async getListings(
+    filters?: { serviceType?: string; active?: boolean },
+    pagination?: { page: number; limit: number }
+  ): Promise<{ items: ListingRow[]; total: number }> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = this.db
+      .from<ListingRow>('service_listings')
+      .select(
+        'id, creator_id, service_type, title, description, price_sats, portfolio_urls, active, created_at, updated_at',
+        { count: 'exact' }
+      );
+
+    // Default to active listings
+    const showActive = filters?.active !== false;
+    query = query.eq('active', showActive);
+
+    if (filters?.serviceType) {
+      query = query.eq('service_type', filters.serviceType);
+    }
+
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      this.logger.error('Failed to get listings', { error, filters });
+      throw new Error(`Failed to get listings: ${error.message}`);
+    }
+
+    return { items: data ?? [], total: count ?? 0 };
+  }
+
+  async updateListing(
+    listingId: string,
+    creatorId: string,
+    data: {
+      title?: string;
+      description?: string;
+      priceSats?: number;
+      portfolioUrls?: string[];
+      active?: boolean;
+    }
+  ): Promise<void> {
+    const updates: Record<string, unknown> = {};
+    if (data.title !== undefined) updates.title = data.title.trim();
+    if (data.description !== undefined) updates.description = data.description;
+    if (data.priceSats !== undefined) updates.price_sats = data.priceSats;
+    if (data.portfolioUrls !== undefined) {
+      // H-4: Validate portfolio URLs
+      for (const url of data.portfolioUrls) {
+        if (typeof url !== 'string' || !url.startsWith('https://')) {
+          throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
+        }
+        await validateSsrfUrl(url);
+      }
+      updates.portfolio_urls = data.portfolioUrls;
+    }
+    if (data.active !== undefined) updates.active = data.active;
+
+    const { error, count } = await this.db
+      .from<ListingRow>('service_listings')
+      .update(updates)
+      .eq('id', listingId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to update listing', { error, listingId });
+      throw new Error(`Failed to update listing: ${error.message}`);
+    }
+    if (count === 0) {
+      throw new Error('Listing not found or not owned by user');
+    }
+  }
+
+  async deleteListing(listingId: string, creatorId: string): Promise<void> {
+    // Soft delete — set active=false
+    const { error, count } = await this.db
+      .from<ListingRow>('service_listings')
+      .update({ active: false })
+      .eq('id', listingId)
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      this.logger.error('Failed to delete listing', { error, listingId });
+      throw new Error(`Failed to delete listing: ${error.message}`);
+    }
+    if (count === 0) {
+      throw new Error('Listing not found or not owned by user');
+    }
+  }
+
+  async getOrders(
+    userId: string,
+    role: 'buyer' | 'seller',
+    pagination?: { page: number; limit: number }
+  ): Promise<{ items: OrderRow[]; total: number }> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const column = role === 'buyer' ? 'buyer_id' : 'seller_id';
+
+    const { data, error, count } = await this.db
+      .from<OrderRow>('service_orders')
+      .select('*', { count: 'exact' })
+      .eq(column, userId)
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      this.logger.error('Failed to get orders', { error, userId, role });
+      throw new Error(`Failed to get orders: ${error.message}`);
+    }
+
+    return { items: data ?? [], total: count ?? 0 };
+  }
+
+  async placeOrder(
+    buyerId: string,
+    listingId: string,
+    idempotencyKey: string
+  ): Promise<{ id: string; invoicePaymentRequest: string }> {
+    // M-6: Idempotency check scoped to buyer — same buyer can reuse key (retry safety)
+    const { data: existing } = await this.db
+      .from<OrderRow>('service_orders')
+      .select('id, escrow_invoice_id')
+      .eq('buyer_id', buyerId)
+      .eq('idempotency_key', idempotencyKey)
+      .maybeSingle();
+
+    if (existing) {
+      // Return the existing order — do not recreate invoice
+      this.logger.info('Idempotent order lookup', {
+        orderId: existing.id,
+        idempotencyKey,
+        buyerId,
+      });
+      return {
+        id: existing.id,
+        invoicePaymentRequest: `cached:${existing.escrow_invoice_id}`,
+      };
+    }
+
+    // Fetch listing (read-only, for validation and price)
+    const { data: listing, error: listingError } = await this.db
+      .from<ListingRow>('service_listings')
+      .select('id, creator_id, price_sats, active')
+      .eq('id', listingId)
+      .single();
+
+    if (listingError || !listing) {
+      throw new Error('Listing not found');
+    }
+
+    if (!listing.active) {
+      throw new Error('This listing is no longer active');
+    }
+
+    if (listing.creator_id === buyerId) {
+      throw new Error('Cannot place an order on your own listing');
+    }
+
+    // #363: Atomic claim — deactivate listing with active=true guard to prevent double-booking.
+    // If another buyer concurrently places an order, only one UPDATE will match (active=true).
+    // The loser gets 0 rows affected and a 409 Conflict.
+    const { data: claimedRows, error: claimError } = await this.db
+      .from<ListingRow>('service_listings')
+      .update({ active: false })
+      .eq('id', listingId)
+      .eq('active', true)
+      .select('id');
+
+    if (claimError) {
+      this.logger.error('Failed to claim listing', { error: claimError, listingId, buyerId });
+      throw new Error(`Failed to claim listing: ${claimError.message}`);
+    }
+
+    if (!claimedRows || claimedRows.length === 0) {
+      throw new ConflictError('Listing is no longer available — another order was placed first');
+    }
+
+    // #363: All subsequent operations are wrapped in try/catch.
+    // If invoice creation or order insert fails after we claimed the listing,
+    // we must re-activate the listing to avoid permanently locking it.
+    try {
+      // Create custodial escrow invoice: buyer pays → Sovren wallet
+      const memo = `Marketplace escrow for order on listing ${listingId}`;
+      const invoice = await this.lightning.createInvoice(listing.price_sats, memo);
+
+      // Persist order (persist before mutating external state)
+      const expiresAt = new Date(
+        Date.now() + ESCROW_EXPIRE_DAYS * 24 * 60 * 60 * 1000
+      ).toISOString();
+
+      const { data: rows, error } = await this.db
+        .from<OrderRow>('service_orders')
+        .insert({
+          listing_id: listingId,
+          buyer_id: buyerId,
+          seller_id: listing.creator_id,
+          status: 'pending',
+          escrow_invoice_id: invoice.invoiceId,
+          escrow_payment_hash: invoice.paymentHash,
+          amount_sats: listing.price_sats,
+          idempotency_key: idempotencyKey,
+          expires_at: expiresAt,
+          release_status: 'pending',
+          release_attempts: 0,
+        })
+        .select('id')
+        .single();
+
+      if (error || !rows) {
+        this.logger.error('Failed to create order', { error, listingId, buyerId });
+        throw new Error(`Failed to create order: ${error?.message}`);
+      }
+
+      // Schedule 30-day auto-expire: pending → expired (no funds held)
+      // If escrow_funded before expiry, the job transitions to 'refunded' instead
+      const expireDelayMs = ESCROW_EXPIRE_DAYS * 24 * 60 * 60 * 1000;
+      await this.queue.addJob(
+        'marketplace',
+        'expire-order',
+        { orderId: rows.id },
+        {
+          jobId: `expire-order-${rows.id}`,
+          delay: expireDelayMs,
+          removeOnComplete: { count: 100 },
+        }
+      );
+
+      this.logger.info('Order placed', {
+        orderId: rows.id,
+        listingId,
+        buyerId,
+        amountSats: listing.price_sats,
+      });
+
+      return {
+        id: rows.id,
+        invoicePaymentRequest: invoice.paymentRequest,
+      };
+    } catch (orderError) {
+      // #363: Rollback listing claim — re-activate listing so it's available again
+      this.logger.warn('Rolling back listing claim after order creation failure', {
+        listingId,
+        buyerId,
+        error: orderError instanceof Error ? orderError.message : 'Unknown error',
+      });
+      await this.db
+        .from<ListingRow>('service_listings')
+        .update({ active: true })
+        .eq('id', listingId)
+        .eq('active', false);
+
+      throw orderError;
+    }
+  }
+
+  async startOrder(orderId: string, sellerId: string): Promise<void> {
+    const { data: order, error: findError } = await this.db
+      .from<OrderRow>('service_orders')
+      .select('id, seller_id, status')
+      .eq('id', orderId)
+      .single();
+
+    if (findError || !order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.seller_id !== sellerId) {
+      throw new Error('Only the seller can mark an order as in progress');
+    }
+
+    if (order.status !== 'escrow_funded') {
+      throw new Error(
+        `Cannot start order in '${order.status}' status. Order must be escrow_funded.`
+      );
+    }
+
+    const { error } = await this.db
+      .from<OrderRow>('service_orders')
+      .update({ status: 'in_progress' })
+      .eq('id', orderId)
+      .eq('status', 'escrow_funded'); // Atomic status guard
+
+    if (error) {
+      this.logger.error('Failed to start order', { error, orderId });
+      throw new Error(`Failed to start order: ${error.message}`);
+    }
+
+    this.logger.info('Order started', { orderId, sellerId });
+  }
+
+  /**
+   * C-1: Escrow release failure recovery
+   * The order ONLY transitions to 'completed' after the Lightning payout succeeds.
+   * On failure: release_status='failed', BullMQ retry enqueued with exponential backoff.
+   * The DB state machine prevents completing an order in 'in_progress' status without
+   * the payout succeeding first — separating "work done" from "payment released".
+   */
+  async completeOrder(orderId: string, buyerId: string): Promise<void> {
+    const { data: order, error: findError } = await this.db
+      .from<OrderRow>('service_orders')
+      .select('id, buyer_id, seller_id, status, amount_sats, release_status, release_attempts')
+      .eq('id', orderId)
+      .single();
+
+    if (findError || !order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.buyer_id !== buyerId) {
+      throw new Error('Only the buyer can mark an order as complete');
+    }
+
+    if (order.status !== 'in_progress') {
+      throw new Error(
+        `Cannot complete order in '${order.status}' status. Order must be in_progress.`
+      );
+    }
+
+    // #262: Atomic guard — only one caller can acquire the 'processing' lock.
+    // The .neq('release_status', 'processing') ensures the second concurrent
+    // request gets 0 rows updated and is safely rejected.
+    const { data: updatedRows, error: processingError } = await this.db
+      .from<OrderRow>('service_orders')
+      .update({
+        release_status: 'processing',
+        release_attempts: (order.release_attempts ?? 0) + 1,
+      })
+      .eq('id', orderId)
+      .eq('status', 'in_progress')
+      .neq('release_status', 'processing') // Atomic guard: reject if already processing
+      .select('id');
+
+    if (processingError) {
+      this.logger.error('Failed to mark order release as processing', {
+        error: processingError,
+        orderId,
+      });
+      throw new Error(`Failed to initiate payout: ${processingError.message}`);
+    }
+
+    // If no rows were updated, another request already acquired the processing lock
+    if (!updatedRows || updatedRows.length === 0) {
+      this.logger.warn('Double-payout race prevented: release already in progress', {
+        orderId,
+        buyerId,
+      });
+      throw new Error('Payout is already being processed for this order');
+    }
+
+    // C-1: Fetch seller's Lightning address and attempt payout
+    try {
+      const sellerAddress = await this.lightning.getSellerLightningAddress(order.seller_id);
+
+      if (!sellerAddress) {
+        throw new Error(`Seller has no Lightning address configured`);
+      }
+
+      const memo = `Sovren marketplace payment for order ${orderId}`;
+      await this.lightning.payToAddress(sellerAddress, order.amount_sats, memo);
+
+      // C-1: Payout succeeded — ONLY NOW transition order to completed
+      const { error: completeError } = await this.db
+        .from<OrderRow>('service_orders')
+        .update({
+          status: 'completed',
+          release_status: 'completed',
+        })
+        .eq('id', orderId)
+        .eq('status', 'in_progress'); // Atomic status guard
+
+      if (completeError) {
+        // Payout went through but DB update failed — critical inconsistency, log and alert
+        this.logger.error('CRITICAL: Payout succeeded but order status update failed', {
+          orderId,
+          sellerId: order.seller_id,
+          amountSats: order.amount_sats,
+          error: completeError.message,
+        });
+        throw new Error(`Payout succeeded but order update failed: ${completeError.message}`);
+      }
+
+      this.logger.info('Order completed — payout released', {
+        orderId,
+        buyerId,
+        sellerId: order.seller_id,
+        amountSats: order.amount_sats,
+      });
+    } catch (payoutError) {
+      // C-1: Payout failed — mark release as failed, do NOT complete the order
+      const currentAttempts = (order.release_attempts ?? 0) + 1;
+      const isFinalFailure = currentAttempts >= MAX_PAYOUT_ATTEMPTS;
+
+      await this.db
+        .from<OrderRow>('service_orders')
+        .update({
+          release_status: isFinalFailure ? 'permanently_failed' : 'failed',
+          release_attempts: currentAttempts,
+        })
+        .eq('id', orderId);
+
+      const errorMessage =
+        payoutError instanceof Error ? payoutError.message : 'Unknown payout error';
+      this.logger.error('Escrow payout failed', {
+        orderId,
+        sellerId: order.seller_id,
+        amountSats: order.amount_sats,
+        attempts: currentAttempts,
+        maxAttempts: MAX_PAYOUT_ATTEMPTS,
+        isFinalFailure,
+        error: errorMessage,
+      });
+
+      if (!isFinalFailure) {
+        // C-1: Enqueue retry with exponential backoff (2^attempt seconds, capped at 1 hour)
+        const backoffMs = Math.min(Math.pow(2, currentAttempts) * 1000, 3600 * 1000);
+        await this.queue.addJob(
+          'marketplace',
+          'retry-payout',
+          { orderId, buyerId },
+          {
+            jobId: `retry-payout-${orderId}-${currentAttempts}`,
+            delay: backoffMs,
+            removeOnComplete: { count: 100 },
+          }
+        );
+        this.logger.info('Payout retry scheduled', {
+          orderId,
+          backoffMs,
+          attempt: currentAttempts,
+        });
+      }
+
+      throw new Error(`Payout to seller failed: ${errorMessage}. Order remains in_progress.`);
+    }
+  }
+
+  async disputeOrder(orderId: string, userId: string): Promise<void> {
+    const { data: order, error: findError } = await this.db
+      .from<OrderRow>('service_orders')
+      .select('id, buyer_id, seller_id, status')
+      .eq('id', orderId)
+      .single();
+
+    if (findError || !order) {
+      throw new Error('Order not found');
+    }
+
+    // Either buyer or seller can dispute
+    if (order.buyer_id !== userId && order.seller_id !== userId) {
+      throw new Error('Only the buyer or seller can dispute an order');
+    }
+
+    if (!['escrow_funded', 'in_progress'].includes(order.status)) {
+      throw new Error(`Cannot dispute order in '${order.status}' status`);
+    }
+
+    const { error } = await this.db
+      .from<OrderRow>('service_orders')
+      .update({ status: 'disputed' })
+      .eq('id', orderId)
+      .in('status', ['escrow_funded', 'in_progress']); // Atomic status guard
+
+    if (error) {
+      this.logger.error('Failed to dispute order', { error, orderId });
+      throw new Error(`Failed to dispute order: ${error.message}`);
+    }
+
+    this.logger.info('Order disputed', { orderId, userId });
+  }
+
+  async reviewOrder(
+    orderId: string,
+    reviewerId: string,
+    data: { rating: number; reviewText?: string }
+  ): Promise<{ id: string }> {
+    if (!Number.isInteger(data.rating) || data.rating < 1 || data.rating > 5) {
+      throw new Error('Rating must be an integer between 1 and 5');
+    }
+
+    // M-4: Validate review text length (10000 char limit matches DB CHECK)
+    if (data.reviewText && data.reviewText.length > 10000) {
+      throw new Error('Review text must be 10000 characters or fewer');
+    }
+
+    // Verify order is completed and reviewer is the buyer
+    const { data: order, error: orderError } = await this.db
+      .from<OrderRow>('service_orders')
+      .select('id, buyer_id, status')
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.buyer_id !== reviewerId) {
+      throw new Error('Only the buyer can review a completed order');
+    }
+
+    if (order.status !== 'completed') {
+      throw new Error('Can only review completed orders');
+    }
+
+    const { data: rows, error } = await this.db
+      .from<ReviewRow>('order_reviews')
+      .insert({
+        order_id: orderId,
+        reviewer_id: reviewerId,
+        rating: data.rating,
+        review_text: data.reviewText ?? null,
+      })
+      .select('id')
+      .single();
+
+    if (error || !rows) {
+      if (error?.code === '23505') {
+        throw new Error('Order has already been reviewed');
+      }
+      this.logger.error('Failed to create review', { error, orderId, reviewerId });
+      throw new Error(`Failed to create review: ${error?.message}`);
+    }
+
+    this.logger.info('Order reviewed', {
+      reviewId: rows.id,
+      orderId,
+      reviewerId,
+      rating: data.rating,
+    });
+    return { id: rows.id };
+  }
+
+  /**
+   * C-3: Verify Lightning payment webhook using HMAC-SHA256 + timing-safe comparison.
+   * The webhook secret is a shared secret with the LNbits instance.
+   * After HMAC passes, cross-verify by polling the Lightning node for ground truth.
+   *
+   * @param rawBody - The raw request body bytes (must be raw, not parsed JSON)
+   * @param signature - The HMAC-SHA256 hex digest from the webhook header
+   * @param webhookSecret - The shared secret for this webhook endpoint
+   */
+  verifyWebhookSignature(rawBody: Buffer, signature: string, webhookSecret: string): boolean {
+    // C-3: Compute expected HMAC-SHA256 digest
+    const expected = createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
+
+    // C-3: Use timingSafeEqual to prevent timing attacks — NEVER use === for HMAC comparison
+    try {
+      const expectedBuf = Buffer.from(expected, 'hex');
+      const receivedBuf = Buffer.from(signature, 'hex');
+
+      if (expectedBuf.length !== receivedBuf.length) {
+        return false;
+      }
+
+      return timingSafeEqual(expectedBuf, receivedBuf);
+    } catch {
+      // Invalid hex encoding in signature
+      return false;
+    }
+  }
+
+  /**
+   * C-3: Handle incoming payment webhook — verify HMAC, then cross-verify via Lightning poll.
+   * Three-layer detection: webhook (primary) → Lightning poll (verify) → BullMQ (backup).
+   *
+   * @param orderId - The order to mark as escrow_funded
+   * @param paymentHash - The payment hash reported by the webhook
+   * @param rawBody - Raw webhook body for HMAC verification
+   * @param signature - HMAC-SHA256 signature from webhook header
+   * @param webhookSecret - Shared secret for this webhook endpoint
+   */
+  async handlePaymentWebhook(
+    orderId: string,
+    paymentHash: string,
+    rawBody: Buffer,
+    signature: string,
+    webhookSecret: string
+  ): Promise<void> {
+    // C-3: Step 1 — HMAC verification (timing-safe)
+    if (!this.verifyWebhookSignature(rawBody, signature, webhookSecret)) {
+      this.logger.warn('Webhook signature verification failed', { orderId });
+      throw new Error('Invalid webhook signature');
+    }
+
+    // C-3: Step 2 — Fetch order and verify payment hash matches what we stored
+    const { data: order, error: findError } = await this.db
+      .from<OrderRow>('service_orders')
+      .select('id, status, escrow_invoice_id, escrow_payment_hash')
+      .eq('id', orderId)
+      .single();
+
+    if (findError || !order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.status !== 'pending') {
+      // Already funded or in another terminal state — idempotent response
+      this.logger.info('Webhook received for non-pending order — ignoring', {
+        orderId,
+        status: order.status,
+      });
+      return;
+    }
+
+    // C-3: Step 3 — Cross-verify by polling Lightning node directly (ground truth)
+    if (!order.escrow_invoice_id) {
+      throw new Error('Order missing escrow invoice ID');
+    }
+    const invoiceStatus = await this.lightning.getInvoiceStatus(order.escrow_invoice_id);
+    if (!invoiceStatus.paid) {
+      this.logger.warn('Webhook claimed payment but Lightning node reports unpaid', {
+        orderId,
+        paymentHashFromWebhook: paymentHash,
+      });
+      throw new Error('Payment not confirmed by Lightning node');
+    }
+
+    // Verify payment hash matches
+    if (invoiceStatus.paymentHash && invoiceStatus.paymentHash !== order.escrow_payment_hash) {
+      this.logger.warn('Payment hash mismatch between webhook and stored invoice', { orderId });
+      throw new Error('Payment hash mismatch');
+    }
+
+    // C-3: All three checks passed — transition to escrow_funded
+    const { error: updateError } = await this.db
+      .from<OrderRow>('service_orders')
+      .update({ status: 'escrow_funded' })
+      .eq('id', orderId)
+      .eq('status', 'pending'); // Atomic status guard
+
+    if (updateError) {
+      this.logger.error('Failed to update order to escrow_funded', { error: updateError, orderId });
+      throw new Error(`Failed to update order: ${updateError.message}`);
+    }
+
+    this.logger.info('Order funded via webhook — escrow active', { orderId, paymentHash });
+  }
+}

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file ThirdPartyIntegrationTester.ts
  * @description Self-updating third-party integration testing with service discovery

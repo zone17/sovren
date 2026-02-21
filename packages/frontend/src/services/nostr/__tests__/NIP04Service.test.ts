@@ -22,26 +22,26 @@ import type { NostrDirectMessage } from '@sovren/shared/types/nostr/nips';
 // Mock WebCrypto API
 const mockCrypto = {
   subtle: {
-    encrypt: jest.fn(),
-    decrypt: jest.fn(),
-    importKey: jest.fn(),
-    deriveBits: jest.fn(),
+    encrypt: vi.fn(),
+    decrypt: vi.fn(),
+    importKey: vi.fn(),
+    deriveBits: vi.fn(),
   },
-  getRandomValues: jest.fn((arr: Uint8Array) => {
+  getRandomValues: vi.fn((arr: Uint8Array) => {
     for (let i = 0; i < arr.length; i++) {
       arr[i] = Math.floor(Math.random() * 256);
     }
     return arr;
   }),
-  randomUUID: jest.fn(() => 'mock-uuid-1234'),
+  randomUUID: vi.fn(() => 'mock-uuid-1234'),
 };
 
 // Mock browser extension with NIP-04 support
 const mockNostrExtension = {
-  getPublicKey: jest.fn(),
-  signEvent: jest.fn(),
-  encrypt: jest.fn(),
-  decrypt: jest.fn(),
+  getPublicKey: vi.fn(),
+  signEvent: vi.fn(),
+  encrypt: vi.fn(),
+  decrypt: vi.fn(),
   _metadata: { name: 'Alby' },
 };
 
@@ -63,10 +63,10 @@ describe('NIP04Service', () => {
 
   beforeEach(async () => {
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup global mocks
-    global.crypto = mockCrypto as any;
+    Object.defineProperty(globalThis, "crypto", { value: mockCrypto as any, writable: true, configurable: true });
     (global as any).window = { nostr: mockNostrExtension };
 
     // Initialize services
@@ -80,7 +80,7 @@ describe('NIP04Service', () => {
   afterEach(async () => {
     await service.destroy();
     await keyManagementService.destroy();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('Singleton Pattern', () => {
@@ -522,7 +522,7 @@ describe('NIP04Service', () => {
 
   describe('Security Features', () => {
     it('should not log plaintext messages', async () => {
-      const consoleSpy = jest.spyOn(console, 'log');
+      const consoleSpy = vi.spyOn(console, 'log');
       const secret = 'super-secret-message';
 
       await service.encrypt(secret, TEST_KEYS.recipient.publicKey);
@@ -534,7 +534,7 @@ describe('NIP04Service', () => {
     });
 
     it('should not log private keys', async () => {
-      const consoleSpy = jest.spyOn(console, 'log');
+      const consoleSpy = vi.spyOn(console, 'log');
 
       await service.encrypt('test', TEST_KEYS.recipient.publicKey);
 

@@ -46,12 +46,12 @@ const createMockSubscription = (overrides?: Partial<Subscription>): Subscription
 });
 
 const createMockActions = () => ({
-  onView: jest.fn(),
-  onEdit: jest.fn(),
-  onPause: jest.fn(),
-  onResume: jest.fn(),
-  onCancel: jest.fn(),
-  onDelete: jest.fn(),
+  onView: vi.fn(),
+  onEdit: vi.fn(),
+  onPause: vi.fn(),
+  onResume: vi.fn(),
+  onCancel: vi.fn(),
+  onDelete: vi.fn(),
 });
 
 // 🧪 **TEST SUITES**

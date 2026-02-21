@@ -10,6 +10,8 @@ export * from './payment-state';
 export * from './nostr-service';
 export * from './wellness';
 export * from './provenance';
+export * from './community';
+export * from './finance';
 
 // Export config utilities
 export * from '../config';
@@ -76,9 +78,7 @@ export const PaginationSchema = z.object({
 export type Pagination = z.infer<typeof PaginationSchema>;
 
 // Paginated response
-export const PaginatedResponseSchema = <T extends z.ZodType>(
-  dataSchema: T
-) =>
+export const PaginatedResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
   z.object({
     success: z.boolean(),
     data: z.array(dataSchema),
@@ -88,4 +88,6 @@ export const PaginatedResponseSchema = <T extends z.ZodType>(
     timestamp: z.string().optional(),
   });
 
-export type PaginatedResponse<T> = z.infer<ReturnType<typeof PaginatedResponseSchema<z.ZodType<T>>>>;
+export type PaginatedResponse<T> = z.infer<
+  ReturnType<typeof PaginatedResponseSchema<z.ZodType<T>>>
+>;

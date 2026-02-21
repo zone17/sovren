@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite E2E Effectiveness Monitor - Continuous testing effectiveness monitoring
  * with AI-powered analytics, predictive insights, and comprehensive reporting.

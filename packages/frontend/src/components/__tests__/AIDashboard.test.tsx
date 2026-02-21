@@ -17,9 +17,9 @@ import * as predictiveAnalyticsModule from '../../features/analytics/services/pr
 import AIDashboard from '../../features/dashboard/components/AIDashboard';
 
 // Mock the predictive analytics module
-jest.mock('../../features/analytics/services/predictiveAnalytics', () => ({
+vi.mock('../../features/analytics/services/predictiveAnalytics', () => ({
   predictiveAnalytics: {
-    predictUserBehavior: jest.fn().mockResolvedValue({
+    predictUserBehavior: vi.fn().mockResolvedValue({
       userId: 'user_123',
       sessionDuration: 45000,
       clickPatterns: [1234567890],
@@ -30,7 +30,7 @@ jest.mock('../../features/analytics/services/predictiveAnalytics', () => ({
       nextAction: 'purchase',
       confidence: 0.92,
     }),
-    forecastPerformance: jest.fn().mockResolvedValue({
+    forecastPerformance: vi.fn().mockResolvedValue({
       metric: 'LCP',
       currentValue: 2.1,
       predictedValue: 2.8,
@@ -39,7 +39,7 @@ jest.mock('../../features/analytics/services/predictiveAnalytics', () => ({
       timeframe: '24h',
       factors: ['user_load', 'cache_efficiency', 'network_conditions'],
     }),
-    analyzeFeatureUsage: jest.fn().mockResolvedValue([
+    analyzeFeatureUsage: vi.fn().mockResolvedValue([
       {
         feature: 'Navigation',
         usage: 85.5,
@@ -49,7 +49,7 @@ jest.mock('../../features/analytics/services/predictiveAnalytics', () => ({
         impactScore: 92.3,
       },
     ]),
-    detectAnomalies: jest.fn().mockResolvedValue([
+    detectAnomalies: vi.fn().mockResolvedValue([
       {
         type: 'performance',
         severity: 'medium',
@@ -58,7 +58,7 @@ jest.mock('../../features/analytics/services/predictiveAnalytics', () => ({
         suggestedActions: ['Optimize images', 'Reduce server response time'],
       },
     ]),
-    getRealtimeRecommendations: jest.fn().mockResolvedValue({
+    getRealtimeRecommendations: vi.fn().mockResolvedValue({
       personalizedContent: [{ type: 'content', action: 'highlight_trending', confidence: 0.8 }],
       uiOptimizations: [{ type: 'ui', action: 'optimize_navigation', confidence: 0.7 }],
       performanceHints: [{ type: 'performance', action: 'preload_likely_pages', confidence: 0.8 }],
@@ -67,13 +67,13 @@ jest.mock('../../features/analytics/services/predictiveAnalytics', () => ({
 }));
 
 // Get the mocked module
-const mockedPredictiveAnalytics = predictiveAnalyticsModule.predictiveAnalytics as jest.Mocked<
+const mockedPredictiveAnalytics = predictiveAnalyticsModule.predictiveAnalytics as anyed<
   typeof predictiveAnalyticsModule.predictiveAnalytics
 >;
 
 describe('🤖 AI Dashboard Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Loading State', () => {
@@ -242,11 +242,11 @@ describe('🤖 AI Dashboard Component', () => {
 
   describe('Real-time Updates', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should set up interval for refreshing data', async () => {
@@ -258,7 +258,7 @@ describe('🤖 AI Dashboard Component', () => {
       });
 
       // Fast-forward 30 seconds
-      jest.advanceTimersByTime(30000);
+      vi.advanceTimersByTime(30000);
 
       await waitFor(() => {
         // eslint-disable-next-line @typescript-eslint/unbound-method

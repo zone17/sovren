@@ -21,25 +21,25 @@ import {
 
 // Mock dependencies
 const mockDb = {
-  query: jest.fn(),
+  query: vi.fn(),
 } as unknown as IDatabase;
 
 const mockCache = {
-  get: jest.fn(),
-  set: jest.fn(),
-  delete: jest.fn(),
-  exists: jest.fn(),
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+  exists: vi.fn(),
 } as unknown as ICacheService;
 
 const mockEventBus = {
-  emit: jest.fn(),
-  on: jest.fn(),
-  off: jest.fn(),
+  emit: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
 } as unknown as IEventBusService;
 
 const mockNotification = {
-  send: jest.fn(),
-  sendBulk: jest.fn(),
+  send: vi.fn(),
+  sendBulk: vi.fn(),
 } as unknown as INotificationService;
 
 describe('ContentPublishingService', () => {
@@ -71,7 +71,7 @@ describe('ContentPublishingService', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     service = new ContentPublishingService(
       mockDb,
       mockCache,
@@ -86,7 +86,7 @@ describe('ContentPublishingService', () => {
 
   describe('publish', () => {
     beforeEach(() => {
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] }) // getContent
         .mockResolvedValueOnce({ rows: [] }) // UPDATE content
         .mockResolvedValueOnce({ rows: [] }); // INSERT publish_records
@@ -161,7 +161,7 @@ describe('ContentPublishingService', () => {
 
     it('should implement idempotency for duplicate publish requests', async () => {
       // Arrange - Mock existing publish record
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] }) // getContent
         .mockResolvedValueOnce({
           // checkIdempotency
@@ -190,7 +190,7 @@ describe('ContentPublishingService', () => {
     it('should notify subscribers if requested', async () => {
       // Arrange
       const options: PublishOptions = { notifySubscribers: true };
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] }) // getContent
         .mockResolvedValueOnce({ rows: [] }) // checkIdempotency
         .mockResolvedValueOnce({ rows: [] }) // UPDATE content
@@ -232,7 +232,7 @@ describe('ContentPublishingService', () => {
     it('should handle Nostr distribution if requested', async () => {
       // Arrange
       const options: PublishOptions = { distributeToNostr: true };
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] }) // getContent
         .mockResolvedValueOnce({ rows: [] }) // checkIdempotency
         .mockResolvedValueOnce({ rows: [] }) // UPDATE content
@@ -257,7 +257,7 @@ describe('ContentPublishingService', () => {
 
     it('should throw error if content not found', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+      (mockDb.query as any).mockResolvedValueOnce({ rows: [] });
 
       // Act & Assert
       await expect(service.publish('nonexistent-123')).rejects.toThrow(
@@ -268,7 +268,7 @@ describe('ContentPublishingService', () => {
     it('should throw error if content has no title', async () => {
       // Arrange
       const invalidContent = { ...mockContent, title: '' };
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({
+      (mockDb.query as any).mockResolvedValueOnce({
         rows: [invalidContent],
       });
 
@@ -281,7 +281,7 @@ describe('ContentPublishingService', () => {
     it('should throw error if content is empty', async () => {
       // Arrange
       const invalidContent = { ...mockContent, content: '' };
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({
+      (mockDb.query as any).mockResolvedValueOnce({
         rows: [invalidContent],
       });
 
@@ -294,7 +294,7 @@ describe('ContentPublishingService', () => {
     it('should throw error if content already published', async () => {
       // Arrange
       const publishedContent = { ...mockContent, status: 'published' };
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({
+      (mockDb.query as any).mockResolvedValueOnce({
         rows: [publishedContent],
       });
 
@@ -306,7 +306,7 @@ describe('ContentPublishingService', () => {
 
     it('should emit publishing.failed event on error', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockRejectedValue(new Error('DB Error'));
+      (mockDb.query as any).mockRejectedValue(new Error('DB Error'));
 
       // Act & Assert
       await expect(service.publish('content-123')).rejects.toThrow();
@@ -322,7 +322,7 @@ describe('ContentPublishingService', () => {
     it('should continue publishing even if Nostr distribution fails', async () => {
       // Arrange
       const options: PublishOptions = { distributeToNostr: true };
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] }) // getContent
         .mockResolvedValueOnce({ rows: [] }) // checkIdempotency
         .mockResolvedValueOnce({ rows: [] }) // UPDATE content
@@ -343,7 +343,7 @@ describe('ContentPublishingService', () => {
     const futureDate = new Date(Date.now() + 3600000); // 1 hour from now
 
     beforeEach(() => {
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] }) // getContent
         .mockResolvedValueOnce({ rows: [] }) // UPDATE content
         .mockResolvedValueOnce({ rows: [] }); // INSERT schedule
@@ -410,7 +410,7 @@ describe('ContentPublishingService', () => {
 
     it('should throw error if content not found', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+      (mockDb.query as any).mockResolvedValueOnce({ rows: [] });
 
       // Act & Assert
       await expect(
@@ -421,13 +421,13 @@ describe('ContentPublishingService', () => {
     it('should execute scheduled publish at the specified time', async () => {
       // Arrange
       const nearFutureDate = new Date(Date.now() + 100); // 100ms from now
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       // Act
       await service.schedule('content-123', nearFutureDate);
 
       // Fast-forward time
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
 
       // Assert - Should trigger publish
       expect(mockEventBus.emit).toHaveBeenCalledWith(
@@ -435,7 +435,7 @@ describe('ContentPublishingService', () => {
         expect.any(Object)
       );
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 
@@ -447,7 +447,7 @@ describe('ContentPublishingService', () => {
     };
 
     beforeEach(() => {
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [publishedContent] }) // getContent
         .mockResolvedValueOnce({ rows: [] }); // UPDATE content
     });
@@ -488,7 +488,7 @@ describe('ContentPublishingService', () => {
 
     it('should throw error if content not published', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({
+      (mockDb.query as any).mockResolvedValueOnce({
         rows: [mockContent],
       }); // content is in draft status
 
@@ -500,7 +500,7 @@ describe('ContentPublishingService', () => {
 
     it('should throw error if content not found', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+      (mockDb.query as any).mockResolvedValueOnce({ rows: [] });
 
       // Act & Assert
       await expect(service.unpublish('nonexistent-123')).rejects.toThrow(
@@ -510,7 +510,7 @@ describe('ContentPublishingService', () => {
 
     it('should handle database errors gracefully', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [publishedContent] })
         .mockRejectedValue(new Error('DB Error'));
 
@@ -530,7 +530,7 @@ describe('ContentPublishingService', () => {
     };
 
     beforeEach(() => {
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({
+      (mockDb.query as any).mockResolvedValueOnce({
         // getNostrKeys
         rows: [
           {
@@ -605,7 +605,7 @@ describe('ContentPublishingService', () => {
 
     it('should throw error if Nostr keys not configured', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+      (mockDb.query as any).mockResolvedValueOnce({ rows: [] });
 
       // Act & Assert
       await expect(
@@ -615,7 +615,7 @@ describe('ContentPublishingService', () => {
 
     it('should use custom relays if configured', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({
+      (mockDb.query as any).mockResolvedValueOnce({
         rows: [
           {
             nostr_public_key: 'test-pub-key',
@@ -641,18 +641,18 @@ describe('ContentPublishingService', () => {
 
     beforeEach(async () => {
       // Schedule a publish first
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] });
 
       await service.schedule('content-123', futureDate);
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should cancel scheduled publish successfully', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] }) // DELETE schedule
         .mockResolvedValueOnce({ rows: [] }); // UPDATE content
 
@@ -672,7 +672,7 @@ describe('ContentPublishingService', () => {
 
     it('should emit content.scheduled.cancelled event', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -718,7 +718,7 @@ describe('ContentPublishingService', () => {
           scheduled_for: new Date(),
         },
       ];
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({
+      (mockDb.query as any).mockResolvedValueOnce({
         rows: mockScheduled,
       });
 
@@ -734,7 +734,7 @@ describe('ContentPublishingService', () => {
 
     it('should return empty array if no scheduled content', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+      (mockDb.query as any).mockResolvedValueOnce({ rows: [] });
 
       // Act
       const result = await service.getScheduledContent();
@@ -745,7 +745,7 @@ describe('ContentPublishingService', () => {
 
     it('should handle database errors', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockRejectedValue(new Error('DB Error'));
+      (mockDb.query as any).mockRejectedValue(new Error('DB Error'));
 
       // Act & Assert
       await expect(service.getScheduledContent()).rejects.toThrow(ServiceError);
@@ -756,7 +756,7 @@ describe('ContentPublishingService', () => {
     it('should clear all scheduled jobs', async () => {
       // Arrange - Create some scheduled jobs
       const futureDate = new Date(Date.now() + 3600000);
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] });
@@ -780,7 +780,7 @@ describe('ContentPublishingService', () => {
 
   describe('idempotency', () => {
     beforeEach(() => {
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] }) // getContent
         .mockResolvedValueOnce({ rows: [] }) // checkIdempotency - not found
         .mockResolvedValueOnce({ rows: [] }) // UPDATE content
@@ -792,8 +792,8 @@ describe('ContentPublishingService', () => {
       const result1 = await service.publish('content-123', { immediate: true });
 
       // Reset mocks for second call
-      jest.clearAllMocks();
-      (mockDb.query as jest.Mock)
+      vi.clearAllMocks();
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] }) // getContent
         .mockResolvedValueOnce({
           // checkIdempotency - found
@@ -817,8 +817,8 @@ describe('ContentPublishingService', () => {
       const result1 = await service.publish('content-123', { immediate: true });
 
       // Reset for different options
-      jest.clearAllMocks();
-      (mockDb.query as jest.Mock)
+      vi.clearAllMocks();
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] })
         .mockResolvedValueOnce({ rows: [] }) // Different idempotency key
         .mockResolvedValueOnce({ rows: [] })
@@ -837,8 +837,8 @@ describe('ContentPublishingService', () => {
   describe('error handling', () => {
     it('should handle cache failures gracefully', async () => {
       // Arrange
-      (mockCache.set as jest.Mock).mockRejectedValue(new Error('Cache error'));
-      (mockDb.query as jest.Mock)
+      (mockCache.set as any).mockRejectedValue(new Error('Cache error'));
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -850,10 +850,10 @@ describe('ContentPublishingService', () => {
 
     it('should handle notification failures gracefully', async () => {
       // Arrange
-      (mockNotification.send as jest.Mock).mockRejectedValue(
+      (mockNotification.send as any).mockRejectedValue(
         new Error('Notification error')
       );
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -872,10 +872,10 @@ describe('ContentPublishingService', () => {
 
     it('should handle event bus failures gracefully', async () => {
       // Arrange
-      (mockEventBus.emit as jest.Mock).mockRejectedValue(
+      (mockEventBus.emit as any).mockRejectedValue(
         new Error('Event bus error')
       );
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -890,7 +890,7 @@ describe('ContentPublishingService', () => {
     it('should handle content with no tags', async () => {
       // Arrange
       const contentNoTags = { ...mockContent, tags: undefined };
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [contentNoTags] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -906,7 +906,7 @@ describe('ContentPublishingService', () => {
     it('should handle content with no summary', async () => {
       // Arrange
       const contentNoSummary = { ...mockContent, summary: undefined };
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [contentNoSummary] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -921,7 +921,7 @@ describe('ContentPublishingService', () => {
 
     it('should handle empty subscriber list', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [mockContent] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })

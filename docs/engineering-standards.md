@@ -175,8 +175,8 @@ describe('UserAuthentication', () => {
 
 **Test Types & Tools:**
 
-- Unit: Jest + React Testing Library
-- Integration: Jest + Supertest
+- Unit: Vitest + React Testing Library
+- Integration: Vitest + Supertest
 - E2E: Playwright
 - Visual: Chromatic (Storybook)
 - Performance: Lighthouse CI
@@ -570,8 +570,8 @@ interface TechStack {
     apiClient: '@supabase/supabase-js';
   };
   testing: {
-    unit: 'Jest + React Testing Library';
-    integration: 'Jest + Supertest';
+    unit: 'Vitest + React Testing Library';
+    integration: 'Vitest + Supertest';
     e2e: 'Playwright';
     visual: 'Chromatic';
   };

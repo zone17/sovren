@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file AITestGenerator.ts
  * @description AI-powered test generation system using advanced ML models

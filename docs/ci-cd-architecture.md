@@ -333,7 +333,7 @@ npm run feature-flags dev
 - **ESLint** real-time linting
 - **Prettier** auto-formatting
 - **TypeScript** strict type checking
-- **Jest** test runner integration
+- **Vitest** test runner integration
 
 ## 🚨 Incident Response
 

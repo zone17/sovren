@@ -19,7 +19,7 @@ import {
 } from '../MobileComponents';
 
 // 📱 **Mock haptic feedback for testing**
-const mockVibrate = jest.fn();
+const mockVibrate = vi.fn();
 Object.defineProperty(navigator, 'vibrate', {
   value: mockVibrate,
   writable: true,
@@ -58,7 +58,7 @@ const simulateTap = (element: HTMLElement) => {
 
 describe('📱 Mobile Components Test Suite', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('🎴 MobileCard Component - US-084.2', () => {
@@ -95,8 +95,8 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should trigger swipe callbacks', () => {
-      const onSwipeLeft = jest.fn();
-      const onSwipeRight = jest.fn();
+      const onSwipeLeft = vi.fn();
+      const onSwipeRight = vi.fn();
 
       render(
         <MobileCard
@@ -117,7 +117,7 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should trigger haptic feedback when enabled', () => {
-      const onTap = jest.fn();
+      const onTap = vi.fn();
 
       render(
         <MobileCard title="Haptic Card" content={<div>Content</div>} haptic={true} onTap={onTap} />
@@ -184,7 +184,7 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should trigger haptic feedback on click', async () => {
-      const onClick = jest.fn();
+      const onClick = vi.fn();
 
       render(
         <MobileButton onClick={onClick} haptic={true}>
@@ -199,7 +199,7 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should not trigger click when disabled', async () => {
-      const onClick = jest.fn();
+      const onClick = vi.fn();
 
       render(
         <MobileButton onClick={onClick} disabled={true}>
@@ -222,14 +222,14 @@ describe('📱 Mobile Components Test Suite', () => {
 
   describe('📝 MobileInput Component - US-084.5', () => {
     test('should render input with proper touch target size', () => {
-      render(<MobileInput value="" onChange={jest.fn()} placeholder="Test input" />);
+      render(<MobileInput value="" onChange={vi.fn()} placeholder="Test input" />);
 
       const input = screen.getByPlaceholderText('Test input');
       expect(input).toHaveClass('min-h-[48px]');
     });
 
     test('should handle value changes with haptic feedback', async () => {
-      const onChange = jest.fn();
+      const onChange = vi.fn();
 
       render(<MobileInput value="" onChange={onChange} haptic={true} />);
 
@@ -241,20 +241,20 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should render label when provided', () => {
-      render(<MobileInput value="" onChange={jest.fn()} label="Test Label" />);
+      render(<MobileInput value="" onChange={vi.fn()} label="Test Label" />);
 
       expect(screen.getByText('Test Label')).toBeInTheDocument();
     });
 
     test('should display error state', () => {
-      render(<MobileInput value="" onChange={jest.fn()} error="Test error" />);
+      render(<MobileInput value="" onChange={vi.fn()} error="Test error" />);
 
       expect(screen.getByText('Test error')).toBeInTheDocument();
       expect(screen.getByRole('textbox')).toHaveClass('border-red-500');
     });
 
     test('should handle disabled state', () => {
-      render(<MobileInput value="" onChange={jest.fn()} disabled={true} />);
+      render(<MobileInput value="" onChange={vi.fn()} disabled={true} />);
 
       const input = screen.getByRole('textbox');
       expect(input).toBeDisabled();
@@ -262,11 +262,11 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should support different input types', () => {
-      const { rerender } = render(<MobileInput type="email" value="" onChange={jest.fn()} />);
+      const { rerender } = render(<MobileInput type="email" value="" onChange={vi.fn()} />);
 
       expect(screen.getByRole('textbox')).toHaveAttribute('type', 'email');
 
-      rerender(<MobileInput type="password" value="" onChange={jest.fn()} />);
+      rerender(<MobileInput type="password" value="" onChange={vi.fn()} />);
 
       expect(screen.getByDisplayValue('')).toHaveAttribute('type', 'password');
     });
@@ -288,7 +288,7 @@ describe('📱 Mobile Components Test Suite', () => {
     ];
 
     test('should render list items correctly', () => {
-      render(<MobileList items={mockItems} onItemTap={jest.fn()} />);
+      render(<MobileList items={mockItems} onItemTap={vi.fn()} />);
 
       expect(screen.getByText('Item 1')).toBeInTheDocument();
       expect(screen.getByText('Subtitle 1')).toBeInTheDocument();
@@ -297,7 +297,7 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should handle item taps', () => {
-      const onItemTap = jest.fn();
+      const onItemTap = vi.fn();
 
       render(<MobileList items={mockItems} onItemTap={onItemTap} />);
 
@@ -308,8 +308,8 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should handle swipe actions', () => {
-      const onItemSwipeLeft = jest.fn();
-      const onItemSwipeRight = jest.fn();
+      const onItemSwipeLeft = vi.fn();
+      const onItemSwipeRight = vi.fn();
 
       render(
         <MobileList
@@ -329,14 +329,14 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should render badges correctly', () => {
-      render(<MobileList items={mockItems} onItemTap={jest.fn()} />);
+      render(<MobileList items={mockItems} onItemTap={vi.fn()} />);
 
       const badge = screen.getByText('5');
       expect(badge).toHaveClass('bg-blue-100', 'text-blue-800');
     });
 
     test('should have proper touch target sizes', () => {
-      render(<MobileList items={mockItems} onItemTap={jest.fn()} />);
+      render(<MobileList items={mockItems} onItemTap={vi.fn()} />);
 
       const listItems = screen
         .getAllByText(/Item \d/)
@@ -351,7 +351,7 @@ describe('📱 Mobile Components Test Suite', () => {
   describe('🗂️ MobileModal Component - US-084.6', () => {
     test('should not render when closed', () => {
       render(
-        <MobileModal isOpen={false} onClose={jest.fn()} title="Test Modal">
+        <MobileModal isOpen={false} onClose={vi.fn()} title="Test Modal">
           Modal content
         </MobileModal>
       );
@@ -361,7 +361,7 @@ describe('📱 Mobile Components Test Suite', () => {
 
     test('should render when open', () => {
       render(
-        <MobileModal isOpen={true} onClose={jest.fn()} title="Test Modal">
+        <MobileModal isOpen={true} onClose={vi.fn()} title="Test Modal">
           Modal content
         </MobileModal>
       );
@@ -371,7 +371,7 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should handle close button click', async () => {
-      const onClose = jest.fn();
+      const onClose = vi.fn();
 
       render(
         <MobileModal isOpen={true} onClose={onClose} title="Test Modal">
@@ -386,7 +386,7 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should handle overlay click to close', async () => {
-      const onClose = jest.fn();
+      const onClose = vi.fn();
 
       render(
         <MobileModal isOpen={true} onClose={onClose} title="Test Modal">
@@ -404,7 +404,7 @@ describe('📱 Mobile Components Test Suite', () => {
       const actions = [<button key="1">Action 1</button>, <button key="2">Action 2</button>];
 
       render(
-        <MobileModal isOpen={true} onClose={jest.fn()} title="Test Modal" actions={actions}>
+        <MobileModal isOpen={true} onClose={vi.fn()} title="Test Modal" actions={actions}>
           Modal content
         </MobileModal>
       );
@@ -414,7 +414,7 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should handle swipe to dismiss', () => {
-      const onClose = jest.fn();
+      const onClose = vi.fn();
 
       render(
         <MobileModal isOpen={true} onClose={onClose} title="Test Modal">
@@ -430,7 +430,7 @@ describe('📱 Mobile Components Test Suite', () => {
 
     test('should be mobile-only (hidden on desktop)', () => {
       render(
-        <MobileModal isOpen={true} onClose={jest.fn()} title="Test Modal">
+        <MobileModal isOpen={true} onClose={vi.fn()} title="Test Modal">
           Modal content
         </MobileModal>
       );
@@ -442,7 +442,7 @@ describe('📱 Mobile Components Test Suite', () => {
 
   describe('🎛️ Touch Gesture Integration', () => {
     test('should handle gesture threshold correctly', () => {
-      const onSwipeLeft = jest.fn();
+      const onSwipeLeft = vi.fn();
 
       render(
         <MobileCard title="Gesture Test" content={<div>Content</div>} onSwipeLeft={onSwipeLeft} />
@@ -463,8 +463,8 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should differentiate between tap and swipe', () => {
-      const onTap = jest.fn();
-      const onSwipeLeft = jest.fn();
+      const onTap = vi.fn();
+      const onSwipeLeft = vi.fn();
 
       render(
         <MobileCard
@@ -502,7 +502,7 @@ describe('📱 Mobile Components Test Suite', () => {
     });
 
     test('should provide proper ARIA labels', () => {
-      render(<MobileInput value="" onChange={jest.fn()} label="Accessible Input" />);
+      render(<MobileInput value="" onChange={vi.fn()} label="Accessible Input" />);
 
       const input = screen.getByRole('textbox');
       expect(input).toBeInTheDocument();
@@ -511,10 +511,10 @@ describe('📱 Mobile Components Test Suite', () => {
     test('should handle reduced motion preferences', () => {
       // Mock prefers-reduced-motion
       Object.defineProperty(window, 'matchMedia', {
-        value: jest.fn().mockImplementation((query) => ({
+        value: vi.fn().mockImplementation((query) => ({
           matches: query === '(prefers-reduced-motion: reduce)',
-          addListener: jest.fn(),
-          removeListener: jest.fn(),
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
         })),
       });
 

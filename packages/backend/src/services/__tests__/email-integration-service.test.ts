@@ -19,7 +19,7 @@
  * @since 2024-01-15
  */
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import {
   CreateNewsletterRequest,
   EmailCampaignType,
@@ -31,84 +31,85 @@ import { EmailIntegrationService } from '../email-integration-service';
 // Mock implementations
 const mockDB = {
   notifications: {
-    create: jest.fn(),
-    update: jest.fn(),
-    findById: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    findById: vi.fn(),
+    findMany: vi.fn(),
+    count: vi.fn(),
   },
   preferences: {
-    findOne: jest.fn(),
-    create: jest.fn(),
-    upsert: jest.fn(),
+    findOne: vi.fn(),
+    create: vi.fn(),
+    upsert: vi.fn(),
   },
   newsletters: {
-    create: jest.fn(),
-    update: jest.fn(),
-    findById: jest.fn(),
-    findMany: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    findById: vi.fn(),
+    findMany: vi.fn(),
   },
   subscribers: {
-    findMany: jest.fn(),
-    create: jest.fn(),
-    count: jest.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    count: vi.fn(),
   },
   campaigns: {
-    create: jest.fn(),
-    update: jest.fn(),
-    findById: jest.fn(),
-    findMany: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    findById: vi.fn(),
+    findMany: vi.fn(),
   },
   segments: {
-    create: jest.fn(),
-    findMany: jest.fn(),
+    create: vi.fn(),
+    findMany: vi.fn(),
   },
   templates: {
-    findMany: jest.fn(),
+    findMany: vi.fn(),
   },
   transactional_emails: {
-    create: jest.fn(),
-    update: jest.fn(),
-    findById: jest.fn(),
-    findMany: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    findById: vi.fn(),
+    findMany: vi.fn(),
   },
   analytics: {
-    create: jest.fn(),
-    update: jest.fn(),
-    findOne: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    findOne: vi.fn(),
   },
   users: {
-    findById: jest.fn(),
+    findById: vi.fn(),
   },
 };
 
 const mockRedis = {
-  get: jest.fn(),
-  set: jest.fn(),
-  del: jest.fn(),
-  exists: jest.fn(),
+  get: vi.fn(),
+  set: vi.fn(),
+  del: vi.fn(),
+  exists: vi.fn(),
 };
 
 const mockWSService = {
-  broadcast: jest.fn(),
-  sendToUser: jest.fn(),
+  broadcast: vi.fn(),
+  sendToUser: vi.fn(),
 };
 
 const mockLogger = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
 };
 
 // Mock nodemailer
 const mockTransporter = {
-  sendMail: jest.fn(),
-  verify: jest.fn(),
+  sendMail: vi.fn(),
+  verify: vi.fn(),
 };
 
-jest.mock('nodemailer', () => ({
-  createTransporter: jest.fn(() => mockTransporter),
+vi.mock('nodemailer', () => ({
+  default: { createTransport: vi.fn(() => mockTransporter) },
+  createTransport: vi.fn(() => mockTransporter),
 }));
 
 // Test data factories
@@ -212,7 +213,7 @@ describe('EmailIntegrationService', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup successful default responses
     mockDB.users.findById.mockResolvedValue(createMockUser());
@@ -362,8 +363,8 @@ describe('EmailIntegrationService', () => {
 
         // Mock current time to be within quiet hours
         const mockDate = new Date('2024-01-15T23:30:00Z'); // 11:30 PM UTC
-        jest.useFakeTimers();
-        jest.setSystemTime(mockDate);
+        vi.useFakeTimers();
+        vi.setSystemTime(mockDate);
 
         const mockPreferences = {
           ...createMockNotificationPreferences(),
@@ -379,7 +380,7 @@ describe('EmailIntegrationService', () => {
           'Notification blocked by user preferences'
         );
 
-        jest.useRealTimers();
+        vi.useRealTimers();
       });
 
       it('should handle email sending failures with retry', async () => {
@@ -728,7 +729,7 @@ describe('EmailIntegrationService', () => {
         };
 
         // Mock the analytics tracker
-        service['analyticsTracker'].generateReport = jest.fn().mockResolvedValue(mockAnalytics);
+        service['analyticsTracker'].generateReport = vi.fn().mockResolvedValue(mockAnalytics);
 
         // Act
         const result = await service.getNewsletterAnalytics(newsletterId);

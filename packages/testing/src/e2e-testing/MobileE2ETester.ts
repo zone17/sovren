@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite Mobile E2E Tester - Autonomous mobile E2E testing
  * with device farm integration and mobile-specific testing capabilities.

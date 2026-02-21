@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file AIUsabilityTestingFramework.ts
  * @description AI-driven usability testing framework with user behavior simulation

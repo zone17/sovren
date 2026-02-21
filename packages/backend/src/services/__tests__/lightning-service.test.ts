@@ -1,7 +1,7 @@
 import { LightningConfig, LightningService } from '../lightning-service';
 
 // Mock fetch for LNbits API calls
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('LightningService', () => {
   let lightningService: LightningService;
@@ -23,17 +23,17 @@ describe('LightningService', () => {
 
   beforeEach(() => {
     lightningService = LightningService.getInstance();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('Service Initialization', () => {
     it('should initialize successfully with valid configuration', async () => {
       // Mock successful wallet response
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -52,7 +52,7 @@ describe('LightningService', () => {
 
     it('should throw error when LNbits connection fails', async () => {
       // Mock failed connection
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Connection failed'));
+      (global.fetch as any).mockRejectedValueOnce(new Error('Connection failed'));
 
       await expect(lightningService.initialize(mockConfig)).rejects.toThrow('Lightning service initialization failed');
     });
@@ -61,7 +61,7 @@ describe('LightningService', () => {
   describe('Invoice Creation', () => {
     beforeEach(async () => {
       // Initialize service for tests
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -75,7 +75,7 @@ describe('LightningService', () => {
         checking_id: 'check123',
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockLnbitsResponse,
       });
@@ -106,7 +106,7 @@ describe('LightningService', () => {
     });
 
     it('should handle LNbits API errors', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 400,
         statusText: 'Bad Request',
@@ -127,14 +127,14 @@ describe('LightningService', () => {
   describe('Invoice Status Checking', () => {
     beforeEach(async () => {
       // Initialize service
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
       await lightningService.initialize(mockConfig);
 
       // Create test invoice
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           payment_request: 'lnbc1000n1...',
@@ -154,7 +154,7 @@ describe('LightningService', () => {
       });
 
       // Mock unpaid status check
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ paid: false }),
       });
@@ -176,7 +176,7 @@ describe('LightningService', () => {
       });
 
       // Mock paid status check
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           paid: true,
@@ -205,7 +205,7 @@ describe('LightningService', () => {
   describe('LNURL-pay Generation', () => {
     beforeEach(async () => {
       // Initialize service
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -227,7 +227,7 @@ describe('LightningService', () => {
       const disabledConfig = { ...mockConfig, enableLnurlPay: false };
 
       // Mock fetch for the new initialization
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -246,7 +246,7 @@ describe('LightningService', () => {
   describe('Lightning Address Creation', () => {
     beforeEach(async () => {
       // Initialize service
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -281,7 +281,7 @@ describe('LightningService', () => {
       const disabledConfig = { ...mockConfig, enableLightningAddress: false };
 
       // Mock fetch for the new initialization
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -301,7 +301,7 @@ describe('LightningService', () => {
   describe('Webhook Processing', () => {
     beforeEach(async () => {
       // Initialize service
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -310,7 +310,7 @@ describe('LightningService', () => {
 
     it('should process payment webhook successfully', async () => {
       // Create invoice first
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           payment_request: 'lnbc1000n1...',
@@ -366,7 +366,7 @@ describe('LightningService', () => {
   describe('Payment History', () => {
     beforeEach(async () => {
       // Initialize service
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -379,7 +379,7 @@ describe('LightningService', () => {
 
     it('should retrieve creator payment history', async () => {
       // Create and process a payment first
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           payment_request: 'lnbc1000n1...',
@@ -433,7 +433,7 @@ describe('LightningService', () => {
   describe('Service Statistics', () => {
     beforeEach(async () => {
       // Initialize service
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -457,7 +457,7 @@ describe('LightningService', () => {
   describe('Health Check', () => {
     it('should return healthy status when all checks pass', async () => {
       // Mock successful LNbits connection
-      (global.fetch as jest.Mock)
+      (global.fetch as any)
         .mockResolvedValueOnce({
           ok: true,
           json: async () => ({ name: 'Test Wallet' }),
@@ -479,7 +479,7 @@ describe('LightningService', () => {
 
     it('should return unhealthy status when checks fail', async () => {
       // Mock LNbits connection failure
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Connection failed'));
+      (global.fetch as any).mockRejectedValueOnce(new Error('Connection failed'));
 
       const result = await lightningService.healthCheck();
 
@@ -494,7 +494,7 @@ describe('LightningService', () => {
   describe('Error Handling', () => {
     beforeEach(async () => {
       // Initialize service
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ name: 'Test Wallet' }),
       });
@@ -503,7 +503,7 @@ describe('LightningService', () => {
 
     it('should handle network timeouts gracefully', async () => {
       // Mock timeout
-      (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      (global.fetch as any).mockImplementationOnce(() =>
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Timeout')), 100)
         )

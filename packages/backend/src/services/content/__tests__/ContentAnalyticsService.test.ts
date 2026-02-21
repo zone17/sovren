@@ -15,46 +15,46 @@ import {
 
 // Mock dependencies
 const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 } as unknown as Logger;
 
 interface MockCacheService {
-  get: jest.Mock;
-  set: jest.Mock;
-  delete: jest.Mock;
-  exists: jest.Mock;
-  clear: jest.Mock;
+  get: any;
+  set: any;
+  delete: any;
+  exists: any;
+  clear: any;
 }
 
 interface MockMetricsService {
-  incrementCounter: jest.Mock;
-  recordHistogram: jest.Mock;
-  recordGauge: jest.Mock;
+  incrementCounter: any;
+  recordHistogram: any;
+  recordGauge: any;
 }
 
 const mockCache = {
-  get: jest.fn(),
-  set: jest.fn(),
-  delete: jest.fn(),
-  exists: jest.fn(),
-  clear: jest.fn(),
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+  exists: vi.fn(),
+  clear: vi.fn(),
 } as MockCacheService;
 
 const mockMetrics = {
-  incrementCounter: jest.fn(),
-  recordHistogram: jest.fn(),
-  recordGauge: jest.fn(),
+  incrementCounter: vi.fn(),
+  recordHistogram: vi.fn(),
+  recordGauge: vi.fn(),
 } as MockMetricsService;
 
 describe('ContentAnalyticsService', () => {
   let service: ContentAnalyticsService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
     service = new ContentAnalyticsService(
       mockLogger,
       mockCache as any,
@@ -64,7 +64,7 @@ describe('ContentAnalyticsService', () => {
 
   afterEach(async () => {
     await service.shutdown();
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   // ============================================================================
@@ -417,7 +417,7 @@ describe('ContentAnalyticsService', () => {
 
     it('should remove all event listeners', async () => {
       // Arrange
-      const handler = jest.fn();
+      const handler = vi.fn();
       service.on('engagement:tracked', handler);
 
       // Act

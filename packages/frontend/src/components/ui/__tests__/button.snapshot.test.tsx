@@ -229,7 +229,7 @@ describe('Button Component Snapshots', () => {
     });
 
     it('renders with custom onClick handler', () => {
-      const mockOnClick = jest.fn();
+      const mockOnClick = vi.fn();
       createSnapshot(<Button onClick={mockOnClick}>Clickable Button</Button>, {
         name: 'with-onClick',
         serializer: {

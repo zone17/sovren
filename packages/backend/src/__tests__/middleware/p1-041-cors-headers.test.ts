@@ -13,68 +13,68 @@
 import { createApp } from '../../app';
 
 // Mock all imports that createApp uses to avoid side effects
-jest.mock('../../lib/sentry', () => ({
-  initSentry: jest.fn(),
+vi.mock('../../lib/sentry', () => ({
+  initSentry: vi.fn(),
 }));
 
-jest.mock('../../lib/logger', () => ({
+vi.mock('../../lib/logger', () => ({
   default: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   },
 }));
 
-jest.mock('../../middleware/deployment-monitoring', () => ({
-  deploymentMonitoring: jest.fn((_req: any, _res: any, next: any) => next()),
-  getPrometheusMetrics: jest.fn((_req: any, res: any) => res.end('# metrics')),
+vi.mock('../../middleware/deployment-monitoring', () => ({
+  deploymentMonitoring: vi.fn((_req: any, _res: any, next: any) => next()),
+  getPrometheusMetrics: vi.fn((_req: any, res: any) => res.end('# metrics')),
 }));
 
-jest.mock('../../middleware/csrf', () => ({
-  csrfProtection: () => jest.fn((_req: any, _res: any, next: any) => next()),
+vi.mock('../../middleware/csrf', () => ({
+  csrfProtection: () => vi.fn((_req: any, _res: any, next: any) => next()),
 }));
 
-jest.mock('../../middleware/rate-limit-middleware', () => ({
-  createRateLimiter: () => jest.fn((_req: any, _res: any, next: any) => next()),
+vi.mock('../../middleware/rate-limit-middleware', () => ({
+  createRateLimiter: () => vi.fn((_req: any, _res: any, next: any) => next()),
 }));
 
-jest.mock('../../middleware/correlation-id', () => ({
-  correlationIdMiddleware: jest.fn((_req: any, _res: any, next: any) => next()),
-  getCorrelationId: jest.fn(() => 'test-correlation-id'),
+vi.mock('../../middleware/correlation-id', () => ({
+  correlationIdMiddleware: vi.fn((_req: any, _res: any, next: any) => next()),
+  getCorrelationId: vi.fn(() => 'test-correlation-id'),
 }));
 
-jest.mock('../../routes/auth', () => {
-  const { Router } = jest.requireActual('express');
+vi.mock('../../routes/auth', async () => {
+  const { Router } = await vi.importActual('express');
   return Router();
 });
 
-jest.mock('../../routes/lightning', () => {
-  const { Router } = jest.requireActual('express');
+vi.mock('../../routes/lightning', async () => {
+  const { Router } = await vi.importActual('express');
   return Router();
 });
 
-jest.mock('../../routes/lightning-receipts', () => {
-  const { Router } = jest.requireActual('express');
+vi.mock('../../routes/lightning-receipts', async () => {
+  const { Router } = await vi.importActual('express');
   return Router();
 });
 
-jest.mock('../../routes/users', () => {
-  const { Router } = jest.requireActual('express');
+vi.mock('../../routes/users', async () => {
+  const { Router } = await vi.importActual('express');
   return Router();
 });
 
-jest.mock('../../routes/health', () => {
-  const { Router } = jest.requireActual('express');
+vi.mock('../../routes/health', async () => {
+  const { Router } = await vi.importActual('express');
   return Router();
 });
 
-jest.mock('../../routes/v1', () => {
-  const { Router } = jest.requireActual('express');
+vi.mock('../../routes/v1', async () => {
+  const { Router } = await vi.importActual('express');
   return Router();
 });
 
-jest.mock('../../middleware/error-handler-middleware', () => ({
-  errorHandler: jest.fn((_err: any, _req: any, _res: any, next: any) => next()),
+vi.mock('../../middleware/error-handler-middleware', () => ({
+  errorHandler: vi.fn((_err: any, _req: any, _res: any, next: any) => next()),
 }));
 
 describe('P1-041: CORS Exposed Headers', () => {

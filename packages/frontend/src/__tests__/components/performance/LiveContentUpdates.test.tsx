@@ -11,11 +11,11 @@ import '@testing-library/jest-dom';
 import { LiveContentUpdates } from '../../../components/performance/LiveContentUpdates';
 
 // Mock WebSocket
-global.WebSocket = jest.fn().mockImplementation(() => ({
-  close: jest.fn(),
-  send: jest.fn(),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
+global.WebSocket = vi.fn().mockImplementation(() => ({
+  close: vi.fn(),
+  send: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
   readyState: 1,
   OPEN: 1,
   CLOSED: 0,
@@ -24,7 +24,7 @@ global.WebSocket = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock useFeatureFlags hook
-jest.mock('../../../hooks/useFeatureFlags', () => ({
+vi.mock('../../../hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => ({
     flags: {
       enableLiveContentUpdates: true,
@@ -45,12 +45,12 @@ describe('LiveContentUpdates Component', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('Component Rendering', () => {
@@ -94,7 +94,7 @@ describe('LiveContentUpdates Component', () => {
       
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -107,7 +107,7 @@ describe('LiveContentUpdates Component', () => {
       render(<LiveContentUpdates {...defaultProps} />);
       
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onerror(new Error('Connection failed'));
       });
 
@@ -119,7 +119,7 @@ describe('LiveContentUpdates Component', () => {
 
   describe('Content Updates Processing', () => {
     test('processes content updates correctly', async () => {
-      const onContentUpdate = jest.fn();
+      const onContentUpdate = vi.fn();
       render(
         <LiveContentUpdates {...defaultProps} onContentUpdate={onContentUpdate} />
       );
@@ -138,7 +138,7 @@ describe('LiveContentUpdates Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'content_update',
@@ -191,7 +191,7 @@ describe('LiveContentUpdates Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'content_batch',
@@ -206,7 +206,7 @@ describe('LiveContentUpdates Component', () => {
     });
 
     test('validates content update data', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
       render(<LiveContentUpdates {...defaultProps} />);
 
       const invalidUpdate = {
@@ -216,7 +216,7 @@ describe('LiveContentUpdates Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'content_update',
@@ -286,7 +286,7 @@ describe('LiveContentUpdates Component', () => {
       // Simulate multiple updates
       for (let i = 0; i < 5; i++) {
         act(() => {
-          const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+          const mockWs = (WebSocket as any).mock.results[0].value;
           mockWs.onmessage({
             data: JSON.stringify({
               type: 'content_update',
@@ -318,7 +318,7 @@ describe('LiveContentUpdates Component', () => {
       // Simulate rapid updates
       act(() => {
         for (let i = 0; i < 3; i++) {
-          const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+          const mockWs = (WebSocket as any).mock.results[0].value;
           mockWs.onmessage({
             data: JSON.stringify({
               type: 'content_update',
@@ -341,7 +341,7 @@ describe('LiveContentUpdates Component', () => {
 
       // Advance time by 1 second
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -368,7 +368,7 @@ describe('LiveContentUpdates Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'content_update',
@@ -389,7 +389,7 @@ describe('LiveContentUpdates Component', () => {
       // Simulate 60 updates (more than the 50 limit)
       act(() => {
         for (let i = 0; i < 60; i++) {
-          const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+          const mockWs = (WebSocket as any).mock.results[0].value;
           mockWs.onmessage({
             data: JSON.stringify({
               type: 'content_update',
@@ -424,7 +424,7 @@ describe('LiveContentUpdates Component', () => {
       fireEvent.click(resyncButton);
 
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalledWith(
           expect.stringContaining('request_resync')
         );
@@ -435,7 +435,7 @@ describe('LiveContentUpdates Component', () => {
       render(<LiveContentUpdates {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onclose({ code: 1006, reason: 'Connection lost' });
       });
 
@@ -485,7 +485,7 @@ describe('LiveContentUpdates Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'conflict',
@@ -520,7 +520,7 @@ describe('LiveContentUpdates Component', () => {
       fireEvent.keyDown(resyncButton, { key: 'Enter' });
       
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalled();
       });
     });
@@ -531,7 +531,7 @@ describe('LiveContentUpdates Component', () => {
       render(<LiveContentUpdates {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'error',
@@ -546,11 +546,11 @@ describe('LiveContentUpdates Component', () => {
     });
 
     test('handles malformed messages gracefully', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
       render(<LiveContentUpdates {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: 'invalid json',
         });
@@ -570,7 +570,7 @@ describe('LiveContentUpdates Component', () => {
   describe('Feature Flag Integration', () => {
     test('does not render when feature is disabled', () => {
       // Mock feature flag as disabled
-      jest.mocked(require('../../../hooks/useFeatureFlags').useFeatureFlags).mockReturnValue({
+      vi.mocked(require('../../../hooks/useFeatureFlags').useFeatureFlags).mockReturnValue({
         flags: {
           enableLiveContentUpdates: false,
         },
@@ -586,7 +586,7 @@ describe('LiveContentUpdates Component', () => {
     test('cleans up on unmount', () => {
       const { unmount } = render(<LiveContentUpdates {...defaultProps} />);
       
-      const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+      const mockWs = (WebSocket as any).mock.results[0].value;
       
       unmount();
       

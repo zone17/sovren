@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import type {
   RecommendationFeedback,
   RecommendationRequest,
@@ -23,31 +23,31 @@ import {
 
 // Mock Supabase client
 const mockSupabase = {
-  from: jest.fn(() => ({
-    select: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        single: jest.fn(() => Promise.resolve({ data: null, error: null })),
-        order: jest.fn(() => ({
-          limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
+  from: vi.fn(() => ({
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+        order: vi.fn(() => ({
+          limit: vi.fn(() => Promise.resolve({ data: [], error: null })),
         })),
       })),
-      gte: jest.fn(() => ({
-        lte: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      gte: vi.fn(() => ({
+        lte: vi.fn(() => Promise.resolve({ data: [], error: null })),
       })),
-      insert: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: {}, error: null })),
+      insert: vi.fn(() => ({
+        select: vi.fn(() => ({
+          single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
         })),
       })),
-      upsert: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: {}, error: null })),
+      upsert: vi.fn(() => ({
+        select: vi.fn(() => ({
+          single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
         })),
       })),
-      update: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          select: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ data: {}, error: null })),
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
           })),
         })),
       })),
@@ -55,8 +55,8 @@ const mockSupabase = {
   })),
 };
 
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => mockSupabase),
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => mockSupabase),
 }));
 
 describe('AIRecommendationService', () => {
@@ -65,7 +65,7 @@ describe('AIRecommendationService', () => {
   const testContentId = '550e8400-e29b-41d4-a716-446655440000';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     aiService = createAIRecommendationService({
       supabaseUrl: 'http://localhost:54321',
       supabaseKey: 'test-key',
@@ -73,7 +73,7 @@ describe('AIRecommendationService', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   // ===== US-095: Personalized Content Recommendations Tests =====
@@ -235,7 +235,7 @@ describe('AIRecommendationService', () => {
       ];
 
       // Mock service method (would normally call complex behavioral analysis)
-      jest.spyOn(aiService, 'getBehavioralRecommendations').mockResolvedValue(mockRecommendations);
+      vi.spyOn(aiService, 'getBehavioralRecommendations').mockResolvedValue(mockRecommendations);
 
       const result = await aiService.getBehavioralRecommendations(testUserId, 5);
 
@@ -283,7 +283,7 @@ describe('AIRecommendationService', () => {
       ];
 
       // Mock the similarity calculation
-      jest.spyOn(aiService, 'calculateContentSimilarity').mockResolvedValue({
+      vi.spyOn(aiService, 'calculateContentSimilarity').mockResolvedValue({
         content_id: testContentId,
         similar_content: mockSimilarContent,
         calculation_metadata: {
@@ -426,7 +426,7 @@ describe('AIRecommendationService', () => {
       });
 
       // Mock the analytics processing
-      jest.spyOn(aiService, 'getFeedbackAnalytics').mockResolvedValue({
+      vi.spyOn(aiService, 'getFeedbackAnalytics').mockResolvedValue({
         feedback_summary: {
           total_feedback: 2,
           positive_feedback: 1,
@@ -527,7 +527,7 @@ describe('AIRecommendationService', () => {
       await expect(aiService.trackBehaviorEvent(behaviorEvent)).resolves.not.toThrow();
 
       // Mock recommendation response
-      jest.spyOn(aiService, 'getPersonalizedRecommendations').mockResolvedValue({
+      vi.spyOn(aiService, 'getPersonalizedRecommendations').mockResolvedValue({
         recommendations: [],
         metadata: {
           total_recommendations: 0,
@@ -578,7 +578,7 @@ describe('AIRecommendationService', () => {
     it('should complete recommendation generation within acceptable time', async () => {
       const startTime = Date.now();
 
-      jest.spyOn(aiService, 'getPersonalizedRecommendations').mockResolvedValue({
+      vi.spyOn(aiService, 'getPersonalizedRecommendations').mockResolvedValue({
         recommendations: [],
         metadata: {
           total_recommendations: 0,
@@ -602,7 +602,7 @@ describe('AIRecommendationService', () => {
     });
 
     it('should handle concurrent requests efficiently', async () => {
-      jest.spyOn(aiService, 'trackBehaviorEvent').mockResolvedValue();
+      vi.spyOn(aiService, 'trackBehaviorEvent').mockResolvedValue();
 
       const concurrentEvents = Array.from({ length: 10 }, (_, i) => ({
         user_id: `user-${i}`,
@@ -628,7 +628,7 @@ describe('AIRecommendationService', () => {
         limit: 0,
       };
 
-      jest.spyOn(aiService, 'getPersonalizedRecommendations').mockResolvedValue({
+      vi.spyOn(aiService, 'getPersonalizedRecommendations').mockResolvedValue({
         recommendations: [],
         metadata: {
           total_recommendations: 0,

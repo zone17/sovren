@@ -12,32 +12,32 @@ import type { ILogger } from '../../../interfaces/shared/ILogger';
 
 function createMockLogger(): ILogger {
   return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   } as unknown as ILogger;
 }
 
 function createMockDb(overrides: Record<string, any> = {}): ISupabaseClient {
   const chainable = {
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
-    lt: jest.fn().mockReturnThis(),
-    gt: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    range: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue({ data: null, error: null }),
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    lt: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    range: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: null, error: null }),
     ...overrides,
   };
 
   return {
-    from: jest.fn(() => chainable),
-    rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
+    from: vi.fn(() => chainable),
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
     ...overrides,
   } as unknown as ISupabaseClient;
 }
@@ -58,8 +58,8 @@ describe('WellnessService', () => {
         created_at: '2026-02-15T10:00:00Z',
       };
       mockDb = {
-        from: jest.fn(),
-        rpc: jest.fn().mockResolvedValue({ data: [rpcResult], error: null }),
+        from: vi.fn(),
+        rpc: vi.fn().mockResolvedValue({ data: [rpcResult], error: null }),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -93,8 +93,8 @@ describe('WellnessService', () => {
 
     it('sets engagement_time_mins for engagement type', async () => {
       mockDb = {
-        from: jest.fn(),
-        rpc: jest.fn().mockResolvedValue({ data: [{ id: 'uuid-2', created_at: '2026-02-15T10:00:00Z' }], error: null }),
+        from: vi.fn(),
+        rpc: vi.fn().mockResolvedValue({ data: [{ id: 'uuid-2', created_at: '2026-02-15T10:00:00Z' }], error: null }),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -115,8 +115,8 @@ describe('WellnessService', () => {
 
     it('sets management_time_mins for management type', async () => {
       mockDb = {
-        from: jest.fn(),
-        rpc: jest.fn().mockResolvedValue({ data: [{ id: 'uuid-3', created_at: '2026-02-15T10:00:00Z' }], error: null }),
+        from: vi.fn(),
+        rpc: vi.fn().mockResolvedValue({ data: [{ id: 'uuid-3', created_at: '2026-02-15T10:00:00Z' }], error: null }),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -138,8 +138,8 @@ describe('WellnessService', () => {
     it('throws and logs on RPC error', async () => {
       const dbError = { message: 'Database error', code: '42P01' };
       mockDb = {
-        from: jest.fn(),
-        rpc: jest.fn().mockResolvedValue({ data: null, error: dbError }),
+        from: vi.fn(),
+        rpc: vi.fn().mockResolvedValue({ data: null, error: dbError }),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -168,25 +168,25 @@ describe('WellnessService', () => {
       ];
 
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: patterns, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: patterns, error: null }),
       };
 
       // Second query (count) — returned via Promise.allSettled
       const countChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ count: 20 }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ count: 20 }),
       };
 
       let callCount = 0;
       mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? chainable : countChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -205,24 +205,24 @@ describe('WellnessService', () => {
 
     it('returns baseline_established=false when fewer than 14 days of data', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       const countChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ count: 5 }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ count: 5 }),
       };
 
       let callCount = 0;
       mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? chainable : countChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -235,24 +235,24 @@ describe('WellnessService', () => {
 
     it('throws on database error', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: null, error: { message: 'Query failed' } }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: null, error: { message: 'Query failed' } }),
       };
 
       const countChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ count: 0 }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ count: 0 }),
       };
 
       let callCount = 0;
       mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? chainable : countChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -275,15 +275,15 @@ describe('WellnessService', () => {
       ];
 
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: patterns, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: patterns, error: null }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -308,15 +308,15 @@ describe('WellnessService', () => {
 
     it('returns empty heatmap when no data', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -340,14 +340,14 @@ describe('WellnessService', () => {
       };
 
       const chainable = {
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: insertedData, error: null }),
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: insertedData, error: null }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -377,14 +377,14 @@ describe('WellnessService', () => {
       };
 
       const chainable = {
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: insertedData, error: null }),
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: insertedData, error: null }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -400,14 +400,14 @@ describe('WellnessService', () => {
 
     it('throws on insert error', async () => {
       const chainable = {
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } }),
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -428,26 +428,26 @@ describe('WellnessService', () => {
       ];
 
       const dataChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        range: jest.fn().mockResolvedValue({ data: entries, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValue({ data: entries, error: null }),
       };
 
       const countChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockResolvedValue({ count: 4 }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockResolvedValue({ count: 4 }),
       };
 
       let callCount = 0;
       mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? dataChainable : countChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -466,26 +466,26 @@ describe('WellnessService', () => {
       ];
 
       const dataChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        range: jest.fn().mockResolvedValue({ data: entries, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValue({ data: entries, error: null }),
       };
 
       const countChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockResolvedValue({ count: 1 }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockResolvedValue({ count: 1 }),
       };
 
       let callCount = 0;
       mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? dataChainable : countChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -498,26 +498,26 @@ describe('WellnessService', () => {
 
     it('enforces limit bounds (max 200)', async () => {
       const dataChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        range: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       const countChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockResolvedValue({ count: 0 }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockResolvedValue({ count: 0 }),
       };
 
       let callCount = 0;
       mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? dataChainable : countChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -532,13 +532,13 @@ describe('WellnessService', () => {
   describe('deletePulseHistory', () => {
     it('returns deleted count', async () => {
       const chainable = {
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ count: 15, error: null }),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ count: 15, error: null }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -549,13 +549,13 @@ describe('WellnessService', () => {
 
     it('throws on delete error', async () => {
       const chainable = {
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ count: null, error: { message: 'Delete failed' } }),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ count: null, error: { message: 'Delete failed' } }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -574,8 +574,8 @@ describe('WellnessService', () => {
       };
 
       mockDb = {
-        from: jest.fn(),
-        rpc: jest.fn().mockResolvedValue({ data: rpcResult, error: null }),
+        from: vi.fn(),
+        rpc: vi.fn().mockResolvedValue({ data: rpcResult, error: null }),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -592,8 +592,8 @@ describe('WellnessService', () => {
 
     it('throws descriptive GDPR error on failure', async () => {
       mockDb = {
-        from: jest.fn(),
-        rpc: jest.fn().mockResolvedValue({ data: null, error: { message: 'Transaction failed' } }),
+        from: vi.fn(),
+        rpc: vi.fn().mockResolvedValue({ data: null, error: { message: 'Transaction failed' } }),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -607,16 +607,16 @@ describe('WellnessService', () => {
   describe('getBenchmark', () => {
     it('returns null when sample size below 10', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: { sample_size: 5, avg_weekly_hours: '30.0', p25_hours: '20.0', p50_hours: '30.0', p75_hours: '40.0' },
           error: null,
         }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -627,8 +627,8 @@ describe('WellnessService', () => {
 
     it('returns benchmark data when sufficient participants', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: {
             sample_size: 150,
             avg_weekly_hours: '32.5',
@@ -641,8 +641,8 @@ describe('WellnessService', () => {
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn().mockResolvedValue({
+        from: vi.fn(() => chainable),
+        rpc: vi.fn().mockResolvedValue({
           data: [{
             sample_count: 150,
             avg_score: '3.5',
@@ -668,13 +668,13 @@ describe('WellnessService', () => {
 
     it('returns null when materialized view has no data', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
       };
 
       mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);

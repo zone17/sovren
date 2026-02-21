@@ -28,12 +28,12 @@ function createMockEventBus() {
   // The NotificationService calls this.eventBus.emit() (EventEmitter-style),
   // not this.eventBus.publish() — cast to any to satisfy the IEventBus type.
   const eventBus = {
-    emit: jest.fn(async (event: string, payload: unknown) => {
+    emit: vi.fn(async (event: string, payload: unknown) => {
       if (shouldThrow) throw new Error('EventBus emit failed');
       emitted.push({ event, payload });
     }),
-    on: jest.fn(),
-    off: jest.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
   } as unknown as any;
   return {
     eventBus,
@@ -57,13 +57,13 @@ function createNotificationService(
   // When withQueue is false, pass undefined — this exercises the no-queue path.
   const queueService = options.withQueue
     ? {
-        createQueue: jest.fn(),
-        addJob: jest.fn().mockResolvedValue('job-123'),
-        registerProcessor: jest.fn(),
-        getQueue: jest.fn(),
-        getQueueNames: jest.fn().mockReturnValue([]),
-        isHealthy: jest.fn().mockResolvedValue(true),
-        closeAll: jest.fn().mockResolvedValue(undefined),
+        createQueue: vi.fn(),
+        addJob: vi.fn().mockResolvedValue('job-123'),
+        registerProcessor: vi.fn(),
+        getQueue: vi.fn(),
+        getQueueNames: vi.fn().mockReturnValue([]),
+        isHealthy: vi.fn().mockResolvedValue(true),
+        closeAll: vi.fn().mockResolvedValue(undefined),
       }
     : undefined;
 
@@ -184,14 +184,14 @@ describe('NotificationService — onFailed handler (Todo 178)', () => {
 
   it('the registered processor has an onFailed handler', () => {
     const { queueService } = createNotificationService({ withQueue: true });
-    const processorArg = (queueService!.registerProcessor as jest.Mock).mock.calls[0][0];
+    const processorArg = (queueService!.registerProcessor as any).mock.calls[0][0];
     expect(typeof processorArg.onFailed).toBe('function');
   });
 
   it('onFailed handler logs error and emits permanentFailure event on success', async () => {
     const { calls, eventBus, queueService } = createNotificationService({ withQueue: true });
 
-    const processorArg = (queueService!.registerProcessor as jest.Mock).mock.calls[0][0];
+    const processorArg = (queueService!.registerProcessor as any).mock.calls[0][0];
 
     const mockJob = {
       id: 'job-001',
@@ -225,7 +225,7 @@ describe('NotificationService — onFailed handler (Todo 178)', () => {
     // Make eventBus.emit throw on the permanentFailure call
     setThrow(true);
 
-    const processorArg = (queueService!.registerProcessor as jest.Mock).mock.calls[0][0];
+    const processorArg = (queueService!.registerProcessor as any).mock.calls[0][0];
     const mockJob = {
       id: 'job-002',
       attemptsMade: 3,
@@ -253,7 +253,7 @@ describe('NotificationService — onFailed handler (Todo 178)', () => {
 describe('NotificationService — rate limiter configuration (Todo 226)', () => {
   it('registers the processor with a limiter config', () => {
     const { queueService } = createNotificationService({ withQueue: true });
-    const processorArg = (queueService!.registerProcessor as jest.Mock).mock.calls[0][0];
+    const processorArg = (queueService!.registerProcessor as any).mock.calls[0][0];
 
     // The limiter should be present and well-formed
     expect(processorArg.limiter).toBeDefined();
@@ -268,7 +268,7 @@ describe('NotificationService — rate limiter configuration (Todo 226)', () => 
     // whatever was set when the module was loaded. In the test environment,
     // env vars are typically unset, so defaults apply.
     const { queueService } = createNotificationService({ withQueue: true });
-    const processorArg = (queueService!.registerProcessor as jest.Mock).mock.calls[0][0];
+    const processorArg = (queueService!.registerProcessor as any).mock.calls[0][0];
 
     // Defaults: 50/min
     expect(processorArg.limiter.max).toBe(
@@ -281,7 +281,7 @@ describe('NotificationService — rate limiter configuration (Todo 226)', () => 
 
   it('registers the processor with concurrency: 5', () => {
     const { queueService } = createNotificationService({ withQueue: true });
-    const processorArg = (queueService!.registerProcessor as jest.Mock).mock.calls[0][0];
+    const processorArg = (queueService!.registerProcessor as any).mock.calls[0][0];
     expect(processorArg.concurrency).toBe(5);
   });
 });

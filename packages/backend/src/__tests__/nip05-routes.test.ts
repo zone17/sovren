@@ -1,18 +1,18 @@
-import { jest } from '@jest/globals';
+
 import express from 'express';
 import request from 'supertest';
 import nip05Router from '../routes/nip05';
 
 // 🧪 Mock Dependencies
-jest.mock('../services/nip05-verification-service');
-jest.mock('../middleware/auth');
+vi.mock('../services/nip05-verification-service');
+vi.mock('../middleware/auth');
 
 const app = express();
 app.use(express.json());
 app.use('/api/nip05', nip05Router);
 
 // Mock authentication middleware
-const mockAuthenticate = jest.fn((req, res, next) => {
+const mockAuthenticate = vi.fn((req, res, next) => {
   req.user = {
     nostr_pubkey: 'a'.repeat(64),
     user_id: '123e4567-e89b-12d3-a456-426614174000',
@@ -22,17 +22,17 @@ const mockAuthenticate = jest.fn((req, res, next) => {
 
 // Mock NIP-05 service
 const mockNIP05Service = {
-  parseNIP05Identifier: jest.fn(),
-  createVerificationRequest: jest.fn(),
-  listUserVerifications: jest.fn(),
-  getVerificationByIdentifier: jest.fn(),
-  refreshVerification: jest.fn(),
-  revokeVerification: jest.fn(),
+  parseNIP05Identifier: vi.fn(),
+  createVerificationRequest: vi.fn(),
+  listUserVerifications: vi.fn(),
+  getVerificationByIdentifier: vi.fn(),
+  refreshVerification: vi.fn(),
+  revokeVerification: vi.fn(),
 };
 
 describe('🔍 NIP-05 API Routes', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup default mocks
     require('../middleware/auth').authenticate = mockAuthenticate;
@@ -574,7 +574,7 @@ describe('🔍 NIP-05 API Routes', () => {
     it('should handle service errors gracefully', async () => {
       // Mock getSovrenVerifications to throw error
       const originalConsoleError = console.error;
-      console.error = jest.fn();
+      console.error = vi.fn();
 
       // This should still return 200 with empty data rather than 500
       const response = await request(app).get('/.well-known/nostr.json').expect(200);

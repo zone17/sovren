@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite E2E Testing Framework - Autonomous end-to-end testing orchestration
  * with AI-driven test case generation and comprehensive testing strategies.

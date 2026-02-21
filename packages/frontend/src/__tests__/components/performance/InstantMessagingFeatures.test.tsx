@@ -12,11 +12,11 @@ import '@testing-library/jest-dom';
 import { InstantMessagingFeatures } from '../../../components/performance/InstantMessagingFeatures';
 
 // Mock WebSocket
-global.WebSocket = jest.fn().mockImplementation(() => ({
-  close: jest.fn(),
-  send: jest.fn(),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
+global.WebSocket = vi.fn().mockImplementation(() => ({
+  close: vi.fn(),
+  send: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
   readyState: 1,
   OPEN: 1,
   CLOSED: 0,
@@ -25,21 +25,25 @@ global.WebSocket = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock Crypto API
-global.crypto = {
-  subtle: {
-    generateKey: jest.fn().mockResolvedValue({
-      publicKey: 'mock-public-key',
-      privateKey: 'mock-private-key',
-    }),
-    encrypt: jest.fn().mockResolvedValue(new ArrayBuffer(8)),
-    decrypt: jest.fn().mockResolvedValue(new ArrayBuffer(8)),
-    exportKey: jest.fn().mockResolvedValue(new ArrayBuffer(8)),
-    importKey: jest.fn().mockResolvedValue('mock-key'),
-  },
-} as any;
+Object.defineProperty(globalThis, 'crypto', {
+  value: {
+    subtle: {
+      generateKey: vi.fn().mockResolvedValue({
+        publicKey: 'mock-public-key',
+        privateKey: 'mock-private-key',
+      }),
+      encrypt: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+      decrypt: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+      exportKey: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+      importKey: vi.fn().mockResolvedValue('mock-key'),
+    },
+  } as any,
+  writable: true,
+  configurable: true,
+});
 
 // Mock useFeatureFlags hook
-jest.mock('../../../hooks/useFeatureFlags', () => ({
+vi.mock('../../../hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => ({
     flags: {
       enableInstantMessaging: true,
@@ -52,10 +56,10 @@ process.env.NEXT_PUBLIC_WS_URL = 'wss://test.example.com';
 
 // Mock localStorage
 const mockLocalStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
@@ -69,12 +73,12 @@ describe('InstantMessagingFeatures Component', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('Component Rendering', () => {
@@ -126,7 +130,7 @@ describe('InstantMessagingFeatures Component', () => {
       
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -138,8 +142,8 @@ describe('InstantMessagingFeatures Component', () => {
 
   describe('Message Sending', () => {
     test('sends text message', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      const onMessageSent = jest.fn();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const onMessageSent = vi.fn();
       
       render(
         <InstantMessagingFeatures 
@@ -150,7 +154,7 @@ describe('InstantMessagingFeatures Component', () => {
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -174,8 +178,8 @@ describe('InstantMessagingFeatures Component', () => {
     });
 
     test('sends message on Enter key press', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      const onMessageSent = jest.fn();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const onMessageSent = vi.fn();
       
       render(
         <InstantMessagingFeatures 
@@ -186,7 +190,7 @@ describe('InstantMessagingFeatures Component', () => {
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -201,8 +205,8 @@ describe('InstantMessagingFeatures Component', () => {
     });
 
     test('does not send message on Shift+Enter', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      const onMessageSent = jest.fn();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const onMessageSent = vi.fn();
       
       render(
         <InstantMessagingFeatures 
@@ -221,7 +225,7 @@ describe('InstantMessagingFeatures Component', () => {
     });
 
     test('prevents sending empty messages', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<InstantMessagingFeatures {...defaultProps} />);
 
@@ -237,13 +241,13 @@ describe('InstantMessagingFeatures Component', () => {
 
   describe('Message Encryption', () => {
     test('encrypts messages when encryption is enabled', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<InstantMessagingFeatures {...defaultProps} enableEncryption={true} />);
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -276,7 +280,7 @@ describe('InstantMessagingFeatures Component', () => {
 
   describe('Message Reception', () => {
     test('receives and displays incoming messages', async () => {
-      const onMessageReceived = jest.fn();
+      const onMessageReceived = vi.fn();
       
       render(
         <InstantMessagingFeatures 
@@ -298,7 +302,7 @@ describe('InstantMessagingFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'message',
@@ -329,7 +333,7 @@ describe('InstantMessagingFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'message_status',
@@ -345,13 +349,13 @@ describe('InstantMessagingFeatures Component', () => {
 
   describe('Typing Indicators', () => {
     test('sends typing indicators', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<InstantMessagingFeatures {...defaultProps} />);
 
       // Simulate connection
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onopen();
       });
 
@@ -359,11 +363,11 @@ describe('InstantMessagingFeatures Component', () => {
       await user.type(textarea, 'Typing...');
 
       act(() => {
-        jest.advanceTimersByTime(100);
+        vi.advanceTimersByTime(100);
       });
 
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalledWith(
           expect.stringContaining('typing_indicator')
         );
@@ -381,7 +385,7 @@ describe('InstantMessagingFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'typing_indicator',
@@ -406,7 +410,7 @@ describe('InstantMessagingFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'typing_indicator',
@@ -421,7 +425,7 @@ describe('InstantMessagingFeatures Component', () => {
 
       // Advance time by 3 seconds to trigger timeout
       act(() => {
-        jest.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(3000);
       });
 
       await waitFor(() => {
@@ -463,7 +467,7 @@ describe('InstantMessagingFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'message',
@@ -495,7 +499,7 @@ describe('InstantMessagingFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'message',
@@ -511,7 +515,7 @@ describe('InstantMessagingFeatures Component', () => {
     });
 
     test('allows marking messages as read', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<InstantMessagingFeatures {...defaultProps} />);
 
@@ -528,7 +532,7 @@ describe('InstantMessagingFeatures Component', () => {
       };
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: JSON.stringify({
             type: 'message',
@@ -546,7 +550,7 @@ describe('InstantMessagingFeatures Component', () => {
       await user.click(markAsReadButton);
 
       await waitFor(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         expect(mockWs.send).toHaveBeenCalledWith(
           expect.stringContaining('message_status')
         );
@@ -556,7 +560,7 @@ describe('InstantMessagingFeatures Component', () => {
 
   describe('Search Functionality', () => {
     test('toggles search interface', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<InstantMessagingFeatures {...defaultProps} />);
 
@@ -569,7 +573,7 @@ describe('InstantMessagingFeatures Component', () => {
     });
 
     test('filters messages based on search query', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<InstantMessagingFeatures {...defaultProps} />);
 
@@ -601,7 +605,7 @@ describe('InstantMessagingFeatures Component', () => {
 
       messages.forEach(message => {
         act(() => {
-          const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+          const mockWs = (WebSocket as any).mock.results[0].value;
           mockWs.onmessage({
             data: JSON.stringify({
               type: 'message',
@@ -640,7 +644,7 @@ describe('InstantMessagingFeatures Component', () => {
       // Send some messages to update stats
       for (let i = 0; i < 3; i++) {
         act(() => {
-          const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+          const mockWs = (WebSocket as any).mock.results[0].value;
           mockWs.onmessage({
             data: JSON.stringify({
               type: 'message',
@@ -671,7 +675,7 @@ describe('InstantMessagingFeatures Component', () => {
       render(<InstantMessagingFeatures {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onerror(new Error('Connection error'));
       });
 
@@ -680,12 +684,12 @@ describe('InstantMessagingFeatures Component', () => {
     });
 
     test('handles malformed message data', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
       
       render(<InstantMessagingFeatures {...defaultProps} />);
 
       act(() => {
-        const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+        const mockWs = (WebSocket as any).mock.results[0].value;
         mockWs.onmessage({
           data: 'invalid json',
         });
@@ -711,7 +715,7 @@ describe('InstantMessagingFeatures Component', () => {
     });
 
     test('supports keyboard navigation', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       
       render(<InstantMessagingFeatures {...defaultProps} />);
 
@@ -731,7 +735,7 @@ describe('InstantMessagingFeatures Component', () => {
   describe('Feature Flag Integration', () => {
     test('does not render when feature is disabled', () => {
       // Mock feature flag as disabled
-      jest.mocked(require('../../../hooks/useFeatureFlags').useFeatureFlags).mockReturnValue({
+      vi.mocked(require('../../../hooks/useFeatureFlags').useFeatureFlags).mockReturnValue({
         flags: {
           enableInstantMessaging: false,
         },
@@ -747,7 +751,7 @@ describe('InstantMessagingFeatures Component', () => {
     test('cleans up on unmount', () => {
       const { unmount } = render(<InstantMessagingFeatures {...defaultProps} />);
       
-      const mockWs = (WebSocket as jest.Mock).mock.results[0].value;
+      const mockWs = (WebSocket as any).mock.results[0].value;
       
       unmount();
       
@@ -755,7 +759,7 @@ describe('InstantMessagingFeatures Component', () => {
     });
 
     test('clears typing timeouts on unmount', () => {
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
       
       const { unmount } = render(<InstantMessagingFeatures {...defaultProps} />);
       

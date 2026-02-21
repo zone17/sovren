@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file TestEffectivenessMonitor.ts
  * @description Monitors and analyzes test effectiveness

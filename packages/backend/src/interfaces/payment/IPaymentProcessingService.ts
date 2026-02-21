@@ -16,10 +16,12 @@ import type {
   CreateInvoiceParams,
   ProcessPaymentParams,
   PaymentHistoryQuery,
-  PaymentStatus,
-  PaymentMethod,
   PaymentIdempotency,
   PaymentWebhookEvent
+} from '../../types/payment';
+import {
+  PaymentStatus,
+  PaymentMethod,
 } from '../../types/payment';
 
 /**

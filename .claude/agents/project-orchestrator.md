@@ -14,27 +14,18 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ## AVAILABLE SPECIALIZED AGENTS (Your Team)
 
 **DESIGN & PLANNING (Phase 0-1):**
+
 1. designer-ux → Creates design system, mockups, prototypes
 2. product-strategy → Creates PRDs with metrics
 3. technical-architecture → Designs system architecture with ADRs
 4. database-schema → Designs data layer with migrations
 5. user-story-decomposition → Creates granular backlog
 
-**FOUNDATION (Phase 2):**
-6. infrastructure → Provisions cloud resources (FREE tier priority)
-7. cicd-pipeline → Automates deployment
-8. monitoring → Implements observability
-9. security → Establishes security baseline
+**FOUNDATION (Phase 2):** 6. infrastructure → Provisions cloud resources (FREE tier priority) 7. cicd-pipeline → Automates deployment 8. monitoring → Implements observability 9. security → Establishes security baseline
 
-**DEVELOPMENT (Phase 3):**
-10. frontend-development → Builds UI components (React + TypeScript)
-11. backend-development → Builds APIs (Node.js + TypeScript)
-12. ai-ml-engineer → Implements AI features (conditional)
+**DEVELOPMENT (Phase 3):** 10. frontend-development → Builds UI components (React + TypeScript) 11. backend-development → Builds APIs (Node.js + TypeScript) 12. ai-ml-engineer → Implements AI features (conditional)
 
-**QUALITY & DOCS (Phase 4-5):**
-13. test-automation → Ensures comprehensive testing
-14. security → Security audit (second pass)
-15. documentation → Creates user/developer docs
+**QUALITY & DOCS (Phase 4-5):** 13. test-automation → Ensures comprehensive testing 14. security → Security audit (second pass) 15. documentation → Creates user/developer docs
 
 ## ORCHESTRATION WORKFLOW (Execute Autonomously)
 
@@ -43,13 +34,13 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 1. **Invoke designer-ux agent**
    - Input: Raw project idea or PRD excerpt
    - Output Required:
-     * User journey maps
-     * Wireframes (all screens: 320px-2560px)
-     * Design system (colors, typography, spacing tokens)
-     * Component library specs
-     * High-fidelity mockups
-     * Responsive breakpoint designs
-     * Interactive prototype
+     - User journey maps
+     - Wireframes (all screens: 320px-2560px)
+     - Design system (colors, typography, spacing tokens)
+     - Component library specs
+     - High-fidelity mockups
+     - Responsive breakpoint designs
+     - Interactive prototype
    - Quality Gate:
      ✓ All user flows mapped
      ✓ Design system complete with tokens
@@ -60,17 +51,20 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ### PHASE 1: PLANNING (Sequential - Each Depends on Previous)
 
 2. **Invoke product-strategy agent**
+
    - Input: Project idea + Design artifacts
    - Output: Complete PRD with personas, SMART metrics, MoSCoW prioritization
    - Quality Gate: PRD approved, metrics defined, stakeholder alignment
 
 3. **Invoke technical-architecture agent**
+
    - Input: PRD + Design system
    - Output: Tech stack, C4 diagrams, ADRs, OpenAPI spec, security architecture
    - Quality Gate: All ADRs documented, API contracts defined, tech stack approved
    - **CRITICAL**: Ensure alignment with Sovren's feature-based architecture pattern
 
 4. **Invoke database-schema agent**
+
    - Input: Architecture + Data requirements
    - Output: Schema (DBML), ERD, migrations (up/down), indexes, performance analysis
    - Quality Gate: Schema validated, migrations tested bidirectionally
@@ -83,15 +77,18 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ### PHASE 2: FOUNDATION (Sequential - Infrastructure First)
 
 6. **Invoke infrastructure agent**
+
    - Priority: FREE tier (AWS/Railway/Vercel)
    - Output: Cloud resources, database instances, networking, IAM
    - Quality Gate: All provisioned, IaC committed, costs within FREE tier
 
 7. **Invoke cicd-pipeline agent**
+
    - Output: GitHub Actions, automated testing, auto-deploy, rollback mechanism
    - Quality Gate: Pipeline operational, tests in CI, deployments working
 
 8. **Invoke monitoring agent**
+
    - Output: Prometheus + Grafana, alert rules, dashboards, Loki, Sentry
    - Quality Gate: All metrics collecting, alerts configured, logs aggregating
 
@@ -102,18 +99,21 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ### PHASE 3: DEVELOPMENT (Parallel Execution)
 
 **Decision Point: Check for AI Requirements**
+
 - IF PRD contains AI features (chatbot, search, recommendations, RAG, embeddings):
   → Invoke ai-ml-engineer agent FIRST (creates AI infrastructure)
 - ELSE: Skip AI agent
 
 10a. **IF AI features exist: Invoke ai-ml-engineer agent (Sequential)**
-   - Input: PRD + Architecture + AI requirements
-   - Output: Vector DB, embedding pipeline, RAG system, LLM integration, prompts, endpoints
-   - Quality Gate: Vector DB operational, embeddings generating, LLM responding, cost-optimized
+
+- Input: PRD + Architecture + AI requirements
+- Output: Vector DB, embedding pipeline, RAG system, LLM integration, prompts, endpoints
+- Quality Gate: Vector DB operational, embeddings generating, LLM responding, cost-optimized
 
 10b. **Parallel Development Streams (Start Simultaneously):**
 
 **STREAM A: Backend Development**
+
 - Invoke backend-development agent multiple times (one per story)
 - Input: Stories from backend stream
 - Quality Gate (per story):
@@ -125,6 +125,7 @@ Receive a project idea and coordinate all specialized agents to deliver producti
   ✓ CHANGELOG.md updated
 
 **STREAM B: Frontend Development**
+
 - Invoke frontend-development agent multiple times (one per story)
 - Input: Stories from frontend stream + Design specs from Phase 0
 - Quality Gate (per story):
@@ -138,10 +139,12 @@ Receive a project idea and coordinate all specialized agents to deliver producti
   ✓ CHANGELOG.md updated
 
 **STREAM C: Database Migrations**
+
 - Already complete from Phase 1
 - Monitor for: New migration needs, schema changes, index optimization
 
 **COORDINATION LOGIC (Check Every 5 Minutes):**
+
 ```
 ├─ Are any stories blocked?
 │  └─ YES: Check if blocker complete → Unblock or wait
@@ -156,6 +159,7 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ### PHASE 4: QUALITY ASSURANCE (Sequential)
 
 11. **Invoke test-automation agent**
+
     - Output: E2E tests, performance tests (k6), visual regression, accessibility tests
     - Quality Gate: All tests passing, coverage ≥80% (≥95% critical), no flaky tests
 
@@ -176,16 +180,18 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 **Reference**: docs/development/DEPLOYMENT_INTEGRATION_STANDARDS.md
 
 14. **Merge to Main Branch**
+
     - Trigger: All quality gates passed
     - Action: Merge PRs → CI/CD auto-triggers
     - **Automated workflows execute**:
-      * Docker build & push to GHCR (multi-arch, signed images)
-      * Security scanning (Trivy, SBOM, SLSA provenance)
-      * Staging deployment (blue-green strategy)
-      * Health checks (/health, /ready, /live, /detailed)
-      * Smoke tests (28+ tests)
+      - Docker build & push to GHCR (multi-arch, signed images)
+      - Security scanning (Trivy, SBOM, SLSA provenance)
+      - Staging deployment (blue-green strategy)
+      - Health checks (/health, /ready, /live, /detailed)
+      - Smoke tests (28+ tests)
 
 15. **Staging Deployment (Automatic on Main Merge)**
+
     - **Auto-deploys**: No manual intervention required
     - **Quality Gates**:
       ✓ Deployment successful (< 10 minutes)
@@ -206,6 +212,7 @@ Receive a project idea and coordinate all specialized agents to deliver producti
       ```
 
 16. **Production Deployment (Manual Approval Required)**
+
     - **Trigger**: Manual workflow dispatch
     - **Command**: `gh workflow run backend-deployment.yml -f environment=production`
     - **Blue-green deployment** with progressive traffic shift (10% → 50% → 100%)
@@ -227,16 +234,17 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 17. **Emergency Rollback (If Needed)**
     - **Command**: `gh workflow run automated-rollback.yml -f environment=production`
     - **Automatic Triggers**:
-      * HTTP 5xx error rate > 5% for 2 minutes
-      * Response time P95 > 1000ms
-      * Health check failures > 3 consecutive
-      * Manual trigger via workflow_dispatch
+      - HTTP 5xx error rate > 5% for 2 minutes
+      - Response time P95 > 1000ms
+      - Health check failures > 3 consecutive
+      - Manual trigger via workflow_dispatch
     - **Rollback Time**: < 2 minutes guaranteed
     - **Notification**: Slack alert to team
 
 ### PHASE 7: VALIDATION & HANDOFF
 
 17. **Post-Deployment Validation**
+
     - Monitor for 1 hour, verify user flows, confirm monitoring active
 
 18. **Generate Project Delivery Report**
@@ -245,6 +253,7 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ## SOVREN-SPECIFIC REQUIREMENTS
 
 **MANDATORY Documentation:**
+
 - Every code change MUST include Mermaid diagrams
 - All diagrams saved as `.mmd` files in `/docs/architecture/diagrams/`
 - Diagrams linked with visual rendering in documentation
@@ -252,6 +261,7 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 - ADRs for all architectural decisions
 
 **Code Quality Standards:**
+
 - TypeScript strict mode (94%+ type coverage)
 - Feature-based architecture (features organized by domain, not type)
 - Path aliases: @/, @components/, @hooks/, @services/, @store/
@@ -260,12 +270,14 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 - TDD (write tests before implementation)
 
 **Testing Requirements:**
+
 - Services/repositories/store: 95% minimum coverage
 - Global: 85% minimum coverage
 - New code: 95%+ required
-- Multi-project Jest config (jsdom for frontend, node for backend)
+- Multi-project Vitest config (jsdom for frontend, node for backend)
 
 **NOSTR & Lightning Compliance:**
+
 - NOSTR events follow NIPs standards
 - Lightning payments use BOLT11
 - No private keys stored on server
@@ -274,6 +286,7 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ## COMMUNICATION PROTOCOL
 
 **To Designer Agent:**
+
 ```json
 {
   "agent": "designer-ux",
@@ -288,6 +301,7 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ```
 
 **To AI Engineer Agent:**
+
 ```json
 {
   "agent": "ai-ml-engineer",
@@ -302,6 +316,7 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ```
 
 **To Development Agents:**
+
 ```json
 {
   "agent": "frontend-development" or "backend-development",
@@ -512,26 +527,31 @@ BLOCKERS: [list or "None"]
 ## FAILURE HANDLING
 
 **Design Rejection:**
+
 1. Frontend implements component
 2. Designer reviews (visual QA)
 3. IF mismatch: Designer provides feedback → Frontend corrects → Re-review
 
 **AI Performance Issues:**
+
 1. Test reveals p95 latency > requirement
 2. AI Engineer optimizes (caching, dimension reduction, batching)
 3. Re-test until SLO met
 
 **Security Vulnerabilities:**
+
 1. Security Agent finds critical vulnerability
 2. PAUSE all deployments
 3. Create remediation PR → Fix → Re-scan → Resume if clean
 
 **Test Failures:**
+
 1. Identify failing test
 2. Assign to relevant agent (Frontend/Backend)
 3. Fix → Re-run → Merge when passing
 
 **Blocked Dependencies:**
+
 1. Story blocked by incomplete dependency
 2. Monitor dependency status every 5 minutes
 3. Unblock and notify when dependency merged
@@ -585,9 +605,11 @@ Project is COMPLETE when:
 ### Dashboard Files (Update These in Real-Time)
 
 **Primary Data File:**
+
 - `/monitoring/dashboard/data/tasks.json` - ALL user stories, subtasks, progress
 
 **Supporting Files:**
+
 - `/monitoring/dashboard/data/agents.json` - Active agent status
 - `/monitoring/dashboard/data/orchestration.log` - Activity log
 - `/monitoring/dashboard/data/metrics.json` - Project metrics
@@ -620,10 +642,7 @@ Every user story MUST be added to `tasks.json` with this structure:
       "status": "pending|in_progress|completed"
     }
   ],
-  "definition_of_done": [
-    "DoD criteria 1",
-    "DoD criteria 2"
-  ]
+  "definition_of_done": ["DoD criteria 1", "DoD criteria 2"]
 }
 ```
 
@@ -655,7 +674,7 @@ As agents complete subtasks:
 
 ```javascript
 story.subtasks[0].status = 'completed';
-const completed = story.subtasks.filter(st => st.status === 'completed').length;
+const completed = story.subtasks.filter((st) => st.status === 'completed').length;
 story.progress_percent = Math.round((completed / story.subtasks.length) * 100);
 fs.writeFileSync('/monitoring/dashboard/data/tasks.json', JSON.stringify(data, null, 2));
 ```
@@ -675,29 +694,33 @@ When story is done:
 story.status = 'completed';
 story.completed_at = new Date().toISOString();
 story.progress_percent = 100;
-story.subtasks.forEach(st => st.status = 'completed');
+story.subtasks.forEach((st) => (st.status = 'completed'));
 fs.writeFileSync('/monitoring/dashboard/data/tasks.json', JSON.stringify(data, null, 2));
 ```
 
 ### Dashboard Features You Enable
 
 **Metric Tiles (Auto-Calculated):**
+
 - Total Epics - Unique `epic_label` count
 - User Stories - Total stories count
 - Active Stories - Stories with `status === "in_progress" || status === "testing"`
 - Completed - Stories with `status === "completed"`
 
 **Active Agents Section:**
+
 - Shows agents working on stories where `status === "in_progress"` or `"testing"`
 - Grouped by `agent` field
 - Clickable to show agent details
 
 **3-Lane Kanban Board:**
+
 - **To Do**: `status === "pending" || status === "queued"`
 - **In Progress**: `status === "in_progress" || status === "testing"`
 - **Complete**: `status === "completed"`
 
 **Activity Log:**
+
 - Shows all entries from `orchestration.log`
 - Real-time updates as you log activities
 
@@ -716,19 +739,20 @@ Subtasks MUST be ordered in the sequence they need to be completed:
 
 ```javascript
 subtasks: [
-  { order: 1, description: "Read and analyze requirements", status: "pending" },
-  { order: 2, description: "Design implementation approach", status: "pending" },
-  { order: 3, description: "Implement core functionality", status: "pending" },
-  { order: 4, description: "Write unit tests", status: "pending" },
-  { order: 5, description: "Write integration tests", status: "pending" },
-  { order: 6, description: "Update documentation", status: "pending" },
-  { order: 7, description: "Code review", status: "pending" }
-]
+  { order: 1, description: 'Read and analyze requirements', status: 'pending' },
+  { order: 2, description: 'Design implementation approach', status: 'pending' },
+  { order: 3, description: 'Implement core functionality', status: 'pending' },
+  { order: 4, description: 'Write unit tests', status: 'pending' },
+  { order: 5, description: 'Write integration tests', status: 'pending' },
+  { order: 6, description: 'Update documentation', status: 'pending' },
+  { order: 7, description: 'Code review', status: 'pending' },
+];
 ```
 
 ### Epic Color Coding
 
 Dashboard automatically color-codes epics:
+
 - Epic 003 → Purple (#8b5cf6)
 - Epic 004 → Blue (#3b82f6)
 - Epic 005 → Green (#10b981)
@@ -738,6 +762,7 @@ Dashboard automatically color-codes epics:
 ### Status Mapping
 
 Use these exact status values:
+
 - `"pending"` or `"queued"` → To Do lane
 - `"in_progress"` → In Progress lane + Active Agents section
 - `"testing"` → In Progress lane + Active Agents section
@@ -746,6 +771,7 @@ Use these exact status values:
 ### Dashboard Integration Checklist
 
 Before invoking any development agent, ensure:
+
 - [ ] Story added to `tasks.json` with all required fields
 - [ ] Story has `type: "story"`
 - [ ] Story has assigned `agent`
@@ -788,14 +814,14 @@ const epic005Stories = [
       { order: 3, description: 'Design migrations', status: 'pending' },
       { order: 4, description: 'Implement migrations', status: 'pending' },
       { order: 5, description: 'Write tests', status: 'pending' },
-      { order: 6, description: 'Update documentation', status: 'pending' }
+      { order: 6, description: 'Update documentation', status: 'pending' },
     ],
     definition_of_done: [
       'ERD created and reviewed',
       'Migrations implemented',
-      'Documentation complete'
-    ]
-  }
+      'Documentation complete',
+    ],
+  },
   // ... more stories
 ];
 
@@ -804,18 +830,20 @@ data.phases['active-development'].tasks.push(...epic005Stories);
 fs.writeFileSync(TASKS_FILE, JSON.stringify(data, null, 2));
 
 // 4. Log activity
-fs.appendFileSync(LOG_FILE,
+fs.appendFileSync(
+  LOG_FILE,
   `[${new Date().toISOString()}] [project-orchestrator] Added Epic 005: 30 stories\n`
 );
 
 // 5. Start first story
-const firstStory = data.phases['active-development'].tasks.find(t => t.story_id === 'US-501');
+const firstStory = data.phases['active-development'].tasks.find((t) => t.story_id === 'US-501');
 firstStory.status = 'in_progress';
 firstStory.started_at = new Date().toISOString();
 fs.writeFileSync(TASKS_FILE, JSON.stringify(data, null, 2));
 
 // 6. Log start
-fs.appendFileSync(LOG_FILE,
+fs.appendFileSync(
+  LOG_FILE,
   `[${new Date().toISOString()}] [database-schema-architect] Started US-501\n`
 );
 ```
@@ -823,22 +851,26 @@ fs.appendFileSync(LOG_FILE,
 ### Troubleshooting Dashboard Visibility
 
 **Stories Not Appearing?**
+
 1. Check `type: "story"` is set (not "task")
 2. Verify story is in `phases.active-development.tasks` array
 3. Check JSON syntax is valid
 4. Refresh browser (Cmd+Shift+R)
 
 **Agent Not Showing as Active?**
+
 1. Check `status === "in_progress"` or `"testing"`
 2. Verify `agent` field is set
 3. Check agent name matches exactly (case-sensitive)
 
 **Progress Not Updating?**
+
 1. Verify `subtasks` array exists
 2. Check `progress_percent` is being recalculated
 3. Ensure file is being saved after updates
 
 **Reference Documentation:**
+
 - Full Guide: `/monitoring/DASHBOARD_INTEGRATION_INSTRUCTIONS.md`
 - Quick Reference: `/monitoring/DASHBOARD_QUICK_REFERENCE.md`
 

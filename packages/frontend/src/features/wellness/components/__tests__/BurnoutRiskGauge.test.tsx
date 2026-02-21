@@ -20,12 +20,12 @@ const mockData = {
   updated_at: '2026-02-15T00:00:00Z',
 };
 
-jest.mock('../../hooks/useBurnoutScore', () => ({
-  useBurnoutScore: jest.fn(),
+vi.mock('../../hooks/useBurnoutScore', () => ({
+  useBurnoutScore: vi.fn(),
 }));
 
 import { useBurnoutScore } from '../../hooks/useBurnoutScore';
-const mockUseBurnoutScore = useBurnoutScore as jest.Mock;
+const mockUseBurnoutScore = useBurnoutScore as any;
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -38,7 +38,7 @@ function createWrapper() {
 
 describe('BurnoutRiskGauge', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('shows loading skeleton', () => {

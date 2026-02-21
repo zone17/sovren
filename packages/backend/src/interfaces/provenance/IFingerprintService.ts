@@ -9,8 +9,10 @@ import type {
   FingerprintRegistry,
   CompareResult,
   HashType,
+  Pagination
+} from '@sovren/shared/types/provenance';
+import {
   ContentType,
-  Pagination,
 } from '@sovren/shared/types/provenance';
 
 export interface CreateFingerprintInput {

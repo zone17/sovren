@@ -16,7 +16,6 @@ import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type {
-  AnalyticsPeriod,
   AnalyticsQuery,
   AnalyticsExportRequest,
   AnalyticsExportResult,
@@ -36,15 +35,22 @@ import type {
   RealtimeDashboardMetrics,
   AnalyticsServiceMetrics,
   PaymentAnalyticsEvent,
-  TimeSeriesDataPoint,
-  ExportFormat
+  TimeSeriesDataPoint
 } from '../../types/payment-analytics';
-import type { Currency } from '../../types/currency';
+import {
+  AnalyticsPeriod,
+  ExportFormat,
+} from '../../types/payment-analytics';
+import {
+  Currency,
+} from '../../types/currency';
 import type {
-  PaymentMethod,
   PaymentTransaction,
-  PaymentHistoryQuery,
-  PaymentStatus
+  PaymentHistoryQuery
+} from '../../types/payment';
+import {
+  PaymentMethod,
+  PaymentStatus,
 } from '../../types/payment';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
 import { performance } from 'perf_hooks';

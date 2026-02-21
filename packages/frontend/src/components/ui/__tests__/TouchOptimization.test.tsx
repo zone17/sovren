@@ -29,7 +29,7 @@ import {
 // ==========================================
 
 // 📱 Mock haptic feedback for testing
-const mockVibrate = jest.fn();
+const mockVibrate = vi.fn();
 Object.defineProperty(navigator, 'vibrate', {
   value: mockVibrate,
   writable: true,
@@ -186,7 +186,7 @@ describe('🎯 TouchTarget Component - US-089', () => {
   });
 
   test('should handle tap interaction with haptic feedback', async () => {
-    const onTap = jest.fn();
+    const onTap = vi.fn();
 
     render(
       <TouchTarget onClick={onTap} haptic testId="haptic-target">
@@ -204,7 +204,7 @@ describe('🎯 TouchTarget Component - US-089', () => {
   });
 
   test('should handle long press interaction', async () => {
-    const onLongPress = jest.fn();
+    const onLongPress = vi.fn();
 
     render(
       <TouchTarget onLongPress={onLongPress} haptic testId="long-press-target">
@@ -225,7 +225,7 @@ describe('🎯 TouchTarget Component - US-089', () => {
   });
 
   test('should respect disabled state', () => {
-    const onClick = jest.fn();
+    const onClick = vi.fn();
 
     render(
       <TouchTarget onClick={onClick} disabled testId="disabled-target">
@@ -265,7 +265,7 @@ describe('🎯 Swipeable Component - US-088.2', () => {
   });
 
   test('should handle swipe left gesture', async () => {
-    const onSwipeLeft = jest.fn();
+    const onSwipeLeft = vi.fn();
 
     render(
       <Swipeable
@@ -291,7 +291,7 @@ describe('🎯 Swipeable Component - US-088.2', () => {
   });
 
   test('should handle swipe right gesture', async () => {
-    const onSwipeRight = jest.fn();
+    const onSwipeRight = vi.fn();
 
     render(
       <Swipeable
@@ -339,7 +339,7 @@ describe('🎯 Swipeable Component - US-088.2', () => {
   });
 
   test('should respect custom threshold', async () => {
-    const onSwipeLeft = jest.fn();
+    const onSwipeLeft = vi.fn();
 
     render(
       <Swipeable onSwipeLeft={onSwipeLeft} threshold={120}>
@@ -377,7 +377,7 @@ describe('🎯 PullToRefresh Component - US-088.3', () => {
   });
 
   test('should handle pull-to-refresh gesture', async () => {
-    const onRefresh = jest.fn().mockResolvedValue(undefined);
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
 
     render(
       <PullToRefresh onRefresh={onRefresh} haptic>
@@ -426,7 +426,7 @@ describe('🎯 PullToRefresh Component - US-088.3', () => {
   });
 
   test('should respect disabled state', () => {
-    const onRefresh = jest.fn();
+    const onRefresh = vi.fn();
 
     render(
       <PullToRefresh onRefresh={onRefresh} disabled>
@@ -538,8 +538,8 @@ describe('🎯 DragDrop Component - US-088.5', () => {
   });
 
   test('should handle drag start and end', async () => {
-    const onDragStart = jest.fn();
-    const onDragEnd = jest.fn();
+    const onDragStart = vi.fn();
+    const onDragEnd = vi.fn();
 
     render(
       <DragDrop onDragStart={onDragStart} onDragEnd={onDragEnd} haptic>
@@ -562,7 +562,7 @@ describe('🎯 DragDrop Component - US-088.5', () => {
   });
 
   test('should handle drop with data', async () => {
-    const onDrop = jest.fn();
+    const onDrop = vi.fn();
     const dragData = { id: 'test-item', type: 'task' };
 
     render(
@@ -680,11 +680,11 @@ describe('🎯 useHapticFeedback Hook - US-090', () => {
 
 describe('🎯 useTouchGestures Hook - US-087', () => {
   test('should detect various touch gestures', async () => {
-    const onTap = jest.fn();
-    const onSwipe = jest.fn();
-    const onLongPress = jest.fn();
-    const onPinch = jest.fn();
-    const onDrag = jest.fn();
+    const onTap = vi.fn();
+    const onSwipe = vi.fn();
+    const onLongPress = vi.fn();
+    const onPinch = vi.fn();
+    const onDrag = vi.fn();
 
     const TestComponent = () => {
       const elementRef = useRef<HTMLDivElement>(null);
@@ -747,9 +747,9 @@ describe('🎯 useTouchGestures Hook - US-087', () => {
 
 describe('🎯 useTouchTargetAudit Hook - US-089.2', () => {
   test('should audit touch target sizes', () => {
-    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-    const consoleGroupSpy = jest.spyOn(console, 'group').mockImplementation();
-    const consoleGroupEndSpy = jest.spyOn(console, 'groupEnd').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation();
+    const consoleGroupSpy = vi.spyOn(console, 'group').mockImplementation();
+    const consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation();
 
     const TestComponent = () => {
       useTouchTargetAudit({
@@ -807,7 +807,7 @@ describe('🎯 useTouchTargetAudit Hook - US-089.2', () => {
 
 describe('🔧 Touch Optimization Integration', () => {
   test('should work together seamlessly', async () => {
-    const onAction = jest.fn();
+    const onAction = vi.fn();
 
     render(
       <PullToRefresh onRefresh={async () => {}}>
@@ -850,8 +850,8 @@ describe('🔧 Touch Optimization Integration', () => {
   });
 
   test('should handle conflicting gestures gracefully', () => {
-    const onTap = jest.fn();
-    const onSwipe = jest.fn();
+    const onTap = vi.fn();
+    const onSwipe = vi.fn();
 
     render(
       <Swipeable onSwipeLeft={onSwipe}>

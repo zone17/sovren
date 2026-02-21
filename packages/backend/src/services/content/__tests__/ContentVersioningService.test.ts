@@ -8,25 +8,25 @@ import { Content, ContentVersion } from '../../../interfaces/content';
 
 // Mock dependencies
 const mockDb = {
-  query: jest.fn(),
+  query: vi.fn(),
 } as unknown as IDatabase;
 
 const mockCache = {
-  get: jest.fn(),
-  set: jest.fn(),
-  delete: jest.fn(),
-  exists: jest.fn(),
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+  exists: vi.fn(),
 } as unknown as ICacheService;
 
 const mockEventBus = {
-  emit: jest.fn(),
-  on: jest.fn(),
-  off: jest.fn(),
+  emit: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
 } as unknown as IEventBusService;
 
 const mockAuditLog = {
-  log: jest.fn(),
-  query: jest.fn(),
+  log: vi.fn(),
+  query: vi.fn(),
 } as unknown as IAuditLogService;
 
 describe('ContentVersioningService', () => {
@@ -66,7 +66,7 @@ describe('ContentVersioningService', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     service = new ContentVersioningService(
       mockDb,
       mockCache,
@@ -78,7 +78,7 @@ describe('ContentVersioningService', () => {
   describe('createVersion', () => {
     it('should create first version as full snapshot', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] }) // Get latest version (none exists)
         .mockResolvedValueOnce({ rows: [] }) // Insert version
         .mockResolvedValueOnce({ rows: [] }) // Update content version
@@ -100,7 +100,7 @@ describe('ContentVersioningService', () => {
       expect(result.delta).toBeUndefined();
 
       // Verify database insert
-      const insertCall = (mockDb.query as jest.Mock).mock.calls[1];
+      const insertCall = (mockDb.query as any).mock.calls[1];
       expect(insertCall[0]).toContain('INSERT INTO content_versions');
       expect(insertCall[1][2]).toBe(1); // version_number
       expect(insertCall[1][3]).toBeNull(); // delta (should be null for first version)
@@ -109,7 +109,7 @@ describe('ContentVersioningService', () => {
 
     it('should create delta version for non-snapshot versions', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [{ version_number: 1 }] }) // Latest version is 1
         .mockResolvedValueOnce({ // Get previous version for delta
           rows: [{
@@ -145,7 +145,7 @@ describe('ContentVersioningService', () => {
 
     it('should create snapshot every 10th version', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [{ version_number: 9 }] }) // Latest version is 9
         .mockResolvedValueOnce({ rows: [] }) // Insert version
         .mockResolvedValueOnce({ rows: [] }) // Update content version
@@ -162,7 +162,7 @@ describe('ContentVersioningService', () => {
 
     it('should cache created version', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -181,7 +181,7 @@ describe('ContentVersioningService', () => {
 
     it('should emit version.created event', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -202,7 +202,7 @@ describe('ContentVersioningService', () => {
 
     it('should log version creation in audit log', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -229,7 +229,7 @@ describe('ContentVersioningService', () => {
 
     it('should handle errors gracefully', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockDb.query as any).mockRejectedValue(new Error('Database error'));
 
       // Act & Assert
       await expect(service.createVersion(mockContent)).rejects.toThrow(ServiceError);
@@ -263,7 +263,7 @@ describe('ContentVersioningService', () => {
         },
       ];
 
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: mockRows });
+      (mockDb.query as any).mockResolvedValue({ rows: mockRows });
 
       // Act
       const result = await service.getVersions('content-123');
@@ -278,7 +278,7 @@ describe('ContentVersioningService', () => {
 
     it('should return empty array for content with no versions', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act
       const result = await service.getVersions('content-123');
@@ -289,7 +289,7 @@ describe('ContentVersioningService', () => {
 
     it('should handle errors gracefully', async () => {
       // Arrange
-      (mockDb.query as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockDb.query as any).mockRejectedValue(new Error('Database error'));
 
       // Act & Assert
       await expect(service.getVersions('content-123')).rejects.toThrow(ServiceError);
@@ -319,7 +319,7 @@ describe('ContentVersioningService', () => {
         createdAt: new Date(),
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(cachedVersion);
+      (mockCache.get as any).mockResolvedValue(cachedVersion);
 
       // Act
       const result = await service.getVersion('version-1');
@@ -331,8 +331,8 @@ describe('ContentVersioningService', () => {
 
     it('should retrieve version from database if not cached', async () => {
       // Arrange
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [mockVersionRow] });
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any).mockResolvedValue({ rows: [mockVersionRow] });
 
       // Act
       const result = await service.getVersion('version-1');
@@ -352,8 +352,8 @@ describe('ContentVersioningService', () => {
 
     it('should throw error if version not found', async () => {
       // Arrange
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [] });
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act & Assert
       await expect(service.getVersion('invalid-id')).rejects.toThrow(ServiceError);
@@ -375,8 +375,8 @@ describe('ContentVersioningService', () => {
         message: 'Initial',
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock)
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [targetVersionRow] }) // getVersion
         .mockResolvedValueOnce({ rows: [targetVersionRow] }) // reconstructContent - snapshot
         .mockResolvedValueOnce({ rows: [] }) // reconstructContent - deltas
@@ -423,8 +423,8 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: [wrongVersionRow] });
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any).mockResolvedValue({ rows: [wrongVersionRow] });
 
       // Act & Assert
       await expect(service.revert('content-123', 'version-1')).rejects.toThrow(ServiceError);
@@ -444,8 +444,8 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock)
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [targetVersionRow] })
         .mockResolvedValueOnce({ rows: [targetVersionRow] })
         .mockResolvedValueOnce({ rows: [] })
@@ -492,8 +492,8 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock)
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [version1Row] }) // getVersion 1
         .mockResolvedValueOnce({ rows: [version2Row] }) // getVersion 2
         .mockResolvedValueOnce({ rows: [version1Row] }) // reconstruct v1 - find snapshot
@@ -539,8 +539,8 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock)
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [version1Row] })
         .mockResolvedValueOnce({ rows: [version2Row] });
 
@@ -580,8 +580,8 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock)
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [version1Row] }) // getVersion 1
         .mockResolvedValueOnce({ rows: [version2Row] }) // getVersion 2
         .mockResolvedValueOnce({ rows: [version1Row] }) // reconstruct v1
@@ -627,8 +627,8 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock)
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [version1Row] })
         .mockResolvedValueOnce({ rows: [version2Row] });
 
@@ -652,7 +652,7 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       }));
 
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: versions }) // getVersions
         .mockResolvedValueOnce({ rows: [] }); // Delete query
 
@@ -660,7 +660,7 @@ describe('ContentVersioningService', () => {
       await service.pruneOldVersions('content-123', 10);
 
       // Assert
-      const deleteCall = (mockDb.query as jest.Mock).mock.calls[1];
+      const deleteCall = (mockDb.query as any).mock.calls[1];
       expect(deleteCall[0]).toContain('DELETE FROM content_versions');
 
       // Should delete versions except last 10 and snapshots (v10, v20)
@@ -682,7 +682,7 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       }));
 
-      (mockDb.query as jest.Mock).mockResolvedValue({ rows: versions });
+      (mockDb.query as any).mockResolvedValue({ rows: versions });
 
       // Act
       await service.pruneOldVersions('content-123', 10);
@@ -704,7 +704,7 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       }));
 
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: versions })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -712,7 +712,7 @@ describe('ContentVersioningService', () => {
       await service.pruneOldVersions('content-123', 10);
 
       // Assert
-      const deleteCall = (mockDb.query as jest.Mock).mock.calls[1];
+      const deleteCall = (mockDb.query as any).mock.calls[1];
       const deletedIds = deleteCall[1][0];
 
       // Verify snapshots are not in delete list
@@ -732,7 +732,7 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       }));
 
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: versions })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -764,7 +764,7 @@ describe('ContentVersioningService', () => {
         content: 'New content',
       };
 
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [{ version_number: 1 }] }) // Latest version
         .mockResolvedValueOnce({ // Previous version
           rows: [{
@@ -818,8 +818,8 @@ describe('ContentVersioningService', () => {
         { op: 'replace' as const, path: '/content', value: 'Version 3 Content' },
       ];
 
-      (mockCache.get as jest.Mock).mockResolvedValue(null);
-      (mockDb.query as jest.Mock)
+      (mockCache.get as any).mockResolvedValue(null);
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [snapshotRow] }) // getVersion
         .mockResolvedValueOnce({ rows: [snapshotRow] }) // reconstruct - find snapshot
         .mockResolvedValueOnce({ // reconstruct - get deltas
@@ -853,7 +853,7 @@ describe('ContentVersioningService', () => {
         tags: [],
       };
 
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -875,7 +875,7 @@ describe('ContentVersioningService', () => {
         content: 'x'.repeat(100000), // 100k characters
       };
 
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
@@ -891,7 +891,7 @@ describe('ContentVersioningService', () => {
 
     it('should handle concurrent version creation', async () => {
       // Arrange
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValue({ rows: [] });
 
       // Act - Simulate concurrent creates
@@ -918,7 +918,7 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       }));
 
-      (mockDb.query as jest.Mock)
+      (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [] }) // Get latest (for create)
         .mockResolvedValueOnce({ rows: [] }) // Insert new version
         .mockResolvedValueOnce({ rows: [] }) // Update content
@@ -929,7 +929,7 @@ describe('ContentVersioningService', () => {
       await service.createVersion(mockContent);
 
       // Assert - Should trigger auto-prune
-      const deleteCall = (mockDb.query as jest.Mock).mock.calls.find(
+      const deleteCall = (mockDb.query as any).mock.calls.find(
         call => call[0].includes('DELETE FROM content_versions')
       );
       expect(deleteCall).toBeDefined();
@@ -946,7 +946,7 @@ describe('ContentVersioningService', () => {
         createdAt: new Date(),
       };
 
-      (mockCache.get as jest.Mock).mockResolvedValue(cachedVersion);
+      (mockCache.get as any).mockResolvedValue(cachedVersion);
 
       // Act - Call multiple times
       await service.getVersion('v1');

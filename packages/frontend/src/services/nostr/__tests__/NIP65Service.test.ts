@@ -6,7 +6,7 @@
  * Target: 95%+ code coverage
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+
 import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools/pure';
 import { NIP65Service } from '../NIP65Service';
 import { KeyManagementService } from '../KeyManagementService';
@@ -18,8 +18,8 @@ import type {
 } from '@shared/types/nostr';
 
 // Mock dependencies
-jest.mock('../KeyManagementService');
-jest.mock('../RelayPoolManager');
+vi.mock('../KeyManagementService');
+vi.mock('../RelayPoolManager');
 
 describe('NIP65Service', () => {
   let service: NIP65Service;
@@ -30,7 +30,7 @@ describe('NIP65Service', () => {
 
   beforeEach(() => {
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Generate test keys
     const testKeyBytes = generateSecretKey();
@@ -41,9 +41,9 @@ describe('NIP65Service', () => {
     keyManagement = KeyManagementService.getInstance();
     relayPool = RelayPoolManager.getInstance();
 
-    (keyManagement.getPrivateKey as jest.Mock).mockResolvedValue(testPrivateKey);
-    (keyManagement.getPublicKey as jest.Mock).mockResolvedValue(testPublicKey);
-    (relayPool.publishEvent as jest.Mock).mockResolvedValue({
+    (keyManagement.getPrivateKey as any).mockResolvedValue(testPrivateKey);
+    (keyManagement.getPublicKey as any).mockResolvedValue(testPublicKey);
+    (relayPool.publishEvent as any).mockResolvedValue({
       success: true,
       relays: [],
       errors: [],
@@ -78,7 +78,7 @@ describe('NIP65Service', () => {
       expect(event.content).toBe('');
       expect(event.tags).toContainEqual(['r', 'wss://relay.damus.io']);
       expect(event.tags).toContainEqual(['r', 'wss://nos.lol']);
-      expect((relayPool.publishEvent as jest.Mock)).toHaveBeenCalledWith(event);
+      expect((relayPool.publishEvent as any)).toHaveBeenCalledWith(event);
     });
 
     it('should publish relay list with read-only relays', async () => {
@@ -145,7 +145,7 @@ describe('NIP65Service', () => {
       await service.publishRelayList(relays, customPrivateKey);
 
       // Should not call KeyManagement for private key
-      expect((keyManagement.getPrivateKey as jest.Mock)).not.toHaveBeenCalled();
+      expect((keyManagement.getPrivateKey as any)).not.toHaveBeenCalled();
     });
 
     it('should throw error for empty relay list', async () => {
@@ -175,7 +175,7 @@ describe('NIP65Service', () => {
     });
 
     it('should throw error if no private key available', async () => {
-      (keyManagement.getPrivateKey as jest.Mock).mockResolvedValue(null);
+      (keyManagement.getPrivateKey as any).mockResolvedValue(null);
 
       const relays: RelayMetadata[] = [
         { url: 'wss://relay.damus.io', read: true, write: true },
@@ -311,7 +311,7 @@ describe('NIP65Service', () => {
         sig: 'test-sig',
       };
 
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => callback(mockEvent as any), 10);
         return 'sub-id';
       });
@@ -334,7 +334,7 @@ describe('NIP65Service', () => {
         sig: 'test-sig',
       };
 
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => callback(mockEvent as any), 10);
         return 'sub-id';
       });
@@ -343,15 +343,15 @@ describe('NIP65Service', () => {
       const relayList1 = await service.fetchRelayList(testPublicKey);
 
       // Second fetch (from cache)
-      (relayPool.subscribe as jest.Mock).mockClear();
+      (relayPool.subscribe as any).mockClear();
       const relayList2 = await service.fetchRelayList(testPublicKey);
 
       expect(relayList2).toEqual(relayList1);
-      expect((relayPool.subscribe as jest.Mock)).not.toHaveBeenCalled();
+      expect((relayPool.subscribe as any)).not.toHaveBeenCalled();
     });
 
     it('should return default relays if none found', async () => {
-      (relayPool.subscribe as jest.Mock).mockImplementation(() => 'sub-id');
+      (relayPool.subscribe as any).mockImplementation(() => 'sub-id');
 
       const relayList = await service.fetchRelayList(testPublicKey, {
         includeDefaults: true,
@@ -362,7 +362,7 @@ describe('NIP65Service', () => {
     });
 
     it('should return null if no relays found and defaults disabled', async () => {
-      (relayPool.subscribe as jest.Mock).mockImplementation(() => 'sub-id');
+      (relayPool.subscribe as any).mockImplementation(() => 'sub-id');
 
       const relayList = await service.fetchRelayList(testPublicKey, {
         includeDefaults: false,
@@ -392,7 +392,7 @@ describe('NIP65Service', () => {
         sig: 'test-sig',
       };
 
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => {
           callback(oldEvent as any);
           callback(newEvent as any);
@@ -413,7 +413,7 @@ describe('NIP65Service', () => {
         { url: 'wss://new.relay.com', read: true, write: true },
       ];
 
-      (relayPool.subscribe as jest.Mock).mockImplementation(() => 'sub-id');
+      (relayPool.subscribe as any).mockImplementation(() => 'sub-id');
 
       const event = await service.updateRelayPreferences(changes);
 
@@ -431,7 +431,7 @@ describe('NIP65Service', () => {
         sig: 'test-sig',
       };
 
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => callback(mockEvent as any), 10);
         return 'sub-id';
       });
@@ -459,7 +459,7 @@ describe('NIP65Service', () => {
         sig: 'test-sig',
       };
 
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => callback(mockEvent as any), 10);
         return 'sub-id';
       });
@@ -491,7 +491,7 @@ describe('NIP65Service', () => {
         sig: 'test-sig',
       };
 
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => callback(mockEvent as any), 10);
         return 'sub-id';
       });
@@ -520,7 +520,7 @@ describe('NIP65Service', () => {
         sig: 'test-sig',
       };
 
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => callback(mockEvent as any), 10);
         return 'sub-id';
       });
@@ -545,7 +545,7 @@ describe('NIP65Service', () => {
         sig: 'test-sig',
       };
 
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => callback(mockEvent as any), 10);
         return 'sub-id';
       });
@@ -557,15 +557,15 @@ describe('NIP65Service', () => {
       service.clearCache(testPublicKey);
 
       // Fetch again (should query network)
-      (relayPool.subscribe as jest.Mock).mockClear();
-      (relayPool.subscribe as jest.Mock).mockImplementation((filters, callback) => {
+      (relayPool.subscribe as any).mockClear();
+      (relayPool.subscribe as any).mockImplementation((filters, callback) => {
         setTimeout(() => callback(mockEvent as any), 10);
         return 'sub-id';
       });
 
       await service.fetchRelayList(testPublicKey);
 
-      expect((relayPool.subscribe as jest.Mock)).toHaveBeenCalled();
+      expect((relayPool.subscribe as any)).toHaveBeenCalled();
     });
 
     it('should clear all cache', () => {

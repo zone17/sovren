@@ -9,7 +9,7 @@ const UnifiedInbox: React.FC = () => {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
+  const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useInboxMessages({
     platform: platformFilter,
@@ -25,22 +25,33 @@ const UnifiedInbox: React.FC = () => {
   const pagination = data?.pagination;
 
   const toggleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  };
+
+  // #290: Clear selection only after server confirms success
+  const handleBatchAction = (action: 'mark_read' | 'mark_unread' | 'archive') => {
+    if (selectedIds.length === 0) return;
+    batchMutation.mutate(
+      { message_ids: selectedIds, action },
+      { onSuccess: () => setSelectedIds([]) }
     );
   };
 
-  const handleBatchAction = (action: 'mark_read' | 'mark_unread' | 'archive') => {
-    if (selectedIds.length === 0) return;
-    batchMutation.mutate({ message_ids: selectedIds, action });
-    setSelectedIds([]);
-  };
-
   const handleReply = (messageId: string) => {
-    if (!replyText.trim()) return;
+    const text = replyTexts[messageId] ?? '';
+    if (!text.trim()) return;
     replyMutation.mutate(
-      { messageId, data: { content: replyText } },
-      { onSuccess: () => { setReplyingTo(null); setReplyText(''); } }
+      { messageId, data: { content: text } },
+      {
+        onSuccess: () => {
+          setReplyingTo(null);
+          setReplyTexts((prev) => {
+            const next = { ...prev };
+            delete next[messageId];
+            return next;
+          });
+        },
+      }
     );
   };
 
@@ -66,7 +77,10 @@ const UnifiedInbox: React.FC = () => {
         <select
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
           value={platformFilter}
-          onChange={(e) => { setPlatformFilter(e.target.value as InboxPlatformFilter); setPage(1); }}
+          onChange={(e) => {
+            setPlatformFilter(e.target.value as InboxPlatformFilter);
+            setPage(1);
+          }}
         >
           <option value="all">All Platforms</option>
           <option value="mastodon">Mastodon</option>
@@ -79,7 +93,10 @@ const UnifiedInbox: React.FC = () => {
         <select
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value as InboxStatusFilter); setPage(1); }}
+          onChange={(e) => {
+            setStatusFilter(e.target.value as InboxStatusFilter);
+            setPage(1);
+          }}
         >
           <option value="all">All Messages</option>
           <option value="unread">Unread</option>
@@ -129,7 +146,9 @@ const UnifiedInbox: React.FC = () => {
                         className="h-2 w-2 rounded-full"
                         style={{ backgroundColor: display?.color || '#6B7280' }}
                       />
-                      <span className="text-sm font-medium text-gray-900 truncate">{msg.author}</span>
+                      <span className="text-sm font-medium text-gray-900 truncate">
+                        {msg.author}
+                      </span>
                       <span className="text-xs text-gray-400">
                         {new Date(msg.created_at).toLocaleDateString()}
                       </span>
@@ -142,8 +161,10 @@ const UnifiedInbox: React.FC = () => {
                           type="text"
                           className="flex-1 rounded-md border px-3 py-1.5 text-sm"
                           placeholder="Write a reply..."
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
+                          value={replyTexts[msg.id] ?? ''}
+                          onChange={(e) =>
+                            setReplyTexts((prev) => ({ ...prev, [msg.id]: e.target.value }))
+                          }
                         />
                         <button
                           className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
@@ -154,7 +175,14 @@ const UnifiedInbox: React.FC = () => {
                         </button>
                         <button
                           className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
-                          onClick={() => { setReplyingTo(null); setReplyText(''); }}
+                          onClick={() => {
+                            setReplyingTo(null);
+                            setReplyTexts((prev) => {
+                              const next = { ...prev };
+                              delete next[msg.id];
+                              return next;
+                            });
+                          }}
                         >
                           Cancel
                         </button>

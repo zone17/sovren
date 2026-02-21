@@ -30,17 +30,21 @@ import type {
   CancelSubscriptionOptions,
   PauseSubscriptionOptions,
   SubscriptionWebhookEvent,
+  SubscriptionUsage,
+  UsageMetric,
+  InvoiceLineItem
+} from '../../types/subscription';
+import {
   SubscriptionEventType,
   SubscriptionStatus,
   BillingInterval,
   SubscriptionTier,
-  SubscriptionUsage,
   InvoiceType,
   InvoiceStatus,
-  UsageMetric,
-  InvoiceLineItem
 } from '../../types/subscription';
-import type { Currency } from '../../types/currency';
+import {
+  Currency,
+} from '../../types/currency';
 import { DomainEventType, DomainEventBuilder } from '../../interfaces/shared/IEventBus';
 import { randomUUID } from 'crypto';
 import { performance } from 'perf_hooks';

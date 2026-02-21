@@ -409,7 +409,7 @@ describe('Webhook Signature Verification (PAY-003)', () => {
   describe('Security Logging', () => {
     it('should log IP address on signature verification failure', async () => {
       // Mock console.error to capture logs
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       const payload = {
         event: 'payment.completed',
@@ -434,7 +434,7 @@ describe('Webhook Signature Verification (PAY-003)', () => {
     });
 
     it('should log replay attack attempts', async () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       const payload = {
         event: 'payment.completed',

@@ -9,12 +9,12 @@ import {
 } from '../usability-testing/AIUsabilityTestingFramework';
 
 // Mock Logger
-jest.mock('../common/Logger', () => ({
-  Logger: jest.fn().mockImplementation(() => ({
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
+vi.mock('../common/Logger', () => ({
+  Logger: vi.fn().mockImplementation(() => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
   })),
 }));
 
@@ -112,7 +112,7 @@ describe('AIUsabilityTestingFramework', () => {
 
   afterEach(() => {
     framework.stopMonitoring();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Framework Initialization', () => {

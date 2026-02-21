@@ -15,20 +15,20 @@ describe('RepurposingService', () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
     mockDb = {
-      from: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn(),
-      insert: jest.fn(),
-      update: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      insert: vi.fn(),
+      update: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
     };
 
     service = new RepurposingService(mockDb, mockLogger);

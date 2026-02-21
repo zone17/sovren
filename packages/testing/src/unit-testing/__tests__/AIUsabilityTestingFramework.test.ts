@@ -14,12 +14,12 @@
  * - Usability testing effectiveness monitoring
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { AIUsabilityTestingFramework } from '../AIUsabilityTestingFramework';
 import type { AIUsabilityTestingConfig, UserBehaviorPattern, UserScenario } from '../types';
 
 // Mock dependencies
-jest.mock('../common/Logger');
+vi.mock('../common/Logger');
 
 describe('AIUsabilityTestingFramework - US-157 Complete Implementation', () => {
   let framework: AIUsabilityTestingFramework;
@@ -71,7 +71,7 @@ describe('AIUsabilityTestingFramework - US-157 Complete Implementation', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Framework Initialization', () => {

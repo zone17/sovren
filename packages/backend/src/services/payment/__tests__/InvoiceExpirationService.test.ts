@@ -13,7 +13,7 @@
  * @see Story #003: Add Invoice Expiration Handling to State Machine
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+
 import {
   InvoiceExpirationService,
   EmailService,
@@ -26,30 +26,30 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 // Mock dependencies
 const mockSupabase = {
-  from: jest.fn(),
+  from: vi.fn(),
 } as unknown as SupabaseClient;
 
 const mockStateMachine = {
-  transition: jest.fn(),
+  transition: vi.fn(),
 } as unknown as PaymentStateMachine;
 
 const mockEmailService: EmailService = {
-  sendInvoiceExpiredEmail: jest.fn(),
+  sendInvoiceExpiredEmail: vi.fn(),
 };
 
 const mockAnalyticsService = {
-  track: jest.fn(),
+  track: vi.fn(),
 };
 
 const mockLightningNodeService: LightningNodeService = {
-  cancelInvoice: jest.fn(),
+  cancelInvoice: vi.fn(),
 };
 
 const mockLogger: Logger = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
 };
 
 // Test helper to create mock payments
@@ -72,7 +72,7 @@ describe('InvoiceExpirationService', () => {
 
   // Reset all mocks before each test
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     services = [];
   });
 
@@ -135,11 +135,11 @@ describe('InvoiceExpirationService', () => {
 
     it('should auto-start scheduler when autoSchedule is true', () => {
       // Mock database query to return empty array
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -165,11 +165,11 @@ describe('InvoiceExpirationService', () => {
       const expiredPayment = createMockPayment();
 
       // Mock database query
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -179,7 +179,7 @@ describe('InvoiceExpirationService', () => {
       });
 
       // Mock state machine transition
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         id: 'event-123',
         success: true,
       });
@@ -223,11 +223,11 @@ describe('InvoiceExpirationService', () => {
         createMockPayment({ id: 'payment-3', user_id: 'user-3' }),
       ];
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: expiredPayments,
                 error: null,
               }),
@@ -236,7 +236,7 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
@@ -258,11 +258,11 @@ describe('InvoiceExpirationService', () => {
     });
 
     it('should handle no expired invoices gracefully', async () => {
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [],
                 error: null,
               }),
@@ -289,11 +289,11 @@ describe('InvoiceExpirationService', () => {
     });
 
     it('should handle database query errors', async () => {
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: null,
                 error: { message: 'Database connection failed' },
               }),
@@ -325,11 +325,11 @@ describe('InvoiceExpirationService', () => {
     it('should handle state transition errors gracefully', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -338,7 +338,7 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockRejectedValue(
+      (mockStateMachine.transition as any).mockRejectedValue(
         new Error('Invalid transition')
       );
 
@@ -371,11 +371,11 @@ describe('InvoiceExpirationService', () => {
     it('should handle email notification errors gracefully', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -384,11 +384,11 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockRejectedValue(
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockRejectedValue(
         new Error('Email service unavailable')
       );
 
@@ -416,11 +416,11 @@ describe('InvoiceExpirationService', () => {
       });
       let callCount = 0;
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockImplementation(async () => {
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockImplementation(async () => {
                 callCount++;
                 if (callCount === 1) {
                   // First call - wait for the promise
@@ -468,11 +468,11 @@ describe('InvoiceExpirationService', () => {
         createMockPayment({ id: `payment-${i}` })
       );
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockImplementation((limit: number) => {
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockImplementation((limit: number) => {
                 expect(limit).toBe(batchSize);
                 return Promise.resolve({
                   data: mockPayments,
@@ -484,11 +484,11 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
 
       const service = createService({
         supabase: mockSupabase,
@@ -508,11 +508,11 @@ describe('InvoiceExpirationService', () => {
 
   describe('Scheduler', () => {
     it('should start automatic checks on schedule', () => {
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -580,10 +580,10 @@ describe('InvoiceExpirationService', () => {
     it('should manually expire a specific payment', async () => {
       const payment = createMockPayment({ state: PaymentState.PENDING });
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: payment,
               error: null,
             }),
@@ -591,11 +591,11 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
 
       const service = createService({
         supabase: mockSupabase,
@@ -616,10 +616,10 @@ describe('InvoiceExpirationService', () => {
     });
 
     it('should throw error for non-existent payment', async () => {
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: null,
               error: { message: 'Not found' },
             }),
@@ -643,10 +643,10 @@ describe('InvoiceExpirationService', () => {
     it('should throw error for non-PENDING payment', async () => {
       const payment = createMockPayment({ state: PaymentState.COMPLETED });
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
               data: payment,
               error: null,
             }),
@@ -672,11 +672,11 @@ describe('InvoiceExpirationService', () => {
     it('should return accurate metrics', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -685,11 +685,11 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
 
       const service = createService({
         supabase: mockSupabase,
@@ -740,11 +740,11 @@ describe('InvoiceExpirationService', () => {
     it('should emit analytics event when invoice expires', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -753,12 +753,12 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
-      (mockAnalyticsService.track as jest.Mock).mockResolvedValue(undefined);
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
+      (mockAnalyticsService.track as any).mockResolvedValue(undefined);
 
       const service = createService({
         supabase: mockSupabase,
@@ -786,11 +786,11 @@ describe('InvoiceExpirationService', () => {
     it('should work without analytics service (optional dependency)', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -799,11 +799,11 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
 
       const service = createService({
         supabase: mockSupabase,
@@ -823,11 +823,11 @@ describe('InvoiceExpirationService', () => {
     it('should continue processing if analytics fails', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -836,12 +836,12 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
-      (mockAnalyticsService.track as jest.Mock).mockRejectedValue(new Error('Analytics unavailable'));
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
+      (mockAnalyticsService.track as any).mockRejectedValue(new Error('Analytics unavailable'));
 
       const service = createService({
         supabase: mockSupabase,
@@ -903,11 +903,11 @@ describe('InvoiceExpirationService', () => {
     it('should cancel invoice on Lightning node when expiring', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -916,12 +916,12 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
-      (mockLightningNodeService.cancelInvoice as jest.Mock).mockResolvedValue(undefined);
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
+      (mockLightningNodeService.cancelInvoice as any).mockResolvedValue(undefined);
 
       const service = createService({
         supabase: mockSupabase,
@@ -945,11 +945,11 @@ describe('InvoiceExpirationService', () => {
     it('should continue processing if Lightning node cleanup fails', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -958,12 +958,12 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
-      (mockLightningNodeService.cancelInvoice as jest.Mock).mockRejectedValue(
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
+      (mockLightningNodeService.cancelInvoice as any).mockRejectedValue(
         new Error('Lightning node unavailable')
       );
 
@@ -995,11 +995,11 @@ describe('InvoiceExpirationService', () => {
     it('should work without Lightning node service (optional dependency)', async () => {
       const expiredPayment = createMockPayment();
 
-      (mockSupabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            lt: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
+      (mockSupabase.from as any).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            lt: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
                 data: [expiredPayment],
                 error: null,
               }),
@@ -1008,11 +1008,11 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as jest.Mock).mockResolvedValue({
+      (mockStateMachine.transition as any).mockResolvedValue({
         success: true,
       });
 
-      (mockEmailService.sendInvoiceExpiredEmail as jest.Mock).mockResolvedValue(undefined);
+      (mockEmailService.sendInvoiceExpiredEmail as any).mockResolvedValue(undefined);
 
       const service = createService({
         supabase: mockSupabase,

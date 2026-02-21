@@ -314,7 +314,7 @@ describe('SimpleContentEditor - Elite Standards Compliance', () => {
     });
 
     it('SHOULD handle auto-save functionality', async () => {
-      const mockOnSave = jest.fn();
+      const mockOnSave = vi.fn();
       renderWithProvider(<SimpleContentEditor onSave={mockOnSave} autoSaveInterval={100} />, {
         initialCMSState: {
           current_content: createMockContentItem(),
@@ -427,7 +427,7 @@ describe('SimpleContentEditor - Elite Standards Compliance', () => {
   // 🚀 **SCENARIO 7: Performance & Optimization**
   describe('WHEN optimizing performance', () => {
     it('SHOULD not re-render unnecessarily', () => {
-      const renderSpy = jest.fn();
+      const renderSpy = vi.fn();
       const WrappedEditor = (): React.ReactElement => {
         renderSpy();
         return <SimpleContentEditor />;

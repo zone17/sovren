@@ -6,9 +6,7 @@
  */
 
 import type {
-  Currency,
   ExchangeRate,
-  ExchangeRateProvider,
   ConversionRequest,
   ConversionResult,
   HistoricalRate,
@@ -20,6 +18,10 @@ import type {
   RateStalenessResult,
   ExchangeRateUpdateEvent,
   CurrencyPair
+} from '../../types/currency';
+import {
+  Currency,
+  ExchangeRateProvider,
 } from '../../types/currency';
 
 /**

@@ -15,14 +15,14 @@ import { BrowserRouter } from 'react-router-dom';
 import { MobileNavigation } from '../MobileNavigation';
 
 // 📱 **Mock dependencies**
-jest.mock('../../../features/auth', () => ({
+vi.mock('../../../features/auth', () => ({
   useAuth: () => ({
     user: { role: 'creator' },
     isAuthenticated: true,
   }),
 }));
 
-jest.mock('../../../hooks/useFeatureFlags', () => ({
+vi.mock('../../../hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => ({
     flags: {
       enableAdvancedAnalytics: true,
@@ -39,7 +39,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 // 📱 **Animation mock**
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: any) => children,
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
@@ -48,7 +48,7 @@ jest.mock('framer-motion', () => ({
 
 describe('📱 Mobile Navigation Test Suite', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('🎯 Basic Rendering - US-086.1', () => {
@@ -426,7 +426,7 @@ describe('📱 Mobile Navigation Test Suite', () => {
 
     test('should filter items based on authentication', () => {
       // Mock unauthenticated user
-      jest.mocked(require('../../../features/auth').useAuth).mockReturnValue({
+      vi.mocked(require('../../../features/auth').useAuth).mockReturnValue({
         user: null,
         isAuthenticated: false,
       });
@@ -444,7 +444,7 @@ describe('📱 Mobile Navigation Test Suite', () => {
 
     test('should filter items based on creator role', () => {
       // Mock supporter user
-      jest.mocked(require('../../../features/auth').useAuth).mockReturnValue({
+      vi.mocked(require('../../../features/auth').useAuth).mockReturnValue({
         user: { role: 'supporter' },
         isAuthenticated: true,
       });
@@ -512,7 +512,7 @@ describe('📱 Mobile Navigation Test Suite', () => {
       ];
 
       // Mock unauthenticated user
-      jest.mocked(require('../../../features/auth').useAuth).mockReturnValue({
+      vi.mocked(require('../../../features/auth').useAuth).mockReturnValue({
         user: null,
         isAuthenticated: false,
       });

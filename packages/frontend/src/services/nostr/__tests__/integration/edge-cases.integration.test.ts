@@ -53,8 +53,8 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
   let perfMeasure: PerformanceMeasurement;
 
   beforeAll(async () => {
-    global.indexedDB = mockIndexedDB as any;
-    global.crypto = mockCrypto as any;
+    Object.defineProperty(globalThis, "indexedDB", { value: mockIndexedDB as any, writable: true, configurable: true });
+    Object.defineProperty(globalThis, "crypto", { value: mockCrypto as any, writable: true, configurable: true });
 
     keyManagement = KeyManagementService.getInstance();
     relayPool = RelayPoolManager.getInstance();

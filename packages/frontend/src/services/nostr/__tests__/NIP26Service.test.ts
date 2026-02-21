@@ -6,7 +6,7 @@
  * Target: 95%+ code coverage
  */
 
-import { describe, it, expect, beforeEach, vi } from '@jest/globals';
+
 import { getPublicKey, generateSecretKey, finalizeEvent } from 'nostr-tools/pure';
 import { NIP26Service } from '../NIP26Service';
 import type { NostrEvent, DelegationConditions } from '@shared/types/nostr';

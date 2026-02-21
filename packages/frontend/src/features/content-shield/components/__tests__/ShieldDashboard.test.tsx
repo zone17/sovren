@@ -3,19 +3,19 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import ShieldDashboard from '../ShieldDashboard';
 
-jest.mock('../FingerprintCoverage', () => ({
+vi.mock('../FingerprintCoverage', () => ({
   __esModule: true,
   default: ({ creatorId }: { creatorId: string }) => (
     <div data-testid="fingerprint-coverage">FingerprintCoverage: {creatorId}</div>
   ),
 }));
 
-jest.mock('../AlertsFeed', () => ({
+vi.mock('../AlertsFeed', () => ({
   __esModule: true,
   default: () => <div data-testid="alerts-feed">AlertsFeed</div>,
 }));
 
-jest.mock('../../ErrorBoundary', () => ({
+vi.mock('../../ErrorBoundary', () => ({
   ContentShieldErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 

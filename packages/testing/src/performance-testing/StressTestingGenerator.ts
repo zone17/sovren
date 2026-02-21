@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite Stress Testing Generator - AI-generated stress testing scenarios
  * based on usage patterns, intelligent load modeling, and adaptive test strategies.

@@ -1,27 +1,26 @@
 /**
- * 🎭 **NOSTR Tools Mock**
+ * NOSTR Tools Mock
  *
- * Jest-compatible mock for nostr-tools package
- * Following TDD/BDD best practices with realistic NOSTR functionality
+ * Vitest mock for nostr-tools package
  */
 
 module.exports = {
-  generateSecretKey: jest.fn().mockReturnValue(new Uint8Array(32).fill(1)),
-  getPublicKey: jest.fn().mockReturnValue('b'.repeat(64)),
+  generateSecretKey: vi.fn().mockReturnValue(new Uint8Array(32).fill(1)),
+  getPublicKey: vi.fn().mockReturnValue('b'.repeat(64)),
 
-  finalizeEvent: jest.fn().mockImplementation((event, privateKey) => ({
+  finalizeEvent: vi.fn().mockImplementation((event, privateKey) => ({
     ...event,
     id: 'd'.repeat(64),
     pubkey: 'b'.repeat(64),
     sig: 'c'.repeat(128),
   })),
 
-  verifyEvent: jest.fn().mockReturnValue(true),
-  validateEvent: jest.fn().mockReturnValue(true),
+  verifyEvent: vi.fn().mockReturnValue(true),
+  validateEvent: vi.fn().mockReturnValue(true),
 
   nip19: {
-    encode: jest.fn().mockImplementation((prefix, data) => `${prefix}1test123456789`),
-    decode: jest.fn().mockImplementation((bech32) => ({
+    encode: vi.fn().mockImplementation((prefix, data) => `${prefix}1test123456789`),
+    decode: vi.fn().mockImplementation((bech32) => ({
       type: 'npub',
       data: 'decoded-data',
     })),
@@ -36,13 +35,13 @@ module.exports = {
     EventDeletion: 5,
   },
 
-  SimplePool: jest.fn().mockImplementation(() => ({
-    subscribeMany: jest.fn().mockReturnValue({
-      close: jest.fn(),
+  SimplePool: vi.fn().mockImplementation(() => ({
+    subscribeMany: vi.fn().mockReturnValue({
+      close: vi.fn(),
     }),
-    publish: jest.fn().mockResolvedValue(['ok']),
-    close: jest.fn(),
-    ensureRelay: jest.fn().mockResolvedValue(undefined),
+    publish: vi.fn().mockResolvedValue(['ok']),
+    close: vi.fn(),
+    ensureRelay: vi.fn().mockResolvedValue(undefined),
   })),
 
   __esModule: true,

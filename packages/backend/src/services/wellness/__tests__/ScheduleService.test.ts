@@ -10,10 +10,10 @@ import type { ILogger } from '../../../interfaces/shared/ILogger';
 
 function createMockLogger(): ILogger {
   return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   } as unknown as ILogger;
 }
 
@@ -48,27 +48,27 @@ describe('ScheduleService', () => {
 
       // Pattern query
       const patternChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: patterns, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: patterns, error: null }),
       };
 
       // Buffer query (future content)
       const bufferChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       let callCount = 0;
       const mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? patternChainable : bufferChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new ScheduleService(mockDb, mockLogger);
@@ -101,26 +101,26 @@ describe('ScheduleService', () => {
       }
 
       const patternChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: patterns, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: patterns, error: null }),
       };
 
       const bufferChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       let callCount = 0;
       const mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? patternChainable : bufferChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new ScheduleService(mockDb, mockLogger);
@@ -134,26 +134,26 @@ describe('ScheduleService', () => {
 
     it('returns empty arrays when no historical data', async () => {
       const patternChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       const bufferChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       let callCount = 0;
       const mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? patternChainable : bufferChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new ScheduleService(mockDb, mockLogger);
@@ -181,26 +181,26 @@ describe('ScheduleService', () => {
       ];
 
       const patternChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: patterns, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: patterns, error: null }),
       };
 
       const bufferChainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       let callCount = 0;
       const mockDb = {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           callCount++;
           return callCount === 1 ? patternChainable : bufferChainable;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new ScheduleService(mockDb, mockLogger);
@@ -227,15 +227,15 @@ describe('ScheduleService', () => {
       ];
 
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: futureContent, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: futureContent, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new ScheduleService(mockDb, mockLogger);
@@ -254,15 +254,15 @@ describe('ScheduleService', () => {
       }
 
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: futureContent, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: futureContent, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new ScheduleService(mockDb, mockLogger);
@@ -274,15 +274,15 @@ describe('ScheduleService', () => {
 
     it('returns empty buffer when no future content', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new ScheduleService(mockDb, mockLogger);
@@ -302,15 +302,15 @@ describe('ScheduleService', () => {
       ];
 
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: futureContent, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: futureContent, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new ScheduleService(mockDb, mockLogger);

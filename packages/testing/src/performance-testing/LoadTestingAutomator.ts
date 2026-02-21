@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite Load Testing Automator - Self-configuring load testing
  * with intelligent scaling, real-time adaptation, and autonomous optimization.

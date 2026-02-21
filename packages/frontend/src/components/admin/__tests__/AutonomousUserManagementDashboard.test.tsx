@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -23,7 +23,7 @@ import AutonomousUserManagementDashboard from '../AutonomousUserManagementDashbo
 // Elite testing coverage with behavior-driven development approach
 
 // Mock the service hook
-jest.mock('../../../services/autonomous-user-management-service');
+vi.mock('../../../services/autonomous-user-management-service');
 
 // === Mock Data ===
 
@@ -220,23 +220,23 @@ const mockBulkOperation: BulkOperation = {
 // Mock service implementation
 const mockUserManagementService = {
   // US-171: Account Management
-  executeAccountOperation: jest.fn().mockResolvedValue(mockAccountOperation),
-  getAccountPolicies: jest.fn().mockResolvedValue([mockAccountPolicy]),
-  updateAccountPolicy: jest.fn().mockResolvedValue(mockAccountPolicy),
-  getAccountMetrics: jest.fn().mockResolvedValue(mockAccountMetrics),
-  getAccountOperations: jest.fn().mockResolvedValue([mockAccountOperation]),
+  executeAccountOperation: vi.fn().mockResolvedValue(mockAccountOperation),
+  getAccountPolicies: vi.fn().mockResolvedValue([mockAccountPolicy]),
+  updateAccountPolicy: vi.fn().mockResolvedValue(mockAccountPolicy),
+  getAccountMetrics: vi.fn().mockResolvedValue(mockAccountMetrics),
+  getAccountOperations: vi.fn().mockResolvedValue([mockAccountOperation]),
 
   // US-172: Role-Based Access Control
-  getRoleDefinitions: jest.fn().mockResolvedValue([mockRoleDefinition]),
-  createRole: jest.fn().mockResolvedValue(mockRoleDefinition),
-  updateRole: jest.fn().mockResolvedValue(mockRoleDefinition),
-  assignRole: jest.fn().mockResolvedValue(mockRoleAssignment),
-  revokeRole: jest.fn().mockResolvedValue(mockRoleAssignment),
-  getAccessControlMetrics: jest.fn().mockResolvedValue(mockAccessControlMetrics),
-  getUserRoleAssignments: jest.fn().mockResolvedValue([mockRoleAssignment]),
+  getRoleDefinitions: vi.fn().mockResolvedValue([mockRoleDefinition]),
+  createRole: vi.fn().mockResolvedValue(mockRoleDefinition),
+  updateRole: vi.fn().mockResolvedValue(mockRoleDefinition),
+  assignRole: vi.fn().mockResolvedValue(mockRoleAssignment),
+  revokeRole: vi.fn().mockResolvedValue(mockRoleAssignment),
+  getAccessControlMetrics: vi.fn().mockResolvedValue(mockAccessControlMetrics),
+  getUserRoleAssignments: vi.fn().mockResolvedValue([mockRoleAssignment]),
 
   // US-173: Behavior Analytics
-  trackBehaviorEvent: jest.fn().mockResolvedValue({
+  trackBehaviorEvent: vi.fn().mockResolvedValue({
     id: 'event_test_123',
     userId: 'user_test_456',
     eventType: 'unusual_activity',
@@ -244,24 +244,24 @@ const mockUserManagementService = {
     anomalyScore: 0.2,
     timestamp: new Date().toISOString(),
   }),
-  getBehaviorPatterns: jest.fn().mockResolvedValue([]),
-  getBehaviorAnomalies: jest.fn().mockResolvedValue([mockBehaviorAnomaly]),
-  getBehaviorAnalyticsMetrics: jest.fn().mockResolvedValue(mockBehaviorAnalyticsMetrics),
-  generateBehaviorReport: jest.fn().mockResolvedValue({
+  getBehaviorPatterns: vi.fn().mockResolvedValue([]),
+  getBehaviorAnomalies: vi.fn().mockResolvedValue([mockBehaviorAnomaly]),
+  getBehaviorAnalyticsMetrics: vi.fn().mockResolvedValue(mockBehaviorAnalyticsMetrics),
+  generateBehaviorReport: vi.fn().mockResolvedValue({
     userId: 'user_test_456',
     summary: { totalEvents: 45, averageRiskScore: 0.25 },
   }),
 
   // US-174: Bulk Operations
-  createBulkOperation: jest.fn().mockResolvedValue(mockBulkOperation),
-  executeBulkOperation: jest.fn().mockResolvedValue({
+  createBulkOperation: vi.fn().mockResolvedValue(mockBulkOperation),
+  executeBulkOperation: vi.fn().mockResolvedValue({
     ...mockBulkOperation,
     status: 'running',
   }),
-  getBulkOperations: jest.fn().mockResolvedValue([mockBulkOperation]),
-  getBulkOperationTemplates: jest.fn().mockResolvedValue([]),
-  getBulkOperationsMetrics: jest.fn().mockResolvedValue(mockBulkOperationsMetrics),
-  validateBulkOperation: jest.fn().mockResolvedValue({
+  getBulkOperations: vi.fn().mockResolvedValue([mockBulkOperation]),
+  getBulkOperationTemplates: vi.fn().mockResolvedValue([]),
+  getBulkOperationsMetrics: vi.fn().mockResolvedValue(mockBulkOperationsMetrics),
+  validateBulkOperation: vi.fn().mockResolvedValue({
     valid: true,
     warnings: [],
     errors: [],
@@ -273,7 +273,7 @@ describe('AutonomousUserManagementDashboard', () => {
 
   beforeEach(() => {
     mockService = new MockAutonomousUserManagementService();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // Helper function to wait for tab content to load
@@ -393,7 +393,7 @@ describe('AutonomousUserManagementDashboard', () => {
   it('handles service errors gracefully', async () => {
     const errorService = {
       ...mockService,
-      getAccountMetrics: jest.fn().mockRejectedValue(new Error('Service error')),
+      getAccountMetrics: vi.fn().mockRejectedValue(new Error('Service error')),
     };
 
     render(<AutonomousUserManagementDashboard service={errorService} />);

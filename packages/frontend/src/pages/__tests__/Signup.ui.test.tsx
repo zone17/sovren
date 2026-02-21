@@ -19,11 +19,11 @@ const mockStore = configureStore({
 });
 
 // Mock auth service - removed since we're using real AuthProvider
-// jest.mock('../../features/auth', () => ({
+// vi.mock('../../features/auth', () => ({
 //   useAuth: () => ({
-//     generateNostrChallenge: jest.fn(),
-//     authenticateNostr: jest.fn(),
-//     signup: jest.fn(),
+//     generateNostrChallenge: vi.fn(),
+//     authenticateNostr: vi.fn(),
+//     signup: vi.fn(),
 //   }),
 // }));
 

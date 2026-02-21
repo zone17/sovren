@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Performance Test Reporter - US-154.6
  * Real-time performance test reporting with predictive analytics

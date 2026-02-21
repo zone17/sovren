@@ -16,7 +16,7 @@ import { EngagementAnalyticsDashboard } from '@/components/analytics/EngagementA
 import { GrowthForecastingChart } from '@/components/analytics/GrowthForecastingChart';
 import { OptimizationSuggestionPanel } from '@/components/analytics/OptimizationSuggestionPanel';
 import { PerformancePredictionViewer } from '@/components/analytics/PerformancePredictionViewer';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

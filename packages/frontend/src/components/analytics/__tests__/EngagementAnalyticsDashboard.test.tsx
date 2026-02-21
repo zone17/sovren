@@ -33,15 +33,15 @@ import {
 import { EngagementAnalyticsDashboard } from '../EngagementAnalyticsDashboard';
 
 // Mock the useToast hook
-jest.mock('../../../hooks/use-toast', () => ({
+vi.mock('../../../hooks/use-toast', () => ({
   useToast: () => ({
-    toast: jest.fn(),
+    toast: vi.fn(),
   }),
 }));
 
 // Mock the useEngagementAnalytics hook
-const mockUseEngagementAnalytics = jest.fn();
-jest.mock('../../../hooks/useEngagementAnalytics', () => ({
+const mockUseEngagementAnalytics = vi.fn();
+vi.mock('../../../hooks/useEngagementAnalytics', () => ({
   useEngagementAnalytics: () => mockUseEngagementAnalytics(),
 }));
 
@@ -53,10 +53,10 @@ describe('EngagementAnalyticsDashboard', () => {
 
   beforeEach(() => {
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup fetch mock for API calls
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('engagement-analytics/metrics')) {
         return Promise.resolve(createMockResponse({ success: true, data: mockMetrics }));
       }
@@ -77,12 +77,12 @@ describe('EngagementAnalyticsDashboard', () => {
       benchmarks: mockBenchmarks,
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('Component Rendering', () => {
@@ -147,7 +147,7 @@ describe('EngagementAnalyticsDashboard', () => {
         benchmarks: null,
         isLoading: true,
         error: null,
-        refetch: jest.fn(),
+        refetch: vi.fn(),
       });
 
       renderWithQueryClient(<EngagementAnalyticsDashboard />);
@@ -167,7 +167,7 @@ describe('EngagementAnalyticsDashboard', () => {
         benchmarks: null,
         isLoading: false,
         error: mockError,
-        refetch: jest.fn(),
+        refetch: vi.fn(),
       });
 
       renderWithQueryClient(<EngagementAnalyticsDashboard />);
@@ -180,7 +180,7 @@ describe('EngagementAnalyticsDashboard', () => {
     });
 
     it('should call refetch when refresh button is clicked', async () => {
-      const mockRefetch = jest.fn();
+      const mockRefetch = vi.fn();
       mockUseEngagementAnalytics.mockReturnValue({
         metrics: mockMetrics,
         patterns: mockPatterns,
@@ -404,7 +404,7 @@ describe('EngagementAnalyticsDashboard', () => {
         benchmarks: mockBenchmarks,
         isLoading: false,
         error: null,
-        refetch: jest.fn(),
+        refetch: vi.fn(),
       });
 
       renderWithQueryClient(<EngagementAnalyticsDashboard />);

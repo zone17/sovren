@@ -1000,7 +1000,7 @@ describe('UserAnalyticsService', () => {
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
       const badDb = {
-        query: jest.fn().mockRejectedValue(new Error('Database error'))
+        query: vi.fn().mockRejectedValue(new Error('Database error'))
       };
 
       container.rebind(TYPES.Database).toConstantValue(badDb);
@@ -1014,8 +1014,8 @@ describe('UserAnalyticsService', () => {
 
     it('should handle cache errors gracefully', async () => {
       const badCache = {
-        get: jest.fn().mockRejectedValue(new Error('Cache error')),
-        set: jest.fn().mockRejectedValue(new Error('Cache error'))
+        get: vi.fn().mockRejectedValue(new Error('Cache error')),
+        set: vi.fn().mockRejectedValue(new Error('Cache error'))
       };
 
       container.rebind(TYPES.CacheService).toConstantValue(badCache);

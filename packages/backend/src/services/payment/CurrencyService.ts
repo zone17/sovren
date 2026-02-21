@@ -11,9 +11,7 @@ import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type {
-  Currency,
   ExchangeRate,
-  ExchangeRateProvider,
   ConversionRequest,
   ConversionResult,
   HistoricalRate,
@@ -25,6 +23,10 @@ import type {
   ExchangeRateUpdateEvent,
   CurrencyPair,
   CurrencyServiceConfig
+} from '../../types/currency';
+import {
+  Currency,
+  ExchangeRateProvider,
 } from '../../types/currency';
 import {
   CURRENCY_PRECISION,

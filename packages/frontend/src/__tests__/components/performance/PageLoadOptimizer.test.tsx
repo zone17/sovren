@@ -23,10 +23,10 @@ const PageLoadOptimizer: React.FC = () => {
 
 // Mock performance API
 const mockPerformance = {
-  now: jest.fn(() => Date.now()),
-  getEntriesByType: jest.fn(() => []),
-  mark: jest.fn(),
-  measure: jest.fn(),
+  now: vi.fn(() => Date.now()),
+  getEntriesByType: vi.fn(() => []),
+  mark: vi.fn(),
+  measure: vi.fn(),
 };
 
 Object.defineProperty(window, 'performance', {
@@ -36,11 +36,11 @@ Object.defineProperty(window, 'performance', {
 
 describe('PageLoadOptimizer', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('US-111.1: Performance Auditing', () => {

@@ -3,7 +3,7 @@ import path from 'path';
 import { LightningConfig, LightningService } from '../lightning-service';
 
 // Mock fetch for LNbits API calls
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 const TEST_DATA_DIR = path.join('/tmp', 'sovren-lightning-p1-test');
 
@@ -24,14 +24,14 @@ const mockConfig: LightningConfig = {
 };
 
 function mockWalletResponse() {
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
+  (global.fetch as any).mockResolvedValueOnce({
     ok: true,
     json: async () => ({ name: 'Test Wallet' }),
   });
 }
 
 function mockInvoiceCreation(paymentHash: string) {
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
+  (global.fetch as any).mockResolvedValueOnce({
     ok: true,
     json: async () => ({
       payment_request: 'lnbc1000n1...',
@@ -62,7 +62,7 @@ describe('Lightning Service P1 Fixes', () => {
     service['paymentCache'].clear();
     service['paymentHashIndex'].clear();
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(() => {
@@ -96,7 +96,7 @@ describe('Lightning Service P1 Fixes', () => {
       service['paymentHashIndex'].delete('hash_113_a');
 
       // checkInvoiceStatus should fall through to persistence
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ paid: false }),
       });
@@ -124,7 +124,7 @@ describe('Lightning Service P1 Fixes', () => {
       service['invoiceCache'].delete(invoiceId);
 
       // First lookup: persistence fallback
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ paid: false }),
       });
@@ -193,10 +193,10 @@ describe('Lightning Service P1 Fixes', () => {
 
       // Make persistence savePayment throw to simulate failure
       const persistence = service['persistence'];
-      jest.spyOn(persistence, 'savePayment').mockRejectedValueOnce(new Error('Disk full'));
+      vi.spyOn(persistence, 'savePayment').mockRejectedValueOnce(new Error('Disk full'));
 
       // Mock LNbits says paid
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ paid: true, fee: 1, preimage: 'pre123' }),
       });
@@ -264,9 +264,9 @@ describe('Lightning Service P1 Fixes', () => {
       service['invoiceCache'].set(invoiceId, invoice);
 
       // Spy on updateInvoiceStatus to verify it's called
-      const updateSpy = jest.spyOn(service['persistence'], 'updateInvoiceStatus');
+      const updateSpy = vi.spyOn(service['persistence'], 'updateInvoiceStatus');
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ paid: false }),
       });
@@ -311,7 +311,7 @@ describe('Lightning Service P1 Fixes', () => {
       }
 
       // Spy on invoiceCache.values to ensure it's NOT called (no linear scan)
-      const valuesSpy = jest.spyOn(service['invoiceCache'], 'values');
+      const valuesSpy = vi.spyOn(service['invoiceCache'], 'values');
 
       const webhookResult = await service.processWebhook({
         type: 'payment',

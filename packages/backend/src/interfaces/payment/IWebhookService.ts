@@ -9,7 +9,6 @@ import type {
   WebhookEndpoint,
   CreateWebhookEndpointParams,
   UpdateWebhookEndpointParams,
-  WebhookEventType,
   WebhookEventPayload,
   WebhookDelivery,
   WebhookDeliveryResult,
@@ -24,6 +23,9 @@ import type {
   WebhookHealthCheck,
   WebhookNotification,
   DeadLetterQueueEntry
+} from '../../types/webhook';
+import {
+  WebhookEventType,
 } from '../../types/webhook';
 
 /**

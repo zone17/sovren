@@ -21,13 +21,17 @@ import type {
   CancelSubscriptionOptions,
   PauseSubscriptionOptions,
   SubscriptionWebhookEvent,
+  SubscriptionUsage
+} from '../../types/subscription';
+import {
   SubscriptionEventType,
   SubscriptionStatus,
   BillingInterval,
   SubscriptionTier,
-  SubscriptionUsage
 } from '../../types/subscription';
-import type { Currency } from '../../types/currency';
+import {
+  Currency,
+} from '../../types/currency';
 
 /**
  * Subscription service interface

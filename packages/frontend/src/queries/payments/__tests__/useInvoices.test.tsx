@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { useInvoices } from '../useInvoices';
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('useInvoices', () => {
   let queryClient: QueryClient;
@@ -19,7 +19,7 @@ describe('useInvoices', () => {
         queries: { retry: false },
       },
     });
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should fetch invoices successfully', async () => {
@@ -53,7 +53,7 @@ describe('useInvoices', () => {
       },
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockData,
     });
@@ -77,7 +77,7 @@ describe('useInvoices', () => {
       },
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockData,
     });
@@ -113,7 +113,7 @@ describe('useInvoices', () => {
       },
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockData,
     });
@@ -134,7 +134,7 @@ describe('useInvoices', () => {
   });
 
   it('should handle fetch errors', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: false,
       statusText: 'Unauthorized',
     });

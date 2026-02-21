@@ -13,12 +13,12 @@ import {
 } from '../e2e-testing/AIExploratoryTestingFramework';
 
 // Mock Logger
-jest.mock('../common/Logger', () => ({
-  Logger: jest.fn().mockImplementation(() => ({
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
+vi.mock('../common/Logger', () => ({
+  Logger: vi.fn().mockImplementation(() => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
   })),
 }));
 
@@ -35,7 +35,7 @@ describe('AIExploratoryTestingFramework', () => {
       confidenceThreshold: 0.8,
       maxDepth: 10,
       enableRL: true,
-      rewardFunction: jest.fn().mockReturnValue(0.9),
+      rewardFunction: vi.fn().mockReturnValue(0.9),
     };
 
     bugDetectionConfig = {
@@ -59,7 +59,7 @@ describe('AIExploratoryTestingFramework', () => {
 
   afterEach(() => {
     framework.stopMonitoring();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Framework Initialization', () => {

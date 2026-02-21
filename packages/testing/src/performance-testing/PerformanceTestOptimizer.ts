@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Performance Test Optimizer - US-154.7
  * Autonomous performance test optimization

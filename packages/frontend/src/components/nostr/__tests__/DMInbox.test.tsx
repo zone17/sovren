@@ -32,10 +32,10 @@ expect.extend(toHaveNoViolations);
 // Mock Services
 // ========================================
 
-jest.mock('@/services/nostr/NIP04Service');
-jest.mock('@/services/nostr/EventPublisherService');
-jest.mock('@/services/nostr/SubscriptionManagerService');
-jest.mock('@/services/nostr/KeyManagementService');
+vi.mock('@/services/nostr/NIP04Service');
+vi.mock('@/services/nostr/EventPublisherService');
+vi.mock('@/services/nostr/SubscriptionManagerService');
+vi.mock('@/services/nostr/KeyManagementService');
 
 // ========================================
 // Test Data
@@ -79,23 +79,23 @@ const createMockDecryptedMessage = (
 // ========================================
 
 const mockNIP04Service = {
-  isInitialized: jest.fn(() => true),
-  initialize: jest.fn(),
-  decrypt: jest.fn(),
-  encrypt: jest.fn(),
-  createDMEvent: jest.fn(),
-  getThreadId: jest.fn((pub1, pub2) => [pub1, pub2].sort().join('_')),
-  addMessageToThread: jest.fn(),
-  getThread: jest.fn(() => Promise.resolve([])),
-  markAsRead: jest.fn(),
-  getUnreadCount: jest.fn(() => Promise.resolve(0)),
-  clearThread: jest.fn(),
+  isInitialized: vi.fn(() => true),
+  initialize: vi.fn(),
+  decrypt: vi.fn(),
+  encrypt: vi.fn(),
+  createDMEvent: vi.fn(),
+  getThreadId: vi.fn((pub1, pub2) => [pub1, pub2].sort().join('_')),
+  addMessageToThread: vi.fn(),
+  getThread: vi.fn(() => Promise.resolve([])),
+  markAsRead: vi.fn(),
+  getUnreadCount: vi.fn(() => Promise.resolve(0)),
+  clearThread: vi.fn(),
 };
 
 const mockEventPublisher = {
-  isInitialized: jest.fn(() => true),
-  initialize: jest.fn(),
-  publish: jest.fn(() =>
+  isInitialized: vi.fn(() => true),
+  initialize: vi.fn(),
+  publish: vi.fn(() =>
     Promise.resolve({
       success: true,
       publishedTo: ['relay1'],
@@ -103,18 +103,18 @@ const mockEventPublisher = {
       timestamp: Date.now(),
     })
   ),
-  createAndPublish: jest.fn(),
+  createAndPublish: vi.fn(),
 };
 
 const mockSubscriptionManager = {
-  subscribe: jest.fn(() => 'sub_123'),
-  unsubscribe: jest.fn(),
-  getSubscription: jest.fn(),
+  subscribe: vi.fn(() => 'sub_123'),
+  unsubscribe: vi.fn(),
+  getSubscription: vi.fn(),
 };
 
 const mockKeyManagement = {
-  isInitialized: jest.fn(() => true),
-  getActiveKey: jest.fn(() => ({
+  isInitialized: vi.fn(() => true),
+  getActiveKey: vi.fn(() => ({
     keyId: 'key1',
     publicKey: mockUserPubkey,
     privateKey: mockPrivateKey,
@@ -129,13 +129,13 @@ const mockKeyManagement = {
 // ========================================
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 
   // Setup service mocks
-  (NIP04Service.getInstance as jest.Mock).mockReturnValue(mockNIP04Service);
-  (EventPublisherService.getInstance as jest.Mock).mockReturnValue(mockEventPublisher);
-  (SubscriptionManagerService.getInstance as jest.Mock).mockReturnValue(mockSubscriptionManager);
-  (KeyManagementService.getInstance as jest.Mock).mockReturnValue(mockKeyManagement);
+  (NIP04Service.getInstance as any).mockReturnValue(mockNIP04Service);
+  (EventPublisherService.getInstance as any).mockReturnValue(mockEventPublisher);
+  (SubscriptionManagerService.getInstance as any).mockReturnValue(mockSubscriptionManager);
+  (KeyManagementService.getInstance as any).mockReturnValue(mockKeyManagement);
 
   // Default decrypt behavior
   mockNIP04Service.decrypt.mockImplementation(
@@ -149,7 +149,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 // ========================================
@@ -358,7 +358,7 @@ describe('DMInbox - Interactions', () => {
   });
 
   it('should auto-scroll to latest message', async () => {
-    const scrollIntoViewMock = jest.fn();
+    const scrollIntoViewMock = vi.fn();
     Element.prototype.scrollIntoView = scrollIntoViewMock;
     const user = userEvent.setup();
 
@@ -656,7 +656,7 @@ describe('DMInbox - Edge Cases', () => {
   it('should handle decryption errors gracefully', async () => {
     mockNIP04Service.decrypt.mockRejectedValue(new Error('Decryption failed'));
 
-    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+    const consoleError = vi.spyOn(console, 'error').mockImplementation();
 
     render(<DMInbox />);
 
@@ -698,10 +698,10 @@ describe('DMInbox - Edge Cases', () => {
     // Create a temporary key management mock that returns null
     const tempKeyMgmt = {
       ...mockKeyManagement,
-      getActiveKey: jest.fn(() => null),
-      isInitialized: jest.fn(() => true),
+      getActiveKey: vi.fn(() => null),
+      isInitialized: vi.fn(() => true),
     };
-    (KeyManagementService.getInstance as jest.Mock).mockReturnValue(tempKeyMgmt);
+    (KeyManagementService.getInstance as any).mockReturnValue(tempKeyMgmt);
 
     render(<DMInbox />);
 
@@ -711,7 +711,7 @@ describe('DMInbox - Edge Cases', () => {
     });
 
     // Restore original mock
-    (KeyManagementService.getInstance as jest.Mock).mockReturnValue(mockKeyManagement);
+    (KeyManagementService.getInstance as any).mockReturnValue(mockKeyManagement);
   });
 
   it('should handle duplicate messages', async () => {
@@ -809,7 +809,7 @@ describe('DMInbox - Edge Cases', () => {
 
   it('should handle thread deletion confirmation', async () => {
     const user = userEvent.setup();
-    window.confirm = jest.fn(() => true);
+    window.confirm = vi.fn(() => true);
 
     render(<DMInbox />);
 

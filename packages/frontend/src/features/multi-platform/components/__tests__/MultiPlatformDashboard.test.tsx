@@ -3,19 +3,19 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import MultiPlatformDashboard from '../MultiPlatformDashboard';
 
-jest.mock('../PlatformConnector', () => ({
+vi.mock('../PlatformConnector', () => ({
   __esModule: true,
   default: () => <div data-testid="platform-connector">PlatformConnector</div>,
 }));
-jest.mock('../CrossPlatformAnalytics', () => ({
+vi.mock('../CrossPlatformAnalytics', () => ({
   __esModule: true,
   default: () => <div data-testid="cross-platform-analytics">CrossPlatformAnalytics</div>,
 }));
-jest.mock('../UnifiedInbox', () => ({
+vi.mock('../UnifiedInbox', () => ({
   __esModule: true,
   default: () => <div data-testid="unified-inbox">UnifiedInbox</div>,
 }));
-jest.mock('../../ErrorBoundary', () => ({
+vi.mock('../../ErrorBoundary', () => ({
   DistributionErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 

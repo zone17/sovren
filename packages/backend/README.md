@@ -6,7 +6,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org)
 [![Supabase](https://img.shields.io/badge/Database-Supabase-orange.svg)](https://supabase.com)
 [![Express](https://img.shields.io/badge/Framework-Express.js-lightgrey.svg)](https://expressjs.com)
-[![Jest](https://img.shields.io/badge/Testing-Jest-red.svg)](https://jestjs.io)
+[![Vitest](https://img.shields.io/badge/Testing-Vitest-6E9F18.svg)](https://vitest.dev)
 
 ## 🎯 Overview
 
@@ -58,16 +58,16 @@ Sovren Backend is an **elite-engineered API server** that powers the Sovren plat
 
 ### 🛠️ Technology Stack
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Runtime** | Node.js 18+ | JavaScript runtime environment |
-| **Framework** | Express.js 4.18+ | Web application framework |
-| **Language** | TypeScript 5.3+ | Type-safe development |
-| **Database** | Supabase (PostgreSQL) | Production database with real-time features |
-| **Authentication** | NOSTR + JWT | Cryptographic identity & session management |
-| **Testing** | Jest + Supertest | Unit, integration, and API testing |
-| **Validation** | Zod | Runtime type validation |
-| **Security** | Helmet, CORS, Rate Limiting | Security middleware stack |
+| Component          | Technology                  | Purpose                                     |
+| ------------------ | --------------------------- | ------------------------------------------- |
+| **Runtime**        | Node.js 18+                 | JavaScript runtime environment              |
+| **Framework**      | Express.js 4.18+            | Web application framework                   |
+| **Language**       | TypeScript 5.3+             | Type-safe development                       |
+| **Database**       | Supabase (PostgreSQL)       | Production database with real-time features |
+| **Authentication** | NOSTR + JWT                 | Cryptographic identity & session management |
+| **Testing**        | Vitest + Supertest          | Unit, integration, and API testing          |
+| **Validation**     | Zod                         | Runtime type validation                     |
+| **Security**       | Helmet, CORS, Rate Limiting | Security middleware stack                   |
 
 ---
 
@@ -157,32 +157,32 @@ npm start
 
 ### Authentication Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/api/auth/challenge` | Generate NOSTR authentication challenge | ❌ |
-| `POST` | `/api/auth/authenticate` | Verify NOSTR signature and get JWT | ❌ |
-| `POST` | `/api/auth/refresh` | Refresh JWT token | ✅ |
-| `GET` | `/api/auth/verify` | Verify current authentication | ✅ |
-| `POST` | `/api/auth/logout` | Invalidate current session | ✅ |
-| `GET` | `/api/auth/stats` | Authentication statistics (admin) | 🔒 Admin |
+| Method | Endpoint                 | Description                             | Auth Required |
+| ------ | ------------------------ | --------------------------------------- | ------------- |
+| `POST` | `/api/auth/challenge`    | Generate NOSTR authentication challenge | ❌            |
+| `POST` | `/api/auth/authenticate` | Verify NOSTR signature and get JWT      | ❌            |
+| `POST` | `/api/auth/refresh`      | Refresh JWT token                       | ✅            |
+| `GET`  | `/api/auth/verify`       | Verify current authentication           | ✅            |
+| `POST` | `/api/auth/logout`       | Invalidate current session              | ✅            |
+| `GET`  | `/api/auth/stats`        | Authentication statistics (admin)       | 🔒 Admin      |
 
 ### User Management Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/api/users/profile` | Create user profile | ✅ |
-| `GET` | `/api/users/profile` | Get current user profile | ✅ |
-| `PUT` | `/api/users/profile` | Update user profile | ✅ |
-| `GET` | `/api/users/search` | Search users by username | ✅ |
-| `GET` | `/api/users/stats` | User statistics | 🔒 Admin |
-| `PUT` | `/api/users/:id/role` | Update user role | 🔒 Admin |
+| Method | Endpoint              | Description              | Auth Required |
+| ------ | --------------------- | ------------------------ | ------------- |
+| `POST` | `/api/users/profile`  | Create user profile      | ✅            |
+| `GET`  | `/api/users/profile`  | Get current user profile | ✅            |
+| `PUT`  | `/api/users/profile`  | Update user profile      | ✅            |
+| `GET`  | `/api/users/search`   | Search users by username | ✅            |
+| `GET`  | `/api/users/stats`    | User statistics          | 🔒 Admin      |
+| `PUT`  | `/api/users/:id/role` | Update user role         | 🔒 Admin      |
 
 ### Health & Monitoring
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/health` | Server health check | ❌ |
-| `GET` | `/api` | API information and status | ❌ |
+| Method | Endpoint  | Description                | Auth Required |
+| ------ | --------- | -------------------------- | ------------- |
+| `GET`  | `/health` | Server health check        | ❌            |
+| `GET`  | `/api`    | API information and status | ❌            |
 
 ---
 
@@ -252,15 +252,17 @@ src/
 
 ```typescript
 // Example security middleware configuration
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "wss://relay.example.com"],
-      // ... additional CSP directives
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", 'wss://relay.example.com'],
+        // ... additional CSP directives
+      },
     },
-  },
-}));
+  })
+);
 ```
 
 ---
@@ -356,7 +358,7 @@ packages/backend/
 │   ├── API.md                  # Detailed API documentation
 │   ├── DEPLOYMENT.md           # Deployment guide
 │   └── CONTRIBUTING.md         # Development guidelines
-├── jest.config.js              # Jest testing configuration
+├── vitest.config.ts            # Vitest testing configuration
 ├── tsconfig.json               # TypeScript configuration
 ├── package.json                # Dependencies and scripts
 ├── CHANGELOG.md                # Version history
@@ -440,22 +442,26 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed version history and migration gu
 ## 🎯 Roadmap
 
 ### ✅ Phase 1: Database Integration (COMPLETED)
+
 - Database schema and configuration
 - User repository and service layer
 - Comprehensive testing suite
 - Security implementation
 
 ### 🔄 Phase 2: User API Routes (IN PROGRESS)
+
 - Complete user management API
 - Role management endpoints
 - User discovery and search
 
 ### 📅 Phase 3: Real-time Features (PLANNED)
+
 - WebSocket connections
 - Live updates and notifications
 - Event-driven architecture
 
 ### 📅 Phase 4: Advanced Features (PLANNED)
+
 - Caching layer optimization
 - Advanced analytics
 - Performance monitoring
@@ -489,8 +495,8 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 Built with ❤️ by the Sovren team, following elite engineering practices and industry best standards.
 
-**Technologies**: Node.js, Express.js, TypeScript, Supabase, Jest, and the amazing open-source community.
+**Technologies**: Node.js, Express.js, TypeScript, Supabase, Vitest, and the amazing open-source community.
 
 ---
 
-*Last Updated: Phase 1 Completion - Database Integration*
+_Last Updated: Phase 1 Completion - Database Integration_

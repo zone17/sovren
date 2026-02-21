@@ -6,7 +6,12 @@
  */
 
 import type { IUserRelationshipService } from '../../interfaces/user/IUserRelationshipService';
-import type { IEventBus, DomainEventType } from '../../interfaces/shared/IEventBus';
+import type {
+  IEventBus
+} from '../../interfaces/shared/IEventBus';
+import {
+  DomainEventType,
+} from '../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type {
@@ -34,10 +39,12 @@ import type {
   ExportFollowsResponse,
   RelationshipMetrics,
   PaginationOptions,
-  RelationshipType,
-  RelationshipStatus,
   RelationshipGraphNode,
   UserRelationshipInfo
+} from '../../types/user-relationship';
+import {
+  RelationshipType,
+  RelationshipStatus,
 } from '../../types/user-relationship';
 
 import { DomainEventBuilder, DomainEventType as EventType } from '../../interfaces/shared/IEventBus';

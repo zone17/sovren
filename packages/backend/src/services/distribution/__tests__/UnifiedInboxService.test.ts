@@ -15,29 +15,29 @@ describe('UnifiedInboxService', () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     };
 
     mockPlatformService = {
-      getAdapter: jest.fn(),
-      getDecryptedToken: jest.fn().mockResolvedValue('decrypted-token'),
-      getStatus: jest.fn(),
+      getAdapter: vi.fn(),
+      getDecryptedToken: vi.fn().mockResolvedValue('decrypted-token'),
+      getStatus: vi.fn(),
     };
 
     mockDb = {
-      from: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      in: jest.fn().mockReturnThis(),
-      single: jest.fn(),
-      update: jest.fn().mockReturnThis(),
-      upsert: jest.fn().mockResolvedValue({ error: null }),
-      order: jest.fn().mockReturnThis(),
-      range: jest.fn(),
-      limit: jest.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      update: vi.fn().mockReturnThis(),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
+      order: vi.fn().mockReturnThis(),
+      range: vi.fn(),
+      limit: vi.fn().mockReturnThis(),
     };
 
     service = new UnifiedInboxService(mockDb, mockPlatformService, mockLogger);
@@ -114,7 +114,7 @@ describe('UnifiedInboxService', () => {
 
   describe('reply', () => {
     it('should route reply to the correct platform adapter', async () => {
-      const mockSendReply = jest.fn().mockResolvedValue(undefined);
+      const mockSendReply = vi.fn().mockResolvedValue(undefined);
       mockDb.single.mockResolvedValue({
         data: { platform: 'mastodon', platform_message_id: 'masto-msg-123' },
         error: null,
@@ -160,7 +160,7 @@ describe('UnifiedInboxService', () => {
         error: null,
       });
       mockPlatformService.getAdapter.mockReturnValue({
-        sendReply: jest.fn().mockResolvedValue(undefined),
+        sendReply: vi.fn().mockResolvedValue(undefined),
       });
 
       await service.reply(creatorId, 'msg-1', 'Thanks!');

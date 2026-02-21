@@ -548,7 +548,8 @@ export interface UsabilityPrediction {
 export class AIUsabilityTestingFramework {
   private logger: Logger;
   private userPersonas: Map<string, UserPersona>;
-  private behaviorSimulations: Map<string, UserBehaviorSimulation>;
+  // @ts-expect-error Stub field for future implementation
+  private _behaviorSimulations: Map<string, UserBehaviorSimulation>;
   private heuristicEvaluation: HeuristicEvaluation;
   private usabilityReports: UsabilityReport[];
   private isMonitoring: boolean;
@@ -560,7 +561,7 @@ export class AIUsabilityTestingFramework {
   constructor(heuristicEvaluation: HeuristicEvaluation) {
     this.logger = new Logger('AIUsabilityTestingFramework');
     this.userPersonas = new Map();
-    this.behaviorSimulations = new Map();
+    this._behaviorSimulations = new Map();
     this.heuristicEvaluation = heuristicEvaluation;
     this.usabilityReports = [];
     this.isMonitoring = false;
@@ -879,7 +880,7 @@ export class AIUsabilityTestingFramework {
     // Implementation for metrics collection initialization
   }
 
-  private async generateScenariosForPersona(persona: UserPersona): Promise<BehaviorPattern[]> {
+  private async generateScenariosForPersona(_persona: UserPersona): Promise<BehaviorPattern[]> {
     // Implementation for persona-specific scenario generation
     return [];
   }
@@ -899,70 +900,70 @@ export class AIUsabilityTestingFramework {
     return [];
   }
 
-  private async analyzeTaskCompletion(sessions: any[]): Promise<number> {
+  private async analyzeTaskCompletion(_sessions: any[]): Promise<number> {
     // Implementation for task completion analysis
     return 85;
   }
 
-  private async analyzeCompletionTime(sessions: any[]): Promise<number> {
+  private async analyzeCompletionTime(_sessions: any[]): Promise<number> {
     // Implementation for completion time analysis
     return 120; // seconds
   }
 
-  private async analyzeErrorRate(sessions: any[]): Promise<number> {
+  private async analyzeErrorRate(_sessions: any[]): Promise<number> {
     // Implementation for error rate analysis
     return 0.05; // 5% error rate
   }
 
-  private async analyzeRecoveryTime(sessions: any[]): Promise<number> {
+  private async analyzeRecoveryTime(_sessions: any[]): Promise<number> {
     // Implementation for recovery time analysis
     return 30; // seconds
   }
 
-  private async analyzeNavigationEfficiency(sessions: any[]): Promise<number> {
+  private async analyzeNavigationEfficiency(_sessions: any[]): Promise<number> {
     // Implementation for navigation efficiency analysis
     return 0.8; // 80% efficiency
   }
 
-  private async assessCognitiveLoad(sessions: any[]): Promise<number> {
+  private async assessCognitiveLoad(_sessions: any[]): Promise<number> {
     // Implementation for cognitive load assessment
     return 3.5; // Scale of 1-5
   }
 
-  private async generateSatisfactionScore(sessions: any[]): Promise<number> {
+  private async generateSatisfactionScore(_sessions: any[]): Promise<number> {
     // Implementation for satisfaction score generation
     return 4.2; // Scale of 1-5
   }
 
-  private async evaluateLearnability(sessions: any[]): Promise<number> {
+  private async evaluateLearnability(_sessions: any[]): Promise<number> {
     // Implementation for learnability evaluation
     return 4.0; // Scale of 1-5
   }
 
-  private async evaluateMemorability(sessions: any[]): Promise<number> {
+  private async evaluateMemorability(_sessions: any[]): Promise<number> {
     // Implementation for memorability evaluation
     return 4.1; // Scale of 1-5
   }
 
-  private async assessAccessibility(sessions: any[]): Promise<number> {
+  private async assessAccessibility(_sessions: any[]): Promise<number> {
     // Implementation for accessibility assessment
     return 85; // Percentage
   }
 
-  private async analyzeInteractionPatterns(data: any[]): Promise<any> {
+  private async analyzeInteractionPatterns(_data: any[]): Promise<any> {
     // Implementation for interaction pattern analysis
     return {};
   }
 
   private async generateFeedbackForPersona(
-    persona: UserPersona,
-    patterns: any
+    _persona: UserPersona,
+    _patterns: any
   ): Promise<SyntheticUserFeedback[]> {
     // Implementation for persona-specific feedback generation
     return [];
   }
 
-  private async generateContextualFeedback(patterns: any): Promise<SyntheticUserFeedback[]> {
+  private async generateContextualFeedback(_patterns: any): Promise<SyntheticUserFeedback[]> {
     // Implementation for contextual feedback generation
     return [];
   }
@@ -990,13 +991,13 @@ export class AIUsabilityTestingFramework {
     return results;
   }
 
-  private async generateImprovementRecommendations(results: HeuristicResult[]): Promise<void> {
+  private async generateImprovementRecommendations(_results: HeuristicResult[]): Promise<void> {
     // Implementation for improvement recommendation generation
   }
 
   private async generateUsabilityRecommendations(
-    metrics: UsabilityMetrics,
-    results: HeuristicResult[]
+    _metrics: UsabilityMetrics,
+    _results: HeuristicResult[]
   ): Promise<UsabilityRecommendation[]> {
     // Implementation for usability recommendation generation
     return [];
@@ -1013,14 +1014,14 @@ export class AIUsabilityTestingFramework {
   }
 
   private async calculateOverallUsabilityScore(
-    metrics: UsabilityMetrics,
-    results: HeuristicResult[]
+    _metrics: UsabilityMetrics,
+    _results: HeuristicResult[]
   ): Promise<number> {
     // Implementation for overall score calculation
     return 82; // Composite score
   }
 
-  private async compareWithPreviousReports(report: UsabilityReport): Promise<void> {
+  private async compareWithPreviousReports(_report: UsabilityReport): Promise<void> {
     // Implementation for report comparison
   }
 
@@ -1032,7 +1033,7 @@ export class AIUsabilityTestingFramework {
     // Implementation for improvement validation
   }
 
-  private async updateRecommendations(report: UsabilityReport): Promise<void> {
+  private async updateRecommendations(_report: UsabilityReport): Promise<void> {
     // Implementation for recommendation updates
   }
 

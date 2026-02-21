@@ -43,13 +43,13 @@
 
 ### Coverage Requirements
 
-| Component | Minimum Coverage | Target Coverage |
-|-----------|------------------|-----------------|
-| **Payment Services** | 100% | 100% (non-negotiable) |
-| **Auth Services** | 95% | 100% |
-| **Content Services** | 85% | 95% |
-| **Utilities** | 80% | 90% |
-| **Global Target** | 85% | 95% |
+| Component            | Minimum Coverage | Target Coverage       |
+| -------------------- | ---------------- | --------------------- |
+| **Payment Services** | 100%             | 100% (non-negotiable) |
+| **Auth Services**    | 95%              | 100%                  |
+| **Content Services** | 85%              | 95%                   |
+| **Utilities**        | 80%              | 90%                   |
+| **Global Target**    | 85%              | 95%                   |
 
 ---
 
@@ -60,6 +60,7 @@
 **Purpose**: Test individual functions/methods in isolation
 
 **Characteristics**:
+
 - Extremely fast (< 1ms each)
 - No external dependencies
 - Use mocks for all dependencies
@@ -83,6 +84,7 @@ describe('calculateFee', () => {
 **Purpose**: Test component interactions
 
 **Characteristics**:
+
 - Medium speed (< 1s each)
 - Real database (test database)
 - Real Redis (test instance)
@@ -102,17 +104,14 @@ describe('PaymentService Integration', () => {
   it('should persist payment to database', async () => {
     const payment = await service.createPayment({
       amount: 1000,
-      userId: 'test-user'
+      userId: 'test-user',
     });
 
-    const retrieved = await testDb.query(
-      'SELECT * FROM payments WHERE id = $1',
-      [payment.id]
-    );
+    const retrieved = await testDb.query('SELECT * FROM payments WHERE id = $1', [payment.id]);
 
     expect(retrieved.rows[0]).toMatchObject({
       amount: 1000,
-      user_id: 'test-user'
+      user_id: 'test-user',
     });
   });
 });
@@ -123,6 +122,7 @@ describe('PaymentService Integration', () => {
 **Purpose**: Test complete user flows
 
 **Characteristics**:
+
 - Slow (seconds to minutes)
 - Full application stack
 - Real HTTP requests
@@ -147,27 +147,33 @@ test('user can create and pay for subscription', async ({ page }) => {
 
 ## Unit Testing
 
-### Jest Configuration
+### Vitest Configuration
 
-```javascript
-// jest.config.elite.ts
-export default {
-  projects: [
-    {
-      displayName: 'backend',
-      testMatch: ['<rootDir>/packages/backend/src/**/*.test.ts'],
-      testEnvironment: 'node',
-      coverageThreshold: {
-        global: {
-          branches: 85,
-          functions: 85,
-          lines: 85,
-          statements: 85
-        }
-      }
-    }
-  ]
-};
+```typescript
+// vitest.config.ts (multi-project configuration at project root)
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'backend',
+          include: ['packages/backend/src/**/*.test.ts'],
+          environment: 'node',
+          coverage: {
+            thresholds: {
+              branches: 85,
+              functions: 85,
+              lines: 85,
+              statements: 85,
+            },
+          },
+        },
+      },
+    ],
+  },
+});
 ```
 
 ### Test Structure (AAA Pattern)
@@ -180,37 +186,34 @@ describe('RefundService', () => {
       const mockTransaction = {
         id: 'tx_123',
         amount: 10000,
-        status: 'completed'
+        status: 'completed',
       };
       mockPaymentService.getTransaction.mockResolvedValue(mockTransaction);
 
       // ACT: Execute the function under test
       const refund = await refundService.createRefund({
         transactionId: 'tx_123',
-        reason: RefundReason.CUSTOMER_REQUEST
+        reason: RefundReason.CUSTOMER_REQUEST,
       });
 
       // ASSERT: Verify results
       expect(refund).toMatchObject({
         transactionId: 'tx_123',
         amount: 10000,
-        status: 'pending'
+        status: 'pending',
       });
-      expect(mockEventBus.emit).toHaveBeenCalledWith(
-        'refund.created',
-        expect.any(Object)
-      );
+      expect(mockEventBus.emit).toHaveBeenCalledWith('refund.created', expect.any(Object));
     });
 
     it('should throw error for already refunded transaction', async () => {
       mockPaymentService.getTransaction.mockResolvedValue({
         id: 'tx_123',
-        status: 'refunded'
+        status: 'refunded',
       });
 
-      await expect(
-        refundService.createRefund({ transactionId: 'tx_123' })
-      ).rejects.toThrow('Transaction already refunded');
+      await expect(refundService.createRefund({ transactionId: 'tx_123' })).rejects.toThrow(
+        'Transaction already refunded'
+      );
     });
   });
 });
@@ -220,23 +223,23 @@ describe('RefundService', () => {
 
 ```typescript
 // Create mock implementations
-const mockLogger: jest.Mocked<ILogger> = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn()
+const mockLogger: Mocked<ILogger> = {
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
 };
 
-const mockEventBus: jest.Mocked<IEventBus> = {
-  emit: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn()
+const mockEventBus: Mocked<IEventBus> = {
+  emit: vi.fn().mockResolvedValue(undefined),
+  on: vi.fn(),
 };
 
-const mockCache: jest.Mocked<ICacheService> = {
-  get: jest.fn(),
-  set: jest.fn(),
-  delete: jest.fn(),
-  deletePattern: jest.fn()
+const mockCache: Mocked<ICacheService> = {
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+  deletePattern: vi.fn(),
 };
 
 // Use in tests
@@ -245,7 +248,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 ```
 
@@ -265,8 +268,8 @@ it('should reject promise', async () => {
 
 // ❌ BAD: Forgetting await
 it('should resolve promise', () => {
-  service.asyncMethod();  // Promise not awaited!
-  expect(result).toBe('expected');  // result is undefined
+  service.asyncMethod(); // Promise not awaited!
+  expect(result).toBe('expected'); // result is undefined
 });
 ```
 
@@ -289,7 +292,7 @@ export class TestDatabase {
       port: 5432,
       database: 'sovren_test',
       user: 'test',
-      password: 'test'
+      password: 'test',
     });
 
     await pool.query('BEGIN');
@@ -323,7 +326,7 @@ describe('PaymentRepository Integration', () => {
   it('should persist payment', async () => {
     const payment = await repository.create({
       amount: 1000,
-      userId: 'user123'
+      userId: 'user123',
     });
 
     expect(payment.id).toBeDefined();
@@ -368,18 +371,18 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   use: {
     baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry'
+    trace: 'on-first-retry',
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 13'] }
-    }
-  ]
+      use: { ...devices['iPhone 13'] },
+    },
+  ],
 });
 ```
 
@@ -448,34 +451,34 @@ import { check, sleep } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '1m', target: 10 },   // Ramp up
-    { duration: '3m', target: 100 },  // Sustained load
-    { duration: '1m', target: 0 }     // Ramp down
+    { duration: '1m', target: 10 }, // Ramp up
+    { duration: '3m', target: 100 }, // Sustained load
+    { duration: '1m', target: 0 }, // Ramp down
   ],
   thresholds: {
-    http_req_duration: ['p(95)<500'],  // 95% under 500ms
-    http_req_failed: ['rate<0.01']     // < 1% errors
-  }
+    http_req_duration: ['p(95)<500'], // 95% under 500ms
+    http_req_failed: ['rate<0.01'], // < 1% errors
+  },
 };
 
-export default function() {
+export default function () {
   const payload = JSON.stringify({
     amount: 10000,
-    currency: 'BTC'
+    currency: 'BTC',
   });
 
   const params = {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${__ENV.AUTH_TOKEN}`
-    }
+      Authorization: `Bearer ${__ENV.AUTH_TOKEN}`,
+    },
   };
 
   const res = http.post('http://localhost:3001/api/v1/payments', payload, params);
 
   check(res, {
     'status is 201': (r) => r.status === 201,
-    'response time < 500ms': (r) => r.timings.duration < 500
+    'response time < 500ms': (r) => r.timings.duration < 500,
   });
 
   sleep(1);
@@ -504,7 +507,7 @@ export class PaymentFactory {
       expiresAt: faker.date.future(),
       createdAt: new Date(),
       updatedAt: new Date(),
-      ...overrides
+      ...overrides,
     };
   }
 
@@ -516,7 +519,7 @@ export class PaymentFactory {
     return this.create({
       status: 'completed',
       preimage: faker.string.hexadecimal({ length: 64 }),
-      ...overrides
+      ...overrides,
     });
   }
 }
@@ -562,16 +565,13 @@ npm run test:load
 
 ```bash
 # Run tests matching pattern
-npm test -- --testNamePattern="create payment"
+npx vitest run -t "create payment"
 
 # Run specific file
-npm test -- PaymentService.test.ts
-
-# Run only failing tests
-npm test -- --onlyFailures
+npx vitest run PaymentService.test.ts
 
 # Update snapshots
-npm test -- --updateSnapshot
+npx vitest run --update
 ```
 
 ---
@@ -585,13 +585,9 @@ npm test -- --updateSnapshot
 {
   "type": "node",
   "request": "launch",
-  "name": "Jest Debug",
-  "program": "${workspaceFolder}/node_modules/.bin/jest",
-  "args": [
-    "--runInBand",
-    "--no-cache",
-    "${file}"
-  ],
+  "name": "Vitest Debug",
+  "program": "${workspaceFolder}/node_modules/.bin/vitest",
+  "args": ["run", "--no-file-parallelism", "${file}"],
   "console": "integratedTerminal",
   "internalConsoleOptions": "neverOpen"
 }
@@ -601,16 +597,16 @@ npm test -- --updateSnapshot
 
 ```bash
 # Run with Node debugger
-node --inspect-brk node_modules/.bin/jest --runInBand
+node --inspect-brk node_modules/.bin/vitest run --no-file-parallelism
 
 # Debug specific test
-npm test -- --runInBand --testNamePattern="specific test name"
+npx vitest run --no-file-parallelism -t "specific test name"
 
 # Verbose output
-npm test -- --verbose
+npx vitest run --reporter=verbose
 
-# Show all console.log
-npm test -- --silent=false
+# Show all console.log (Vitest shows console output by default)
+npx vitest run
 ```
 
 ---
@@ -657,10 +653,10 @@ jobs:
         run: npm ci
 
       - name: Run unit tests
-        run: npm run test:unit -- --ci --coverage
+        run: npm run test:unit -- --coverage
 
       - name: Run integration tests
-        run: npm run test:integration -- --ci
+        run: npm run test:integration
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/sovren_test
           REDIS_URL: redis://localhost:6379

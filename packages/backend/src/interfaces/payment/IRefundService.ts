@@ -21,9 +21,11 @@ import type {
   RefundIdempotency,
   RefundWebhookEvent,
   CreateRefundRequest,
+  RefundNotification
+} from '../../types/refund';
+import {
   RefundStatus,
   RefundReason,
-  RefundNotification
 } from '../../types/refund';
 
 /**

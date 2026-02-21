@@ -14,7 +14,7 @@
  * - Accessibility coverage verification
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { AIAccessibilityTestingFramework } from '../AIAccessibilityTestingFramework';
 import type {
   AIAccessibilityTestingConfig,
@@ -26,8 +26,8 @@ import type {
 } from '../types';
 
 // Mock dependencies
-jest.mock('../common/Logger');
-jest.mock('axe-core');
+vi.mock('../common/Logger');
+vi.mock('axe-core');
 
 describe('AIAccessibilityTestingFramework - US-156 Complete Implementation', () => {
   let framework: AIAccessibilityTestingFramework;
@@ -83,7 +83,7 @@ describe('AIAccessibilityTestingFramework - US-156 Complete Implementation', () 
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Framework Initialization', () => {

@@ -13,7 +13,7 @@ const mockStore = configureStore({
 });
 
 // Mock feature flags
-jest.mock('../../../../hooks/useFeatureFlags', () => ({
+vi.mock('../../../../hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => ({
     flags: {
       enableAdvancedAnalytics: true,
@@ -27,9 +27,9 @@ jest.mock('../../../../hooks/useFeatureFlags', () => ({
 }));
 
 // Mock analytics service
-jest.mock('../../services/mockAnalyticsService', () => ({
+vi.mock('../../services/mockAnalyticsService', () => ({
   mockAnalyticsService: {
-    getCreatorEarnings: jest.fn().mockResolvedValue({
+    getCreatorEarnings: vi.fn().mockResolvedValue({
       total_earnings: 100000,
       period_earnings: 25000,
       previous_period_earnings: 20000,
@@ -68,12 +68,12 @@ jest.mock('../../services/mockAnalyticsService', () => ({
         { country: 'UK', subscriber_count: 300, earnings_sats: 20000 },
       ],
     }),
-    getChartData: jest.fn().mockResolvedValue({
+    getChartData: vi.fn().mockResolvedValue({
       earnings_over_time: [],
       subscriber_growth: [],
       content_performance: [],
     }),
-    getPerformanceMetrics: jest.fn().mockResolvedValue({
+    getPerformanceMetrics: vi.fn().mockResolvedValue({
       performance_score: 87,
       content_quality_score: 92,
       engagement_score: 85,
@@ -90,8 +90,8 @@ jest.mock('../../services/mockAnalyticsService', () => ({
         },
       ],
     }),
-    connectRealTime: jest.fn().mockResolvedValue(undefined),
-    subscribeToEvents: jest.fn().mockReturnValue(() => {}),
+    connectRealTime: vi.fn().mockResolvedValue(undefined),
+    subscribeToEvents: vi.fn().mockReturnValue(() => {}),
     exportAnalytics: jest
       .fn()
       .mockResolvedValue(new Blob(['{"data": "mock"}'], { type: 'application/json' })),
@@ -112,7 +112,7 @@ const renderDashboard = () => {
 
 describe('📊 Creator Analytics Dashboard - Code of Craft Standards', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset mocks to ensure proper data flow
     const { mockAnalyticsService } = require('../../services/mockAnalyticsService');

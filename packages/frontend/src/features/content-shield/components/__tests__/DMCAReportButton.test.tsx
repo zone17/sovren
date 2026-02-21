@@ -3,14 +3,14 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import DMCAReportButton from '../DMCAReportButton';
 
-const mockMutate = jest.fn();
+const mockMutate = vi.fn();
 
-jest.mock('../../hooks/useDmcaReport', () => ({
-  useDmcaReport: jest.fn(),
+vi.mock('../../hooks/useDmcaReport', () => ({
+  useDmcaReport: vi.fn(),
 }));
 
 import { useDmcaReport } from '../../hooks/useDmcaReport';
-const mockUseDmcaReport = useDmcaReport as jest.Mock;
+const mockUseDmcaReport = useDmcaReport as any;
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -23,7 +23,7 @@ function createWrapper() {
 
 describe('DMCAReportButton', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseDmcaReport.mockReturnValue({
       mutate: mockMutate,
       isPending: false,

@@ -13,29 +13,35 @@ import type { IPlatformConnectionService } from '../../interfaces/distribution/I
 import type { IPlatformAdapter } from './adapters/IPlatformAdapter';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
-import type { PlatformStatus, SupportedPlatform, OAuthTokens } from '@sovren/shared/types/distribution';
+import type {
+  PlatformStatus,
+  SupportedPlatform,
+  OAuthTokens,
+} from '@sovren/shared/types/distribution';
 import { encryptToken, decryptToken, getEncryptionKey } from './crypto';
 import { MastodonAdapter } from './adapters/MastodonAdapter';
 import { BlueskyAdapter } from './adapters/BlueskyAdapter';
 import { TwitterAdapter } from './adapters/TwitterAdapter';
 import { YouTubeAdapter } from './adapters/YouTubeAdapter';
+import { TTLCache } from '../../utils/ttl-cache';
 
 export class PlatformConnectionService implements IPlatformConnectionService {
   private readonly adapters: Map<SupportedPlatform, IPlatformAdapter>;
   private readonly logger: ILogger;
   private readonly db: ISupabaseClient;
 
-  // In-memory state store for OAuth CSRF protection
-  // In production, use Redis-backed session store
-  private readonly oauthStateStore = new Map<string, { creatorId: string; platform: SupportedPlatform; expiresAt: number }>();
-  private cleanupTimer: ReturnType<typeof setInterval> | null = null;
+  // #348: TTLCache replaces unbounded Map — 10-minute TTL, 10k max entries, LRU eviction
+  private readonly oauthStateStore = new TTLCache<
+    string,
+    { creatorId: string; platform: SupportedPlatform }
+  >({
+    maxSize: 10_000,
+    ttlMs: 10 * 60 * 1000, // 10 minutes
+  });
 
   constructor(db: ISupabaseClient, logger: ILogger) {
     this.db = db;
     this.logger = logger;
-
-    // Start periodic cleanup of expired OAuth state tokens
-    this.startStateCleanup();
 
     // Initialize platform adapters
     this.adapters = new Map();
@@ -43,60 +49,55 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     const callbackBase = process.env.API_BASE_URL || 'http://localhost:3001';
 
     if (process.env.MASTODON_CLIENT_ID) {
-      this.adapters.set('mastodon', new MastodonAdapter({
-        clientId: process.env.MASTODON_CLIENT_ID!,
-        clientSecret: process.env.MASTODON_CLIENT_SECRET!,
-        callbackUrl: `${callbackBase}/api/v2/platforms/callback/mastodon`,
-      }));
+      this.adapters.set(
+        'mastodon',
+        new MastodonAdapter({
+          clientId: process.env.MASTODON_CLIENT_ID!,
+          clientSecret: process.env.MASTODON_CLIENT_SECRET!,
+          callbackUrl: `${callbackBase}/api/v2/platforms/callback/mastodon`,
+        })
+      );
     }
 
     if (process.env.BLUESKY_CLIENT_ID) {
-      this.adapters.set('bluesky', new BlueskyAdapter({
-        clientId: process.env.BLUESKY_CLIENT_ID!,
-        clientSecret: process.env.BLUESKY_CLIENT_SECRET!,
-        callbackUrl: `${callbackBase}/api/v2/platforms/callback/bluesky`,
-      }));
+      this.adapters.set(
+        'bluesky',
+        new BlueskyAdapter({
+          clientId: process.env.BLUESKY_CLIENT_ID!,
+          clientSecret: process.env.BLUESKY_CLIENT_SECRET!,
+          callbackUrl: `${callbackBase}/api/v2/platforms/callback/bluesky`,
+        })
+      );
     }
 
     if (process.env.TWITTER_CLIENT_ID) {
-      this.adapters.set('twitter', new TwitterAdapter({
-        clientId: process.env.TWITTER_CLIENT_ID!,
-        clientSecret: process.env.TWITTER_CLIENT_SECRET!,
-        callbackUrl: `${callbackBase}/api/v2/platforms/callback/twitter`,
-      }));
+      this.adapters.set(
+        'twitter',
+        new TwitterAdapter({
+          clientId: process.env.TWITTER_CLIENT_ID!,
+          clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+          callbackUrl: `${callbackBase}/api/v2/platforms/callback/twitter`,
+        })
+      );
     }
 
     if (process.env.YOUTUBE_CLIENT_ID) {
-      this.adapters.set('youtube', new YouTubeAdapter({
-        clientId: process.env.YOUTUBE_CLIENT_ID!,
-        clientSecret: process.env.YOUTUBE_CLIENT_SECRET!,
-        callbackUrl: `${callbackBase}/api/v2/platforms/callback/youtube`,
-      }));
+      this.adapters.set(
+        'youtube',
+        new YouTubeAdapter({
+          clientId: process.env.YOUTUBE_CLIENT_ID!,
+          clientSecret: process.env.YOUTUBE_CLIENT_SECRET!,
+          callbackUrl: `${callbackBase}/api/v2/platforms/callback/youtube`,
+        })
+      );
     }
-  }
-
-  /**
-   * Start periodic cleanup of expired OAuth state tokens (every 5 minutes).
-   */
-  private startStateCleanup(): void {
-    this.cleanupTimer = setInterval(() => {
-      const now = Date.now();
-      for (const [key, value] of this.oauthStateStore) {
-        if (value.expiresAt < now) {
-          this.oauthStateStore.delete(key);
-        }
-      }
-    }, 5 * 60 * 1000);
   }
 
   /**
    * Stop the periodic state cleanup timer. Call on shutdown for graceful cleanup.
    */
   stopStateCleanup(): void {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer);
-      this.cleanupTimer = null;
-    }
+    this.oauthStateStore.destroy();
   }
 
   getAdapter(platform: SupportedPlatform): IPlatformAdapter {
@@ -114,24 +115,10 @@ export class PlatformConnectionService implements IPlatformConnectionService {
   ): Promise<{ authorization_url: string }> {
     const adapter = this.getAdapter(platform);
 
-    // Prevent unbounded growth of state store (DoS protection)
-    if (this.oauthStateStore.size >= 10000) {
-      // Evict oldest entries
-      const entries = [...this.oauthStateStore.entries()];
-      entries.sort((a, b) => a[1].expiresAt - b[1].expiresAt);
-      const toDelete = entries.slice(0, entries.length - 5000);
-      for (const [key] of toDelete) {
-        this.oauthStateStore.delete(key);
-      }
-    }
-
     // Generate CSRF state token
+    // #348: TTLCache handles TTL (10 min) and max size (10k) with LRU eviction
     const state = randomBytes(32).toString('hex');
-    this.oauthStateStore.set(state, {
-      creatorId,
-      platform,
-      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minute expiry
-    });
+    this.oauthStateStore.set(state, { creatorId, platform });
 
     const authorization_url = adapter.getAuthorizationUrl(state, options);
 
@@ -150,21 +137,20 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     state: string
   ): Promise<{ creator_id: string; platform: SupportedPlatform }> {
     // Validate CSRF state token
+    // #348: TTLCache auto-expires entries — .get() returns undefined for expired tokens
     const stateData = this.oauthStateStore.get(state);
     if (!stateData) {
-      this.logger.warn('[PlatformConnectionService] Invalid OAuth state parameter — potential CSRF', {
-        platform,
-      });
+      this.logger.warn(
+        '[PlatformConnectionService] Invalid OAuth state parameter — potential CSRF',
+        {
+          platform,
+        }
+      );
       throw new Error('Invalid or expired OAuth state parameter');
     }
 
     if (stateData.platform !== platform) {
       throw new Error('Platform mismatch in OAuth callback');
-    }
-
-    if (stateData.expiresAt < Date.now()) {
-      this.oauthStateStore.delete(state);
-      throw new Error('OAuth state parameter has expired');
     }
 
     // Remove used state token (one-time use)
@@ -192,10 +178,13 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       await adapter.revokeTokens(accessToken);
     } catch {
       // If revocation fails, still delete from our database
-      this.logger.warn('[PlatformConnectionService] Token revocation failed, proceeding with disconnect', {
-        creatorId,
-        platform,
-      });
+      this.logger.warn(
+        '[PlatformConnectionService] Token revocation failed, proceeding with disconnect',
+        {
+          creatorId,
+          platform,
+        }
+      );
     }
 
     // Cancel queued/scheduled cross-posts for this platform before removing the connection
@@ -236,7 +225,16 @@ export class PlatformConnectionService implements IPlatformConnectionService {
     const allPlatforms: SupportedPlatform[] = ['mastodon', 'bluesky', 'twitter', 'youtube'];
 
     return allPlatforms.map((platform) => {
-      const connection = (data || []).find((c: any) => c.platform === platform);
+      const connection = (data || []).find(
+        (c: {
+          platform: string;
+          status: string;
+          platform_username: string;
+          connected_at: string;
+          expires_at: string;
+          scopes: string[];
+        }) => c.platform === platform
+      );
       if (connection) {
         return {
           platform,
@@ -287,7 +285,9 @@ export class PlatformConnectionService implements IPlatformConnectionService {
 
     const { data, error } = await this.db
       .from('platform_connections')
-      .select('id, creator_id, platform, refresh_token_encrypted, refresh_token_iv, refresh_token_auth_tag')
+      .select(
+        'id, creator_id, platform, refresh_token_encrypted, refresh_token_iv, refresh_token_auth_tag'
+      )
       .eq('status', 'connected')
       .not('expires_at', 'is', null)
       .lt('expires_at', oneHourFromNow);
@@ -373,7 +373,7 @@ export class PlatformConnectionService implements IPlatformConnectionService {
       refreshEncrypted = encryptToken(tokens.refresh_token, key);
     }
 
-    const row: any = {
+    const row: Record<string, unknown> = {
       creator_id: creatorId,
       platform,
       access_token_encrypted: accessEncrypted.encrypted,

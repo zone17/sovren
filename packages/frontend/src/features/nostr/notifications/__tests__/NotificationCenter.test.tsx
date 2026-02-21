@@ -11,7 +11,7 @@ import { NotificationService } from '../services/NotificationService';
 import { Notification, NotificationType } from '../types';
 
 // Mock the service
-jest.mock('../services/NotificationService');
+vi.mock('../services/NotificationService');
 
 const mockNotifications: Notification[] = [
   {
@@ -58,11 +58,11 @@ const mockNotifications: Notification[] = [
 ];
 
 describe('NotificationCenter', () => {
-  let mockService: jest.Mocked<NotificationService>;
+  let mockService: vi.Mocked<NotificationService>;
 
   beforeEach(() => {
     mockService = {
-      getState: jest.fn(() => ({
+      getState: vi.fn(() => ({
         notifications: mockNotifications,
         unreadCount: 1,
         loading: false,
@@ -70,8 +70,8 @@ describe('NotificationCenter', () => {
         lastFetchedAt: Date.now(),
         subscribed: true,
       })),
-      getUnreadCount: jest.fn(() => 1),
-      subscribe: jest.fn((listener) => {
+      getUnreadCount: vi.fn(() => 1),
+      subscribe: vi.fn((listener) => {
         listener({
           notifications: mockNotifications,
           unreadCount: 1,
@@ -80,9 +80,9 @@ describe('NotificationCenter', () => {
           lastFetchedAt: Date.now(),
           subscribed: true,
         });
-        return jest.fn();
+        return vi.fn();
       }),
-      getPreferences: jest.fn(() => ({
+      getPreferences: vi.fn(() => ({
         enableMentions: true,
         enableReplies: true,
         enableReactions: true,
@@ -96,13 +96,13 @@ describe('NotificationCenter', () => {
         groupByDate: true,
         autoMarkRead: true,
       })),
-      markAsRead: jest.fn(),
-      markAllAsRead: jest.fn(),
-      deleteNotification: jest.fn(),
-      getNotifications: jest.fn(() => mockNotifications),
+      markAsRead: vi.fn(),
+      markAllAsRead: vi.fn(),
+      deleteNotification: vi.fn(),
+      getNotifications: vi.fn(() => mockNotifications),
     } as any;
 
-    (NotificationService as jest.Mock).mockImplementation(() => mockService);
+    (NotificationService as any).mockImplementation(() => mockService);
   });
 
   describe('Rendering', () => {
@@ -331,7 +331,7 @@ describe('NotificationCenter', () => {
 
   describe('Callbacks', () => {
     it('should call onNotificationClick when notification is clicked', () => {
-      const onNotificationClick = jest.fn();
+      const onNotificationClick = vi.fn();
       render(<NotificationCenter initialOpen onNotificationClick={onNotificationClick} />);
 
       const notification = screen.getByText('Alice mentioned you in a post');

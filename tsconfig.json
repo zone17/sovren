@@ -20,10 +20,8 @@
     "paths": {
       "@sovren/*": ["packages/*/src"]
     },
-    "types": ["node", "jest", "@testing-library/jest-dom"]
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": [
-    "packages/*/src/**/*"
-  ],
+  "include": ["packages/*/src/**/*"],
   "exclude": ["node_modules", "dist", "test-utils", "**/*.test.ts", "**/*.test.tsx", "**/__tests__"]
 }

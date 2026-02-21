@@ -92,8 +92,8 @@ const createMockResponse = (data: any, success = true): Response => {
 
 describe('🔍 NIP05Manager Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue(
+    vi.clearAllMocks();
+    (global.fetch as anyedFunction<typeof fetch>).mockResolvedValue(
       createMockResponse({
         verifications: mockVerifications,
       })
@@ -102,7 +102,7 @@ describe('🔍 NIP05Manager Component', () => {
 
   describe('📝 Basic Rendering', () => {
     it('should render loading state initially', () => {
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockImplementation(
+      (global.fetch as anyedFunction<typeof fetch>).mockImplementation(
         () => new Promise(() => {})
       ); // Never resolves
       render(<NIP05Manager />);
@@ -133,7 +133,7 @@ describe('🔍 NIP05Manager Component', () => {
     });
 
     it('should render empty state when no verifications exist', async () => {
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue(
+      (global.fetch as anyedFunction<typeof fetch>).mockResolvedValue(
         createMockResponse({ verifications: [] })
       );
       render(<NIP05Manager />);
@@ -169,12 +169,12 @@ describe('🔍 NIP05Manager Component', () => {
           verification_status: 'pending',
         },
       });
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce(
+      (global.fetch as anyedFunction<typeof fetch>).mockResolvedValueOnce(
         createMockResponse({ verifications: mockVerifications })
       );
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce(createResponse);
+      (global.fetch as anyedFunction<typeof fetch>).mockResolvedValueOnce(createResponse);
 
-      const onVerificationCreated = jest.fn();
+      const onVerificationCreated = vi.fn();
       render(<NIP05Manager onVerificationCreated={onVerificationCreated} />);
 
       // Wait for initial load
@@ -220,10 +220,10 @@ describe('🔍 NIP05Manager Component', () => {
           last_checked_at: new Date().toISOString(),
         },
       });
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce(
+      (global.fetch as anyedFunction<typeof fetch>).mockResolvedValueOnce(
         createMockResponse({ verifications: mockVerifications })
       );
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce(refreshResponse);
+      (global.fetch as anyedFunction<typeof fetch>).mockResolvedValueOnce(refreshResponse);
 
       render(<NIP05Manager />);
 
@@ -241,7 +241,7 @@ describe('🔍 NIP05Manager Component', () => {
     });
 
     it('should handle copy to clipboard', async () => {
-      const mockWriteText = jest.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+      const mockWriteText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
 
       render(<NIP05Manager />);
 
@@ -266,7 +266,7 @@ describe('🔍 NIP05Manager Component', () => {
 
   describe('🚨 Error Handling', () => {
     it('should display error message when API call fails', async () => {
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockRejectedValue(
+      (global.fetch as anyedFunction<typeof fetch>).mockRejectedValue(
         new Error('Network error')
       );
       render(<NIP05Manager />);
@@ -277,10 +277,10 @@ describe('🔍 NIP05Manager Component', () => {
     });
 
     it('should handle create verification errors', async () => {
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce(
+      (global.fetch as anyedFunction<typeof fetch>).mockResolvedValueOnce(
         createMockResponse({ verifications: mockVerifications })
       );
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce(
+      (global.fetch as anyedFunction<typeof fetch>).mockResolvedValueOnce(
         createMockResponse(null, false)
       );
 

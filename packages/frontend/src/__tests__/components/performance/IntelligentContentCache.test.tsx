@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import IntelligentContentCache from '../../../components/performance/IntelligentContentCache';
 
 // Mock dependencies
-jest.mock('@/components/ui/card', () => ({
+vi.mock('@/components/ui/card', () => ({
   Card: ({ children }: any) => <div data-testid="card">{children}</div>,
   CardContent: ({ children }: any) => <div data-testid="card-content">{children}</div>,
   CardDescription: ({ children }: any) => <div data-testid="card-description">{children}</div>,
@@ -11,7 +11,7 @@ jest.mock('@/components/ui/card', () => ({
   CardTitle: ({ children }: any) => <div data-testid="card-title">{children}</div>,
 }));
 
-jest.mock('@/components/ui/button', () => ({
+vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, ...props }: any) => (
     <button onClick={onClick} disabled={disabled} {...props}>
       {children}
@@ -19,11 +19,11 @@ jest.mock('@/components/ui/button', () => ({
   ),
 }));
 
-jest.mock('@/components/ui/badge', () => ({
+vi.mock('@/components/ui/badge', () => ({
   Badge: ({ children, variant }: any) => <span className={`badge ${variant}`}>{children}</span>,
 }));
 
-jest.mock('@/components/ui/progress', () => ({
+vi.mock('@/components/ui/progress', () => ({
   Progress: ({ value }: any) => (
     <div data-testid="progress" data-value={value}>
       Progress: {value}%
@@ -31,18 +31,18 @@ jest.mock('@/components/ui/progress', () => ({
   ),
 }));
 
-jest.mock('@/components/ui/alert', () => ({
+vi.mock('@/components/ui/alert', () => ({
   Alert: ({ children }: any) => <div data-testid="alert">{children}</div>,
   AlertDescription: ({ children }: any) => <div data-testid="alert-description">{children}</div>,
 }));
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('IntelligentContentCache', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (fetch as jest.Mock).mockResolvedValue({
+    vi.clearAllMocks();
+    (fetch as any).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ data: 'test' }),
     });
@@ -129,8 +129,8 @@ describe('IntelligentContentCache', () => {
   });
 
   it('calls onCacheHit callback when provided', () => {
-    const onCacheHit = jest.fn();
-    const onCacheMiss = jest.fn();
+    const onCacheHit = vi.fn();
+    const onCacheMiss = vi.fn();
 
     render(
       <IntelligentContentCache enabled={true} onCacheHit={onCacheHit} onCacheMiss={onCacheMiss} />
@@ -288,7 +288,7 @@ describe('Cache Configuration', () => {
 // Error Handling Tests
 describe('Error Handling', () => {
   it('should handle fetch errors gracefully', async () => {
-    (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+    (fetch as any).mockRejectedValue(new Error('Network error'));
 
     render(<IntelligentContentCache enabled={true} />);
 
@@ -302,7 +302,7 @@ describe('Error Handling', () => {
   });
 
   it('should handle invalid responses', async () => {
-    (fetch as jest.Mock).mockResolvedValue({
+    (fetch as any).mockResolvedValue({
       ok: false,
       status: 404,
       statusText: 'Not Found',
@@ -330,8 +330,8 @@ describe('Cache Integration', () => {
   });
 
   it('should support callback functions', () => {
-    const onCacheHit = jest.fn();
-    const onCacheMiss = jest.fn();
+    const onCacheHit = vi.fn();
+    const onCacheMiss = vi.fn();
 
     render(
       <IntelligentContentCache enabled={true} onCacheHit={onCacheHit} onCacheMiss={onCacheMiss} />

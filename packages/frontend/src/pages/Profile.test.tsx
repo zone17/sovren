@@ -66,33 +66,33 @@ const mockEmailUser: TestUser = {
 };
 
 // Mock logout function
-const mockLogout = jest.fn();
+const mockLogout = vi.fn();
 
 // 🎯 **ELITE JEST MODULE MOCK** - Updated path
 // Current user for test context switching
 let currentTestUser: TestUser = mockCreatorUser;
 
 // Mock the entire AuthContext module with correct path
-jest.mock('../features/auth/services/AuthContext', () => {
-  const originalModule = jest.requireActual('../features/auth/services/AuthContext');
+vi.mock('../features/auth/services/AuthContext', () => {
+  const originalModule = vi.importActual('../features/auth/services/AuthContext');
 
   return {
     ...originalModule,
-    useAuth: jest.fn(() => ({
+    useAuth: vi.fn(() => ({
       user: currentTestUser,
       token: 'mock-token',
       isAuthenticated: true,
       isLoading: false,
       error: null,
-      login: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      signup: vi.fn(),
       logout: mockLogout,
-      authenticateNostr: jest.fn(),
-      generateNostrChallenge: jest.fn(),
-      refreshToken: jest.fn(),
-      updateProfile: jest.fn(),
-      verifyEmail: jest.fn(),
-      resetPassword: jest.fn(),
+      authenticateNostr: vi.fn(),
+      generateNostrChallenge: vi.fn(),
+      refreshToken: vi.fn(),
+      updateProfile: vi.fn(),
+      verifyEmail: vi.fn(),
+      resetPassword: vi.fn(),
     })),
     AuthProvider: ({ children }: { children: React.ReactNode }) => {
       return React.createElement('div', { 'data-testid': 'mock-auth-provider' }, children);
@@ -114,7 +114,7 @@ const renderWithTestWrapper = (user: TestUser = mockCreatorUser): void => {
 
 describe('Profile Component', () => {
   beforeEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     currentTestUser = mockCreatorUser;
   });
 
@@ -292,7 +292,7 @@ describe('Profile Component', () => {
 // Test different user roles using our elite test wrapper
 describe('Profile Component - Different Roles', () => {
   beforeEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('shows supporter features for supporter role', () => {
@@ -313,7 +313,7 @@ describe('Profile Component - Different Roles', () => {
 // Test email authentication fallback
 describe('Profile Component - Email Authentication', () => {
   beforeEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('shows email authentication when no NOSTR key', () => {

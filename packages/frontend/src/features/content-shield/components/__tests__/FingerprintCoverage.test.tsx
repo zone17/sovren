@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import FingerprintCoverage from '../FingerprintCoverage';
 
-jest.mock('../../hooks/useFingerprintCoverage', () => ({
-  useFingerprintCoverage: jest.fn(),
+vi.mock('../../hooks/useFingerprintCoverage', () => ({
+  useFingerprintCoverage: vi.fn(),
 }));
 
 import { useFingerprintCoverage } from '../../hooks/useFingerprintCoverage';
-const mockUseFingerprintCoverage = useFingerprintCoverage as jest.Mock;
+const mockUseFingerprintCoverage = useFingerprintCoverage as any;
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -21,7 +21,7 @@ function createWrapper() {
 
 describe('FingerprintCoverage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('shows loading skeleton while loading', () => {

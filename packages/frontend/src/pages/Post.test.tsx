@@ -12,19 +12,19 @@ import type { Post as PostType, User } from '../types';
 import Post from './Post';
 
 // Mock react-router-dom
-const mockNavigate = jest.fn();
-const mockUseParams = jest.fn();
-jest.mock(
+const mockNavigate = vi.fn();
+const mockUseParams = vi.fn();
+vi.mock(
   'react-router-dom',
-  (): Record<string, unknown> => ({
-    ...jest.requireActual('react-router-dom'),
-    useNavigate: (): jest.Mock => mockNavigate,
+  async (): Promise<Record<string, unknown>> => ({
+    ...(await vi.importActual('react-router-dom')),
+    useNavigate: (): any => mockNavigate,
     useParams: (): Record<string, string> => mockUseParams() as Record<string, string>,
   })
 );
 
 // Mock components with proper structure matching actual Layout
-jest.mock('../components/ui/Layout', () => ({
+vi.mock('../components/ui/Layout', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }): JSX.Element => (
     <div data-testid="layout">{children}</div>
@@ -38,7 +38,7 @@ interface ButtonProps {
   [key: string]: unknown;
 }
 
-jest.mock('../components/ui/Button', () => ({
+vi.mock('../components/ui/Button', () => ({
   __esModule: true,
   default: ({ children, onClick, variant, ...props }: ButtonProps): JSX.Element => (
     <button onClick={onClick} data-variant={variant} {...props}>
@@ -48,7 +48,7 @@ jest.mock('../components/ui/Button', () => ({
 }));
 
 // Mock the components index to properly export Button
-jest.mock('../components', () => ({
+vi.mock('../components', () => ({
   Layout: ({ children }: { children: React.ReactNode }): JSX.Element => (
     <div data-testid="layout">{children}</div>
   ),
@@ -135,7 +135,7 @@ const renderWithProviders = (
 
 describe('Post Component', () => {
   beforeEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockNavigate.mockClear();
     mockUseParams.mockClear();
     // Default mock for useParams

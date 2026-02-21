@@ -4,7 +4,7 @@
  * Part of US-E5-034: Integration Test Suite
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+
 import { createTestContainer, cleanupTestContainer } from '../fixtures/test-container-setup';
 import { createTestUser, createTestInvoice, scenarios } from '../fixtures/test-data-factory';
 import { createMockLightningService } from '../fixtures/mock-services';

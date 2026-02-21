@@ -1,0 +1,114 @@
+/// <reference types="vitest" />
+import path from 'path';
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@/': path.resolve(__dirname, 'packages/frontend/src') + '/',
+      '@backend/': path.resolve(__dirname, 'packages/backend/src') + '/',
+      '@shared/': path.resolve(__dirname, 'packages/shared/src') + '/',
+      '@sovren/shared/': path.resolve(__dirname, 'packages/shared/src') + '/',
+      '@testing/': path.resolve(__dirname, 'packages/testing/src') + '/',
+      '@test-utils/': path.resolve(__dirname, 'test-utils') + '/',
+      // Jest compat: redirect @jest/globals to vitest
+      '@jest/globals': 'vitest',
+    },
+  },
+  test: {
+    globals: true,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: 2, // Limit workers to avoid OOM on 24GB machines
+      },
+    },
+    // Default environment - overridden per project
+    environment: 'node',
+    // CSS handling
+    css: false,
+    // Timeouts
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    // Projects (replaces workspace file)
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'frontend',
+          environment: 'jsdom',
+          include: ['packages/frontend/src/**/*.{test,spec}.{ts,tsx}'],
+          exclude: [
+            'node_modules',
+            'dist',
+            '**/fixtures/**',
+            '**/helpers/**',
+            '**/mocks/**',
+            '**/integration/**',
+            '**/setup.ts',
+            '**/test-helpers.ts',
+            '**/test-events.ts',
+            '**/relay-fixtures.ts',
+            '**/performance-utils.ts',
+          ],
+          setupFiles: [
+            './test-utils/vitest-jest-compat.ts',
+            './test-utils/vitest-frontend-setup.ts',
+          ],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'backend',
+          environment: 'node',
+          include: ['packages/backend/src/**/*.{test,spec}.{ts,tsx}'],
+          exclude: [
+            'node_modules',
+            'dist',
+            '**/fixtures/**',
+            '**/helpers/**',
+            '**/mocks/**',
+          ],
+          setupFiles: [
+            './test-utils/vitest-jest-compat.ts',
+            './test-utils/vitest-backend-setup.ts',
+          ],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'shared',
+          environment: 'node',
+          include: ['packages/shared/src/**/*.{test,spec}.{ts,tsx}'],
+          exclude: ['node_modules', 'dist', 'packages/shared/dist'],
+          setupFiles: [
+            './test-utils/vitest-jest-compat.ts',
+          ],
+        },
+      },
+    ],
+    // Coverage
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'html', 'json'],
+      include: [
+        'packages/*/src/**/*.{ts,tsx}',
+      ],
+      exclude: [
+        '**/*.d.ts',
+        '**/*.test.{ts,tsx}',
+        '**/*.spec.{ts,tsx}',
+        '**/__tests__/**',
+        '**/__mocks__/**',
+        '**/stories/**',
+        '**/test-utils/**',
+      ],
+    },
+    // Reporter
+    reporters: ['default'],
+  },
+});

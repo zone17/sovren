@@ -60,7 +60,7 @@ const server = setupServer(
 beforeAll(() => server.listen());
 afterEach(() => {
   server.resetHandlers();
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 afterAll(() => server.close());
 

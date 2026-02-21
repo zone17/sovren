@@ -25,7 +25,7 @@ import { createMockStore } from '../../../../test-utils/mockStore';
 import { ContentManagementHub } from '../components/ContentManagementHub';
 
 // Mock dependencies
-jest.mock('../../../hooks/useFeatureFlags', () => ({
+vi.mock('../../../hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => mockFeatureFlags,
 }));
 
@@ -71,7 +71,7 @@ describe('ContentManagementHub', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Component Rendering', () => {
@@ -203,7 +203,7 @@ describe('ContentManagementHub', () => {
     });
 
     it('debounces search input to prevent excessive API calls', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       render(
         <Provider store={mockStore}>
@@ -217,7 +217,7 @@ describe('ContentManagementHub', () => {
       await user.type(searchInput, 'test');
 
       // Fast-forward timers
-      jest.advanceTimersByTime(500); // 500ms debounce
+      vi.advanceTimersByTime(500); // 500ms debounce
 
       await waitFor(() => {
         expect(mockStore.dispatch).toHaveBeenCalledWith(
@@ -227,7 +227,7 @@ describe('ContentManagementHub', () => {
         );
       });
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('clears search results when search input is cleared', async () => {
@@ -517,7 +517,7 @@ describe('ContentManagementHub', () => {
         aiWritingAssistant: true,
       };
 
-      jest.doMock('../../../hooks/useFeatureFlags', () => ({
+      vi.doMock('../../../hooks/useFeatureFlags', () => ({
         useFeatureFlags: () => aiEnabledFlags,
       }));
 
@@ -536,7 +536,7 @@ describe('ContentManagementHub', () => {
         aiWritingAssistant: false,
       };
 
-      jest.doMock('../../../hooks/useFeatureFlags', () => ({
+      vi.doMock('../../../hooks/useFeatureFlags', () => ({
         useFeatureFlags: () => aiDisabledFlags,
       }));
 

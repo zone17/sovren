@@ -18,17 +18,17 @@ import userEvent from '@testing-library/user-event';
 import { UserSubscriptionManager } from '../UserSubscriptionManager';
 
 // Mock hooks and services
-const mockRefreshSubscriptions = jest.fn();
-const mockToggleAutoRenew = jest.fn();
-const mockCancelSubscription = jest.fn();
-const mockPauseSubscription = jest.fn();
-const mockResumeSubscription = jest.fn();
-const mockAddPaymentMethod = jest.fn();
-const mockUpdatePaymentMethod = jest.fn();
-const mockDeletePaymentMethod = jest.fn();
-const mockSetDefaultPaymentMethod = jest.fn();
-const mockUpdateRenewalSettings = jest.fn();
-const mockExportSubscriptionHistory = jest.fn();
+const mockRefreshSubscriptions = vi.fn();
+const mockToggleAutoRenew = vi.fn();
+const mockCancelSubscription = vi.fn();
+const mockPauseSubscription = vi.fn();
+const mockResumeSubscription = vi.fn();
+const mockAddPaymentMethod = vi.fn();
+const mockUpdatePaymentMethod = vi.fn();
+const mockDeletePaymentMethod = vi.fn();
+const mockSetDefaultPaymentMethod = vi.fn();
+const mockUpdateRenewalSettings = vi.fn();
+const mockExportSubscriptionHistory = vi.fn();
 
 // Mock the service hook
 const mockService = {
@@ -50,11 +50,11 @@ const mockService = {
   exportSubscriptionHistory: mockExportSubscriptionHistory,
 };
 
-jest.mock('../../services/useUserSubscriptionService', () => ({
+vi.mock('../../services/useUserSubscriptionService', () => ({
   useUserSubscriptionService: () => mockService,
 }));
 
-jest.mock('../../../../hooks/useFeatureFlags', () => ({
+vi.mock('../../../../hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => ({
     enableUserSubscriptionManagement: true,
   }),
@@ -157,7 +157,7 @@ const mockSubscriptionHistory = [
 
 describe('UserSubscriptionManager', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders subscription manager component', () => {
@@ -175,7 +175,7 @@ describe('UserSubscriptionManager', () => {
 
   it('shows loading state when loading is true', () => {
     const loadingService = { ...mockService, loading: true };
-    jest.doMock('../../services/useUserSubscriptionService', () => ({
+    vi.doMock('../../services/useUserSubscriptionService', () => ({
       useUserSubscriptionService: () => loadingService,
     }));
     render(<UserSubscriptionManager />);
@@ -184,7 +184,7 @@ describe('UserSubscriptionManager', () => {
 
   it('shows error state when there is an error', () => {
     const errorService = { ...mockService, error: 'Test error' };
-    jest.doMock('../../services/useUserSubscriptionService', () => ({
+    vi.doMock('../../services/useUserSubscriptionService', () => ({
       useUserSubscriptionService: () => errorService,
     }));
     render(<UserSubscriptionManager />);

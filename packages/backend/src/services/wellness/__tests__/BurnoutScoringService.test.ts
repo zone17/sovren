@@ -15,10 +15,10 @@ import type { ILogger } from '../../../interfaces/shared/ILogger';
 
 function createMockLogger(): ILogger {
   return {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   } as unknown as ILogger;
 }
 
@@ -55,13 +55,13 @@ describe('BurnoutScoringService', () => {
   describe('calculateScore - baseline not ready', () => {
     it('returns null score when fewer than 14 days of data', async () => {
       const fromChain = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ count: 10, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ count: 10, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => fromChain),
-        rpc: jest.fn(),
+        from: vi.fn(() => fromChain),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BurnoutScoringService(mockDb, mockLogger);
@@ -86,54 +86,54 @@ describe('BurnoutScoringService', () => {
 
       // Call 1: count query (from creator_work_patterns)
       resolvers.push({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ count: opts.totalDays, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ count: opts.totalDays, error: null }),
       });
 
       // Call 2: sensitivity from creator_boundaries (getSensitivity call)
       resolvers.push({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: { sensitivity_level: 'normal' }, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: { sensitivity_level: 'normal' }, error: null }),
       });
 
       // Call 3: current week patterns
       resolvers.push({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: opts.currentWeek, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: opts.currentWeek, error: null }),
       });
 
       // Call 4: baseline data
       resolvers.push({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        lt: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: opts.baseline, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        lt: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: opts.baseline, error: null }),
       });
 
       // Call 5: history query
       resolvers.push({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue({ data: opts.history || [], error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({ data: opts.history || [], error: null }),
       });
 
       // Call 6: upsert to burnout_risk_history
       resolvers.push({
-        upsert: jest.fn().mockResolvedValue({ error: null }),
+        upsert: vi.fn().mockResolvedValue({ error: null }),
       });
 
       return {
-        from: jest.fn(() => {
+        from: vi.fn(() => {
           const result = resolvers[callIndex] || resolvers[resolvers.length - 1];
           callIndex++;
           return result;
         }),
-        rpc: jest.fn(),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
     }
 
@@ -321,12 +321,12 @@ describe('BurnoutScoringService', () => {
   describe('setSensitivity', () => {
     it('persists sensitivity to database and returns result', async () => {
       const chainable = {
-        upsert: jest.fn().mockResolvedValue({ error: null }),
+        upsert: vi.fn().mockResolvedValue({ error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BurnoutScoringService(mockDb, mockLogger);
@@ -342,12 +342,12 @@ describe('BurnoutScoringService', () => {
 
     it('throws on database error', async () => {
       const chainable = {
-        upsert: jest.fn().mockResolvedValue({ error: { message: 'Upsert failed' } }),
+        upsert: vi.fn().mockResolvedValue({ error: { message: 'Upsert failed' } }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BurnoutScoringService(mockDb, mockLogger);
@@ -359,14 +359,14 @@ describe('BurnoutScoringService', () => {
   describe('getSensitivity', () => {
     it('returns default when no data exists', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BurnoutScoringService(mockDb, mockLogger);
@@ -377,14 +377,14 @@ describe('BurnoutScoringService', () => {
 
     it('returns cached value on repeated calls', async () => {
       const chainable = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: { sensitivity_level: 'sensitive' }, error: null }),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: { sensitivity_level: 'sensitive' }, error: null }),
       };
 
       const mockDb = {
-        from: jest.fn(() => chainable),
-        rpc: jest.fn(),
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
       } as unknown as ISupabaseClient;
 
       service = new BurnoutScoringService(mockDb, mockLogger);

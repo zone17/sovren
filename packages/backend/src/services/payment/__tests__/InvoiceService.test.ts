@@ -9,18 +9,18 @@ import { Decimal } from 'decimal.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock dependencies
-jest.mock('uuid');
-jest.mock('pdfkit');
-jest.mock('handlebars');
-jest.mock('decimal.js');
+vi.mock('uuid');
+vi.mock('pdfkit');
+vi.mock('handlebars');
+vi.mock('decimal.js');
 
 describe('InvoiceService', () => {
   let service: InvoiceService;
-  let mockDb: jest.Mocked<IDatabase>;
-  let mockCache: jest.Mocked<ICacheService>;
-  let mockEventBus: jest.Mocked<IEventBusService>;
-  let mockAuditLog: jest.Mocked<IAuditLogService>;
-  let mockNotification: jest.Mocked<INotificationService>;
+  let mockDb: vi.Mocked<IDatabase>;
+  let mockCache: vi.Mocked<ICacheService>;
+  let mockEventBus: vi.Mocked<IEventBusService>;
+  let mockAuditLog: vi.Mocked<IAuditLogService>;
+  let mockNotification: vi.Mocked<INotificationService>;
 
   const mockInvoiceDraft = {
     customerId: 'customer-123',
@@ -73,28 +73,28 @@ describe('InvoiceService', () => {
   beforeEach(() => {
     // Create mock implementations
     mockDb = {
-      query: jest.fn(),
-      beginTransaction: jest.fn(),
-      commitTransaction: jest.fn(),
-      rollbackTransaction: jest.fn(),
+      query: vi.fn(),
+      beginTransaction: vi.fn(),
+      commitTransaction: vi.fn(),
+      rollbackTransaction: vi.fn(),
     } as any;
 
     mockCache = {
-      get: jest.fn(),
-      set: jest.fn(),
-      delete: jest.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
     } as any;
 
     mockEventBus = {
-      emit: jest.fn(),
+      emit: vi.fn(),
     } as any;
 
     mockAuditLog = {
-      log: jest.fn(),
+      log: vi.fn(),
     } as any;
 
     mockNotification = {
-      send: jest.fn(),
+      send: vi.fn(),
     } as any;
 
     // Create service instance
@@ -107,17 +107,17 @@ describe('InvoiceService', () => {
     );
 
     // Reset mocks
-    jest.clearAllMocks();
-    (uuidv4 as jest.Mock).mockReturnValue('invoice-123');
+    vi.clearAllMocks();
+    (uuidv4 as any).mockReturnValue('invoice-123');
 
     // Mock Decimal.js
     (Decimal as any).mockImplementation((value: any) => ({
-      plus: jest.fn().mockReturnThis(),
-      minus: jest.fn().mockReturnThis(),
-      mul: jest.fn().mockReturnThis(),
-      div: jest.fn().mockReturnThis(),
-      gte: jest.fn().mockReturnValue(true),
-      toFixed: jest.fn().mockReturnValue(value.toString()),
+      plus: vi.fn().mockReturnThis(),
+      minus: vi.fn().mockReturnThis(),
+      mul: vi.fn().mockReturnThis(),
+      div: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnValue(true),
+      toFixed: vi.fn().mockReturnValue(value.toString()),
     }));
   });
 
@@ -539,11 +539,11 @@ describe('InvoiceService', () => {
 
       const PDFDocument = require('pdfkit');
       const mockDoc = {
-        fontSize: jest.fn().mockReturnThis(),
-        text: jest.fn().mockReturnThis(),
-        moveDown: jest.fn().mockReturnThis(),
-        end: jest.fn(),
-        on: jest.fn((event, callback) => {
+        fontSize: vi.fn().mockReturnThis(),
+        text: vi.fn().mockReturnThis(),
+        moveDown: vi.fn().mockReturnThis(),
+        end: vi.fn(),
+        on: vi.fn((event, callback) => {
           if (event === 'data') {
             callback(Buffer.from('test'));
           }
@@ -578,7 +578,7 @@ describe('InvoiceService', () => {
       mockDb.query.mockResolvedValue({ rows: [mockInvoice] });
 
       const Handlebars = require('handlebars');
-      Handlebars.compile = jest.fn().mockReturnValue((data: any) => '<html>Invoice</html>');
+      Handlebars.compile = vi.fn().mockReturnValue((data: any) => '<html>Invoice</html>');
 
       // Act
       const result = await service.generateHTML('invoice-123');

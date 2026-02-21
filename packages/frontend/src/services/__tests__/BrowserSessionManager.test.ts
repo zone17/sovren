@@ -3,7 +3,7 @@
  * WHY: Ensure browser session management works correctly
  */
 
-import { describe, it, expect } from '@jest/globals';
+
 
 describe('BrowserSessionManager', () => {
   it('should be tested comprehensively', () => {

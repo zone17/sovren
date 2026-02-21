@@ -29,16 +29,16 @@ import { PaymentStateMachine } from '../PaymentStateMachine';
 import { EmailIntegrationService } from '../../email-integration-service';
 
 // Mock Supabase client
-jest.mock('@supabase/supabase-js');
+vi.mock('@supabase/supabase-js');
 
 // Mock dependencies
-jest.mock('../PaymentStateMachine');
-jest.mock('../../email-integration-service');
+vi.mock('../PaymentStateMachine');
+vi.mock('../../email-integration-service');
 
 describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
-  let mockSupabase: jest.Mocked<SupabaseClient>;
-  let mockStateMachine: jest.Mocked<PaymentStateMachine>;
-  let mockEmailService: jest.Mocked<EmailIntegrationService>;
+  let mockSupabase: vi.Mocked<SupabaseClient>;
+  let mockStateMachine: vi.Mocked<PaymentStateMachine>;
+  let mockEmailService: vi.Mocked<EmailIntegrationService>;
   let retryService: PaymentRetryService;
 
   // Test fixtures
@@ -57,51 +57,51 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
   };
 
   const mockLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup mock Supabase client with chainable methods
     const mockChain = {
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      upsert: jest.fn().mockReturnThis(),
-      in: jest.fn().mockReturnThis(),
-      lte: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      upsert: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      lte: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
     };
 
     mockSupabase = {
-      from: jest.fn(() => mockChain),
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn(),
-      rpc: jest.fn(),
+      from: vi.fn(() => mockChain),
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      rpc: vi.fn(),
     } as any;
 
-    (createClient as jest.Mock).mockReturnValue(mockSupabase);
+    (createClient as any).mockReturnValue(mockSupabase);
 
     // Setup mock state machine
     mockStateMachine = new PaymentStateMachine({
       supabase: mockSupabase,
-    }) as jest.Mocked<PaymentStateMachine>;
+    }) as anyed<PaymentStateMachine>;
 
-    mockStateMachine.transition = jest.fn().mockResolvedValue(undefined);
+    mockStateMachine.transition = vi.fn().mockResolvedValue(undefined);
 
     // Setup mock email service
-    mockEmailService = new EmailIntegrationService() as jest.Mocked<EmailIntegrationService>;
-    mockEmailService.sendNotification = jest.fn().mockResolvedValue(undefined);
+    mockEmailService = new EmailIntegrationService() as anyed<EmailIntegrationService>;
+    mockEmailService.sendNotification = vi.fn().mockResolvedValue(undefined);
 
     // Create retry service instance
     retryService = new PaymentRetryService({
@@ -445,30 +445,30 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
 
       // Mock database calls with proper chaining
       const mockRetryChain = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: retryAttempt,
           error: null,
         }),
       };
 
       const mockPaymentChain = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: paidPayment,
           error: null,
         }),
       };
 
       const mockUpdateChain = {
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ error: null }),
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ error: null }),
       };
 
       let callCount = 0;
-      mockSupabase.from = jest.fn((table) => {
+      mockSupabase.from = vi.fn((table) => {
         callCount++;
         if (table === 'payment_retry_attempts' && callCount === 1) {
           return mockRetryChain;
@@ -481,7 +481,7 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
       }) as any;
 
       // Mock verification to return true (paid)
-      jest.spyOn(retryService as any, 'verifyPaymentStatus').mockResolvedValue(true);
+      vi.spyOn(retryService as any, 'verifyPaymentStatus').mockResolvedValue(true);
 
       // Act
       const result = await retryService.executeRetry(retryAttemptId);
@@ -527,7 +527,7 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
       });
 
       // Mock verification to return false (still pending)
-      jest.spyOn(retryService as any, 'verifyPaymentStatus').mockResolvedValue(false);
+      vi.spyOn(retryService as any, 'verifyPaymentStatus').mockResolvedValue(false);
 
       // Act
       const result = await retryService.executeRetry(retryAttemptId);
@@ -564,7 +564,7 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
 
       // Mock verification to throw
       const verificationError = new Error('Lightning node unavailable');
-      jest.spyOn(retryService as any, 'verifyPaymentStatus').mockRejectedValue(verificationError);
+      vi.spyOn(retryService as any, 'verifyPaymentStatus').mockRejectedValue(verificationError);
 
       // Act & Assert: Should handle error gracefully
       await expect(retryService.executeRetry(retryAttemptId)).rejects.toThrow(

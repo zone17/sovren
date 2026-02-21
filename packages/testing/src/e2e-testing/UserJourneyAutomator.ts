@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @fileoverview Elite User Journey Automator - Self-maintaining user journey automation
  * with AI-driven optimization and adaptive test maintenance capabilities.

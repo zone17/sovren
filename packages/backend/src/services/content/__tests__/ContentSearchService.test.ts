@@ -5,6 +5,7 @@
  */
 
 import { ContentSearchService } from '../ContentSearchService';
+import { Client } from '@elastic/elasticsearch';
 import type {
   SearchQuery,
   SearchResult,
@@ -20,15 +21,15 @@ import type { ILogger } from '../../../interfaces/shared/ILogger';
 
 class MockElasticsearchClient {
   public indices = {
-    exists: jest.fn(),
-    create: jest.fn()
+    exists: vi.fn(),
+    create: vi.fn()
   };
-  public search = jest.fn();
-  public index = jest.fn();
-  public update = jest.fn();
-  public delete = jest.fn();
-  public bulk = jest.fn();
-  public close = jest.fn();
+  public search = vi.fn();
+  public index = vi.fn();
+  public update = vi.fn();
+  public delete = vi.fn();
+  public bulk = vi.fn();
+  public close = vi.fn();
 }
 
 class MockCacheService implements ICacheService {
@@ -119,16 +120,16 @@ class MockCacheService implements ICacheService {
 }
 
 class MockLogger implements ILogger {
-  debug = jest.fn();
-  info = jest.fn();
-  warn = jest.fn();
-  error = jest.fn();
+  debug = vi.fn();
+  info = vi.fn();
+  warn = vi.fn();
+  error = vi.fn();
 }
 
 // Mock the Elasticsearch client
-jest.mock('@elastic/elasticsearch', () => {
+vi.mock('@elastic/elasticsearch', () => {
   return {
-    Client: jest.fn().mockImplementation(() => new MockElasticsearchClient())
+    Client: vi.fn().mockImplementation(() => new MockElasticsearchClient())
   };
 });
 
@@ -152,12 +153,12 @@ describe('ContentSearchService', () => {
     };
 
     // Setup default mock responses before creating service
-    const { Client } = require('@elastic/elasticsearch');
+    const MockedClient = vi.mocked(Client);
     const mockClient = new MockElasticsearchClient();
     mockClient.indices.exists.mockResolvedValue(true);
 
     // Mock the Client constructor to return our mock
-    Client.mockImplementation(() => mockClient);
+    MockedClient.mockImplementation(() => mockClient);
 
     // Create service (this will also create mock ES client)
     service = new ContentSearchService(mockCache, mockLogger, config);
@@ -169,7 +170,7 @@ describe('ContentSearchService', () => {
 
   afterEach(async () => {
     await service.shutdown();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ==========================================================================
@@ -178,11 +179,11 @@ describe('ContentSearchService', () => {
 
   describe('Initialization', () => {
     it('should create Elasticsearch index if it does not exist', async () => {
-      const { Client } = require('@elastic/elasticsearch');
+      const MockedClient = vi.mocked(Client);
       const newMockClient = new MockElasticsearchClient();
       newMockClient.indices.exists.mockResolvedValue(false);
       newMockClient.indices.create.mockResolvedValue({});
-      Client.mockImplementation(() => newMockClient);
+      MockedClient.mockImplementation(() => newMockClient);
 
       const newLogger = new MockLogger();
       const newService = new ContentSearchService(mockCache, newLogger, config);
@@ -200,11 +201,11 @@ describe('ContentSearchService', () => {
     });
 
     it('should not create index if it already exists', async () => {
-      const { Client } = require('@elastic/elasticsearch');
+      const MockedClient = vi.mocked(Client);
       const newMockClient = new MockElasticsearchClient();
       newMockClient.indices.exists.mockResolvedValue(true);
       newMockClient.indices.create.mockResolvedValue({});
-      Client.mockImplementation(() => newMockClient);
+      MockedClient.mockImplementation(() => newMockClient);
 
       const newLogger = new MockLogger();
       const newService = new ContentSearchService(mockCache, newLogger, config);
@@ -218,11 +219,11 @@ describe('ContentSearchService', () => {
     });
 
     it('should log error if index creation fails', async () => {
-      const { Client } = require('@elastic/elasticsearch');
+      const MockedClient = vi.mocked(Client);
       const newMockClient = new MockElasticsearchClient();
       newMockClient.indices.exists.mockResolvedValue(false);
       newMockClient.indices.create.mockRejectedValue(new Error('Index creation failed'));
-      Client.mockImplementation(() => newMockClient);
+      MockedClient.mockImplementation(() => newMockClient);
 
       const newLogger = new MockLogger();
       const newService = new ContentSearchService(mockCache, newLogger, config);
@@ -504,7 +505,7 @@ describe('ContentSearchService', () => {
     });
 
     it('should cache results with 5-minute TTL', async () => {
-      const setCacheSpy = jest.spyOn(mockCache, 'set');
+      const setCacheSpy = vi.spyOn(mockCache, 'set');
 
       await service.search(mockSearchQuery);
 
@@ -789,7 +790,7 @@ describe('ContentSearchService', () => {
     });
 
     it('should invalidate cache after indexing', async () => {
-      const invalidateSpy = jest.spyOn(mockCache, 'invalidate');
+      const invalidateSpy = vi.spyOn(mockCache, 'invalidate');
 
       await service.indexDocument(mockDocument);
 
@@ -835,7 +836,7 @@ describe('ContentSearchService', () => {
     });
 
     it('should invalidate cache after updating', async () => {
-      const invalidateSpy = jest.spyOn(mockCache, 'invalidate');
+      const invalidateSpy = vi.spyOn(mockCache, 'invalidate');
 
       await service.updateDocument('123', { title: 'Updated' });
 
@@ -874,7 +875,7 @@ describe('ContentSearchService', () => {
     });
 
     it('should invalidate cache after deleting', async () => {
-      const invalidateSpy = jest.spyOn(mockCache, 'invalidate');
+      const invalidateSpy = vi.spyOn(mockCache, 'invalidate');
 
       await service.deleteDocument('123');
 
@@ -981,7 +982,7 @@ describe('ContentSearchService', () => {
     });
 
     it('should invalidate all cache after bulk indexing', async () => {
-      const invalidateSpy = jest.spyOn(mockCache, 'invalidate');
+      const invalidateSpy = vi.spyOn(mockCache, 'invalidate');
 
       await service.bulkIndex(mockDocuments);
 

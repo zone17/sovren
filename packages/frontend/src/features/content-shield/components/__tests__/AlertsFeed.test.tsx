@@ -28,15 +28,15 @@ const mockPagination = {
   hasPrev: false,
 };
 
-jest.mock('../../hooks/useAlerts', () => ({
-  useAlerts: jest.fn(),
-  useAlertDetail: jest.fn(),
-  useUpdateAlertStatus: jest.fn(),
+vi.mock('../../hooks/useAlerts', () => ({
+  useAlerts: vi.fn(),
+  useAlertDetail: vi.fn(),
+  useUpdateAlertStatus: vi.fn(),
 }));
 
-jest.mock('../../hooks/useDmcaReport', () => ({
-  useDmcaReport: jest.fn().mockReturnValue({
-    mutate: jest.fn(),
+vi.mock('../../hooks/useDmcaReport', () => ({
+  useDmcaReport: vi.fn().mockReturnValue({
+    mutate: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -44,7 +44,7 @@ jest.mock('../../hooks/useDmcaReport', () => ({
 }));
 
 import { useAlerts } from '../../hooks/useAlerts';
-const mockUseAlerts = useAlerts as jest.Mock;
+const mockUseAlerts = useAlerts as any;
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -57,7 +57,7 @@ function createWrapper() {
 
 describe('AlertsFeed', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('shows loading state', () => {

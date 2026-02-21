@@ -219,7 +219,7 @@ describe('🎨 Design System Integration', () => {
     });
 
     it('should render lightning payment button pattern', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
 
       render(
         <Button
