@@ -123,25 +123,58 @@ if (typeof window !== 'undefined') {
 
   // indexedDB mock for tests that need it
   if (typeof globalThis.indexedDB === 'undefined') {
-    const mockIDBFactory = {
-      open: vi.fn().mockReturnValue({
-        onupgradeneeded: null,
-        onsuccess: null,
-        onerror: null,
-        result: {
-          createObjectStore: vi.fn(),
-          transaction: vi.fn().mockReturnValue({
-            objectStore: vi.fn().mockReturnValue({
-              put: vi.fn(),
-              get: vi.fn(),
-              delete: vi.fn(),
-              getAll: vi.fn(),
-            }),
-          }),
-          close: vi.fn(),
-        },
+    const mockDB = {
+      objectStoreNames: { contains: vi.fn().mockReturnValue(false) },
+      createObjectStore: vi.fn().mockReturnValue({
+        createIndex: vi.fn(),
       }),
-      deleteDatabase: vi.fn(),
+      transaction: vi.fn().mockReturnValue({
+        objectStore: vi.fn().mockReturnValue({
+          put: vi.fn().mockImplementation(() => {
+            const req: any = { onsuccess: null, onerror: null };
+            Promise.resolve().then(() => req.onsuccess?.({ target: { result: undefined } }));
+            return req;
+          }),
+          get: vi.fn().mockImplementation(() => {
+            const req: any = { onsuccess: null, onerror: null };
+            Promise.resolve().then(() => req.onsuccess?.({ target: { result: undefined } }));
+            return req;
+          }),
+          delete: vi.fn().mockImplementation(() => {
+            const req: any = { onsuccess: null, onerror: null };
+            Promise.resolve().then(() => req.onsuccess?.({ target: { result: undefined } }));
+            return req;
+          }),
+          getAll: vi.fn().mockImplementation(() => {
+            const req: any = { onsuccess: null, onerror: null };
+            Promise.resolve().then(() => req.onsuccess?.({ target: { result: [] } }));
+            return req;
+          }),
+        }),
+        oncomplete: null,
+        onerror: null,
+      }),
+      close: vi.fn(),
+    };
+    const mockIDBFactory = {
+      open: vi.fn().mockImplementation(() => {
+        const request: any = {
+          onupgradeneeded: null,
+          onsuccess: null,
+          onerror: null,
+          result: mockDB,
+        };
+        // Trigger onsuccess asynchronously after callbacks are set
+        Promise.resolve().then(() => {
+          request.onsuccess?.({ target: { result: mockDB } });
+        });
+        return request;
+      }),
+      deleteDatabase: vi.fn().mockImplementation(() => {
+        const request: any = { onsuccess: null, onerror: null };
+        Promise.resolve().then(() => request.onsuccess?.({ target: { result: undefined } }));
+        return request;
+      }),
     };
     Object.defineProperty(globalThis, 'indexedDB', {
       value: mockIDBFactory,
@@ -150,12 +183,38 @@ if (typeof window !== 'undefined') {
     });
   }
 
-  // getComputedStyle
-  globalThis.getComputedStyle = vi.fn().mockImplementation(() => ({
-    getPropertyValue: vi.fn().mockReturnValue(''),
-    setProperty: vi.fn(),
-    removeProperty: vi.fn(),
-  })) as any;
+  // getComputedStyle - return a more complete CSSStyleDeclaration mock
+  globalThis.getComputedStyle = vi.fn().mockImplementation(() => {
+    const style: Record<string, string> = {};
+    return new Proxy(style, {
+      get(target, prop) {
+        if (prop === 'getPropertyValue') return vi.fn().mockReturnValue('');
+        if (prop === 'setProperty') return vi.fn();
+        if (prop === 'removeProperty') return vi.fn();
+        if (prop === 'length') return 0;
+        if (typeof prop === 'string') return target[prop] || '';
+        return undefined;
+      },
+    });
+  }) as any;
+
+  // navigator.clipboard mock
+  if (typeof navigator !== 'undefined') {
+    try {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: {
+          writeText: vi.fn().mockResolvedValue(undefined),
+          readText: vi.fn().mockResolvedValue(''),
+          write: vi.fn().mockResolvedValue(undefined),
+          read: vi.fn().mockResolvedValue([]),
+        },
+        writable: true,
+        configurable: true,
+      });
+    } catch {
+      // clipboard already defined
+    }
+  }
 }
 
 // WebSocket mock

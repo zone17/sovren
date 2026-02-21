@@ -17,8 +17,10 @@
  * @lastModified 2024-12-28
  */
 
-// 🛡️ **ELITE TYPE DEFINITIONS**
-interface TestUser {
+// Test interfaces use snake_case to match Supabase/database row shapes.
+// Canonical app-layer types are in packages/shared/src/types/ (camelCase).
+// See: BaseUser (user.ts), Post, Payment (index.ts).
+export interface TestUser {
   id: string;
   username: string;
   display_name: string;
@@ -31,7 +33,7 @@ interface TestUser {
   role?: string;
 }
 
-interface TestContent {
+export interface TestContent {
   id: string;
   title: string;
   content: string;
@@ -42,7 +44,7 @@ interface TestContent {
   published_at?: string;
 }
 
-interface TestPayment {
+export interface TestPayment {
   id: string;
   amount: number;
   status: string;

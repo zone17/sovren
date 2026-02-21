@@ -26,6 +26,11 @@ const mockCrypto = {
     decrypt: vi.fn(),
     importKey: vi.fn(),
     deriveBits: vi.fn(),
+    generateKey: vi.fn().mockResolvedValue({ type: 'secret' }),
+    exportKey: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
+    digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
+    sign: vi.fn().mockResolvedValue(new ArrayBuffer(64)),
+    verify: vi.fn().mockResolvedValue(true),
   },
   getRandomValues: vi.fn((arr: Uint8Array) => {
     for (let i = 0; i < arr.length; i++) {
@@ -67,7 +72,7 @@ describe('NIP04Service', () => {
 
     // Setup global mocks
     Object.defineProperty(globalThis, "crypto", { value: mockCrypto as any, writable: true, configurable: true });
-    (global as any).window = { nostr: mockNostrExtension };
+    (window as any).nostr = mockNostrExtension;
 
     // Initialize services
     keyManagementService = KeyManagementService.getInstance();
@@ -78,8 +83,8 @@ describe('NIP04Service', () => {
   });
 
   afterEach(async () => {
-    await service.destroy();
-    await keyManagementService.destroy();
+    await service?.destroy?.();
+    await keyManagementService?.destroy?.();
     vi.restoreAllMocks();
   });
 

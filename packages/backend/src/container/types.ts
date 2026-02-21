@@ -536,7 +536,8 @@ export const SERVICE_LIFETIMES = {
 
 /**
  * Service dependency map
- * Documents explicit dependencies for each service
+ * Documents explicit dependencies for each service.
+ * Used by getServiceDependencies() and integration tests.
  */
 export const SERVICE_DEPENDENCIES = {
   // Shared Services
@@ -626,6 +627,13 @@ export const SERVICE_DEPENDENCIES = {
 } as const;
 
 /**
+ * Get dependencies for a given service name
+ */
+export function getServiceDependencies(serviceName: string): string[] {
+  return SERVICE_DEPENDENCIES[serviceName as keyof typeof SERVICE_DEPENDENCIES] || [];
+}
+
+/**
  * Service tags for grouping and discovery
  */
 export const SERVICE_TAGS = {
@@ -693,13 +701,6 @@ export function getServiceLifetime(serviceName: string): 'singleton' | 'transien
     return 'singleton';
   }
   return 'transient';
-}
-
-/**
- * Get dependencies for a given service name
- */
-export function getServiceDependencies(serviceName: string): string[] {
-  return SERVICE_DEPENDENCIES[serviceName as keyof typeof SERVICE_DEPENDENCIES] || [];
 }
 
 /**

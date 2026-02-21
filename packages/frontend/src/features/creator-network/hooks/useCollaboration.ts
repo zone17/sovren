@@ -1,9 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { collaborationApi } from '../services/collaborationApi';
+import type { ApiResponse } from '../types/community';
+import type { ContentCollaborator } from '@shared/types/community';
+
+export const collaboratorKeys = {
+  all: ['creator-network', 'collaborators'] as const,
+  detail: (contentId: string) => [...collaboratorKeys.all, contentId] as const,
+};
 
 export function useCollaborators(contentId: string) {
   return useQuery({
-    queryKey: ['creator-network', 'collaborators', contentId],
+    queryKey: collaboratorKeys.detail(contentId),
     queryFn: () => collaborationApi.getCollaborators(contentId),
     select: (res) => res.data?.collaborators ?? [],
     enabled: Boolean(contentId),
@@ -35,12 +42,15 @@ export function useInviteCollaborators(contentId: string) {
         }
       }
       return results
-        .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+        .filter(
+          (r): r is PromiseFulfilledResult<ApiResponse<ContentCollaborator>> =>
+            r.status === 'fulfilled'
+        )
         .map((r) => r.value);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['creator-network', 'collaborators', contentId],
+        queryKey: collaboratorKeys.detail(contentId),
       });
     },
     onError: (error) => {
@@ -60,7 +70,7 @@ export function useUpdateRevenueSplit(contentId: string) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['creator-network', 'collaborators', contentId],
+        queryKey: collaboratorKeys.detail(contentId),
       });
     },
     onError: (error) => {
@@ -77,7 +87,8 @@ export function useRespondToCollaboration() {
     mutationFn: ({ invitationId, accept }: { invitationId: string; accept: boolean }) =>
       collaborationApi.respondToInvitation(invitationId, accept),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['creator-network', 'collaborators'] });
+      // Invalidates all collaborator queries — contentId unknown from invitation response
+      queryClient.invalidateQueries({ queryKey: [...collaboratorKeys.all] });
     },
     onError: (error) => {
       console.error('Respond to collaboration failed:', error);

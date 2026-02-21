@@ -48,9 +48,22 @@ function isPrivateIPv6(ip: string): boolean {
   if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true; // ULA fc00::/7
   if (normalized.startsWith('fe80')) return true; // Link-local
 
-  // IPv4-mapped: ::ffff:x.x.x.x
+  // IPv4-mapped: ::ffff:x.x.x.x (dotted-decimal form)
   const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
   if (mapped) return isPrivateIPv4(mapped[1]);
+
+  // IPv4-mapped: ::ffff:HHHH:HHHH (hex form, as normalized by URL parser)
+  // e.g. ::ffff:7f00:1 = 127.0.0.1, ::ffff:a00:1 = 10.0.0.1
+  const hexMapped = normalized.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (hexMapped) {
+    const hi = parseInt(hexMapped[1], 16);
+    const lo = parseInt(hexMapped[2], 16);
+    const a = (hi >> 8) & 0xff;
+    const b = hi & 0xff;
+    const c = (lo >> 8) & 0xff;
+    const d = lo & 0xff;
+    return isPrivateIPv4(`${a}.${b}.${c}.${d}`);
+  }
 
   return false;
 }

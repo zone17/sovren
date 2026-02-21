@@ -220,7 +220,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const data = await getWellnessService().getBenchmark();
     if (!data) {
-      res.json(createApiResponse(req, null));
+      res.json(createApiResponse(req, { benchmark: null, message: 'Insufficient participants for anonymous benchmarking (minimum: 10)' }));
       return;
     }
     res.json(createApiResponse(req, data));

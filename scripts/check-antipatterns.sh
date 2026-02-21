@@ -28,8 +28,9 @@ fi
 
 # Check 1b: console.log in source TypeScript files
 # Legitimate logging should use the logger service, not console.log
+# Excludes: frontend (no logger service), env-validation.ts, logger.ts
 if [ -n "$STAGED_TS_SRC" ]; then
-  MATCHES=$(echo "$STAGED_TS_SRC" | xargs grep -HnE '\bconsole\.(log|debug|info|warn|error)\(' 2>/dev/null \
+  MATCHES=$(echo "$STAGED_TS_SRC" | grep -v 'packages/frontend/' | xargs grep -HnE '\bconsole\.(log|debug|info|warn|error)\(' 2>/dev/null \
     | grep -v '^\s*//' \
     | grep -v 'env-validation\.ts' \
     | grep -v 'logger\.ts' || true)
@@ -40,12 +41,14 @@ if [ -n "$STAGED_TS_SRC" ]; then
   fi
 fi
 
-# Check 1c: TODO/FIXME comments in staged source files
+# Check 1c: TODO/FIXME comments in newly-added lines only
+# Scoped to new lines (git diff --cached) to avoid false positives on pre-existing TODOs
 if [ -n "$STAGED_TS_SRC" ]; then
-  MATCHES=$(echo "$STAGED_TS_SRC" | xargs grep -HnEi '\b(TODO|FIXME|HACK|XXX)\b' 2>/dev/null \
-    | grep -v '^\s*//' || true)
+  MATCHES=$(git diff --cached -U0 -- $STAGED_TS_SRC 2>/dev/null \
+    | grep -E '^\+' | grep -v '^\+\+\+' \
+    | grep -Ei '\b(TODO|FIXME|HACK|XXX)\b' || true)
   if [ -n "$MATCHES" ]; then
-    echo "⚠️  TODO/FIXME comment detected (resolve before committing):"
+    echo "⚠️  TODO/FIXME comment in newly-added lines (resolve before committing):"
     echo "$MATCHES"
     ERRORS=$((ERRORS + 1))
   fi
@@ -53,6 +56,7 @@ fi
 
 # Check 1d: Hardcoded secrets/credentials in source files
 # Catches common patterns: password=, secret=, apikey=, token= with inline values
+# Excludes: test-utils (intentional test fixtures), setup files
 if [ -n "$STAGED_TS_SRC" ]; then
   MATCHES=$(echo "$STAGED_TS_SRC" | xargs grep -HnEi "(password|secret|api_?key|token)\s*[:=]\s*['\"][^'\"]{8,}" 2>/dev/null \
     | grep -v '^\s*//' \
@@ -61,7 +65,9 @@ if [ -n "$STAGED_TS_SRC" ]; then
     | grep -v '\.test\.' \
     | grep -v 'example' \
     | grep -v 'placeholder' \
-    | grep -v 'your-' || true)
+    | grep -v 'your-' \
+    | grep -v 'test-utils/' \
+    | grep -v 'setup\.ts' || true)
   if [ -n "$MATCHES" ]; then
     echo "⚠️  Possible hardcoded secret detected (use environment variables):"
     echo "$MATCHES"

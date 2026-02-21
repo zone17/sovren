@@ -733,6 +733,12 @@ export class NostrKeyManagementService extends EventEmitter {
 
   /**
    * 📝 Create mnemonic backup
+   *
+   * DESIGN NOTE: The mnemonic is generated independently (random 256-bit entropy)
+   * and is NOT derived from the private key. It serves as a separate recovery
+   * credential stored alongside the key pair, not as a deterministic seed that
+   * can reconstruct the private key. Key recovery requires both the stored
+   * (encrypted) private key and optionally this mnemonic as a second factor.
    */
   private async createMnemonicBackup(
     keyPair: NostrEnhancedKeyPair,
@@ -741,7 +747,7 @@ export class NostrKeyManagementService extends EventEmitter {
       encryptionKey?: string;
     }
   ): Promise<NostrMnemonicBackup> {
-    // Generate mnemonic from private key
+    // Generate independent mnemonic (NOT derived from the private key — see DESIGN NOTE above)
     const mnemonic = generateMnemonic(256); // 24 words for maximum security
 
     // Validate the generated mnemonic

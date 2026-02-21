@@ -28,77 +28,13 @@ import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { cmsReducer, paymentReducer, postReducer } from '../store/slices/tempStubs';
 import userReducer from '../store/slices/userSlice';
 
-// Import test data
+// Import test data and shared test interfaces (single source of truth)
+import type { TestContent, TestPayment, TestUser } from './test-environment';
 import { BDD, TEST_DATA } from './test-environment';
 
-/**
- * 🧪 **ELITE TEST PROVIDERS**
- *
- * **Purpose**: Comprehensive test provider setup for React component testing
- * **Architecture**: Type-safe, configurable providers with realistic test scenarios
- * **Performance**: Optimized for sub-100ms test setup
- * **Flexibility**: Support for multiple authentication states and data scenarios
- *
- * **Key Features**:
- * - 🎭 BDD-style test scenarios (Given-When-Then)
- * - 🏗️ Configurable store states for different test cases
- * - 🧭 Router configuration for navigation testing
- * - 🔄 Redux integration with realistic data
- * - 🛡️ TypeScript type safety throughout
- *
- * @author Elite Engineering Team
- * @version 2.0.0
- * @lastModified 2024-12-28
- */
-
-/**
- * 🛡️ **ELITE TYPE DEFINITIONS**
- */
-
-// Import shared types for consistency
-interface TestUser {
-  id: string;
-  username: string;
-  display_name: string;
-  bio: string;
-  avatar_url: string;
-  email: string;
-  nostr_pubkey: string;
-  created_at: string;
-  updated_at: string;
-  role?: string;
-}
-
-interface TestPost {
-  id: string;
-  title: string;
-  content: string;
-  status: string;
-  author_id: string;
-  created_at: string;
-  updated_at: string;
-  published_at?: string;
-}
-
-interface TestPayment {
-  id: string;
-  amount: number;
-  status: string;
-  invoice: string;
-  user_id: string;
-  created_at: string;
-}
-
-interface TestContentItem {
-  id: string;
-  title: string;
-  content: string;
-  status: string;
-  author_id: string;
-  created_at: string;
-  updated_at: string;
-  published_at?: string;
-}
+// Re-use TestContent as the post/content-item shape (identical structure)
+type TestPost = TestContent;
+type TestContentItem = TestContent;
 
 interface TestCollaborator {
   id: string;
