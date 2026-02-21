@@ -2,8 +2,8 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # Sovren Pre-Push Quality Gate
-# Final protection before code reaches remote repository
-# Uses git diff origin/main...HEAD to compare branch changes (not --cached)
+# Runs project-scoped tests for changed packages only.
+# Uses git diff origin/main...HEAD to find branch changes.
 
 echo "Running pre-push quality verification..."
 
@@ -16,39 +16,87 @@ if [ "$current_branch" = "$protected_branch" ]; then
   echo "Consider using feature branches and pull requests for better code review"
 fi
 
-# 2. Final test suite run
-echo "Running final test verification..."
-npm test -- --passWithNoTests
-if [ $? -ne 0 ]; then
-  echo "FAIL: Test suite failed! Cannot push."
-  exit 1
+# 2. Project-scoped test run (only test files related to changed source files)
+echo "Running tests for changed packages..."
+CHANGED=$(git diff origin/main...HEAD --name-only 2>/dev/null || git diff HEAD~1...HEAD --name-only 2>/dev/null || true)
+
+if [ -z "$CHANGED" ]; then
+  echo "No changed files detected, skipping tests"
+else
+  # Find test files corresponding to changed source files
+  TEST_FILES=""
+  for src_file in $CHANGED; do
+    # Include test files directly
+    if echo "$src_file" | grep -qE '\.(test|spec)\.(ts|tsx)$'; then
+      if [ -f "$src_file" ]; then
+        TEST_FILES="$TEST_FILES $src_file"
+      fi
+      continue
+    fi
+
+    # Skip non-TS/JS files
+    echo "$src_file" | grep -qE '\.(ts|tsx|js|jsx)$' || continue
+
+    basename=$(basename "$src_file" | sed 's/\.[^.]*$//')
+    dir=$(dirname "$src_file")
+
+    # Check for __tests__/basename.test.ts
+    for ext in "test.ts" "test.tsx" "spec.ts"; do
+      candidate="$dir/__tests__/$basename.$ext"
+      if [ -f "$candidate" ]; then
+        TEST_FILES="$TEST_FILES $candidate"
+        break
+      fi
+      candidate="$dir/$basename.$ext"
+      if [ -f "$candidate" ]; then
+        TEST_FILES="$TEST_FILES $candidate"
+        break
+      fi
+    done
+  done
+
+  if [ -n "$TEST_FILES" ]; then
+    UNIQUE_TESTS=$(echo "$TEST_FILES" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+    echo "Running test files: $UNIQUE_TESTS"
+    npx vitest run --bail 1 --passWithNoTests $UNIQUE_TESTS
+    if [ $? -ne 0 ]; then
+      echo "FAIL: Tests failed! Cannot push."
+      exit 1
+    fi
+  else
+    echo "No related test files found for changed source files"
+  fi
 fi
 
 # 3. Verify no TODO/FIXME comments in changed production code
 echo "Checking for development markers..."
-changed_files=$(git diff origin/main...HEAD --name-only 2>/dev/null || git diff HEAD~1...HEAD --name-only)
-todo_count=$(echo "$changed_files" | xargs grep -l "TODO\|FIXME\|XXX\|HACK" 2>/dev/null | wc -l | tr -d ' ')
-if [ "$todo_count" -gt 0 ]; then
-  echo "WARNING: Found TODO/FIXME markers in changed files:"
-  echo "$changed_files" | xargs grep -n "TODO\|FIXME\|XXX\|HACK" 2>/dev/null || true
-  echo ""
-  echo "Consider resolving these before pushing to maintain code quality"
+if [ -n "$CHANGED" ]; then
+  todo_count=$(echo "$CHANGED" | xargs grep -l "TODO\|FIXME\|XXX\|HACK" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$todo_count" -gt 0 ]; then
+    echo "WARNING: Found TODO/FIXME markers in changed files:"
+    echo "$CHANGED" | xargs grep -n "TODO\|FIXME\|XXX\|HACK" 2>/dev/null || true
+    echo ""
+    echo "Consider resolving these before pushing to maintain code quality"
+  fi
 fi
 
 # 4. Check for console.log statements in changed production code
-# Excludes test files, spec files, and markdown
 echo "Checking for debug statements..."
-src_files=$(echo "$changed_files" | grep -E '\.(ts|tsx|js|jsx)$' | grep -vE '\.(test|spec)\.(ts|tsx|js|jsx)$' | grep -v '\.md$')
-debug_count=$(echo "$src_files" | xargs grep -l "console\." 2>/dev/null | wc -l | tr -d ' ')
-if [ "$debug_count" -gt 0 ]; then
-  echo "WARNING: Found console statements in changed source files:"
-  echo "$src_files" | xargs grep -n "console\." 2>/dev/null || true
-  echo ""
-  echo "Consider removing debug statements before pushing"
+if [ -n "$CHANGED" ]; then
+  src_files=$(echo "$CHANGED" | grep -E '\.(ts|tsx|js|jsx)$' | grep -vE '\.(test|spec)\.(ts|tsx|js|jsx)$' | grep -v '\.md$' || true)
+  if [ -n "$src_files" ]; then
+    debug_count=$(echo "$src_files" | xargs grep -l "console\." 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$debug_count" -gt 0 ]; then
+      echo "WARNING: Found console statements in changed source files:"
+      echo "$src_files" | xargs grep -n "console\." 2>/dev/null || true
+      echo ""
+      echo "Consider removing debug statements before pushing"
+    fi
+  fi
 fi
 
 # 5. Verify docs are up to date if package.json changed
-if echo "$changed_files" | grep -q "package\.json"; then
+if [ -n "$CHANGED" ] && echo "$CHANGED" | grep -q "package\.json"; then
   echo "Package.json changed - remember to update DEVELOPER_GUIDE.md if dependencies changed"
 fi
 
