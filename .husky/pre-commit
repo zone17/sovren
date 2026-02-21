@@ -2,8 +2,8 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # Sovren Pre-Commit Quality Gates
-# Fast checks only: anti-patterns, lint-staged, related unit tests
-# Target: <60s. Build and Vercel validation moved to CI.
+# Fast checks: anti-patterns, lint-staged, security tests, related unit tests
+# Target: <90s. Build and Vercel validation moved to CI.
 
 echo "Running pre-commit quality gates..."
 
@@ -14,21 +14,61 @@ bash scripts/check-antipatterns.sh
 echo "Checking code formatting and linting..."
 npx lint-staged
 
-# 3. Run related unit tests for staged files (both frontend and backend)
+# 3. Security-critical test suites (runs full suite when security files change)
+bash scripts/run-security-tests.sh
+
+# 4. Run test files related to staged source files
 echo "Running related unit tests for staged files..."
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$' || true)
 
 if [ -n "$STAGED_FILES" ]; then
-  # Backend/shared related tests
-  BACKEND_FILES=$(echo "$STAGED_FILES" | grep -E '^packages/(backend|shared)/' || true)
-  if [ -n "$BACKEND_FILES" ]; then
-    echo "$BACKEND_FILES" | xargs npx jest --findRelatedTests --passWithNoTests --bail 2>/dev/null || true
-  fi
+  # Find test files that correspond to staged source files
+  # Pattern: source file foo.ts -> look for foo.test.ts or __tests__/foo.test.ts
+  TEST_FILES=""
+  for src_file in $STAGED_FILES; do
+    # Skip test files themselves (they'll run directly)
+    if echo "$src_file" | grep -qE '\.(test|spec)\.(ts|tsx)$'; then
+      TEST_FILES="$TEST_FILES $src_file"
+      continue
+    fi
 
-  # Frontend related tests
-  FRONTEND_FILES=$(echo "$STAGED_FILES" | grep -E '^packages/frontend/' || true)
-  if [ -n "$FRONTEND_FILES" ]; then
-    echo "$FRONTEND_FILES" | xargs npx jest --findRelatedTests --passWithNoTests --bail 2>/dev/null || true
+    # Skip non-source files
+    basename=$(basename "$src_file" | sed 's/\.[^.]*$//')
+    dir=$(dirname "$src_file")
+
+    # Check for __tests__/basename.test.ts (common pattern)
+    candidate="$dir/__tests__/$basename.test.ts"
+    if [ -f "$candidate" ]; then
+      TEST_FILES="$TEST_FILES $candidate"
+      continue
+    fi
+
+    # Check for basename.test.ts in same directory
+    candidate="$dir/$basename.test.ts"
+    if [ -f "$candidate" ]; then
+      TEST_FILES="$TEST_FILES $candidate"
+      continue
+    fi
+
+    # Check for basename.test.tsx (React components)
+    candidate="$dir/__tests__/$basename.test.tsx"
+    if [ -f "$candidate" ]; then
+      TEST_FILES="$TEST_FILES $candidate"
+      continue
+    fi
+    candidate="$dir/$basename.test.tsx"
+    if [ -f "$candidate" ]; then
+      TEST_FILES="$TEST_FILES $candidate"
+    fi
+  done
+
+  # Deduplicate and filter already-run security tests
+  if [ -n "$TEST_FILES" ]; then
+    UNIQUE_TESTS=$(echo "$TEST_FILES" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+    echo "Running test files: $UNIQUE_TESTS"
+    npx vitest run --bail 1 --passWithNoTests $UNIQUE_TESTS
+  else
+    echo "No related test files found for staged changes"
   fi
 fi
 

@@ -30,6 +30,7 @@
     "test:e2e:debug": "cd packages/frontend && npx playwright test --debug",
     "test:security": "npm audit --audit-level high && npm run test:security:custom",
     "test:security:custom": "vitest run --testNamePattern=\"security\"",
+    "test:security-critical": "vitest run packages/backend/src/utils/__tests__/ssrf.test.ts packages/backend/src/middleware/__tests__/auth.test.ts packages/backend/src/__tests__/middleware/csrf.test.ts",
     "test:a11y": "vitest run --testNamePattern=\"accessibility\"",
     "test:a11y:report": "vitest run --testNamePattern=\"accessibility\"",
     "test:performance": "npm run test:lighthouse && npm run test:load",
