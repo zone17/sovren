@@ -18,7 +18,7 @@ export interface TypedRequest<
   TBody = unknown,
   TParams = Record<string, string>,
   TQuery = Record<string, string>
-> extends Request {
+> extends Omit<Request, 'body' | 'params' | 'query' | 'user'> {
   body: TBody;
   params: TParams;
   query: TQuery;
@@ -39,6 +39,7 @@ export interface AuthenticatedUser {
   id: string;
   email?: string;
   nostrPubkey?: string;
+  nostr_pubkey: string;
   role: UserRole;
   permissions: string[];
   sessionId?: string;

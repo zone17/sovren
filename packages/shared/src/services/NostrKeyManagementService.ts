@@ -12,7 +12,6 @@ import {
   NostrKeyBackupMethod,
   NostrKeyManagementConfig,
   NostrKeyManagementConfigSchema,
-  NostrKeyManagementEvents,
   NostrKeyManagementResult,
   NostrKeyManagementState,
   NostrKeyRotation,
@@ -38,7 +37,7 @@ import {
  *
  * US-212: NOSTR Key Management
  */
-export class NostrKeyManagementService extends EventEmitter<NostrKeyManagementEvents> {
+export class NostrKeyManagementService extends EventEmitter {
   private state: NostrKeyManagementState;
   private storageService: INostrKeyStorageService;
   private cryptoService: INostrCryptoService;
@@ -172,6 +171,8 @@ export class NostrKeyManagementService extends EventEmitter<NostrKeyManagementEv
         entropyBits: entropy.bits,
         storageType: this.state.config.defaultStorageType,
         encrypted: this.state.config.encryptionEnabled,
+        backedUp: false,
+        backupVerified: false,
         securityLevel: options.securityLevel || this.state.config.defaultSecurityLevel,
         hardwareWalletSupported: options.hardwareWallet || false,
         hardwareWalletConnected: false,
@@ -297,6 +298,8 @@ export class NostrKeyManagementService extends EventEmitter<NostrKeyManagementEv
         entropyBits: 256, // Assume full entropy for imported keys
         storageType: this.state.config.defaultStorageType,
         encrypted: this.state.config.encryptionEnabled,
+        backedUp: false,
+        backupVerified: false,
         securityLevel: this.state.config.defaultSecurityLevel,
         hardwareWalletSupported: false,
         hardwareWalletConnected: false,
@@ -738,9 +741,6 @@ export class NostrKeyManagementService extends EventEmitter<NostrKeyManagementEv
       encryptionKey?: string;
     }
   ): Promise<NostrMnemonicBackup> {
-    // Convert private key to seed
-    const privateKeyBytes = new Uint8Array(Buffer.from(keyPair.privateKey, 'hex'));
-
     // Generate mnemonic from private key
     const mnemonic = generateMnemonic(256); // 24 words for maximum security
 
@@ -797,7 +797,7 @@ export class NostrKeyManagementService extends EventEmitter<NostrKeyManagementEv
    * 🔒 Record security event
    */
   private async recordSecurityEvent(
-    event: Omit<NostrKeySecurityMonitoring, 'metadata'> & { metadata?: any }
+    event: Omit<NostrKeySecurityMonitoring, 'metadata' | 'resolved'> & { metadata?: any; resolved?: boolean }
   ): Promise<void> {
     if (!this.state.config.securityMonitoringEnabled) {
       return;
@@ -805,6 +805,7 @@ export class NostrKeyManagementService extends EventEmitter<NostrKeyManagementEv
 
     const fullEvent: NostrKeySecurityMonitoring = {
       ...event,
+      resolved: event.resolved ?? false,
       metadata: event.metadata || {},
     };
 
@@ -970,6 +971,7 @@ export class NostrKeyManagementService extends EventEmitter<NostrKeyManagementEv
         eventType: 'unauthorized_access_attempt',
         severity: 'high',
         description: `Crypto service error: ${error.message}`,
+        resolved: false,
       });
     });
   }

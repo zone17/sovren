@@ -13,6 +13,7 @@ import { validate } from '../../middleware/validation-middleware';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
+import logger from '../../lib/logger';
 import { DistributionValidators } from '../../validators/distribution';
 import { encryptToken, getEncryptionKey } from '../../services/distribution/crypto';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
@@ -87,19 +88,15 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ params: DistributionValidators.platformParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const platform = req.params.platform as SupportedPlatform;
-      const result = await getPlatformService().initiateConnection(
-        getAuthUser(req).nostr_pubkey,
-        platform,
-        req.body
-      );
-      res.json({ success: true, data: result });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req: Request, res: Response) => {
+    const platform = req.params.platform as SupportedPlatform;
+    const result = await getPlatformService().initiateConnection(
+      getAuthUser(req).nostr_pubkey,
+      platform,
+      req.body
+    );
+    res.json(createApiResponse(req, result));
+  })
 );
 
 // ============================================================================
@@ -124,7 +121,7 @@ router.get(
       // #336: Build redirect URL and validate against allowlist
       const successUrl = `${frontendUrl}/settings/platforms?connected=${encodeURIComponent(platform)}`;
       if (!isAllowedRedirectUrl(successUrl)) {
-        console.error('[OAuth] Blocked redirect to non-allowed URL', { successUrl });
+        logger.error('[OAuth] Blocked redirect to non-allowed URL', { successUrl });
         res.redirect(`${frontendUrl}/settings/platforms?error=invalid_redirect`);
         return;
       }
@@ -145,15 +142,11 @@ router.delete(
   requireCreator,
   mutationRateLimiter,
   validate({ params: DistributionValidators.platformParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const platform = req.params.platform as SupportedPlatform;
-      await getPlatformService().disconnect(getAuthUser(req).nostr_pubkey, platform);
-      res.json({ success: true, data: { disconnected: true } });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req: Request, res: Response) => {
+    const platform = req.params.platform as SupportedPlatform;
+    await getPlatformService().disconnect(getAuthUser(req).nostr_pubkey, platform);
+    res.json(createApiResponse(req, { disconnected: true }));
+  })
 );
 
 // ============================================================================
@@ -164,14 +157,10 @@ router.get(
   '/status',
   authenticate,
   requireCreator,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getPlatformService().getStatus(getAuthUser(req).nostr_pubkey);
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req: Request, res: Response) => {
+    const data = await getPlatformService().getStatus(getAuthUser(req).nostr_pubkey);
+    res.json(createApiResponse(req, data));
+  })
 );
 
 // ============================================================================

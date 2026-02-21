@@ -29,6 +29,7 @@ import {
   XCircle,
   Zap,
 } from 'lucide-react';
+import { formatSats } from '../../../shared/utils/formatSats';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import {
@@ -117,15 +118,6 @@ export interface SubscriptionCardProps {
 }
 
 // 🎨 **HELPER FUNCTIONS**
-
-/**
- * Format satoshis amount with abbreviations
- */
-const formatSats = (sats: number): string => {
-  if (sats >= 1000000) return `${(sats / 1000000).toFixed(1)}M`;
-  if (sats >= 1000) return `${(sats / 1000).toFixed(1)}K`;
-  return sats.toLocaleString();
-};
 
 /**
  * Convert satoshis to approximate USD (assumes $30,000 per BTC)
@@ -307,7 +299,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           <div className="flex items-baseline gap-2">
             <Zap className="h-4 w-4 text-yellow-500" aria-hidden="true" />
             <span className="text-2xl font-bold text-gray-900">
-              {formatSats(subscription.amount)}
+              {formatSats(subscription.amount, { abbreviate: true, suffix: false })}
             </span>
             <span className="text-sm text-gray-600">{getBillingLabel(subscription.billingInterval)}</span>
           </div>

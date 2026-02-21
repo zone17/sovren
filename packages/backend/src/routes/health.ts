@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Request, Response, Router } from 'express';
 import WebSocket from 'ws';
 import os from 'os';
-import { getRedisClient } from '../lib/redis';
+import { getRedisClient, isRedisAvailable } from '../lib/redis';
 import { container } from '../container';
 import { TYPES } from '../container/types';
 
@@ -83,17 +83,32 @@ router.get('/health', (req: Request, res: Response) => {
 });
 
 // Readiness probe shortcut (inline check instead of redirect)
+// Returns 200 ready/degraded when DB is healthy. Only returns 503 when DB is down.
+// Redis is non-critical: app degrades gracefully without it (in-memory fallback).
 router.get('/ready', async (req: Request, res: Response) => {
   try {
     const dbHealth = await checkDatabase();
     const redisHealth = await checkRedis();
 
-    if (dbHealth.status === 'healthy' && redisHealth.status === 'healthy') {
+    const dbOk = dbHealth.status === 'healthy';
+    const redisOk = redisHealth.status === 'healthy';
+
+    if (dbOk && redisOk) {
       res.status(200).json({
         status: 'ready',
         timestamp: new Date().toISOString(),
       });
+    } else if (dbOk && !redisOk) {
+      // DB is up, Redis is down — app can function in degraded mode
+      res.status(200).json({
+        status: 'degraded',
+        timestamp: new Date().toISOString(),
+        issues: {
+          redis: redisHealth.error || 'Redis unavailable — features requiring cache/queues degraded',
+        },
+      });
     } else {
+      // DB is down — app cannot function
       res.status(503).json({
         status: 'not-ready',
         timestamp: new Date().toISOString(),
@@ -169,16 +184,27 @@ router.get('/health/detailed', async (req: Request, res: Response) => {
 });
 
 // Readiness probe for Kubernetes
+// Same degradation logic: Redis down = degraded (200), DB down = not-ready (503)
 router.get('/health/ready', async (req: Request, res: Response) => {
   try {
-    // Check critical services required for the app to function
     const dbHealth = await checkDatabase();
     const redisHealth = await checkRedis();
 
-    if (dbHealth.status === 'healthy' && redisHealth.status === 'healthy') {
+    const dbOk = dbHealth.status === 'healthy';
+    const redisOk = redisHealth.status === 'healthy';
+
+    if (dbOk && redisOk) {
       res.status(200).json({
         status: 'ready',
         timestamp: new Date().toISOString(),
+      });
+    } else if (dbOk && !redisOk) {
+      res.status(200).json({
+        status: 'degraded',
+        timestamp: new Date().toISOString(),
+        issues: {
+          redis: redisHealth.error || 'Redis unavailable — features requiring cache/queues degraded',
+        },
       });
     } else {
       res.status(503).json({
@@ -258,6 +284,16 @@ async function checkRedis(): Promise<ServiceHealth> {
   const startTime = Date.now();
 
   try {
+    // If Redis was never connected (e.g., startup failed gracefully), report degraded
+    if (!isRedisAvailable()) {
+      return {
+        status: 'unhealthy',
+        responseTime: 0,
+        lastChecked: new Date().toISOString(),
+        error: 'Redis not connected — app running in degraded mode without cache/queues',
+      };
+    }
+
     const redis = getRedisClient();
 
     await redis.ping();

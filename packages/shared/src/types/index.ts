@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-// Export all type modules
+// Export all type modules.
+// Where names collide across modules, explicit re-exports below resolve ambiguity.
+// The canonical source for each duplicate is the most domain-specific module.
+
 export * from './nostr';
 export * from './user';
 export * from './quality-metrics';
@@ -15,6 +18,28 @@ export * from './finance';
 
 // Export config utilities
 export * from '../config';
+
+// ============================================================================
+// Explicit re-exports to resolve TS2308 ambiguity from overlapping modules.
+// Each line picks the canonical source for a name exported by 2+ modules above.
+// ============================================================================
+
+// NostrKeyRecovery/Schema: exported by ./user AND ./nostr-key-management — canonical: ./user
+export { NostrKeyRecoverySchema } from './user';
+export type { NostrKeyRecovery } from './user';
+
+// UserRole: exported by ./user AND ./api-handlers — canonical: ./user
+export { UserRole } from './user';
+
+// CacheConfig: exported by ./nostr-service AND ./api-handlers — canonical: ./nostr-service
+export type { CacheConfig } from './nostr-service';
+
+// NostrServiceConfig/Schema/Events: exported by ./nostr AND ./nostr-service — canonical: ./nostr
+export { NostrServiceConfigSchema } from './nostr';
+export type { NostrServiceConfig, NostrServiceEvents } from './nostr';
+
+// ValidationError/ValidationResult: exported by ./api-handlers AND ../config — canonical: ../config
+export type { ValidationError, ValidationResult } from '../config';
 
 // Post types
 export const PostSchema = z.object({

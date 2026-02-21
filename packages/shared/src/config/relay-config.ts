@@ -30,7 +30,7 @@
  * ```
  */
 
-import type { RelayMetadata } from '@shared/types/nostr';
+import type { RelayMetadata } from '../types/nostr/nips';
 
 /**
  * Default relay configuration with read/write capabilities

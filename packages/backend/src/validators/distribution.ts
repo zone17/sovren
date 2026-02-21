@@ -26,7 +26,7 @@ export const CallbackQuerySchema = z.object({
 
 export const PublishBodySchema = z.object({
   content_id: z.string().uuid(),
-  platforms: z.array(platformEnum).min(1),
+  platforms: z.array(platformEnum).min(1).max(10),
   schedule: z.object({
     mastodon: z.string().datetime().optional(),
     bluesky: z.string().datetime().optional(),
@@ -38,7 +38,7 @@ export const PublishBodySchema = z.object({
 
 export const RepurposeBodySchema = z.object({
   content_id: z.string().uuid(),
-  target_platforms: z.array(platformEnum).min(1),
+  target_platforms: z.array(platformEnum).min(1).max(10),
 });
 
 export const ContentIdParamSchema = z.object({

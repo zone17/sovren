@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { useTaxSummary, useExportTax } from '../hooks/useTax';
 import type { QuarterlyTaxSummary } from '../types';
-
-function formatSats(sats: number): string {
-  if (sats >= 1_000_000) return (sats / 1_000_000).toFixed(2) + 'M';
-  if (sats >= 1_000) return (sats / 1_000).toFixed(1) + 'K';
-  return String(sats);
-}
+import { formatSats } from '../../../shared/utils/formatSats';
 
 function formatUsd(usd: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(usd);
@@ -136,13 +131,13 @@ const TaxSummary: React.FC = () => {
                     {summary.quarter}
                   </td>
                   <td className="px-4 py-3 text-right text-sm text-gray-700">
-                    {formatSats(summary.totalIncomeSats)}
+                    {formatSats(summary.totalIncomeSats, { abbreviate: true, suffix: false })}
                   </td>
                   <td className="px-4 py-3 text-right text-sm text-gray-700">
                     {formatUsd(summary.totalIncomeUsd)}
                   </td>
                   <td className="px-4 py-3 text-right text-sm text-gray-700">
-                    {formatSats(summary.totalExpensesSats)}
+                    {formatSats(summary.totalExpensesSats, { abbreviate: true, suffix: false })}
                   </td>
                   <td className="px-4 py-3 text-right text-sm text-gray-700">
                     {formatUsd(summary.totalExpensesUsd)}

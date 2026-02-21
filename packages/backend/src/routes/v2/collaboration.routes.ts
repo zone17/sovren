@@ -16,6 +16,7 @@ import {
   RespondCollaborationSchema,
   UpdateRevenueSplitSchema,
 } from '../../validators/community';
+import { ValidationError } from '../../utils/errors';
 import type { ICollaborativeContentService } from '../../interfaces/community/ICollaborativeContentService';
 
 const router = Router();
@@ -51,10 +52,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const result = InviteCollaboratorSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getCollaborationService().inviteCollaborator(
@@ -81,10 +79,7 @@ router.put(
   asyncHandler(async (req, res) => {
     const result = UpdateRevenueSplitSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     await getCollaborationService().updateRevenueSplit(
@@ -109,10 +104,7 @@ router.put(
   asyncHandler(async (req, res) => {
     const result = RespondCollaborationSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     await getCollaborationService().respondToInvitation(
@@ -128,17 +120,21 @@ router.put(
 /**
  * GET /api/v2/content/:id/collaborators
  * List collaborators and their revenue splits
+ * #382: Pagination support
  */
 router.get(
   '/:id/collaborators',
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getCollaborationService().getCollaborators(
       req.params.id,
       getAuthUser(req).nostr_pubkey
     );
-    res.json(createApiResponse(req, data));
+    const paginated = data.slice(offset, offset + limit);
+    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
   })
 );
 

@@ -264,18 +264,17 @@ describe('CirclesBrowser', () => {
 
       fireEvent.click(screen.getByRole('button', { name: `Join ${sampleCircle.name}` }));
 
-      expect(mutate).toHaveBeenCalledWith(sampleCircle.id);
+      expect(mutate).toHaveBeenCalledWith(sampleCircle.id, expect.objectContaining({ onSettled: expect.any(Function) }));
     });
 
-    it('shows Joining... on the button while the join mutation is pending for that circle', () => {
-      mockUseJoinCircle.mockReturnValue({
-        ...idleJoinMutation,
-        isPending: true,
-        variables: sampleCircle.id,
-      });
+    it('shows Joining... on the button after Join is clicked', () => {
+      const mutate = vi.fn();
+      mockUseJoinCircle.mockReturnValue({ ...idleJoinMutation, mutate });
       mockUseSuggestedCircles.mockReturnValue({ data: [sampleCircle], isLoading: false });
 
       render(<CirclesBrowser />, { wrapper: createWrapper() });
+
+      fireEvent.click(screen.getByRole('button', { name: `Join ${sampleCircle.name}` }));
 
       expect(screen.getByText('Joining...')).toBeInTheDocument();
     });

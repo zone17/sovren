@@ -11,14 +11,8 @@ import type { IBusinessInvoiceService } from '../../interfaces/finance/IBusiness
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
-import type { BusinessInvoice } from '@shared/types/finance';
+import type { BusinessInvoice, LineItem } from '@shared/types/finance';
 import { ConflictError } from '../../utils/errors';
-
-interface LineItem {
-  description: string;
-  quantity: number;
-  unitPriceSats: number;
-}
 
 const RECURRING_QUEUE = 'recurring-invoices';
 

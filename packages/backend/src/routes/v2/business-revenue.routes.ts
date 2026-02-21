@@ -16,6 +16,7 @@ import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import { RecordRevenueSchema, SetDiversificationGoalsSchema } from '../../validators/finance';
+import { ValidationError } from '../../utils/errors';
 import type { IRevenueService } from '../../interfaces/finance/IRevenueService';
 
 const router = Router();
@@ -89,15 +90,12 @@ router.get(
 router.put(
   '/goals',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = SetDiversificationGoalsSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     await getRevenueService().setDiversificationGoals(creatorId, result.data.targets);
@@ -112,15 +110,12 @@ router.put(
 router.post(
   '/',
   authenticate,
-  mutationRateLimiter,
   requireCreator,
+  mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const result = RecordRevenueSchema.safeParse(req.body);
     if (!result.success) {
-      res
-        .status(400)
-        .json({ success: false, error: result.error.issues[0]?.message ?? 'Invalid input' });
-      return;
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
     const creatorId = getAuthUser(req).nostr_pubkey;
     const { source, amountSats, description } = result.data;

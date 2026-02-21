@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useBusinessInvoices, useUpdateInvoiceStatus } from '../hooks/useBusinessInvoices';
 import type { InvoiceStatus } from '@shared/types/finance';
+import { formatSats } from '../../../shared/utils/formatSats';
 
 interface InvoiceDashboardProps {
   onCreateNew: () => void;
@@ -17,10 +18,6 @@ const STATUS_STYLES: Record<InvoiceStatus, string> = {
 };
 
 const STATUS_FILTERS: Array<InvoiceStatus | 'all'> = ['all', 'draft', 'sent', 'paid', 'overdue'];
-
-function formatSats(sats: number): string {
-  return sats.toLocaleString() + ' sats';
-}
 
 const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onViewInvoice }) => {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all');

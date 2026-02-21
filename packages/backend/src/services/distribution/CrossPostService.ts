@@ -20,6 +20,7 @@ export interface CrossPublishJobData {
 }
 
 const QUEUE_NAME = 'cross-publish';
+const MAX_CROSS_POST_TARGETS = 10;
 
 export class CrossPostService implements ICrossPostService {
   private readonly db: ISupabaseClient;
@@ -53,6 +54,12 @@ export class CrossPostService implements ICrossPostService {
     creatorId: string,
     request: PublishRequest
   ): Promise<{ job_id: string; platforms: CrossPostEntry[] }> {
+    if (request.platforms.length > MAX_CROSS_POST_TARGETS) {
+      throw new Error(
+        `Cannot cross-post to more than ${MAX_CROSS_POST_TARGETS} platforms at once (received ${request.platforms.length})`
+      );
+    }
+
     const batchJobId = uuidv4();
 
     // Build all cross_posts rows upfront

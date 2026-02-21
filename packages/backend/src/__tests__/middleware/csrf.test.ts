@@ -13,15 +13,24 @@ import { csrfProtection } from '../../middleware/csrf';
 
 // Helper to create mock Express req/res/next
 function createMockReq(overrides: Partial<Request> = {}): Request {
-  return {
+  const headers: Record<string, string> = {};
+  const req = {
     method: 'GET',
     path: '/api/test',
     url: '/api/test',
     cookies: {},
-    headers: {},
+    headers,
     body: {},
     ...overrides,
-  } as unknown as Request;
+    get(name: string) {
+      const lower = name.toLowerCase();
+      return (overrides.headers as Record<string, string>)?.[lower] ?? headers[lower] ?? (overrides.headers as Record<string, string>)?.[name] ?? headers[name];
+    },
+    header(name: string) {
+      return (req as any).get(name);
+    },
+  };
+  return req as unknown as Request;
 }
 
 function createMockRes(): Response & {

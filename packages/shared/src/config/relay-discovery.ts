@@ -13,7 +13,7 @@
  * - Performance-based selection
  */
 
-import type { NostrEvent } from '@shared/types/nostr';
+import type { NostrEvent } from '../types/nostr';
 
 /**
  * Relay discovery configuration
@@ -102,10 +102,10 @@ export class RelayDiscoveryService {
     const discovered: DiscoveredRelay[] = [];
 
     for (const event of events) {
-      if (event.kind !== 10002) continue;
+      if ((event.kind as number) !== 10002) continue;
 
       // Parse relay tags
-      const relayTags = event.tags.filter(tag => tag[0] === 'r');
+      const relayTags = event.tags.filter((tag: string[]) => tag[0] === 'r');
 
       for (const tag of relayTags) {
         const url = tag[1];

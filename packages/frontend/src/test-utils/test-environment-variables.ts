@@ -279,7 +279,7 @@ export function validateTestEnvironment(): { valid: boolean; missing: string[] }
   const missing: string[] = [];
 
   requiredVars.forEach((varName) => {
-    if (!process.env[varName] && !TEST_ENVIRONMENT_VARIABLES[varName]) {
+    if (!process.env[varName] && !(TEST_ENVIRONMENT_VARIABLES as Record<string, string>)[varName]) {
       missing.push(varName);
     }
   });
@@ -364,7 +364,7 @@ export function setupNostrEnvironment(): () => void {
 export function resetTestEnvironment(): void {
   // Clear any overrides
   Object.keys(TEST_ENVIRONMENT_VARIABLES).forEach((key) => {
-    process.env[key] = TEST_ENVIRONMENT_VARIABLES[key];
+    process.env[key] = (TEST_ENVIRONMENT_VARIABLES as Record<string, string>)[key];
   });
 
   // Re-setup Vite environment
@@ -377,11 +377,8 @@ if (isTestEnvironment()) {
   setupTestEnvironment();
 }
 
-// 🎯 **EXPORT INTERFACE**
+// 🎯 **EXPORT ALIASES**
 export {
   getTestEnvVar as getEnv,
-  isTestEnvironment,
-  setupTestEnvironment,
   TEST_ENVIRONMENT_VARIABLES as testEnv,
-  validateTestEnvironment,
 };

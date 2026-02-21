@@ -4,12 +4,14 @@
  * EPIC-009: Cross-post, repurpose, status
  */
 
-import { Request, Response, NextFunction, Router } from 'express';
+import { Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
 import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validation-middleware';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import { asyncHandler } from '../../utils/asyncHandler';
+import { createApiResponse } from '../../utils/api-response';
 import { DistributionValidators } from '../../validators/distribution';
 import type { ICrossPostService } from '../../interfaces/distribution/ICrossPostService';
 import type { IRepurposingService } from '../../interfaces/distribution/IRepurposingService';
@@ -44,14 +46,10 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ body: DistributionValidators.publishBody }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const result = await getCrossPostService().publish(getAuthUser(req).nostr_pubkey, req.body);
-      res.status(202).json({ success: true, data: result });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req, res) => {
+    const result = await getCrossPostService().publish(getAuthUser(req).nostr_pubkey, req.body);
+    res.status(202).json(createApiResponse(req, result));
+  })
 );
 
 // ============================================================================
@@ -63,17 +61,13 @@ router.get(
   authenticate,
   requireCreator,
   validate({ params: DistributionValidators.contentIdParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getCrossPostService().getStatus(
-        getAuthUser(req).nostr_pubkey,
-        req.params.contentId
-      );
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req, res) => {
+    const data = await getCrossPostService().getStatus(
+      getAuthUser(req).nostr_pubkey,
+      req.params.contentId
+    );
+    res.json(createApiResponse(req, data));
+  })
 );
 
 // ============================================================================
@@ -86,17 +80,13 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ params: DistributionValidators.crossPostIdParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getCrossPostService().cancel(
-        getAuthUser(req).nostr_pubkey,
-        req.params.crossPostId
-      );
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req, res) => {
+    const data = await getCrossPostService().cancel(
+      getAuthUser(req).nostr_pubkey,
+      req.params.crossPostId
+    );
+    res.json(createApiResponse(req, data));
+  })
 );
 
 // ============================================================================
@@ -109,18 +99,14 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   validate({ body: DistributionValidators.repurposeBody }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getRepurposingService().repurpose(
-        getAuthUser(req).nostr_pubkey,
-        req.body.content_id,
-        req.body.target_platforms
-      );
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req, res) => {
+    const data = await getRepurposingService().repurpose(
+      getAuthUser(req).nostr_pubkey,
+      req.body.content_id,
+      req.body.target_platforms
+    );
+    res.json(createApiResponse(req, data));
+  })
 );
 
 // ============================================================================
@@ -132,17 +118,13 @@ router.get(
   authenticate,
   requireCreator,
   validate({ params: DistributionValidators.contentIdParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getRepurposingService().getRepurposed(
-        getAuthUser(req).nostr_pubkey,
-        req.params.contentId
-      );
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req, res) => {
+    const data = await getRepurposingService().getRepurposed(
+      getAuthUser(req).nostr_pubkey,
+      req.params.contentId
+    );
+    res.json(createApiResponse(req, data));
+  })
 );
 
 // ============================================================================
@@ -155,17 +137,13 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   validate({ params: DistributionValidators.repurposedIdParam }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getRepurposingService().approve(
-        getAuthUser(req).nostr_pubkey,
-        req.params.id
-      );
-      res.json({ success: true, data });
-    } catch (err) {
-      next(err);
-    }
-  }
+  asyncHandler(async (req, res) => {
+    const data = await getRepurposingService().approve(
+      getAuthUser(req).nostr_pubkey,
+      req.params.id
+    );
+    res.json(createApiResponse(req, data));
+  })
 );
 
 export default router;

@@ -63,6 +63,7 @@ export interface BusinessInvoice {
   status: InvoiceStatus;
   dueDate?: string;
   recurringInterval?: RecurringInterval;
+  recurrenceEndDate?: string | null;
   createdAt: string;
   paidAt?: string;
 }

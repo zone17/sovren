@@ -33,6 +33,7 @@ import {
   Zap,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { formatSats } from '../../../shared/utils/formatSats';
 import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -110,12 +111,6 @@ const ActiveSubscriptionsTab: React.FC<{
   onPauseSubscription,
   onResumeSubscription,
 }) => {
-  const formatSats = (sats: number) => {
-    if (sats >= 1000000) return `${(sats / 1000000).toFixed(1)}M`;
-    if (sats >= 1000) return `${(sats / 1000).toFixed(1)}K`;
-    return sats.toLocaleString();
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
@@ -201,7 +196,7 @@ const ActiveSubscriptionsTab: React.FC<{
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-gray-600">Amount</p>
-                  <p className="font-semibold">⚡ {formatSats(subscription.amount_sats)} sats</p>
+                  <p className="font-semibold">⚡ {formatSats(subscription.amount_sats, { abbreviate: true, suffix: false })} sats</p>
                   <p className="text-xs text-gray-500">
                     ≈ ${((subscription.amount_sats / 100000000) * 30000).toFixed(2)} USD
                   </p>
@@ -248,7 +243,7 @@ const ActiveSubscriptionsTab: React.FC<{
                     <div>
                       <p className="text-gray-600">Value Received</p>
                       <p className="font-semibold">
-                        ⚡ {formatSats(subscription.usage_stats.total_value_received)}
+                        ⚡ {formatSats(subscription.usage_stats.total_value_received, { abbreviate: true, suffix: false })}
                       </p>
                     </div>
                   </div>
@@ -556,12 +551,6 @@ const SubscriptionHistoryTab: React.FC<{
     }
   };
 
-  const formatSats = (sats: number) => {
-    if (sats >= 1000000) return `${(sats / 1000000).toFixed(1)}M`;
-    if (sats >= 1000) return `${(sats / 1000).toFixed(1)}K`;
-    return sats.toLocaleString();
-  };
-
   const filteredHistory = history.filter((item) => filter === 'all' || item.action === filter);
 
   const sortedHistory = [...filteredHistory].sort((a, b) => {
@@ -623,7 +612,7 @@ const SubscriptionHistoryTab: React.FC<{
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">⚡ {formatSats(item.amount_sats)}</p>
+                    <p className="font-semibold">⚡ {formatSats(item.amount_sats, { abbreviate: true, suffix: false })}</p>
                     <p className="text-xs text-gray-500">
                       ≈ ${((item.amount_sats / 100000000) * 30000).toFixed(2)}
                     </p>

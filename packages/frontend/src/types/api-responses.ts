@@ -241,13 +241,15 @@ export async function fetchWithTypes<T>(
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      const error: ApiError = {
-        type: response.status === 401 || response.status === 403 ? 'auth' :
-              response.status === 400 ? 'validation' :
-              response.status >= 500 ? 'server' : 'network',
-        message: `HTTP ${response.status}: ${response.statusText}`,
-        status: response.status as 400 | 401 | 403 | 500
-      };
+      const message = `HTTP ${response.status}: ${response.statusText}`;
+      const error: ApiError =
+        response.status === 401 || response.status === 403
+          ? { type: 'auth', message, status: response.status as 401 | 403 }
+          : response.status === 400
+            ? { type: 'validation', message, status: 400, errors: {} }
+            : response.status >= 500
+              ? { type: 'server', message, status: 500 }
+              : { type: 'network', message };
 
       return {
         data: null as T,

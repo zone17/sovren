@@ -130,6 +130,8 @@ const createMockCache = (): any => ({
   keys: vi.fn().mockResolvedValue([] as any)
 });
 
+const recentDate = () => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+
 const createMockTransaction = (overrides?: Partial<PaymentTransaction>): PaymentTransaction => ({
   id: 'tx_123',
   invoiceId: 'inv_123',
@@ -143,9 +145,9 @@ const createMockTransaction = (overrides?: Partial<PaymentTransaction>): Payment
   preimage: 'preimage_123',
   fee: 10,
   retryCount: 0,
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2024-01-01'),
-  completedAt: new Date('2024-01-01'),
+  createdAt: recentDate(),
+  updatedAt: recentDate(),
+  completedAt: recentDate(),
   ...overrides
 });
 
