@@ -7,6 +7,7 @@
  */
 
 import { lookup } from 'dns/promises';
+import https from 'https';
 
 /**
  * Check if an IP string uses octal (0177.x) or hex (0x7f) notation.
@@ -40,7 +41,7 @@ function isPrivateIPv4(ip: string): boolean {
 
 /**
  * Check if an IPv6 address is private/reserved.
- * Handles loopback, ULA, link-local, and IPv4-mapped addresses.
+ * Handles loopback, ULA, link-local, IPv4-mapped, and IPv4-compatible addresses.
  */
 function isPrivateIPv6(ip: string): boolean {
   const normalized = ip.toLowerCase().replace(/^\[|\]$/g, '');
@@ -58,6 +59,25 @@ function isPrivateIPv6(ip: string): boolean {
   if (hexMapped) {
     const hi = parseInt(hexMapped[1], 16);
     const lo = parseInt(hexMapped[2], 16);
+    const a = (hi >> 8) & 0xff;
+    const b = hi & 0xff;
+    const c = (lo >> 8) & 0xff;
+    const d = lo & 0xff;
+    return isPrivateIPv4(`${a}.${b}.${c}.${d}`);
+  }
+
+  // IPv4-compatible: ::x.x.x.x (deprecated RFC 4291 §2.5.5.1 but still parseable)
+  // Some URL parsers/HTTP clients resolve these. Block to be safe.
+  const compat = normalized.match(/^::(\d+\.\d+\.\d+\.\d+)$/);
+  if (compat) return isPrivateIPv4(compat[1]);
+
+  // IPv4-compatible hex form: ::HHHH:HHHH (as normalized by URL parser)
+  // e.g. ::7f00:1 = 127.0.0.1, ::a00:1 = 10.0.0.1, ::c0a8:101 = 192.168.1.1
+  // Node.js URL parser normalizes ::x.x.x.x to this form.
+  const hexCompat = normalized.match(/^::([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (hexCompat) {
+    const hi = parseInt(hexCompat[1], 16);
+    const lo = parseInt(hexCompat[2], 16);
     const a = (hi >> 8) & 0xff;
     const b = hi & 0xff;
     const c = (lo >> 8) & 0xff;
@@ -83,13 +103,24 @@ function isDecimalIntegerIp(hostname: string): boolean {
   return isPrivateIPv4(`${a}.${b}.${c}.${d}`);
 }
 
+/** Result from SSRF validation including resolved IPs for DNS pinning. */
+export interface SsrfValidationResult {
+  /** All resolved IP addresses (validated as public). Pin these when fetching. */
+  resolvedIps: Array<{ address: string; family: 4 | 6 }>;
+}
+
 /**
  * Validates that a URL is safe for server-side outbound requests.
  * Performs DNS resolution to catch rebinding attacks.
  *
+ * **TOCTOU warning:** DNS can change between validation and fetch. If you fetch
+ * the URL after validation, use the returned `resolvedIps` with
+ * `createSsrfSafeAgent()` to pin DNS and prevent rebinding attacks.
+ *
+ * @returns Resolved IPs that were validated as public. Use with `createSsrfSafeAgent`.
  * @throws {Error} with a safe message (no URL in production error responses)
  */
-export async function validateSsrfUrl(url: string): Promise<void> {
+export async function validateSsrfUrl(url: string): Promise<SsrfValidationResult> {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -143,6 +174,7 @@ export async function validateSsrfUrl(url: string): Promise<void> {
   // DNS resolution check: resolve hostname and verify all IPs are public
   try {
     const results = await lookup(hostname, { all: true });
+    const resolvedIps: SsrfValidationResult['resolvedIps'] = [];
     for (const result of results) {
       if (result.family === 4 && isPrivateIPv4(result.address)) {
         throw new Error('URL resolves to a private IP address');
@@ -150,7 +182,9 @@ export async function validateSsrfUrl(url: string): Promise<void> {
       if (result.family === 6 && isPrivateIPv6(result.address)) {
         throw new Error('URL resolves to a private IPv6 address');
       }
+      resolvedIps.push({ address: result.address, family: result.family as 4 | 6 });
     }
+    return { resolvedIps };
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('URL ')) {
       throw err; // Re-throw our own errors
@@ -158,4 +192,26 @@ export async function validateSsrfUrl(url: string): Promise<void> {
     // DNS resolution failure — block the request (fail-closed)
     throw new Error('URL hostname could not be resolved');
   }
+}
+
+/**
+ * Creates an HTTPS agent that pins DNS to pre-validated IPs.
+ * Use after `validateSsrfUrl()` to prevent DNS TOCTOU rebinding attacks.
+ *
+ * @example
+ * ```ts
+ * const { resolvedIps } = await validateSsrfUrl(url);
+ * const agent = createSsrfSafeAgent(resolvedIps);
+ * const response = await fetch(url, { agent });
+ * ```
+ */
+export function createSsrfSafeAgent(resolvedIps: SsrfValidationResult['resolvedIps']): https.Agent {
+  let callIndex = 0;
+  return new https.Agent({
+    lookup: (_hostname, _options, callback) => {
+      const ip = resolvedIps[callIndex % resolvedIps.length];
+      callIndex++;
+      callback(null, ip.address, ip.family);
+    },
+  });
 }

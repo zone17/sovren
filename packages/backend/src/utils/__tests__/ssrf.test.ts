@@ -13,7 +13,7 @@
  */
 
 import { lookup } from 'dns/promises';
-import { validateSsrfUrl } from '../ssrf';
+import { validateSsrfUrl, createSsrfSafeAgent } from '../ssrf';
 
 // Mock DNS lookup to avoid real network calls in tests.
 // Default mock resolves to a public IP; individual tests override for DNS-specific scenarios.
@@ -138,9 +138,7 @@ describe('validateSsrfUrl', () => {
     });
 
     it('rejects 0.0.0.0', async () => {
-      await expect(validateSsrfUrl('https://0.0.0.0')).rejects.toThrow(
-        'cannot point to localhost'
-      );
+      await expect(validateSsrfUrl('https://0.0.0.0')).rejects.toThrow('cannot point to localhost');
     });
   });
 
@@ -218,9 +216,9 @@ describe('validateSsrfUrl', () => {
     });
 
     it('rejects AWS metadata with path', async () => {
-      await expect(
-        validateSsrfUrl('https://169.254.169.254/latest/meta-data/')
-      ).rejects.toThrow('private IP range');
+      await expect(validateSsrfUrl('https://169.254.169.254/latest/meta-data/')).rejects.toThrow(
+        'private IP range'
+      );
     });
 
     it('rejects link-local range broadly (169.254.0.0/16)', async () => {
@@ -327,6 +325,24 @@ describe('validateSsrfUrl', () => {
       await expect(validateSsrfUrl('https://[fd00::1]')).rejects.toThrow();
     });
 
+    describe('IPv4-compatible IPv6 addresses (deprecated ::x.x.x.x)', () => {
+      it('rejects [::127.0.0.1] (IPv4-compatible loopback)', async () => {
+        await expect(validateSsrfUrl('https://[::127.0.0.1]')).rejects.toThrow();
+      });
+
+      it('rejects [::10.0.0.1] (IPv4-compatible Class A private)', async () => {
+        await expect(validateSsrfUrl('https://[::10.0.0.1]')).rejects.toThrow();
+      });
+
+      it('rejects [::192.168.1.1] (IPv4-compatible Class C private)', async () => {
+        await expect(validateSsrfUrl('https://[::192.168.1.1]')).rejects.toThrow();
+      });
+
+      it('rejects [::169.254.169.254] (IPv4-compatible metadata endpoint)', async () => {
+        await expect(validateSsrfUrl('https://[::169.254.169.254]')).rejects.toThrow();
+      });
+    });
+
     describe('IPv4-mapped IPv6 addresses', () => {
       it('rejects [::ffff:127.0.0.1] (IPv4-mapped loopback)', async () => {
         // URL parser normalizes to [::ffff:7f00:1] -> hex-form IPv4-mapped check
@@ -427,14 +443,63 @@ describe('validateSsrfUrl', () => {
     // since only the hostname is security-relevant.
 
     it('handles percent-encoded path safely (path encoding is irrelevant)', async () => {
-      await expect(
-        validateSsrfUrl('https://example.com/%2e%2e/admin')
-      ).resolves.not.toThrow();
+      await expect(validateSsrfUrl('https://example.com/%2e%2e/admin')).resolves.not.toThrow();
     });
   });
 
   // =========================================================================
-  // 13. Redirect chain handling
+  // 13. Return value: resolved IPs for DNS pinning (#424 TOCTOU fix)
+  // =========================================================================
+  describe('return value — resolved IPs for DNS pinning', () => {
+    it('returns resolved IPs on successful validation', async () => {
+      mockLookup.mockResolvedValueOnce([{ address: '93.184.216.34', family: 4 }] as never);
+      const result = await validateSsrfUrl('https://example.com');
+      expect(result).toEqual({
+        resolvedIps: [{ address: '93.184.216.34', family: 4 }],
+      });
+    });
+
+    it('returns multiple resolved IPs', async () => {
+      mockLookup.mockResolvedValueOnce([
+        { address: '93.184.216.34', family: 4 },
+        { address: '2606:2800:220:1:248:1893:25c8:1946', family: 6 },
+      ] as never);
+      const result = await validateSsrfUrl('https://example.com');
+      expect(result.resolvedIps).toHaveLength(2);
+      expect(result.resolvedIps[0]).toEqual({ address: '93.184.216.34', family: 4 });
+      expect(result.resolvedIps[1]).toEqual({
+        address: '2606:2800:220:1:248:1893:25c8:1946',
+        family: 6,
+      });
+    });
+  });
+
+  // =========================================================================
+  // 14. createSsrfSafeAgent — DNS pinning
+  // =========================================================================
+  describe('createSsrfSafeAgent', () => {
+    it('creates an HTTPS agent that pins to validated IPs', () => {
+      const agent = createSsrfSafeAgent([{ address: '93.184.216.34', family: 4 }]);
+      expect(agent).toBeInstanceOf(require('https').Agent);
+    });
+
+    it('pinned lookup returns the validated IP', async () => {
+      const agent = createSsrfSafeAgent([{ address: '93.184.216.34', family: 4 }]);
+      const lookupFn = (agent as any).options?.lookup;
+      expect(lookupFn).toBeDefined();
+      const result = await new Promise<{ address: string; family: number }>((resolve, reject) => {
+        lookupFn('evil.com', {}, (err: Error | null, address: string, family: number) => {
+          if (err) return reject(err);
+          resolve({ address, family });
+        });
+      });
+      expect(result.address).toBe('93.184.216.34');
+      expect(result.family).toBe(4);
+    });
+  });
+
+  // =========================================================================
+  // 15. Redirect chain handling
   // Redirect-based SSRF cannot be tested in unit tests because this
   // validator only checks the URL *before* fetching. Redirect protection
   // must be enforced at the HTTP client level (e.g., disabling auto-follow

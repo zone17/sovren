@@ -1,6 +1,6 @@
 ---
 title: Common Solutions — Reusable Fixes for Recurring Issues
-date: '2026-02-20'
+date: '2026-02-21'
 category: patterns
 purpose: Consolidated solutions for P2/P3 patterns that recur across sprints. Prevents re-invention.
 usage: Reference when implementing features. Check if a solution already exists here before writing new code.
@@ -8,7 +8,7 @@ usage: Reference when implementing features. Check if a solution already exists 
 
 # Common Solutions
 
-Reusable solutions extracted from 180 P2/P3 findings across 10 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
+Reusable solutions extracted from 180+ P2/P3 findings across 11 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
 
 ---
 
@@ -437,24 +437,20 @@ git diff origin/main...HEAD --name-only
 ### Standard Pattern: allSettled with Typed Filtering
 
 ```typescript
-const results = await Promise.allSettled(
-  items.map(item => processItem(item))
-);
+const results = await Promise.allSettled(items.map((item) => processItem(item)));
 
 const succeeded = results.filter(
   (r): r is PromiseFulfilledResult<ProcessResult> => r.status === 'fulfilled'
 );
-const failed = results.filter(
-  (r): r is PromiseRejectedResult => r.status === 'rejected'
-);
+const failed = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
 
 if (failed.length > 0) {
   logger.warn(`${failed.length}/${results.length} items failed`, {
-    errors: failed.map(f => f.reason?.message),
+    errors: failed.map((f) => f.reason?.message),
   });
 }
 
-return { succeeded: succeeded.map(s => s.value), failedCount: failed.length };
+return { succeeded: succeeded.map((s) => s.value), failedCount: failed.length };
 ```
 
 **When to use:** Batch notifications, multi-relay NOSTR publishing, bulk imports/exports, webhook fanout -- any operation where partial success is acceptable.
@@ -474,17 +470,18 @@ return { succeeded: succeeded.map(s => s.value), failedCount: failed.length };
 ```typescript
 // BEFORE: 8 inline copies with slight variations
 // features/dashboard/components/Stats.tsx
-const formatted = amount >= 1000000
-  ? `${(amount / 1000000).toFixed(1)}M`
-  : amount >= 1000
-    ? `${(amount / 1000).toFixed(1)}K`
-    : `${amount}`;
+const formatted =
+  amount >= 1000000
+    ? `${(amount / 1000000).toFixed(1)}M`
+    : amount >= 1000
+      ? `${(amount / 1000).toFixed(1)}K`
+      : `${amount}`;
 
 // AFTER: Single parameterized utility
 // packages/shared/src/utils/format-sats.ts
 interface FormatSatsOptions {
-  abbreviate?: boolean;  // true: 1.5M, false: 1,500,000
-  suffix?: string;       // e.g., ' sats', ' BTC'
+  abbreviate?: boolean; // true: 1.5M, false: 1,500,000
+  suffix?: string; // e.g., ' sats', ' BTC'
 }
 
 export function formatSats(amount: number, options: FormatSatsOptions = {}): string {
@@ -521,12 +518,12 @@ echo "[$(date)] Task completed: $1" >> /tmp/task-completions.log
 
 **Enforcement layers (in order of frequency):**
 
-| Layer | Scope | Frequency | Blocks? |
-|-------|-------|-----------|---------|
-| Task hooks | Log only | Every task update | No |
-| Pre-commit | Changed files only | Every commit | Yes |
-| CI pipeline | Full monorepo | Every push | Yes |
-| PR review | Full review suite | Every PR | Yes |
+| Layer       | Scope              | Frequency         | Blocks? |
+| ----------- | ------------------ | ----------------- | ------- |
+| Task hooks  | Log only           | Every task update | No      |
+| Pre-commit  | Changed files only | Every commit      | Yes     |
+| CI pipeline | Full monorepo      | Every push        | Yes     |
+| PR review   | Full review suite  | Every PR          | Yes     |
 
 **Rules:**
 
@@ -541,6 +538,145 @@ echo "[$(date)] Task completed: $1" >> /tmp/task-completions.log
 - [ ] Hook has a timeout (max 30 seconds)
 - [ ] Hook failure does NOT block agent progress
 - [ ] Hook only checks files the agent actually changed (if it checks anything)
+
+---
+
+## 16. Security-Critical File Mapping (Source -> Test Suite)
+
+**Recurrence:** 2 P1 SSRF findings (#423, #424) in PR #89 would have been caught if security tests ran during development. Pre-commit hook was broken (PR #90).
+
+### Standard Pattern: Declarative Source-to-Test Map in Pre-Commit
+
+```bash
+#!/usr/bin/env bash
+# scripts/run-security-tests.sh — called from .husky/pre-commit
+set -euo pipefail
+
+# Extensible map: add new entries when creating security-critical files
+SECURITY_MAP=(
+  "packages/backend/src/utils/ssrf.ts:packages/backend/src/utils/__tests__/ssrf.test.ts"
+  "packages/backend/src/middleware/auth.ts:packages/backend/src/middleware/__tests__/auth.test.ts"
+  "packages/backend/src/middleware/csrf.ts:packages/backend/src/__tests__/middleware/csrf.test.ts"
+  "packages/backend/src/routes/auth.ts:packages/backend/src/middleware/__tests__/auth.test.ts"
+)
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+[ -z "$STAGED_FILES" ] && exit 0
+
+SECURITY_TESTS=""
+for mapping in "${SECURITY_MAP[@]}"; do
+  source_pattern="${mapping%%:*}"
+  test_file="${mapping##*:}"
+  if echo "$STAGED_FILES" | grep -q "$source_pattern"; then
+    [ -f "$test_file" ] && SECURITY_TESTS="$SECURITY_TESTS $test_file"
+  fi
+done
+
+[ -z "$SECURITY_TESTS" ] && exit 0
+npx vitest run --bail 1 $SECURITY_TESTS
+```
+
+**Why not `vitest related`?** `vitest related` uses static import analysis which (a) loads the entire project and hits compile errors in unrelated files, and (b) only finds direct import dependents, missing integration-level coverage. Explicit mapping is deterministic, fast, and documents the security boundary.
+
+**Checklist when adding a new security-critical file:**
+
+- [ ] Add source:test mapping to `SECURITY_MAP` in `scripts/run-security-tests.sh`
+- [ ] Verify test file exists and passes: `npx vitest run path/to/test.ts`
+- [ ] Test the hook: stage the file, confirm security tests fire
+
+**Detection:** Grep for new files in `middleware/`, `utils/` that handle auth, validation, SSRF, CSRF, rate limiting, or encryption. If no SECURITY_MAP entry exists, flag it.
+
+---
+
+## 17. Hook Migration Checklist (Test Framework Switches)
+
+**Recurrence:** 1 P1 (PR #90). Vitest migration (PR #86) updated 220+ test files but missed husky hooks. Broken hooks went undetected because of error suppression.
+
+### Standard Pattern: Checklist for Every Test Framework Migration
+
+When switching test frameworks (Jest -> Vitest, Mocha -> Jest, etc.), these artifacts MUST be updated in the same PR:
+
+```markdown
+## Test Framework Migration Checklist
+
+### Test Infrastructure
+
+- [ ] Test config files (jest.config.js -> vitest.config.ts)
+- [ ] Test files (API changes: jest.fn -> vi.fn, etc.)
+- [ ] Test utilities and helpers
+
+### Developer Tooling (OFTEN MISSED)
+
+- [ ] `.husky/pre-commit` — test runner invocations
+- [ ] `.husky/pre-push` — test runner invocations
+- [ ] `scripts/` — any custom test scripts (run-security-tests.sh, etc.)
+- [ ] `package.json` — npm test scripts and their arguments
+
+### CI/CD
+
+- [ ] `.github/workflows/` — CI test steps
+- [ ] Docker test stages (if applicable)
+
+### Documentation
+
+- [ ] `CLAUDE.md` / `README.md` — test command references
+- [ ] `CONTRIBUTING.md` — developer workflow docs
+
+### Verification
+
+- [ ] Pre-commit hook runs tests successfully (stage a file, commit)
+- [ ] Pre-push hook runs tests successfully (push to feature branch)
+- [ ] `npm test` succeeds (or fails only on pre-existing issues)
+- [ ] No `2>/dev/null || true` suppressing test runner errors
+```
+
+**Rule:** The PR description for any test framework migration MUST include this checklist with all items checked. Reviewer should verify hooks are tested.
+
+---
+
+## 18. Error Suppression Anti-Pattern in Git Hooks
+
+**Recurrence:** 1 P1 (PR #90). `2>/dev/null || true` after `jest --findRelatedTests` made the broken hook invisible for an entire sprint.
+
+### The Anti-Pattern
+
+```bash
+# WRONG — suppresses ALL errors, including the tool being completely broken
+npx jest --findRelatedTests $FILES 2>/dev/null || true
+npx some-tool --check $FILES 2>&1 | head -1 || true
+
+# The hook's entire purpose is to BLOCK on failure.
+# Suppressing errors defeats the hook.
+```
+
+### Standard Pattern: Conditional Execution Without Suppression
+
+```bash
+# RIGHT — only run if there are files to test; let errors propagate
+if [ -n "$TEST_FILES" ]; then
+  npx vitest run --bail 1 --passWithNoTests $TEST_FILES
+fi
+
+# RIGHT — handle specific expected conditions, not all errors
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM || true)
+# The || true here is correct: git diff can fail if .git is missing,
+# and we want a graceful empty result. But the TEST RUNNER must not be suppressed.
+
+# RIGHT — fallback chain for git diff variants
+CHANGED=$(git diff origin/main...HEAD --name-only 2>/dev/null || \
+          git diff HEAD~1...HEAD --name-only 2>/dev/null || true)
+# The 2>/dev/null here is acceptable: we're handling missing remote/ref gracefully
+# with a fallback. The test runner output is NEVER suppressed.
+```
+
+**Rules:**
+
+- NEVER suppress test runner output (`vitest`, `jest`, `eslint`, `tsc`)
+- Acceptable suppression: `git diff` with fallback chain, `which`/`command -v` checks
+- After any hook modification, grep for `|| true` and `2>/dev/null` — each instance must be justified
+- The test runner exit code must propagate to the hook exit code (no `|| true` after test commands)
+
+**Detection:** `grep -n '|| true\|2>/dev/null' .husky/*` — review every match for appropriate vs. inappropriate suppression.
 
 ---
 
@@ -559,27 +695,30 @@ CONTEXT TO LOAD:
 
 ## Index: Which Pattern Solves Which Issue
 
-| Issue You're Seeing                     | Pattern # | File                 |
-| --------------------------------------- | --------- | -------------------- |
-| Race condition on capacity/count        | 1a-1c     | critical-patterns.md |
-| User can access others' data            | 2         | critical-patterns.md |
-| Query loads too much into memory        | 3         | critical-patterns.md |
-| Two inserts, second might fail          | 4         | critical-patterns.md |
-| Payment data could be lost              | 5         | critical-patterns.md |
-| URL from user input fetched server-side | 6         | critical-patterns.md |
-| Can delete a paid/active entity         | 7         | critical-patterns.md |
-| Button fires duplicate mutations        | 1         | common-solutions.md  |
-| Map grows without bound                 | 2         | common-solutions.md  |
-| New env var not validated               | 3         | common-solutions.md  |
-| Inconsistent error responses            | 4         | common-solutions.md  |
-| snake_case in API response              | 5         | common-solutions.md  |
-| Worker running for stub function        | 6         | common-solutions.md  |
-| Tests break after service change        | 7         | common-solutions.md  |
-| New routes missing rate limit           | 8         | common-solutions.md  |
-| Named route not matching                | 9         | common-solutions.md  |
-| `db: any` in constructor                | 10        | common-solutions.md  |
-| Vitest OOM / worker crashes             | 11        | common-solutions.md  |
-| `git diff --cached` empty at push       | 12        | common-solutions.md  |
-| Batch op fails on single rejection      | 13        | common-solutions.md  |
-| Same utility in 3+ files                | 14        | common-solutions.md  |
-| Hook loops agents on pre-existing issues| 15        | common-solutions.md  |
+| Issue You're Seeing                      | Pattern # | File                 |
+| ---------------------------------------- | --------- | -------------------- |
+| Race condition on capacity/count         | 1a-1c     | critical-patterns.md |
+| User can access others' data             | 2         | critical-patterns.md |
+| Query loads too much into memory         | 3         | critical-patterns.md |
+| Two inserts, second might fail           | 4         | critical-patterns.md |
+| Payment data could be lost               | 5         | critical-patterns.md |
+| URL from user input fetched server-side  | 6         | critical-patterns.md |
+| Can delete a paid/active entity          | 7         | critical-patterns.md |
+| Button fires duplicate mutations         | 1         | common-solutions.md  |
+| Map grows without bound                  | 2         | common-solutions.md  |
+| New env var not validated                | 3         | common-solutions.md  |
+| Inconsistent error responses             | 4         | common-solutions.md  |
+| snake_case in API response               | 5         | common-solutions.md  |
+| Worker running for stub function         | 6         | common-solutions.md  |
+| Tests break after service change         | 7         | common-solutions.md  |
+| New routes missing rate limit            | 8         | common-solutions.md  |
+| Named route not matching                 | 9         | common-solutions.md  |
+| `db: any` in constructor                 | 10        | common-solutions.md  |
+| Vitest OOM / worker crashes              | 11        | common-solutions.md  |
+| `git diff --cached` empty at push        | 12        | common-solutions.md  |
+| Batch op fails on single rejection       | 13        | common-solutions.md  |
+| Same utility in 3+ files                 | 14        | common-solutions.md  |
+| Hook loops agents on pre-existing issues | 15        | common-solutions.md  |
+| Security file changed, no tests ran      | 16        | common-solutions.md  |
+| Test framework migrated, hooks broken    | 17        | common-solutions.md  |
+| Hook error suppressed, failures hidden   | 18        | common-solutions.md  |
