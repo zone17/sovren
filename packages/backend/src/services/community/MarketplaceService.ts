@@ -25,6 +25,7 @@ import type { IMarketplaceService } from '../../interfaces/community/IMarketplac
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
+import type { ILightningService } from '../../interfaces/finance/ILightningService';
 import { validateSsrfUrl } from '../../utils/ssrf';
 import { ConflictError } from '../../utils/errors';
 
@@ -72,21 +73,6 @@ interface ReviewRow {
   rating: number;
   review_text: string | null;
   created_at: string;
-}
-
-// LightningService interface (subset used by marketplace)
-interface ILightningService {
-  createInvoice(
-    amountSats: number,
-    memo: string
-  ): Promise<{ invoiceId: string; paymentRequest: string; paymentHash: string }>;
-  payToAddress(
-    lightningAddress: string,
-    amountSats: number,
-    memo: string
-  ): Promise<{ paymentHash: string }>;
-  getInvoiceStatus(invoiceId: string): Promise<{ paid: boolean; paymentHash?: string }>;
-  getSellerLightningAddress(sellerId: string): Promise<string | null>;
 }
 
 export class MarketplaceService implements IMarketplaceService {

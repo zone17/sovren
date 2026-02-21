@@ -1,9 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { circlesApi } from '../services/circlesApi';
 
+export const circleKeys = {
+  all: ['creator-network', 'circles'] as const,
+  lists: () => [...circleKeys.all, 'list'] as const,
+  suggested: () => [...circleKeys.all, 'suggested'] as const,
+  details: () => [...circleKeys.all, 'detail'] as const,
+  detail: (id: string) => [...circleKeys.details(), id] as const,
+  posts: (circleId: string) => [...circleKeys.detail(circleId), 'posts'] as const,
+};
+
 export function useCircles() {
   return useQuery({
-    queryKey: ['creator-network', 'circles'],
+    queryKey: circleKeys.lists(),
     queryFn: () => circlesApi.getCircles(),
     select: (res) => res.data?.circles ?? [],
     staleTime: 60 * 1000,
@@ -12,7 +21,7 @@ export function useCircles() {
 
 export function useSuggestedCircles() {
   return useQuery({
-    queryKey: ['creator-network', 'circles', 'suggested'],
+    queryKey: circleKeys.suggested(),
     queryFn: () => circlesApi.getSuggestedCircles(),
     select: (res) => res.data?.circles ?? [],
     staleTime: 5 * 60 * 1000,
@@ -25,7 +34,7 @@ export function useCreateCircle() {
   return useMutation({
     mutationFn: circlesApi.createCircle,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['creator-network', 'circles'] });
+      queryClient.invalidateQueries({ queryKey: circleKeys.lists() });
     },
     onError: (error) => {
       console.error('Create circle failed:', error);
@@ -39,7 +48,7 @@ export function useJoinCircle() {
   return useMutation({
     mutationFn: (circleId: string) => circlesApi.joinCircle(circleId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['creator-network', 'circles'] });
+      queryClient.invalidateQueries({ queryKey: circleKeys.lists() });
     },
     onError: (error) => {
       console.error('Join circle failed:', error);
@@ -54,7 +63,7 @@ export function useRemoveMember() {
     mutationFn: ({ circleId, memberId }: { circleId: string; memberId: string }) =>
       circlesApi.removeMember(circleId, memberId),
     onSuccess: (_data, { circleId }) => {
-      queryClient.invalidateQueries({ queryKey: ['creator-network', 'circles', circleId] });
+      queryClient.invalidateQueries({ queryKey: circleKeys.detail(circleId) });
     },
     onError: (error) => {
       console.error('Remove member failed:', error);
@@ -64,7 +73,7 @@ export function useRemoveMember() {
 
 export function useCirclePosts(circleId: string, page = 1) {
   return useQuery({
-    queryKey: ['creator-network', 'circles', circleId, 'posts', page],
+    queryKey: [...circleKeys.posts(circleId), page],
     queryFn: () => circlesApi.getCirclePosts(circleId, { page, limit: 20 }),
     select: (res) => res.data,
     enabled: Boolean(circleId),
@@ -79,7 +88,7 @@ export function usePostToCircle(circleId: string) {
     mutationFn: (content: string) => circlesApi.postToCircle(circleId, { content }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['creator-network', 'circles', circleId, 'posts'],
+        queryKey: circleKeys.posts(circleId),
       });
     },
     onError: (error) => {

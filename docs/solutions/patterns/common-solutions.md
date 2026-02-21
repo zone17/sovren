@@ -8,7 +8,7 @@ usage: Reference when implementing features. Check if a solution already exists 
 
 # Common Solutions
 
-Reusable solutions extracted from 162 P2/P3 findings across 9 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
+Reusable solutions extracted from 180 P2/P3 findings across 10 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
 
 ---
 
@@ -430,6 +430,120 @@ git diff origin/main...HEAD --name-only
 
 ---
 
+## 13. Promise.allSettled for Batch Operations
+
+**Recurrence:** 3 P2s across 2 sprints. `Promise.all` used for batch operations where partial success is acceptable, causing total failure on any single rejection.
+
+### Standard Pattern: allSettled with Typed Filtering
+
+```typescript
+const results = await Promise.allSettled(
+  items.map(item => processItem(item))
+);
+
+const succeeded = results.filter(
+  (r): r is PromiseFulfilledResult<ProcessResult> => r.status === 'fulfilled'
+);
+const failed = results.filter(
+  (r): r is PromiseRejectedResult => r.status === 'rejected'
+);
+
+if (failed.length > 0) {
+  logger.warn(`${failed.length}/${results.length} items failed`, {
+    errors: failed.map(f => f.reason?.message),
+  });
+}
+
+return { succeeded: succeeded.map(s => s.value), failedCount: failed.length };
+```
+
+**When to use:** Batch notifications, multi-relay NOSTR publishing, bulk imports/exports, webhook fanout -- any operation where partial success is acceptable.
+
+**When NOT to use:** Financial transactions (use atomic patterns from critical-patterns.md), operations where partial completion leaves inconsistent state, sequential operations where each step depends on the previous.
+
+**Detection:** Grep for `Promise.all(` where the mapped function can independently fail (e.g., network calls, DB writes to separate rows). Replace with `Promise.allSettled(`.
+
+---
+
+## 14. Shared Utility Extraction Threshold
+
+**Recurrence:** 3 P2s across 2 sprints. Inline utility logic duplicated across 3+ feature files with slight variations, causing inconsistency and maintenance burden.
+
+### Standard Pattern: Extract at 3+ Copies
+
+```typescript
+// BEFORE: 8 inline copies with slight variations
+// features/dashboard/components/Stats.tsx
+const formatted = amount >= 1000000
+  ? `${(amount / 1000000).toFixed(1)}M`
+  : amount >= 1000
+    ? `${(amount / 1000).toFixed(1)}K`
+    : `${amount}`;
+
+// AFTER: Single parameterized utility
+// packages/shared/src/utils/format-sats.ts
+interface FormatSatsOptions {
+  abbreviate?: boolean;  // true: 1.5M, false: 1,500,000
+  suffix?: string;       // e.g., ' sats', ' BTC'
+}
+
+export function formatSats(amount: number, options: FormatSatsOptions = {}): string {
+  const { abbreviate = true, suffix = '' } = options;
+  if (!abbreviate) return `${amount.toLocaleString()}${suffix}`;
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M${suffix}`;
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K${suffix}`;
+  return `${amount}${suffix}`;
+}
+```
+
+**Rule:** When a utility function appears in **3+ files** with slight variations:
+
+1. Extract to `packages/shared/src/utils/` with a parameterized interface covering all variation points
+2. Replace ALL call sites in the same PR (no partial migration)
+3. Add unit tests for each variation the parameters enable
+
+**Detection:** Grep for repeated patterns like formatting logic, validation regexes, or transformation functions. If 3+ files have similar implementations, extract.
+
+---
+
+## 15. Task-Completion Hooks Must Not Run Full Quality Gates
+
+**Recurrence:** 1 critical incident (02-20). `verify-task-complete` hook ran full monorepo lint/typecheck/tests on every `TaskUpdate` call. With pre-existing issues (2,957 type errors, 121 failing suites, 6,443 ESLint issues), the hook never passed, causing agents to loop indefinitely and burn tokens.
+
+### Standard Pattern: Log-Only Hooks + CI Enforcement
+
+```bash
+#!/bin/bash
+# verify-task-complete.sh (log-only version)
+# Quality gates enforced at CI/PR level, not per-task
+echo "[$(date)] Task completed: $1" >> /tmp/task-completions.log
+```
+
+**Enforcement layers (in order of frequency):**
+
+| Layer | Scope | Frequency | Blocks? |
+|-------|-------|-----------|---------|
+| Task hooks | Log only | Every task update | No |
+| Pre-commit | Changed files only | Every commit | Yes |
+| CI pipeline | Full monorepo | Every push | Yes |
+| PR review | Full review suite | Every PR | Yes |
+
+**Rules:**
+
+- Task-completion hooks: Log only, never run quality checks
+- Pre-commit hooks: Scope to staged files (`git diff --cached --name-only`)
+- Never run `npm run lint` / `npm run type-check` / `npm test` in any hook that fires per-task-update
+- Full quality gates belong in CI/CD, where they run once per push
+
+**Prevention checklist before deploying any new hook:**
+
+- [ ] Hook has been tested against a codebase with pre-existing issues
+- [ ] Hook has a timeout (max 30 seconds)
+- [ ] Hook failure does NOT block agent progress
+- [ ] Hook only checks files the agent actually changed (if it checks anything)
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -466,3 +580,6 @@ CONTEXT TO LOAD:
 | `db: any` in constructor                | 10        | common-solutions.md  |
 | Vitest OOM / worker crashes             | 11        | common-solutions.md  |
 | `git diff --cached` empty at push       | 12        | common-solutions.md  |
+| Batch op fails on single rejection      | 13        | common-solutions.md  |
+| Same utility in 3+ files                | 14        | common-solutions.md  |
+| Hook loops agents on pre-existing issues| 15        | common-solutions.md  |

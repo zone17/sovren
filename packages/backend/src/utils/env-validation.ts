@@ -363,11 +363,40 @@ async function validateConnectivity(env: ValidatedEnv): Promise<void> {
 }
 
 /**
+ * Backward-compatible env var fallbacks for renamed LNBits variables.
+ * Emits deprecation warnings when old names are used.
+ * Old -> New mapping:
+ *   LNBITS_URL -> LNBITS_API_URL
+ *   LNBITS_API_KEY -> LNBITS_ADMIN_KEY
+ *   LIGHTNING_WEBHOOK_SECRET -> LNBITS_WEBHOOK_SECRET
+ */
+function applyEnvFallbacks(): void {
+  const renames: Array<[string, string]> = [
+    ['LNBITS_URL', 'LNBITS_API_URL'],
+    ['LNBITS_API_KEY', 'LNBITS_ADMIN_KEY'],
+    ['LIGHTNING_WEBHOOK_SECRET', 'LNBITS_WEBHOOK_SECRET'],
+  ];
+
+  for (const [oldName, newName] of renames) {
+    if (!process.env[newName] && process.env[oldName]) {
+      process.env[newName] = process.env[oldName];
+      console.warn(
+        `[env-validation] DEPRECATED: ${oldName} has been renamed to ${newName}. ` +
+          `Update your .env file. The old name will be removed in a future release.`
+      );
+    }
+  }
+}
+
+/**
  * Load and validate environment configuration
  */
 export async function validateEnvironment(): Promise<ValidatedEnv> {
   try {
     console.log('🔧 Validating environment configuration...');
+
+    // Apply backward-compatible fallbacks for renamed env vars
+    applyEnvFallbacks();
 
     // Parse environment variables
     const parsed = envSchema.parse(process.env);

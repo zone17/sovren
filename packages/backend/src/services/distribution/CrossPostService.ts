@@ -10,6 +10,7 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { CrossPostEntry, SupportedPlatform } from '@sovren/shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
+import { ValidationError } from '../../utils/errors';
 
 export interface CrossPublishJobData {
   crossPostId: string;
@@ -55,7 +56,7 @@ export class CrossPostService implements ICrossPostService {
     request: PublishRequest
   ): Promise<{ job_id: string; platforms: CrossPostEntry[] }> {
     if (request.platforms.length > MAX_CROSS_POST_TARGETS) {
-      throw new Error(
+      throw new ValidationError(
         `Cannot cross-post to more than ${MAX_CROSS_POST_TARGETS} platforms at once (received ${request.platforms.length})`
       );
     }

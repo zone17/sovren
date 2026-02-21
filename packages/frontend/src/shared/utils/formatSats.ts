@@ -24,6 +24,10 @@ export function formatSats(
   const abbreviate = options?.abbreviate ?? false;
   const suffix = options?.suffix ?? true;
 
+  if (!Number.isFinite(sats) || sats < 0) {
+    return suffix ? '0 sats' : '0';
+  }
+
   let formatted: string;
 
   if (abbreviate) {
