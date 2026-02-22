@@ -8,7 +8,7 @@ usage: Reference when implementing features. Check if a solution already exists 
 
 # Common Solutions
 
-Reusable solutions extracted from 180+ P2/P3 findings across 11 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
+Reusable solutions extracted from 180+ P2/P3 findings across 12 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
 
 ---
 
@@ -453,11 +453,19 @@ if (failed.length > 0) {
 return { succeeded: succeeded.map((s) => s.value), failedCount: failed.length };
 ```
 
-**When to use:** Batch notifications, multi-relay NOSTR publishing, bulk imports/exports, webhook fanout -- any operation where partial success is acceptable.
+**When to use:** Batch notifications, multi-relay NOSTR publishing, bulk imports/exports, webhook fanout, test utility settling -- any operation where partial success is acceptable.
 
-**When NOT to use:** Financial transactions (use atomic patterns from critical-patterns.md), operations where partial completion leaves inconsistent state, sequential operations where each step depends on the previous.
+**When NOT to use:** Financial transactions (use atomic patterns from critical-patterns.md), input validation where any failure should reject the batch (use `Promise.all`), sequential operations where each step depends on the previous.
 
-**Detection:** Grep for `Promise.all(` where the mapped function can independently fail (e.g., network calls, DB writes to separate rows). Replace with `Promise.allSettled(`.
+**Clarification — `Promise.all` vs `Promise.allSettled`:**
+
+| Question | Answer | Use |
+| -------- | ------ | --- |
+| Should ANY failure reject the whole batch? | Yes | `Promise.all` |
+| Should we wait for ALL items regardless of failures? | Yes | `Promise.allSettled` |
+| Examples | SSRF validation, schema checks | Test settling, notifications, fanout |
+
+**Detection:** Grep for `Promise.all(` where the mapped function can independently fail (e.g., network calls, DB writes to separate rows). Replace with `Promise.allSettled(`. Conversely, grep for `Promise.allSettled(` used for validation — these should be `Promise.all`.
 
 ---
 
@@ -680,6 +688,193 @@ CHANGED=$(git diff origin/main...HEAD --name-only 2>/dev/null || \
 
 ---
 
+## 19. grep BRE/ERE Portability (macOS BSD grep vs GNU grep)
+
+**Recurrence:** 1 scanner bug (PR #93) caused false positives on macOS. BRE `\+` works on GNU grep (Linux CI) but breaks silently on BSD grep (macOS developer machines).
+
+### The Problem
+
+macOS ships BSD grep. GNU extensions like `\+` (one-or-more in BRE), `\?`, and `\|` are not available in BSD grep's BRE mode. A pattern that works perfectly on Linux CI may silently produce wrong results on macOS.
+
+```bash
+# WRONG — BRE \+ is a GNU extension, silently broken on macOS
+grep -v '^\+\+\+'   # BSD grep: \+ may match literal +, not "one or more +"
+
+# WRONG — BRE \? is also GNU-only
+grep '^\+\?fix'
+```
+
+### Standard Pattern: Use -F or -E Explicitly
+
+```bash
+# RIGHT — fixed-string match, portable everywhere
+grep -vF '+++'        # Equivalent to grep -v '^\+\+\+' on GNU, but portable
+
+# RIGHT — ERE mode, portable across GNU and BSD
+grep -Ev '^\+{3}'     # Explicit ERE quantifier
+grep -E '^\+\+\+'     # Three literal + characters in ERE (+ is not special without a preceding atom)
+
+# RIGHT — when you need alternation
+grep -E 'foo|bar'     # ERE -E works on both GNU and BSD
+# WRONG: grep 'foo\|bar'  — \| alternation is GNU BRE extension only
+```
+
+### Decision Table
+
+| Pattern | Mode | macOS BSD | Linux GNU | Recommendation |
+| ------- | ---- | --------- | --------- | -------------- |
+| Fixed string | `-F` | Yes | Yes | Preferred for literals |
+| Standard ERE | `-E` | Yes | Yes | Preferred for patterns with quantifiers |
+| BRE with `\+`, `\?`, `\|` | (default) | No | Yes | Never use — silent failure |
+| BRE with `*`, `.`, `^`, `$` | (default) | Yes | Yes | Safe subset only |
+
+**Rule:** For any shell script that runs on both macOS (developer) and Linux (CI):
+1. Use `-F` when matching fixed/literal strings
+2. Use `-E` when quantifiers or alternation are needed
+3. Never rely on `\+`, `\?`, or `\|` in BRE mode
+
+**Detection:** `grep -r "grep '[^']*\\\\+" scripts/ .husky/` — flag any grep without `-E` or `-F` where the pattern contains `\+`, `\?`, or `\|`.
+
+---
+
+## 20. `Array.forEach` Async No-Op Bug
+
+**Recurrence:** 1 P3 (PR #93 `waitForQueriesToSettle`). `forEach` silently swallows async work, making functions look correct but do nothing.
+
+### The Problem
+
+`forEach` always returns `undefined`. When its callback is `async`, the callback returns a Promise — but `forEach` discards it. Any `await` inside the callback awaits within the callback's own microtask queue, not the caller's.
+
+```typescript
+// WRONG — completely no-op: forEach discards all returned Promises
+async function waitForAll(items: Item[]): Promise<void> {
+  return items.forEach(async (item) => {
+    await processItem(item); // This await is local to the callback
+  });
+  // Function returns immediately with undefined cast to Promise<void>
+}
+
+// ALSO WRONG — return inside forEach exits the callback, not the outer function
+function findFirst(items: Item[]): Item | undefined {
+  items.forEach((item) => {
+    if (item.valid) return item; // Returns from forEach callback, not findFirst
+  });
+  // Always returns undefined
+}
+```
+
+### Standard Pattern: Use for...of or map + Promise combinator
+
+```typescript
+// SEQUENTIAL — when each step depends on the previous
+async function processSequentially(items: Item[]): Promise<void> {
+  for (const item of items) {
+    await processItem(item);
+  }
+}
+
+// PARALLEL fail-fast — reject immediately if any item fails (validation, SSRF checks)
+async function processParallelFailFast(items: Item[]): Promise<void> {
+  await Promise.all(items.map((item) => processItem(item)));
+}
+
+// PARALLEL wait-for-all — continue even if some fail (test settling, notifications)
+async function processParallelWaitAll(items: Item[]): Promise<ProcessResult[]> {
+  const results = await Promise.allSettled(items.map((item) => processItem(item)));
+  return results
+    .filter((r): r is PromiseFulfilledResult<ProcessResult> => r.status === 'fulfilled')
+    .map((r) => r.value);
+}
+```
+
+### Which Promise Combinator?
+
+| Use Case | Use | Why |
+| -------- | --- | --- |
+| Input validation (SSRF, schema) | `Promise.all` | First failure should reject entire batch |
+| Test utility settling, notifications | `Promise.allSettled` | Wait for all; partial success acceptable |
+| Sequential dependency chain | `for...of` + `await` | Each step depends on previous |
+| Finding an element | `Array.find()` (sync) or `for...of` | `forEach` cannot short-circuit |
+
+**Detection:** Grep for `forEach(async` — every instance is a potential no-op bug. Also grep for `return.*\.forEach(` since `forEach` always returns `undefined`.
+
+```bash
+# Detection commands
+grep -rn 'forEach(async' packages/
+grep -rn 'return.*\.forEach(' packages/
+```
+
+---
+
+## 21. Deterministic BullMQ Job IDs (Cancel-by-Computation)
+
+**Recurrence:** 1 P3 (PR #93 CrossPostService). Random job IDs require DB lookups to cancel; deterministic IDs enable pure computation.
+
+### The Problem
+
+By default, BullMQ generates random UUID job IDs. To cancel a queued job, you must first query the DB to retrieve its ID — an extra round-trip that also creates a TOCTOU window.
+
+### Standard Pattern: `{operation}-${entityId}`
+
+```typescript
+// WRONG — random ID, cannot cancel without DB lookup
+await queue.add('cross-post', { contentId, platform });
+
+// RIGHT — deterministic ID, cancel is a pure computation
+const jobId = `crosspost-${contentRow.id}`;
+await queue.add('cross-post', { contentId, platform }, { jobId });
+
+// Cancel without any DB lookup:
+const jobIdToCancel = `crosspost-${contentRow.id}`; // Reconstructed from context
+await queue.remove(jobIdToCancel);
+```
+
+### Naming Convention
+
+```
+{operation}-{primaryEntityId}
+
+crosspost-{contentId}          // Cross-posting a piece of content
+notify-{userId}-{eventId}      // Notification for a specific event
+invoice-{invoiceId}            // Invoice processing job
+```
+
+Keep it human-readable — the ID appears in BullMQ dashboard and error logs.
+
+### Handling Idempotent Re-Adds (Retry Safety)
+
+When the same `jobId` is added twice (e.g., network failure retry), BullMQ may throw a constraint violation if the previous job still exists in the queue:
+
+```typescript
+try {
+  await queue.add(jobName, payload, { jobId });
+} catch (err) {
+  // FK/unique violation: job already exists — idempotent, not an error
+  if (err?.code === '23505' || err?.message?.includes('duplicate')) {
+    logger.debug(`Job ${jobId} already queued — idempotent skip`);
+    return;
+  }
+  throw err;
+}
+```
+
+### Adding `removeJob()` to Queue Interfaces
+
+When the queue is injected via interface, ensure the interface includes `remove()`:
+
+```typescript
+interface IJobQueue {
+  add(name: string, data: unknown, opts?: { jobId?: string }): Promise<void>;
+  remove(jobId: string): Promise<void>; // Required for deterministic cancel
+}
+```
+
+**When to apply:** Any `queue.add()` call where the job may need to be cancelled, deduplicated, or idempotently re-submitted. If you ever need to "cancel a job for entity X", the job ID for X must be deterministic.
+
+**Detection:** Grep for `queue.add(` without a `jobId` option in service files where cancellation is a use case.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -695,32 +890,35 @@ CONTEXT TO LOAD:
 
 ## Index: Which Pattern Solves Which Issue
 
-| Issue You're Seeing                      | Pattern # | File                 |
-| ---------------------------------------- | --------- | -------------------- |
-| Race condition on capacity/count         | 1a-1c     | critical-patterns.md |
-| User can access others' data             | 2         | critical-patterns.md |
-| Query loads too much into memory         | 3         | critical-patterns.md |
-| Two inserts, second might fail           | 4         | critical-patterns.md |
-| Payment data could be lost               | 5         | critical-patterns.md |
-| URL from user input fetched server-side  | 6a-6c     | critical-patterns.md |
-| DNS TOCTOU between validate and fetch    | 6b        | critical-patterns.md |
-| IPv6 encoding bypasses SSRF check        | 6c        | critical-patterns.md |
-| Can delete a paid/active entity          | 7         | critical-patterns.md |
-| Button fires duplicate mutations         | 1         | common-solutions.md  |
-| Map grows without bound                  | 2         | common-solutions.md  |
-| New env var not validated                | 3         | common-solutions.md  |
-| Inconsistent error responses             | 4         | common-solutions.md  |
-| snake_case in API response               | 5         | common-solutions.md  |
-| Worker running for stub function         | 6         | common-solutions.md  |
-| Tests break after service change         | 7         | common-solutions.md  |
-| New routes missing rate limit            | 8         | common-solutions.md  |
-| Named route not matching                 | 9         | common-solutions.md  |
-| `db: any` in constructor                 | 10        | common-solutions.md  |
-| Vitest OOM / worker crashes              | 11        | common-solutions.md  |
-| `git diff --cached` empty at push        | 12        | common-solutions.md  |
-| Batch op fails on single rejection       | 13        | common-solutions.md  |
-| Same utility in 3+ files                 | 14        | common-solutions.md  |
-| Hook loops agents on pre-existing issues | 15        | common-solutions.md  |
-| Security file changed, no tests ran      | 16        | common-solutions.md  |
-| Test framework migrated, hooks broken    | 17        | common-solutions.md  |
-| Hook error suppressed, failures hidden   | 18        | common-solutions.md  |
+| Issue You're Seeing                          | Pattern # | File                 |
+| -------------------------------------------- | --------- | -------------------- |
+| Race condition on capacity/count             | 1a-1c     | critical-patterns.md |
+| User can access others' data                 | 2         | critical-patterns.md |
+| Query loads too much into memory             | 3         | critical-patterns.md |
+| Two inserts, second might fail               | 4         | critical-patterns.md |
+| Payment data could be lost                   | 5         | critical-patterns.md |
+| URL from user input fetched server-side      | 6a-6c     | critical-patterns.md |
+| DNS TOCTOU between validate and fetch        | 6b        | critical-patterns.md |
+| IPv6 encoding bypasses SSRF check            | 6c        | critical-patterns.md |
+| Can delete a paid/active entity              | 7         | critical-patterns.md |
+| Button fires duplicate mutations             | 1         | common-solutions.md  |
+| Map grows without bound                      | 2         | common-solutions.md  |
+| New env var not validated                    | 3         | common-solutions.md  |
+| Inconsistent error responses                 | 4         | common-solutions.md  |
+| snake_case in API response                   | 5         | common-solutions.md  |
+| Worker running for stub function             | 6         | common-solutions.md  |
+| Tests break after service change             | 7         | common-solutions.md  |
+| New routes missing rate limit                | 8         | common-solutions.md  |
+| Named route not matching                     | 9         | common-solutions.md  |
+| `db: any` in constructor                     | 10        | common-solutions.md  |
+| Vitest OOM / worker crashes                  | 11        | common-solutions.md  |
+| `git diff --cached` empty at push            | 12        | common-solutions.md  |
+| Batch op fails on single rejection           | 13        | common-solutions.md  |
+| Same utility in 3+ files                     | 14        | common-solutions.md  |
+| Hook loops agents on pre-existing issues     | 15        | common-solutions.md  |
+| Security file changed, no tests ran          | 16        | common-solutions.md  |
+| Test framework migrated, hooks broken        | 17        | common-solutions.md  |
+| Hook error suppressed, failures hidden       | 18        | common-solutions.md  |
+| grep breaks on macOS / portability issue     | 19        | common-solutions.md  |
+| `forEach(async` does nothing / returns early | 20        | common-solutions.md  |
+| Need to cancel BullMQ job without DB lookup  | 21        | common-solutions.md  |
