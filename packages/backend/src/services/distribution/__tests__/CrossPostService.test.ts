@@ -4,24 +4,7 @@
  */
 
 import { CrossPostService } from '../CrossPostService';
-
-/**
- * Creates a chainable mock for a specific Supabase table query.
- * Per common-solutions.md #7 — chainable mock builder pattern.
- */
-function createMockChain(terminalData: any = []) {
-  const chain: any = {};
-  ['from', 'select', 'insert', 'update', 'delete', 'eq', 'neq', 'in', 'order', 'limit'].forEach(
-    (method) => {
-      chain[method] = vi.fn().mockReturnValue(chain);
-    }
-  );
-  // Terminal methods
-  chain.single = vi.fn().mockResolvedValue({ data: terminalData, error: null });
-  // For insert().select() chains, the final await resolves via the chain itself
-  chain.then = undefined; // Prevent premature Promise detection
-  return chain;
-}
+import { createMockChain } from '../../../test-utils/supabase-mock';
 
 describe('CrossPostService', () => {
   let service: CrossPostService;
@@ -48,6 +31,7 @@ describe('CrossPostService', () => {
     mockQueueService = {
       createQueue: vi.fn(),
       addJob: vi.fn().mockResolvedValue('job-123'),
+      removeJob: vi.fn().mockResolvedValue(undefined),
     };
 
     mockPlatformService = {

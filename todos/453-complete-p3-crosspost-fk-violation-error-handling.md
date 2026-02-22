@@ -1,8 +1,8 @@
 ---
 id: 453
 severity: P3
-status: pending
-title: "CrossPostService: add specific FK violation (23503) error handling for content deletion race"
+status: complete
+title: 'CrossPostService: add specific FK violation (23503) error handling for content deletion race'
 file: packages/backend/src/services/distribution/CrossPostService.ts
 found_in: PR #92
 reviewer: review-data-integrity

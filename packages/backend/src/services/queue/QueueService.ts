@@ -93,6 +93,27 @@ export class QueueService implements IQueueService {
     return job.id!;
   }
 
+  async removeJob(queueName: string, jobId: string): Promise<void> {
+    const queue = this.queues.get(queueName);
+    if (!queue) {
+      this.logger.warn(`[QueueService] Cannot remove job — queue "${queueName}" not found`);
+      return;
+    }
+
+    try {
+      const job = await queue.getJob(jobId);
+      if (job) {
+        await job.remove();
+        this.logger.info(`[QueueService] Job "${jobId}" removed from queue "${queueName}"`);
+      }
+    } catch (err) {
+      // Best-effort: job may have already completed or been cleaned up
+      this.logger.warn(`[QueueService] Could not remove job "${jobId}" from queue "${queueName}"`, {
+        error: (err as Error).message,
+      });
+    }
+  }
+
   /**
    * Get the underlying BullMQ Queue for admin tooling (Bull Board).
    * NOT on the IQueueService interface — this is an implementation detail.

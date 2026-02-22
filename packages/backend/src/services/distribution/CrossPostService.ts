@@ -4,7 +4,10 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import type { ICrossPostService, PublishRequest } from '../../interfaces/distribution/ICrossPostService';
+import type {
+  ICrossPostService,
+  PublishRequest,
+} from '../../interfaces/distribution/ICrossPostService';
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
@@ -78,7 +81,7 @@ export class CrossPostService implements ICrossPostService {
     const batchJobId = uuidv4();
 
     // Build all cross_posts rows upfront
-    const crossPostRows = request.platforms.map(platform => {
+    const crossPostRows = request.platforms.map((platform) => {
       const scheduledAt = request.schedule?.[platform] || null;
       return {
         id: uuidv4(),
@@ -98,6 +101,10 @@ export class CrossPostService implements ICrossPostService {
       .select('id, platform, status, scheduled_at');
 
     if (error) {
+      // #453: FK violation means the content was deleted between the ownership check and insert
+      if (error.code === '23503') {
+        throw new ValidationError('Content was deleted before cross-posting could begin');
+      }
       throw error;
     }
 
@@ -121,11 +128,11 @@ export class CrossPostService implements ICrossPostService {
         QUEUE_NAME,
         `publish-${row.platform}`,
         jobData,
-        { delay }
+        { jobId: `crosspost-${row.id}`, delay }
       );
     }
 
-    const entries: CrossPostEntry[] = (inserted || []).map(row => ({
+    const entries: CrossPostEntry[] = (inserted || []).map((row) => ({
       id: row.id,
       content_id: request.content_id,
       platform: row.platform,
@@ -150,7 +157,9 @@ export class CrossPostService implements ICrossPostService {
   async getStatus(creatorId: string, contentId: string): Promise<CrossPostEntry[]> {
     const { data, error } = await this.db
       .from('cross_posts')
-      .select('id, content_id, platform, status, platform_post_id, platform_url, scheduled_at, published_at, error_message')
+      .select(
+        'id, content_id, platform, status, platform_post_id, platform_url, scheduled_at, published_at, error_message'
+      )
       .eq('creator_id', creatorId)
       .eq('content_id', contentId)
       .order('created_at', { ascending: false });
@@ -172,6 +181,15 @@ export class CrossPostService implements ICrossPostService {
 
     if (error) {
       throw error;
+    }
+
+    // #454: Best-effort BullMQ job removal — prevents cancelled jobs from sitting
+    // in the queue for hours. Non-blocking: if job doesn't exist or already
+    // completed, the removal is silently ignored.
+    try {
+      await this.queueService.removeJob(QUEUE_NAME, `crosspost-${crossPostId}`);
+    } catch {
+      // Non-blocking — the processor already checks for cancelled status
     }
 
     this.logger.info('[CrossPostService] Cross-post cancelled', {

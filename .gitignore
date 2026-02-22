@@ -101,9 +101,15 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# macOS Finder duplicate files (created on filename conflicts)
-*\ [0-9].*
-*\ [0-9][0-9].*
+# macOS Finder duplicate files (Finder adds " 2", " 3", etc. on copy conflicts)
+*\ 2
+*\ 2.*
+*\ 3
+*\ 3.*
+*\ 4
+*\ 4.*
+*\ 5
+*\ 5.*
 
 # Database
 *.db

@@ -1,8 +1,8 @@
 ---
 id: 441
 severity: P3
-status: pending
-title: "vitest-frontend-setup: globalThis.fetch mock missing headers and other Response properties"
+status: complete
+title: 'vitest-frontend-setup: globalThis.fetch mock missing headers and other Response properties'
 file: test-utils/vitest-frontend-setup.ts
 found_in: PR #89
 reviewer: review-testing
@@ -15,15 +15,18 @@ reviewer: review-testing
 The `globalThis.fetch` mock at line 244 returns a minimal response:
 
 ```typescript
-globalThis.fetch = vi.fn().mockImplementation(() => Promise.resolve({
-  ok: true,
-  json: () => Promise.resolve({}),
-  text: () => Promise.resolve(''),
-  status: 200,
-}));
+globalThis.fetch = vi.fn().mockImplementation(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+    status: 200,
+  })
+);
 ```
 
 This is missing:
+
 - `headers` (a `Headers` instance) — code that reads `response.headers.get('content-type')` will throw
 - `blob()`, `arrayBuffer()`, `formData()` methods
 - `statusText`, `type`, `url`, `redirected`, `body`, `bodyUsed` properties
@@ -42,23 +45,27 @@ test-utils/vitest-frontend-setup.ts  lines 244-249
 Use a more complete mock:
 
 ```typescript
-globalThis.fetch = vi.fn().mockImplementation(() => Promise.resolve({
-  ok: true,
-  status: 200,
-  statusText: 'OK',
-  headers: new Headers({ 'content-type': 'application/json' }),
-  json: () => Promise.resolve({}),
-  text: () => Promise.resolve(''),
-  blob: () => Promise.resolve(new Blob()),
-  arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
-  formData: () => Promise.resolve(new FormData()),
-  clone: function() { return this; },
-  redirected: false,
-  type: 'basic',
-  url: '',
-  body: null,
-  bodyUsed: false,
-}));
+globalThis.fetch = vi.fn().mockImplementation(() =>
+  Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+    blob: () => Promise.resolve(new Blob()),
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    formData: () => Promise.resolve(new FormData()),
+    clone: function () {
+      return this;
+    },
+    redirected: false,
+    type: 'basic',
+    url: '',
+    body: null,
+    bodyUsed: false,
+  })
+);
 ```
 
 Or use a library like `msw` for more realistic HTTP mocking.

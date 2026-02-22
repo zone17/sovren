@@ -1,8 +1,8 @@
 ---
 id: 458
 severity: P3
-status: pending
-title: "wellness /benchmark endpoint: add comment explaining intentional omission of requireCreator"
+status: complete
+title: 'wellness /benchmark endpoint: add comment explaining intentional omission of requireCreator'
 file: packages/backend/src/routes/v2/wellness.routes.ts
 found_in: PR #92
 reviewer: review-security, review-architecture

@@ -378,7 +378,11 @@ function applyEnvFallbacks(): void {
   ];
 
   for (const [oldName, newName] of renames) {
-    if (process.env[newName] && process.env[oldName] && process.env[newName] !== process.env[oldName]) {
+    if (
+      process.env[newName] &&
+      process.env[oldName] &&
+      process.env[newName] !== process.env[oldName]
+    ) {
       console.warn(
         `[env-validation] WARNING: Both ${oldName} and ${newName} are set with different values. ` +
           `Using ${newName}. Remove ${oldName} from your .env file.`
@@ -412,11 +416,19 @@ export async function validateEnvironment(): Promise<ValidatedEnv> {
     validateDockerConfiguration(parsed);
     validatePerformance(parsed);
 
-    // Run connectivity checks (non-blocking)
+    // Run connectivity checks with a timeout — fail fast if critical services are unreachable
     if (parsed.VALIDATE_ENV) {
-      validateConnectivity(parsed).catch((error) => {
+      try {
+        await Promise.race([
+          validateConnectivity(parsed),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Connectivity check timed out after 5s')), 5000)
+          ),
+        ]);
+      } catch (error) {
         console.warn('⚠️  Connectivity validation failed:', error);
-      });
+        // Don't throw — allow startup but log degraded state
+      }
     }
 
     console.log('✅ Environment validation successful');
@@ -443,7 +455,9 @@ export async function validateEnvironment(): Promise<ValidatedEnv> {
       );
     }
 
-    process.exit(1);
+    throw new Error(
+      `Environment validation failed: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 

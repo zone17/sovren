@@ -43,6 +43,8 @@ export class NostrKeyManagementService extends EventEmitter {
   private cryptoService: INostrCryptoService;
   private analyticsService: INostrAnalyticsService;
   private monitoringService: INostrMonitoringService;
+  private cleanupInterval?: ReturnType<typeof setInterval>;
+  private rotationInterval?: ReturnType<typeof setInterval>;
 
   constructor(
     config: Partial<NostrKeyManagementConfig> = {},
@@ -705,7 +707,7 @@ export class NostrKeyManagementService extends EventEmitter {
     quality: number;
   }> {
     switch (source) {
-      case NostrEntropySource.WEB_CRYPTO_API:
+      case NostrEntropySource.WEB_CRYPTO_API: {
         const entropy = new Uint8Array(32);
         crypto.getRandomValues(entropy);
         return {
@@ -713,8 +715,9 @@ export class NostrKeyManagementService extends EventEmitter {
           bits: 256,
           quality: 1.0,
         };
+      }
 
-      case NostrEntropySource.SECURE_RANDOM:
+      case NostrEntropySource.SECURE_RANDOM: {
         // Fallback to Math.random (not recommended for production)
         const fallbackEntropy = new Uint8Array(32);
         for (let i = 0; i < 32; i++) {
@@ -725,6 +728,7 @@ export class NostrKeyManagementService extends EventEmitter {
           bits: 128, // Lower quality
           quality: 0.6,
         };
+      }
 
       default:
         throw new Error(`Unsupported entropy source: ${source}`);
@@ -803,7 +807,10 @@ export class NostrKeyManagementService extends EventEmitter {
    * 🔒 Record security event
    */
   private async recordSecurityEvent(
-    event: Omit<NostrKeySecurityMonitoring, 'metadata' | 'resolved'> & { metadata?: any; resolved?: boolean }
+    event: Omit<NostrKeySecurityMonitoring, 'metadata' | 'resolved'> & {
+      metadata?: Record<string, unknown>;
+      resolved?: boolean;
+    }
   ): Promise<void> {
     if (!this.state.config.securityMonitoringEnabled) {
       return;
@@ -914,12 +921,12 @@ export class NostrKeyManagementService extends EventEmitter {
    */
   private startBackgroundTasks(): void {
     // Clean up expired data every hour
-    setInterval(() => {
+    this.cleanupInterval = setInterval(() => {
       this.cleanupExpiredData();
     }, 3600000);
 
     // Process rotation queue every minute
-    setInterval(() => {
+    this.rotationInterval = setInterval(() => {
       this.processRotationQueue();
     }, 60000);
   }
@@ -1011,7 +1018,13 @@ export class NostrKeyManagementService extends EventEmitter {
    * 🧹 Cleanup resources
    */
   destroy(): void {
-    // Clear intervals and cleanup
+    // Clear background task intervals to prevent memory leaks (#447)
+    if (this.cleanupInterval) clearInterval(this.cleanupInterval);
+    if (this.rotationInterval) clearInterval(this.rotationInterval);
+    this.cleanupInterval = undefined;
+    this.rotationInterval = undefined;
+
+    // Clear event listeners and in-memory state
     this.removeAllListeners();
     this.state.keys.clear();
     this.state.usageAnalytics.clear();
@@ -1031,7 +1044,7 @@ export interface INostrKeyStorageService {
   loadAllKeys(): Promise<NostrKeyManagementResult<NostrEnhancedKeyPair[]>>;
   deleteKey(keyId: string): Promise<NostrKeyManagementResult<void>>;
   storeBackup(backup: NostrMnemonicBackup): Promise<NostrKeyManagementResult<void>>;
-  on?(event: string, listener: (...args: any[]) => void): void;
+  on?(event: string, listener: (...args: unknown[]) => void): void;
 }
 
 /**
@@ -1040,7 +1053,7 @@ export interface INostrKeyStorageService {
 export interface INostrCryptoService {
   initialize(): Promise<void>;
   calculateChecksum(data: string): Promise<string>;
-  on?(event: string, listener: (...args: any[]) => void): void;
+  on?(event: string, listener: (...args: unknown[]) => void): void;
 }
 
 /**

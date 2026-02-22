@@ -1,8 +1,8 @@
 ---
 id: 438
 severity: P3
-status: pending
-title: "env-validation: process.exit(1) makes the module untestable"
+status: complete
+title: 'env-validation: process.exit(1) makes the module untestable'
 file: packages/backend/src/utils/env-validation.ts
 found_in: PR #89
 reviewer: review-backend

@@ -1,7 +1,7 @@
 ---
 id: 439
 severity: P3
-status: pending
+status: complete
 title: "SSRF tests: mockLookup uses 'as never' to suppress type errors"
 file: packages/backend/src/utils/__tests__/ssrf.test.ts
 found_in: PR #89

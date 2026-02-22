@@ -605,7 +605,7 @@ export const SERVICE_DEPENDENCIES = {
 
   // Phase 8: Distribution Services (EPIC-009)
   PlatformConnectionService: ['Database', 'Logger'],
-  CrossPostService: ['PlatformConnectionService', 'QueueService', 'Logger'],
+  CrossPostService: ['Database', 'PlatformConnectionService', 'QueueService', 'Logger'],
   RepurposingService: ['Database', 'Logger'],
   UnifiedInboxService: ['PlatformConnectionService', 'QueueService', 'Database', 'Logger'],
   CrossPlatformAnalyticsService: ['PlatformConnectionService', 'Database', 'Logger'],

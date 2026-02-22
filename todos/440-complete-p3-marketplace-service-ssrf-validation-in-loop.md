@@ -1,8 +1,8 @@
 ---
 id: 440
 severity: P3
-status: pending
-title: "MarketplaceService: SSRF validation in sequential loop for portfolio URLs"
+status: complete
+title: 'MarketplaceService: SSRF validation in sequential loop for portfolio URLs'
 file: packages/backend/src/services/community/MarketplaceService.ts
 found_in: PR #89
 reviewer: review-backend
@@ -21,7 +21,7 @@ for (const url of data.portfolioUrls) {
 }
 ```
 
-Each `validateSsrfUrl` call does a DNS resolution (`lookup(hostname, { all: true })`). For a listing with 10 portfolio URLs, this is 10 sequential DNS lookups. In the worst case (slow DNS, timeout), this could take 10 * DNS_TIMEOUT seconds.
+Each `validateSsrfUrl` call does a DNS resolution (`lookup(hostname, { all: true })`). For a listing with 10 portfolio URLs, this is 10 sequential DNS lookups. In the worst case (slow DNS, timeout), this could take 10 \* DNS_TIMEOUT seconds.
 
 ## Location
 
@@ -36,13 +36,19 @@ Validate URLs in parallel:
 
 ```typescript
 if (data.portfolioUrls && data.portfolioUrls.length > 0) {
-  await Promise.all(data.portfolioUrls.map(async (url) => {
-    if (typeof url !== 'string' || !url.startsWith('https://')) {
-      throw new Error(`Invalid portfolio URL: "${url}"`);
-    }
-    try { new URL(url); } catch { throw new Error(`Invalid URL: "${url}"`); }
-    await validateSsrfUrl(url);
-  }));
+  await Promise.all(
+    data.portfolioUrls.map(async (url) => {
+      if (typeof url !== 'string' || !url.startsWith('https://')) {
+        throw new Error(`Invalid portfolio URL: "${url}"`);
+      }
+      try {
+        new URL(url);
+      } catch {
+        throw new Error(`Invalid URL: "${url}"`);
+      }
+      await validateSsrfUrl(url);
+    })
+  );
 }
 ```
 

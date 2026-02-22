@@ -13,6 +13,7 @@
  */
 
 import { lookup } from 'dns/promises';
+import type { LookupAddress } from 'dns';
 import { validateSsrfUrl, createSsrfSafeAgent } from '../ssrf';
 
 // Mock DNS lookup to avoid real network calls in tests.
@@ -21,11 +22,27 @@ vi.mock('dns/promises', () => ({
   lookup: vi.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]),
 }));
 
-const mockLookup = vi.mocked(lookup);
+// Cast to a properly typed mock that returns LookupAddress[] (matching the { all: true } overload).
+const mockLookup = lookup as unknown as ReturnType<typeof vi.fn<[], Promise<LookupAddress[]>>>;
+
+/** Helper to set the mock DNS response with correct typing. */
+function mockDnsResponse(...entries: LookupAddress[]): void {
+  (mockLookup as ReturnType<typeof vi.fn>).mockResolvedValue(entries);
+}
+
+/** Helper to set a one-time mock DNS response. */
+function mockDnsResponseOnce(...entries: LookupAddress[]): void {
+  (mockLookup as ReturnType<typeof vi.fn>).mockResolvedValueOnce(entries);
+}
+
+/** Helper to set a one-time mock DNS rejection. */
+function mockDnsRejectionOnce(error: Error): void {
+  (mockLookup as ReturnType<typeof vi.fn>).mockRejectedValueOnce(error);
+}
 
 describe('validateSsrfUrl', () => {
   beforeEach(() => {
-    mockLookup.mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as never);
+    mockDnsResponse({ address: '93.184.216.34', family: 4 });
   });
 
   // =========================================================================
@@ -368,59 +385,59 @@ describe('validateSsrfUrl', () => {
   // =========================================================================
   describe('DNS rebinding protection', () => {
     it('rejects hostname that resolves to private IPv4 (DNS rebinding)', async () => {
-      mockLookup.mockResolvedValueOnce([{ address: '127.0.0.1', family: 4 }] as never);
+      mockDnsResponseOnce({ address: '127.0.0.1', family: 4 });
       await expect(validateSsrfUrl('https://evil-rebind.example.com')).rejects.toThrow(
         'resolves to a private IP'
       );
     });
 
     it('rejects hostname that resolves to 10.x private IP', async () => {
-      mockLookup.mockResolvedValueOnce([{ address: '10.0.0.1', family: 4 }] as never);
+      mockDnsResponseOnce({ address: '10.0.0.1', family: 4 });
       await expect(validateSsrfUrl('https://rebind.example.com')).rejects.toThrow(
         'resolves to a private IP'
       );
     });
 
     it('rejects hostname that resolves to 192.168.x private IP', async () => {
-      mockLookup.mockResolvedValueOnce([{ address: '192.168.1.1', family: 4 }] as never);
+      mockDnsResponseOnce({ address: '192.168.1.1', family: 4 });
       await expect(validateSsrfUrl('https://rebind2.example.com')).rejects.toThrow(
         'resolves to a private IP'
       );
     });
 
     it('rejects hostname that resolves to link-local IP', async () => {
-      mockLookup.mockResolvedValueOnce([{ address: '169.254.169.254', family: 4 }] as never);
+      mockDnsResponseOnce({ address: '169.254.169.254', family: 4 });
       await expect(validateSsrfUrl('https://metadata.example.com')).rejects.toThrow(
         'resolves to a private IP'
       );
     });
 
     it('rejects hostname that resolves to private IPv6', async () => {
-      mockLookup.mockResolvedValueOnce([{ address: '::1', family: 6 }] as never);
+      mockDnsResponseOnce({ address: '::1', family: 6 });
       await expect(validateSsrfUrl('https://ipv6-rebind.example.com')).rejects.toThrow(
         'resolves to a private IPv6'
       );
     });
 
     it('rejects hostname that resolves to IPv6 ULA', async () => {
-      mockLookup.mockResolvedValueOnce([{ address: 'fc00::1', family: 6 }] as never);
+      mockDnsResponseOnce({ address: 'fc00::1', family: 6 });
       await expect(validateSsrfUrl('https://ula-rebind.example.com')).rejects.toThrow(
         'resolves to a private IPv6'
       );
     });
 
     it('rejects when any resolved IP is private (multi-record)', async () => {
-      mockLookup.mockResolvedValueOnce([
+      mockDnsResponseOnce(
         { address: '93.184.216.34', family: 4 },
-        { address: '10.0.0.1', family: 4 },
-      ] as never);
+        { address: '10.0.0.1', family: 4 }
+      );
       await expect(validateSsrfUrl('https://multi-record.example.com')).rejects.toThrow(
         'resolves to a private IP'
       );
     });
 
     it('blocks when DNS resolution fails (fail-closed)', async () => {
-      mockLookup.mockRejectedValueOnce(new Error('ENOTFOUND'));
+      mockDnsRejectionOnce(new Error('ENOTFOUND'));
       await expect(validateSsrfUrl('https://nonexistent.example.com')).rejects.toThrow(
         'could not be resolved'
       );
@@ -452,7 +469,7 @@ describe('validateSsrfUrl', () => {
   // =========================================================================
   describe('return value — resolved IPs for DNS pinning', () => {
     it('returns resolved IPs on successful validation', async () => {
-      mockLookup.mockResolvedValueOnce([{ address: '93.184.216.34', family: 4 }] as never);
+      mockDnsResponseOnce({ address: '93.184.216.34', family: 4 });
       const result = await validateSsrfUrl('https://example.com');
       expect(result).toEqual({
         resolvedIps: [{ address: '93.184.216.34', family: 4 }],
@@ -460,10 +477,10 @@ describe('validateSsrfUrl', () => {
     });
 
     it('returns multiple resolved IPs', async () => {
-      mockLookup.mockResolvedValueOnce([
+      mockDnsResponseOnce(
         { address: '93.184.216.34', family: 4 },
-        { address: '2606:2800:220:1:248:1893:25c8:1946', family: 6 },
-      ] as never);
+        { address: '2606:2800:220:1:248:1893:25c8:1946', family: 6 }
+      );
       const result = await validateSsrfUrl('https://example.com');
       expect(result.resolvedIps).toHaveLength(2);
       expect(result.resolvedIps[0]).toEqual({ address: '93.184.216.34', family: 4 });

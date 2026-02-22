@@ -86,9 +86,11 @@ interface TestResult {
 // 🔧 Test Environment Variables Configuration
 export const TEST_ENVIRONMENT = {
   // 🗄️ Database Configuration (Mocked)
+  // Use obviously-fake values that won't trigger secret scanners (GitHub, Snyk, GitGuardian).
+  // Avoid JWT-like prefixes (eyJ...) and known API key prefixes (sk-).
   SUPABASE_URL: 'https://test-project.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key',
-  SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-service-role-key',
+  SUPABASE_ANON_KEY: 'test-anon-key-not-real-000000000000000000000000',
+  SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key-not-real-000000000000',
 
   // 🎯 Feature Flags (Test Configuration)
   ENABLE_CMS: 'true',
@@ -99,19 +101,19 @@ export const TEST_ENVIRONMENT = {
   ENABLE_LIGHTNING_PAYMENTS: 'true',
 
   // 🤖 AI Services (Mocked)
-  OPENAI_API_KEY: 'sk-test-key-for-testing-purposes-only',
-  ANTHROPIC_API_KEY: 'test-anthropic-key',
+  OPENAI_API_KEY: 'test-openai-key-not-real-00000000000000000000',
+  ANTHROPIC_API_KEY: 'test-anthropic-key-not-real-00000000000000',
 
   // 🌐 IPFS/Arweave Configuration (Mocked)
   IPFS_GATEWAY: 'https://test-ipfs-gateway.com',
   ARWEAVE_HOST: 'test-arweave.net',
 
   // 🔒 Security Configuration (Test-safe)
-  JWT_SECRET: 'test-jwt-secret-for-testing-purposes-minimum-32-characters',
+  JWT_SECRET: 'test-jwt-secret-not-real-00000000000000000000',
 
   // ⚡ Lightning Network (Mocked)
   LNBITS_URL: 'https://test-lnbits.com',
-  LNBITS_API_KEY: 'test-lnbits-api-key',
+  LNBITS_API_KEY: 'test-lnbits-key-not-real-00000000000000',
 
   // 🔄 Environment Meta
   NODE_ENV: 'test',
@@ -348,11 +350,11 @@ export const SECURITY = {
     unicodeExploits: '\u202e\u202d',
   },
 
-  // Test authentication states
+  // Test authentication states — use obviously-fake values without JWT-like prefixes
   authStates: {
     unauthenticated: null,
-    validToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-valid-token',
-    expiredToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-expired-token',
+    validToken: 'test-valid-token-not-real-000000000000000000',
+    expiredToken: 'test-expired-token-not-real-000000000000000',
     malformedToken: 'invalid-token-format',
   },
 };

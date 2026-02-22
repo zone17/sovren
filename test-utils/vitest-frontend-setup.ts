@@ -12,14 +12,14 @@ import '@testing-library/jest-dom/vitest';
 process.env.NODE_ENV = 'test';
 process.env.TZ = 'UTC';
 process.env.VITE_SUPABASE_URL = 'https://test-project.supabase.co';
-process.env.VITE_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key';
+process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key-not-real-000000000000000000000000';
 process.env.VITE_API_URL = 'http://localhost:3000/api';
 process.env.VITE_ENABLE_CMS = 'true';
 process.env.VITE_ENABLE_AI_ASSISTANT = 'true';
 process.env.VITE_ENABLE_NOSTR_INTEGRATION = 'true';
 process.env.VITE_ENABLE_LIGHTNING_PAYMENTS = 'true';
 process.env.SUPABASE_URL = 'https://test.supabase.co';
-process.env.SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.SUPABASE_ANON_KEY = 'test-anon-key-not-real-000000000000000000000000';
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
 
 // Cleanup after each test
@@ -31,6 +31,9 @@ afterEach(() => {
 beforeEach(() => {
   vi.clearAllMocks();
 });
+
+// Module-level guard for getBoundingClientRect patching (replaces fragile __mocked flag)
+let boundingRectPatched = false;
 
 // Browser API mocks
 if (typeof window !== 'undefined') {
@@ -50,17 +53,22 @@ if (typeof window !== 'undefined') {
     observe() {}
     unobserve() {}
     disconnect() {}
-    takeRecords() { return []; }
+    takeRecords() {
+      return [];
+    }
   }
   globalThis.IntersectionObserver = MockIntersectionObserver as any;
 
   // scrollIntoView - not available in jsdom
-  Element.prototype.scrollIntoView = function() {};
+  Element.prototype.scrollIntoView = function () {};
 
   // getBoundingClientRect - return non-zero dimensions for recharts
-  if (!Element.prototype.getBoundingClientRect.__mocked) {
+  // Use module-level boolean instead of fragile __mocked flag on the prototype.
+  // The __mocked property required `as any` casts and could become inconsistent
+  // if vi.clearAllMocks() or vi.restoreAllMocks() reset the function but not the flag.
+  if (!boundingRectPatched) {
     const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
-    Element.prototype.getBoundingClientRect = function() {
+    Element.prototype.getBoundingClientRect = function () {
       const rect = originalGetBoundingClientRect.call(this);
       // Return non-zero dimensions if jsdom returns zeros (for recharts ResponsiveContainer)
       if (rect.width === 0 && rect.height === 0) {
@@ -68,7 +76,7 @@ if (typeof window !== 'undefined') {
       }
       return rect;
     };
-    (Element.prototype.getBoundingClientRect as any).__mocked = true;
+    boundingRectPatched = true;
   }
 
   // matchMedia
@@ -236,10 +244,26 @@ globalThis.Notification = vi.fn().mockImplementation(() => ({
 (globalThis.Notification as any).permission = 'granted';
 (globalThis.Notification as any).requestPermission = vi.fn().mockResolvedValue('granted');
 
-// fetch mock
-globalThis.fetch = vi.fn().mockResolvedValue({
-  ok: true,
-  json: vi.fn().mockResolvedValue({}),
-  text: vi.fn().mockResolvedValue(''),
-  status: 200,
-});
+// fetch mock — complete Response shape to prevent silent failures
+// when code accesses headers, blob(), clone(), etc.
+globalThis.fetch = vi.fn().mockImplementation(() =>
+  Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: vi.fn().mockResolvedValue({}),
+    text: vi.fn().mockResolvedValue(''),
+    blob: vi.fn().mockResolvedValue(new Blob()),
+    arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+    formData: vi.fn().mockResolvedValue(new FormData()),
+    clone: function () {
+      return { ...this };
+    },
+    redirected: false,
+    type: 'basic' as ResponseType,
+    url: '',
+    body: null,
+    bodyUsed: false,
+  })
+);

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { circlesApi } from '../services/circlesApi';
 
 export const circleKeys = {
@@ -36,8 +37,8 @@ export function useCreateCircle() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: circleKeys.lists() });
     },
-    onError: (error) => {
-      console.error('Create circle failed:', error);
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create circle. Please try again.');
     },
   });
 }
@@ -50,8 +51,8 @@ export function useJoinCircle() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: circleKeys.lists() });
     },
-    onError: (error) => {
-      console.error('Join circle failed:', error);
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to join circle. Please try again.');
     },
   });
 }
@@ -65,8 +66,8 @@ export function useRemoveMember() {
     onSuccess: (_data, { circleId }) => {
       queryClient.invalidateQueries({ queryKey: circleKeys.detail(circleId) });
     },
-    onError: (error) => {
-      console.error('Remove member failed:', error);
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to remove member. Please try again.');
     },
   });
 }
@@ -91,8 +92,8 @@ export function usePostToCircle(circleId: string) {
         queryKey: circleKeys.posts(circleId),
       });
     },
-    onError: (error) => {
-      console.error('Post to circle failed:', error);
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to post to circle. Please try again.');
     },
   });
 }

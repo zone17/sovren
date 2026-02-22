@@ -1,7 +1,7 @@
 ---
 id: 445
 severity: P3
-status: pending
+status: complete
 title: "Anti-pattern scanner: 'as any' regex misses some patterns"
 file: scripts/check-antipatterns.sh
 found_in: PR #89
@@ -19,6 +19,7 @@ grep -HnE '(\bas\s+any\b|:\s*any\b|<any>|<any\[)'
 ```
 
 This catches `as any`, `: any`, `<any>`, `<any[` but misses:
+
 1. `any[]` (array of any without angle brackets) — e.g., `param: any[]`
 2. `Promise<any>` — the `<any>` pattern matches but `Promise<any[]>` may not depending on how grep handles the brackets
 3. `Record<string, any>` — uses `any` inside generic but not at the boundaries matched by the regex
@@ -41,6 +42,7 @@ grep -HnE '(\bas\s+any\b|:\s*any\b|<any[>\[\],)]|any\[\])'
 ```
 
 Or use a more comprehensive pattern:
+
 ```bash
 grep -HnE '\bany\b' | grep -v '^\s*//' | grep -v 'import type'
 ```

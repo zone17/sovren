@@ -1,8 +1,8 @@
 ---
 id: 456
 severity: P3
-status: pending
-title: "waitForQueriesToSettle is a no-op — forEach returns undefined, promises never awaited"
+status: complete
+title: 'waitForQueriesToSettle is a no-op — forEach returns undefined, promises never awaited'
 file: packages/frontend/src/test-utils/react-query-test-utils.tsx
 found_in: PR #92
 reviewer: review-frontend-races
@@ -19,9 +19,10 @@ export const waitForQueriesToSettle = async (queryClient: QueryClient) => {
   await queryClient
     .getQueryCache()
     .findAll()
-    .forEach((query) => {        // forEach returns undefined!
+    .forEach((query) => {
+      // forEach returns undefined!
       if (query.state.fetchStatus === 'fetching') {
-        return query.promise;    // returns from callback, not from function
+        return query.promise; // returns from callback, not from function
       }
     });
 };

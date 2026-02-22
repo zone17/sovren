@@ -1,8 +1,8 @@
 ---
 id: 444
 severity: P3
-status: pending
-title: "env-validation: connectivity check is fire-and-forget with swallowed errors"
+status: complete
+title: 'env-validation: connectivity check is fire-and-forget with swallowed errors'
 file: packages/backend/src/utils/env-validation.ts
 found_in: PR #89
 reviewer: review-backend
@@ -37,6 +37,7 @@ packages/backend/src/utils/env-validation.ts  lines 410-414
 ## Fix
 
 Either:
+
 1. **Await it with a timeout** — fail fast if critical services are unreachable:
 
 ```typescript
@@ -44,7 +45,9 @@ if (parsed.VALIDATE_ENV) {
   try {
     await Promise.race([
       validateConnectivity(parsed),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Connectivity check timeout')), 5000)),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connectivity check timeout')), 5000)
+      ),
     ]);
   } catch (error) {
     console.warn('Connectivity validation failed:', error);
