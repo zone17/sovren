@@ -16,7 +16,6 @@
 
 import { NIP04Service } from '../NIP04Service';
 import { KeyManagementService } from '../KeyManagementService';
-import type { NostrEvent } from '@sovren/shared/types/nostr/events';
 import type { NostrDirectMessage } from '@sovren/shared/types/nostr/nips';
 
 // Mock WebCrypto API
@@ -70,8 +69,9 @@ describe('NIP04Service', () => {
     // Reset mocks
     vi.clearAllMocks();
 
-    // Setup global mocks
-    Object.defineProperty(globalThis, "crypto", { value: mockCrypto as any, writable: true, configurable: true });
+    // Setup global mocks — vi.stubGlobal is properly restored by vi.restoreAllMocks()
+    vi.stubGlobal('crypto', mockCrypto);
+    vi.stubGlobal('nostr', mockNostrExtension);
     (window as any).nostr = mockNostrExtension;
 
     // Initialize services
@@ -191,9 +191,7 @@ describe('NIP04Service', () => {
     });
 
     it('should throw error for invalid recipient public key', async () => {
-      await expect(
-        service.encrypt('test', 'invalid-pubkey')
-      ).rejects.toThrow();
+      await expect(service.encrypt('test', 'invalid-pubkey')).rejects.toThrow();
     });
   });
 
@@ -202,10 +200,7 @@ describe('NIP04Service', () => {
       const plaintext = 'Secret message';
       const encrypted = await service.encrypt(plaintext, TEST_KEYS.recipient.publicKey);
 
-      const decrypted = await service.decrypt(
-        encrypted,
-        TEST_KEYS.sender.publicKey
-      );
+      const decrypted = await service.decrypt(encrypted, TEST_KEYS.sender.publicKey);
 
       expect(decrypted).toBe(plaintext);
     });
@@ -226,15 +221,15 @@ describe('NIP04Service', () => {
     });
 
     it('should throw error for malformed encrypted content', async () => {
-      await expect(
-        service.decrypt('malformed', TEST_KEYS.sender.publicKey)
-      ).rejects.toThrow('Invalid encrypted content format');
+      await expect(service.decrypt('malformed', TEST_KEYS.sender.publicKey)).rejects.toThrow(
+        'Invalid encrypted content format'
+      );
     });
 
     it('should throw error for missing IV', async () => {
-      await expect(
-        service.decrypt('base64content', TEST_KEYS.sender.publicKey)
-      ).rejects.toThrow('Invalid encrypted content format');
+      await expect(service.decrypt('base64content', TEST_KEYS.sender.publicKey)).rejects.toThrow(
+        'Invalid encrypted content format'
+      );
     });
 
     it('should throw error for invalid base64', async () => {
@@ -250,9 +245,7 @@ describe('NIP04Service', () => {
       // Try to decrypt with wrong public key
       const wrongPublicKey = '0000000000000000000000000000000000000000000000000000000000000099';
 
-      await expect(
-        service.decrypt(encrypted, wrongPublicKey)
-      ).rejects.toThrow();
+      await expect(service.decrypt(encrypted, wrongPublicKey)).rejects.toThrow();
     });
   });
 
@@ -284,10 +277,7 @@ describe('NIP04Service', () => {
     it('should use extension for encryption if available and preferred', async () => {
       mockNostrExtension.encrypt.mockResolvedValue('extension-encrypted?iv=base64iv');
 
-      const encrypted = await service.encryptWithExtension(
-        'test',
-        TEST_KEYS.recipient.publicKey
-      );
+      const encrypted = await service.encryptWithExtension('test', TEST_KEYS.recipient.publicKey);
 
       expect(mockNostrExtension.encrypt).toHaveBeenCalledWith(
         TEST_KEYS.recipient.publicKey,
@@ -322,11 +312,9 @@ describe('NIP04Service', () => {
     it('should fall back to native encryption if extension fails', async () => {
       mockNostrExtension.encrypt.mockRejectedValue(new Error('Extension error'));
 
-      const encrypted = await service.encrypt(
-        'test',
-        TEST_KEYS.recipient.publicKey,
-        { fallbackToNative: true }
-      );
+      const encrypted = await service.encrypt('test', TEST_KEYS.recipient.publicKey, {
+        fallbackToNative: true,
+      });
 
       expect(encrypted).toBeDefined();
       expect(encrypted).toMatch(/\?iv=/);
@@ -336,10 +324,7 @@ describe('NIP04Service', () => {
   describe('DM Event Creation', () => {
     it('should create NIP-04 compliant DM event (kind 4)', async () => {
       const message = 'Hello!';
-      const event = await service.createDMEvent(
-        message,
-        TEST_KEYS.recipient.publicKey
-      );
+      const event = await service.createDMEvent(message, TEST_KEYS.recipient.publicKey);
 
       expect(event.kind).toBe(4);
       expect(event.content).toMatch(/\?iv=/);
@@ -348,11 +333,9 @@ describe('NIP04Service', () => {
     });
 
     it('should sign DM event with local key', async () => {
-      const event = await service.createDMEvent(
-        'test',
-        TEST_KEYS.recipient.publicKey,
-        { sign: true }
-      );
+      const event = await service.createDMEvent('test', TEST_KEYS.recipient.publicKey, {
+        sign: true,
+      });
 
       expect(event.id).toBeDefined();
       expect(event.sig).toBeDefined();
@@ -360,11 +343,9 @@ describe('NIP04Service', () => {
     });
 
     it('should create unsigned event if sign=false', async () => {
-      const event = await service.createDMEvent(
-        'test',
-        TEST_KEYS.recipient.publicKey,
-        { sign: false }
-      );
+      const event = await service.createDMEvent('test', TEST_KEYS.recipient.publicKey, {
+        sign: false,
+      });
 
       expect(event.id).toBeUndefined();
       expect(event.sig).toBeUndefined();
@@ -458,10 +439,7 @@ describe('NIP04Service', () => {
       };
 
       await service.addMessageToThread(message);
-      await service.markAsRead(
-        TEST_KEYS.sender.publicKey,
-        TEST_KEYS.recipient.publicKey
-      );
+      await service.markAsRead(TEST_KEYS.sender.publicKey, TEST_KEYS.recipient.publicKey);
 
       const unreadCount = await service.getUnreadCount(
         TEST_KEYS.sender.publicKey,
@@ -511,10 +489,7 @@ describe('NIP04Service', () => {
       };
 
       await service.addMessageToThread(message);
-      await service.clearThread(
-        TEST_KEYS.sender.publicKey,
-        TEST_KEYS.recipient.publicKey
-      );
+      await service.clearThread(TEST_KEYS.sender.publicKey, TEST_KEYS.recipient.publicKey);
 
       const thread = await service.getThread(
         TEST_KEYS.sender.publicKey,
@@ -559,9 +534,7 @@ describe('NIP04Service', () => {
       ];
 
       for (const invalid of invalidFormats) {
-        await expect(
-          service.decrypt(invalid, TEST_KEYS.sender.publicKey)
-        ).rejects.toThrow();
+        await expect(service.decrypt(invalid, TEST_KEYS.sender.publicKey)).rejects.toThrow();
       }
     });
 
@@ -578,9 +551,9 @@ describe('NIP04Service', () => {
     it('should handle encryption errors gracefully', async () => {
       mockCrypto.subtle.encrypt.mockRejectedValueOnce(new Error('Crypto error'));
 
-      await expect(
-        service.encrypt('test', TEST_KEYS.recipient.publicKey)
-      ).rejects.toThrow('Encryption failed');
+      await expect(service.encrypt('test', TEST_KEYS.recipient.publicKey)).rejects.toThrow(
+        'Encryption failed'
+      );
     });
 
     it('should handle decryption errors gracefully', async () => {
@@ -627,9 +600,7 @@ describe('NIP04Service', () => {
 
       const start = performance.now();
 
-      await Promise.all(
-        messages.map(msg => service.encrypt(msg, TEST_KEYS.recipient.publicKey))
-      );
+      await Promise.all(messages.map((msg) => service.encrypt(msg, TEST_KEYS.recipient.publicKey)));
 
       const duration = performance.now() - start;
       expect(duration).toBeLessThan(500); // 10 messages in < 500ms
@@ -644,11 +615,9 @@ describe('NIP04Service', () => {
 
       await keyManagementService.setActiveKey(keyPair.keyId);
 
-      const encrypted = await service.encrypt(
-        'test',
-        TEST_KEYS.recipient.publicKey,
-        { useActiveKey: true }
-      );
+      const encrypted = await service.encrypt('test', TEST_KEYS.recipient.publicKey, {
+        useActiveKey: true,
+      });
 
       expect(encrypted).toBeDefined();
       expect(encrypted).toMatch(/\?iv=/);
@@ -657,11 +626,9 @@ describe('NIP04Service', () => {
     it('should support encryption with specific key ID', async () => {
       const keyPair = await keyManagementService.generateKeyPair();
 
-      const encrypted = await service.encrypt(
-        'test',
-        TEST_KEYS.recipient.publicKey,
-        { keyId: keyPair.keyId }
-      );
+      const encrypted = await service.encrypt('test', TEST_KEYS.recipient.publicKey, {
+        keyId: keyPair.keyId,
+      });
 
       expect(encrypted).toBeDefined();
     });
@@ -672,10 +639,7 @@ describe('NIP04Service', () => {
   describe('Read Receipts (Kind 1515)', () => {
     it('should create read receipt event', async () => {
       const messageId = 'test-message-id-123';
-      const receipt = await service.createReadReceipt(
-        messageId,
-        TEST_KEYS.sender.publicKey
-      );
+      const receipt = await service.createReadReceipt(messageId, TEST_KEYS.sender.publicKey);
 
       expect(receipt.kind).toBe(1515);
       expect(receipt.tags).toContainEqual(['e', messageId]);
@@ -709,10 +673,7 @@ describe('NIP04Service', () => {
 
     it('should track read receipt status', async () => {
       const messageId = 'msg-456';
-      const receipt = await service.createReadReceipt(
-        messageId,
-        TEST_KEYS.sender.publicKey
-      );
+      const receipt = await service.createReadReceipt(messageId, TEST_KEYS.sender.publicKey);
 
       const status = service.getReadReceiptStatus(messageId);
       expect(status).toBeDefined();
@@ -739,10 +700,7 @@ describe('NIP04Service', () => {
 
   describe('Typing Indicators (Kind 20004)', () => {
     it('should send typing indicator', async () => {
-      const indicator = await service.sendTypingIndicator(
-        TEST_KEYS.recipient.publicKey,
-        true
-      );
+      const indicator = await service.sendTypingIndicator(TEST_KEYS.recipient.publicKey, true);
 
       expect(indicator.kind).toBe(20004);
       expect(indicator.content).toBe('typing');
@@ -750,10 +708,7 @@ describe('NIP04Service', () => {
     });
 
     it('should send stopped typing indicator', async () => {
-      const indicator = await service.sendTypingIndicator(
-        TEST_KEYS.recipient.publicKey,
-        false
-      );
+      const indicator = await service.sendTypingIndicator(TEST_KEYS.recipient.publicKey, false);
 
       expect(indicator.kind).toBe(20004);
       expect(indicator.content).toBe('stopped');
@@ -786,7 +741,7 @@ describe('NIP04Service', () => {
       expect(service.isUserTyping(TEST_KEYS.recipient.publicKey)).toBe(true);
 
       // Wait 3.1 seconds
-      await new Promise(resolve => setTimeout(resolve, 3100));
+      await new Promise((resolve) => setTimeout(resolve, 3100));
 
       expect(service.isUserTyping(TEST_KEYS.recipient.publicKey)).toBe(false);
     }, 5000);
@@ -889,17 +844,16 @@ describe('NIP04Service', () => {
         before: now + 20000,
       });
 
-      expect(history.every(msg => msg.timestamp > now + 10000 && msg.timestamp < now + 20000)).toBe(true);
+      expect(
+        history.every((msg) => msg.timestamp > now + 10000 && msg.timestamp < now + 20000)
+      ).toBe(true);
     });
 
     it('should search messages by content', async () => {
-      const results = await service.searchMessages(
-        TEST_KEYS.recipient.publicKey,
-        'Message 5'
-      );
+      const results = await service.searchMessages(TEST_KEYS.recipient.publicKey, 'Message 5');
 
       expect(results.length).toBeGreaterThan(0);
-      expect(results.some(msg => msg.content.includes('Message 5'))).toBe(true);
+      expect(results.some((msg) => msg.content.includes('Message 5'))).toBe(true);
     });
 
     it('should cache decrypted messages', () => {
@@ -1161,7 +1115,7 @@ describe('NIP04Service', () => {
       const messages = Array.from({ length: 20 }, (_, i) => `Message ${i}`);
 
       const encrypted = await Promise.all(
-        messages.map(msg => service.encrypt(msg, TEST_KEYS.recipient.publicKey))
+        messages.map((msg) => service.encrypt(msg, TEST_KEYS.recipient.publicKey))
       );
 
       expect(encrypted).toHaveLength(20);
@@ -1181,14 +1135,10 @@ describe('NIP04Service', () => {
 
     it('should validate all user inputs', async () => {
       // Invalid pubkey format
-      await expect(
-        service.encrypt('test', 'invalid-pubkey-format')
-      ).rejects.toThrow();
+      await expect(service.encrypt('test', 'invalid-pubkey-format')).rejects.toThrow();
 
       // Empty message ID for read receipt
-      await expect(
-        service.createReadReceipt('', TEST_KEYS.sender.publicKey)
-      ).rejects.toThrow();
+      await expect(service.createReadReceipt('', TEST_KEYS.sender.publicKey)).rejects.toThrow();
     });
 
     it('should not leak information through error messages', async () => {
@@ -1267,9 +1217,7 @@ describe('NIP04Service', () => {
       for (const maliciousIV of maliciousIVs) {
         const malformed = `${validCiphertext}?iv=${maliciousIV}`;
 
-        await expect(
-          service.decrypt(malformed, TEST_KEYS.sender.publicKey)
-        ).rejects.toThrow();
+        await expect(service.decrypt(malformed, TEST_KEYS.sender.publicKey)).rejects.toThrow();
       }
     });
 
@@ -1318,9 +1266,7 @@ describe('NIP04Service', () => {
       ];
 
       for (const invalidPubkey of invalidPubkeys) {
-        await expect(
-          service.encrypt('test', invalidPubkey)
-        ).rejects.toThrow();
+        await expect(service.encrypt('test', invalidPubkey)).rejects.toThrow();
       }
     });
 
@@ -1618,7 +1564,7 @@ describe('NIP04Service', () => {
       }
 
       // All should auto-clear after 3 seconds
-      await new Promise(resolve => setTimeout(resolve, 3100));
+      await new Promise((resolve) => setTimeout(resolve, 3100));
 
       for (const user of users) {
         expect(service.isUserTyping(user)).toBe(false);

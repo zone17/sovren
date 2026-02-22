@@ -1,8 +1,8 @@
 ---
 id: 436
 severity: P3
-status: pending
-title: "test-environment.ts: hardcoded test API keys look like real credentials"
+status: complete
+title: 'test-environment.ts: hardcoded test API keys look like real credentials'
 file: packages/frontend/src/test-utils/test-environment.ts
 found_in: PR #89
 reviewer: review-security
@@ -21,6 +21,7 @@ OPENAI_API_KEY: 'sk-test-key-for-testing-purposes-only',
 ```
 
 These will:
+
 1. Trigger GitHub secret scanning alerts
 2. Trigger the anti-pattern scanner's credential check (though test-utils is now excluded)
 3. Confuse new developers who might think these are real

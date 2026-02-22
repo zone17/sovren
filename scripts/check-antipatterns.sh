@@ -8,19 +8,20 @@ set -e
 STAGED_TS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.ts$' || true)
 STAGED_SQL=$(git diff --cached --name-only --diff-filter=ACM | grep '\.sql$' || true)
 
-# Exclude test files from TypeScript checks (legitimate as any usage in mocks)
-STAGED_TS_SRC=$(echo "$STAGED_TS" | grep -v '__tests__\|\.test\.ts\|\.spec\.ts' || true)
+# Exclude test files and test utilities from TypeScript checks (legitimate as any usage in mocks)
+STAGED_TS_SRC=$(echo "$STAGED_TS" | grep -v '__tests__\|\.test\.ts\|\.spec\.ts\|test-utils/\|vitest.*setup' || true)
 
 ROUTE_FILES=$(echo "$STAGED_TS_SRC" | grep -E 'routes/' || true)
 ERRORS=0
 
 # Check 1a: Unsafe `any` types in source TypeScript files
-# Catches: as any, : any, Promise<any>, Promise<any[]>, Array<any>
+# Catches: as any, : any, <any>, <any[, any[], Record<string, any>, Promise<any>,
+#          (...args: any), <any,  (generic position)
 if [ -n "$STAGED_TS_SRC" ]; then
   MATCHES=""
   while IFS= read -r f; do
     [ -z "$f" ] && continue
-    MATCHES+=$(grep -HnE '(\bas\s+any\b|:\s*any\b|<any>|<any\[)' "$f" 2>/dev/null || true)$'\n'
+    MATCHES+=$(grep -HnE '(\bas\s+any\b|:\s*any\b|<any>|<any,|any\[\])' "$f" 2>/dev/null || true)$'\n'
   done <<< "$STAGED_TS_SRC"
   MATCHES=$(echo "$MATCHES" | grep -v '^\s*//' | sed '/^$/d' || true)
   if [ -n "$MATCHES" ]; then
@@ -60,7 +61,7 @@ if [ -n "$STAGED_TS_SRC" ]; then
     DIFF_FILES+=("$f")
   done <<< "$STAGED_TS_SRC"
   MATCHES=$(git diff --cached -U0 -- "${DIFF_FILES[@]}" 2>/dev/null \
-    | grep -E '^\+' | grep -v '^\+\+\+' \
+    | grep -E '^\+' | grep -vF '+++' \
     | grep -Ei '\b(TODO|FIXME|HACK|XXX)\b' || true)
   if [ -n "$MATCHES" ]; then
     echo "⚠️  TODO/FIXME comment in newly-added lines (resolve before committing):"
@@ -152,6 +153,7 @@ if [ -n "$SERVICE_FILES" ]; then
 fi
 
 # Check 6: Auth bypass — route handler without auth middleware
+# Handles multiline route definitions (middleware on subsequent lines)
 # Excludes: /health, /metrics, /ready, /live endpoints (legitimately public)
 # Excludes: auth routes (challenge, authenticate — public by design)
 if [ -n "$ROUTE_FILES" ]; then
@@ -159,9 +161,16 @@ if [ -n "$ROUTE_FILES" ]; then
     [ -z "$f" ] && continue
     # Skip auth route file itself (login/challenge endpoints are public)
     case "$f" in *routes/auth.ts|*routes/auth/*) continue ;; esac
-    UNPROTECTED=$(grep -nE 'router\.(get|post|put|delete|patch)\(' "$f" 2>/dev/null \
-      | grep -vE 'authenticate|optionalAuth|authRateLimit|requireAuth' \
-      | grep -vE "'/health'|'/metrics'|'/ready'|'/live'|'/status'" || true)
+    UNPROTECTED=""
+    while IFS= read -r line_num; do
+      # Check 5-line window for auth middleware (handles multiline route defs)
+      CONTEXT=$(sed -n "${line_num},$((line_num + 5))p" "$f")
+      if ! echo "$CONTEXT" | grep -qE 'authenticate|optionalAuth|authRateLimit|requireAuth'; then
+        if ! echo "$CONTEXT" | grep -qE "'/health'|'/metrics'|'/ready'|'/live'|'/status'"; then
+          UNPROTECTED+="  ${line_num}: $(sed -n "${line_num}p" "$f")"$'\n'
+        fi
+      fi
+    done < <(grep -nE 'router\.(get|post|put|delete|patch)\(' "$f" 2>/dev/null | cut -d: -f1)
     if [ -n "$UNPROTECTED" ]; then
       echo "⚠️  $f: Route without auth middleware:"
       echo "$UNPROTECTED"

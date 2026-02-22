@@ -30,12 +30,23 @@ export interface IQueueService {
    * Add a job to a named queue
    * @returns The job ID
    */
-  addJob<T>(queueName: string, jobName: string, data: T, options?: QueueJobOptions): Promise<string>;
+  addJob<T>(
+    queueName: string,
+    jobName: string,
+    data: T,
+    options?: QueueJobOptions
+  ): Promise<string>;
 
   /**
    * Register a job processor (worker) for a queue
    */
   registerProcessor<T>(processor: IJobProcessor<T>): void;
+
+  /**
+   * Attempt to remove a job from a queue by its BullMQ job ID.
+   * Best-effort: resolves silently if the job doesn't exist or has already completed.
+   */
+  removeJob(queueName: string, jobId: string): Promise<void>;
 
   /**
    * Get all registered queue names

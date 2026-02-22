@@ -216,11 +216,18 @@ router.get(
 router.get(
   '/benchmark',
   authenticate,
+  // requireCreator intentionally omitted: benchmarks return anonymous aggregate
+  // community data accessible to all authenticated users, not creator-specific content
   expensiveRateLimiter,
   asyncHandler(async (req, res) => {
     const data = await getWellnessService().getBenchmark();
     if (!data) {
-      res.json(createApiResponse(req, { benchmark: null, message: 'Insufficient participants for anonymous benchmarking (minimum: 10)' }));
+      res.json(
+        createApiResponse(req, {
+          benchmark: null,
+          message: 'Insufficient participants for anonymous benchmarking (minimum: 10)',
+        })
+      );
       return;
     }
     res.json(createApiResponse(req, data));
@@ -246,9 +253,7 @@ router.delete(
   requireCreator,
   expensiveRateLimiter,
   asyncHandler(async (req, res) => {
-    const deleted = await getWellnessService().deleteAllWellnessData(
-      getAuthUser(req).nostr_pubkey
-    );
+    const deleted = await getWellnessService().deleteAllWellnessData(getAuthUser(req).nostr_pubkey);
     res.json(createApiResponse(req, { deleted }));
   })
 );

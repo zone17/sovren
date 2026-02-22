@@ -70,20 +70,30 @@ export const renderWithQueryClient = (
   };
 };
 
-// Utility to wait for queries to settle
+// Utility to wait for queries to settle.
+// Uses filter + map + Promise.allSettled so that all in-flight query promises
+// are actually collected and awaited. The previous forEach implementation was
+// a no-op: forEach returns undefined, so `await undefined` resolved immediately
+// and `return query.promise` returned from the callback, not the outer function.
+// Promise.allSettled (not Promise.all) ensures one query error doesn't abort the rest.
 export const waitForQueriesToSettle = async (queryClient: QueryClient) => {
-  await queryClient
+  const pendingPromises = queryClient
     .getQueryCache()
     .findAll()
-    .forEach((query) => {
-      if (query.state.fetchStatus === 'fetching') {
-        return query.promise;
-      }
-    });
+    .filter((query) => query.state.fetchStatus === 'fetching')
+    .map((query) => query.promise);
+
+  if (pendingPromises.length > 0) {
+    await Promise.allSettled(pendingPromises);
+  }
 };
 
 // Mock fetch response helper with proper generic type
-export const createMockResponse = <T = unknown>(data: T, status = 200, ok = true): Partial<Response> => ({
+export const createMockResponse = <T = unknown,>(
+  data: T,
+  status = 200,
+  ok = true
+): Partial<Response> => ({
   ok,
   status,
   statusText: ok ? 'OK' : 'Error',
@@ -110,7 +120,7 @@ export const expectQueryToBeLoading = (
   expect(queryState?.fetchStatus).toBe('fetching');
 };
 
-export const expectQueryToBeSuccess = <T = unknown>(
+export const expectQueryToBeSuccess = <T = unknown,>(
   queryClient: QueryClient,
   queryKey: readonly unknown[],
   expectedData?: T

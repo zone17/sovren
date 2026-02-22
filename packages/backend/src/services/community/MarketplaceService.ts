@@ -33,6 +33,7 @@ const VALID_SERVICE_TYPES = ['editing', 'writing', 'design', 'consulting', 'othe
 const ESCROW_EXPIRE_DAYS = 30;
 // C-1: max BullMQ retry attempts for Lightning payout before marking permanently failed
 const MAX_PAYOUT_ATTEMPTS = 5;
+const MAX_PORTFOLIO_URLS = 20;
 
 interface ListingRow {
   id: string;
@@ -117,23 +118,29 @@ export class MarketplaceService implements IMarketplaceService {
 
     // H-4: Validate portfolio URLs — must be https:// only (no http, no data URIs)
     // #347: SSRF validation — reject URLs pointing to internal/private IPs
+    // #440: Validate in parallel (DNS lookups are I/O-bound; sequential is unnecessarily slow)
     if (data.portfolioUrls && data.portfolioUrls.length > 0) {
-      for (const url of data.portfolioUrls) {
-        if (typeof url !== 'string' || !url.startsWith('https://')) {
-          throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
-        }
-        // Verify it's a parseable URL (catches malformed inputs)
-        try {
-          const parsed = new URL(url);
-          if (parsed.protocol !== 'https:') {
-            throw new Error('Protocol must be https');
-          }
-        } catch {
-          throw new Error(`Invalid portfolio URL: "${url}". Must be a valid https:// URL`);
-        }
-        // #347: SSRF check — blocks internal IPs, DNS rebinding, decimal IPs, etc.
-        await validateSsrfUrl(url);
+      if (data.portfolioUrls.length > MAX_PORTFOLIO_URLS) {
+        throw new Error(`Too many portfolio URLs (max ${MAX_PORTFOLIO_URLS})`);
       }
+      await Promise.all(
+        data.portfolioUrls.map(async (url) => {
+          if (typeof url !== 'string' || !url.startsWith('https://')) {
+            throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
+          }
+          // Verify it's a parseable URL (catches malformed inputs)
+          try {
+            const parsed = new URL(url);
+            if (parsed.protocol !== 'https:') {
+              throw new Error('Protocol must be https');
+            }
+          } catch {
+            throw new Error(`Invalid portfolio URL: "${url}". Must be a valid https:// URL`);
+          }
+          // #347: SSRF check — blocks internal IPs, DNS rebinding, decimal IPs, etc.
+          await validateSsrfUrl(url);
+        })
+      );
     }
 
     const { data: rows, error } = await this.db
@@ -227,12 +234,18 @@ export class MarketplaceService implements IMarketplaceService {
     if (data.priceSats !== undefined) updates.price_sats = data.priceSats;
     if (data.portfolioUrls !== undefined) {
       // H-4: Validate portfolio URLs
-      for (const url of data.portfolioUrls) {
-        if (typeof url !== 'string' || !url.startsWith('https://')) {
-          throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
-        }
-        await validateSsrfUrl(url);
+      // #440: Validate in parallel (DNS lookups are I/O-bound)
+      if (data.portfolioUrls.length > MAX_PORTFOLIO_URLS) {
+        throw new Error(`Too many portfolio URLs (max ${MAX_PORTFOLIO_URLS})`);
       }
+      await Promise.all(
+        data.portfolioUrls.map(async (url) => {
+          if (typeof url !== 'string' || !url.startsWith('https://')) {
+            throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
+          }
+          await validateSsrfUrl(url);
+        })
+      );
       updates.portfolio_urls = data.portfolioUrls;
     }
     if (data.active !== undefined) updates.active = data.active;

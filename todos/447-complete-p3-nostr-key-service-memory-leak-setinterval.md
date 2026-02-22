@@ -1,8 +1,8 @@
 ---
 id: 447
 severity: P3
-status: pending
-title: "NostrKeyManagementService: setInterval in startBackgroundTasks never cleared on destroy"
+status: complete
+title: 'NostrKeyManagementService: setInterval in startBackgroundTasks never cleared on destroy'
 file: packages/shared/src/services/NostrKeyManagementService.ts
 found_in: PR #89
 reviewer: review-backend
@@ -28,6 +28,7 @@ destroy(): void {
 ```
 
 This causes:
+
 1. Memory leak — destroyed instances continue running cleanup/rotation tasks
 2. Zombie callbacks — after `destroy()`, the interval callbacks reference cleared maps, potentially causing errors
 3. In tests, leaked intervals can cause "open handles" warnings and prevent clean test exit

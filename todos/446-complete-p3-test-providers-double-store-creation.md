@@ -1,8 +1,8 @@
 ---
 id: 446
 severity: P3
-status: pending
-title: "test-providers: renderWithProviders creates store twice"
+status: complete
+title: 'test-providers: renderWithProviders creates store twice'
 file: packages/frontend/src/test-utils/test-providers.tsx
 found_in: PR #89
 reviewer: review-testing

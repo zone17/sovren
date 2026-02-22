@@ -1,14 +1,14 @@
 ---
 id: 435
 severity: P3
-status: pending
-title: "vitest-frontend-setup: getBoundingClientRect __mocked flag check is fragile"
+status: complete
+title: 'vitest-frontend-setup: getBoundingClientRect __mocked flag check is fragile'
 file: test-utils/vitest-frontend-setup.ts
 found_in: PR #89
 reviewer: review-testing
 ---
 
-# getBoundingClientRect mock uses undeclared __mocked flag
+# getBoundingClientRect mock uses undeclared \_\_mocked flag
 
 ## Problem
 
@@ -41,7 +41,7 @@ let boundingRectPatched = false;
 
 if (!boundingRectPatched) {
   const original = Element.prototype.getBoundingClientRect;
-  Element.prototype.getBoundingClientRect = function() {
+  Element.prototype.getBoundingClientRect = function () {
     const rect = original.call(this);
     if (rect.width === 0 && rect.height === 0) {
       return { ...rect, width: 500, height: 300, top: 0, left: 0, bottom: 300, right: 500 };

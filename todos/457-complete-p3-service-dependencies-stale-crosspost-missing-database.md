@@ -1,7 +1,7 @@
 ---
 id: 457
 severity: P3
-status: pending
+status: complete
 title: "SERVICE_DEPENDENCIES map missing 'Database' for CrossPostService"
 file: packages/backend/src/container/types.ts
 found_in: PR #92
@@ -13,6 +13,7 @@ reviewer: review-architecture
 ## Problem
 
 The dependency map at line 608 lists:
+
 ```typescript
 CrossPostService: ['PlatformConnectionService', 'QueueService', 'Logger'],
 ```

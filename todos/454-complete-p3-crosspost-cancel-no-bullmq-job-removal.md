@@ -1,7 +1,7 @@
 ---
 id: 454
 severity: P3
-status: pending
+status: complete
 title: "CrossPostService: cancel() doesn't remove BullMQ job from queue"
 file: packages/backend/src/services/distribution/CrossPostService.ts
 found_in: PR #92

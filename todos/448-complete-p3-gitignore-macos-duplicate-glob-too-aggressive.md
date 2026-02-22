@@ -1,8 +1,8 @@
 ---
 id: 448
 severity: P3
-status: pending
-title: ".gitignore: macOS duplicate file patterns may accidentally ignore legitimate files"
+status: complete
+title: '.gitignore: macOS duplicate file patterns may accidentally ignore legitimate files'
 file: .gitignore
 found_in: PR #89
 reviewer: review-infra
@@ -21,6 +21,7 @@ The new patterns added for macOS Finder duplicate files:
 ```
 
 These glob patterns match any file with a space followed by a digit before the extension. This could accidentally ignore legitimate files like:
+
 - `chapter 1.md`
 - `version 2.0.ts`
 - `step 3.json`
@@ -47,6 +48,7 @@ Make the pattern more specific to Finder's duplicate naming:
 ```
 
 Or use a more targeted pattern:
+
 ```gitignore
 # macOS Finder duplicates: "file 2.ext", "file 2" (no extension)
 *[[:space:]][0-9]

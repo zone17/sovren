@@ -1,8 +1,8 @@
 ---
 id: 455
 severity: P3
-status: pending
-title: "Extract createMockChain to shared test utility for Supabase chain mocking"
+status: complete
+title: 'Extract createMockChain to shared test utility for Supabase chain mocking'
 file: packages/backend/src/services/distribution/__tests__/CrossPostService.test.ts
 found_in: PR #92
 reviewer: review-typescript

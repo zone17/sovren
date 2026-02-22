@@ -337,12 +337,22 @@ export function renderWithProviders(
 } & ReturnType<typeof render> {
   const { providerOptions = {}, ...renderOptions } = options;
 
+  // Create the store ONCE and share it between the Wrapper and the return value.
+  // Previously, AllProviders created its own store internally, so the returned
+  // `store` was a different instance than the one used by the rendered components.
+  // Tests that inspected `store.getState()` were checking the wrong store.
+  const store = createTestStore(providerOptions);
+
   function Wrapper({ children }: { children: React.ReactNode }): JSX.Element {
-    return <AllProviders {...providerOptions}>{children}</AllProviders>;
+    return (
+      <Provider store={store}>
+        <TestRouter {...providerOptions}>{children}</TestRouter>
+      </Provider>
+    );
   }
 
   return {
-    store: createTestStore(providerOptions),
+    store,
     ...render(ui, { wrapper: Wrapper, ...renderOptions }),
   };
 }

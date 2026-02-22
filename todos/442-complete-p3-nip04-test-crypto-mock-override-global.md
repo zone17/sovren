@@ -1,8 +1,8 @@
 ---
 id: 442
 severity: P3
-status: pending
-title: "NIP04Service test: overrides globalThis.crypto which may leak to other test files"
+status: complete
+title: 'NIP04Service test: overrides globalThis.crypto which may leak to other test files'
 file: packages/frontend/src/services/nostr/__tests__/NIP04Service.test.ts
 found_in: PR #89
 reviewer: review-testing
@@ -15,10 +15,10 @@ reviewer: review-testing
 The NIP04Service test at line 74 replaces `globalThis.crypto` with a mock:
 
 ```typescript
-Object.defineProperty(globalThis, "crypto", {
+Object.defineProperty(globalThis, 'crypto', {
   value: mockCrypto as any,
   writable: true,
-  configurable: true
+  configurable: true,
 });
 ```
 
@@ -42,7 +42,7 @@ Add explicit cleanup in `afterEach`:
 const originalCrypto = globalThis.crypto;
 
 beforeEach(() => {
-  Object.defineProperty(globalThis, "crypto", {
+  Object.defineProperty(globalThis, 'crypto', {
     value: mockCrypto as any,
     writable: true,
     configurable: true,
@@ -50,7 +50,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  Object.defineProperty(globalThis, "crypto", {
+  Object.defineProperty(globalThis, 'crypto', {
     value: originalCrypto,
     writable: true,
     configurable: true,
