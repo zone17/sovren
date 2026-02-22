@@ -108,28 +108,48 @@ export class CrossPostService implements ICrossPostService {
       throw error;
     }
 
-    // Queue BullMQ jobs for each inserted row
-    for (const row of inserted || []) {
-      let delay = 0;
-      if (row.scheduled_at) {
-        const scheduledTime = new Date(row.scheduled_at).getTime();
-        delay = Math.max(0, scheduledTime - Date.now());
+    // Queue BullMQ jobs for each inserted row.
+    // Compensating transaction (critical-patterns.md #4c): if enqueue fails
+    // mid-loop, rows that were never enqueued are marked 'failed' so they don't
+    // stay permanently stuck in 'queued' status with no corresponding BullMQ job.
+    const enqueuedIds: string[] = [];
+    try {
+      for (const row of inserted || []) {
+        let delay = 0;
+        if (row.scheduled_at) {
+          const scheduledTime = new Date(row.scheduled_at).getTime();
+          delay = Math.max(0, scheduledTime - Date.now());
+        }
+
+        const jobData: CrossPublishJobData = {
+          crossPostId: row.id,
+          contentId: request.content_id,
+          creatorId,
+          platform: row.platform,
+          useRepurposed: request.use_repurposed || false,
+        };
+
+        await this.queueService.addJob<CrossPublishJobData>(
+          QUEUE_NAME,
+          `publish-${row.platform}`,
+          jobData,
+          { jobId: `crosspost-${row.id}`, delay }
+        );
+
+        enqueuedIds.push(row.id);
+      }
+    } catch (err) {
+      // Mark un-enqueued rows as 'failed' so they don't stay stuck in 'queued'
+      const failedIds = (inserted || []).map((r) => r.id).filter((id) => !enqueuedIds.includes(id));
+
+      if (failedIds.length > 0) {
+        await this.db
+          .from('cross_posts')
+          .update({ status: 'failed', error_message: 'Queue enqueue failed' })
+          .in('id', failedIds);
       }
 
-      const jobData: CrossPublishJobData = {
-        crossPostId: row.id,
-        contentId: request.content_id,
-        creatorId,
-        platform: row.platform,
-        useRepurposed: request.use_repurposed || false,
-      };
-
-      await this.queueService.addJob<CrossPublishJobData>(
-        QUEUE_NAME,
-        `publish-${row.platform}`,
-        jobData,
-        { jobId: `crosspost-${row.id}`, delay }
-      );
+      throw err;
     }
 
     const entries: CrossPostEntry[] = (inserted || []).map((row) => ({

@@ -7,16 +7,22 @@ import { CrossPostService } from '../CrossPostService';
 import { createMockChain } from '../../../test-utils/supabase-mock';
 import { createQueueServiceMock } from '../../../test-utils/queue-mock';
 import type { IQueueService } from '../../../interfaces/queue/IQueueService';
+import type { ILogger } from '../../../interfaces/shared/ILogger';
+import type { ISupabaseClient } from '../../../interfaces/shared/ISupabaseClient';
+import type { IPlatformConnectionService } from '../../../interfaces/distribution/IPlatformConnectionService';
 
 describe('CrossPostService', () => {
   let service: CrossPostService;
-  let mockDb: any;
+  let mockDb: Partial<ISupabaseClient>;
   let mockQueueService: IQueueService;
-  let mockPlatformService: any;
-  let mockLogger: any;
+  let mockPlatformService: Partial<IPlatformConnectionService>;
+  let mockLogger: Partial<ILogger>;
 
-  // Chain mocks for different tables
+  // `any` is intentional: createMockChain returns Vitest mock objects whose chained
+  // methods (.mockReturnValue, .mockResolvedValue) conflict with SupabaseFilterBuilder types.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let contentChain: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let crossPostsChain: any;
 
   const creatorId = 'creator-pubkey-123';
@@ -50,7 +56,12 @@ describe('CrossPostService', () => {
       }),
     };
 
-    service = new CrossPostService(mockDb, mockQueueService, mockPlatformService, mockLogger);
+    service = new CrossPostService(
+      mockDb as ISupabaseClient,
+      mockQueueService,
+      mockPlatformService as IPlatformConnectionService,
+      mockLogger as ILogger
+    );
   });
 
   describe('constructor', () => {
@@ -165,6 +176,47 @@ describe('CrossPostService', () => {
       await expect(
         service.publish(creatorId, { content_id: contentId, platforms: ['mastodon'] })
       ).rejects.toThrow('Not authorized to cross-post this content');
+    });
+
+    it('should mark un-enqueued rows as failed when enqueue fails mid-loop', async () => {
+      // Arrange: 3 platforms; addJob succeeds for the first, fails on the second
+      const platforms = ['mastodon', 'bluesky', 'nostr'] as const;
+      const insertedRows = platforms.map((platform, i) => ({
+        id: `cp-id-${i}`,
+        platform,
+        status: 'queued',
+        scheduled_at: null,
+      }));
+
+      crossPostsChain.insert.mockImplementation(() => ({
+        select: vi.fn().mockResolvedValue({ data: insertedRows, error: null }),
+      }));
+
+      // addJob resolves for index 0, rejects for index 1 (and never reaches index 2)
+      (mockQueueService.addJob as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce('job-1')
+        .mockRejectedValueOnce(new Error('Redis connection lost'));
+
+      // Mock the compensating update so we can assert on it
+      const updateChain = {
+        in: vi.fn().mockResolvedValue({ error: null }),
+      };
+      crossPostsChain.update.mockReturnValue(updateChain);
+
+      // Act
+      await expect(
+        service.publish(creatorId, { content_id: contentId, platforms: [...platforms] })
+      ).rejects.toThrow('Redis connection lost');
+
+      // Assert: addJob was called twice (succeeded once, failed once; third never reached)
+      expect(mockQueueService.addJob).toHaveBeenCalledTimes(2);
+
+      // Assert: compensating update targets only the un-enqueued rows (bluesky + nostr)
+      expect(crossPostsChain.update).toHaveBeenCalledWith({
+        status: 'failed',
+        error_message: 'Queue enqueue failed',
+      });
+      expect(updateChain.in).toHaveBeenCalledWith('id', ['cp-id-1', 'cp-id-2']);
     });
   });
 

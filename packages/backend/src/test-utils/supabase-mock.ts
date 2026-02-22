@@ -20,11 +20,44 @@ import { vi } from 'vitest';
  */
 export function createMockChain(terminalData: unknown = []) {
   const chain: Record<string, ReturnType<typeof vi.fn>> = {};
-  ['from', 'select', 'insert', 'update', 'delete', 'eq', 'neq', 'in', 'order', 'limit'].forEach(
-    (method) => {
-      chain[method] = vi.fn().mockReturnValue(chain);
-    }
-  );
+  [
+    // Core query builder
+    'from',
+    'select',
+    'insert',
+    'update',
+    'delete',
+    'upsert',
+    // Equality filters
+    'eq',
+    'neq',
+    'in',
+    // Comparison filters
+    'gt',
+    'gte',
+    'lt',
+    'lte',
+    // Pattern filters
+    'like',
+    'ilike',
+    'match',
+    'textSearch',
+    // Null / boolean filters
+    'is',
+    // Array / range filters
+    'contains',
+    'containedBy',
+    'overlaps',
+    // Logical operators
+    'not',
+    'or',
+    'filter',
+    // Sorting / pagination
+    'order',
+    'limit',
+  ].forEach((method) => {
+    chain[method] = vi.fn().mockReturnValue(chain);
+  });
   // Terminal methods — each resolves with { data, error } matching Supabase's response shape
   chain.single = vi.fn().mockResolvedValue({ data: terminalData, error: null });
   chain.maybeSingle = vi.fn().mockResolvedValue({ data: terminalData, error: null });
