@@ -142,11 +142,31 @@ export class CrossPostService implements ICrossPostService {
       // Mark un-enqueued rows as 'failed' so they don't stay stuck in 'queued'
       const failedIds = (inserted || []).map((r) => r.id).filter((id) => !enqueuedIds.includes(id));
 
+      this.logger.error('[CrossPostService] Enqueue failed mid-loop; compensating', {
+        enqueuedCount: enqueuedIds.length,
+        totalCount: (inserted || []).length,
+        err,
+      });
+
       if (failedIds.length > 0) {
-        await this.db
+        const { error: compensateError } = await this.db
           .from('cross_posts')
-          .update({ status: 'failed', error_message: 'Queue enqueue failed' })
+          .update({
+            status: 'failed',
+            error_message: 'Queue enqueue failed',
+            updated_at: new Date().toISOString(),
+          })
           .in('id', failedIds);
+
+        if (compensateError) {
+          this.logger.error(
+            '[CrossPostService] Compensating update failed — rows may be stuck in queued',
+            {
+              failedIds,
+              compensateError,
+            }
+          );
+        }
       }
 
       throw err;
@@ -204,7 +224,7 @@ export class CrossPostService implements ICrossPostService {
     }
 
     if (count === 0) {
-      throw new Error('Cross-post not found or not in a cancellable state');
+      throw new ValidationError('Cross-post not found or not in a cancellable state');
     }
 
     // #454: Best-effort BullMQ job removal — prevents cancelled jobs from sitting

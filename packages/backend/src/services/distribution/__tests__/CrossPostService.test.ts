@@ -211,10 +211,17 @@ describe('CrossPostService', () => {
       // Assert: addJob was called twice (succeeded once, failed once; third never reached)
       expect(mockQueueService.addJob).toHaveBeenCalledTimes(2);
 
+      // Assert: error logged before compensating
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[CrossPostService] Enqueue failed mid-loop; compensating',
+        expect.objectContaining({ enqueuedCount: 1, totalCount: 3 })
+      );
+
       // Assert: compensating update targets only the un-enqueued rows (bluesky + nostr)
       expect(crossPostsChain.update).toHaveBeenCalledWith({
         status: 'failed',
         error_message: 'Queue enqueue failed',
+        updated_at: expect.any(String),
       });
       expect(updateChain.in).toHaveBeenCalledWith('id', ['cp-id-1', 'cp-id-2']);
     });
