@@ -33,6 +33,7 @@ const VALID_SERVICE_TYPES = ['editing', 'writing', 'design', 'consulting', 'othe
 const ESCROW_EXPIRE_DAYS = 30;
 // C-1: max BullMQ retry attempts for Lightning payout before marking permanently failed
 const MAX_PAYOUT_ATTEMPTS = 5;
+const MAX_PORTFOLIO_URLS = 20;
 
 interface ListingRow {
   id: string;
@@ -119,7 +120,6 @@ export class MarketplaceService implements IMarketplaceService {
     // #347: SSRF validation — reject URLs pointing to internal/private IPs
     // #440: Validate in parallel (DNS lookups are I/O-bound; sequential is unnecessarily slow)
     if (data.portfolioUrls && data.portfolioUrls.length > 0) {
-      const MAX_PORTFOLIO_URLS = 20;
       if (data.portfolioUrls.length > MAX_PORTFOLIO_URLS) {
         throw new Error(`Too many portfolio URLs (max ${MAX_PORTFOLIO_URLS})`);
       }
@@ -235,7 +235,6 @@ export class MarketplaceService implements IMarketplaceService {
     if (data.portfolioUrls !== undefined) {
       // H-4: Validate portfolio URLs
       // #440: Validate in parallel (DNS lookups are I/O-bound)
-      const MAX_PORTFOLIO_URLS = 20;
       if (data.portfolioUrls.length > MAX_PORTFOLIO_URLS) {
         throw new Error(`Too many portfolio URLs (max ${MAX_PORTFOLIO_URLS})`);
       }

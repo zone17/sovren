@@ -18,8 +18,8 @@ import { vi } from 'vitest';
  *
  * @param terminalData - Data returned by terminal methods (`.single()`, `.range()`).
  */
-export function createMockChain(terminalData: any = []) {
-  const chain: any = {};
+export function createMockChain(terminalData: unknown = []) {
+  const chain: Record<string, ReturnType<typeof vi.fn>> = {};
   ['from', 'select', 'insert', 'update', 'delete', 'eq', 'neq', 'in', 'order', 'limit'].forEach(
     (method) => {
       chain[method] = vi.fn().mockReturnValue(chain);
