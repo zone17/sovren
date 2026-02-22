@@ -5,11 +5,13 @@
 
 import { CrossPostService } from '../CrossPostService';
 import { createMockChain } from '../../../test-utils/supabase-mock';
+import { createQueueServiceMock } from '../../../test-utils/queue-mock';
+import type { IQueueService } from '../../../interfaces/queue/IQueueService';
 
 describe('CrossPostService', () => {
   let service: CrossPostService;
   let mockDb: any;
-  let mockQueueService: any;
+  let mockQueueService: IQueueService;
   let mockPlatformService: any;
   let mockLogger: any;
 
@@ -28,11 +30,7 @@ describe('CrossPostService', () => {
       debug: vi.fn(),
     };
 
-    mockQueueService = {
-      createQueue: vi.fn(),
-      addJob: vi.fn().mockResolvedValue('job-123'),
-      removeJob: vi.fn().mockResolvedValue(undefined),
-    };
+    mockQueueService = createQueueServiceMock();
 
     mockPlatformService = {
       getAdapter: vi.fn(),
