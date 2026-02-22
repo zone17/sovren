@@ -1,6 +1,6 @@
 ---
 title: Common Solutions — Reusable Fixes for Recurring Issues
-date: '2026-02-21'
+date: '2026-02-22'
 category: patterns
 purpose: Consolidated solutions for P2/P3 patterns that recur across sprints. Prevents re-invention.
 usage: Reference when implementing features. Check if a solution already exists here before writing new code.
@@ -459,11 +459,11 @@ return { succeeded: succeeded.map((s) => s.value), failedCount: failed.length };
 
 **Clarification — `Promise.all` vs `Promise.allSettled`:**
 
-| Question | Answer | Use |
-| -------- | ------ | --- |
-| Should ANY failure reject the whole batch? | Yes | `Promise.all` |
-| Should we wait for ALL items regardless of failures? | Yes | `Promise.allSettled` |
-| Examples | SSRF validation, schema checks | Test settling, notifications, fanout |
+| Question                                             | Answer                         | Use                                  |
+| ---------------------------------------------------- | ------------------------------ | ------------------------------------ |
+| Should ANY failure reject the whole batch?           | Yes                            | `Promise.all`                        |
+| Should we wait for ALL items regardless of failures? | Yes                            | `Promise.allSettled`                 |
+| Examples                                             | SSRF validation, schema checks | Test settling, notifications, fanout |
 
 **Detection:** Grep for `Promise.all(` where the mapped function can independently fail (e.g., network calls, DB writes to separate rows). Replace with `Promise.allSettled(`. Conversely, grep for `Promise.allSettled(` used for validation — these should be `Promise.all`.
 
@@ -506,6 +506,8 @@ export function formatSats(amount: number, options: FormatSatsOptions = {}): str
 1. Extract to `packages/shared/src/utils/` with a parameterized interface covering all variation points
 2. Replace ALL call sites in the same PR (no partial migration)
 3. Add unit tests for each variation the parameters enable
+
+**Special case -- test mock factories:** When extracting a shared mock factory (e.g., `createQueueServiceMock()`), the PR MUST also migrate at least one existing test file to use the factory. A factory without consumers is dead code that drifts silently. Mapped types like `{ [K in keyof T]: Mock<any> }` erase parameter types -- without a real consumer, no one notices the type loss.
 
 **Detection:** Grep for repeated patterns like formatting logic, validation regexes, or transformation functions. If 3+ files have similar implementations, extract.
 
@@ -721,14 +723,17 @@ grep -E 'foo|bar'     # ERE -E works on both GNU and BSD
 
 ### Decision Table
 
-| Pattern | Mode | macOS BSD | Linux GNU | Recommendation |
-| ------- | ---- | --------- | --------- | -------------- |
-| Fixed string | `-F` | Yes | Yes | Preferred for literals |
-| Standard ERE | `-E` | Yes | Yes | Preferred for patterns with quantifiers |
-| BRE with `\+`, `\?`, `\|` | (default) | No | Yes | Never use — silent failure |
-| BRE with `*`, `.`, `^`, `$` | (default) | Yes | Yes | Safe subset only |
+| Pattern                     | Mode      | macOS BSD | Linux GNU | Recommendation                                         |
+| --------------------------- | --------- | --------- | --------- | ------------------------------------------------------ |
+| Fixed string                | `-F`      | Yes       | Yes       | Preferred for literals                                 |
+| Standard ERE                | `-E`      | Yes       | Yes       | Preferred for patterns with quantifiers or alternation |
+| BRE with `\+` (one-or-more) | (default) | No        | Yes       | Never use — silent failure (fixed PR #93)              |
+| BRE with `\?` (zero-or-one) | (default) | No        | Yes       | Never use — silent failure                             |
+| BRE with `\|` (alternation) | (default) | No        | Yes       | Never use — silent failure (fixed PR #94)              |
+| BRE with `*`, `.`, `^`, `$` | (default) | Yes       | Yes       | Safe subset only                                       |
 
 **Rule:** For any shell script that runs on both macOS (developer) and Linux (CI):
+
 1. Use `-F` when matching fixed/literal strings
 2. Use `-E` when quantifiers or alternation are needed
 3. Never rely on `\+`, `\?`, or `\|` in BRE mode
@@ -789,12 +794,12 @@ async function processParallelWaitAll(items: Item[]): Promise<ProcessResult[]> {
 
 ### Which Promise Combinator?
 
-| Use Case | Use | Why |
-| -------- | --- | --- |
-| Input validation (SSRF, schema) | `Promise.all` | First failure should reject entire batch |
-| Test utility settling, notifications | `Promise.allSettled` | Wait for all; partial success acceptable |
-| Sequential dependency chain | `for...of` + `await` | Each step depends on previous |
-| Finding an element | `Array.find()` (sync) or `for...of` | `forEach` cannot short-circuit |
+| Use Case                             | Use                                 | Why                                      |
+| ------------------------------------ | ----------------------------------- | ---------------------------------------- |
+| Input validation (SSRF, schema)      | `Promise.all`                       | First failure should reject entire batch |
+| Test utility settling, notifications | `Promise.allSettled`                | Wait for all; partial success acceptable |
+| Sequential dependency chain          | `for...of` + `await`                | Each step depends on previous            |
+| Finding an element                   | `Array.find()` (sync) or `for...of` | `forEach` cannot short-circuit           |
 
 **Detection:** Grep for `forEach(async` — every instance is a potential no-op bug. Also grep for `return.*\.forEach(` since `forEach` always returns `undefined`.
 
@@ -875,6 +880,76 @@ interface IJobQueue {
 
 ---
 
+## 22. Promise.race Timer Cleanup
+
+**Recurrence:** 1 P3 (PR #94 env-validation.ts). `Promise.race` with `setTimeout` as the timeout leg leaks the timer when the work promise resolves first. Detected by Vitest `--detectOpenHandles`.
+
+### Standard Pattern: `.finally(() => clearTimeout(timer!))`
+
+```typescript
+let timer: NodeJS.Timeout;
+await Promise.race([
+  doWork().finally(() => clearTimeout(timer!)),
+  new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Operation timed out')), timeoutMs);
+  }),
+]);
+```
+
+**Why `timer!` is safe:** The Promise executor runs synchronously. By the time `.finally` can fire (after microtask queue drains), `timer` is guaranteed to be assigned.
+
+**Alternative (avoids non-null assertion):**
+
+```typescript
+let timer: NodeJS.Timeout | undefined;
+await Promise.race([
+  doWork().finally(() => {
+    if (timer !== undefined) clearTimeout(timer);
+  }),
+  new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Timed out')), timeoutMs);
+  }),
+]);
+```
+
+**Rule:** Every `Promise.race` that uses `setTimeout` must clean up the timer. Grep for `Promise.race` + `setTimeout` without `clearTimeout` in the same scope.
+
+**Detection:** `grep -rn 'Promise.race' packages/ | xargs grep -l setTimeout | xargs grep -L clearTimeout`
+
+---
+
+## 23. Set Dedup Before External Validation
+
+**Recurrence:** 1 P3 (PR #94 marketplace-service.ts). Duplicate URLs in user input caused redundant DNS lookups during SSRF validation.
+
+### Standard Pattern: `[...new Set(array)]` Before I/O Validation
+
+```typescript
+// Dedup before validation -- avoids redundant I/O
+const uniqueItems = [...new Set(rawItems)];
+
+// Limit applies to unique count (not raw input count)
+if (uniqueItems.length > MAX_ITEMS) {
+  throw new ValidationError(`Maximum ${MAX_ITEMS} unique items`);
+}
+
+// Validate unique items only
+await Promise.all(uniqueItems.map((item) => validateExternally(item)));
+```
+
+**Key design decision:** Dedup happens BEFORE the count check. The limit constrains unique items, not raw duplicates. Submitting 15 copies of 3 URLs should count as 3, not 15.
+
+**When to apply:** Any array from user input that feeds into I/O-bound validation (DNS, HTTP, DB lookup). Common cases:
+
+- Portfolio URLs before SSRF validation
+- Email addresses before verification
+- External API keys before health checks
+- Relay URLs before connection attempts
+
+**Detection:** Grep for `Promise.all(*.map(*validate*))` where the input comes from user request body without a preceding `new Set()`.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -922,3 +997,5 @@ CONTEXT TO LOAD:
 | grep breaks on macOS / portability issue     | 19        | common-solutions.md  |
 | `forEach(async` does nothing / returns early | 20        | common-solutions.md  |
 | Need to cancel BullMQ job without DB lookup  | 21        | common-solutions.md  |
+| Promise.race leaks setTimeout handle         | 22        | common-solutions.md  |
+| Duplicate items cause redundant I/O          | 23        | common-solutions.md  |

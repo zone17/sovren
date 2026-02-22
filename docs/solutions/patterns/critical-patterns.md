@@ -1,6 +1,6 @@
 ---
 title: Critical Patterns — Canonical Reference
-date: '2026-02-19'
+date: '2026-02-22'
 category: patterns
 purpose: Single source of truth for recurring P1 fix patterns. Include in agent briefs.
 usage: Read this file BEFORE writing any service, route, or financial component.
@@ -28,14 +28,14 @@ const { error } = await db.from('members').insert({ group_id, user_id });
 if (error?.code === '23505') throw new Error('Already a member');
 
 // COUNT after insert — true post-insert count
-const { count } = await db.from('members')
+const { count } = await db
+  .from('members')
   .select('id', { count: 'exact', head: true })
   .eq('group_id', groupId);
 
 // Over cap? Rollback the insert
 if ((count ?? 0) > maxMembers) {
-  await db.from('members').delete()
-    .eq('group_id', groupId).eq('user_id', userId);
+  await db.from('members').delete().eq('group_id', groupId).eq('user_id', userId);
   throw new ConflictError('Group is full');
 }
 ```
@@ -46,18 +46,22 @@ Use when a status transition must also respect a concurrent aggregate cap.
 
 ```typescript
 // Atomic status guard — only one concurrent caller wins
-await db.from('requests').update({ status: 'active' })
-  .eq('id', requestId).eq('status', 'pending');
+await db.from('requests').update({ status: 'active' }).eq('id', requestId).eq('status', 'pending');
 
 // Verify capacity post-transition
-const { count } = await db.from('requests')
+const { count } = await db
+  .from('requests')
   .select('id', { count: 'exact', head: true })
-  .eq('owner_id', ownerId).eq('status', 'active');
+  .eq('owner_id', ownerId)
+  .eq('status', 'active');
 
 if ((count ?? 0) > maxCapacity) {
   // Revert
-  await db.from('requests').update({ status: 'pending' })
-    .eq('id', requestId).eq('status', 'active');
+  await db
+    .from('requests')
+    .update({ status: 'pending' })
+    .eq('id', requestId)
+    .eq('status', 'active');
   throw new ConflictError('Capacity exceeded');
 }
 ```
@@ -68,9 +72,11 @@ Use when exactly one writer must win (tickets, slots, listings).
 
 ```typescript
 // UPDATE WHERE active=true — exactly one concurrent caller succeeds
-const { data: claimed } = await db.from('listings')
+const { data: claimed } = await db
+  .from('listings')
   .update({ active: false })
-  .eq('id', listingId).eq('active', true)
+  .eq('id', listingId)
+  .eq('active', true)
   .select('id');
 
 if (!claimed?.length) throw new ConflictError('Already claimed');
@@ -80,8 +86,7 @@ try {
   await createOrder(listingId);
 } catch (err) {
   // Rollback: re-activate so resource isn't permanently locked
-  await db.from('listings').update({ active: true })
-    .eq('id', listingId).eq('active', false);
+  await db.from('listings').update({ active: true }).eq('id', listingId).eq('active', false);
   throw err;
 }
 ```
@@ -126,13 +131,17 @@ async getPrivateContent(contentId: string, callerId: string): Promise<Content> {
 
 ```typescript
 const PAGE_SIZE = 500;
-let total = 0, offset = 0, hasMore = true;
+let total = 0,
+  offset = 0,
+  hasMore = true;
 
 while (hasMore) {
-  const { data } = await db.from('entries')
+  const { data } = await db
+    .from('entries')
     .select('amount')
     .eq('owner_id', ownerId)
-    .gte('created_at', startDate).lte('created_at', endDate)
+    .gte('created_at', startDate)
+    .lte('created_at', endDate)
     .order('created_at', { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1);
 
@@ -174,7 +183,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 ```typescript
 // Service call
 const { data } = await db.rpc('create_group_with_admin', {
-  p_name: name, p_creator_id: creatorId
+  p_name: name,
+  p_creator_id: creatorId,
 });
 ```
 
@@ -198,6 +208,7 @@ try {
 ## 5. Payment & Financial Persistence (4 patterns from PR #73 R6)
 
 ### 5a. Atomic Write (temp file + rename)
+
 ```typescript
 const tmpPath = `${filePath}.${Date.now()}.tmp`;
 await fs.writeFile(tmpPath, JSON.stringify(data));
@@ -205,21 +216,27 @@ await fs.rename(tmpPath, filePath); // Atomic on same filesystem
 ```
 
 ### 5b. Write Mutex (prevent concurrent file corruption)
+
 ```typescript
 if (this.writeLock) return; // Already writing
 this.writeLock = true;
-try { await atomicWrite(path, data); }
-finally { this.writeLock = false; }
+try {
+  await atomicWrite(path, data);
+} finally {
+  this.writeLock = false;
+}
 ```
 
 ### 5c. Persist-Then-Mutate (never lose state)
+
 ```typescript
-await persistToStorage(data);   // Step 1: durable write
+await persistToStorage(data); // Step 1: durable write
 this.memoryCache.set(key, data); // Step 2: in-memory update
 // If step 2 fails, data is still persisted for recovery
 ```
 
 ### 5d. Compensating Transaction (multi-step with rollback)
+
 ```typescript
 const invoice = await createInvoice(amount);
 try {
@@ -320,21 +337,22 @@ function isPrivateIPv6(ip: string): boolean {
 }
 
 function hexToIPv4(hi: string, lo: string): string {
-  const h = parseInt(hi, 16), l = parseInt(lo, 16);
+  const h = parseInt(hi, 16),
+    l = parseInt(lo, 16);
   return `${(h >> 8) & 0xff}.${h & 0xff}.${(l >> 8) & 0xff}.${l & 0xff}`;
 }
 ```
 
 **URL parser normalization table (must-know for SSRF testing):**
 
-| Input hostname | `new URL().hostname` | Which check catches it |
-|---|---|---|
-| `0177.0.0.1` | `127.0.0.1` | isPrivateIPv4 |
-| `0x7f000001` | `127.0.0.1` | isPrivateIPv4 |
-| `2130706433` | `127.0.0.1` | isPrivateIPv4 |
-| `::ffff:127.0.0.1` | `::ffff:7f00:1` | IPv4-mapped hex check |
-| `::127.0.0.1` | `::7f00:1` | **IPv4-compatible hex check** (PR #91) |
-| `::192.168.1.1` | `::c0a8:101` | **IPv4-compatible hex check** (PR #91) |
+| Input hostname     | `new URL().hostname` | Which check catches it                 |
+| ------------------ | -------------------- | -------------------------------------- |
+| `0177.0.0.1`       | `127.0.0.1`          | isPrivateIPv4                          |
+| `0x7f000001`       | `127.0.0.1`          | isPrivateIPv4                          |
+| `2130706433`       | `127.0.0.1`          | isPrivateIPv4                          |
+| `::ffff:127.0.0.1` | `::ffff:7f00:1`      | IPv4-mapped hex check                  |
+| `::127.0.0.1`      | `::7f00:1`           | **IPv4-compatible hex check** (PR #91) |
+| `::192.168.1.1`    | `::c0a8:101`         | **IPv4-compatible hex check** (PR #91) |
 
 **Detection:** Grep for `fetch(`, `axios(`, `http.get(` where the URL comes from user input without passing through `validateSsrfUrl`. Also grep for calls to `validateSsrfUrl` that ignore the return value (TOCTOU risk).
 
@@ -360,22 +378,43 @@ async deleteEntity(id: string, callerId: string): Promise<void> {
 
 **Valid delete states:** `draft`, `cancelled`. **Protected states:** `sent`, `paid`, `active`, `released`, `completed`.
 
-**Detection:** Grep for `.delete()` without a preceding status check in the same function.
+**Additional rule (PR #94):** Every Supabase mutation (`.update()`, `.delete()`) that targets a specific row MUST check the returned `count`. A `count === 0` result means the WHERE clause matched nothing -- the entity either doesn't exist or is in an unexpected state. Without this check, the operation silently succeeds as a no-op.
+
+```typescript
+// WRONG -- silent no-op when row doesn't match
+const { error } = await db
+  .from('cross_posts')
+  .update({ status: 'cancelled' })
+  .eq('id', crossPostId)
+  .eq('status', 'pending');
+
+// RIGHT -- explicit count guard
+const { error, count } = await db
+  .from('cross_posts')
+  .update({ status: 'cancelled' })
+  .eq('id', crossPostId)
+  .eq('status', 'pending');
+
+if (error) throw new DatabaseError(error.message);
+if (count === 0) throw new NotFoundError('Not found or not in cancellable state');
+```
+
+**Detection:** Grep for `.delete()` without a preceding status check in the same function. Also grep for `.update()` or `.delete()` without destructuring `count` from the result.
 
 ---
 
 ## Quick Reference Table
 
-| Pattern | When to Use | Key Guard | HTTP Error |
-|---------|-------------|-----------|------------|
-| Insert-then-verify | Aggregate caps | Count after insert | 409 |
-| Accept-then-revert | Status + capacity | Count after transition | 409 |
-| Atomic claim | Scarce resources | `UPDATE WHERE active=true` | 409 |
-| Service-layer auth | All data access | Membership/ownership query | 403 |
-| Paginated accumulation | Any unbounded SELECT | `PAGE_SIZE=500` + while loop | N/A |
-| Atomic multi-table | 2+ table writes | RPC or compensating tx | 500 |
-| SSRF validation | User-supplied URLs | DNS resolve + IP check + pin IPs | 400 |
-| Status guard | DELETE/void/cancel | Assert status before write | 409 |
+| Pattern                | When to Use          | Key Guard                        | HTTP Error |
+| ---------------------- | -------------------- | -------------------------------- | ---------- |
+| Insert-then-verify     | Aggregate caps       | Count after insert               | 409        |
+| Accept-then-revert     | Status + capacity    | Count after transition           | 409        |
+| Atomic claim           | Scarce resources     | `UPDATE WHERE active=true`       | 409        |
+| Service-layer auth     | All data access      | Membership/ownership query       | 403        |
+| Paginated accumulation | Any unbounded SELECT | `PAGE_SIZE=500` + while loop     | N/A        |
+| Atomic multi-table     | 2+ table writes      | RPC or compensating tx           | 500        |
+| SSRF validation        | User-supplied URLs   | DNS resolve + IP check + pin IPs | 400        |
+| Status guard           | DELETE/void/cancel   | Assert status before write       | 409        |
 
 ---
 
