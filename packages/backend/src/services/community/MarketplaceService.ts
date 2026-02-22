@@ -116,34 +116,8 @@ export class MarketplaceService implements IMarketplaceService {
       throw new Error('price_sats must be a positive integer');
     }
 
-    // H-4: Validate portfolio URLs — must be https:// only (no http, no data URIs)
-    // #347: SSRF validation — reject URLs pointing to internal/private IPs
-    // #440: Validate in parallel (DNS lookups are I/O-bound; sequential is unnecessarily slow)
-    // #465: Deduplicate before validation — avoids redundant SSRF DNS lookups
-    const uniquePortfolioUrls = data.portfolioUrls ? [...new Set(data.portfolioUrls)] : [];
-    if (uniquePortfolioUrls.length > 0) {
-      if (uniquePortfolioUrls.length > MAX_PORTFOLIO_URLS) {
-        throw new Error(`Too many portfolio URLs (max ${MAX_PORTFOLIO_URLS})`);
-      }
-      await Promise.all(
-        uniquePortfolioUrls.map(async (url) => {
-          if (typeof url !== 'string' || !url.startsWith('https://')) {
-            throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
-          }
-          // Verify it's a parseable URL (catches malformed inputs)
-          try {
-            const parsed = new URL(url);
-            if (parsed.protocol !== 'https:') {
-              throw new Error('Protocol must be https');
-            }
-          } catch {
-            throw new Error(`Invalid portfolio URL: "${url}". Must be a valid https:// URL`);
-          }
-          // #347: SSRF check — blocks internal IPs, DNS rebinding, decimal IPs, etc.
-          await validateSsrfUrl(url);
-        })
-      );
-    }
+    // #468: Shared validation — dedup, parse, SSRF check
+    const uniquePortfolioUrls = await this.validatePortfolioUrls(data.portfolioUrls);
 
     const { data: rows, error } = await this.db
       .from<ListingRow>('service_listings')
@@ -235,22 +209,8 @@ export class MarketplaceService implements IMarketplaceService {
     if (data.description !== undefined) updates.description = data.description;
     if (data.priceSats !== undefined) updates.price_sats = data.priceSats;
     if (data.portfolioUrls !== undefined) {
-      // H-4: Validate portfolio URLs
-      // #440: Validate in parallel (DNS lookups are I/O-bound)
-      // #465: Deduplicate before validation
-      const uniqueUrls = [...new Set(data.portfolioUrls)];
-      if (uniqueUrls.length > MAX_PORTFOLIO_URLS) {
-        throw new Error(`Too many portfolio URLs (max ${MAX_PORTFOLIO_URLS})`);
-      }
-      await Promise.all(
-        uniqueUrls.map(async (url) => {
-          if (typeof url !== 'string' || !url.startsWith('https://')) {
-            throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
-          }
-          await validateSsrfUrl(url);
-        })
-      );
-      updates.portfolio_urls = uniqueUrls;
+      // #468: Shared validation — dedup, parse, SSRF check
+      updates.portfolio_urls = await this.validatePortfolioUrls(data.portfolioUrls);
     }
     if (data.active !== undefined) updates.active = data.active;
 
@@ -835,5 +795,41 @@ export class MarketplaceService implements IMarketplaceService {
     }
 
     this.logger.info('Order funded via webhook — escrow active', { orderId, paymentHash });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Deduplicate, parse, and SSRF-validate portfolio URLs.
+   * Single source of truth for both createListing and updateListing (#468).
+   */
+  private async validatePortfolioUrls(urls?: string[]): Promise<string[]> {
+    const unique = urls ? [...new Set(urls)] : [];
+    if (unique.length === 0) return unique;
+
+    if (unique.length > MAX_PORTFOLIO_URLS) {
+      throw new Error(`Too many portfolio URLs (max ${MAX_PORTFOLIO_URLS})`);
+    }
+
+    await Promise.all(
+      unique.map(async (url) => {
+        if (typeof url !== 'string' || !url.startsWith('https://')) {
+          throw new Error(`Invalid portfolio URL: "${url}". All URLs must start with https://`);
+        }
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol !== 'https:') {
+            throw new Error('Protocol must be https');
+          }
+        } catch {
+          throw new Error(`Invalid portfolio URL: "${url}". Must be a valid https:// URL`);
+        }
+        await validateSsrfUrl(url);
+      })
+    );
+
+    return unique;
   }
 }

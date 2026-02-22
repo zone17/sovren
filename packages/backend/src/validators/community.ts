@@ -15,6 +15,7 @@ const MAX_BIO = 2000;
 const MAX_CONTENT = 4000;
 const MAX_REVIEW_TEXT = 10000;
 const MAX_GOALS = 10;
+const MAX_PORTFOLIO_URLS = 20; // Must match MarketplaceService.MAX_PORTFOLIO_URLS
 
 // ============================================================================
 // Circles — EPIC-010
@@ -98,7 +99,10 @@ export const CreateListingSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(MAX_CONTENT).optional(),
   priceSats: z.number().int().positive(),
-  portfolioUrls: z.array(z.string().url().startsWith('https://')).max(10).optional(),
+  portfolioUrls: z
+    .array(z.string().url().startsWith('https://'))
+    .max(MAX_PORTFOLIO_URLS)
+    .optional(),
 });
 
 export const UpdateListingSchema = z
@@ -106,7 +110,10 @@ export const UpdateListingSchema = z
     title: z.string().min(1).max(200).optional(),
     description: z.string().max(MAX_CONTENT).optional(),
     priceSats: z.number().int().positive().optional(),
-    portfolioUrls: z.array(z.string().url().startsWith('https://')).max(10).optional(),
+    portfolioUrls: z
+      .array(z.string().url().startsWith('https://'))
+      .max(MAX_PORTFOLIO_URLS)
+      .optional(),
     active: z.boolean().optional(),
   })
   .refine((d) => Object.values(d).some((v) => v !== undefined), {
