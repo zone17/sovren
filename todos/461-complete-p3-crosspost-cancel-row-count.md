@@ -23,7 +23,9 @@ Source: Architecture strategist, Pattern recognition (PR #93)
 ## Proposed Solutions
 
 ### Option A: Check update result count
+
 Return the update result and verify `count > 0` before proceeding to `removeJob` and logging success.
+
 - Effort: Small
 - Risk: Low
 
@@ -38,6 +40,6 @@ Return the update result and verify `count > 0` before proceeding to `removeJob`
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
-| 2026-02-21 | Created from PR #93 review | |
+| Date       | Action                     | Learnings |
+| ---------- | -------------------------- | --------- |
+| 2026-02-21 | Created from PR #93 review |           |

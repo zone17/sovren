@@ -9,7 +9,7 @@ STAGED_TS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.ts$' || tr
 STAGED_SQL=$(git diff --cached --name-only --diff-filter=ACM | grep '\.sql$' || true)
 
 # Exclude test files and test utilities from TypeScript checks (legitimate as any usage in mocks)
-STAGED_TS_SRC=$(echo "$STAGED_TS" | grep -v '__tests__\|\.test\.ts\|\.spec\.ts\|test-utils/\|vitest.*setup' || true)
+STAGED_TS_SRC=$(echo "$STAGED_TS" | grep -vE '__tests__|\.test\.ts|\.spec\.ts|test-utils/|vitest.*setup' || true)
 
 ROUTE_FILES=$(echo "$STAGED_TS_SRC" | grep -E 'routes/' || true)
 ERRORS=0

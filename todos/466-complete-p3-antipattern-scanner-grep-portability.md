@@ -24,7 +24,9 @@ Source: Architecture strategist (PR #93)
 ## Proposed Solutions
 
 ### Option A: Use grep -vE with pipe alternation
+
 Replace all `grep -v 'a\|b'` with `grep -vE 'a|b'` throughout the scanner.
+
 - Effort: Small
 - Risk: Low
 
@@ -39,6 +41,6 @@ Replace all `grep -v 'a\|b'` with `grep -vE 'a|b'` throughout the scanner.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                     | Learnings                                                 |
+| ---------- | -------------------------- | --------------------------------------------------------- |
 | 2026-02-21 | Created from PR #93 review | Already fixed one BRE bug in this sprint (grep -vF '+++') |

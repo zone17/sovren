@@ -172,7 +172,7 @@ export class CrossPostService implements ICrossPostService {
   }
 
   async cancel(creatorId: string, crossPostId: string): Promise<void> {
-    const { error } = await this.db
+    const { error, count } = await this.db
       .from('cross_posts')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('id', crossPostId)
@@ -181,6 +181,10 @@ export class CrossPostService implements ICrossPostService {
 
     if (error) {
       throw error;
+    }
+
+    if (count === 0) {
+      throw new Error('Cross-post not found or not in a cancellable state');
     }
 
     // #454: Best-effort BullMQ job removal — prevents cancelled jobs from sitting

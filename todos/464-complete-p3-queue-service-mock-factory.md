@@ -23,10 +23,12 @@ Source: Architecture strategist (PR #93)
 ## Proposed Solutions
 
 ### Option A: Create shared factory in test-utils
+
 ```typescript
 // packages/backend/src/test-utils/queue-mock.ts
 export function createQueueServiceMock() { ... }
 ```
+
 - Effort: Small
 - Risk: Low
 
@@ -42,6 +44,6 @@ export function createQueueServiceMock() { ... }
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
-| 2026-02-21 | Created from PR #93 review | |
+| Date       | Action                     | Learnings |
+| ---------- | -------------------------- | --------- |
+| 2026-02-21 | Created from PR #93 review |           |

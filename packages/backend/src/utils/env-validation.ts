@@ -419,12 +419,16 @@ export async function validateEnvironment(): Promise<ValidatedEnv> {
     // Run connectivity checks with a timeout — fail fast if critical services are unreachable
     if (parsed.VALIDATE_ENV) {
       try {
+        let timer: ReturnType<typeof setTimeout>;
         await Promise.race([
           validateConnectivity(parsed),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Connectivity check timed out after 5s')), 5000)
-          ),
-        ]);
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(
+              () => reject(new Error('Connectivity check timed out after 5s')),
+              5000
+            );
+          }),
+        ]).finally(() => clearTimeout(timer!));
       } catch (error) {
         console.warn('⚠️  Connectivity validation failed:', error);
         // Don't throw — allow startup but log degraded state

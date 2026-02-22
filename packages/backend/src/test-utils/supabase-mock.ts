@@ -25,8 +25,10 @@ export function createMockChain(terminalData: unknown = []) {
       chain[method] = vi.fn().mockReturnValue(chain);
     }
   );
-  // Terminal methods
+  // Terminal methods — each resolves with { data, error } matching Supabase's response shape
   chain.single = vi.fn().mockResolvedValue({ data: terminalData, error: null });
+  chain.maybeSingle = vi.fn().mockResolvedValue({ data: terminalData, error: null });
+  chain.range = vi.fn().mockResolvedValue({ data: terminalData, error: null, count: 0 });
   // For insert().select() chains, the final await resolves via the chain itself
   chain.then = undefined; // Prevent premature Promise detection
   return chain;

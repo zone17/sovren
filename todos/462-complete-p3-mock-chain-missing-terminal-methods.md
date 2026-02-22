@@ -24,7 +24,9 @@ Source: Architecture strategist, Pattern recognition (PR #93)
 ## Proposed Solutions
 
 ### Option A: Add missing terminal methods
+
 Add `maybeSingle()`, `range()`, and accept an options object `{ data, error }` for error path testing.
+
 - Effort: Small
 - Risk: Low
 
@@ -39,6 +41,6 @@ Add `maybeSingle()`, `range()`, and accept an options object `{ data, error }` f
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
-| 2026-02-21 | Created from PR #93 review | |
+| Date       | Action                     | Learnings |
+| ---------- | -------------------------- | --------- |
+| 2026-02-21 | Created from PR #93 review |           |
