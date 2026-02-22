@@ -22,9 +22,11 @@ Source: Performance oracle (PR #93)
 ## Proposed Solutions
 
 ### Option A: Add Set dedup before validation
+
 ```typescript
 const uniqueUrls = [...new Set(data.portfolioUrls)];
 ```
+
 - Effort: Small (1 line)
 - Risk: None
 
@@ -39,6 +41,6 @@ const uniqueUrls = [...new Set(data.portfolioUrls)];
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
-| 2026-02-21 | Created from PR #93 review | |
+| Date       | Action                     | Learnings |
+| ---------- | -------------------------- | --------- |
+| 2026-02-21 | Created from PR #93 review |           |

@@ -23,7 +23,9 @@ Source: Performance oracle, Pattern recognition (PR #93)
 ## Proposed Solutions
 
 ### Option A: Add timer.unref() or AbortSignal.timeout
+
 Use `AbortSignal.timeout(5000)` on the underlying fetch call, or clear the timer on resolution.
+
 - Effort: Small
 - Risk: Low
 
@@ -38,6 +40,6 @@ Use `AbortSignal.timeout(5000)` on the underlying fetch call, or clear the timer
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
-| 2026-02-21 | Created from PR #93 review | |
+| Date       | Action                     | Learnings |
+| ---------- | -------------------------- | --------- |
+| 2026-02-21 | Created from PR #93 review |           |
