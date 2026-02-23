@@ -40,7 +40,7 @@ import type { ILogger } from '../../../interfaces/shared/ILogger';
 import type { IQueueService } from '../../../interfaces/queue/IQueueService';
 import type { IPlatformConnectionService } from '../../../interfaces/distribution/IPlatformConnectionService';
 
-let mockDb: ReturnType<typeof createMockDb>;  // or ISupabaseClient
+let mockDb: ReturnType<typeof createMockDb>; // or ISupabaseClient
 let mockQueueService: Partial<IQueueService>;
 let mockPlatformService: Partial<IPlatformConnectionService>;
 let mockLogger: Partial<ILogger>;

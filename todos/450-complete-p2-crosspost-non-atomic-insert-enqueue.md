@@ -2,7 +2,7 @@
 id: 450
 severity: P2
 status: pending
-title: "CrossPostService: non-atomic insert + queue enqueue leaves orphaned rows on partial failure"
+title: 'CrossPostService: non-atomic insert + queue enqueue leaves orphaned rows on partial failure'
 file: packages/backend/src/services/distribution/CrossPostService.ts
 found_in: PR #92
 reviewer: review-data-integrity
