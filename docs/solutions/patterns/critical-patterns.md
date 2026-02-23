@@ -203,6 +203,58 @@ try {
 
 **Detection:** Grep for two or more `.insert()` or `.update()` calls on different tables within the same function without RPC or try/catch.
 
+### 4c. DB + Queue Compensation with Error Checking (PR #96)
+
+When a DB write succeeds but subsequent queue enqueue fails mid-loop, mark un-enqueued rows as terminal. **The compensation itself can fail** — destructure its error, log with recovery context, and always rethrow the original.
+
+```typescript
+const enqueuedIds: string[] = [];
+try {
+  for (const row of inserted || []) {
+    await queueService.addJob(QUEUE_NAME, `publish-${row.platform}`, jobData, { delay });
+    enqueuedIds.push(row.id);
+  }
+} catch (err) {
+  const failedIds = (inserted || []).map((r) => r.id).filter((id) => !enqueuedIds.includes(id));
+
+  logger.error('[Service] Enqueue failed mid-loop; compensating', {
+    enqueuedCount: enqueuedIds.length,
+    totalCount: (inserted || []).length,
+    err,
+  });
+
+  if (failedIds.length > 0) {
+    const { error: compensateError } = await db
+      .from('table')
+      .update({
+        status: 'failed',
+        error_message: 'Queue enqueue failed',
+        updated_at: new Date().toISOString(),
+      })
+      .in('id', failedIds);
+
+    if (compensateError) {
+      logger.error('[Service] Compensating update failed — rows may be stuck', {
+        failedIds,
+        compensateError,
+      });
+    }
+  }
+
+  throw err; // Always rethrow — compensation is cleanup, not recovery
+}
+```
+
+**Key rules:**
+
+- Track successes per-iteration (`enqueuedIds.push`) so the failed set is exact.
+- Log **before** compensating — if compensation crashes, at least one log exists.
+- Rename destructured error (`compensateError`) to avoid shadowing the catch binding.
+- Add `updated_at` for audit trail consistency.
+- `throw err` is unconditional — caller must see the real failure.
+
+**Detection:** Grep for `addJob` or `enqueue` inside a `for` loop that also has a preceding `.insert()`. If there's no try/catch with compensation, it's a P1.
+
 ---
 
 ## 5. Payment & Financial Persistence (4 patterns from PR #73 R6)

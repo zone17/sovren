@@ -950,6 +950,71 @@ await Promise.all(uniqueItems.map((item) => validateExternally(item)));
 
 ---
 
+## 24. Error Class Selection for Service Methods
+
+**Recurrence:** 3 P2s across PRs #92, #96. Bare `Error` in service methods produces HTTP 500 on client-triggerable paths. Wrong error class (ValidationError instead of AuthorizationError, or vice versa) corrupts security monitoring.
+
+### Decision Matrix
+
+| Scenario                    | Error class                          | HTTP    | Example                          |
+| --------------------------- | ------------------------------------ | ------- | -------------------------------- |
+| Resource not found          | `ValidationError` or `NotFoundError` | 400/404 | Content ID doesn't exist         |
+| Resource in wrong state     | `ValidationError`                    | 400     | Cancel on already-published post |
+| Caller doesn't own resource | `AuthorizationError`                 | 403     | Edit someone else's content      |
+| Caller not authenticated    | `UnauthorizedError`                  | 401     | Missing/expired token            |
+| Infrastructure failure      | raw error (rethrow)                  | 500     | DB connection lost               |
+
+```typescript
+import { ValidationError, AuthorizationError } from '../../utils/errors';
+
+// Ownership check → AuthorizationError (403)
+if (content.creator_id !== creatorId) {
+  throw new AuthorizationError('Not authorized to modify this content');
+}
+
+// State guard rejection → ValidationError (400)
+if (count === 0) {
+  throw new ValidationError('Resource not found or not in expected state');
+}
+
+// NEVER: bare Error on client-triggerable path
+// throw new Error('something went wrong'); // → 500, pages on-call
+```
+
+**Detection:** Grep for `throw new Error(` inside service methods. Any match is a candidate for replacement with a typed error class.
+
+**When to apply:** Every service method that can fail due to client input or state. The only acceptable bare `Error` throw is in catch blocks rethrowing infrastructure failures.
+
+---
+
+## 25. Stale Todo Detection — Triage Before Implementing
+
+**Recurrence:** 2 sprints (PR #93: 40% stale, PR #96: 76% stale). Todos from prior review cycles go stale as subsequent PRs fix the described issues.
+
+### Triage Methodology
+
+1. Spawn lightweight Explore agents grouped by domain (3 agents for ~15-20 items)
+2. Each agent reads the referenced source file and checks if the described defect still exists
+3. Classify each item: DO / ALREADY_FIXED / WONT_FIX / DEFERRED / FALSE_POSITIVE
+4. Only send DO items to implementation agents
+
+```bash
+# Quick stale check: grep for the expected fix pattern
+grep -n "ValidationError" src/services/SomeService.ts
+# If the fix is already present, mark ALREADY_FIXED
+```
+
+**Key rules:**
+
+- Never assign a todo without verifying the defect exists at the referenced line in current HEAD
+- Use Explore agents (read-only) for triage, not general-purpose agents
+- Group by domain to minimize context: backend-routes, types-infra, service-specific
+- Budget: 3 agents can triage ~20 items in <5 minutes
+
+**Detection:** When `todos/` has >10 pending items from a previous sprint, run triage before any implementation sprint.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -999,3 +1064,6 @@ CONTEXT TO LOAD:
 | Need to cancel BullMQ job without DB lookup  | 21        | common-solutions.md  |
 | Promise.race leaks setTimeout handle         | 22        | common-solutions.md  |
 | Duplicate items cause redundant I/O          | 23        | common-solutions.md  |
+| Bare `Error` in service method → 500         | 24        | common-solutions.md  |
+| DB insert + queue enqueue partial failure    | 4c        | critical-patterns.md |
+| Todos from prior sprint, many may be stale   | 25        | common-solutions.md  |
