@@ -3,8 +3,8 @@
  * Single source of truth for Redis connection configuration.
  *
  * Lifecycle:
- *   1. connectRedis() — call during server bootstrap (eager connect, fail-fast)
- *   2. getRedisClient() — returns the connected singleton
+ *   1. connectRedis() — call during server bootstrap (eager connect + ping verification)
+ *   2. getRedisClient() — returns the singleton; lazy-creates with warning if connectRedis() wasn't called
  *   3. disconnectRedis() — call during graceful shutdown
  */
 import Redis from 'ioredis';
@@ -51,7 +51,13 @@ function createClient(): Redis {
 
   const client = config.url
     ? new Redis(config.url, commonOpts)
-    : new Redis({ host: config.host, port: config.port, password: config.password, db: config.db, ...commonOpts });
+    : new Redis({
+        host: config.host,
+        port: config.port,
+        password: config.password,
+        db: config.db,
+        ...commonOpts,
+      });
 
   client.on('error', (err) => {
     logger.error('[Redis] Connection error:', { message: err.message });
@@ -97,6 +103,9 @@ export async function connectRedis(): Promise<void> {
  */
 export function getRedisClient(): Redis {
   if (!sharedClient) {
+    logger.warn(
+      '[Redis] Lazy-creating client — connectRedis() was not called first. Ping verification skipped.'
+    );
     sharedClient = createClient();
   }
   return sharedClient;
@@ -118,7 +127,9 @@ export async function disconnectRedis(): Promise<void> {
     try {
       await sharedClient.quit();
     } catch (err) {
-      logger.warn('[Redis] Error during disconnect, forcing close', { error: (err as Error).message });
+      logger.warn('[Redis] Error during disconnect, forcing close', {
+        error: (err as Error).message,
+      });
       sharedClient.disconnect();
     }
     sharedClient = null;

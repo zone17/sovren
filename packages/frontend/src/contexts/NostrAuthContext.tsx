@@ -6,9 +6,17 @@
  * Integrates with the unified backend authentication service
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
 import { KeyManagementService } from '../services/nostr/KeyManagementService';
 import type { NostrEnhancedKeyPair } from '@shared/types/nostr';
+import { createSignatureMessage } from '@shared/types/nostr/auth';
 
 // =====================================================
 // TYPE DEFINITIONS
@@ -128,112 +136,114 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
   // AUTHENTICATION METHODS
   // =====================================================
 
-  const login = useCallback(async (privateKey?: string) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+  const login = useCallback(
+    async (privateKey?: string) => {
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    try {
-      // Step 1: Get or import key
-      let keyPair: NostrEnhancedKeyPair;
+      try {
+        // Step 1: Get or import key
+        let keyPair: NostrEnhancedKeyPair;
 
-      if (privateKey) {
-        // Import provided key
-        const format = privateKey.startsWith('nsec') ? 'nsec' : 'hex';
-        keyPair = await keyManagement.importKey(privateKey, format);
-      } else {
-        // Use active key or generate new one
-        let activeKey = keyManagement.getActiveKey();
-        if (!activeKey) {
-          keyPair = await keyManagement.generateKeyPair();
-          await keyManagement.setActiveKey(keyPair.keyId);
+        if (privateKey) {
+          // Import provided key
+          const format = privateKey.startsWith('nsec') ? 'nsec' : 'hex';
+          keyPair = await keyManagement.importKey(privateKey, format);
         } else {
-          keyPair = activeKey;
+          // Use active key or generate new one
+          const activeKey = keyManagement.getActiveKey();
+          if (!activeKey) {
+            keyPair = await keyManagement.generateKeyPair();
+            await keyManagement.setActiveKey(keyPair.keyId);
+          } else {
+            keyPair = activeKey;
+          }
         }
-      }
 
-      // Step 2: Request authentication challenge
-      const challengeResponse = await fetch(`${apiBaseUrl}/api/auth/challenge`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pubkey: keyPair.publicKey }),
-      });
+        // Step 2: Request authentication challenge
+        const challengeResponse = await fetch(`${apiBaseUrl}/api/auth/challenge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pubkey: keyPair.publicKey }),
+        });
 
-      if (!challengeResponse.ok) {
-        throw new Error('Failed to get authentication challenge');
-      }
+        if (!challengeResponse.ok) {
+          throw new Error('Failed to get authentication challenge');
+        }
 
-      const challenge: AuthChallenge = await challengeResponse.json();
+        const challenge: AuthChallenge = await challengeResponse.json();
 
-      // Step 3: Sign the challenge
-      const timestamp = Date.now();
-      const message = `Sovren Authentication\nChallenge: ${challenge.challenge}\nTimestamp: ${timestamp}`;
+        // Step 3: Sign the challenge
+        const timestamp = Date.now();
+        const message = createSignatureMessage(challenge.challenge, timestamp);
 
-      const event = {
-        kind: 22242, // AUTH kind
-        pubkey: keyPair.publicKey,
-        created_at: Math.floor(timestamp / 1000),
-        tags: [['challenge', challenge.challenge]],
-        content: message,
-      };
-
-      const signedEvent = await keyManagement.signEvent(keyPair.keyId, event);
-
-      // Step 4: Verify signature with backend
-      const verifyResponse = await fetch(`${apiBaseUrl}/api/auth/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        const event = {
+          kind: 22242, // AUTH kind
           pubkey: keyPair.publicKey,
-          signature: signedEvent.sig,
-          challenge: challenge.challenge,
-          timestamp,
-          deviceInfo: {
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            deviceType: getDeviceType(),
-          },
-        }),
-      });
+          created_at: Math.floor(timestamp / 1000),
+          tags: [['challenge', challenge.challenge]],
+          content: message,
+        };
 
-      if (!verifyResponse.ok) {
-        const error = await verifyResponse.json();
-        throw new Error(error.message || 'Authentication failed');
+        const signedEvent = await keyManagement.signEvent(keyPair.keyId, event);
+
+        // Step 4: Verify signature with backend
+        const verifyResponse = await fetch(`${apiBaseUrl}/api/auth/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pubkey: keyPair.publicKey,
+            signature: signedEvent.sig,
+            challenge: challenge.challenge,
+            timestamp,
+            deviceInfo: {
+              userAgent: navigator.userAgent,
+              platform: navigator.platform,
+              deviceType: getDeviceType(),
+            },
+          }),
+        });
+
+        if (!verifyResponse.ok) {
+          const error = await verifyResponse.json();
+          throw new Error(error.message || 'Authentication failed');
+        }
+
+        const authResult = await verifyResponse.json();
+
+        // Step 5: Store authentication state
+        setState({
+          isAuthenticated: true,
+          isLoading: false,
+          pubkey: keyPair.publicKey,
+          npub: keyPair.npub,
+          profile: null, // Will be loaded separately
+          sessionId: authResult.sessionId,
+          token: authResult.token,
+          error: null,
+        });
+
+        // Persist session if enabled
+        if (persistSession && authResult.token) {
+          localStorage.setItem('nostr_auth_token', authResult.token);
+          localStorage.setItem('nostr_pubkey', keyPair.publicKey);
+          sessionStorage.setItem('nostr_session_id', authResult.sessionId);
+        }
+
+        // Step 6: Load profile (async, non-blocking)
+        loadProfile(keyPair.publicKey);
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Authentication failed',
+        }));
       }
-
-      const authResult = await verifyResponse.json();
-
-      // Step 5: Store authentication state
-      setState({
-        isAuthenticated: true,
-        isLoading: false,
-        pubkey: keyPair.publicKey,
-        npub: keyPair.npub,
-        profile: null, // Will be loaded separately
-        sessionId: authResult.sessionId,
-        token: authResult.token,
-        error: null,
-      });
-
-      // Persist session if enabled
-      if (persistSession && authResult.token) {
-        localStorage.setItem('nostr_auth_token', authResult.token);
-        localStorage.setItem('nostr_pubkey', keyPair.publicKey);
-        sessionStorage.setItem('nostr_session_id', authResult.sessionId);
-      }
-
-      // Step 6: Load profile (async, non-blocking)
-      loadProfile(keyPair.publicKey);
-
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Authentication failed',
-      }));
-    }
-  }, [apiBaseUrl, keyManagement, persistSession]);
+    },
+    [apiBaseUrl, keyManagement, persistSession]
+  );
 
   const loginWithExtension = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
       // Step 1: Connect to browser extension
@@ -258,7 +268,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
 
       // Step 3: Sign with extension
       const timestamp = Date.now();
-      const message = `Sovren Authentication\nChallenge: ${challenge.challenge}\nTimestamp: ${timestamp}`;
+      const message = createSignatureMessage(challenge.challenge, timestamp);
 
       const event = {
         kind: 22242,
@@ -311,9 +321,8 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
       }
 
       loadProfile(extension.publicKey);
-
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : 'Extension authentication failed',
@@ -322,7 +331,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
   }, [apiBaseUrl, keyManagement, persistSession]);
 
   const logout = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true }));
+    setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
       // Call backend logout if we have a token
@@ -330,7 +339,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
         await fetch(`${apiBaseUrl}/api/auth/logout`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${state.token}`,
+            Authorization: `Bearer ${state.token}`,
           },
         });
       }
@@ -354,7 +363,6 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
 
       // Clear key management session
       await keyManagement.clearSession();
-
     } catch (error) {
       console.error('Logout error:', error);
       // Still clear local state even if backend call fails
@@ -380,7 +388,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
       const response = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${state.token}`,
+          Authorization: `Bearer ${state.token}`,
         },
       });
 
@@ -390,7 +398,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
 
       const { newToken } = await response.json();
 
-      setState(prev => ({ ...prev, token: newToken }));
+      setState((prev) => ({ ...prev, token: newToken }));
 
       if (persistSession) {
         localStorage.setItem('nostr_auth_token', newToken);
@@ -410,11 +418,14 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
     return keyManagement.generateKeyPair();
   }, [keyManagement]);
 
-  const importKey = useCallback(async (key: string, format: 'nsec' | 'hex') => {
-    const keyPair = await keyManagement.importKey(key, format);
-    await keyManagement.setActiveKey(keyPair.keyId);
-    await login(); // Auto-login with imported key
-  }, [keyManagement, login]);
+  const importKey = useCallback(
+    async (key: string, format: 'nsec' | 'hex') => {
+      const keyPair = await keyManagement.importKey(key, format);
+      await keyManagement.setActiveKey(keyPair.keyId);
+      await login(); // Auto-login with imported key
+    },
+    [keyManagement, login]
+  );
 
   // =====================================================
   // SESSION MANAGEMENT
@@ -427,7 +438,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
 
     const response = await fetch(`${apiBaseUrl}/api/auth/sessions`, {
       headers: {
-        'Authorization': `Bearer ${state.token}`,
+        Authorization: `Bearer ${state.token}`,
       },
     });
 
@@ -439,40 +450,43 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
     return sessions;
   }, [apiBaseUrl, state.token]);
 
-  const revokeSession = useCallback(async (sessionId: string) => {
-    if (!state.token) {
-      throw new Error('Not authenticated');
-    }
+  const revokeSession = useCallback(
+    async (sessionId: string) => {
+      if (!state.token) {
+        throw new Error('Not authenticated');
+      }
 
-    const response = await fetch(`${apiBaseUrl}/api/auth/sessions/${sessionId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${state.token}`,
-      },
-    });
+      const response = await fetch(`${apiBaseUrl}/api/auth/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${state.token}`,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to revoke session');
-    }
+      if (!response.ok) {
+        throw new Error('Failed to revoke session');
+      }
 
-    // If revoking current session, logout
-    if (sessionId === state.sessionId) {
-      await logout();
-    }
-  }, [apiBaseUrl, state.token, state.sessionId, logout]);
+      // If revoking current session, logout
+      if (sessionId === state.sessionId) {
+        await logout();
+      }
+    },
+    [apiBaseUrl, state.token, state.sessionId, logout]
+  );
 
   // =====================================================
   // UTILITY METHODS
   // =====================================================
 
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
+    setState((prev) => ({ ...prev, error: null }));
   }, []);
 
   const loadProfile = useCallback(async (pubkey: string) => {
     // This would fetch the profile from NOSTR relays
     // Simplified for now
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       profile: {
         name: pubkey.substring(0, 8),
@@ -500,13 +514,13 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
       const pubkey = localStorage.getItem('nostr_pubkey');
 
       if (token && pubkey) {
-        setState(prev => ({ ...prev, isLoading: true }));
+        setState((prev) => ({ ...prev, isLoading: true }));
 
         try {
           // Validate token with backend
           const response = await fetch(`${apiBaseUrl}/api/auth/validate`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           });
 
@@ -528,11 +542,11 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
             // Token invalid, clear storage
             localStorage.removeItem('nostr_auth_token');
             localStorage.removeItem('nostr_pubkey');
-            setState(prev => ({ ...prev, isLoading: false }));
+            setState((prev) => ({ ...prev, isLoading: false }));
           }
         } catch (error) {
           console.error('Auto-connect failed:', error);
-          setState(prev => ({ ...prev, isLoading: false }));
+          setState((prev) => ({ ...prev, isLoading: false }));
         }
       }
     };
@@ -551,9 +565,12 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
     if (!state.token) return;
 
     // Refresh token every 23 hours (for 24h expiry)
-    const refreshInterval = setInterval(() => {
-      refreshToken().catch(console.error);
-    }, 23 * 60 * 60 * 1000);
+    const refreshInterval = setInterval(
+      () => {
+        refreshToken().catch(console.error);
+      },
+      23 * 60 * 60 * 1000
+    );
 
     return () => clearInterval(refreshInterval);
   }, [state.token, refreshToken]);
@@ -575,11 +592,7 @@ export const NostrAuthProvider: React.FC<NostrAuthProviderProps> = ({
     clearError,
   };
 
-  return (
-    <NostrAuthContext.Provider value={contextValue}>
-      {children}
-    </NostrAuthContext.Provider>
-  );
+  return <NostrAuthContext.Provider value={contextValue}>{children}</NostrAuthContext.Provider>;
 };
 
 export default NostrAuthProvider;

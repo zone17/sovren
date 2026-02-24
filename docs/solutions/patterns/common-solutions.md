@@ -1120,6 +1120,42 @@ When E2E is deferred entirely to Phase 3, the QA agent lacks context about imple
 
 ---
 
+## 28. Grep Same File After Fixing a Class Method
+
+**Recurrence:** `isValidSignature()` standalone export had the same bug as `verifySignature()` class method — but only the method was fixed. Bug survived 7 sprints until full-file review caught it. 9/10 agents flagged it independently.
+
+### The Rule
+
+When fixing a pattern in a class method, **always grep the same file** for the identical pattern in:
+
+- Standalone exported functions
+- Other class methods
+- Helper utilities at the bottom of the file
+
+### Checklist
+
+```bash
+# After fixing a bug, search for the same broken pattern
+grep -n "BROKEN_PATTERN" path/to/fixed-file.ts
+
+# Example: after fixing id: '' in verifySignature(), check the rest of the file
+grep -n "id: ''" packages/backend/src/services/nostr-auth.ts
+```
+
+### Why This Happens
+
+1. **Copy-paste during initial development** — standalone utility duplicates class method logic
+2. **Diff-based reviews** only see the fixed method, not the still-broken utility below
+3. **Test coverage gaps** — if the standalone utility isn't called by any test, the bug is invisible
+
+### Prevention
+
+- After any fix, run: `grep -n "OLD_BROKEN_PATTERN" <fixed-file>` to find remaining instances
+- Use full-file reviews (not diff reviews) for security-critical files
+- Agent consensus ≥ 6 = confirmed true positive — strongest signal possible
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1174,3 +1210,5 @@ CONTEXT TO LOAD:
 | Todos from prior sprint, many may be stale   | 25        | common-solutions.md  |
 | E2E tests mock API via `page.route()`        | 26        | common-solutions.md  |
 | New test type exists locally but not in CI   | 8a-8c     | critical-patterns.md |
+| NOSTR verifyEvent with `id: ''`              | 9a-9b     | critical-patterns.md |
+| Fixed method but standalone utility broken   | 28        | common-solutions.md  |

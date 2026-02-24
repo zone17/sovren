@@ -6,6 +6,7 @@
 import { finalizeEvent } from 'nostr-tools/pure';
 import { createHash } from 'crypto';
 import type { APIRequestContext } from '@playwright/test';
+import { createSignatureMessage } from '@shared/types/nostr/auth';
 
 export async function authenticateWithNostr(
   request: APIRequestContext,
@@ -17,13 +18,15 @@ export async function authenticateWithNostr(
   // 1. Get challenge from backend
   const challengeRes = await request.post(`${baseUrl}/api/auth/challenge`);
   if (!challengeRes.ok()) {
-    throw new Error(`Challenge request failed: ${challengeRes.status()} ${await challengeRes.text()}`);
+    throw new Error(
+      `Challenge request failed: ${challengeRes.status()} ${await challengeRes.text()}`
+    );
   }
   const challengeBody = await challengeRes.json();
   const { challenge, timestamp } = challengeBody.data;
 
-  // 2. Create signature message (must match backend's createSignatureMessage)
-  const message = `Sovren Authentication\nChallenge: ${challenge}\nTimestamp: ${timestamp}`;
+  // 2. Create signature message — shared source of truth
+  const message = createSignatureMessage(challenge, timestamp);
   const messageHash = createHash('sha256').update(message).digest('hex');
 
   // 3. Create and sign NOSTR event using nostr-tools finalizeEvent

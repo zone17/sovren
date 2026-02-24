@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p1
 issue_id: 488
 tags: [code-review, security, nostr, correctness]
@@ -67,6 +67,7 @@ Option A if anyone might need the utility. Option B if DRY is preferred.
 
 ## Work Log
 
-| Date       | Action                                             | Learnings                           |
-| ---------- | -------------------------------------------------- | ----------------------------------- |
-| 2026-02-24 | Created from /workflows:review (10-agent parallel) | 9/10 agent consensus = confirmed P1 |
+| Date       | Action                                                 | Learnings                           |
+| ---------- | ------------------------------------------------------ | ----------------------------------- |
+| 2026-02-24 | Created from /workflows:review (10-agent parallel)     | 9/10 agent consensus = confirmed P1 |
+| 2026-02-24 | Fixed with Option A, committed 88b401d, pushed to main | getEventHash pattern applied        |

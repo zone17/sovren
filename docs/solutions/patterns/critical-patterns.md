@@ -527,6 +527,69 @@ If any returns empty, the test type is partially integrated and will atrophy.
 
 ---
 
+## 9. NOSTR `verifyEvent()` Requires Computed Event ID (1 P1 — 9/10 agent consensus)
+
+**The problem:** `verifyEvent()` from `nostr-tools/pure` does NOT auto-compute the event ID. It validates that `event.id` matches `SHA256([0, pubkey, created_at, kind, tags, content])`. Passing `id: ''` or any incorrect value means verification always fails silently — returns `false` with no error.
+
+**Rule:** Always build an `UnsignedEvent` first, compute the ID with `getEventHash()`, then spread into a full `NostrEvent`.
+
+### 9a. Correct Event Construction for Verification
+
+```typescript
+import {
+  getEventHash,
+  verifyEvent,
+  type Event as NostrEvent,
+  type UnsignedEvent,
+} from 'nostr-tools/pure';
+
+// ❌ WRONG: verifyEvent checks id against computed hash — empty string always mismatches
+const event: NostrEvent = {
+  kind: 1,
+  pubkey,
+  created_at: Math.floor(Date.now() / 1000),
+  tags: [],
+  content: messageHash,
+  id: '', // Will be computed by verifyEvent — WRONG, it validates, not computes
+  sig: signature,
+};
+
+// ✅ RIGHT: Compute id explicitly from UnsignedEvent
+const eventData: UnsignedEvent = {
+  kind: 1,
+  pubkey,
+  created_at: Math.floor(Date.now() / 1000),
+  tags: [],
+  content: messageHash,
+};
+const event: NostrEvent = {
+  ...eventData,
+  id: getEventHash(eventData),
+  sig: signature,
+};
+
+const isValid = verifyEvent(event);
+```
+
+### 9b. Incomplete Fix Detection
+
+When fixing a bug pattern in a class method, **grep the entire file** for the same pattern in standalone exports:
+
+```bash
+# After fixing verifySignature() class method, check for other instances
+grep -n "id: ''" packages/backend/src/services/nostr-auth.ts
+```
+
+This bug survived 7 sprints and 139 findings because:
+
+1. The class method `verifySignature()` was fixed but the standalone `isValidSignature()` utility was missed
+2. Diff-based reviews only saw the fixed method, not the still-broken utility
+3. Full-file reviews (not diff reviews) are required to catch duplicate patterns
+
+**Detection:** `grep -rn "id: ''" --include="*.ts" src/` — any `NostrEvent` with `id: ''` is broken.
+
+---
+
 ## Quick Reference Table
 
 | Pattern                | When to Use          | Key Guard                        | HTTP Error |
@@ -540,6 +603,7 @@ If any returns empty, the test type is partially integrated and will atrophy.
 | SSRF validation        | User-supplied URLs   | DNS resolve + IP check + pin IPs | 400        |
 | Status guard           | DELETE/void/cancel   | Assert status before write       | 409        |
 | Test infra integration | New test type added  | CI stage + brief + CLAUDE.md     | N/A        |
+| NOSTR event ID         | Any verifyEvent call | `getEventHash(UnsignedEvent)`    | N/A        |
 
 ---
 

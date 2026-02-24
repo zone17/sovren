@@ -70,7 +70,7 @@ import {
   NostrEventSchema,
   UnsignedNostrEventSchema,
   NostrEventTagSchema,
-  EventCacheEntrySchema
+  EventCacheEntrySchema,
 } from './events';
 import {
   NostrKeyPairSchema,
@@ -85,18 +85,9 @@ import {
   NostrKeyRotationSchema,
   NostrKeyRecoverySchema,
 } from './keys';
-import {
-  NostrRelaySchema,
-  RelayConfigSchema,
-  RelayInformationDocumentSchema,
-} from './relays';
-import {
-  NostrFilterSchema,
-  SubscriptionInfoSchema,
-} from './filters';
-import {
-  NostrDirectMessageSchema,
-} from './nips';
+import { NostrRelaySchema, RelayConfigSchema, RelayInformationDocumentSchema } from './relays';
+import { NostrFilterSchema, SubscriptionInfoSchema } from './filters';
+import { NostrDirectMessageSchema } from './nips';
 
 // Re-export for re-use elsewhere
 import type { NostrEvent as NostrEventType } from './events';
@@ -244,6 +235,7 @@ export {
   isNostrAuthChallenge,
   isNostrAuthToken,
   isAuthenticated,
+  createSignatureMessage,
 } from './auth';
 
 // ========================================
@@ -395,7 +387,10 @@ export class NostrError extends Error {
  * Connection error
  */
 export class NostrConnectionError extends NostrError {
-  constructor(message: string, public relay: string) {
+  constructor(
+    message: string,
+    public relay: string
+  ) {
     super(message, 'CONNECTION_ERROR', { relay });
     this.name = 'NostrConnectionError';
   }
@@ -405,7 +400,10 @@ export class NostrConnectionError extends NostrError {
  * Validation error
  */
 export class NostrValidationError extends NostrError {
-  constructor(message: string, public event?: NostrEventType) {
+  constructor(
+    message: string,
+    public event?: NostrEventType
+  ) {
     super(message, 'VALIDATION_ERROR', { event });
     this.name = 'NostrValidationError';
   }
@@ -439,7 +437,10 @@ export class NostrPublishError extends NostrError {
  * Subscription error
  */
 export class NostrSubscriptionError extends NostrError {
-  constructor(message: string, public subscriptionId: string) {
+  constructor(
+    message: string,
+    public subscriptionId: string
+  ) {
     super(message, 'SUBSCRIPTION_ERROR', { subscriptionId });
     this.name = 'NostrSubscriptionError';
   }
@@ -449,7 +450,10 @@ export class NostrSubscriptionError extends NostrError {
  * Timeout error
  */
 export class NostrTimeoutError extends NostrError {
-  constructor(message: string, public operation: string) {
+  constructor(
+    message: string,
+    public operation: string
+  ) {
     super(message, 'TIMEOUT_ERROR', { operation });
     this.name = 'NostrTimeoutError';
   }
@@ -523,7 +527,7 @@ export function isNostrFilter(obj: unknown): obj is import('./filters').NostrFil
   const validKeys = ['ids', 'authors', 'kinds', 'since', 'until', 'limit', 'search'];
   const objKeys = Object.keys(obj);
 
-  return objKeys.some(key => validKeys.includes(key) || key.startsWith('#'));
+  return objKeys.some((key) => validKeys.includes(key) || key.startsWith('#'));
 }
 
 // ========================================

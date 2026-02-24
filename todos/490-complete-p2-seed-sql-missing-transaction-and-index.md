@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p2
 issue_id: 490
 tags: [code-review, database, seed-data]
@@ -44,6 +44,7 @@ COMMIT;
 
 ## Work Log
 
-| Date       | Action                         | Learnings                                        |
-| ---------- | ------------------------------ | ------------------------------------------------ |
-| 2026-02-24 | Created from /workflows:review | Data integrity + performance agents both flagged |
+| Date       | Action                                                                     | Learnings                                        |
+| ---------- | -------------------------------------------------------------------------- | ------------------------------------------------ |
+| 2026-02-24 | Created from /workflows:review                                             | Data integrity + performance agents both flagged |
+| 2026-02-24 | Fixed: BEGIN/COMMIT wrapper, index added, db:seed script fixed to use psql | All 3 acceptance criteria met                    |

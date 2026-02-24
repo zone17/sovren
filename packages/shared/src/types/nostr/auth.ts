@@ -177,7 +177,13 @@ export interface NostrSecurityEvent {
   /** Event identifier */
   event_id: string;
   /** Event type */
-  type: 'auth_attempt' | 'auth_success' | 'auth_failure' | 'token_refresh' | 'session_expire' | 'suspicious_activity';
+  type:
+    | 'auth_attempt'
+    | 'auth_success'
+    | 'auth_failure'
+    | 'token_refresh'
+    | 'session_expire'
+    | 'suspicious_activity';
   /** Associated public key */
   pubkey?: string;
   /** Event timestamp */
@@ -337,6 +343,16 @@ export function isNostrAuthToken(obj: unknown): obj is NostrAuthToken {
  */
 export function isAuthenticated(user: NostrAuthUser): boolean {
   return user.authenticated && !!user.session && user.session.expires_at > Date.now();
+}
+
+// ============= Utility Functions =============
+
+/**
+ * Create the message string for NOSTR challenge-response authentication.
+ * Single source of truth — used by backend verification and frontend signing.
+ */
+export function createSignatureMessage(challenge: string, timestamp: number): string {
+  return `Sovren Authentication\nChallenge: ${challenge}\nTimestamp: ${timestamp}`;
 }
 
 // ============= Constants =============

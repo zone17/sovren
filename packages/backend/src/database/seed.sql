@@ -2,6 +2,8 @@
 -- Deterministic test users with pubkeys derived from hardcoded keys in test-users.ts
 -- Run: psql "$DATABASE_URL" -f src/database/seed.sql
 
+BEGIN;
+
 -- Create wellness tables if they don't exist (not in any migration yet)
 CREATE TABLE IF NOT EXISTS creator_work_patterns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -84,3 +86,9 @@ VALUES (
   'low',
   '{"work_hours_7d": 14.5, "rest_days": 2, "content_pct": 55, "engagement_pct": 25, "management_pct": 20}'
 );
+
+-- Add index for wellness_snapshots lookups by creator
+CREATE INDEX IF NOT EXISTS idx_wellness_snapshots_creator_id
+  ON wellness_snapshots(creator_id);
+
+COMMIT;

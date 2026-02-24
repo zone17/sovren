@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p2
 issue_id: 491
 tags: [code-review, duplication, nostr, architecture]
@@ -44,6 +44,7 @@ Add `// MUST match: packages/backend/src/services/nostr-auth.ts:363` comments at
 
 ## Work Log
 
-| Date       | Action                         | Learnings                                       |
-| ---------- | ------------------------------ | ----------------------------------------------- |
-| 2026-02-24 | Created from /workflows:review | Pattern recognition agent found all 5 instances |
+| Date       | Action                                                                          | Learnings                                       |
+| ---------- | ------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 2026-02-24 | Created from /workflows:review                                                  | Pattern recognition agent found all 5 instances |
+| 2026-02-24 | Fixed: Option A — moved to @shared/types/nostr/auth.ts, all 5 locations updated | Single source of truth                          |

@@ -7,6 +7,7 @@ import {
   type UnsignedEvent,
 } from 'nostr-tools/pure';
 import { z } from 'zod';
+import { createSignatureMessage as sharedCreateSignatureMessage } from '@shared/types/nostr/auth';
 import logger from '../lib/logger';
 
 // 🌐 NOSTR Authentication Schemas (from shared package)
@@ -365,9 +366,10 @@ export class NostrAuthService {
 
   /**
    * 📝 Create signature message for verification
+   * Delegates to shared package — single source of truth.
    */
   private createSignatureMessage(challenge: string, timestamp: number): string {
-    return `Sovren Authentication\nChallenge: ${challenge}\nTimestamp: ${timestamp}`;
+    return sharedCreateSignatureMessage(challenge, timestamp);
   }
 
   /**
@@ -465,9 +467,8 @@ export const nostrAuth = new NostrAuthService(
 );
 
 // 🎯 Export utility functions
-export const createSignatureMessage = (challenge: string, timestamp: number): string => {
-  return `Sovren Authentication\nChallenge: ${challenge}\nTimestamp: ${timestamp}`;
-};
+// Re-export from shared package — single source of truth for signature message format
+export { createSignatureMessage } from '@shared/types/nostr/auth';
 
 export const validateNostrPubkey = (pubkey: string): boolean => {
   return /^[0-9a-fA-F]{64}$/.test(pubkey);
