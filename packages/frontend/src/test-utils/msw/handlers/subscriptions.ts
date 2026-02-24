@@ -1,29 +1,30 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { jsonOk, TEST_TIMESTAMP } from './helpers';
 
 export const subscriptionHandlers = [
-  http.get('/api/subscriptions', () => {
-    return HttpResponse.json({ subscriptions: [], total: 0 });
+  http.get('/api/subscription-tiers', () => {
+    return jsonOk({ subscriptions: [], total: 0 });
   }),
 
-  http.get('/api/subscriptions/:id', ({ params }) => {
-    return HttpResponse.json({
+  http.get('/api/subscription-tiers/:id', ({ params }) => {
+    return jsonOk({
       id: params.id,
       tier: 'basic',
       status: 'active',
-      startDate: new Date().toISOString(),
-      endDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+      startDate: TEST_TIMESTAMP,
+      endDate: '2026-02-15T12:00:00.000Z',
     });
   }),
 
-  http.post('/api/subscriptions', () => {
-    return HttpResponse.json({ id: 'sub-new', tier: 'basic', status: 'active' });
+  http.post('/api/subscription-tiers', () => {
+    return jsonOk({ id: 'sub-new', tier: 'basic', status: 'active' });
   }),
 
-  http.put('/api/subscriptions/:id', ({ params }) => {
-    return HttpResponse.json({ id: params.id, tier: 'premium', status: 'active' });
+  http.put('/api/subscription-tiers/:id', ({ params }) => {
+    return jsonOk({ id: params.id, tier: 'premium', status: 'active' });
   }),
 
-  http.delete('/api/subscriptions/:id', () => {
-    return HttpResponse.json({ success: true });
+  http.delete('/api/subscription-tiers/:id', () => {
+    return jsonOk({ deleted: true });
   }),
 ];

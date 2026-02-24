@@ -329,6 +329,10 @@ export interface CustomRenderOptions extends RenderOptions {
   providerOptions?: AllProvidersOptions;
 }
 
+/**
+ * @deprecated Use `renderWithAll()` from `test-utils/render-with-all` instead.
+ * This wrapper uses legacy tempStub reducers that don't match the real store.
+ */
 export function renderWithProviders(
   ui: ReactElement,
   options: CustomRenderOptions = {}

@@ -26,23 +26,18 @@ import paginationReducer from './slices/paginationSlice';
 // - paymentReducer (moved to React Query)
 // - cmsReducer (content data moved to React Query, UI state in cmsUiReducer)
 
+/** Reducer map — exported for test wrappers (render-with-all.tsx) */
+export const reducers = {
+  ui: uiReducer,
+  cmsUi: cmsUiReducer,
+  navigation: navigationReducer,
+  layout: layoutReducer,
+  pagination: paginationReducer,
+  user: userReducer,
+};
+
 export const store = configureStore({
-  reducer: {
-    // UI State (stays in Redux)
-    ui: uiReducer,
-    cmsUi: cmsUiReducer,
-    navigation: navigationReducer,
-    layout: layoutReducer,
-    pagination: paginationReducer,
-
-    // Auth State (stays in Redux - it's client state)
-    user: userReducer,
-
-    // REMOVED: Server data slices
-    // post: postReducer, // -> Use React Query hooks instead
-    // payment: paymentReducer, // -> Use React Query hooks instead
-    // cms: cmsReducer, // -> Content data in React Query, UI in cmsUi
-  },
+  reducer: reducers,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

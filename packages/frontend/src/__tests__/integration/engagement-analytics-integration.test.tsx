@@ -20,7 +20,7 @@ import { PerformancePredictionViewer } from '@/components/analytics/PerformanceP
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 
 // =====================================================
@@ -150,35 +150,33 @@ const mockApiResponses = {
 };
 
 const server = setupServer(
-  rest.get('/api/engagement-analytics/metrics', (req, res, ctx) => {
-    return res(ctx.json(mockApiResponses.metrics));
+  http.get('/api/engagement-analytics/metrics', () => {
+    return HttpResponse.json(mockApiResponses.metrics);
   }),
-  rest.get('/api/engagement-analytics/patterns', (req, res, ctx) => {
-    return res(ctx.json(mockApiResponses.patterns));
+  http.get('/api/engagement-analytics/patterns', () => {
+    return HttpResponse.json(mockApiResponses.patterns);
   }),
-  rest.get('/api/engagement-analytics/insights', (req, res, ctx) => {
-    return res(ctx.json(mockApiResponses.insights));
+  http.get('/api/engagement-analytics/insights', () => {
+    return HttpResponse.json(mockApiResponses.insights);
   }),
-  rest.get('/api/engagement-analytics/predictions', (req, res, ctx) => {
-    return res(ctx.json(mockApiResponses.predictions));
+  http.get('/api/engagement-analytics/predictions', () => {
+    return HttpResponse.json(mockApiResponses.predictions);
   }),
-  rest.get('/api/engagement-analytics/forecasts', (req, res, ctx) => {
-    return res(ctx.json(mockApiResponses.forecasts));
+  http.get('/api/engagement-analytics/forecasts', () => {
+    return HttpResponse.json(mockApiResponses.forecasts);
   }),
-  rest.get('/api/engagement-analytics/optimizations', (req, res, ctx) => {
-    return res(ctx.json(mockApiResponses.optimizations));
+  http.get('/api/engagement-analytics/optimizations', () => {
+    return HttpResponse.json(mockApiResponses.optimizations);
   }),
-  rest.get('/api/engagement-analytics/benchmarks', (req, res, ctx) => {
-    return res(
-      ctx.json({
-        success: true,
-        data: {
-          industry_average: 0.067,
-          personal_best: 0.095,
-          content_type_average: 0.074,
-        },
-      })
-    );
+  http.get('/api/engagement-analytics/benchmarks', () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        industry_average: 0.067,
+        personal_best: 0.095,
+        content_type_average: 0.074,
+      },
+    });
   })
 );
 
@@ -347,8 +345,8 @@ describe('Engagement Analytics Integration', () => {
     it('handles API errors gracefully', async () => {
       // Mock API error
       server.use(
-        rest.get('/api/engagement-analytics/metrics', (req, res, ctx) => {
-          return res(ctx.status(500), ctx.json({ error: 'Internal Server Error' }));
+        http.get('/api/engagement-analytics/metrics', () => {
+          return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
         })
       );
 
@@ -518,8 +516,8 @@ describe('Engagement Analytics Integration', () => {
       };
 
       server.use(
-        rest.get('/api/engagement-analytics/patterns', (req, res, ctx) => {
-          return res(ctx.json(largeDataset));
+        http.get('/api/engagement-analytics/patterns', () => {
+          return HttpResponse.json(largeDataset);
         })
       );
 
@@ -581,8 +579,8 @@ describe('Engagement Analytics Integration', () => {
 
       // Force an error in one component
       server.use(
-        rest.get('/api/engagement-analytics/predictions', (req, res, ctx) => {
-          return res(ctx.status(500));
+        http.get('/api/engagement-analytics/predictions', () => {
+          return new HttpResponse(null, { status: 500 });
         })
       );
 
@@ -614,8 +612,8 @@ describe('Engagement Analytics Integration', () => {
 
     it('provides fallback UI for failed components', async () => {
       server.use(
-        rest.get('/api/engagement-analytics/optimizations', (req, res, ctx) => {
-          return res(ctx.status(500));
+        http.get('/api/engagement-analytics/optimizations', () => {
+          return new HttpResponse(null, { status: 500 });
         })
       );
 

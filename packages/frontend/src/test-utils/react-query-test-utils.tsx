@@ -53,6 +53,10 @@ interface RenderWithQueryClientOptions extends Omit<RenderOptions, 'wrapper'> {
   queryClient?: QueryClient;
 }
 
+/**
+ * @deprecated Use `renderWithAll()` from `test-utils/render-with-all` instead.
+ * It includes QueryClient + Redux + Router in a single wrapper.
+ */
 export const renderWithQueryClient = (
   ui: ReactElement,
   options: RenderWithQueryClientOptions = {}

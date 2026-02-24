@@ -1,37 +1,31 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { jsonOk, TEST_TIMESTAMP } from './helpers';
+
+const sampleInvoice = {
+  paymentRequest: 'lnbc10u1ptest',
+  paymentHash: 'abc123def456',
+  amount: 1000,
+  description: 'test',
+  expiresAt: '2026-01-15T13:00:00.000Z',
+  createdAt: TEST_TIMESTAMP,
+  settled: false,
+  status: 'pending',
+};
 
 export const lightningHandlers = [
   http.post('/api/lightning/invoice', () => {
-    return HttpResponse.json({
-      paymentRequest: 'lnbc10u1ptest',
-      paymentHash: 'abc123def456',
-      amount: 1000,
-      description: 'test',
-      expiresAt: new Date(Date.now() + 3600000).toISOString(),
-      createdAt: new Date().toISOString(),
-      settled: false,
-    });
+    return jsonOk(sampleInvoice);
   }),
 
   http.get('/api/lightning/invoice/:id', ({ params }) => {
-    return HttpResponse.json({
-      id: params.id,
-      paymentRequest: 'lnbc10u1ptest',
-      paymentHash: 'abc123def456',
-      amount: 1000,
-      description: 'test',
-      expiresAt: new Date(Date.now() + 3600000).toISOString(),
-      createdAt: new Date().toISOString(),
-      settled: false,
-      status: 'pending',
-    });
+    return jsonOk({ ...sampleInvoice, id: params.id as string });
   }),
 
   http.get('/api/lightning/status', () => {
-    return HttpResponse.json({ balance: 50000, pending: 0 });
+    return jsonOk({ balance: 50000, pending: 0 });
   }),
 
   http.get('/api/lightning/payments', () => {
-    return HttpResponse.json({ payments: [], total: 0 });
+    return jsonOk({ payments: [], total: 0 });
   }),
 ];

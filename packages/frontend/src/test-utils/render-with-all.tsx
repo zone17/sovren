@@ -1,19 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, RenderOptions } from '@testing-library/react';
+import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import React, { ReactElement } from 'react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 
-// Real reducers from the store
-import uiReducer from '../store/slices/uiSlice';
-import cmsUiReducer from '../store/slices/cmsUiSlice';
-import userReducer from '../store/slices/userSlice';
-import navigationReducer from '../store/slices/navigationSlice';
-import layoutReducer from '../store/slices/layoutSlice';
-import paginationReducer from '../store/slices/paginationSlice';
-
-import type { RootState } from '../store';
+// Import reducer map from real store — single source of truth
+import { reducers, type RootState } from '../store';
 
 export interface RenderWithAllOptions extends Omit<RenderOptions, 'wrapper'> {
   preloadedState?: Partial<RootState>;
@@ -21,19 +14,20 @@ export interface RenderWithAllOptions extends Omit<RenderOptions, 'wrapper'> {
   queryClient?: QueryClient;
 }
 
-export function renderWithAll(ui: ReactElement, options: RenderWithAllOptions = {}) {
+export interface RenderWithAllResult extends RenderResult {
+  store: ReturnType<typeof configureStore>;
+  queryClient: QueryClient;
+}
+
+export function renderWithAll(
+  ui: ReactElement,
+  options: RenderWithAllOptions = {}
+): RenderWithAllResult {
   const { preloadedState, route = '/', queryClient: providedClient, ...renderOptions } = options;
 
   const store = configureStore({
-    reducer: {
-      ui: uiReducer,
-      cmsUi: cmsUiReducer,
-      user: userReducer,
-      navigation: navigationReducer,
-      layout: layoutReducer,
-      pagination: paginationReducer,
-    },
-    preloadedState: preloadedState as RootState,
+    reducer: reducers,
+    preloadedState: preloadedState as undefined | RootState,
   });
 
   const queryClient =

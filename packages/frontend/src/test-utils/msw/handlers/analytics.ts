@@ -1,8 +1,9 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { jsonOk, TEST_TIMESTAMP } from './helpers';
 
 export const analyticsHandlers = [
-  http.get('/api/analytics/summary', () => {
-    return HttpResponse.json({
+  http.get('/api/v1/metrics/summary', () => {
+    return jsonOk({
       totalViews: 1500,
       totalLikes: 320,
       totalShares: 85,
@@ -10,12 +11,12 @@ export const analyticsHandlers = [
     });
   }),
 
-  http.get('/api/analytics/events', () => {
-    return HttpResponse.json({ events: [] });
+  http.get('/api/v1/metrics/events', () => {
+    return jsonOk({ events: [] });
   }),
 
   http.get('/api/engagement-analytics/metrics', () => {
-    return HttpResponse.json({
+    return jsonOk({
       views: 1500,
       likes: 320,
       shares: 85,
@@ -25,14 +26,14 @@ export const analyticsHandlers = [
   }),
 
   http.get('/api/engagement-analytics/patterns', () => {
-    return HttpResponse.json({ patterns: [], period: '30d' });
+    return jsonOk({ patterns: [], period: '30d' });
   }),
 
   http.get('/api/engagement-analytics/insights', () => {
-    return HttpResponse.json({ insights: [], generatedAt: new Date().toISOString() });
+    return jsonOk({ insights: [], generatedAt: TEST_TIMESTAMP });
   }),
 
   http.get('/api/engagement-analytics/benchmarks', () => {
-    return HttpResponse.json({ benchmarks: [], category: 'general' });
+    return jsonOk({ benchmarks: [], category: 'general' });
   }),
 ];

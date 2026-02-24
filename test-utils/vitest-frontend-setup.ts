@@ -24,7 +24,7 @@ process.env.SUPABASE_ANON_KEY = 'test-anon-key-not-real-000000000000000000000000
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
 
 // MSW server lifecycle
-beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
 afterAll(() => server.close());
 
 // Cleanup after each test
@@ -250,26 +250,6 @@ globalThis.Notification = vi.fn().mockImplementation(() => ({
 (globalThis.Notification as any).permission = 'granted';
 (globalThis.Notification as any).requestPermission = vi.fn().mockResolvedValue('granted');
 
-// fetch mock — complete Response shape to prevent silent failures
-// when code accesses headers, blob(), clone(), etc.
-globalThis.fetch = vi.fn().mockImplementation(() =>
-  Promise.resolve({
-    ok: true,
-    status: 200,
-    statusText: 'OK',
-    headers: new Headers({ 'content-type': 'application/json' }),
-    json: vi.fn().mockResolvedValue({}),
-    text: vi.fn().mockResolvedValue(''),
-    blob: vi.fn().mockResolvedValue(new Blob()),
-    arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
-    formData: vi.fn().mockResolvedValue(new FormData()),
-    clone: function () {
-      return { ...this };
-    },
-    redirected: false,
-    type: 'basic' as ResponseType,
-    url: '',
-    body: null,
-    bodyUsed: false,
-  })
-);
+// NOTE: globalThis.fetch mock REMOVED — MSW intercepts fetch at the network level.
+// If you need a test-specific fetch behavior, use server.use() with MSW handlers.
+// See: packages/frontend/src/test-utils/msw/handlers/

@@ -19,7 +19,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureStore } from '@reduxjs/toolkit';
 import { act } from 'react-dom/test-utils';
 import { setupServer } from 'msw/node';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import userEvent from '@testing-library/user-event';
 
 // Import slices and hooks
@@ -30,30 +30,26 @@ import { useUIState } from '../../../hooks/useUIState';
 
 // Mock server setup
 const server = setupServer(
-  rest.get('/api/users', (req, res, ctx) => {
-    return res(
-      ctx.json([
-        { id: '1', name: 'User 1', email: 'user1@test.com' },
-        { id: '2', name: 'User 2', email: 'user2@test.com' }
-      ])
-    );
+  http.get('/api/users', () => {
+    return HttpResponse.json([
+      { id: '1', name: 'User 1', email: 'user1@test.com' },
+      { id: '2', name: 'User 2', email: 'user2@test.com' }
+    ]);
   }),
-  rest.get('/api/posts', (req, res, ctx) => {
-    return res(
-      ctx.json([
-        { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' },
-        { id: '2', title: 'Post 2', content: 'Content 2', userId: '2' }
-      ])
-    );
+  http.get('/api/posts', () => {
+    return HttpResponse.json([
+      { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' },
+      { id: '2', title: 'Post 2', content: 'Content 2', userId: '2' }
+    ]);
   }),
-  rest.put('/api/users/:id', async (req, res, ctx) => {
-    const { id } = req.params;
-    const body = await req.json();
-    return res(ctx.json({ id, ...body, updated: true }));
+  http.put('/api/users/:id', async ({ params, request }) => {
+    const { id } = params;
+    const body = await request.json();
+    return HttpResponse.json({ id, ...body, updated: true });
   }),
-  rest.post('/api/posts', async (req, res, ctx) => {
-    const body = await req.json();
-    return res(ctx.json({ id: '3', ...body, created: true }));
+  http.post('/api/posts', async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({ id: '3', ...body, created: true });
   })
 );
 
@@ -182,22 +178,18 @@ describe('React Query + Redux Integration', () => {
 
       // Mock updated response
       server.use(
-        rest.get('/api/users', (req, res, ctx) => {
-          const url = new URL(req.url);
+        http.get('/api/users', ({ request }) => {
+          const url = new URL(request.url);
           if (url.searchParams.get('updated') === 'true') {
-            return res(
-              ctx.json([
-                { id: '1', name: 'Updated User', email: 'user1@test.com' },
-                { id: '2', name: 'User 2', email: 'user2@test.com' }
-              ])
-            );
-          }
-          return res(
-            ctx.json([
-              { id: '1', name: 'User 1', email: 'user1@test.com' },
+            return HttpResponse.json([
+              { id: '1', name: 'Updated User', email: 'user1@test.com' },
               { id: '2', name: 'User 2', email: 'user2@test.com' }
-            ])
-          );
+            ]);
+          }
+          return HttpResponse.json([
+            { id: '1', name: 'User 1', email: 'user1@test.com' },
+            { id: '2', name: 'User 2', email: 'user2@test.com' }
+          ]);
         })
       );
 
@@ -230,25 +222,21 @@ describe('React Query + Redux Integration', () => {
     it('should refetch React Query data when Redux UI filter changes', async () => {
       let fetchCount = 0;
       server.use(
-        rest.get('/api/posts', (req, res, ctx) => {
+        http.get('/api/posts', ({ request }) => {
           fetchCount++;
-          const url = new URL(req.url);
+          const url = new URL(request.url);
           const filter = url.searchParams.get('filter');
 
           if (filter === 'user1') {
-            return res(
-              ctx.json([
-                { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' }
-              ])
-            );
+            return HttpResponse.json([
+              { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' }
+            ]);
           }
 
-          return res(
-            ctx.json([
-              { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' },
-              { id: '2', title: 'Post 2', content: 'Content 2', userId: '2' }
-            ])
-          );
+          return HttpResponse.json([
+            { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' },
+            { id: '2', title: 'Post 2', content: 'Content 2', userId: '2' }
+          ]);
         })
       );
 
@@ -342,8 +330,8 @@ describe('React Query + Redux Integration', () => {
 
       // Setup server to fail
       server.use(
-        rest.post('/api/posts', (req, res, ctx) => {
-          return res(ctx.status(500), ctx.json({ error: 'Server error' }));
+        http.post('/api/posts', () => {
+          return HttpResponse.json({ error: 'Server error' }, { status: 500 });
         })
       );
 
@@ -402,8 +390,8 @@ describe('React Query + Redux Integration', () => {
 
       // Setup server to fail
       server.use(
-        rest.get('/api/users', (req, res, ctx) => {
-          return res(ctx.status(500), ctx.json({ error: 'Database connection failed' }));
+        http.get('/api/users', () => {
+          return HttpResponse.json({ error: 'Database connection failed' }, { status: 500 });
         })
       );
 
@@ -543,17 +531,17 @@ describe('React Query + Redux Integration', () => {
       let postFetchCount = 0;
 
       server.use(
-        rest.get('/api/users/:id', (req, res, ctx) => {
+        http.get('/api/users/:id', ({ params }) => {
           userFetchCount++;
-          const { id } = req.params;
-          return res(ctx.json({ id, name: `User ${id}` }));
+          const { id } = params;
+          return HttpResponse.json({ id, name: `User ${id}` });
         }),
-        rest.get('/api/users/:userId/posts', (req, res, ctx) => {
+        http.get('/api/users/:userId/posts', ({ params }) => {
           postFetchCount++;
-          const { userId } = req.params;
-          return res(ctx.json([
+          const { userId } = params;
+          return HttpResponse.json([
             { id: '1', title: `Post by User ${userId}` }
-          ]));
+          ]);
         })
       );
 

@@ -1,43 +1,44 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { jsonOk } from './helpers';
 
 export const platformHandlers = [
-  http.get('/api/platforms', () => {
-    return HttpResponse.json({ platforms: [] });
+  http.get('/api/v2/platforms', () => {
+    return jsonOk({ platforms: [] });
   }),
 
-  http.get('/api/platforms/:id', ({ params }) => {
-    return HttpResponse.json({ id: params.id, name: 'Test Platform', connected: true });
+  http.get('/api/v2/platforms/:id', ({ params }) => {
+    return jsonOk({ id: params.id, name: 'Test Platform', connected: true });
   }),
 
-  http.post('/api/platforms/connect', () => {
-    return HttpResponse.json({ platformId: 'plat-1', connected: true });
+  http.post('/api/v2/platforms/connect', () => {
+    return jsonOk({ platformId: 'plat-1', connected: true });
   }),
 
-  http.get('/api/platforms/accounts', () => {
-    return HttpResponse.json({ accounts: [] });
+  http.get('/api/v2/platforms/accounts', () => {
+    return jsonOk({ accounts: [] });
   }),
 
-  http.post('/api/platforms/share', () => {
-    return HttpResponse.json({ shared: true, platformIds: [] });
+  http.post('/api/v2/platforms/share', () => {
+    return jsonOk({ shared: true, platformIds: [] });
   }),
 
-  http.get('/api/platforms/posts', () => {
-    return HttpResponse.json({ posts: [], total: 0 });
+  http.get('/api/v2/platforms/posts', () => {
+    return jsonOk({ posts: [], total: 0 });
   }),
 
-  http.post('/api/platforms/posts/:id/publish', () => {
-    return HttpResponse.json({ published: true });
+  http.post('/api/v2/platforms/posts/:id/publish', () => {
+    return jsonOk({ published: true });
   }),
 
-  http.get('/api/platforms/schedules', () => {
-    return HttpResponse.json({ schedules: [] });
+  http.get('/api/v2/platforms/schedules', () => {
+    return jsonOk({ schedules: [] });
   }),
 
-  http.get('/api/platforms/reports', () => {
-    return HttpResponse.json({ reports: [] });
+  http.get('/api/v2/platforms/reports', () => {
+    return jsonOk({ reports: [] });
   }),
 
-  http.post('/api/platforms/oauth/initiate', () => {
-    return HttpResponse.json({ authUrl: 'https://example.com/oauth' });
+  http.post('/api/v2/platforms/oauth/initiate', () => {
+    return jsonOk({ authUrl: 'https://example.com/oauth' });
   }),
 ];
