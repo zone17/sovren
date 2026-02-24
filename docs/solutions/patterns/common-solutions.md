@@ -1156,6 +1156,53 @@ grep -n "id: ''" packages/backend/src/services/nostr-auth.ts
 
 ---
 
+## 29. Silent Fallback / Lazy Init Must Log a Warning
+
+**Recurrence:** Redis `getRedisClient()` lazy-created a client bypassing `ping()` health check with zero logging. Services silently got unverified connections. Pattern also appeared in feature flag fallbacks and config defaults across 3 prior sprints.
+
+### The Rule
+
+Every code path that falls back to a default, lazy-creates a resource, or bypasses a verification step **must emit a `logger.warn()`**. Silent fallbacks hide operational problems until they cascade.
+
+### Pattern
+
+```typescript
+// ❌ WRONG: Silent fallback — if Redis is down, no one knows
+export function getRedisClient(): Redis {
+  if (!sharedClient) {
+    sharedClient = createClient();
+  }
+  return sharedClient;
+}
+
+// ✅ RIGHT: Warn so ops can see lazy init in logs
+export function getRedisClient(): Redis {
+  if (!sharedClient) {
+    logger.warn(
+      '[Redis] Lazy-creating client — connectRedis() was not called first. Ping verification skipped.'
+    );
+    sharedClient = createClient();
+  }
+  return sharedClient;
+}
+```
+
+### Applies To
+
+- Lazy singleton initialization (Redis, DB, cache clients)
+- Config fallback values (e.g., `process.env.FOO || 'default'` for non-trivial defaults)
+- Feature flag fallbacks (`flag ?? false`)
+- Retry exhaustion fallbacks (`return cachedValue` when API call fails)
+
+### Detection
+
+```bash
+# Find lazy-init patterns without logging
+grep -n "if (!.*) {" src/lib/*.ts | grep -v "logger\|console\|throw"
+```
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1212,3 +1259,6 @@ CONTEXT TO LOAD:
 | New test type exists locally but not in CI   | 8a-8c     | critical-patterns.md |
 | NOSTR verifyEvent with `id: ''`              | 9a-9b     | critical-patterns.md |
 | Fixed method but standalone utility broken   | 28        | common-solutions.md  |
+| Silent fallback with no logging              | 29        | common-solutions.md  |
+| String duplicated across packages            | 10a       | critical-patterns.md |
+| Lazy init with no logging                    | 10b       | critical-patterns.md |

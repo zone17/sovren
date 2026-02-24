@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p3
 issue_id: 492
 tags: [code-review, dead-code, yagni, simplicity]
@@ -34,11 +34,12 @@ Delete unused files/exports. Re-add when needed.
 
 ## Acceptance Criteria
 
-- [ ] No exported functions with zero external callers
-- [ ] POM locators match actual test assertions
+- [x] No exported functions with zero external callers
+- [x] POM locators match actual test assertions
 
 ## Work Log
 
-| Date       | Action                         | Learnings                                |
-| ---------- | ------------------------------ | ---------------------------------------- |
-| 2026-02-24 | Created from /workflows:review | Simplicity reviewer identified all items |
+| Date       | Action                           | Learnings                                                                                                                                                                                                            |
+| ---------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-02-24 | Created from /workflows:review   | Simplicity reviewer identified all items                                                                                                                                                                             |
+| 2026-02-24 | Fixed: removed ~33 LOC dead code | Kept nostr-auth.ts (infrastructure for planned real auth, just updated in P2 #491). Kept `_token` (functional write-through cache). Removed: test-users.ts helpers+shorthands, wellness POM CSS locators, jsonError. |

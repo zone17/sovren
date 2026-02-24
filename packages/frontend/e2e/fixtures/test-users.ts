@@ -93,21 +93,3 @@ export const TEST_USERS = {
     picture: 'https://i.pravatar.cc/150?u=eve',
   }),
 };
-
-export function getTestUser(id: keyof typeof TEST_USERS): TestUserProfile {
-  return TEST_USERS[id];
-}
-
-export function getAllTestUsers(): TestUserProfile[] {
-  return Object.values(TEST_USERS);
-}
-
-export function getTestUserPublicKeys(): string[] {
-  return Object.values(TEST_USERS).map((user) => user.publicKey);
-}
-
-export const ALICE = TEST_USERS.alice;
-export const BOB = TEST_USERS.bob;
-export const CHARLIE = TEST_USERS.charlie;
-export const DAVE = TEST_USERS.dave;
-export const EVE = TEST_USERS.eve;

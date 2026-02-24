@@ -590,6 +590,57 @@ This bug survived 7 sprints and 139 findings because:
 
 ---
 
+## 10. Cross-Package String Duplication Causes Silent Auth Breakage (1 P2 — 5 locations)
+
+**Pattern:** When the same string literal or function is copy-pasted across multiple packages, a format change in one location silently breaks the others. For authentication strings, this means the backend verifies against one format while the frontend signs with another — **auth fails with no error explaining why**.
+
+### 10a. Single Source in `@shared/` for Cross-Package Utilities
+
+```typescript
+// ❌ WRONG — duplicated in 5 locations across 3 packages
+const message = `Sovren Authentication\nChallenge: ${challenge}\nTimestamp: ${timestamp}`;
+
+// ✅ CORRECT — single source of truth in shared package
+// packages/shared/src/types/nostr/auth.ts
+export function createSignatureMessage(challenge: string, timestamp: number): string {
+  return `Sovren Authentication\nChallenge: ${challenge}\nTimestamp: ${timestamp}`;
+}
+
+// All consumers import from shared:
+import { createSignatureMessage } from '@shared/types/nostr/auth';
+```
+
+**Detection rule:** `grep -rn "string literal" packages/ | wc -l` — if count > 2 across different packages, extract to `@shared/`.
+
+**When to use:** Any string, template, or function that appears in 3+ locations OR in 2+ packages. The `@shared/` path alias is already configured for both frontend and backend — adding a function there is immediately available everywhere.
+
+### 10b. Silent Fallback / Lazy Init Must Log
+
+```typescript
+// ❌ WRONG — silent fallback, operationally invisible
+export function getClient(): Client {
+  if (!sharedClient) {
+    sharedClient = createClient(); // No one knows this happened
+  }
+  return sharedClient;
+}
+
+// ✅ CORRECT — warning makes the fallback visible
+export function getClient(): Client {
+  if (!sharedClient) {
+    logger.warn('[Service] Lazy-creating client — init() was not called. Health check skipped.');
+    sharedClient = createClient();
+  }
+  return sharedClient;
+}
+```
+
+**Detection rule:** Any `if (!x) { x = create...() }` without a `logger.warn` on the lazy path.
+
+**When to use:** Every lazy-init, fallback, or default-value path in service initialization. If it's supposed to be temporary, also add `// TODO: remove lazy init after bootstrap ordering is fixed`.
+
+---
+
 ## Quick Reference Table
 
 | Pattern                | When to Use          | Key Guard                        | HTTP Error |
@@ -604,6 +655,8 @@ This bug survived 7 sprints and 139 findings because:
 | Status guard           | DELETE/void/cancel   | Assert status before write       | 409        |
 | Test infra integration | New test type added  | CI stage + brief + CLAUDE.md     | N/A        |
 | NOSTR event ID         | Any verifyEvent call | `getEventHash(UnsignedEvent)`    | N/A        |
+| Cross-pkg dedup        | String in 3+ files   | Extract to `@shared/`            | N/A        |
+| Silent fallback log    | Any lazy-init path   | `logger.warn()` on fallback      | N/A        |
 
 ---
 

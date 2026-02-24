@@ -31,19 +31,6 @@ export function jsonPaginated<T>(
   });
 }
 
-/** Return an error response matching the backend error envelope */
-export function jsonError(message: string, status: number) {
-  return HttpResponse.json(
-    {
-      success: false,
-      error: message,
-      code: status,
-      timestamp: TEST_TIMESTAMP,
-    },
-    { status }
-  );
-}
-
 /** Shared test user fixture (NOSTR-based, matches backend contract) */
 export const TEST_USER = {
   id: 'user-1',
