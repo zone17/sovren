@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { LoginPage } from './pages/login.page';
 import { ProfilePage } from './pages/profile.page';
 import { SignupPage } from './pages/signup.page';
+import { TEST_USER, SIGNUP_USER } from './fixtures/test-credentials';
 
 // Auth tests create their own auth state per-test — they do NOT use shared storage state.
 
@@ -15,7 +16,7 @@ test.describe('Authentication', () => {
   test('email login redirects to profile', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
-    await loginPage.loginWithEmail('test@sovren.app', 'password123');
+    await loginPage.loginWithEmail(TEST_USER.email, TEST_USER.password);
 
     await expect(page).toHaveURL(/\/profile/);
 
@@ -26,7 +27,7 @@ test.describe('Authentication', () => {
   test('email signup redirects to profile', async ({ page }) => {
     const signupPage = new SignupPage(page);
     await signupPage.goto();
-    await signupPage.signupWithEmail('Test Creator', 'newuser@sovren.app', 'password123');
+    await signupPage.signupWithEmail(SIGNUP_USER.name, SIGNUP_USER.email, SIGNUP_USER.password);
 
     await expect(page).toHaveURL(/\/profile/);
 
@@ -43,7 +44,7 @@ test.describe('Authentication', () => {
     // Login first
     const loginPage = new LoginPage(page);
     await loginPage.goto();
-    await loginPage.loginWithEmail('test@sovren.app', 'password123');
+    await loginPage.loginWithEmail(TEST_USER.email, TEST_USER.password);
     await expect(page).toHaveURL(/\/profile/);
 
     // Logout

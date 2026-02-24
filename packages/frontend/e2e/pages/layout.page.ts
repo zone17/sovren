@@ -24,4 +24,8 @@ export class LayoutPage {
     this.loginLink = page.getByRole('link', { name: 'Login' });
     this.signUpLink = page.getByRole('link', { name: 'Sign Up' });
   }
+
+  async goto(path = '/profile') {
+    await this.page.goto(path);
+  }
 }

@@ -2,7 +2,6 @@ import type { Locator, Page } from '@playwright/test';
 
 export class SignupPage {
   readonly page: Page;
-  readonly heading: Locator;
   readonly emailTab: Locator;
   readonly creatorRoleButton: Locator;
   readonly nameInput: Locator;
@@ -14,7 +13,6 @@ export class SignupPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.getByRole('heading', { name: 'Join Sovren' });
     this.emailTab = page.getByRole('button', { name: /Email/ });
     this.creatorRoleButton = page.getByRole('button', { name: /Creator/ });
     this.nameInput = page.getByLabel('Full Name');

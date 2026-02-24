@@ -16,16 +16,17 @@ export default defineConfig({
 
   reporter: [
     ['html', { outputFolder: 'test-results/playwright-report', open: process.env.CI ? 'never' : 'on-failure' }],
+    ['json', { outputFile: 'test-results/results.json' }],
     ['line'],
     ...(process.env.CI ? [['github'] as const] : []),
   ],
 
   use: {
     baseURL: process.env.E2E_BASE_URL || 'http://localhost:3000',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     actionTimeout: 10_000,
-    navigationTimeout: 30_000,
+    navigationTimeout: 15_000,
   },
 
   projects: [
@@ -36,7 +37,7 @@ export default defineConfig({
     },
     {
       name: 'chromium-authenticated',
-      testMatch: /auth\.spec\.ts|navigation\.spec\.ts/,
+      testMatch: /navigation\.spec\.ts/,
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -45,7 +46,7 @@ export default defineConfig({
     },
     {
       name: 'chromium-public',
-      testMatch: /home\.spec\.ts/,
+      testMatch: /home\.spec\.ts|auth\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
   ],

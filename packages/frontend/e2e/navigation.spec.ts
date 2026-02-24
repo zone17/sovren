@@ -1,11 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { LayoutPage } from './pages/layout.page';
+import { ProfilePage } from './pages/profile.page';
 
 test.describe('Navigation (authenticated creator)', () => {
-  test('nav bar shows creator links', async ({ page }) => {
-    await page.goto('/profile');
-    const layout = new LayoutPage(page);
+  let layout: LayoutPage;
 
+  test.beforeEach(async ({ page }) => {
+    layout = new LayoutPage(page);
+    await layout.goto();
+  });
+
+  test('nav bar shows creator links', async () => {
     await expect(layout.profileLink).toBeVisible();
     await expect(layout.createLink).toBeVisible();
     await expect(layout.dashboardLink).toBeVisible();
@@ -13,44 +18,31 @@ test.describe('Navigation (authenticated creator)', () => {
     await expect(layout.shieldLink).toBeVisible();
   });
 
-  test('navigate to dashboard', async ({ page }) => {
-    await page.goto('/profile');
-    const layout = new LayoutPage(page);
-
+  test('navigate to dashboard', async () => {
     await layout.dashboardLink.click();
-    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(layout.page).toHaveURL(/\/dashboard/);
   });
 
-  test('navigate to wellness', async ({ page }) => {
-    await page.goto('/profile');
-    const layout = new LayoutPage(page);
-
+  test('navigate to wellness', async () => {
     await layout.wellnessLink.click();
-    await expect(page).toHaveURL(/\/wellness/);
+    await expect(layout.page).toHaveURL(/\/wellness/);
   });
 
-  test('navigate to shield', async ({ page }) => {
-    await page.goto('/profile');
-    const layout = new LayoutPage(page);
-
+  test('navigate to shield', async () => {
     await layout.shieldLink.click();
-    await expect(page).toHaveURL(/\/shield/);
+    await expect(layout.page).toHaveURL(/\/shield/);
   });
 
-  test('logo navigates to home', async ({ page }) => {
-    await page.goto('/profile');
-    const layout = new LayoutPage(page);
-
+  test('logo navigates to home', async () => {
     await layout.sovrenLogo.first().click();
-    await expect(page).toHaveURL('/');
+    await expect(layout.page).toHaveURL('/');
   });
 
   test('mobile viewport renders page correctly', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/profile');
 
-    // Profile content should still be visible
-    const profileHeading = page.locator('h1').first();
-    await expect(profileHeading).toBeVisible();
+    const profilePage = new ProfilePage(page);
+    await expect(profilePage.userName).toBeVisible();
   });
 });

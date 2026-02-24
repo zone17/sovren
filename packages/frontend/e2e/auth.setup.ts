@@ -1,26 +1,18 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { expect, test as setup } from '@playwright/test';
+import { LoginPage } from './pages/login.page';
+import { CREATOR_CREDENTIALS } from './fixtures/test-credentials';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const authFile = path.join(__dirname, '../test-results/.auth/creator.json');
 
 setup('authenticate as creator', async ({ page }) => {
-  await page.goto('/login');
+  const loginPage = new LoginPage(page);
+  await loginPage.goto();
+  await loginPage.loginWithEmail(CREATOR_CREDENTIALS.email, CREATOR_CREDENTIALS.password);
 
-  // Click the Email tab (default is NOSTR)
-  await page.getByRole('button', { name: /Email/ }).click();
+  await expect(page, 'Login failed — check E2E_CREATOR_EMAIL and E2E_CREATOR_PASSWORD env vars').toHaveURL(/\/profile/);
 
-  // Fill login form
-  await page.getByLabel('Email address').fill('e2e-creator@sovren.app');
-  await page.getByLabel('Password').fill('testpassword123');
-
-  // Submit
-  await page.getByRole('button', { name: /Sign In with Email/ }).click();
-
-  // Wait for redirect to profile
-  await expect(page).toHaveURL(/\/profile/);
-
-  // Save storage state for authenticated tests
   await page.context().storageState({ path: authFile });
 });
