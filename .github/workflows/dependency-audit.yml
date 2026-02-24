@@ -166,7 +166,7 @@ jobs:
           fi
 
       - name: 📎 Upload Audit Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dependency-audit-report-${{ github.run_id }}
           path: |

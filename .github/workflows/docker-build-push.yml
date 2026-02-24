@@ -188,7 +188,7 @@ jobs:
           echo "$digest" > "/tmp/digests/${{ steps.platform.outputs.name }}.txt"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: digests-${{ steps.platform.outputs.name }}
           path: /tmp/digests/*

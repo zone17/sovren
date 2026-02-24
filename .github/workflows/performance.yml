@@ -169,7 +169,7 @@ jobs:
           fi
       
       - name: 📤 Upload load test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: load-test-results
           path: load-test-results.json
@@ -231,7 +231,7 @@ jobs:
           echo "Bundle analysis report generated" >> $GITHUB_STEP_SUMMARY
       
       - name: 📤 Upload bundle report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: bundle-analysis
           path: packages/frontend/bundle-report.html
@@ -275,7 +275,7 @@ jobs:
           fi
       
       - name: 📤 Upload accessibility results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: accessibility-results
