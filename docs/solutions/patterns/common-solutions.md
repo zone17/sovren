@@ -1015,6 +1015,67 @@ grep -n "ValidationError" src/services/SomeService.ts
 
 ---
 
+## 26. E2E Tests Must Not Mock API Calls
+
+**Recurrence:** 14 test files (6,145 lines) all used `page.route()` to mock every API call. 18 wellness test failures proved mock data diverged from reality. Tests gave false confidence while duplicating Vitest+RTL coverage.
+
+### The Rule
+
+E2E tests exercise real user flows through a real browser. Mocking the API layer turns them into slow component tests.
+
+```typescript
+// WRONG: Mock-based "E2E" — tests UI rendering, not integration
+await page.route('**/api/**', (route) => route.fulfill({ json: mockData }));
+await expect(page.getByText('Dashboard')).toBeVisible(); // Always passes
+
+// RIGHT: Real E2E — tests actual user journey
+await loginPage.loginWithEmail('test@sovren.app', 'password123');
+await expect(page).toHaveURL(/\/profile/); // Fails if auth is broken
+```
+
+### Standard Pattern: Page Object Model + Storage State
+
+```typescript
+// 1. POMs centralize locators (e2e/pages/login.page.ts)
+export class LoginPage {
+  readonly emailTab: Locator;
+  readonly emailInput: Locator;
+  constructor(page: Page) {
+    this.emailTab = page.getByRole('button', { name: /Email/ });
+    this.emailInput = page.getByLabel('Email address');
+  }
+  async loginWithEmail(email: string, password: string) {
+    /* ... */
+  }
+}
+
+// 2. Auth setup saves state once (e2e/auth.setup.ts)
+setup('authenticate', async ({ page }) => {
+  // Real login flow — no mocks
+  await page.context().storageState({ path: authFile });
+});
+
+// 3. Config uses 3-tier projects
+projects: [
+  { name: 'setup', testMatch: /auth\.setup\.ts/ },
+  { name: 'authenticated', dependencies: ['setup'], use: { storageState: authFile } },
+  { name: 'public', testMatch: /home\.spec\.ts/ },
+];
+```
+
+### Checklist
+
+- [ ] Zero `page.route()` calls in any E2E test
+- [ ] Role-based locators (`getByRole`, `getByLabel`) — no CSS selectors
+- [ ] No `waitForTimeout` — use web-first assertions
+- [ ] Page Object Model for all pages under test
+- [ ] Storage state auth (authenticate once, reuse)
+- [ ] ESM-compatible (`import.meta.url` not `__dirname`)
+
+**Detection:** `grep -r "page.route" e2e/` should return zero results. Any `page.route()` in E2E = use Vitest+RTL instead.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1067,3 +1128,4 @@ CONTEXT TO LOAD:
 | Bare `Error` in service method → 500         | 24        | common-solutions.md  |
 | DB insert + queue enqueue partial failure    | 4c        | critical-patterns.md |
 | Todos from prior sprint, many may be stale   | 25        | common-solutions.md  |
+| E2E tests mock API via `page.route()`        | 26        | common-solutions.md  |

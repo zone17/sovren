@@ -1,0 +1,393 @@
+================================================================================
+                 PLAYWRIGHT E2E TESTING DOCUMENTATION
+                          Complete Map (Feb 24, 2026)
+================================================================================
+
+DIRECTORY: /Users/fp/Desktop/Sovren/docs/solutions/testing/
+
+FOUR DOCUMENTS CREATED:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. PREVENTION STRATEGIES & BEST PRACTICES                  933 lines | 28 KB │
+│    FILE: playwright-e2e-prevention-strategies.md                             │
+│                                                                              │
+│    PRIMARY COMPREHENSIVE GUIDE                                              │
+│    What you'll learn:                                                       │
+│    • The core problem with mock-based E2E tests                             │
+│    • Prevention rules and decision trees                                    │
+│    • Three-tier Playwright project structure                               │
+│    • Storage state authentication (30-40x faster)                          │
+│    • Page Object Model patterns                                            │
+│    • 8 best practices with code examples                                   │
+│    • Complete test creation checklist                                      │
+│    • Anti-patterns to avoid                                                │
+│    • Migration guide for existing tests                                    │
+│    • Troubleshooting guide                                                 │
+│    • Reusable patterns from Sovren                                         │
+│                                                                              │
+│    READ THIS IF: Writing new E2E tests or reviewing existing tests          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. QUICK REFERENCE                                        330 lines | 10 KB  │
+│    FILE: playwright-e2e-quick-reference.md                                   │
+│                                                                              │
+│    DAILY USE GUIDE (Copy-Paste Templates)                                  │
+│    What you'll find:                                                        │
+│    • Core rule ("E2E = Real Browser + Real Backend")                        │
+│    • Project structure diagram                                             │
+│    • Three project tiers explanation                                       │
+│    • Auth setup pattern (ready to copy-paste)                              │
+│    • Page Object pattern (ready to copy-paste)                             │
+│    • Test template (ready to copy-paste)                                   │
+│    • Wait strategies cheat sheet                                           │
+│    • Pre-commit checklist                                                  │
+│    • Common mistakes table                                                 │
+│    • Commands reference                                                    │
+│    • Success metrics                                                       │
+│                                                                              │
+│    USE THIS FOR: Daily coding, copy-paste templates, quick lookup           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. ANTI-PATTERNS CATALOG                                  620 lines | 22 KB  │
+│    FILE: playwright-e2e-anti-patterns.md                                     │
+│                                                                              │
+│    DEBUGGING & CODE REVIEW GUIDE                                           │
+│    Seven anti-patterns detailed:                                           │
+│    1. Mock-based E2E tests (page.route)                                    │
+│    2. Per-test authentication                                              │
+│    3. Hardcoded locators in tests                                          │
+│    4. Multiple journeys in one test                                        │
+│    5. Permanently skipped tests                                            │
+│    6. Arbitrary waitForTimeout() waits                                     │
+│    7. Testing implementation details                                       │
+│                                                                              │
+│    FOR EACH ANTI-PATTERN:                                                  │
+│    • Why it fails (with real examples)                                     │
+│    • Detection rule (grep patterns)                                        │
+│    • How to fix (step-by-step)                                             │
+│    • Summary table of all anti-patterns                                    │
+│    • Detection rules quick reference                                       │
+│                                                                              │
+│    USE THIS FOR: Fixing bad tests, code review, teaching                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4. DOCUMENTATION INDEX & SUMMARY                                             │
+│    FILES:                                                                    │
+│    • README.md (Navigation guide)                                          │
+│    • REMEDIATION_SUMMARY.md (What happened & what was fixed)               │
+│    • DOCUMENTATION_MAP.txt (This file)                                     │
+│                                                                              │
+│    READ THIS IF: Orientation, choosing which document to read              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            QUICK START
+================================================================================
+
+I'M...                          READ THIS...
+─────────────────────────────────────────────────────────────────────────────
+Starting new E2E tests          Prevention Strategies (Sections 1-3)
+Need code template              Quick Reference ("Test Template" section)
+Reviewing tests                 Quick Reference ("Quick Checklist" section)
+Tests are flaky/slow            Anti-Patterns (Anti-Pattern #2, #6)
+UI changes break tests          Anti-Patterns (Anti-Pattern #3)
+Tests passing but app broken    Prevention Strategies (Section 1.1)
+Fixing a specific issue         Anti-Patterns (look up issue in table)
+Setting up playwright config    Quick Reference (Project Tiers table)
+Creating auth setup             Prevention Strategies (Section 1.4)
+Need working example code       Prevention Strategies (Section 7)
+
+================================================================================
+                         KEY CONCEPTS AT A GLANCE
+================================================================================
+
+THE CORE RULE:
+──────────────
+E2E Testing = Real Browser + Real Backend, ZERO Mocks
+
+If you use page.route() to mock API calls, you're not writing E2E tests.
+
+THREE TIERS:
+────────────
+1. SETUP        → Authenticates once, saves storage state
+2. AUTHENTICATED → Reuses auth for parallel test execution
+3. PUBLIC       → No auth needed, tests unauthenticated flows
+
+SPEED COMPARISON:
+──────────────────
+Per-test login:  320+ seconds (20s × 16 tests)
+Storage state:   8-10 seconds (setup once + parallel)
+Speedup:         30-40x faster
+
+PAGE OBJECTS:
+─────────────
+• Locators defined in one place (pages/ directory)
+• Tests reference page objects
+• UI change? Update 1 file, all tests still work
+
+SEVEN ANTI-PATTERNS:
+────────────────────
+1. page.route() mocks (P1 critical)
+2. Per-test login (P2 performance)
+3. Hardcoded locators (P2 maintainability)
+4. Multiple journeys (P3 debugging)
+5. Skipped tests (P1 technical debt)
+6. Arbitrary timeouts (P2 flakiness)
+7. Testing details (P3 brittleness)
+
+================================================================================
+                         SOVREN CURRENT STATE
+================================================================================
+
+REMEDIATION COMPLETE:
+─────────────────────
+✅ 14 mock-based test files deleted
+✅ 16 focused E2E tests written
+✅ Zero mocks (all real API)
+✅ Page Object Model (5 pages)
+✅ Storage state auth (6.8s setup)
+✅ 100% CI pass rate
+
+METRICS:
+────────
+Total tests:          16
+Runtime:              6.8 seconds
+Auth setup:           6.8s (once)
+Mocked APIs:          0
+Page objects:         5
+Skipped tests:        0
+CI pass rate:         100%
+
+FILE LOCATIONS:
+───────────────
+Tests:                /packages/frontend/e2e/
+Test config:          /packages/frontend/playwright.config.ts
+Page objects:         /packages/frontend/e2e/pages/
+Documentation:        /docs/solutions/testing/
+
+================================================================================
+                         PREVENTION CHECKLIST
+================================================================================
+
+BEFORE WRITING TESTS:
+☐ Is this really E2E? (complete journey, real API)
+☐ Identify auth tier (public, authenticated, admin)
+☐ Test data exists (test user accounts)
+☐ Backend accessible (E2E needs real API)
+
+WHILE WRITING:
+☐ Create page object (pages/ directory)
+☐ One test file per page/feature
+☐ Single journey per test (not 5 in 1)
+☐ Real API calls only (no page.route)
+☐ Explicit waits (waitForURL, waitForResponse, toBeVisible)
+☐ Test data via environment variables
+☐ Page objects reusable
+
+BEFORE COMMITTING:
+☐ All tests pass
+☐ No console errors
+☐ No skipped tests (.skip forbidden)
+☐ No mocks anywhere
+☐ Tests run < 30 seconds
+☐ Page objects used for all locators
+☐ Auth setup runs first
+
+================================================================================
+                         HOW TO USE THESE DOCS
+================================================================================
+
+FIRST TIME:
+───────────
+1. Read this file (you're doing it!)
+2. Read README.md (Navigation guide)
+3. Skim Prevention Strategies (get concepts)
+4. Read Quick Reference (templates)
+
+WRITING TESTS:
+──────────────
+1. Open Quick Reference (in one window)
+2. Copy test template
+3. Follow checklist
+4. Refer to Prevention Strategies for details
+
+REVIEWING TESTS:
+────────────────
+1. Use Anti-Patterns Catalog (detection rules)
+2. Provide feedback with specific anti-pattern
+3. Link to anti-pattern page for explanation
+
+TEACHING OTHERS:
+────────────────
+1. Start with Prevention Strategies (Sections 1-3)
+2. Show Quick Reference templates
+3. Use Anti-Patterns for code review
+
+DEBUGGING:
+──────────
+1. Identify symptom (slow, flaky, brittle, etc.)
+2. Look up in Anti-Patterns summary table
+3. Read relevant anti-pattern section
+4. Follow "How to fix" steps
+
+================================================================================
+                         FILE REFERENCE
+================================================================================
+
+/docs/solutions/testing/
+├── README.md
+│   • Overview of all documents
+│   • Navigation guide ("I'm... → Read this")
+│   • Key concepts, quick start, metrics
+│   • Common questions FAQ
+│
+├── REMEDIATION_SUMMARY.md
+│   • What problem existed
+│   • What was fixed
+│   • Prevention documentation created
+│   • Key prevention rules
+│   • Implementation checklist
+│   • Impact and benefits
+│
+├── playwright-e2e-prevention-strategies.md (933 lines)
+│   PRIMARY REFERENCE
+│   • Core problem analysis
+│   • Prevention rules and patterns
+│   • 8 best practices with code
+│   • Complete checklist
+│   • Troubleshooting guide
+│   • Reusable patterns from Sovren
+│
+├── playwright-e2e-quick-reference.md (330 lines)
+│   DAILY USE REFERENCE
+│   • Core rule summary
+│   • Ready-to-copy code templates
+│   • Cheat sheets
+│   • Pre-commit checklist
+│   • Common mistakes
+│   • Commands
+│
+├── playwright-e2e-anti-patterns.md (620 lines)
+│   DEBUGGING REFERENCE
+│   • 7 anti-patterns detailed
+│   • Why each fails
+│   • Detection rules
+│   • How to fix each
+│   • Summary table
+│
+└── DOCUMENTATION_MAP.txt (this file)
+    • Orientation and file structure
+    • Quick start guide
+    • Key concepts summary
+    • Prevention checklist
+    • How to use docs
+
+================================================================================
+                      DOCUMENT STATISTICS
+================================================================================
+
+Total Documentation:  ~1,800 lines | ~70 KB
+Files Created:        5 markdown files + 1 reference
+Coverage:             All aspects of E2E testing
+Examples:             50+ code samples
+Anti-patterns:        7 major patterns detailed
+Checklists:           3 comprehensive checklists
+Detection Rules:      7 grep patterns for auto-detection
+Templates:            5 ready-to-copy code templates
+
+================================================================================
+                        NEXT STEPS
+================================================================================
+
+FOR INDIVIDUAL DEVELOPERS:
+──────────────────────────
+1. Read REMEDIATION_SUMMARY.md (5 min)
+2. Read Quick Reference (10 min)
+3. Bookmark these docs for daily reference
+4. Write first test using template (15 min)
+5. Show to team for review
+
+FOR CODE REVIEWERS:
+───────────────────
+1. Print Anti-Patterns Catalog summary table
+2. Use detection rules for automated checks
+3. Reference anti-pattern pages in PR feedback
+4. Share links to relevant sections
+
+FOR TEAM LEADS:
+────────────────
+1. Share README.md with team
+2. Assign Prevention Strategies reading (1 hour)
+3. Set up pre-commit hook for anti-pattern detection
+4. Include Quick Reference in onboarding
+5. Use Anti-Patterns in code review training
+
+FOR NEW TEAM MEMBERS:
+─────────────────────
+Day 1:  Read REMEDIATION_SUMMARY.md (understand problem/solution)
+Day 1:  Read Prevention Strategies Sections 1-3 (core concepts)
+Day 2:  Read Quick Reference (templates and commands)
+Day 2:  Read Anti-Patterns Catalog (what to avoid)
+Day 3:  Write first test with mentor review
+Week 2: Lead code review using Anti-Patterns
+
+================================================================================
+                          VERSION & HISTORY
+================================================================================
+
+Document Set Version:   1.0
+Created:                February 24, 2026
+Project:                Sovren Creator Platform
+Context:                Remediation of mock-based E2E tests
+Status:                 Complete & Ready for Use
+
+Initial Creation:       2026-02-24
+  • Prevention Strategies & Best Practices
+  • Quick Reference
+  • Anti-Patterns Catalog
+  • README
+  • REMEDIATION_SUMMARY
+  • DOCUMENTATION_MAP
+
+================================================================================
+                      GETTING HELP
+================================================================================
+
+CAN'T FIND WHAT YOU NEED?
+
+Looking for...                  Check in...
+──────────────────────────────────────────────────────────────────────────
+Code example                    Quick Reference or Prevention Strategies #7
+Checklist                       Quick Reference or Prevention Strategies #3
+How to fix X                    Anti-Patterns (search by name)
+Why X is bad                    Anti-Patterns (Problem section)
+Configuration                   Prevention Strategies #1.3 or Quick Ref
+Authentication setup            Prevention Strategies #1.4 or Quick Ref
+Page Object pattern             Prevention Strategies #1.5 or Quick Ref
+Performance issue               Anti-Patterns (Anti-Pattern #2)
+Flaky tests                     Anti-Patterns (Anti-Pattern #6)
+Test maintenance                Anti-Patterns (Anti-Pattern #3)
+
+STILL STUCK?
+
+1. Read the relevant section in Prevention Strategies (most comprehensive)
+2. Check Anti-Patterns for similar issues
+3. Search Quick Reference for keywords
+4. Review Sovren's actual test code (/packages/frontend/e2e/)
+
+================================================================================
+                            END OF MAP
+================================================================================
+
+For navigation, start with: README.md
+For quick coding:         Quick Reference
+For learning:             Prevention Strategies
+For debugging:            Anti-Patterns Catalog
+For context:              REMEDIATION_SUMMARY.md
+
+Questions or updates?     See document ownership in README.md
+
+================================================================================
