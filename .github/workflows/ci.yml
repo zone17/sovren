@@ -105,13 +105,76 @@ jobs:
           fail_ci_if_error: false
 
   # ===========================================
+  # Stage 3b: Integration Tests (parallel with unit tests)
+  # ===========================================
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [lint, security]
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 54322:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local
+        run: supabase start
+        env:
+          SUPABASE_DB_PORT: 54322
+
+      - name: Run integration tests
+        run: npm run test:integration --workspace=packages/backend
+        env:
+          NODE_ENV: test
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU' }}
+          REDIS_TEST_HOST: localhost
+          REDIS_TEST_PORT: 6380
+
+      - name: Upload integration coverage
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./packages/backend/coverage/integration/lcov.info
+          flags: integration
+          fail_ci_if_error: false
+
+  # ===========================================
   # Stage 4: Build
   # ===========================================
   build:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [test]
+    needs: [test, test-integration]
 
     steps:
       - uses: actions/checkout@v4
@@ -135,13 +198,58 @@ jobs:
           retention-days: 3
 
   # ===========================================
+  # Stage 4b: E2E Tests (post-build, against production bundle)
+  # ===========================================
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: packages/frontend/dist
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: packages/frontend
+
+      - name: Start preview server
+        run: npx vite preview --port 4173 &
+        working-directory: packages/frontend
+
+      - name: Wait for preview server
+        run: npx wait-on http://localhost:4173 --timeout 30000
+
+      - name: Run E2E tests against production build
+        run: npm run test:e2e
+        working-directory: packages/frontend
+        env:
+          CI: true
+          E2E_BASE_URL: http://localhost:4173
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: packages/frontend/test-results/
+          retention-days: 7
+
+  # ===========================================
   # Stage 5: Docker Image Build & Security Scan
   # ===========================================
   docker:
     name: Docker Build & Scan
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [test]
+    needs: [test, test-integration]
     if: github.event_name == 'push'
 
     permissions:
@@ -216,7 +324,7 @@ jobs:
     name: Deploy Staging
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [build, docker]
+    needs: [build, docker, e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: staging
