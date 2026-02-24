@@ -1076,6 +1076,50 @@ projects: [
 
 ---
 
+## 27. New Test Types Need Three Integration Points
+
+**Recurrence:** Playwright E2E existed locally but was missing from CI pipeline and agent briefs. Frontend agents were told "E2E tests (QA agent in Phase 3)" and never wrote E2E tests during implementation. QA brief referenced wrong monorepo paths.
+
+### The Rule
+
+When adding any new test type (E2E, a11y, performance, security), it must be wired into three places or it becomes a dead artifact:
+
+1. **CI pipeline** — a stage that gates deploys
+2. **Agent brief deliverables** — agents must write these tests during implementation
+3. **Project CLAUDE.md** — structure, conventions, and commands documented
+
+### Checklist
+
+- [ ] CI pipeline stage added with artifact upload on failure
+- [ ] Deploy stages depend on new test stage passing
+- [ ] Project CLAUDE.md section added (structure, conventions, commands)
+- [ ] Frontend agent brief: test type added as deliverable checklist item
+- [ ] QA agent brief: correct monorepo paths + conventions documented
+- [ ] Backend agent brief: scope boundary updated (who creates what)
+- [ ] `npm run test:*` script exists in package.json
+
+### Anti-Pattern: "QA Handles It in Phase 3"
+
+```markdown
+# WRONG: Frontend brief defers all E2E to QA
+
+**You DO NOT OWN:**
+
+- E2E tests (QA agent in Phase 3)
+
+# RIGHT: Frontend creates E2E alongside UI, QA hardens
+
+**Deliverables:**
+
+- [ ] E2E Page Object + spec for the new page/feature
+```
+
+When E2E is deferred entirely to Phase 3, the QA agent lacks context about implementation details and the E2E coverage arrives too late to catch integration issues during development.
+
+**Detection:** `grep -r "QA.*Phase 3.*handles" briefs/` — any brief that fully defers a test type to QA is a gap. Implementation agents should create initial coverage; QA extends and hardens.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1129,3 +1173,4 @@ CONTEXT TO LOAD:
 | DB insert + queue enqueue partial failure    | 4c        | critical-patterns.md |
 | Todos from prior sprint, many may be stale   | 25        | common-solutions.md  |
 | E2E tests mock API via `page.route()`        | 26        | common-solutions.md  |
+| New test type exists locally but not in CI   | 8a-8c     | critical-patterns.md |

@@ -210,3 +210,4 @@ $ npx playwright test
 - **Common Solutions #17:** Hook migration checklist (includes test runner commands)
 - **Common Solutions #18:** Error suppression anti-pattern in hooks
 - **Prevention Deep-Dive:** `docs/solutions/testing/` — full anti-patterns catalog, quick reference, prevention strategies
+- **CI + Agent Brief Integration:** `docs/solutions/workflow-issues/e2e-ci-agent-integration-gaps-20260224.md` — wiring E2E into CI pipeline and agent workflow instructions

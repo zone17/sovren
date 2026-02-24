@@ -230,7 +230,7 @@ npm run test:e2e:debug    # Run in debug mode
 
 Before writing any code in this repository, read these canonical pattern files:
 
-- **`docs/solutions/patterns/critical-patterns.md`** — 7 P1-class patterns (TOCTOU, auth, pagination, atomic writes, SSRF, status guards, payment persistence). Extracted from 50 P1 findings across 6 sprints. **Violating these patterns WILL produce P1 review findings.**
+- **`docs/solutions/patterns/critical-patterns.md`** — 8 P1-class patterns (TOCTOU, auth, pagination, atomic writes, SSRF, status guards, payment persistence, test infrastructure integration). Extracted from 50+ P1 findings across 7 sprints. **Violating these patterns WILL produce P1 review findings.**
 - **`docs/solutions/patterns/common-solutions.md`** — 12 P2/P3-class patterns (double-submit, TTLCache, env validation, error format, case-transform, feature flags, mock chains, rate limiting, route ordering, DI types, Vitest OOM prevention, git diff for hooks). Prevents re-inventing solutions that already exist.
 
 These files are the single source of truth. Sprint-specific docs in `docs/solutions/` provide historical context but the patterns files are the canonical reference.

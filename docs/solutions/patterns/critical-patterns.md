@@ -8,7 +8,7 @@ usage: Read this file BEFORE writing any service, route, or financial component.
 
 # Critical Patterns
 
-Canonical patterns extracted from 50 P1 findings across 6 sprints. Each pattern has appeared in 3+ separate reviews. **If you're writing code that touches any of these categories, use the pattern exactly as shown.**
+Canonical patterns extracted from 50+ P1 findings across 7 sprints. Each pattern has appeared in 3+ separate reviews or represents a systemic gap. **If you're writing code that touches any of these categories, use the pattern exactly as shown.**
 
 ---
 
@@ -455,6 +455,78 @@ if (count === 0) throw new NotFoundError('Not found or not in cancellable state'
 
 ---
 
+## 8. Test Infrastructure Must Wire Into CI + Agent Briefs (1 P1 + systemic gap)
+
+**The problem:** New test types (E2E, a11y, perf) are created locally but never added to CI pipeline or agent brief deliverables. Tests exist but don't protect anything — deploys proceed without them, and agents never write them during implementation.
+
+**Rule:** Every test type requires three integration points. Missing any one makes the tests a dead artifact.
+
+### 8a. CI Pipeline Gate
+
+Tests must block deploys, not just exist locally.
+
+```yaml
+# ❌ WRONG: E2E exists locally but CI only runs unit tests
+jobs:
+  test:
+    run: npm run test:ci    # Vitest only
+  deploy-staging:
+    needs: [test]           # No E2E gate
+
+# ✅ RIGHT: E2E gates staging deploys against production build
+jobs:
+  e2e:
+    needs: [build]
+    steps:
+      - run: npx vite preview --port 4173 &
+      - run: npm run test:e2e
+        env:
+          E2E_BASE_URL: http://localhost:4173
+  deploy-staging:
+    needs: [build, docker, e2e]  # E2E must pass
+```
+
+### 8b. Agent Brief Deliverables
+
+Implementation agents must create test coverage alongside features — not defer entirely to QA.
+
+```markdown
+# ❌ WRONG: Frontend brief defers all E2E to QA
+
+**You DO NOT OWN:**
+
+- E2E tests (QA agent in Phase 3)
+
+# ✅ RIGHT: Frontend creates E2E alongside UI, QA hardens
+
+**Deliverables:**
+
+- [ ] UI components for the feature
+- [ ] Component unit tests
+- [ ] E2E Page Object + spec for the new page/feature
+
+**E2E Testing:**
+
+1. Create Page Object in e2e/pages/{page}.page.ts
+2. Add spec covering happy path user journey
+3. Register spec in correct Playwright project in config
+4. Run npm run test:e2e before marking complete
+```
+
+### 8c. Project Documentation
+
+The project CLAUDE.md must document structure, conventions, and commands so every agent knows how to write tests correctly.
+
+**Detection:** For any test type, check all three:
+
+1. `grep -r "test-type" .github/workflows/ci.yml` — in CI?
+2. `grep -r "test-type" briefs/` — in agent deliverables?
+3. `grep -r "test-type" CLAUDE.md` — documented?
+
+If any returns empty, the test type is partially integrated and will atrophy.
+
+---
+
 ## Quick Reference Table
 
 | Pattern                | When to Use          | Key Guard                        | HTTP Error |
@@ -467,6 +539,7 @@ if (count === 0) throw new NotFoundError('Not found or not in cancellable state'
 | Atomic multi-table     | 2+ table writes      | RPC or compensating tx           | 500        |
 | SSRF validation        | User-supplied URLs   | DNS resolve + IP check + pin IPs | 400        |
 | Status guard           | DELETE/void/cancel   | Assert status before write       | 409        |
+| Test infra integration | New test type added  | CI stage + brief + CLAUDE.md     | N/A        |
 
 ---
 
