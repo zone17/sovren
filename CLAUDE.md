@@ -169,6 +169,63 @@ Located in `packages/backend/src/`:
 - Payment verification and subscription management
 - Transaction history tracking
 
+### Playwright E2E Testing
+
+E2E tests live in `packages/frontend/e2e/` and run against the real app (zero `page.route()` mocks).
+
+**Structure:**
+
+```
+e2e/
+├── pages/                  # Page Object Models (one per page)
+│   ├── home.page.ts
+│   ├── login.page.ts
+│   ├── signup.page.ts
+│   ├── profile.page.ts
+│   └── layout.page.ts     # Shared nav/layout locators
+├── fixtures/
+│   ├── test-credentials.ts # Centralized credentials with env var fallbacks
+│   ├── test-users.ts       # NOSTR key fixtures
+│   └── test-events.ts      # NOSTR event fixtures
+├── auth.setup.ts           # Playwright setup project — real login, saves storage state
+├── auth.spec.ts            # Auth flow tests (no stored state — tests auth itself)
+├── navigation.spec.ts      # Authenticated nav tests (uses stored state)
+├── home.spec.ts            # Public page tests (no auth needed)
+├── global-setup.ts         # Creates auth dir
+└── global-teardown.ts      # Cleans auth dir
+```
+
+**3-tier Playwright config** (`playwright.config.ts`):
+
+1. **setup** — Runs `auth.setup.ts`, saves storage state to `test-results/.auth/creator.json`
+2. **chromium-authenticated** — Uses saved storage state for tests needing auth
+3. **chromium-public** — No auth, for public pages and auth flow tests
+
+**When building new features, agents MUST:**
+
+1. Create a Page Object in `e2e/pages/{page}.page.ts` with role-based locators (`getByRole`, `getByLabel`)
+2. Add E2E spec covering the critical user journey (happy path + key error state)
+3. If the page requires auth, add the spec to `chromium-authenticated` project's `testMatch` regex in `playwright.config.ts`
+4. If the page is public, add to `chromium-public` project's `testMatch` regex
+5. Import credentials from `e2e/fixtures/test-credentials.ts` — never hardcode
+6. Run `npm run test:e2e` and verify all tests pass before marking work complete
+
+**Conventions:**
+
+- Use Page Object Model pattern for all pages
+- Use web-first assertions (`toBeVisible`, `toHaveURL`) — never `waitForTimeout`
+- Use role-based locators — never CSS selectors or test IDs
+- One spec file per page/feature, one POM per page
+- E2E tests run in CI post-build against the production bundle via `vite preview`
+
+**Commands:**
+
+```bash
+npm run test:e2e          # Run all E2E tests
+npm run test:e2e:ui       # Run with Playwright UI
+npm run test:e2e:debug    # Run in debug mode
+```
+
 ## Required Reading for All Agents
 
 Before writing any code in this repository, read these canonical pattern files:
