@@ -78,6 +78,7 @@ export interface NostrSignature {
   signature: string;
   pubkey: string;
   challenge: string;
+  timestamp: number;
 }
 
 // 🔄 **AUTH API RESPONSES**

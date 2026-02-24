@@ -147,7 +147,7 @@ export default defineConfig(({ mode, command }) => {
       },
       proxy: {
         '/api': {
-          target: env.VITE_API_URL || 'http://localhost:4000',
+          target: env.VITE_API_URL || 'http://localhost:3001',
           changeOrigin: true,
           secure: false,
         },

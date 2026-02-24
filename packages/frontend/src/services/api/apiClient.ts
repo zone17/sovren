@@ -33,18 +33,37 @@ const DEFAULT_BASE_URL = 'http://localhost:3001';
 
 class ApiClient {
   private baseUrl: string;
-  private token: string | null = null;
+  private _token: string | null = null;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
   }
 
+  /**
+   * Lazy token accessor — checks localStorage on every call so tokens
+   * set after module initialization (e.g. by auth setup) are picked up.
+   */
+  private getEffectiveToken(): string | null {
+    if (this._token) return this._token;
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token');
+    }
+    return null;
+  }
+
   setToken(token: string | null): void {
-    this.token = token;
+    this._token = token;
+    if (typeof window !== 'undefined') {
+      if (token) {
+        localStorage.setItem('auth_token', token);
+      } else {
+        localStorage.removeItem('auth_token');
+      }
+    }
   }
 
   getToken(): string | null {
-    return this.token;
+    return this.getEffectiveToken();
   }
 
   private async request<T>(
@@ -67,8 +86,9 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    const token = this.getEffectiveToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     const response = await fetch(url.toString(), {

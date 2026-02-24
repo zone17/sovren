@@ -37,7 +37,7 @@ export default defineConfig({
     },
     {
       name: 'chromium-authenticated',
-      testMatch: /navigation\.spec\.ts/,
+      testMatch: /navigation\.spec\.ts|wellness\.spec\.ts/,
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -51,12 +51,33 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    port: 3000,
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  webServer: [
+    // Backend — only started if explicitly enabled via USE_BACKEND=1
+    ...(process.env.USE_BACKEND ? [{
+      command: 'npm run dev',
+      cwd: path.join(__dirname, '../backend'),
+      url: 'http://localhost:3001/health',
+      timeout: 30_000,
+      reuseExistingServer: true,
+      env: {
+        NODE_ENV: 'test',
+        PORT: '3001',
+        SUPABASE_URL: process.env.SUPABASE_URL || 'http://localhost:54321',
+        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+        JWT_SECRET: 'e2e-test-secret-at-least-32-characters-long',
+      },
+    }] : []),
+    // Frontend — demo auth by default, real backend auth when USE_BACKEND=1
+    {
+      command: 'npm run dev',
+      url: 'http://localhost:3000',
+      timeout: 15_000,
+      reuseExistingServer: true,
+      env: {
+        ...(process.env.USE_BACKEND ? { VITE_ENABLE_BACKEND: 'true' } : {}),
+      },
+    },
+  ],
 
   globalSetup: './e2e/global-setup.ts',
   globalTeardown: './e2e/global-teardown.ts',

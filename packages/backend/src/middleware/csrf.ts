@@ -47,6 +47,8 @@ const DEFAULT_OPTIONS: Required<CsrfOptions> = {
   excludePaths: [
     '/api/security/csp-report',
     '/api/v1/payments/webhooks',
+    '/api/auth/challenge',
+    '/api/auth/authenticate',
     '/health',
     '/ready',
     '/live',

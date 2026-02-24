@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
-import { verifyEvent, type Event as NostrEvent } from 'nostr-tools/pure';
+import { getEventHash, verifyEvent, type Event as NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
 import { z } from 'zod';
 import logger from '../lib/logger';
 
@@ -162,14 +162,17 @@ export class NostrAuthService {
       const message = this.createSignatureMessage(challenge, timestamp);
       const messageHash = createHash('sha256').update(message).digest('hex');
 
-      // Create a NOSTR event for verification
-      const event: NostrEvent = {
+      // Create a NOSTR event for verification — compute the proper event ID
+      const eventData: UnsignedEvent = {
         kind: 1,
         pubkey,
         created_at: Math.floor(timestamp / 1000),
         tags: [],
         content: messageHash,
-        id: '', // Will be computed by verifyEvent
+      };
+      const event: NostrEvent = {
+        ...eventData,
+        id: getEventHash(eventData),
         sig: signature,
       };
 

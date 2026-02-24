@@ -91,13 +91,13 @@ export async function connectRedis(): Promise<void> {
 
 /**
  * Get the shared Redis client singleton.
- * Throws if connectRedis() has not been called yet.
+ * Lazily creates the client if connectRedis() has not been called yet,
+ * which happens when services are instantiated at module-load time
+ * before the server bootstrap completes.
  */
 export function getRedisClient(): Redis {
   if (!sharedClient) {
-    throw new Error(
-      'Redis client not initialized. Call connectRedis() during server bootstrap.'
-    );
+    sharedClient = createClient();
   }
   return sharedClient;
 }

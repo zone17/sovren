@@ -6,6 +6,7 @@ import type { FullConfig } from '@playwright/test';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function globalSetup(_config: FullConfig): Promise<void> {
+  // Create auth directory for storage state
   const authDir = path.join(__dirname, '../test-results/.auth');
   await fs.mkdir(authDir, { recursive: true });
 }

@@ -247,6 +247,7 @@ export class RealAuthService {
         body: JSON.stringify({
           nostr_pubkey: signature.pubkey,
           challenge: signature.challenge,
+          timestamp: signature.timestamp,
           signature: signature.signature,
           role: 'supporter', // Default role for NOSTR auth
         }),

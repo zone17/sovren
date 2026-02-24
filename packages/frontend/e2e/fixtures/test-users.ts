@@ -1,8 +1,8 @@
 /**
- * 👥 Test User Fixtures for E2E Tests
- * Pre-configured test users with deterministic keys
+ * Test User Fixtures for E2E Tests
+ * Deterministic keys — same pubkeys every run for seed.sql matching.
  */
-import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools';
+import { getPublicKey, nip19 } from 'nostr-tools';
 
 export interface TestUserProfile {
   id: string;
@@ -20,9 +20,15 @@ export interface TestUserProfile {
   };
 }
 
-/**
- * Generate deterministic test user from seed
- */
+/** Hardcoded hex keys — deterministic across runs */
+const TEST_PRIVATE_KEYS: Record<string, string> = {
+  alice: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2',
+  bob: 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3',
+  charlie: 'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4',
+  dave: 'd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5',
+  eve: 'e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6',
+};
+
 function createTestUser(
   id: string,
   profile: {
@@ -33,9 +39,11 @@ function createTestUser(
     lud16?: string;
   }
 ): TestUserProfile {
-  const privateKey = generateSecretKey();
+  const privateKeyHex = TEST_PRIVATE_KEYS[id];
+  const privateKey = Uint8Array.from(
+    privateKeyHex.match(/.{2}/g)!.map((byte) => parseInt(byte, 16))
+  );
   const publicKey = getPublicKey(privateKey);
-  const privateKeyHex = Buffer.from(privateKey).toString('hex');
   const nsec = nip19.nsecEncode(privateKey);
   const npub = nip19.npubEncode(publicKey);
 
@@ -50,9 +58,6 @@ function createTestUser(
   };
 }
 
-/**
- * Pre-configured test users
- */
 export const TEST_USERS = {
   alice: createTestUser('alice', {
     name: 'Alice Test',
@@ -89,66 +94,18 @@ export const TEST_USERS = {
   }),
 };
 
-/**
- * Get test user by ID
- */
 export function getTestUser(id: keyof typeof TEST_USERS): TestUserProfile {
   return TEST_USERS[id];
 }
 
-/**
- * Get all test users
- */
 export function getAllTestUsers(): TestUserProfile[] {
   return Object.values(TEST_USERS);
 }
 
-/**
- * Get test user public keys
- */
 export function getTestUserPublicKeys(): string[] {
   return Object.values(TEST_USERS).map((user) => user.publicKey);
 }
 
-/**
- * Create follow relationship between users
- */
-export function createFollowRelationships(): Map<string, string[]> {
-  const follows = new Map<string, string[]>();
-
-  // Alice follows Bob and Charlie
-  follows.set(TEST_USERS.alice.publicKey, [
-    TEST_USERS.bob.publicKey,
-    TEST_USERS.charlie.publicKey,
-  ]);
-
-  // Bob follows Alice, Charlie, and Dave
-  follows.set(TEST_USERS.bob.publicKey, [
-    TEST_USERS.alice.publicKey,
-    TEST_USERS.charlie.publicKey,
-    TEST_USERS.dave.publicKey,
-  ]);
-
-  // Charlie follows everyone
-  follows.set(TEST_USERS.charlie.publicKey, [
-    TEST_USERS.alice.publicKey,
-    TEST_USERS.bob.publicKey,
-    TEST_USERS.dave.publicKey,
-    TEST_USERS.eve.publicKey,
-  ]);
-
-  // Dave follows Alice and Bob
-  follows.set(TEST_USERS.dave.publicKey, [TEST_USERS.alice.publicKey, TEST_USERS.bob.publicKey]);
-
-  // Eve follows no one (bot account)
-  follows.set(TEST_USERS.eve.publicKey, []);
-
-  return follows;
-}
-
-/**
- * Export convenience constants
- */
 export const ALICE = TEST_USERS.alice;
 export const BOB = TEST_USERS.bob;
 export const CHARLIE = TEST_USERS.charlie;

@@ -345,6 +345,7 @@ const SovereignOnboarding: React.FC = () => {
         signature: signedEvent.sig,
         pubkey: nostrKeys.publicKey,
         challenge: challengeResult.challenge,
+        timestamp: Date.now(),
       });
 
       if (authResult.error) {
