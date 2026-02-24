@@ -1,57 +1,44 @@
 import { expect, test } from '@playwright/test';
+import { HomePage } from './pages/home.page';
 
 test.describe('Home Page', () => {
-  test('should display the home page correctly', async ({ page }) => {
-    await page.goto('/');
+  test('displays hero heading, subheading, and CTA buttons', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
 
-    // Check the main heading
-    await expect(page.getByRole('heading', { name: 'Welcome to Sovren' })).toBeVisible();
-
-    // Check the description
-    await expect(page.getByText('The platform for creators to monetize their content using Bitcoin and Nostr.')).toBeVisible();
-
-    // Check the call-to-action buttons
-    await expect(page.getByRole('link', { name: 'Get Started' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Learn More' })).toBeVisible();
-
-    // Check the feature cards
-    await expect(page.getByRole('heading', { name: 'Create Content' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Monetize' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Build Community' })).toBeVisible();
+    await expect(home.heading).toBeVisible();
+    await expect(home.subheading).toBeVisible();
+    await expect(home.ctaButton).toBeVisible();
+    await expect(home.learnMoreButton).toBeVisible();
   });
 
-  test('should navigate to signup page when clicking Get Started', async ({ page }) => {
-    await page.goto('/');
+  test('displays benefit cards', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
 
-    // Click the Get Started button
-    await page.getByRole('link', { name: 'Get Started' }).click();
-
-    // Should navigate to signup page
-    await expect(page).toHaveURL('/signup');
+    await expect(home.trueOwnershipCard).toBeVisible();
+    await expect(home.bitcoinMonetizationCard).toBeVisible();
+    await expect(home.eliteCommunityCard).toBeVisible();
   });
 
-  test('should navigate to about page when clicking Learn More', async ({ page }) => {
-    await page.goto('/');
+  test('CTA navigates to onboarding', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
+    await home.clickCTA();
 
-    // Click the Learn More button
-    await page.getByRole('link', { name: 'Learn More' }).click();
-
-    // Should navigate to about page
-    await expect(page).toHaveURL('/about');
+    await expect(page).toHaveURL(/\/onboarding/);
   });
 
-  test('should be responsive on mobile', async ({ page }) => {
-    // Set mobile viewport
+  test('mobile viewport renders correctly', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/');
 
-    // Should still show main content
-    await expect(page.getByRole('heading', { name: 'Welcome to Sovren' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Get Started' })).toBeVisible();
+    const home = new HomePage(page);
+    await home.goto();
 
-    // Feature cards should stack vertically (just check they're visible)
-    await expect(page.getByRole('heading', { name: 'Create Content' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Monetize' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Build Community' })).toBeVisible();
+    await expect(home.heading).toBeVisible();
+    await expect(home.ctaButton).toBeVisible();
+    await expect(home.trueOwnershipCard).toBeVisible();
+    await expect(home.bitcoinMonetizationCard).toBeVisible();
+    await expect(home.eliteCommunityCard).toBeVisible();
   });
 });
