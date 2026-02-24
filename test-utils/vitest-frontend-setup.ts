@@ -4,9 +4,10 @@
  * Provides jsdom environment setup, mocks for browser APIs, and
  * testing-library configuration for React component tests.
  */
-import { afterEach, beforeEach, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+import { server } from '../packages/frontend/src/test-utils/msw/server';
 
 // Environment variables
 process.env.NODE_ENV = 'test';
@@ -22,8 +23,13 @@ process.env.SUPABASE_URL = 'https://test.supabase.co';
 process.env.SUPABASE_ANON_KEY = 'test-anon-key-not-real-000000000000000000000000';
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
 
+// MSW server lifecycle
+beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+afterAll(() => server.close());
+
 // Cleanup after each test
 afterEach(() => {
+  server.resetHandlers();
   cleanup();
   vi.clearAllMocks();
 });
