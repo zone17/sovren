@@ -1,6 +1,11 @@
 import { createHash, randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
-import { getEventHash, verifyEvent, type Event as NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
+import {
+  getEventHash,
+  verifyEvent,
+  type Event as NostrEvent,
+  type UnsignedEvent,
+} from 'nostr-tools/pure';
 import { z } from 'zod';
 import logger from '../lib/logger';
 
@@ -50,7 +55,7 @@ export class NostrAuthService {
       if (jwtSecret.length < 32) {
         throw new Error(
           'JWT_SECRET must be at least 32 characters. ' +
-          'Generate one with: openssl rand -base64 32'
+            'Generate one with: openssl rand -base64 32'
         );
       }
       this.JWT_SECRET = jwtSecret;
@@ -59,7 +64,7 @@ export class NostrAuthService {
     } else {
       throw new Error(
         'JWT_SECRET environment variable is required. ' +
-        'Generate one with: openssl rand -base64 32'
+          'Generate one with: openssl rand -base64 32'
       );
     }
     this.JWT_EXPIRES_IN = jwtExpiresIn;
@@ -101,7 +106,9 @@ export class NostrAuthService {
 
       return validatedChallenge;
     } catch (error) {
-      throw new Error(`Failed to generate challenge: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate challenge: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -140,7 +147,8 @@ export class NostrAuthService {
 
       // Verify timestamp is within acceptable range (prevent replay attacks)
       const timeDiff = Math.abs(Date.now() - timestamp);
-      if (timeDiff > 300000) { // 5 minutes
+      if (timeDiff > 300000) {
+        // 5 minutes
         return {
           valid: false,
           pubkey,
@@ -207,10 +215,7 @@ export class NostrAuthService {
   /**
    * 🎟️ Generate JWT token for API compatibility
    */
-  async generateJWT(
-    pubkey: string,
-    role: 'creator' | 'supporter' = 'supporter'
-  ): Promise<string> {
+  async generateJWT(pubkey: string, role: 'creator' | 'supporter' = 'supporter'): Promise<string> {
     try {
       const payload: JWTPayload = {
         nostr_pubkey: pubkey,
@@ -225,7 +230,9 @@ export class NostrAuthService {
 
       return jwt.sign(payload, this.JWT_SECRET);
     } catch (error) {
-      throw new Error(`Failed to generate JWT: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate JWT: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -403,7 +410,7 @@ export class NostrAuthService {
     jwtExpiresIn: string;
     challengeTTL: number;
   } {
-    const timestamps = Array.from(this.challenges.values()).map(c => c.timestamp);
+    const timestamps = Array.from(this.challenges.values()).map((c) => c.timestamp);
 
     const stats = {
       activeChallenges: this.challenges.size,
@@ -474,14 +481,17 @@ export const isValidSignature = async (
   try {
     const messageHash = createHash('sha256').update(message).digest('hex');
 
-    // Create a NOSTR event for verification
-    const event: NostrEvent = {
+    // Create a NOSTR event for verification — compute the proper event ID
+    const eventData: UnsignedEvent = {
       kind: 1,
       pubkey,
       created_at: Math.floor(Date.now() / 1000),
       tags: [],
       content: messageHash,
-      id: '', // Will be computed by verifyEvent
+    };
+    const event: NostrEvent = {
+      ...eventData,
+      id: getEventHash(eventData),
       sig: signature,
     };
 
