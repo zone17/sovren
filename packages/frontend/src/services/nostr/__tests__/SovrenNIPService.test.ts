@@ -1,5 +1,5 @@
 /**
- * 🧪 SOVREN NIP SERVICE TESTS
+ * SOVREN NIP SERVICE TESTS
  *
  * US-320: Custom Sovren NOSTR Extensions - Service Tests
  * Epic 003 Wave 5: NOSTR Consolidation
@@ -16,8 +16,16 @@
  */
 
 import { SovrenNIPService } from '../SovrenNIPService';
+
+// Mock dependencies
+vi.mock('../EventPublisherService');
+vi.mock('../KeyManagementService');
+vi.mock('../RelayPoolManager');
+vi.mock('../EventCacheService');
+
+// Import enums after mocks so they are available as runtime values
 import {
-  SovrenEventKind,
+  SovrenEventKind as SovrenEventKindEnum,
   CreatorCategory,
   SocialPlatform,
   AnalyticsEventType,
@@ -30,12 +38,6 @@ import type {
   SubscriptionManagementContent,
   ContentRecommendationsContent,
 } from '@shared/types/nostr';
-
-// Mock dependencies
-vi.mock('../EventPublisherService');
-vi.mock('../KeyManagementService');
-vi.mock('../RelayPoolManager');
-vi.mock('../EventCacheService');
 
 describe('SovrenNIPService', () => {
   let service: SovrenNIPService;
@@ -97,37 +99,41 @@ describe('SovrenNIPService', () => {
   // ========================================
 
   describe('Creator Profile Extended (Kind 30078)', () => {
-    const validProfile: CreatorProfileExtendedContent = {
-      displayName: 'Test Creator',
-      bio: 'Test bio',
-      avatar: 'https://example.com/avatar.jpg',
-      banner: 'https://example.com/banner.jpg',
-      categories: [CreatorCategory.TECHNOLOGY],
-      lightningAddress: 'test@getalby.com',
-      website: 'https://example.com',
-      links: [
-        {
-          platform: SocialPlatform.TWITTER,
-          url: 'https://twitter.com/test',
-          username: 'test',
-          verified: false,
-        },
-      ],
-      paymentMethods: [
-        {
-          type: 'lightning',
-          address: 'test@getalby.com',
-          preferred: true,
-          enabled: true,
-        },
-      ],
-      acceptsDonations: true,
-      defaultCurrency: 'sats',
-      nip05Verified: false,
-      createdAt: Math.floor(Date.now() / 1000),
-      updatedAt: Math.floor(Date.now() / 1000),
-      version: '1.0.0',
-    };
+    let validProfile: CreatorProfileExtendedContent;
+
+    beforeEach(() => {
+      validProfile = {
+        displayName: 'Test Creator',
+        bio: 'Test bio',
+        avatar: 'https://example.com/avatar.jpg',
+        banner: 'https://example.com/banner.jpg',
+        categories: [CreatorCategory.TECHNOLOGY],
+        lightningAddress: 'test@getalby.com',
+        website: 'https://example.com',
+        links: [
+          {
+            platform: SocialPlatform.TWITTER,
+            url: 'https://twitter.com/test',
+            username: 'test',
+            verified: false,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: 'lightning',
+            address: 'test@getalby.com',
+            preferred: true,
+            enabled: true,
+          },
+        ],
+        acceptsDonations: true,
+        defaultCurrency: 'sats',
+        nip05Verified: false,
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
+        version: '1.0.0',
+      };
+    });
 
     it('should publish creator profile successfully', async () => {
       const result = await service.publishCreatorProfile(validProfile);
@@ -161,7 +167,7 @@ describe('SovrenNIPService', () => {
 
     it('should fetch creator profile from cache', async () => {
       const cachedEvent = {
-        kind: SovrenEventKind.CREATOR_PROFILE_EXTENDED,
+        kind: SovrenEventKindEnum.CREATOR_PROFILE_EXTENDED,
         content: JSON.stringify(validProfile),
         id: 'cached-event',
       };
@@ -178,13 +184,13 @@ describe('SovrenNIPService', () => {
     it('should fetch creator profile from relays when not cached', async () => {
       // Mock relay subscription
       const mockEvent = {
-        kind: SovrenEventKind.CREATOR_PROFILE_EXTENDED,
+        kind: SovrenEventKindEnum.CREATOR_PROFILE_EXTENDED,
         content: JSON.stringify(validProfile),
         created_at: Math.floor(Date.now() / 1000),
         id: 'relay-event',
       };
 
-      mockRelayPool.subscribe.mockImplementation((filters, options) => {
+      mockRelayPool.subscribe.mockImplementation((filters: any, options: any) => {
         setTimeout(() => {
           options.onEvent(mockEvent);
           options.onEose?.();
@@ -206,34 +212,39 @@ describe('SovrenNIPService', () => {
   // ========================================
 
   describe('Content Monetization (Kind 30079)', () => {
-    const validMonetization: ContentMonetizationContent = {
-      contentId: 'content-123',
-      contentType: 'article',
-      title: 'Test Article',
-      monetizationModel: 'pay-per-view',
-      paywall: {
-        enabled: true,
-        type: 'partial',
-        previewLength: 500,
-      },
-      pricingTiers: [
-        {
-          id: 'tier-1',
-          name: 'Basic',
-          description: 'Basic access',
-          price: 1000,
-          currency: 'sats',
-          interval: 'one-time',
-          benefits: ['Read article'],
+    let validMonetization: ContentMonetizationContent;
+
+    beforeEach(() => {
+      const tierId = '00000000-0000-0000-0000-000000000001';
+      validMonetization = {
+        contentId: 'content-123',
+        contentType: 'article',
+        title: 'Test Article',
+        monetizationModel: 'pay-per-view',
+        paywall: {
           enabled: true,
+          type: 'partial',
+          previewLength: 500,
         },
-      ],
-      defaultTierId: 'tier-1',
-      requiresVerification: false,
-      createdAt: Math.floor(Date.now() / 1000),
-      updatedAt: Math.floor(Date.now() / 1000),
-      version: '1.0.0',
-    };
+        pricingTiers: [
+          {
+            id: tierId,
+            name: 'Basic',
+            description: 'Basic access',
+            price: 1000,
+            currency: 'sats',
+            interval: 'one-time',
+            benefits: ['Read article'],
+            enabled: true,
+          },
+        ],
+        defaultTierId: tierId,
+        requiresVerification: false,
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
+        version: '1.0.0',
+      };
+    });
 
     it('should publish monetization settings successfully', async () => {
       const result = await service.publishMonetizationSettings(
@@ -248,12 +259,12 @@ describe('SovrenNIPService', () => {
 
     it('should fetch monetization settings by content ID', async () => {
       const mockEvent = {
-        kind: SovrenEventKind.CONTENT_MONETIZATION,
+        kind: SovrenEventKindEnum.CONTENT_MONETIZATION,
         content: JSON.stringify(validMonetization),
         created_at: Math.floor(Date.now() / 1000),
       };
 
-      mockRelayPool.subscribe.mockImplementation((filters, options) => {
+      mockRelayPool.subscribe.mockImplementation((filters: any, options: any) => {
         setTimeout(() => {
           options.onEvent(mockEvent);
           options.onEose?.();
@@ -274,16 +285,20 @@ describe('SovrenNIPService', () => {
   // ========================================
 
   describe('Analytics Event (Kind 30080)', () => {
-    const validAnalytics: AnalyticsEventContent = {
-      eventType: AnalyticsEventType.VIEW,
-      contentId: 'content-123',
-      viewCount: 100,
-      uniqueViewers: 80,
-      periodStart: Math.floor(Date.now() / 1000) - 3600,
-      periodEnd: Math.floor(Date.now() / 1000),
-      granularity: 'hourly',
-      version: '1.0.0',
-    };
+    let validAnalytics: AnalyticsEventContent;
+
+    beforeEach(() => {
+      validAnalytics = {
+        eventType: AnalyticsEventType.VIEW,
+        contentId: 'content-123',
+        viewCount: 100,
+        uniqueViewers: 80,
+        periodStart: Math.floor(Date.now() / 1000) - 3600,
+        periodEnd: Math.floor(Date.now() / 1000),
+        granularity: 'hourly',
+        version: '1.0.0',
+      };
+    });
 
     it('should track analytics event successfully', async () => {
       const result = await service.trackAnalyticsEvent(
@@ -298,12 +313,12 @@ describe('SovrenNIPService', () => {
 
     it('should fetch analytics for content', async () => {
       const mockEvent = {
-        kind: SovrenEventKind.ANALYTICS_EVENT,
+        kind: SovrenEventKindEnum.ANALYTICS_EVENT,
         content: JSON.stringify(validAnalytics),
         created_at: Math.floor(Date.now() / 1000),
       };
 
-      mockRelayPool.subscribe.mockImplementation((filters, options) => {
+      mockRelayPool.subscribe.mockImplementation((filters: any, options: any) => {
         setTimeout(() => {
           options.onEvent(mockEvent);
           options.onEose?.();
@@ -323,7 +338,7 @@ describe('SovrenNIPService', () => {
       const since = Math.floor(Date.now() / 1000) - 86400; // 24h ago
       const until = Math.floor(Date.now() / 1000);
 
-      mockRelayPool.subscribe.mockImplementation((filters, options) => {
+      mockRelayPool.subscribe.mockImplementation((filters: any, options: any) => {
         expect(filters[0].since).toBe(since);
         expect(filters[0].until).toBe(until);
 
@@ -342,42 +357,49 @@ describe('SovrenNIPService', () => {
   // ========================================
 
   describe('Subscription Management (Kind 30081)', () => {
-    const validSubscription: SubscriptionManagementContent = {
-      creatorId: 'pubkey123',
-      creatorName: 'Test Creator',
-      tiers: [
-        {
-          id: 'tier-1',
-          name: 'Premium',
-          description: 'Premium access',
-          price: 21000,
-          currency: 'sats',
-          interval: 'monthly',
-          benefits: {
-            accessLevel: 'premium',
-            features: ['All content'],
-            exclusiveContent: true,
-            earlyAccess: true,
-            adFree: true,
+    let validSubscription: SubscriptionManagementContent;
+
+    beforeEach(() => {
+      // creatorId must be 64 chars (pubkey), tier id must be UUID
+      const creatorPubkey = 'a'.repeat(64);
+      const tierId = '00000000-0000-0000-0000-000000000001';
+      validSubscription = {
+        creatorId: creatorPubkey,
+        creatorName: 'Test Creator',
+        tiers: [
+          {
+            id: tierId,
+            name: 'Premium',
+            description: 'Premium access',
+            price: 21000,
+            currency: 'sats',
+            interval: 'monthly',
+            benefits: {
+              accessLevel: 'premium',
+              features: ['All content'],
+              exclusiveContent: true,
+              earlyAccess: true,
+              adFree: true,
+            },
+            subscriberCount: 50,
+            enabled: true,
           },
-          subscriberCount: 50,
-          enabled: true,
+        ],
+        stats: {
+          totalSubscribers: 50,
+          activeSubscribers: 48,
+          cancelledSubscribers: 2,
+          totalRevenue: 1050000,
+          monthlyRecurringRevenue: 1008000,
         },
-      ],
-      stats: {
-        totalSubscribers: 50,
-        activeSubscribers: 48,
-        cancelledSubscribers: 2,
-        totalRevenue: 1050000,
-        monthlyRecurringRevenue: 1008000,
-      },
-      allowGifting: true,
-      allowTrial: false,
-      autoRenew: true,
-      createdAt: Math.floor(Date.now() / 1000),
-      updatedAt: Math.floor(Date.now() / 1000),
-      version: '1.0.0',
-    };
+        allowGifting: true,
+        allowTrial: false,
+        autoRenew: true,
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
+        version: '1.0.0',
+      };
+    });
 
     it('should publish subscription info successfully', async () => {
       const result = await service.publishSubscriptionInfo(validSubscription);
@@ -388,12 +410,12 @@ describe('SovrenNIPService', () => {
 
     it('should fetch subscription info by creator pubkey', async () => {
       const mockEvent = {
-        kind: SovrenEventKind.SUBSCRIPTION_MANAGEMENT,
+        kind: SovrenEventKindEnum.SUBSCRIPTION_MANAGEMENT,
         content: JSON.stringify(validSubscription),
         created_at: Math.floor(Date.now() / 1000),
       };
 
-      mockRelayPool.subscribe.mockImplementation((filters, options) => {
+      mockRelayPool.subscribe.mockImplementation((filters: any, options: any) => {
         setTimeout(() => {
           options.onEvent(mockEvent);
           options.onEose?.();
@@ -414,37 +436,44 @@ describe('SovrenNIPService', () => {
   // ========================================
 
   describe('Content Recommendations (Kind 30082)', () => {
-    const validRecommendations: ContentRecommendationsContent = {
-      targetPubkey: 'user-pubkey',
-      recommendations: [
-        {
-          contentId: 'content-456',
-          creatorPubkey: 'creator-pubkey',
-          title: 'Test Content',
-          contentType: 'article',
-          score: {
-            confidence: 0.9,
-            relevance: 0.85,
-            quality: 0.95,
-            engagement: 0.8,
-            overall: 0.87,
+    let validRecommendations: ContentRecommendationsContent;
+
+    beforeEach(() => {
+      // targetPubkey and creatorPubkey must be exactly 64 chars (NOSTR pubkey format)
+      const userPubkey = 'b'.repeat(64);
+      const creatorPubkey = 'c'.repeat(64);
+      validRecommendations = {
+        targetPubkey: userPubkey,
+        recommendations: [
+          {
+            contentId: 'content-456',
+            creatorPubkey,
+            title: 'Test Content',
+            contentType: 'article',
+            score: {
+              confidence: 0.9,
+              relevance: 0.85,
+              quality: 0.95,
+              engagement: 0.8,
+              overall: 0.87,
+            },
+            source: RecommendationSource.AI_HYBRID,
+            reason: 'Based on your interests',
           },
-          source: RecommendationSource.AI_HYBRID,
-          reason: 'Based on your interests',
-        },
-      ],
-      feedType: 'personalized',
-      algorithm: 'hybrid-ml-v1',
-      algorithmVersion: '1.0.0',
-      generatedAt: Math.floor(Date.now() / 1000),
-      expiresAt: Math.floor(Date.now() / 1000) + 3600,
-      refreshInterval: 1800,
-      version: '1.0.0',
-    };
+        ],
+        feedType: 'personalized',
+        algorithm: 'hybrid-ml-v1',
+        algorithmVersion: '1.0.0',
+        generatedAt: Math.floor(Date.now() / 1000),
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+        refreshInterval: 1800,
+        version: '1.0.0',
+      };
+    });
 
     it('should publish recommendations successfully', async () => {
       const result = await service.publishRecommendations(
-        'user-pubkey',
+        validRecommendations.targetPubkey,
         validRecommendations
       );
 
@@ -454,12 +483,12 @@ describe('SovrenNIPService', () => {
 
     it('should fetch active recommendations', async () => {
       const mockEvent = {
-        kind: SovrenEventKind.CONTENT_RECOMMENDATIONS,
+        kind: SovrenEventKindEnum.CONTENT_RECOMMENDATIONS,
         content: JSON.stringify(validRecommendations),
         created_at: Math.floor(Date.now() / 1000),
       };
 
-      mockRelayPool.subscribe.mockImplementation((filters, options) => {
+      mockRelayPool.subscribe.mockImplementation((filters: any, options: any) => {
         setTimeout(() => {
           options.onEvent(mockEvent);
           options.onEose?.();
@@ -468,7 +497,7 @@ describe('SovrenNIPService', () => {
         return { id: 'sub123' };
       });
 
-      const result = await service.fetchRecommendations('user-pubkey');
+      const result = await service.fetchRecommendations(validRecommendations.targetPubkey);
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(validRecommendations);
@@ -481,12 +510,12 @@ describe('SovrenNIPService', () => {
       };
 
       const mockEvent = {
-        kind: SovrenEventKind.CONTENT_RECOMMENDATIONS,
+        kind: SovrenEventKindEnum.CONTENT_RECOMMENDATIONS,
         content: JSON.stringify(expiredRecommendations),
         created_at: Math.floor(Date.now() / 1000),
       };
 
-      mockRelayPool.subscribe.mockImplementation((filters, options) => {
+      mockRelayPool.subscribe.mockImplementation((filters: any, options: any) => {
         setTimeout(() => {
           options.onEvent(mockEvent);
           options.onEose?.();
@@ -495,7 +524,7 @@ describe('SovrenNIPService', () => {
         return { id: 'sub123' };
       });
 
-      const result = await service.fetchRecommendations('user-pubkey');
+      const result = await service.fetchRecommendations(validRecommendations.targetPubkey);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('expired');
@@ -550,12 +579,12 @@ describe('SovrenNIPService', () => {
 
     it('should handle invalid JSON in event content', async () => {
       const invalidEvent = {
-        kind: SovrenEventKind.CREATOR_PROFILE_EXTENDED,
+        kind: SovrenEventKindEnum.CREATOR_PROFILE_EXTENDED,
         content: 'invalid-json{',
         created_at: Math.floor(Date.now() / 1000),
       };
 
-      mockRelayPool.subscribe.mockImplementation((filters, options) => {
+      mockRelayPool.subscribe.mockImplementation((filters: any, options: any) => {
         setTimeout(() => {
           options.onEvent(invalidEvent);
           options.onEose?.();

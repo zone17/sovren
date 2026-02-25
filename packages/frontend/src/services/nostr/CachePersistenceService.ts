@@ -13,7 +13,7 @@
  */
 
 import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
-import { EventCacheService } from './EventCacheService';
+import { EventCacheService, getEventCache } from './EventCacheService';
 
 /**
  * IndexedDB configuration
@@ -98,7 +98,7 @@ export class CachePersistenceService {
       ...config,
     };
 
-    this.cacheService = EventCacheService.getInstance();
+    this.cacheService = getEventCache();
     this.metadata = {
       version: DB_VERSION,
       createdAt: Date.now(),
@@ -215,17 +215,24 @@ export class CachePersistenceService {
     const store = transaction.objectStore(EVENTS_STORE);
 
     return new Promise((resolve, reject) => {
-      const request = store.put(persistedEvent);
+      try {
+        const request = store.put(persistedEvent);
 
-      request.onsuccess = () => {
-        this.metadata.totalEvents++;
-        this.metadata.totalSize += size;
-        this.metadata.lastUpdated = Date.now();
-        this.saveMetadata();
-        resolve();
-      };
+        request.onsuccess = () => {
+          this.metadata.totalEvents++;
+          this.metadata.totalSize += size;
+          this.metadata.lastUpdated = Date.now();
+          this.saveMetadata();
+          resolve();
+        };
 
-      request.onerror = () => reject(request.error);
+        request.onerror = () => reject(request.error);
+      } catch (err) {
+        // Synchronous errors from store.put (e.g. invalid keyPath value)
+        reject(err);
+      }
+    }).catch((err) => {
+      console.warn('[CachePersistenceService] persistEvent failed, skipping:', err);
     });
   }
 
@@ -654,10 +661,16 @@ export class CachePersistenceService {
       clearInterval(this.saveTimer);
     }
 
+    // Reset the singleton so subsequent getInstance() calls create a fresh instance
+    if (CachePersistenceService.instance === this) {
+      CachePersistenceService.instance = null;
+    }
+
     this.flushPendingSaves();
 
     if (this.db) {
       this.db.close();
+      this.db = null;
     }
   }
 }

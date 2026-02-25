@@ -1,12 +1,12 @@
 /**
- * 🧪 ELITE TESTS: NIP-65 Relay List Metadata Service
+ * NIP-65 Relay List Metadata Service Tests
  * US-319: NIP-65 Implementation Tests
  *
  * Comprehensive test suite for NIP-65 relay list functionality
  * Target: 95%+ code coverage
  */
 
-
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools/pure';
 import { NIP65Service } from '../NIP65Service';
 import { KeyManagementService } from '../KeyManagementService';
@@ -25,7 +25,7 @@ describe('NIP65Service', () => {
   let service: NIP65Service;
   let keyManagement: KeyManagementService;
   let relayPool: RelayPoolManager;
-  let testPrivateKey: string;
+  let testKeyBytes: Uint8Array;
   let testPublicKey: string;
 
   beforeEach(() => {
@@ -33,15 +33,17 @@ describe('NIP65Service', () => {
     vi.clearAllMocks();
 
     // Generate test keys
-    const testKeyBytes = generateSecretKey();
-    testPrivateKey = Array.from(testKeyBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    testKeyBytes = generateSecretKey();
     testPublicKey = getPublicKey(testKeyBytes);
 
-    // Setup mocks
+    // Setup mocks.
+    // NIP65Service.publishRelayList calls finalizeEvent(event, privKey) from nostr-tools/pure.
+    // finalizeEvent requires privKey to be a Uint8Array (not a hex string), so we return
+    // the raw key bytes from getPrivateKey to match what finalizeEvent expects.
     keyManagement = KeyManagementService.getInstance();
     relayPool = RelayPoolManager.getInstance();
 
-    (keyManagement.getPrivateKey as any).mockResolvedValue(testPrivateKey);
+    (keyManagement.getPrivateKey as any).mockResolvedValue(testKeyBytes);
     (keyManagement.getPublicKey as any).mockResolvedValue(testPublicKey);
     (relayPool.publishEvent as any).mockResolvedValue({
       success: true,
@@ -136,13 +138,14 @@ describe('NIP65Service', () => {
     });
 
     it('should use provided private key', async () => {
+      // NIP65Service.publishRelayList passes the private key directly to finalizeEvent,
+      // which requires a Uint8Array. Provide raw key bytes as the custom private key.
       const customKeyBytes = generateSecretKey();
-      const customPrivateKey = Array.from(customKeyBytes).map(b => b.toString(16).padStart(2, '0')).join('');
       const relays: RelayMetadata[] = [
         { url: 'wss://relay.damus.io', read: true, write: true },
       ];
 
-      await service.publishRelayList(relays, customPrivateKey);
+      await service.publishRelayList(relays, customKeyBytes as unknown as string);
 
       // Should not call KeyManagement for private key
       expect((keyManagement.getPrivateKey as any)).not.toHaveBeenCalled();

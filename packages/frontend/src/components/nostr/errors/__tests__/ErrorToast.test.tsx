@@ -37,7 +37,13 @@ const TestComponent: React.FC<{ options: ErrorToastOptions }> = ({ options }) =>
 };
 
 describe('ErrorToast', () => {
-  vi.useFakeTimers();
+  beforeAll(() => {
+    vi.useFakeTimers();
+  });
+
+  afterAll(() => {
+    vi.useRealTimers();
+  });
 
   beforeEach(() => {
     vi.clearAllTimers();
@@ -394,5 +400,4 @@ describe('ErrorToast', () => {
     });
   });
 
-  vi.useRealTimers();
 });

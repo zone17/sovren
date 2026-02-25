@@ -241,10 +241,11 @@ class AnalyticsServiceImpl {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        // Don't retry for auth errors or validation errors
+        // Don't retry for auth errors, validation errors, or client errors (4xx)
         if (
           error instanceof AnalyticsError &&
-          (error.code.includes('AUTH') || error.code.includes('VALIDATION'))
+          (error.code.includes('AUTH') || error.code.includes('VALIDATION') ||
+           error.code === 'HTTP_401' || error.code === 'HTTP_403')
         ) {
           throw error;
         }
@@ -310,7 +311,7 @@ class AnalyticsServiceImpl {
 
       return earnings;
     } catch (error) {
-      if (error instanceof AnalyticsValidationError) {
+      if (error instanceof AnalyticsError) {
         throw error;
       }
       throw new AnalyticsError('Failed to fetch creator earnings', 'FETCH_ERROR', { error });

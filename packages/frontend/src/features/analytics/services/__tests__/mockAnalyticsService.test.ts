@@ -9,7 +9,7 @@
  * - Integration test coverage
  */
 
-import '@testing-library/jest-dom';
+// @testing-library/jest-dom matchers are loaded via vitest setup file
 import { AnalyticsError, AnalyticsEvent } from '../../types';
 import { mockAnalyticsService } from '../mockAnalyticsService';
 
@@ -19,7 +19,7 @@ describe('📊 Elite Analytics Service Tests', () => {
     // Clear cache before each test
     mockAnalyticsService.clearCache();
     vi.clearAllTimers();
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
   afterEach(() => {
@@ -312,8 +312,13 @@ describe('📊 Elite Analytics Service Tests', () => {
       expect(blob.type).toBe('application/json');
       expect(blob.size).toBeGreaterThan(0);
 
-      // Validate blob content
-      const text = await blob.text();
+      // Validate blob content (use FileReader for jsdom compatibility)
+      const text = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsText(blob);
+      });
       const data = JSON.parse(text);
       expect(data.export_config).toEqual(exportConfig);
       expect(data.generated_at).toBeDefined();
@@ -361,8 +366,9 @@ describe('📊 Elite Analytics Service Tests', () => {
 
       await mockAnalyticsService.connectRealTime();
 
-      // Fast forward time to trigger events
-      vi.advanceTimersByTime(10000);
+      // Fast forward time to trigger events (interval is 5-15s random, advance enough to guarantee)
+      // Use async version to properly flush microtasks between timer executions
+      await vi.advanceTimersByTimeAsync(20000);
 
       expect(events.length).toBeGreaterThan(0);
 

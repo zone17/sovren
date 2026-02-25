@@ -3,11 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import { useInvoices } from '../useInvoices';
 
-// Mock fetch
-global.fetch = vi.fn();
-
 describe('useInvoices', () => {
   let queryClient: QueryClient;
+  let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -19,7 +17,11 @@ describe('useInvoices', () => {
         queries: { retry: false },
       },
     });
-    vi.clearAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
   });
 
   it('should fetch invoices successfully', async () => {
@@ -53,17 +55,19 @@ describe('useInvoices', () => {
       },
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify(mockData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
 
     const { result } = renderHook(() => useInvoices(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toEqual(mockData);
-    expect(global.fetch).toHaveBeenCalledWith('/api/payments/invoices?', expect.any(Object));
+    expect(fetchSpy).toHaveBeenCalledWith('/api/payments/invoices?', expect.any(Object));
   });
 
   it('should handle filters correctly', async () => {
@@ -77,10 +81,12 @@ describe('useInvoices', () => {
       },
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify(mockData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
 
     const filters = {
       userId: 'user1',
@@ -96,7 +102,7 @@ describe('useInvoices', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(fetchSpy).toHaveBeenCalledWith(
       '/api/payments/invoices?userId=user1&status=completed&method=lightning&minAmount=100&maxAmount=1000&sortBy=amount&sortOrder=desc',
       expect.any(Object)
     );
@@ -113,10 +119,12 @@ describe('useInvoices', () => {
       },
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify(mockData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
 
     const filters = {
       dateFrom: '2024-01-01',
@@ -127,17 +135,19 @@ describe('useInvoices', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(fetchSpy).toHaveBeenCalledWith(
       '/api/payments/invoices?dateFrom=2024-01-01&dateTo=2024-12-31',
       expect.any(Object)
     );
   });
 
   it('should handle fetch errors', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      statusText: 'Unauthorized',
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response('Unauthorized', {
+        status: 401,
+        statusText: 'Unauthorized',
+      })
+    );
 
     const { result } = renderHook(() => useInvoices(), { wrapper });
 
@@ -147,7 +157,7 @@ describe('useInvoices', () => {
   });
 
   it('should use correct cache configuration', () => {
-    const { result } = renderHook(() => useInvoices(), { wrapper });
+    renderHook(() => useInvoices(), { wrapper });
 
     // The query should have the correct cache key
     const queryState = queryClient.getQueryState(['payments', 'invoices', { filters: undefined }]);

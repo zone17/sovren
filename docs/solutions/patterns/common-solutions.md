@@ -8,7 +8,7 @@ usage: Reference when implementing features. Check if a solution already exists 
 
 # Common Solutions
 
-Reusable solutions extracted from 180+ P2/P3 findings across 12 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
+Reusable solutions extracted from 180+ P2/P3 findings across 13 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
 
 ---
 
@@ -1074,10 +1074,15 @@ projects: [
 - [ ] Role-based locators (`getByRole`, `getByLabel`) — no CSS selectors
 - [ ] No `waitForTimeout` — use web-first assertions
 - [ ] Page Object Model for all pages under test
+- [ ] All locators centralized in POMs — no raw `page.getBy*()` in spec files
+- [ ] `beforeEach` extracts shared POM instantiation + `goto()` when 2+ tests repeat it
+- [ ] `.first()` on any POM heading/logo locator that may match multiple DOM elements
+- [ ] `as const` on credential exports for narrower types
 - [ ] Storage state auth (authenticate once, reuse)
 - [ ] ESM-compatible (`import.meta.url` not `__dirname`)
+- [ ] Import order: `@playwright/test` first, then local imports
 
-**Detection:** `grep -r "page.route" e2e/` should return zero results. Any `page.route()` in E2E = use Vitest+RTL instead.
+**Detection:** `grep -r "page.route" e2e/` should return zero results. Any `page.route()` in E2E = use Vitest+RTL instead. `grep -rn "page.getBy" e2e/*.spec.ts` flags raw locators that should be in POMs.
 
 ---
 
@@ -1288,6 +1293,142 @@ grep -rn "(.*: any).*is " --include="*.ts" src/ e2e/
 
 ---
 
+## 32. Agent-Native Discoverability Scoring for CLAUDE.md
+
+**Recurrence:** 1 P2. Agent-native reviewer scored 4 E2E areas at 6-7/10 — POM template, auth setup chain, credential enumeration, USE_BACKEND explanation. Agents building new E2E specs lacked guidance and reinvented patterns or asked clarifying questions.
+
+### The Rule
+
+After any structural change (new test framework, new file conventions, new workflow), run the agent-native reviewer and score each capability on a 1-10 scale. Any score <8/10 is an actionable documentation gap in CLAUDE.md.
+
+### What to Score
+
+For each agent task ("create a new POM", "write an authenticated spec", "understand auth setup"), ask:
+1. Can the agent find the relevant section in CLAUDE.md?
+2. Does it include a concrete example (template, code snippet)?
+3. Are all options enumerated (credential names, command flags)?
+4. Is the "why" explained (not just "what")?
+
+### Standard CLAUDE.md Expansion Pattern
+
+```markdown
+## [Feature] Section
+
+**Setup chain:** [numbered steps showing the dependency flow]
+
+**Available [resources]:** [table with Name, Purpose, Used by columns]
+
+**Template:**
+[complete code example an agent can copy-paste and adapt]
+
+**Conventions:**
+- [rule 1 with rationale]
+- [rule 2 with rationale]
+```
+
+### Checklist
+
+- [ ] Agent-native review run after structural changes
+- [ ] All capabilities score 8+/10
+- [ ] CLAUDE.md includes templates for creating new artifacts
+- [ ] All available resources enumerated (credentials, commands, config options)
+- [ ] Setup chains documented as numbered dependency flows
+
+**Detection:** Run agent-native-reviewer on CLAUDE.md after any framework/convention change. Scores <8/10 = documentation gap.
+
+---
+
+## 33. MSW v2 WebSocket Mock Override
+
+**Recurrence:** 2 sprints (Phase 9 analytics + CollaborativeFeatures). MSW v2 locks `globalThis.WebSocket` as non-writable via `Object.defineProperty`.
+
+### When You See It
+
+- `(WebSocket as any).mock.results[0].value` is `undefined`
+- WebSocket constructor spy shows 0 calls despite component creating WebSocket
+- `global.WebSocket = vi.fn()` silently fails (no error, just ignored)
+
+### Fix: Object.defineProperty in beforeEach
+
+```typescript
+const mockWsInstance = {
+  close: vi.fn(), send: vi.fn(), readyState: 1,
+  onopen: null as any, onclose: null as any,
+  onmessage: null as any, onerror: null as any,
+};
+const MockWebSocket = vi.fn(() => mockWsInstance) as any;
+MockWebSocket.CONNECTING = 0;
+MockWebSocket.OPEN = 1;
+MockWebSocket.CLOSING = 2;
+MockWebSocket.CLOSED = 3;
+
+beforeEach(() => {
+  MockWebSocket.mockClear();
+  Object.defineProperty(globalThis, 'WebSocket', {
+    value: MockWebSocket, configurable: true, writable: true,
+  });
+});
+```
+
+**When MSW is NOT intercepting WebSocket**: `vi.stubGlobal('WebSocket', MockWebSocket)` works.
+
+---
+
+## 34. React Effect Flushing with Fake Timers
+
+**Recurrence:** 2 sprints. Effects don't fire after mounting because React's scheduler uses MessageChannel (unaffected by `vi.useFakeTimers`).
+
+### Fix
+
+```typescript
+// After render + state change, flush React's scheduler:
+await act(async () => {}); // flushes MessageChannel-based queue
+```
+
+**Do NOT** use `vi.advanceTimersByTime()` to flush effects — it only advances setTimeout/setInterval.
+
+---
+
+## 35. Test QueryClient retryDelay
+
+**Recurrence:** PaymentHistory + any component using React Query with `retry > 0`. Error-state tests timeout because retries use exponential backoff.
+
+### Fix
+
+```typescript
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false, retryDelay: 0, gcTime: 0 },
+  },
+});
+```
+
+Always set `retryDelay: 0` in test QueryClients, even if `retry: false` — some components override retry at the hook level.
+
+---
+
+## 36. vi.hoisted() for Mock Factory Variables
+
+**Recurrence:** 3 sprints. `vi.mock()` factories cannot reference variables declared below them in source — Vitest hoists `vi.mock()` to the top.
+
+### When You See It
+
+`ReferenceError: Cannot access 'MyVariable' before initialization` pointing at a `vi.mock()` factory.
+
+### Fix
+
+```typescript
+// Declare with vi.hoisted() — runs at hoist time, before vi.mock factories
+const { MyStub } = vi.hoisted(() => {
+  const MyStub = () => <div>Stub</div>;
+  return { MyStub };
+});
+
+vi.mock('../MyComponent', () => ({ MyComponent: MyStub }));
+```
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1349,3 +1490,8 @@ CONTEXT TO LOAD:
 | Lazy init with no logging                    | 10b       | critical-patterns.md |
 | New spec silently excluded from test run     | 30        | common-solutions.md  |
 | Type guard uses `any` instead of `unknown`   | 31        | common-solutions.md  |
+| Agent can't create new artifact from CLAUDE.md| 32        | common-solutions.md  |
+| WebSocket mock silently ignored by MSW v2    | 33        | common-solutions.md  |
+| React effects don't fire with fake timers    | 34        | common-solutions.md  |
+| Error-state test times out (React Query)     | 35        | common-solutions.md  |
+| vi.mock factory: variable before init        | 36        | common-solutions.md  |

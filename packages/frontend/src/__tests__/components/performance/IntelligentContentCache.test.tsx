@@ -36,16 +36,20 @@ vi.mock('@/components/ui/alert', () => ({
   AlertDescription: ({ children }: any) => <div data-testid="alert-description">{children}</div>,
 }));
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch using vi.spyOn so mockResolvedValue/mockRejectedValue are available
+let fetchSpy: ReturnType<typeof vi.spyOn>;
 
 describe('IntelligentContentCache', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (fetch as any).mockResolvedValue({
+    fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ data: 'test' }),
-    });
+    } as Response);
+  });
+
+  afterEach(() => {
+    fetchSpy?.mockRestore();
   });
 
   it('renders correctly when enabled', () => {
@@ -68,7 +72,8 @@ describe('IntelligentContentCache', () => {
     render(<IntelligentContentCache enabled={true} />);
 
     expect(screen.getByText('Cache Hit Rate')).toBeInTheDocument();
-    expect(screen.getByText('Bandwidth Saved')).toBeInTheDocument();
+    // "Bandwidth Saved" appears in multiple cards; just verify at least one exists
+    expect(screen.getAllByText('Bandwidth Saved').length).toBeGreaterThan(0);
     expect(screen.getByText('Storage Used')).toBeInTheDocument();
   });
 
@@ -90,7 +95,8 @@ describe('IntelligentContentCache', () => {
     fireEvent.click(warmButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Warming.../)).toBeInTheDocument();
+      // "Warming..." appears in the button and possibly in the progress text; at least one exists
+      expect(screen.getAllByText(/Warming\.\.\./)[0]).toBeInTheDocument();
     });
   });
 
@@ -110,7 +116,7 @@ describe('IntelligentContentCache', () => {
   it('displays cache effectiveness score', () => {
     render(<IntelligentContentCache enabled={true} />);
 
-    expect(screen.getByText('Cache Effectiveness Score')).toBeInTheDocument();
+    expect(screen.getAllByText('Cache Effectiveness Score')[0]).toBeInTheDocument();
     expect(
       screen.getByText('Overall cache performance and optimization effectiveness')
     ).toBeInTheDocument();
@@ -169,8 +175,8 @@ describe('IntelligentContentCache', () => {
   it('renders with all required UI components', () => {
     render(<IntelligentContentCache enabled={true} />);
 
-    // Check for key UI elements
-    expect(screen.getByTestId('card')).toBeInTheDocument();
+    // Check for key UI elements (multiple Card components are rendered)
+    expect(screen.getAllByTestId('card')[0]).toBeInTheDocument();
     expect(screen.getByText('Warm Cache')).toBeInTheDocument();
     expect(screen.getByText('Clear Content')).toBeInTheDocument();
     expect(screen.getByText('Clear All')).toBeInTheDocument();
@@ -179,7 +185,7 @@ describe('IntelligentContentCache', () => {
   it('calculates and displays effectiveness score', () => {
     render(<IntelligentContentCache enabled={true} />);
 
-    expect(screen.getByText('Cache Effectiveness Score')).toBeInTheDocument();
+    expect(screen.getAllByText('Cache Effectiveness Score')[0]).toBeInTheDocument();
 
     // Should display a numerical score
     const scoreElements = screen.getAllByText(/\d+/);
@@ -190,10 +196,20 @@ describe('IntelligentContentCache', () => {
 // Multi-layer Cache Architecture Tests
 describe('MultiLayerCache', () => {
   let cache: any;
+  let mlFetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+    mlFetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: 'test' }),
+    } as Response);
     // We can't directly test the private class, but we can test the component behavior
     // that uses it through integration tests
+  });
+
+  afterEach(() => {
+    mlFetchSpy?.mockRestore();
   });
 
   it('should handle cache storage and retrieval through component', async () => {
@@ -220,13 +236,27 @@ describe('MultiLayerCache', () => {
     fireEvent.click(warmButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Warming.../)).toBeInTheDocument();
+      expect(screen.getAllByText(/Warming\.\.\./)[0]).toBeInTheDocument();
     });
   });
 });
 
 // Performance Metrics Tests
 describe('Cache Performance Metrics', () => {
+  let metricsFetchSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    metricsFetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: 'test' }),
+    } as Response);
+  });
+
+  afterEach(() => {
+    metricsFetchSpy?.mockRestore();
+  });
+
   it('should display accurate hit rate metrics', () => {
     render(<IntelligentContentCache enabled={true} />);
 
@@ -240,7 +270,8 @@ describe('Cache Performance Metrics', () => {
   it('should show bandwidth and storage metrics', () => {
     render(<IntelligentContentCache enabled={true} />);
 
-    expect(screen.getByText('Bandwidth Saved')).toBeInTheDocument();
+    // "Bandwidth Saved" appears in multiple cards (overview + effectiveness score)
+    expect(screen.getAllByText('Bandwidth Saved')[0]).toBeInTheDocument();
     expect(screen.getByText('Storage Used')).toBeInTheDocument();
 
     // Should show size in MB
@@ -251,7 +282,8 @@ describe('Cache Performance Metrics', () => {
   it('should calculate effectiveness score correctly', () => {
     render(<IntelligentContentCache enabled={true} />);
 
-    expect(screen.getByText('Cache Effectiveness Score')).toBeInTheDocument();
+    // "Cache Effectiveness Score" appears in both CardTitle and body text
+    expect(screen.getAllByText('Cache Effectiveness Score')[0]).toBeInTheDocument();
 
     // Should display progress indicators
     const progressElements = screen.getAllByTestId('progress');
@@ -287,8 +319,22 @@ describe('Cache Configuration', () => {
 
 // Error Handling Tests
 describe('Error Handling', () => {
+  let errorFetchSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    errorFetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: 'test' }),
+    } as Response);
+  });
+
+  afterEach(() => {
+    errorFetchSpy?.mockRestore();
+  });
+
   it('should handle fetch errors gracefully', async () => {
-    (fetch as any).mockRejectedValue(new Error('Network error'));
+    errorFetchSpy.mockRejectedValue(new Error('Network error'));
 
     render(<IntelligentContentCache enabled={true} />);
 
@@ -302,11 +348,11 @@ describe('Error Handling', () => {
   });
 
   it('should handle invalid responses', async () => {
-    (fetch as any).mockResolvedValue({
+    errorFetchSpy.mockResolvedValue({
       ok: false,
       status: 404,
       statusText: 'Not Found',
-    });
+    } as Response);
 
     render(<IntelligentContentCache enabled={true} />);
 

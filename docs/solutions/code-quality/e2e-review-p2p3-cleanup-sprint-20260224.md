@@ -110,3 +110,4 @@ Removed across 6 files:
 - [E2E Review Remediation](../test-failures/e2e-review-remediation-convention-naming-20260224.md) — first review sprint (3 P2s)
 - [P3 Dead Code POM Cleanup](./p3-dead-code-pom-cleanup-review-sprint-20260224.md) — P3 POM fixes that preceded this sprint
 - [Playwright E2E Prevention Strategies](../testing/playwright-e2e-prevention-strategies.md) — canonical E2E testing reference
+- [E2E Review Findings Fix](./e2e-review-findings-fix-discoverability-consistency-20260224.md) — review findings from this sprint's commits

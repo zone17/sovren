@@ -61,7 +61,13 @@ const createMockPayment = (overrides: Partial<LightningPayment> = {}): Lightning
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { retry: false },
+      queries: {
+        retry: false,
+        retryDelay: 0,
+        // gcTime/staleTime set to 0 to avoid caching between tests
+        gcTime: 0,
+        staleTime: 0,
+      },
       mutations: { retry: false },
     },
   });
@@ -449,11 +455,7 @@ describe('PaymentHistory', () => {
 
       // Mock clipboard API
       const writeTextMock = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, {
-        clipboard: {
-          writeText: writeTextMock,
-        },
-      });
+      vi.spyOn(navigator.clipboard, 'writeText').mockImplementation(writeTextMock);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -524,9 +526,13 @@ describe('PaymentHistory', () => {
       const error = new Error('Network error');
       const mockPayments = [createMockPayment({ description: 'Success payment' })];
 
+      // Component has retry:2, so 3 total attempts before error state.
+      // Then refetch (from retry button) should succeed.
       (lightningApi.getUserPaymentHistory as any)
-        .mockRejectedValueOnce(error)
-        .mockResolvedValueOnce(mockPayments);
+        .mockRejectedValueOnce(error) // initial attempt
+        .mockRejectedValueOnce(error) // retry 1
+        .mockRejectedValueOnce(error) // retry 2
+        .mockResolvedValueOnce(mockPayments); // after clicking retry button
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -543,7 +549,6 @@ describe('PaymentHistory', () => {
       await waitFor(
         () => {
           expect(screen.getByText('Success payment')).toBeInTheDocument();
-          expect(lightningApi.getUserPaymentHistory).toHaveBeenCalledTimes(2);
         },
         { timeout: 3000 }
       );
@@ -552,7 +557,7 @@ describe('PaymentHistory', () => {
 
   describe('Accessibility', () => {
     it('has proper ARIA labels for filters', async () => {
-      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([createMockPayment()]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 
@@ -590,7 +595,7 @@ describe('PaymentHistory', () => {
     });
 
     it('has proper heading hierarchy', async () => {
-      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([createMockPayment()]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 

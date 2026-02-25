@@ -28,6 +28,25 @@ import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
 
 vi.mock('../RelayPoolManager');
 vi.mock('../EventCacheService');
+// Mock RateLimiter so checkLimit always allows (rate limiting tested separately)
+vi.mock('../RateLimiter', () => {
+  const mockInstance = {
+    checkLimit: vi.fn().mockResolvedValue({ allowed: true }),
+    initialize: vi.fn().mockResolvedValue(undefined),
+    isInitialized: vi.fn().mockReturnValue(true),
+    destroy: vi.fn().mockResolvedValue(undefined),
+    updateConfig: vi.fn(),
+    setRelayLimit: vi.fn(),
+    getMetrics: vi.fn().mockReturnValue({ overall: {}, byOperation: new Map(), queue: {} }),
+    getQueueMetrics: vi.fn().mockReturnValue({ size: 0, totalQueued: 0, totalProcessed: 0, totalTimedOut: 0 }),
+    on: vi.fn().mockReturnThis(),
+    off: vi.fn().mockReturnThis(),
+    removeAllListeners: vi.fn(),
+  };
+  const RateLimiter = vi.fn().mockImplementation(() => mockInstance);
+  RateLimiter.getInstance = vi.fn().mockReturnValue(mockInstance);
+  return { RateLimiter };
+});
 
 describe('SubscriptionManagerService', () => {
   let service: SubscriptionManagerService;
@@ -109,11 +128,11 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('subscribe()', () => {
-    it('should create subscription with single filter', () => {
+    it('should create subscription with single filter', async () => {
       const filter: NostrFilter = { kinds: [1], limit: 10 };
       const onEvent = vi.fn();
 
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       expect(subId).toBeDefined();
       expect(typeof subId).toBe('string');
@@ -124,14 +143,14 @@ describe('SubscriptionManagerService', () => {
       );
     });
 
-    it('should create subscription with multiple filters', () => {
+    it('should create subscription with multiple filters', async () => {
       const filters: NostrFilter[] = [
         { kinds: [1], limit: 10 },
         { kinds: [0], authors: ['pubkey123'] },
       ];
       const onEvent = vi.fn();
 
-      const subId = service.subscribe(filters, onEvent);
+      const subId = await service.subscribe(filters, onEvent);
 
       expect(subId).toBeDefined();
       expect(mockRelayPoolManager.subscribe).toHaveBeenCalledWith(
@@ -141,24 +160,24 @@ describe('SubscriptionManagerService', () => {
       );
     });
 
-    it('should create subscription with custom ID', () => {
+    it('should create subscription with custom ID', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const customId = 'custom-subscription-id';
 
-      const subId = service.subscribe([filter], onEvent, {
+      const subId = await service.subscribe([filter], onEvent, {
         id: customId,
       });
 
       expect(subId).toBe(customId);
     });
 
-    it('should call onEvent callback when event is received', () => {
+    it('should call onEvent callback when event is received', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const mockEvent = createMockEvent();
 
-      service.subscribe([filter], onEvent);
+      await service.subscribe([filter], onEvent);
 
       // Simulate event reception
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
@@ -167,12 +186,12 @@ describe('SubscriptionManagerService', () => {
       expect(onEvent).toHaveBeenCalledWith(mockEvent, expect.any(String));
     });
 
-    it('should call onEOSE callback when EOSE is received', () => {
+    it('should call onEOSE callback when EOSE is received', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const onEOSE = vi.fn();
 
-      service.subscribe([filter], onEvent, { onEOSE });
+      await service.subscribe([filter], onEvent, { onEOSE });
 
       // Simulate EOSE reception
       const eoseCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][2];
@@ -181,11 +200,11 @@ describe('SubscriptionManagerService', () => {
       expect(onEOSE).toHaveBeenCalledWith('wss://relay1.com'); // First relay
     });
 
-    it('should track subscription state', () => {
+    it('should track subscription state', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
 
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
       const subscription = service.getSubscription(subId);
 
       expect(subscription).toBeDefined();
@@ -194,12 +213,12 @@ describe('SubscriptionManagerService', () => {
       expect(subscription?.state).toBe('active');
     });
 
-    it('should auto-cache events when option is enabled', () => {
+    it('should auto-cache events when option is enabled', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const mockEvent = createMockEvent();
 
-      service.subscribe([filter], onEvent, { autoCache: true });
+      await service.subscribe([filter], onEvent, { autoCache: true });
 
       // Simulate event reception
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
@@ -208,13 +227,13 @@ describe('SubscriptionManagerService', () => {
       expect(mockEventCache.set).toHaveBeenCalledWith(mockEvent, expect.any(Object));
     });
 
-    it('should throw error if no connected relays', () => {
+    it('should throw error if no connected relays', async () => {
       mockRelayPoolManager.getConnectedRelays.mockReturnValue([]);
 
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
 
-      expect(() => service.subscribe([filter], onEvent)).toThrow(
+      await expect(service.subscribe([filter], onEvent)).rejects.toThrow(
         'No connected relays available'
       );
     });
@@ -225,12 +244,12 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('Event Deduplication', () => {
-    it('should deduplicate events from multiple relays', () => {
+    it('should deduplicate events from multiple relays', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const mockEvent = createMockEvent({ id: 'same-event-id' });
 
-      service.subscribe([filter], onEvent);
+      await service.subscribe([filter], onEvent);
 
       // Simulate same event from different relays
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
@@ -240,12 +259,12 @@ describe('SubscriptionManagerService', () => {
       expect(onEvent).toHaveBeenCalledTimes(1);
     });
 
-    it('should track event source relay', () => {
+    it('should track event source relay', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const mockEvent = createMockEvent();
 
-      service.subscribe([filter], onEvent);
+      await service.subscribe([filter], onEvent);
 
       // Simulate event reception
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
@@ -254,13 +273,13 @@ describe('SubscriptionManagerService', () => {
       expect(onEvent).toHaveBeenCalledWith(mockEvent, expect.any(String));
     });
 
-    it('should allow different events with same content', () => {
+    it('should allow different events with same content', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const event1 = createMockEvent({ id: 'event1', content: 'Same content' });
       const event2 = createMockEvent({ id: 'event2', content: 'Same content' });
 
-      service.subscribe([filter], onEvent);
+      await service.subscribe([filter], onEvent);
 
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
       subscribeCallback(event1);
@@ -275,10 +294,10 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('updateSubscription()', () => {
-    it('should update subscription filters', () => {
+    it('should update subscription filters', async () => {
       const initialFilter: NostrFilter = { kinds: [1], limit: 10 };
       const onEvent = vi.fn();
-      const subId = service.subscribe([initialFilter], onEvent);
+      const subId = await service.subscribe([initialFilter], onEvent);
 
       const newFilters: NostrFilter[] = [{ kinds: [1, 6], limit: 20 }];
       service.updateSubscription(subId, newFilters);
@@ -287,10 +306,10 @@ describe('SubscriptionManagerService', () => {
       expect(subscription?.filters).toEqual(newFilters);
     });
 
-    it('should close old subscription and create new one', () => {
+    it('should close old subscription and create new one', async () => {
       const initialFilter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([initialFilter], onEvent);
+      const subId = await service.subscribe([initialFilter], onEvent);
 
       mockRelayPoolManager.subscribe.mockClear();
 
@@ -317,10 +336,10 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('unsubscribe()', () => {
-    it('should cancel active subscription', () => {
+    it('should cancel active subscription', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       service.unsubscribe(subId);
 
@@ -334,10 +353,10 @@ describe('SubscriptionManagerService', () => {
       }).not.toThrow();
     });
 
-    it('should update subscription state to closed', () => {
+    it('should update subscription state to closed', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       const subscription = service.getSubscription(subId);
       expect(subscription?.state).toBe('active');
@@ -354,10 +373,10 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('Pause and Resume', () => {
-    it('should pause active subscription', () => {
+    it('should pause active subscription', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       service.pauseSubscription(subId);
 
@@ -365,12 +384,12 @@ describe('SubscriptionManagerService', () => {
       expect(subscription?.state).toBe('paused');
     });
 
-    it('should not receive events when paused', () => {
+    it('should not receive events when paused', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const mockEvent = createMockEvent();
 
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
       service.pauseSubscription(subId);
 
       // Simulate event reception
@@ -380,10 +399,10 @@ describe('SubscriptionManagerService', () => {
       expect(onEvent).not.toHaveBeenCalled();
     });
 
-    it('should resume paused subscription', () => {
+    it('should resume paused subscription', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       service.pauseSubscription(subId);
       service.resumeSubscription(subId);
@@ -392,12 +411,12 @@ describe('SubscriptionManagerService', () => {
       expect(subscription?.state).toBe('active');
     });
 
-    it('should receive events after resume', () => {
+    it('should receive events after resume', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const mockEvent = createMockEvent();
 
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
       service.pauseSubscription(subId);
       service.resumeSubscription(subId);
 
@@ -426,13 +445,13 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('getSubscriptions()', () => {
-    it('should return all active subscriptions', () => {
+    it('should return all active subscriptions', async () => {
       const filter1: NostrFilter = { kinds: [1] };
       const filter2: NostrFilter = { kinds: [6] };
       const onEvent = vi.fn();
 
-      const subId1 = service.subscribe([filter1], onEvent);
-      const subId2 = service.subscribe([filter2], onEvent);
+      const subId1 = await service.subscribe([filter1], onEvent);
+      const subId2 = await service.subscribe([filter2], onEvent);
 
       const subscriptions = service.getSubscriptions();
 
@@ -447,13 +466,13 @@ describe('SubscriptionManagerService', () => {
       expect(subscriptions).toHaveLength(0);
     });
 
-    it('should filter subscriptions by state', () => {
+    it('should filter subscriptions by state', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
 
       // Disable pooling to create separate subscriptions
-      const subId1 = service.subscribe([filter], onEvent, { pool: false });
-      const subId2 = service.subscribe([filter], onEvent, { pool: false });
+      const subId1 = await service.subscribe([filter], onEvent, { pool: false });
+      const subId2 = await service.subscribe([filter], onEvent, { pool: false });
 
       service.pauseSubscription(subId1);
 
@@ -526,13 +545,13 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('Subscription Pooling', () => {
-    it('should reuse existing subscription for identical filters', () => {
+    it('should reuse existing subscription for identical filters', async () => {
       const filter: NostrFilter = { kinds: [1], limit: 10 };
       const onEvent1 = vi.fn();
       const onEvent2 = vi.fn();
 
-      const subId1 = service.subscribe([filter], onEvent1, { pool: true });
-      const subId2 = service.subscribe([filter], onEvent2, { pool: true });
+      const subId1 = await service.subscribe([filter], onEvent1, { pool: true });
+      const subId2 = await service.subscribe([filter], onEvent2, { pool: true });
 
       // Should return same subscription ID
       expect(subId1).toBe(subId2);
@@ -541,14 +560,14 @@ describe('SubscriptionManagerService', () => {
       expect(mockRelayPoolManager.subscribe).toHaveBeenCalledTimes(1);
     });
 
-    it('should call all callbacks for pooled subscription', () => {
+    it('should call all callbacks for pooled subscription', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent1 = vi.fn();
       const onEvent2 = vi.fn();
       const mockEvent = createMockEvent();
 
-      service.subscribe([filter], onEvent1, { pool: true });
-      service.subscribe([filter], onEvent2, { pool: true });
+      await service.subscribe([filter], onEvent1, { pool: true });
+      await service.subscribe([filter], onEvent2, { pool: true });
 
       // Simulate event reception
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
@@ -558,13 +577,13 @@ describe('SubscriptionManagerService', () => {
       expect(onEvent2).toHaveBeenCalledWith(mockEvent, expect.any(String));
     });
 
-    it('should not pool when pool option is false', () => {
+    it('should not pool when pool option is false', async () => {
       const filter: NostrFilter = { kinds: [1], limit: 10 };
       const onEvent1 = vi.fn();
       const onEvent2 = vi.fn();
 
-      const subId1 = service.subscribe([filter], onEvent1, { pool: false });
-      const subId2 = service.subscribe([filter], onEvent2, { pool: false });
+      const subId1 = await service.subscribe([filter], onEvent1, { pool: false });
+      const subId2 = await service.subscribe([filter], onEvent2, { pool: false });
 
       expect(subId1).not.toBe(subId2);
       expect(mockRelayPoolManager.subscribe).toHaveBeenCalledTimes(2);
@@ -576,10 +595,10 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('Event Tracking', () => {
-    it('should track event count for subscription', () => {
+    it('should track event count for subscription', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
       subscribeCallback(createMockEvent());
@@ -590,10 +609,10 @@ describe('SubscriptionManagerService', () => {
       expect(subscription?.eventCount).toBe(3);
     });
 
-    it('should track last event timestamp', () => {
+    it('should track last event timestamp', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       const beforeTime = Date.now();
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
@@ -611,12 +630,12 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('EOSE Tracking', () => {
-    it('should track EOSE per relay', () => {
+    it('should track EOSE per relay', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const onEOSE = vi.fn();
 
-      const subId = service.subscribe([filter], onEvent, { onEOSE });
+      const subId = await service.subscribe([filter], onEvent, { onEOSE });
 
       const eoseCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][2];
       eoseCallback(); // Simulate EOSE from first relay
@@ -625,12 +644,12 @@ describe('SubscriptionManagerService', () => {
       expect(subscription?.eoseRelays).toContain('wss://relay1.com');
     });
 
-    it('should mark subscription as EOSE complete when all relays report EOSE', () => {
+    it('should mark subscription as EOSE complete when all relays report EOSE', async () => {
       mockRelayPoolManager.getConnectedRelays.mockReturnValue(['wss://relay1.com']);
 
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       const eoseCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][2];
       eoseCallback(); // EOSE from only relay
@@ -649,8 +668,8 @@ describe('SubscriptionManagerService', () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
 
-      service.subscribe([filter], onEvent);
-      service.subscribe([filter], onEvent);
+      await service.subscribe([filter], onEvent);
+      await service.subscribe([filter], onEvent);
 
       await service.destroy();
 
@@ -663,8 +682,8 @@ describe('SubscriptionManagerService', () => {
       const onEvent = vi.fn();
 
       // Disable pooling to create separate subscriptions
-      service.subscribe([filter], onEvent, { pool: false });
-      service.subscribe([filter], onEvent, { pool: false });
+      await service.subscribe([filter], onEvent, { pool: false });
+      await service.subscribe([filter], onEvent, { pool: false });
 
       await service.destroy();
 
@@ -677,7 +696,7 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('Error Handling', () => {
-    it('should call onError callback when subscription fails', () => {
+    it('should call onError callback when subscription fails', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const onError = vi.fn();
@@ -686,15 +705,15 @@ describe('SubscriptionManagerService', () => {
         throw new Error('Subscription failed');
       });
 
-      expect(() => {
-        service.subscribe([filter], onEvent, { onError });
-      }).toThrow('Subscription failed');
+      await expect(service.subscribe([filter], onEvent, { onError })).rejects.toThrow(
+        'Subscription failed'
+      );
     });
 
-    it('should handle relay disconnection gracefully', () => {
+    it('should handle relay disconnection gracefully', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
-      const subId = service.subscribe([filter], onEvent);
+      const subId = await service.subscribe([filter], onEvent);
 
       // Simulate relay disconnection
       mockRelayPoolManager.getConnectedRelays.mockReturnValue([]);
@@ -709,32 +728,32 @@ describe('SubscriptionManagerService', () => {
   // ========================================
 
   describe('Integration with RelayPoolManager', () => {
-    it('should use relay pool manager for subscriptions', () => {
+    it('should use relay pool manager for subscriptions', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
 
-      service.subscribe([filter], onEvent);
+      await service.subscribe([filter], onEvent);
 
       expect(mockRelayPoolManager.subscribe).toHaveBeenCalled();
     });
 
-    it('should get connected relays from pool manager', () => {
+    it('should get connected relays from pool manager', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
 
-      service.subscribe([filter], onEvent);
+      await service.subscribe([filter], onEvent);
 
       expect(mockRelayPoolManager.getConnectedRelays).toHaveBeenCalled();
     });
   });
 
   describe('Integration with EventCacheService', () => {
-    it('should cache events when autoCache is enabled', () => {
+    it('should cache events when autoCache is enabled', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const mockEvent = createMockEvent();
 
-      service.subscribe([filter], onEvent, { autoCache: true });
+      await service.subscribe([filter], onEvent, { autoCache: true });
 
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
       subscribeCallback(mockEvent);
@@ -742,12 +761,12 @@ describe('SubscriptionManagerService', () => {
       expect(mockEventCache.set).toHaveBeenCalledWith(mockEvent, expect.any(Object));
     });
 
-    it('should not cache events when autoCache is disabled', () => {
+    it('should not cache events when autoCache is disabled', async () => {
       const filter: NostrFilter = { kinds: [1] };
       const onEvent = vi.fn();
       const mockEvent = createMockEvent();
 
-      service.subscribe([filter], onEvent, { autoCache: false });
+      await service.subscribe([filter], onEvent, { autoCache: false });
 
       const subscribeCallback = (mockRelayPoolManager.subscribe as any).mock.calls[0][1];
       subscribeCallback(mockEvent);

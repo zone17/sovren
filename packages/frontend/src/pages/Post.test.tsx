@@ -5,10 +5,9 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../features/auth';
-// TODO: US-E4-010 - Replace with React Query
-import { paymentReducer as paymentSlice, postReducer as postSlice, setPosts } from '../store/slices/tempStubs';
+import { paymentReducer as paymentSlice, postReducer as postSlice } from '../store/slices/tempStubs';
 import userSlice, { clearUser, setUser } from '../store/slices/userSlice';
-import type { Post as PostType, User } from '../types';
+import type { User } from '../types';
 import Post from './Post';
 
 // Mock react-router-dom
@@ -47,7 +46,7 @@ vi.mock('../components/ui/Button', () => ({
   ),
 }));
 
-// Mock the components index to properly export Button
+// Mock the components index to properly export Button and Layout
 vi.mock('../components', () => ({
   Layout: ({ children }: { children: React.ReactNode }): JSX.Element => (
     <div data-testid="layout">{children}</div>
@@ -68,7 +67,7 @@ const mockUser: User = {
   updated_at: '2024-01-01T00:00:00Z',
 };
 
-const mockPost: PostType = {
+const mockPost = {
   id: '1',
   title: 'Test Post Title',
   content: 'This is a test post content with some detailed information.',
@@ -78,31 +77,31 @@ const mockPost: PostType = {
   author_id: 'author1',
 };
 
+/**
+ * Create a store with pre-populated initial state to bypass the no-op setPosts reducer stub.
+ */
 const createTestStore = (
   options: { withUser?: boolean; withPosts?: boolean } = {}
 ): ReturnType<typeof configureStore> => {
-  const store = configureStore({
+  const postInitialState = options.withPosts !== false
+    ? { posts: [mockPost], currentPost: null, loading: false, error: null }
+    : { posts: [], currentPost: null, loading: false, error: null };
+
+  const userInitialState = options.withUser !== false
+    ? { currentUser: mockUser, loading: false, error: null }
+    : { currentUser: null, loading: false, error: null };
+
+  return configureStore({
     reducer: {
       user: userSlice,
       post: postSlice,
       payment: paymentSlice,
     },
+    preloadedState: {
+      user: userInitialState,
+      post: postInitialState,
+    },
   });
-
-  // Set up initial state using actions
-  if (options.withUser) {
-    store.dispatch(setUser(mockUser));
-  } else {
-    store.dispatch(clearUser());
-  }
-
-  if (options.withPosts) {
-    store.dispatch(setPosts([mockPost]));
-  } else {
-    store.dispatch(setPosts([]));
-  }
-
-  return store;
 };
 
 interface RenderOptions {
@@ -115,10 +114,9 @@ const renderWithProviders = (
   component: React.ReactElement,
   options: RenderOptions = {}
 ): ReturnType<typeof render> & { store: ReturnType<typeof configureStore> } => {
-  const { withUser = true, withPosts = true, postId = '1' } = options;
-  const store = createTestStore({ withUser, withPosts });
+  const { postId = '1' } = options;
+  const store = createTestStore(options);
 
-  // Set up useParams mock to return the post ID
   mockUseParams.mockReturnValue({ id: postId });
 
   return {
@@ -138,7 +136,6 @@ describe('Post Component', () => {
     vi.clearAllMocks();
     mockNavigate.mockClear();
     mockUseParams.mockClear();
-    // Default mock for useParams
     mockUseParams.mockReturnValue({ id: '1' });
   });
 

@@ -1,8 +1,7 @@
 /**
- * 🏠 **HOME PAGE TESTS - CODE OF CRAFT STANDARDS**
+ * HOME PAGE TESTS - CODE OF CRAFT STANDARDS
  *
- * Elite Engineering: Tests match actual content exactly
- * Following systematic methodology from Button component recovery
+ * Updated to match actual Home.tsx implementation.
  */
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
@@ -19,105 +18,95 @@ const renderHome = () => {
   );
 };
 
-describe('🏠 Home Page - Elite Creator Platform', () => {
-  describe('🎨 Hero Section', () => {
-    test('SHOULD display main heading Sovren', () => {
+describe('Home Page - Sovren Creator Platform', () => {
+  describe('Hero Section', () => {
+    test('SHOULD display main heading about creative sovereignty', () => {
       renderHome();
       const mainHeading = screen.getByRole('heading', { level: 1 });
-      expect(mainHeading).toHaveTextContent('Sovren');
+      expect(mainHeading).toHaveTextContent('Unleash Your Creative Sovereignty');
     });
 
-    test('SHOULD show elite creator platform subtitle', () => {
+    test('SHOULD show platform description subtitle', () => {
       renderHome();
-      expect(screen.getByText('Elite Creator Monetization Platform')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Monetize your audience\. Own your platform/i)
+      ).toBeInTheDocument();
     });
 
-    test('SHOULD have NOSTR & Lightning badge', () => {
+    test('SHOULD have NOSTR & Lightning badge in footer', () => {
       renderHome();
       expect(screen.getByText(/Powered by NOSTR & Lightning Network/i)).toBeInTheDocument();
     });
 
-    test('SHOULD display sovereign revolution message', () => {
+    test('SHOULD display no deplatforming message', () => {
       renderHome();
-      expect(screen.getByText(/Join the sovereign revolution/i)).toBeInTheDocument();
+      expect(screen.getByText(/No deplatforming. No middlemen./i)).toBeInTheDocument();
+    });
+
+    test('SHOULD display instant Bitcoin payouts bullet', () => {
+      renderHome();
+      expect(screen.getByText(/Instant Bitcoin payouts/i)).toBeInTheDocument();
     });
   });
 
-  describe('🚀 Call to Action Buttons', () => {
-    test('SHOULD have Become Sovereign primary button', () => {
+  describe('Call to Action Buttons', () => {
+    test('SHOULD have Start Your Sovren Journey primary button', () => {
       renderHome();
-      const button = screen.getByRole('button', { name: /become sovereign/i });
+      const button = screen.getByRole('button', { name: /Start Your Sovren Journey/i });
       expect(button).toBeInTheDocument();
     });
 
-    test('SHOULD have Explore Platform secondary button', () => {
+    test('SHOULD have See How Sovren Works secondary button', () => {
       renderHome();
-      const button = screen.getByRole('button', { name: /explore platform/i });
-      expect(button).toBeInTheDocument();
-    });
-
-    test('SHOULD have Join the Elite CTA button', () => {
-      renderHome();
-      const button = screen.getByRole('button', { name: /join the elite/i });
+      const button = screen.getByRole('button', { name: /See How Sovren Works/i });
       expect(button).toBeInTheDocument();
     });
   });
 
-  describe('📊 Elite Stats', () => {
-    test('SHOULD display elite creator count', () => {
+  describe('Benefits Section', () => {
+    test('SHOULD display Why Sovren heading', () => {
       renderHome();
-      expect(screen.getByText('10,000+')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: /Why Sovren\?/i })).toBeInTheDocument();
     });
 
-    test('SHOULD show revenue growth stat', () => {
+    test('SHOULD highlight True Ownership benefit', () => {
       renderHome();
-      expect(screen.getByText('300%')).toBeInTheDocument();
+      expect(screen.getByText('True Ownership')).toBeInTheDocument();
     });
 
-    test('SHOULD display global reach', () => {
+    test('SHOULD show Bitcoin Monetization benefit', () => {
       renderHome();
-      expect(screen.getByText('65+')).toBeInTheDocument();
-    });
-  });
-
-  describe('⚡ Feature Section', () => {
-    test('SHOULD highlight Lightning Fast Payments', () => {
-      renderHome();
-      expect(screen.getByText('Lightning Fast Payments')).toBeInTheDocument();
+      expect(screen.getByText('Bitcoin Monetization')).toBeInTheDocument();
     });
 
-    test('SHOULD show Sovereign Identity feature', () => {
+    test('SHOULD display Elite Community benefit', () => {
       renderHome();
-      expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
+      expect(screen.getByText('Elite Community')).toBeInTheDocument();
     });
 
-    test('SHOULD display Creator Protection', () => {
+    test('SHOULD show ownership description', () => {
       renderHome();
-      expect(screen.getByText('Creator Protection')).toBeInTheDocument();
+      expect(
+        screen.getByText(/You control your audience, your content, and your revenue/i)
+      ).toBeInTheDocument();
     });
 
-    test('SHOULD have feature badges', () => {
+    test('SHOULD show Bitcoin payment description', () => {
       renderHome();
-      expect(screen.getByText('Instant')).toBeInTheDocument();
-      expect(screen.getByText('Sovereign')).toBeInTheDocument();
-      expect(screen.getByText('Protected')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Get paid instantly, anywhere in the world/i)
+      ).toBeInTheDocument();
     });
   });
 
-  describe('👑 Creator Kingdom CTA', () => {
-    test('SHOULD display creator kingdom heading', () => {
+  describe('Footer', () => {
+    test('SHOULD show copyright info', () => {
       renderHome();
-      expect(screen.getByText(/Ready to Rule Your/i)).toBeInTheDocument();
-      expect(screen.getByText(/Creator Kingdom/i)).toBeInTheDocument();
-    });
-
-    test('SHOULD mention elite creators', () => {
-      renderHome();
-      expect(screen.getByText(/Join the elite creators/i)).toBeInTheDocument();
+      expect(screen.getByText(/Sovren.*All rights reserved/i)).toBeInTheDocument();
     });
   });
 
-  describe('🎯 Technical Quality', () => {
+  describe('Technical Quality', () => {
     test('SHOULD render without errors', () => {
       expect(() => renderHome()).not.toThrow();
     });
@@ -128,6 +117,12 @@ describe('🏠 Home Page - Elite Creator Platform', () => {
       buttons.forEach((button) => {
         expect(button).toHaveAccessibleName();
       });
+    });
+
+    test('SHOULD have proper h3 headings for benefits', () => {
+      renderHome();
+      const h3Headings = screen.getAllByRole('heading', { level: 3 });
+      expect(h3Headings.length).toBeGreaterThanOrEqual(3);
     });
   });
 });

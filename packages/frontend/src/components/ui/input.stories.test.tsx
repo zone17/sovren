@@ -1,1 +1,26 @@
-import { composeStories } from "@storybook/react"; import "@testing-library/jest-dom"; import { render, screen } from "@testing-library/react"; import * as stories from "./Input.stories"; const { CreatorUsername, LightningPayment, SearchCreators, WithError, WithSuccess, WithWarning, LoadingState, AllVariants } = composeStories(stories); describe("Input Component Stories", () => { it("CreatorUsername renders correctly", () => { render(<CreatorUsername />); const input = screen.getByPlaceholderText(/enter your creator username/i); expect(input).toBeInTheDocument(); expect(input).toHaveClass("border-[#6366f1]"); }); it("LightningPayment renders correctly", () => { render(<LightningPayment />); const input = screen.getByPlaceholderText("10000"); expect(input).toBeInTheDocument(); expect(input).toHaveClass("border-[#f7931a]"); }); it("Error state uses modern colors", () => { render(<WithError />); const input = screen.getByDisplayValue("ab"); expect(input).toHaveClass("border-[#da3633]"); }); it("Success state uses modern colors", () => { render(<WithSuccess />); const input = screen.getByDisplayValue("elite_creator"); expect(input).toHaveClass("border-[#1a7f37]"); }); it("Loading state works", () => { render(<LoadingState />); const input = screen.getByDisplayValue("checking_username"); expect(input).toBeDisabled(); }); });
+import { composeStories } from "@storybook/react";
+import "@testing-library/jest-dom";
+import { render, screen } from "@testing-library/react";
+import * as stories from "./input.stories";
+
+const { CreatorUsername, LightningPayment, LoadingState } = composeStories(stories);
+
+describe("Input Component Stories", () => {
+  it("CreatorUsername renders correctly", () => {
+    render(<CreatorUsername />);
+    const input = screen.getByPlaceholderText(/enter your creator username/i);
+    expect(input).toBeInTheDocument();
+  });
+
+  it("LightningPayment renders correctly", () => {
+    render(<LightningPayment />);
+    const input = screen.getByPlaceholderText("10000");
+    expect(input).toBeInTheDocument();
+  });
+
+  it("Loading state disables input", () => {
+    render(<LoadingState />);
+    const input = screen.getByDisplayValue("checking_username");
+    expect(input).toBeDisabled();
+  });
+});

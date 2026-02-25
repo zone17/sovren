@@ -108,9 +108,10 @@ export class BackupEncryptionService {
       // Validate encrypted backup structure
       const validated = EncryptedBackupSchema.parse(encryptedBackup);
 
-      // Convert base64 back to buffers
-      const salt = this.base64ToArrayBuffer(validated.salt);
-      const iv = this.base64ToArrayBuffer(validated.iv);
+      // Convert base64 back to Uint8Array buffers.
+      // crypto.subtle requires TypedArray/Uint8Array for salt/iv, not plain ArrayBuffer.
+      const salt = new Uint8Array(this.base64ToArrayBuffer(validated.salt));
+      const iv = new Uint8Array(this.base64ToArrayBuffer(validated.iv));
       const ciphertext = this.base64ToArrayBuffer(validated.encryptedData);
       const authTag = this.base64ToArrayBuffer(validated.authTag);
 

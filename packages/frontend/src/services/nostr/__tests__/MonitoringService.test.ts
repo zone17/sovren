@@ -267,17 +267,17 @@ describe('MonitoringService', () => {
     });
 
     it('should track successful publish events', () => {
+      // Use a single relay so totalEvents == 1 (service counts per relay per publish)
       const publishResult = {
         success: true,
         eventId: 'event123',
         relayResults: [
           { relay: 'wss://relay1.com', success: true, latency: 150 },
-          { relay: 'wss://relay2.com', success: true, latency: 200 },
         ],
-        publishedTo: ['wss://relay1.com', 'wss://relay2.com'],
+        publishedTo: ['wss://relay1.com'],
         failedRelays: [],
         timestamp: Date.now(),
-        totalLatency: 350,
+        totalLatency: 150,
       };
 
       // Trigger publish event
@@ -720,6 +720,24 @@ describe('MonitoringService', () => {
     it('should return healthy status when all checks pass', () => {
       setupHealthyMocks();
 
+      // Trigger successful publish events to make publish success rate > 95%
+      const publishHandler = (mockPublisher.on as any).mock.calls.find(
+        (call: any) => call[0] === 'event:published'
+      )?.[1];
+      if (publishHandler) {
+        for (let i = 0; i < 10; i++) {
+          publishHandler({
+            success: true,
+            eventId: `event${i}`,
+            relayResults: [{ relay: 'wss://relay1.com', success: true, latency: 100 }],
+            publishedTo: ['wss://relay1.com'],
+            failedRelays: [],
+            timestamp: Date.now(),
+            totalLatency: 100,
+          });
+        }
+      }
+
       const health = monitoringService.healthCheck();
 
       expect(health.status).toBe(HealthStatus.HEALTHY);
@@ -736,6 +754,33 @@ describe('MonitoringService', () => {
 
     it('should return unhealthy status when multiple checks fail', () => {
       setupUnhealthyMocks();
+
+      // Trigger relay:connected events to update internal health state with unhealthy values
+      const connectHandler = (mockRelayPool.on as any).mock.calls.find(
+        (call: any) => call[0] === 'relay:connected'
+      )?.[1];
+      if (connectHandler) {
+        connectHandler('wss://relay1.com');
+        connectHandler('wss://relay2.com');
+      }
+
+      // Trigger failed publish events so publish success rate < 80%
+      const publishHandler = (mockPublisher.on as any).mock.calls.find(
+        (call: any) => call[0] === 'event:published'
+      )?.[1];
+      if (publishHandler) {
+        for (let i = 0; i < 10; i++) {
+          publishHandler({
+            success: false,
+            eventId: `event${i}`,
+            relayResults: [{ relay: 'wss://relay1.com', success: false, latency: 2000 }],
+            publishedTo: [],
+            failedRelays: ['wss://relay1.com'],
+            timestamp: Date.now(),
+            totalLatency: 2000,
+          });
+        }
+      }
 
       const health = monitoringService.healthCheck();
 

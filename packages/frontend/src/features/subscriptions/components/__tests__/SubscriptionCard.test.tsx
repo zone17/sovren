@@ -66,7 +66,7 @@ describe('SubscriptionCard', () => {
       expect(screen.getByText('Test Creator')).toBeInTheDocument();
       expect(screen.getByText('Premium content subscription')).toBeInTheDocument();
       expect(screen.getByText('Premium')).toBeInTheDocument();
-      expect(screen.getByText(/50K/i)).toBeInTheDocument();
+      expect(screen.getByText('50.0K')).toBeInTheDocument();
       expect(screen.getByText(/month/i)).toBeInTheDocument();
     });
 
@@ -74,8 +74,10 @@ describe('SubscriptionCard', () => {
       const subscription = createMockSubscription({ status: 'active' });
       render(<SubscriptionCard subscription={subscription} />);
 
-      const badge = screen.getByText(/active/i);
-      expect(badge).toBeInTheDocument();
+      const badgeText = screen.getByText(/active/i);
+      expect(badgeText).toBeInTheDocument();
+      // Badge classes are on the parent element (Badge component wraps in a div)
+      const badge = badgeText.closest('[class*="bg-green-100"]') ?? badgeText.parentElement;
       expect(badge).toHaveClass('bg-green-100');
     });
 
@@ -83,8 +85,9 @@ describe('SubscriptionCard', () => {
       const subscription = createMockSubscription({ status: 'paused' });
       render(<SubscriptionCard subscription={subscription} />);
 
-      const badge = screen.getByText(/paused/i);
-      expect(badge).toBeInTheDocument();
+      const badgeText = screen.getByText(/paused/i);
+      expect(badgeText).toBeInTheDocument();
+      const badge = badgeText.closest('[class*="bg-yellow-100"]') ?? badgeText.parentElement;
       expect(badge).toHaveClass('bg-yellow-100');
     });
 
@@ -92,8 +95,9 @@ describe('SubscriptionCard', () => {
       const subscription = createMockSubscription({ status: 'cancelled' });
       render(<SubscriptionCard subscription={subscription} />);
 
-      const badge = screen.getByText(/cancelled/i);
-      expect(badge).toBeInTheDocument();
+      const badgeText = screen.getByText(/cancelled/i);
+      expect(badgeText).toBeInTheDocument();
+      const badge = badgeText.closest('[class*="bg-red-100"]') ?? badgeText.parentElement;
       expect(badge).toHaveClass('bg-red-100');
     });
 
@@ -101,8 +105,9 @@ describe('SubscriptionCard', () => {
       const subscription = createMockSubscription({ status: 'expired' });
       render(<SubscriptionCard subscription={subscription} />);
 
-      const badge = screen.getByText(/expired/i);
-      expect(badge).toBeInTheDocument();
+      const badgeText = screen.getByText(/expired/i);
+      expect(badgeText).toBeInTheDocument();
+      const badge = badgeText.closest('[class*="bg-gray-100"]') ?? badgeText.parentElement;
       expect(badge).toHaveClass('bg-gray-100');
     });
 
@@ -110,8 +115,9 @@ describe('SubscriptionCard', () => {
       const subscription = createMockSubscription({ status: 'pending' });
       render(<SubscriptionCard subscription={subscription} />);
 
-      const badge = screen.getByText(/pending/i);
-      expect(badge).toBeInTheDocument();
+      const badgeText = screen.getByText(/pending/i);
+      expect(badgeText).toBeInTheDocument();
+      const badge = badgeText.closest('[class*="bg-blue-100"]') ?? badgeText.parentElement;
       expect(badge).toHaveClass('bg-blue-100');
     });
 
@@ -258,9 +264,13 @@ describe('SubscriptionCard', () => {
 
     it('displays USD conversion', () => {
       const subscription = createMockSubscription({ amount: 100000 });
-      render(<SubscriptionCard subscription={subscription} />);
+      const { container } = render(<SubscriptionCard subscription={subscription} />);
 
-      expect(screen.getByText(/\$0\.03 USD/)).toBeInTheDocument();
+      // 100,000 sats / 100,000,000 * $30,000 = $30.00
+      // The text may be split across child nodes, so check textContent of the paragraph
+      const usdParagraph = container.querySelector('p.text-xs.text-gray-500');
+      expect(usdParagraph).toBeTruthy();
+      expect(usdParagraph?.textContent).toMatch(/\$30\.00 USD/);
     });
   });
 

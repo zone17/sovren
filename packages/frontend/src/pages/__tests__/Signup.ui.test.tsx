@@ -77,7 +77,9 @@ describe('🎨 Signup UI/UX Quality Tests - Code of Craft', () => {
 
       // NOSTR benefits should be highlighted
       expect(screen.getByText('🔐 Sovereign Identity')).toBeInTheDocument();
-      expect(screen.getByText(/Create a NOSTR identity that you own forever/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Create a decentralized identity that you fully control/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -150,7 +152,7 @@ describe('🎨 Signup UI/UX Quality Tests - Code of Craft', () => {
       renderSignup();
 
       // Should have key generation feature
-      const generateButton = screen.getByText('🎲 Generate My NOSTR Keys');
+      const generateButton = screen.getByText('🔑 Generate New Keys');
       expect(generateButton).toBeInTheDocument();
     });
 

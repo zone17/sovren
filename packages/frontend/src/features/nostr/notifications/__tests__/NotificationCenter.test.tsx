@@ -5,13 +5,16 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+// @testing-library/jest-dom matchers are loaded via Vitest setup — no direct import needed
 import { NotificationCenter } from '../components/NotificationCenter';
-import { NotificationService } from '../services/NotificationService';
+import { NotificationService, getNotificationService } from '../services/NotificationService';
 import { Notification, NotificationType } from '../types';
 
-// Mock the service
-vi.mock('../services/NotificationService');
+// Mock the entire service module so getNotificationService returns our mockService
+vi.mock('../services/NotificationService', () => ({
+  NotificationService: vi.fn(),
+  getNotificationService: vi.fn(),
+}));
 
 const mockNotifications: Notification[] = [
   {
@@ -103,13 +106,15 @@ describe('NotificationCenter', () => {
     } as any;
 
     (NotificationService as any).mockImplementation(() => mockService);
+    (getNotificationService as ReturnType<typeof vi.fn>).mockReturnValue(mockService);
   });
 
   describe('Rendering', () => {
     it('should render notification bell button', () => {
       render(<NotificationCenter />);
 
-      const button = screen.getByLabelText(/notifications/i);
+      // Use getByRole to avoid ambiguity with the badge's aria-label which also contains "notifications"
+      const button = screen.getByRole('button', { name: /notifications/i });
       expect(button).toBeInTheDocument();
     });
 
@@ -121,7 +126,19 @@ describe('NotificationCenter', () => {
     });
 
     it('should not display badge when count is zero', () => {
+      // Set up zero count state BEFORE render so the subscribe listener passes 0
       mockService.getUnreadCount.mockReturnValue(0);
+      mockService.subscribe = vi.fn((listener) => {
+        listener({
+          notifications: mockNotifications,
+          unreadCount: 0,
+          loading: false,
+          error: null,
+          lastFetchedAt: Date.now(),
+          subscribed: true,
+        });
+        return vi.fn();
+      });
       mockService.getState.mockReturnValue({
         notifications: mockNotifications,
         unreadCount: 0,
@@ -130,9 +147,11 @@ describe('NotificationCenter', () => {
         lastFetchedAt: Date.now(),
         subscribed: true,
       });
+      (getNotificationService as ReturnType<typeof vi.fn>).mockReturnValue(mockService);
 
       render(<NotificationCenter />);
 
+      // Badge should not render when count is 0 (showZero is false by default)
       const badge = screen.queryByText('1');
       expect(badge).not.toBeInTheDocument();
     });
@@ -156,7 +175,7 @@ describe('NotificationCenter', () => {
     it('should open panel when bell is clicked', () => {
       render(<NotificationCenter />);
 
-      const button = screen.getByLabelText(/notifications/i);
+      const button = screen.getByRole('button', { name: /notifications/i });
       fireEvent.click(button);
 
       const panel = screen.getByRole('dialog');
@@ -166,7 +185,7 @@ describe('NotificationCenter', () => {
     it('should close panel when bell is clicked again', () => {
       render(<NotificationCenter />);
 
-      const button = screen.getByLabelText(/notifications/i);
+      const button = screen.getByRole('button', { name: /notifications/i });
 
       // Open
       fireEvent.click(button);
@@ -227,6 +246,7 @@ describe('NotificationCenter', () => {
 
   describe('Empty State', () => {
     it('should display empty state when no notifications', () => {
+      // Set up empty state BEFORE render so hooks receive empty notifications
       mockService.getNotifications.mockReturnValue([]);
       mockService.getState.mockReturnValue({
         notifications: [],
@@ -236,6 +256,18 @@ describe('NotificationCenter', () => {
         lastFetchedAt: Date.now(),
         subscribed: true,
       });
+      mockService.subscribe = vi.fn((listener) => {
+        listener({
+          notifications: [],
+          unreadCount: 0,
+          loading: false,
+          error: null,
+          lastFetchedAt: Date.now(),
+          subscribed: true,
+        });
+        return vi.fn();
+      });
+      (getNotificationService as ReturnType<typeof vi.fn>).mockReturnValue(mockService);
 
       render(<NotificationCenter initialOpen />);
 
@@ -287,7 +319,7 @@ describe('NotificationCenter', () => {
     it('should have proper ARIA attributes on bell button', () => {
       render(<NotificationCenter />);
 
-      const button = screen.getByLabelText(/notifications/i);
+      const button = screen.getByRole('button', { name: /notifications/i });
       expect(button).toHaveAttribute('aria-expanded', 'false');
 
       fireEvent.click(button);
@@ -304,10 +336,13 @@ describe('NotificationCenter', () => {
     it('should support keyboard navigation', () => {
       render(<NotificationCenter />);
 
-      const button = screen.getByLabelText(/notifications/i);
+      // Buttons in browsers open on click; use click to simulate keyboard activation
+      const button = screen.getByRole('button', { name: /notifications/i });
       button.focus();
+      expect(button).toHaveFocus();
 
-      fireEvent.keyDown(button, { key: 'Enter' });
+      // Simulate activation via click (Enter on a button triggers its onClick handler)
+      fireEvent.click(button);
 
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });

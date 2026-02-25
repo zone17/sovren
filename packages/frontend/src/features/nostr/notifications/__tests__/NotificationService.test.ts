@@ -6,7 +6,62 @@
 import { NotificationService, getNotificationService } from '../services/NotificationService';
 import { Notification, NotificationType, NotificationPreferences } from '../types';
 
-// Mock IndexedDB
+// In-memory store shared across mock DB operations so get() can look up what add() stored
+let mockDbStore: Map<string, any> = new Map();
+
+/** Create a request that fires onsuccess asynchronously (microtask) with the given result. */
+function makeAsyncRequest(result: unknown = undefined) {
+  const req: any = { result, error: null };
+  let _onsuccess: any = null;
+  let _onerror: any = null;
+  Object.defineProperty(req, 'onsuccess', {
+    set(fn: any) {
+      _onsuccess = fn;
+      // Fire via queueMicrotask so Promises inside the service resolve properly
+      if (fn) queueMicrotask(() => fn({ target: req }));
+    },
+    get() { return _onsuccess; },
+    configurable: true,
+  });
+  Object.defineProperty(req, 'onerror', {
+    set(fn: any) { _onerror = fn; },
+    get() { return _onerror; },
+    configurable: true,
+  });
+  return req;
+}
+
+/** Create a cursor request that fires onsuccess with null (empty store). */
+function makeEmptyCursorRequest() {
+  return makeAsyncRequest(null); // null result = no cursor
+}
+
+class MockIDBObjectStore {
+  add = vi.fn((value: any) => {
+    const req = makeAsyncRequest();
+    // Store the value keyed by its id so get() can retrieve it
+    queueMicrotask(() => { mockDbStore.set(value.id, value); });
+    return req;
+  });
+  get = vi.fn((id: string) => {
+    const result = mockDbStore.get(id) ?? null;
+    return makeAsyncRequest(result);
+  });
+  put = vi.fn((value: any) => {
+    const req = makeAsyncRequest();
+    queueMicrotask(() => { mockDbStore.set(value.id, value); });
+    return req;
+  });
+  delete = vi.fn((id: string) => {
+    const req = makeAsyncRequest();
+    queueMicrotask(() => { mockDbStore.delete(id); });
+    return req;
+  });
+  index = vi.fn(() => ({
+    openCursor: vi.fn(() => makeEmptyCursorRequest()),
+  }));
+}
+
 class MockIDBDatabase {
   objectStoreNames = { contains: vi.fn(() => false) };
   close = vi.fn();
@@ -14,35 +69,50 @@ class MockIDBDatabase {
     createIndex: vi.fn(),
   }));
   transaction = vi.fn(() => ({
-    objectStore: vi.fn(() => ({
-      add: vi.fn(() => ({ onsuccess: null, onerror: null })),
-      get: vi.fn(() => ({ onsuccess: null, onerror: null, result: null })),
-      put: vi.fn(() => ({ onsuccess: null, onerror: null })),
-      delete: vi.fn(() => ({ onsuccess: null, onerror: null })),
-      index: vi.fn(() => ({
-        openCursor: vi.fn(() => ({ onsuccess: null, onerror: null })),
-      })),
-    })),
+    objectStore: vi.fn(() => new MockIDBObjectStore()),
   }));
 }
 
+// Mock IDBKeyRange so cleanupOldNotifications doesn't throw
+const mockIDBKeyRange = {
+  upperBound: vi.fn((value: any) => ({ upper: value, lowerOpen: false, upperOpen: false })),
+  lowerBound: vi.fn((value: any) => ({ lower: value })),
+  bound: vi.fn((lower: any, upper: any) => ({ lower, upper })),
+  only: vi.fn((value: any) => ({ value })),
+};
+// @ts-ignore
+Object.defineProperty(globalThis, 'IDBKeyRange', { value: mockIDBKeyRange, writable: true, configurable: true });
+
 const mockIndexedDB = {
   open: vi.fn(() => {
-    const request = {
-      onsuccess: null as any,
-      onerror: null as any,
-      onupgradeneeded: null as any,
-      result: new MockIDBDatabase(),
-    };
-    setTimeout(() => {
-      if (request.onsuccess) request.onsuccess();
-    }, 0);
+    const db = new MockIDBDatabase();
+    const request: any = { result: db, error: null };
+    let _onsuccess: any = null;
+    Object.defineProperty(request, 'onsuccess', {
+      set(fn: any) {
+        _onsuccess = fn;
+        // Fire via setTimeout so that: (1) the test's beforeEach completes first,
+        // (2) then initialization runs asynchronously in the next tick.
+        // Tests that need DB operations must await waitForInit() before calling service methods.
+        if (fn) setTimeout(() => fn({ target: request }), 0);
+      },
+      get() { return _onsuccess; },
+      configurable: true,
+    });
+    request.onerror = null;
+    request.onupgradeneeded = null;
     return request;
   }),
 };
 
 // @ts-ignore
 Object.defineProperty(globalThis, "indexedDB", { value: mockIndexedDB, writable: true, configurable: true });
+
+/** Wait for the NotificationService to finish initialization (DB open + load + cleanup). */
+async function waitForInit() {
+  // Allow setTimeout(0) for openDatabase onsuccess to fire, then drain microtasks
+  await new Promise(resolve => setTimeout(resolve, 10));
+}
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -63,14 +133,11 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-// Mock Notification API
-const mockNotification = vi.fn();
-Object.defineProperty(window, 'Notification', {
-  value: mockNotification,
-  configurable: true,
-});
+// Mock Notification API for jsdom
+const mockNotification = vi.fn() as any;
 mockNotification.permission = 'granted';
-mockNotification.requestPermission = vi.fn(() => Promise.resolve('granted'));
+mockNotification.requestPermission = vi.fn().mockResolvedValue('granted');
+vi.stubGlobal('Notification', mockNotification);
 
 // Mock AudioContext
 class MockAudioContext {
@@ -101,6 +168,7 @@ describe('NotificationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
+    mockDbStore.clear();
     service = new NotificationService();
   });
 
@@ -132,6 +200,7 @@ describe('NotificationService', () => {
 
   describe('addNotification', () => {
     it('should add a notification successfully', async () => {
+      await waitForInit();
       const notification: Notification = {
         id: 'test-1',
         type: NotificationType.MENTION,
@@ -160,6 +229,7 @@ describe('NotificationService', () => {
     });
 
     it('should not add duplicate notifications', async () => {
+      await waitForInit();
       const notification: Notification = {
         id: 'test-1',
         type: NotificationType.MENTION,
@@ -189,6 +259,7 @@ describe('NotificationService', () => {
     });
 
     it('should not add notification if type is disabled', async () => {
+      await waitForInit();
       await service.updatePreferences({ enableMentions: false });
 
       const notification: Notification = {
@@ -218,6 +289,7 @@ describe('NotificationService', () => {
     });
 
     it('should update unread count', async () => {
+      await waitForInit();
       const notification: Notification = {
         id: 'test-1',
         type: NotificationType.MENTION,
@@ -246,6 +318,7 @@ describe('NotificationService', () => {
 
   describe('markAsRead', () => {
     it('should mark notification as read', async () => {
+      await waitForInit();
       const notification: Notification = {
         id: 'test-1',
         type: NotificationType.MENTION,
@@ -275,6 +348,7 @@ describe('NotificationService', () => {
     });
 
     it('should decrease unread count', async () => {
+      await waitForInit();
       const notification: Notification = {
         id: 'test-1',
         type: NotificationType.MENTION,
@@ -305,6 +379,7 @@ describe('NotificationService', () => {
 
   describe('markAllAsRead', () => {
     it('should mark all notifications as read', async () => {
+      await waitForInit();
       const notifications: Notification[] = [
         {
           id: 'test-1',
@@ -354,6 +429,7 @@ describe('NotificationService', () => {
 
   describe('deleteNotification', () => {
     it('should delete a notification', async () => {
+      await waitForInit();
       const notification: Notification = {
         id: 'test-1',
         type: NotificationType.MENTION,
@@ -414,6 +490,7 @@ describe('NotificationService', () => {
 
   describe('Statistics', () => {
     it('should return accurate statistics', async () => {
+      await waitForInit();
       const notifications: Notification[] = [
         {
           id: 'test-1',
@@ -482,6 +559,7 @@ describe('NotificationService', () => {
 
   describe('State Subscription', () => {
     it('should notify subscribers of state changes', async () => {
+      await waitForInit();
       const listener = vi.fn();
       const unsubscribe = service.subscribe(listener);
 

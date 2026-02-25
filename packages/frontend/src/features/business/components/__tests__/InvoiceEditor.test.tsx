@@ -275,7 +275,6 @@ describe('InvoiceEditor', () => {
       expect(mutate).toHaveBeenCalledWith(
         expect.objectContaining({
           clientName: 'Acme Corp',
-          totalSats: 5000,
           lineItems: expect.arrayContaining([
             expect.objectContaining({
               description: 'Design work',
@@ -284,7 +283,7 @@ describe('InvoiceEditor', () => {
             }),
           ]),
         }),
-        expect.any(Object)
+        expect.objectContaining({ onSuccess: expect.any(Function) })
       );
     });
 

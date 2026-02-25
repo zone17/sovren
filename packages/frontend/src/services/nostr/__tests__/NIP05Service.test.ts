@@ -320,10 +320,15 @@ describe('NIP05Service', () => {
     });
 
     it('should fail on timeout', async () => {
+      // In jsdom, DOMException does not extend Error, so the service's
+      // `instanceof Error` check fails. Use a plain Error with name='AbortError'
+      // to correctly simulate what the fetch API throws on abort.
       mockFetch.mockImplementation(
         () =>
           new Promise((_, reject) => {
-            setTimeout(() => reject(new DOMException('The operation was aborted.', 'AbortError')), 100);
+            const abortError = new Error('The operation was aborted.');
+            abortError.name = 'AbortError';
+            setTimeout(() => reject(abortError), 100);
           })
       );
 
@@ -479,11 +484,15 @@ describe('NIP05Service', () => {
     it('should respect custom timeout option', async () => {
       const customTimeout = 100;
 
+      // In jsdom, DOMException does not extend Error, so use a plain Error
+      // with name='AbortError' to correctly simulate an aborted fetch.
       mockFetch.mockImplementation(
         () =>
           new Promise((_, reject) => {
+            const abortError = new Error('The operation was aborted.');
+            abortError.name = 'AbortError';
             setTimeout(() => {
-              reject(new DOMException('The operation was aborted.', 'AbortError'));
+              reject(abortError);
             }, customTimeout - 10);
           })
       );

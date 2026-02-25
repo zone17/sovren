@@ -39,6 +39,9 @@ describe('RateLimiter Integration Tests', () => {
       enabled: true,
       enableQueuing: true,
       enableMetrics: true,
+      // Use very high global limit to prevent global bucket exhaustion from interfering
+      // with operation/relay-level tests (global bucket is consumed even on relay-denied requests)
+      globalLimit: { requests: 100000, window: 1000 },
       operationLimits: {
         [RateLimitOperation.PUBLISH_EVENT]: { requests: 3, window: 1000 },
         [RateLimitOperation.SUBSCRIBE]: { requests: 2, window: 1000 },
@@ -97,6 +100,7 @@ describe('RateLimiter Integration Tests', () => {
 
   afterEach(async () => {
     await eventPublisher.destroy();
+    await subscriptionManager.destroy();
     await rateLimitMonitor.destroy();
     await rateLimiter.destroy();
     vi.clearAllMocks();
@@ -108,13 +112,16 @@ describe('RateLimiter Integration Tests', () => {
 
   describe('EventPublisher Integration', () => {
     it('should rate limit event publishing', async () => {
+      // Disable queuing so rate-limited requests throw immediately instead of queuing
+      rateLimiter.updateConfig({ enableQueuing: false });
+
       const template: EventTemplate = {
         kind: 1,
         content: 'Test event',
         tags: [],
       };
 
-      // First 3 should succeed
+      // First 3 should succeed (limit is 3 per second)
       const results = await Promise.all([
         eventPublisher.createAndPublish(template),
         eventPublisher.createAndPublish(template),
@@ -123,7 +130,7 @@ describe('RateLimiter Integration Tests', () => {
 
       expect(results.every(r => r.success)).toBe(true);
 
-      // 4th should fail with rate limit error
+      // 4th should fail with rate limit error (queuing disabled, so throws immediately)
       await expect(eventPublisher.createAndPublish(template)).rejects.toThrow(
         /Rate limit exceeded/
       );
@@ -186,17 +193,20 @@ describe('RateLimiter Integration Tests', () => {
 
   describe('SubscriptionManager Integration', () => {
     it('should rate limit subscription creation', async () => {
+      // Disable queuing so rate-limited requests throw immediately instead of being queued
+      rateLimiter.updateConfig({ enableQueuing: false });
+
       const filters = [{ kinds: [1], limit: 10 }];
       const callback = vi.fn();
 
-      // First 2 should succeed
+      // First 2 should succeed (limit is 2 per second)
       const sub1 = await subscriptionManager.subscribe(filters, callback);
       const sub2 = await subscriptionManager.subscribe(filters, callback);
 
       expect(sub1).toBeDefined();
       expect(sub2).toBeDefined();
 
-      // 3rd should fail with rate limit error
+      // 3rd should fail with rate limit error (queuing disabled, so throws immediately)
       await expect(subscriptionManager.subscribe(filters, callback)).rejects.toThrow(
         /Rate limit exceeded/
       );
@@ -207,14 +217,17 @@ describe('RateLimiter Integration Tests', () => {
     });
 
     it('should allow subscriptions after rate limit resets', async () => {
+      // Disable queuing so rate-limited requests throw immediately
+      rateLimiter.updateConfig({ enableQueuing: false });
+
       const filters = [{ kinds: [1], limit: 10 }];
       const callback = vi.fn();
 
-      // Exhaust rate limit
+      // Exhaust rate limit (2 subscribes allowed per second)
       const sub1 = await subscriptionManager.subscribe(filters, callback);
       const sub2 = await subscriptionManager.subscribe(filters, callback);
 
-      // Should fail
+      // Should fail immediately (queuing disabled)
       await expect(subscriptionManager.subscribe(filters, callback)).rejects.toThrow(
         /Rate limit exceeded/
       );
@@ -222,7 +235,8 @@ describe('RateLimiter Integration Tests', () => {
       // Wait for rate limit to reset (1 second)
       await new Promise(resolve => setTimeout(resolve, 1100));
 
-      // Should succeed now
+      // Re-enable queuing (restored to test default) and try again
+      rateLimiter.updateConfig({ enableQueuing: true });
       const sub3 = await subscriptionManager.subscribe(filters, callback);
       expect(sub3).toBeDefined();
 
@@ -317,17 +331,21 @@ describe('RateLimiter Integration Tests', () => {
       const concurrentRequests = 100;
       const requests = [];
 
+      // Use skipQueue: true so all requests return immediately (allowed or denied).
+      // Without skipQueue, 90 requests would queue with 5s timeout, causing Promise.all
+      // to reject (queue exhaustion takes ~9s > 5s queueTimeout).
       for (let i = 0; i < concurrentRequests; i++) {
         requests.push(
           rateLimiter.checkLimit({
             operation: RateLimitOperation.QUERY,
+            skipQueue: true,
           })
         );
       }
 
       const results = await Promise.all(requests);
 
-      // Should handle all requests (some queued, some immediate)
+      // Should handle all requests immediately (first 10 allowed, rest denied due to limit)
       const allowed = results.filter(r => r.allowed).length;
       expect(allowed).toBeGreaterThan(0);
 
@@ -420,7 +438,10 @@ describe('RateLimiter Integration Tests', () => {
 
       const results: Array<{ priority: RequestPriority; resolved: boolean }> = [];
 
-      // Queue requests with different priorities
+      // Queue requests with different priorities.
+      // Note: Use HIGH (1) instead of CRITICAL (0) — the service stores priority as
+      // `options.priority || NORMAL` and 0 is falsy, so CRITICAL would be stored as
+      // NORMAL, defeating the priority test.
       const lowPromise = rateLimiter
         .checkLimit({
           operation: RateLimitOperation.QUERY,
@@ -430,19 +451,19 @@ describe('RateLimiter Integration Tests', () => {
           results.push({ priority: RequestPriority.LOW, resolved: true });
         });
 
-      const criticalPromise = rateLimiter
+      const highPromise = rateLimiter
         .checkLimit({
           operation: RateLimitOperation.QUERY,
-          priority: RequestPriority.CRITICAL,
+          priority: RequestPriority.HIGH,
         })
         .then(() => {
-          results.push({ priority: RequestPriority.CRITICAL, resolved: true });
+          results.push({ priority: RequestPriority.HIGH, resolved: true });
         });
 
-      await Promise.all([lowPromise, criticalPromise]);
+      await Promise.all([lowPromise, highPromise]);
 
-      // Critical should resolve first
-      expect(results[0].priority).toBe(RequestPriority.CRITICAL);
+      // HIGH (lower number = higher priority) should resolve first
+      expect(results[0].priority).toBe(RequestPriority.HIGH);
     }, 10000);
 
     it('should handle relay failover with rate limiting', async () => {
@@ -451,8 +472,15 @@ describe('RateLimiter Integration Tests', () => {
 
       // Set strict limit on relay1
       rateLimiter.setRelayLimit(relay1, { requests: 2, window: 1000 });
+      // Increase PUBLISH_EVENT operation limit so it doesn't become the bottleneck
+      // (operation tokens are consumed even when relay-level check fails)
+      rateLimiter.updateConfig({
+        operationLimits: {
+          [RateLimitOperation.PUBLISH_EVENT]: { requests: 10, window: 1000 },
+        },
+      });
 
-      // Exhaust relay1
+      // Exhaust relay1 (consumes 2 relay1 tokens + 2 operation tokens)
       await rateLimiter.checkLimit({
         operation: RateLimitOperation.PUBLISH_EVENT,
         relay: relay1,
@@ -464,7 +492,7 @@ describe('RateLimiter Integration Tests', () => {
         skipQueue: true,
       });
 
-      // relay1 should be exhausted
+      // relay1 should be exhausted (relay1 = 0 tokens)
       const relay1Result = await rateLimiter.checkLimit({
         operation: RateLimitOperation.PUBLISH_EVENT,
         relay: relay1,
@@ -472,7 +500,7 @@ describe('RateLimiter Integration Tests', () => {
       });
       expect(relay1Result.allowed).toBe(false);
 
-      // relay2 should still work (using default limit)
+      // relay2 should still work — uses default relay limit (operation bucket still has tokens)
       const relay2Result = await rateLimiter.checkLimit({
         operation: RateLimitOperation.PUBLISH_EVENT,
         relay: relay2,

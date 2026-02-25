@@ -110,7 +110,7 @@ describe('Login Component', () => {
     it('generates new NOSTR keys when generate button is clicked', async (): Promise<void> => {
       renderWithProviders(<Login />);
 
-      const generateButton = screen.getByText('🎲 Generate New Keys');
+      const generateButton = screen.getByText('🔑 Generate New Keys');
       fireEvent.click(generateButton);
 
       // Should show loading state

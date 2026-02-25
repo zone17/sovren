@@ -565,12 +565,16 @@ export class NotificationService {
       return;
     }
 
+    // Use window.Notification explicitly to avoid shadowing by the imported
+    // Notification *interface* (which esbuild erases to undefined at runtime).
+    const BrowserNotification = window.Notification;
+
     // Request permission if not granted
-    if (Notification.permission === 'default') {
-      await Notification.requestPermission();
+    if (BrowserNotification.permission === 'default') {
+      await BrowserNotification.requestPermission();
     }
 
-    if (Notification.permission !== 'granted') {
+    if (BrowserNotification.permission !== 'granted') {
       return;
     }
 
@@ -583,7 +587,7 @@ export class NotificationService {
       data: notification,
     };
 
-    const desktopNotification = new Notification(options.title, options);
+    const desktopNotification = new BrowserNotification(options.title, options);
 
     desktopNotification.onclick = () => {
       window.focus();

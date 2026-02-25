@@ -1,13 +1,15 @@
 import { apiClient, ApiError } from '../apiClient';
 
-// Mock fetch globally
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
-
 describe('ApiClient', () => {
+  let fetchSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
-    mockFetch.mockClear();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
     apiClient.setToken(null);
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
   });
 
   describe('Token Management', () => {
@@ -29,14 +31,16 @@ describe('ApiClient', () => {
 
   describe('Request Headers', () => {
     it('includes Content-Type header', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true, data: {} }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ success: true, data: {} }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
 
       await apiClient.checkHealth();
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -48,14 +52,16 @@ describe('ApiClient', () => {
 
     it('includes Authorization header when token is set', async () => {
       apiClient.setToken('my-jwt-token');
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true, data: {} }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ success: true, data: {} }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
 
       await apiClient.checkHealth();
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -66,32 +72,35 @@ describe('ApiClient', () => {
     });
 
     it('does not include Authorization header when token is not set', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true, data: {} }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ success: true, data: {} }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
 
       await apiClient.checkHealth();
 
-      const callHeaders = mockFetch.mock.calls[0][1].headers;
+      const callHeaders = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
       expect(callHeaders).not.toHaveProperty('Authorization');
     });
   });
 
   describe('Auth Endpoints', () => {
     it('calls POST /api/auth/challenge for generateChallenge', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
+      fetchSpy.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
             success: true,
             data: { challenge: 'abc123', timestamp: 123, expires_at: 456, message: 'Sign' },
           }),
-      });
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        )
+      );
 
       const result = await apiClient.generateChallenge();
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining('/api/auth/challenge'),
         expect.objectContaining({ method: 'POST' })
       );
@@ -99,10 +108,9 @@ describe('ApiClient', () => {
     });
 
     it('calls POST /api/auth/authenticate', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
+      fetchSpy.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
             success: true,
             data: {
               token: 'jwt-token',
@@ -110,7 +118,9 @@ describe('ApiClient', () => {
               expires_in: '24h',
             },
           }),
-      });
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        )
+      );
 
       const result = await apiClient.authenticate({
         nostr_pubkey: 'a'.repeat(64),
@@ -125,18 +135,19 @@ describe('ApiClient', () => {
 
   describe('User Endpoints', () => {
     it('calls GET /api/v1/users/profile/:id', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
+      fetchSpy.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
             success: true,
             data: { id: 'user-1', display_name: 'Test' },
           }),
-      });
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        )
+      );
 
       await apiClient.getUserProfile('user-1');
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/users/profile/user-1'),
         expect.objectContaining({ method: 'GET' })
       );
@@ -145,14 +156,15 @@ describe('ApiClient', () => {
 
   describe('Payment Endpoints', () => {
     it('calls POST /api/v1/payments/invoices', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
+      fetchSpy.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
             success: true,
             data: { id: 'inv-1', payment_request: 'lnbc...', amount_sats: 5000, status: 'pending' },
           }),
-      });
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        )
+      );
 
       const result = await apiClient.createInvoice({
         amount_sats: 5000,
@@ -168,28 +180,27 @@ describe('ApiClient', () => {
 
   describe('Error Handling', () => {
     it('throws ApiError on non-OK response', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-        json: () => Promise.resolve({ error: 'Resource not found', code: 'NOT_FOUND' }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ error: 'Resource not found', code: 'NOT_FOUND' }),
+          { status: 404, statusText: 'Not Found', headers: { 'Content-Type': 'application/json' } }
+        )
+      );
 
       await expect(apiClient.getUserProfile('nonexistent')).rejects.toThrow(ApiError);
     });
 
     it('includes status and code in ApiError', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        json: () =>
-          Promise.resolve({ error: 'Invalid token', code: 'AUTHENTICATION_ERROR' }),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ error: 'Invalid token', code: 'AUTHENTICATION_ERROR' }),
+          { status: 401, statusText: 'Unauthorized', headers: { 'Content-Type': 'application/json' } }
+        )
+      );
 
       try {
         await apiClient.verifyToken();
-        fail('Should have thrown');
+        expect.fail('Should have thrown');
       } catch (err) {
         expect(err).toBeInstanceOf(ApiError);
         const apiErr = err as ApiError;
@@ -200,12 +211,13 @@ describe('ApiClient', () => {
     });
 
     it('handles malformed JSON in error response', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
-        json: () => Promise.reject(new Error('Invalid JSON')),
-      });
+      fetchSpy.mockResolvedValueOnce(
+        new Response('not json', {
+          status: 500,
+          statusText: 'Internal Server Error',
+          headers: { 'Content-Type': 'text/plain' },
+        })
+      );
 
       await expect(apiClient.checkHealth()).rejects.toThrow(ApiError);
     });

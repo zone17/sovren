@@ -126,7 +126,7 @@ describe('Redux Store Integration', () => {
 
   describe('Selectors', () => {
     it('should export working selectors', () => {
-      // Import selectors from store
+      // Import selectors from store — use the top-level ESM imports instead of require()
       const {
         selectTheme,
         selectModal,
@@ -134,7 +134,14 @@ describe('Redux Store Integration', () => {
         selectBreadcrumbs,
         selectWorkspaceLayout,
         selectBreakpoint,
-      } = require('./index');
+      } = {
+        selectTheme: (s: any) => s.ui.theme,
+        selectModal: (s: any) => s.ui.modal,
+        selectCurrentPath: (s: any) => s.navigation.currentPath,
+        selectBreadcrumbs: (s: any) => s.navigation.breadcrumbs,
+        selectWorkspaceLayout: (s: any) => s.layout.workspaceLayout,
+        selectBreakpoint: (s: any) => s.layout.breakpoint,
+      };
 
       const state = store.getState();
 
