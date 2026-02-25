@@ -300,11 +300,15 @@ export class BackupEncryptionService {
       password += allChars[array[i] % allChars.length];
     }
 
-    // Shuffle
-    return password
-      .split('')
-      .sort(() => Math.random() - 0.5)
-      .join('');
+    // Fisher-Yates shuffle with crypto.getRandomValues()
+    const chars = password.split('');
+    const shuffleBytes = new Uint32Array(chars.length);
+    crypto.getRandomValues(shuffleBytes);
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = shuffleBytes[i] % (i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+    return chars.join('');
   }
 
   /**
