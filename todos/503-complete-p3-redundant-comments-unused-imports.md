@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p3
 issue_id: '503'
 tags:
@@ -62,18 +62,19 @@ After the WellnessPage JSDoc removal (#500), several other E2E files still have 
 - `packages/frontend/e2e/global-setup.ts` (1 comment + unused import/param)
 - `packages/frontend/e2e/global-teardown.ts` (unused import/param)
 - `packages/frontend/e2e/fixtures/test-credentials.ts` (5-line JSDoc)
-- `packages/frontend/e2e/fixtures/test-events.ts` (emoji in JSDoc)
+- `packages/frontend/e2e/fixtures/test-events.ts` (emoji in JSDoc) — file deleted in #501
 
 ## Acceptance Criteria
 
-- [ ] Zero redundant inline comments in E2E specs
-- [ ] No unused `FullConfig` imports
-- [ ] No emoji in JSDoc headers
-- [ ] Consistent with WellnessPage JSDoc cleanup (#500)
-- [ ] All 20 E2E tests still pass
+- [x] Zero redundant inline comments in E2E specs
+- [x] No unused `FullConfig` imports
+- [x] No emoji in JSDoc headers — moot, file deleted in #501
+- [x] Consistent with WellnessPage JSDoc cleanup (#500)
+- [x] All 20 E2E tests still pass
 
 ## Work Log
 
-| Date       | Action                                           | Outcome      |
-| ---------- | ------------------------------------------------ | ------------ |
-| 2026-02-24 | Flagged by code-simplicity + pattern-recognition | P3 — cleanup |
+| Date       | Action                                                                    | Outcome            |
+| ---------- | ------------------------------------------------------------------------- | ------------------ |
+| 2026-02-24 | Flagged by code-simplicity + pattern-recognition                          | P3 — cleanup       |
+| 2026-02-24 | Removed 11 redundant comments, 2 unused FullConfig imports, 1 JSDoc block | Fixed — 20/20 pass |

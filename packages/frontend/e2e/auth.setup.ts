@@ -12,9 +12,7 @@ setup('authenticate as creator via email', async ({ page }) => {
   await loginPage.goto();
   await loginPage.loginWithEmail(CREATOR_CREDENTIALS.email, CREATOR_CREDENTIALS.password);
 
-  // Demo auth redirects to /profile after login
   await expect(page).toHaveURL(/\/profile/);
 
-  // Save storage state for downstream tests
   await page.context().storageState({ path: authFile });
 });

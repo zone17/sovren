@@ -15,10 +15,7 @@ test.describe('Wellness Dashboard (real backend)', () => {
     const wellnessPage = new WellnessPage(page);
     await wellnessPage.goto();
 
-    // Page should render — not stuck in a loading state forever
     await expect(wellnessPage.heading).toBeVisible();
-
-    // The wellness error boundary should NOT show a crash
     await expect(page.getByText('Something went wrong')).not.toBeVisible();
   });
 
@@ -28,7 +25,6 @@ test.describe('Wellness Dashboard (real backend)', () => {
 
     await wellnessPage.pulseCheckInButton.click();
 
-    // Modal should appear (WellnessPulseModal)
     await expect(page.getByRole('dialog')).toBeVisible();
   });
 });

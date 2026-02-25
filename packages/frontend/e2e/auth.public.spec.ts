@@ -4,8 +4,6 @@ import { ProfilePage } from './pages/profile.page';
 import { SignupPage } from './pages/signup.page';
 import { TEST_USER, SIGNUP_USER } from './fixtures/test-credentials';
 
-// Auth tests create their own auth state per-test — they do NOT use shared storage state.
-
 test.describe('Authentication', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any existing auth state
@@ -41,17 +39,14 @@ test.describe('Authentication', () => {
   });
 
   test('logout clears session', async ({ page }) => {
-    // Login first
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.loginWithEmail(TEST_USER.email, TEST_USER.password);
     await expect(page).toHaveURL(/\/profile/);
 
-    // Logout
     const profilePage = new ProfilePage(page);
     await profilePage.logout();
 
-    // Verify: visiting protected route now redirects to login
     await page.goto('/profile');
     await expect(page).toHaveURL(/\/login/);
   });
