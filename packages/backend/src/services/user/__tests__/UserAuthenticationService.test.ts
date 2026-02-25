@@ -6,13 +6,13 @@ import { IAuditLogService } from '../../../interfaces/IAuditLogService';
 import { INotificationService } from '../../../interfaces/INotificationService';
 import { ServiceError } from '../../../utils/errors';
 import * as argon2 from 'argon2';
-import * as speakeasy from 'speakeasy';
+import * as OTPAuth from 'otpauth';
 import * as jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock dependencies
 vi.mock('argon2');
-vi.mock('speakeasy');
+vi.mock('otpauth');
 vi.mock('jsonwebtoken');
 vi.mock('uuid');
 vi.mock('qrcode');
@@ -280,25 +280,27 @@ describe('UserAuthenticationService', () => {
     it('should verify valid TOTP token', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
-      (speakeasy.totp.verify as any).mockReturnValue(true);
+      const mockValidate = vi.fn().mockReturnValue(0);
+      (OTPAuth.TOTP as any).mockImplementation(() => ({
+        validate: mockValidate,
+      }));
+      (OTPAuth.Secret as any).fromBase32 = vi.fn().mockReturnValue('mock-secret');
 
       // Act
       const result = await service.verifyMFA('user-123', '123456');
 
       // Assert
       expect(result).toBe(true);
-      expect(speakeasy.totp.verify).toHaveBeenCalledWith({
-        secret: 'JBSWY3DPEHPK3PXP',
-        encoding: 'base32',
-        token: '123456',
-        window: 2,
-      });
+      expect(mockValidate).toHaveBeenCalledWith({ token: '123456', window: 2 });
     });
 
     it('should verify valid backup code and remove it', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
-      (speakeasy.totp.verify as any).mockReturnValue(false);
+            (OTPAuth.TOTP as any).mockImplementation(() => ({
+        validate: vi.fn().mockReturnValue(null),
+      }));
+      (OTPAuth.Secret as any).fromBase32 = vi.fn().mockReturnValue('mock-secret');
       (argon2.hash as any).mockResolvedValue('hashed-code-1');
 
       // Act
@@ -319,7 +321,10 @@ describe('UserAuthenticationService', () => {
         backupCodes: ['hashed-code-1', 'hashed-code-2'], // Only 2 codes
       };
       mockDb.query.mockResolvedValue({ rows: [lowBackupSettings] });
-      (speakeasy.totp.verify as any).mockReturnValue(false);
+            (OTPAuth.TOTP as any).mockImplementation(() => ({
+        validate: vi.fn().mockReturnValue(null),
+      }));
+      (OTPAuth.Secret as any).fromBase32 = vi.fn().mockReturnValue('mock-secret');
       (argon2.hash as any).mockResolvedValue('hashed-code-1');
 
       // Act
@@ -338,7 +343,10 @@ describe('UserAuthenticationService', () => {
     it('should return false for invalid token', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
-      (speakeasy.totp.verify as any).mockReturnValue(false);
+            (OTPAuth.TOTP as any).mockImplementation(() => ({
+        validate: vi.fn().mockReturnValue(null),
+      }));
+      (OTPAuth.Secret as any).fromBase32 = vi.fn().mockReturnValue('mock-secret');
       (argon2.hash as any).mockResolvedValue('invalid-hash');
 
       // Act
@@ -353,10 +361,11 @@ describe('UserAuthenticationService', () => {
     it('should setup TOTP with QR code and backup codes', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
-      (speakeasy.generateSecret as any).mockReturnValue({
-        base32: 'SECRET123',
-        otpauth_url: 'otpauth://totp/...',
-      });
+      const mockSecret = { base32: 'SECRET123' };
+      (OTPAuth.Secret as any).mockImplementation(() => mockSecret);
+      (OTPAuth.TOTP as any).mockImplementation(() => ({
+        toString: vi.fn().mockReturnValue('otpauth://totp/...'),
+      }));
       const QRCode = require('qrcode');
       QRCode.toDataURL = vi.fn().mockResolvedValue('data:image/png;base64,...');
 
