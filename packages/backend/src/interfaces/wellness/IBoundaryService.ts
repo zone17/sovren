@@ -4,7 +4,7 @@
  * EPIC-007: Creator Wellness System
  */
 
-import type { CreatorBoundaries } from '@sovren/shared/types/wellness';
+import type { CreatorBoundaries } from '@shared/types/wellness';
 
 export interface BoundaryUpdateInput {
   focus_hours?: {

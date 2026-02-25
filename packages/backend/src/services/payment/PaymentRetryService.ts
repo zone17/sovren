@@ -15,7 +15,7 @@ import {
   PaymentState,
   Payment,
   PaymentNotFoundError,
-} from '@sovren/shared/types';
+} from '@shared/types';
 import { PaymentStateMachine } from './PaymentStateMachine';
 import { EmailIntegrationService } from '../email-integration-service';
 

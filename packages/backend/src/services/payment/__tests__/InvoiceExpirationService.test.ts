@@ -21,7 +21,7 @@ import {
   LightningNodeService,
 } from '../InvoiceExpirationService';
 import { PaymentStateMachine } from '../PaymentStateMachine';
-import { PaymentState, Payment } from '@sovren/shared/types';
+import { PaymentState, Payment } from '@shared/types';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 // Mock dependencies

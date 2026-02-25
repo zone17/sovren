@@ -11,7 +11,7 @@ import type {
   ContentComparison,
   PlatformROI,
   SupportedPlatform,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 
 interface MetricsHistoryRow {

@@ -21,7 +21,7 @@ import type {
   WellnessBenchmark,
   DailyWorkPattern,
   PulseTrendDirection,
-} from '@sovren/shared/types/wellness';
+} from '@shared/types/wellness';
 import type {
   IWellnessService,
   CreateWorkPatternInput,

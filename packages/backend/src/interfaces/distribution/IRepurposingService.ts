@@ -6,7 +6,7 @@
 import type {
   RepurposedContent,
   SupportedPlatform,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 
 export interface IRepurposingService {
   /** Generate platform-optimized versions of source content */

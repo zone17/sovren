@@ -17,7 +17,7 @@ import type {
   PlatformStatus,
   SupportedPlatform,
   OAuthTokens,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 import { encryptToken, decryptToken, getEncryptionKey } from './crypto';
 import { MastodonAdapter } from './adapters/MastodonAdapter';
 import { BlueskyAdapter } from './adapters/BlueskyAdapter';

@@ -18,7 +18,7 @@ import type { IProvenanceService } from '../../interfaces/provenance/IProvenance
 import type { IFingerprintService } from '../../interfaces/provenance/IFingerprintService';
 import type { IAlertService } from '../../interfaces/provenance/IAlertService';
 import type { IDmcaService } from '../../interfaces/provenance/IDmcaService';
-import type { AlertStatus } from '@sovren/shared/types/provenance';
+import type { AlertStatus } from '@shared/types/provenance';
 
 const router = Router();
 

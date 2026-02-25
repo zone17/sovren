@@ -9,8 +9,8 @@ import type {
   AlertDetail,
   AlertStatus,
   Pagination,
-} from '@sovren/shared/types/provenance';
-import { ALERT_STATUS_TRANSITIONS } from '@sovren/shared/types/provenance';
+} from '@shared/types/provenance';
+import { ALERT_STATUS_TRANSITIONS } from '@shared/types/provenance';
 import type { IAlertService } from '../../interfaces/provenance/IAlertService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';

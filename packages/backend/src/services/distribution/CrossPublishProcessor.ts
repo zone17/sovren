@@ -8,7 +8,7 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { CrossPublishJobData } from './CrossPostService';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
-import type { FormattedContent } from '@sovren/shared/types/distribution';
+import type { FormattedContent } from '@shared/types/distribution';
 
 export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData> {
   readonly name = 'cross-platform-publisher';

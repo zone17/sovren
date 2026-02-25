@@ -6,7 +6,7 @@
 import type {
   CrossPostEntry,
   SupportedPlatform,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 
 export interface PublishRequest {
   content_id: string;

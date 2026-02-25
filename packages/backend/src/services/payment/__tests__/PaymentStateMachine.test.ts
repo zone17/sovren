@@ -19,7 +19,7 @@ import {
   InvalidTransitionError,
   StateTransitionError,
   PaymentNotFoundError,
-} from '@sovren/shared/types';
+} from '@shared/types';
 
 // Mock Supabase client
 const createMockSupabase = (): Partial<SupabaseClient> => ({

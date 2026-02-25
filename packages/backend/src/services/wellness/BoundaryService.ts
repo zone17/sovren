@@ -4,7 +4,7 @@
  * EPIC-007: Creator Wellness System (US-E7-007)
  */
 
-import type { CreatorBoundaries, AvailabilityStatus, DayOfWeek } from '@sovren/shared/types/wellness';
+import type { CreatorBoundaries, AvailabilityStatus, DayOfWeek } from '@shared/types/wellness';
 import type { IBoundaryService, BoundaryUpdateInput } from '../../interfaces/wellness/IBoundaryService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';

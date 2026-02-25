@@ -14,7 +14,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import { PaymentStateMachine } from './PaymentStateMachine';
-import { PaymentState, Payment } from '@sovren/shared/types';
+import { PaymentState, Payment } from '@shared/types';
 
 /**
  * Email Service Interface for sending expiration notifications

@@ -4,7 +4,7 @@
  * EPIC-008: Content Shield
  */
 
-import type { ProvenanceRecord, ProvenanceCertificate } from '@sovren/shared/types/provenance';
+import type { ProvenanceRecord, ProvenanceCertificate } from '@shared/types/provenance';
 
 export interface SignContentInput {
   contentId: string;

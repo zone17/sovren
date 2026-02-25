@@ -18,7 +18,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import webhookRouter from '../../routes/webhooks-race-condition-hardened';
-import { PaymentState } from '@sovren/shared/types';
+import { PaymentState } from '@shared/types';
 
 // Test app setup
 const app = express();

@@ -4,7 +4,7 @@
  * EPIC-008: Content Shield
  */
 
-import type { ContentAlert, AlertDetail, AlertStatus, Pagination } from '@sovren/shared/types/provenance';
+import type { ContentAlert, AlertDetail, AlertStatus, Pagination } from '@shared/types/provenance';
 
 export interface IAlertService {
   getAlerts(creatorId: string, status: AlertStatus, page: number, limit: number): Promise<{ data: ContentAlert[]; pagination: Pagination }>;

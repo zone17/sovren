@@ -18,7 +18,7 @@ import { DistributionValidators } from '../../validators/distribution';
 import { encryptToken, getEncryptionKey } from '../../services/distribution/crypto';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
-import type { SupportedPlatform } from '@sovren/shared/types/distribution';
+import type { SupportedPlatform } from '@shared/types/distribution';
 
 const router = Router();
 

@@ -28,7 +28,7 @@ import {
   PaymentNotFoundError,
   WebhookTimestampExpiredError,
   InvalidWebhookSignatureError,
-} from '@sovren/shared/types';
+} from '@shared/types';
 import crypto from 'crypto';
 
 // Mock Lightning Service to avoid actual network calls

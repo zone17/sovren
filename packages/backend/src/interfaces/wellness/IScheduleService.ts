@@ -4,7 +4,7 @@
  * EPIC-007: Creator Wellness System
  */
 
-import type { ScheduleRecommendation, BufferDepth } from '@sovren/shared/types/wellness';
+import type { ScheduleRecommendation, BufferDepth } from '@shared/types/wellness';
 
 export interface IScheduleService {
   getRecommendations(creatorId: string): Promise<ScheduleRecommendation>;

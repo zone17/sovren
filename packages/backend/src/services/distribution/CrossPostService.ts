@@ -11,7 +11,7 @@ import type {
 import type { IQueueService } from '../../interfaces/queue/IQueueService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
-import type { CrossPostEntry, SupportedPlatform } from '@sovren/shared/types/distribution';
+import type { CrossPostEntry, SupportedPlatform } from '@shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 import { ValidationError, AuthorizationError } from '../../utils/errors';
 

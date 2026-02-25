@@ -23,7 +23,7 @@ import type { IInboxPollingService } from '../../interfaces/distribution/IInboxP
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
-import type { SupportedPlatform } from '@sovren/shared/types/distribution';
+import type { SupportedPlatform } from '@shared/types/distribution';
 import { decryptToken, getEncryptionKey } from './crypto';
 import { validateSsrfUrl } from '../../utils/ssrf';
 

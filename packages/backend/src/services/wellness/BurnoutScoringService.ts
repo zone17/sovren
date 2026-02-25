@@ -17,7 +17,7 @@ import type {
   BurnoutFactors,
   BurnoutHistoryEntry,
   SensitivityLevel,
-} from '@sovren/shared/types/wellness';
+} from '@shared/types/wellness';
 import type { IBurnoutScoringService } from '../../interfaces/wellness/IBurnoutScoringService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';

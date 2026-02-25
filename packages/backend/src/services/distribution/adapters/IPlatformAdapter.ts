@@ -12,7 +12,7 @@ import type {
   ContentConstraints,
   FormattedContent,
   PostMetrics,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 
 export interface PlatformAdapterConfig {
   clientId: string;

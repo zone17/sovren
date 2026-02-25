@@ -10,7 +10,7 @@ import type {
   InboxMessage,
   DistributionPagination,
   SupportedPlatform,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 import type { IPlatformConnectionService } from '../../interfaces/distribution/IPlatformConnectionService';
 
 interface InboxMessageRow {
