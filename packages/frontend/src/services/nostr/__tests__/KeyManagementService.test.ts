@@ -329,6 +329,7 @@ describe('KeyManagementService', () => {
 
   describe('Key Import', () => {
     it('should import key from nsec format', async () => {
+      // Test vector — NOT an operational key. Do not use outside tests.
       const testNsec = 'nsec1vl029mgpspedva04g90vltkh6fvh240zqtv9k0t9af8935ke9laqsnlfe5';
 
       const keyPair = await service.importKey(testNsec);
@@ -340,6 +341,7 @@ describe('KeyManagementService', () => {
     });
 
     it('should import key from hex private key', async () => {
+      // Test vector — NOT an operational key. Do not use outside tests.
       const testHex = '67dea2ed018072d675f5415ecfaed7d2597555e202d85b3d65ea4e58d2d92ffa';
 
       const keyPair = await service.importKey(testHex, 'hex');
@@ -361,6 +363,7 @@ describe('KeyManagementService', () => {
     });
 
     it('should import with metadata', async () => {
+      // Test vector — NOT an operational key. Do not use outside tests.
       const testNsec = 'nsec1vl029mgpspedva04g90vltkh6fvh240zqtv9k0t9af8935ke9laqsnlfe5';
 
       const keyPair = await service.importKey(testNsec, 'nsec', {
@@ -589,6 +592,7 @@ describe('KeyManagementService', () => {
     });
 
     it('should validate key format (nsec, npub, hex)', async () => {
+      // Test vector — NOT an operational key. Do not use outside tests.
       const validNsec = 'nsec1vl029mgpspedva04g90vltkh6fvh240zqtv9k0t9af8935ke9laqsnlfe5';
       const invalidNsec = 'invalid-nsec';
 

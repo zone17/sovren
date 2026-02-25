@@ -21,7 +21,6 @@ process.env.VITE_ENABLE_NOSTR_INTEGRATION = 'true';
 process.env.VITE_ENABLE_LIGHTNING_PAYMENTS = 'true';
 process.env.SUPABASE_URL = 'https://test.supabase.co';
 process.env.SUPABASE_ANON_KEY = 'test-anon-key-not-real-000000000000000000000000';
-process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
 
 // MSW server lifecycle
 beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));

@@ -158,6 +158,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     vi.stubGlobal('WebSocket', MockWebSocket);
 
     analyticsService.clearCache();
+    analyticsService.retryDelay = () => 0;
 
     // Mock successful auth
     localStorageMock.getItem.mockImplementation((key: string) => {
@@ -169,6 +170,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
 
   afterEach(() => {
     analyticsService.disconnectRealTime();
+    analyticsService.retryDelay = (attempt) => Math.pow(2, attempt) * 1000;
     queryClient.clear();
   });
 
@@ -269,7 +271,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
 
       expect(result).toBeDefined();
       expect(callCount).toBe(3);
-    }, 15000);
+    });
   });
 
   // ⚡ **LIGHTNING PAYMENTS TESTS**
@@ -446,7 +448,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
 
       expect(result).toBeDefined();
       expect(attempts).toBe(3);
-    }, 15000);
+    });
 
     test('should handle authentication errors without retry', async () => {
       server.use(
@@ -479,7 +481,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
       const duration = Date.now() - startTime;
 
       expect(duration).toBeLessThan(5000);
-    }, 30000);
+    });
 
     test('should handle concurrent requests efficiently', async () => {
       server.use(
@@ -497,7 +499,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
       expect(duration).toBeLessThan(10000);
       expect(results).toHaveLength(3);
       results.forEach(result => expect(result).toBeDefined());
-    }, 15000);
+    });
   });
 
   // 🔄 **CLEANUP TESTS**

@@ -164,8 +164,8 @@ export type BackupData = z.infer<typeof BackupDataSchema>;
  * Encrypted Backup Container
  */
 export const EncryptedBackupSchema = z.object({
-  // Encrypted data (base64 encoded); may be empty for empty plaintext input
-  encryptedData: z.string(),
+  // Encrypted data (base64 encoded)
+  encryptedData: z.string().min(1),
 
   // Encryption parameters (NOT encrypted)
   salt: z.string().min(1),

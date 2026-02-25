@@ -592,7 +592,14 @@ export class NotificationService {
     desktopNotification.onclick = () => {
       window.focus();
       if (notification.url) {
-        window.location.href = notification.url;
+        try {
+          const parsed = new URL(notification.url, window.location.origin);
+          if (parsed.origin === window.location.origin) {
+            window.location.href = parsed.pathname + parsed.search + parsed.hash;
+          }
+        } catch {
+          // Malformed URL — do not navigate
+        }
       }
       desktopNotification.close();
     };

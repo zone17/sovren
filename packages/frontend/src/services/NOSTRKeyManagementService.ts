@@ -40,7 +40,7 @@ const KeyPairSchema = z.object({
   hardware_wallet: z.boolean(),
   rotated_count: z.number(),
   last_rotated: z.number().optional(),
-}).passthrough();
+});
 export type HardwareWallet = NostrHardwareWallet;
 export type KeyUsageMetrics = NostrKeyUsageAnalytics;
 
@@ -53,7 +53,7 @@ const HardwareWalletSchema = z.object({
   firmware_version: z.string().optional(),
   app_version: z.string().optional(),
   last_connected: z.number().optional(),
-}).passthrough();
+});
 
 // Service-specific metrics schema matching the legacy shape this service uses.
 const KeyUsageMetricsSchema = z.object({
@@ -63,7 +63,7 @@ const KeyUsageMetricsSchema = z.object({
   rotated_count: z.number().default(0),
   hardware_signs: z.number().default(0),
   extension_signs: z.number().default(0),
-}).passthrough();
+});
 
 // Service-specific backup schema (extends consolidated type)
 const BackupMethodSchema = z.enum(['mnemonic', 'hardware', 'file', 'qr', 'social_recovery']);

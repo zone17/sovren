@@ -475,7 +475,7 @@ export class RateLimiter extends EventEmitter {
         payload: options.payload as T,
         operation: options.operation,
         relay: options.relay,
-        priority: options.priority || RequestPriority.NORMAL,
+        priority: options.priority ?? RequestPriority.NORMAL,
         createdAt: Date.now(),
         timeout: Date.now() + this.config.queueTimeout,
         retries: 0,

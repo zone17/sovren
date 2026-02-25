@@ -233,7 +233,9 @@ describe('RateLimiter Integration Tests', () => {
       );
 
       // Wait for rate limit to reset (1 second)
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      await vi.advanceTimersByTimeAsync(1100);
+      vi.useRealTimers();
 
       // Re-enable queuing (restored to test default) and try again
       rateLimiter.updateConfig({ enableQueuing: true });

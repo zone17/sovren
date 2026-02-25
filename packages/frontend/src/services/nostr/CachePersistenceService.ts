@@ -676,6 +676,12 @@ export class CachePersistenceService {
 }
 
 /**
- * Export singleton instance
+ * Lazy singleton accessor — avoids eager IndexedDB initialization on import
  */
-export const cachePersistence = CachePersistenceService.getInstance();
+let _cachePersistence: CachePersistenceService | null = null;
+export function getCachePersistence(): CachePersistenceService {
+  if (!_cachePersistence) {
+    _cachePersistence = CachePersistenceService.getInstance();
+  }
+  return _cachePersistence;
+}

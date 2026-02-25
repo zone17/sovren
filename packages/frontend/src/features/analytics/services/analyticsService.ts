@@ -179,6 +179,7 @@ class AnalyticsWebSocketManager {
 class AnalyticsServiceImpl {
   private wsManager = new AnalyticsWebSocketManager();
   private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
+  retryDelay: (attempt: number) => number = (attempt) => Math.pow(2, attempt) * 1000;
   private readonly CACHE_TTL = {
     earnings: 5 * 60 * 1000, // 5 minutes
     payments: 2 * 60 * 1000, // 2 minutes
@@ -241,11 +242,10 @@ class AnalyticsServiceImpl {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        // Don't retry for auth errors, validation errors, or client errors (4xx)
+        // Don't retry for auth errors or validation errors
         if (
           error instanceof AnalyticsError &&
-          (error.code.includes('AUTH') || error.code.includes('VALIDATION') ||
-           error.code === 'HTTP_401' || error.code === 'HTTP_403')
+          (error.code.includes('AUTH') || error.code.includes('VALIDATION'))
         ) {
           throw error;
         }
@@ -256,7 +256,7 @@ class AnalyticsServiceImpl {
         }
 
         // Wait before retry (exponential backoff)
-        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        await new Promise((resolve) => setTimeout(resolve, this.retryDelay(attempt)));
       }
     }
 

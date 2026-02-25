@@ -47,6 +47,10 @@ export class BackupEncryptionService {
    * Encrypt backup data with password
    */
   async encryptBackup(data: string, password: string): Promise<EncryptedBackup> {
+    if (!data) {
+      throw new Error('Cannot encrypt empty backup data');
+    }
+
     // Validate password strength
     const strength = this.validatePasswordStrength(password);
     if (!strength.valid) {

@@ -188,11 +188,10 @@ describe('BackupEncryptionService', () => {
       ).rejects.toThrow('Password too weak');
     });
 
-    it('should handle empty data', async () => {
-      const encrypted = await service.encryptBackup('', testPassword);
-      const decrypted = await service.decryptBackup(encrypted, testPassword);
-
-      expect(decrypted).toBe('');
+    it('should reject empty data', async () => {
+      await expect(
+        service.encryptBackup('', testPassword)
+      ).rejects.toThrow('Cannot encrypt empty backup data');
     });
 
     it('should handle large data', async () => {
