@@ -200,9 +200,7 @@ export function createChannelMessage(
   content: string,
   replyToId?: string
 ): NostrEvent {
-  const tags: string[][] = [
-    ['e', channelId, '', 'root'],
-  ];
+  const tags: string[][] = [['e', channelId, '', 'root']];
 
   if (replyToId) {
     tags.push(['e', replyToId, '', 'reply']);
@@ -314,15 +312,16 @@ export function createThread(user: TestUser, messages: string[]): NostrEvent[] {
 /**
  * Verify event structure is valid
  */
-export function isValidEvent(event: any): event is NostrEvent {
+export function isValidEvent(event: unknown): event is NostrEvent {
   return (
-    event &&
-    typeof event.id === 'string' &&
-    typeof event.pubkey === 'string' &&
-    typeof event.created_at === 'number' &&
-    typeof event.kind === 'number' &&
-    Array.isArray(event.tags) &&
-    typeof event.content === 'string' &&
-    typeof event.sig === 'string'
+    typeof event === 'object' &&
+    event !== null &&
+    typeof (event as Record<string, unknown>).id === 'string' &&
+    typeof (event as Record<string, unknown>).pubkey === 'string' &&
+    typeof (event as Record<string, unknown>).created_at === 'number' &&
+    typeof (event as Record<string, unknown>).kind === 'number' &&
+    Array.isArray((event as Record<string, unknown>).tags) &&
+    typeof (event as Record<string, unknown>).content === 'string' &&
+    typeof (event as Record<string, unknown>).sig === 'string'
   );
 }

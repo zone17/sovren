@@ -15,7 +15,7 @@ export const TEST_USER = {
 };
 
 export const SIGNUP_USER = {
-  name: 'Test Creator',
-  email: 'newuser@sovren.app',
-  password: 'password123',
+  name: process.env.E2E_SIGNUP_NAME || 'Test Creator',
+  email: process.env.E2E_SIGNUP_EMAIL || 'newuser@sovren.app',
+  password: process.env.E2E_SIGNUP_PASSWORD || 'password123',
 };

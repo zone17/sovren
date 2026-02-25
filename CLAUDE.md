@@ -187,12 +187,13 @@ e2e/
 │   ├── test-credentials.ts # Centralized credentials with env var fallbacks
 │   ├── test-users.ts       # NOSTR key fixtures
 │   └── test-events.ts      # NOSTR event fixtures
-├── auth.setup.ts           # Playwright setup project — real login, saves storage state
-├── auth.spec.ts            # Auth flow tests (no stored state — tests auth itself)
-├── navigation.spec.ts      # Authenticated nav tests (uses stored state)
-├── home.spec.ts            # Public page tests (no auth needed)
-├── global-setup.ts         # Creates auth dir
-└── global-teardown.ts      # Cleans auth dir
+├── auth.setup.ts              # Playwright setup project — real login, saves storage state
+├── auth.public.spec.ts        # Auth flow tests (no stored state — tests auth itself)
+├── home.public.spec.ts        # Public page tests (no auth needed)
+├── navigation.auth.spec.ts    # Authenticated nav tests (uses stored state)
+├── wellness.auth.spec.ts      # Authenticated wellness tests
+├── global-setup.ts            # Creates auth dir
+└── global-teardown.ts         # Cleans auth dir
 ```
 
 **3-tier Playwright config** (`playwright.config.ts`):
@@ -204,11 +205,11 @@ e2e/
 **When building new features, agents MUST:**
 
 1. Create a Page Object in `e2e/pages/{page}.page.ts` with role-based locators (`getByRole`, `getByLabel`)
-2. Add E2E spec covering the critical user journey (happy path + key error state)
-3. If the page requires auth, add the spec to `chromium-authenticated` project's `testMatch` regex in `playwright.config.ts`
-4. If the page is public, add to `chromium-public` project's `testMatch` regex
-5. Import credentials from `e2e/fixtures/test-credentials.ts` — never hardcode
-6. Run `npm run test:e2e` and verify all tests pass before marking work complete
+2. Add E2E spec with convention-based naming — no config changes needed:
+   - Needs auth: `{name}.auth.spec.ts` (auto-matched by `chromium-authenticated` project)
+   - Public page: `{name}.public.spec.ts` (auto-matched by `chromium-public` project)
+3. Import credentials from `e2e/fixtures/test-credentials.ts` — never hardcode
+4. Run `npm run test:e2e` and verify all tests pass before marking work complete
 
 **Conventions:**
 
