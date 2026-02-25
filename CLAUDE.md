@@ -184,9 +184,7 @@ e2e/
 │   ├── profile.page.ts
 │   └── layout.page.ts     # Shared nav/layout locators
 ├── fixtures/
-│   ├── test-credentials.ts # Centralized credentials with env var fallbacks
-│   ├── test-users.ts       # NOSTR key fixtures
-│   └── test-events.ts      # NOSTR event fixtures
+│   └── test-credentials.ts    # Centralized credentials with env var fallbacks
 ├── auth.setup.ts              # Playwright setup project — real login, saves storage state
 ├── auth.public.spec.ts        # Auth flow tests (no stored state — tests auth itself)
 ├── home.public.spec.ts        # Public page tests (no auth needed)
@@ -217,14 +215,16 @@ e2e/
 - Use web-first assertions (`toBeVisible`, `toHaveURL`) — never `waitForTimeout`
 - Use role-based locators — never CSS selectors or test IDs
 - One spec file per page/feature, one POM per page
+- Add `.first()` in the POM constructor for any locator that may match multiple elements (e.g. logo, headings); Playwright strict mode throws at runtime if a locator resolves to more than one element
 - E2E tests run in CI post-build against the production bundle via `vite preview`
 
 **Commands:**
 
 ```bash
-npm run test:e2e          # Run all E2E tests
-npm run test:e2e:ui       # Run with Playwright UI
-npm run test:e2e:debug    # Run in debug mode
+npm run test:e2e                    # Run all E2E tests (demo auth, no backend)
+npm run test:e2e:ui                 # Run with Playwright UI
+npm run test:e2e:debug              # Run in debug mode
+USE_BACKEND=1 npm run test:e2e      # Start real backend + frontend; uses real auth
 ```
 
 ## Required Reading for All Agents
@@ -232,7 +232,7 @@ npm run test:e2e:debug    # Run in debug mode
 Before writing any code in this repository, read these canonical pattern files:
 
 - **`docs/solutions/patterns/critical-patterns.md`** — 8 P1-class patterns (TOCTOU, auth, pagination, atomic writes, SSRF, status guards, payment persistence, test infrastructure integration). Extracted from 50+ P1 findings across 7 sprints. **Violating these patterns WILL produce P1 review findings.**
-- **`docs/solutions/patterns/common-solutions.md`** — 12 P2/P3-class patterns (double-submit, TTLCache, env validation, error format, case-transform, feature flags, mock chains, rate limiting, route ordering, DI types, Vitest OOM prevention, git diff for hooks). Prevents re-inventing solutions that already exist.
+- **`docs/solutions/patterns/common-solutions.md`** — P2/P3-class patterns covering double-submit, TTLCache, env validation, error format, E2E testing, SSRF, Vitest, git hooks, and more. Prevents re-inventing solutions already established across prior sprints.
 
 These files are the single source of truth. Sprint-specific docs in `docs/solutions/` provide historical context but the patterns files are the canonical reference.
 
