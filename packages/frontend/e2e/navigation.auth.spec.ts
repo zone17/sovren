@@ -7,7 +7,7 @@ test.describe('Navigation (authenticated creator)', () => {
 
   test.beforeEach(async ({ page }) => {
     layout = new LayoutPage(page);
-    await layout.goto();
+    await layout.goto('/profile');
   });
 
   test('nav bar shows creator links', async () => {

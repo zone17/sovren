@@ -1,6 +1,6 @@
+import { expect, test as setup } from '@playwright/test';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { expect, test as setup } from '@playwright/test';
 import { CREATOR_CREDENTIALS } from './fixtures/test-credentials';
 import { LoginPage } from './pages/login.page';
 

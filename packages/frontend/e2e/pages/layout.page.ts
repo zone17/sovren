@@ -19,7 +19,7 @@ export class LayoutPage {
     this.shieldLink = page.getByRole('link', { name: 'Shield' });
   }
 
-  async goto(path = '/profile') {
+  async goto(path: string) {
     await this.page.goto(path);
   }
 }

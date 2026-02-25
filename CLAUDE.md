@@ -200,14 +200,57 @@ e2e/
 2. **chromium-authenticated** — Uses saved storage state for tests needing auth
 3. **chromium-public** — No auth, for public pages and auth flow tests
 
+**Auth setup chain:**
+
+1. `global-setup.ts` creates `test-results/.auth/` directory
+2. **setup** project runs `auth.setup.ts` — logs in via `LoginPage` POM with `CREATOR_CREDENTIALS`, saves storage state to `test-results/.auth/creator.json`
+3. **chromium-authenticated** project depends on setup, injects saved storage state into every `*.auth.spec.ts` test
+4. **chromium-public** project has no dependency — runs `*.public.spec.ts` tests without auth
+5. `global-teardown.ts` cleans up the `.auth/` directory
+
+**Available credentials** (`e2e/fixtures/test-credentials.ts`):
+
+| Export                | Purpose                    | Used by                         |
+| --------------------- | -------------------------- | ------------------------------- |
+| `CREATOR_CREDENTIALS` | Primary authenticated user | `auth.setup.ts` (storage state) |
+| `TEST_USER`           | Secondary login testing    | `auth.public.spec.ts`           |
+| `SIGNUP_USER`         | Registration flow testing  | `auth.public.spec.ts`           |
+
+All support env var overrides (e.g. `E2E_CREATOR_EMAIL`).
+
+**POM template:**
+
+```typescript
+import type { Locator, Page } from '@playwright/test';
+
+export class ExamplePage {
+  readonly page: Page;
+  readonly heading: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.heading = page.getByRole('heading', { name: 'Page Title' }).first();
+  }
+
+  async goto() {
+    await this.page.goto('/example');
+  }
+
+  async someAction() {
+    await this.heading.click();
+  }
+}
+```
+
 **When building new features, agents MUST:**
 
-1. Create a Page Object in `e2e/pages/{page}.page.ts` with role-based locators (`getByRole`, `getByLabel`)
+1. Create a Page Object in `e2e/pages/{page}.page.ts` following the POM template above
 2. Add E2E spec with convention-based naming — no config changes needed:
    - Needs auth: `{name}.auth.spec.ts` (auto-matched by `chromium-authenticated` project)
    - Public page: `{name}.public.spec.ts` (auto-matched by `chromium-public` project)
 3. Import credentials from `e2e/fixtures/test-credentials.ts` — never hardcode
-4. Run `npm run test:e2e` and verify all tests pass before marking work complete
+4. Use `beforeEach` to instantiate POMs and navigate — avoid repeating setup in every test
+5. Run `npm run test:e2e` and verify all tests pass before marking work complete
 
 **Conventions:**
 
@@ -216,6 +259,8 @@ e2e/
 - Use role-based locators — never CSS selectors or test IDs
 - One spec file per page/feature, one POM per page
 - Add `.first()` in the POM constructor for any locator that may match multiple elements (e.g. logo, headings); Playwright strict mode throws at runtime if a locator resolves to more than one element
+- Centralize all locators in POMs — no raw `page.getByText()` calls in spec files
+- Import order: `@playwright/test` first, then local imports
 - E2E tests run in CI post-build against the production bundle via `vite preview`
 
 **Commands:**
@@ -224,7 +269,7 @@ e2e/
 npm run test:e2e                    # Run all E2E tests (demo auth, no backend)
 npm run test:e2e:ui                 # Run with Playwright UI
 npm run test:e2e:debug              # Run in debug mode
-USE_BACKEND=1 npm run test:e2e      # Start real backend + frontend; uses real auth
+USE_BACKEND=1 npm run test:e2e      # Start real backend + frontend; real auth (not demo redirect)
 ```
 
 ## Required Reading for All Agents
