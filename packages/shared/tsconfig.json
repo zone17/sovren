@@ -17,5 +17,12 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/__tests__/**/*",
+    "src/services/NostrKeyManagementService.ts",
+    "src/services/NostrSecureKeyStorage.ts"
+  ]
 }
