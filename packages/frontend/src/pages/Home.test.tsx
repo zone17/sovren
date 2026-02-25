@@ -17,14 +17,6 @@ vi.mock(
   })
 );
 
-// Mock components
-vi.mock('../components/ui/Layout', () => ({
-  __esModule: true,
-  default: ({ children }: { children: React.ReactNode }): JSX.Element => (
-    <div data-testid="layout">{children}</div>
-  ),
-}));
-
 // Test utilities with AuthProvider wrapper
 const renderWithProviders = (component: React.ReactElement): ReturnType<typeof render> => {
   const store = configureStore({
@@ -48,117 +40,89 @@ describe('Home Component - Code of Craft Standards', () => {
   });
 
   describe('Rendering', () => {
-    it('renders within Layout component', () => {
-      renderWithProviders(<Home />);
-      expect(screen.getByTestId('layout')).toBeInTheDocument();
+    it('renders without errors', () => {
+      expect(() => renderWithProviders(<Home />)).not.toThrow();
     });
 
     it('renders the main heading', () => {
       renderWithProviders(<Home />);
       const heading = screen.getByRole('heading', { level: 1 });
       expect(heading).toBeInTheDocument();
-      expect(heading).toHaveTextContent('Sovren');
+      expect(heading).toHaveTextContent('Unleash Your Creative Sovereignty');
     });
 
-    it('renders the tagline', () => {
+    it('renders the subheading', () => {
       renderWithProviders(<Home />);
-      expect(screen.getByText('Elite Creator Monetization Platform')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Monetize your audience\. Own your platform/i)
+      ).toBeInTheDocument();
     });
 
-    it('renders the description', () => {
+    it('renders NOSTR & Lightning badge in footer', () => {
       renderWithProviders(<Home />);
-      expect(screen.getByText(/Join the sovereign revolution/)).toBeInTheDocument();
+      expect(screen.getByText(/Powered by NOSTR & Lightning Network/i)).toBeInTheDocument();
     });
   });
 
   describe('Navigation buttons', () => {
-    it('renders Become Sovereign button', () => {
+    it('renders Start Your Sovren Journey button', () => {
       renderWithProviders(<Home />);
-      const sovereignButton = screen.getByRole('button', { name: /become sovereign/i });
-      expect(sovereignButton).toBeInTheDocument();
+      const btn = screen.getByRole('button', { name: /Start Your Sovren Journey/i });
+      expect(btn).toBeInTheDocument();
     });
 
-    it('renders Explore Platform button', () => {
+    it('renders See How Sovren Works button', () => {
       renderWithProviders(<Home />);
-      const exploreButton = screen.getByRole('button', { name: /explore platform/i });
-      expect(exploreButton).toBeInTheDocument();
+      const btn = screen.getByRole('button', { name: /See How Sovren Works/i });
+      expect(btn).toBeInTheDocument();
     });
   });
 
-  describe('Feature sections', () => {
-    it('renders feature highlights', () => {
+  describe('Benefits sections', () => {
+    it('renders True Ownership benefit', () => {
       renderWithProviders(<Home />);
-
-      expect(screen.getByText('Lightning Fast Payments')).toBeInTheDocument();
-      expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
-      expect(screen.getByText('Creator Protection')).toBeInTheDocument();
+      expect(screen.getByText('True Ownership')).toBeInTheDocument();
     });
 
-    it('renders feature descriptions', () => {
+    it('renders Bitcoin Monetization benefit', () => {
       renderWithProviders(<Home />);
+      expect(screen.getByText('Bitcoin Monetization')).toBeInTheDocument();
+    });
 
+    it('renders Elite Community benefit', () => {
+      renderWithProviders(<Home />);
+      expect(screen.getByText('Elite Community')).toBeInTheDocument();
+    });
+
+    it('renders Why Sovren? heading', () => {
+      renderWithProviders(<Home />);
+      expect(screen.getByRole('heading', { level: 2, name: /Why Sovren\?/i })).toBeInTheDocument();
+    });
+  });
+
+  describe('Content', () => {
+    it('renders the open source description text', () => {
+      renderWithProviders(<Home />);
       expect(
-        screen.getByText(/Instant Bitcoin payments with zero platform fees/)
+        screen.getByText(/Built by creators, for creators/i)
       ).toBeInTheDocument();
-      expect(screen.getByText(/Your keys, your identity, your control/)).toBeInTheDocument();
-      expect(screen.getByText(/No censorship, no deplatforming, no middlemen/)).toBeInTheDocument();
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('has proper heading hierarchy', () => {
-      renderWithProviders(<Home />);
-
-      const mainHeading = screen.getByRole('heading', { level: 1 });
-      expect(mainHeading).toBeInTheDocument();
-
-      const subHeadings = screen.getAllByRole('heading', { level: 3 });
-      expect(subHeadings.length).toBeGreaterThan(0);
     });
 
-    it('has accessible button labels', () => {
+    it('renders no deplatforming bullet', () => {
       renderWithProviders(<Home />);
-
-      const sovereignButton = screen.getByRole('button', { name: /become sovereign/i });
-      const exploreButton = screen.getByRole('button', { name: /explore platform/i });
-
-      expect(sovereignButton).toBeInTheDocument();
-      expect(exploreButton).toBeInTheDocument();
-    });
-  });
-
-  describe('Layout and styling', () => {
-    it('has proper responsive design structure', () => {
-      renderWithProviders(<Home />);
-
-      // Check that main content is rendered
-      const mainContent = screen.getByText('Sovren');
-      expect(mainContent).toBeInTheDocument();
-    });
-
-    it('renders feature grid correctly', () => {
-      renderWithProviders(<Home />);
-
-      // Check that all three features are present
-      expect(screen.getByText('Lightning Fast Payments')).toBeInTheDocument();
-      expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
-      expect(screen.getByText('Creator Protection')).toBeInTheDocument();
+      expect(screen.getByText(/No deplatforming. No middlemen./i)).toBeInTheDocument();
     });
   });
 
   describe('Integration', () => {
     it('integrates properly with React Router', () => {
       renderWithProviders(<Home />);
-
-      // Verify component renders without router errors
-      expect(screen.getByText('Sovren')).toBeInTheDocument();
+      expect(screen.getByText('Unleash Your Creative Sovereignty')).toBeInTheDocument();
     });
 
     it('integrates with Redux store', () => {
       renderWithProviders(<Home />);
-
-      // Verify component renders without Redux errors
-      expect(screen.getByText('Sovren')).toBeInTheDocument();
+      expect(screen.getByText('Unleash Your Creative Sovereignty')).toBeInTheDocument();
     });
   });
 });

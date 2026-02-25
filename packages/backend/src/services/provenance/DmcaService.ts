@@ -4,7 +4,7 @@
  * EPIC-008: Content Shield (US-E8-004c)
  */
 
-import type { DmcaReport } from '@sovren/shared/types/provenance';
+import type { DmcaReport } from '@shared/types/provenance';
 import type { IDmcaService } from '../../interfaces/provenance/IDmcaService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';

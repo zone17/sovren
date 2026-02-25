@@ -417,7 +417,8 @@ describe('📱 Mobile Responsive Layout Test Suite', () => {
         </ResponsiveSection>
       );
 
-      const section = screen.getByRole('region') || document.querySelector('section');
+      // <section> without aria-label has no ARIA 'region' role; query by element tag
+      const section = document.querySelector('section');
       expect(section).toBeInTheDocument();
       expect(screen.getByText('Section content')).toBeInTheDocument();
     });

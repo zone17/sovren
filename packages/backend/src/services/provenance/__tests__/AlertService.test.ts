@@ -105,7 +105,7 @@ describe('AlertService', () => {
   describe('status transitions map', () => {
     it('should define valid transitions for all statuses', () => {
       // From shared types
-      const { ALERT_STATUS_TRANSITIONS } = require('@sovren/shared/types/provenance');
+      const { ALERT_STATUS_TRANSITIONS } = require('@shared/types/provenance');
 
       expect(ALERT_STATUS_TRANSITIONS.new).toContain('reviewed');
       expect(ALERT_STATUS_TRANSITIONS.new).toContain('false_positive');

@@ -3,11 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import { useContent } from '../useContent';
 
-// Mock fetch
-global.fetch = vi.fn();
-
 describe('useContent', () => {
   let queryClient: QueryClient;
+  let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -19,7 +17,11 @@ describe('useContent', () => {
         queries: { retry: false },
       },
     });
-    vi.clearAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
   });
 
   it('should fetch content with infinite query', async () => {
@@ -52,10 +54,12 @@ describe('useContent', () => {
       },
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify(mockData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
 
     const { result } = renderHook(() => useContent(), { wrapper });
 
@@ -63,7 +67,7 @@ describe('useContent', () => {
 
     expect(result.current.data?.pages).toHaveLength(1);
     expect(result.current.data?.pages[0]).toEqual(mockData);
-    expect(global.fetch).toHaveBeenCalledWith('/api/content?page=1', expect.any(Object));
+    expect(fetchSpy).toHaveBeenCalledWith('/api/content?page=1', expect.any(Object));
   });
 
   it('should handle filters correctly', async () => {
@@ -77,10 +81,12 @@ describe('useContent', () => {
       },
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify(mockData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
 
     const filters = {
       creatorId: 'creator1',
@@ -95,8 +101,8 @@ describe('useContent', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      '/api/content?page=1&creatorId=creator1&type=video&category=tech&tags=javascript,react&sortBy=popular&isPremium=true',
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/content?page=1&creatorId=creator1&type=video&category=tech&tags=javascript%2Creact&sortBy=popular&isPremium=true',
       expect.any(Object)
     );
   });
@@ -122,15 +128,19 @@ describe('useContent', () => {
       },
     };
 
-    (global.fetch as any)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => page1,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => page2,
-      });
+    fetchSpy
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(page1), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(page2), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
 
     const { result } = renderHook(() => useContent(), { wrapper });
 
@@ -148,10 +158,12 @@ describe('useContent', () => {
   });
 
   it('should handle fetch errors', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      statusText: 'Internal Server Error',
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response('Internal Server Error', {
+        status: 500,
+        statusText: 'Internal Server Error',
+      })
+    );
 
     const { result } = renderHook(() => useContent(), { wrapper });
 

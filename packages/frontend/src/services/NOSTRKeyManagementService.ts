@@ -1,14 +1,8 @@
 import { createHash } from 'crypto';
 import { finalizeEvent, generateSecretKey, getPublicKey, nip19, verifyEvent } from 'nostr-tools';
 import { z } from 'zod';
-import {
-  NostrEnhancedKeyPair,
-  NostrKeyBackupMethod,
-  NostrHardwareWallet,
-  NostrKeyUsageAnalytics,
-  NostrKeyRecovery,
-  NostrKeySchemas,
-} from '@shared/types/nostr';
+import { NostrHardwareWallet, NostrKeyUsageAnalytics } from '@shared/types/nostr/keys';
+import type { NostrEnhancedKeyPair } from '@shared/types/nostr/keys';
 
 // WebHID API type declarations
 interface NostrHIDDevice {
@@ -24,8 +18,45 @@ interface NostrHIDDevice {
 // 🔐 NOSTR Key Management Schemas (US-301: Using consolidated types)
 // Re-export from consolidated types for backward compatibility
 export type NostrKeyPair = NostrEnhancedKeyPair;
+
+// Service-specific key pair schema matching the fields this service produces.
+// The consolidated NostrEnhancedKeyPairSchema uses a different field shape
+// (entropyBits, backedUp, etc.) — this local schema validates the legacy shape.
+const KeyPairSchema = z.object({
+  privateKey: z.string().length(64, 'Private key must be 64 characters'),
+  publicKey: z.string().length(64, 'Public key must be 64 characters'),
+  npub: z.string().startsWith('npub1', 'Invalid npub format'),
+  nsec: z.string().startsWith('nsec1', 'Invalid nsec format'),
+  entropy: z.number().min(0),
+  created: z.number().positive(),
+  backed_up: z.boolean(),
+  hardware_wallet: z.boolean(),
+  rotated_count: z.number(),
+  last_rotated: z.number().optional(),
+});
 export type HardwareWallet = NostrHardwareWallet;
 export type KeyUsageMetrics = NostrKeyUsageAnalytics;
+
+// Service-specific hardware wallet schema matching the legacy shape this service uses.
+const HardwareWalletSchema = z.object({
+  connected: z.boolean().default(false),
+  supports_nostr: z.boolean().default(false),
+  device_type: z.string().optional(),
+  device_id: z.string().optional(),
+  firmware_version: z.string().optional(),
+  app_version: z.string().optional(),
+  last_connected: z.number().optional(),
+});
+
+// Service-specific metrics schema matching the legacy shape this service uses.
+const KeyUsageMetricsSchema = z.object({
+  sign_count: z.number().default(0),
+  failed_attempts: z.number().default(0),
+  compromised: z.boolean().default(false),
+  rotated_count: z.number().default(0),
+  hardware_signs: z.number().default(0),
+  extension_signs: z.number().default(0),
+});
 
 // Service-specific backup schema (extends consolidated type)
 const BackupMethodSchema = z.enum(['mnemonic', 'hardware', 'file', 'qr', 'social_recovery']);
@@ -424,7 +455,7 @@ export class NOSTRKeyManagementService {
     return Math.min(256, totalEntropy % 256);
   }
 
-  private async createMnemonicBackup(password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
+  private async createMnemonicBackup(_password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
     return {
       method: 'mnemonic',
       encrypted_data: 'mnemonic_data_encrypted',
@@ -440,7 +471,7 @@ export class NOSTRKeyManagementService {
     };
   }
 
-  private async createFileBackup(password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
+  private async createFileBackup(_password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
     return {
       method: 'file',
       encrypted_data: 'file_backup_encrypted',
@@ -448,7 +479,7 @@ export class NOSTRKeyManagementService {
     };
   }
 
-  private async createQRBackup(password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
+  private async createQRBackup(_password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
     return {
       method: 'qr',
       encrypted_data: 'qr_backup_encoded',
@@ -465,7 +496,7 @@ export class NOSTRKeyManagementService {
     };
   }
 
-  private async checkNostrSupport(device: NostrHIDDevice): Promise<boolean> {
+  private async checkNostrSupport(_device: NostrHIDDevice): Promise<boolean> {
     // Device-specific NOSTR support checking would be implemented here
     return true; // Mock implementation
   }

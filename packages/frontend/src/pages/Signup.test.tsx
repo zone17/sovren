@@ -31,7 +31,8 @@ describe('Signup Component', () => {
     it('renders the main heading', () => {
       renderWithProviders(<Signup />);
 
-      const heading = screen.getByRole('heading', { level: 3, name: 'Join Sovren' });
+      // CardTitle renders as h3 by default
+      const heading = screen.getByRole('heading', { name: 'Join Sovren' });
       expect(heading).toBeInTheDocument();
       expect(heading).toHaveTextContent('Join Sovren');
     });
@@ -45,7 +46,8 @@ describe('Signup Component', () => {
 
       // Check for NOSTR-specific elements (default mode)
       expect(screen.getByText('🔐 Sovereign Identity')).toBeInTheDocument();
-      expect(screen.getByText('Generate Your NOSTR Keys')).toBeInTheDocument();
+      // Generate button shows in NOSTR mode
+      expect(screen.getByText('🔑 Generate New Keys')).toBeInTheDocument();
     });
 
     it('switches between authentication modes', () => {
@@ -55,11 +57,11 @@ describe('Signup Component', () => {
       const emailTab = screen.getByText('📧 Email');
       fireEvent.click(emailTab);
 
-      // Check for email form elements
-      expect(screen.getByLabelText('Full name')).toBeInTheDocument();
+      // Check for email form elements - uses Label component which wraps text
+      expect(screen.getByLabelText('Full Name')).toBeInTheDocument();
       expect(screen.getByLabelText('Email address')).toBeInTheDocument();
       expect(screen.getByLabelText('Password')).toBeInTheDocument();
-      expect(screen.getByLabelText('Confirm password')).toBeInTheDocument();
+      expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument();
     });
   });
 
@@ -67,10 +69,10 @@ describe('Signup Component', () => {
     it('generates NOSTR keys when button is clicked', async (): Promise<void> => {
       renderWithProviders(<Signup />);
 
-      const generateButton = screen.getByText('🎲 Generate My NOSTR Keys');
+      const generateButton = screen.getByText('🔑 Generate New Keys');
       fireEvent.click(generateButton);
 
-      // Should show loading state
+      // Should show loading state (button becomes disabled)
       await waitFor(() => {
         expect(generateButton).toBeDisabled();
       });

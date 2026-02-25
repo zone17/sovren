@@ -669,15 +669,33 @@ export type AnalyticsExport = z.infer<typeof AnalyticsExportSchema>;
 
 // ✅ **VALIDATION HELPERS**
 export const validateCreatorEarnings = (data: unknown): CreatorEarnings => {
-  return CreatorEarningsSchema.parse(data);
+  try {
+    return CreatorEarningsSchema.parse(data);
+  } catch (error) {
+    throw new AnalyticsValidationError('Validation failed for creator earnings', {
+      errors: error instanceof z.ZodError ? error.errors : [{ message: String(error) }],
+    });
+  }
 };
 
 export const validateAnalyticsFilters = (data: unknown): AnalyticsFilters => {
-  return AnalyticsFiltersSchema.parse(data);
+  try {
+    return AnalyticsFiltersSchema.parse(data);
+  } catch (error) {
+    throw new AnalyticsValidationError('Validation failed for analytics filters', {
+      errors: error instanceof z.ZodError ? error.errors : [{ message: String(error) }],
+    });
+  }
 };
 
 export const validateLightningPayment = (data: unknown): LightningPaymentAnalytics => {
-  return LightningPaymentAnalyticsSchema.parse(data);
+  try {
+    return LightningPaymentAnalyticsSchema.parse(data);
+  } catch (error) {
+    throw new AnalyticsValidationError('Validation failed for lightning payment', {
+      errors: error instanceof z.ZodError ? error.errors : [{ message: String(error) }],
+    });
+  }
 };
 
 // 🚨 **ERROR TYPES**

@@ -17,7 +17,7 @@ import type {
   RepurposedContent,
   SupportedPlatform,
   RepurposeFormatType,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 
 const PLATFORM_CHAR_LIMITS: Record<SupportedPlatform, number> = {
   mastodon: 500,

@@ -18,7 +18,7 @@ import {
   PaymentState,
   Payment,
   PaymentNotFoundError,
-} from '@sovren/shared/types';
+} from '@shared/types';
 import {
   PaymentRetryService,
   PaymentNotRetryableError,

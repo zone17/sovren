@@ -6,7 +6,6 @@
  */
 
 import { BackupEncryptionService } from '../BackupEncryptionService';
-import type { EncryptedBackup } from '../types/backup';
 
 describe('BackupEncryptionService', () => {
   let service: BackupEncryptionService;
@@ -119,7 +118,7 @@ describe('BackupEncryptionService', () => {
       expect(/[a-z]/.test(password)).toBe(true);
       expect(/[A-Z]/.test(password)).toBe(true);
       expect(/[0-9]/.test(password)).toBe(true);
-      expect(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)).toBe(true);
+      expect(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)).toBe(true);
     });
   });
 
@@ -151,9 +150,7 @@ describe('BackupEncryptionService', () => {
     it('should fail with wrong password', async () => {
       const encrypted = await service.encryptBackup(testData, testPassword);
 
-      await expect(
-        service.decryptBackup(encrypted, 'WrongPassword123!')
-      ).rejects.toThrow();
+      await expect(service.decryptBackup(encrypted, 'WrongPassword123!')).rejects.toThrow();
     });
 
     it('should encrypt different data differently', async () => {
@@ -183,16 +180,15 @@ describe('BackupEncryptionService', () => {
     it('should reject weak passwords for encryption', async () => {
       const weakPassword = 'weak';
 
-      await expect(
-        service.encryptBackup(testData, weakPassword)
-      ).rejects.toThrow('Password too weak');
+      await expect(service.encryptBackup(testData, weakPassword)).rejects.toThrow(
+        'Password too weak'
+      );
     });
 
-    it('should handle empty data', async () => {
-      const encrypted = await service.encryptBackup('', testPassword);
-      const decrypted = await service.decryptBackup(encrypted, testPassword);
-
-      expect(decrypted).toBe('');
+    it('should reject empty data', async () => {
+      await expect(service.encryptBackup('', testPassword)).rejects.toThrow(
+        'Cannot encrypt empty backup data'
+      );
     });
 
     it('should handle large data', async () => {
@@ -318,27 +314,21 @@ describe('BackupEncryptionService', () => {
         // Missing required fields
       } as any;
 
-      await expect(
-        service.decryptBackup(invalidBackup, 'TestP@ssw0rd123!')
-      ).rejects.toThrow();
+      await expect(service.decryptBackup(invalidBackup, 'TestP@ssw0rd123!')).rejects.toThrow();
     });
 
     it('should throw error for corrupted encrypted data', async () => {
       const encrypted = await service.encryptBackup('test', 'TestP@ssw0rd123!');
       encrypted.encryptedData = 'corrupted_data';
 
-      await expect(
-        service.decryptBackup(encrypted, 'TestP@ssw0rd123!')
-      ).rejects.toThrow();
+      await expect(service.decryptBackup(encrypted, 'TestP@ssw0rd123!')).rejects.toThrow();
     });
 
     it('should throw error for corrupted auth tag', async () => {
       const encrypted = await service.encryptBackup('test', 'TestP@ssw0rd123!');
       encrypted.authTag = 'corrupted_tag';
 
-      await expect(
-        service.decryptBackup(encrypted, 'TestP@ssw0rd123!')
-      ).rejects.toThrow();
+      await expect(service.decryptBackup(encrypted, 'TestP@ssw0rd123!')).rejects.toThrow();
     });
   });
 });

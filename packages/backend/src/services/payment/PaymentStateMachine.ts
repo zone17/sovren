@@ -20,7 +20,7 @@ import {
   InvalidTransitionError,
   StateTransitionError,
   PaymentNotFoundError,
-} from '@sovren/shared/types';
+} from '@shared/types';
 
 /**
  * Payment State Machine Configuration

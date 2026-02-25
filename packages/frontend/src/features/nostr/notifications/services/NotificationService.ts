@@ -3,8 +3,6 @@
  * EPIC 003 WAVE 5 - STORY 6: Mentions/Notifications UI
  */
 
-import type { Event as NostrEvent, Filter } from 'nostr-tools';
-import * as nip19 from 'nostr-tools/nip19';
 import {
   Notification,
   NotificationType,
@@ -352,7 +350,9 @@ export class NotificationService {
           cursor.continue();
         } else {
           // Wait for all updates to complete
-          Promise.all(updates.map((r) => new Promise((res) => (r.onsuccess = () => res(undefined)))))
+          Promise.all(
+            updates.map((r) => new Promise((res) => (r.onsuccess = () => res(undefined))))
+          )
             .then(() => {
               // Update state
               const notifications = this.state.notifications.map((n) => ({ ...n, read: true }));
@@ -417,7 +417,9 @@ export class NotificationService {
           deletions.push(store.delete(cursor.primaryKey));
           cursor.continue();
         } else {
-          Promise.all(deletions.map((r) => new Promise((res) => (r.onsuccess = () => res(undefined)))))
+          Promise.all(
+            deletions.map((r) => new Promise((res) => (r.onsuccess = () => res(undefined))))
+          )
             .then(() => {
               // Reload notifications
               this.loadNotifications().then(resolve).catch(reject);
@@ -565,12 +567,16 @@ export class NotificationService {
       return;
     }
 
+    // Use window.Notification explicitly to avoid shadowing by the imported
+    // Notification *interface* (which esbuild erases to undefined at runtime).
+    const BrowserNotification = window.Notification;
+
     // Request permission if not granted
-    if (Notification.permission === 'default') {
-      await Notification.requestPermission();
+    if (BrowserNotification.permission === 'default') {
+      await BrowserNotification.requestPermission();
     }
 
-    if (Notification.permission !== 'granted') {
+    if (BrowserNotification.permission !== 'granted') {
       return;
     }
 
@@ -583,12 +589,19 @@ export class NotificationService {
       data: notification,
     };
 
-    const desktopNotification = new Notification(options.title, options);
+    const desktopNotification = new BrowserNotification(options.title, options);
 
     desktopNotification.onclick = () => {
       window.focus();
       if (notification.url) {
-        window.location.href = notification.url;
+        try {
+          const parsed = new URL(notification.url, window.location.origin);
+          if (parsed.origin === window.location.origin) {
+            window.location.href = parsed.pathname + parsed.search + parsed.hash;
+          }
+        } catch {
+          // Malformed URL — do not navigate
+        }
       }
       desktopNotification.close();
     };

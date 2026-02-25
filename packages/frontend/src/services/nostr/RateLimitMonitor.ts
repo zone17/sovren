@@ -30,12 +30,12 @@
 import { EventEmitter } from 'events';
 import { RateLimiter } from './RateLimiter';
 import { MonitoringService } from './MonitoringService';
+import { RateLimitAlertSeverity } from './types/rate-limit';
 import type {
   RateLimitMetrics,
   RateLimitOperation,
   RateLimitEvent,
   RateLimitAlert,
-  RateLimitAlertSeverity,
 } from './types/rate-limit';
 
 // ========================================

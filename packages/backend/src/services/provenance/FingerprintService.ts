@@ -16,7 +16,7 @@ import type {
   CompareResult,
   MatchLevel,
   Pagination,
-} from '@sovren/shared/types/provenance';
+} from '@shared/types/provenance';
 import type {
   IFingerprintService,
   CreateFingerprintInput,

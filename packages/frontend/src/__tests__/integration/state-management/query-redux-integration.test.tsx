@@ -17,10 +17,8 @@ import { render, waitFor, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureStore } from '@reduxjs/toolkit';
-import { act } from 'react-dom/test-utils';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import userEvent from '@testing-library/user-event';
 
 // Import slices and hooks
 import uiSlice from '../../../store/slices/uiSlice';
@@ -600,7 +598,7 @@ describe('Coverage Metrics', () => {
       lines: 96.5
     };
 
-    Object.entries(coverageReport).forEach(([metric, value]) => {
+    Object.entries(coverageReport).forEach(([_metric, value]) => {
       expect(value).toBeGreaterThanOrEqual(REQUIRED_COVERAGE);
     });
   });

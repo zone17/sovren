@@ -17,7 +17,7 @@ import { IDatabase } from '../../interfaces/IDatabase';
 import { Logger } from '../../utils/logger';
 import { ServiceError } from '../../utils/errors';
 import * as argon2 from 'argon2';
-import * as speakeasy from 'speakeasy';
+import * as OTPAuth from 'otpauth';
 import * as QRCode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import * as jwt from 'jsonwebtoken';
@@ -253,12 +253,13 @@ export class UserAuthenticationService implements IUserAuthenticationService {
 
       // Try TOTP verification first
       if (mfaSettings.totpSecret) {
-        const verified = speakeasy.totp.verify({
-          secret: mfaSettings.totpSecret,
-          encoding: 'base32',
-          token,
-          window: 2, // Allow 2 time steps for clock drift
+        const totp = new OTPAuth.TOTP({
+          secret: OTPAuth.Secret.fromBase32(mfaSettings.totpSecret),
+          algorithm: 'SHA1',
+          digits: 6,
+          period: 30,
         });
+        const verified = totp.validate({ token, window: 2 }) !== null;
 
         if (verified) {
           await this.recordMFAUsage(userId, 'totp');
@@ -320,14 +321,18 @@ export class UserAuthenticationService implements IUserAuthenticationService {
       switch (type) {
         case 'totp': {
           // Generate TOTP secret
-          const secret = speakeasy.generateSecret({
-            length: 32,
-            name: `Sovren (${user.email})`,
+          const secret = new OTPAuth.Secret({ size: 32 });
+          const totp = new OTPAuth.TOTP({
             issuer: 'Sovren',
+            label: user.email,
+            algorithm: 'SHA1',
+            digits: 6,
+            period: 30,
+            secret,
           });
 
           // Generate QR code
-          const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
+          const qrCodeUrl = await QRCode.toDataURL(totp.toString());
 
           // Store secret temporarily (user must verify to activate)
           await this.cache.set(

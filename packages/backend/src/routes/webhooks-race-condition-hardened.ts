@@ -37,7 +37,7 @@ import {
   WebhookTimestampExpiredError,
   InvalidWebhookSignatureError,
   MissingWebhookHeadersError,
-} from '@sovren/shared/types';
+} from '@shared/types';
 
 const router = express.Router();
 

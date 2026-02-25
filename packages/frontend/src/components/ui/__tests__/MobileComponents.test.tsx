@@ -26,19 +26,36 @@ Object.defineProperty(navigator, 'vibrate', {
 });
 
 // 📱 **Touch Event Simulation Utilities**
-const createTouchEvent = (type: string, touches: Array<{ clientX: number; clientY: number }>) => {
+// jsdom's TouchEvent constructor does not reliably expose touches/changedTouches
+// from TouchEventInit, so we create the event and define the properties manually.
+const createTouchEvent = (
+  type: string,
+  touches: Array<{ clientX: number; clientY: number }>,
+  changedTouches?: Array<{ clientX: number; clientY: number }>
+) => {
+  const makeTouchList = (pts: Array<{ clientX: number; clientY: number }>) =>
+    pts.map((touch) => ({
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      pageX: touch.clientX,
+      pageY: touch.clientY,
+      screenX: touch.clientX,
+      screenY: touch.clientY,
+      identifier: 0,
+      target: document.createElement('div'),
+    }));
+
+  const resolved = changedTouches ?? touches;
   const touchEvent = new TouchEvent(type, {
     bubbles: true,
     cancelable: true,
-    touches: touches.map((touch) => ({
-      ...touch,
-      target: document.createElement('div'),
-    })) as any,
-    targetTouches: touches.map((touch) => ({
-      ...touch,
-      target: document.createElement('div'),
-    })) as any,
   });
+
+  // Define touch lists directly on the event to work around jsdom limitations
+  Object.defineProperty(touchEvent, 'touches', { value: makeTouchList(touches) });
+  Object.defineProperty(touchEvent, 'targetTouches', { value: makeTouchList(touches) });
+  Object.defineProperty(touchEvent, 'changedTouches', { value: makeTouchList(resolved) });
+
   return touchEvent;
 };
 
@@ -48,12 +65,14 @@ const simulateSwipe = (element: HTMLElement, direction: 'left' | 'right') => {
 
   fireEvent(element, createTouchEvent('touchstart', [{ clientX: startX, clientY: 100 }]));
   fireEvent(element, createTouchEvent('touchmove', [{ clientX: endX, clientY: 100 }]));
-  fireEvent(element, createTouchEvent('touchend', []));
+  // Pass changedTouches with the end position so the component can read deltaX
+  fireEvent(element, createTouchEvent('touchend', [], [{ clientX: endX, clientY: 100 }]));
 };
 
 const simulateTap = (element: HTMLElement) => {
   fireEvent(element, createTouchEvent('touchstart', [{ clientX: 100, clientY: 100 }]));
-  fireEvent(element, createTouchEvent('touchend', []));
+  // Same position = tap (distance < 10)
+  fireEvent(element, createTouchEvent('touchend', [], [{ clientX: 100, clientY: 100 }]));
 };
 
 describe('📱 Mobile Components Test Suite', () => {
@@ -86,7 +105,7 @@ describe('📱 Mobile Components Test Suite', () => {
       expect(screen.queryByText('Hidden content')).not.toBeInTheDocument();
 
       // Tap to expand
-      const card = screen.getByRole('generic');
+      const card = screen.getByTestId('mobile-card-expandable-card');
       simulateTap(card);
 
       await waitFor(() => {
@@ -107,7 +126,7 @@ describe('📱 Mobile Components Test Suite', () => {
         />
       );
 
-      const card = screen.getByRole('generic');
+      const card = screen.getByTestId('mobile-card-swipeable-card');
 
       simulateSwipe(card, 'left');
       expect(onSwipeLeft).toHaveBeenCalledTimes(1);
@@ -448,12 +467,12 @@ describe('📱 Mobile Components Test Suite', () => {
         <MobileCard title="Gesture Test" content={<div>Content</div>} onSwipeLeft={onSwipeLeft} />
       );
 
-      const card = screen.getByRole('generic');
+      const card = screen.getByTestId('mobile-card-gesture-test');
 
       // Small movement (below threshold)
       fireEvent(card, createTouchEvent('touchstart', [{ clientX: 100, clientY: 100 }]));
       fireEvent(card, createTouchEvent('touchmove', [{ clientX: 80, clientY: 100 }]));
-      fireEvent(card, createTouchEvent('touchend', []));
+      fireEvent(card, createTouchEvent('touchend', [], [{ clientX: 80, clientY: 100 }]));
 
       expect(onSwipeLeft).not.toHaveBeenCalled();
 
@@ -475,7 +494,7 @@ describe('📱 Mobile Components Test Suite', () => {
         />
       );
 
-      const card = screen.getByRole('generic');
+      const card = screen.getByTestId('mobile-card-tap-vs-swipe');
 
       // Tap gesture
       simulateTap(card);

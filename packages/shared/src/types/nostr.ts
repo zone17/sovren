@@ -297,6 +297,53 @@ export interface NostrMobileConfig {
   offlineMode: boolean;
 }
 
+// ========================================
+// Sovren Custom NIPs - re-exported from nostr/ directory
+// These are not in this flat file but needed for @shared/types/nostr resolution
+// ========================================
+export {
+  SovrenEventKind,
+  SocialPlatform,
+  CreatorCategory,
+  AnalyticsEventType,
+  RecommendationSource,
+  SovrenNIPSchemas,
+  parseCreatorProfileExtended,
+  parseContentMonetization,
+  parseAnalyticsEvent,
+  parseSubscriptionManagement,
+  parseContentRecommendations,
+  buildCreatorProfileExtendedTemplate,
+  buildContentMonetizationTemplate,
+  buildAnalyticsEventTemplate,
+  buildSubscriptionManagementTemplate,
+  buildContentRecommendationsTemplate,
+} from './nostr/sovren-nips';
+
+export type {
+  SocialLink,
+  PaymentMethod,
+  CreatorProfileExtendedContent,
+  CreatorProfileExtendedEvent,
+  PricingTier,
+  PaywallConfig,
+  ContentMonetizationContent,
+  ContentMonetizationEvent,
+  EngagementMetrics,
+  RevenueMetrics,
+  AnalyticsEventContent,
+  AnalyticsEvent,
+  SubscriptionBenefits,
+  SubscriptionTier,
+  SubscriptionStats,
+  SubscriptionManagementContent,
+  SubscriptionManagementEvent,
+  ContentRecommendation,
+  RecommendationScore,
+  ContentRecommendationsContent,
+  ContentRecommendationsEvent,
+} from './nostr/sovren-nips';
+
 /**
  * Export all schemas for validation
  */

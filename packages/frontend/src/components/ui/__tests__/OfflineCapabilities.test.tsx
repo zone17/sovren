@@ -19,7 +19,7 @@ const mockUseFeatureFlags = vi.fn(() => ({
   },
 }));
 
-vi.mock('../../hooks/useFeatureFlags', () => ({
+vi.mock('../../../hooks/useFeatureFlags', () => ({
   useFeatureFlags: () => mockUseFeatureFlags(),
 }));
 
@@ -100,6 +100,16 @@ const mockIndexedDB = {
 
 // Setup global mocks
 beforeEach(() => {
+  // Restore the default mock implementation before clearing other mocks
+  mockUseFeatureFlags.mockReturnValue({
+    flags: {
+      enableOfflineCapabilities: true,
+      enableContentCaching: true,
+      enableOfflineReading: true,
+      enableBackgroundSync: true,
+    },
+  });
+
   // Mock navigator
   Object.defineProperty(global.navigator, 'serviceWorker', {
     value: mockServiceWorker,
@@ -144,12 +154,28 @@ beforeEach(() => {
     writable: true,
   });
 
-  // Clear all mocks
+  // Clear call history (not implementations) for vi.fn() mocks
   vi.clearAllMocks();
+
+  // Re-apply default implementation after clearAllMocks
+  mockUseFeatureFlags.mockReturnValue({
+    flags: {
+      enableOfflineCapabilities: true,
+      enableContentCaching: true,
+      enableOfflineReading: true,
+      enableBackgroundSync: true,
+    },
+  });
 });
 
 afterEach(() => {
   vi.clearAllMocks();
+  // Clear the SyncManager singleton queue between tests to prevent state bleed
+  try {
+    SyncManager.getInstance().clearQueue();
+  } catch (_) {
+    // ignore if not available
+  }
 });
 
 // ===================================================================
@@ -197,15 +223,17 @@ describe('ServiceWorkerManager', () => {
 
   test('should handle service worker updates', async () => {
     const manager = ServiceWorkerManager.getInstance();
-    mockServiceWorker.register.mockResolvedValue({
+    const mockWaiting = { postMessage: vi.fn() };
+    const registrationWithWaiting = {
       ...mockRegistration,
-      waiting: { postMessage: vi.fn() },
-    });
+      waiting: mockWaiting,
+    };
+    mockServiceWorker.register.mockResolvedValue(registrationWithWaiting);
 
     await manager.register('/sw.js');
     await manager.skipWaiting();
 
-    expect(mockRegistration.waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    expect(mockWaiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
   });
 });
 
@@ -237,7 +265,7 @@ describe('CacheManager', () => {
 
   test('should get cache status', async () => {
     const manager = CacheManager.getInstance();
-    const mockKeys = [new Request('/test1'), new Request('/test2')];
+    const mockKeys = [new Request('http://localhost/test1'), new Request('http://localhost/test2')];
     const mockResponse = new Response('test', {
       headers: { 'content-length': '1000' },
     });
@@ -518,8 +546,9 @@ describe('OfflineCapabilities Component', () => {
     render(<OfflineCapabilities />);
 
     await waitFor(() => {
-      expect(screen.getByText('Static Cache')).toBeInTheDocument();
-      expect(screen.getByText('10 items • 1000KB • 85% hit rate')).toBeInTheDocument();
+      // The component renders cache.name with CSS capitalize (visual only); DOM text is lowercase
+      expect(screen.getByText('static Cache')).toBeInTheDocument();
+      expect(screen.getByText(/10 items.*1000KB.*85% hit rate/)).toBeInTheDocument();
     });
 
     getCacheStatusSpy.mockRestore();
@@ -573,11 +602,17 @@ describe('OfflineCapabilities Component', () => {
       .spyOn(ServiceWorkerManager.prototype, 'skipWaiting')
       .mockResolvedValue();
 
-    // Mock service worker with update available
-    mockServiceWorker.register.mockResolvedValue({
-      ...mockRegistration,
-      waiting: { postMessage: vi.fn() },
-    });
+    // Spy on addListener to immediately invoke the callback with updateAvailable: true
+    const addListenerSpy = vi
+      .spyOn(ServiceWorkerManager.prototype, 'addListener')
+      .mockImplementation((listener) => {
+        listener({
+          state: 'activated',
+          scope: '/',
+          scriptURL: '/sw.js',
+          updateAvailable: true,
+        });
+      });
 
     render(<OfflineCapabilities />);
 
@@ -591,6 +626,7 @@ describe('OfflineCapabilities Component', () => {
     expect(skipWaitingSpy).toHaveBeenCalled();
 
     skipWaitingSpy.mockRestore();
+    addListenerSpy.mockRestore();
   });
 
   test('should display architecture information', () => {
@@ -612,13 +648,16 @@ describe('OfflineCapabilities Component', () => {
   });
 
   test('should handle poor connection quality', () => {
-    // Mock slow connection
+    // Mock slow connection (must include addEventListener/removeEventListener
+    // since the component calls connection.addEventListener('change', ...))
     Object.defineProperty(navigator, 'connection', {
       value: {
         effectiveType: 'slow-2g',
         type: 'cellular',
         downlink: 0.5,
         rtt: 2000,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
       },
       writable: true,
     });
@@ -809,11 +848,12 @@ describe('Offline Capabilities Accessibility', () => {
     render(<OfflineCapabilities enableBackgroundSync={true} />);
 
     // Should be able to tab through interactive elements
+    // Native <button> elements have implicit role="button" but no explicit role attribute
     await user.tab();
-    expect(document.activeElement).toHaveAttribute('role', 'button');
+    expect(document.activeElement?.tagName.toLowerCase()).toBe('button');
 
     await user.tab();
-    expect(document.activeElement).toHaveAttribute('role', 'button');
+    expect(document.activeElement?.tagName.toLowerCase()).toBe('button');
   });
 
   test('should provide clear status indicators', () => {
@@ -822,8 +862,9 @@ describe('Offline Capabilities Accessibility', () => {
     // Connection status should be clearly indicated
     expect(screen.getByText('Online')).toBeInTheDocument();
 
-    // Service worker status should be clear
-    expect(screen.getByText(/service worker/i)).toBeInTheDocument();
+    // Service worker status section heading should be present
+    // (multiple elements match /service worker/i; check for the section heading specifically)
+    expect(screen.getByRole('heading', { name: /service worker status/i })).toBeInTheDocument();
   });
 
   test('should handle reduced motion preferences', () => {

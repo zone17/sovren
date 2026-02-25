@@ -15,7 +15,7 @@ describe('WellnessResources', () => {
   it('filters by category', () => {
     render(<WellnessResources />);
 
-    fireEvent.click(screen.getByText('Tool'));
+    fireEvent.click(screen.getByRole('button', { name: 'Tool' }));
 
     expect(screen.getByText('Focus Timer for Creators')).toBeInTheDocument();
     expect(screen.getByText('Batch Content Planner')).toBeInTheDocument();
@@ -25,8 +25,8 @@ describe('WellnessResources', () => {
   it('shows all when All filter selected', () => {
     render(<WellnessResources />);
 
-    fireEvent.click(screen.getByText('Tool'));
-    fireEvent.click(screen.getByText('All'));
+    fireEvent.click(screen.getByRole('button', { name: 'Tool' }));
+    fireEvent.click(screen.getByRole('button', { name: 'All' }));
 
     expect(screen.getByText('Creator Burnout Recovery Group')).toBeInTheDocument();
     expect(screen.getByText('Focus Timer for Creators')).toBeInTheDocument();

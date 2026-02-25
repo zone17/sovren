@@ -11,7 +11,7 @@ import type { IJobProcessor, JobContext } from '../../interfaces/queue/IJobProce
 import type { IFingerprintService } from '../../interfaces/provenance/IFingerprintService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
-import type { MatchLevel } from '@sovren/shared/types/provenance';
+import type { MatchLevel } from '@shared/types/provenance';
 
 export interface RelayScanJobData {
   creatorId: string;

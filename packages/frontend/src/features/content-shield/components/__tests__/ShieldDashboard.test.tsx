@@ -3,6 +3,16 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import ShieldDashboard from '../ShieldDashboard';
 
+vi.mock('@/features/auth', () => ({
+  useAuth: () => ({
+    user: { id: 'test-user', email: 'test@example.com', name: 'Test User', role: 'creator', nostr_pubkey: 'npub1test' },
+    isLoading: false,
+    isAuthenticated: true,
+  }),
+  useAuthStatus: () => ({ isAuthenticated: true, isLoading: false }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock('../FingerprintCoverage', () => ({
   __esModule: true,
   default: ({ creatorId }: { creatorId: string }) => (

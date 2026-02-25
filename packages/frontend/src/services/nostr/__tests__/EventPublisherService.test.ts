@@ -12,6 +12,7 @@
  * - Error handling
  */
 
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { EventPublisherService } from '../EventPublisherService';
 import { KeyManagementService } from '../KeyManagementService';
 import { RelayPoolManager } from '../RelayPoolManager';
@@ -39,6 +40,11 @@ describe('EventPublisherService', () => {
   beforeEach(async () => {
     // Reset mocks
     vi.clearAllMocks();
+
+    // Reset the EventPublisherService singleton so each test gets a fresh instance
+    // that captures the mocked dependencies set up below. Without this, the instance
+    // created at module-load time holds a reference to the real (unmocked) KMS.
+    (EventPublisherService as any).instance = null;
 
     // Setup KeyManagementService mock with proper prototype
     mockKeyManagement = {

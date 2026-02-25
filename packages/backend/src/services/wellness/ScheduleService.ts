@@ -10,7 +10,7 @@ import type {
   BufferStatus,
   DayOfWeek,
   ProductiveWindow,
-} from '@sovren/shared/types/wellness';
+} from '@shared/types/wellness';
 import type { IScheduleService } from '../../interfaces/wellness/IScheduleService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';

@@ -56,15 +56,13 @@ import type {
   LatencyPercentiles,
   ThroughputMetrics,
   Alert,
-  AlertType,
-  AlertSeverity,
   AlertCondition,
   PrometheusMetric,
   MetricsExport,
   HealthCheckResult,
-  HealthStatus,
   MonitoringEvents,
 } from './types/monitoring';
+import { AlertType, AlertSeverity, HealthStatus } from './types/monitoring';
 import { RelayStatus, RelayHealth } from './types';
 
 /**

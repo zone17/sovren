@@ -5,7 +5,7 @@
  */
 
 import { createHash } from 'crypto';
-import type { ProvenanceRecord, ProvenanceCertificate } from '@sovren/shared/types/provenance';
+import type { ProvenanceRecord, ProvenanceCertificate } from '@shared/types/provenance';
 import type { IProvenanceService, SignContentInput } from '../../interfaces/provenance/IProvenanceService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';

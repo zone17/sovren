@@ -22,7 +22,7 @@ import { IDatabase } from '../../interfaces/IDatabase';
 import { Logger } from '../../utils/logger';
 import { ServiceError } from '../../utils/errors';
 import { v4 as uuidv4 } from 'uuid';
-import * as PDFDocument from 'pdfkit';
+// pdfkit loaded lazily in generatePDF() to avoid 80ms cold start penalty
 import * as Handlebars from 'handlebars';
 import { Decimal } from 'decimal.js';
 
@@ -567,7 +567,8 @@ export class InvoiceService implements IInvoiceService {
     try {
       const invoice = await this.getInvoice(invoiceId);
 
-      // Create PDF document
+      // Create PDF document (lazy import to avoid cold start penalty)
+      const PDFDocument = (await import('pdfkit')).default;
       const doc = new PDFDocument({ margin: 50 });
       const chunks: Buffer[] = [];
 

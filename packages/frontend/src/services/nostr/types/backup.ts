@@ -10,8 +10,6 @@
  */
 
 import { z } from 'zod';
-import type { NostrEnhancedKeyPair } from '@shared/types/nostr';
-
 // ========================================
 // Backup Types and Formats
 // ========================================

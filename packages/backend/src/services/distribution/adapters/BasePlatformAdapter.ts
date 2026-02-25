@@ -12,7 +12,7 @@ import type {
   ContentConstraints,
   FormattedContent,
   PostMetrics,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 import type { IPlatformAdapter, PlatformAdapterConfig } from './IPlatformAdapter';
 import { TTLCache } from '../../../utils/ttl-cache';
 

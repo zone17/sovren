@@ -3,11 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import { useCreators } from '../useCreators';
 
-// Mock fetch
-global.fetch = vi.fn();
-
 describe('useCreators', () => {
   let queryClient: QueryClient;
+  let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -19,7 +17,11 @@ describe('useCreators', () => {
         queries: { retry: false },
       },
     });
-    vi.clearAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
   });
 
   it('should fetch creators successfully', async () => {
@@ -43,17 +45,19 @@ describe('useCreators', () => {
       },
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify(mockData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
 
     const { result } = renderHook(() => useCreators(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toEqual(mockData);
-    expect(global.fetch).toHaveBeenCalledWith('/api/creators?', expect.any(Object));
+    expect(fetchSpy).toHaveBeenCalledWith('/api/creators?', expect.any(Object));
   });
 
   it('should handle filters correctly', async () => {
@@ -67,10 +71,12 @@ describe('useCreators', () => {
       },
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify(mockData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
 
     const filters = {
       page: 2,
@@ -84,17 +90,19 @@ describe('useCreators', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(fetchSpy).toHaveBeenCalledWith(
       '/api/creators?page=2&limit=20&category=music&sortBy=popular&search=test',
       expect.any(Object)
     );
   });
 
   it('should handle fetch errors', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      statusText: 'Internal Server Error',
-    });
+    fetchSpy.mockResolvedValueOnce(
+      new Response('Internal Server Error', {
+        status: 500,
+        statusText: 'Internal Server Error',
+      })
+    );
 
     const { result } = renderHook(() => useCreators(), { wrapper });
 
@@ -104,7 +112,7 @@ describe('useCreators', () => {
   });
 
   it('should use correct cache configuration', () => {
-    const { result } = renderHook(() => useCreators(), { wrapper });
+    renderHook(() => useCreators(), { wrapper });
 
     // The query should have the correct stale time (from the hook itself)
     const queryState = queryClient.getQueryState(['creators', 'list', { filters: undefined }]);

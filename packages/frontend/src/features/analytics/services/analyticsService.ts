@@ -19,7 +19,6 @@ import {
   AnalyticsEvent,
   AnalyticsExport,
   AnalyticsFilters,
-  AnalyticsValidationError,
   CreatorEarnings,
   CreatorPerformanceMetrics,
   LightningPaymentAnalytics,
@@ -179,6 +178,7 @@ class AnalyticsWebSocketManager {
 class AnalyticsServiceImpl {
   private wsManager = new AnalyticsWebSocketManager();
   private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
+  private retryDelay: (attempt: number) => number = (attempt) => Math.pow(2, attempt) * 1000;
   private readonly CACHE_TTL = {
     earnings: 5 * 60 * 1000, // 5 minutes
     payments: 2 * 60 * 1000, // 2 minutes
@@ -255,7 +255,7 @@ class AnalyticsServiceImpl {
         }
 
         // Wait before retry (exponential backoff)
-        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        await new Promise((resolve) => setTimeout(resolve, this.retryDelay(attempt)));
       }
     }
 
@@ -310,7 +310,7 @@ class AnalyticsServiceImpl {
 
       return earnings;
     } catch (error) {
-      if (error instanceof AnalyticsValidationError) {
+      if (error instanceof AnalyticsError) {
         throw error;
       }
       throw new AnalyticsError('Failed to fetch creator earnings', 'FETCH_ERROR', { error });

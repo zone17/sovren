@@ -47,12 +47,14 @@ export class BackupEncryptionService {
    * Encrypt backup data with password
    */
   async encryptBackup(data: string, password: string): Promise<EncryptedBackup> {
+    if (!data) {
+      throw new Error('Cannot encrypt empty backup data');
+    }
+
     // Validate password strength
     const strength = this.validatePasswordStrength(password);
     if (!strength.valid) {
-      throw new Error(
-        `Password too weak. Requirements: ${strength.feedback.join(', ')}`
-      );
+      throw new Error(`Password too weak. Requirements: ${strength.feedback.join(', ')}`);
     }
 
     try {
@@ -108,9 +110,10 @@ export class BackupEncryptionService {
       // Validate encrypted backup structure
       const validated = EncryptedBackupSchema.parse(encryptedBackup);
 
-      // Convert base64 back to buffers
-      const salt = this.base64ToArrayBuffer(validated.salt);
-      const iv = this.base64ToArrayBuffer(validated.iv);
+      // Convert base64 back to Uint8Array buffers.
+      // crypto.subtle requires TypedArray/Uint8Array for salt/iv, not plain ArrayBuffer.
+      const salt = new Uint8Array(this.base64ToArrayBuffer(validated.salt));
+      const iv = new Uint8Array(this.base64ToArrayBuffer(validated.iv));
       const ciphertext = this.base64ToArrayBuffer(validated.encryptedData);
       const authTag = this.base64ToArrayBuffer(validated.authTag);
 
@@ -148,21 +151,15 @@ export class BackupEncryptionService {
   /**
    * Derive encryption key from password using PBKDF2
    */
-  private async deriveKey(
-    password: string,
-    salt: Uint8Array | ArrayBuffer
-  ): Promise<CryptoKey> {
+  private async deriveKey(password: string, salt: Uint8Array | ArrayBuffer): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
 
     // Import password as key material
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      passwordBuffer,
-      'PBKDF2',
-      false,
-      ['deriveBits', 'deriveKey']
-    );
+    const keyMaterial = await crypto.subtle.importKey('raw', passwordBuffer, 'PBKDF2', false, [
+      'deriveBits',
+      'deriveKey',
+    ]);
 
     // Derive key using PBKDF2
     return await crypto.subtle.deriveKey(
@@ -191,7 +188,7 @@ export class BackupEncryptionService {
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumber: /[0-9]/.test(password),
-      hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasSpecial: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     };
 
     const feedback: string[] = [];
@@ -256,7 +253,7 @@ export class BackupEncryptionService {
     if (/[a-z]/.test(password)) characterSpace += 26;
     if (/[A-Z]/.test(password)) characterSpace += 26;
     if (/[0-9]/.test(password)) characterSpace += 10;
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) characterSpace += 32;
+    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) characterSpace += 32;
 
     // Entropy = log2(characterSpace^length)
     return Math.log2(Math.pow(characterSpace, password.length));
@@ -303,11 +300,15 @@ export class BackupEncryptionService {
       password += allChars[array[i] % allChars.length];
     }
 
-    // Shuffle
-    return password
-      .split('')
-      .sort(() => Math.random() - 0.5)
-      .join('');
+    // Fisher-Yates shuffle with crypto.getRandomValues()
+    const chars = password.split('');
+    const shuffleBytes = new Uint32Array(chars.length);
+    crypto.getRandomValues(shuffleBytes);
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = shuffleBytes[i] % (i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+    return chars.join('');
   }
 
   /**

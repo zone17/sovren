@@ -12,7 +12,7 @@ import type {
   PulseHistory,
   WellnessBenchmark,
   WorkActivityType,
-} from '@sovren/shared/types/wellness';
+} from '@shared/types/wellness';
 
 export interface CreateWorkPatternInput {
   type: WorkActivityType;

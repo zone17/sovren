@@ -7,7 +7,7 @@ import type {
   PlatformOverview,
   ContentComparison,
   PlatformROI,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 
 export interface ICrossPlatformAnalyticsService {
   /** Get aggregate overview across all connected platforms */

@@ -10,10 +10,10 @@ import type {
   CompareResult,
   HashType,
   Pagination
-} from '@sovren/shared/types/provenance';
+} from '@shared/types/provenance';
 import {
   ContentType,
-} from '@sovren/shared/types/provenance';
+} from '@shared/types/provenance';
 
 export interface CreateFingerprintInput {
   content_id: string;

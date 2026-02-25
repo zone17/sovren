@@ -19,7 +19,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import {
   PaymentState,
   Payment,
-} from '@sovren/shared/types';
+} from '@shared/types';
 import {
   PaymentRetryService,
   RetryConfig,

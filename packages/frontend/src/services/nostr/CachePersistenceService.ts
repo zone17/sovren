@@ -13,7 +13,7 @@
  */
 
 import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
-import { EventCacheService } from './EventCacheService';
+import { EventCacheService, getEventCache } from './EventCacheService';
 
 /**
  * IndexedDB configuration
@@ -33,7 +33,6 @@ export interface PersistenceConfig {
   maxSizeBytes?: number;
   enableAutoSave?: boolean;
   autoSaveInterval?: number;
-  enableCompression?: boolean;
 }
 
 /**
@@ -48,7 +47,6 @@ export interface PersistedEvent {
   size: number;
   relay?: string;
   verified?: boolean;
-  compressed?: boolean;
 }
 
 /**
@@ -94,11 +92,10 @@ export class CachePersistenceService {
       maxSizeBytes: 50 * 1024 * 1024, // 50MB
       enableAutoSave: true,
       autoSaveInterval: 5000, // 5 seconds
-      enableCompression: false,
       ...config,
     };
 
-    this.cacheService = EventCacheService.getInstance();
+    this.cacheService = getEventCache();
     this.metadata = {
       version: DB_VERSION,
       createdAt: Date.now(),
@@ -202,30 +199,30 @@ export class CachePersistenceService {
       size,
       relay: metadata?.relay,
       verified: metadata?.verified,
-      compressed: false,
     };
-
-    // Compress if enabled
-    if (this.config.enableCompression) {
-      persistedEvent.event = await this.compressEvent(event);
-      persistedEvent.compressed = true;
-    }
 
     const transaction = this.db.transaction([EVENTS_STORE], 'readwrite');
     const store = transaction.objectStore(EVENTS_STORE);
 
     return new Promise((resolve, reject) => {
-      const request = store.put(persistedEvent);
+      try {
+        const request = store.put(persistedEvent);
 
-      request.onsuccess = () => {
-        this.metadata.totalEvents++;
-        this.metadata.totalSize += size;
-        this.metadata.lastUpdated = Date.now();
-        this.saveMetadata();
-        resolve();
-      };
+        request.onsuccess = () => {
+          this.metadata.totalEvents++;
+          this.metadata.totalSize += size;
+          this.metadata.lastUpdated = Date.now();
+          this.saveMetadata();
+          resolve();
+        };
 
-      request.onerror = () => reject(request.error);
+        request.onerror = () => reject(request.error);
+      } catch (err) {
+        // Synchronous errors from store.put (e.g. invalid keyPath value)
+        reject(err);
+      }
+    }).catch((err) => {
+      console.warn('[CachePersistenceService] persistEvent failed, skipping:', err);
     });
   }
 
@@ -238,7 +235,7 @@ export class CachePersistenceService {
     const transaction = this.db.transaction([EVENTS_STORE], 'readwrite');
     const store = transaction.objectStore(EVENTS_STORE);
 
-    const promises = events.map(event => {
+    const promises = events.map((event) => {
       const size = this.calculateEventSize(event);
 
       const persistedEvent: PersistedEvent = {
@@ -291,13 +288,7 @@ export class CachePersistenceService {
         result.accessCount++;
         store.put(result);
 
-        // Decompress if needed
-        let event = result.event;
-        if (result.compressed) {
-          event = await this.decompressEvent(event);
-        }
-
-        resolve(event);
+        resolve(result.event);
       };
 
       request.onerror = () => reject(request.error);
@@ -323,12 +314,7 @@ export class CachePersistenceService {
 
         if (cursor) {
           const persistedEvent: PersistedEvent = cursor.value;
-          let nostrEvent = persistedEvent.event;
-
-          // Decompress if needed
-          if (persistedEvent.compressed) {
-            nostrEvent = await this.decompressEvent(nostrEvent);
-          }
+          const nostrEvent = persistedEvent.event;
 
           // Apply filter
           if (this.matchesFilter(nostrEvent, filter)) {
@@ -353,11 +339,7 @@ export class CachePersistenceService {
   /**
    * Persist profile data
    */
-  public async persistProfile(
-    pubkey: string,
-    metadata: any,
-    nip05?: string
-  ): Promise<void> {
+  public async persistProfile(pubkey: string, metadata: any, nip05?: string): Promise<void> {
     if (!this.db) return;
 
     const profile: PersistedProfile = {
@@ -467,22 +449,6 @@ export class CachePersistenceService {
   }
 
   /**
-   * Compress event (placeholder - implement actual compression)
-   */
-  private async compressEvent(event: NostrEvent): Promise<any> {
-    // In production, use CompressionStream or pako library
-    return event;
-  }
-
-  /**
-   * Decompress event (placeholder - implement actual decompression)
-   */
-  private async decompressEvent(compressed: any): Promise<NostrEvent> {
-    // In production, use DecompressionStream or pako library
-    return compressed;
-  }
-
-  /**
    * Check if event matches filter
    */
   private matchesFilter(event: NostrEvent, filter: NostrFilter): boolean {
@@ -494,13 +460,13 @@ export class CachePersistenceService {
 
     // Check tags
     if (filter['#e']) {
-      const eTags = event.tags.filter(t => t[0] === 'e').map(t => t[1]);
-      if (!filter['#e'].some(id => eTags.includes(id))) return false;
+      const eTags = event.tags.filter((t) => t[0] === 'e').map((t) => t[1]);
+      if (!filter['#e'].some((id) => eTags.includes(id))) return false;
     }
 
     if (filter['#p']) {
-      const pTags = event.tags.filter(t => t[0] === 'p').map(t => t[1]);
-      if (!filter['#p'].some(id => pTags.includes(id))) return false;
+      const pTags = event.tags.filter((t) => t[0] === 'p').map((t) => t[1]);
+      if (!filter['#p'].some((id) => pTags.includes(id))) return false;
     }
 
     return true;
@@ -571,9 +537,7 @@ export class CachePersistenceService {
   private async flushPendingSaves(): Promise<void> {
     if (this.pendingSaves.size === 0) return;
 
-    const events = Array.from(this.pendingSaves).map(id =>
-      this.cacheService.get(id)
-    );
+    const events = Array.from(this.pendingSaves).map((id) => this.cacheService.get(id));
 
     const validEvents = events.filter((e): e is NostrEvent => e !== null);
 
@@ -594,13 +558,14 @@ export class CachePersistenceService {
     averageEventSize: number;
     cacheEfficiency: number;
   } {
-    const avgSize = this.metadata.totalEvents > 0
-      ? this.metadata.totalSize / this.metadata.totalEvents
-      : 0;
+    const avgSize =
+      this.metadata.totalEvents > 0 ? this.metadata.totalSize / this.metadata.totalEvents : 0;
 
-    const efficiency = this.metadata.totalEvents > 0
-      ? 1 - (this.metadata.evictionCount / (this.metadata.totalEvents + this.metadata.evictionCount))
-      : 0;
+    const efficiency =
+      this.metadata.totalEvents > 0
+        ? 1 -
+          this.metadata.evictionCount / (this.metadata.totalEvents + this.metadata.evictionCount)
+        : 0;
 
     return {
       totalEvents: this.metadata.totalEvents,
@@ -628,12 +593,15 @@ export class CachePersistenceService {
       transaction.objectStore(METADATA_STORE).clear(),
     ];
 
-    await Promise.all(clearPromises.map(req =>
-      new Promise((resolve, reject) => {
-        req.onsuccess = () => resolve(undefined);
-        req.onerror = () => reject(req.error);
-      })
-    ));
+    await Promise.all(
+      clearPromises.map(
+        (req) =>
+          new Promise((resolve, reject) => {
+            req.onsuccess = () => resolve(undefined);
+            req.onerror = () => reject(req.error);
+          })
+      )
+    );
 
     // Reset metadata
     this.metadata = {
@@ -649,20 +617,21 @@ export class CachePersistenceService {
   /**
    * Cleanup on shutdown
    */
-  public cleanup(): void {
+  public async cleanup(): Promise<void> {
     if (this.saveTimer) {
       clearInterval(this.saveTimer);
     }
 
-    this.flushPendingSaves();
+    // Reset singleton so subsequent getInstance() calls create a fresh instance
+    if (CachePersistenceService.instance === this) {
+      CachePersistenceService.instance = null;
+    }
+
+    await this.flushPendingSaves();
 
     if (this.db) {
       this.db.close();
+      this.db = null;
     }
   }
 }
-
-/**
- * Export singleton instance
- */
-export const cachePersistence = CachePersistenceService.getInstance();

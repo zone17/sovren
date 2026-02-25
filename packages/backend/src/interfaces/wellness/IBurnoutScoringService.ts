@@ -4,7 +4,7 @@
  * EPIC-007: Creator Wellness System
  */
 
-import type { BurnoutRiskScore, SensitivityLevel } from '@sovren/shared/types/wellness';
+import type { BurnoutRiskScore, SensitivityLevel } from '@shared/types/wellness';
 
 export interface IBurnoutScoringService {
   calculateScore(creatorId: string): Promise<BurnoutRiskScore>;

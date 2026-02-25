@@ -102,7 +102,7 @@ describe('AlertsFeed', () => {
     render(<AlertsFeed />, { wrapper: createWrapper() });
 
     fireEvent.click(screen.getByText('reviewed'));
-    expect(mockUseAlerts).toHaveBeenCalledWith('reviewed', 1, 20);
+    expect(mockUseAlerts).toHaveBeenCalledWith('reviewed', 1);
   });
 
   it('renders all status tab options', () => {

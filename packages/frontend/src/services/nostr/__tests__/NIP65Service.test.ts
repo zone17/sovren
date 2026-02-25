@@ -1,12 +1,12 @@
 /**
- * 🧪 ELITE TESTS: NIP-65 Relay List Metadata Service
+ * NIP-65 Relay List Metadata Service Tests
  * US-319: NIP-65 Implementation Tests
  *
  * Comprehensive test suite for NIP-65 relay list functionality
  * Target: 95%+ code coverage
  */
 
-
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools/pure';
 import { NIP65Service } from '../NIP65Service';
 import { KeyManagementService } from '../KeyManagementService';
@@ -25,23 +25,26 @@ describe('NIP65Service', () => {
   let service: NIP65Service;
   let keyManagement: KeyManagementService;
   let relayPool: RelayPoolManager;
-  let testPrivateKey: string;
+  let testKeyBytes: Uint8Array;
   let testPublicKey: string;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     // Reset mocks
     vi.clearAllMocks();
 
     // Generate test keys
-    const testKeyBytes = generateSecretKey();
-    testPrivateKey = Array.from(testKeyBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    testKeyBytes = generateSecretKey();
     testPublicKey = getPublicKey(testKeyBytes);
 
-    // Setup mocks
+    // Setup mocks.
+    // NIP65Service.publishRelayList calls finalizeEvent(event, privKey) from nostr-tools/pure.
+    // finalizeEvent requires privKey to be a Uint8Array (not a hex string), so we return
+    // the raw key bytes from getPrivateKey to match what finalizeEvent expects.
     keyManagement = KeyManagementService.getInstance();
     relayPool = RelayPoolManager.getInstance();
 
-    (keyManagement.getPrivateKey as any).mockResolvedValue(testPrivateKey);
+    (keyManagement.getPrivateKey as any).mockResolvedValue(testKeyBytes);
     (keyManagement.getPublicKey as any).mockResolvedValue(testPublicKey);
     (relayPool.publishEvent as any).mockResolvedValue({
       success: true,
@@ -55,6 +58,7 @@ describe('NIP65Service', () => {
 
   afterEach(() => {
     service.clearCache();
+    vi.useRealTimers();
   });
 
   describe('getInstance', () => {
@@ -136,13 +140,14 @@ describe('NIP65Service', () => {
     });
 
     it('should use provided private key', async () => {
+      // NIP65Service.publishRelayList passes the private key directly to finalizeEvent,
+      // which requires a Uint8Array. Provide raw key bytes as the custom private key.
       const customKeyBytes = generateSecretKey();
-      const customPrivateKey = Array.from(customKeyBytes).map(b => b.toString(16).padStart(2, '0')).join('');
       const relays: RelayMetadata[] = [
         { url: 'wss://relay.damus.io', read: true, write: true },
       ];
 
-      await service.publishRelayList(relays, customPrivateKey);
+      await service.publishRelayList(relays, customKeyBytes as unknown as string);
 
       // Should not call KeyManagement for private key
       expect((keyManagement.getPrivateKey as any)).not.toHaveBeenCalled();
@@ -316,7 +321,9 @@ describe('NIP65Service', () => {
         return 'sub-id';
       });
 
-      const relayList = await service.fetchRelayList(testPublicKey);
+      const promise = service.fetchRelayList(testPublicKey);
+      await vi.advanceTimersByTimeAsync(10100);
+      const relayList = await promise;
 
       expect(relayList).not.toBeNull();
       expect(relayList?.relays).toHaveLength(1);
@@ -340,7 +347,9 @@ describe('NIP65Service', () => {
       });
 
       // First fetch (from network)
-      const relayList1 = await service.fetchRelayList(testPublicKey);
+      const promise1 = service.fetchRelayList(testPublicKey);
+      await vi.advanceTimersByTimeAsync(10100);
+      const relayList1 = await promise1;
 
       // Second fetch (from cache)
       (relayPool.subscribe as any).mockClear();
@@ -353,9 +362,11 @@ describe('NIP65Service', () => {
     it('should return default relays if none found', async () => {
       (relayPool.subscribe as any).mockImplementation(() => 'sub-id');
 
-      const relayList = await service.fetchRelayList(testPublicKey, {
+      const promise = service.fetchRelayList(testPublicKey, {
         includeDefaults: true,
       });
+      await vi.advanceTimersByTimeAsync(10100);
+      const relayList = await promise;
 
       expect(relayList).not.toBeNull();
       expect(relayList?.relays.length).toBeGreaterThan(0);
@@ -364,9 +375,11 @@ describe('NIP65Service', () => {
     it('should return null if no relays found and defaults disabled', async () => {
       (relayPool.subscribe as any).mockImplementation(() => 'sub-id');
 
-      const relayList = await service.fetchRelayList(testPublicKey, {
+      const promise = service.fetchRelayList(testPublicKey, {
         includeDefaults: false,
       });
+      await vi.advanceTimersByTimeAsync(10100);
+      const relayList = await promise;
 
       expect(relayList).toBeNull();
     });
@@ -400,7 +413,9 @@ describe('NIP65Service', () => {
         return 'sub-id';
       });
 
-      const relayList = await service.fetchRelayList(testPublicKey);
+      const promise = service.fetchRelayList(testPublicKey);
+      await vi.advanceTimersByTimeAsync(10100);
+      const relayList = await promise;
 
       expect(relayList?.eventId).toBe('new-id');
       expect(relayList?.relays[0].url).toBe('wss://new.relay.com');
@@ -415,7 +430,9 @@ describe('NIP65Service', () => {
 
       (relayPool.subscribe as any).mockImplementation(() => 'sub-id');
 
-      const event = await service.updateRelayPreferences(changes);
+      const promise = service.updateRelayPreferences(changes);
+      await vi.advanceTimersByTimeAsync(10100);
+      const event = await promise;
 
       expect(event.tags).toContainEqual(['r', 'wss://new.relay.com']);
     });
@@ -440,7 +457,9 @@ describe('NIP65Service', () => {
         { url: 'wss://relay.damus.io', read: true, write: false },
       ];
 
-      const event = await service.updateRelayPreferences(changes);
+      const promise = service.updateRelayPreferences(changes);
+      await vi.advanceTimersByTimeAsync(10100);
+      const event = await promise;
 
       expect(event.tags).toContainEqual(['r', 'wss://relay.damus.io', 'read']);
     });
@@ -468,7 +487,9 @@ describe('NIP65Service', () => {
         { url: 'wss://relay.damus.io', remove: true },
       ];
 
-      const event = await service.updateRelayPreferences(changes);
+      const promise = service.updateRelayPreferences(changes);
+      await vi.advanceTimersByTimeAsync(10100);
+      const event = await promise;
 
       expect(event.tags).not.toContainEqual(['r', 'wss://relay.damus.io']);
       expect(event.tags).toContainEqual(['r', 'wss://nos.lol']);
@@ -496,7 +517,9 @@ describe('NIP65Service', () => {
         return 'sub-id';
       });
 
-      const readRelays = await service.getReadRelays(testPublicKey);
+      const promise = service.getReadRelays(testPublicKey);
+      await vi.advanceTimersByTimeAsync(10100);
+      const readRelays = await promise;
 
       expect(readRelays).toContain('wss://relay1.com');
       expect(readRelays).toContain('wss://relay2.com');
@@ -525,7 +548,9 @@ describe('NIP65Service', () => {
         return 'sub-id';
       });
 
-      const writeRelays = await service.getWriteRelays(testPublicKey);
+      const promise = service.getWriteRelays(testPublicKey);
+      await vi.advanceTimersByTimeAsync(10100);
+      const writeRelays = await promise;
 
       expect(writeRelays).toContain('wss://relay1.com');
       expect(writeRelays).not.toContain('wss://relay2.com');
@@ -551,7 +576,9 @@ describe('NIP65Service', () => {
       });
 
       // Fetch and cache
-      await service.fetchRelayList(testPublicKey);
+      const promise1 = service.fetchRelayList(testPublicKey);
+      await vi.advanceTimersByTimeAsync(10100);
+      await promise1;
 
       // Clear cache
       service.clearCache(testPublicKey);
@@ -563,7 +590,9 @@ describe('NIP65Service', () => {
         return 'sub-id';
       });
 
-      await service.fetchRelayList(testPublicKey);
+      const promise2 = service.fetchRelayList(testPublicKey);
+      await vi.advanceTimersByTimeAsync(10100);
+      await promise2;
 
       expect((relayPool.subscribe as any)).toHaveBeenCalled();
     });

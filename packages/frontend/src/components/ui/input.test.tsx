@@ -1,1 +1,31 @@
-import "@testing-library/jest-dom"; import { render, screen } from "@testing-library/react"; import { Input } from "./input"; describe("Input Component", () => { it("renders correctly", () => { render(<Input placeholder="test" />); expect(screen.getByRole("textbox")).toBeInTheDocument(); }); it("lightning variant", () => { render(<Input variant="lightning" />); expect(screen.getByRole("textbox")).toHaveClass("border-[#f7931a]"); }); it("sovereign variant", () => { render(<Input variant="sovereign" />); expect(screen.getByRole("textbox")).toHaveClass("border-[#6366f1]"); }); it("error state", () => { render(<Input error="Test error" />); expect(screen.getByText("Test error")).toBeInTheDocument(); }); it("success state", () => { render(<Input success="Success" />); expect(screen.getByText("Success")).toBeInTheDocument(); }); });
+import "@testing-library/jest-dom";
+import { render, screen } from "@testing-library/react";
+import { Input } from "./input";
+
+describe("Input Component", () => {
+  it("renders correctly", () => {
+    render(<Input placeholder="test" />);
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+  });
+
+  it("has default styling classes", () => {
+    render(<Input />);
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveClass("border-input");
+  });
+
+  it("applies custom className", () => {
+    render(<Input className="custom-class" />);
+    expect(screen.getByRole("textbox")).toHaveClass("custom-class");
+  });
+
+  it("forwards type attribute", () => {
+    render(<Input type="email" />);
+    expect(screen.getByRole("textbox")).toHaveAttribute("type", "email");
+  });
+
+  it("handles disabled state", () => {
+    render(<Input disabled />);
+    expect(screen.getByRole("textbox")).toBeDisabled();
+  });
+});

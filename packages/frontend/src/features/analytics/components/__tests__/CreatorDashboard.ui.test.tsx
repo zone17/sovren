@@ -1,9 +1,20 @@
+import React from 'react';
 import { configureStore } from '@reduxjs/toolkit';
 import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../../../auth';
 import { CreatorDashboard } from '../CreatorDashboard';
+
+// Mock auth to avoid provider requirement
+vi.mock('../../../auth', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAuth: () => ({
+    user: { id: 'test-user', email: 'test@example.com', name: 'Test User', role: 'creator' },
+    isLoading: false,
+    isAuthenticated: true,
+  }),
+  useAuthStatus: () => ({ isAuthenticated: true, isLoading: false }),
+}));
 
 // Mock store
 const mockStore = configureStore({
@@ -92,7 +103,7 @@ vi.mock('../../services/mockAnalyticsService', () => ({
     }),
     connectRealTime: vi.fn().mockResolvedValue(undefined),
     subscribeToEvents: vi.fn().mockReturnValue(() => {}),
-    exportAnalytics: jest
+    exportAnalytics: vi
       .fn()
       .mockResolvedValue(new Blob(['{"data": "mock"}'], { type: 'application/json' })),
   },
@@ -101,11 +112,9 @@ vi.mock('../../services/mockAnalyticsService', () => ({
 const renderDashboard = () => {
   return render(
     <BrowserRouter>
-      <AuthProvider>
-        <Provider store={mockStore}>
-          <CreatorDashboard />
-        </Provider>
-      </AuthProvider>
+      <Provider store={mockStore}>
+        <CreatorDashboard />
+      </Provider>
     </BrowserRouter>
   );
 };
@@ -113,57 +122,6 @@ const renderDashboard = () => {
 describe('📊 Creator Analytics Dashboard - Code of Craft Standards', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Reset mocks to ensure proper data flow
-    const { mockAnalyticsService } = require('../../services/mockAnalyticsService');
-    mockAnalyticsService.getCreatorEarnings.mockImplementation(() =>
-      Promise.resolve({
-        period: '30d',
-        start_date: '2025-01-01T00:00:00Z',
-        end_date: '2025-01-31T23:59:59Z',
-        lightning: {
-          total_sats: 100000,
-          total_invoices: 50,
-          paid_invoices: 45,
-          success_rate: 90.0,
-          average_payment: 2222,
-          largest_payment: 10000,
-          payment_velocity: 1.5,
-        },
-        content: {
-          total_posts: 25,
-          premium_posts: 10,
-          average_engagement: 85.5,
-          top_performing_content: ['post1', 'post2', 'post3'],
-        },
-        subscribers: {
-          total_count: 1500,
-          new_subscribers: 150,
-          churn_rate: 5.2,
-          retention_rate: 94.8,
-          subscriber_growth: 10.5,
-        },
-        geography: [
-          { country: 'USA', subscriber_count: 800, earnings_sats: 50000 },
-          { country: 'Canada', subscriber_count: 400, earnings_sats: 30000 },
-          { country: 'UK', subscriber_count: 300, earnings_sats: 20000 },
-        ],
-        realtime: {
-          active_supporters: 25,
-          pending_payments: 3,
-          last_payment_time: '2025-01-15T12:00:00Z',
-          current_session_earnings: 2500,
-        },
-      })
-    );
-
-    mockAnalyticsService.getChartData.mockImplementation(() =>
-      Promise.resolve({
-        earnings_over_time: [],
-        subscriber_growth: [],
-        content_performance: [],
-      })
-    );
   });
 
   describe('🎨 Modern Component Usage', () => {

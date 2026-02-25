@@ -3,7 +3,7 @@
  * EPIC-009: Multi-Platform Hub
  */
 
-import type { PlatformStatus, SupportedPlatform } from '@sovren/shared/types/distribution';
+import type { PlatformStatus, SupportedPlatform } from '@shared/types/distribution';
 import type { IPlatformAdapter } from '../../services/distribution/adapters/IPlatformAdapter';
 
 export interface IPlatformConnectionService {

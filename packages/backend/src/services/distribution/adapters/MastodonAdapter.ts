@@ -9,7 +9,7 @@ import type {
   PublishResult,
   ContentConstraints,
   FormattedContent,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 import type { PlatformAdapterConfig } from './IPlatformAdapter';
 import { BasePlatformAdapter } from './BasePlatformAdapter';
 

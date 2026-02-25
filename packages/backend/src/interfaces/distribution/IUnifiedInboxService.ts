@@ -7,7 +7,7 @@ import type {
   AllPlatform,
   InboxMessage,
   DistributionPagination,
-} from '@sovren/shared/types/distribution';
+} from '@shared/types/distribution';
 
 export interface InboxQuery {
   platform: AllPlatform | 'all';
