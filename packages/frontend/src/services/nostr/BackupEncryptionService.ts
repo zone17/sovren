@@ -54,9 +54,7 @@ export class BackupEncryptionService {
     // Validate password strength
     const strength = this.validatePasswordStrength(password);
     if (!strength.valid) {
-      throw new Error(
-        `Password too weak. Requirements: ${strength.feedback.join(', ')}`
-      );
+      throw new Error(`Password too weak. Requirements: ${strength.feedback.join(', ')}`);
     }
 
     try {
@@ -153,21 +151,15 @@ export class BackupEncryptionService {
   /**
    * Derive encryption key from password using PBKDF2
    */
-  private async deriveKey(
-    password: string,
-    salt: Uint8Array | ArrayBuffer
-  ): Promise<CryptoKey> {
+  private async deriveKey(password: string, salt: Uint8Array | ArrayBuffer): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
 
     // Import password as key material
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      passwordBuffer,
-      'PBKDF2',
-      false,
-      ['deriveBits', 'deriveKey']
-    );
+    const keyMaterial = await crypto.subtle.importKey('raw', passwordBuffer, 'PBKDF2', false, [
+      'deriveBits',
+      'deriveKey',
+    ]);
 
     // Derive key using PBKDF2
     return await crypto.subtle.deriveKey(
@@ -196,7 +188,7 @@ export class BackupEncryptionService {
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumber: /[0-9]/.test(password),
-      hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasSpecial: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     };
 
     const feedback: string[] = [];
@@ -261,7 +253,7 @@ export class BackupEncryptionService {
     if (/[a-z]/.test(password)) characterSpace += 26;
     if (/[A-Z]/.test(password)) characterSpace += 26;
     if (/[0-9]/.test(password)) characterSpace += 10;
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) characterSpace += 32;
+    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) characterSpace += 32;
 
     // Entropy = log2(characterSpace^length)
     return Math.log2(Math.pow(characterSpace, password.length));

@@ -1,14 +1,7 @@
 import { createHash } from 'crypto';
 import { finalizeEvent, generateSecretKey, getPublicKey, nip19, verifyEvent } from 'nostr-tools';
 import { z } from 'zod';
-import {
-  NostrEnhancedKeyPairSchema,
-  NostrKeyBackupMethod,
-  NostrHardwareWallet,
-  NostrKeyUsageAnalytics,
-  NostrKeyRecovery,
-  NostrKeySchemas,
-} from '@shared/types/nostr/keys';
+import { NostrHardwareWallet, NostrKeyUsageAnalytics } from '@shared/types/nostr/keys';
 import type { NostrEnhancedKeyPair } from '@shared/types/nostr/keys';
 
 // WebHID API type declarations
@@ -462,7 +455,7 @@ export class NOSTRKeyManagementService {
     return Math.min(256, totalEntropy % 256);
   }
 
-  private async createMnemonicBackup(password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
+  private async createMnemonicBackup(_password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
     return {
       method: 'mnemonic',
       encrypted_data: 'mnemonic_data_encrypted',
@@ -478,7 +471,7 @@ export class NOSTRKeyManagementService {
     };
   }
 
-  private async createFileBackup(password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
+  private async createFileBackup(_password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
     return {
       method: 'file',
       encrypted_data: 'file_backup_encrypted',
@@ -486,7 +479,7 @@ export class NOSTRKeyManagementService {
     };
   }
 
-  private async createQRBackup(password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
+  private async createQRBackup(_password?: string): Promise<Omit<KeyBackup, 'created_at'>> {
     return {
       method: 'qr',
       encrypted_data: 'qr_backup_encoded',
@@ -503,7 +496,7 @@ export class NOSTRKeyManagementService {
     };
   }
 
-  private async checkNostrSupport(device: NostrHIDDevice): Promise<boolean> {
+  private async checkNostrSupport(_device: NostrHIDDevice): Promise<boolean> {
     // Device-specific NOSTR support checking would be implemented here
     return true; // Mock implementation
   }

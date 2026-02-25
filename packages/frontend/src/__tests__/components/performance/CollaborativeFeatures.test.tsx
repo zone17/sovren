@@ -68,7 +68,7 @@ interface StubProps {
   onOperationApplied?: (operation: any) => void;
 }
 
-const { StubCollaborativeFeatures, useFeatureFlags } = vi.hoisted(() => {
+const { StubCollaborativeFeatures } = vi.hoisted(() => {
   const useFeatureFlags = () => ({
     flags: {
       enableCollaborativeFeatures: true,
@@ -76,232 +76,238 @@ const { StubCollaborativeFeatures, useFeatureFlags } = vi.hoisted(() => {
   });
 
   const StubCollaborativeFeatures: React.FC<StubProps> = ({
-  userId,
-  documentId,
-  initialContent = '',
-  userPermission = 'edit',
-  className = '',
-  onContentChange,
-  onOperationApplied,
-}) => {
-  const { flags } = useFeatureFlags();
-  const isEnabled = flags.enableCollaborativeFeatures;
+    userId,
+    documentId,
+    initialContent = '',
+    userPermission = 'edit',
+    className = '',
+    onContentChange,
+    onOperationApplied,
+  }) => {
+    const { flags } = useFeatureFlags();
+    const isEnabled = flags.enableCollaborativeFeatures;
 
-  const [isConnected, setIsConnected] = useState(false);
-  const [content, setContent] = useState(initialContent);
-  const [collaborators, setCollaborators] = useState<any[]>([]);
-  const [comments, setComments] = useState<any[]>([]);
-  const [showComments, setShowComments] = useState(false);
-  const [selectedText, setSelectedText] = useState<{ start: number; end: number } | null>(null);
-  const [newComment, setNewComment] = useState('');
-  const [stats, setStats] = useState({
-    totalOperations: 0,
-    conflictsResolved: 0,
-    averageLatency: 0,
-    syncAccuracy: 100,
-    documentVersion: 1,
-  });
-  const wsRef = useRef<any>(null);
+    const [isConnected, setIsConnected] = useState(false);
+    const [content, setContent] = useState(initialContent);
+    const [collaborators, setCollaborators] = useState<any[]>([]);
+    const [comments, setComments] = useState<any[]>([]);
+    const [showComments, setShowComments] = useState(false);
+    const [selectedText, setSelectedText] = useState<{ start: number; end: number } | null>(null);
+    const [newComment, setNewComment] = useState('');
+    const [stats, setStats] = useState({
+      totalOperations: 0,
+      conflictsResolved: 0,
+      averageLatency: 0,
+      syncAccuracy: 100,
+      documentVersion: 1,
+    });
+    const wsRef = useRef<any>(null);
 
-  useEffect(() => {
-    if (!isEnabled) return;
+    useEffect(() => {
+      if (!isEnabled) return;
 
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}/collaboration/realtime?userId=${userId}&documentId=${documentId}`;
-    const ws = new (global.WebSocket as any)(wsUrl);
-    wsRef.current = ws;
+      const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}/collaboration/realtime?userId=${userId}&documentId=${documentId}`;
+      const ws = new (global.WebSocket as any)(wsUrl);
+      wsRef.current = ws;
 
-    ws.onopen = () => {
-      setIsConnected(true);
-      ws.send(JSON.stringify({ type: 'request_document_state' }));
-      // Start heartbeat
-      const heartbeatTimer = setInterval(() => {
-        ws.send(JSON.stringify({ type: 'heartbeat', timestamp: Date.now() }));
-      }, 30000);
-      ws._heartbeatTimer = heartbeatTimer;
-    };
+      ws.onopen = () => {
+        setIsConnected(true);
+        ws.send(JSON.stringify({ type: 'request_document_state' }));
+        // Start heartbeat
+        const heartbeatTimer = setInterval(() => {
+          ws.send(JSON.stringify({ type: 'heartbeat', timestamp: Date.now() }));
+        }, 30000);
+        ws._heartbeatTimer = heartbeatTimer;
+      };
 
-    ws.onmessage = (event: any) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'presence_update') {
-          setCollaborators((prev) => {
-            const existing = prev.find((c) => c.id === msg.data.id);
-            if (existing) return prev.map((c) => (c.id === msg.data.id ? msg.data : c));
-            return [...prev, msg.data];
-          });
-        } else if (msg.type === 'operation') {
-          const op = msg.data;
-          if (!op.type || !op.documentId || !op.userId) {
-            console.error('Invalid operation data:', new Error('Missing required fields'));
-            return;
+      ws.onmessage = (event: any) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'presence_update') {
+            setCollaborators((prev) => {
+              const existing = prev.find((c) => c.id === msg.data.id);
+              if (existing) return prev.map((c) => (c.id === msg.data.id ? msg.data : c));
+              return [...prev, msg.data];
+            });
+          } else if (msg.type === 'operation') {
+            const op = msg.data;
+            if (!op.type || !op.documentId || !op.userId) {
+              console.error('Invalid operation data:', new Error('Missing required fields'));
+              return;
+            }
+            if (op.type === 'insert' && op.content) {
+              setContent(
+                (prev) => prev.slice(0, op.position) + op.content + prev.slice(op.position)
+              );
+            } else if (op.type === 'delete') {
+              setContent(
+                (prev) => prev.slice(0, op.position) + prev.slice(op.position + (op.length || 1))
+              );
+            }
+            setStats((prev) => ({ ...prev, totalOperations: prev.totalOperations + 1 }));
+            onOperationApplied?.(op);
+          } else if (msg.type === 'comment') {
+            setComments((prev) => [...prev, msg.data]);
+          } else if (msg.type === 'document_state') {
+            const doc = msg.data;
+            setContent(doc.content);
+            setCollaborators(doc.collaborators || []);
+            setComments(doc.comments || []);
+            setStats((prev) => ({ ...prev, documentVersion: doc.version || 1 }));
+          } else if (msg.type === 'cursor_update') {
+            // process cursor updates silently
+          } else if (msg.type === 'permission_update') {
+            // process permission updates silently
+          } else if (msg.type === 'heartbeat') {
+            // process heartbeat silently
+          } else if (msg.type === 'error') {
+            // process error silently
           }
-          if (op.type === 'insert' && op.content) {
-            setContent((prev) => prev.slice(0, op.position) + op.content + prev.slice(op.position));
-          } else if (op.type === 'delete') {
-            setContent((prev) => prev.slice(0, op.position) + prev.slice(op.position + (op.length || 1)));
-          }
-          setStats((prev) => ({ ...prev, totalOperations: prev.totalOperations + 1 }));
-          onOperationApplied?.(op);
-        } else if (msg.type === 'comment') {
-          setComments((prev) => [...prev, msg.data]);
-        } else if (msg.type === 'document_state') {
-          const doc = msg.data;
-          setContent(doc.content);
-          setCollaborators(doc.collaborators || []);
-          setComments(doc.comments || []);
-          setStats((prev) => ({ ...prev, documentVersion: doc.version || 1 }));
-        } else if (msg.type === 'cursor_update') {
-          // process cursor updates silently
-        } else if (msg.type === 'permission_update') {
-          // process permission updates silently
-        } else if (msg.type === 'heartbeat') {
-          // process heartbeat silently
-        } else if (msg.type === 'error') {
-          // process error silently
+        } catch (err) {
+          // ignore parse errors
         }
-      } catch (err) {
-        // ignore parse errors
+      };
+
+      ws.onerror = () => {
+        setIsConnected(false);
+      };
+
+      ws.onclose = () => {
+        setIsConnected(false);
+      };
+
+      return () => {
+        clearInterval(ws._heartbeatTimer);
+        clearTimeout(ws._cursorTimeout);
+        ws.close(1000, 'User disconnect');
+      };
+    }, [isEnabled, userId, documentId]);
+
+    if (!isEnabled) return null;
+
+    const canEdit = userPermission === 'edit' || userPermission === 'admin';
+
+    const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newContent = e.target.value;
+      setContent(newContent);
+      onContentChange?.(newContent);
+      if (wsRef.current && isConnected) {
+        wsRef.current.send(
+          JSON.stringify({ type: 'operation', data: { type: 'insert', content: newContent } })
+        );
       }
     };
 
-    ws.onerror = () => {
-      setIsConnected(false);
-    };
-
-    ws.onclose = () => {
-      setIsConnected(false);
-    };
-
-    return () => {
-      clearInterval(ws._heartbeatTimer);
-      clearTimeout(ws._cursorTimeout);
-      ws.close(1000, 'User disconnect');
-    };
-  }, [isEnabled, userId, documentId]);
-
-  if (!isEnabled) return null;
-
-  const canEdit = userPermission === 'edit' || userPermission === 'admin';
-
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setContent(newContent);
-    onContentChange?.(newContent);
-    if (wsRef.current && isConnected) {
-      wsRef.current.send(JSON.stringify({ type: 'operation', data: { type: 'insert', content: newContent } }));
-    }
-  };
-
-  const handleSelect = () => {
-    const textarea = document.querySelector('textarea');
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      if (start !== end) {
-        setSelectedText({ start, end });
-        // Throttled cursor update
-        clearTimeout((wsRef.current as any)?._cursorTimeout);
-        if (wsRef.current) {
-          (wsRef.current as any)._cursorTimeout = setTimeout(() => {
-            wsRef.current?.send(JSON.stringify({ type: 'cursor_update', data: { start, end } }));
-          }, 100);
+    const handleSelect = () => {
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        if (start !== end) {
+          setSelectedText({ start, end });
+          // Throttled cursor update
+          clearTimeout((wsRef.current as any)?._cursorTimeout);
+          if (wsRef.current) {
+            (wsRef.current as any)._cursorTimeout = setTimeout(() => {
+              wsRef.current?.send(JSON.stringify({ type: 'cursor_update', data: { start, end } }));
+            }, 100);
+          }
         }
       }
-    }
-  };
-
-  const handleAddComment = () => {
-    if (!newComment.trim() || !selectedText || !wsRef.current) return;
-    const comment = {
-      id: `comment-${Date.now()}`,
-      documentId,
-      userId,
-      content: newComment,
-      position: selectedText.start,
-      range: selectedText,
-      timestamp: new Date().toISOString(),
-      resolved: false,
-      replies: [],
     };
-    wsRef.current.send(JSON.stringify({ type: 'comment', data: comment }));
-    setNewComment('');
-  };
 
-  return (
-    <div className={`collaborative-features ${className}`}>
-      <div className="header">
-        <h2>Collaborative Editing</h2>
-        <span className="badge">v{stats.documentVersion}</span>
-        <span className="connection-status">{isConnected ? 'Connected' : 'Disconnected'}</span>
-      </div>
+    const handleAddComment = () => {
+      if (!newComment.trim() || !selectedText || !wsRef.current) return;
+      const comment = {
+        id: `comment-${Date.now()}`,
+        documentId,
+        userId,
+        content: newComment,
+        position: selectedText.start,
+        range: selectedText,
+        timestamp: new Date().toISOString(),
+        resolved: false,
+        replies: [],
+      };
+      wsRef.current.send(JSON.stringify({ type: 'comment', data: comment }));
+      setNewComment('');
+    };
 
-      <div className="collaborators">
-        <h3>Active Collaborators ({collaborators.length})</h3>
-        {collaborators.map((c) => (
-          <div key={c.id} className="collaborator" title={c.name}>
-            {c.name}
-          </div>
-        ))}
-      </div>
-
-      <div className="editor-container">
-        <h3>Document Editor</h3>
-        <textarea
-          placeholder="Start typing to collaborate..."
-          value={content}
-          onChange={handleContentChange}
-          onSelect={handleSelect}
-          disabled={!canEdit}
-          aria-label="Document editor"
-        />
-      </div>
-
-      {selectedText && canEdit && (
-        <div className="comment-input">
-          <input
-            placeholder="Add a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            disabled={!canEdit}
-          />
-          <button onClick={handleAddComment} aria-label="Add comment">
-            <span className="icon" />
-          </button>
+    return (
+      <div className={`collaborative-features ${className}`}>
+        <div className="header">
+          <h2>Collaborative Editing</h2>
+          <span className="badge">v{stats.documentVersion}</span>
+          <span className="connection-status">{isConnected ? 'Connected' : 'Disconnected'}</span>
         </div>
-      )}
 
-      <button
-        onClick={() => setShowComments(!showComments)}
-        aria-label={`Comments (${comments.length})`}
-      >
-        Comments ({comments.length})
-      </button>
-
-      {showComments && (
-        <div className="comments-panel">
-          <h3>Comments</h3>
-          {comments.map((c) => (
-            <div key={c.id} className="comment">
-              <span className="author">{c.userId}</span>
-              <p>{c.content}</p>
+        <div className="collaborators">
+          <h3>Active Collaborators ({collaborators.length})</h3>
+          {collaborators.map((c) => (
+            <div key={c.id} className="collaborator" title={c.name}>
+              {c.name}
             </div>
           ))}
         </div>
-      )}
 
-      <div className="stats">
-        <h3>Collaboration Stats</h3>
-        <div>Operations</div>
-        <span>{stats.totalOperations}</span>
-        <div>Conflicts Resolved</div>
-        <span>{stats.conflictsResolved}</span>
-        <div>Avg Latency</div>
-        <span>{stats.averageLatency}ms</span>
-        <div>Sync Accuracy</div>
-        <span>{stats.syncAccuracy}%</span>
+        <div className="editor-container">
+          <h3>Document Editor</h3>
+          <textarea
+            placeholder="Start typing to collaborate..."
+            value={content}
+            onChange={handleContentChange}
+            onSelect={handleSelect}
+            disabled={!canEdit}
+            aria-label="Document editor"
+          />
+        </div>
+
+        {selectedText && canEdit && (
+          <div className="comment-input">
+            <input
+              placeholder="Add a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              disabled={!canEdit}
+            />
+            <button onClick={handleAddComment} aria-label="Add comment">
+              <span className="icon" />
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowComments(!showComments)}
+          aria-label={`Comments (${comments.length})`}
+        >
+          Comments ({comments.length})
+        </button>
+
+        {showComments && (
+          <div className="comments-panel">
+            <h3>Comments</h3>
+            {comments.map((c) => (
+              <div key={c.id} className="comment">
+                <span className="author">{c.userId}</span>
+                <p>{c.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="stats">
+          <h3>Collaboration Stats</h3>
+          <div>Operations</div>
+          <span>{stats.totalOperations}</span>
+          <div>Conflicts Resolved</div>
+          <span>{stats.conflictsResolved}</span>
+          <div>Avg Latency</div>
+          <span>{stats.averageLatency}ms</span>
+          <div>Sync Accuracy</div>
+          <span>{stats.syncAccuracy}%</span>
+        </div>
       </div>
-    </div>
-  );
+    );
   };
   return { StubCollaborativeFeatures, useFeatureFlags };
 });
@@ -392,12 +398,7 @@ describe('CollaborativeFeatures Component', () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       const onContentChange = vi.fn();
 
-      render(
-        <CollaborativeFeatures
-          {...defaultProps}
-          onContentChange={onContentChange}
-        />
-      );
+      render(<CollaborativeFeatures {...defaultProps} onContentChange={onContentChange} />);
       await act(async () => {}); // flush React effects so ws.onopen is assigned
 
       // Simulate connection
@@ -432,19 +433,12 @@ describe('CollaborativeFeatures Component', () => {
 
       await waitFor(() => {
         const mockWs = (WebSocket as any).mock.results[0].value;
-        expect(mockWs.send).toHaveBeenCalledWith(
-          expect.stringContaining('operation')
-        );
+        expect(mockWs.send).toHaveBeenCalledWith(expect.stringContaining('operation'));
       });
     });
 
     test('disables editing for view-only permission', () => {
-      render(
-        <CollaborativeFeatures
-          {...defaultProps}
-          userPermission="view"
-        />
-      );
+      render(<CollaborativeFeatures {...defaultProps} userPermission="view" />);
 
       const editor = screen.getByDisplayValue('Initial document content');
       expect(editor).toBeDisabled();
@@ -455,12 +449,7 @@ describe('CollaborativeFeatures Component', () => {
     test('receives and applies operations from other users', async () => {
       const onOperationApplied = vi.fn();
 
-      render(
-        <CollaborativeFeatures
-          {...defaultProps}
-          onOperationApplied={onOperationApplied}
-        />
-      );
+      render(<CollaborativeFeatures {...defaultProps} onOperationApplied={onOperationApplied} />);
       await act(async () => {}); // flush React effects so ws.onopen is assigned
 
       const operation = {
@@ -613,9 +602,7 @@ describe('CollaborativeFeatures Component', () => {
 
       await waitFor(() => {
         const mockWs = (WebSocket as any).mock.results[0].value;
-        expect(mockWs.send).toHaveBeenCalledWith(
-          expect.stringContaining('cursor_update')
-        );
+        expect(mockWs.send).toHaveBeenCalledWith(expect.stringContaining('cursor_update'));
       });
     });
   });
@@ -665,9 +652,7 @@ describe('CollaborativeFeatures Component', () => {
 
       await waitFor(() => {
         const mockWs = (WebSocket as any).mock.results[0].value;
-        expect(mockWs.send).toHaveBeenCalledWith(
-          expect.stringContaining('comment')
-        );
+        expect(mockWs.send).toHaveBeenCalledWith(expect.stringContaining('comment'));
       });
     });
 
@@ -709,12 +694,7 @@ describe('CollaborativeFeatures Component', () => {
     test('prevents commenting with view permission', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
-      render(
-        <CollaborativeFeatures
-          {...defaultProps}
-          userPermission="view"
-        />
-      );
+      render(<CollaborativeFeatures {...defaultProps} userPermission="view" />);
 
       const editor = screen.getByDisplayValue('Initial document content');
 
@@ -745,9 +725,7 @@ describe('CollaborativeFeatures Component', () => {
 
       await waitFor(() => {
         const mockWs = (WebSocket as any).mock.results[0].value;
-        expect(mockWs.send).toHaveBeenCalledWith(
-          expect.stringContaining('request_document_state')
-        );
+        expect(mockWs.send).toHaveBeenCalledWith(expect.stringContaining('request_document_state'));
       });
     });
 
@@ -815,9 +793,7 @@ describe('CollaborativeFeatures Component', () => {
       expect(screen.getByDisplayValue('Initial document content')).not.toBeDisabled();
 
       // Test view permission
-      rerender(
-        <CollaborativeFeatures {...defaultProps} userPermission="view" />
-      );
+      rerender(<CollaborativeFeatures {...defaultProps} userPermission="view" />);
 
       expect(screen.getByDisplayValue('Initial document content')).toBeDisabled();
     });
@@ -899,10 +875,7 @@ describe('CollaborativeFeatures Component', () => {
       });
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'Invalid operation data:',
-          expect.any(Error)
-        );
+        expect(consoleSpy).toHaveBeenCalledWith('Invalid operation data:', expect.any(Error));
       });
 
       consoleSpy.mockRestore();
@@ -931,7 +904,10 @@ describe('CollaborativeFeatures Component', () => {
     test('has proper ARIA labels and roles', () => {
       render(<CollaborativeFeatures {...defaultProps} />);
 
-      expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', 'Start typing to collaborate...');
+      expect(screen.getByRole('textbox')).toHaveAttribute(
+        'placeholder',
+        'Start typing to collaborate...'
+      );
       expect(screen.getByRole('button', { name: /comments/i })).toBeInTheDocument();
     });
 
@@ -978,9 +954,7 @@ describe('CollaborativeFeatures Component', () => {
 
       await waitFor(() => {
         const mockWs = (WebSocket as any).mock.results[0].value;
-        expect(mockWs.send).toHaveBeenCalledWith(
-          expect.stringContaining('heartbeat')
-        );
+        expect(mockWs.send).toHaveBeenCalledWith(expect.stringContaining('heartbeat'));
       });
     });
 

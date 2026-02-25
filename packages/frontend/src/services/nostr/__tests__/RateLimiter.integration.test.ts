@@ -13,11 +13,7 @@ import { EventPublisherService } from '../EventPublisherService';
 import { SubscriptionManagerService } from '../SubscriptionManagerService';
 import { KeyManagementService } from '../KeyManagementService';
 import { RelayPoolManager } from '../RelayPoolManager';
-import {
-  RateLimitOperation,
-  RequestPriority,
-  type RateLimitDashboardData,
-} from '../types/rate-limit';
+import { RateLimitOperation, RequestPriority } from '../types/rate-limit';
 import type { NostrEvent, EventTemplate } from '@shared/types/nostr';
 
 // Mock dependencies
@@ -62,7 +58,7 @@ describe('RateLimiter Integration Tests', () => {
 
     // Mock key management
     const mockPublicKey = 'a'.repeat(64);
-    const mockPrivateKey = 'b'.repeat(64);
+    // mockPrivateKey not needed — only publicKey used in getActiveKey mock
     vi.spyOn(keyManagement, 'getActiveKey').mockReturnValue({
       keyId: 'test-key',
       publicKey: mockPublicKey,
@@ -128,7 +124,7 @@ describe('RateLimiter Integration Tests', () => {
         eventPublisher.createAndPublish(template),
       ]);
 
-      expect(results.every(r => r.success)).toBe(true);
+      expect(results.every((r) => r.success)).toBe(true);
 
       // 4th should fail with rate limit error (queuing disabled, so throws immediately)
       await expect(eventPublisher.createAndPublish(template)).rejects.toThrow(
@@ -305,7 +301,7 @@ describe('RateLimiter Integration Tests', () => {
     it('should handle rate limit alerts', async () => {
       const alerts: any[] = [];
 
-      rateLimitMonitor.on('alert', alert => {
+      rateLimitMonitor.on('alert', (alert) => {
         alerts.push(alert);
       });
 
@@ -318,7 +314,7 @@ describe('RateLimiter Integration Tests', () => {
       }
 
       // Wait for alert processing
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(alerts.length).toBeGreaterThan(0);
     });
@@ -348,7 +344,7 @@ describe('RateLimiter Integration Tests', () => {
       const results = await Promise.all(requests);
 
       // Should handle all requests immediately (first 10 allowed, rest denied due to limit)
-      const allowed = results.filter(r => r.allowed).length;
+      const allowed = results.filter((r) => r.allowed).length;
       expect(allowed).toBeGreaterThan(0);
 
       // Check metrics
@@ -383,15 +379,14 @@ describe('RateLimiter Integration Tests', () => {
         promises.push(
           rateLimiter.checkLimit({
             operation: RateLimitOperation.QUERY,
-            priority:
-              i % 2 === 0 ? RequestPriority.HIGH : RequestPriority.NORMAL,
+            priority: i % 2 === 0 ? RequestPriority.HIGH : RequestPriority.NORMAL,
           })
         );
       }
 
       // All should eventually complete
       const results = await Promise.all(promises);
-      const allowed = results.filter(r => r.allowed).length;
+      const allowed = results.filter((r) => r.allowed).length;
 
       expect(allowed).toBeGreaterThan(0);
 
@@ -419,13 +414,11 @@ describe('RateLimiter Integration Tests', () => {
       ];
 
       const results = await Promise.all(
-        operations.map(operation =>
-          rateLimiter.checkLimit({ operation, skipQueue: true })
-        )
+        operations.map((operation) => rateLimiter.checkLimit({ operation, skipQueue: true }))
       );
 
       // Most should succeed (within limits)
-      const allowed = results.filter(r => r.allowed).length;
+      const allowed = results.filter((r) => r.allowed).length;
       expect(allowed).toBeGreaterThan(operations.length / 2);
     });
 

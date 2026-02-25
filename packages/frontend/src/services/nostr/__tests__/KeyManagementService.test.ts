@@ -27,11 +27,7 @@ vi.mock('@shared/types/nostr', async (importOriginal) => {
 });
 
 import { KeyManagementService } from '../KeyManagementService';
-import type {
-  NostrEnhancedKeyPair,
-  NostrKeyManagementConfig,
-  NostrBrowserExtension,
-} from '@sovren/shared/types/nostr-key-management';
+import type { NostrKeyManagementConfig } from '@sovren/shared/types/nostr-key-management';
 
 // =========================================================
 // Functional IndexedDB mock for jsdom environment.
@@ -73,17 +69,32 @@ function createIDBMock() {
     if (!persistentStores[storeName]) persistentStores[storeName] = new Map();
     const data = persistentStores[storeName];
     return {
-      put: (value: any) => makeRequest(() => { data.set(value.keyId ?? value.id ?? String(Date.now()), value); return undefined; }),
+      put: (value: any) =>
+        makeRequest(() => {
+          data.set(value.keyId ?? value.id ?? String(Date.now()), value);
+          return undefined;
+        }),
       get: (key: string) => makeRequest(() => data.get(key)),
       getAll: () => makeRequest(() => Array.from(data.values())),
-      delete: (key: string) => makeRequest(() => { data.delete(key); return undefined; }),
-      clear: () => makeRequest(() => { data.clear(); return undefined; }),
+      delete: (key: string) =>
+        makeRequest(() => {
+          data.delete(key);
+          return undefined;
+        }),
+      clear: () =>
+        makeRequest(() => {
+          data.clear();
+          return undefined;
+        }),
     };
   }
 
   const mockDB: any = {
     objectStoreNames: { contains: () => false },
-    createObjectStore: (name: string) => { if (!persistentStores[name]) persistentStores[name] = new Map(); return makeStore(name); },
+    createObjectStore: (name: string) => {
+      if (!persistentStores[name]) persistentStores[name] = new Map();
+      return makeStore(name);
+    },
     transaction: (_storeNames: string[], _mode: string) => ({
       objectStore: (name: string) => makeStore(name),
     }),
@@ -124,12 +135,19 @@ const mockIndexedDB = {
 
 function makeDeleteRequest(): any {
   const req: any = { onsuccess: null, onerror: null, result: undefined };
-  queueMicrotask(() => { if (req.onsuccess) req.onsuccess({ target: req } as any); });
+  queueMicrotask(() => {
+    if (req.onsuccess) req.onsuccess({ target: req } as any);
+  });
   return req;
 }
 
 // Mock AES-GCM CryptoKey returned by generateKey
-const mockCryptoKey = { type: 'secret', algorithm: { name: 'AES-GCM' }, extractable: true, usages: ['encrypt', 'decrypt'] };
+const mockCryptoKey = {
+  type: 'secret',
+  algorithm: { name: 'AES-GCM' },
+  extractable: true,
+  usages: ['encrypt', 'decrypt'],
+};
 
 // Mock WebCrypto API
 const mockCrypto = {
@@ -137,7 +155,9 @@ const mockCrypto = {
     // generateKey must return a CryptoKey — KeyManagementService stores this as this.encryptionKey
     generateKey: vi.fn().mockResolvedValue(mockCryptoKey),
     encrypt: vi.fn().mockResolvedValue(new Uint8Array(32).buffer),
-    decrypt: vi.fn().mockResolvedValue(new TextEncoder().encode(JSON.stringify({ test: 'data' })).buffer),
+    decrypt: vi
+      .fn()
+      .mockResolvedValue(new TextEncoder().encode(JSON.stringify({ test: 'data' })).buffer),
     exportKey: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
     importKey: vi.fn().mockResolvedValue(mockCryptoKey),
     deriveBits: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
@@ -174,7 +194,9 @@ describe('KeyManagementService', () => {
     // Re-apply default mockCrypto return values since vi.clearAllMocks() clears them
     mockCrypto.subtle.generateKey.mockResolvedValue(mockCryptoKey);
     mockCrypto.subtle.encrypt.mockResolvedValue(new Uint8Array(32).buffer);
-    mockCrypto.subtle.decrypt.mockResolvedValue(new TextEncoder().encode(JSON.stringify({ test: 'data' })).buffer);
+    mockCrypto.subtle.decrypt.mockResolvedValue(
+      new TextEncoder().encode(JSON.stringify({ test: 'data' })).buffer
+    );
     mockCrypto.subtle.exportKey.mockResolvedValue(new ArrayBuffer(32));
     mockCrypto.subtle.importKey.mockResolvedValue(mockCryptoKey);
     mockCrypto.subtle.deriveBits.mockResolvedValue(new ArrayBuffer(32));
@@ -192,8 +214,16 @@ describe('KeyManagementService', () => {
     mockIndexedDB.deleteDatabase.mockImplementation(() => makeDeleteRequest());
 
     // Setup global mocks
-    Object.defineProperty(globalThis, 'crypto', { value: mockCrypto as any, writable: true, configurable: true });
-    Object.defineProperty(globalThis, 'indexedDB', { value: mockIndexedDB as any, writable: true, configurable: true });
+    Object.defineProperty(globalThis, 'crypto', {
+      value: mockCrypto as any,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(globalThis, 'indexedDB', {
+      value: mockIndexedDB as any,
+      writable: true,
+      configurable: true,
+    });
 
     // Reset singleton so each test gets a fresh instance with the mocked IDB
     (KeyManagementService as any).instance = null;
@@ -299,7 +329,9 @@ describe('KeyManagementService', () => {
 
       expect(keyPair.name).toBe('Test Key');
       expect(keyPair.description).toBe('Testing key generation');
-      expect(keyPair.keyId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      expect(keyPair.keyId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+      );
       expect(keyPair.created).toBeGreaterThan(0);
     });
 
@@ -317,9 +349,9 @@ describe('KeyManagementService', () => {
       });
       // Freeze the string sources to a single repeating character so they
       // also yield just 1 unique byte each.
-      vi.spyOn(Date, 'now').mockReturnValue(1111111111111);         // '1111111111111' — 1 unique char
+      vi.spyOn(Date, 'now').mockReturnValue(1111111111111); // '1111111111111' — 1 unique char
       vi.spyOn(Math, 'random').mockReturnValue(0.1111111111111111); // '0.1111111111111' — 3 unique chars ('0', '.', '1')
-      vi.spyOn(performance, 'now').mockReturnValue(1111111111111);  // '1111111111111' — 1 unique char
+      vi.spyOn(performance, 'now').mockReturnValue(1111111111111); // '1111111111111' — 1 unique char
 
       // Even with 3 unique chars in Math.random string, total is capped at:
       // 8 + 8 + 24 + 8 = 48 bits — well below the 128 threshold.
@@ -725,8 +757,8 @@ describe('KeyManagementService', () => {
       const keys = await service.listKeys();
 
       expect(keys).toHaveLength(2);
-      expect(keys.map(k => k.name)).toContain('Key 1');
-      expect(keys.map(k => k.name)).toContain('Key 2');
+      expect(keys.map((k) => k.name)).toContain('Key 1');
+      expect(keys.map((k) => k.name)).toContain('Key 2');
     });
 
     it('should delete key by ID', async () => {
@@ -770,7 +802,7 @@ describe('KeyManagementService', () => {
   describe('Error Handling', () => {
     it('should handle corrupt key data gracefully', async () => {
       // Mock corrupt data
-      const result = await service.importKey('corrupt-data').catch(e => e);
+      const result = await service.importKey('corrupt-data').catch((e) => e);
 
       expect(result).toBeInstanceOf(Error);
     });
@@ -831,9 +863,9 @@ describe('KeyManagementService', () => {
 
       await service.markKeyAsCompromised(keyPair.keyId, 'Test compromise');
 
-      await expect(
-        service.signEvent(keyPair.keyId, {} as any)
-      ).rejects.toThrow('Key marked as compromised');
+      await expect(service.signEvent(keyPair.keyId, {} as any)).rejects.toThrow(
+        'Key marked as compromised'
+      );
     });
 
     it('should support security level escalation', async () => {
@@ -874,14 +906,14 @@ describe('KeyManagementService', () => {
     });
 
     it('should handle concurrent operations efficiently', async () => {
-      const operations = Array(10).fill(null).map(() =>
-        service.generateKeyPair()
-      );
+      const operations = Array(10)
+        .fill(null)
+        .map(() => service.generateKeyPair());
 
       const results = await Promise.all(operations);
 
       expect(results).toHaveLength(10);
-      expect(new Set(results.map(r => r.publicKey)).size).toBe(10);
+      expect(new Set(results.map((r) => r.publicKey)).size).toBe(10);
     });
   });
 });

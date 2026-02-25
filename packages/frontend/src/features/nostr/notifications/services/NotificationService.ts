@@ -3,8 +3,6 @@
  * EPIC 003 WAVE 5 - STORY 6: Mentions/Notifications UI
  */
 
-import type { Event as NostrEvent, Filter } from 'nostr-tools';
-import * as nip19 from 'nostr-tools/nip19';
 import {
   Notification,
   NotificationType,
@@ -352,7 +350,9 @@ export class NotificationService {
           cursor.continue();
         } else {
           // Wait for all updates to complete
-          Promise.all(updates.map((r) => new Promise((res) => (r.onsuccess = () => res(undefined)))))
+          Promise.all(
+            updates.map((r) => new Promise((res) => (r.onsuccess = () => res(undefined))))
+          )
             .then(() => {
               // Update state
               const notifications = this.state.notifications.map((n) => ({ ...n, read: true }));
@@ -417,7 +417,9 @@ export class NotificationService {
           deletions.push(store.delete(cursor.primaryKey));
           cursor.continue();
         } else {
-          Promise.all(deletions.map((r) => new Promise((res) => (r.onsuccess = () => res(undefined)))))
+          Promise.all(
+            deletions.map((r) => new Promise((res) => (r.onsuccess = () => res(undefined))))
+          )
             .then(() => {
               // Reload notifications
               this.loadNotifications().then(resolve).catch(reject);

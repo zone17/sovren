@@ -19,7 +19,6 @@ import {
   AnalyticsEvent,
   AnalyticsExport,
   AnalyticsFilters,
-  AnalyticsValidationError,
   CreatorEarnings,
   CreatorPerformanceMetrics,
   LightningPaymentAnalytics,

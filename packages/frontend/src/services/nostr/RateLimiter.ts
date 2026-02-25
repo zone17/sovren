@@ -207,10 +207,7 @@ export class RateLimiter extends EventEmitter {
 
     // Initialize operation buckets
     Object.entries(this.config.operationLimits).forEach(([operation, policy]) => {
-      this.operationBuckets.set(
-        operation as RateLimitOperation,
-        this.createTokenBucket(policy)
-      );
+      this.operationBuckets.set(operation as RateLimitOperation, this.createTokenBucket(policy));
     });
 
     // Start queue processing if enabled
@@ -314,14 +311,12 @@ export class RateLimiter extends EventEmitter {
   /**
    * Check if a request is allowed under rate limits
    */
-  async checkLimit<T = unknown>(
-    options: CheckLimitOptions<T>
-  ): Promise<RateLimitResult> {
+  async checkLimit<T = unknown>(options: CheckLimitOptions<T>): Promise<RateLimitResult> {
     if (!this.config.enabled) {
       return { allowed: true };
     }
 
-    const { operation, relay, priority = RequestPriority.NORMAL, skipQueue = false } = options;
+    const { operation, relay, skipQueue = false } = options;
 
     // Check global limit first
     if (this.globalBucket) {
@@ -456,10 +451,7 @@ export class RateLimiter extends EventEmitter {
     estimatedWait: number
   ): Promise<RateLimitResult> {
     // Check if queue is full
-    if (
-      this.config.maxQueueSize > 0 &&
-      this.requestQueue.length >= this.config.maxQueueSize
-    ) {
+    if (this.config.maxQueueSize > 0 && this.requestQueue.length >= this.config.maxQueueSize) {
       this.recordDenial(options.operation, RateLimitTier.GLOBAL, 'queue', options.relay);
       return Promise.resolve({
         allowed: false,
@@ -489,10 +481,7 @@ export class RateLimiter extends EventEmitter {
       // Update metrics
       this.queueMetrics.totalQueued++;
       this.queueMetrics.size = this.requestQueue.length;
-      this.queueMetrics.maxSize = Math.max(
-        this.queueMetrics.maxSize,
-        this.requestQueue.length
-      );
+      this.queueMetrics.maxSize = Math.max(this.queueMetrics.maxSize, this.requestQueue.length);
       this.queueMetrics.byPriority[queuedRequest.priority]++;
 
       this.recordQueued(options.operation, options.relay);
@@ -623,14 +612,15 @@ export class RateLimiter extends EventEmitter {
 
     // Remove processed and timed out requests
     this.requestQueue = this.requestQueue.filter(
-      req => !processedRequests.includes(req.id) && !timedOutRequests.includes(req.id)
+      (req) => !processedRequests.includes(req.id) && !timedOutRequests.includes(req.id)
     );
     this.queueMetrics.size = this.requestQueue.length;
 
     // Check for high timeout rate alert
-    const timeoutRate = this.queueMetrics.totalQueued > 0
-      ? this.queueMetrics.totalTimedOut / this.queueMetrics.totalQueued
-      : 0;
+    const timeoutRate =
+      this.queueMetrics.totalQueued > 0
+        ? this.queueMetrics.totalTimedOut / this.queueMetrics.totalQueued
+        : 0;
 
     if (timeoutRate > 0.2) {
       this.emitAlert({
@@ -794,7 +784,7 @@ export class RateLimiter extends EventEmitter {
 
       // Parse key to determine type
       if (key.includes(':')) {
-        const [operation, relay] = key.split(':');
+        const [, relay] = key.split(':');
         byRelay.set(relay, {
           ...stats,
           relay,
@@ -808,9 +798,8 @@ export class RateLimiter extends EventEmitter {
       }
     });
 
-    overall.successRate = overall.totalRequests > 0
-      ? (overall.allowed / overall.totalRequests) * 100
-      : 100;
+    overall.successRate =
+      overall.totalRequests > 0 ? (overall.allowed / overall.totalRequests) * 100 : 100;
 
     // Global stats from global bucket
     const globalStats: RateLimitStats = {
@@ -878,9 +867,7 @@ export class RateLimiter extends EventEmitter {
 
     if (!stats) return null;
 
-    stats.successRate = stats.totalRequests > 0
-      ? (stats.allowed / stats.totalRequests) * 100
-      : 100;
+    stats.successRate = stats.totalRequests > 0 ? (stats.allowed / stats.totalRequests) * 100 : 100;
 
     return {
       ...stats,
@@ -934,10 +921,7 @@ export class RateLimiter extends EventEmitter {
     // Recreate buckets with new policies
     if (config.operationLimits) {
       Object.entries(config.operationLimits).forEach(([operation, policy]) => {
-        this.operationBuckets.set(
-          operation as RateLimitOperation,
-          this.createTokenBucket(policy)
-        );
+        this.operationBuckets.set(operation as RateLimitOperation, this.createTokenBucket(policy));
       });
     }
 
@@ -1029,7 +1013,7 @@ export class RateLimiter extends EventEmitter {
     this.stopQueueProcessing();
 
     // Reject all queued requests
-    this.requestQueue.forEach(request => {
+    this.requestQueue.forEach((request) => {
       request.reject(new Error('Rate limiter is being destroyed'));
     });
     this.requestQueue = [];
