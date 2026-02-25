@@ -293,9 +293,7 @@ export abstract class BaseService implements IService {
   /**
    * Perform service-specific cleanup
    */
-  protected async performCleanup(): Promise<void> {
-    // Default no-op — subclasses override for custom cleanup
-  }
+  protected abstract performCleanup(): Promise<void>;
 
   /**
    * Hook called before each operation

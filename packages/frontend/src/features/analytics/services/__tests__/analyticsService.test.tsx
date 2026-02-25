@@ -158,7 +158,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     vi.stubGlobal('WebSocket', MockWebSocket);
 
     analyticsService.clearCache();
-    analyticsService.retryDelay = () => 0;
+    (analyticsService as any).retryDelay = () => 0;
 
     // Mock successful auth
     localStorageMock.getItem.mockImplementation((key: string) => {
@@ -170,7 +170,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
 
   afterEach(() => {
     analyticsService.disconnectRealTime();
-    analyticsService.retryDelay = (attempt) => Math.pow(2, attempt) * 1000;
+    (analyticsService as any).retryDelay = (attempt: number) => Math.pow(2, attempt) * 1000;
     queryClient.clear();
   });
 

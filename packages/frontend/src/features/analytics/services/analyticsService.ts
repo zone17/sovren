@@ -178,7 +178,7 @@ class AnalyticsWebSocketManager {
 class AnalyticsServiceImpl {
   private wsManager = new AnalyticsWebSocketManager();
   private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
-  retryDelay: (attempt: number) => number = (attempt) => Math.pow(2, attempt) * 1000;
+  private retryDelay: (attempt: number) => number = (attempt) => Math.pow(2, attempt) * 1000;
   private readonly CACHE_TTL = {
     earnings: 5 * 60 * 1000, // 5 minutes
     payments: 2 * 60 * 1000, // 2 minutes

@@ -661,7 +661,7 @@ export class CachePersistenceService {
       clearInterval(this.saveTimer);
     }
 
-    // Reset the singleton so subsequent getInstance() calls create a fresh instance
+    // Reset singleton so subsequent getInstance() calls create a fresh instance
     if (CachePersistenceService.instance === this) {
       CachePersistenceService.instance = null;
     }
@@ -676,12 +676,8 @@ export class CachePersistenceService {
 }
 
 /**
- * Lazy singleton accessor — avoids eager IndexedDB initialization on import
+ * Lazy singleton accessor — delegates to getInstance()
  */
-let _cachePersistence: CachePersistenceService | null = null;
 export function getCachePersistence(): CachePersistenceService {
-  if (!_cachePersistence) {
-    _cachePersistence = CachePersistenceService.getInstance();
-  }
-  return _cachePersistence;
+  return CachePersistenceService.getInstance();
 }

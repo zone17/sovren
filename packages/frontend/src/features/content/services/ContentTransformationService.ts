@@ -1023,6 +1023,23 @@ export class ContentTransformationService
     }
   }
 
+  protected async performHealthCheck(): Promise<boolean> {
+    return !this.isDisposed;
+  }
+
+  protected async getCustomMetrics(): Promise<Record<string, any>> {
+    return {
+      cacheSize: this.transformationCache.size,
+      validationRulesCount: this.validationRulesCache.size,
+      formatConvertersCount: this.formatConverters.size,
+    };
+  }
+
+  protected async performCleanup(): Promise<void> {
+    this.transformationCache.clear();
+    this.validationRulesCache.clear();
+  }
+
   private async generateChecksum(data: string | ArrayBuffer): Promise<string> {
     const buffer = typeof data === 'string' ? new TextEncoder().encode(data) : new Uint8Array(data);
 
