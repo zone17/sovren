@@ -378,12 +378,7 @@ describe('Content Service Layer', () => {
   });
 
   afterAll(async () => {
-    // Cleanup services — ignore errors from services with missing lifecycle methods
-    try {
-      await serviceContainer.dispose();
-    } catch {
-      // ContentTransformationService does not implement performCleanup (production bug)
-    }
+    await serviceContainer.dispose();
   });
 
   // ==================== UNIT TESTS ====================
