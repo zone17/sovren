@@ -7,7 +7,7 @@ export class ProfilePage {
 
   constructor(page: Page) {
     this.page = page;
-    this.userName = page.getByRole('heading', { level: 1 });
+    this.userName = page.getByRole('heading', { level: 1 }).first();
     this.logoutButton = page.getByRole('button', { name: 'Logout' }).first();
   }
 

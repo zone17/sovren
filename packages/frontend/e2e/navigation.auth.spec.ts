@@ -34,7 +34,7 @@ test.describe('Navigation (authenticated creator)', () => {
   });
 
   test('logo navigates to home', async () => {
-    await layout.sovrenLogo.first().click();
+    await layout.sovrenLogo.click();
     await expect(layout.page).toHaveURL('/');
   });
 

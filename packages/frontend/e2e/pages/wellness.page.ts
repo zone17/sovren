@@ -1,9 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
 
-/**
- * Page Object for WellnessDashboard
- * Source: src/features/wellness/components/WellnessDashboard.tsx
- */
 export class WellnessPage {
   readonly page: Page;
   readonly heading: Locator;

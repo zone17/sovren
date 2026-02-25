@@ -24,7 +24,7 @@ test.describe('Home Page', () => {
   test('CTA navigates to onboarding', async ({ page }) => {
     const home = new HomePage(page);
     await home.goto();
-    await home.clickCTA();
+    await home.ctaButton.click();
 
     await expect(page).toHaveURL(/\/onboarding/);
   });

@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p3
 issue_id: '500'
 tags:
@@ -45,6 +45,7 @@ Delete lines 3-6 of `wellness.page.ts`.
 
 ## Work Log
 
-| Date       | Action                                 | Outcome                  |
-| ---------- | -------------------------------------- | ------------------------ |
-| 2026-02-24 | Identified by code-simplicity-reviewer | P3 — unnecessary comment |
+| Date       | Action                                       | Outcome                  |
+| ---------- | -------------------------------------------- | ------------------------ |
+| 2026-02-24 | Identified by code-simplicity-reviewer       | P3 — unnecessary comment |
+| 2026-02-24 | Removed 4-line JSDoc from WellnessPage class | Fixed — 20/20 tests pass |

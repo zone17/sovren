@@ -24,8 +24,4 @@ export class HomePage {
   async goto() {
     await this.page.goto('/');
   }
-
-  async clickCTA() {
-    await this.ctaButton.click();
-  }
 }

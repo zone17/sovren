@@ -11,7 +11,7 @@ export class LayoutPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.sovrenLogo = page.getByRole('link', { name: /Sovren/ });
+    this.sovrenLogo = page.getByRole('link', { name: /Sovren/ }).first();
     this.profileLink = page.getByRole('link', { name: 'Profile' });
     this.createLink = page.getByRole('link', { name: 'Create' });
     this.dashboardLink = page.getByRole('link', { name: 'Dashboard' });

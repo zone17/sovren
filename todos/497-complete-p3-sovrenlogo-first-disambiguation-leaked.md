@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p3
 issue_id: '497'
 tags:
@@ -57,6 +57,7 @@ this.sovrenLogo = page.getByRole('link', { name: /Sovren/ }).first();
 
 ## Work Log
 
-| Date       | Action                                       | Outcome                |
-| ---------- | -------------------------------------------- | ---------------------- |
-| 2026-02-24 | Identified by pattern-recognition-specialist | P3 — POM encapsulation |
+| Date       | Action                                            | Outcome                  |
+| ---------- | ------------------------------------------------- | ------------------------ |
+| 2026-02-24 | Identified by pattern-recognition-specialist      | P3 — POM encapsulation   |
+| 2026-02-24 | Moved `.first()` into POM, removed from call site | Fixed — 20/20 tests pass |

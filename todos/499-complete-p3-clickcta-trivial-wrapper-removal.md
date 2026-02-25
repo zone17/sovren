@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p3
 issue_id: '499'
 tags:
@@ -46,6 +46,7 @@ In `home.page.ts`, remove `clickCTA()`. In `home.spec.ts`, change `await home.cl
 
 ## Work Log
 
-| Date       | Action                                 | Outcome              |
-| ---------- | -------------------------------------- | -------------------- |
-| 2026-02-24 | Identified by code-simplicity-reviewer | P3 — YAGNI violation |
+| Date       | Action                                                   | Outcome                  |
+| ---------- | -------------------------------------------------------- | ------------------------ |
+| 2026-02-24 | Identified by code-simplicity-reviewer                   | P3 — YAGNI violation     |
+| 2026-02-24 | Removed `clickCTA()`, spec uses `home.ctaButton.click()` | Fixed — 20/20 tests pass |

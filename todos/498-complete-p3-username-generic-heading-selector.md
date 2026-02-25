@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p3
 issue_id: '498'
 tags:
@@ -57,6 +57,7 @@ this.userName = page.getByRole('heading', { level: 1 }).first();
 
 ## Work Log
 
-| Date       | Action                                       | Outcome             |
-| ---------- | -------------------------------------------- | ------------------- |
-| 2026-02-24 | Identified by pattern-recognition-specialist | P3 — fragility risk |
+| Date       | Action                                                   | Outcome                  |
+| ---------- | -------------------------------------------------------- | ------------------------ |
+| 2026-02-24 | Identified by pattern-recognition-specialist             | P3 — fragility risk      |
+| 2026-02-24 | Added `.first()` to `getByRole('heading', { level: 1 })` | Fixed — 20/20 tests pass |

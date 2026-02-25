@@ -989,7 +989,7 @@ if (count === 0) {
 
 ## 25. Stale Todo Detection — Triage Before Implementing
 
-**Recurrence:** 2 sprints (PR #93: 40% stale, PR #96: 76% stale). Todos from prior review cycles go stale as subsequent PRs fix the described issues.
+**Recurrence:** 3 sprints (PR #93: 40% stale, PR #96: 76% stale, E2E review #472-478: 71% stale). Todos from prior review cycles go stale as subsequent PRs fix the described issues.
 
 ### Triage Methodology
 
@@ -1055,11 +1055,16 @@ setup('authenticate', async ({ page }) => {
   await page.context().storageState({ path: authFile });
 });
 
-// 3. Config uses 3-tier projects
+// 3. Config uses 3-tier projects with convention-based discovery
 projects: [
-  { name: 'setup', testMatch: /auth\.setup\.ts/ },
-  { name: 'authenticated', dependencies: ['setup'], use: { storageState: authFile } },
-  { name: 'public', testMatch: /home\.spec\.ts/ },
+  { name: 'setup', testMatch: /\.setup\.ts$/ },
+  {
+    name: 'authenticated',
+    testMatch: /\.auth\.spec\.ts$/,
+    dependencies: ['setup'],
+    use: { storageState: authFile },
+  },
+  { name: 'public', testMatch: /\.public\.spec\.ts$/ },
 ];
 ```
 
@@ -1203,6 +1208,86 @@ grep -n "if (!.*) {" src/lib/*.ts | grep -v "logger\|console\|throw"
 
 ---
 
+## 30. Convention-Based Playwright Spec Naming (Eliminates Silent Test Exclusion)
+
+**Recurrence:** 1 P2. Hardcoded `testMatch` arrays in `playwright.config.ts` create a hidden contract — every new spec must be manually registered. Missing registration = silent exclusion with exit code 0 and zero warnings. Playwright runs the listed files and ignores the new one.
+
+### The Rule
+
+Use suffix-based wildcard patterns that auto-discover specs by naming convention. Never hardcode individual filenames in `testMatch`.
+
+```typescript
+// ❌ WRONG: Manual registry — new specs silently excluded if not listed
+testMatch: ['**/auth.spec.ts', '**/home.spec.ts', '**/navigation.spec.ts'],
+
+// ✅ RIGHT: Convention-based — new specs auto-discovered by suffix
+{
+  name: 'chromium-authenticated',
+  testMatch: /\.auth\.spec\.ts$/,     // auto-discovers all *.auth.spec.ts
+  dependencies: ['setup'],
+  use: { storageState: authFile },
+},
+{
+  name: 'chromium-public',
+  testMatch: /\.public\.spec\.ts$/,   // auto-discovers all *.public.spec.ts
+},
+```
+
+### Naming Convention
+
+- Authenticated tests: `{name}.auth.spec.ts` (matched by `chromium-authenticated` project)
+- Public page tests: `{name}.public.spec.ts` (matched by `chromium-public` project)
+- No config change needed when adding a new spec — just use the correct suffix
+
+### Detection
+
+If `testMatch` in `playwright.config.ts` contains specific file names rather than glob/regex patterns, flag for refactor. `grep -n "testMatch.*spec\.ts" playwright.config.ts` and check for file names instead of wildcards.
+
+---
+
+## 31. `unknown` Is the Correct Input Type for Type Guards
+
+**Recurrence:** 1 P2. `isValidEvent(event: any)` defeated TypeScript's type checking at call sites. Callers could pass `string`, `number`, or `null` without a compile error. The runtime checks inside the function were correct, but `any` erased the safety signal.
+
+### The Rule
+
+Type guards over untrusted data must use `unknown` as the input type. The compiler enforces this because property access on `unknown` requires a cast or narrowing step first.
+
+```typescript
+// ❌ WRONG: any disables type checking at call sites
+function isValidEvent(event: any): event is NostrEvent {
+  return typeof event === 'object' && event !== null && typeof event.id === 'string';
+}
+
+// ✅ RIGHT: unknown forces callers to explicitly pass untrusted data
+function isValidEvent(event: unknown): event is NostrEvent {
+  if (typeof event !== 'object' || event === null) return false;
+  const e = event as Record<string, unknown>;
+  return (
+    typeof e.id === 'string' &&
+    typeof e.pubkey === 'string' &&
+    typeof e.kind === 'number' &&
+    typeof e.content === 'string' &&
+    Array.isArray(e.tags)
+  );
+}
+```
+
+### Key Points
+
+- The intermediate cast to `Record<string, unknown>` is required because TypeScript doesn't allow property access on `unknown` directly
+- This is the idiomatic pattern for runtime type guards over untrusted data
+- Use `any` only when the function is genuinely flexible and NOT acting as a type guard
+
+### Detection
+
+```bash
+# Find type guards with 'any' input
+grep -rn "(.*: any).*is " --include="*.ts" src/ e2e/
+```
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1262,3 +1347,5 @@ CONTEXT TO LOAD:
 | Silent fallback with no logging              | 29        | common-solutions.md  |
 | String duplicated across packages            | 10a       | critical-patterns.md |
 | Lazy init with no logging                    | 10b       | critical-patterns.md |
+| New spec silently excluded from test run     | 30        | common-solutions.md  |
+| Type guard uses `any` instead of `unknown`   | 31        | common-solutions.md  |
