@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### refactor(backend): Eliminate all mocks from SubscriptionService and PaymentAnalyticsService tests — 2026-02-26
+
+**Category**: Test Infrastructure — Payment Domain
+**Status**: Complete — 233/233 tests passing with real service instances (105 Subscription + 128 Analytics)
+
+Rewrote `SubscriptionService.test.ts` (105 tests) and `PaymentAnalyticsService.test.ts` (128 tests) to use `PaymentTestHarness` with real in-memory backends. Zero `vi.fn()` mocks for service dependencies.
+
+Extended harness with `TestableEventBus` (bridges `SubscriptionService.emit()` / `IEventBus.publish()` pre-existing interface mismatch) and `seedRawTransaction()` (injects arbitrary transaction states for analytics assertions). Added `installSubscriptionPaymentShim()` workaround for `SubscriptionService` passing non-standard params to `processPayment()`.
+
+Combined with RefundService rewrite below, all 317 payment tests now run against real services. Net -247 lines across both test files.
+
+### refactor(backend): Eliminate all mocks from RefundService tests — 2026-02-26
+
+**Category**: Test Infrastructure — Payment Domain
+**Status**: Complete — 84/84 tests passing with real service instances
+
+Created `PaymentTestHarness` (`test-utils/payment-test-harness.ts`) providing real `EventBusService`, `CurrencyService`, `PaymentProcessingService`, `AuditLogService`, `RefundService`, `SubscriptionService`, and `PaymentAnalyticsService` wired with in-memory backends. Includes `InMemoryCacheService`, `SilentLogger`, `seedCompletedTransaction()`, and `flushPromises()` helpers.
+
+Rewrote `RefundService.test.ts` from 84 mock-based tests (28 `vi.fn()` stubs) to 84 integration tests with zero mocks. All tests exercise real service behavior including auto-processing, state machine transitions, and cross-service interactions.
+
+### fix(backend): Add missing REFUND\_\* DomainEventType enum values — 2026-02-26
+
+**Category**: Bug Fix — Payment Domain
+**Status**: Complete — 28 RefundService tests recovered (37→9 failing; 9 remaining are pre-existing test assertion bugs)
+
+Added 7 missing `DomainEventType` enum values (`REFUND_INITIATED`, `REFUND_AUTHORIZED`, `REFUND_DENIED`, `REFUND_COMPLETED`, `REFUND_FAILED`, `REFUND_CANCELED`, `REFUND_REVERSED`) to `IEventBus.ts`. `RefundService.ts` referenced these values at 7 call sites but they didn't exist, causing `DomainEventBuilder.build()` to throw.
+
 ### docs: ADR-019 & ADR-020 — BullMQ + REST+Zod Standards — 2026-02-26
 
 **Category**: Documentation — Architecture Decision Records

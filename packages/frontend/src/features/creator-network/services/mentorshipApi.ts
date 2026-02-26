@@ -31,10 +31,7 @@ export const mentorshipApi = {
     return apiClient.post(`${BASE}/request`, data);
   },
 
-  respondToMentorship(
-    id: string,
-    data: { accept: boolean }
-  ): Promise<ApiResponse<Mentorship>> {
+  respondToMentorship(id: string, data: { accept: boolean }): Promise<ApiResponse<Mentorship>> {
     return apiClient.put(`${BASE}/${id}/accept`, data);
   },
 

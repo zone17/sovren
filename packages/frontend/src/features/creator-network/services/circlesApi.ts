@@ -37,10 +37,7 @@ export const circlesApi = {
     return apiClient.get(`${BASE}/${circleId}/posts`, params);
   },
 
-  postToCircle(
-    circleId: string,
-    data: { content: string }
-  ): Promise<ApiResponse<CirclePost>> {
+  postToCircle(circleId: string, data: { content: string }): Promise<ApiResponse<CirclePost>> {
     return apiClient.post(`${BASE}/${circleId}/posts`, data);
   },
 };
