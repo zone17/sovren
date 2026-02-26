@@ -4,6 +4,9 @@
   "description": "🚀 World-Class Creator Monetization Platform with AI-Enhanced CI/CD Pipeline - LEGENDARY ENGINEERING STATUS",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "workspaces": [
     "packages/*"
   ],
