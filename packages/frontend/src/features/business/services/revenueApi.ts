@@ -11,22 +11,22 @@ const BASE = '/api/v2/business/revenue';
 
 export const revenueApi = {
   getBreakdown(): Promise<ApiResponse<RevenueBreakdownEntry[]>> {
-    return apiClient['request']('GET', `${BASE}/breakdown`);
+    return apiClient.get(`${BASE}/breakdown`);
   },
 
   getRisk(): Promise<ApiResponse<RevenueRisk>> {
-    return apiClient['request']('GET', `${BASE}/risk`);
+    return apiClient.get(`${BASE}/risk`);
   },
 
   getGoals(): Promise<ApiResponse<DiversificationGoal>> {
-    return apiClient['request']('GET', `${BASE}/goals`);
+    return apiClient.get(`${BASE}/goals`);
   },
 
   updateGoals(targets: Record<string, number>): Promise<ApiResponse<DiversificationGoal>> {
-    return apiClient['request']('PUT', `${BASE}/goals`, { targets });
+    return apiClient.put(`${BASE}/goals`, { targets });
   },
 
   addRevenueEntry(data: CreateRevenueEntryPayload): Promise<ApiResponse<RevenueEntry>> {
-    return apiClient['request']('POST', BASE, data);
+    return apiClient.post(BASE, data);
   },
 };

@@ -23,50 +23,50 @@ export const wellnessApi = {
   // -- Work Patterns --
 
   getPatterns(period: PatternPeriod = '7d'): Promise<ApiResponse<WorkPatterns>> {
-    return apiClient['request']('GET', `${BASE}/patterns`, undefined, { period });
+    return apiClient.get(`${BASE}/patterns`, { period });
   },
 
   getHeatmap(period: HeatmapPeriod = '7d'): Promise<ApiResponse<HeatmapData>> {
-    return apiClient['request']('GET', `${BASE}/patterns/heatmap`, undefined, { period });
+    return apiClient.get(`${BASE}/patterns/heatmap`, { period });
   },
 
   // -- Burnout Risk --
 
   getRiskScore(): Promise<ApiResponse<BurnoutScore>> {
-    return apiClient['request']('GET', `${BASE}/risk-score`);
+    return apiClient.get(`${BASE}/risk-score`);
   },
 
   updateSensitivity(sensitivity: Sensitivity): Promise<ApiResponse<{ sensitivity: Sensitivity; updated_at: string }>> {
-    return apiClient['request']('PUT', `${BASE}/risk-score/sensitivity`, { sensitivity });
+    return apiClient.put(`${BASE}/risk-score/sensitivity`, { sensitivity });
   },
 
   // -- Schedule --
 
   getScheduleRecommendations(): Promise<ApiResponse<ScheduleRecommendations>> {
-    return apiClient['request']('GET', `${BASE}/schedule/recommendations`);
+    return apiClient.get(`${BASE}/schedule/recommendations`);
   },
 
   // -- Boundaries --
 
   getBoundaries(): Promise<ApiResponse<BoundaryConfig>> {
-    return apiClient['request']('GET', `${BASE}/boundaries`);
+    return apiClient.get(`${BASE}/boundaries`);
   },
 
   updateBoundaries(data: BoundaryUpdatePayload): Promise<ApiResponse<BoundaryConfig>> {
-    return apiClient['request']('PUT', `${BASE}/boundaries`, data);
+    return apiClient.put(`${BASE}/boundaries`, data);
   },
 
   // -- Pulse Check-Ins --
 
   submitPulse(data: PulseSubmission): Promise<ApiResponse<PulseCheckIn>> {
-    return apiClient['request']('POST', `${BASE}/pulse`, data);
+    return apiClient.post(`${BASE}/pulse`, data);
   },
 
   getPulseHistory(
     period: PulsePeriod = '90d',
     pagination?: { limit?: number; offset?: number }
   ): Promise<ApiResponse<PulseHistory & { total?: number; limit?: number; offset?: number }>> {
-    return apiClient['request']('GET', `${BASE}/pulse/history`, undefined, {
+    return apiClient.get(`${BASE}/pulse/history`, {
       period,
       limit: pagination?.limit,
       offset: pagination?.offset,
@@ -74,13 +74,13 @@ export const wellnessApi = {
   },
 
   deletePulseHistory(): Promise<ApiResponse<{ deleted_count: number }>> {
-    return apiClient['request']('DELETE', `${BASE}/pulse`);
+    return apiClient.delete(`${BASE}/pulse`);
   },
 
   // -- Benchmarks --
 
   getBenchmarks(): Promise<ApiResponse<WellnessBenchmark | null>> {
-    return apiClient['request']('GET', `${BASE}/benchmark`);
+    return apiClient.get(`${BASE}/benchmark`);
   },
 
   // -- Resource Library --

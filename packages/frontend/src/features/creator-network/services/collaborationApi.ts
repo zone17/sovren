@@ -11,7 +11,7 @@ export const collaborationApi = {
     collaboratorId: string,
     revenueSplitBps: number
   ): Promise<ApiResponse<ContentCollaborator>> {
-    return apiClient['request']('POST', `${BASE}/collaborate`, {
+    return apiClient.post(`${BASE}/collaborate`, {
       contentId,
       collaboratorId,
       revenueSplitBps,
@@ -23,13 +23,13 @@ export const collaborationApi = {
     contentId: string,
     data: { splits: Array<{ creatorId: string; bps: number }> }
   ): Promise<ApiResponse<ContentCollaborator[]>> {
-    return apiClient['request']('PUT', `${BASE}/${contentId}/revenue-split`, data);
+    return apiClient.put(`${BASE}/${contentId}/revenue-split`, data);
   },
 
   getCollaborators(
     contentId: string
   ): Promise<ApiResponse<{ collaborators: ContentCollaborator[] }>> {
-    return apiClient['request']('GET', `${BASE}/${contentId}/collaborators`);
+    return apiClient.get(`${BASE}/${contentId}/collaborators`);
   },
 
   /** #313: Backend route PUT /collaborations/:id/respond with { accept: boolean } */
@@ -37,7 +37,7 @@ export const collaborationApi = {
     invitationId: string,
     accept: boolean
   ): Promise<ApiResponse<{ accepted: boolean }>> {
-    return apiClient['request']('PUT', `${BASE}/collaborations/${invitationId}/respond`, {
+    return apiClient.put(`${BASE}/collaborations/${invitationId}/respond`, {
       accept,
     });
   },

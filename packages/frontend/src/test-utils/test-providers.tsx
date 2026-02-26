@@ -23,10 +23,30 @@ import React, { ReactElement } from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 
-// Import store reducers
-// TODO: Remove temporary stubs after US-E4-010 completes
-import { cmsReducer, paymentReducer, postReducer } from '../store/slices/tempStubs';
 import userReducer from '../store/slices/userSlice';
+
+// Inline no-op reducers — these stubs keep the deprecated test provider
+// functional. New tests should use renderWithAll() from render-with-all.tsx.
+interface StubPostState {
+  posts: unknown[];
+  currentPost: unknown | null;
+  loading: boolean;
+  error: string | null;
+}
+interface StubPaymentState {
+  payments: unknown[];
+  currentPayment: unknown | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const postReducer = (
+  state: StubPostState = { posts: [], currentPost: null, loading: false, error: null }
+): StubPostState => state;
+const paymentReducer = (
+  state: StubPaymentState = { payments: [], currentPayment: null, loading: false, error: null }
+): StubPaymentState => state;
+const cmsReducer = (state: Record<string, unknown> = {}): Record<string, unknown> => state;
 
 // Import test data and shared test interfaces (single source of truth)
 import type { TestContent, TestPayment, TestUser } from './test-environment';

@@ -6,7 +6,7 @@ const BASE = '/api/v2/business/tax';
 
 export const taxApi = {
   getSummary(): Promise<ApiResponse<QuarterlyTaxSummary[]>> {
-    return apiClient['request']('GET', `${BASE}/summary`);
+    return apiClient.get(`${BASE}/summary`);
   },
 
   getExpenses(params?: {
@@ -14,23 +14,23 @@ export const taxApi = {
     from?: string;
     to?: string;
   }): Promise<ApiResponse<Expense[]>> {
-    return apiClient['request']('GET', `${BASE}/expenses`, undefined, params);
+    return apiClient.get(`${BASE}/expenses`, params);
   },
 
   addExpense(data: CreateExpensePayload): Promise<ApiResponse<Expense>> {
-    return apiClient['request']('POST', `${BASE}/expenses`, data);
+    return apiClient.post(`${BASE}/expenses`, data);
   },
 
   getCategories(): Promise<ApiResponse<ExpenseCategory[]>> {
-    return apiClient['request']('GET', `${BASE}/categories`);
+    return apiClient.get(`${BASE}/categories`);
   },
 
   createCategory(name: string, type: string): Promise<ApiResponse<ExpenseCategory>> {
-    return apiClient['request']('POST', `${BASE}/categories`, { name, type });
+    return apiClient.post(`${BASE}/categories`, { name, type });
   },
 
   exportTax(format: 'csv' | 'json', year?: number): Promise<ApiResponse<{ downloadUrl: string }>> {
-    return apiClient['request']('GET', `${BASE}/export`, undefined, {
+    return apiClient.get(`${BASE}/export`, {
       format,
       ...(year !== undefined ? { year } : {}),
     });

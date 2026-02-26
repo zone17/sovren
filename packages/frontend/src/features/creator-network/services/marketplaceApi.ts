@@ -13,7 +13,7 @@ export const marketplaceApi = {
     priceSats: number;
     portfolioUrls?: string[];
   }): Promise<ApiResponse<ServiceListing>> {
-    return apiClient['request']('POST', `${BASE}/listings`, data);
+    return apiClient.post(`${BASE}/listings`, data);
   },
 
   getListings(params?: {
@@ -21,32 +21,32 @@ export const marketplaceApi = {
     page?: number;
     limit?: number;
   }): Promise<ApiResponse<{ listings: ServiceListing[]; pagination: Pagination }>> {
-    return apiClient['request']('GET', `${BASE}/listings`, undefined, params);
+    return apiClient.get(`${BASE}/listings`, params);
   },
 
   placeOrder(data: {
     listingId: string;
     idempotencyKey: string;
   }): Promise<ApiResponse<ServiceOrder>> {
-    return apiClient['request']('POST', `${BASE}/orders`, data);
+    return apiClient.post(`${BASE}/orders`, data);
   },
 
   startOrder(orderId: string): Promise<ApiResponse<ServiceOrder>> {
-    return apiClient['request']('PUT', `${ORDERS_BASE}/${orderId}/start`);
+    return apiClient.put(`${ORDERS_BASE}/${orderId}/start`);
   },
 
   completeOrder(orderId: string): Promise<ApiResponse<ServiceOrder>> {
-    return apiClient['request']('PUT', `${ORDERS_BASE}/${orderId}/complete`);
+    return apiClient.put(`${ORDERS_BASE}/${orderId}/complete`);
   },
 
   disputeOrder(orderId: string, data: { reason: string }): Promise<ApiResponse<ServiceOrder>> {
-    return apiClient['request']('PUT', `${ORDERS_BASE}/${orderId}/dispute`, data);
+    return apiClient.put(`${ORDERS_BASE}/${orderId}/dispute`, data);
   },
 
   reviewOrder(
     orderId: string,
     data: { rating: number; reviewText?: string }
   ): Promise<ApiResponse<OrderReview>> {
-    return apiClient['request']('POST', `${ORDERS_BASE}/${orderId}/review`, data);
+    return apiClient.post(`${ORDERS_BASE}/${orderId}/review`, data);
   },
 };

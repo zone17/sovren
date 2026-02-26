@@ -4,9 +4,12 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { Provider } from 'react-redux';
 import SimpleContentEditor from '../../features/content/components/SimpleContentEditor';
-// TODO: US-E4-010 - Replace with React Query
-import { cmsReducer as cmsSlice } from '../../store/slices/tempStubs';
 import type { CMSState, ContentItem, MediaAsset } from '../../types/content';
+
+// Inline no-op reducer — SimpleContentEditor reads state.cms which
+// doesn't exist in the real store (migrated to React Query + cmsUi).
+// This stub keeps tests functional until the component is fully migrated.
+const cmsSlice = (state: Record<string, unknown> = {}): Record<string, unknown> => state;
 
 // 🛡️ **ELITE TEST ARCHITECTURE**
 interface TestRenderOptions {
@@ -188,8 +191,7 @@ describe('SimpleContentEditor - Elite Standards Compliance', () => {
       const lightningButton = screen.getByText('+ Lightning');
       await user.click(lightningButton);
 
-      // The tempStubs reducer is a no-op; verify the button click dispatches correctly
-      // by checking the UI reflects the action (the button should still be present)
+      // Dispatch calls are local state only; verify button is still interactive
       expect(lightningButton).toBeInTheDocument();
     });
 
@@ -245,7 +247,6 @@ describe('SimpleContentEditor - Elite Standards Compliance', () => {
     });
 
     it('SHOULD handle media upload with proper error handling', async () => {
-      const user = userEvent.setup();
       renderWithProvider(<SimpleContentEditor />, {
         initialCMSState: {
           current_content: createMockContentItem({
@@ -278,8 +279,6 @@ describe('SimpleContentEditor - Elite Standards Compliance', () => {
       });
 
       const altTextInput = screen.getByDisplayValue('Test image');
-      // The alt text input is a controlled input driven by Redux state.
-      // The tempStubs reducer is a no-op, so typing won't persist to Redux.
       // Verify the input exists and is editable (has placeholder for accessibility).
       expect(altTextInput).toHaveAttribute('placeholder', 'Describe this media for accessibility');
       expect(altTextInput).not.toBeDisabled();
@@ -301,7 +300,7 @@ describe('SimpleContentEditor - Elite Standards Compliance', () => {
       await user.type(titleInput, 'Elite Bitcoin Content!');
 
       // Verify the controlled input reflects the typed value (local state updates)
-      // Note: tempStubs reducer is a no-op, so Redux state check is skipped here
+      // Content updates are local state only; verify controlled input value
       expect(titleInput).toHaveValue('Elite Bitcoin Content!');
     });
 
@@ -477,7 +476,7 @@ describe('SimpleContentEditor - Integration Tests', () => {
     const lightningButton = screen.getByText('+ Lightning');
     await user.click(lightningButton);
 
-    // tempStubs reducer is a no-op; verify UI state (local component state) reflects changes
+    // Verify UI state (local component state) reflects changes
     expect(titleInput).toHaveValue('Full Integration Test');
     expect(lightningButton).toBeInTheDocument();
   });
