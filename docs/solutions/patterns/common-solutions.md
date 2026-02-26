@@ -1304,6 +1304,7 @@ After any structural change (new test framework, new file conventions, new workf
 ### What to Score
 
 For each agent task ("create a new POM", "write an authenticated spec", "understand auth setup"), ask:
+
 1. Can the agent find the relevant section in CLAUDE.md?
 2. Does it include a concrete example (template, code snippet)?
 3. Are all options enumerated (credential names, command flags)?
@@ -1322,6 +1323,7 @@ For each agent task ("create a new POM", "write an authenticated spec", "underst
 [complete code example an agent can copy-paste and adapt]
 
 **Conventions:**
+
 - [rule 1 with rationale]
 - [rule 2 with rationale]
 ```
@@ -1352,9 +1354,13 @@ For each agent task ("create a new POM", "write an authenticated spec", "underst
 
 ```typescript
 const mockWsInstance = {
-  close: vi.fn(), send: vi.fn(), readyState: 1,
-  onopen: null as any, onclose: null as any,
-  onmessage: null as any, onerror: null as any,
+  close: vi.fn(),
+  send: vi.fn(),
+  readyState: 1,
+  onopen: null as any,
+  onclose: null as any,
+  onmessage: null as any,
+  onerror: null as any,
 };
 const MockWebSocket = vi.fn(() => mockWsInstance) as any;
 MockWebSocket.CONNECTING = 0;
@@ -1365,7 +1371,9 @@ MockWebSocket.CLOSED = 3;
 beforeEach(() => {
   MockWebSocket.mockClear();
   Object.defineProperty(globalThis, 'WebSocket', {
-    value: MockWebSocket, configurable: true, writable: true,
+    value: MockWebSocket,
+    configurable: true,
+    writable: true,
   });
 });
 ```
@@ -1429,6 +1437,101 @@ vi.mock('../MyComponent', () => ({ MyComponent: MyStub }));
 
 ---
 
+## 37. React Version Hoisting in npm Workspaces
+
+**Recurrence:** 1 P1 (PR #99). Any `npm update` in a monorepo with React 18 apps risks this.
+
+After `npm update`, transitive peer deps (Radix UI, etc.) that accept `react: "^18 || ^19"` cause npm to hoist React 19 to root `node_modules/`. Two React instances coexist — hooks break with "Objects are not valid as a React child" (1,541 test failures).
+
+### Fix: Pin React via overrides
+
+```json
+// root package.json
+"overrides": {
+  "react": "^18.3.1",
+  "react-dom": "^18.3.1"
+}
+```
+
+### Detection
+
+Run tests immediately after `npm update`. React conflicts manifest as mass test failures, not build errors.
+
+### When to use
+
+Always pin framework packages via overrides in monorepos when the ecosystem has split peer dependency ranges across major versions.
+
+---
+
+## 38. GitHub Action Major Version Silent Parameter Renames
+
+**Recurrence:** 1 P1 (PR #99). Every GitHub Action major bump risks this.
+
+`slackapi/slack-github-action@v2` renamed `webhook-url` to `webhook`. The action silently ignores unknown inputs — no error, exit code 0, but no notification sent. Especially dangerous for rollback alerts.
+
+### Detection
+
+```bash
+# After bumping any action version, find ALL usages across workflows
+grep -rn "uses: slackapi/slack-github-action" .github/workflows/
+```
+
+Check the action's release notes for renamed/removed inputs. Partial migration across workflow files is the common failure mode — one file gets updated, others don't.
+
+### Checklist for action major bumps
+
+1. `grep -rn "uses: {action}@" .github/workflows/` — find ALL usages
+2. Read the action's `CHANGELOG.md` or release notes for the new major version
+3. Check for renamed inputs, changed defaults, removed features
+4. Update ALL workflow files in the same commit
+5. Test with `act` or a dry-run workflow dispatch if possible
+
+---
+
+## 39. npm Lockfile Stale Workspace Resolutions
+
+**Recurrence:** 1 P2 (PR #99). Affects any npm workspace version alignment.
+
+After updating all 4 `package.json` files to `nostr-tools: ^2.23.1`, the lockfile kept per-workspace resolutions at `2.23.0`. Neither `npm install` nor `npm update` re-resolved them.
+
+### Fix: Override + lockfile regeneration
+
+```json
+// root package.json — force single version
+"overrides": {
+  "nostr-tools": "2.23.1"
+}
+```
+
+```bash
+rm package-lock.json && npm install
+```
+
+### When to use
+
+Always use overrides for security-critical libraries (crypto, auth, payment SDKs) in monorepos. Verify resolution:
+
+```bash
+grep -B1 '"version":' package-lock.json | grep -A1 '{package-name}'
+```
+
+---
+
+## 40. Verify Import Chain Before Modifying Config Files
+
+**Recurrence:** 1 P2 (PR #99). 4/8 review agents flagged dead code migration.
+
+Before modifying any singleton/config file during a migration, verify it's actually imported:
+
+```bash
+# Check if the module has any importers
+grep -rn "from.*{module-path}" packages/ --include="*.ts" --include="*.tsx"
+```
+
+If no results → the file is dead code. Don't modify it — either delete it or skip. Modifying dead code creates a false sense of coverage.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1444,54 +1547,58 @@ CONTEXT TO LOAD:
 
 ## Index: Which Pattern Solves Which Issue
 
-| Issue You're Seeing                          | Pattern # | File                 |
-| -------------------------------------------- | --------- | -------------------- |
-| Race condition on capacity/count             | 1a-1c     | critical-patterns.md |
-| User can access others' data                 | 2         | critical-patterns.md |
-| Query loads too much into memory             | 3         | critical-patterns.md |
-| Two inserts, second might fail               | 4         | critical-patterns.md |
-| Payment data could be lost                   | 5         | critical-patterns.md |
-| URL from user input fetched server-side      | 6a-6c     | critical-patterns.md |
-| DNS TOCTOU between validate and fetch        | 6b        | critical-patterns.md |
-| IPv6 encoding bypasses SSRF check            | 6c        | critical-patterns.md |
-| Can delete a paid/active entity              | 7         | critical-patterns.md |
-| Button fires duplicate mutations             | 1         | common-solutions.md  |
-| Map grows without bound                      | 2         | common-solutions.md  |
-| New env var not validated                    | 3         | common-solutions.md  |
-| Inconsistent error responses                 | 4         | common-solutions.md  |
-| snake_case in API response                   | 5         | common-solutions.md  |
-| Worker running for stub function             | 6         | common-solutions.md  |
-| Tests break after service change             | 7         | common-solutions.md  |
-| New routes missing rate limit                | 8         | common-solutions.md  |
-| Named route not matching                     | 9         | common-solutions.md  |
-| `db: any` in constructor                     | 10        | common-solutions.md  |
-| Vitest OOM / worker crashes                  | 11        | common-solutions.md  |
-| `git diff --cached` empty at push            | 12        | common-solutions.md  |
-| Batch op fails on single rejection           | 13        | common-solutions.md  |
-| Same utility in 3+ files                     | 14        | common-solutions.md  |
-| Hook loops agents on pre-existing issues     | 15        | common-solutions.md  |
-| Security file changed, no tests ran          | 16        | common-solutions.md  |
-| Test framework migrated, hooks broken        | 17        | common-solutions.md  |
-| Hook error suppressed, failures hidden       | 18        | common-solutions.md  |
-| grep breaks on macOS / portability issue     | 19        | common-solutions.md  |
-| `forEach(async` does nothing / returns early | 20        | common-solutions.md  |
-| Need to cancel BullMQ job without DB lookup  | 21        | common-solutions.md  |
-| Promise.race leaks setTimeout handle         | 22        | common-solutions.md  |
-| Duplicate items cause redundant I/O          | 23        | common-solutions.md  |
-| Bare `Error` in service method → 500         | 24        | common-solutions.md  |
-| DB insert + queue enqueue partial failure    | 4c        | critical-patterns.md |
-| Todos from prior sprint, many may be stale   | 25        | common-solutions.md  |
-| E2E tests mock API via `page.route()`        | 26        | common-solutions.md  |
-| New test type exists locally but not in CI   | 8a-8c     | critical-patterns.md |
-| NOSTR verifyEvent with `id: ''`              | 9a-9b     | critical-patterns.md |
-| Fixed method but standalone utility broken   | 28        | common-solutions.md  |
-| Silent fallback with no logging              | 29        | common-solutions.md  |
-| String duplicated across packages            | 10a       | critical-patterns.md |
-| Lazy init with no logging                    | 10b       | critical-patterns.md |
-| New spec silently excluded from test run     | 30        | common-solutions.md  |
-| Type guard uses `any` instead of `unknown`   | 31        | common-solutions.md  |
-| Agent can't create new artifact from CLAUDE.md| 32        | common-solutions.md  |
-| WebSocket mock silently ignored by MSW v2    | 33        | common-solutions.md  |
-| React effects don't fire with fake timers    | 34        | common-solutions.md  |
-| Error-state test times out (React Query)     | 35        | common-solutions.md  |
-| vi.mock factory: variable before init        | 36        | common-solutions.md  |
+| Issue You're Seeing                            | Pattern # | File                 |
+| ---------------------------------------------- | --------- | -------------------- |
+| Race condition on capacity/count               | 1a-1c     | critical-patterns.md |
+| User can access others' data                   | 2         | critical-patterns.md |
+| Query loads too much into memory               | 3         | critical-patterns.md |
+| Two inserts, second might fail                 | 4         | critical-patterns.md |
+| Payment data could be lost                     | 5         | critical-patterns.md |
+| URL from user input fetched server-side        | 6a-6c     | critical-patterns.md |
+| DNS TOCTOU between validate and fetch          | 6b        | critical-patterns.md |
+| IPv6 encoding bypasses SSRF check              | 6c        | critical-patterns.md |
+| Can delete a paid/active entity                | 7         | critical-patterns.md |
+| Button fires duplicate mutations               | 1         | common-solutions.md  |
+| Map grows without bound                        | 2         | common-solutions.md  |
+| New env var not validated                      | 3         | common-solutions.md  |
+| Inconsistent error responses                   | 4         | common-solutions.md  |
+| snake_case in API response                     | 5         | common-solutions.md  |
+| Worker running for stub function               | 6         | common-solutions.md  |
+| Tests break after service change               | 7         | common-solutions.md  |
+| New routes missing rate limit                  | 8         | common-solutions.md  |
+| Named route not matching                       | 9         | common-solutions.md  |
+| `db: any` in constructor                       | 10        | common-solutions.md  |
+| Vitest OOM / worker crashes                    | 11        | common-solutions.md  |
+| `git diff --cached` empty at push              | 12        | common-solutions.md  |
+| Batch op fails on single rejection             | 13        | common-solutions.md  |
+| Same utility in 3+ files                       | 14        | common-solutions.md  |
+| Hook loops agents on pre-existing issues       | 15        | common-solutions.md  |
+| Security file changed, no tests ran            | 16        | common-solutions.md  |
+| Test framework migrated, hooks broken          | 17        | common-solutions.md  |
+| Hook error suppressed, failures hidden         | 18        | common-solutions.md  |
+| grep breaks on macOS / portability issue       | 19        | common-solutions.md  |
+| `forEach(async` does nothing / returns early   | 20        | common-solutions.md  |
+| Need to cancel BullMQ job without DB lookup    | 21        | common-solutions.md  |
+| Promise.race leaks setTimeout handle           | 22        | common-solutions.md  |
+| Duplicate items cause redundant I/O            | 23        | common-solutions.md  |
+| Bare `Error` in service method → 500           | 24        | common-solutions.md  |
+| DB insert + queue enqueue partial failure      | 4c        | critical-patterns.md |
+| Todos from prior sprint, many may be stale     | 25        | common-solutions.md  |
+| E2E tests mock API via `page.route()`          | 26        | common-solutions.md  |
+| New test type exists locally but not in CI     | 8a-8c     | critical-patterns.md |
+| NOSTR verifyEvent with `id: ''`                | 9a-9b     | critical-patterns.md |
+| Fixed method but standalone utility broken     | 28        | common-solutions.md  |
+| Silent fallback with no logging                | 29        | common-solutions.md  |
+| String duplicated across packages              | 10a       | critical-patterns.md |
+| Lazy init with no logging                      | 10b       | critical-patterns.md |
+| New spec silently excluded from test run       | 30        | common-solutions.md  |
+| Type guard uses `any` instead of `unknown`     | 31        | common-solutions.md  |
+| Agent can't create new artifact from CLAUDE.md | 32        | common-solutions.md  |
+| WebSocket mock silently ignored by MSW v2      | 33        | common-solutions.md  |
+| React effects don't fire with fake timers      | 34        | common-solutions.md  |
+| Error-state test times out (React Query)       | 35        | common-solutions.md  |
+| vi.mock factory: variable before init          | 36        | common-solutions.md  |
+| React 19 hoisted after npm update              | 37        | common-solutions.md  |
+| Action bumped, notifications silently fail     | 38        | common-solutions.md  |
+| Lockfile keeps stale workspace resolutions     | 39        | common-solutions.md  |
+| Migrated dead code nobody imports              | 40        | common-solutions.md  |
