@@ -48,7 +48,7 @@
     "@scure/bip32": "^1.7.0",
     "@scure/bip39": "^1.6.0",
     "@sentry/node": "^10.38.0",
-    "@supabase/supabase-js": "^2.38.4",
+    "@supabase/supabase-js": "^2.97.0",
     "@vercel/node": "^5.2.0",
     "argon2": "^0.41.0",
     "bcryptjs": "^2.4.3",
