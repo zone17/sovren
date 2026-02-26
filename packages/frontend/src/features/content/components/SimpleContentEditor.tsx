@@ -1,11 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../store';
-import {
-  addContentBlock,
-  deleteContentBlock,
-  updateContentBlock,
-  updateCurrentContent,
-} from '../../../store/slices/tempStubs'; // TODO: US-E4-010;
+import React, { useCallback, useEffect, useState } from 'react';
+import { useAppSelector } from '../../../store';
 import type { ContentBlock, ContentBlockMetadata, MediaAsset } from '../../../types/content';
 
 interface SimpleContentEditorProps {
@@ -103,16 +97,25 @@ interface MediaBlockProps {
 
 const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) => {
   const { media_assets } = useAppSelector((state) => state.cms);
-  const [uploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // uploadMedia is a no-op Redux action (not an async thunk),
-    // so dispatch().unwrap() would throw TypeError.
-    // TODO: Replace with React Query mutation in US-E4-010.
-    console.error('Media upload not yet implemented:', file.name);
+    setUploading(true);
+    setUploadError(null);
+    try {
+      // TODO: Replace with real media upload API call (React Query mutation)
+      throw new Error(
+        'Media upload not yet implemented. Will be added during React Query migration.'
+      );
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const mediaAsset: MediaAsset | undefined = media_assets.find(
@@ -148,6 +151,7 @@ const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) =>
             className="mb-3"
           />
           {uploading && <div className="text-sm text-gray-600">Uploading to IPFS...</div>}
+          {uploadError && <div className="text-sm text-red-600">{uploadError}</div>}
         </div>
       ) : (
         <div>
@@ -220,17 +224,20 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
   onPublish,
   autoSaveInterval = 30000,
 }) => {
-  const dispatch = useAppDispatch();
   const { current_content, editor_state } = useAppSelector((state) => state.cms);
   const [title, setTitle] = useState(current_content?.title || '');
   const [description, setDescription] = useState(current_content?.description || '');
   const [content, setContent] = useState('');
+  const [localBlocks, setLocalBlocks] = useState<ContentBlock[]>(
+    current_content?.content_blocks || []
+  );
 
   // Initialize content from blocks
   useEffect(() => {
     if (current_content) {
       setTitle(current_content.title);
       setDescription(current_content.description || '');
+      setLocalBlocks(current_content.content_blocks);
 
       // Extract text content from blocks
       const textContent = current_content.content_blocks
@@ -249,66 +256,48 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
 
   // Auto-save functionality
   useEffect(() => {
-    if (!editor_state.auto_save_enabled || !onSave) return;
+    if (!editor_state.auto_save_enabled) return;
 
     const interval = setInterval(() => {
-      onSave();
+      if (editor_state.last_saved === null) {
+        onSave?.();
+      }
     }, autoSaveInterval);
 
     return (): void => clearInterval(interval);
-  }, [editor_state.auto_save_enabled, autoSaveInterval, onSave]);
+  }, [editor_state.auto_save_enabled, editor_state.last_saved, autoSaveInterval, onSave]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const newTitle = e.target.value;
-    setTitle(newTitle);
-    dispatch(
-      updateCurrentContent({
-        title: newTitle,
-        slug: newTitle
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, ''),
-      })
-    );
+    setTitle(e.target.value);
+    // TODO: Persist title changes via React Query mutation
   };
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
-    const newDescription = e.target.value;
-    setDescription(newDescription);
-    dispatch(updateCurrentContent({ description: newDescription }));
+    setDescription(e.target.value);
+    // TODO: Persist description changes via React Query mutation
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     const newContent = e.target.value;
     setContent(newContent);
 
-    if (current_content) {
-      // Update the text content blocks
-      const paragraphs = newContent.split('\n\n').filter((p) => p.trim());
-      const existingTextBlocks = current_content.content_blocks.filter(
-        (block: ContentBlock) => block.type === 'paragraph' || block.type === 'heading'
-      );
-      const textBlocks: ContentBlock[] = paragraphs.map((text, i) => ({
-        id: existingTextBlocks[i]?.id ?? crypto.randomUUID(),
-        type: 'paragraph' as const,
-        content: { text },
-      }));
+    // Update local blocks state — paragraphs are rebuilt, non-text blocks preserved
+    const paragraphs = newContent.split('\n\n').filter((p) => p.trim());
+    const textBlocks: ContentBlock[] = paragraphs.map((text) => ({
+      id: crypto.randomUUID(),
+      type: 'paragraph',
+      content: { text },
+    }));
 
-      // Preserve non-text blocks
-      const nonTextBlocks = current_content.content_blocks.filter(
-        (block: ContentBlock) => !['paragraph', 'heading'].includes(block.type)
-      );
+    const nonTextBlocks = localBlocks.filter(
+      (block: ContentBlock) => !['paragraph', 'heading'].includes(block.type)
+    );
 
-      dispatch(
-        updateCurrentContent({
-          content_blocks: [...textBlocks, ...nonTextBlocks],
-          updated_at: new Date().toISOString(),
-        })
-      );
-    }
+    setLocalBlocks([...textBlocks, ...nonTextBlocks]);
+    // TODO: Persist content block changes via React Query mutation
   };
 
-  const addLightningBlock = (): void => {
+  const addLightningBlock = useCallback((): void => {
     const newBlock: ContentBlock = {
       id: crypto.randomUUID(),
       type: 'lightning-payment',
@@ -318,12 +307,11 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
         type: 'payment_request',
       },
     };
+    setLocalBlocks((prev) => [...prev, newBlock]);
+    // TODO: Persist new block via React Query mutation
+  }, []);
 
-    const insertIndex = current_content?.content_blocks.length || 0;
-    dispatch(addContentBlock({ index: insertIndex, block: newBlock }));
-  };
-
-  const addMediaBlock = (): void => {
+  const addMediaBlock = useCallback((): void => {
     const newBlock: ContentBlock = {
       id: crypto.randomUUID(),
       type: 'image',
@@ -333,24 +321,23 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
         caption: '',
       },
     };
+    setLocalBlocks((prev) => [...prev, newBlock]);
+    // TODO: Persist new block via React Query mutation
+  }, []);
 
-    const insertIndex = current_content?.content_blocks.length || 0;
-    dispatch(addContentBlock({ index: insertIndex, block: newBlock }));
-  };
+  const updateBlock = useCallback((index: number, blockContent: ContentBlockMetadata): void => {
+    setLocalBlocks((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], content: blockContent };
+      return updated;
+    });
+    // TODO: Persist block update via React Query mutation
+  }, []);
 
-  const updateBlock = (index: number, content: ContentBlockMetadata): void => {
-    if (current_content) {
-      const updatedBlock = {
-        ...current_content.content_blocks[index],
-        content,
-      };
-      dispatch(updateContentBlock({ index, block: updatedBlock }));
-    }
-  };
-
-  const deleteBlock = (index: number): void => {
-    dispatch(deleteContentBlock(index));
-  };
+  const deleteBlock = useCallback((index: number): void => {
+    setLocalBlocks((prev) => prev.filter((_, i) => i !== index));
+    // TODO: Persist block deletion via React Query mutation
+  }, []);
 
   const formatText = (type: 'bold' | 'italic' | 'heading'): void => {
     const textarea = document.getElementById('content-editor') as HTMLTextAreaElement;
@@ -495,12 +482,10 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
 
       {/* Custom Blocks */}
       <div className="mt-6">
-        {current_content.content_blocks
+        {localBlocks
           .filter((block: ContentBlock) => !['paragraph', 'heading'].includes(block.type))
-          .map((block: ContentBlock, _index: number) => {
-            const actualIndex = current_content.content_blocks.findIndex(
-              (b: ContentBlock) => b.id === block.id
-            );
+          .map((block: ContentBlock) => {
+            const actualIndex = localBlocks.findIndex((b: ContentBlock) => b.id === block.id);
 
             if (block.type === 'lightning-payment') {
               return (

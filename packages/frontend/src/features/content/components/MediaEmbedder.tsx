@@ -11,8 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../store';
-import { addContentBlock } from '../../../store/slices/tempStubs'; // TODO: US-E4-010;
+import { useAppSelector } from '../../../store';
 import type { ContentBlock, MediaAsset } from '../../../types/content';
 
 // Supported media types
@@ -49,8 +48,7 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
   maxFileSize = 50 * 1024 * 1024, // 50MB default
   className = '',
 }) => {
-  const dispatch = useAppDispatch();
-  const { media_assets, current_content } = useAppSelector((state) => state.cms);
+  const { media_assets } = useAppSelector((state) => state.cms);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -65,7 +63,7 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
 
   // Handle file selection
   const handleFileSelect = useCallback(
-    (files: FileList | null) => {
+    async (files: FileList | null) => {
       if (!files || files.length === 0) return;
 
       const file = files[0];
@@ -101,15 +99,25 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
         return;
       }
 
-      // uploadMedia is a no-op Redux action (not an async thunk),
-      // so dispatch().unwrap() would throw TypeError.
-      // TODO: Replace with IPFS upload via React Query in US-E4-010.
-      setError('Media upload is not yet implemented. IPFS integration coming soon.');
-      setUploading(false);
+      // Create preview
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+
+      // Upload file
+      setUploading(true);
       setUploadProgress(0);
-      setPreviewUrl(null);
+
+      try {
+        // TODO: Implement real media upload via IPFS/Pinata API (React Query mutation)
+        throw new Error('Media upload is not yet implemented. IPFS integration coming soon.');
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Upload failed');
+        setUploading(false);
+        setUploadProgress(0);
+        setPreviewUrl(null);
+      }
     },
-    [maxFileSize, allowedTypes]
+    [maxFileSize, allowedTypes, onMediaAdded]
   );
 
   // Handle external URL embedding
@@ -172,15 +180,9 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
       },
     };
 
-    // Add to content
-    if (current_content) {
-      const insertIndex = current_content.content_blocks.length;
-      dispatch(addContentBlock({ index: insertIndex, block: embedBlock }));
-    }
-
     onMediaAdded?.(embedBlock);
     setExternalUrl('');
-  }, [externalUrl, allowedTypes, current_content, dispatch, onMediaAdded]);
+  }, [externalUrl, allowedTypes, onMediaAdded]);
 
   // Handle existing media selection
   const handleGallerySelect = useCallback(
@@ -203,15 +205,9 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
         },
       };
 
-      // Add to content
-      if (current_content) {
-        const insertIndex = current_content.content_blocks.length;
-        dispatch(addContentBlock({ index: insertIndex, block: mediaBlock }));
-      }
-
       onMediaAdded?.(mediaBlock);
     },
-    [current_content, dispatch, onMediaAdded]
+    [onMediaAdded]
   );
 
   // Drag and drop handlers

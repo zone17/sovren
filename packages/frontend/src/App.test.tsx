@@ -2,17 +2,11 @@ import { configureStore } from '@reduxjs/toolkit';
 import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import App from './App';
-// TODO: US-E4-010 - Replace with React Query
-import { paymentReducer as paymentSlice, postReducer as postSlice } from './store/slices/tempStubs';
-import userSlice from './store/slices/userSlice';
+import { reducers } from './store';
 
 const createTestStore = (): ReturnType<typeof configureStore> => {
   return configureStore({
-    reducer: {
-      user: userSlice,
-      post: postSlice,
-      payment: paymentSlice,
-    },
+    reducer: reducers,
   });
 };
 

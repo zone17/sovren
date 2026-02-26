@@ -29,6 +29,26 @@ Rewrote `RefundService.test.ts` from 84 mock-based tests (28 `vi.fn()` stubs) to
 
 Added 7 missing `DomainEventType` enum values (`REFUND_INITIATED`, `REFUND_AUTHORIZED`, `REFUND_DENIED`, `REFUND_COMPLETED`, `REFUND_FAILED`, `REFUND_CANCELED`, `REFUND_REVERSED`) to `IEventBus.ts`. `RefundService.ts` referenced these values at 7 call sites but they didn't exist, causing `DomainEventBuilder.build()` to throw.
 
+### docs: ADR-019 & ADR-020 — BullMQ + REST+Zod Standards — 2026-02-26
+
+**Category**: Documentation — Architecture Decision Records
+**Status**: Complete
+**Epic**: v2.0 Production Roadmap (Sprint 0 Day 1 Prerequisite)
+
+Two prescriptive ADRs that codify existing patterns and extend them with mandatory conventions
+for all new backend work across v2.0's 5 sprints.
+
+- **ADR-019: BullMQ Job Queue Standard** — Queue naming (`{domain}-{action}`), retry policy
+  (3 attempts, exponential 5s), failed job handling (BullMQ native failed set, no separate DLQ),
+  processor implementation via `IJobProcessor<T>`, concurrency table for 4 new queues,
+  job data rules, compensating transaction pattern, monitoring via Bull Board
+- **ADR-020: REST+Zod API Contract Standard** — Canonical middleware stack
+  (`authenticate → requireRole → rateLimiter → validate → asyncHandler → createApiResponse`),
+  validation standard (`validate()` canonical, `safeParse()` deprecated), response format
+  with `snakeToCamel` documentation, 8-code error registry, `paginationSchema` mandatory
+  for list endpoints, shared type ownership, rate limiting tiers, versioning strategy (all v2, no v3),
+  lazy singleton service resolution
+
 ### feat(multi-platform): EPIC-009B Frontend — Unified Inbox + Cross-Platform Analytics — 2026-02-18
 
 **Category**: Feature — Multi-Platform Hub Extension

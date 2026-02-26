@@ -5,10 +5,33 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../features/auth';
-import { paymentReducer as paymentSlice, postReducer as postSlice } from '../store/slices/tempStubs';
-import userSlice, { clearUser, setUser } from '../store/slices/userSlice';
+import userSlice from '../store/slices/userSlice';
+
 import type { User } from '../types';
 import Post from './Post';
+
+// Inline no-op reducers — Post component reads state.post.posts which
+// doesn't exist in the real store (migrated to React Query). These stubs
+// keep tests functional until Post.tsx is fully migrated.
+interface PostState {
+  posts: unknown[];
+  currentPost: unknown | null;
+  loading: boolean;
+  error: string | null;
+}
+interface PaymentState {
+  payments: unknown[];
+  currentPayment: unknown | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const postSlice = (
+  state: PostState = { posts: [], currentPost: null, loading: false, error: null }
+): PostState => state;
+const paymentSlice = (
+  state: PaymentState = { payments: [], currentPayment: null, loading: false, error: null }
+): PaymentState => state;
 
 // Mock react-router-dom
 const mockNavigate = vi.fn();
@@ -17,7 +40,7 @@ vi.mock(
   'react-router-dom',
   async (): Promise<Record<string, unknown>> => ({
     ...(await vi.importActual('react-router-dom')),
-    useNavigate: (): any => mockNavigate,
+    useNavigate: (): ReturnType<typeof mockNavigate> => mockNavigate,
     useParams: (): Record<string, string> => mockUseParams() as Record<string, string>,
   })
 );
@@ -83,13 +106,15 @@ const mockPost = {
 const createTestStore = (
   options: { withUser?: boolean; withPosts?: boolean } = {}
 ): ReturnType<typeof configureStore> => {
-  const postInitialState = options.withPosts !== false
-    ? { posts: [mockPost], currentPost: null, loading: false, error: null }
-    : { posts: [], currentPost: null, loading: false, error: null };
+  const postInitialState =
+    options.withPosts !== false
+      ? { posts: [mockPost], currentPost: null, loading: false, error: null }
+      : { posts: [], currentPost: null, loading: false, error: null };
 
-  const userInitialState = options.withUser !== false
-    ? { currentUser: mockUser, loading: false, error: null }
-    : { currentUser: null, loading: false, error: null };
+  const userInitialState =
+    options.withUser !== false
+      ? { currentUser: mockUser, loading: false, error: null }
+      : { currentUser: null, loading: false, error: null };
 
   return configureStore({
     reducer: {

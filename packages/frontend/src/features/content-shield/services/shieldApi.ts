@@ -17,7 +17,7 @@ export const shieldApi = {
   // -- Provenance --
 
   getProvenance(contentId: string): Promise<ApiResponse<ProvenanceData>> {
-    return apiClient['request']('GET', `${BASE}/provenance/${contentId}`);
+    return apiClient.get(`${BASE}/provenance/${contentId}`);
   },
 
   // -- Fingerprints --
@@ -27,7 +27,7 @@ export const shieldApi = {
     page = 1,
     limit = 20
   ): Promise<PaginatedApiResponse<FingerprintCoverageData>> {
-    return apiClient['request']('GET', `${BASE}/fingerprints/${creatorId}`, undefined, {
+    return apiClient.get(`${BASE}/fingerprints/${creatorId}`, {
       page,
       limit,
     });
@@ -40,18 +40,18 @@ export const shieldApi = {
     page = 1,
     limit = 20
   ): Promise<PaginatedApiResponse<ContentAlert[]>> {
-    return apiClient['request']('GET', `${BASE}/alerts`, undefined, { status, page, limit });
+    return apiClient.get(`${BASE}/alerts`, { status, page, limit });
   },
 
   getAlertDetail(alertId: string): Promise<ApiResponse<AlertDetail>> {
-    return apiClient['request']('GET', `${BASE}/alerts/${alertId}`);
+    return apiClient.get(`${BASE}/alerts/${alertId}`);
   },
 
   updateAlertStatus(
     alertId: string,
     status: AlertStatus
   ): Promise<ApiResponse<{ id: string; status: AlertStatus; updated_at: string }>> {
-    return apiClient['request']('PUT', `${BASE}/alerts/${alertId}`, { status });
+    return apiClient.put(`${BASE}/alerts/${alertId}`, { status });
   },
 
   // -- DMCA Reports --
@@ -60,9 +60,8 @@ export const shieldApi = {
     alertId: string,
     format: ReportFormat = 'json'
   ): Promise<ApiResponse<{ report: DMCAReport }>> {
-    return apiClient['request']('POST', `${BASE}/alerts/${alertId}/dmca-report`, undefined, {
+    return apiClient.post(`${BASE}/alerts/${alertId}/dmca-report`, undefined, {
       format,
     });
   },
-
 };

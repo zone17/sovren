@@ -11,36 +11,33 @@ export const circlesApi = {
     niche?: string;
     maxMembers?: number;
   }): Promise<ApiResponse<Circle>> {
-    return apiClient['request']('POST', BASE, data);
+    return apiClient.post(BASE, data);
   },
 
   getCircles(): Promise<ApiResponse<{ circles: CircleWithMemberCount[] }>> {
-    return apiClient['request']('GET', BASE);
+    return apiClient.get(BASE);
   },
 
   getSuggestedCircles(): Promise<ApiResponse<{ circles: CircleWithMemberCount[] }>> {
-    return apiClient['request']('GET', `${BASE}/suggested`);
+    return apiClient.get(`${BASE}/suggested`);
   },
 
   joinCircle(circleId: string): Promise<ApiResponse<CircleMember>> {
-    return apiClient['request']('POST', `${BASE}/${circleId}/join`);
+    return apiClient.post(`${BASE}/${circleId}/join`);
   },
 
   removeMember(circleId: string, memberId: string): Promise<ApiResponse<void>> {
-    return apiClient['request']('DELETE', `${BASE}/${circleId}/members/${memberId}`);
+    return apiClient.delete(`${BASE}/${circleId}/members/${memberId}`);
   },
 
   getCirclePosts(
     circleId: string,
     params?: { page?: number; limit?: number }
   ): Promise<ApiResponse<{ posts: CirclePost[]; total: number }>> {
-    return apiClient['request']('GET', `${BASE}/${circleId}/posts`, undefined, params);
+    return apiClient.get(`${BASE}/${circleId}/posts`, params);
   },
 
-  postToCircle(
-    circleId: string,
-    data: { content: string }
-  ): Promise<ApiResponse<CirclePost>> {
-    return apiClient['request']('POST', `${BASE}/${circleId}/posts`, data);
+  postToCircle(circleId: string, data: { content: string }): Promise<ApiResponse<CirclePost>> {
+    return apiClient.post(`${BASE}/${circleId}/posts`, data);
   },
 };

@@ -39,24 +39,33 @@ interface PremiumContentPaywallProps {
 
 export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
   content,
-  onPaymentComplete: _onPaymentComplete,
+  onPaymentComplete,
 }) => {
   const { currentUser } = useAppSelector((state) => state.user);
-  const [isProcessingPayment] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [selectedAmount, setSelectedAmount] = useState(content.price_sats || 1000);
 
-  const handlePayment = useCallback(() => {
+  const handlePayment = useCallback(async () => {
     if (!currentUser?.nostr_pubkey) {
       setPaymentError('Please sign in to access premium content');
       return;
     }
 
-    // supportContent is a no-op Redux action (not an async thunk),
-    // so dispatch().unwrap() would throw TypeError.
-    // TODO: Replace with Lightning payment via React Query in US-E4-010.
-    setPaymentError('Payment processing is not yet available. Lightning integration coming soon.');
-  }, [currentUser?.nostr_pubkey]);
+    setIsProcessingPayment(true);
+    setPaymentError(null);
+
+    try {
+      // TODO: Implement real Lightning payment flow via React Query mutation
+      throw new Error(
+        'Payment processing is not yet available. Lightning integration coming soon.'
+      );
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'Payment failed. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  }, [content.id, content.title, selectedAmount, currentUser?.nostr_pubkey, onPaymentComplete]);
 
   const predefinedAmounts = [
     content.price_sats || 1000,
