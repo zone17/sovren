@@ -11,5 +11,9 @@ export {
   InMemoryCacheService,
   SilentLogger,
   TestableEventBus,
+  installSubscriptionPaymentShim,
+  installFailedPaymentShim,
+  makeDomainEvent,
+  overridePaymentHistory,
   type PaymentTestHarness,
 } from './payment-test-harness';

@@ -22,34 +22,18 @@ import {
 } from '../../../types/subscription';
 import { Currency } from '../../../types/currency';
 import { PaymentStatus } from '../../../types/payment';
-import { createPaymentTestHarness, type PaymentTestHarness } from '../../../test-utils';
+import {
+  createPaymentTestHarness,
+  installSubscriptionPaymentShim,
+  installFailedPaymentShim,
+  type PaymentTestHarness,
+} from '../../../test-utils';
 
-/**
- * SubscriptionService internally calls paymentService.processPayment() with non-standard
- * params (userId, amount, currency, description) instead of the ProcessPaymentParams shape
- * (invoiceId, method). This is a pre-existing source mismatch — the real processPayment
- * requires an invoiceId to look up. This helper overrides processPayment on the harness
- * to accept SubscriptionService's call pattern and return a successful result.
- */
-function installSubscriptionPaymentShim(harness: PaymentTestHarness): void {
-  let txCounter = 0;
-  (harness.paymentService as any).processPayment = async (params: any) => {
-    txCounter++;
-    return {
-      success: true,
-      transactionId: `shim-tx-${txCounter}`,
-      paymentHash: `shim-hash-${txCounter}`,
-      preimage: `shim-preimage-${txCounter}`,
-      amount: params.amount ?? 0,
-      currency: params.currency ?? Currency.USD,
-      status: PaymentStatus.COMPLETED,
-      timestamp: new Date(),
-    };
-  };
-}
+// Plan templates used across all tests.
+// Return type matches createPlan() parameter: Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>
+type CreatePlanInput = Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>;
 
-// Plan templates used across all tests
-function makeCreatorPlan(): Omit<SubscriptionPlan, 'id'> & { id?: string } {
+function makeCreatorPlan(): CreatePlanInput {
   return {
     name: 'Creator',
     tier: SubscriptionTier.CREATOR,
@@ -80,12 +64,10 @@ function makeCreatorPlan(): Omit<SubscriptionPlan, 'id'> & { id?: string } {
     },
     trialDays: 14,
     active: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   };
 }
 
-function makeProPlan(): Omit<SubscriptionPlan, 'id'> & { id?: string } {
+function makeProPlan(): CreatePlanInput {
   return {
     name: 'Pro',
     tier: SubscriptionTier.PRO,
@@ -116,8 +98,6 @@ function makeProPlan(): Omit<SubscriptionPlan, 'id'> & { id?: string } {
     },
     trialDays: 14,
     active: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   };
 }
 
@@ -139,7 +119,7 @@ describe('SubscriptionService', () => {
   describe('Plan Management', () => {
     describe('createPlan', () => {
       it('should create a new subscription plan', async () => {
-        const plan = await service.createPlan(makeCreatorPlan() as any);
+        const plan = await service.createPlan(makeCreatorPlan());
 
         expect(plan.id).toBeDefined();
         expect(plan.name).toBe('Creator');
@@ -148,7 +128,7 @@ describe('SubscriptionService', () => {
       });
 
       it('should set creation and update timestamps', async () => {
-        const plan = await service.createPlan(makeCreatorPlan() as any);
+        const plan = await service.createPlan(makeCreatorPlan());
 
         expect(plan.createdAt).toBeInstanceOf(Date);
         expect(plan.updatedAt).toBeInstanceOf(Date);
@@ -157,7 +137,7 @@ describe('SubscriptionService', () => {
 
     describe('getPlan', () => {
       it('should retrieve a plan by ID', async () => {
-        const created = await service.createPlan(makeCreatorPlan() as any);
+        const created = await service.createPlan(makeCreatorPlan());
 
         const retrieved = await service.getPlan(created.id);
         expect(retrieved).toEqual(created);
@@ -171,16 +151,16 @@ describe('SubscriptionService', () => {
 
     describe('listPlans', () => {
       it('should list all active plans', async () => {
-        await service.createPlan(makeCreatorPlan() as any);
-        await service.createPlan(makeProPlan() as any);
+        await service.createPlan(makeCreatorPlan());
+        await service.createPlan(makeProPlan());
 
         const plans = await service.listPlans();
         expect(plans).toHaveLength(2);
       });
 
       it('should filter plans by tier', async () => {
-        await service.createPlan(makeCreatorPlan() as any);
-        await service.createPlan(makeProPlan() as any);
+        await service.createPlan(makeCreatorPlan());
+        await service.createPlan(makeProPlan());
 
         const creatorPlans = await service.listPlans(SubscriptionTier.CREATOR);
         expect(creatorPlans).toHaveLength(1);
@@ -188,7 +168,7 @@ describe('SubscriptionService', () => {
       });
 
       it('should not include inactive plans', async () => {
-        await service.createPlan(makeCreatorPlan() as any);
+        await service.createPlan(makeCreatorPlan());
         const inactivePlan = await service.createPlan({
           ...makeProPlan(),
           active: false,
@@ -202,7 +182,7 @@ describe('SubscriptionService', () => {
 
     describe('updatePlan', () => {
       it('should update plan details', async () => {
-        const plan = await service.createPlan(makeCreatorPlan() as any);
+        const plan = await service.createPlan(makeCreatorPlan());
 
         const updated = await service.updatePlan(plan.id, {
           name: 'Updated Plan',
@@ -223,7 +203,7 @@ describe('SubscriptionService', () => {
 
     describe('deactivatePlan', () => {
       it('should deactivate a plan', async () => {
-        const plan = await service.createPlan(makeCreatorPlan() as any);
+        const plan = await service.createPlan(makeCreatorPlan());
 
         await service.deactivatePlan(plan.id);
 
@@ -235,8 +215,8 @@ describe('SubscriptionService', () => {
 
   describe('Subscription Creation', () => {
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
-      proPlan = await service.createPlan(makeProPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
+      proPlan = await service.createPlan(makeProPlan());
     });
 
     describe('createSubscription', () => {
@@ -520,7 +500,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -657,7 +637,7 @@ describe('SubscriptionService', () => {
 
   describe('Trial Management', () => {
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
     });
 
     describe('startTrial', () => {
@@ -775,8 +755,8 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
-      proPlan = await service.createPlan(makeProPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
+      proPlan = await service.createPlan(makeProPlan());
 
       // SubscriptionService calls processPayment with non-standard params (pre-existing mismatch)
       installSubscriptionPaymentShim(harness);
@@ -845,16 +825,7 @@ describe('SubscriptionService', () => {
       });
 
       it('should throw error if payment fails', async () => {
-        // Override shim to simulate failure
-        (harness.paymentService as any).processPayment = async () => ({
-          success: false,
-          error: 'Payment failed',
-          transactionId: '',
-          amount: 0,
-          currency: Currency.USD,
-          status: PaymentStatus.FAILED,
-          timestamp: new Date(),
-        });
+        installFailedPaymentShim(harness);
 
         await expect(service.upgradeSubscription(subscription.id, proPlan.id)).rejects.toThrow(
           'Payment failed'
@@ -919,7 +890,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
 
       // SubscriptionService calls processPayment with non-standard params (pre-existing mismatch)
       installSubscriptionPaymentShim(harness);
@@ -953,15 +924,7 @@ describe('SubscriptionService', () => {
       });
 
       it('should handle payment failure', async () => {
-        (harness.paymentService as any).processPayment = async () => ({
-          success: false,
-          error: 'Insufficient funds',
-          transactionId: '',
-          amount: 0,
-          currency: Currency.USD,
-          status: PaymentStatus.FAILED,
-          timestamp: new Date(),
-        });
+        installFailedPaymentShim(harness, 'Insufficient funds');
 
         const result = await service.renewSubscription(subscription.id);
 
@@ -1044,15 +1007,7 @@ describe('SubscriptionService', () => {
     describe('retryFailedPayment', () => {
       it('should retry failed payment', async () => {
         // Simulate failed payment first
-        (harness.paymentService as any).processPayment = async () => ({
-          success: false,
-          error: 'Insufficient funds',
-          transactionId: '',
-          amount: 0,
-          currency: Currency.USD,
-          status: PaymentStatus.FAILED,
-          timestamp: new Date(),
-        });
+        installFailedPaymentShim(harness, 'Insufficient funds');
 
         await service.renewSubscription(subscription.id);
 
@@ -1099,7 +1054,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1182,7 +1137,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1237,7 +1192,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1288,8 +1243,8 @@ describe('SubscriptionService', () => {
 
   describe('Analytics & Reporting', () => {
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
-      proPlan = await service.createPlan(makeProPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
+      proPlan = await service.createPlan(makeProPlan());
     });
 
     describe('calculateMRR', () => {
@@ -1363,7 +1318,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1413,7 +1368,7 @@ describe('SubscriptionService', () => {
     let subscription: Subscription;
 
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
       subscription = await service.createSubscription({
         userId: 'user_123',
         planId: creatorPlan.id,
@@ -1454,7 +1409,7 @@ describe('SubscriptionService', () => {
 
   describe('Health & Maintenance', () => {
     beforeEach(async () => {
-      creatorPlan = await service.createPlan(makeCreatorPlan() as any);
+      creatorPlan = await service.createPlan(makeCreatorPlan());
     });
 
     describe('healthCheck', () => {

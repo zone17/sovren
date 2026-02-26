@@ -16,29 +16,15 @@ import type {
 } from '../../../types/payment-analytics';
 import { AnalyticsPeriod, ExportFormat } from '../../../types/payment-analytics';
 import type { PaymentTransaction } from '../../../types/payment';
-import { PaymentStatus, PaymentMethod } from '../../../types/payment';
+import { PaymentStatus, PaymentMethod, PaymentFailureReason } from '../../../types/payment';
 import { Currency } from '../../../types/currency';
-import { DomainEventType, type DomainEvent } from '../../../interfaces/shared/IEventBus';
-import { createPaymentTestHarness, type PaymentTestHarness } from '../../../test-utils';
-
-/** Create a well-formed DomainEvent for publishing through the real EventBusService. */
-function makeDomainEvent(type: DomainEventType, payload: any = {}): DomainEvent {
-  return {
-    id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    type,
-    aggregateId: 'test',
-    aggregateType: 'test',
-    payload,
-    metadata: {
-      timestamp: new Date(),
-      correlationId: 'test-corr',
-      causationId: 'test-cause',
-      userId: 'test-user',
-      version: '1',
-      source: 'test',
-    },
-  };
-}
+import { DomainEventType } from '../../../interfaces/shared/IEventBus';
+import {
+  createPaymentTestHarness,
+  makeDomainEvent,
+  overridePaymentHistory,
+  type PaymentTestHarness,
+} from '../../../test-utils';
 
 // Standard sample transactions seeded into every test via seedRawTransaction.
 // 4 transactions: 2 completed, 1 failed, 1 refunded (matching the original test data).
@@ -81,7 +67,7 @@ function makeSampleTransactions(): PaymentTransaction[] {
       status: PaymentStatus.FAILED,
       method: PaymentMethod.ONCHAIN,
       paymentHash: 'hash3',
-      failureReason: 'insufficient_funds' as any,
+      failureReason: PaymentFailureReason.INSUFFICIENT_FUNDS,
       retryCount: 2,
       createdAt: new Date('2024-01-03'),
       updatedAt: new Date('2024-01-03'),
@@ -129,10 +115,8 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should subscribe to payment events', async () => {
-      // The real EventBusService stores subscriptions internally.
-      // Verify by checking that publishing a domain event doesn't throw.
+      // Publishing a domain event should not throw — verifies event subscriptions work.
       await harness.eventBus.publish(makeDomainEvent(DomainEventType.PAYMENT_RECEIVED));
-      expect(true).toBe(true);
     });
 
     it('should set default base currency to BTC', () => {
@@ -199,7 +183,7 @@ describe('PaymentAnalyticsService', () => {
 
     it('should handle empty transactions', async () => {
       // Override to return empty set
-      (harness.paymentService as any).getPaymentHistory = async () => [];
+      overridePaymentHistory(harness, []);
 
       const result = await service.getRevenueAnalytics(query);
 
@@ -213,7 +197,7 @@ describe('PaymentAnalyticsService', () => {
         { ...sampleTransactions[1], currency: 'EUR', amountFiat: 200 },
       ];
 
-      (harness.paymentService as any).getPaymentHistory = async () => multiCurrencyTxs;
+      overridePaymentHistory(harness, multiCurrencyTxs);
 
       // Seed USD:BTC and EUR:BTC fallback rates
       const cs = harness.currencyService as any;
@@ -499,7 +483,7 @@ describe('PaymentAnalyticsService', () => {
 
     it('should get individual customer LTV', async () => {
       // Override to return only user1's transaction
-      (harness.paymentService as any).getPaymentHistory = async () => [sampleTransactions[0]];
+      overridePaymentHistory(harness, [sampleTransactions[0]]);
 
       const ltv = await service.getCustomerLTV('user1');
 
@@ -616,8 +600,6 @@ describe('PaymentAnalyticsService', () => {
       const subscriptionId = service.subscribeToRealtimeUpdates(callback);
 
       service.unsubscribeFromRealtimeUpdates(subscriptionId);
-
-      expect(true).toBe(true);
     });
 
     it('should generate alerts for low success rate', async () => {
@@ -631,7 +613,7 @@ describe('PaymentAnalyticsService', () => {
           updatedAt: now,
         }));
 
-      (harness.paymentService as any).getPaymentHistory = async () => failedTxs;
+      overridePaymentHistory(harness, failedTxs);
 
       const result = await service.getRealtimeMetrics();
 
@@ -780,14 +762,19 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should complete aggregation job', async () => {
-      const jobId = await service.triggerAggregation(AnalyticsPeriod.DAILY);
+      vi.useFakeTimers();
+      try {
+        const jobId = await service.triggerAggregation(AnalyticsPeriod.DAILY);
 
-      await new Promise((resolve) => setTimeout(resolve, 5100));
+        vi.advanceTimersByTime(5100);
 
-      const status = await service.getAggregationJobStatus(jobId);
+        const status = await service.getAggregationJobStatus(jobId);
 
-      expect(status?.status).toBe('completed');
-      expect(status?.progress).toBe(100);
+        expect(status?.status).toBe('completed');
+        expect(status?.progress).toBe(100);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
@@ -817,9 +804,6 @@ describe('PaymentAnalyticsService', () => {
 
     it('should clear cache with pattern', async () => {
       await service.clearCache('analytics:revenue:*');
-
-      // Should not throw
-      expect(true).toBe(true);
     });
 
     it('should get cache stats', async () => {
@@ -863,8 +847,6 @@ describe('PaymentAnalyticsService', () => {
       const subscriptionId = service.subscribeToEvents('analytics.generated', callback);
 
       service.unsubscribeFromEvents(subscriptionId);
-
-      expect(true).toBe(true);
     });
   });
 
@@ -1020,9 +1002,6 @@ describe('PaymentAnalyticsService', () => {
   describe('Dispose', () => {
     it('should dispose resources', async () => {
       await service.dispose();
-
-      // Service should be disposed without error
-      expect(true).toBe(true);
     });
 
     it('should clear all subscriptions on dispose', async () => {
@@ -1031,8 +1010,6 @@ describe('PaymentAnalyticsService', () => {
       service.subscribeToEvents('test', callback);
 
       await service.dispose();
-
-      expect(true).toBe(true);
     });
   });
 
@@ -1053,7 +1030,7 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should handle empty time series', async () => {
-      (harness.paymentService as any).getPaymentHistory = async () => [];
+      overridePaymentHistory(harness, []);
 
       const query: AnalyticsQuery = {
         period: AnalyticsPeriod.DAILY,
@@ -1076,7 +1053,7 @@ describe('PaymentAnalyticsService', () => {
         },
       ];
 
-      (harness.paymentService as any).getPaymentHistory = async () => multiCurrencyTxs;
+      overridePaymentHistory(harness, multiCurrencyTxs);
 
       // Override convert to throw
       const origConvert = harness.currencyService.convert.bind(harness.currencyService);
@@ -1097,7 +1074,7 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should handle single transaction', async () => {
-      (harness.paymentService as any).getPaymentHistory = async () => [sampleTransactions[0]];
+      overridePaymentHistory(harness, [sampleTransactions[0]]);
 
       const query: AnalyticsQuery = {
         period: AnalyticsPeriod.DAILY,
@@ -1111,7 +1088,7 @@ describe('PaymentAnalyticsService', () => {
     });
 
     it('should handle zero division in calculations', async () => {
-      (harness.paymentService as any).getPaymentHistory = async () => [];
+      overridePaymentHistory(harness, []);
 
       const query: AnalyticsQuery = {
         period: AnalyticsPeriod.DAILY,
@@ -1429,7 +1406,7 @@ describe('PaymentAnalyticsService', () => {
           updatedAt: new Date(now.getTime() - 1000),
         }));
 
-      (harness.paymentService as any).getPaymentHistory = async () => recentTxs;
+      overridePaymentHistory(harness, recentTxs);
 
       const metrics = await service.getRealtimeMetrics();
 

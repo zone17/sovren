@@ -3,6 +3,20 @@
  *
  * Provides real service instances with in-memory backends for integration testing.
  * Eliminates all vi.fn() mocks — services are wired together exactly as in production.
+ *
+ * ## Per-Service Setup Guide
+ *
+ * **RefundService tests**: Use harness directly — seedCompletedTransaction() creates
+ * transactions that can be refunded via refundService.processRefund().
+ *
+ * **SubscriptionService tests**: Call installSubscriptionPaymentShim(harness) before any
+ * subscription operations. SubscriptionService calls processPayment() with non-standard
+ * params ({userId, amount, currency}) that the real PaymentProcessingService doesn't accept.
+ * TODO(payment-api-alignment): Remove shim when SubscriptionService uses ProcessPaymentParams.
+ *
+ * **PaymentAnalyticsService tests**: Use seedRawTransaction() to inject arbitrary transaction
+ * states (failed, refunded) that the simplified payment flow can't produce. Use
+ * makeDomainEvent() for event-driven analytics tests.
  */
 
 import { EventBusService } from '../services/EventBusService';
@@ -16,21 +30,29 @@ import type { ILogger } from '../interfaces/shared/ILogger';
 import type { ICacheService, CacheOptions } from '../interfaces/shared/ICacheService';
 import type { IPaymentProcessingService } from '../interfaces/payment/IPaymentProcessingService';
 import type { ICurrencyService } from '../interfaces/payment/ICurrencyService';
-// IAuditLogService file doesn't exist (pre-existing compile gap); import type is stripped by esbuild
-import type { IAuditLogService } from '../interfaces/shared/IAuditLogService';
-import type { PaymentTransaction } from '../types/payment';
-import { PaymentMethod } from '../types/payment';
+import type { DomainEvent } from '../interfaces/shared/IEventBus';
+import { DomainEventType, DomainEventBuilder } from '../interfaces/shared/IEventBus';
+import type { PaymentTransaction, PaymentResult } from '../types/payment';
+import { PaymentMethod, PaymentStatus } from '../types/payment';
+import { Currency } from '../types/currency';
 
 /**
  * EventBus subclass that adds an emit() shim.
  * SubscriptionService calls this.eventBus.emit(type, data) — a pre-existing
  * interface mismatch (IEventBus only has publish()). This class bridges the gap
  * and captures emitted events for test assertions.
+ *
+ * **WARNING**: Events are captured but NOT processed — subscribers registered via
+ * subscribe() will NOT fire. If your test depends on event-driven side effects,
+ * use publish() directly with a DomainEvent instead.
+ *
+ * TODO(eventbus-emit-publish): SubscriptionService should use publish() instead of
+ * emit(). When fixed, this shim and the capturedEmits array become unnecessary.
  */
 export class TestableEventBus extends EventBusService {
-  capturedEmits: Array<{ type: string; data: any }> = [];
+  capturedEmits: Array<{ type: string; data: unknown }> = [];
 
-  async emit(type: string, data: any): Promise<void> {
+  async emit(type: string, data: unknown): Promise<void> {
     this.capturedEmits.push({ type, data });
   }
 
@@ -161,7 +183,7 @@ export interface PaymentTestHarness {
   cache: ICacheService;
   currencyService: ICurrencyService;
   paymentService: IPaymentProcessingService;
-  auditLog: IAuditLogService;
+  auditLog: AuditLogService;
   refundService: RefundService;
   subscriptionService: SubscriptionService;
   analyticsService: PaymentAnalyticsService;
@@ -247,15 +269,30 @@ export function createPaymentTestHarness(): PaymentTestHarness {
     await new Promise<void>((resolve) => process.nextTick(resolve));
   };
 
+  /**
+   * Save a raw transaction to the in-memory repository for analytics tests
+   * needing arbitrary states (failed, refunded) that the simplified payment
+   * processing flow can't produce.
+   *
+   * **CAUTION**: Accesses private `repository` field via `as any`. If the
+   * internal API changes, this will throw a descriptive error immediately.
+   */
   const seedRawTransaction = async (tx: PaymentTransaction): Promise<void> => {
-    // Access the private in-memory repository to inject arbitrary transaction data.
-    // This enables analytics tests with states (failed, refunded) that the simplified
-    // payment processing implementations can't produce through the normal flow.
     const repo = (paymentService as any).repository;
+    if (!repo || typeof repo.saveTransaction !== 'function') {
+      throw new Error(
+        'seedRawTransaction: PaymentProcessingService internal API changed. ' +
+        'Expected (paymentService as any).repository.saveTransaction to exist.'
+      );
+    }
     await repo.saveTransaction(tx);
   };
 
   const dispose = async (): Promise<void> => {
+    await paymentService.dispose();
+    await currencyService.dispose();
+    await auditLog.dispose();
+    await analyticsService.dispose();
     await refundService.dispose();
     await subscriptionService.dispose();
     await eventBus.dispose();
@@ -268,7 +305,7 @@ export function createPaymentTestHarness(): PaymentTestHarness {
     cache,
     currencyService,
     paymentService,
-    auditLog: auditLog as any,
+    auditLog,
     refundService,
     subscriptionService,
     analyticsService,
@@ -277,4 +314,77 @@ export function createPaymentTestHarness(): PaymentTestHarness {
     flushPromises,
     dispose,
   };
+}
+
+/**
+ * Override processPayment on the harness to accept SubscriptionService's non-standard
+ * call pattern ({userId, amount, currency, description}) and return a successful result.
+ *
+ * SubscriptionService internally calls processPayment with params that don't match
+ * ProcessPaymentParams (needs invoiceId, method). This shim bridges the gap.
+ *
+ * TODO(payment-api-alignment): Remove when SubscriptionService uses ProcessPaymentParams.
+ */
+export function installSubscriptionPaymentShim(harness: PaymentTestHarness): void {
+  let txCounter = 0;
+  (harness.paymentService as any).processPayment = async (params: {
+    userId?: string;
+    amount?: number;
+    currency?: Currency;
+    description?: string;
+  }): Promise<PaymentResult> => {
+    txCounter++;
+    return {
+      success: true,
+      transactionId: `shim-tx-${txCounter}`,
+      paymentHash: `shim-hash-${txCounter}`,
+      preimage: `shim-preimage-${txCounter}`,
+      amount: params.amount ?? 0,
+      fee: 0,
+      timestamp: new Date(),
+    };
+  };
+}
+
+/**
+ * Create a well-formed DomainEvent for publishing through the real EventBusService.
+ * Wraps DomainEventBuilder with sensible test defaults.
+ */
+let eventCounter = 0;
+export function makeDomainEvent(type: DomainEventType, payload: any = {}): DomainEvent {
+  eventCounter++;
+  return new DomainEventBuilder()
+    .withType(type)
+    .withAggregateId('test')
+    .withAggregateType('test')
+    .withPayload(payload)
+    .withUserId('test-user')
+    .withCorrelationId('test-corr')
+    .withSource('test')
+    .build();
+}
+
+/**
+ * Override getPaymentHistory on the harness to return custom transaction arrays.
+ * Reduces 9+ duplicate monkey-patch blocks to a single function call.
+ */
+export function overridePaymentHistory(harness: PaymentTestHarness, txs: PaymentTransaction[]): void {
+  (harness.paymentService as any).getPaymentHistory = async () => txs;
+}
+
+/**
+ * Override processPayment on the harness to simulate a payment failure.
+ * Reduces 4+ duplicate failure blocks to a single function call.
+ */
+export function installFailedPaymentShim(harness: PaymentTestHarness, error = 'Payment failed'): void {
+  (harness.paymentService as any).processPayment = async () => ({
+    success: false,
+    error,
+    transactionId: '',
+    amount: 0,
+    fee: 0,
+    currency: Currency.USD,
+    status: PaymentStatus.FAILED,
+    timestamp: new Date(),
+  });
 }
