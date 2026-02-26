@@ -5,13 +5,16 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../features/auth';
-import userSlice, { clearUser, setUser } from '../store/slices/userSlice';
+import userSlice from '../store/slices/userSlice';
 
 // Inline no-op reducers — Post component reads state.post.posts which
 // doesn't exist in the real store (migrated to React Query). These stubs
 // keep tests functional until Post.tsx is fully migrated.
-const postSlice = (state: any = { posts: [], currentPost: null, loading: false, error: null }) => state;
-const paymentSlice = (state: any = { payments: [], currentPayment: null, loading: false, error: null }) => state;
+const postSlice = (state: any = { posts: [], currentPost: null, loading: false, error: null }) =>
+  state;
+const paymentSlice = (
+  state: any = { payments: [], currentPayment: null, loading: false, error: null }
+) => state;
 import type { User } from '../types';
 import Post from './Post';
 
@@ -88,13 +91,15 @@ const mockPost = {
 const createTestStore = (
   options: { withUser?: boolean; withPosts?: boolean } = {}
 ): ReturnType<typeof configureStore> => {
-  const postInitialState = options.withPosts !== false
-    ? { posts: [mockPost], currentPost: null, loading: false, error: null }
-    : { posts: [], currentPost: null, loading: false, error: null };
+  const postInitialState =
+    options.withPosts !== false
+      ? { posts: [mockPost], currentPost: null, loading: false, error: null }
+      : { posts: [], currentPost: null, loading: false, error: null };
 
-  const userInitialState = options.withUser !== false
-    ? { currentUser: mockUser, loading: false, error: null }
-    : { currentUser: null, loading: false, error: null };
+  const userInitialState =
+    options.withUser !== false
+      ? { currentUser: mockUser, loading: false, error: null }
+      : { currentUser: null, loading: false, error: null };
 
   return configureStore({
     reducer: {

@@ -248,7 +248,6 @@ describe('SimpleContentEditor - Elite Standards Compliance', () => {
     });
 
     it('SHOULD handle media upload with proper error handling', async () => {
-      const user = userEvent.setup();
       renderWithProvider(<SimpleContentEditor />, {
         initialCMSState: {
           current_content: createMockContentItem({
