@@ -17,6 +17,15 @@ export enum DomainEventType {
   SUBSCRIPTION_CANCELLED = 'subscription.cancelled',
   SUBSCRIPTION_RENEWED = 'subscription.renewed',
 
+  // Refund Events
+  REFUND_INITIATED = 'refund.initiated',
+  REFUND_AUTHORIZED = 'refund.authorized',
+  REFUND_DENIED = 'refund.denied',
+  REFUND_COMPLETED = 'refund.completed',
+  REFUND_FAILED = 'refund.failed',
+  REFUND_CANCELED = 'refund.canceled',
+  REFUND_REVERSED = 'refund.reversed',
+
   // Content Events
   CONTENT_CREATED = 'content.created',
   CONTENT_PUBLISHED = 'content.published',
@@ -43,7 +52,7 @@ export enum DomainEventType {
   SERVICE_STOPPED = 'service.stopped',
   SERVICE_ERROR = 'service.error',
   SERVICE_HEALTHY = 'service.healthy',
-  SERVICE_UNHEALTHY = 'service.unhealthy'
+  SERVICE_UNHEALTHY = 'service.unhealthy',
 }
 
 export interface EventMetadata {
@@ -136,8 +145,8 @@ export class DomainEventBuilder<T = any> {
     metadata: {
       timestamp: new Date(),
       version: '1.0.0',
-      source: 'unknown'
-    }
+      source: 'unknown',
+    },
   };
 
   private generateId(): string {

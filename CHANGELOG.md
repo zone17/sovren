@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### fix(backend): Add missing REFUND\_\* DomainEventType enum values — 2026-02-26
+
+**Category**: Bug Fix — Payment Domain
+**Status**: Complete — 28 RefundService tests recovered (37→9 failing; 9 remaining are pre-existing test assertion bugs)
+
+Added 7 missing `DomainEventType` enum values (`REFUND_INITIATED`, `REFUND_AUTHORIZED`, `REFUND_DENIED`, `REFUND_COMPLETED`, `REFUND_FAILED`, `REFUND_CANCELED`, `REFUND_REVERSED`) to `IEventBus.ts`. `RefundService.ts` referenced these values at 7 call sites but they didn't exist, causing `DomainEventBuilder.build()` to throw.
+
 ### feat(multi-platform): EPIC-009B Frontend — Unified Inbox + Cross-Platform Analytics — 2026-02-18
 
 **Category**: Feature — Multi-Platform Hub Extension
