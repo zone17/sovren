@@ -24,8 +24,23 @@ export class RateLimitError extends AppError {
   }
 }
 
-// Re-export canonical error classes from utils/errors to avoid duplicate definitions
-export { ValidationError, NotFoundError, ConflictError, ServiceError, UnauthorizedError, AuthorizationError } from '../utils/errors';
+// Import and re-export canonical error classes from utils/errors
+import {
+  ValidationError,
+  NotFoundError,
+  ConflictError,
+  ServiceError,
+  UnauthorizedError,
+  AuthorizationError,
+} from '../utils/errors';
+export {
+  ValidationError,
+  NotFoundError,
+  ConflictError,
+  ServiceError,
+  UnauthorizedError,
+  AuthorizationError,
+};
 
 // ============================================================================
 // Error Response Interface
@@ -276,4 +291,3 @@ export const notFoundHandler = (req: Request, res: Response, next: NextFunction)
   });
   next(error);
 };
-

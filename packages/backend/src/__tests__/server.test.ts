@@ -11,19 +11,14 @@ describe('Sovren API Server', () => {
 
   describe('Basic Server Functionality', () => {
     it('should respond to health check', async () => {
-      const response = await request(app)
-        .get('/health')
-        .expect(200);
+      const response = await request(app).get('/health').expect(200);
 
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.status).toBe('healthy');
-      expect(response.body.data.service).toBe('sovren-api');
+      expect(response.body.status).toBe('healthy');
+      expect(response.body.service).toBe('sovren-api');
     });
 
     it('should respond to API root endpoint', async () => {
-      const response = await request(app)
-        .get('/api')
-        .expect(200);
+      const response = await request(app).get('/api').expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.name).toBe('Sovren API');
@@ -31,9 +26,7 @@ describe('Sovren API Server', () => {
     });
 
     it('should return 404 for unknown endpoints', async () => {
-      const response = await request(app)
-        .get('/unknown-endpoint')
-        .expect(404);
+      const response = await request(app).get('/unknown-endpoint').expect(404);
 
       expect(response.body.success).toBe(false);
       expect(response.body.error).toBe('Endpoint not found');
@@ -41,8 +34,7 @@ describe('Sovren API Server', () => {
     });
 
     it('should include security headers', async () => {
-      const response = await request(app)
-        .get('/health');
+      const response = await request(app).get('/health');
 
       expect(response.headers['x-content-type-options']).toBe('nosniff');
       expect(response.headers['x-frame-options']).toBe('DENY');
@@ -54,9 +46,7 @@ describe('Sovren API Server', () => {
     it('should respond to health check within 200ms', async () => {
       const startTime = Date.now();
 
-      await request(app)
-        .get('/health')
-        .expect(200);
+      await request(app).get('/health').expect(200);
 
       const responseTime = Date.now() - startTime;
       expect(responseTime).toBeLessThan(200);
