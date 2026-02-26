@@ -282,7 +282,7 @@ export function createPaymentTestHarness(): PaymentTestHarness {
     if (!repo || typeof repo.saveTransaction !== 'function') {
       throw new Error(
         'seedRawTransaction: PaymentProcessingService internal API changed. ' +
-        'Expected (paymentService as any).repository.saveTransaction to exist.'
+          'Expected (paymentService as any).repository.saveTransaction to exist.'
       );
     }
     await repo.saveTransaction(tx);
@@ -350,9 +350,7 @@ export function installSubscriptionPaymentShim(harness: PaymentTestHarness): voi
  * Create a well-formed DomainEvent for publishing through the real EventBusService.
  * Wraps DomainEventBuilder with sensible test defaults.
  */
-let eventCounter = 0;
 export function makeDomainEvent(type: DomainEventType, payload: any = {}): DomainEvent {
-  eventCounter++;
   return new DomainEventBuilder()
     .withType(type)
     .withAggregateId('test')
@@ -368,7 +366,10 @@ export function makeDomainEvent(type: DomainEventType, payload: any = {}): Domai
  * Override getPaymentHistory on the harness to return custom transaction arrays.
  * Reduces 9+ duplicate monkey-patch blocks to a single function call.
  */
-export function overridePaymentHistory(harness: PaymentTestHarness, txs: PaymentTransaction[]): void {
+export function overridePaymentHistory(
+  harness: PaymentTestHarness,
+  txs: PaymentTransaction[]
+): void {
   (harness.paymentService as any).getPaymentHistory = async () => txs;
 }
 
@@ -376,7 +377,10 @@ export function overridePaymentHistory(harness: PaymentTestHarness, txs: Payment
  * Override processPayment on the harness to simulate a payment failure.
  * Reduces 4+ duplicate failure blocks to a single function call.
  */
-export function installFailedPaymentShim(harness: PaymentTestHarness, error = 'Payment failed'): void {
+export function installFailedPaymentShim(
+  harness: PaymentTestHarness,
+  error = 'Payment failed'
+): void {
   (harness.paymentService as any).processPayment = async () => ({
     success: false,
     error,
