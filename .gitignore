@@ -136,3 +136,9 @@ docker-compose.env
 .vault-config/
 .vault-data/
 .credentials-backup/
+
+# Local data and temp files
+data/
+public/
+supabase/.temp/
+supabase/.branches/
