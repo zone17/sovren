@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### refactor(backend): Eliminate all mocks from SubscriptionService and PaymentAnalyticsService tests — 2026-02-26
+
+**Category**: Test Infrastructure — Payment Domain
+**Status**: Complete — 233/233 tests passing with real service instances (105 Subscription + 128 Analytics)
+
+Rewrote `SubscriptionService.test.ts` (105 tests) and `PaymentAnalyticsService.test.ts` (128 tests) to use `PaymentTestHarness` with real in-memory backends. Zero `vi.fn()` mocks for service dependencies.
+
+Extended harness with `TestableEventBus` (bridges `SubscriptionService.emit()` / `IEventBus.publish()` pre-existing interface mismatch) and `seedRawTransaction()` (injects arbitrary transaction states for analytics assertions). Added `installSubscriptionPaymentShim()` workaround for `SubscriptionService` passing non-standard params to `processPayment()`.
+
+Combined with RefundService rewrite below, all 317 payment tests now run against real services. Net -247 lines across both test files.
+
 ### refactor(backend): Eliminate all mocks from RefundService tests — 2026-02-26
 
 **Category**: Test Infrastructure — Payment Domain
