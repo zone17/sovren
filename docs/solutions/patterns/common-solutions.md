@@ -309,6 +309,29 @@ function createPaginatedMock(allRows: any[], pageSize = 500) {
 
 **Rule:** When a service adds `.order()` or `.range()`, the test mock MUST add those methods to the chain. Missing chain methods are the #1 cause of test failures after P1 fixes.
 
+### Table-Aware Mock Routing (multi-table services)
+
+Services querying 2+ tables get `undefined` from single-chain mocks. Route `from()` by table name:
+
+```typescript
+const userChain = createMockChain(mockUsers);
+const paymentChain = createMockChain(mockPayments);
+const defaultChain = createMockChain([]);
+
+mockDb.from = vi.fn((table: string) => {
+  switch (table) {
+    case 'users':
+      return userChain;
+    case 'payments':
+      return paymentChain;
+    default:
+      return defaultChain;
+  }
+});
+```
+
+**When to use:** Any service whose constructor or methods call `db.from()` with 2+ different table names. Single-chain mocks silently return `undefined` for the second table.
+
 ---
 
 ## 8. Rate Limiting on Mutation Routes
@@ -1532,6 +1555,136 @@ If no results → the file is dead code. Don't modify it — either delete it or
 
 ---
 
+## 41. `vi.resetAllMocks()` vs `vi.clearAllMocks()`
+
+**Recurrence:** 87 test files in one sprint (PR #100). This is the #1 root cause of mock-related test failures.
+
+- `vi.clearAllMocks()` — clears call history only, preserves `mockResolvedValue` implementations
+- `vi.resetAllMocks()` — clears EVERYTHING including `mockResolvedValueOnce` queues
+
+**Rule:** If your `afterEach` uses `vi.resetAllMocks()`, you MUST re-apply mock implementations in `beforeEach()`. Otherwise the second test in every suite gets `undefined`.
+
+```typescript
+// ❌ WRONG — resetAllMocks wipes the implementation set in describe scope
+const mockFn = vi.fn().mockResolvedValue({ data: [], error: null });
+afterEach(() => vi.resetAllMocks()); // Second test: mockFn returns undefined
+
+// ✅ RIGHT — re-apply in beforeEach
+let mockFn: ReturnType<typeof vi.fn>;
+beforeEach(() => {
+  mockFn = vi.fn().mockResolvedValue({ data: [], error: null });
+});
+afterEach(() => vi.resetAllMocks());
+```
+
+**Detection:** Grep for `resetAllMocks` in `afterEach` — then check if `beforeEach` re-applies all mock implementations.
+
+---
+
+## 42. `structuredClone()` for Shared Test Data
+
+**Recurrence:** 2 sprints. Shallow spread `{ ...obj }` leaks nested references between tests, causing flaky test ordering.
+
+```typescript
+// ❌ WRONG — nested objects are shared references
+const DEFAULT_PREFS = { notifications: { email: true, push: false } };
+const getDefaults = () => ({ ...DEFAULT_PREFS }); // notifications is same ref
+
+// ✅ RIGHT — deep copy prevents cross-test pollution
+const DEFAULT_PREFS = { notifications: { email: true, push: false } };
+const getDefaults = () => structuredClone(DEFAULT_PREFS);
+```
+
+**When to use:** Any service method that returns a module-level default object. Also any test fixture with nested objects shared across tests.
+
+**Detection:** Grep for `{ ...DEFAULT_` or `{ ...INITIAL_` patterns in service code. If the object has nested properties, it needs `structuredClone()`.
+
+---
+
+## 43. ESM Default Export Mocking (`{ default: mockFn }`)
+
+**Recurrence:** 2 sprints. `vi.mock()` for modules with `export default` requires explicit `default` key.
+
+```typescript
+// ❌ WRONG — mock doesn't match ESM default export shape
+vi.mock('ws', () => ({ WebSocket: vi.fn(() => mockWs) }));
+
+// ✅ RIGHT — ESM default export needs { default: ... }
+vi.mock('ws', () => ({ default: vi.fn(() => mockWs) }));
+```
+
+**When to use:** Any `vi.mock()` targeting a module that uses `export default`. Check the source module — if it uses `export default class/function`, the mock factory must return `{ default: ... }`.
+
+---
+
+## 44. `process.nextTick` Flush for Fire-and-Forget Async
+
+**Recurrence:** 2 sprints. Express `asyncHandler` patterns that fire async work without `await` leave assertions racing against microtasks.
+
+```typescript
+// Route handler fires async work without awaiting
+app.post(
+  '/route',
+  asyncHandler(async (req, res) => {
+    res.json({ ok: true });
+    backgroundService.process(req.body); // fire-and-forget, no await
+  })
+);
+
+// ❌ WRONG — assertion runs before backgroundService.process completes
+await request(app).post('/route').send(data);
+expect(backgroundService.process).toHaveBeenCalled(); // Fails intermittently
+
+// ✅ RIGHT — flush microtask queue first
+await request(app).post('/route').send(data);
+await new Promise(process.nextTick); // flush fire-and-forget
+expect(backgroundService.process).toHaveBeenCalled();
+```
+
+**Detection:** Grep for test assertions on mocked services called from route handlers where the route sends the response before the service call.
+
+---
+
+## 45. Class-Based Mocks Need Re-Init After `vi.resetAllMocks()`
+
+**Recurrence:** 2 sprints. Class instances with `vi.fn()` methods get cleared by `resetAllMocks()` but the instance itself persists — methods become `undefined`.
+
+```typescript
+// ❌ WRONG — mockPool methods cleared after first test
+const mockPool = { close: vi.fn(), subscribeMany: vi.fn() };
+afterEach(() => vi.resetAllMocks());
+
+// ✅ RIGHT — create fresh instance in beforeEach
+let mockPool: { close: ReturnType<typeof vi.fn>; subscribeMany: ReturnType<typeof vi.fn> };
+beforeEach(() => {
+  mockPool = { close: vi.fn(), subscribeMany: vi.fn() };
+});
+afterEach(() => vi.resetAllMocks());
+```
+
+**When to use:** Any mock object whose methods are `vi.fn()` AND whose test suite uses `vi.resetAllMocks()`. Particularly common with `SimplePool` (nostr-tools), WebSocket mocks, and service class mocks.
+
+---
+
+## 46. `global.fetch` Must Exist Before Service Instantiation
+
+**Recurrence:** 1 sprint (87 files). Services that capture `fetch` at construction time get `undefined` if the mock is applied after `new Service()`.
+
+```typescript
+// ❌ WRONG — service captures fetch in constructor, mock applied too late
+const service = new MyService(db);
+global.fetch = vi.fn().mockResolvedValue(new Response('ok'));
+// service.fetch is still the original (or undefined)
+
+// ✅ RIGHT — mock fetch before instantiating the service
+global.fetch = vi.fn().mockResolvedValue(new Response('ok'));
+const service = new MyService(db);
+```
+
+**When to use:** Any service that uses `fetch` (directly or via a captured reference) AND is constructed in test setup. Check the service constructor for `this.fetch = fetch` or similar captures.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1602,3 +1755,9 @@ CONTEXT TO LOAD:
 | Action bumped, notifications silently fail     | 38        | common-solutions.md  |
 | Lockfile keeps stale workspace resolutions     | 39        | common-solutions.md  |
 | Migrated dead code nobody imports              | 40        | common-solutions.md  |
+| `resetAllMocks` wipes mock implementations     | 41        | common-solutions.md  |
+| Nested test data leaks between tests           | 42        | common-solutions.md  |
+| ESM default export mock returns undefined      | 43        | common-solutions.md  |
+| Fire-and-forget assertion fails intermittently | 44        | common-solutions.md  |
+| Class mock methods undefined after reset       | 45        | common-solutions.md  |
+| Service constructor captures undefined fetch   | 46        | common-solutions.md  |
