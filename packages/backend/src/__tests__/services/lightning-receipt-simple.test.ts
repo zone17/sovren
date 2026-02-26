@@ -27,6 +27,19 @@ vi.mock('fs/promises', () => ({
   writeFile: vi.fn().mockResolvedValue(undefined),
   readFile: vi.fn().mockResolvedValue('mock-template-content'),
   mkdir: vi.fn().mockResolvedValue(undefined),
+  open: vi.fn().mockResolvedValue({
+    writeFile: vi.fn().mockResolvedValue(undefined),
+    datasync: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
+  }),
+}));
+
+vi.mock('fs', () => ({
+  existsSync: vi.fn().mockReturnValue(true),
+  mkdirSync: vi.fn(),
+  readFileSync: vi.fn().mockReturnValue('[]'),
+  renameSync: vi.fn(),
+  copyFileSync: vi.fn(),
 }));
 
 // Import after mocks
@@ -78,6 +91,22 @@ describe('Lightning Receipt Service - Simple Test', () => {
 
   it('should verify generated receipt', async () => {
     const validPaymentId = '550e8400-e29b-41d4-a716-446655440001';
+    // Preimage and its SHA-256 hash must match for verification to pass
+    const preimage = '7598dd3a2f5318b8a8e9b299dabd85596c3222f3d8a42e8895378d4473c0c79e';
+    const paymentHash = '498336b26fb6b08af6b878f0f85fe5e2492a43a8039ec2bb4ef94335359eb85c';
+
+    // Override fetchPaymentData to provide matching preimage/hash pair
+    const fetchSpy = vi.spyOn(receiptService as any, 'fetchPaymentData').mockResolvedValue({
+      paymentHash,
+      preimage,
+      invoiceId: validPaymentId,
+      amount: 1000,
+      fee: 10,
+      timestamp: Date.now(),
+      creator: { id: 'c1', name: 'Creator', displayName: 'Creator', lightningAddress: 'c@test.com', profile: {} },
+      supporter: { id: 's1', name: 'Supporter', anonymous: false, message: 'Thanks!' },
+      invoice: { bolt11: 'lnbc...', description: 'Test', memo: 'Test', expiresAt: Date.now() + 3600000 },
+    });
 
     // Generate receipt
     const receipt = await receiptService.generateReceipt({
@@ -85,6 +114,8 @@ describe('Lightning Receipt Service - Simple Test', () => {
       includeDetailedVerification: false,
       emailReceipt: false,
     });
+
+    fetchSpy.mockRestore();
 
     // Verify receipt
     const verification = await receiptService.verifyReceipt(receipt.id);

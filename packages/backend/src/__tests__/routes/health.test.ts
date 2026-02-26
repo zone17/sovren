@@ -13,7 +13,7 @@ import { Request, Response } from 'express';
 
 // --- Capture route handlers via Express Router mock ---
 
-const capturedRoutes: Record<string, Function> = {};
+const capturedRoutes: Record<string, Function> = vi.hoisted(() => ({}));
 
 vi.mock('express', async () => {
   const actual = await vi.importActual('express');
@@ -34,19 +34,33 @@ vi.mock('express', async () => {
   };
 });
 
-// Mock ioredis
-const mockRedisPing = vi.fn().mockResolvedValue('PONG');
-const mockRedisDisconnect = vi.fn().mockResolvedValue(undefined);
+// Use vi.hoisted() to declare mock functions before vi.mock factories run (hoisting)
+const { mockRedisPing, mockRedisAvailable, mockSupabaseSelect, mockSupabaseLimit, mockFetch, mockWsClose } = vi.hoisted(() => ({
+  mockRedisPing: vi.fn().mockResolvedValue('PONG'),
+  mockRedisAvailable: vi.fn().mockReturnValue(true),
+  mockSupabaseSelect: vi.fn().mockReturnThis(),
+  mockSupabaseLimit: vi.fn().mockResolvedValue({ data: [{ id: 1 }], error: null }),
+  mockFetch: vi.fn(),
+  mockWsClose: vi.fn(),
+}));
+
+// Mock lib/redis — the health route uses isRedisAvailable() and getRedisClient()
+vi.mock('../../lib/redis', () => ({
+  isRedisAvailable: mockRedisAvailable,
+  getRedisClient: vi.fn(() => ({
+    ping: mockRedisPing,
+  })),
+}));
+
+// Mock ioredis (may be imported transitively)
 vi.mock('ioredis', () => ({
   default: vi.fn().mockImplementation(() => ({
     ping: mockRedisPing,
-    disconnect: mockRedisDisconnect,
+    on: vi.fn(),
   })),
 }));
 
 // Mock @supabase/supabase-js
-const mockSupabaseSelect = vi.fn().mockReturnThis();
-const mockSupabaseLimit = vi.fn().mockResolvedValue({ data: [{ id: 1 }], error: null });
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({
     from: vi.fn().mockReturnValue({
@@ -56,24 +70,42 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
+// Mock container for queue health checks
+vi.mock('../../container', () => ({
+  container: {
+    resolveOptional: vi.fn().mockReturnValue(null),
+  },
+}));
+
+vi.mock('../../container/types', () => ({
+  TYPES: { QueueService: Symbol('QueueService') },
+}));
+
+// Mock logger to suppress output
+vi.mock('../../lib/logger', () => ({
+  default: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+
 // Mock global fetch for LNbits
-const mockFetch = vi.fn();
 global.fetch = mockFetch as any;
 
 // Mock WebSocket for NOSTR relay checks
-const mockWsClose = vi.fn();
-(global as any).WebSocket = vi.fn().mockImplementation(() => {
-  const ws: any = {
-    close: mockWsClose,
-    set onopen(fn: () => void) {
-      setTimeout(() => fn(), 0);
-    },
-    set onerror(fn: (err: any) => void) {
-      // no-op by default
-    },
-  };
-  return ws;
-});
+vi.mock('ws', () => ({
+  default: vi.fn().mockImplementation(() => {
+    const ws: any = {
+      close: mockWsClose,
+      onopen: null as (() => void) | null,
+      onerror: null as ((err: any) => void) | null,
+      onclose: null as (() => void) | null,
+      onmessage: null as ((msg: any) => void) | null,
+    };
+    // Trigger onopen after a microtask for successful connections
+    setTimeout(() => {
+      if (ws.onopen) ws.onopen();
+    }, 0);
+    return ws;
+  }),
+}));
 
 // Import the module — this triggers Router mock and captures all route handlers
 import '../../routes/health';
@@ -111,10 +143,11 @@ describe('Health Routes', () => {
     vi.clearAllMocks();
     // Restore default happy-path mocks
     mockRedisPing.mockResolvedValue('PONG');
-    mockRedisDisconnect.mockResolvedValue(undefined);
+    mockRedisAvailable.mockReturnValue(true);
     mockSupabaseSelect.mockReturnThis();
     mockSupabaseLimit.mockResolvedValue({ data: [{ id: 1 }], error: null });
     mockFetch.mockReset();
+    mockWsClose.mockReset();
     // Clear env overrides
     delete process.env.LNBITS_API_URL;
     delete process.env.NOSTR_RELAYS;
@@ -206,8 +239,8 @@ describe('Health Routes', () => {
       expect(res._json.status).toBe('not-ready');
     });
 
-    it('should return not-ready (503) when redis is unhealthy', async () => {
-      mockRedisPing.mockRejectedValueOnce(new Error('Redis connection refused'));
+    it('should return degraded (200) when redis is unavailable but DB is healthy', async () => {
+      mockRedisAvailable.mockReturnValue(false);
 
       const handler = capturedRoutes['GET /ready'];
       const req = createMockReq({ path: '/ready' });
@@ -215,8 +248,8 @@ describe('Health Routes', () => {
 
       await handler(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(503);
-      expect(res._json.status).toBe('not-ready');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res._json.status).toBe('degraded');
     });
 
     it('should return not-ready (503) when database check fails with exception', async () => {
@@ -262,7 +295,7 @@ describe('Health Routes', () => {
     });
 
     it('should return unhealthy status when a critical service is unhealthy', async () => {
-      mockRedisPing.mockRejectedValueOnce(new Error('Connection refused'));
+      mockRedisAvailable.mockReturnValue(false);
 
       const handler = capturedRoutes['GET /health/detailed'];
       const req = createMockReq({ path: '/health/detailed' });
@@ -315,8 +348,8 @@ describe('Health Routes', () => {
       expect(res._json.status).toBe('ready');
     });
 
-    it('should include issues when services are unhealthy', async () => {
-      mockRedisPing.mockRejectedValueOnce(new Error('Connection refused'));
+    it('should return degraded when Redis is unavailable but DB is healthy', async () => {
+      mockRedisAvailable.mockReturnValue(false);
 
       const handler = capturedRoutes['GET /health/ready'];
       const req = createMockReq({ path: '/health/ready' });
@@ -324,7 +357,8 @@ describe('Health Routes', () => {
 
       await handler(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(503);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res._json.status).toBe('degraded');
       expect(res._json.issues).toBeDefined();
       expect(res._json.issues.redis).toBeTruthy();
     });
@@ -387,7 +421,21 @@ describe('Health Routes', () => {
   });
 
   describe('Redis check', () => {
-    it('should report unhealthy on Redis connection error', async () => {
+    it('should report unhealthy when Redis is not available', async () => {
+      mockRedisAvailable.mockReturnValue(false);
+
+      const handler = capturedRoutes['GET /health/detailed'];
+      const req = createMockReq({ path: '/health/detailed' });
+      const res = createMockRes();
+
+      await handler(req, res);
+
+      expect(res._json.services.redis.status).toBe('unhealthy');
+      expect(res._json.services.redis.error).toContain('Redis not connected');
+    });
+
+    it('should report unhealthy when Redis ping throws', async () => {
+      mockRedisAvailable.mockReturnValue(true);
       mockRedisPing.mockRejectedValueOnce(new Error('Connection refused'));
 
       const handler = capturedRoutes['GET /health/detailed'];
@@ -401,6 +449,8 @@ describe('Health Routes', () => {
     });
 
     it('should report healthy with response time details on success', async () => {
+      mockRedisAvailable.mockReturnValue(true);
+
       const handler = capturedRoutes['GET /health/detailed'];
       const req = createMockReq({ path: '/health/detailed' });
       const res = createMockRes();
@@ -485,7 +535,7 @@ describe('Health Routes', () => {
 
   describe('Overall status aggregation', () => {
     it('should prioritize unhealthy over degraded', async () => {
-      mockRedisPing.mockRejectedValueOnce(new Error('Connection refused'));
+      mockRedisAvailable.mockReturnValue(false);
 
       const handler = capturedRoutes['GET /health/detailed'];
       const req = createMockReq({ path: '/health/detailed' });

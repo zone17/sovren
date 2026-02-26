@@ -217,11 +217,11 @@ export class UserRelationshipService implements IUserRelationshipService {
       const validation = await this.validateRelationship(request.userId, request.targetUserId);
 
       if (validation.isBlocked) {
-        throw new Error('Cannot follow: you are blocked by this user');
+        throw new Error('Cannot follow: you have blocked this user');
       }
 
       if (validation.isBlockedBy) {
-        throw new Error('Cannot follow: you have blocked this user');
+        throw new Error('Cannot follow: you are blocked by this user');
       }
     }
 

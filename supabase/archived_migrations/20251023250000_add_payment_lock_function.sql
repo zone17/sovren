@@ -73,8 +73,8 @@ CREATE OR REPLACE FUNCTION acquire_payment_lock(p_payment_hash VARCHAR)
 RETURNS TABLE(
   id UUID,
   state VARCHAR(20),
-  user_id UUID,
-  amount BIGINT,
+  payer_id UUID,
+  amount_sats BIGINT,
   payment_hash VARCHAR,
   created_at TIMESTAMPTZ,
   updated_at TIMESTAMPTZ,
@@ -95,8 +95,8 @@ BEGIN
     SELECT
       p.id,
       p.state,
-      p.user_id,
-      p.amount,
+      p.payer_id,
+      p.amount_sats,
       p.payment_hash,
       p.created_at,
       p.updated_at,
@@ -195,8 +195,8 @@ CREATE OR REPLACE FUNCTION acquire_payment_lock_by_id(p_payment_id UUID)
 RETURNS TABLE(
   id UUID,
   state VARCHAR(20),
-  user_id UUID,
-  amount BIGINT,
+  payer_id UUID,
+  amount_sats BIGINT,
   payment_hash VARCHAR,
   created_at TIMESTAMPTZ,
   updated_at TIMESTAMPTZ,
@@ -216,8 +216,8 @@ BEGIN
     SELECT
       p.id,
       p.state,
-      p.user_id,
-      p.amount,
+      p.payer_id,
+      p.amount_sats,
       p.payment_hash,
       p.created_at,
       p.updated_at,
@@ -402,7 +402,7 @@ CREATE POLICY payment_lock_events_select_own
   FOR SELECT
   USING (
     payment_id IN (
-      SELECT id FROM payments WHERE user_id = auth.uid()
+      SELECT id FROM payments WHERE payer_id = auth.uid() OR recipient_id = auth.uid()
     )
   );
 
@@ -429,7 +429,7 @@ SELECT
   p.id AS payment_id,
   p.payment_hash,
   p.state,
-  p.amount,
+  p.amount_sats,
   COUNT(ple.id) AS lock_attempts,
   COUNT(ple.id) FILTER (WHERE ple.lock_acquired = TRUE) AS successful_locks,
   COUNT(ple.id) FILTER (WHERE ple.lock_acquired = FALSE) AS failed_locks,
@@ -438,7 +438,7 @@ SELECT
 FROM payments p
 LEFT JOIN payment_lock_events ple ON ple.payment_id = p.id
 WHERE ple.timestamp > NOW() - INTERVAL '1 hour'
-GROUP BY p.id, p.payment_hash, p.state, p.amount
+GROUP BY p.id, p.payment_hash, p.state, p.amount_sats
 HAVING COUNT(ple.id) > 0
 ORDER BY failed_locks DESC, lock_attempts DESC;
 

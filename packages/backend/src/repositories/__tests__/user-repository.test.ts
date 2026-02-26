@@ -1,26 +1,48 @@
-import { createTestDatabase, resetDatabase } from '../../config/database';
-import { CreateUserProfile } from '../../services/user-service';
 import { UserRepository } from '../user-repository';
+import { CreateUserProfile } from '../../services/user-service';
+
+vi.mock('../../config/database');
 
 /**
- * 🧪 User Repository Tests - BDD Style
- *
- * Following elite TDD/BDD practices:
- * - Behavior-driven test scenarios
- * - Comprehensive edge case coverage
- * - Security validation testing
- * - Performance requirements validation
+ * Chainable+thenable mock for Supabase client.
  */
+function createMockChain(defaultResult: any = { data: null, error: null }) {
+  let _result = defaultResult;
 
-describe('User Repository - Elite Database Layer', () => {
+  const chain: any = {
+    select: vi.fn().mockImplementation(() => chain),
+    insert: vi.fn().mockImplementation(() => chain),
+    update: vi.fn().mockImplementation(() => chain),
+    delete: vi.fn().mockImplementation(() => chain),
+    eq: vi.fn().mockImplementation(() => chain),
+    neq: vi.fn().mockImplementation(() => chain),
+    ilike: vi.fn().mockImplementation(() => chain),
+    order: vi.fn().mockImplementation(() => chain),
+    limit: vi.fn().mockImplementation(() => chain),
+    single: vi.fn().mockImplementation(() => Promise.resolve(_result)),
+    maybeSingle: vi.fn().mockImplementation(() => Promise.resolve(_result)),
+    then: vi.fn().mockImplementation((resolve: any) => resolve(_result)),
+    _setResult(result: any) {
+      _result = result;
+      chain.single.mockImplementation(() => Promise.resolve(result));
+      chain.then.mockImplementation((resolve: any) => resolve(result));
+      return chain;
+    },
+  };
+
+  return chain;
+}
+
+describe('User Repository', () => {
   let userRepository: UserRepository;
+  let mockChain: ReturnType<typeof createMockChain>;
+  let mockDatabase: any;
 
-  // Test data - now includes all required fields
   const mockUser: CreateUserProfile = {
     nostr_pubkey: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
     username: 'testuser',
     display_name: 'Test User',
-    bio: 'A test user for our elite testing suite',
+    bio: 'A test user for our testing suite',
     avatar_url: 'https://example.com/avatar.jpg',
     email: 'test@example.com',
     email_verified: false,
@@ -29,60 +51,75 @@ describe('User Repository - Elite Database Layer', () => {
     last_login_at: null,
   };
 
-  beforeEach(async () => {
-    // Create isolated test database instance
-    const testDb = createTestDatabase({
-      supabaseUrl: process.env.TEST_SUPABASE_URL || 'http://localhost:54321',
-      supabaseKey: process.env.TEST_SUPABASE_KEY || 'test-key',
-    });
-
-    userRepository = new UserRepository(testDb);
-
-    // Clean state for each test
-    await userRepository.cleanup();
-  });
-
-  afterEach(async () => {
-    // Cleanup after each test
-    await userRepository.cleanup();
-    resetDatabase();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockChain = createMockChain();
+    mockDatabase = {
+      client: {
+        from: vi.fn().mockReturnValue(mockChain),
+      },
+    };
+    userRepository = new UserRepository(mockDatabase as any);
   });
 
   describe('Creating User Profiles', () => {
     it('should create a new user profile with valid data', async () => {
-      // Given valid user data
       const userData = { ...mockUser };
+      const mockDbRecord = {
+        id: 'user-uuid-123',
+        ...userData,
+        role: 'supporter',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      // When creating the user profile
+      // findByNostrPubkey: not found (2 calls: one for existing check, one for username check is separate)
+      // findByUsername: not found
+      // insert().select().single(): returns created record
+      let singleCallCount = 0;
+      mockChain.single.mockImplementation(() => {
+        singleCallCount++;
+        if (singleCallCount <= 2) {
+          // findByNostrPubkey + findByUsername: not found
+          return Promise.resolve({ data: null, error: { code: 'PGRST116' } });
+        }
+        // insert().select().single(): success
+        return Promise.resolve({ data: mockDbRecord, error: null });
+      });
+
       const result = await userRepository.create(userData);
 
-      // Then it should succeed with proper data structure
       expect(result.success).toBe(true);
       expect(result.user).toBeDefined();
       expect(result.user?.nostr_pubkey).toBe(userData.nostr_pubkey);
       expect(result.user?.username).toBe(userData.username);
-      expect(result.user?.role).toBe('supporter'); // Default role
+      expect(result.user?.role).toBe('supporter');
       expect(result.user?.created_at).toBeInstanceOf(Date);
       expect(result.user?.updated_at).toBeInstanceOf(Date);
       expect(result.error).toBeUndefined();
     });
 
     it('should reject duplicate NOSTR public keys', async () => {
-      // Given an existing user
-      await userRepository.create(mockUser);
+      const existingRecord = {
+        id: 'existing-user',
+        ...mockUser,
+        role: 'supporter',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      // When attempting to create user with same NOSTR key
+      // findByNostrPubkey: found (user exists)
+      mockChain.single.mockResolvedValue({ data: existingRecord, error: null });
+
       const duplicateUser = { ...mockUser, username: 'different_username' };
       const result = await userRepository.create(duplicateUser);
 
-      // Then it should fail with appropriate error
       expect(result.success).toBe(false);
       expect(result.error).toContain('already exists');
       expect(result.user).toBeUndefined();
     });
 
     it('should reject invalid NOSTR public key formats', async () => {
-      // Given invalid NOSTR public key formats
       const invalidKeys = [
         'invalid-key',
         '123', // Too short
@@ -92,68 +129,87 @@ describe('User Repository - Elite Database Layer', () => {
       ];
 
       for (const invalidKey of invalidKeys) {
-        // When creating user with invalid key
         const userData = { ...mockUser, nostr_pubkey: invalidKey };
         const result = await userRepository.create(userData);
 
-        // Then it should fail validation
         expect(result.success).toBe(false);
         expect(result.error).toContain('Invalid NOSTR public key');
       }
     });
 
     it('should handle username validation correctly', async () => {
-      // Given various username formats
+      // Valid usernames
       const validUsernames = ['test123', 'user_name', 'a', 'A'.repeat(50)];
-      // Note: Empty string '' actually skips validation in current implementation
-      const invalidUsernames = ['a'.repeat(51), 'user-name', 'user name'];
 
-      // When testing valid usernames
       for (let i = 0; i < validUsernames.length; i++) {
         const username = validUsernames[i];
-        const userData = {
-          ...mockUser,
-          nostr_pubkey:
-            `${Math.random().toString(16).substring(2)}${i.toString().padStart(4, '0')}`.padEnd(
-              64,
-              '0'
-            ),
-          username,
-        };
+        const pubkey = `${i.toString().padStart(4, '0')}${'a'.repeat(60)}`;
+        const userData = { ...mockUser, nostr_pubkey: pubkey, username };
+
+        // findByNostrPubkey: not found, findByUsername: not found, insert: success
+        let callCount = 0;
+        mockChain.single.mockImplementation(() => {
+          callCount++;
+          if (callCount <= 2) {
+            return Promise.resolve({ data: null, error: { code: 'PGRST116' } });
+          }
+          return Promise.resolve({
+            data: {
+              id: `user-${i}`,
+              ...userData,
+              role: 'supporter',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            error: null,
+          });
+        });
 
         const result = await userRepository.create(userData);
         expect(result.success).toBe(true);
       }
 
-      // When testing invalid usernames
-      for (let i = 0; i < invalidUsernames.length; i++) {
-        const username = invalidUsernames[i];
-        const userData = {
-          ...mockUser,
-          nostr_pubkey:
-            `${Math.random().toString(16).substring(2)}${(i + 1000).toString().padStart(4, '0')}`.padEnd(
-              64,
-              '0'
-            ),
-          username,
-        };
+      // Invalid usernames
+      const invalidUsernames = ['a'.repeat(51), 'user-name', 'user name'];
+
+      for (const username of invalidUsernames) {
+        const pubkey = `${'b'.repeat(60)}0001`;
+        const userData = { ...mockUser, nostr_pubkey: pubkey, username };
+
+        // findByNostrPubkey needs to be not found for validation to proceed
+        mockChain.single.mockResolvedValue({ data: null, error: { code: 'PGRST116' } });
 
         const result = await userRepository.create(userData);
         expect(result.success).toBe(false);
       }
 
-      // Test empty string separately - it should pass because validation is skipped
-      const emptyUsernameData = {
-        ...mockUser,
-        nostr_pubkey: `${Math.random().toString(16).substring(2)}9999`.padEnd(64, '0'),
-        username: '',
-      };
+      // Empty string skips validation
+      const emptyPubkey = `${'c'.repeat(60)}0001`;
+      const emptyUsernameData = { ...mockUser, nostr_pubkey: emptyPubkey, username: '' };
+      let emptyCallCount = 0;
+      mockChain.single.mockImplementation(() => {
+        emptyCallCount++;
+        if (emptyCallCount <= 1) {
+          return Promise.resolve({ data: null, error: { code: 'PGRST116' } });
+        }
+        return Promise.resolve({
+          data: {
+            id: 'user-empty',
+            ...emptyUsernameData,
+            username: null,
+            role: 'supporter',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          error: null,
+        });
+      });
+
       const emptyResult = await userRepository.create(emptyUsernameData);
-      expect(emptyResult.success).toBe(true); // Empty string skips validation
+      expect(emptyResult.success).toBe(true);
     });
 
     it('should create user with minimum required fields', async () => {
-      // Given minimal user data with all required fields
       const minimalUser: CreateUserProfile = {
         nostr_pubkey: 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
         email_verified: false,
@@ -161,10 +217,33 @@ describe('User Repository - Elite Database Layer', () => {
         is_verified: false,
       };
 
-      // When creating the user
+      const mockDbRecord = {
+        id: 'user-minimal',
+        ...minimalUser,
+        username: null,
+        display_name: null,
+        bio: null,
+        avatar_url: null,
+        email: null,
+        role: 'supporter',
+        last_login_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      let callCount = 0;
+      mockChain.single.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // findByNostrPubkey: not found
+          return Promise.resolve({ data: null, error: { code: 'PGRST116' } });
+        }
+        // insert: success
+        return Promise.resolve({ data: mockDbRecord, error: null });
+      });
+
       const result = await userRepository.create(minimalUser);
 
-      // Then it should succeed with defaults
       expect(result.success).toBe(true);
       expect(result.user?.username).toBeNull();
       expect(result.user?.display_name).toBeNull();
@@ -175,14 +254,18 @@ describe('User Repository - Elite Database Layer', () => {
 
   describe('Retrieving User Profiles', () => {
     it('should find existing user by NOSTR public key', async () => {
-      // Given an existing user
-      const createdUser = await userRepository.create(mockUser);
-      expect(createdUser.success).toBe(true);
+      const mockDbRecord = {
+        id: 'user-uuid-123',
+        ...mockUser,
+        role: 'supporter',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      // When finding by NOSTR public key
+      mockChain.single.mockResolvedValue({ data: mockDbRecord, error: null });
+
       const result = await userRepository.findByNostrPubkey(mockUser.nostr_pubkey);
 
-      // Then it should return the user
       expect(result.success).toBe(true);
       expect(result.user).toBeDefined();
       expect(result.user?.nostr_pubkey).toBe(mockUser.nostr_pubkey);
@@ -190,60 +273,80 @@ describe('User Repository - Elite Database Layer', () => {
     });
 
     it('should return not found for non-existent NOSTR key', async () => {
-      // Given a non-existent NOSTR key
       const nonExistentKey = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
-      // When searching for non-existent user
+      mockChain.single.mockResolvedValue({
+        data: null,
+        error: { code: 'PGRST116', message: 'No rows found' },
+      });
+
       const result = await userRepository.findByNostrPubkey(nonExistentKey);
 
-      // Then it should return not found
       expect(result.success).toBe(false);
       expect(result.error).toContain('not found');
       expect(result.user).toBeUndefined();
     });
 
     it('should find user by username', async () => {
-      // Given an existing user
-      await userRepository.create(mockUser);
+      const mockDbRecord = {
+        id: 'user-uuid-123',
+        ...mockUser,
+        role: 'supporter',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      // When finding by username
+      mockChain.single.mockResolvedValue({ data: mockDbRecord, error: null });
+
       const result = await userRepository.findByUsername(mockUser.username!);
 
-      // Then it should return the user
       expect(result.success).toBe(true);
       expect(result.user?.username).toBe(mockUser.username);
     });
 
     it('should handle case-insensitive username search', async () => {
-      // Given user with lowercase username
-      const userData = { ...mockUser, username: 'testuser' };
-      await userRepository.create(userData);
+      const mockDbRecord = {
+        id: 'user-uuid-123',
+        ...mockUser,
+        username: 'testuser',
+        role: 'supporter',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      // When searching with different case
+      mockChain.single.mockResolvedValue({ data: mockDbRecord, error: null });
+
       const result = await userRepository.findByUsername('TESTUSER');
 
-      // Then it should find the user (database handles case sensitivity)
       expect(result.success).toBe(true);
       expect(result.user?.username).toBe('testuser');
+      // Verify ilike was used for case-insensitive search
+      expect(mockChain.ilike).toHaveBeenCalledWith('username', 'TESTUSER');
     });
   });
 
   describe('Updating User Profiles', () => {
     it('should update user profile fields', async () => {
-      // Given an existing user
-      const createdUser = await userRepository.create(mockUser);
-      const userId = createdUser.user!.id!;
-
-      // When updating profile fields
+      const userId = 'user-uuid-123';
       const updateData = {
         display_name: 'Updated Display Name',
         bio: 'Updated bio description',
         avatar_url: 'https://example.com/new-avatar.jpg',
       };
 
+      const mockDbRecord = {
+        id: userId,
+        ...mockUser,
+        ...updateData,
+        role: 'supporter',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      mockChain.single.mockResolvedValue({ data: mockDbRecord, error: null });
+
       const result = await userRepository.update(userId, updateData);
 
-      // Then it should update successfully
       expect(result.success).toBe(true);
       expect(result.user?.display_name).toBe(updateData.display_name);
       expect(result.user?.bio).toBe(updateData.bio);
@@ -252,57 +355,60 @@ describe('User Repository - Elite Database Layer', () => {
     });
 
     it('should handle partial updates correctly', async () => {
-      // Given an existing user
-      const createdUser = await userRepository.create(mockUser);
-      const userId = createdUser.user!.id!;
+      const userId = 'user-uuid-123';
+      const mockDbRecord = {
+        id: userId,
+        ...mockUser,
+        bio: 'New bio only',
+        role: 'supporter',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      // When updating only specific fields
+      mockChain.single.mockResolvedValue({ data: mockDbRecord, error: null });
+
       const result = await userRepository.update(userId, { bio: 'New bio only' });
 
-      // Then only specified fields should change
       expect(result.success).toBe(true);
       expect(result.user?.bio).toBe('New bio only');
-      expect(result.user?.display_name).toBe(mockUser.display_name); // Unchanged
-      expect(result.user?.username).toBe(mockUser.username); // Unchanged
+      expect(result.user?.display_name).toBe(mockUser.display_name);
+      expect(result.user?.username).toBe(mockUser.username);
     });
   });
 
   describe('Role Management', () => {
     it('should update user role with admin permissions', async () => {
-      // Given an existing user
-      const createdUser = await userRepository.create(mockUser);
-      const userId = createdUser.user!.id!;
+      const userId = 'user-uuid-123';
+      const mockDbRecord = {
+        id: userId,
+        ...mockUser,
+        role: 'admin',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      // When updating role as admin
+      mockChain.single.mockResolvedValue({ data: mockDbRecord, error: null });
+
       const result = await userRepository.updateRole(userId, 'admin', 'admin');
 
-      // Then role should be updated
       expect(result.success).toBe(true);
       expect(result.user?.role).toBe('admin');
     });
 
     it('should reject role updates from non-admin users', async () => {
-      // Given an existing user
-      const createdUser = await userRepository.create(mockUser);
-      const userId = createdUser.user!.id!;
+      const userId = 'user-uuid-123';
 
-      // When attempting role update as non-admin
       const result = await userRepository.updateRole(userId, 'admin', 'creator');
 
-      // Then it should be rejected
       expect(result.success).toBe(false);
       expect(result.error).toContain('permission');
     });
 
     it('should validate role values', async () => {
-      // Given an existing user
-      const createdUser = await userRepository.create(mockUser);
-      const userId = createdUser.user!.id!;
+      const userId = 'user-uuid-123';
 
-      // When updating to invalid role
       const result = await userRepository.updateRole(userId, 'invalid_role' as any, 'admin');
 
-      // Then it should be rejected
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid role');
     });
@@ -310,23 +416,48 @@ describe('User Repository - Elite Database Layer', () => {
 
   describe('Performance and Security', () => {
     it('should complete operations within performance requirements', async () => {
-      // Given performance requirements
-      const maxResponseTime = 200; // milliseconds
-
-      // When performing database operations
+      const maxResponseTime = 200;
       const startTime = Date.now();
 
+      // findByNostrPubkey: not found, findByUsername: not found
+      let callCount = 0;
+      mockChain.single.mockImplementation(() => {
+        callCount++;
+        if (callCount <= 2) {
+          return Promise.resolve({ data: null, error: { code: 'PGRST116' } });
+        }
+        return Promise.resolve({
+          data: {
+            id: 'user-uuid',
+            ...mockUser,
+            role: 'supporter',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          error: null,
+        });
+      });
+
       await userRepository.create(mockUser);
+
+      // Reset for findByNostrPubkey
+      mockChain.single.mockResolvedValue({
+        data: {
+          id: 'user-uuid',
+          ...mockUser,
+          role: 'supporter',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        error: null,
+      });
       await userRepository.findByNostrPubkey(mockUser.nostr_pubkey);
 
       const duration = Date.now() - startTime;
-
-      // Then operations should be fast
       expect(duration).toBeLessThan(maxResponseTime);
     });
 
     it('should handle SQL injection attempts safely', async () => {
-      // Given malicious input attempts
       const maliciousInputs = [
         "'; DROP TABLE users; --",
         "' OR '1'='1",
@@ -335,36 +466,59 @@ describe('User Repository - Elite Database Layer', () => {
       ];
 
       for (const maliciousInput of maliciousInputs) {
-        // When attempting to use malicious input
-        const userData = {
-          ...mockUser,
-          username: maliciousInput,
-          nostr_pubkey: Math.random().toString(16).padEnd(64, '0'),
-        };
+        const pubkey = Math.random().toString(16).substring(2).padEnd(64, '0');
+        const userData = { ...mockUser, username: maliciousInput, nostr_pubkey: pubkey };
+
+        // These should fail username validation (regex rejects special chars)
+        mockChain.single.mockResolvedValue({ data: null, error: { code: 'PGRST116' } });
 
         const result = await userRepository.create(userData);
 
-        // Then it should either reject or sanitize safely
-        if (result.success) {
-          expect(result.user?.username).not.toContain('DROP TABLE');
-          expect(result.user?.username).not.toContain('<script>');
-        }
+        // Should fail due to username format validation
+        expect(result.success).toBe(false);
       }
     });
 
     it('should properly handle concurrent operations', async () => {
-      // Given multiple concurrent operations
       const concurrentUsers = Array.from({ length: 5 }, (_, i) => ({
         ...mockUser,
         nostr_pubkey: i.toString().padStart(64, '0'),
         username: `user${i}`,
       }));
 
-      // When creating users concurrently
+      // Each create() calls:
+      //   1. findByNostrPubkey -> single() -> not found
+      //   2. findByUsername -> single() -> not found
+      //   3. insert().select().single() -> success
+      // With concurrent calls, insert() marks a per-call context.
+      // Track pending inserts: each insert() pushes a flag, single() pops it.
+      const pendingInserts: boolean[] = [];
+      mockChain.insert.mockImplementation(() => {
+        pendingInserts.push(true);
+        return mockChain;
+      });
+
+      mockChain.single.mockImplementation(() => {
+        if (pendingInserts.length > 0) {
+          pendingInserts.pop();
+          return Promise.resolve({
+            data: {
+              id: `user-concurrent-${Date.now()}`,
+              nostr_pubkey: '0'.repeat(64),
+              username: 'user0',
+              role: 'supporter',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            error: null,
+          });
+        }
+        return Promise.resolve({ data: null, error: { code: 'PGRST116' } });
+      });
+
       const promises = concurrentUsers.map((user) => userRepository.create(user));
       const results = await Promise.all(promises);
 
-      // Then all should succeed without conflicts
       results.forEach((result: any) => {
         expect(result.success).toBe(true);
       });
@@ -373,24 +527,52 @@ describe('User Repository - Elite Database Layer', () => {
 
   describe('Statistics and Analytics', () => {
     it('should provide accurate user statistics', async () => {
-      // Given users with different roles
-      const users = [
-        { ...mockUser, nostr_pubkey: '1'.padEnd(64, '0'), username: 'creator1' },
-        { ...mockUser, nostr_pubkey: '2'.padEnd(64, '0'), username: 'supporter1' },
-        { ...mockUser, nostr_pubkey: '3'.padEnd(64, '0'), username: 'admin1' },
-      ];
+      // user_stats view: not found, falls back to manual calculation
+      let singleCalled = false;
+      mockChain.single.mockImplementation(() => {
+        if (!singleCalled) {
+          singleCalled = true;
+          // user_stats view doesn't exist
+          return Promise.resolve({ data: null, error: { message: 'Not found' } });
+        }
+        return Promise.resolve({ data: null, error: null });
+      });
 
-      // When creating the users
-      for (const user of users) {
-        await userRepository.create(user);
-      }
+      // Fallback: select('role').eq('is_active', true)
+      mockChain.then.mockImplementation((resolve: any) =>
+        resolve({
+          data: [
+            { role: 'supporter' },
+            { role: 'supporter' },
+            { role: 'supporter' },
+          ],
+          error: null,
+        })
+      );
 
-      // When getting statistics
       const stats = await userRepository.getStats();
 
-      // Then statistics should be accurate
       expect(stats.totalUsers).toBe(3);
-      expect(stats.roleDistribution.supporter).toBe(3); // All default to supporter
+      expect(stats.roleDistribution.supporter).toBe(3);
+    });
+  });
+
+  describe('Cleanup', () => {
+    it('should cleanup test data in test environment', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'test';
+
+      // delete().neq() resolves via then
+      mockChain.then.mockImplementation((resolve: any) =>
+        resolve({ data: null, error: null })
+      );
+
+      await userRepository.cleanup();
+
+      expect(mockDatabase.client.from).toHaveBeenCalledWith('users');
+      expect(mockChain.delete).toHaveBeenCalled();
+
+      process.env.NODE_ENV = originalEnv;
     });
   });
 });

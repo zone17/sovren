@@ -5,6 +5,15 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  esbuild: {
+    // Required for inversify @inject() parameter decorators in backend services
+    tsconfigRaw: {
+      compilerOptions: {
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+      },
+    },
+  },
   resolve: {
     alias: {
       '@/': path.resolve(__dirname, 'packages/frontend/src') + '/',
@@ -61,6 +70,11 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: {
+          alias: {
+            '@/': path.resolve(__dirname, 'packages/backend/src') + '/',
+          },
+        },
         test: {
           name: 'backend',
           environment: 'node',
@@ -72,10 +86,16 @@ export default defineConfig({
             '**/helpers/**',
             '**/mocks/**',
           ],
+          globalSetup: ['./test-utils/backend-global-setup.ts'],
           setupFiles: [
             './test-utils/vitest-jest-compat.ts',
             './test-utils/vitest-backend-setup.ts',
           ],
+          poolOptions: {
+            forks: {
+              maxForks: 1, // Sequential: real DB tests must not interfere
+            },
+          },
         },
       },
       {

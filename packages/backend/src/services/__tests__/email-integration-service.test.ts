@@ -230,6 +230,20 @@ describe('EmailIntegrationService', () => {
       mockWSService as any,
       mockLogger as any
     );
+
+    // Mock templateEngine.renderTemplate to return valid email content
+    // (no real templates are registered since mockDB.templates.findMany returns [])
+    (service as any).templateEngine = {
+      renderTemplate: vi.fn().mockReturnValue({
+        subject: 'Test Subject',
+        html: '<p>Test email content</p>',
+        text: 'Test email content',
+      }),
+      registerTemplate: vi.fn(),
+    };
+
+    // Populate transporters (initializeService is async and may not complete before tests)
+    (service as any).transporters.set('primary', mockTransporter);
   });
 
   // ==========================================
@@ -405,7 +419,7 @@ describe('EmailIntegrationService', () => {
         // Act & Assert
         await expect(service.sendNotification(request)).rejects.toThrow('SMTP Error');
         expect(mockDB.notifications.update).toHaveBeenCalledWith(
-          'notification123',
+          expect.stringMatching(/^notification_/),
           expect.objectContaining({
             status: 'failed',
           })

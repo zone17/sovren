@@ -20,7 +20,7 @@ interface RouteEntry {
   handler: HandlerFn;
 }
 
-const capturedRoutes: RouteEntry[] = [];
+const capturedRoutes: RouteEntry[] = vi.hoisted(() => [] as RouteEntry[]);
 
 vi.mock('express', async () => {
   const actual = await vi.importActual('express');
@@ -39,6 +39,7 @@ vi.mock('express', async () => {
           return mockRouter;
         });
       });
+      mockRouter.use = vi.fn((..._args: unknown[]) => mockRouter);
       return mockRouter;
     },
   };
@@ -50,10 +51,32 @@ vi.mock('../../../middleware/auth', () => ({
   authenticate: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
   requireCreator: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
   optionalAuth: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
+  getAuthUser: vi.fn((req: Request) => req.user),
 }));
 
 vi.mock('../../../middleware/validation-middleware', () => ({
   validate: vi.fn(() => (_req: Request, _res: Response, next: NextFunction) => next()),
+}));
+
+vi.mock('../../../middleware/rate-limit-middleware', () => {
+  const noop = vi.fn((_req: Request, _res: Response, next: NextFunction) => next());
+  return {
+    readOnlyRateLimiter: noop,
+    createUserRateLimiter: vi.fn(() => noop),
+    createRateLimiter: vi.fn(() => noop),
+  };
+});
+
+vi.mock('../../../middleware/correlation-id', () => ({
+  getCorrelationId: vi.fn(() => 'no-context'),
+}));
+
+// Mock createApiResponse to return a simple envelope (no snake→camel transform)
+vi.mock('../../../utils/api-response', () => ({
+  createApiResponse: vi.fn((_req: Request, data: unknown) => ({
+    success: true,
+    data,
+  })),
 }));
 
 // --- Mock services ---
@@ -187,22 +210,17 @@ describe('Shield Routes (v2)', () => {
       expect(json).toHaveBeenCalledWith({ success: true, data: mockData });
     });
 
-    it('returns 404 when provenance not found', async () => {
+    it('forwards NotFoundError to next when provenance not found', async () => {
       mockGetProvenanceChain.mockResolvedValue(null);
 
       const req = makeRequest({ params: { contentId: 'nonexistent' } });
-      const { res, json, status } = makeResponse();
+      const { res } = makeResponse();
 
       const route = getRoute('GET', '/provenance/:contentId')!;
       await route.handler(req, res, nextFn);
+      await new Promise(process.nextTick);
 
-      expect(status).toHaveBeenCalledWith(404);
-      expect(json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          success: false,
-          error: 'NOT_FOUND',
-        })
-      );
+      expect(nextFn).toHaveBeenCalledWith(expect.objectContaining({ name: 'NotFoundError' }));
     });
 
     it('calls next on service error', async () => {
@@ -213,6 +231,7 @@ describe('Shield Routes (v2)', () => {
 
       const route = getRoute('GET', '/provenance/:contentId')!;
       await route.handler(req, res, nextFn);
+      await new Promise(process.nextTick);
 
       expect(nextFn).toHaveBeenCalledWith(expect.any(Error));
     });
@@ -265,28 +284,22 @@ describe('Shield Routes (v2)', () => {
       const route = getRoute('GET', '/fingerprints/:creatorId')!;
       await route.handler(req, res, nextFn);
 
+      // Route passes { data, pagination } to createApiResponse, which wraps in { success, data }
       expect(json).toHaveBeenCalledWith({
         success: true,
-        data: mockResult.data,
-        pagination: mockResult.pagination,
+        data: { data: mockResult.data, pagination: mockResult.pagination },
       });
     });
 
-    it('returns 403 when accessing another creator registry', async () => {
+    it('forwards AuthorizationError when accessing another creator registry', async () => {
       const req = makeRequest({ params: { creatorId: 'other-creator-pubkey' } });
-      const { res, json, status } = makeResponse();
+      const { res } = makeResponse();
 
       const route = getRoute('GET', '/fingerprints/:creatorId')!;
       await route.handler(req, res, nextFn);
+      await new Promise(process.nextTick);
 
-      expect(status).toHaveBeenCalledWith(403);
-      expect(json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          success: false,
-          error: 'FORBIDDEN',
-          message: 'Can only view your own fingerprint registry',
-        })
-      );
+      expect(nextFn).toHaveBeenCalledWith(expect.objectContaining({ name: 'AuthorizationError' }));
     });
   });
 
@@ -321,10 +334,10 @@ describe('Shield Routes (v2)', () => {
       const route = getRoute('GET', '/alerts')!;
       await route.handler(req, res, nextFn);
 
+      // Route passes { data, pagination } to createApiResponse, which wraps in { success, data }
       expect(json).toHaveBeenCalledWith({
         success: true,
-        data: mockResult.data,
-        pagination: mockResult.pagination,
+        data: { data: mockResult.data, pagination: mockResult.pagination },
       });
       expect(mockGetAlerts).toHaveBeenCalledWith('test-pubkey-123', 'new', 1, 20);
     });

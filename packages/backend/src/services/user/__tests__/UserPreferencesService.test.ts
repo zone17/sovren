@@ -796,7 +796,7 @@ describe('UserPreferencesService', () => {
     it('should reject invalid imported preferences', async () => {
       const userId = 'user1103';
 
-      const exportData = await service.exportPreferences(userId, 'json');
+      const exportData = structuredClone(await service.exportPreferences(userId, 'json'));
       exportData.preferences.display.theme = 'invalid' as any;
 
       await expect(

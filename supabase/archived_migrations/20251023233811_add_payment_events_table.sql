@@ -93,7 +93,7 @@ CREATE POLICY payment_events_select_own
     user_id = auth.uid()
     OR
     payment_id IN (
-      SELECT id FROM payments WHERE user_id = auth.uid()
+      SELECT id FROM payments WHERE payer_id = auth.uid() OR recipient_id = auth.uid()
     )
   );
 
@@ -122,7 +122,7 @@ RETURNS TABLE(
   id UUID,
   state VARCHAR(20),
   previous_state VARCHAR(20),
-  timestamp TIMESTAMPTZ,
+  event_timestamp TIMESTAMPTZ,
   metadata JSONB,
   error_message TEXT
 ) AS $$
@@ -132,12 +132,12 @@ BEGIN
     pe.id,
     pe.state,
     pe.previous_state,
-    pe.timestamp,
+    pe."timestamp" AS event_timestamp,
     pe.metadata,
     pe.error_message
   FROM payment_events pe
   WHERE pe.payment_id = p_payment_id
-  ORDER BY pe.timestamp ASC;
+  ORDER BY pe."timestamp" ASC;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
@@ -225,7 +225,7 @@ BEGIN
       CASE WHEN TG_OP = 'UPDATE' THEN OLD.state ELSE NULL END,
       NOW(),
       COALESCE(NEW.metadata, '{}'::jsonb),
-      NEW.user_id,
+      NEW.payer_id,
       NEW.last_error
     );
   END IF;

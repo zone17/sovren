@@ -1271,12 +1271,13 @@ export class UserActivityService implements IUserActivityService {
   }
 
   public async flush(): Promise<number> {
+    let activities: ActivityEvent[] = [];
     try {
       if (this.activityBuffer.activities.length === 0) {
         return 0;
       }
 
-      const activities = [...this.activityBuffer.activities];
+      activities = [...this.activityBuffer.activities];
       this.activityBuffer.activities = [];
       this.activityBuffer.lastFlushedAt = new Date();
 
@@ -1309,7 +1310,7 @@ export class UserActivityService implements IUserActivityService {
     } catch (error) {
       this.logger.error('Failed to flush activity buffer', error);
       // Re-add activities to buffer if flush failed
-      this.activityBuffer.activities.unshift(...this.activityBuffer.activities);
+      this.activityBuffer.activities.unshift(...activities);
       throw new ServiceError('Failed to flush activity buffer', { cause: error });
     }
   }
@@ -1359,10 +1360,10 @@ export class UserActivityService implements IUserActivityService {
 
     let os: string | undefined;
     if (/windows/.test(ua)) os = 'Windows';
+    else if (/iphone|ipad|ipod/.test(ua)) os = 'iOS';
+    else if (/android/.test(ua)) os = 'Android';
     else if (/mac/.test(ua)) os = 'macOS';
     else if (/linux/.test(ua)) os = 'Linux';
-    else if (/android/.test(ua)) os = 'Android';
-    else if (/ios|iphone|ipad/.test(ua)) os = 'iOS';
 
     let browser: string | undefined;
     if (/chrome/.test(ua)) browser = 'Chrome';

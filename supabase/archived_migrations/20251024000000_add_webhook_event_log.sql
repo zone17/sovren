@@ -133,7 +133,7 @@ CREATE POLICY webhook_events_select_own
   FOR SELECT
   USING (
     payment_id IN (
-      SELECT id FROM payments WHERE user_id = auth.uid()
+      SELECT id FROM payments WHERE payer_id = auth.uid() OR recipient_id = auth.uid()
     )
   );
 

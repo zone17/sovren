@@ -445,7 +445,7 @@ describe('WellnessService', () => {
       mockDb = {
         from: vi.fn(() => {
           callCount++;
-          return callCount === 1 ? dataChainable : countChainable;
+          return callCount === 1 ? countChainable : dataChainable;
         }),
         rpc: vi.fn(),
       } as unknown as ISupabaseClient;
@@ -483,7 +483,7 @@ describe('WellnessService', () => {
       mockDb = {
         from: vi.fn(() => {
           callCount++;
-          return callCount === 1 ? dataChainable : countChainable;
+          return callCount === 1 ? countChainable : dataChainable;
         }),
         rpc: vi.fn(),
       } as unknown as ISupabaseClient;
@@ -515,7 +515,7 @@ describe('WellnessService', () => {
       mockDb = {
         from: vi.fn(() => {
           callCount++;
-          return callCount === 1 ? dataChainable : countChainable;
+          return callCount === 1 ? countChainable : dataChainable;
         }),
         rpc: vi.fn(),
       } as unknown as ISupabaseClient;

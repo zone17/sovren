@@ -15,6 +15,20 @@
  * @story PAY-015
  */
 
+// Mock the subscription-management-service module entirely
+// (it imports analytics-service, lightning-payment-service, notification-service, websocket-service
+// — all of which are missing files, pre-existing broken imports)
+vi.mock('../../services/subscription-management-service', () => ({
+  SubscriptionManagementService: vi.fn().mockImplementation(() => ({})),
+  subscriptionManagementService: {},
+}));
+
+// Also mock the route that imports it
+vi.mock('../../routes/subscription-tiers', () => {
+  const { Router } = require('express');
+  return { default: Router() };
+});
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi, Mock } from 'vitest';
 import request from 'supertest';
 import { createClient } from '@supabase/supabase-js';

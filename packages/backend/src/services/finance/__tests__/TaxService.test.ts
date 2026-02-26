@@ -147,10 +147,10 @@ describe('TaxService', () => {
     mockCache = makeCache();
     mockDb = makeDb();
 
-    // Default: global.fetch returns a valid BTC/USD rate
-    (global.fetch as any).mockResolvedValue({
+    // Mock global.fetch for BTC/USD rate resolution
+    global.fetch = vi.fn().mockResolvedValue({
       json: vi.fn().mockResolvedValue({ bitcoin: { usd: MOCK_BTC_RATE } }),
-    });
+    }) as any;
 
     service = new TaxService(mockDb as any, mockCache as any, mockLogger as any);
   });

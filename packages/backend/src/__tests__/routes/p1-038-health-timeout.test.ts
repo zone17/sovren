@@ -11,7 +11,7 @@ import { Request, Response } from 'express';
 
 // --- Capture route handlers via Express Router mock ---
 
-const capturedRoutes: Record<string, Function> = {};
+const capturedRoutes: Record<string, Function> = vi.hoisted(() => ({}));
 
 vi.mock('express', async () => {
   const actual = await vi.importActual('express');
@@ -32,9 +32,27 @@ vi.mock('express', async () => {
   };
 });
 
-// Mock ioredis (used by lib/redis)
-const mockRedisPing = vi.fn().mockResolvedValue('PONG');
-const mockRedisQuit = vi.fn().mockResolvedValue(undefined);
+// Use vi.hoisted() to declare mock functions before vi.mock factories run (hoisting)
+const { mockRedisPing, mockRedisQuit, mockSupabaseSelect, mockSupabaseLimit, mockFetch, mockWsClose } = vi.hoisted(() => ({
+  mockRedisPing: vi.fn().mockResolvedValue('PONG'),
+  mockRedisQuit: vi.fn().mockResolvedValue(undefined),
+  mockSupabaseSelect: vi.fn().mockReturnThis(),
+  mockSupabaseLimit: vi.fn().mockResolvedValue({ data: [{ id: 1 }], error: null }),
+  mockFetch: vi.fn(),
+  mockWsClose: vi.fn(),
+}));
+
+let wsInstance: any = null;
+
+// Mock lib/redis — health route uses isRedisAvailable() and getRedisClient()
+vi.mock('../../lib/redis', () => ({
+  isRedisAvailable: vi.fn().mockReturnValue(true),
+  getRedisClient: vi.fn(() => ({
+    ping: mockRedisPing,
+  })),
+}));
+
+// Mock ioredis (may be imported transitively)
 vi.mock('ioredis', () => ({
   default: vi.fn().mockImplementation(() => ({
     ping: mockRedisPing,
@@ -44,8 +62,6 @@ vi.mock('ioredis', () => ({
 }));
 
 // Mock @supabase/supabase-js
-const mockSupabaseSelect = vi.fn().mockReturnThis();
-const mockSupabaseLimit = vi.fn().mockResolvedValue({ data: [{ id: 1 }], error: null });
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({
     from: vi.fn().mockReturnValue({
@@ -55,25 +71,34 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
+// Mock container for queue health checks
+vi.mock('../../container', () => ({
+  container: {
+    resolveOptional: vi.fn().mockReturnValue(null),
+  },
+}));
+
+vi.mock('../../container/types', () => ({
+  TYPES: { QueueService: Symbol('QueueService') },
+}));
+
+// Mock logger to suppress output
+vi.mock('../../lib/logger', () => ({
+  default: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+
 // Mock global fetch for LNbits
-const mockFetch = vi.fn();
 global.fetch = mockFetch as any;
 
-// Track WebSocket close calls
-const mockWsClose = vi.fn();
-let wsInstance: any = null;
+// Mock WebSocket for NOSTR relay checks — hoist the mock constructor
+const { mockWsConstructor } = vi.hoisted(() => ({
+  mockWsConstructor: vi.fn(),
+}));
 
-// Mock WebSocket for NOSTR relay checks
-vi.mock('ws', () => {
-  return vi.fn().mockImplementation(() => {
-    wsInstance = {
-      close: mockWsClose,
-      onopen: null as (() => void) | null,
-      onerror: null as ((err: any) => void) | null,
-    };
-    return wsInstance;
-  });
-});
+vi.mock('ws', () => ({
+  default: mockWsConstructor,
+  __esModule: true,
+}));
 
 // Import after mocks
 import '../../routes/health';
@@ -172,8 +197,7 @@ describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
       process.env.NOSTR_RELAYS = 'wss://relay.example.com';
 
       // Simulate successful connection
-      const WS = require('ws');
-      WS.mockImplementation(() => {
+      mockWsConstructor.mockImplementation(() => {
         const ws: any = {
           close: mockWsClose,
           onopen: null,
@@ -200,8 +224,7 @@ describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
     it('should close WebSocket on connection error', async () => {
       process.env.NOSTR_RELAYS = 'wss://relay.example.com';
 
-      const WS = require('ws');
-      WS.mockImplementation(() => {
+      mockWsConstructor.mockImplementation(() => {
         const ws: any = {
           close: mockWsClose,
           onopen: null,
@@ -230,8 +253,7 @@ describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
       vi.useFakeTimers();
       process.env.NOSTR_RELAYS = 'wss://relay.example.com';
 
-      const WS = require('ws');
-      WS.mockImplementation(() => {
+      mockWsConstructor.mockImplementation(() => {
         const ws: any = {
           close: mockWsClose,
           onopen: null,
@@ -248,8 +270,8 @@ describe('P1-038: Health Check Timeout & WebSocket Leak', () => {
 
       const handlerPromise = handler(req, res);
 
-      // Advance past the 5s WebSocket timeout
-      vi.advanceTimersByTime(6000);
+      // Advance past the 5s WebSocket timeout (use async variant to flush microtasks)
+      await vi.advanceTimersByTimeAsync(6000);
 
       await handlerPromise;
 

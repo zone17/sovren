@@ -20,7 +20,7 @@ interface RouteEntry {
   handler: HandlerFn;
 }
 
-const capturedRoutes: RouteEntry[] = [];
+const capturedRoutes: RouteEntry[] = vi.hoisted(() => [] as RouteEntry[]);
 
 vi.mock('express', async () => {
   const actual = await vi.importActual('express');
@@ -39,6 +39,7 @@ vi.mock('express', async () => {
           return mockRouter;
         });
       });
+      mockRouter.use = vi.fn((..._args: unknown[]) => mockRouter);
       return mockRouter;
     },
   };
@@ -50,10 +51,32 @@ vi.mock('../../../middleware/auth', () => ({
   authenticate: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
   requireCreator: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
   optionalAuth: vi.fn((_req: Request, _res: Response, next: NextFunction) => next()),
+  getAuthUser: vi.fn((req: Request) => req.user),
 }));
 
 vi.mock('../../../middleware/validation-middleware', () => ({
   validate: vi.fn(() => (_req: Request, _res: Response, next: NextFunction) => next()),
+}));
+
+vi.mock('../../../middleware/rate-limit-middleware', () => {
+  const noop = vi.fn((_req: Request, _res: Response, next: NextFunction) => next());
+  return {
+    readOnlyRateLimiter: noop,
+    createUserRateLimiter: vi.fn(() => noop),
+    createRateLimiter: vi.fn(() => noop),
+  };
+});
+
+vi.mock('../../../middleware/correlation-id', () => ({
+  getCorrelationId: vi.fn(() => 'no-context'),
+}));
+
+// Mock createApiResponse to return a simple envelope (no snake→camel transform)
+vi.mock('../../../utils/api-response', () => ({
+  createApiResponse: vi.fn((_req: Request, data: unknown) => ({
+    success: true,
+    data,
+  })),
 }));
 
 // --- Mock services ---
@@ -220,6 +243,8 @@ describe('Wellness Routes (v2)', () => {
 
       const route = getRoute('POST', '/patterns')!;
       await route.handler(req, res, nextFn);
+      // asyncHandler doesn't return the promise chain, so flush microtasks
+      await new Promise(process.nextTick);
 
       expect(nextFn).toHaveBeenCalledWith(expect.any(Error));
     });
@@ -406,8 +431,10 @@ describe('Wellness Routes (v2)', () => {
 
       expect(json).toHaveBeenCalledWith({
         success: true,
-        data: null,
-        message: 'Insufficient participants for anonymous benchmarking (minimum: 10)',
+        data: {
+          benchmark: null,
+          message: 'Insufficient participants for anonymous benchmarking (minimum: 10)',
+        },
       });
     });
   });

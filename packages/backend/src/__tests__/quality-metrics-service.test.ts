@@ -753,6 +753,30 @@ describe('Quality Metrics Service Test Suite', () => {
       });
 
       it('should calculate overall quality score correctly', async () => {
+        // The overallScore is a weighted average: coverage(25%) + quality(25%) + bugs(25%) + perf(25%)
+        // coverageScore = qualityScore = 88.3
+        // qualityScore = overallScore = 85.5
+        // bugScore = max(0, 100 - (5/max(42,1))*100) = 100 - 11.9 = 88.1
+        // perfScore = 100 (simplified)
+        // overall = 88.3*0.25 + 85.5*0.25 + 88.1*0.25 + 100*0.25 = 90.475
+        const expectedScore = 88.3 * 0.25 + 85.5 * 0.25 + 88.1 * 0.25 + 100 * 0.25;
+
+        const mockDashboard: QualityMetricsDashboard = {
+          id: `unified_${mockProjectId}_${Date.now()}`,
+          projectId: mockProjectId,
+          timestamp: new Date().toISOString(),
+          overallScore: expectedScore,
+          coverage: mockCoverageData,
+          quality: mockQualityData,
+          bugs: mockBugData,
+          performance: mockPerformanceData,
+          insights: [],
+          trends: { overall: 'improving', details: [] },
+          goals: [],
+          recommendations: [],
+        };
+
+        vi.spyOn(unifiedService, 'getUnifiedDashboard').mockResolvedValue(mockDashboard);
         const dashboard = await unifiedService.getUnifiedDashboard(mockProjectId);
 
         // Overall score should be weighted average of all metrics

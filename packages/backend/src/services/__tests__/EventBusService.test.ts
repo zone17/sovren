@@ -444,6 +444,8 @@ describe('EventBusService', () => {
     });
 
     it('should handle handler timeout', async () => {
+      vi.useFakeTimers();
+
       const handler = vi.fn(async () => {
         // Simulate a very long running handler
         await new Promise(resolve => setTimeout(resolve, 60000));
@@ -458,13 +460,17 @@ describe('EventBusService', () => {
         .withSource('test')
         .build();
 
-      await eventBus.publish(event);
+      const publishPromise = eventBus.publish(event);
 
-      // Handler should timeout after 30 seconds (but we'll check sooner)
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Advance past the 30s handler timeout + retry delay + retry timeout
+      await vi.advanceTimersByTimeAsync(65000);
+
+      await publishPromise;
+
+      vi.useRealTimers();
 
       expect(mockLogger.error).toHaveBeenCalled();
-    }, 35000); // Increase test timeout
+    });
 
     it('should continue processing after handler error', async () => {
       const failingHandler = vi.fn(() => {

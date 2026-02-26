@@ -280,31 +280,40 @@ describe('ProvenanceService', () => {
 
   describe('revokeProvenance', () => {
     it('should revoke a provenance record owned by creator', async () => {
-      // First call: getProvenanceChain → returns the record
-      mockDb._chain.single
-        .mockReturnValueOnce({
-          data: {
-            content_id: 'content-1',
-            creator_id: 'pubkey-abc',
-            created_at: '2026-02-15T10:00:00Z',
-            signature: 'sig',
-            nostr_event_id: 'event',
-            content_hash: 'hash',
-            relay_confirmations: [],
-            verification_status: 'verified',
-          },
-          error: null,
-        });
+      // First from() call: getProvenanceChain → select().eq().single()
+      // Second from() call: update → update().eq().eq()
+      const selectChain: any = {};
+      selectChain.select = vi.fn().mockReturnValue(selectChain);
+      selectChain.eq = vi.fn().mockReturnValue(selectChain);
+      selectChain.single = vi.fn().mockReturnValue({
+        data: {
+          content_id: 'content-1',
+          creator_id: 'pubkey-abc',
+          created_at: '2026-02-15T10:00:00Z',
+          signature: 'sig',
+          nostr_event_id: 'event',
+          content_hash: 'hash',
+          relay_confirmations: [],
+          verification_status: 'verified',
+        },
+        error: null,
+      });
 
-      // Second call: update → succeeds
-      mockDb._chain.eq.mockReturnValue(mockDb._chain);
-      mockDb._chain.update = vi.fn().mockReturnValue(mockDb._chain);
-      // Make the update's eq chain return no error
       const updateChain: any = {};
+      updateChain.update = vi.fn().mockReturnValue(updateChain);
       updateChain.eq = vi.fn().mockReturnValue(updateChain);
-      mockDb._chain.update.mockReturnValue(updateChain);
-      updateChain.eq.mockReturnValue({ error: null });
+      // Final .eq() resolves the promise (the chain is awaited)
+      updateChain.eq.mockReturnValueOnce(updateChain).mockReturnValue({ error: null });
 
+      let callCount = 0;
+      const localMockDb = {
+        from: vi.fn(() => {
+          callCount++;
+          return callCount === 1 ? selectChain : updateChain;
+        }),
+      };
+
+      service = new ProvenanceService(localMockDb as any, mockLogger);
       const result = await service.revokeProvenance('content-1', 'pubkey-abc');
 
       expect(result.content_id).toBe('content-1');

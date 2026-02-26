@@ -717,7 +717,7 @@ export class UserPreferencesService implements IUserPreferencesService {
    * Get preference defaults
    */
   async getDefaults(): Promise<Omit<UserPreferences, 'userId' | 'createdAt' | 'updatedAt'>> {
-    return DEFAULT_PREFERENCES;
+    return structuredClone(DEFAULT_PREFERENCES);
   }
 
   /**
@@ -733,9 +733,10 @@ export class UserPreferencesService implements IUserPreferencesService {
    * Create default preferences for a new user
    */
   private async createDefaultPreferences(userId: string): Promise<UserPreferences> {
+    const defaults = structuredClone(DEFAULT_PREFERENCES);
     const preferences: UserPreferences = {
       userId,
-      ...DEFAULT_PREFERENCES,
+      ...defaults,
       createdAt: new Date(),
       updatedAt: new Date()
     };

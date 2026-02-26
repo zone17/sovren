@@ -41,83 +41,71 @@ function createMockRes(): Response & { _headers: Record<string, string> } {
   return res;
 }
 
+/** Run middleware and return the RequestContext captured inside next() */
+function runMiddleware(req: Request, res: Response): Promise<ReturnType<typeof getRequestContext>> {
+  return new Promise((resolve) => {
+    const next: NextFunction = () => {
+      resolve(getRequestContext());
+    };
+    correlationIdMiddleware(req, res, next);
+  });
+}
+
 describe('Correlation ID Middleware', () => {
   describe('UUID generation', () => {
-    it('should generate a UUID when no correlation header is present', (done) => {
+    it('should generate a UUID when no correlation header is present', async () => {
       const req = createMockReq();
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        const context = getRequestContext();
-        expect(context).toBeDefined();
-        expect(context!.correlationId).toMatch(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-        );
-        done();
-      };
+      const context = await runMiddleware(req, res);
 
-      correlationIdMiddleware(req, res, next);
+      expect(context).toBeDefined();
+      expect(context!.correlationId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+      );
     });
 
-    it('should generate unique IDs for each request', (done) => {
+    it('should generate unique IDs for each request', async () => {
       const ids: string[] = [];
-      let completed = 0;
 
       for (let i = 0; i < 3; i++) {
         const req = createMockReq();
         const res = createMockRes();
-
-        const next: NextFunction = () => {
-          const context = getRequestContext();
-          ids.push(context!.correlationId);
-          completed++;
-
-          if (completed === 3) {
-            const uniqueIds = new Set(ids);
-            expect(uniqueIds.size).toBe(3);
-            done();
-          }
-        };
-
-        correlationIdMiddleware(req, res, next);
+        const context = await runMiddleware(req, res);
+        ids.push(context!.correlationId);
       }
+
+      const uniqueIds = new Set(ids);
+      expect(uniqueIds.size).toBe(3);
     });
   });
 
   describe('Header reuse', () => {
-    it('should reuse X-Correlation-ID header if present', (done) => {
+    it('should reuse X-Correlation-ID header if present', async () => {
       const existingId = 'existing-correlation-id-123';
       const req = createMockReq({
         headers: { 'x-correlation-id': existingId },
       });
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        const context = getRequestContext();
-        expect(context!.correlationId).toBe(existingId);
-        done();
-      };
+      const context = await runMiddleware(req, res);
 
-      correlationIdMiddleware(req, res, next);
+      expect(context!.correlationId).toBe(existingId);
     });
 
-    it('should reuse X-Request-ID header if present', (done) => {
+    it('should reuse X-Request-ID header if present', async () => {
       const existingId = 'existing-request-id-456';
       const req = createMockReq({
         headers: { 'x-request-id': existingId },
       });
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        const context = getRequestContext();
-        expect(context!.correlationId).toBe(existingId);
-        done();
-      };
+      const context = await runMiddleware(req, res);
 
-      correlationIdMiddleware(req, res, next);
+      expect(context!.correlationId).toBe(existingId);
     });
 
-    it('should prefer X-Correlation-ID over X-Request-ID', (done) => {
+    it('should prefer X-Correlation-ID over X-Request-ID', async () => {
       const correlationId = 'correlation-takes-priority';
       const requestId = 'request-id-lower-priority';
       const req = createMockReq({
@@ -128,60 +116,45 @@ describe('Correlation ID Middleware', () => {
       });
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        const context = getRequestContext();
-        expect(context!.correlationId).toBe(correlationId);
-        done();
-      };
+      const context = await runMiddleware(req, res);
 
-      correlationIdMiddleware(req, res, next);
+      expect(context!.correlationId).toBe(correlationId);
     });
   });
 
   describe('Response header', () => {
-    it('should set X-Correlation-ID response header', (done) => {
+    it('should set X-Correlation-ID response header', async () => {
       const req = createMockReq();
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        expect(res.setHeader).toHaveBeenCalledWith('X-Correlation-ID', expect.any(String));
-        expect(res._headers['X-Correlation-ID']).toBeTruthy();
-        done();
-      };
+      await runMiddleware(req, res);
 
-      correlationIdMiddleware(req, res, next);
+      expect(res.setHeader).toHaveBeenCalledWith('X-Correlation-ID', expect.any(String));
+      expect(res._headers['X-Correlation-ID']).toBeTruthy();
     });
 
-    it('should set response header to the same ID available in context', (done) => {
+    it('should set response header to the same ID available in context', async () => {
       const req = createMockReq();
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        const context = getRequestContext();
-        expect(res._headers['X-Correlation-ID']).toBe(context!.correlationId);
-        done();
-      };
+      const context = await runMiddleware(req, res);
 
-      correlationIdMiddleware(req, res, next);
+      expect(res._headers['X-Correlation-ID']).toBe(context!.correlationId);
     });
   });
 
   describe('AsyncLocalStorage context', () => {
-    it('should provide full RequestContext in AsyncLocalStorage', (done) => {
+    it('should provide full RequestContext in AsyncLocalStorage', async () => {
       const req = createMockReq({ method: 'POST', path: '/api/users' });
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        const context = getRequestContext();
-        expect(context).toBeDefined();
-        expect(context!.correlationId).toBeTruthy();
-        expect(context!.requestStartTime).toBeGreaterThan(0);
-        expect(context!.method).toBe('POST');
-        expect(context!.path).toBe('/api/users');
-        done();
-      };
+      const context = await runMiddleware(req, res);
 
-      correlationIdMiddleware(req, res, next);
+      expect(context).toBeDefined();
+      expect(context!.correlationId).toBeTruthy();
+      expect(context!.requestStartTime).toBeGreaterThan(0);
+      expect(context!.method).toBe('POST');
+      expect(context!.path).toBe('/api/users');
     });
 
     it('should return undefined context outside request lifecycle', () => {
@@ -194,37 +167,36 @@ describe('Correlation ID Middleware', () => {
       expect(id).toBe('no-context');
     });
 
-    it('should return the correlation ID via getCorrelationId helper', (done) => {
+    it('should return the correlation ID via getCorrelationId helper', async () => {
       const req = createMockReq();
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        const id = getCorrelationId();
-        expect(id).not.toBe('no-context');
-        expect(typeof id).toBe('string');
-        expect(id.length).toBeGreaterThan(0);
-        done();
-      };
+      let capturedId: string = '';
+      await new Promise<void>((resolve) => {
+        const next: NextFunction = () => {
+          capturedId = getCorrelationId();
+          resolve();
+        };
+        correlationIdMiddleware(req, res, next);
+      });
 
-      correlationIdMiddleware(req, res, next);
+      expect(capturedId).not.toBe('no-context');
+      expect(typeof capturedId).toBe('string');
+      expect(capturedId.length).toBeGreaterThan(0);
     });
   });
 
   describe('Request start time tracking', () => {
-    it('should capture requestStartTime close to current time', (done) => {
+    it('should capture requestStartTime close to current time', async () => {
       const before = Date.now();
       const req = createMockReq();
       const res = createMockRes();
 
-      const next: NextFunction = () => {
-        const after = Date.now();
-        const context = getRequestContext();
-        expect(context!.requestStartTime).toBeGreaterThanOrEqual(before);
-        expect(context!.requestStartTime).toBeLessThanOrEqual(after);
-        done();
-      };
+      const context = await runMiddleware(req, res);
 
-      correlationIdMiddleware(req, res, next);
+      const after = Date.now();
+      expect(context!.requestStartTime).toBeGreaterThanOrEqual(before);
+      expect(context!.requestStartTime).toBeLessThanOrEqual(after);
     });
   });
 });

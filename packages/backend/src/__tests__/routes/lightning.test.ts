@@ -5,7 +5,7 @@ import { lightningService } from '../../services/lightning/lightningService';
 
 // Mock the authentication middleware
 vi.mock('../../middleware/auth', () => ({
-  authenticate: (req: any, res: any, next: any) => {
+  authenticate: (req: any, _res: any, next: any) => {
     // Add a mock user to the request
     req.user = {
       id: 'user123',
@@ -13,6 +13,17 @@ vi.mock('../../middleware/auth', () => ({
     };
     next();
   },
+  requireCreator: (_req: any, _res: any, next: any) => next(),
+}));
+
+// Mock the validation middleware
+vi.mock('../../middleware/validation-middleware', () => ({
+  validateRequest: vi.fn(() => (_req: any, _res: any, next: any) => next()),
+}));
+
+// Mock the types/lightning to provide schemas
+vi.mock('../../types/lightning', () => ({
+  CreateInvoiceRequestSchema: {},
 }));
 
 // Mock the lightning service

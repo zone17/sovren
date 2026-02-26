@@ -40,15 +40,17 @@ export function createMockCache(config?: { real?: boolean }): ICacheService {
 
     ttl: async (key: string): Promise<number> => {
       const entry = cache.get(key);
-      if (!entry || !entry.expiresAt) return -1;
+      if (!entry) return -2;  // Key doesn't exist (Redis convention)
+      if (!entry.expiresAt) return -1;  // Key exists but no TTL
       const remaining = Math.floor((entry.expiresAt - Date.now()) / 1000);
       return remaining > 0 ? remaining : -2;
     },
 
     increment: async (key: string, amount = 1): Promise<number> => {
-      const current = (await cache.get(key)) || 0;
-      const newValue = (current as number) + amount;
-      await cache.set(key, newValue);
+      const entry = cache.get(key);
+      const current = entry ? (entry.value as number) : 0;
+      const newValue = current + amount;
+      cache.set(key, { value: newValue, expiresAt: entry?.expiresAt });
       return newValue;
     },
 

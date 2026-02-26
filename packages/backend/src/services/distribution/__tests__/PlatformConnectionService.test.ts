@@ -4,6 +4,7 @@
  */
 
 import { PlatformConnectionService } from '../PlatformConnectionService';
+import { createMockChain } from '../../../test-utils/supabase-mock';
 
 // Mock the crypto module
 vi.mock('../crypto', () => ({
@@ -20,6 +21,8 @@ describe('PlatformConnectionService', () => {
   let service: PlatformConnectionService;
   let mockDb: any;
   let mockLogger: any;
+  let connectionsChain: any;
+  let crossPostsChain: any;
 
   const creatorId = 'creator-pubkey-123';
 
@@ -38,16 +41,14 @@ describe('PlatformConnectionService', () => {
       debug: vi.fn(),
     };
 
+    connectionsChain = createMockChain();
+    crossPostsChain = createMockChain();
+
     mockDb = {
-      from: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn(),
-      delete: vi.fn().mockReturnThis(),
-      upsert: vi.fn(),
-      update: vi.fn().mockReturnThis(),
-      not: vi.fn().mockReturnThis(),
-      lt: vi.fn(),
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'cross_posts') return crossPostsChain;
+        return connectionsChain;
+      }),
     };
 
     service = new PlatformConnectionService(mockDb, mockLogger);
@@ -125,16 +126,18 @@ describe('PlatformConnectionService', () => {
         },
       ];
 
-      mockDb.eq.mockReturnValue({ data: mockConnections, error: null });
+      // getStatus calls: .from('platform_connections').select('*').eq('creator_id', ...)
+      // The final .eq() resolves as a PromiseLike, so override it to resolve with data
+      connectionsChain.eq.mockResolvedValue({ data: mockConnections, error: null });
 
       const result = await service.getStatus(creatorId);
 
       expect(result).toHaveLength(4); // All 4 platforms
-      const mastodon = result.find((p) => p.platform === 'mastodon');
+      const mastodon = result.find((p: any) => p.platform === 'mastodon');
       expect(mastodon?.connected).toBe(true);
       expect(mastodon?.username).toBe('@user@mastodon.social');
 
-      const twitter = result.find((p) => p.platform === 'twitter');
+      const twitter = result.find((p: any) => p.platform === 'twitter');
       expect(twitter?.connected).toBe(false);
       expect(twitter?.status).toBe('disconnected');
     });
@@ -142,18 +145,33 @@ describe('PlatformConnectionService', () => {
 
   describe('disconnect', () => {
     it('should delete connection from database', async () => {
-      // Mock getDecryptedToken
-      mockDb.single.mockResolvedValue({
-        data: {
-          access_token_encrypted: Buffer.from('enc'),
-          token_iv: Buffer.from('iv-16bytes------'),
-          token_auth_tag: Buffer.from('tag-16bytes-----'),
-        },
-        error: null,
-      });
+      // disconnect() makes 3 DB calls in sequence:
+      // 1. getDecryptedToken: .from('platform_connections').select().eq().eq().single()
+      // 2. cross_posts update: .from('cross_posts').update().eq().eq().in()
+      // 3. delete connection: .from('platform_connections').delete().eq().eq()
 
-      // Mock delete
-      mockDb.eq.mockReturnValue({ error: null });
+      // Build per-call chains to avoid chaining conflicts
+      const tokenChain = createMockChain({
+        access_token_encrypted: Buffer.from('enc'),
+        token_iv: Buffer.from('iv-16bytes------'),
+        token_auth_tag: Buffer.from('tag-16bytes-----'),
+      });
+      const updateChain = createMockChain();
+      updateChain.in.mockResolvedValue({ error: null });
+      const deleteChain = createMockChain();
+      // First .eq() returns chain (for further chaining), second .eq() resolves (terminal)
+      deleteChain.eq
+        .mockReturnValueOnce(deleteChain)
+        .mockResolvedValueOnce({ error: null });
+
+      let callCount = 0;
+      mockDb.from = vi.fn().mockImplementation((table: string) => {
+        callCount++;
+        if (table === 'cross_posts') return updateChain;
+        // First platform_connections call = getDecryptedToken, second = delete
+        if (callCount <= 1) return tokenChain;
+        return deleteChain;
+      });
 
       await service.disconnect(creatorId, 'mastodon');
 
@@ -167,7 +185,7 @@ describe('PlatformConnectionService', () => {
 
   describe('getDecryptedToken', () => {
     it('should return decrypted access token', async () => {
-      mockDb.single.mockResolvedValue({
+      connectionsChain.single.mockResolvedValue({
         data: {
           access_token_encrypted: Buffer.from('encrypted'),
           token_iv: Buffer.from('iv'),
@@ -181,7 +199,7 @@ describe('PlatformConnectionService', () => {
     });
 
     it('should throw if no connection found', async () => {
-      mockDb.single.mockResolvedValue({ data: null, error: { message: 'Not found' } });
+      connectionsChain.single.mockResolvedValue({ data: null, error: { message: 'Not found' } });
 
       await expect(service.getDecryptedToken(creatorId, 'twitter')).rejects.toThrow(
         'No twitter connection found'
@@ -191,7 +209,7 @@ describe('PlatformConnectionService', () => {
 
   describe('refreshExpiringTokens', () => {
     it('should return 0 when no tokens need refreshing', async () => {
-      mockDb.lt.mockResolvedValue({ data: [], error: null });
+      connectionsChain.lt.mockResolvedValue({ data: [], error: null });
 
       const count = await service.refreshExpiringTokens();
       expect(count).toBe(0);

@@ -94,7 +94,6 @@ describe('P1-039: Redis Client Factory', () => {
       const [, options] = MockRedis.mock.calls[0];
       expect(options.maxRetriesPerRequest).toBe(3);
       expect(typeof options.retryStrategy).toBe('function');
-      expect(options.lazyConnect).toBe(true);
     });
   });
 
@@ -134,12 +133,11 @@ describe('P1-039: Redis Client Factory', () => {
       const [config] = MockRedis.mock.calls[0];
       expect(config.maxRetriesPerRequest).toBe(3);
       expect(typeof config.retryStrategy).toBe('function');
-      expect(config.lazyConnect).toBe(true);
     });
   });
 
   describe('Retry strategy', () => {
-    it('should return delay = times * 200, capped at 3000ms', async () => {
+    it('should return delay = times * 200, capped at 5000ms, null after max retries', async () => {
       await loadModule();
       getRedisClient();
 
@@ -151,8 +149,10 @@ describe('P1-039: Redis Client Factory', () => {
 
       expect(retryStrategy(1)).toBe(200);
       expect(retryStrategy(5)).toBe(1000);
-      expect(retryStrategy(15)).toBe(3000);
-      expect(retryStrategy(100)).toBe(3000);
+      expect(retryStrategy(10)).toBe(2000);
+      // Beyond MAX_RETRY_ATTEMPTS (10), returns null
+      expect(retryStrategy(11)).toBeNull();
+      expect(retryStrategy(100)).toBeNull();
     });
   });
 

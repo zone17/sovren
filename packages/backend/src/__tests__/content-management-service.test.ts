@@ -22,7 +22,7 @@ const mockSupabaseClient = {
   storage: {
     from: vi.fn(),
   },
-  sql: vi.fn(),
+  sql: ((strings: TemplateStringsArray, ...values: any[]) => `SQL:${strings.join('')}`) as any,
 };
 
 // Mock configuration
@@ -42,7 +42,7 @@ describe('ContentManagementService', () => {
     // Reset all mocks
     vi.clearAllMocks();
 
-    // Setup mock query chain
+    // Setup mock query chain — thenable so `await query` works for non-.single() queries
     mockQuery = {
       select: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
@@ -63,6 +63,8 @@ describe('ContentManagementService', () => {
       limit: vi.fn().mockReturnThis(),
       single: vi.fn(),
       maybeSingle: vi.fn(),
+      // Default thenable resolution for queries that await the chain directly
+      then: vi.fn((resolve: any) => resolve({ data: null, error: null, count: 0 })),
     };
 
     mockSupabaseClient.from.mockReturnValue(mockQuery);
@@ -317,11 +319,11 @@ describe('ContentManagementService', () => {
           { id: 'content-2', title: 'Video 1', content_type: 'video' },
         ];
 
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: mockItems,
           error: null,
           count: 2,
-        });
+        }));
 
         const result = await service.getContentItems();
 
@@ -350,11 +352,11 @@ describe('ContentManagementService', () => {
           limit: 10,
         };
 
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: [],
           error: null,
           count: 0,
-        });
+        }));
 
         await service.getContentItems(params);
 
@@ -370,11 +372,11 @@ describe('ContentManagementService', () => {
       });
 
       it('should handle fetch errors', async () => {
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: null,
           error: { message: 'Database connection failed' },
           count: null,
-        });
+        }));
 
         await expect(service.getContentItems()).rejects.toThrow(
           'Failed to fetch content: Database connection failed'
@@ -502,11 +504,11 @@ describe('ContentManagementService', () => {
           { id: 'asset-2', filename: 'video1.mp4', file_type: 'video/mp4' },
         ];
 
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: mockAssets,
           error: null,
           count: 2,
-        });
+        }));
 
         const result = await service.getMediaAssets({ page: 1, limit: 10 });
 
@@ -520,11 +522,11 @@ describe('ContentManagementService', () => {
       });
 
       it('should apply file type filter', async () => {
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: [],
           error: null,
           count: 0,
-        });
+        }));
 
         await service.getMediaAssets({ file_type: 'image' });
 
@@ -532,11 +534,11 @@ describe('ContentManagementService', () => {
       });
 
       it('should apply search filter', async () => {
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: [],
           error: null,
           count: 0,
-        });
+        }));
 
         await service.getMediaAssets({ search: 'test' });
 
@@ -665,7 +667,7 @@ describe('ContentManagementService', () => {
         });
 
         await expect(service.addContentToCollection('invalid-id', 'content-1')).rejects.toThrow(
-          'Collection not found: Collection not found'
+          'Collection (invalid-id) not found'
         );
       });
     });
@@ -880,11 +882,11 @@ describe('ContentManagementService', () => {
           error: null,
         });
 
-        // Mock update for deactivation
-        mockQuery.update.mockResolvedValue({
+        // Mock the awaited chain for deactivation update
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: null,
           error: null,
-        });
+        }));
 
         const result = await service.checkPremiumAccess('content-123', 'user-123');
 
@@ -899,10 +901,10 @@ describe('ContentManagementService', () => {
   describe('Analytics', () => {
     describe('trackContentView', () => {
       it('should track view and increment count', async () => {
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: null,
           error: null,
-        });
+        }));
 
         await service.trackContentView('content-123', 'user-123');
 
@@ -927,10 +929,10 @@ describe('ContentManagementService', () => {
       });
 
       it('should handle anonymous views', async () => {
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: null,
           error: null,
-        });
+        }));
 
         await service.trackContentView('content-123');
 
@@ -953,10 +955,10 @@ describe('ContentManagementService', () => {
           { user_id: null, metadata: { read_time: 60 } }, // Anonymous
         ];
 
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: mockAnalyticsData,
           error: null,
-        });
+        }));
 
         const result = await service.getContentAnalytics('content-123', {
           start_date: '2024-01-01T00:00:00Z',
@@ -971,15 +973,15 @@ describe('ContentManagementService', () => {
           views: 4,
           unique_viewers: 2, // user-1 and user-2 (anonymous excluded)
           engagement_rate: 50, // 2/4 * 100
-          average_read_time: 112, // (120+180+90+60)/4
+          average_read_time: 113, // Math.round((120+180+90+60)/4) = Math.round(112.5) = 113
         });
       });
 
       it('should handle empty analytics data', async () => {
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: [],
           error: null,
-        });
+        }));
 
         const result = await service.getContentAnalytics('content-123', {
           start_date: '2024-01-01T00:00:00Z',
@@ -1006,10 +1008,10 @@ describe('ContentManagementService', () => {
           { id: 'content-2', title: 'Another Test', content_type: 'video' },
         ];
 
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: mockResults,
           error: null,
-        });
+        }));
 
         const result = await service.searchContent('test', {
           content_type: 'article',
@@ -1030,10 +1032,10 @@ describe('ContentManagementService', () => {
       });
 
       it('should handle search errors', async () => {
-        mockQuery.mockResolvedValue({
+        mockQuery.then.mockImplementation((resolve: any) => resolve({
           data: null,
           error: { message: 'Search index error' },
-        });
+        }));
 
         await expect(service.searchContent('test')).rejects.toThrow(
           'Search failed: Search index error'

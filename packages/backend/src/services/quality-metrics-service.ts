@@ -1187,10 +1187,3 @@ class RealTimeProcessor extends EventEmitter {
   }
 }
 
-export {
-  AutomatedBugTrackingService,
-  AutomatedCodeQualityService,
-  AutomatedCoverageTrackingService,
-  AutomatedPerformanceBenchmarkingService,
-  UnifiedQualityMetricsService,
-};

@@ -319,13 +319,13 @@ describe('CSRF Middleware', () => {
   });
 
   describe('Cookie attributes', () => {
-    it('should set SameSite to lax by default', () => {
+    it('should set SameSite to strict by default', () => {
       const req = createMockReq({ method: 'GET' });
       const res = createMockRes();
 
       middleware(req, res, next);
 
-      expect(res._cookies['_csrf'].options.sameSite).toBe('lax');
+      expect(res._cookies['_csrf'].options.sameSite).toBe('strict');
     });
 
     it('should set httpOnly to false (must be readable by JS)', () => {

@@ -5,10 +5,7 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
-import 'reflect-metadata';
-import { Container } from 'inversify';
 import { UserAnalyticsService } from '../UserAnalyticsService';
-import { TYPES } from '../../../container/types';
 import {
   IUserAnalyticsService,
   UserAcquisitionMetrics,
@@ -41,11 +38,17 @@ class MockDatabase {
   }
 
   async query(sql: string, params: any[]): Promise<{ rows: any[] }> {
-    // Return mock data based on query pattern
-    if (sql.includes('COUNT(*)') && sql.includes('users')) {
-      return { rows: [{ count: '1000' }] };
+    // Check for overridden query results first
+    for (const [key, result] of this.queryResults) {
+      if (sql.toLowerCase().includes(key.toLowerCase())) {
+        this.queryResults.delete(key); // One-time override
+        return { rows: result };
+      }
     }
 
+    // Return mock data based on query pattern
+    // Note: signup_source must be checked BEFORE generic COUNT(*)+users
+    // because the signup query includes both patterns
     if (sql.includes('signup_source')) {
       return {
         rows: [
@@ -56,6 +59,15 @@ class MockDatabase {
       };
     }
 
+    if (sql.includes('COUNT(*)') && sql.includes('users') && !sql.includes('user_activity')) {
+      return { rows: [{ count: '1000' }] };
+    }
+
+    if (sql.includes('user_activity') && sql.includes('DISTINCT user_id') && sql.includes('ANY')) {
+      // Cohort retention query — return realistic count relative to cohort size
+      return { rows: [{ count: '3' }] };
+    }
+
     if (sql.includes('user_activity') && sql.includes('DISTINCT user_id')) {
       return { rows: [{ count: '750' }] };
     }
@@ -63,6 +75,7 @@ class MockDatabase {
     if (sql.includes('user_sessions')) {
       return {
         rows: [{
+          count: '50',
           avg_duration: '180',
           avg_actions: '5.5'
         }]
@@ -131,6 +144,19 @@ class MockDatabase {
       };
     }
 
+    // Cohort user query: SELECT user_id FROM users WHERE created_at >= ...
+    if (sql.includes('user_id') && sql.includes('users') && sql.includes('created_at') && !sql.includes('COUNT')) {
+      return {
+        rows: [
+          { user_id: 'user1' },
+          { user_id: 'user2' },
+          { user_id: 'user3' },
+          { user_id: 'user4' },
+          { user_id: 'user5' }
+        ]
+      };
+    }
+
     if (sql.includes('activity_level')) {
       return {
         rows: [
@@ -138,6 +164,21 @@ class MockDatabase {
           { user_id: 'user2', activity_level: 'high', location: 'US', created_at: new Date('2024-01-15') }
         ]
       };
+    }
+
+    // User journey funnel queries
+    if (sql.includes('user_journey')) {
+      return { rows: [{ count: '100', avg_time: '60' }] };
+    }
+
+    // Retention cohort queries
+    if (sql.includes('cohort') || sql.includes('retained')) {
+      return { rows: [{ count: '80', retention_rate: '0.8' }] };
+    }
+
+    // Default: return a count row for COUNT queries to prevent undefined access
+    if (sql.includes('COUNT')) {
+      return { rows: [{ count: '0' }] };
     }
 
     // Default response
@@ -233,7 +274,6 @@ class MockLogger {
  * Test Suite
  */
 describe('UserAnalyticsService', () => {
-  let container: Container;
   let service: IUserAnalyticsService;
   let mockDb: MockDatabase;
   let mockCache: MockCache;
@@ -249,17 +289,15 @@ describe('UserAnalyticsService', () => {
     mockAuditLog = new MockAuditLog();
     mockLogger = new MockLogger();
 
-    // Setup DI container
-    container = new Container();
-    container.bind(TYPES.Database).toConstantValue(mockDb);
-    container.bind(TYPES.CacheService).toConstantValue(mockCache);
-    container.bind(TYPES.EventBus).toConstantValue(mockEventBus);
-    container.bind(TYPES.AuditLog).toConstantValue(mockAuditLog);
-    container.bind(TYPES.Logger).toConstantValue(mockLogger);
-    container.bind<IUserAnalyticsService>(TYPES.UserAnalyticsService).to(UserAnalyticsService);
-
-    // Get service instance
-    service = container.get<IUserAnalyticsService>(TYPES.UserAnalyticsService);
+    // Construct service directly (bypass DI container — TYPES.EventBus/AuditLog
+    // tokens don't exist in TYPES registry, only EventBusService/AuditLogService)
+    service = new (UserAnalyticsService as any)(
+      mockDb,
+      mockCache,
+      mockEventBus,
+      mockAuditLog,
+      mockLogger
+    );
   });
 
   afterEach(() => {
@@ -412,8 +450,8 @@ describe('UserAnalyticsService', () => {
     });
 
     it('should handle empty cohort', async () => {
-      // Mock empty cohort
-      mockDb.setQueryResult('cohort', []);
+      // Mock empty cohort — key must match SQL: "SELECT user_id FROM users"
+      mockDb.setQueryResult('user_id', []);
 
       const metrics = await service.getRetentionMetrics(new Date('2025-01-01'));
 
@@ -1003,8 +1041,9 @@ describe('UserAnalyticsService', () => {
         query: vi.fn().mockRejectedValue(new Error('Database error'))
       };
 
-      container.rebind(TYPES.Database).toConstantValue(badDb);
-      const badService = container.get<IUserAnalyticsService>(TYPES.UserAnalyticsService);
+      const badService = new (UserAnalyticsService as any)(
+        badDb, mockCache, mockEventBus, mockAuditLog, mockLogger
+      );
 
       await expect(badService.getUserAcquisitionMetrics({
         startDate: new Date(),
@@ -1018,8 +1057,9 @@ describe('UserAnalyticsService', () => {
         set: vi.fn().mockRejectedValue(new Error('Cache error'))
       };
 
-      container.rebind(TYPES.CacheService).toConstantValue(badCache);
-      const badService = container.get<IUserAnalyticsService>(TYPES.UserAnalyticsService);
+      const badService = new (UserAnalyticsService as any)(
+        mockDb, badCache, mockEventBus, mockAuditLog, mockLogger
+      );
 
       // Should still work without cache
       await badService.trackActivity({

@@ -22,8 +22,11 @@ vi.mock('puppeteer', () => ({
     newPage: vi.fn().mockResolvedValue({
       setContent: vi.fn(),
       pdf: vi.fn().mockResolvedValue(Buffer.from('Mock PDF content')),
+      close: vi.fn(),
     }),
     close: vi.fn(),
+    on: vi.fn(),
+    connected: true,
   }),
 }));
 
@@ -37,10 +40,26 @@ vi.mock('nodemailer', () => ({
   }),
 }));
 
-vi.mock('fs/promises', () => ({
-  readFile: vi.fn(),
-  writeFile: vi.fn(),
-  mkdir: vi.fn(),
+vi.mock('fs/promises', () => {
+  const mod = {
+    readFile: vi.fn().mockResolvedValue('mock-template-content'),
+    writeFile: vi.fn().mockResolvedValue(undefined),
+    mkdir: vi.fn().mockResolvedValue(undefined),
+    open: vi.fn().mockResolvedValue({
+      writeFile: vi.fn().mockResolvedValue(undefined),
+      datasync: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+    }),
+  };
+  return { ...mod, default: mod };
+});
+
+vi.mock('fs', () => ({
+  existsSync: vi.fn().mockReturnValue(true),
+  mkdirSync: vi.fn(),
+  readFileSync: vi.fn().mockReturnValue('[]'),
+  renameSync: vi.fn(),
+  copyFileSync: vi.fn(),
 }));
 
 // Test configuration
@@ -72,7 +91,7 @@ const testConfig = {
 
 // Mock payment data
 const mockPaymentData = {
-  paymentHash: '9dabd85596c3222f3d8a42e8895378d4473c0c79e7598dd3a2f5318b8a8e9b29',
+  paymentHash: '498336b26fb6b08af6b878f0f85fe5e2492a43a8039ec2bb4ef94335359eb85c',
   preimage: '7598dd3a2f5318b8a8e9b299dabd85596c3222f3d8a42e8895378d4473c0c79e',
   invoiceId: 'test-payment-id',
   amount: 1000,
@@ -139,12 +158,12 @@ describe('LightningReceiptService', () => {
   describe('Receipt Generation', () => {
     it('should generate a complete payment receipt', async () => {
       // Mock the fetchPaymentData method
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       const request = {
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
         includeDetailedVerification: true,
         emailReceipt: false,
       };
@@ -165,12 +184,12 @@ describe('LightningReceiptService', () => {
     });
 
     it('should generate unique receipt numbers', async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       const request = {
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       };
 
       const receipt1 = await receiptService.generateReceipt(request);
@@ -183,12 +202,12 @@ describe('LightningReceiptService', () => {
     });
 
     it('should include all required receipt fields', async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       const request = {
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       };
 
       const receipt = await receiptService.generateReceipt(request);
@@ -229,12 +248,12 @@ describe('LightningReceiptService', () => {
     let mockReceipt: PaymentReceipt;
 
     beforeEach(async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       mockReceipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       fetchPaymentDataSpy.mockRestore();
@@ -268,9 +287,15 @@ describe('LightningReceiptService', () => {
     });
 
     it('should handle PDF generation errors gracefully', async () => {
-      // Mock puppeteer to throw error
-      const puppeteer = require('puppeteer');
-      puppeteer.launch.mockRejectedValueOnce(new Error('PDF generation failed'));
+      // Force browser pool to re-launch by resetting internal state
+      const browserPool = (receiptService as any).browserPool;
+      if (browserPool?.browser) {
+        browserPool.browser = null;
+      }
+
+      // Mock puppeteer to throw error on next launch
+      const puppeteerMod = await import('puppeteer');
+      vi.mocked(puppeteerMod.launch).mockRejectedValueOnce(new Error('PDF generation failed'));
 
       await expect(receiptService.generatePdfReceipt(mockReceipt)).rejects.toThrow(
         'PDF generation failed'
@@ -286,12 +311,12 @@ describe('LightningReceiptService', () => {
     let mockReceipt: PaymentReceipt;
 
     beforeEach(async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       mockReceipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       fetchPaymentDataSpy.mockRestore();
@@ -307,9 +332,11 @@ describe('LightningReceiptService', () => {
     });
 
     it('should handle email delivery errors', async () => {
-      const nodemailer = require('nodemailer');
-      const mockTransporter = nodemailer.createTransport();
-      mockTransporter.sendMail.mockRejectedValueOnce(new Error('Email delivery failed'));
+      // Override sendMail on the internal transporter to simulate failure
+      const transporter = (receiptService as any).emailTransporter;
+      if (transporter) {
+        transporter.sendMail = vi.fn().mockRejectedValueOnce(new Error('Email delivery failed'));
+      }
 
       const email = 'test@example.com';
 
@@ -351,12 +378,12 @@ describe('LightningReceiptService', () => {
     let mockReceipt: PaymentReceipt;
 
     beforeEach(async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       mockReceipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       fetchPaymentDataSpy.mockRestore();
@@ -396,12 +423,12 @@ describe('LightningReceiptService', () => {
     let mockReceipt: PaymentReceipt;
 
     beforeEach(async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       mockReceipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       fetchPaymentDataSpy.mockRestore();
@@ -479,12 +506,12 @@ describe('LightningReceiptService', () => {
     let mockReceipt: PaymentReceipt;
 
     beforeEach(async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       mockReceipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       fetchPaymentDataSpy.mockRestore();
@@ -501,12 +528,12 @@ describe('LightningReceiptService', () => {
     });
 
     it('should generate unique verification codes', async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
-      const receipt1 = await receiptService.generateReceipt({ paymentId: 'test-1' });
-      const receipt2 = await receiptService.generateReceipt({ paymentId: 'test-2' });
+      const receipt1 = await receiptService.generateReceipt({ paymentId: '550e8400-e29b-41d4-a716-446655440001' });
+      const receipt2 = await receiptService.generateReceipt({ paymentId: '550e8400-e29b-41d4-a716-446655440002' });
 
       expect(receipt1.security.verificationCode).not.toBe(receipt2.security.verificationCode);
       expect(receipt1.security.verificationCode).toMatch(/^[A-F0-9]{8}$/);
@@ -527,7 +554,7 @@ describe('LightningReceiptService', () => {
         .mockResolvedValue(invalidPaymentData);
 
       const receipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       const verificationResult = await receiptService.verifyReceipt(receipt.id);
@@ -547,18 +574,23 @@ describe('LightningReceiptService', () => {
     let mockReceipt: PaymentReceipt;
 
     beforeEach(async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       mockReceipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       fetchPaymentDataSpy.mockRestore();
     });
 
     it('should render PDF template with receipt data', async () => {
+      // Clear template cache to force re-load
+      (receiptService as any).templateCache?.clear();
+      // Make readFile reject so the default template is used
+      (fs.readFile as any).mockRejectedValue(new Error('File not found'));
+
       const renderTemplateSpy = vi.spyOn(receiptService as any, 'renderTemplate');
 
       (fs.mkdir as any).mockResolvedValue(undefined);
@@ -576,6 +608,7 @@ describe('LightningReceiptService', () => {
     });
 
     it('should use default template when file not found', async () => {
+      (receiptService as any).templateCache?.clear();
       (fs.readFile as any).mockRejectedValue(new Error('File not found'));
 
       const loadTemplateSpy = vi.spyOn(receiptService as any, 'loadTemplate');
@@ -600,7 +633,7 @@ describe('LightningReceiptService', () => {
 
   describe('Event Emission', () => {
     it('should emit receipt:generated event', async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
@@ -608,7 +641,7 @@ describe('LightningReceiptService', () => {
       receiptService.on('receipt:generated', eventListener);
 
       await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       expect(eventListener).toHaveBeenCalledTimes(1);
@@ -621,12 +654,12 @@ describe('LightningReceiptService', () => {
     });
 
     it('should emit receipt:pdf:generated event', async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       const receipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       const eventListener = vi.fn();
@@ -647,13 +680,22 @@ describe('LightningReceiptService', () => {
     });
 
     it('should emit receipt:email:sent event', async () => {
-      const fetchPaymentDataSpy = jest
+      const fetchPaymentDataSpy = vi
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
       const receipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
+
+      // Re-mock sendMail after vi.clearAllMocks() wiped the mock return value
+      const transporter = (receiptService as any).emailTransporter;
+      if (transporter) {
+        transporter.sendMail = vi.fn().mockResolvedValue({
+          messageId: 'test-message-id',
+          accepted: ['test@example.com'],
+        });
+      }
 
       const eventListener = vi.fn();
       receiptService.on('receipt:email:sent', eventListener);
@@ -688,7 +730,7 @@ describe('LightningReceiptService', () => {
         .mockResolvedValue(largePaymentData);
 
       const receipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       expect(receipt.amount).toBe(largePaymentData.amount);
@@ -709,7 +751,7 @@ describe('LightningReceiptService', () => {
         .mockResolvedValue(smallPaymentData);
 
       const receipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       expect(receipt.amount).toBe(1);
@@ -748,7 +790,7 @@ describe('LightningReceiptService', () => {
         .mockResolvedValue(minimalPaymentData);
 
       const receipt = await receiptService.generateReceipt({
-        paymentId: 'test-payment-id',
+        paymentId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       expect(receipt).toBeDefined();

@@ -34,9 +34,22 @@ vi.mock('../../middleware/csrf', () => ({
   csrfProtection: () => vi.fn((_req: any, _res: any, next: any) => next()),
 }));
 
-vi.mock('../../middleware/rate-limit-middleware', () => ({
-  createRateLimiter: () => vi.fn((_req: any, _res: any, next: any) => next()),
-}));
+vi.mock('../../middleware/rate-limit-middleware', () => {
+  const noop = vi.fn((_req: any, _res: any, next: any) => next());
+  return {
+    createRateLimiter: () => noop,
+    readOnlyRateLimiter: noop,
+    authRateLimiter: noop,
+    contentCreationRateLimiter: noop,
+    paymentRateLimiter: noop,
+    expensiveOperationRateLimiter: noop,
+    webhookRateLimiter: noop,
+    createRedisRateLimiter: () => noop,
+    createUserRateLimiter: () => noop,
+    rateLimiters: {},
+    bypassRateLimitInTest: () => false,
+  };
+});
 
 vi.mock('../../middleware/correlation-id', () => ({
   correlationIdMiddleware: vi.fn((_req: any, _res: any, next: any) => next()),
@@ -45,36 +58,64 @@ vi.mock('../../middleware/correlation-id', () => ({
 
 vi.mock('../../routes/auth', async () => {
   const { Router } = await vi.importActual('express');
-  return Router();
+  return { default: Router() };
 });
 
 vi.mock('../../routes/lightning', async () => {
   const { Router } = await vi.importActual('express');
-  return Router();
+  return { default: Router() };
 });
 
 vi.mock('../../routes/lightning-receipts', async () => {
   const { Router } = await vi.importActual('express');
-  return Router();
+  return { default: Router() };
 });
 
 vi.mock('../../routes/users', async () => {
   const { Router } = await vi.importActual('express');
-  return Router();
+  return { default: Router() };
 });
 
 vi.mock('../../routes/health', async () => {
   const { Router } = await vi.importActual('express');
-  return Router();
+  return { default: Router() };
 });
 
 vi.mock('../../routes/v1', async () => {
   const { Router } = await vi.importActual('express');
-  return Router();
+  return { default: Router() };
 });
+
+vi.mock('../../routes/v2', async () => {
+  const { Router } = await vi.importActual('express');
+  return { default: Router() };
+});
+
+vi.mock('../../routes/content-discovery', async () => {
+  const { Router } = await vi.importActual('express');
+  return { default: Router() };
+});
+
+vi.mock('../../routes/subscription-tiers', async () => {
+  const { Router } = await vi.importActual('express');
+  return { default: Router() };
+});
+
+vi.mock('../../routes/admin/bull-board', () => ({
+  createBullBoardRouter: vi.fn(() => {
+    const { Router } = require('express');
+    return Router();
+  }),
+}));
+
+vi.mock('../../middleware/auth', () => ({
+  authenticate: vi.fn((_req: any, _res: any, next: any) => next()),
+  authorize: vi.fn(() => (_req: any, _res: any, next: any) => next()),
+}));
 
 vi.mock('../../middleware/error-handler-middleware', () => ({
   errorHandler: vi.fn((_err: any, _req: any, _res: any, next: any) => next()),
+  notFoundHandler: vi.fn((_req: any, _res: any, next: any) => next()),
 }));
 
 describe('P1-041: CORS Exposed Headers', () => {

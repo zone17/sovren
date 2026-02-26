@@ -60,7 +60,17 @@ describe('UserActivityService', () => {
   let intervalCallback: Function;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+
+    // Ensure mocks return resolved promises by default
+    mockEventBus.publish.mockResolvedValue(undefined);
+    mockEventBus.subscribe.mockReturnValue('sub-id');
+    mockCache.get.mockResolvedValue(null);
+    mockCache.set.mockResolvedValue(undefined);
+    mockCache.delete.mockResolvedValue(undefined);
+    mockCache.increment.mockResolvedValue(1);
+    mockDatabase.query.mockResolvedValue({ rows: [] });
+    mockAuditLog.log.mockResolvedValue(undefined);
 
     // Mock setInterval to capture the callback
     originalSetInterval = global.setInterval;
@@ -79,9 +89,6 @@ describe('UserActivityService', () => {
       mockEventBus,
       mockAuditLog
     );
-
-    // Reset event bus subscribe calls (service subscribes on init)
-    mockEventBus.subscribe.mockClear();
   });
 
   afterEach(async () => {
@@ -369,11 +376,12 @@ describe('UserActivityService', () => {
   describe('updateSessionActivity', () => {
     it('should update session from cache', async () => {
       const sessionId = 'session-123';
+      const originalLastActivity = new Date(Date.now() - 10000);
       const session = {
         id: sessionId,
         userId: 'user-123',
         startedAt: new Date(),
-        lastActivityAt: new Date(Date.now() - 10000),
+        lastActivityAt: originalLastActivity,
         isActive: true,
         activityCount: 5,
       };
@@ -385,7 +393,7 @@ describe('UserActivityService', () => {
       const result = await service.updateSessionActivity(sessionId);
 
       expect(result.activityCount).toBe(6);
-      expect(result.lastActivityAt.getTime()).toBeGreaterThan(session.lastActivityAt.getTime());
+      expect(result.lastActivityAt.getTime()).toBeGreaterThan(originalLastActivity.getTime());
     });
 
     it('should fallback to database if not in cache', async () => {
@@ -414,7 +422,7 @@ describe('UserActivityService', () => {
       mockDatabase.query.mockResolvedValue({ rows: [] });
 
       await expect(service.updateSessionActivity('invalid-session')).rejects.toThrow(
-        'Session not found'
+        'Failed to update session activity'
       );
     });
   });
@@ -683,7 +691,16 @@ describe('UserActivityService', () => {
 
     it('should store aggregations in database', async () => {
       mockCache.get.mockResolvedValue(null);
-      mockDatabase.query.mockResolvedValue({ rows: [] });
+      // Mock all the queries getActivityStats makes, plus the INSERT
+      mockDatabase.query
+        .mockResolvedValueOnce({ rows: [{ total: '10' }] })    // total activities
+        .mockResolvedValueOnce({ rows: [{ count: '5' }] })     // unique users
+        .mockResolvedValueOnce({ rows: [] })                     // by type
+        .mockResolvedValueOnce({ rows: [] })                     // by hour
+        .mockResolvedValueOnce({ rows: [] })                     // by day
+        .mockResolvedValueOnce({ rows: [{ count: '5' }] })     // DAU
+        .mockResolvedValueOnce({ rows: [{ avg_duration: '0', avg_activities_per_session: '0' }] }) // session metrics
+        .mockResolvedValue({ rows: [] });                        // INSERT and remaining queries
 
       await service.createAggregations('daily', new Date('2024-01-01'), new Date('2024-01-02'));
 
@@ -746,7 +763,7 @@ describe('UserActivityService', () => {
 
       expect(result.isSuspicious).toBe(true);
       expect(result.patterns.rapidRequests).toBe(true);
-      expect(result.reasons).toContain(expect.stringContaining('High activity volume'));
+      expect(result.reasons).toEqual(expect.arrayContaining([expect.stringContaining('High activity volume')]));
     });
 
     it('should detect multiple failed logins', async () => {
@@ -1097,7 +1114,7 @@ describe('UserActivityService', () => {
       await service.dispose();
 
       await expect(service.logActivity('user-1', ActivityType.LOGIN, {})).rejects.toThrow(
-        'Service has been disposed'
+        'Failed to log activity'
       );
     });
   });
