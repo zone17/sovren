@@ -1685,6 +1685,130 @@ const service = new MyService(db);
 
 ---
 
+## 47. Sprint Boundary Checklist for Repo Health
+
+**Recurrence:** 1 sprint. After 20+ sprints, 16 stale branches + 25 remote branches + 9 stashes + orphaned PR + dirty tree accumulated.
+
+**Problem:** Repo cruft (stale branches, stashes, orphaned PRs) accumulates silently between sprints. No automated verification before work starts.
+
+**Solution:** Execute 7-step checklist at sprint start:
+
+```bash
+# 1. Sync with remote
+git fetch origin
+
+# 2. Run repo health check
+npm run verify:repo-health
+# ✅ Verifies: working tree clean, no stashes, no stale branches, main up-to-date
+
+# 3. Detect branches not updated in 7 days (likely squash-merged)
+scripts/detect-stale-branches.sh 7 | xargs -I {} git branch -d {}
+
+# 4. Check for orphaned PRs
+gh pr list --state open | grep -v "base: main"
+
+# 5. Verify .gitignore is current
+git status  # Should show no untracked files (except .env.local)
+
+# 6. Ensure yarn.lock is fresh
+git log --oneline yarn.lock | head -1
+
+# 7. Ensure main is up-to-date
+git switch main && git pull origin main
+```
+
+**Key metrics to track:**
+
+- Stale branches count — target: 0 at sprint boundary
+- Orphaned PRs — target: 0
+- Stash count — target: 0
+- Dirty working tree failures — target: 0 per sprint
+
+**When to use:** Start of every sprint, before claiming first task. Takes 2-3 minutes.
+
+---
+
+## 48. Post-Merge Branch Cleanup
+
+**Recurrence:** Every PR merge. After squash-merge, both local and remote branches remain, risking accidental branches off stale code.
+
+**Problem:** `git branch --merged` doesn't detect squash merges (original commits lost in rewrite). Manual deletion of remote branches forgotten.
+
+**Solution:** Delete both local and remote branch immediately after squash-merge.
+
+```bash
+# After gh pr merge --squash
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+git switch main
+git branch -d "$BRANCH"
+git push origin :"$BRANCH" 2>/dev/null || true
+echo "✅ Cleaned up $BRANCH"
+```
+
+**Where to integrate:**
+
+- GitHub Actions CI workflow post-merge (create `.github/workflows/branch-cleanup.yml`)
+- CLI wrapper for `gh pr merge` (add to local shell aliases)
+- Manual PR merge checklist (if automation unavailable)
+
+**When to use:** Every PR merge to main.
+
+---
+
+## 49. .gitignore Proactive Updates
+
+**Recurrence:** 20+ sprints. New local tools (Supabase CLI, test data dirs, IDE files) accumulate without `.gitignore` entries, forcing `git update-index --skip-worktree` hacks.
+
+**Problem:** New dev tools added over time without updating `.gitignore`. Later developers see untracked files, either commit them or use skip-worktree (which breaks CI).
+
+**Solution:** Update `.gitignore` in the same PR as new tooling. Include categories:
+
+```
+# Local development
+.env.local
+.env.*.local
+.supabase/
+.supabase-local/
+
+# Build and test artifacts
+dist/
+coverage/
+test-results/
+.turbo/
+
+# IDE and OS
+.DS_Store
+.vscode/local.env
+*.swp
+*.swo
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Test data (temporary)
+test-data/
+fixtures/temp/
+seeds/temp/
+```
+
+**Process:**
+
+1. Before adding new tool, identify what untracked files it creates
+2. Add those patterns to `.gitignore` in the same commit as the tool
+3. Verify `git status` shows no unexpected untracked files
+4. Note in PR description: "Updated .gitignore for {tool-name} artifacts"
+
+**Code review checklist:**
+
+- ✅ New local tool added? → Did PR update `.gitignore`?
+- ✅ Does `git status` show clean after running the tool?
+
+**When to use:** Any PR adding new local tooling, build artifact type, or IDE integration. **Zero tolerance: PR cannot merge without .gitignore update if introducing new untracked files.**
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -1761,3 +1885,6 @@ CONTEXT TO LOAD:
 | Fire-and-forget assertion fails intermittently | 44        | common-solutions.md  |
 | Class mock methods undefined after reset       | 45        | common-solutions.md  |
 | Service constructor captures undefined fetch   | 46        | common-solutions.md  |
+| Stale branches, stashes, orphaned PRs pile up  | 47        | common-solutions.md  |
+| Branch not deleted after squash-merge to main  | 48        | common-solutions.md  |
+| New tool added, untracked artifacts in tree    | 49        | common-solutions.md  |
