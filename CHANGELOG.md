@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### refactor(backend): Eliminate all mocks from RefundService tests — 2026-02-26
+
+**Category**: Test Infrastructure — Payment Domain
+**Status**: Complete — 84/84 tests passing with real service instances
+
+Created `PaymentTestHarness` (`test-utils/payment-test-harness.ts`) providing real `EventBusService`, `CurrencyService`, `PaymentProcessingService`, `AuditLogService`, `RefundService`, `SubscriptionService`, and `PaymentAnalyticsService` wired with in-memory backends. Includes `InMemoryCacheService`, `SilentLogger`, `seedCompletedTransaction()`, and `flushPromises()` helpers.
+
+Rewrote `RefundService.test.ts` from 84 mock-based tests (28 `vi.fn()` stubs) to 84 integration tests with zero mocks. All tests exercise real service behavior including auto-processing, state machine transitions, and cross-service interactions.
+
 ### fix(backend): Add missing REFUND\_\* DomainEventType enum values — 2026-02-26
 
 **Category**: Bug Fix — Payment Domain

@@ -254,14 +254,14 @@ afterEach(async () => {
 
 ### PR 2 Acceptance Criteria
 
-- [ ] `createPaymentTestHarness()` in `test-utils/payment-test-harness.ts`
-- [ ] `InMemoryCacheService` in same file (or extracted to own file if large)
-- [ ] Barrel-exported from `test-utils/index.ts`
-- [ ] `RefundService.test.ts`: zero `vi.fn()` mocks, zero `: any`, all tests use real services
-- [ ] All RefundService tests passing (84+ or justified reduction with behavioral coverage)
-- [ ] Other 2 test suites unaffected
-- [ ] `@inject` spike completed (result documented)
-- [ ] CHANGELOG.md updated
+- [x] `createPaymentTestHarness()` in `test-utils/payment-test-harness.ts`
+- [x] `InMemoryCacheService` in same file (or extracted to own file if large)
+- [x] Barrel-exported from `test-utils/index.ts`
+- [x] `RefundService.test.ts`: zero `vi.fn()` mocks, zero `: any`, all tests use real services
+- [x] All RefundService tests passing (84/84 with real services)
+- [x] Other 2 test suites unaffected (105 + 128 still passing)
+- [x] `@inject` spike completed (decorators don't prevent direct construction)
+- [x] CHANGELOG.md updated
 
 ### PR 2 Files
 

@@ -6,3 +6,9 @@
  */
 export { createMockChain } from './supabase-mock';
 export { createQueueServiceMock } from './queue-mock';
+export {
+  createPaymentTestHarness,
+  InMemoryCacheService,
+  SilentLogger,
+  type PaymentTestHarness,
+} from './payment-test-harness';
