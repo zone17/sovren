@@ -63,6 +63,7 @@ const httpRequestErrors = new Counter({
 });
 
 // --- Database Metrics ---
+// TODO: Wire into Supabase/Redis when instrumentation layer exists
 
 export const dbQueryDuration = new Histogram({
   name: 'sovren_db_query_duration_seconds',
@@ -72,6 +73,7 @@ export const dbQueryDuration = new Histogram({
   registers: [register],
 });
 
+// TODO: Wire into Supabase when instrumentation layer exists
 export const dbConnectionsActive = new Gauge({
   name: 'sovren_db_connections_active',
   help: 'Number of active database connections',
@@ -79,6 +81,7 @@ export const dbConnectionsActive = new Gauge({
 });
 
 // --- Cache Metrics ---
+// TODO: Wire into Redis when instrumentation layer exists
 
 export const cacheOperations = new Counter({
   name: 'sovren_cache_operations_total',

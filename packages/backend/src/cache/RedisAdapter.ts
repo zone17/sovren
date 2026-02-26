@@ -20,6 +20,7 @@
  */
 
 import Redis, { RedisOptions, Cluster, ClusterOptions } from 'ioredis';
+import logger from '../lib/logger';
 
 // Define minimal NostrEvent type for backend caching
 // Full types are in shared package but we only need structure for caching
@@ -148,7 +149,7 @@ export class RedisAdapter implements CacheAdapter {
         await this.connectSingle();
       }
     } catch (error) {
-      console.error('Redis connection failed:', error);
+      logger.error('Redis connection failed', { error });
       this.activateFallback();
     }
   }
@@ -174,13 +175,13 @@ export class RedisAdapter implements CacheAdapter {
     this.client = new Redis(options);
 
     this.client.on('connect', () => {
-      console.log('Redis connected');
+      logger.info('Redis connected');
       this.stats.connected = true;
       this.isUsingFallback = false;
     });
 
     this.client.on('error', (error) => {
-      console.error('Redis error:', error);
+      logger.error('Redis error', { error });
       this.stats.errors++;
       if (!this.isUsingFallback) {
         this.activateFallback();
@@ -188,7 +189,7 @@ export class RedisAdapter implements CacheAdapter {
     });
 
     this.client.on('close', () => {
-      console.warn('Redis connection closed');
+      logger.warn('Redis connection closed');
       this.stats.connected = false;
     });
 
@@ -213,13 +214,13 @@ export class RedisAdapter implements CacheAdapter {
     this.client = new Redis.Cluster(this.config.clusterNodes, options);
 
     this.client.on('connect', () => {
-      console.log('Redis Cluster connected');
+      logger.info('Redis Cluster connected');
       this.stats.connected = true;
       this.isUsingFallback = false;
     });
 
     this.client.on('error', (error) => {
-      console.error('Redis Cluster error:', error);
+      logger.error('Redis Cluster error', { error });
       this.stats.errors++;
       if (!this.isUsingFallback) {
         this.activateFallback();
@@ -234,7 +235,7 @@ export class RedisAdapter implements CacheAdapter {
       throw new Error('Redis unavailable and fallback disabled');
     }
 
-    console.warn('Redis unavailable - using memory fallback');
+    logger.warn('Redis unavailable - using memory fallback');
     this.isUsingFallback = true;
     this.stats.connected = false;
   }
@@ -270,7 +271,7 @@ export class RedisAdapter implements CacheAdapter {
       this.stats.hits++;
       return JSON.parse(value) as NostrEvent;
     } catch (error) {
-      console.error('Redis get error:', error);
+      logger.error('Redis get error', { error });
       this.stats.errors++;
       return this.getFallback(key);
     }
@@ -294,7 +295,7 @@ export class RedisAdapter implements CacheAdapter {
       const serialized = JSON.stringify(value);
       await this.client.setex(fullKey, effectiveTTL, serialized);
     } catch (error) {
-      console.error('Redis set error:', error);
+      logger.error('Redis set error', { error });
       this.stats.errors++;
       this.setFallback(key, value, effectiveTTL);
     }
@@ -316,7 +317,7 @@ export class RedisAdapter implements CacheAdapter {
 
       await this.client.del(fullKey);
     } catch (error) {
-      console.error('Redis delete error:', error);
+      logger.error('Redis delete error', { error });
       this.stats.errors++;
       this.memoryFallback.delete(key);
     }
@@ -357,7 +358,7 @@ export class RedisAdapter implements CacheAdapter {
 
       return deletedCount;
     } catch (error) {
-      console.error('Redis deletePattern error:', error);
+      logger.error('Redis deletePattern error', { error });
       this.stats.errors++;
       return this.deletePatternFallback(pattern);
     }
@@ -379,7 +380,7 @@ export class RedisAdapter implements CacheAdapter {
       const result = await this.client.exists(fullKey);
       return result === 1;
     } catch (error) {
-      console.error('Redis exists error:', error);
+      logger.error('Redis exists error', { error });
       this.stats.errors++;
       return this.memoryFallback.has(key);
     }
@@ -401,7 +402,7 @@ export class RedisAdapter implements CacheAdapter {
       // Delete all keys with our prefix
       await this.deletePattern('*');
     } catch (error) {
-      console.error('Redis clear error:', error);
+      logger.error('Redis clear error', { error });
       this.stats.errors++;
       this.memoryFallback.clear();
     }
@@ -490,7 +491,7 @@ export class RedisAdapter implements CacheAdapter {
 
       return { ...this.stats };
     } catch (error) {
-      console.error('Redis getStats error:', error);
+      logger.error('Redis getStats error', { error });
       return { ...this.stats };
     }
   }

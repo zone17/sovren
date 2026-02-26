@@ -55,6 +55,13 @@ scrape_configs:
     scrape_interval: 60s
     scrape_timeout: 20s
 
+  # Sovren Backend API
+  - job_name: 'sovren-api'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['backend:3001']
+    metrics_path: '/metrics'
+
   # System metrics
   - job_name: 'prometheus'
     static_configs:
