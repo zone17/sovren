@@ -219,14 +219,6 @@ export default defineConfig(({ mode, command }) => {
             // Cryptography and blockchain
             crypto: ['@noble/secp256k1', '@scure/bip32', '@scure/bip39', 'nostr-tools'],
 
-            // Rich text editor
-            editor: [
-              '@tiptap/react',
-              '@tiptap/starter-kit',
-              '@tiptap/extension-image',
-              '@tiptap/extension-link',
-            ],
-
             // Charts and analytics
             charts: ['recharts'],
 
