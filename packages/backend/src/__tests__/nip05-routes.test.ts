@@ -1,50 +1,42 @@
 import express from 'express';
 import request from 'supertest';
-
-// Use vi.hoisted() because vi.mock factories are hoisted above const declarations
-const { mockAuthenticate, mockNIP05Service } = vi.hoisted(() => ({
-  mockAuthenticate: vi.fn((req: any, _res: any, next: any) => {
-    req.user = {
-      nostr_pubkey: 'a'.repeat(64),
-      user_id: '123e4567-e89b-12d3-a456-426614174000',
-    };
-    next();
-  }),
-  mockNIP05Service: {
-    parseNIP05Identifier: vi.fn(),
-    createVerificationRequest: vi.fn(),
-    listUserVerifications: vi.fn(),
-    getVerificationByIdentifier: vi.fn(),
-    refreshVerification: vi.fn(),
-    revokeVerification: vi.fn(),
-  },
-}));
-
-vi.mock('../services/nip05-verification-service', () => ({
-  createNIP05VerificationService: () => mockNIP05Service,
-}));
-vi.mock('../middleware/auth', () => ({
-  authenticate: mockAuthenticate,
-}));
-
-// Import router after mocks are set up
 import nip05Router from '../routes/nip05';
+
+// 🧪 Mock Dependencies
+vi.mock('../services/nip05-verification-service');
+vi.mock('../middleware/auth');
 
 const app = express();
 app.use(express.json());
 app.use('/api/nip05', nip05Router);
 
-describe('NIP-05 API Routes', () => {
+// Mock authentication middleware
+const mockAuthenticate = vi.fn((req, res, next) => {
+  req.user = {
+    nostr_pubkey: 'a'.repeat(64),
+    user_id: '123e4567-e89b-12d3-a456-426614174000',
+  };
+  next();
+});
+
+// Mock NIP-05 service
+const mockNIP05Service = {
+  parseNIP05Identifier: vi.fn(),
+  createVerificationRequest: vi.fn(),
+  listUserVerifications: vi.fn(),
+  getVerificationByIdentifier: vi.fn(),
+  refreshVerification: vi.fn(),
+  revokeVerification: vi.fn(),
+};
+
+describe('🔍 NIP-05 API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Re-set authenticate mock behavior after clearAllMocks
-    mockAuthenticate.mockImplementation((req: any, _res: any, next: any) => {
-      req.user = {
-        nostr_pubkey: 'a'.repeat(64),
-        user_id: '123e4567-e89b-12d3-a456-426614174000',
-      };
-      next();
-    });
+
+    // Setup default mocks
+    require('../middleware/auth').authenticate = mockAuthenticate;
+    require('../services/nip05-verification-service').createNIP05VerificationService = () =>
+      mockNIP05Service;
   });
 
   describe('🆕 POST /api/nip05/verify', () => {
@@ -95,9 +87,8 @@ describe('NIP-05 API Routes', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      // Route uses Zod validation which returns generic "Invalid request data"
-      // before the service-level NIP-05 format check runs
-      expect(response.body.error).toBeDefined();
+      expect(response.body.error).toContain('Invalid NIP-05 format');
+      expect(response.body.code).toBe('INVALID_NIP05_FORMAT');
     });
 
     it('should validate request schema', async () => {
