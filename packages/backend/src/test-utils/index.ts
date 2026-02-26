@@ -10,5 +10,6 @@ export {
   createPaymentTestHarness,
   InMemoryCacheService,
   SilentLogger,
+  TestableEventBus,
   type PaymentTestHarness,
 } from './payment-test-harness';

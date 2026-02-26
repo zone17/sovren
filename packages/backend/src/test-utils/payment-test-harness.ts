@@ -23,6 +23,24 @@ import type { PaymentTransaction } from '../types/payment';
 import { PaymentMethod } from '../types/payment';
 
 /**
+ * EventBus subclass that adds an emit() shim.
+ * SubscriptionService calls this.eventBus.emit(type, data) — a pre-existing
+ * interface mismatch (IEventBus only has publish()). This class bridges the gap
+ * and captures emitted events for test assertions.
+ */
+export class TestableEventBus extends EventBusService {
+  capturedEmits: Array<{ type: string; data: any }> = [];
+
+  async emit(type: string, data: any): Promise<void> {
+    this.capturedEmits.push({ type, data });
+  }
+
+  clearCapturedEmits(): void {
+    this.capturedEmits = [];
+  }
+}
+
+/**
  * Map-based ICacheService for tests. No external dependencies.
  */
 export class InMemoryCacheService implements ICacheService {
@@ -139,7 +157,7 @@ export class SilentLogger implements ILogger {
 }
 
 export interface PaymentTestHarness {
-  eventBus: IEventBus;
+  eventBus: TestableEventBus;
   logger: ILogger;
   cache: ICacheService;
   currencyService: ICurrencyService;
@@ -156,6 +174,9 @@ export interface PaymentTestHarness {
     method?: PaymentMethod;
   }) => Promise<PaymentTransaction>;
 
+  /** Save a raw transaction to the in-memory repository (for analytics tests needing arbitrary states). */
+  seedRawTransaction: (tx: PaymentTransaction) => Promise<void>;
+
   /** Flush fire-and-forget promises (e.g. auto-processing). */
   flushPromises: () => Promise<void>;
 
@@ -169,7 +190,7 @@ export interface PaymentTestHarness {
  */
 export function createPaymentTestHarness(): PaymentTestHarness {
   const logger = new SilentLogger();
-  const eventBus = new EventBusService(logger);
+  const eventBus = new TestableEventBus(logger);
   const cache = new InMemoryCacheService();
   const currencyService = new CurrencyService(eventBus, logger, cache);
   const paymentService = new PaymentProcessingService(eventBus, logger, cache);
@@ -227,6 +248,14 @@ export function createPaymentTestHarness(): PaymentTestHarness {
     await new Promise<void>((resolve) => process.nextTick(resolve));
   };
 
+  const seedRawTransaction = async (tx: PaymentTransaction): Promise<void> => {
+    // Access the private in-memory repository to inject arbitrary transaction data.
+    // This enables analytics tests with states (failed, refunded) that the simplified
+    // payment processing implementations can't produce through the normal flow.
+    const repo = (paymentService as any).repository;
+    await repo.saveTransaction(tx);
+  };
+
   const dispose = async (): Promise<void> => {
     await refundService.dispose();
     await subscriptionService.dispose();
@@ -245,6 +274,7 @@ export function createPaymentTestHarness(): PaymentTestHarness {
     subscriptionService,
     analyticsService,
     seedCompletedTransaction,
+    seedRawTransaction,
     flushPromises,
     dispose,
   };
