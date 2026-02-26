@@ -21,7 +21,7 @@ import {
   type CreateSubscriptionParams,
 } from '../../../types/subscription';
 import { Currency } from '../../../types/currency';
-import { PaymentStatus, PaymentMethod } from '../../../types/payment';
+import { PaymentStatus } from '../../../types/payment';
 import { createPaymentTestHarness, type PaymentTestHarness } from '../../../test-utils';
 
 /**
@@ -1375,10 +1375,7 @@ describe('SubscriptionService', () => {
     describe('subscribeToEvents', () => {
       it('should subscribe to events', () => {
         const callback = vi.fn();
-        const subscriptionId = service.subscribeToEvents(
-          SubscriptionEventType.RENEWED,
-          callback
-        );
+        const subscriptionId = service.subscribeToEvents(SubscriptionEventType.RENEWED, callback);
 
         expect(subscriptionId).toBeDefined();
         expect(typeof subscriptionId).toBe('string');

@@ -12,7 +12,6 @@ import { AuditLogService } from '../services/AuditLogService';
 import { RefundService } from '../services/payment/RefundService';
 import { SubscriptionService } from '../services/payment/SubscriptionService';
 import { PaymentAnalyticsService } from '../services/payment/PaymentAnalyticsService';
-import type { IEventBus } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
 import type { ICacheService, CacheOptions } from '../interfaces/shared/ICacheService';
 import type { IPaymentProcessingService } from '../interfaces/payment/IPaymentProcessingService';
