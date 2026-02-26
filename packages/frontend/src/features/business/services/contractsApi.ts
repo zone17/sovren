@@ -6,26 +6,26 @@ const BASE = '/api/v2/business/contracts';
 
 export const contractsApi = {
   getTemplates(): Promise<ApiResponse<ContractTemplate[]>> {
-    return apiClient['request']('GET', `${BASE}/templates`);
+    return apiClient.get(`${BASE}/templates`);
   },
 
   getTemplate(id: string): Promise<ApiResponse<ContractTemplate>> {
-    return apiClient['request']('GET', `${BASE}/templates/${id}`);
+    return apiClient.get(`${BASE}/templates/${id}`);
   },
 
   getContracts(): Promise<ApiResponse<Contract[]>> {
-    return apiClient['request']('GET', BASE);
+    return apiClient.get(BASE);
   },
 
   createContract(data: CreateContractPayload): Promise<ApiResponse<Contract>> {
-    return apiClient['request']('POST', BASE, data);
+    return apiClient.post(BASE, data);
   },
 
   updateContract(id: string, data: UpdateContractPayload): Promise<ApiResponse<Contract>> {
-    return apiClient['request']('PUT', `${BASE}/${id}`, data);
+    return apiClient.put(`${BASE}/${id}`, data);
   },
 
   analyzeContract(text: string): Promise<ApiResponse<RedFlag[]>> {
-    return apiClient['request']('POST', `${BASE}/analyze`, { text });
+    return apiClient.post(`${BASE}/analyze`, { text });
   },
 };

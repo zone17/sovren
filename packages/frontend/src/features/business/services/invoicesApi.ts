@@ -6,25 +6,25 @@ const BASE = '/api/v2/business/invoices';
 
 export const invoicesApi = {
   getInvoices(): Promise<ApiResponse<BusinessInvoice[]>> {
-    return apiClient['request']('GET', BASE);
+    return apiClient.get(BASE);
   },
 
   getInvoice(id: string): Promise<ApiResponse<BusinessInvoice>> {
-    return apiClient['request']('GET', `${BASE}/${id}`);
+    return apiClient.get(`${BASE}/${id}`);
   },
 
   createInvoice(data: CreateInvoicePayload): Promise<ApiResponse<BusinessInvoice>> {
-    return apiClient['request']('POST', BASE, data);
+    return apiClient.post(BASE, data);
   },
 
   updateStatus(
     id: string,
     status: string
   ): Promise<ApiResponse<BusinessInvoice>> {
-    return apiClient['request']('PUT', `${BASE}/${id}/status`, { status });
+    return apiClient.put(`${BASE}/${id}/status`, { status });
   },
 
   generatePaymentLink(id: string): Promise<ApiResponse<{ lnurlPay: string; qrCode: string }>> {
-    return apiClient['request']('POST', `${BASE}/${id}/payment-link`);
+    return apiClient.post(`${BASE}/${id}/payment-link`);
   },
 };

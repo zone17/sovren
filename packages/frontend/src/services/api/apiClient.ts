@@ -31,6 +31,9 @@ import type {
 
 const DEFAULT_BASE_URL = 'http://localhost:3001';
 
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+type QueryParams = Record<string, string | number | boolean | undefined>;
+
 class ApiClient {
   private baseUrl: string;
   private _token: string | null = null;
@@ -67,10 +70,10 @@ class ApiClient {
   }
 
   private async request<T>(
-    method: string,
+    method: HttpMethod,
     path: string,
     body?: unknown,
-    params?: Record<string, string | number | boolean | undefined>
+    params?: QueryParams
   ): Promise<T> {
     const url = new URL(`${this.baseUrl}${path}`);
 
@@ -109,7 +112,25 @@ class ApiClient {
       );
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
+  }
+
+  // -- Typed HTTP methods --
+
+  get<T>(path: string, params?: QueryParams): Promise<T> {
+    return this.request<T>('GET', path, undefined, params);
+  }
+
+  post<T>(path: string, body?: unknown, params?: QueryParams): Promise<T> {
+    return this.request<T>('POST', path, body, params);
+  }
+
+  put<T>(path: string, body?: unknown, params?: QueryParams): Promise<T> {
+    return this.request<T>('PUT', path, body, params);
+  }
+
+  delete<T>(path: string, body?: unknown, params?: QueryParams): Promise<T> {
+    return this.request<T>('DELETE', path, body, params);
   }
 
   // -- Auth --
@@ -174,7 +195,7 @@ class ApiClient {
   async searchContent(
     params: ContentSearchParams
   ): Promise<PaginatedResponse<ContentSearchResult>> {
-    return this.request('GET', '/api/v1/content/search', undefined, params as Record<string, string | number | boolean | undefined>);
+    return this.request('GET', '/api/v1/content/search', undefined, params as QueryParams);
   }
 
   async getContentRecommendations(

@@ -11,7 +11,7 @@ export const mentorshipApi = {
     bio?: string;
     maxMentees?: number;
   }): Promise<ApiResponse<MentorProfile>> {
-    return apiClient['request']('POST', `${BASE}/register-mentor`, data);
+    return apiClient.post(`${BASE}/register-mentor`, data);
   },
 
   getMentors(params?: {
@@ -20,7 +20,7 @@ export const mentorshipApi = {
     page?: number;
     limit?: number;
   }): Promise<ApiResponse<{ mentors: MentorProfile[]; total: number }>> {
-    return apiClient['request']('GET', `${BASE}/mentors`, undefined, params);
+    return apiClient.get(`${BASE}/mentors`, params);
   },
 
   requestMentorship(data: {
@@ -28,17 +28,17 @@ export const mentorshipApi = {
     niche?: string;
     goals?: string[];
   }): Promise<ApiResponse<Mentorship>> {
-    return apiClient['request']('POST', `${BASE}/request`, data);
+    return apiClient.post(`${BASE}/request`, data);
   },
 
   respondToMentorship(
     id: string,
     data: { accept: boolean }
   ): Promise<ApiResponse<Mentorship>> {
-    return apiClient['request']('PUT', `${BASE}/${id}/accept`, data);
+    return apiClient.put(`${BASE}/${id}/accept`, data);
   },
 
   getMyMentorships(): Promise<ApiResponse<{ mentorships: Mentorship[] }>> {
-    return apiClient['request']('GET', `${BASE}/my-mentorships`);
+    return apiClient.get(`${BASE}/my-mentorships`);
   },
 };

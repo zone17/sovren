@@ -12,8 +12,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
-import { useAppDispatch, useAppSelector } from '../../../store';
-import { updateCurrentContent } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
+import { useAppSelector } from '../../../store';
 
 // Formatting options interface
 interface FormattingOption {
@@ -73,8 +72,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   maxHeight = 600,
   className = '',
 }) => {
-  const dispatch = useAppDispatch();
-  const { current_content, editor_state } = useAppSelector((state) => state.cms);
+  const { editor_state } = useAppSelector((state) => state.cms);
 
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState(content);
@@ -99,34 +97,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const autoSaveTimer = setInterval(() => {
       if (editorContent !== content) {
         onSave?.();
-        if (current_content) {
-          dispatch(
-            updateCurrentContent({
-              content_blocks: [
-                {
-                  id: 'rich-text-content',
-                  type: 'paragraph',
-                  content: { html: editorContent },
-                },
-              ],
-              updated_at: new Date().toISOString(),
-            })
-          );
-        }
       }
     }, autoSaveInterval);
 
     return () => clearInterval(autoSaveTimer);
-  }, [
-    autoSave,
-    isEditing,
-    editorContent,
-    content,
-    onSave,
-    autoSaveInterval,
-    current_content,
-    dispatch,
-  ]);
+  }, [autoSave, isEditing, editorContent, content, onSave, autoSaveInterval]);
 
   // Update word and character counts
   const updateCounts = useCallback((htmlContent: string) => {

@@ -5,8 +5,13 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../features/auth';
-import { paymentReducer as paymentSlice, postReducer as postSlice } from '../store/slices/tempStubs';
 import userSlice, { clearUser, setUser } from '../store/slices/userSlice';
+
+// Inline no-op reducers — Post component reads state.post.posts which
+// doesn't exist in the real store (migrated to React Query). These stubs
+// keep tests functional until Post.tsx is fully migrated.
+const postSlice = (state: any = { posts: [], currentPost: null, loading: false, error: null }) => state;
+const paymentSlice = (state: any = { payments: [], currentPayment: null, loading: false, error: null }) => state;
 import type { User } from '../types';
 import Post from './Post';
 

@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store';
-import {
-  addContentBlock,
-  deleteContentBlock,
-  updateContentBlock,
-  updateCurrentContent,
-  uploadMedia,
-} from '../../../store/slices/tempStubs' // TODO: US-E4-010;
 import type { ContentBlock, ContentBlockMetadata, MediaAsset } from '../../../types/content';
 
 interface SimpleContentEditorProps {

@@ -4,9 +4,12 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { Provider } from 'react-redux';
 import SimpleContentEditor from '../../features/content/components/SimpleContentEditor';
-// TODO: US-E4-010 - Replace with React Query
-import { cmsReducer as cmsSlice } from '../../store/slices/tempStubs';
 import type { CMSState, ContentItem, MediaAsset } from '../../types/content';
+
+// Inline no-op reducer — SimpleContentEditor reads state.cms which
+// doesn't exist in the real store (migrated to React Query + cmsUi).
+// This stub keeps tests functional until the component is fully migrated.
+const cmsSlice = (state: any = {}) => state;
 
 // 🛡️ **ELITE TEST ARCHITECTURE**
 interface TestRenderOptions {

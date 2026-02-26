@@ -13,15 +13,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 import { useAppDispatch, useAppSelector } from '../../../store';
-import {
-  addContentToCollection,
-  createContentCollection,
-  deleteContentCollection,
-  fetchContentCollections,
-  removeContentFromCollection,
-  reorderCollectionItems,
-  updateContentCollection,
-} from '../../../store/slices/tempStubs' // TODO: US-E4-010;
 import type { CollectionType, ContentCollection, ContentItem } from '../../../types/content';
 
 // Collection type configurations

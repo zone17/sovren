@@ -13,16 +13,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 import { useAppDispatch, useAppSelector } from '../../../store';
-import {
-  addEpisodeToSeries,
-  createContentSeries,
-  deleteContentSeries,
-  fetchContentSeries,
-  removeEpisodeFromSeries,
-  reorderSeriesEpisodes,
-  updateContentSeries,
-  updateEpisodeProgress,
-} from '../../../store/slices/tempStubs' // TODO: US-E4-010;
 import type { ContentItem, ContentSeries } from '../../../types/content';
 
 // Series difficulty levels

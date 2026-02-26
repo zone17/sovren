@@ -11,8 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../store';
-import { addContentBlock, uploadMedia } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
+import { useAppSelector } from '../../../store';
 import type { ContentBlock, MediaAsset } from '../../../types/content';
 
 // Supported media types
@@ -49,8 +48,7 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
   maxFileSize = 50 * 1024 * 1024, // 50MB default
   className = '',
 }) => {
-  const dispatch = useAppDispatch();
-  const { media_assets, current_content } = useAppSelector((state) => state.cms);
+  const { media_assets } = useAppSelector((state) => state.cms);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -115,7 +113,8 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
           setUploadProgress((prev) => Math.min(prev + 10, 90));
         }, 100);
 
-        const result = await dispatch(uploadMedia({ file })).unwrap();
+        // TODO: Replace with real media upload API call
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         clearInterval(progressInterval);
         setUploadProgress(100);
@@ -126,19 +125,13 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
           id: crypto.randomUUID(),
           type: blockType,
           content: {
-            media_asset_id: result.id,
+            media_asset_id: crypto.randomUUID(),
             alt_text: isImage ? '' : undefined,
             caption: '',
             autoplay: isVideo || isAudio ? false : undefined,
             controls: isVideo || isAudio ? true : undefined,
           },
         };
-
-        // Add to content
-        if (current_content) {
-          const insertIndex = current_content.content_blocks.length;
-          dispatch(addContentBlock({ index: insertIndex, block: mediaBlock }));
-        }
 
         onMediaAdded?.(mediaBlock);
 
@@ -158,7 +151,7 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
         setPreviewUrl(null);
       }
     },
-    [dispatch, maxFileSize, allowedTypes, current_content, onMediaAdded]
+    [maxFileSize, allowedTypes, onMediaAdded]
   );
 
   // Handle external URL embedding
@@ -221,15 +214,9 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
       },
     };
 
-    // Add to content
-    if (current_content) {
-      const insertIndex = current_content.content_blocks.length;
-      dispatch(addContentBlock({ index: insertIndex, block: embedBlock }));
-    }
-
     onMediaAdded?.(embedBlock);
     setExternalUrl('');
-  }, [externalUrl, allowedTypes, current_content, dispatch, onMediaAdded]);
+  }, [externalUrl, allowedTypes, onMediaAdded]);
 
   // Handle existing media selection
   const handleGallerySelect = useCallback(
@@ -252,15 +239,9 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
         },
       };
 
-      // Add to content
-      if (current_content) {
-        const insertIndex = current_content.content_blocks.length;
-        dispatch(addContentBlock({ index: insertIndex, block: mediaBlock }));
-      }
-
       onMediaAdded?.(mediaBlock);
     },
-    [current_content, dispatch, onMediaAdded]
+    [onMediaAdded]
   );
 
   // Drag and drop handlers

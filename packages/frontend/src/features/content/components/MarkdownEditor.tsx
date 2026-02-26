@@ -12,8 +12,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
-import { useAppDispatch, useAppSelector } from '../../../store';
-import { updateCurrentContent } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
+import { useAppSelector } from '../../../store';
 
 // Markdown syntax patterns for highlighting
 const MARKDOWN_PATTERNS = {
@@ -74,8 +73,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   minHeight = 300,
   className = '',
 }) => {
-  const dispatch = useAppDispatch();
-  const { current_content, editor_state } = useAppSelector((state) => state.cms);
+  const { editor_state } = useAppSelector((state) => state.cms);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [markdown, setMarkdown] = useState(content);
@@ -99,24 +97,10 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
     const autoSaveTimer = setInterval(() => {
       onSave?.();
-      if (current_content) {
-        dispatch(
-          updateCurrentContent({
-            content_blocks: [
-              {
-                id: 'markdown-content',
-                type: 'paragraph',
-                content: { markdown },
-              },
-            ],
-            updated_at: new Date().toISOString(),
-          })
-        );
-      }
     }, autoSaveInterval);
 
     return () => clearInterval(autoSaveTimer);
-  }, [autoSave, isEditing, markdown, content, onSave, autoSaveInterval, current_content, dispatch]);
+  }, [autoSave, isEditing, markdown, content, onSave, autoSaveInterval]);
 
   // Update counts and cursor position
   const updateCounts = useCallback((text: string) => {
