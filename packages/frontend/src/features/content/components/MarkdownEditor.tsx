@@ -13,7 +13,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { useAppDispatch, useAppSelector } from '../../../store';
-import { updateCurrentContent } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
+import { updateCurrentContent } from '../../../store/slices/tempStubs'; // TODO: US-E4-010;
 
 // Markdown syntax patterns for highlighting
 const MARKDOWN_PATTERNS = {
@@ -79,6 +79,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [markdown, setMarkdown] = useState(content);
+  const markdownRef = useRef(markdown);
+  markdownRef.current = markdown;
   const [previewMode, setPreviewMode] = useState<'edit' | 'preview' | 'split'>('edit');
   const [isEditing, setIsEditing] = useState(false);
   const [wordCount, setWordCount] = useState(0);
@@ -95,9 +97,10 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSave || !isEditing || markdown === content) return;
+    if (!autoSave || !isEditing) return;
 
     const autoSaveTimer = setInterval(() => {
+      if (markdownRef.current === content) return;
       onSave?.();
       if (current_content) {
         dispatch(
@@ -106,7 +109,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               {
                 id: 'markdown-content',
                 type: 'paragraph',
-                content: { markdown },
+                content: { markdown: markdownRef.current },
               },
             ],
             updated_at: new Date().toISOString(),
@@ -116,7 +119,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     }, autoSaveInterval);
 
     return () => clearInterval(autoSaveTimer);
-  }, [autoSave, isEditing, markdown, content, onSave, autoSaveInterval, current_content, dispatch]);
+  }, [autoSave, isEditing, content, onSave, autoSaveInterval, current_content, dispatch]);
 
   // Update counts and cursor position
   const updateCounts = useCallback((text: string) => {
@@ -538,7 +541,9 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             <div
               className="p-4 prose max-w-none h-full overflow-y-auto"
               style={{ minHeight: `${minHeight}px` }}
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(convertMarkdownToHTML(markdown)) }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(convertMarkdownToHTML(markdown)),
+              }}
             />
           </div>
         )}

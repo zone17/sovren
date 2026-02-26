@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../store';
-import { supportContent } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
+import { useAppSelector } from '../../../store';
 import type { ContentItem } from '../../../types/content';
 import { formatSats } from '../../../shared/utils/formatSats';
 
@@ -40,39 +39,24 @@ interface PremiumContentPaywallProps {
 
 export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
   content,
-  onPaymentComplete,
+  onPaymentComplete: _onPaymentComplete,
 }) => {
-  const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [selectedAmount, setSelectedAmount] = useState(content.price_sats || 1000);
 
-  const handlePayment = useCallback(async () => {
-    if (!user?.nostr_pubkey) {
+  const handlePayment = useCallback(() => {
+    if (!currentUser?.nostr_pubkey) {
       setPaymentError('Please sign in to access premium content');
       return;
     }
 
-    setIsProcessingPayment(true);
-    setPaymentError(null);
-
-    try {
-      await dispatch(
-        supportContent({
-          contentId: content.id,
-          amountSats: selectedAmount,
-          message: `Access to premium content: ${content.title}`,
-        })
-      ).unwrap();
-
-      onPaymentComplete?.();
-    } catch (error) {
-      setPaymentError(error instanceof Error ? error.message : 'Payment failed. Please try again.');
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  }, [dispatch, content.id, content.title, selectedAmount, user?.nostr_pubkey, onPaymentComplete]);
+    // supportContent is a no-op Redux action (not an async thunk),
+    // so dispatch().unwrap() would throw TypeError.
+    // TODO: Replace with Lightning payment via React Query in US-E4-010.
+    setPaymentError('Payment processing is not yet available. Lightning integration coming soon.');
+  }, [currentUser?.nostr_pubkey]);
 
   const predefinedAmounts = [
     content.price_sats || 1000,
@@ -179,7 +163,9 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
           ) : (
             <>
               <ZapIcon />
-              <span className="ml-2">Pay {formatSats(selectedAmount, { abbreviate: true })} with Lightning</span>
+              <span className="ml-2">
+                Pay {formatSats(selectedAmount, { abbreviate: true })} with Lightning
+              </span>
             </>
           )}
         </button>

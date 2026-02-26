@@ -12,7 +12,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store';
-import { addContentBlock, uploadMedia } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
+import { addContentBlock } from '../../../store/slices/tempStubs'; // TODO: US-E4-010;
 import type { ContentBlock, MediaAsset } from '../../../types/content';
 
 // Supported media types
@@ -65,7 +65,7 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
 
   // Handle file selection
   const handleFileSelect = useCallback(
-    async (files: FileList | null) => {
+    (files: FileList | null) => {
       if (!files || files.length === 0) return;
 
       const file = files[0];
@@ -101,64 +101,15 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
         return;
       }
 
-      // Create preview
-      const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
-
-      // Upload file
-      setUploading(true);
+      // uploadMedia is a no-op Redux action (not an async thunk),
+      // so dispatch().unwrap() would throw TypeError.
+      // TODO: Replace with IPFS upload via React Query in US-E4-010.
+      setError('Media upload is not yet implemented. IPFS integration coming soon.');
+      setUploading(false);
       setUploadProgress(0);
-
-      try {
-        // Simulate upload progress
-        const progressInterval = setInterval(() => {
-          setUploadProgress((prev) => Math.min(prev + 10, 90));
-        }, 100);
-
-        const result = await dispatch(uploadMedia({ file })).unwrap();
-
-        clearInterval(progressInterval);
-        setUploadProgress(100);
-
-        // Create content block
-        const blockType = isImage ? 'image' : isVideo ? 'video' : 'audio';
-        const mediaBlock: ContentBlock = {
-          id: crypto.randomUUID(),
-          type: blockType,
-          content: {
-            media_asset_id: result.id,
-            alt_text: isImage ? '' : undefined,
-            caption: '',
-            autoplay: isVideo || isAudio ? false : undefined,
-            controls: isVideo || isAudio ? true : undefined,
-          },
-        };
-
-        // Add to content
-        if (current_content) {
-          const insertIndex = current_content.content_blocks.length;
-          dispatch(addContentBlock({ index: insertIndex, block: mediaBlock }));
-        }
-
-        onMediaAdded?.(mediaBlock);
-
-        // Reset state
-        setTimeout(() => {
-          setUploading(false);
-          setUploadProgress(0);
-          setPreviewUrl(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        }, 1000);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'Upload failed');
-        setUploading(false);
-        setUploadProgress(0);
-        setPreviewUrl(null);
-      }
+      setPreviewUrl(null);
     },
-    [dispatch, maxFileSize, allowedTypes, current_content, onMediaAdded]
+    [maxFileSize, allowedTypes]
   );
 
   // Handle external URL embedding

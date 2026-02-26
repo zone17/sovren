@@ -5,8 +5,7 @@ import {
   deleteContentBlock,
   updateContentBlock,
   updateCurrentContent,
-  uploadMedia,
-} from '../../../store/slices/tempStubs' // TODO: US-E4-010;
+} from '../../../store/slices/tempStubs'; // TODO: US-E4-010;
 import type { ContentBlock, ContentBlockMetadata, MediaAsset } from '../../../types/content';
 
 interface SimpleContentEditorProps {
@@ -103,27 +102,17 @@ interface MediaBlockProps {
 }
 
 const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) => {
-  const dispatch = useAppDispatch();
   const { media_assets } = useAppSelector((state) => state.cms);
-  const [uploading, setUploading] = useState(false);
+  const [uploading] = useState(false);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
-    try {
-      const result = await dispatch(uploadMedia({ file })).unwrap();
-      onUpdate({
-        media_asset_id: result.id,
-        alt_text: typeof block.content.alt_text === 'string' ? block.content.alt_text : '',
-        caption: typeof block.content.caption === 'string' ? block.content.caption : '',
-      });
-    } catch (error) {
-      console.error('Failed to upload media:', error);
-    } finally {
-      setUploading(false);
-    }
+    // uploadMedia is a no-op Redux action (not an async thunk),
+    // so dispatch().unwrap() would throw TypeError.
+    // TODO: Replace with React Query mutation in US-E4-010.
+    console.error('Media upload not yet implemented:', file.name);
   };
 
   const mediaAsset: MediaAsset | undefined = media_assets.find(
@@ -260,16 +249,14 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
 
   // Auto-save functionality
   useEffect(() => {
-    if (!editor_state.auto_save_enabled) return;
+    if (!editor_state.auto_save_enabled || !onSave) return;
 
     const interval = setInterval(() => {
-      if (editor_state.last_saved === null) {
-        onSave?.();
-      }
+      onSave();
     }, autoSaveInterval);
 
     return (): void => clearInterval(interval);
-  }, [editor_state.auto_save_enabled, editor_state.last_saved, autoSaveInterval, onSave]);
+  }, [editor_state.auto_save_enabled, autoSaveInterval, onSave]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const newTitle = e.target.value;
@@ -298,9 +285,12 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
     if (current_content) {
       // Update the text content blocks
       const paragraphs = newContent.split('\n\n').filter((p) => p.trim());
-      const textBlocks: ContentBlock[] = paragraphs.map((text) => ({
-        id: crypto.randomUUID(),
-        type: 'paragraph',
+      const existingTextBlocks = current_content.content_blocks.filter(
+        (block: ContentBlock) => block.type === 'paragraph' || block.type === 'heading'
+      );
+      const textBlocks: ContentBlock[] = paragraphs.map((text, i) => ({
+        id: existingTextBlocks[i]?.id ?? crypto.randomUUID(),
+        type: 'paragraph' as const,
         content: { text },
       }));
 

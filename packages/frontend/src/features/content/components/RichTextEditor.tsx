@@ -13,7 +13,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { useAppDispatch, useAppSelector } from '../../../store';
-import { updateCurrentContent } from '../../../store/slices/tempStubs' // TODO: US-E4-010;
+import { updateCurrentContent } from '../../../store/slices/tempStubs'; // TODO: US-E4-010;
 
 // Formatting options interface
 interface FormattingOption {
@@ -262,7 +262,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
       e.preventDefault();
       const text = e.clipboardData.getData('text/plain');
-      const cleanText = text.replace(/[\r\n]/g, '<br>');
+      const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      const cleanText = escaped.replace(/[\r\n]/g, '<br>');
       document.execCommand('insertHTML', false, cleanText);
       handleContentChange();
     },
