@@ -91,12 +91,21 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     }
   }, [content, markdown]);
 
+  // Warn if autoSave is enabled but no onSave handler is provided
+  useEffect(() => {
+    if (autoSave && !onSave) {
+      console.warn(
+        'MarkdownEditor: autoSave is enabled but no onSave handler was provided. Content changes will not be persisted.'
+      );
+    }
+  }, [autoSave, onSave]);
+
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSave || !isEditing || markdown === content) return;
+    if (!autoSave || !isEditing || !onSave || markdown === content) return;
 
     const autoSaveTimer = setInterval(() => {
-      onSave?.();
+      onSave();
     }, autoSaveInterval);
 
     return () => clearInterval(autoSaveTimer);
@@ -522,7 +531,9 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             <div
               className="p-4 prose max-w-none h-full overflow-y-auto"
               style={{ minHeight: `${minHeight}px` }}
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(convertMarkdownToHTML(markdown)) }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(convertMarkdownToHTML(markdown)),
+              }}
             />
           </div>
         )}

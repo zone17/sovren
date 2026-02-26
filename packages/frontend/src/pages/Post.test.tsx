@@ -7,16 +7,31 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../features/auth';
 import userSlice from '../store/slices/userSlice';
 
+import type { User } from '../types';
+import Post from './Post';
+
 // Inline no-op reducers — Post component reads state.post.posts which
 // doesn't exist in the real store (migrated to React Query). These stubs
 // keep tests functional until Post.tsx is fully migrated.
-const postSlice = (state: any = { posts: [], currentPost: null, loading: false, error: null }) =>
-  state;
+interface PostState {
+  posts: unknown[];
+  currentPost: unknown | null;
+  loading: boolean;
+  error: string | null;
+}
+interface PaymentState {
+  payments: unknown[];
+  currentPayment: unknown | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const postSlice = (
+  state: PostState = { posts: [], currentPost: null, loading: false, error: null }
+): PostState => state;
 const paymentSlice = (
-  state: any = { payments: [], currentPayment: null, loading: false, error: null }
-) => state;
-import type { User } from '../types';
-import Post from './Post';
+  state: PaymentState = { payments: [], currentPayment: null, loading: false, error: null }
+): PaymentState => state;
 
 // Mock react-router-dom
 const mockNavigate = vi.fn();
@@ -25,7 +40,7 @@ vi.mock(
   'react-router-dom',
   async (): Promise<Record<string, unknown>> => ({
     ...(await vi.importActual('react-router-dom')),
-    useNavigate: (): any => mockNavigate,
+    useNavigate: (): ReturnType<typeof mockNavigate> => mockNavigate,
     useParams: (): Record<string, string> => mockUseParams() as Record<string, string>,
   })
 );

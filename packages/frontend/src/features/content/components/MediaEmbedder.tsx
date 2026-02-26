@@ -108,42 +108,8 @@ export const MediaEmbedder: React.FC<MediaEmbedderProps> = ({
       setUploadProgress(0);
 
       try {
-        // Simulate upload progress
-        const progressInterval = setInterval(() => {
-          setUploadProgress((prev) => Math.min(prev + 10, 90));
-        }, 100);
-
-        // TODO: Replace with real media upload API call
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        clearInterval(progressInterval);
-        setUploadProgress(100);
-
-        // Create content block
-        const blockType = isImage ? 'image' : isVideo ? 'video' : 'audio';
-        const mediaBlock: ContentBlock = {
-          id: crypto.randomUUID(),
-          type: blockType,
-          content: {
-            media_asset_id: crypto.randomUUID(),
-            alt_text: isImage ? '' : undefined,
-            caption: '',
-            autoplay: isVideo || isAudio ? false : undefined,
-            controls: isVideo || isAudio ? true : undefined,
-          },
-        };
-
-        onMediaAdded?.(mediaBlock);
-
-        // Reset state
-        setTimeout(() => {
-          setUploading(false);
-          setUploadProgress(0);
-          setPreviewUrl(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        }, 1000);
+        // TODO: Implement real media upload via IPFS/Pinata API (React Query mutation)
+        throw new Error('Media upload is not yet implemented. IPFS integration coming soon.');
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Upload failed');
         setUploading(false);

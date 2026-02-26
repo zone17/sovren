@@ -56,8 +56,10 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
     setPaymentError(null);
 
     try {
-      // TODO: Replace with real payment API call when payment service is implemented
-      onPaymentComplete?.();
+      // TODO: Implement real Lightning payment flow via React Query mutation
+      throw new Error(
+        'Payment processing is not yet available. Lightning integration coming soon.'
+      );
     } catch (error) {
       setPaymentError(error instanceof Error ? error.message : 'Payment failed. Please try again.');
     } finally {
@@ -170,7 +172,9 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
           ) : (
             <>
               <ZapIcon />
-              <span className="ml-2">Pay {formatSats(selectedAmount, { abbreviate: true })} with Lightning</span>
+              <span className="ml-2">
+                Pay {formatSats(selectedAmount, { abbreviate: true })} with Lightning
+              </span>
             </>
           )}
         </button>

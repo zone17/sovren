@@ -10,14 +10,14 @@ const ANALYTICS_BASE = '/api/v2/analytics/cross-platform';
 
 export const analyticsApi = {
   getOverview(): Promise<ApiResponse<PlatformOverview>> {
-    return apiClient.get( `${ANALYTICS_BASE}/overview`);
+    return apiClient.get(`${ANALYTICS_BASE}/overview`);
   },
 
   getComparison(contentId: string): Promise<ApiResponse<ContentComparison[]>> {
-    return apiClient.get( `${ANALYTICS_BASE}/comparison/${contentId}`);
+    return apiClient.get(`${ANALYTICS_BASE}/comparison/${contentId}`);
   },
 
   getROI(): Promise<ApiResponse<PlatformROI[]>> {
-    return apiClient.get( `${ANALYTICS_BASE}/roi`);
+    return apiClient.get(`${ANALYTICS_BASE}/roi`);
   },
 };
