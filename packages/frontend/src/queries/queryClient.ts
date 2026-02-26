@@ -9,7 +9,7 @@
  * - Financial data: No cache (always fresh)
  */
 
-import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
+import { QueryClient, QueryCache, MutationCache, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
 // Cache time configurations (in milliseconds)
@@ -17,54 +17,53 @@ export const CACHE_TIMES = {
   // Static/Reference Data (1 hour)
   STATIC: {
     staleTime: 60 * 60 * 1000, // 1 hour
-    cacheTime: 24 * 60 * 60 * 1000, // 24 hours in cache
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours in cache
   },
 
   // User Profile Data (5 minutes)
   USER: {
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes in cache
+    gcTime: 30 * 60 * 1000, // 30 minutes in cache
   },
 
   // Content Data (2 minutes)
   CONTENT: {
     staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes in cache
+    gcTime: 10 * 60 * 1000, // 10 minutes in cache
   },
 
   // Real-time Data (30 seconds)
   REALTIME: {
     staleTime: 30 * 1000, // 30 seconds
-    cacheTime: 5 * 60 * 1000, // 5 minutes in cache
+    gcTime: 5 * 60 * 1000, // 5 minutes in cache
   },
 
   // Financial/Payment Data (always fresh)
   FINANCIAL: {
     staleTime: 0, // Always stale, refetch on mount
-    cacheTime: 0, // Don't cache
+    gcTime: 0, // Don't cache
   },
 
   // Analytics Data (10 minutes)
   ANALYTICS: {
     staleTime: 10 * 60 * 1000, // 10 minutes
-    cacheTime: 60 * 60 * 1000, // 1 hour in cache
+    gcTime: 60 * 60 * 1000, // 1 hour in cache
   },
 } as const;
 
 // Retry configuration based on error type
-const getRetryConfig = (failureCount: number, error: any) => {
+const shouldRetry = (failureCount: number, error: any): boolean => {
   // Don't retry on 4xx errors (client errors)
   if (error?.status >= 400 && error?.status < 500) {
     return false;
   }
+  // Retry up to 3 times for network/server errors
+  return failureCount < 3;
+};
 
-  // Retry up to 3 times for network errors
-  if (failureCount < 3) {
-    // Exponential backoff: 1s, 2s, 4s
-    return failureCount * 1000;
-  }
-
-  return false;
+// Exponential backoff delay: 1s, 2s, 4s
+const retryDelay = (attemptIndex: number): number => {
+  return Math.min(1000 * 2 ** attemptIndex, 8000);
 };
 
 // Create the QueryClient with optimized defaults
@@ -73,10 +72,11 @@ export const queryClient = new QueryClient({
     queries: {
       // Default to content cache times
       staleTime: CACHE_TIMES.CONTENT.staleTime,
-      cacheTime: CACHE_TIMES.CONTENT.cacheTime,
+      gcTime: CACHE_TIMES.CONTENT.gcTime,
 
       // Retry configuration
-      retry: getRetryConfig,
+      retry: shouldRetry,
+      retryDelay,
 
       // Refetch on window focus for fresh data
       refetchOnWindowFocus: true,
@@ -85,7 +85,7 @@ export const queryClient = new QueryClient({
       refetchOnReconnect: 'always',
 
       // Keep previous data while fetching new data
-      keepPreviousData: true,
+      placeholderData: keepPreviousData,
 
       // Structural sharing for optimal re-renders
       structuralSharing: true,
@@ -126,16 +126,6 @@ export const queryClient = new QueryClient({
       }
     },
 
-    // Global success handler for queries
-    onSuccess: (data: any, query) => {
-      // Track successful queries for analytics
-      if (typeof window !== 'undefined' && window.analytics) {
-        window.analytics.track('query_success', {
-          queryKey: query.queryKey,
-          dataSize: JSON.stringify(data).length,
-        });
-      }
-    },
   }),
 
   // Mutation cache configuration

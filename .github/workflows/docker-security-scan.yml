@@ -123,7 +123,7 @@ jobs:
             VERSION=${{ github.ref_name }}
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           image-ref: ${{ steps.meta.outputs.tags }}
           format: 'sarif'

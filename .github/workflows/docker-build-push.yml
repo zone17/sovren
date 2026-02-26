@@ -164,7 +164,7 @@ jobs:
 
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./packages/backend
           file: ./packages/backend/Dockerfile
@@ -291,7 +291,7 @@ jobs:
 
     steps:
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.metadata.outputs.version }}
           format: 'sarif'
@@ -305,7 +305,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Run Trivy for summary
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.metadata.outputs.version }}
           format: 'table'

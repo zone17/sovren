@@ -6,7 +6,7 @@
 # - Security hardening
 
 # Stage 1: Build stage with full toolchain
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Set build arguments
 ARG BUILD_DATE
@@ -45,7 +45,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production stage with minimal surface
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # Set production environment
 ENV NODE_ENV=production \

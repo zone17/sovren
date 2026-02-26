@@ -1,10 +1,10 @@
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
-FROM node:18-alpine AS runtime
+FROM node:20-alpine AS runtime
 
 # Security hardening
 RUN addgroup -g 1001 -S mcp && \
