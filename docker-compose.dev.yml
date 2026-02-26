@@ -243,7 +243,7 @@ services:
 
   # Development Tools Container
   dev-tools:
-    image: node:18-alpine
+    image: node:20-alpine
     container_name: sovren-dev-tools
     working_dir: /workspace
     volumes:

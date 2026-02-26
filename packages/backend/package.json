@@ -70,7 +70,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.8",
-    "nostr-tools": "^2.23.0",
+    "nostr-tools": "^2.23.1",
     "otpauth": "^9.5.0",
     "path-to-regexp": "0.1.7",
     "pdfkit": "^0.15.0",
