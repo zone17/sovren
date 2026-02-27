@@ -48,6 +48,7 @@ describe('useDiscovery', () => {
   };
 
   beforeEach(() => {
+    vi.useFakeTimers();
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false, gcTime: 0, staleTime: 0 },
@@ -57,6 +58,7 @@ describe('useDiscovery', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     fetchSpy.mockRestore();
     queryClient.clear();
   });
@@ -136,8 +138,10 @@ describe('useDiscovery', () => {
       result.current.updateFilters({ query: 'a' });
     });
 
-    // Wait to ensure no new fetch is triggered
-    await new Promise((r) => setTimeout(r, 400));
+    // Advance past debounce timer
+    await act(async () => {
+      vi.advanceTimersByTime(400);
+    });
 
     // Should not have made a new call for 1-char query
     expect(fetchSpy.mock.calls.length).toBe(callCountBefore);

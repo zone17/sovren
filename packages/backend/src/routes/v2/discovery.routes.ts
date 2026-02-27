@@ -15,7 +15,13 @@ import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { ServiceError } from '../../utils/errors';
 import { getDatabase } from '../../config/database';
-import type { CreatorSearchResult, DiscoveryResponse } from '@shared/types/discovery';
+import logger from '../../lib/logger';
+import { DISCOVERY_CATEGORIES } from '@shared/types/discovery';
+import type {
+  CreatorSearchResult,
+  DiscoveryCategory,
+  DiscoveryResponse,
+} from '@shared/types/discovery';
 
 const router = Router();
 
@@ -23,17 +29,19 @@ router.use(expensiveOperationRateLimiter);
 
 /**
  * Escape PostgREST filter metacharacters to prevent filter injection.
- * Characters `,`, `.`, `(`, `)`, `*` are PostgREST filter delimiters.
+ * Characters `,`, `.`, `(`, `)`, `*`, `:`, `"` are PostgREST filter delimiters.
+ * `%` and `_` are SQL LIKE wildcards that must also be escaped.
+ * Backslash is escaped first to avoid double-escaping.
  */
 function escapePostgrestFilter(input: string): string {
-  return input.replace(/[,.*()]/g, '\\$&');
+  return input.replace(/\\/g, '\\\\').replace(/[,.*():%"_]/g, '\\$&');
 }
 
 /** Row shape returned by the discovery_creators view (post-COALESCE). */
 interface DiscoveryCreatorRow {
   id: string;
   bio: string;
-  categories: string[];
+  categories: DiscoveryCategory[];
   created_at: string;
   user_id: string;
   display_name: string;
@@ -45,17 +53,6 @@ interface DiscoveryCreatorRow {
   tags: string[];
   verified: boolean;
 }
-
-const DISCOVERY_CATEGORIES = [
-  'Art',
-  'Writing',
-  'Music',
-  'Podcast',
-  'Education',
-  'Photography',
-  'Development',
-  'Bitcoin',
-] as const;
 
 const searchCreatorsSchema = z.object({
   q: z.string().min(2).max(100).optional(),
@@ -102,7 +99,8 @@ router.get(
     const { data: rows, count, error } = await query;
 
     if (error) {
-      throw new ServiceError('Discovery search failed', { cause: error });
+      logger.error('Discovery search failed', { error: String(error) });
+      throw new ServiceError('Discovery search failed');
     }
 
     const total = count ?? 0;

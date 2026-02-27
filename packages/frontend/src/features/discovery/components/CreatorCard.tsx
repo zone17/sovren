@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '../../../components/ui/button';
 import type { CreatorSearchResult } from '../types';
 
@@ -6,11 +5,11 @@ interface CreatorCardProps {
   creator: CreatorSearchResult;
 }
 
-export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
+export const CreatorCard = ({ creator }: CreatorCardProps) => {
   return (
     <article
       className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
-      aria-label={`Creator profile: ${creator.displayName}`}
+      aria-label={`Creator profile: ${creator.displayName || creator.username || 'Unknown'}`}
     >
       {/* Header with avatar and name */}
       <div className="p-6">
@@ -29,13 +28,13 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
               className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0"
               aria-hidden="true"
             >
-              {creator.displayName.charAt(0).toUpperCase()}
+              {(creator.displayName || '?').charAt(0).toUpperCase()}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900 truncate">
-                {creator.displayName}
+                {creator.displayName || creator.username || 'Anonymous'}
               </h3>
               {creator.nip05Verified && (
                 <span
@@ -89,7 +88,7 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
           size="sm"
           disabled
           title="Creator profiles coming in Sprint 1"
-          aria-label={`View ${creator.displayName}'s profile — coming soon`}
+          aria-label={`View ${creator.displayName || creator.username || 'creator'}'s profile — coming soon`}
         >
           Coming Soon
         </Button>

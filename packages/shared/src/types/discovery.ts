@@ -27,7 +27,7 @@ export interface CreatorSearchResult {
   avatarUrl: string | null;
   bio: string;
   nip05Verified: boolean;
-  categories: string[];
+  categories: DiscoveryCategory[];
   tags: string[];
   followerCount: number;
   contentCount: number;
@@ -37,20 +37,15 @@ export interface CreatorSearchResult {
 
 export interface DiscoveryFilters {
   query?: string;
-  category?: string;
+  category?: DiscoveryCategory;
   sortBy?: 'relevance' | 'followers' | 'newest';
   page?: number;
   limit?: number;
 }
 
+import type { Pagination } from './provenance';
+
 export interface DiscoveryResponse {
   creators: CreatorSearchResult[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
+  pagination: Pagination;
 }

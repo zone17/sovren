@@ -58,6 +58,10 @@ vi.mock('../../../middleware/rate-limit-middleware', () => ({
   ),
 }));
 
+vi.mock('../../../lib/logger', () => ({
+  default: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
+}));
+
 vi.mock('../../../utils/api-response', () => ({
   createApiResponse: vi.fn((_req: Request, data: unknown) => ({
     success: true,
@@ -290,8 +294,30 @@ describe('Discovery Routes', () => {
       expect(escapePostgrestFilter('a*b')).toBe('a\\*b');
     });
 
-    it('escapes multiple metacharacters', () => {
-      expect(escapePostgrestFilter('bio.ilike.%test%,other')).toBe('bio\\.ilike\\.%test%\\,other');
+    it('escapes percent (LIKE wildcard)', () => {
+      expect(escapePostgrestFilter('100%')).toBe('100\\%');
+    });
+
+    it('escapes underscore (LIKE wildcard)', () => {
+      expect(escapePostgrestFilter('a_b')).toBe('a\\_b');
+    });
+
+    it('escapes backslash first to avoid double-escaping', () => {
+      expect(escapePostgrestFilter('a\\b')).toBe('a\\\\b');
+    });
+
+    it('escapes colon', () => {
+      expect(escapePostgrestFilter('a:b')).toBe('a\\:b');
+    });
+
+    it('escapes double quote', () => {
+      expect(escapePostgrestFilter('a"b')).toBe('a\\"b');
+    });
+
+    it('escapes multiple metacharacters including new ones', () => {
+      expect(escapePostgrestFilter('bio.ilike.%test%,other')).toBe(
+        'bio\\.ilike\\.\\%test\\%\\,other'
+      );
     });
 
     it('returns clean string unchanged', () => {
