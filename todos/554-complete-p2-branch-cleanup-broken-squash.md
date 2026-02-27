@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p2
 issue_id: '554'
 tags: [code-review, ci-cd, pr-104]
