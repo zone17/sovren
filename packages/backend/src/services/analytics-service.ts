@@ -8,6 +8,6 @@ import logger from '../lib/logger';
  */
 export class AnalyticsService {
   async track(event: string, properties: Record<string, unknown> = {}): Promise<void> {
-    logger.info('Analytics event', { event, ...properties });
+    logger.info('Analytics event', { event, properties });
   }
 }

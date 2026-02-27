@@ -238,7 +238,7 @@ export default defineConfig(({ mode, command }) => {
             icons: ['lucide-react'],
 
             // Monitoring and analytics
-            monitoring: ['@sentry/tracing', 'web-vitals'],
+            monitoring: ['web-vitals'],
           },
 
           // Optimized chunk file naming for caching

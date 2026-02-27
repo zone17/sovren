@@ -8,10 +8,10 @@ import logger from '../lib/logger';
  */
 export class WebSocketService {
   broadcast(event: string, data: Record<string, unknown> = {}): void {
-    logger.info('WebSocket broadcast', { event, ...data });
+    logger.info('WebSocket broadcast', { event, data });
   }
 
   sendToUser(userId: string, event: string, data: Record<string, unknown> = {}): void {
-    logger.info('WebSocket message', { userId, event, ...data });
+    logger.info('WebSocket message', { userId, event, data });
   }
 }

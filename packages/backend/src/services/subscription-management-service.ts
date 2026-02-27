@@ -8,7 +8,7 @@ import { Logger } from '../utils/logger';
 import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
 import { LightningPaymentService } from './lightning-payment-service';
-import { NotificationService } from './notification-service';
+import { NotificationService } from './notification-stub';
 import { WebSocketService } from './websocket-service';
 
 // Subscription Management Types and Schemas

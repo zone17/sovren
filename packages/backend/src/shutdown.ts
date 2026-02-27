@@ -248,7 +248,7 @@ export function setupShutdownHandlers(
     await handleShutdown('UNCAUGHT_EXCEPTION');
   });
 
-  process.on('unhandledRejection', async (reason, promise) => {
+  process.on('unhandledRejection', async (reason, _promise) => {
     logger.error('Unhandled promise rejection', { reason });
     await handleShutdown('UNHANDLED_REJECTION');
   });
