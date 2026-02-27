@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### feat(discovery): Wire Discovery MVP frontend to real backend — 2026-02-26
+
+**Category**: Feature — Discovery (Squad B, Sprint 0, Slice 2)
+**Status**: Complete — 34 unit tests + 3 E2E tests passing
+**Issue**: #107
+
+Replaced hardcoded mock data in the Discovery page with real API calls. Created `GET /api/v2/discovery/creators` endpoint that JOINs `creator_profiles`, `users`, and `creators` tables. Rewrote `useDiscovery` hook from 99 lines of mock data to React Query with debounced search, category/sort filters, and pagination. Updated `CreatorCard` and `DiscoveryPage` components for new `CreatorSearchResult` type. Added shared types in `packages/shared/src/types/discovery.ts` used by both frontend and backend. "View Profile" button disabled with "Coming Soon" for Sprint 1.
+
+**Files created**: `shared/types/discovery.ts`, `backend/routes/v2/discovery.routes.ts`, `frontend/hooks/useDebouncedValue.ts`, `e2e/pages/discovery.page.ts`, `e2e/discovery.public.spec.ts`
+**Files modified**: `useDiscovery.ts` (full rewrite), `DiscoveryPage.tsx`, `CreatorCard.tsx`, `discovery/types/index.ts`, `v2/index.ts`, component test files
+
 ### refactor(backend): Eliminate all mocks from SubscriptionService and PaymentAnalyticsService tests — 2026-02-26
 
 **Category**: Test Infrastructure — Payment Domain
@@ -21,6 +32,7 @@ Combined with RefundService rewrite below, all 317 payment tests now run against
 Created `PaymentTestHarness` (`test-utils/payment-test-harness.ts`) providing real `EventBusService`, `CurrencyService`, `PaymentProcessingService`, `AuditLogService`, `RefundService`, `SubscriptionService`, and `PaymentAnalyticsService` wired with in-memory backends. Includes `InMemoryCacheService`, `SilentLogger`, `seedCompletedTransaction()`, and `flushPromises()` helpers.
 
 Rewrote `RefundService.test.ts` from 84 mock-based tests (28 `vi.fn()` stubs) to 84 integration tests with zero mocks. All tests exercise real service behavior including auto-processing, state machine transitions, and cross-service interactions.
+
 ### fix(backend): Add missing REFUND\_\* DomainEventType enum values — 2026-02-26
 
 **Category**: Bug Fix — Payment Domain
@@ -47,6 +59,7 @@ for all new backend work across v2.0's 5 sprints.
   with `snakeToCamel` documentation, 8-code error registry, `paginationSchema` mandatory
   for list endpoints, shared type ownership, rate limiting tiers, versioning strategy (all v2, no v3),
   lazy singleton service resolution
+
 ### feat(multi-platform): EPIC-009B Frontend — Unified Inbox + Cross-Platform Analytics — 2026-02-18
 
 **Category**: Feature — Multi-Platform Hub Extension
