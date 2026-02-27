@@ -7,6 +7,7 @@
 
 import type { IServiceContainer } from './interfaces/shared/IServiceRegistry';
 import { TYPES } from './container/types';
+import logger from './lib/logger';
 
 /**
  * Shutdown configuration
@@ -50,7 +51,7 @@ export async function gracefulShutdown(
   const errors: Array<{ service: string; error: Error }> = [];
 
   if (fullConfig.logProgress) {
-    console.log('\n📴 Initiating graceful shutdown...');
+    logger.info('Initiating graceful shutdown');
   }
 
   // Create timeout promise
@@ -75,11 +76,11 @@ export async function gracefulShutdown(
     const duration = Date.now() - startTime;
 
     if (fullConfig.logProgress) {
-      console.log(`\n✅ Graceful shutdown complete (${duration}ms)`);
-      console.log(`   Services disposed: ${servicesDisposed.length}`);
-      if (errors.length > 0) {
-        console.log(`   ⚠️  Errors encountered: ${errors.length}`);
-      }
+      logger.info('Graceful shutdown complete', {
+        duration,
+        servicesDisposed: servicesDisposed.length,
+        errors: errors.length,
+      });
     }
 
     return {
@@ -92,13 +93,15 @@ export async function gracefulShutdown(
     const duration = Date.now() - startTime;
 
     if (fullConfig.logProgress) {
-      console.error(`\n❌ Shutdown timeout or error (${duration}ms)`);
-      console.error(`   Error: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error('Shutdown timeout or error', {
+        duration,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     if (fullConfig.forceExit) {
       if (fullConfig.logProgress) {
-        console.log('   Forcing exit...');
+        logger.info('Forcing exit');
       }
       process.exit(1);
     }
@@ -169,7 +172,7 @@ async function performShutdown(
   // Dispose services in order
   for (const group of shutdownOrder) {
     if (logProgress) {
-      console.log(`   Disposing ${group.name}...`);
+      logger.info('Disposing service group', { group: group.name });
     }
 
     for (const serviceName of group.services) {
@@ -189,7 +192,7 @@ async function performShutdown(
         });
 
         if (logProgress) {
-          console.error(`      ⚠️  Error disposing ${serviceName}:`, error);
+          logger.error('Error disposing service', { service: serviceName, error });
         }
       }
     }
@@ -218,19 +221,19 @@ export function setupShutdownHandlers(
 
   const handleShutdown = async (signal: string) => {
     if (shuttingDown) {
-      console.log('   Already shutting down...');
+      logger.info('Shutdown already in progress');
       return;
     }
 
     shuttingDown = true;
-    console.log(`\n📴 Received ${signal}`);
+    logger.info('Received shutdown signal', { signal });
 
     const result = await gracefulShutdown(container, config);
 
     if (result.success) {
       process.exit(0);
     } else {
-      console.error('   Shutdown completed with errors');
+      logger.error('Shutdown completed with errors');
       process.exit(1);
     }
   };
@@ -241,12 +244,12 @@ export function setupShutdownHandlers(
 
   // Handle uncaught errors
   process.on('uncaughtException', async (error) => {
-    console.error('❌ Uncaught Exception:', error);
+    logger.error('Uncaught exception', { error });
     await handleShutdown('UNCAUGHT_EXCEPTION');
   });
 
-  process.on('unhandledRejection', async (reason, promise) => {
-    console.error('❌ Unhandled Promise Rejection:', reason);
+  process.on('unhandledRejection', async (reason, _promise) => {
+    logger.error('Unhandled promise rejection', { reason });
     await handleShutdown('UNHANDLED_REJECTION');
   });
 }
@@ -284,7 +287,7 @@ export async function preShutdownHealthCheck(
       blockers,
     };
   } catch (error) {
-    console.error('Error during pre-shutdown health check:', error);
+    logger.error('Error during pre-shutdown health check', { error });
     return {
       canShutdown: false,
       blockers: ['Health check failed'],
@@ -296,7 +299,7 @@ export async function preShutdownHealthCheck(
  * Emergency shutdown (immediate, no cleanup)
  */
 export function emergencyShutdown(reason: string, exitCode = 1): never {
-  console.error(`\n🚨 EMERGENCY SHUTDOWN: ${reason}`);
-  console.error('   Exiting immediately without cleanup');
+  logger.error('Emergency shutdown', { reason });
+  logger.error('Exiting immediately without cleanup');
   process.exit(exitCode);
 }

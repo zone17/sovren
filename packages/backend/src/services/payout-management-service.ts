@@ -7,7 +7,7 @@ import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
 import { AnalyticsService } from './analytics-service';
 import { LightningPaymentService } from './lightning-payment-service';
-import { NotificationService } from './notification-service';
+import { NotificationService } from './notification-stub';
 import { TransactionHistoryService } from './transaction-history-service';
 
 // Payout Management Types and Schemas

@@ -175,7 +175,7 @@ async function initializeLightningService(): Promise<void> {
  */
 async function initializeReceiptService(): Promise<void> {
   try {
-    console.log('🧾 Initializing Lightning Receipt service...');
+    logger.info('Initializing Lightning Receipt service');
 
     // Check if receipt service configuration is provided
     const receiptFromEmail = process.env.RECEIPT_FROM_EMAIL;

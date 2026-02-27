@@ -7,7 +7,7 @@ import { supabase } from '../config/supabase';
 import { Logger } from '../utils/logger';
 import { TTLCache } from '../utils/ttl-cache';
 import { AnalyticsService } from './analytics-service';
-import { NotificationService } from './notification-service';
+import { NotificationService } from './notification-stub';
 import { WebSocketService } from './websocket-service';
 
 // Lightning Network Types and Schemas

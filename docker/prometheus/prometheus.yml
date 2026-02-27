@@ -55,6 +55,16 @@ scrape_configs:
     scrape_interval: 60s
     scrape_timeout: 20s
 
+  # Sovren Backend API
+  - job_name: 'sovren-api'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['backend:3001']
+    metrics_path: '/metrics'
+    # Production: uncomment and set token matching METRICS_AUTH_TOKEN
+    # bearer_token_file: /etc/prometheus/secrets/metrics-token
+
   # System metrics
   - job_name: 'prometheus'
     static_configs:

@@ -28,7 +28,7 @@ vi.mock('../../lib/redis', () => ({
 }));
 
 vi.mock(
-  '../notification-service',
+  '../notification-stub',
   () => ({
     NotificationService: vi.fn().mockImplementation(() => ({
       sendNotification: vi.fn().mockResolvedValue(undefined),

@@ -1,6 +1,6 @@
 ---
 title: Common Solutions — Reusable Fixes for Recurring Issues
-date: '2026-02-22'
+date: '2026-02-26'
 category: patterns
 purpose: Consolidated solutions for P2/P3 patterns that recur across sprints. Prevents re-invention.
 usage: Reference when implementing features. Check if a solution already exists here before writing new code.
@@ -8,7 +8,7 @@ usage: Reference when implementing features. Check if a solution already exists 
 
 # Common Solutions
 
-Reusable solutions extracted from 180+ P2/P3 findings across 13 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
+Reusable solutions extracted from 180+ P2/P3 findings across 14 sprints. These are not critical blockers but patterns that waste time when re-discovered. **Check here before implementing anything in these categories.**
 
 ---
 
@@ -1918,6 +1918,213 @@ service.createPlan(makeCreatorPlan());  // no cast needed
 
 ---
 
+## 54. Re-Export Does NOT Create Local Scope
+
+**Recurrence:** 1 P1-class pre-existing bug (PR #103). `export { X } from './module'` makes `X` available to consumers but NOT the re-exporting file itself. Causes runtime `ReferenceError` that TypeScript cannot detect at compile time.
+
+### The Problem
+
+```typescript
+// error-handler-middleware.ts
+
+// WRONG — NotFoundError is available to importers of THIS file,
+// but NOT usable within this file's own functions
+export { NotFoundError } from '../utils/errors';
+
+function handleError(err: unknown) {
+  if (err instanceof NotFoundError) {
+    // ReferenceError at runtime!
+    res.status(404).json({ error: err.message });
+  }
+}
+```
+
+### Standard Pattern: Import + Re-Export
+
+```typescript
+// RIGHT — two-step: import for local use, then re-export
+import { NotFoundError } from '../utils/errors';
+export { NotFoundError };
+
+function handleError(err: unknown) {
+  if (err instanceof NotFoundError) {
+    // Works correctly
+    res.status(404).json({ error: err.message });
+  }
+}
+```
+
+### Why TypeScript Doesn't Catch It
+
+TypeScript type-checks `export { X } from` as valid syntax for the re-export declaration. But `instanceof` is a runtime operation — TypeScript doesn't verify that the name is in scope for runtime use within the same file. The file compiles cleanly and crashes at runtime.
+
+**Detection:** Files that have `export { X } from` AND use `X` in their own function bodies. The grep is tricky because the export is syntactically valid:
+
+```bash
+# Find files with re-exports that may use the name locally
+grep -l "export {.*} from" packages/ --include="*.ts" -r | while read f; do
+  names=$(grep -oP "export \{ \K[^}]+" "$f" | tr ',' '\n' | tr -d ' ')
+  for name in $names; do
+    if grep -q "instanceof $name\|new $name\|$name\." "$f"; then
+      echo "POTENTIAL BUG: $f re-exports and locally uses $name"
+    fi
+  done
+done
+```
+
+**When to apply:** Any barrel file or middleware that both re-exports and uses the same symbols.
+
+---
+
+## 55. Service Stub Name Collisions on Case-Insensitive Filesystems
+
+**Recurrence:** 1 P2 (PR #103, 5/7 agent consensus). Creating `notification-service.ts` alongside existing `NotificationService.ts` on macOS APFS (case-insensitive by default) can cause silent import misdirection.
+
+### The Problem
+
+macOS APFS and Windows NTFS are case-insensitive by default. Two files differing only by case (`NotificationService.ts` vs `notification-service.ts`) may resolve to the same file depending on import casing and module resolution order. CI on Linux (ext4, case-sensitive) passes fine — the collision only manifests on developer machines.
+
+### Standard Pattern: Use Explicitly Different Names for Stubs
+
+```
+# WRONG — case-insensitive collision risk
+services/
+  NotificationService.ts   # Real DI-registered service
+  notification-service.ts  # Stub — APFS may confuse these
+
+# RIGHT — no possible collision
+services/
+  NotificationService.ts   # Real DI-registered service
+  notification-stub.ts     # Clearly a stub, different name entirely
+```
+
+### Naming Convention for Stubs
+
+| Real File                | Stub File              | Why            |
+| ------------------------ | ---------------------- | -------------- |
+| `NotificationService.ts` | `notification-stub.ts` | `-stub` suffix |
+| `AnalyticsService.ts`    | `analytics-stub.ts`    | `-stub` suffix |
+| `WebSocketService.ts`    | `websocket-stub.ts`    | `-stub` suffix |
+
+**Rules:**
+
+- Never create two files in the same directory that differ only by case
+- Use `-stub` or `-mock` suffix for placeholder/stub files
+- CI passing on Linux does NOT guarantee macOS safety
+
+**Detection:**
+
+```bash
+# Find case-colliding filenames in the same directory
+find packages/ -type f -name "*.ts" | while read f; do
+  dir=$(dirname "$f")
+  base=$(basename "$f" | tr '[:upper:]' '[:lower:]')
+  count=$(ls "$dir" | tr '[:upper:]' '[:lower:]' | grep -c "^${base}$")
+  [ "$count" -gt 1 ] && echo "COLLISION: $f"
+done
+```
+
+---
+
+## 56. Spread Operator in Logger Metadata Is Unsafe
+
+**Recurrence:** 1 P3 (PR #103). `logger.info('msg', { event, ...properties })` lets callers shadow Winston built-in keys (`level`, `message`, `timestamp`, `service`).
+
+### The Problem
+
+Winston (and most structured loggers) use flat metadata objects. When caller-controlled data is spread into the root metadata, any key matching a Winston built-in silently overwrites it.
+
+```typescript
+// WRONG — caller properties can shadow Winston built-ins
+function trackEvent(event: string, properties: Record<string, unknown>) {
+  logger.info('Event tracked', { event, ...properties });
+  // If properties = { message: 'hello', level: 'error' }
+  // Winston sees level='error' and message='hello' — corrupted log entry
+}
+
+// RIGHT — nest caller data under a dedicated key
+function trackEvent(event: string, properties: Record<string, unknown>) {
+  logger.info('Event tracked', { event, properties });
+  // Winston built-ins are safe; all caller data under 'properties'
+}
+```
+
+### Winston Built-In Keys (Do Not Shadow)
+
+- `level` — log severity
+- `message` — log message text
+- `timestamp` — ISO timestamp
+- `service` — service name (if configured)
+- `[Symbol.for('splat')]` — internal formatting
+
+**Rules:**
+
+- Never spread external/caller-controlled data into logger metadata root
+- Always nest under a dedicated key: `{ event, properties }` or `{ event, data }`
+- Applies to Winston, Pino, Bunyan — any logger with flat metadata
+
+**Detection:**
+
+```bash
+grep -rn 'logger\.\(info\|warn\|error\|debug\).*\.\.\.' packages/ --include="*.ts"
+```
+
+Any spread in a logger call is suspect. Verify the spread source is not caller-controlled.
+
+---
+
+## 57. API Root Discovery Must List All Monitoring Endpoints
+
+**Recurrence:** 1 P3 (PR #103, agent-native reviewer). `/api` root listed `/health` but omitted 5 other monitoring endpoints. Agents and automated tools cannot discover what is not listed.
+
+### The Rule
+
+Every endpoint registered in Express (especially monitoring/operational endpoints) must appear in the `/api` root discovery response. This is the machine-readable equivalent of API documentation.
+
+### Standard Pattern
+
+```typescript
+// When adding new monitoring endpoints, update the discovery response
+app.get('/api', (req, res) => {
+  res.json({
+    name: 'Sovren API',
+    version: '1.0.0',
+    endpoints: {
+      // Monitoring (keep this section up to date)
+      health: '/health',
+      ready: '/ready',
+      live: '/live',
+      healthDetailed: '/health/detailed',
+      metrics: '/metrics',
+      metricsApi: '/api/v1/metrics',
+      // Business endpoints
+      auth: '/api/v1/auth',
+      content: '/api/v1/content',
+      // ... etc
+    },
+  });
+});
+```
+
+### Checklist When Adding New Endpoints
+
+- [ ] Endpoint registered in Express
+- [ ] Endpoint added to `/api` root discovery response
+- [ ] Endpoint documented in CLAUDE.md (if operational/monitoring)
+- [ ] If authenticated, noted in discovery response or separate auth docs
+
+**Detection:** Compare `app.get`/`router.get` registrations with keys in the `/api` discovery response. Script:
+
+```bash
+# List all registered routes
+grep -rn "app\.\(get\|post\|put\|delete\)\|router\.\(get\|post\|put\|delete\)" packages/backend/src/ --include="*.ts" | grep -oP "'[^']+'" | sort -u
+# Compare against the discovery object keys in app.ts
+```
+
+**When to apply:** Every new endpoint, especially monitoring/health/metrics endpoints that automated agents rely on for observability.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2001,3 +2208,7 @@ CONTEXT TO LOAD:
 | `as any` for private field in test helper      | 51        | common-solutions.md  |
 | Timer handles leaked after test run            | 52        | common-solutions.md  |
 | >5 `as any` casts in test factory consumers    | 53        | common-solutions.md  |
+| Re-export used locally but not in scope        | 54        | common-solutions.md  |
+| Stub file name-collides on case-insensitive FS | 55        | common-solutions.md  |
+| Spread in logger metadata shadows built-ins    | 56        | common-solutions.md  |
+| Monitoring endpoint missing from `/api` root   | 57        | common-solutions.md  |

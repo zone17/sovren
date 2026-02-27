@@ -10,10 +10,7 @@
  */
 
 import { PaymentAnalyticsService } from '../PaymentAnalyticsService';
-import type {
-  AnalyticsQuery,
-  AnalyticsExportRequest,
-} from '../../../types/payment-analytics';
+import type { AnalyticsQuery, AnalyticsExportRequest } from '../../../types/payment-analytics';
 import { AnalyticsPeriod, ExportFormat } from '../../../types/payment-analytics';
 import type { PaymentTransaction } from '../../../types/payment';
 import { PaymentStatus, PaymentMethod, PaymentFailureReason } from '../../../types/payment';
@@ -1330,9 +1327,9 @@ describe('PaymentAnalyticsService', () => {
       const trend = (service as any).calculateTrend(values);
 
       expect(trend.strength).toBeDefined();
-      expect(
-        isNaN(trend.strength) || trend.strength === 0 || trend.strength === Infinity
-      ).toBe(true);
+      expect(isNaN(trend.strength) || trend.strength === 0 || trend.strength === Infinity).toBe(
+        true
+      );
     });
 
     it('should handle forecast with negative trend', () => {
