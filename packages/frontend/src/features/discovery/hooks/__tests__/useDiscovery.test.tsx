@@ -36,14 +36,21 @@ describe('useDiscovery', () => {
           createdAt: '2024-01-01T00:00:00Z',
         },
       ],
-      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      pagination: {
+        page: 1,
+        limit: 20,
+        total: 1,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
     },
   };
 
   beforeEach(() => {
     queryClient = new QueryClient({
       defaultOptions: {
-        queries: { retry: false, gcTime: 0 },
+        queries: { retry: false, gcTime: 0, staleTime: 0 },
       },
     });
     fetchSpy = vi.spyOn(globalThis, 'fetch');
@@ -68,7 +75,7 @@ describe('useDiscovery', () => {
     expect(result.current.pagination).toEqual(mockDiscoveryData.data.pagination);
   });
 
-  it('passes filter params to the API', async () => {
+  it('passes sortBy param to the API', async () => {
     fetchSpy.mockResolvedValue(mockResponse(mockDiscoveryData));
 
     const { result } = renderHook(() => useDiscovery(), { wrapper });
@@ -82,7 +89,7 @@ describe('useDiscovery', () => {
     await waitFor(() => {
       const lastCall = fetchSpy.mock.calls[fetchSpy.mock.calls.length - 1][0] as string;
       expect(lastCall).toContain('category=Art');
-      expect(lastCall).toContain('sort=followers');
+      expect(lastCall).toContain('sortBy=followers');
     });
   });
 
@@ -114,5 +121,25 @@ describe('useDiscovery', () => {
     await waitFor(() => expect(result.current.error).toBeTruthy());
 
     expect(result.current.creators).toEqual([]);
+  });
+
+  it('does not fetch when debounced query is 1 character', async () => {
+    fetchSpy.mockResolvedValue(mockResponse(mockDiscoveryData));
+
+    const { result } = renderHook(() => useDiscovery(), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const callCountBefore = fetchSpy.mock.calls.length;
+
+    act(() => {
+      result.current.updateFilters({ query: 'a' });
+    });
+
+    // Wait to ensure no new fetch is triggered
+    await new Promise((r) => setTimeout(r, 400));
+
+    // Should not have made a new call for 1-char query
+    expect(fetchSpy.mock.calls.length).toBe(callCountBefore);
   });
 });

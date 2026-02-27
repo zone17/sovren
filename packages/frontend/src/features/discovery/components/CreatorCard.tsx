@@ -19,6 +19,9 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             <img
               src={creator.avatarUrl}
               alt=""
+              loading="lazy"
+              width={56}
+              height={56}
               className="w-14 h-14 rounded-full object-cover flex-shrink-0"
             />
           ) : (
@@ -85,7 +88,6 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
           variant="default"
           size="sm"
           disabled
-          aria-disabled="true"
           title="Creator profiles coming in Sprint 1"
           aria-label={`View ${creator.displayName}'s profile — coming soon`}
         >

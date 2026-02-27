@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
 import { DiscoveryPage } from '../DiscoveryPage';
 import type { CreatorSearchResult } from '../../types';
 
@@ -41,7 +40,14 @@ const mockCreators: CreatorSearchResult[] = [
 
 const defaultHookReturn = {
   creators: mockCreators,
-  pagination: { page: 1, limit: 20, total: 2, totalPages: 1 },
+  pagination: {
+    page: 1,
+    limit: 20,
+    total: 2,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
+  },
   filters: { sortBy: 'relevance' as const },
   updateFilters: mockUpdateFilters,
   page: 1,
@@ -59,13 +65,6 @@ vi.mock('../../hooks/useDiscovery', () => ({
 import { useDiscovery } from '../../hooks/useDiscovery';
 const mockUseDiscovery = vi.mocked(useDiscovery);
 
-const renderPage = () =>
-  render(
-    <BrowserRouter>
-      <DiscoveryPage />
-    </BrowserRouter>
-  );
-
 describe('DiscoveryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,18 +73,18 @@ describe('DiscoveryPage', () => {
 
   describe('Rendering', () => {
     it('renders page title and description', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByText('Discover Creators')).toBeInTheDocument();
       expect(screen.getByText(/Find and support creators building on NOSTR/)).toBeInTheDocument();
     });
 
     it('renders search input', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByPlaceholderText(/Search creators/i)).toBeInTheDocument();
     });
 
     it('renders category filter buttons', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       const nav = screen.getByRole('navigation', { name: /Creator categories/i });
       expect(nav).toBeInTheDocument();
       expect(screen.getByText('All')).toBeInTheDocument();
@@ -93,12 +92,12 @@ describe('DiscoveryPage', () => {
     });
 
     it('renders sort select', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByLabelText('Sort by:')).toBeInTheDocument();
     });
 
     it('renders creator cards', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByText('Sophia')).toBeInTheDocument();
       expect(screen.getByText('Alex')).toBeInTheDocument();
     });
@@ -106,8 +105,12 @@ describe('DiscoveryPage', () => {
 
   describe('Loading and error states', () => {
     it('shows loading spinner when loading', () => {
-      mockUseDiscovery.mockReturnValue({ ...defaultHookReturn, isLoading: true, creators: [] });
-      renderPage();
+      mockUseDiscovery.mockReturnValue({
+        ...defaultHookReturn,
+        isLoading: true,
+        creators: [],
+      });
+      render(<DiscoveryPage />);
       expect(screen.getByRole('status')).toBeInTheDocument();
     });
 
@@ -117,7 +120,7 @@ describe('DiscoveryPage', () => {
         error: new Error('Network error'),
         creators: [],
       });
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
       fireEvent.click(screen.getByText('Try Again'));
       expect(mockRefetch).toHaveBeenCalled();
@@ -125,21 +128,21 @@ describe('DiscoveryPage', () => {
 
     it('shows empty state when no creators found', () => {
       mockUseDiscovery.mockReturnValue({ ...defaultHookReturn, creators: [] });
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByText('No creators found')).toBeInTheDocument();
     });
   });
 
   describe('Interactions', () => {
     it('calls updateFilters on search input change', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       const search = screen.getByPlaceholderText(/Search creators/i);
       fireEvent.change(search, { target: { value: 'test' } });
       expect(mockUpdateFilters).toHaveBeenCalledWith({ query: 'test' });
     });
 
     it('calls updateFilters on category click', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       fireEvent.click(screen.getByText('Music'));
       expect(mockUpdateFilters).toHaveBeenCalledWith({ category: 'Music' });
     });
@@ -149,43 +152,93 @@ describe('DiscoveryPage', () => {
         ...defaultHookReturn,
         filters: { sortBy: 'relevance', category: 'Music' },
       });
-      renderPage();
+      render(<DiscoveryPage />);
       fireEvent.click(screen.getByText('All'));
       expect(mockUpdateFilters).toHaveBeenCalledWith({ category: undefined });
     });
 
     it('calls updateFilters on sort change', () => {
-      renderPage();
-      fireEvent.change(screen.getByLabelText('Sort by:'), { target: { value: 'followers' } });
+      render(<DiscoveryPage />);
+      fireEvent.change(screen.getByLabelText('Sort by:'), {
+        target: { value: 'followers' },
+      });
       expect(mockUpdateFilters).toHaveBeenCalledWith({ sortBy: 'followers' });
     });
 
-    it('shows Load More button when more pages available', () => {
+    it('shows Next Page and Previous Page buttons when multiple pages', () => {
       mockUseDiscovery.mockReturnValue({
         ...defaultHookReturn,
-        pagination: { page: 1, limit: 20, total: 40, totalPages: 2 },
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 40,
+          totalPages: 2,
+          hasNext: true,
+          hasPrev: false,
+        },
       });
-      renderPage();
-      fireEvent.click(screen.getByText('Load More'));
+      render(<DiscoveryPage />);
+
+      const nextButton = screen.getByText('Next Page');
+      const prevButton = screen.getByText('Previous Page');
+
+      expect(nextButton).not.toBeDisabled();
+      expect(prevButton).toBeDisabled();
+
+      fireEvent.click(nextButton);
       expect(mockSetPage).toHaveBeenCalledWith(2);
+    });
+
+    it('disables Next Page on last page', () => {
+      mockUseDiscovery.mockReturnValue({
+        ...defaultHookReturn,
+        page: 2,
+        pagination: {
+          page: 2,
+          limit: 20,
+          total: 40,
+          totalPages: 2,
+          hasNext: false,
+          hasPrev: true,
+        },
+      });
+      render(<DiscoveryPage />);
+
+      expect(screen.getByText('Next Page')).toBeDisabled();
+      expect(screen.getByText('Previous Page')).not.toBeDisabled();
+    });
+
+    it('does not show pagination for single page', () => {
+      render(<DiscoveryPage />);
+      expect(screen.queryByText('Next Page')).not.toBeInTheDocument();
     });
   });
 
   describe('Accessibility', () => {
     it('has a labeled search input', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByLabelText('Search creators')).toBeInTheDocument();
     });
 
     it('has a labeled category nav', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByRole('navigation', { name: /Creator categories/i })).toBeInTheDocument();
     });
 
     it('marks active category with aria-pressed', () => {
-      renderPage();
+      render(<DiscoveryPage />);
       expect(screen.getByText('All')).toHaveAttribute('aria-pressed', 'true');
       expect(screen.getByText('Music')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('has role=status on fetching indicator', () => {
+      mockUseDiscovery.mockReturnValue({
+        ...defaultHookReturn,
+        isFetching: true,
+      });
+      render(<DiscoveryPage />);
+      const statusElements = screen.getAllByRole('status');
+      expect(statusElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 });

@@ -44,25 +44,26 @@ export const DiscoveryPage: React.FC = () => {
 
           {/* Category filters */}
           <nav className="mt-4 flex flex-wrap gap-2" aria-label="Creator categories">
-            {CATEGORIES.map((category) => (
-              <button
-                key={category}
-                onClick={() =>
-                  updateFilters({ category: category === 'All' ? undefined : category })
-                }
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  (filters.category ?? 'All') === (category === 'All' ? undefined : category) ||
-                  (!filters.category && category === 'All')
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                aria-pressed={
-                  (!filters.category && category === 'All') || filters.category === category
-                }
-              >
-                {category}
-              </button>
-            ))}
+            {CATEGORIES.map((category) => {
+              const isActive =
+                category === 'All' ? !filters.category : filters.category === category;
+              return (
+                <button
+                  key={category}
+                  onClick={() =>
+                    updateFilters({ category: category === 'All' ? undefined : category })
+                  }
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  aria-pressed={isActive}
+                >
+                  {category}
+                </button>
+              );
+            })}
           </nav>
 
           {/* Sort */}
@@ -74,7 +75,9 @@ export const DiscoveryPage: React.FC = () => {
               id="sort-select"
               value={filters.sortBy ?? 'relevance'}
               onChange={(e) =>
-                updateFilters({ sortBy: e.target.value as 'relevance' | 'followers' | 'newest' })
+                updateFilters({
+                  sortBy: e.target.value as 'relevance' | 'followers' | 'newest',
+                })
               }
               className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
             >
@@ -123,7 +126,7 @@ export const DiscoveryPage: React.FC = () => {
           <>
             {/* Subtle fetching indicator for subsequent queries */}
             {isFetching && (
-              <div className="flex justify-center pb-4">
+              <div className="flex justify-center pb-4" role="status" aria-label="Updating results">
                 <div className="h-1 w-24 bg-blue-200 rounded-full overflow-hidden">
                   <div className="h-full bg-blue-500 rounded-full animate-pulse" />
                 </div>
@@ -136,14 +139,25 @@ export const DiscoveryPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Load More */}
-            {pagination && page < pagination.totalPages && (
-              <div className="mt-8 flex justify-center">
+            {/* Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-4">
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={!pagination.hasPrev}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous Page
+                </button>
+                <span className="text-sm text-gray-600">
+                  Page {page} of {pagination.totalPages}
+                </span>
                 <button
                   onClick={() => setPage(page + 1)}
-                  className="px-6 py-3 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  disabled={!pagination.hasNext}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Load More
+                  Next Page
                 </button>
               </div>
             )}

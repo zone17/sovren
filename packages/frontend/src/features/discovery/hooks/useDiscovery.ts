@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import apiClient from '@/services/api/apiClient';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -10,7 +10,10 @@ export function useDiscovery() {
   const [page, setPage] = useState(1);
   const debouncedQuery = useDebouncedValue(filters.query ?? '', 300);
 
-  const effectiveFilters = { ...filters, query: debouncedQuery || undefined, page };
+  const effectiveFilters = useMemo(
+    () => ({ ...filters, query: debouncedQuery || undefined, page }),
+    [filters, debouncedQuery, page]
+  );
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['discovery', 'creators', effectiveFilters],
@@ -18,7 +21,7 @@ export function useDiscovery() {
       apiClient.get<ApiResponse<DiscoveryResponse>>('/api/v2/discovery/creators', {
         q: effectiveFilters.query,
         category: effectiveFilters.category,
-        sort: effectiveFilters.sortBy,
+        sortBy: effectiveFilters.sortBy,
         page: effectiveFilters.page,
         limit: effectiveFilters.limit,
       }),

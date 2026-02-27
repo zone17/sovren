@@ -4,14 +4,7 @@ export type {
   DiscoveryResponse,
 } from '@shared/types/discovery';
 
-export const CATEGORIES = [
-  'All',
-  'Art',
-  'Writing',
-  'Music',
-  'Podcast',
-  'Education',
-  'Photography',
-  'Development',
-  'Bitcoin',
-] as const;
+import { DISCOVERY_CATEGORIES } from '@shared/types/discovery';
+
+/** UI categories include "All" for clearing filter; backend enum excludes it. */
+export const CATEGORIES = ['All', ...DISCOVERY_CATEGORIES] as const;

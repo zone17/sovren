@@ -3,8 +3,22 @@
  * Shared types for Slice 2: Discovery MVP
  *
  * Used by both backend routes and frontend hooks.
- * Backend JOINs users + creators + creator_profiles to build CreatorSearchResult.
+ * Backend queries the `discovery_creators` view to build CreatorSearchResult.
  */
+
+/** Valid discovery categories (excludes "All" which is UI-only). */
+export const DISCOVERY_CATEGORIES = [
+  'Art',
+  'Writing',
+  'Music',
+  'Podcast',
+  'Education',
+  'Photography',
+  'Development',
+  'Bitcoin',
+] as const;
+
+export type DiscoveryCategory = (typeof DISCOVERY_CATEGORIES)[number];
 
 export interface CreatorSearchResult {
   id: string;
@@ -36,5 +50,7 @@ export interface DiscoveryResponse {
     limit: number;
     total: number;
     totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
 }
