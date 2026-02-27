@@ -1,47 +1,31 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { CreatorCard } from '../CreatorCard';
-import type { DiscoveryCreator } from '../../types';
+import type { CreatorSearchResult } from '../../types';
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
-  useNavigate: () => mockNavigate,
-}));
-
-const mockCreator: DiscoveryCreator = {
+const mockCreator: CreatorSearchResult = {
   id: 'creator-1',
-  display_name: 'Sophia',
+  displayName: 'Sophia',
   username: 'sophia_art',
-  avatar_url: '',
+  avatarUrl: null,
   bio: 'Digital illustrator creating art about the Bitcoin future.',
-  nip05_verified: true,
-  stats: { follower_count: 1500, post_count: 45, total_supporters: 200 },
-  subscription_tiers: [
-    { id: 'tier-1', name: 'Basic', price_sats: 1000, features: ['Weekly posts'] },
-    { id: 'tier-2', name: 'Premium', price_sats: 5000, features: ['All content'] },
-  ],
-  tags: ['art', 'bitcoin'],
-  featured_content_title: 'The Future of Digital Art',
+  nip05Verified: true,
+  categories: ['Art'],
+  tags: ['bitcoin', 'illustration'],
+  followerCount: 1500,
+  contentCount: 45,
+  verified: true,
+  createdAt: '2024-01-01T00:00:00Z',
 };
 
-const renderWithRouter = (ui: React.ReactElement) =>
-  render(<BrowserRouter>{ui}</BrowserRouter>);
+const renderWithRouter = (ui: React.ReactElement) => render(<BrowserRouter>{ui}</BrowserRouter>);
 
 describe('CreatorCard', () => {
-  beforeEach(() => {
-    mockNavigate.mockClear();
-  });
-
   describe('Rendering', () => {
-    it('renders creator display name', () => {
+    it('renders creator display name and username', () => {
       renderWithRouter(<CreatorCard creator={mockCreator} />);
       expect(screen.getByText('Sophia')).toBeInTheDocument();
-    });
-
-    it('renders creator username', () => {
-      renderWithRouter(<CreatorCard creator={mockCreator} />);
       expect(screen.getByText('@sophia_art')).toBeInTheDocument();
     });
 
@@ -56,7 +40,7 @@ describe('CreatorCard', () => {
     });
 
     it('does not render verified badge when not verified', () => {
-      const unverified = { ...mockCreator, nip05_verified: false };
+      const unverified = { ...mockCreator, nip05Verified: false };
       renderWithRouter(<CreatorCard creator={unverified} />);
       expect(screen.queryByText('Verified')).not.toBeInTheDocument();
     });
@@ -65,85 +49,65 @@ describe('CreatorCard', () => {
       renderWithRouter(<CreatorCard creator={mockCreator} />);
       expect(screen.getByText(/1,500 followers/)).toBeInTheDocument();
       expect(screen.getByText('45 posts')).toBeInTheDocument();
-      expect(screen.getByText('200 supporters')).toBeInTheDocument();
     });
 
-    it('renders tags', () => {
+    it('renders categories and tags', () => {
       renderWithRouter(<CreatorCard creator={mockCreator} />);
-      expect(screen.getByText('art')).toBeInTheDocument();
+      expect(screen.getByText('Art')).toBeInTheDocument();
       expect(screen.getByText('bitcoin')).toBeInTheDocument();
+      expect(screen.getByText('illustration')).toBeInTheDocument();
     });
 
-    it('renders lowest tier price', () => {
+    it('renders avatar initial when no avatar URL', () => {
       renderWithRouter(<CreatorCard creator={mockCreator} />);
-      expect(screen.getByText('1,000 sats/mo')).toBeInTheDocument();
+      expect(screen.getByText('S')).toBeInTheDocument();
     });
 
-    it('renders featured content title', () => {
-      renderWithRouter(<CreatorCard creator={mockCreator} />);
-      expect(screen.getByText('The Future of Digital Art')).toBeInTheDocument();
-    });
-
-    it('renders avatar initial', () => {
-      renderWithRouter(<CreatorCard creator={mockCreator} />);
-      // Avatar shows first letter
-      const avatar = screen.getByText('S');
-      expect(avatar).toBeInTheDocument();
+    it('renders avatar image when avatar URL provided', () => {
+      const withAvatar = { ...mockCreator, avatarUrl: 'https://example.com/avatar.jpg' };
+      renderWithRouter(<CreatorCard creator={withAvatar} />);
+      const img = screen.getByRole('img', { hidden: true });
+      expect(img).toHaveAttribute('src', 'https://example.com/avatar.jpg');
     });
   });
 
-  describe('Interactions', () => {
-    it('navigates to creator profile on View Profile click', () => {
+  describe('Coming Soon button', () => {
+    it('renders disabled Coming Soon button instead of View Profile', () => {
       renderWithRouter(<CreatorCard creator={mockCreator} />);
+      const button = screen.getByRole('button', { name: /coming soon/i });
+      expect(button).toBeInTheDocument();
+      expect(button).toBeDisabled();
+    });
 
-      const viewButton = screen.getByRole('button', { name: /View Sophia's profile/i });
-      fireEvent.click(viewButton);
-
-      expect(mockNavigate).toHaveBeenCalledWith('/creator/creator-1');
+    it('does not render View Profile button', () => {
+      renderWithRouter(<CreatorCard creator={mockCreator} />);
+      expect(screen.queryByRole('button', { name: /View Profile/i })).not.toBeInTheDocument();
     });
   });
 
   describe('Accessibility', () => {
     it('has article role with proper label', () => {
       renderWithRouter(<CreatorCard creator={mockCreator} />);
-      expect(
-        screen.getByRole('article', { name: /Creator profile: Sophia/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('article', { name: /Creator profile: Sophia/i })).toBeInTheDocument();
     });
 
     it('has labeled tags section', () => {
       renderWithRouter(<CreatorCard creator={mockCreator} />);
       expect(screen.getByLabelText('Creator tags')).toBeInTheDocument();
     });
-
-    it('has labeled View Profile button', () => {
-      renderWithRouter(<CreatorCard creator={mockCreator} />);
-      expect(
-        screen.getByRole('button', { name: /View Sophia's profile/i })
-      ).toBeInTheDocument();
-    });
   });
 
   describe('Edge Cases', () => {
-    it('handles creator with no featured content', () => {
-      const noFeatured = { ...mockCreator, featured_content_title: undefined };
-      renderWithRouter(<CreatorCard creator={noFeatured} />);
-      expect(screen.queryByText('Featured')).not.toBeInTheDocument();
-    });
-
-    it('handles creator with no tiers', () => {
-      const noTiers = { ...mockCreator, subscription_tiers: [] };
-      renderWithRouter(<CreatorCard creator={noTiers} />);
-      expect(screen.queryByText(/sats\/mo/)).not.toBeInTheDocument();
-    });
-
     it('handles creator with zero followers', () => {
-      const zeroFollowers = {
-        ...mockCreator,
-        stats: { follower_count: 0, post_count: 0, total_supporters: 0 },
-      };
+      const zeroFollowers = { ...mockCreator, followerCount: 0, contentCount: 0 };
       renderWithRouter(<CreatorCard creator={zeroFollowers} />);
       expect(screen.getByText(/0 followers/)).toBeInTheDocument();
+    });
+
+    it('handles creator with empty categories and tags', () => {
+      const empty = { ...mockCreator, categories: [], tags: [] };
+      renderWithRouter(<CreatorCard creator={empty} />);
+      expect(screen.getByRole('article')).toBeInTheDocument();
     });
   });
 });
