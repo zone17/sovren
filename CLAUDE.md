@@ -407,10 +407,16 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
 - Pass pre-commit hooks (lint, format, test, docs)
 - Reference issue/ticket in footer
 
-### Branch Scope
+### Branching & Merge Strategy
 
+**Read before starting any work:** [docs/development/BRANCHING_STRATEGY.md](docs/development/BRANCHING_STRATEGY.md)
+
+- **Trunk-based development.** All merges to `main` go through the merge queue. No `--admin` bypass except hotfix lane.
+- **Branch naming:** `{type}/{squad}/{ticket}-{slug}` (e.g., `feat/squad-a/SOV-123-payment-webhooks`)
 - **One epic per branch.** Multi-epic branches produce 3x more review findings.
-- Pre-flight shared infrastructure (types, DI tokens, route stubs) goes to main first.
+- **Shared package changes** go in a separate PR before consumer changes. See [SHARED_PACKAGE_PROTOCOL.md](docs/development/SHARED_PACKAGE_PROTOCOL.md).
+- **Hotfixes:** Follow [HOTFIX_PROCEDURE.md](docs/development/HOTFIX_PROCEDURE.md).
+- **Merge command:** `gh pr merge --auto --squash` (enters merge queue).
 - Each branch gets its own `/workflows:review` cycle.
 
 ## Common Workflows

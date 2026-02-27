@@ -2,7 +2,7 @@ name: 🗄️ Database Migration Deployment
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'supabase/migrations/**'
       - 'supabase/config.toml'

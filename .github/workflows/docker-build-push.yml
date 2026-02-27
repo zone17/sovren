@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-      - develop
     paths:
       - 'packages/backend/**'
       - '.github/workflows/docker-build-push.yml'
