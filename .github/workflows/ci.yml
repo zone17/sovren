@@ -6,9 +6,11 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
 
 permissions: read-all
 
@@ -22,10 +24,62 @@ env:
 
 jobs:
   # ===========================================
-  # Stage 1: Code Quality (parallel)
+  # Path Detection (determines which packages changed)
+  # ===========================================
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      shared: ${{ steps.filter.outputs.shared }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'packages/backend/**'
+              - 'packages/shared/**'
+            frontend:
+              - 'packages/frontend/**'
+              - 'packages/shared/**'
+            shared:
+              - 'packages/shared/**'
+
+  # ===========================================
+  # Branch Name Validation (PRs only)
+  # ===========================================
+  branch-name:
+    name: Branch Name Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Validate branch name
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          # Exempt Dependabot and merge queue branches
+          if [[ "$BRANCH" == dependabot/* ]] || [[ "$BRANCH" == gh-readonly-queue/* ]]; then
+            echo "Exempt branch pattern: $BRANCH"
+            exit 0
+          fi
+
+          PATTERN='^(feat|fix|hotfix|chore|refactor|docs)/(squad-[ab]/)?[A-Za-z]+-[0-9]+-[a-z0-9-]+$'
+          if [[ "$BRANCH" =~ $PATTERN ]]; then
+            echo "Branch name OK: $BRANCH"
+          else
+            echo "::warning::Branch name '$BRANCH' does not match convention: {type}/{squad}/{TICKET-123}-{slug}"
+            echo "See: docs/development/BRANCHING_STRATEGY.md"
+            # Warning only — will become required after adoption period
+          fi
+
+  # ===========================================
+  # Stage 1a: Lint (ESLint + Prettier)
   # ===========================================
   lint:
-    name: Lint & Type Check
+    name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -37,6 +91,17 @@ jobs:
 
       - name: Prettier
         run: npm run format:check
+
+  # ===========================================
+  # Stage 1b: Type Check
+  # ===========================================
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
 
       - name: TypeScript
         run: npm run type-check
@@ -65,13 +130,14 @@ jobs:
           format: 'table'
 
   # ===========================================
-  # Stage 3: Tests
+  # Stage 3: Backend Tests (conditional on changes)
   # ===========================================
-  test:
-    name: Tests
+  test-backend:
+    name: Backend Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [lint, security]
+    needs: [changes, lint, typecheck, security]
+    if: needs.changes.outputs.backend == 'true'
 
     services:
       postgres:
@@ -91,8 +157,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node
 
-      - name: Unit tests with coverage
-        run: npm run test:ci
+      - name: Backend unit tests
+        run: npx vitest run --project backend
         env:
           NODE_ENV: test
 
@@ -101,17 +167,45 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage/lcov.info
-          flags: unittests
+          flags: backend
           fail_ci_if_error: false
 
   # ===========================================
-  # Stage 3b: Integration Tests (parallel with unit tests)
+  # Stage 3b: Frontend Tests (conditional on changes)
+  # ===========================================
+  test-frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [changes, lint, typecheck, security]
+    if: needs.changes.outputs.frontend == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+
+      - name: Frontend unit tests
+        run: npx vitest run --project frontend
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
+
+  # ===========================================
+  # Stage 3c: Integration Tests (conditional on backend changes)
   # ===========================================
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [lint, security]
+    needs: [changes, lint, typecheck, security]
+    if: needs.changes.outputs.backend == 'true'
 
     services:
       postgres:
@@ -168,13 +262,41 @@ jobs:
           fail_ci_if_error: false
 
   # ===========================================
+  # Stage 3d: Test Gate (aggregator for required status check)
+  # ===========================================
+  test-gate:
+    name: Test Gate
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, test-integration]
+    if: always()
+    steps:
+      - name: Evaluate test results
+        run: |
+          echo "Backend:     ${{ needs.test-backend.result }}"
+          echo "Frontend:    ${{ needs.test-frontend.result }}"
+          echo "Integration: ${{ needs.test-integration.result }}"
+
+          results=(
+            "${{ needs.test-backend.result }}"
+            "${{ needs.test-frontend.result }}"
+            "${{ needs.test-integration.result }}"
+          )
+          for result in "${results[@]}"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "Test gate FAILED — at least one test job failed or was cancelled"
+              exit 1
+            fi
+          done
+          echo "Test gate PASSED — all test jobs succeeded or were skipped"
+
+  # ===========================================
   # Stage 4: Build
   # ===========================================
   build:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [test, test-integration]
+    needs: [test-gate]
 
     steps:
       - uses: actions/checkout@v4
@@ -249,7 +371,7 @@ jobs:
     name: Docker Build & Scan
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [test, test-integration]
+    needs: [test-gate]
     if: github.event_name == 'push'
 
     permissions:

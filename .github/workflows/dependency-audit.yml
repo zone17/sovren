@@ -2,7 +2,7 @@ name: 🔒 Dependency Security Audit
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'package.json'
       - 'package-lock.json'
@@ -10,7 +10,7 @@ on:
       - 'packages/*/package-lock.json'
       - '.github/workflows/dependency-audit.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'package.json'
       - 'package-lock.json'

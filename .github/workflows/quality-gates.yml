@@ -2,7 +2,9 @@ name: Quality Gates
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
   workflow_dispatch:
   workflow_call:
 
@@ -468,6 +470,7 @@ jobs:
 
     steps:
       - name: Check quality gate status
+        id: gate-check
         run: |
           FAILED=0
 
@@ -515,17 +518,18 @@ jobs:
           echo "All required quality gates passed!"
 
       - name: Update PR status
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
+            const gatePassed = '${{ steps.gate-check.outcome }}' === 'success';
             github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: context.sha,
-              state: 'success',
+              state: gatePassed ? 'success' : 'failure',
               target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-              description: 'All quality gates passed',
+              description: gatePassed ? 'All quality gates passed' : 'Quality gates failed',
               context: 'Quality Gates'
             });
 

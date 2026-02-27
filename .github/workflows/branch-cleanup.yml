@@ -1,0 +1,55 @@
+name: Branch Cleanup
+
+on:
+  schedule:
+    # Sundays at 02:00 UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    name: Delete Merged Branches
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find and delete merged branches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== Branch Cleanup ==="
+          DELETED=0
+          SKIPPED=0
+
+          # List remote branches (exclude main and recent hotfix branches)
+          for branch in $(git branch -r --merged origin/main | grep -v 'origin/main$' | grep -v 'origin/HEAD' | sed 's|origin/||'); do
+            # Skip protected patterns
+            if [[ "$branch" == "main" ]]; then
+              continue
+            fi
+
+            # Skip hotfix branches less than 7 days old
+            if [[ "$branch" == hotfix/* ]]; then
+              LAST_COMMIT=$(git log -1 --format=%ct "origin/$branch" 2>/dev/null || echo "0")
+              SEVEN_DAYS_AGO=$(date -d "7 days ago" +%s 2>/dev/null || date -v-7d +%s)
+              if [ "$LAST_COMMIT" -gt "$SEVEN_DAYS_AGO" ]; then
+                echo "SKIP: $branch (recent hotfix)"
+                SKIPPED=$((SKIPPED + 1))
+                continue
+              fi
+            fi
+
+            echo "DELETE: $branch"
+            git push origin --delete "$branch" 2>/dev/null || true
+            DELETED=$((DELETED + 1))
+          done
+
+          echo ""
+          echo "Deleted: $DELETED branches"
+          echo "Skipped: $SKIPPED branches"

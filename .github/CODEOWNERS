@@ -1,0 +1,35 @@
+# Sovren CODEOWNERS
+# Last matching rule wins. Teams must have repo write access.
+# See: docs/development/BRANCHING_STRATEGY.md
+
+# Default — tech leads review anything unmapped
+*                                          @zone17/tech-leads
+
+# Squad A: Backend
+/packages/backend/                         @zone17/squad-a
+/packages/shared/                          @zone17/squad-a @zone17/squad-b
+
+# Squad B: Frontend
+/packages/frontend/                        @zone17/squad-b
+
+# Testing infra — both squads
+/packages/testing/                         @zone17/squad-a @zone17/squad-b
+
+# CI/CD and infrastructure — tech leads only
+/.github/                                  @zone17/tech-leads
+/scripts/                                  @zone17/tech-leads
+/docker/                                   @zone17/tech-leads
+/supabase/                                 @zone17/tech-leads
+Dockerfile*                                @zone17/tech-leads
+
+# Root config — tech leads only
+/package.json                              @zone17/tech-leads
+/package-lock.json                         @zone17/tech-leads
+/tsconfig*.json                            @zone17/tech-leads
+/vitest.config.ts                          @zone17/tech-leads
+/eslint.config.*                           @zone17/tech-leads
+
+# Security-sensitive — requires tech lead review
+/packages/backend/src/middleware/auth*      @zone17/tech-leads
+/packages/backend/src/services/payment/    @zone17/tech-leads
+/packages/backend/src/utils/ssrf*          @zone17/tech-leads
