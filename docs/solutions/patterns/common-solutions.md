@@ -2125,6 +2125,165 @@ grep -rn "app\.\(get\|post\|put\|delete\)\|router\.\(get\|post\|put\|delete\)" p
 
 ---
 
+## 58. keepPreviousData Gate — Pagination Only, Not Filters
+
+**Recurrence:** 1 P2 in Discovery MVP. Will recur in every search/filter/pagination feature.
+
+### Problem
+
+React Query's `keepPreviousData` (or `placeholderData: keepPreviousData`) applied unconditionally shows stale results when switching category/search filters. Users see old category data for 500ms+ while new results load.
+
+### Standard Pattern: useRef to Track Page Changes
+
+```tsx
+const prevPageRef = useRef(page);
+const isPageChange = prevPageRef.current !== page;
+prevPageRef.current = page;
+
+const { data } = useQuery({
+  queryKey: ['items', { page, category, search }],
+  queryFn: () => fetchItems({ page, category, search }),
+  placeholderData: isPageChange ? keepPreviousData : undefined,
+});
+```
+
+**Why?** `keepPreviousData` is a UX optimization for pagination (show page N-1 while N loads), but a UX degradation for filter changes where users expect immediate fresh results.
+
+**Checklist:**
+
+- [ ] `keepPreviousData` gated by `useRef` comparison (not unconditional)
+- [ ] Filter changes (category, search, sort) get `undefined` placeholder
+- [ ] Page changes get `keepPreviousData` placeholder
+- [ ] `isFetching` indicator shown during background refetch
+
+**Detection:** `grep -rn "keepPreviousData" packages/frontend/` — verify each usage compares previous vs current change type.
+
+---
+
+## 59. COALESCE Nullable Columns at VIEW Level
+
+**Recurrence:** 1 P2 in Discovery MVP. Will recur with every new VIEW joining nullable columns.
+
+### Problem
+
+DB columns (bio, categories, display_name, nip05_verified) can be NULL but TypeScript interfaces declare them non-nullable. Runtime crashes on `.toLocaleString()`, `.charAt()`, `.map()` when NULL returned.
+
+### Standard Pattern: COALESCE in SQL VIEW
+
+```sql
+CREATE OR REPLACE VIEW my_view AS
+SELECT
+  COALESCE(t.text_col, '') AS text_col,           -- string default
+  COALESCE(t.array_col, ARRAY[]::text[]) AS arr,  -- empty array default
+  COALESCE(t.bool_col, false) AS bool_col,         -- boolean default
+  COALESCE(t.int_col, 0) AS int_col,              -- numeric default
+  COALESCE(t.name, t.fallback_name, 'Anonymous') AS name, -- cascade fallback
+FROM my_table t;
+```
+
+**Why at the VIEW level?** One COALESCE in SQL prevents N null checks scattered across TypeScript. Guarantees type definitions match runtime reality.
+
+**Checklist:**
+
+- [ ] Every nullable column in JOIN has COALESCE with sensible default
+- [ ] String columns → `''`, arrays → `ARRAY[]::type[]`, booleans → `false`, numbers → `0`
+- [ ] Cascade fallbacks for display names: `COALESCE(display_name, username, 'Anonymous')`
+- [ ] TypeScript interface matches COALESCE guarantees (non-nullable types)
+
+**Detection:** Compare VIEW columns against source table nullable columns. `\d+ view_name` in psql shows column types.
+
+---
+
+## 60. pg_trgm Indexes for ILIKE Full-Text Search
+
+**Recurrence:** 1 P2 in Discovery MVP. Required for every ILIKE `%pattern%` search.
+
+### Problem
+
+ILIKE with leading wildcard (`%query`) is not B-tree indexable — forces sequential scan. 500ms+ on tables with 100K+ rows.
+
+### Standard Pattern: GIN Trigram Indexes
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- GIN indexes for ILIKE %pattern% searches
+CREATE INDEX IF NOT EXISTS idx_users_display_name_trgm
+  ON users USING gin (display_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_users_username_trgm
+  ON users USING gin (username gin_trgm_ops);
+
+-- B-tree for ORDER BY (sorting)
+CREATE INDEX IF NOT EXISTS idx_creators_follower_count_desc
+  ON creators (follower_count DESC);
+
+-- GIN for array containment (@>)
+CREATE INDEX IF NOT EXISTS idx_creator_profiles_categories_gin
+  ON creator_profiles USING gin (categories);
+```
+
+**Index type selection:**
+
+| Query Pattern       | Index Type    | Example                  |
+| ------------------- | ------------- | ------------------------ |
+| `ILIKE '%foo%'`     | GIN (pg_trgm) | `gin (col gin_trgm_ops)` |
+| `= 'exact'`         | B-tree        | `btree (col)`            |
+| `ORDER BY col DESC` | B-tree DESC   | `btree (col DESC)`       |
+| `@> ARRAY['val']`   | GIN           | `gin (col)`              |
+
+**Checklist:**
+
+- [ ] `pg_trgm` extension enabled (`CREATE EXTENSION IF NOT EXISTS pg_trgm`)
+- [ ] Every ILIKE column has GIN trigram index
+- [ ] Every ORDER BY column has B-tree index (match sort direction)
+- [ ] Array filter columns have GIN index
+- [ ] Verify with `EXPLAIN ANALYZE` on production-size data
+
+**Detection:** `grep -rn "ILIKE\|ilike" packages/backend/` — check each column has a corresponding trigram index in migrations.
+
+---
+
+## 61. Error Cause Sanitization — Log Internally, Throw Clean
+
+**Recurrence:** 1 P2 in Discovery MVP. Common in every service that catches and re-throws.
+
+### Problem
+
+`throw new ServiceError('msg', { cause: error })` passes raw Error objects (with stack traces, file paths, internal details) that can leak to API consumers via serialization.
+
+### Standard Pattern: Log Full, Throw Clean
+
+```typescript
+try {
+  const result = await db.from('table').select('*');
+  if (result.error) throw result.error;
+  return result.data;
+} catch (error) {
+  // Log full error internally (for debugging)
+  logger.error('Operation failed', { error: String(error) });
+  // Throw clean error to consumer (no cause, no internals)
+  throw new ServiceError('Operation failed');
+}
+```
+
+**Why not `{ cause: error }`?**
+
+- Error objects contain stack traces with file paths
+- `JSON.stringify(error)` may include internal state
+- Express error handlers may serialize the entire cause chain
+- The `cause` property is for programmatic error chaining within a service, not across API boundaries
+
+**Checklist:**
+
+- [ ] No `{ cause: error }` in errors thrown from route handlers
+- [ ] `logger.error()` captures full error before throwing
+- [ ] ServiceError message is user-safe (no internal details)
+- [ ] Stack traces never appear in API response bodies
+
+**Detection:** `grep -rn "new ServiceError.*cause\|new Error.*cause" packages/backend/src/routes/` — verify no raw errors passed as cause in route-level throws.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2212,3 +2371,9 @@ CONTEXT TO LOAD:
 | Stub file name-collides on case-insensitive FS | 55        | common-solutions.md  |
 | Spread in logger metadata shadows built-ins    | 56        | common-solutions.md  |
 | Monitoring endpoint missing from `/api` root   | 57        | common-solutions.md  |
+| keepPreviousData shows stale filter results    | 58        | common-solutions.md  |
+| Nullable DB col crashes TS at runtime          | 59        | common-solutions.md  |
+| ILIKE `%query%` causes sequential scan         | 60        | common-solutions.md  |
+| ServiceError cause leaks stack trace to client | 61        | common-solutions.md  |
+| PostgREST filter injection via metacharacters  | 11        | critical-patterns.md |
+| VIEW exposes admin/inactive users              | 12        | critical-patterns.md |

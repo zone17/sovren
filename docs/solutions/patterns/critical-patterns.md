@@ -643,20 +643,86 @@ export function getClient(): Client {
 
 ## Quick Reference Table
 
-| Pattern                | When to Use          | Key Guard                        | HTTP Error |
-| ---------------------- | -------------------- | -------------------------------- | ---------- |
-| Insert-then-verify     | Aggregate caps       | Count after insert               | 409        |
-| Accept-then-revert     | Status + capacity    | Count after transition           | 409        |
-| Atomic claim           | Scarce resources     | `UPDATE WHERE active=true`       | 409        |
-| Service-layer auth     | All data access      | Membership/ownership query       | 403        |
-| Paginated accumulation | Any unbounded SELECT | `PAGE_SIZE=500` + while loop     | N/A        |
-| Atomic multi-table     | 2+ table writes      | RPC or compensating tx           | 500        |
-| SSRF validation        | User-supplied URLs   | DNS resolve + IP check + pin IPs | 400        |
-| Status guard           | DELETE/void/cancel   | Assert status before write       | 409        |
-| Test infra integration | New test type added  | CI stage + brief + CLAUDE.md     | N/A        |
-| NOSTR event ID         | Any verifyEvent call | `getEventHash(UnsignedEvent)`    | N/A        |
-| Cross-pkg dedup        | String in 3+ files   | Extract to `@shared/`            | N/A        |
-| Silent fallback log    | Any lazy-init path   | `logger.warn()` on fallback      | N/A        |
+| Pattern                 | When to Use          | Key Guard                          | HTTP Error   |
+| ----------------------- | -------------------- | ---------------------------------- | ------------ |
+| Insert-then-verify      | Aggregate caps       | Count after insert                 | 409          |
+| Accept-then-revert      | Status + capacity    | Count after transition             | 409          |
+| Atomic claim            | Scarce resources     | `UPDATE WHERE active=true`         | 409          |
+| Service-layer auth      | All data access      | Membership/ownership query         | 403          |
+| Paginated accumulation  | Any unbounded SELECT | `PAGE_SIZE=500` + while loop       | N/A          |
+| Atomic multi-table      | 2+ table writes      | RPC or compensating tx             | 500          |
+| SSRF validation         | User-supplied URLs   | DNS resolve + IP check + pin IPs   | 400          |
+| Status guard            | DELETE/void/cancel   | Assert status before write         | 409          |
+| Test infra integration  | New test type added  | CI stage + brief + CLAUDE.md       | N/A          |
+| NOSTR event ID          | Any verifyEvent call | `getEventHash(UnsignedEvent)`      | N/A          |
+| Cross-pkg dedup         | String in 3+ files   | Extract to `@shared/`              | N/A          |
+| Silent fallback log     | Any lazy-init path   | `logger.warn()` on fallback        | N/A          |
+| PostgREST filter escape | User text → `.or()`  | Escape `\` first, then metachar    | 400          |
+| VIEW security barrier   | Public-facing VIEW   | `security_barrier` + status filter | 200 (hidden) |
+
+---
+
+## 11. PostgREST Filter Escape — Complete Metacharacter Coverage (1 P1)
+
+**The problem:** User-supplied text passed to PostgREST `.or()` / `.filter()` without escaping all metacharacters allows filter injection — broadening searches (`%`), injecting operators (`:`, `"`), or triggering LIKE wildcards (`_`).
+
+**Rule:** Escape backslash FIRST (to avoid double-escaping), then escape all PostgREST/SQL metacharacters in a single pass.
+
+```typescript
+export function escapePostgrestFilter(input: string): string {
+  return input
+    .replace(/\\/g, '\\\\') // backslash FIRST
+    .replace(/[,.*():%"_]/g, '\\$&'); // all metacharacters
+}
+
+// Usage — always escape before passing to PostgREST filters:
+const safe = escapePostgrestFilter(userQuery);
+query = query.or(`display_name.ilike.%${safe}%,username.ilike.%${safe}%`);
+```
+
+**Full metacharacter set:** `\` `,` `.` `*` `(` `)` `:` `%` `"` `_`
+
+**Why backslash first?** If you escape `,` to `\,` first, then escape `\` to `\\`, you get `\\,` — the comma is no longer escaped. Escaping `\` first means `\` → `\\`, then `,` → `\,`, giving the correct `\\` and `\,` separately.
+
+**Test payloads:** `100%`, `a_b`, `a\b`, `a:b`, `a"b`, `bio.ilike.%test%,other`
+
+**Detection:** `grep -rn "\.or(\|\.filter(" packages/backend/` — verify all user-supplied strings pass through `escapePostgrestFilter()` before interpolation.
+
+---
+
+## 12. PostgreSQL VIEW Security Barrier (1 P1)
+
+**The problem:** PostgreSQL VIEWs bypass RLS. Without `security_barrier = true`, the query planner can push user-supplied predicates past the VIEW's WHERE clause, disclosing rows that should be hidden (admin accounts, inactive users, banned content).
+
+**Rule:** Every public-facing VIEW must have `security_barrier = true`, a status filter, and a role filter.
+
+```sql
+CREATE OR REPLACE VIEW discovery_creators WITH (security_barrier = true) AS
+SELECT
+  cp.id,
+  COALESCE(cp.bio, '') AS bio,
+  COALESCE(u.display_name, u.username, 'Anonymous') AS display_name,
+  -- ... other columns with COALESCE for nullable fields
+FROM creator_profiles cp
+INNER JOIN users u ON cp.creator_id = u.id
+LEFT JOIN creators c ON c.user_id = u.id
+WHERE u.status = 'active'
+  AND u.role != 'admin';
+
+-- Only SELECT, never INSERT/UPDATE/DELETE
+GRANT SELECT ON discovery_creators TO anon, authenticated;
+```
+
+**Checklist for every VIEW:**
+
+- [ ] `WITH (security_barrier = true)`
+- [ ] `WHERE status = 'active'` or equivalent
+- [ ] `AND role != 'admin'` for public-facing views
+- [ ] COALESCE all nullable columns (prevents TS runtime crashes)
+- [ ] GRANT only SELECT to appropriate roles
+- [ ] Security comment in migration
+
+**Detection:** `grep -rn "CREATE.*VIEW" supabase/migrations/` — verify every VIEW has `security_barrier`. `grep -L "security_barrier" supabase/migrations/*view*.sql` finds violations.
 
 ---
 

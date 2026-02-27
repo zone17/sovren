@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### feat(discovery): Wire Discovery MVP frontend to real backend — 2026-02-26
+
+**Category**: Feature — Discovery (Squad B, Sprint 0, Slice 2)
+**Status**: Complete — 34 unit tests + 3 E2E tests passing
+**Issue**: #107
+
+Replaced hardcoded mock data in the Discovery page with real API calls. Created `GET /api/v2/discovery/creators` endpoint that JOINs `creator_profiles`, `users`, and `creators` tables. Rewrote `useDiscovery` hook from 99 lines of mock data to React Query with debounced search, category/sort filters, and pagination. Updated `CreatorCard` and `DiscoveryPage` components for new `CreatorSearchResult` type. Added shared types in `packages/shared/src/types/discovery.ts` used by both frontend and backend. "View Profile" button disabled with "Coming Soon" for Sprint 1.
+
+**Files created**: `shared/types/discovery.ts`, `backend/routes/v2/discovery.routes.ts`, `frontend/hooks/useDebouncedValue.ts`, `e2e/pages/discovery.page.ts`, `e2e/discovery.public.spec.ts`
+**Files modified**: `useDiscovery.ts` (full rewrite), `DiscoveryPage.tsx`, `CreatorCard.tsx`, `discovery/types/index.ts`, `v2/index.ts`, component test files
+
 ### refactor(backend): Eliminate all mocks from SubscriptionService and PaymentAnalyticsService tests — 2026-02-26
 
 **Category**: Test Infrastructure — Payment Domain

@@ -1,5 +1,5 @@
 name: 'Setup Node.js'
-description: 'Setup Node.js with npm caching using .nvmrc'
+description: 'Setup Node.js with node_modules caching for npm workspaces'
 
 inputs:
   install-deps:
@@ -19,9 +19,20 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ steps.nvmrc.outputs.version }}
-        cache: 'npm'
+
+    - name: Cache node_modules
+      if: inputs.install-deps == 'true'
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          node_modules
+          packages/*/node_modules
+        key: node-modules-${{ runner.os }}-node${{ steps.nvmrc.outputs.version }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          node-modules-${{ runner.os }}-node${{ steps.nvmrc.outputs.version }}-
 
     - name: Install dependencies
-      if: inputs.install-deps == 'true'
+      if: inputs.install-deps == 'true' && steps.cache.outputs.cache-hit != 'true'
       shell: bash
-      run: npm ci --prefer-offline --no-audit
+      run: npm ci --no-audit

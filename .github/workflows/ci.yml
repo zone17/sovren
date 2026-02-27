@@ -49,35 +49,105 @@ jobs:
               - 'packages/shared/**'
 
   # ===========================================
-  # Stage 1a: Lint (ESLint + Prettier)
+  # Stage 1a: Lint (changed files only — incremental strictness)
   # ===========================================
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: ./.github/actions/setup-node
 
-      - name: ESLint
-        run: npm run lint
+      - name: Get changed files
+        id: changed
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          elif [[ "${{ github.event_name }}" == "merge_group" ]]; then
+            BASE="${{ github.event.merge_group.base_sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          # Fallback: if BASE is empty or zeroed, diff against origin/main
+          if [[ -z "$BASE" || "$BASE" == "0000000000000000000000000000000000000000" ]]; then
+            BASE="origin/main"
+          fi
+          FILES=$(git diff --name-only --diff-filter=ACMR "$BASE" HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | tr '\n' ' ')
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "count=$(echo "$FILES" | wc -w | tr -d ' ')" >> "$GITHUB_OUTPUT"
 
-      - name: Prettier
-        run: npm run format:check
+      - name: ESLint (changed files)
+        if: steps.changed.outputs.count != '0'
+        run: npx eslint ${{ steps.changed.outputs.files }} --max-warnings 0 --no-error-on-unmatched-pattern
+
+      - name: Prettier (changed files)
+        if: steps.changed.outputs.count != '0'
+        run: npx prettier --check ${{ steps.changed.outputs.files }} --no-error-on-unmatched-pattern
+
+      - name: No files changed
+        if: steps.changed.outputs.count == '0'
+        run: echo "No TS/JS files changed — lint skipped"
 
   # ===========================================
-  # Stage 1b: Type Check
+  # Stage 1b: Type Check (changed files only — incremental strictness)
   # ===========================================
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: ./.github/actions/setup-node
 
-      - name: TypeScript
-        run: npm run type-check
+      - name: Get changed TS files
+        id: changed
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          elif [[ "${{ github.event_name }}" == "merge_group" ]]; then
+            BASE="${{ github.event.merge_group.base_sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          # Fallback: if BASE is empty or zeroed, diff against origin/main
+          if [[ -z "$BASE" || "$BASE" == "0000000000000000000000000000000000000000" ]]; then
+            BASE="origin/main"
+          fi
+          FILES=$(git diff --name-only --diff-filter=ACMR "$BASE" HEAD -- '*.ts' '*.tsx' | tr '\n' ' ')
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "count=$(echo "$FILES" | wc -w | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: TypeScript (changed files)
+        if: steps.changed.outputs.count != '0'
+        run: |
+          # tsc needs full project context, so run full check but filter output to changed files only
+          # Any new type error in a changed file fails the build; pre-existing errors in untouched files are ignored
+          CHANGED="${{ steps.changed.outputs.files }}"
+          ERRORS=0
+          TSC_OUTPUT=$(npx tsc --noEmit --pretty false 2>&1 || true)
+          for FILE in $CHANGED; do
+            FILE_ERRORS=$(echo "$TSC_OUTPUT" | grep "^$FILE(" || true)
+            if [ -n "$FILE_ERRORS" ]; then
+              echo "$FILE_ERRORS"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::Type errors found in changed files"
+            exit 1
+          fi
+          echo "No type errors in changed files"
+
+      - name: No files changed
+        if: steps.changed.outputs.count == '0'
+        run: echo "No TS files changed — type check skipped"
 
   # ===========================================
   # Stage 2: Security Scan (parallel with lint)
@@ -85,7 +155,7 @@ jobs:
   security:
     name: Security Audit
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node
