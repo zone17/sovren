@@ -156,7 +156,8 @@ export class CrossPostService implements ICrossPostService {
             error_message: 'Queue enqueue failed',
             updated_at: new Date().toISOString(),
           })
-          .in('id', failedIds);
+          .in('id', failedIds)
+          .in('status', ['queued', 'scheduled']);
 
         if (compensateError) {
           this.logger.error(

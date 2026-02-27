@@ -198,8 +198,12 @@ describe('CrossPostService', () => {
         .mockRejectedValueOnce(new Error('Redis connection lost'));
 
       // Mock the compensating update so we can assert on it
-      const updateChain = {
+      // Chain: .update({...}).in('id', failedIds).in('status', [...])
+      const statusFilterChain = {
         in: vi.fn().mockResolvedValue({ error: null }),
+      };
+      const updateChain = {
+        in: vi.fn().mockReturnValue(statusFilterChain),
       };
       crossPostsChain.update.mockReturnValue(updateChain);
 
@@ -224,6 +228,7 @@ describe('CrossPostService', () => {
         updated_at: expect.any(String),
       });
       expect(updateChain.in).toHaveBeenCalledWith('id', ['cp-id-1', 'cp-id-2']);
+      expect(statusFilterChain.in).toHaveBeenCalledWith('status', ['queued', 'scheduled']);
     });
   });
 
@@ -262,6 +267,14 @@ describe('CrossPostService', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         '[CrossPostService] Cross-post cancelled',
         expect.objectContaining({ creatorId, crossPostId: 'cp-1' })
+      );
+    });
+
+    it('should throw ValidationError when cross-post not found or not cancellable', async () => {
+      crossPostsChain.in.mockResolvedValue({ error: null, count: 0 });
+
+      await expect(service.cancel(creatorId, 'cp-nonexistent')).rejects.toThrow(
+        'Cross-post not found or not in a cancellable state'
       );
     });
   });
