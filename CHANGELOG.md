@@ -21,7 +21,6 @@ Combined with RefundService rewrite below, all 317 payment tests now run against
 Created `PaymentTestHarness` (`test-utils/payment-test-harness.ts`) providing real `EventBusService`, `CurrencyService`, `PaymentProcessingService`, `AuditLogService`, `RefundService`, `SubscriptionService`, and `PaymentAnalyticsService` wired with in-memory backends. Includes `InMemoryCacheService`, `SilentLogger`, `seedCompletedTransaction()`, and `flushPromises()` helpers.
 
 Rewrote `RefundService.test.ts` from 84 mock-based tests (28 `vi.fn()` stubs) to 84 integration tests with zero mocks. All tests exercise real service behavior including auto-processing, state machine transitions, and cross-service interactions.
-
 ### fix(backend): Add missing REFUND\_\* DomainEventType enum values — 2026-02-26
 
 **Category**: Bug Fix — Payment Domain
@@ -48,7 +47,6 @@ for all new backend work across v2.0's 5 sprints.
   with `snakeToCamel` documentation, 8-code error registry, `paginationSchema` mandatory
   for list endpoints, shared type ownership, rate limiting tiers, versioning strategy (all v2, no v3),
   lazy singleton service resolution
-
 ### feat(multi-platform): EPIC-009B Frontend — Unified Inbox + Cross-Platform Analytics — 2026-02-18
 
 **Category**: Feature — Multi-Platform Hub Extension
