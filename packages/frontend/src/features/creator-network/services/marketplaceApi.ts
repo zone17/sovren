@@ -1,6 +1,11 @@
 import apiClient from '@/services/api/apiClient';
 import type { ApiResponse, Pagination } from '../types/community';
-import type { ServiceListing, ServiceOrder, OrderReview, ServiceType } from '@shared/types/community';
+import type {
+  ServiceListing,
+  ServiceOrder,
+  OrderReview,
+  ServiceType,
+} from '@shared/types/community';
 
 const BASE = '/api/v2/marketplace';
 const ORDERS_BASE = '/api/v2/marketplace/orders';

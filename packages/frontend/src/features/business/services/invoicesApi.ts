@@ -17,10 +17,7 @@ export const invoicesApi = {
     return apiClient.post(BASE, data);
   },
 
-  updateStatus(
-    id: string,
-    status: string
-  ): Promise<ApiResponse<BusinessInvoice>> {
+  updateStatus(id: string, status: string): Promise<ApiResponse<BusinessInvoice>> {
     return apiClient.put(`${BASE}/${id}/status`, { status });
   },
 

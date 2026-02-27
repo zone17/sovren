@@ -1809,7 +1809,116 @@ seeds/temp/
 
 ---
 
-## 50. Re-Export Does NOT Create Local Scope
+## 50. Real Services > vi.fn() Mocks for Integration Tests
+
+**Recurrence:** 317 mocks across 3 test files. When `PaymentProcessingService` grew from 8→28 methods, all mock stubs broke silently — tests passed but exercised no real behavior.
+
+**Problem:** `vi.fn()` mocks couple tests to implementation details. When a service grows, every mock must be updated manually. Single-chain mocks can't serve multi-table queries or arbitrary state permutations.
+
+**Solution:** Create a shared test harness with real service instances backed by in-memory storage:
+
+```typescript
+// packages/backend/src/test-utils/payment-test-harness.ts
+export function createPaymentTestHarness(): PaymentTestHarness {
+  const logger = new SilentLogger();
+  const eventBus = new TestableEventBus(logger);
+  const cache = new InMemoryCacheService();
+  const paymentService = new PaymentProcessingService(eventBus, logger, cache);
+  // ... wire all services with real instances
+  return { paymentService, refundService, ..., dispose, seedCompletedTransaction };
+}
+```
+
+**Detection rule:** If a test file has >10 `vi.fn()` stubs for a single service interface, or the service has >5 methods, it's a candidate for a test harness.
+
+**When to use:** Any service with >5 methods or cross-service interactions. Tests exercise actual behavior including edge cases mocks would miss.
+
+**Cross-reference:** [Payment Test Harness — Mock Elimination](../testing/payment-test-harness-mock-elimination-20260226.md)
+
+---
+
+## 51. Runtime Guard for Private Field Access in Tests
+
+**Recurrence:** 2 sprints. Test harness accesses private internals via `as any`, then service refactors produce cryptic `TypeError: Cannot read properties of undefined`.
+
+**Problem:** `(service as any).repository.saveTransaction(tx)` breaks silently when the private field name changes.
+
+**Solution:** Add a runtime guard with descriptive error before accessing private fields:
+
+```typescript
+const repo = (service as any).repository;
+if (!repo || typeof repo.saveTransaction !== 'function') {
+  throw new Error(
+    'seedRawTransaction: PaymentProcessingService internal API changed. ' +
+      'Expected (paymentService as any).repository.saveTransaction to exist.'
+  );
+}
+await repo.saveTransaction(tx);
+```
+
+**Detection rule:** Any `(x as any).privateField` in test utilities without a preceding null/typeof check.
+
+**When to use:** Every test helper that accesses private fields via `as any`. Fails fast with a descriptive error instead of cryptic `TypeError` deep in test execution.
+
+---
+
+## 52. dispose() Must Cover ALL Timer-Based Services
+
+**Recurrence:** ~1200 timer handles leaked per test run (4/8 services missing from dispose). Causes flaky tests and Node.js `--detectOpenHandles` warnings.
+
+**Problem:** Test harness creates multiple services with `setInterval`/`setTimeout` in constructors, but `dispose()` only cleans up some of them.
+
+**Solution:** Every service that starts a timer MUST have its `dispose()` called in teardown:
+
+```typescript
+const dispose = async (): Promise<void> => {
+  await paymentService.dispose(); // clears expirationCheckInterval
+  await currencyService.dispose(); // clears refreshInterval
+  await auditLog.dispose(); // clears archiveInterval
+  await analyticsService.dispose(); // clears subscriptions + jobs
+  await refundService.dispose();
+  await subscriptionService.dispose();
+  await eventBus.dispose();
+  await cache.dispose();
+};
+```
+
+**Detection checklist:**
+
+1. `grep -rn 'setInterval\|setTimeout' packages/backend/src/services/` — list all timer-based services
+2. Verify each one appears in the harness `dispose()` function
+3. When adding a new service to the harness, add it to `dispose()` in the same commit
+
+**When to use:** Any test harness that creates services with timers/intervals. Missing even one service leaks handles that accumulate across the test suite.
+
+---
+
+## 53. Factory Return Types Must Match Consumer Parameter Types
+
+**Recurrence:** 20 `as any` casts in SubscriptionService tests. Factory returns `{createdAt, updatedAt}` but `createPlan()` expects `Omit<..., 'createdAt' | 'updatedAt'>`.
+
+**Problem:** Test factories create objects with extra fields that the service method doesn't accept. The mismatch requires `as any` casts that mask real type errors.
+
+**Solution:** Define a type alias matching the consumer's parameter type:
+
+```typescript
+// ❌ WRONG — factory returns superset, needs `as any` cast
+function makeCreatorPlan(): Omit<SubscriptionPlan, 'id'> & { id?: string } { ... }
+service.createPlan(makeCreatorPlan() as any);  // 20 casts
+
+// ✅ CORRECT — factory returns exactly what createPlan() expects
+type CreatePlanInput = Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>;
+function makeCreatorPlan(): CreatePlanInput { ... }
+service.createPlan(makeCreatorPlan());  // no cast needed
+```
+
+**Detection rule:** `grep -c 'as any' path/to/test.ts` — if >5 `as any` casts in a test file, check if factory return types match consumer parameter types.
+
+**When to use:** Every test factory that creates objects consumed by service methods. Extra fields require `as any` casts that mask real type errors. Define the factory return type from the consumer's parameter type, not from the domain model.
+
+---
+
+## 54. Re-Export Does NOT Create Local Scope
 
 **Recurrence:** 1 P1-class pre-existing bug (PR #103). `export { X } from './module'` makes `X` available to consumers but NOT the re-exporting file itself. Causes runtime `ReferenceError` that TypeScript cannot detect at compile time.
 
@@ -1867,7 +1976,7 @@ done
 
 ---
 
-## 51. Service Stub Name Collisions on Case-Insensitive Filesystems
+## 55. Service Stub Name Collisions on Case-Insensitive Filesystems
 
 **Recurrence:** 1 P2 (PR #103, 5/7 agent consensus). Creating `notification-service.ts` alongside existing `NotificationService.ts` on macOS APFS (case-insensitive by default) can cause silent import misdirection.
 
@@ -1917,7 +2026,7 @@ done
 
 ---
 
-## 52. Spread Operator in Logger Metadata Is Unsafe
+## 56. Spread Operator in Logger Metadata Is Unsafe
 
 **Recurrence:** 1 P3 (PR #103). `logger.info('msg', { event, ...properties })` lets callers shadow Winston built-in keys (`level`, `message`, `timestamp`, `service`).
 
@@ -1964,7 +2073,7 @@ Any spread in a logger call is suspect. Verify the spread source is not caller-c
 
 ---
 
-## 53. API Root Discovery Must List All Monitoring Endpoints
+## 57. API Root Discovery Must List All Monitoring Endpoints
 
 **Recurrence:** 1 P3 (PR #103, agent-native reviewer). `/api` root listed `/health` but omitted 5 other monitoring endpoints. Agents and automated tools cannot discover what is not listed.
 
@@ -2095,7 +2204,11 @@ CONTEXT TO LOAD:
 | Stale branches, stashes, orphaned PRs pile up  | 47        | common-solutions.md  |
 | Branch not deleted after squash-merge to main  | 48        | common-solutions.md  |
 | New tool added, untracked artifacts in tree    | 49        | common-solutions.md  |
-| Re-export used locally but not in scope        | 50        | common-solutions.md  |
-| Stub file name-collides on case-insensitive FS | 51        | common-solutions.md  |
-| Spread in logger metadata shadows built-ins    | 52        | common-solutions.md  |
-| Monitoring endpoint missing from `/api` root   | 53        | common-solutions.md  |
+| >10 vi.fn() stubs for one service interface    | 50        | common-solutions.md  |
+| `as any` for private field in test helper      | 51        | common-solutions.md  |
+| Timer handles leaked after test run            | 52        | common-solutions.md  |
+| >5 `as any` casts in test factory consumers    | 53        | common-solutions.md  |
+| Re-export used locally but not in scope        | 54        | common-solutions.md  |
+| Stub file name-collides on case-insensitive FS | 55        | common-solutions.md  |
+| Spread in logger metadata shadows built-ins    | 56        | common-solutions.md  |
+| Monitoring endpoint missing from `/api` root   | 57        | common-solutions.md  |

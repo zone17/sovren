@@ -296,10 +296,10 @@ packages/backend/src/services/payout-management-service.ts
 
 | Pattern                                     | Action | Target File         | Entry # |
 | ------------------------------------------- | ------ | ------------------- | ------- |
-| Re-export scope bug                         | NEW    | common-solutions.md | #50     |
-| Stub name collision on case-insensitive FS  | NEW    | common-solutions.md | #51     |
-| Spread in logger metadata                   | NEW    | common-solutions.md | #52     |
-| API root discovery for monitoring endpoints | NEW    | common-solutions.md | #53     |
+| Re-export scope bug                         | NEW    | common-solutions.md | #54     |
+| Stub name collision on case-insensitive FS  | NEW    | common-solutions.md | #55     |
+| Spread in logger metadata                   | NEW    | common-solutions.md | #56     |
+| API root discovery for monitoring endpoints | NEW    | common-solutions.md | #57     |
 
 No existing patterns in critical-patterns.md or common-solutions.md needed refinement.
 

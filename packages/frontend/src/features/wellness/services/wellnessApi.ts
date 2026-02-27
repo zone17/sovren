@@ -36,7 +36,9 @@ export const wellnessApi = {
     return apiClient.get(`${BASE}/risk-score`);
   },
 
-  updateSensitivity(sensitivity: Sensitivity): Promise<ApiResponse<{ sensitivity: Sensitivity; updated_at: string }>> {
+  updateSensitivity(
+    sensitivity: Sensitivity
+  ): Promise<ApiResponse<{ sensitivity: Sensitivity; updated_at: string }>> {
     return apiClient.put(`${BASE}/risk-score/sensitivity`, { sensitivity });
   },
 
