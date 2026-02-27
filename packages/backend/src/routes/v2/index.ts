@@ -8,6 +8,7 @@
 import { Router } from 'express';
 import wellnessRoutes from './wellness.routes';
 import shieldRoutes from './shield.routes';
+import discoveryRoutes from './discovery.routes';
 import platformsRoutes from './platforms.routes';
 import distributeRoutes from './distribute.routes';
 import inboxRoutes from './inbox.routes';
@@ -30,6 +31,7 @@ const router = Router();
  */
 router.use('/wellness', wellnessRoutes);
 router.use('/shield', shieldRoutes);
+router.use('/discovery', discoveryRoutes);
 
 // EPIC-009: Multi-Platform Hub
 router.use('/platforms', platformsRoutes);
@@ -62,6 +64,7 @@ router.get('/', (req, res) => {
       endpoints: {
         wellness: '/api/v2/wellness',
         shield: '/api/v2/shield',
+        discovery: '/api/v2/discovery',
         platforms: '/api/v2/platforms',
         distribute: '/api/v2/distribute',
         inbox: '/api/v2/inbox',
