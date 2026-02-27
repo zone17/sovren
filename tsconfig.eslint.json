@@ -4,9 +4,16 @@
     "packages/*/src/**/*",
     "packages/*/e2e/**/*",
     "packages/*/*.config.ts",
+    "packages/frontend/.storybook/**/*",
+    "packages/frontend/api/**/*",
+    "packages/frontend/lib/**/*",
+    "packages/backend/scripts/**/*",
+    "packages/backend/performance/**/*",
+    "config/**/*",
     "scripts/**/*",
+    "supabase/functions/**/*",
     "test-utils/**/*",
     "vitest.config.ts"
   ],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "docs/nostr/examples"]
 }
