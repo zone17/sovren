@@ -30,6 +30,11 @@ Dockerfile*                                @zone17/tech-leads
 /eslint.config.*                           @zone17/tech-leads
 
 # Security-sensitive — requires tech lead review
-/packages/backend/src/middleware/auth*      @zone17/tech-leads
-/packages/backend/src/services/payment/    @zone17/tech-leads
-/packages/backend/src/utils/ssrf*          @zone17/tech-leads
+/packages/backend/src/middleware/auth*       @zone17/tech-leads
+/packages/backend/src/middleware/auth/**     @zone17/tech-leads
+/packages/backend/src/services/payment/     @zone17/tech-leads
+/packages/backend/src/utils/ssrf*           @zone17/tech-leads
+/packages/backend/src/utils/crypto*         @zone17/tech-leads
+/packages/backend/src/utils/encrypt*        @zone17/tech-leads
+/packages/backend/src/services/wallet/      @zone17/tech-leads
+/packages/backend/src/services/subscription/ @zone17/tech-leads

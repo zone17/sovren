@@ -49,33 +49,6 @@ jobs:
               - 'packages/shared/**'
 
   # ===========================================
-  # Branch Name Validation (PRs only)
-  # ===========================================
-  branch-name:
-    name: Branch Name Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Validate branch name
-        env:
-          BRANCH: ${{ github.head_ref }}
-        run: |
-          # Exempt Dependabot and merge queue branches
-          if [[ "$BRANCH" == dependabot/* ]] || [[ "$BRANCH" == gh-readonly-queue/* ]]; then
-            echo "Exempt branch pattern: $BRANCH"
-            exit 0
-          fi
-
-          PATTERN='^(feat|fix|hotfix|chore|refactor|docs)/(squad-[ab]/)?[A-Za-z]+-[0-9]+-[a-z0-9-]+$'
-          if [[ "$BRANCH" =~ $PATTERN ]]; then
-            echo "Branch name OK: $BRANCH"
-          else
-            echo "::warning::Branch name '$BRANCH' does not match convention: {type}/{squad}/{TICKET-123}-{slug}"
-            echo "See: docs/development/BRANCHING_STRATEGY.md"
-            # Warning only — will become required after adoption period
-          fi
-
-  # ===========================================
   # Stage 1a: Lint (ESLint + Prettier)
   # ===========================================
   lint:
@@ -267,11 +240,18 @@ jobs:
   test-gate:
     name: Test Gate
     runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend, test-integration]
+    needs: [changes, test-backend, test-frontend, test-integration]
     if: always()
     steps:
       - name: Evaluate test results
         run: |
+          # If path detection itself failed, we can't trust skipped results
+          if [[ "${{ needs.changes.result }}" == "failure" || "${{ needs.changes.result }}" == "cancelled" ]]; then
+            echo "Test gate FAILED — path detection (changes job) did not succeed"
+            exit 1
+          fi
+
+          echo "Changes:     ${{ needs.changes.result }}"
           echo "Backend:     ${{ needs.test-backend.result }}"
           echo "Frontend:    ${{ needs.test-frontend.result }}"
           echo "Integration: ${{ needs.test-integration.result }}"

@@ -38,6 +38,8 @@ else
 fi
 
 # Step 3: Create/update the ruleset
+# Note: bypass_actors actor_id values are GitHub RepositoryRole IDs:
+#   1=Read, 2=Triage, 3=Write, 4=Maintain, 5=Admin
 gh api ${METHOD} "${ENDPOINT}" \
   --input - <<'EOF'
 {
@@ -80,7 +82,7 @@ gh api ${METHOD} "${ENDPOINT}" \
     {
       "type": "required_status_checks",
       "parameters": {
-        "strict_required_status_checks_policy": false,
+        "strict_required_status_checks_policy": true,
         "required_status_checks": [
           { "context": "CI / Test Gate" },
           { "context": "CI / Lint" },
