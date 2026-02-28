@@ -252,18 +252,8 @@ jobs:
     if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
 
     services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 54322:5432
+      # Note: postgres is NOT listed here — supabase start brings its own.
+      # Adding a postgres service on port 54322 conflicts with supabase's DB.
       redis:
         image: redis:7-alpine
         options: >-
@@ -285,8 +275,6 @@ jobs:
 
       - name: Start Supabase local
         run: supabase start
-        env:
-          SUPABASE_DB_PORT: 54322
 
       - name: Run integration tests
         run: npm run test:integration --workspace=packages/backend

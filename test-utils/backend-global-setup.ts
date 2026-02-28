@@ -9,7 +9,27 @@ import { resolve } from 'path';
 const PROJECT_ROOT = resolve(__dirname, '..');
 
 export async function setup() {
-  // 1. Verify Supabase is running
+  const isCI = process.env.CI === 'true';
+
+  if (isCI) {
+    // In CI, backend unit tests run with mocks — no live Supabase/Redis needed.
+    // Integration tests have their own job with supabase start.
+    console.log('⏭ CI detected — skipping Supabase/Redis infrastructure checks');
+    process.env.SUPABASE_URL = process.env.SUPABASE_URL || 'http://127.0.0.1:54321';
+    process.env.SUPABASE_ANON_KEY =
+      process.env.SUPABASE_ANON_KEY ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+    process.env.SUPABASE_SERVICE_ROLE_KEY =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
+    process.env.JWT_SECRET =
+      process.env.JWT_SECRET || 'super-secret-jwt-token-with-at-least-32-characters-long';
+    process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6380';
+    console.log('✓ Backend test environment configured for CI');
+    return;
+  }
+
+  // 1. Verify Supabase is running (local dev only)
   try {
     const status = execSync('supabase status -o env 2>/dev/null', {
       cwd: PROJECT_ROOT,
@@ -26,9 +46,7 @@ export async function setup() {
         timeout: 5000,
       });
     } catch {
-      console.error(
-        '\n❌ Supabase is not running. Start it with: supabase start\n'
-      );
+      console.error('\n❌ Supabase is not running. Start it with: supabase start\n');
       process.exit(1);
     }
   }
@@ -45,7 +63,7 @@ export async function setup() {
   } catch {
     console.error(
       '\n❌ Redis test container not running. Start it with:\n' +
-      '   docker run -d --name redis-test -p 6380:6379 redis:7-alpine\n'
+        '   docker run -d --name redis-test -p 6380:6379 redis:7-alpine\n'
     );
     process.exit(1);
   }
