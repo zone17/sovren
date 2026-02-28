@@ -627,7 +627,7 @@ export class CurrencyService implements ICurrencyService {
 
   parse(formatted: string, currency: Currency): number {
     // Remove currency symbols and codes
-    let cleaned = formatted
+    const cleaned = formatted
       .replace(CURRENCY_SYMBOLS[currency], '')
       .replace(currency, '')
       .replace(/,/g, '')

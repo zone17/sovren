@@ -36,39 +36,22 @@
  * @since 2024-01-15
  */
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { z } from 'zod';
 import { 
   Users, 
   Edit3, 
   MessageCircle, 
-  Eye, 
-  Mouse, 
-  Lock, 
-  Unlock, 
-  UserCheck, 
-  UserX, 
   Activity,
-  GitBranch,
-  Merge,
-  AlertTriangle,
   Check,
-  Clock,
-  Settings,
-  Share2,
-  History,
-  Undo,
-  Redo
+  Share2
 } from 'lucide-react';
-import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { Switch } from '../ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 

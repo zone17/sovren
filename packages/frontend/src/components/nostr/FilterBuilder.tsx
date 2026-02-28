@@ -12,7 +12,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   NostrFilter,
-  NostrFilterBuilder,
   CommonFilters,
   validateFilter,
   optimizeFilter,
@@ -266,7 +265,7 @@ export const FilterBuilder: React.FC<FilterBuilderProps> = ({
     if (!trimmed) return;
 
     // Support both hex and npub formats
-    let pubkeyHex = trimmed;
+    const pubkeyHex = trimmed;
     if (isValidNpub(trimmed)) {
       // In a real implementation, decode npub to hex
       // For now, just validate format

@@ -42,32 +42,21 @@ import {
   Send, 
   Image, 
   File, 
-  Mic, 
-  Video, 
   Shield, 
   Check, 
   CheckCheck, 
   Clock, 
   Search,
-  Filter,
   Download,
   Eye,
-  Lock,
-  Trash2,
-  Edit3,
-  Forward,
-  Reply,
-  MoreHorizontal
+  Lock
 } from 'lucide-react';
-import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { Switch } from '../ui/switch';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 
 // 📊 **TYPE DEFINITIONS & VALIDATION**

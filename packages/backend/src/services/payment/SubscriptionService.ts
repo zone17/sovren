@@ -31,7 +31,6 @@ import type {
   PauseSubscriptionOptions,
   SubscriptionWebhookEvent,
   SubscriptionUsage,
-  UsageMetric,
   InvoiceLineItem
 } from '../../types/subscription';
 import {
@@ -45,7 +44,6 @@ import {
 import {
   Currency,
 } from '../../types/currency';
-import { DomainEventType, DomainEventBuilder } from '../../interfaces/shared/IEventBus';
 import { randomUUID } from 'crypto';
 import { performance } from 'perf_hooks';
 

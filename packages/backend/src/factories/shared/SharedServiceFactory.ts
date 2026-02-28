@@ -5,7 +5,7 @@
  */
 
 import { SafeServiceFactory } from '../ServiceFactory';
-import { IServiceContainer, ServiceToken } from '../../interfaces/shared/IServiceRegistry';
+import { ServiceToken } from '../../interfaces/shared/IServiceRegistry';
 import { IEventBus } from '../../interfaces/shared/IEventBus';
 
 // Service Tokens

@@ -62,8 +62,6 @@ import {
   decode as nip19Decode,
   BECH32_REGEX,
 } from 'nostr-tools/nip19';
-import { decode as bech32Decode } from '@scure/base';
-import { utf8 } from '@scure/base';
 import { hexToBytes, bytesToHex } from 'nostr-tools/utils';
 import {
   type DecodedNIP19,
@@ -72,7 +70,6 @@ import {
   type DecodedProfile,
   type DecodedEvent,
   type DecodedAddress,
-  NIP19EntityType,
 } from '@shared/types/nostr';
 
 /**

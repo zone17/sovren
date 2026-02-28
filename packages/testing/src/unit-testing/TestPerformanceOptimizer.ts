@@ -364,7 +364,7 @@ export class TestPerformanceOptimizer {
       return null;
     }
 
-    let optimization: {
+    const optimization: {
       file: string;
       issue: string;
       optimizationType: string;

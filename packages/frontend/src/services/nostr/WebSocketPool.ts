@@ -34,7 +34,6 @@ import { EventEmitter } from 'events';
 import type {
   ConnectionPoolConfig,
   WebSocketConnection,
-  WebSocketOptions,
   ConnectionState,
   PoolStats,
   ConnectionLoad,

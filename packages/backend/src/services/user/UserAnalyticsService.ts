@@ -56,7 +56,6 @@ import {
   FunnelStep,
   DropOffPoint,
   LTVDistribution,
-  ChurnPrediction as ChurnPredictionType,
   ChurnRiskFactor,
   ChurnRiskSegment,
   RetentionOpportunity,

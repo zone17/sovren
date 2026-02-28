@@ -15,7 +15,6 @@
 import { performance } from 'perf_hooks';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient } from '@tanstack/react-query';
-import { renderHook, act } from '@testing-library/react';
 import * as fs from 'fs';
 import * as path from 'path';
 

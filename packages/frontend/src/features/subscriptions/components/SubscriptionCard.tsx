@@ -22,7 +22,6 @@ import {
   CheckCircle,
   Clock,
   Crown,
-  DollarSign,
   Shield,
   Star,
   Users,

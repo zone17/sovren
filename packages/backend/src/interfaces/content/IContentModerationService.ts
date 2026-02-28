@@ -21,7 +21,6 @@ import type {
 } from '../../types/moderation';
 import {
   ModerationAction,
-  AppealStatus,
 } from '../../types/moderation';
 
 /**

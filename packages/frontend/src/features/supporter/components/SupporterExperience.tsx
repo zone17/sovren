@@ -19,10 +19,7 @@ import {
   Category, 
   SearchQuery, 
   SearchResults, 
-  TrendingContent,
-  validatePersonalizedFeed,
-  validateSearchResults,
-  validateTrendingContent
+  TrendingContent
 } from '../types/supporterExperience';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useSupporterExperienceService } from '../services/supporterExperienceService';

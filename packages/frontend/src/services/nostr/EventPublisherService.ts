@@ -45,12 +45,10 @@ import type {
   PublishResult as BasePublishResult,
   BatchPublishResult,
   EventValidationResult,
-  NostrEventKind,
   NostrEventSchema,
 } from '@shared/types/nostr';
 import { KeyManagementService } from './KeyManagementService';
 import { RelayPoolManager } from './RelayPoolManager';
-import { NIP26Service } from './NIP26Service';
 import type { PublishResult } from './types';
 import { RateLimiter } from './RateLimiter';
 import { RateLimitOperation, RequestPriority } from './types/rate-limit';

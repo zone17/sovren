@@ -8,7 +8,7 @@ import type { RevenueSplitEntry } from '../types/community';
 function allocateSats(totalSats: number, splitsBps: number[]): number[] {
   const exact = splitsBps.map((bps) => (totalSats * bps) / 10000);
   const floored = exact.map(Math.floor);
-  let remainder = totalSats - floored.reduce((a, b) => a + b, 0);
+  const remainder = totalSats - floored.reduce((a, b) => a + b, 0);
   const fractions = exact.map((e, i) => ({ i, frac: e - floored[i] }));
   fractions.sort((a, b) => b.frac - a.frac);
   for (let j = 0; j < remainder; j++) {

@@ -45,7 +45,6 @@ import type {
   PaymentTransaction
 } from '../../types/payment';
 import {
-  PaymentStatus,
   Currency,
 } from '../../types/payment';
 import { DomainEventType, DomainEventBuilder } from '../../interfaces/shared/IEventBus';

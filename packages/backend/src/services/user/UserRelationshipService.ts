@@ -9,9 +9,8 @@ import type { IUserRelationshipService } from '../../interfaces/user/IUserRelati
 import type {
   IEventBus
 } from '../../interfaces/shared/IEventBus';
-import {
-  DomainEventType,
-} from '../../interfaces/shared/IEventBus';
+
+
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type {
@@ -48,7 +47,7 @@ import {
 } from '../../types/user-relationship';
 
 import { DomainEventBuilder, DomainEventType as EventType } from '../../interfaces/shared/IEventBus';
-import crypto, { createHash } from 'crypto';
+import crypto from 'crypto';
 
 /**
  * In-memory relationship graph for efficient bidirectional queries

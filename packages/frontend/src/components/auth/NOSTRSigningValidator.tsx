@@ -302,7 +302,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
         ).length;
 
         // Detection heuristics
-        let compromiseReasons: string[] = [];
+        const compromiseReasons: string[] = [];
         let confidence = 0;
 
         // Too many recent failures

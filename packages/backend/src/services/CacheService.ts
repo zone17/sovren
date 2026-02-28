@@ -10,7 +10,6 @@ import type { IEventBus } from '../interfaces/shared/IEventBus';
 import type { ILogger } from '../interfaces/shared/ILogger';
 import type {
   CacheOptions,
-  CacheEntry,
   CacheStats,
   CacheConfiguration,
   CacheInvalidationPattern,
@@ -18,7 +17,6 @@ import type {
 } from '../types/cache';
 
 import * as Redis from 'ioredis';
-import { createHash } from 'crypto';
 import { performance } from 'perf_hooks';
 
 /**

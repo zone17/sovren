@@ -394,7 +394,7 @@ router.post(
 
       // Process webhook event based on type
       let targetState: PaymentState | null = null;
-      let metadata: Record<string, unknown> = {
+      const metadata: Record<string, unknown> = {
         webhookEvent: event,
         timestamp,
         webhookId,

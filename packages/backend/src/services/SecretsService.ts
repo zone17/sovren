@@ -21,7 +21,7 @@ import {
   InvalidRequestException,
   InvalidParameterException,
 } from '@aws-sdk/client-secrets-manager';
-import { getSecretsConfig, SecretsConfig, SecretMapping } from '../config/secrets.config';
+import { getSecretsConfig, SecretsConfig } from '../config/secrets.config';
 
 /**
  * Cache entry for a secret value

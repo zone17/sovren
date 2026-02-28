@@ -11,7 +11,6 @@ import {
   SubscriptionChange,
   ProrationResult,
   Payment,
-  InvoiceStatus,
   InvoiceMetrics
 } from '../../interfaces/payment';
 import { ICacheService } from '../../interfaces/ICacheService';

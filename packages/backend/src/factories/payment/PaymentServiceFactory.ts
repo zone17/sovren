@@ -5,8 +5,7 @@
  */
 
 import { SafeServiceFactory } from '../ServiceFactory';
-import { IServiceContainer, ServiceToken } from '../../interfaces/shared/IServiceRegistry';
-import { IPaymentService } from '../../interfaces/payment/IPaymentService';
+import { ServiceToken } from '../../interfaces/shared/IServiceRegistry';
 import { IEventBus } from '../../interfaces/shared/IEventBus';
 import { DomainEventBuilder, DomainEventType } from '../../interfaces/shared/IEventBus';
 

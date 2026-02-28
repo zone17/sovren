@@ -36,15 +36,13 @@
  * @since 2024-01-15
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { z } from 'zod';
-import { Activity, AlertTriangle, CheckCircle, Clock, Filter, RefreshCw, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle, Clock, RefreshCw, Zap } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Switch } from '../ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 
 // 📊 **TYPE DEFINITIONS & VALIDATION**

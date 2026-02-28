@@ -25,7 +25,6 @@ import type {
 } from '../../types/subscription';
 import {
   SubscriptionEventType,
-  SubscriptionStatus,
   BillingInterval,
   SubscriptionTier,
 } from '../../types/subscription';

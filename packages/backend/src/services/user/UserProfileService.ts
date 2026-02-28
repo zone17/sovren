@@ -24,8 +24,7 @@ import type {
   ProfileValidationResult,
   SocialMediaLink,
   ProfileVisibility,
-  AvatarMetadata,
-  ProfileAnalytics
+  AvatarMetadata
 } from '../../types/user-profile';
 import {
   PROFILE_CONSTRAINTS,
@@ -34,7 +33,7 @@ import {
   PROFILE_EVENT_TYPES,
   PROFILE_AUDIT_ACTIONS
 } from '../../types/user-profile';
-import crypto, { createHash } from 'crypto';
+import crypto from 'crypto';
 import sharp from 'sharp';
 
 /**
@@ -1143,7 +1142,7 @@ export class UserProfileService implements IUserProfileService {
     lastUpdate?: Date;
   }> {
     let cacheConnected = false;
-    let dbConnected = true; // Using in-memory storage for now
+    const dbConnected = true; // Using in-memory storage for now
 
     try {
       await this.cache.getStats();

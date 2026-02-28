@@ -12,7 +12,6 @@
  * - Alert definitions
  */
 
-import type { NostrEvent } from '@shared/types/nostr';
 import type { RelayStatus, RelayHealth } from '../types';
 
 // ============================================

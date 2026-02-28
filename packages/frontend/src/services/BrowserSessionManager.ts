@@ -19,7 +19,6 @@ import type {
   DeviceInfo,
   SessionActivity,
   SessionValidation,
-  SessionQueryOptions,
   SessionStats,
 } from '@shared/services/UnifiedSessionManager';
 

@@ -6,11 +6,8 @@
  */
 
 import type { Event as NostrEvent, Filter } from 'nostr-tools';
-import type {
-  RelayState,
-  RelayHealthStatus,
-  NostrRelay as BaseNostrRelay,
-} from '@shared/types/nostr';
+
+
 
 /**
  * Relay connection status (extends consolidated RelayState)

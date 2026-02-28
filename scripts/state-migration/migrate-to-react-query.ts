@@ -18,7 +18,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from '@typescript-eslint/parser';
-import { ESLintUtils } from '@typescript-eslint/utils';
 import chalk from 'chalk';
 import ora from 'ora';
 import { glob } from 'glob';

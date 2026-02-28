@@ -4,7 +4,6 @@ import {
   Session,
   SessionActivity,
   SessionConfig,
-  SessionMetadata,
 } from '../../../shared/src/services/UnifiedSessionManager';
 import { SupabaseDatabase } from '../config/database';
 

@@ -13,7 +13,6 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import {
   PaymentState,
   PaymentEvent,
-  PaymentTransition,
   Payment,
   ALLOWED_TRANSITIONS,
   isTransitionAllowed,

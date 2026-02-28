@@ -17,8 +17,7 @@ import { asyncHandler } from '../middleware/error-handler-middleware';
 import { getClientIP } from '../utils/client-ip';
 import { z } from 'zod';
 import { DatabaseSessionManager } from '../services/DatabaseSessionManager';
-import { SessionMetadata, DeviceInfo } from '@shared/services/UnifiedSessionManager';
-import { randomBytes } from 'crypto';
+import { SessionMetadata } from '@shared/services/UnifiedSessionManager';
 
 const router = express.Router();
 

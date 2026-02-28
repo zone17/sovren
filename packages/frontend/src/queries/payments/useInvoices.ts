@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Invoice, PaymentFilters, InvoicesResponse } from '@/types/payment-query';
+import { PaymentFilters, InvoicesResponse } from '@/types/payment-query';
 
 /**
  * Fetch invoices with pagination and filters

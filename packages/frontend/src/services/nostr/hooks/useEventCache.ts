@@ -21,7 +21,7 @@ import {
   type UseMutationOptions,
 } from '@tanstack/react-query';
 import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
-import { getEventCache, type EventCacheConfig } from '../EventCacheService';
+import { getEventCache } from '../EventCacheService';
 
 // ========================================
 // Query Key Factories

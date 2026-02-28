@@ -45,7 +45,7 @@ import {
   buildContentRecommendationsTemplate,
 } from '@shared/types/nostr';
 
-import type { NostrEvent, PublishResult } from '@shared/types/nostr';
+import type { NostrEvent } from '@shared/types/nostr';
 import { EventPublisherService } from './EventPublisherService';
 import { KeyManagementService } from './KeyManagementService';
 import { RelayPoolManager } from './RelayPoolManager';

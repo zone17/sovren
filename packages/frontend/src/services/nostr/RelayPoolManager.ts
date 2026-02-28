@@ -36,16 +36,11 @@ import {
   RelayStatus,
   RelayHealth,
   RelayHealthInfo,
-  RelayMetrics,
   RelayTag,
   PublishResult,
-  SubscriptionOptions,
   ActiveSubscription,
   ConnectionOptions,
   MetricsUpdate,
-  RelayPoolEvents,
-  DiscoveredRelay,
-  RelayDiscoveryOptions,
 } from './types';
 
 /**

@@ -15,8 +15,6 @@ import { KeyManagementService } from './KeyManagementService';
 import { BackupEncryptionService } from './BackupEncryptionService';
 import type {
   BackupContentType,
-  BackupFormat,
-  BackupCompressionType,
   BackupFile,
   BackupData,
   KeysBackupData,
@@ -653,7 +651,7 @@ export class NOSTRBackupService {
   ): Promise<RecoveryResult['verificationResult']> {
     let keysValid = true;
     let signaturesValid = true;
-    let configValid = true;
+    const configValid = true;
 
     // Verify keys were restored
     if (backupData.keys) {

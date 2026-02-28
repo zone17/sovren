@@ -7,7 +7,7 @@
 import { useInfiniteQuery, UseInfiniteQueryOptions } from '@tanstack/react-query';
 import { useAppSelector } from '@/store';
 import { selectCurrentPage, selectPageSize, selectSorting, selectFilters } from '@/store/slices/paginationSlice';
-import { Content, ContentResponse } from '@/types/content-query';
+import { ContentResponse } from '@/types/content-query';
 
 /**
  * Fetch content from server

@@ -6,7 +6,6 @@
  */
 
 import type { Currency } from './currency';
-import type { PaymentTransaction } from './payment';
 
 /**
  * Subscription status state machine

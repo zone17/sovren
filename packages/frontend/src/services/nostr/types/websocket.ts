@@ -13,7 +13,6 @@
  * - Performance metrics
  */
 
-import type { Filter, Event as NostrEvent } from 'nostr-tools';
 
 // ============================================
 // CONNECTION STATES

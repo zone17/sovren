@@ -14,7 +14,6 @@ import type {
   CurrencyFormatOptions,
   FormattedCurrency,
   CurrencyStatistics,
-  SatoshiConversion,
   RateStalenessResult,
   ExchangeRateUpdateEvent,
   CurrencyPair

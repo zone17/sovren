@@ -5,7 +5,6 @@
 
 import type { Meta, StoryObj } from '@storybook/react';
 import { NotificationCenter } from './NotificationCenter';
-import { NotificationType } from '../types';
 
 const meta: Meta<typeof NotificationCenter> = {
   title: 'Features/NOSTR/Notifications/NotificationCenter',

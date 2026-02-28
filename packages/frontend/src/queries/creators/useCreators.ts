@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Creator, CreatorsResponse, CreatorFilters } from '@/types/creator';
+import { CreatorsResponse, CreatorFilters } from '@/types/creator';
 
 /**
  * API endpoint for fetching creators

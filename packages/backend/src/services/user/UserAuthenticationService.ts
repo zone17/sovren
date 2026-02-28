@@ -6,8 +6,7 @@ import {
   AuthSession,
   MFAType,
   MFASetup,
-  PasswordValidation,
-  RefreshTokenResult
+  PasswordValidation
 } from '../../interfaces/user';
 import { ICacheService } from '../../interfaces/ICacheService';
 import { IEventBusService } from '../../interfaces/IEventBusService';

@@ -20,7 +20,6 @@ import {
     NostrFilter,
     NostrKeyPair,
     NostrMobileConfig,
-    NostrRelay,
     NostrRelayState,
     NostrSchemas,
     NostrServiceConfig,

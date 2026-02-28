@@ -30,8 +30,6 @@ import type {
 import {
   NIP05IdentifierSchema,
   NIP05WellKnownResponseSchema,
-  NIP05Error,
-  NIP05VerificationError,
   NIP05CacheError,
   DEFAULT_NIP05_CACHE_CONFIG,
 } from '@shared/types/nip05';

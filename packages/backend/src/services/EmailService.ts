@@ -15,7 +15,6 @@ import type {
   EmailTemplate,
   EmailAttachment,
   EmailDeliveryStatus,
-  EmailProvider,
   EmailBounce,
   EmailMetrics,
   EmailConfiguration,
@@ -24,10 +23,8 @@ import type {
   BulkEmailResult
 } from '../types/email';
 
-import { EventEmitter } from 'events';
 import * as nodemailer from 'nodemailer';
 import * as handlebars from 'handlebars';
-import * as path from 'path';
 import * as fs from 'fs/promises';
 import { createHash } from 'crypto';
 

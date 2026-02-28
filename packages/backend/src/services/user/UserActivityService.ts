@@ -19,7 +19,7 @@ import { injectable, inject } from 'inversify';
 import { TYPES } from '../../container/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '../../utils/logger';
-import { ServiceError, NotFoundError, ValidationError } from '../../utils/errors';
+import { ServiceError, NotFoundError } from '../../utils/errors';
 import { IUserActivityService } from '../../interfaces/user/IUserActivityService';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';

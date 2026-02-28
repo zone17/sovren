@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Subscription, SubscriptionFilters, SubscriptionsResponse } from '@/types/payment-query';
+import { SubscriptionFilters, SubscriptionsResponse } from '@/types/payment-query';
 import { paymentKeys } from './useInvoices';
 
 /**

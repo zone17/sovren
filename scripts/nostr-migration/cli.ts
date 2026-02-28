@@ -35,7 +35,6 @@
 import * as readline from 'readline/promises';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { createHash } from 'crypto';
 
 // Import migration scripts
 // Note: These would be imported from their respective files

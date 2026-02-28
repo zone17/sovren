@@ -8,7 +8,7 @@ import { constants } from 'zlib';
 
 // Elite Build Performance Monitoring
 const buildStartTime = Date.now();
-let buildMetrics = {
+const buildMetrics = {
   startTime: buildStartTime,
   endTime: 0,
   duration: 0,

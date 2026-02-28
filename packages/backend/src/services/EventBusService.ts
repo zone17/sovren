@@ -12,8 +12,7 @@ import {
   EventFilter,
   EventSubscription,
   EventReplayOptions,
-  DomainEventType,
-  ValidationResult
+  DomainEventType
 } from '../interfaces/shared/IEventBus';
 
 /**

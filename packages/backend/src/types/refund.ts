@@ -5,7 +5,7 @@
  * Part of Epic 005 - Backend Service Layer Refactoring
  */
 
-import type { PaymentStatus, PaymentMethod, Currency } from './payment';
+import type { PaymentMethod, Currency } from './payment';
 
 /**
  * Refund status state machine

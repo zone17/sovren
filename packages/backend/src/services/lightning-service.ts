@@ -253,7 +253,7 @@ export class LightningService extends EventEmitter {
    * Concurrent cache misses for the same key share a single persistence read.
    */
   private async getInvoiceWithFallback(id: string): Promise<LightningInvoice | null> {
-    let invoice = this.invoiceCache.get(id);
+    const invoice = this.invoiceCache.get(id);
     if (invoice) return invoice;
 
     const pending = this.pendingLookups.get(id);
@@ -379,7 +379,7 @@ export class LightningService extends EventEmitter {
       this.requireInitialization();
 
       // Fix #113 + Fix #139: Cache fallback with request coalescing
-      let invoice = await this.getInvoiceWithFallback(invoiceId);
+      const invoice = await this.getInvoiceWithFallback(invoiceId);
       if (!invoice) {
         return {
           success: false,

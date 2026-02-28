@@ -54,7 +54,6 @@ import type {
   CloseReason,
   ConnectionManagerMetrics,
   PerformanceBenchmarks,
-  WebSocketConnectionEvents,
   DEFAULT_MANAGER_CONFIG,
   DEFAULT_WEBSOCKET_OPTIONS,
   DEFAULT_RECONNECTION_CONFIG,

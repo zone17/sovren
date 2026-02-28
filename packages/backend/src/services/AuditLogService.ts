@@ -16,15 +16,10 @@ import type {
   AuditLogMetrics,
   AuditLogExport,
   AuditLogRetention,
-  AuditAction,
-  AuditActor,
-  AuditResource,
   AuditContext
 } from '../types/audit';
 
 import { createHash, randomUUID } from 'crypto';
-import * as fs from 'fs/promises';
-import * as path from 'path';
 import { performance } from 'perf_hooks';
 
 /**
