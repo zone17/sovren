@@ -2,6 +2,7 @@
  * Global setup for backend test suite.
  * Verifies Supabase and Redis are running before tests start.
  */
+/* eslint-disable no-console */
 import { execSync } from 'child_process';
 import { resolve } from 'path';
 
