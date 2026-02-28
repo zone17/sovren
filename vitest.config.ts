@@ -92,6 +92,8 @@ export default defineConfig({
             '**/fixtures/**',
             '**/helpers/**',
             '**/mocks/**',
+            // Integration tests run via vitest.integration.config.ts (testcontainers)
+            '**/integration/**',
             // Permanent exclusions — need dedicated CI jobs, not the unit test suite
             '**/performance/api-performance.test.ts',
             '**/performance/database-performance.test.ts',
