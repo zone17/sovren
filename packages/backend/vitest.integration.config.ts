@@ -31,11 +31,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage/integration',
-      include: [
-        'src/services/**/*.ts',
-        'src/routes/**/*.ts',
-        'src/middleware/**/*.ts',
-      ],
+      include: ['src/services/**/*.ts', 'src/routes/**/*.ts', 'src/middleware/**/*.ts'],
       exclude: [
         '**/__tests__/**',
         '**/__mocks__/**',
@@ -54,8 +50,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@sovren/shared': path.resolve(__dirname, '../shared/src'),
+      '@/': path.resolve(__dirname, './src') + '/',
+      '@shared/': path.resolve(__dirname, '../shared/src') + '/',
+      '@sovren/shared/': path.resolve(__dirname, '../shared/src') + '/',
+      '@backend/': path.resolve(__dirname, './src') + '/',
     },
   },
 });
