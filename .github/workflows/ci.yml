@@ -242,58 +242,27 @@ jobs:
           fail_ci_if_error: false
 
   # ===========================================
-  # Stage 3c: Integration Tests (conditional on backend changes)
+  # Stage 3c: Integration Tests (testcontainers — advisory during stabilization)
   # ===========================================
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [changes, lint, typecheck, security]
-    # Skipped: integration tests require live Supabase + Redis and are not yet CI-stable.
-    # Re-enable when integration test suite is fixed (tracked in docs/backlog/excluded-tests.md).
-    if: false
-
-    services:
-      # Note: postgres is NOT listed here — supabase start brings its own.
-      # Adding a postgres service on port 54322 conflicts with supabase's DB.
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6380:6379
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    # Advisory-only during stabilization — CI stays green even if these fail.
+    # Remove continue-on-error once integration test suite is fully stable.
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Start Supabase local
-        run: supabase start
-
-      - name: Run integration tests
-        run: npm run test:integration --workspace=packages/backend
+      - name: Run integration tests (testcontainers)
+        run: npm run test:integration
         env:
           NODE_ENV: test
-          SUPABASE_URL: http://localhost:54321
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU' }}
-          REDIS_TEST_HOST: localhost
-          REDIS_TEST_PORT: 6380
-
-      - name: Upload integration coverage
-        if: always()
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./packages/backend/coverage/integration/lcov.info
-          flags: integration
-          fail_ci_if_error: false
+          TESTCONTAINERS_RYUK_DISABLED: 'true'
 
   # ===========================================
   # Stage 3d: Test Gate (aggregator for required status check)
@@ -315,20 +284,26 @@ jobs:
           echo "Changes:     ${{ needs.changes.result }}"
           echo "Backend:     ${{ needs.test-backend.result }}"
           echo "Frontend:    ${{ needs.test-frontend.result }}"
-          echo "Integration: ${{ needs.test-integration.result }}"
+          echo "Integration: ${{ needs.test-integration.result }} (advisory — continue-on-error)"
 
-          results=(
+          # Blocking gates: backend + frontend must pass (or be skipped)
+          blocking=(
             "${{ needs.test-backend.result }}"
             "${{ needs.test-frontend.result }}"
-            "${{ needs.test-integration.result }}"
           )
-          for result in "${results[@]}"; do
+          for result in "${blocking[@]}"; do
             if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
-              echo "Test gate FAILED — at least one test job failed or was cancelled"
+              echo "Test gate FAILED — a blocking test job failed or was cancelled"
               exit 1
             fi
           done
-          echo "Test gate PASSED — all test jobs succeeded or were skipped"
+
+          # Advisory: integration tests (continue-on-error) — log but don't block
+          if [[ "${{ needs.test-integration.result }}" == "failure" ]]; then
+            echo "::warning::Integration tests failed (advisory — not blocking merge)"
+          fi
+
+          echo "Test gate PASSED — all blocking test jobs succeeded or were skipped"
 
   # ===========================================
   # Stage 4: Build
