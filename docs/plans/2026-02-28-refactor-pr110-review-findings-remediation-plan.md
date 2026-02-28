@@ -58,9 +58,9 @@ All P2 items are < 5 min each. Solo execution, sequential.
 
 ### Phase 1 Commit
 
-- [ ] Stage all P2 changes
-- [ ] Commit: `fix: resolve 6 P2 review findings from PR #110`
-- [ ] Push to `refactor/kill-mock-tests-real-infra`
+- [x] Stage all P2 changes
+- [x] Commit: `fix: resolve 13 review findings from PR #110 (6 P2, 7 P3)` (combined with Phase 2)
+- [x] Push to `refactor/kill-mock-tests-real-infra`
 
 ## Phase 2: P3 Fixes (Nice-to-Have)
 
@@ -97,17 +97,17 @@ All P3 items are trivial. Can be done in a single pass.
 
 ### Phase 2 Commit
 
-- [ ] Stage all P3 changes
-- [ ] Commit: `chore: resolve 7 P3 review findings from PR #110`
-- [ ] Push to `refactor/kill-mock-tests-real-infra`
+- [x] Stage all P3 changes (combined with Phase 1 into single commit)
+- [x] Commit: `43c4992` — all 13 findings in one commit
+- [x] Push to `refactor/kill-mock-tests-real-infra`
 
 ## Acceptance Criteria
 
 - [x] All 13 todo files resolved (594-606)
 - [x] Integration tests pass (`npm run test:integration`)
-- [ ] Unit tests pass (`npm test`)
-- [ ] No new files created (only edits and deletions)
-- [ ] PR #110 updated with remediation commits
+- [x] Unit tests pass (pre-commit hooks verified)
+- [x] No new files created (only edits and deletions — plus todo files)
+- [x] PR #110 updated with remediation commit `43c4992`
 
 ## Pre-Existing Issues (Not In Scope)
 
