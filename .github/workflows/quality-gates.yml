@@ -1,8 +1,13 @@
 name: Quality Gates
 
+# DEPRECATED: Functionality consolidated into ci.yml
+# Kept for emergency manual use only.
 on:
   workflow_dispatch:
-  workflow_call:
+    inputs:
+      confirm:
+        description: 'DEPRECATED - Use ci.yml instead. Type CONFIRM to run.'
+        required: true
 
 permissions: read-all
 

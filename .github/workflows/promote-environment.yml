@@ -1,8 +1,13 @@
 name: Promote Environment
 
+# DEPRECATED: Functionality consolidated into ci.yml
+# Kept for emergency manual use only.
 on:
   workflow_dispatch:
     inputs:
+      confirm:
+        description: 'DEPRECATED - Use ci.yml instead. Type CONFIRM to run.'
+        required: true
       from:
         description: 'Source environment'
         required: true

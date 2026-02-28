@@ -1,0 +1,7 @@
+# Trivy ignore file for known unfixable transitive dependency CVEs
+# Format: one CVE ID per line
+# Review periodically and remove entries when fixes become available.
+
+# fast-xml-parser stack overflow via @aws-sdk/xml-builder (low severity, transitive)
+# Tracked upstream: https://github.com/advisories/GHSA-fj3w-jwp8-x2g3
+# Fix requires @aws-sdk major bump — deferred per PR #99 decision.
