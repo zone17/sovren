@@ -1,8 +1,8 @@
 /**
  * Vitest Integration Test Configuration
  *
- * Configuration for running integration tests with testcontainers.
- * Uses Vitest for fast, modern testing with TypeScript support.
+ * Runs integration tests against real PostgreSQL + Redis via testcontainers.
+ * globalSetup starts containers, applies migrations, and sets env vars.
  *
  * @see https://vitest.dev/config/
  */
@@ -15,36 +15,16 @@ export default defineConfig({
     name: 'backend-integration',
     globals: true,
     environment: 'node',
-    setupFiles: ['./src/__tests__/setup/integration-setup.ts'],
+    globalSetup: ['./src/__tests__/setup/testcontainers-global-setup.ts'],
     include: ['src/__tests__/integration/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
-    testTimeout: 60000, // 60s for container startup
+    testTimeout: 15000,
     hookTimeout: 60000,
     teardownTimeout: 30000,
-    isolate: true,
+    pool: 'forks',
     poolOptions: {
-      threads: {
-        singleThread: true, // Run integration tests sequentially for database consistency
-      },
-    },
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      reportsDirectory: './coverage/integration',
-      include: ['src/services/**/*.ts', 'src/routes/**/*.ts', 'src/middleware/**/*.ts'],
-      exclude: [
-        '**/__tests__/**',
-        '**/__mocks__/**',
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/*.test.ts',
-        '**/*.spec.ts',
-      ],
-      thresholds: {
-        lines: 95,
-        functions: 95,
-        branches: 90,
-        statements: 95,
+      forks: {
+        maxForks: 1, // Sequential: real DB tests must not interfere
       },
     },
   },

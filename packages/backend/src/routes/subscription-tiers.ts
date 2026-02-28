@@ -16,12 +16,18 @@ import { LightningPaymentService } from '../services/lightning-payment-service';
 
 const router = express.Router();
 
-// Initialize services
-const lightningService = new LightningPaymentService();
-lightningService.initialize().catch(err => {
-  console.error('Failed to initialize LightningPaymentService:', err);
-});
-const subscriptionService = new SubscriptionManagementService(lightningService);
+// Lazy singleton — deferred to first request to avoid side effects at module load
+let _subscriptionService: SubscriptionManagementService | null = null;
+function getSubscriptionService(): SubscriptionManagementService {
+  if (!_subscriptionService) {
+    const lightningService = new LightningPaymentService();
+    lightningService.initialize().catch(err => {
+      console.error('Failed to initialize LightningPaymentService:', err);
+    });
+    _subscriptionService = new SubscriptionManagementService(lightningService);
+  }
+  return _subscriptionService;
+}
 
 // Validation schemas
 const CreateTierSchema = z.object({
@@ -57,7 +63,7 @@ router.post(
         });
       }
 
-      const tier = await subscriptionService.createSubscriptionTier({
+      const tier = await getSubscriptionService().createSubscriptionTier({
         creator_id: req.user.id || req.user.nostr_pubkey,
         ...req.body,
       });
@@ -102,7 +108,7 @@ router.get('/tiers', authenticate, async (req, res) => {
       });
     }
 
-    const tiers = await subscriptionService.getCreatorTiers(creatorId);
+    const tiers = await getSubscriptionService().getCreatorTiers(creatorId);
 
     res.json({
       success: true,
@@ -129,7 +135,7 @@ router.get('/tiers/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const tier = await subscriptionService.getSubscriptionTier(id);
+    const tier = await getSubscriptionService().getSubscriptionTier(id);
 
     if (!tier) {
       return res.status(404).json({
@@ -166,7 +172,7 @@ router.put(
       const { id } = req.params;
 
       // Verify user is the creator of this tier
-      const tier = await subscriptionService.getSubscriptionTier(id);
+      const tier = await getSubscriptionService().getSubscriptionTier(id);
 
       if (!tier) {
         return res.status(404).json({
@@ -185,7 +191,7 @@ router.put(
         });
       }
 
-      const updatedTier = await subscriptionService.updateSubscriptionTier(id, req.body);
+      const updatedTier = await getSubscriptionService().updateSubscriptionTier(id, req.body);
 
       res.json({
         success: true,
@@ -211,7 +217,7 @@ router.delete('/tiers/:id', authenticate, async (req, res) => {
     const { id } = req.params;
 
     // Verify user is the creator of this tier
-    const tier = await subscriptionService.getSubscriptionTier(id);
+    const tier = await getSubscriptionService().getSubscriptionTier(id);
 
     if (!tier) {
       return res.status(404).json({
@@ -231,7 +237,7 @@ router.delete('/tiers/:id', authenticate, async (req, res) => {
     }
 
     // Check if there are active subscriptions
-    const activeSubscriptions = await subscriptionService.getTierSubscriptions(id);
+    const activeSubscriptions = await getSubscriptionService().getTierSubscriptions(id);
 
     if (activeSubscriptions.length > 0) {
       return res.status(400).json({
@@ -244,7 +250,7 @@ router.delete('/tiers/:id', authenticate, async (req, res) => {
       });
     }
 
-    await subscriptionService.deleteSubscriptionTier(id);
+    await getSubscriptionService().deleteSubscriptionTier(id);
 
     res.json({
       success: true,
@@ -270,7 +276,7 @@ router.get('/tiers/:id/subscribers', authenticate, async (req, res) => {
     const { page = 1, limit = 50 } = req.query;
 
     // Verify user is the creator of this tier
-    const tier = await subscriptionService.getSubscriptionTier(id);
+    const tier = await getSubscriptionService().getSubscriptionTier(id);
 
     if (!tier) {
       return res.status(404).json({
@@ -289,7 +295,7 @@ router.get('/tiers/:id/subscribers', authenticate, async (req, res) => {
       });
     }
 
-    const subscribers = await subscriptionService.getTierSubscribers(
+    const subscribers = await getSubscriptionService().getTierSubscribers(
       id,
       Number(page),
       Number(limit)
@@ -336,7 +342,7 @@ router.post('/subscribe', authenticate, async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
 
     // Create subscription with Lightning payment
-    const subscription = await subscriptionService.createSubscription({
+    const subscription = await getSubscriptionService().createSubscription({
       user_id: userId,
       tier_id,
     });
@@ -372,7 +378,7 @@ router.get('/my-subscriptions', authenticate, async (req, res) => {
   try {
     const userId = req.user?.id || req.user?.nostr_pubkey;
 
-    const subscriptions = await subscriptionService.getUserSubscriptions(userId);
+    const subscriptions = await getSubscriptionService().getUserSubscriptions(userId);
 
     res.json({
       success: true,

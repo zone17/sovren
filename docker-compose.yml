@@ -154,7 +154,7 @@ services:
 
   # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: sovren-postgres-dev
     hostname: postgres-dev
     ports:
@@ -492,7 +492,7 @@ services:
 
   # Test Database for Integration Testing
   postgres-test:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: sovren-postgres-test
     hostname: postgres-test
     ports:

@@ -75,7 +75,7 @@ Sovren Backend is an **elite-engineered API server** that powers the Sovren plat
 
 ### Prerequisites
 
-- **Node.js 18+** and npm
+- **Node.js 20+** and npm
 - **Supabase Account** (for database)
 - **Git** for version control
 
