@@ -148,12 +148,13 @@ Build the foundation for real integration tests. Validate it with one smoke test
 
 **Install dependencies:**
 
-- [ ] `@testcontainers/postgresql`
-- [ ] `pg` + `@types/pg` (for raw SQL migration application)
+- [x] `@testcontainers/postgresql`
+- [x] `pg` + `@types/pg` (for raw SQL migration application)
+- [x] `testcontainers` bumped to `^11.12.0` in backend (version mismatch with `@testcontainers/postgresql@11.12.0` caused port binding failures)
 
 **Create global setup file:**
 
-- [ ] `packages/backend/src/__tests__/setup/testcontainers-global-setup.ts`
+- [x] `packages/backend/src/__tests__/setup/testcontainers-global-setup.ts`
 
 ```typescript
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
@@ -235,7 +236,7 @@ export async function teardown({ pgContainer, redisContainer }) {
 
 **Update integration config:**
 
-- [ ] `packages/backend/vitest.integration.config.ts`:
+- [x] `packages/backend/vitest.integration.config.ts`:
   - Add `globalSetup` pointing to new file
   - Change `poolOptions.threads` → `pool: 'forks'` with `maxForks: 1` (remove the old `poolOptions.threads` block)
   - Remove coverage thresholds entirely
@@ -243,7 +244,7 @@ export async function teardown({ pgContainer, redisContainer }) {
 
 **Write smoke integration test:**
 
-- [ ] `packages/backend/src/__tests__/integration/smoke.integration.test.ts`
+- [x] `packages/backend/src/__tests__/integration/smoke.integration.test.ts`
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -275,10 +276,18 @@ describe('Testcontainers Infrastructure', () => {
 });
 ```
 
+**Cleanup — deleted 4 old mock integration tests that imported deleted `test-container-setup` fixture:**
+
+- [x] `cache-layer.integration.test.ts`
+- [x] `concurrent-operations.integration.test.ts`
+- [x] `error-recovery.integration.test.ts`
+- [x] `external-services.integration.test.ts`
+
 **Verify:**
 
-- [ ] `npm run test:integration` starts containers, applies migrations, runs smoke test, exits cleanly
-- [ ] Budget 30-60 min for migration compatibility debugging (extensions, SECURITY DEFINER functions, etc.)
+- [x] `npm run test:integration` starts containers, applies migrations, runs smoke test, exits cleanly (2 files, 18 tests, all pass)
+- [x] Containers cleaned up properly via module-level teardown (Vitest forks pool doesn't pass setup return to teardown)
+- [x] Debugging notes: testcontainers v10 port binding fails on Docker Desktop macOS (IPv6 format), Ryuk disabled, version mismatch was root cause
 
 ### Phase 4: Re-enable CI Integration Test Job (30 min)
 
