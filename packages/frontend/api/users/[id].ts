@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../types/vercel';
 import { z } from 'zod';
 import { User } from '@sovren/shared/types';
 import { supabase } from '../../lib/database';

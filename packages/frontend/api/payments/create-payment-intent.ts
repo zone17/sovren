@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../types/vercel';
 import Stripe from 'stripe';
 import { z } from 'zod';
 import { config } from '../../lib/config/environment';

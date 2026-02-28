@@ -1,7 +1,6 @@
 import react from '@vitejs/plugin-react';
 import { createHash } from 'crypto';
 import path from 'path';
-import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, loadEnv } from 'vite';
 import viteCompression from 'vite-plugin-compression';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -21,11 +20,24 @@ let buildMetrics = {
 };
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode, command }) => {
+export default defineConfig(async ({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isDev = command === 'serve';
   const isProd = mode === 'production';
   const isAnalyze = process.env.ANALYZE === 'true';
+
+  // Dynamic import — only loads (and its transitive dep `open`) when analyzing
+  const analyzePlugins = isAnalyze
+    ? [
+        (await import('rollup-plugin-visualizer')).visualizer({
+          filename: 'bundle-analysis.html',
+          open: true,
+          gzipSize: true,
+          brotliSize: true,
+          template: 'treemap',
+        }),
+      ]
+    : [];
 
   console.log(`🚀 Elite Build System Starting - Mode: ${mode}`);
 
@@ -104,18 +116,8 @@ export default defineConfig(({ mode, command }) => {
         },
       }),
 
-      // Bundle Analysis Plugin
-      ...(isAnalyze
-        ? [
-            visualizer({
-              filename: 'bundle-analysis.html',
-              open: true,
-              gzipSize: true,
-              brotliSize: true,
-              template: 'treemap',
-            }),
-          ]
-        : []),
+      // Bundle Analysis Plugin (dynamically imported above)
+      ...analyzePlugins,
     ],
 
     // Enhanced Path Resolution
@@ -229,7 +231,7 @@ export default defineConfig(({ mode, command }) => {
             api: ['@tanstack/react-query', '@supabase/supabase-js'],
 
             // IPFS and distributed storage
-            ipfs: ['@helia/http', '@helia/unixfs', 'helia', 'ipfs-http-client', 'arweave'],
+            ipfs: ['@helia/http', '@helia/unixfs', 'helia', 'arweave'],
 
             // Payment processing
             payments: ['stripe'],

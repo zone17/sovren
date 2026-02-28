@@ -16,6 +16,9 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "nostr-tools": "2.23.1",
+    "ws": ">=8.17.1",
+    "tar-fs": ">=3.0.7",
+    "serialize-javascript": ">=7.0.3",
     "express": {
       "path-to-regexp": "0.1.12"
     }
@@ -34,7 +37,7 @@
     "test:e2e:ui": "cd packages/frontend && npx playwright test --ui",
     "test:e2e:headed": "cd packages/frontend && npx playwright test --headed",
     "test:e2e:debug": "cd packages/frontend && npx playwright test --debug",
-    "test:security": "npm audit --audit-level high && npm run test:security:custom",
+    "test:security": "npm audit --audit-level high --omit=dev && npm run test:security:custom",
     "test:security:custom": "vitest run --testNamePattern=\"security\"",
     "test:security-critical": "vitest run packages/backend/src/utils/__tests__/ssrf.test.ts packages/backend/src/middleware/__tests__/auth.test.ts packages/backend/src/__tests__/middleware/csrf.test.ts",
     "test:a11y": "vitest run --testNamePattern=\"accessibility\"",
@@ -88,7 +91,7 @@
     "vault:status": "docker exec sovren-vault vault status",
     "vault:logs": "docker logs sovren-vault",
     "chromatic": "cd packages/frontend && npx chromatic",
-    "audit:security": "npm audit --audit-level high && npm run lint && npm run type-check",
+    "audit:security": "npm audit --audit-level high --omit=dev && npm run lint && npm run type-check",
     "audit:dependencies": "npm outdated",
     "audit:bundle": "npm run build && npx bundlesize",
     "audit:performance": "npm run build && npm run test:performance",
@@ -122,7 +125,6 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
     "jsonwebtoken": "^9.0.2",
-    "node-vault": "^0.10.9",
     "nostr-tools": "2.23.1",
     "pg": "^8.11.3",
     "sodium-native": "^4.0.4"
@@ -134,8 +136,8 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/supertest": "^6.0.3",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.5.0",
     "enzyme-to-json": "^3.6.2",

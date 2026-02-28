@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../types/vercel';
 import { z } from 'zod';
 import { supabase } from '../../lib/database';
 import { rateLimiter } from '../../lib/middleware/rateLimit';

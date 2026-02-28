@@ -1,4 +1,4 @@
-import type { VercelRequest } from '@vercel/node';
+import type { VercelRequest } from './vercel';
 import { User } from '@sovren/shared/types';
 
 /**
@@ -332,7 +332,7 @@ export type ExtractApiData<T extends ApiResponse<any>> = T extends ApiSuccessRes
  */
 export type ApiRouteHandler<T = unknown> = (
   req: VercelRequest,
-  res: import('@vercel/node').VercelResponse
+  res: import('./vercel').VercelResponse
 ) => Promise<ApiResponse<T> | void>;
 
 /**
@@ -340,5 +340,5 @@ export type ApiRouteHandler<T = unknown> = (
  */
 export type AuthenticatedApiRouteHandler<T = unknown> = (
   req: AuthenticatedRequest,
-  res: import('@vercel/node').VercelResponse
+  res: import('./vercel').VercelResponse
 ) => Promise<ApiResponse<T> | void>;
