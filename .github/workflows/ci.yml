@@ -11,6 +11,7 @@ on:
     branches: [main]
   merge_group:
     types: [checks_requested]
+  workflow_dispatch:
 
 permissions: read-all
 
@@ -180,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [changes, lint, typecheck, security]
-    if: needs.changes.outputs.backend == 'true'
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
 
     services:
       postgres:
@@ -221,7 +222,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [changes, lint, typecheck, security]
-    if: needs.changes.outputs.frontend == 'true'
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - uses: actions/checkout@v4
@@ -248,7 +249,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [changes, lint, typecheck, security]
-    if: needs.changes.outputs.backend == 'true'
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
 
     services:
       postgres:
