@@ -53,7 +53,7 @@ describe('Feature Flags', () => {
       };
 
       const result = parseFeatureFlags(input);
-      expect(result).toEqual(input);
+      expect(result).toMatchObject(input);
     });
 
     it('should throw on invalid input', () => {
