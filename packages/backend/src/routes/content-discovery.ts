@@ -16,9 +16,22 @@ import { RecommendationService } from '../services/recommendation-service';
 
 const router = express.Router();
 
-// Initialize services
-const discoveryService = new ContentDiscoveryService();
-const recommendationService = new RecommendationService();
+// Lazy singletons — deferred to first request to avoid side effects at module load
+let _discoveryService: ContentDiscoveryService | null = null;
+function getDiscoveryService(): ContentDiscoveryService {
+  if (!_discoveryService) {
+    _discoveryService = new ContentDiscoveryService();
+  }
+  return _discoveryService;
+}
+
+let _recommendationService: RecommendationService | null = null;
+function getRecommendationService(): RecommendationService {
+  if (!_recommendationService) {
+    _recommendationService = new RecommendationService();
+  }
+  return _recommendationService;
+}
 
 // Validation schemas
 const SearchSchema = z.object({
@@ -85,7 +98,7 @@ router.get(
       } = req.query as z.infer<typeof FeedSchema>;
 
       // Get personalized feed based on user preferences and history
-      const feedItems = await discoveryService.getPersonalizedFeed({
+      const feedItems = await getDiscoveryService().getPersonalizedFeed({
         user_id: userId,
         categories,
         exclude_categories,
@@ -131,7 +144,7 @@ router.get('/trending', validateRequest(TrendingSchema, 'query'), async (req, re
   try {
     const { timeframe, category, limit } = req.query as unknown as z.infer<typeof TrendingSchema>;
 
-    const trendingContent = await discoveryService.getTrendingContent({
+    const trendingContent = await getDiscoveryService().getTrendingContent({
       timeframe,
       category,
       limit,
@@ -163,7 +176,7 @@ router.get('/trending', validateRequest(TrendingSchema, 'query'), async (req, re
  */
 router.get('/categories', async (req, res) => {
   try {
-    const categories = await discoveryService.getCategories();
+    const categories = await getDiscoveryService().getCategories();
 
     res.json({
       success: true,
@@ -196,7 +209,7 @@ router.get(
       const { category } = req.params as unknown as z.infer<typeof CategoryParamSchema>;
       const { sort, page, limit } = req.query as unknown as z.infer<typeof CategoryQuerySchema>;
 
-      const content = await discoveryService.getContentByCategory({
+      const content = await getDiscoveryService().getContentByCategory({
         category,
         sort,
         page,
@@ -241,14 +254,14 @@ router.post(
       const userId = req.user?.id || req.user?.nostr_pubkey;
       const searchParams = req.body as z.infer<typeof SearchSchema>;
 
-      const searchResults = await discoveryService.searchContent({
+      const searchResults = await getDiscoveryService().searchContent({
         ...searchParams,
         user_id: userId,
       });
 
       // Track search for analytics and recommendations
       if (userId) {
-        await recommendationService.trackSearch(userId, searchParams.query);
+        await getRecommendationService().trackSearch(userId, searchParams.query);
       }
 
       res.json({
@@ -290,7 +303,7 @@ router.get('/recommendations/creators', authenticate, async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { limit = 10 } = req.query;
 
-    const recommendedCreators = await recommendationService.getCreatorRecommendations({
+    const recommendedCreators = await getRecommendationService().getCreatorRecommendations({
       user_id: userId,
       limit: Number(limit),
     });
@@ -323,7 +336,7 @@ router.get('/recommendations/content', authenticate, async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { limit = 20, exclude_viewed = false } = req.query;
 
-    const recommendedContent = await recommendationService.getContentRecommendations({
+    const recommendedContent = await getRecommendationService().getContentRecommendations({
       user_id: userId,
       limit: Number(limit),
       exclude_viewed: exclude_viewed === 'true',
@@ -358,7 +371,7 @@ router.get('/similar/:contentId', async (req, res) => {
     const { contentId } = req.params;
     const { limit = 10 } = req.query;
 
-    const similarContent = await discoveryService.getSimilarContent({
+    const similarContent = await getDiscoveryService().getSimilarContent({
       content_id: contentId,
       limit: Number(limit),
     });
@@ -391,7 +404,7 @@ router.post('/feedback', authenticate, validateRequest(FeedbackSchema), async (r
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { content_id, action, rating } = req.body as z.infer<typeof FeedbackSchema>;
 
-    await recommendationService.processFeedback({
+    await getRecommendationService().processFeedback({
       user_id: userId,
       content_id,
       action,
@@ -422,7 +435,7 @@ router.get('/explore', optionalAuth, async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { limit = 20 } = req.query;
 
-    const explorationContent = await discoveryService.getExplorationContent({
+    const explorationContent = await getDiscoveryService().getExplorationContent({
       user_id: userId,
       limit: Number(limit),
     });

@@ -19,7 +19,15 @@ import {
 } from '../types/creator-recommendations';
 
 const router = Router();
-const creatorRecService = new CreatorRecommendationService();
+
+// Lazy singleton — deferred to first request to avoid side effects at module load
+let _creatorRecService: CreatorRecommendationService | null = null;
+function getCreatorRecService(): CreatorRecommendationService {
+  if (!_creatorRecService) {
+    _creatorRecService = new CreatorRecommendationService();
+  }
+  return _creatorRecService;
+}
 
 // Rate limiting for recommendation endpoints
 const recommendationRateLimit = rateLimit({
@@ -153,7 +161,7 @@ router.post(
         );
       }
 
-      const profile = await creatorRecService.createOrUpdateCreatorProfile(creatorId, req.body);
+      const profile = await getCreatorRecService().createOrUpdateCreatorProfile(creatorId, req.body);
 
       res.json({
         success: true,
@@ -184,7 +192,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { creatorId } = req.params;
-      const profile = await creatorRecService.getCreatorProfile(creatorId);
+      const profile = await getCreatorRecService().getCreatorProfile(creatorId);
 
       if (!profile) {
         return res.status(404).json({
@@ -229,7 +237,7 @@ router.post(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const matches = await creatorRecService.findSimilarCreators(req.body);
+      const matches = await getCreatorRecService().findSimilarCreators(req.body);
 
       res.json({
         success: true,
@@ -270,7 +278,7 @@ router.post(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const interest = await creatorRecService.createInterest(req.body);
+      const interest = await getCreatorRecService().createInterest(req.body);
 
       res.json({
         success: true,
@@ -301,7 +309,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { userId } = req.params;
-      const interests = await creatorRecService.getUserInterests(userId);
+      const interests = await getCreatorRecService().getUserInterests(userId);
 
       res.json({
         success: true,
@@ -339,7 +347,7 @@ router.post(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const suggestions = await creatorRecService.getInterestBasedSuggestions(req.body);
+      const suggestions = await getCreatorRecService().getInterestBasedSuggestions(req.body);
 
       res.json({
         success: true,
@@ -378,7 +386,7 @@ router.post(
         throw new CreatorRecommendationValidationError('User ID is required', 'userId', undefined);
       }
 
-      const session = await creatorRecService.startDiscoverySession(
+      const session = await getCreatorRecService().startDiscoverySession(
         userId,
         req.body.discoveryMethod
       );
@@ -427,7 +435,7 @@ router.post(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const discovery = await creatorRecService.discoverCreators(req.body);
+      const discovery = await getCreatorRecService().discoverCreators(req.body);
 
       res.json({
         success: true,
@@ -475,7 +483,7 @@ router.post(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const recommendations = await creatorRecService.getFollowRecommendations(req.body);
+      const recommendations = await getCreatorRecService().getFollowRecommendations(req.body);
 
       res.json({
         success: true,
@@ -512,7 +520,7 @@ router.post(
     try {
       const { followerId, followingId, followSource, recommendationId } = req.body;
 
-      const relationship = await creatorRecService.trackFollowRelationship(
+      const relationship = await getCreatorRecService().trackFollowRelationship(
         followerId,
         followingId,
         followSource,
