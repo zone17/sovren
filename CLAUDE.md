@@ -51,7 +51,7 @@ npm run test:coverage
 
 # Run specific project tests
 npm run test:unit              # Backend, frontend, shared
-npm run test:integration       # Integration tests
+npm run test:integration       # Integration tests (requires Docker — uses testcontainers)
 npm run test:e2e              # Playwright E2E tests
 npm run test:e2e:ui           # E2E tests with UI
 npm run test:security         # Security tests
@@ -60,6 +60,13 @@ npm run test:a11y             # Accessibility tests
 # Run single test file
 npx vitest run path/to/test.test.ts
 ```
+
+**Prerequisites for integration tests:**
+
+- Docker Desktop (or Docker Engine) must be running for `test:integration`
+- Testcontainers auto-pulls `postgres:16-alpine` and `redis:7-alpine`
+- First run downloads ~150MB of container images
+- Set `TESTCONTAINERS_RYUK_DISABLED=true` if Docker API connectivity issues occur
 
 ### Code Quality
 
@@ -288,7 +295,6 @@ These files are the single source of truth. Sprint-specific docs in `docs/soluti
 **Every code change MUST include documentation updates**. This is enforced in CI/CD.
 
 1. **Mermaid Diagrams**: ALL user story implementations MUST include:
-
    - Architecture Overview Diagram
    - Component Interaction Diagram
    - Data Flow Diagram
@@ -296,13 +302,11 @@ These files are the single source of truth. Sprint-specific docs in `docs/soluti
    - Implementation-specific diagrams (as needed)
 
 2. **Mermaid Diagram Linking**: All diagrams must be:
-
    - Saved as `.mmd` files in `/docs/architecture/diagrams/`
    - Linked with visual rendering: `![Name](github.com/owner/repo/blob/main/path/to/diagram.mmd)`
    - Provided in multiple formats (GitHub visual, interactive editor, source)
 
 3. **CHANGELOG.md**: Every commit requires a CHANGELOG entry with:
-
    - Type prefix (feat:, fix:, docs:, refactor:, test:, chore:)
    - Clear description of changes
    - Reference to user story/issue
@@ -430,7 +434,6 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
    ```
 
 2. **Design with Mermaid Diagrams** (BEFORE coding):
-
    - Create all required diagrams in `/docs/architecture/diagrams/`
    - Get design review approval
 
@@ -470,7 +473,6 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
    ```
 
 5. **Update Documentation**:
-
    - CHANGELOG.md
    - Feature documentation in `/docs/features/`
    - ADR if architectural decision made
@@ -505,7 +507,6 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
    ```
 
    **Story NOT complete until**:
-
    - ✅ CI/CD quality gates passing
    - ✅ Staging deployment successful
    - ✅ Health checks passing

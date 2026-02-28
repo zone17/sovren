@@ -18,7 +18,7 @@ export default defineConfig({
     globalSetup: ['./src/__tests__/setup/testcontainers-global-setup.ts'],
     include: ['src/__tests__/integration/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
-    testTimeout: 60000,
+    testTimeout: 15000,
     hookTimeout: 60000,
     teardownTimeout: 30000,
     pool: 'forks',

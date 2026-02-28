@@ -185,7 +185,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: sovren_test
@@ -251,18 +251,20 @@ jobs:
     needs: [changes, lint, typecheck, security]
     if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
     # Advisory-only during stabilization — CI stays green even if these fail.
-    # Remove continue-on-error once integration test suite is fully stable.
+    # TODO: Remove continue-on-error after 5 consecutive green integration runs on main.
     continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node
 
+      - name: Pre-pull test container images
+        run: docker pull postgres:16-alpine & docker pull redis:7-alpine & wait
+
       - name: Run integration tests (testcontainers)
         run: npm run test:integration
         env:
           NODE_ENV: test
-          TESTCONTAINERS_RYUK_DISABLED: 'true'
 
   # ===========================================
   # Stage 3d: Test Gate (aggregator for required status check)

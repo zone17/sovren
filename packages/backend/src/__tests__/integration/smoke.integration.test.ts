@@ -14,15 +14,19 @@ describe('Testcontainers Infrastructure', () => {
     await client.end();
   });
 
-  it('Redis is accessible', async () => {
+  it('Redis is accessible and responds to PING', async () => {
     const url = new URL(process.env.REDIS_URL!);
     const net = await import('net');
-    await new Promise<void>((resolve, reject) => {
+    const response = await new Promise<string>((resolve, reject) => {
       const socket = net.createConnection({ host: url.hostname, port: parseInt(url.port) }, () => {
+        socket.write('PING\r\n');
+      });
+      socket.on('data', (data) => {
         socket.end();
-        resolve();
+        resolve(data.toString().trim());
       });
       socket.on('error', reject);
     });
+    expect(response).toBe('+PONG');
   });
 });

@@ -1,6 +1,6 @@
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { readFileSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
@@ -20,7 +20,23 @@ export async function setup(): Promise<void> {
     new PostgreSqlContainer('postgres:16-alpine')
       .withDatabase('sovren_test')
       .withTmpFs({ '/var/lib/postgresql/data': 'rw' })
-      .withCommand(['postgres', '-c', 'fsync=off', '-c', 'synchronous_commit=off'])
+      .withCommand([
+        'postgres',
+        '-c',
+        'fsync=off',
+        '-c',
+        'synchronous_commit=off',
+        '-c',
+        'shared_buffers=256MB',
+        '-c',
+        'work_mem=64MB',
+        '-c',
+        'wal_level=minimal',
+        '-c',
+        'max_wal_senders=0',
+        '-c',
+        'random_page_cost=1.1',
+      ])
       .start(),
     new GenericContainer('redis:7-alpine').withExposedPorts(6379).start(),
   ]);
@@ -38,10 +54,7 @@ export async function setup(): Promise<void> {
     -- Supabase auth schema stubs
     CREATE SCHEMA IF NOT EXISTS auth;
     CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$
-      SELECT COALESCE(
-        current_setting('request.jwt.claim.sub', true)::uuid,
-        '00000000-0000-0000-0000-000000000000'::uuid
-      );
+      SELECT current_setting('request.jwt.claim.sub', true)::uuid;
     $$ LANGUAGE sql STABLE;
     CREATE OR REPLACE FUNCTION auth.role() RETURNS text AS $$
       SELECT COALESCE(current_setting('request.jwt.claim.role', true), 'anon');
@@ -60,6 +73,12 @@ export async function setup(): Promise<void> {
 
   // Apply all migrations in order (glob + sort = deterministic, no hardcoded list)
   const migrationsDir = join(__dirname, '../../../../../supabase/migrations');
+  if (!existsSync(migrationsDir)) {
+    throw new Error(
+      `Migration directory not found at ${migrationsDir}. ` +
+        `Expected relative to testcontainers-global-setup.ts: supabase/migrations/`
+    );
+  }
   const migrationFiles = readdirSync(migrationsDir)
     .filter((f) => f.endsWith('.sql') && /^\d{14}_/.test(f))
     .sort();
@@ -81,8 +100,7 @@ export async function setup(): Promise<void> {
 }
 
 export async function teardown(): Promise<void> {
-  await _pgContainer?.stop();
-  await _redisContainer?.stop();
+  await Promise.all([_pgContainer?.stop({ timeout: 0 }), _redisContainer?.stop({ timeout: 0 })]);
   _pgContainer = null;
   _redisContainer = null;
 }

@@ -125,7 +125,7 @@ services:
 
   # PostgreSQL Development Database
   postgres-dev:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: sovren-postgres-dev
     ports:
       - '5432:5432'
