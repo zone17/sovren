@@ -2615,6 +2615,65 @@ concurrency:
 
 ---
 
+## 71. Fetch Main After Every Squash-Merge (Stale Local Ref)
+
+**Recurrence:** 1 P2 — PR created from feature branch showed already-merged commits in diff because local `main` was stale after squash-merge.
+
+### Problem
+
+`gh pr merge --auto --squash` executes server-side on GitHub. The local `main` branch doesn't know the merge happened. If you continue working on the same feature branch and create a new PR, `git diff main...HEAD` includes commits that were already squash-merged — making the PR diff misleading and potentially causing merge conflicts.
+
+```bash
+# Timeline of the bug:
+gh pr merge 117 --auto --squash  # Merges on GitHub, local main unchanged
+# ... continue working on same branch ...
+git push                          # Push new commit
+gh pr create                      # PR diff shows ALL commits, not just new one
+```
+
+### Fix
+
+After every `gh pr merge`, immediately update local main:
+
+```bash
+# MANDATORY post-merge sequence
+gh pr merge <PR> --auto --squash
+
+# Update local ref (doesn't switch branches)
+git fetch origin main:main
+
+# OR if you need to switch to main:
+git checkout main && git pull origin main
+```
+
+### Rule
+
+- **After every `gh pr merge`**: Run `git fetch origin main:main` to update the local tracking ref
+- **Before creating a new PR from an existing branch**: Always `git fetch origin main` first, then verify `git log main..HEAD` shows only the new commits
+- **Multi-squad critical**: Stale local refs cause phantom diffs, misleading reviews, and merge conflicts when multiple squads rebase off different versions of main
+
+### Detection
+
+```bash
+# Check if local main matches remote
+git fetch origin main
+git rev-parse main          # Local
+git rev-parse origin/main   # Remote
+# If they differ, local main is stale
+```
+
+### Agent Workflow Addition
+
+Add to every agent's post-merge workflow:
+
+```bash
+# After successful merge
+gh pr merge <PR> --auto --squash
+git fetch origin main:main        # ← ADD THIS LINE
+```
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2717,3 +2776,4 @@ CONTEXT TO LOAD:
 | `${{ }}` in run: block — shell injection risk   | 68        | common-solutions.md  |
 | Path-filtered job skips block merge             | 69        | common-solutions.md  |
 | `cancel-in-progress` kills deploy on main       | 70        | common-solutions.md  |
+| Local main stale after squash-merge             | 71        | common-solutions.md  |
