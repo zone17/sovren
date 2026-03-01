@@ -278,12 +278,8 @@ export default defineConfig(async ({ mode, command }) => {
           // Add externals here for CDN optimization if needed
         ],
 
-        // Advanced tree shaking
-        treeshake: {
-          moduleSideEffects: false,
-          propertyReadSideEffects: false,
-          unknownGlobalSideEffects: false,
-        },
+        // Tree shaking (use Rollup defaults — moduleSideEffects:false strips the entire app)
+        treeshake: true,
       },
 
       // Elite chunk size management
