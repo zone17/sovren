@@ -42,11 +42,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: [
-          'persist/PERSIST',
-          'ui/addToast',
-          'ui/addNotification',
-        ],
+        ignoredActions: ['persist/PERSIST', 'ui/addToast', 'ui/addNotification'],
         // Ignore these field paths in all actions
         ignoredActionPaths: ['payload.timestamp', 'payload.createdAt'],
         // Ignore these paths in the state
@@ -106,9 +102,9 @@ export const toastMiddleware = (store: any) => (next: any) => (action: any) => {
       setTimeout(() => {
         store.dispatch({
           type: 'ui/removeToast',
-          payload: store.getState().ui.toasts.find((t: any) =>
-            t.message === toast.message && t.type === toast.type
-          )?.id,
+          payload: store
+            .getState()
+            .ui.toasts.find((t: any) => t.message === toast.message && t.type === toast.type)?.id,
         });
       }, duration);
     }

@@ -338,9 +338,12 @@ describe('LightningPaymentButton', () => {
       fireEvent.click(button);
 
       // Wait for dialog to appear after async invoice creation + polling
-      await waitFor(() => {
-        expect(document.querySelector('[role="dialog"]')).toBeInTheDocument();
-      }, { timeout: 5000 });
+      await waitFor(
+        () => {
+          expect(document.querySelector('[role="dialog"]')).toBeInTheDocument();
+        },
+        { timeout: 5000 }
+      );
 
       // Fast-forward time to trigger auto-close (2000ms setTimeout in component)
       await vi.runAllTimersAsync();

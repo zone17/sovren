@@ -65,7 +65,7 @@ describe('uiSlice', () => {
 
     it('should handle all theme values', () => {
       const themes: Theme[] = ['light', 'dark', 'system'];
-      themes.forEach(theme => {
+      themes.forEach((theme) => {
         const state = uiReducer(getInitialState(), setTheme(theme));
         expect(state.theme).toBe(theme);
       });
@@ -95,10 +95,7 @@ describe('uiSlice', () => {
   describe('Modal actions', () => {
     it('should handle openModal', () => {
       const modalData = { id: '123', title: 'Test Modal' };
-      const state = uiReducer(
-        getInitialState(),
-        openModal({ type: 'payment', data: modalData })
-      );
+      const state = uiReducer(getInitialState(), openModal({ type: 'payment', data: modalData }));
 
       expect(state.modal.type).toBe('payment');
       expect(state.modal.data).toEqual(modalData);
@@ -106,10 +103,7 @@ describe('uiSlice', () => {
     });
 
     it('should handle closeModal', () => {
-      let state = uiReducer(
-        getInitialState(),
-        openModal({ type: 'settings', data: null })
-      );
+      let state = uiReducer(getInitialState(), openModal({ type: 'settings', data: null }));
       state = uiReducer(state, closeModal());
 
       expect(state.modal.type).toBe(null);
@@ -136,10 +130,7 @@ describe('uiSlice', () => {
     });
 
     it('should handle removeToast', () => {
-      let state = uiReducer(
-        getInitialState(),
-        addToast({ message: 'Toast 1', type: 'info' })
-      );
+      let state = uiReducer(getInitialState(), addToast({ message: 'Toast 1', type: 'info' }));
       const toastId = state.toasts[0].id;
 
       state = uiReducer(state, removeToast(toastId));
@@ -196,7 +187,7 @@ describe('uiSlice', () => {
       );
 
       state = uiReducer(state, markAllNotificationsRead());
-      expect(state.notifications.every(n => n.read)).toBe(true);
+      expect(state.notifications.every((n) => n.read)).toBe(true);
     });
 
     it('should handle removeNotification', () => {
@@ -238,18 +229,12 @@ describe('uiSlice', () => {
     });
 
     it('should handle setFilter', () => {
-      const state = uiReducer(
-        getInitialState(),
-        setFilter({ key: 'category', value: 'video' })
-      );
+      const state = uiReducer(getInitialState(), setFilter({ key: 'category', value: 'video' }));
       expect(state.selectedFilters.category).toBe('video');
     });
 
     it('should handle clearFilter', () => {
-      let state = uiReducer(
-        getInitialState(),
-        setFilter({ key: 'category', value: 'video' })
-      );
+      let state = uiReducer(getInitialState(), setFilter({ key: 'category', value: 'video' }));
       state = uiReducer(state, setFilter({ key: 'status', value: 'published' }));
 
       state = uiReducer(state, clearFilter('category'));
@@ -258,10 +243,7 @@ describe('uiSlice', () => {
     });
 
     it('should handle clearAllFilters', () => {
-      let state = uiReducer(
-        getInitialState(),
-        setFilter({ key: 'category', value: 'video' })
-      );
+      let state = uiReducer(getInitialState(), setFilter({ key: 'category', value: 'video' }));
       state = uiReducer(state, setFilter({ key: 'status', value: 'published' }));
 
       state = uiReducer(state, clearAllFilters());
@@ -272,10 +254,7 @@ describe('uiSlice', () => {
   describe('Form data actions', () => {
     it('should handle setFormData', () => {
       const formData = { name: 'Test', email: 'test@example.com' };
-      const state = uiReducer(
-        getInitialState(),
-        setFormData({ formId: 'signup', data: formData })
-      );
+      const state = uiReducer(getInitialState(), setFormData({ formId: 'signup', data: formData }));
 
       expect(state.formData.signup).toEqual(formData);
     });

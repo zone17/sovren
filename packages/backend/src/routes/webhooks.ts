@@ -283,10 +283,7 @@ router.post(
           metadata.preimage = preimage;
           metadata.amount = amount;
           // Update payment record with preimage
-          await supabase
-            .from('payments')
-            .update({ preimage })
-            .eq('id', payment.id);
+          await supabase.from('payments').update({ preimage }).eq('id', payment.id);
           break;
 
         case 'payment.failed':

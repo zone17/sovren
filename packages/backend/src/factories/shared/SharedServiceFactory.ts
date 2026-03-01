@@ -18,7 +18,7 @@ export const SHARED_SERVICE_TOKENS = {
   EventBus: new ServiceToken<IEventBus>('EventBus'),
   Logger: new ServiceToken<ILogger>('Logger'),
   Database: new ServiceToken<IDatabase>('Database'),
-  RedisClient: new ServiceToken<IRedisClient>('RedisClient')
+  RedisClient: new ServiceToken<IRedisClient>('RedisClient'),
 };
 
 // Shared Service Interfaces
@@ -35,7 +35,10 @@ export interface INotificationService {
   sendNotification(notification: Notification): Promise<NotificationResult>;
   sendBulkNotifications(notifications: Notification[]): Promise<BulkNotificationResult>;
   getNotificationChannels(userId: string): Promise<NotificationChannel[]>;
-  updateNotificationPreferences(userId: string, preferences: NotificationPreferences): Promise<void>;
+  updateNotificationPreferences(
+    userId: string,
+    preferences: NotificationPreferences
+  ): Promise<void>;
   markAsRead(notificationId: string): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
   getUnreadCount(userId: string): Promise<number>;
@@ -154,7 +157,7 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
     return [
       SHARED_SERVICE_TOKENS.Logger,
       SHARED_SERVICE_TOKENS.Database,
-      SHARED_SERVICE_TOKENS.EventBus
+      SHARED_SERVICE_TOKENS.EventBus,
     ];
   }
 
@@ -169,7 +172,7 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
           logger.info('Sending email', {
             to: options.to,
             subject: options.subject,
-            templateId: options.templateId
+            templateId: options.templateId,
           });
 
           // Here would be actual email sending logic (SendGrid, SES, etc.)
@@ -178,20 +181,26 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
           // Log email event
           await db.execute(
             'INSERT INTO email_logs (message_id, recipient, subject, status, sent_at) VALUES (?, ?, ?, ?, ?)',
-            [messageId, Array.isArray(options.to) ? options.to.join(',') : options.to, options.subject, 'sent', new Date()]
+            [
+              messageId,
+              Array.isArray(options.to) ? options.to.join(',') : options.to,
+              options.subject,
+              'sent',
+              new Date(),
+            ]
           );
 
           return {
             success: true,
             messageId,
-            timestamp: new Date()
+            timestamp: new Date(),
           };
         } catch (error) {
           logger.error('Failed to send email', error as Error);
           return {
             success: false,
             error: (error as Error).message,
-            timestamp: new Date()
+            timestamp: new Date(),
           };
         }
       },
@@ -200,21 +209,21 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
         logger.info(`Sending bulk emails to ${recipients.length} recipients`);
 
         const results = await Promise.all(
-          recipients.map(recipient =>
+          recipients.map((recipient) =>
             this.sendEmail({
               to: recipient.email,
               subject: recipient.subject,
               templateId: recipient.templateId,
-              variables: recipient.variables
+              variables: recipient.variables,
             })
           )
         );
 
         return {
           total: recipients.length,
-          successful: results.filter(r => r.success).length,
-          failed: results.filter(r => !r.success).length,
-          results
+          successful: results.filter((r) => r.success).length,
+          failed: results.filter((r) => !r.success).length,
+          results,
         };
       },
 
@@ -224,10 +233,7 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
       },
 
       async getEmailTemplate(templateId: string): Promise<any> {
-        const results = await db.query(
-          'SELECT * FROM email_templates WHERE id = ?',
-          [templateId]
-        );
+        const results = await db.query('SELECT * FROM email_templates WHERE id = ?', [templateId]);
         return results[0] || null;
       },
 
@@ -244,7 +250,7 @@ export class EmailServiceFactory extends SafeServiceFactory<IEmailService> {
           [filter.startDate]
         );
         return stats[0];
-      }
+      },
     };
   }
 }
@@ -262,7 +268,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
       SHARED_SERVICE_TOKENS.Logger,
       SHARED_SERVICE_TOKENS.Database,
       SHARED_SERVICE_TOKENS.EventBus,
-      SHARED_SERVICE_TOKENS.CacheService
+      SHARED_SERVICE_TOKENS.CacheService,
     ];
   }
 
@@ -277,7 +283,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
         logger.info('Sending notification', {
           userId: notification.userId,
           type: notification.type,
-          channel: notification.channel
+          channel: notification.channel,
         });
 
         const notificationId = notification.id || `notif_${Date.now()}`;
@@ -285,8 +291,18 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
         // Store notification
         await db.execute(
           'INSERT INTO notifications (id, user_id, type, title, message, channel, priority, data, created_at, read_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [notificationId, notification.userId, notification.type, notification.title, notification.message,
-           notification.channel, notification.priority, JSON.stringify(notification.data), new Date(), null]
+          [
+            notificationId,
+            notification.userId,
+            notification.type,
+            notification.title,
+            notification.message,
+            notification.channel,
+            notification.priority,
+            JSON.stringify(notification.data),
+            new Date(),
+            null,
+          ]
         );
 
         // Update unread count in cache
@@ -296,19 +312,17 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
         return {
           success: true,
           notificationId,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
       },
 
       async sendBulkNotifications(notifications: Notification[]): Promise<any> {
-        const results = await Promise.all(
-          notifications.map(n => this.sendNotification(n))
-        );
+        const results = await Promise.all(notifications.map((n) => this.sendNotification(n)));
 
         return {
           total: notifications.length,
-          successful: results.filter(r => r.success).length,
-          failed: results.filter(r => !r.success).length
+          successful: results.filter((r) => r.success).length,
+          failed: results.filter((r) => !r.success).length,
         };
       },
 
@@ -326,13 +340,13 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
       },
 
       async markAsRead(notificationId: string): Promise<void> {
-        await db.execute(
-          'UPDATE notifications SET read_at = ? WHERE id = ?',
-          [new Date(), notificationId]
-        );
+        await db.execute('UPDATE notifications SET read_at = ? WHERE id = ?', [
+          new Date(),
+          notificationId,
+        ]);
 
         // Clear cache
-        const notification = await db.query<{user_id: string}>(
+        const notification = await db.query<{ user_id: string }>(
           'SELECT user_id FROM notifications WHERE id = ?',
           [notificationId]
         );
@@ -354,7 +368,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
         const cached = await cache.get<number>(cacheKey);
         if (cached !== null) return cached;
 
-        const result = await db.query<{count: number}>(
+        const result = await db.query<{ count: number }>(
           'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND read_at IS NULL',
           [userId]
         );
@@ -362,7 +376,7 @@ export class NotificationServiceFactory extends SafeServiceFactory<INotification
         const count = result[0]?.count || 0;
         await cache.set(cacheKey, count, 300); // Cache for 5 minutes
         return count;
-      }
+      },
     };
   }
 }
@@ -376,10 +390,7 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
   }
 
   protected getRequiredDependencies(): ServiceToken<any>[] {
-    return [
-      SHARED_SERVICE_TOKENS.Logger,
-      SHARED_SERVICE_TOKENS.Database
-    ];
+    return [SHARED_SERVICE_TOKENS.Logger, SHARED_SERVICE_TOKENS.Database];
   }
 
   async create(): Promise<IAuditLogService> {
@@ -394,9 +405,18 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
           `INSERT INTO audit_logs
            (user_id, action, entity_type, entity_id, old_value, new_value, ip_address, user_agent, metadata, timestamp)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [entry.userId, entry.action, entry.entityType, entry.entityId,
-           JSON.stringify(entry.oldValue), JSON.stringify(entry.newValue),
-           entry.ipAddress, entry.userAgent, JSON.stringify(entry.metadata), entry.timestamp]
+          [
+            entry.userId,
+            entry.action,
+            entry.entityType,
+            entry.entityId,
+            JSON.stringify(entry.oldValue),
+            JSON.stringify(entry.newValue),
+            entry.ipAddress,
+            entry.userAgent,
+            JSON.stringify(entry.metadata),
+            entry.timestamp,
+          ]
         );
       },
 
@@ -438,8 +458,14 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
         } else {
           // CSV export logic
           const headers = ['timestamp', 'userId', 'action', 'entityType', 'entityId'];
-          const rows = entries.map(e => [e.timestamp, e.userId, e.action, e.entityType, e.entityId]);
-          return [headers, ...rows].map(r => r.join(',')).join('\n');
+          const rows = entries.map((e) => [
+            e.timestamp,
+            e.userId,
+            e.action,
+            e.entityType,
+            e.entityId,
+          ]);
+          return [headers, ...rows].map((r) => r.join(',')).join('\n');
         }
       },
 
@@ -451,10 +477,7 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
       },
 
       async purgeOldLogs(beforeDate: Date): Promise<number> {
-        const result = await db.execute(
-          'DELETE FROM audit_logs WHERE timestamp < ?',
-          [beforeDate]
-        );
+        const result = await db.execute('DELETE FROM audit_logs WHERE timestamp < ?', [beforeDate]);
         logger.info(`Purged audit logs before ${beforeDate}`);
         return 0; // Would return affected rows count
       },
@@ -466,9 +489,9 @@ export class AuditLogServiceFactory extends SafeServiceFactory<IAuditLogService>
           totalActions: 0,
           userActivity: {},
           criticalActions: [],
-          anomalies: []
+          anomalies: [],
         };
-      }
+      },
     };
   }
 }
@@ -482,10 +505,7 @@ export class CacheServiceFactory extends SafeServiceFactory<ICacheService> {
   }
 
   protected getRequiredDependencies(): ServiceToken<any>[] {
-    return [
-      SHARED_SERVICE_TOKENS.Logger,
-      SHARED_SERVICE_TOKENS.RedisClient
-    ];
+    return [SHARED_SERVICE_TOKENS.Logger, SHARED_SERVICE_TOKENS.RedisClient];
   }
 
   async create(): Promise<ICacheService> {
@@ -517,7 +537,7 @@ export class CacheServiceFactory extends SafeServiceFactory<ICacheService> {
         } else {
           memoryCache.set(key, {
             value,
-            expires: Date.now() + (ttl * 1000)
+            expires: Date.now() + ttl * 1000,
           });
         }
       },
@@ -534,7 +554,7 @@ export class CacheServiceFactory extends SafeServiceFactory<ICacheService> {
         if (redis) {
           const keys = await redis.keys(pattern);
           if (keys.length > 0) {
-            await Promise.all(keys.map(k => redis.del(k)));
+            await Promise.all(keys.map((k) => redis.del(k)));
           }
           return keys.length;
         } else {
@@ -565,7 +585,7 @@ export class CacheServiceFactory extends SafeServiceFactory<ICacheService> {
         } else {
           const entry = memoryCache.get(key);
           if (entry) {
-            entry.expires = Date.now() + (ttl * 1000);
+            entry.expires = Date.now() + ttl * 1000;
           }
         }
       },
@@ -586,9 +606,9 @@ export class CacheServiceFactory extends SafeServiceFactory<ICacheService> {
           keys: memoryCache.size,
           memoryUsage: 0,
           evictions: 0,
-          hitRate: 0
+          hitRate: 0,
         };
-      }
+      },
     };
   }
 }

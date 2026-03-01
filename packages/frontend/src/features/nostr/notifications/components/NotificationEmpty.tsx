@@ -48,9 +48,7 @@ export const NotificationEmpty: React.FC<NotificationEmptyProps> = ({
       </div>
 
       {/* Message */}
-      <p className="text-gray-600 dark:text-gray-400 text-lg font-medium mb-2">
-        {message}
-      </p>
+      <p className="text-gray-600 dark:text-gray-400 text-lg font-medium mb-2">{message}</p>
 
       <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">
         You'll see notifications here when you get mentions, replies, and more.

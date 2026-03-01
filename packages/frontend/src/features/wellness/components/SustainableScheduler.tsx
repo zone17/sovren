@@ -15,7 +15,15 @@ const DAY_LABELS: Record<DayOfWeek, string> = {
   sunday: 'Sun',
 };
 
-const ALL_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const ALL_DAYS: DayOfWeek[] = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+];
 
 function formatHour(hour: number): string {
   if (hour === 0) return '12 AM';
@@ -30,8 +38,12 @@ export const SustainableScheduler: React.FC = () => {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader><Skeleton className="h-5 w-48" /></CardHeader>
-        <CardContent><Skeleton className="h-40 w-full" /></CardContent>
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-40 w-full" />
+        </CardContent>
       </Card>
     );
   }
@@ -60,10 +72,13 @@ export const SustainableScheduler: React.FC = () => {
           <div>
             <p className="text-sm font-medium text-gray-700">Posting Pace</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {data.current_posts_per_week}/week (recommended: {data.recommended_posts_per_week}/week)
+              {data.current_posts_per_week}/week (recommended: {data.recommended_posts_per_week}
+              /week)
             </p>
           </div>
-          <Badge className={overPacing ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}>
+          <Badge
+            className={overPacing ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}
+          >
             {overPacing ? 'Over pace' : 'On pace'}
           </Badge>
         </div>
@@ -78,9 +93,7 @@ export const SustainableScheduler: React.FC = () => {
                 <div
                   key={day}
                   className={`flex-1 py-1.5 text-center text-xs rounded ${
-                    isOptimal
-                      ? 'bg-blue-100 text-blue-700 font-medium'
-                      : 'bg-gray-50 text-gray-400'
+                    isOptimal ? 'bg-blue-100 text-blue-700 font-medium' : 'bg-gray-50 text-gray-400'
                   }`}
                 >
                   {DAY_LABELS[day]}
@@ -94,9 +107,7 @@ export const SustainableScheduler: React.FC = () => {
         {data.optimal_hours.length > 0 && (
           <div>
             <p className="text-xs font-medium text-gray-600 mb-1">Best Times</p>
-            <p className="text-sm text-gray-700">
-              {data.optimal_hours.map(formatHour).join(', ')}
-            </p>
+            <p className="text-sm text-gray-700">{data.optimal_hours.map(formatHour).join(', ')}</p>
           </div>
         )}
 
@@ -111,12 +122,12 @@ export const SustainableScheduler: React.FC = () => {
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${bufferLow ? 'bg-red-500' : 'bg-green-500'}`}
-              style={{ width: `${Math.min((data.content_buffer_days / data.buffer_threshold) * 100, 100)}%` }}
+              style={{
+                width: `${Math.min((data.content_buffer_days / data.buffer_threshold) * 100, 100)}%`,
+              }}
             />
           </div>
-          <p className="text-[10px] text-gray-400 mt-1">
-            Threshold: {data.buffer_threshold} days
-          </p>
+          <p className="text-[10px] text-gray-400 mt-1">Threshold: {data.buffer_threshold} days</p>
         </div>
 
         {/* Productive windows */}
@@ -125,9 +136,14 @@ export const SustainableScheduler: React.FC = () => {
             <p className="text-xs font-medium text-gray-600 mb-2">Productive Windows</p>
             <div className="space-y-1">
               {data.productive_windows.slice(0, 3).map((window, i) => (
-                <div key={i} className="flex items-center justify-between text-xs p-2 bg-gray-50 rounded">
+                <div
+                  key={i}
+                  className="flex items-center justify-between text-xs p-2 bg-gray-50 rounded"
+                >
                   <span className="text-gray-700 capitalize">{window.day}</span>
-                  <span className="text-gray-500">{window.start} - {window.end}</span>
+                  <span className="text-gray-500">
+                    {window.start} - {window.end}
+                  </span>
                   <Badge variant="outline" className="text-[10px]">
                     {(window.energy_score * 100).toFixed(0)}% energy
                   </Badge>

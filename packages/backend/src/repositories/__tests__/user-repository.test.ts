@@ -541,11 +541,7 @@ describe('User Repository', () => {
       // Fallback: select('role').eq('is_active', true)
       mockChain.then.mockImplementation((resolve: any) =>
         resolve({
-          data: [
-            { role: 'supporter' },
-            { role: 'supporter' },
-            { role: 'supporter' },
-          ],
+          data: [{ role: 'supporter' }, { role: 'supporter' }, { role: 'supporter' }],
           error: null,
         })
       );
@@ -563,9 +559,7 @@ describe('User Repository', () => {
       process.env.NODE_ENV = 'test';
 
       // delete().neq() resolves via then
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: null, error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: null, error: null }));
 
       await userRepository.cleanup();
 

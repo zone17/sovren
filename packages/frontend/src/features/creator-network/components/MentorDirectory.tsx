@@ -93,12 +93,8 @@ const MentorDirectory: React.FC = () => {
                       {AUDIENCE_SIZE_LABELS[mentor.audienceSizeRange] ?? mentor.audienceSizeRange}
                     </span>
                   </div>
-                  {mentor.bio && (
-                    <p className="mt-2 text-sm text-gray-600">{mentor.bio}</p>
-                  )}
-                  <p className="mt-1 text-xs text-gray-400">
-                    Mentees: up to {mentor.maxMentees}
-                  </p>
+                  {mentor.bio && <p className="mt-2 text-sm text-gray-600">{mentor.bio}</p>}
+                  <p className="mt-1 text-xs text-gray-400">Mentees: up to {mentor.maxMentees}</p>
                 </div>
 
                 {requestingId === mentor.id ? (
@@ -120,7 +116,10 @@ const MentorDirectory: React.FC = () => {
                         {requestMutation.isPending ? 'Sending...' : 'Send Request'}
                       </button>
                       <button
-                        onClick={() => { setRequestingId(null); setGoals(''); }}
+                        onClick={() => {
+                          setRequestingId(null);
+                          setGoals('');
+                        }}
                         className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
                       >
                         Cancel

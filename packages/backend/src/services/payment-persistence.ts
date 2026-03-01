@@ -14,7 +14,10 @@ export interface PaymentPersistence {
   savePayment(payment: LightningPayment): Promise<void>;
   getInvoiceById(id: string): Promise<LightningInvoice | null>;
   getInvoiceByPaymentHash(hash: string): Promise<LightningInvoice | null>;
-  getPaymentsByCreator(creatorId: string, filters?: { status?: string }): Promise<LightningPayment[]>;
+  getPaymentsByCreator(
+    creatorId: string,
+    filters?: { status?: string }
+  ): Promise<LightningPayment[]>;
   getAllPayments(): Promise<LightningPayment[]>;
   getAllInvoices(): Promise<LightningInvoice[]>;
   updateInvoiceStatus(id: string, status: string): Promise<void>;
@@ -66,7 +69,10 @@ export class JsonFilePaymentStore extends EventEmitter implements PaymentPersist
     return null;
   }
 
-  async getPaymentsByCreator(creatorId: string, filters?: { status?: string }): Promise<LightningPayment[]> {
+  async getPaymentsByCreator(
+    creatorId: string,
+    filters?: { status?: string }
+  ): Promise<LightningPayment[]> {
     // TODO: When backed by a real database, apply filters as WHERE clauses in the query
     // instead of filtering in-memory for better performance at scale
     return Array.from(this.payments.values()).filter((p) => {
@@ -124,10 +130,11 @@ export class JsonFilePaymentStore extends EventEmitter implements PaymentPersist
 
     const tmpData = this.tryParseFile(tmpPath);
     if (tmpData !== null) {
-      this.logger.error(
-        `Recovered ${type} from .tmp file after main file corruption`,
-        { type, filePath, tmpPath }
-      );
+      this.logger.error(`Recovered ${type} from .tmp file after main file corruption`, {
+        type,
+        filePath,
+        tmpPath,
+      });
       this.emit('corruption:detected', { type, filePath, recoveredFromTmp: true });
       for (const item of tmpData) {
         target.set(item.id, item);
@@ -195,10 +202,7 @@ export class JsonFilePaymentStore extends EventEmitter implements PaymentPersist
       }
       renameSync(tmpPath, filePath);
     } catch (err) {
-      this.logger.error(
-        `Failed to write ${type} to disk`,
-        { type, filePath, error: err }
-      );
+      this.logger.error(`Failed to write ${type} to disk`, { type, filePath, error: err });
       throw err;
     }
   }

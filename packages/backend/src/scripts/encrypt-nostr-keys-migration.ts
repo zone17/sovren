@@ -24,7 +24,7 @@ async function migrateNostrKeys(): Promise<void> {
   if (!encryptionKey || encryptionKey.length !== 64) {
     throw new Error(
       'NOSTR_KEY_ENCRYPTION_KEY must be a 64-character hex string (32 bytes). ' +
-      'Set it in environment variables or AWS Secrets Manager before running this migration.'
+        'Set it in environment variables or AWS Secrets Manager before running this migration.'
     );
   }
 
@@ -85,7 +85,9 @@ async function migrateNostrKeys(): Promise<void> {
     }
   }
 
-  console.log(`Migration complete: ${encrypted} encrypted, ${skipped} already encrypted, ${errors} errors`);
+  console.log(
+    `Migration complete: ${encrypted} encrypted, ${skipped} already encrypted, ${errors} errors`
+  );
 
   if (errors > 0) {
     process.exit(1);

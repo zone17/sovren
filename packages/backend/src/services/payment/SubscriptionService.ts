@@ -32,7 +32,7 @@ import type {
   PauseSubscriptionOptions,
   SubscriptionWebhookEvent,
   SubscriptionUsage,
-  InvoiceLineItem
+  InvoiceLineItem,
 } from '../../types/subscription';
 import {
   SubscriptionEventType,
@@ -42,9 +42,7 @@ import {
   InvoiceType,
   InvoiceStatus,
 } from '../../types/subscription';
-import {
-  Currency,
-} from '../../types/currency';
+import { Currency } from '../../types/currency';
 import { randomUUID } from 'crypto';
 import { performance } from 'perf_hooks';
 
@@ -104,19 +102,19 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
     let results = Array.from(this.subscriptions.values());
 
     if (query.userId) {
-      results = results.filter(s => s.userId === query.userId);
+      results = results.filter((s) => s.userId === query.userId);
     }
     if (query.status) {
-      results = results.filter(s => s.status === query.status);
+      results = results.filter((s) => s.status === query.status);
     }
     if (query.planId) {
-      results = results.filter(s => s.planId === query.planId);
+      results = results.filter((s) => s.planId === query.planId);
     }
     if (query.startDate) {
-      results = results.filter(s => s.createdAt >= query.startDate!);
+      results = results.filter((s) => s.createdAt >= query.startDate!);
     }
     if (query.endDate) {
-      results = results.filter(s => s.createdAt <= query.endDate!);
+      results = results.filter((s) => s.createdAt <= query.endDate!);
     }
 
     // Sort
@@ -125,7 +123,7 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
     results.sort((a, b) => {
       const aVal = a[sortBy];
       const bVal = b[sortBy];
-      return sortOrder === 'desc' ? (bVal > aVal ? 1 : -1) : (aVal > bVal ? 1 : -1);
+      return sortOrder === 'desc' ? (bVal > aVal ? 1 : -1) : aVal > bVal ? 1 : -1;
     });
 
     // Paginate
@@ -153,9 +151,9 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
   }
 
   async listPlans(tier?: SubscriptionTier): Promise<SubscriptionPlan[]> {
-    let plans = Array.from(this.plans.values()).filter(p => p.active);
+    let plans = Array.from(this.plans.values()).filter((p) => p.active);
     if (tier) {
-      plans = plans.filter(p => p.tier === tier);
+      plans = plans.filter((p) => p.tier === tier);
     }
     return plans;
   }
@@ -172,9 +170,12 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
     return this.invoices.get(id) || null;
   }
 
-  async listSubscriptionInvoices(subscriptionId: string, limit = 100): Promise<SubscriptionInvoice[]> {
+  async listSubscriptionInvoices(
+    subscriptionId: string,
+    limit = 100
+  ): Promise<SubscriptionInvoice[]> {
     return Array.from(this.invoices.values())
-      .filter(inv => inv.subscriptionId === subscriptionId)
+      .filter((inv) => inv.subscriptionId === subscriptionId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
   }
@@ -189,7 +190,7 @@ class InMemorySubscriptionRepository implements ISubscriptionRepository {
 
   async getEventHistory(subscriptionId: string, limit = 100): Promise<SubscriptionEvent[]> {
     return this.events
-      .filter(e => e.subscriptionId === subscriptionId)
+      .filter((e) => e.subscriptionId === subscriptionId)
       .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
       .slice(0, limit);
   }
@@ -214,12 +215,15 @@ export class SubscriptionService implements ISubscriptionService {
   private readonly logger: ILogger;
   private readonly cache?: ICacheService;
   private readonly repository: ISubscriptionRepository;
-  private readonly eventSubscriptions = new Map<string, ((event: SubscriptionWebhookEvent) => void | Promise<void>)>();
+  private readonly eventSubscriptions = new Map<
+    string,
+    (event: SubscriptionWebhookEvent) => void | Promise<void>
+  >();
   private readonly metrics = {
     totalSubscriptions: 0,
     totalRenewals: 0,
     averageProcessingTime: 0,
-    uptime: Date.now()
+    uptime: Date.now(),
   };
 
   constructor(
@@ -272,7 +276,8 @@ export class SubscriptionService implements ISubscriptionService {
       const nextBillingDate = isTrialing ? trialEndDate! : currentPeriodEnd;
 
       // Get price based on interval
-      const price = params.billingInterval === BillingInterval.YEARLY ? plan.yearlyPrice : plan.monthlyPrice;
+      const price =
+        params.billingInterval === BillingInterval.YEARLY ? plan.yearlyPrice : plan.monthlyPrice;
       const currency = params.currency || plan.currency;
 
       // Create subscription
@@ -298,7 +303,7 @@ export class SubscriptionService implements ISubscriptionService {
         creditBalance: 0,
         metadata: params.metadata,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       };
 
       // Save subscription
@@ -310,10 +315,14 @@ export class SubscriptionService implements ISubscriptionService {
       }
 
       // Record event
-      await this.recordEvent(subscription.id, isTrialing ? SubscriptionEventType.TRIAL_STARTED : SubscriptionEventType.CREATED, {
-        newStatus: subscription.status,
-        newPlanId: subscription.planId
-      });
+      await this.recordEvent(
+        subscription.id,
+        isTrialing ? SubscriptionEventType.TRIAL_STARTED : SubscriptionEventType.CREATED,
+        {
+          newStatus: subscription.status,
+          newPlanId: subscription.planId,
+        }
+      );
 
       // Audit log
       await this.auditLog.log({
@@ -321,17 +330,19 @@ export class SubscriptionService implements ISubscriptionService {
         action: 'subscription.create',
         resource: { type: 'subscription', id: subscription.id },
         outcome: 'success',
-        details: { planId: params.planId, billingInterval: params.billingInterval, isTrialing }
+        details: { planId: params.planId, billingInterval: params.billingInterval, isTrialing },
       });
 
       // Emit event
-      await this.emitWebhookEvent(subscription, isTrialing ? SubscriptionEventType.TRIAL_STARTED : SubscriptionEventType.CREATED);
+      await this.emitWebhookEvent(
+        subscription,
+        isTrialing ? SubscriptionEventType.TRIAL_STARTED : SubscriptionEventType.CREATED
+      );
 
       this.metrics.totalSubscriptions++;
       this.updateMetrics(performance.now() - startTime);
 
       return subscription;
-
     } catch (error) {
       this.logger.error('Failed to create subscription', error);
       throw error;
@@ -367,7 +378,10 @@ export class SubscriptionService implements ISubscriptionService {
     return this.repository.countSubscriptions(query);
   }
 
-  async updateSubscription(subscriptionId: string, params: UpdateSubscriptionParams): Promise<Subscription> {
+  async updateSubscription(
+    subscriptionId: string,
+    params: UpdateSubscriptionParams
+  ): Promise<Subscription> {
     const subscription = await this.getSubscription(subscriptionId);
     if (!subscription) {
       throw new Error(`Subscription not found: ${subscriptionId}`);
@@ -394,7 +408,7 @@ export class SubscriptionService implements ISubscriptionService {
       action: 'subscription.update',
       resource: { type: 'subscription', id: subscriptionId },
       outcome: 'success',
-      details: params
+      details: params,
     });
 
     return subscription;
@@ -404,13 +418,15 @@ export class SubscriptionService implements ISubscriptionService {
    * PLAN MANAGEMENT
    */
 
-  async createPlan(planData: Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>): Promise<SubscriptionPlan> {
+  async createPlan(
+    planData: Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<SubscriptionPlan> {
     const now = new Date();
     const plan: SubscriptionPlan = {
       ...planData,
       id: randomUUID(),
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
     await this.repository.savePlan(plan);
@@ -420,7 +436,7 @@ export class SubscriptionService implements ISubscriptionService {
       action: 'plan.create',
       resource: { type: 'subscription_plan', id: plan.id },
       outcome: 'success',
-      details: { tier: plan.tier, monthlyPrice: plan.monthlyPrice }
+      details: { tier: plan.tier, monthlyPrice: plan.monthlyPrice },
     });
 
     return plan;
@@ -434,7 +450,10 @@ export class SubscriptionService implements ISubscriptionService {
     return this.repository.listPlans(tier);
   }
 
-  async updatePlan(planId: string, updates: Partial<Omit<SubscriptionPlan, 'id' | 'createdAt'>>): Promise<SubscriptionPlan> {
+  async updatePlan(
+    planId: string,
+    updates: Partial<Omit<SubscriptionPlan, 'id' | 'createdAt'>>
+  ): Promise<SubscriptionPlan> {
     const plan = await this.repository.getPlan(planId);
     if (!plan) {
       throw new Error(`Plan not found: ${planId}`);
@@ -443,7 +462,7 @@ export class SubscriptionService implements ISubscriptionService {
     const updated: SubscriptionPlan = {
       ...plan,
       ...updates,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     await this.repository.updatePlan(updated);
@@ -458,7 +477,10 @@ export class SubscriptionService implements ISubscriptionService {
    * SUBSCRIPTION LIFECYCLE
    */
 
-  async cancelSubscription(subscriptionId: string, options: CancelSubscriptionOptions): Promise<Subscription> {
+  async cancelSubscription(
+    subscriptionId: string,
+    options: CancelSubscriptionOptions
+  ): Promise<Subscription> {
     const subscription = await this.getSubscription(subscriptionId);
     if (!subscription) {
       throw new Error(`Subscription not found: ${subscriptionId}`);
@@ -474,7 +496,7 @@ export class SubscriptionService implements ISubscriptionService {
 
       await this.recordEvent(subscriptionId, SubscriptionEventType.CANCELED, {
         previousStatus: subscription.status,
-        newStatus: SubscriptionStatus.CANCELED
+        newStatus: SubscriptionStatus.CANCELED,
       });
 
       await this.emitWebhookEvent(subscription, SubscriptionEventType.CANCELED);
@@ -485,7 +507,7 @@ export class SubscriptionService implements ISubscriptionService {
 
       await this.recordEvent(subscriptionId, SubscriptionEventType.CANCELLATION_SCHEDULED, {
         previousStatus: subscription.status,
-        newStatus: SubscriptionStatus.PENDING_CANCELLATION
+        newStatus: SubscriptionStatus.PENDING_CANCELLATION,
       });
 
       await this.emitWebhookEvent(subscription, SubscriptionEventType.CANCELLATION_SCHEDULED);
@@ -499,7 +521,7 @@ export class SubscriptionService implements ISubscriptionService {
       action: 'subscription.cancel',
       resource: { type: 'subscription', id: subscriptionId },
       outcome: 'success',
-      details: { immediate: options.immediate, reason: options.reason }
+      details: { immediate: options.immediate, reason: options.reason },
     });
 
     // Invalidate cache
@@ -529,7 +551,7 @@ export class SubscriptionService implements ISubscriptionService {
 
     await this.recordEvent(subscriptionId, SubscriptionEventType.ACTIVATED, {
       previousStatus: SubscriptionStatus.PENDING_CANCELLATION,
-      newStatus: SubscriptionStatus.ACTIVE
+      newStatus: SubscriptionStatus.ACTIVE,
     });
 
     // Invalidate cache
@@ -540,7 +562,10 @@ export class SubscriptionService implements ISubscriptionService {
     return subscription;
   }
 
-  async pauseSubscription(subscriptionId: string, options?: PauseSubscriptionOptions): Promise<Subscription> {
+  async pauseSubscription(
+    subscriptionId: string,
+    options?: PauseSubscriptionOptions
+  ): Promise<Subscription> {
     const subscription = await this.getSubscription(subscriptionId);
     if (!subscription) {
       throw new Error(`Subscription not found: ${subscriptionId}`);
@@ -552,13 +577,13 @@ export class SubscriptionService implements ISubscriptionService {
       ...subscription.metadata,
       pausedAt: new Date().toISOString(),
       pauseReason: options?.pauseReason,
-      resumeAt: options?.resumeAt?.toISOString()
+      resumeAt: options?.resumeAt?.toISOString(),
     };
 
     await this.repository.updateSubscription(subscription);
 
     await this.recordEvent(subscriptionId, SubscriptionEventType.PAUSED, {
-      newStatus: SubscriptionStatus.PAUSED
+      newStatus: SubscriptionStatus.PAUSED,
     });
 
     await this.emitWebhookEvent(subscription, SubscriptionEventType.PAUSED);
@@ -588,7 +613,7 @@ export class SubscriptionService implements ISubscriptionService {
 
     await this.recordEvent(subscriptionId, SubscriptionEventType.RESUMED, {
       previousStatus: SubscriptionStatus.PAUSED,
-      newStatus: SubscriptionStatus.ACTIVE
+      newStatus: SubscriptionStatus.ACTIVE,
     });
 
     await this.emitWebhookEvent(subscription, SubscriptionEventType.RESUMED);
@@ -612,7 +637,7 @@ export class SubscriptionService implements ISubscriptionService {
     await this.repository.updateSubscription(subscription);
 
     await this.recordEvent(subscriptionId, SubscriptionEventType.EXPIRED, {
-      newStatus: SubscriptionStatus.EXPIRED
+      newStatus: SubscriptionStatus.EXPIRED,
     });
 
     await this.emitWebhookEvent(subscription, SubscriptionEventType.EXPIRED);
@@ -646,7 +671,7 @@ export class SubscriptionService implements ISubscriptionService {
     await this.repository.updateSubscription(subscription);
 
     await this.recordEvent(subscriptionId, SubscriptionEventType.TRIAL_STARTED, {
-      newStatus: SubscriptionStatus.TRIAL
+      newStatus: SubscriptionStatus.TRIAL,
     });
 
     return subscription;
@@ -666,14 +691,17 @@ export class SubscriptionService implements ISubscriptionService {
       subscription.status = SubscriptionStatus.ACTIVE;
       subscription.isTrialing = false;
       subscription.trialEndDate = new Date();
-      subscription.nextBillingDate = this.calculatePeriodEnd(new Date(), subscription.billingInterval);
+      subscription.nextBillingDate = this.calculatePeriodEnd(
+        new Date(),
+        subscription.billingInterval
+      );
       subscription.updatedAt = new Date();
 
       await this.repository.updateSubscription(subscription);
 
       await this.recordEvent(subscriptionId, SubscriptionEventType.TRIAL_ENDED, {
         previousStatus: SubscriptionStatus.TRIAL,
-        newStatus: SubscriptionStatus.ACTIVE
+        newStatus: SubscriptionStatus.ACTIVE,
       });
 
       // Create first invoice
@@ -689,19 +717,23 @@ export class SubscriptionService implements ISubscriptionService {
   }
 
   async getTrialsEndingSoon(daysAhead: number): Promise<Subscription[]> {
-    const allSubscriptions = await this.repository.querySubscriptions({ status: SubscriptionStatus.TRIAL, limit: 10000 });
+    const allSubscriptions = await this.repository.querySubscriptions({
+      status: SubscriptionStatus.TRIAL,
+      limit: 10000,
+    });
     const cutoffDate = new Date(Date.now() + daysAhead * 86400000);
 
-    return allSubscriptions.filter(sub =>
-      sub.trialEndDate && sub.trialEndDate <= cutoffDate
-    );
+    return allSubscriptions.filter((sub) => sub.trialEndDate && sub.trialEndDate <= cutoffDate);
   }
 
   /**
    * UPGRADE & DOWNGRADE
    */
 
-  async upgradeSubscription(subscriptionId: string, newPlanId: string): Promise<{
+  async upgradeSubscription(
+    subscriptionId: string,
+    newPlanId: string
+  ): Promise<{
     subscription: Subscription;
     proration: ProrationResult;
     invoice?: SubscriptionInvoice;
@@ -729,7 +761,7 @@ export class SubscriptionService implements ISubscriptionService {
         amount: proration.amountDue,
         currency: subscription.currency as any,
         description: `Upgrade to ${proration.newPlan.name}`,
-        metadata: { subscriptionId, invoiceId: invoice.id }
+        metadata: { subscriptionId, invoiceId: invoice.id },
       });
 
       if (paymentResult.success) {
@@ -741,16 +773,17 @@ export class SubscriptionService implements ISubscriptionService {
 
     // Apply plan change
     subscription.planId = newPlanId;
-    subscription.price = subscription.billingInterval === BillingInterval.YEARLY
-      ? proration.newPlan.yearlyPrice
-      : proration.newPlan.monthlyPrice;
+    subscription.price =
+      subscription.billingInterval === BillingInterval.YEARLY
+        ? proration.newPlan.yearlyPrice
+        : proration.newPlan.monthlyPrice;
     subscription.updatedAt = new Date();
 
     await this.repository.updateSubscription(subscription);
 
     await this.recordEvent(subscriptionId, SubscriptionEventType.UPGRADED, {
       previousPlanId: proration.currentPlan.id,
-      newPlanId: proration.newPlan.id
+      newPlanId: proration.newPlan.id,
     });
 
     await this.emitWebhookEvent(subscription, SubscriptionEventType.UPGRADED);
@@ -763,7 +796,11 @@ export class SubscriptionService implements ISubscriptionService {
     return { subscription, proration, invoice };
   }
 
-  async downgradeSubscription(subscriptionId: string, newPlanId: string, immediate: boolean): Promise<{
+  async downgradeSubscription(
+    subscriptionId: string,
+    newPlanId: string,
+    immediate: boolean
+  ): Promise<{
     subscription: Subscription;
     proration: ProrationResult;
   }> {
@@ -781,15 +818,16 @@ export class SubscriptionService implements ISubscriptionService {
     if (immediate) {
       // Apply immediately and credit balance
       subscription.planId = newPlanId;
-      subscription.price = subscription.billingInterval === BillingInterval.YEARLY
-        ? proration.newPlan.yearlyPrice
-        : proration.newPlan.monthlyPrice;
+      subscription.price =
+        subscription.billingInterval === BillingInterval.YEARLY
+          ? proration.newPlan.yearlyPrice
+          : proration.newPlan.monthlyPrice;
       subscription.creditBalance += Math.abs(proration.amountDue);
       subscription.updatedAt = new Date();
 
       await this.recordEvent(subscriptionId, SubscriptionEventType.DOWNGRADED, {
         previousPlanId: proration.currentPlan.id,
-        newPlanId: proration.newPlan.id
+        newPlanId: proration.newPlan.id,
       });
     } else {
       // Schedule for end of period
@@ -799,7 +837,7 @@ export class SubscriptionService implements ISubscriptionService {
 
       await this.recordEvent(subscriptionId, SubscriptionEventType.DOWNGRADE_SCHEDULED, {
         previousPlanId: proration.currentPlan.id,
-        newPlanId: proration.newPlan.id
+        newPlanId: proration.newPlan.id,
       });
     }
 
@@ -827,15 +865,23 @@ export class SubscriptionService implements ISubscriptionService {
     }
 
     const now = new Date();
-    const daysRemaining = Math.ceil((subscription.currentPeriodEnd.getTime() - now.getTime()) / 86400000);
-    const totalDays = Math.ceil((subscription.currentPeriodEnd.getTime() - subscription.currentPeriodStart.getTime()) / 86400000);
+    const daysRemaining = Math.ceil(
+      (subscription.currentPeriodEnd.getTime() - now.getTime()) / 86400000
+    );
+    const totalDays = Math.ceil(
+      (subscription.currentPeriodEnd.getTime() - subscription.currentPeriodStart.getTime()) /
+        86400000
+    );
 
     // Calculate unused credit
     const dailyRate = subscription.price / totalDays;
     const unusedCredit = dailyRate * daysRemaining;
 
     // Calculate new plan cost (prorated)
-    const newDailyRate = (subscription.billingInterval === BillingInterval.YEARLY ? newPlan.yearlyPrice : newPlan.monthlyPrice) / totalDays;
+    const newDailyRate =
+      (subscription.billingInterval === BillingInterval.YEARLY
+        ? newPlan.yearlyPrice
+        : newPlan.monthlyPrice) / totalDays;
     const newPlanCost = newDailyRate * daysRemaining;
 
     // Net amount due (positive = charge, negative = credit)
@@ -849,7 +895,7 @@ export class SubscriptionService implements ISubscriptionService {
       newPlanCost,
       amountDue,
       isUpgrade: newPlanCost > unusedCredit,
-      effectiveDate: now
+      effectiveDate: now,
     };
   }
 
@@ -865,9 +911,10 @@ export class SubscriptionService implements ISubscriptionService {
     }
 
     subscription.planId = subscription.pendingPlanChange;
-    subscription.price = subscription.billingInterval === BillingInterval.YEARLY
-      ? newPlan.yearlyPrice
-      : newPlan.monthlyPrice;
+    subscription.price =
+      subscription.billingInterval === BillingInterval.YEARLY
+        ? newPlan.yearlyPrice
+        : newPlan.monthlyPrice;
     subscription.pendingPlanChange = undefined;
     subscription.pendingPlanChangeDate = undefined;
     subscription.updatedAt = new Date();
@@ -875,7 +922,7 @@ export class SubscriptionService implements ISubscriptionService {
     await this.repository.updateSubscription(subscription);
 
     await this.recordEvent(subscriptionId, SubscriptionEventType.PLAN_CHANGED, {
-      newPlanId: newPlan.id
+      newPlanId: newPlan.id,
     });
 
     return subscription;
@@ -895,7 +942,7 @@ export class SubscriptionService implements ISubscriptionService {
           subscriptionId,
           success: false,
           error: 'Subscription not found',
-          nextBillingDate: new Date()
+          nextBillingDate: new Date(),
         };
       }
 
@@ -908,7 +955,7 @@ export class SubscriptionService implements ISubscriptionService {
         amount: invoice.totalAmount,
         currency: subscription.currency as any,
         description: `Subscription renewal`,
-        metadata: { subscriptionId, invoiceId: invoice.id }
+        metadata: { subscriptionId, invoiceId: invoice.id },
       });
 
       if (paymentResult.success) {
@@ -919,7 +966,10 @@ export class SubscriptionService implements ISubscriptionService {
         subscription.lastPaymentId = paymentResult.transactionId;
         subscription.lastPaymentDate = new Date();
         subscription.currentPeriodStart = subscription.currentPeriodEnd;
-        subscription.currentPeriodEnd = this.calculatePeriodEnd(subscription.currentPeriodEnd, subscription.billingInterval);
+        subscription.currentPeriodEnd = this.calculatePeriodEnd(
+          subscription.currentPeriodEnd,
+          subscription.billingInterval
+        );
         subscription.nextBillingDate = subscription.currentPeriodEnd;
         subscription.retryCount = 0;
         subscription.updatedAt = new Date();
@@ -937,9 +987,8 @@ export class SubscriptionService implements ISubscriptionService {
           success: true,
           invoiceId: invoice.id,
           paymentTransactionId: paymentResult.transactionId,
-          nextBillingDate: subscription.nextBillingDate
+          nextBillingDate: subscription.nextBillingDate,
         };
-
       } else {
         // Payment failed - update status and schedule retry
         subscription.status = SubscriptionStatus.PAST_DUE;
@@ -960,17 +1009,16 @@ export class SubscriptionService implements ISubscriptionService {
           success: false,
           error: paymentResult.error,
           nextBillingDate: subscription.nextBillingDate,
-          retryScheduled: retryDate
+          retryScheduled: retryDate,
         };
       }
-
     } catch (error) {
       this.logger.error('Renewal failed', error);
       return {
         subscriptionId,
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        nextBillingDate: new Date()
+        nextBillingDate: new Date(),
       };
     }
   }
@@ -981,11 +1029,11 @@ export class SubscriptionService implements ISubscriptionService {
     // Get all subscriptions due for renewal
     const dueSubscriptions = await this.repository.querySubscriptions({
       status: SubscriptionStatus.ACTIVE,
-      limit: 10000
+      limit: 10000,
     });
 
-    const subscriptionsToBill = dueSubscriptions.filter(sub =>
-      sub.autoRenew && sub.nextBillingDate <= targetDate
+    const subscriptionsToBill = dueSubscriptions.filter(
+      (sub) => sub.autoRenew && sub.nextBillingDate <= targetDate
     );
 
     const results: RenewalResult[] = [];
@@ -1005,15 +1053,15 @@ export class SubscriptionService implements ISubscriptionService {
       }
     }
 
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
 
     return {
       totalProcessed: results.length,
       successful,
       failed,
       results,
-      errors
+      errors,
     };
   }
 
@@ -1021,7 +1069,10 @@ export class SubscriptionService implements ISubscriptionService {
     return this.renewSubscription(subscriptionId);
   }
 
-  async updatePaymentMethod(subscriptionId: string, paymentMethodId: string): Promise<Subscription> {
+  async updatePaymentMethod(
+    subscriptionId: string,
+    paymentMethodId: string
+  ): Promise<Subscription> {
     const subscription = await this.getSubscription(subscriptionId);
     if (!subscription) {
       throw new Error(`Subscription not found: ${subscriptionId}`);
@@ -1029,7 +1080,7 @@ export class SubscriptionService implements ISubscriptionService {
 
     subscription.metadata = {
       ...subscription.metadata,
-      paymentMethodId
+      paymentMethodId,
     };
     subscription.updatedAt = new Date();
 
@@ -1053,7 +1104,10 @@ export class SubscriptionService implements ISubscriptionService {
     return subscription.nextBillingDate;
   }
 
-  async updateBillingInterval(subscriptionId: string, interval: BillingInterval): Promise<Subscription> {
+  async updateBillingInterval(
+    subscriptionId: string,
+    interval: BillingInterval
+  ): Promise<Subscription> {
     const subscription = await this.getSubscription(subscriptionId);
     if (!subscription) {
       throw new Error(`Subscription not found: ${subscriptionId}`);
@@ -1098,9 +1152,9 @@ export class SubscriptionService implements ISubscriptionService {
         amount: subscription.price,
         period: {
           start: subscription.currentPeriodStart,
-          end: subscription.currentPeriodEnd
-        }
-      }
+          end: subscription.currentPeriodEnd,
+        },
+      },
     ];
 
     // Add usage charges if applicable
@@ -1110,13 +1164,14 @@ export class SubscriptionService implements ISubscriptionService {
         description: 'Usage charges',
         quantity: 1,
         unitPrice: usageCharges,
-        amount: usageCharges
+        amount: usageCharges,
       });
     }
 
     const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
     const taxAmount = 0; // Tax calculation would go here
-    const discountAmount = subscription.creditBalance > 0 ? Math.min(subscription.creditBalance, subtotal) : 0;
+    const discountAmount =
+      subscription.creditBalance > 0 ? Math.min(subscription.creditBalance, subtotal) : 0;
     const totalAmount = subtotal + taxAmount - discountAmount;
 
     const invoice: SubscriptionInvoice = {
@@ -1131,7 +1186,7 @@ export class SubscriptionService implements ISubscriptionService {
       status: InvoiceStatus.PENDING,
       dueDate: subscription.nextBillingDate,
       lineItems,
-      createdAt: now
+      createdAt: now,
     };
 
     await this.repository.saveInvoice(invoice);
@@ -1145,7 +1200,10 @@ export class SubscriptionService implements ISubscriptionService {
     return invoice;
   }
 
-  async getSubscriptionInvoices(subscriptionId: string, limit?: number): Promise<SubscriptionInvoice[]> {
+  async getSubscriptionInvoices(
+    subscriptionId: string,
+    limit?: number
+  ): Promise<SubscriptionInvoice[]> {
     return this.repository.listSubscriptionInvoices(subscriptionId, limit);
   }
 
@@ -1170,7 +1228,12 @@ export class SubscriptionService implements ISubscriptionService {
    * USAGE-BASED BILLING
    */
 
-  async recordUsage(subscriptionId: string, metricName: string, quantity: number, timestamp?: Date): Promise<void> {
+  async recordUsage(
+    subscriptionId: string,
+    metricName: string,
+    quantity: number,
+    timestamp?: Date
+  ): Promise<void> {
     let usage = await this.repository.getCurrentUsage(subscriptionId);
 
     if (!usage) {
@@ -1183,7 +1246,7 @@ export class SubscriptionService implements ISubscriptionService {
         periodEnd: subscription.currentPeriodEnd,
         metrics: {},
         totalCost: 0,
-        currency: subscription.currency
+        currency: subscription.currency,
       };
     }
 
@@ -1195,12 +1258,13 @@ export class SubscriptionService implements ISubscriptionService {
         unit: 'unit',
         unitPrice: 0,
         totalCost: 0,
-        limitExceeded: false
+        limitExceeded: false,
       };
     }
 
     usage.metrics[metricName].quantity += quantity;
-    usage.metrics[metricName].totalCost = usage.metrics[metricName].quantity * usage.metrics[metricName].unitPrice;
+    usage.metrics[metricName].totalCost =
+      usage.metrics[metricName].quantity * usage.metrics[metricName].unitPrice;
 
     usage.totalCost = Object.values(usage.metrics).reduce((sum, m) => sum + m.totalCost, 0);
 
@@ -1238,7 +1302,10 @@ export class SubscriptionService implements ISubscriptionService {
   }
 
   async getSubscriptionsInGracePeriod(): Promise<Subscription[]> {
-    return this.repository.querySubscriptions({ status: SubscriptionStatus.GRACE_PERIOD, limit: 10000 });
+    return this.repository.querySubscriptions({
+      status: SubscriptionStatus.GRACE_PERIOD,
+      limit: 10000,
+    });
   }
 
   async schedulePaymentRetry(subscriptionId: string, retryDate: Date): Promise<void> {
@@ -1266,7 +1333,11 @@ export class SubscriptionService implements ISubscriptionService {
    * ANALYTICS & REPORTING
    */
 
-  async getAnalytics(periodType: 'day' | 'week' | 'month' | 'year', startDate: Date, endDate: Date): Promise<SubscriptionAnalytics[]> {
+  async getAnalytics(
+    periodType: 'day' | 'week' | 'month' | 'year',
+    startDate: Date,
+    endDate: Date
+  ): Promise<SubscriptionAnalytics[]> {
     // This would typically query aggregated analytics data
     // For now, return a single period
     const analytics: SubscriptionAnalytics = {
@@ -1293,9 +1364,9 @@ export class SubscriptionService implements ISubscriptionService {
         [SubscriptionTier.FREE]: { count: 0, mrr: 0, percentage: 0 },
         [SubscriptionTier.CREATOR]: { count: 0, mrr: 0, percentage: 0 },
         [SubscriptionTier.PRO]: { count: 0, mrr: 0, percentage: 0 },
-        [SubscriptionTier.ENTERPRISE]: { count: 0, mrr: 0, percentage: 0 }
+        [SubscriptionTier.ENTERPRISE]: { count: 0, mrr: 0, percentage: 0 },
       },
-      calculatedAt: new Date()
+      calculatedAt: new Date(),
     };
 
     return [analytics];
@@ -1311,20 +1382,19 @@ export class SubscriptionService implements ISubscriptionService {
       arr: await this.calculateARR(),
       averageLTV: await this.calculateAverageLTV(),
       churnRate: await this.calculateChurnRate(),
-      retentionRate: await this.getRetentionRate()
+      retentionRate: await this.getRetentionRate(),
     };
   }
 
   async calculateMRR(): Promise<number> {
     const activeSubscriptions = await this.repository.querySubscriptions({
       status: SubscriptionStatus.ACTIVE,
-      limit: 100000
+      limit: 100000,
     });
 
     return activeSubscriptions.reduce((total, sub) => {
-      const monthlyRevenue = sub.billingInterval === BillingInterval.YEARLY
-        ? sub.price / 12
-        : sub.price;
+      const monthlyRevenue =
+        sub.billingInterval === BillingInterval.YEARLY ? sub.price / 12 : sub.price;
       return total + monthlyRevenue;
     }, 0);
   }
@@ -1339,12 +1409,12 @@ export class SubscriptionService implements ISubscriptionService {
 
     const startActive = await this.countSubscriptions({
       status: SubscriptionStatus.ACTIVE,
-      endDate: periodStart
+      endDate: periodStart,
     });
 
     const churned = await this.countSubscriptions({
       status: SubscriptionStatus.CANCELED,
-      startDate: periodStart
+      startDate: periodStart,
     });
 
     return startActive > 0 ? (churned / startActive) * 100 : 0;
@@ -1369,7 +1439,10 @@ export class SubscriptionService implements ISubscriptionService {
    * EVENTS & WEBHOOKS
    */
 
-  subscribeToEvents(eventType: SubscriptionEventType, callback: (event: SubscriptionWebhookEvent) => void | Promise<void>): string {
+  subscribeToEvents(
+    eventType: SubscriptionEventType,
+    callback: (event: SubscriptionWebhookEvent) => void | Promise<void>
+  ): string {
     const id = randomUUID();
     this.eventSubscriptions.set(id, callback);
     return id;
@@ -1387,7 +1460,10 @@ export class SubscriptionService implements ISubscriptionService {
    * CURRENCY SUPPORT
    */
 
-  async getSubscriptionInCurrency(subscriptionId: string, currency: Currency): Promise<Subscription> {
+  async getSubscriptionInCurrency(
+    subscriptionId: string,
+    currency: Currency
+  ): Promise<Subscription> {
     const subscription = await this.getSubscription(subscriptionId);
     if (!subscription) {
       throw new Error(`Subscription not found: ${subscriptionId}`);
@@ -1401,13 +1477,13 @@ export class SubscriptionService implements ISubscriptionService {
     const converted = await this.currencyService.convert({
       amount: subscription.price,
       from: subscription.currency,
-      to: currency
+      to: currency,
     });
 
     return {
       ...subscription,
       price: converted.convertedAmount,
-      currency
+      currency,
     };
   }
 
@@ -1421,7 +1497,7 @@ export class SubscriptionService implements ISubscriptionService {
     const converted = await this.currencyService.convert({
       amount: subscription.price,
       from: subscription.currency,
-      to: newCurrency
+      to: newCurrency,
     });
 
     subscription.price = converted.convertedAmount;
@@ -1463,7 +1539,7 @@ export class SubscriptionService implements ISubscriptionService {
       mrr: await this.calculateMRR(),
       arr: await this.calculateARR(),
       churnRate: await this.calculateChurnRate(),
-      averageProcessingTime: this.metrics.averageProcessingTime
+      averageProcessingTime: this.metrics.averageProcessingTime,
     };
   }
 
@@ -1473,7 +1549,7 @@ export class SubscriptionService implements ISubscriptionService {
     const expiredSubscriptions = await this.repository.querySubscriptions({
       status: SubscriptionStatus.EXPIRED,
       endDate: cutoffDate,
-      limit: 10000
+      limit: 10000,
     });
 
     // In production, would delete or archive these subscriptions
@@ -1515,20 +1591,23 @@ export class SubscriptionService implements ISubscriptionService {
     return new Date(Date.now() + daysToAdd * 86400000);
   }
 
-  private async createProrationInvoice(subscription: Subscription, proration: ProrationResult): Promise<SubscriptionInvoice> {
+  private async createProrationInvoice(
+    subscription: Subscription,
+    proration: ProrationResult
+  ): Promise<SubscriptionInvoice> {
     const lineItems: InvoiceLineItem[] = [
       {
         description: `Remaining time credit: ${proration.currentPlan.name}`,
         quantity: 1,
         unitPrice: -proration.unusedCredit,
-        amount: -proration.unusedCredit
+        amount: -proration.unusedCredit,
       },
       {
         description: `Upgrade to ${proration.newPlan.name} (${proration.daysRemaining} days)`,
         quantity: 1,
         unitPrice: proration.newPlanCost,
-        amount: proration.newPlanCost
-      }
+        amount: proration.newPlanCost,
+      },
     ];
 
     const invoice: SubscriptionInvoice = {
@@ -1543,31 +1622,38 @@ export class SubscriptionService implements ISubscriptionService {
       status: InvoiceStatus.PENDING,
       dueDate: new Date(),
       lineItems,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     await this.repository.saveInvoice(invoice);
     return invoice;
   }
 
-  private async recordEvent(subscriptionId: string, eventType: SubscriptionEventType, data?: Partial<SubscriptionEvent>): Promise<void> {
+  private async recordEvent(
+    subscriptionId: string,
+    eventType: SubscriptionEventType,
+    data?: Partial<SubscriptionEvent>
+  ): Promise<void> {
     const event: SubscriptionEvent = {
       id: randomUUID(),
       subscriptionId,
       eventType,
       ...data,
-      occurredAt: new Date()
+      occurredAt: new Date(),
     };
 
     await this.repository.saveEvent(event);
   }
 
-  private async emitWebhookEvent(subscription: Subscription, eventType: SubscriptionEventType): Promise<void> {
+  private async emitWebhookEvent(
+    subscription: Subscription,
+    eventType: SubscriptionEventType
+  ): Promise<void> {
     const event: SubscriptionWebhookEvent = {
       id: randomUUID(),
       type: eventType,
       subscription,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     // Emit to event bus

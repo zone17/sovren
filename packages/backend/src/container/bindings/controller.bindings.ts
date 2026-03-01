@@ -26,76 +26,67 @@ export class ControllerModule implements IServiceModule {
     // ===========================
     // ContentController - SCOPED
     // ===========================
-    registry.registerSingleton(
-      TYPES.ContentController,
-      (container) => {
-        const publishingService = container.resolve(TYPES.ContentPublishingService);
-        const moderationService = container.resolve(TYPES.ContentModerationService);
-        const searchService = container.resolve(TYPES.ContentSearchService);
-        const recommendationService = container.resolve(TYPES.ContentRecommendationService);
-        const analyticsService = container.resolve(TYPES.ContentAnalyticsService);
-        const versioningService = container.resolve(TYPES.ContentVersioningService);
-        const creationService = container.resolve(TYPES.ContentCreationService);
+    registry.registerSingleton(TYPES.ContentController, (container) => {
+      const publishingService = container.resolve(TYPES.ContentPublishingService);
+      const moderationService = container.resolve(TYPES.ContentModerationService);
+      const searchService = container.resolve(TYPES.ContentSearchService);
+      const recommendationService = container.resolve(TYPES.ContentRecommendationService);
+      const analyticsService = container.resolve(TYPES.ContentAnalyticsService);
+      const versioningService = container.resolve(TYPES.ContentVersioningService);
+      const creationService = container.resolve(TYPES.ContentCreationService);
 
-        return new ContentController(
-          publishingService,
-          moderationService,
-          searchService,
-          recommendationService,
-          analyticsService,
-          versioningService,
-          creationService as unknown as ContentCreationService
-        );
-      }
-    );
+      return new ContentController(
+        publishingService,
+        moderationService,
+        searchService,
+        recommendationService,
+        analyticsService,
+        versioningService,
+        creationService as unknown as ContentCreationService
+      );
+    });
 
     // ===========================
     // UserController - SCOPED
     // ===========================
-    registry.registerSingleton(
-      TYPES.UserController,
-      (container) => {
-        const profileService = container.resolve(TYPES.UserProfileService);
-        const preferencesService = container.resolve(TYPES.UserPreferencesService);
-        const activityService = container.resolve(TYPES.UserActivityService);
-        const relationshipService = container.resolve(TYPES.UserRelationshipService);
-        const analyticsService = container.resolve(TYPES.UserAnalyticsService);
+    registry.registerSingleton(TYPES.UserController, (container) => {
+      const profileService = container.resolve(TYPES.UserProfileService);
+      const preferencesService = container.resolve(TYPES.UserPreferencesService);
+      const activityService = container.resolve(TYPES.UserActivityService);
+      const relationshipService = container.resolve(TYPES.UserRelationshipService);
+      const analyticsService = container.resolve(TYPES.UserAnalyticsService);
 
-        return new UserController(
-          profileService,
-          preferencesService,
-          activityService,
-          relationshipService,
-          analyticsService
-        );
-      }
-    );
+      return new UserController(
+        profileService,
+        preferencesService,
+        activityService,
+        relationshipService,
+        analyticsService
+      );
+    });
 
     // ===========================
     // PaymentController - SCOPED
     // ===========================
-    registry.registerSingleton(
-      TYPES.PaymentController,
-      (container) => {
-        const paymentService = container.resolve(TYPES.PaymentProcessingService);
-        const invoiceService = container.resolve(TYPES.InvoiceService);
-        const currencyService = container.resolve(TYPES.CurrencyService);
-        const subscriptionService = container.resolve(TYPES.SubscriptionService);
-        const refundService = container.resolve(TYPES.RefundService);
-        const analyticsService = container.resolve(TYPES.PaymentAnalyticsService);
-        const webhookService = container.resolve(TYPES.WebhookService);
+    registry.registerSingleton(TYPES.PaymentController, (container) => {
+      const paymentService = container.resolve(TYPES.PaymentProcessingService);
+      const invoiceService = container.resolve(TYPES.InvoiceService);
+      const currencyService = container.resolve(TYPES.CurrencyService);
+      const subscriptionService = container.resolve(TYPES.SubscriptionService);
+      const refundService = container.resolve(TYPES.RefundService);
+      const analyticsService = container.resolve(TYPES.PaymentAnalyticsService);
+      const webhookService = container.resolve(TYPES.WebhookService);
 
-        return new PaymentController(
-          paymentService,
-          invoiceService,
-          currencyService,
-          subscriptionService,
-          refundService,
-          analyticsService,
-          webhookService
-        );
-      }
-    );
+      return new PaymentController(
+        paymentService,
+        invoiceService,
+        currencyService,
+        subscriptionService,
+        refundService,
+        analyticsService,
+        webhookService
+      );
+    });
   }
 
   dependencies = ['ContentServicesModule', 'UserServicesModule', 'PaymentServicesModule'];

@@ -14,11 +14,7 @@ import type { IPlatformConnectionService } from '../../interfaces/distribution/I
 import type { IPlatformAdapter } from './adapters/IPlatformAdapter';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
-import type {
-  PlatformStatus,
-  SupportedPlatform,
-  OAuthTokens,
-} from '@shared/types/distribution';
+import type { PlatformStatus, SupportedPlatform, OAuthTokens } from '@shared/types/distribution';
 import { encryptToken, decryptToken, getEncryptionKey } from './crypto';
 import { MastodonAdapter } from './adapters/MastodonAdapter';
 import { BlueskyAdapter } from './adapters/BlueskyAdapter';

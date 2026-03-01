@@ -133,10 +133,7 @@ async function ensureBackupDir(): Promise<string> {
   return backupPath;
 }
 
-async function saveBackup(
-  backupPath: string,
-  subscriptions: LegacySubscription[]
-): Promise<void> {
+async function saveBackup(backupPath: string, subscriptions: LegacySubscription[]): Promise<void> {
   const backupFile = path.join(backupPath, 'subscriptions-backup.json');
 
   await fs.writeFile(
@@ -214,9 +211,7 @@ function generateId(): string {
 /**
  * Validate subscription data
  */
-function validateSubscription(
-  sub: LegacySubscription
-): { valid: boolean; error?: string } {
+function validateSubscription(sub: LegacySubscription): { valid: boolean; error?: string } {
   try {
     // Check required fields
     if (!sub.id) {
@@ -235,8 +230,8 @@ function validateSubscription(
 
       // Check for at least one filter property
       const validProps = ['ids', 'authors', 'kinds', 'since', 'until', 'limit'];
-      const hasValidProp = validProps.some(prop => prop in filter);
-      const hasTagFilter = Object.keys(filter).some(key => key.startsWith('#'));
+      const hasValidProp = validProps.some((prop) => prop in filter);
+      const hasTagFilter = Object.keys(filter).some((key) => key.startsWith('#'));
 
       if (!hasValidProp && !hasTagFilter) {
         return { valid: false, error: 'Filter must have at least one property' };
@@ -248,7 +243,7 @@ function validateSubscription(
           return { valid: false, error: 'kinds must be an array' };
         }
 
-        if (filter.kinds.some(k => typeof k !== 'number')) {
+        if (filter.kinds.some((k) => typeof k !== 'number')) {
           return { valid: false, error: 'kinds must contain numbers' };
         }
       }
@@ -259,7 +254,7 @@ function validateSubscription(
           return { valid: false, error: 'authors must be an array' };
         }
 
-        if (filter.authors.some(a => !/^[0-9a-f]{64}$/i.test(a))) {
+        if (filter.authors.some((a) => !/^[0-9a-f]{64}$/i.test(a))) {
           return { valid: false, error: 'Invalid author pubkey format' };
         }
       }
@@ -382,7 +377,7 @@ async function performMigration(options: MigrationOptions): Promise<MigrationSta
   log(`Found ${stats.totalSubscriptions} subscription(s) to migrate`, 'info');
 
   // Step 2: Filter subscriptions
-  const subscriptionsToMigrate = allSubscriptions.filter(sub => {
+  const subscriptionsToMigrate = allSubscriptions.filter((sub) => {
     const inactive = isInactive(sub);
 
     if (inactive) {
@@ -400,7 +395,10 @@ async function performMigration(options: MigrationOptions): Promise<MigrationSta
   });
 
   log(`${subscriptionsToMigrate.length} active subscriptions to migrate`, 'info');
-  log(`${stats.inactive} inactive subscriptions ${options.migrateInactive ? 'included' : 'skipped'}`, 'warn');
+  log(
+    `${stats.inactive} inactive subscriptions ${options.migrateInactive ? 'included' : 'skipped'}`,
+    'warn'
+  );
 
   // Step 3: Create backup
   const backupPath = await ensureBackupDir();
@@ -454,7 +452,10 @@ async function performMigration(options: MigrationOptions): Promise<MigrationSta
       const sub = subscriptionsToMigrate[i];
       const progress = Math.round(((i + 1) / subscriptionsToMigrate.length) * 100);
 
-      log(`[${progress}%] Migrating subscription ${i + 1}/${subscriptionsToMigrate.length}...`, 'info');
+      log(
+        `[${progress}%] Migrating subscription ${i + 1}/${subscriptionsToMigrate.length}...`,
+        'info'
+      );
 
       const result = await migrateSubscription(sub, db);
 
@@ -556,7 +557,10 @@ async function main() {
       log('💡 Use --include-inactive to migrate old subscriptions', 'info');
       log('💡 Use --cleanup to remove old database after migration', 'info');
     } else if (stats.migrated > 0) {
-      log('\n✓ Migration successful! Subscriptions are now managed by SubscriptionManager.', 'success');
+      log(
+        '\n✓ Migration successful! Subscriptions are now managed by SubscriptionManager.',
+        'success'
+      );
     }
 
     process.exit(stats.failed > 0 ? 1 : 0);

@@ -17,11 +17,9 @@ import type {
   ReviewOptions,
   AppealOptions,
   ModerationQuery,
-  AppealQuery
+  AppealQuery,
 } from '../../types/moderation';
-import {
-  ModerationAction,
-} from '../../types/moderation';
+import { ModerationAction } from '../../types/moderation';
 
 /**
  * Content Moderation Service

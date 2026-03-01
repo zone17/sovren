@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { useCollaborators, useInviteCollaborators, useUpdateRevenueSplit } from '../hooks/useCollaboration';
+import {
+  useCollaborators,
+  useInviteCollaborators,
+  useUpdateRevenueSplit,
+} from '../hooks/useCollaboration';
 import RevenueSplitEditor from './RevenueSplitEditor';
 import type { RevenueSplitEntry } from '../types/community';
 
@@ -8,10 +12,7 @@ interface CollaborationInviteProps {
   contentTitle?: string;
 }
 
-const CollaborationInvite: React.FC<CollaborationInviteProps> = ({
-  contentId,
-  contentTitle,
-}) => {
+const CollaborationInvite: React.FC<CollaborationInviteProps> = ({ contentId, contentTitle }) => {
   const [splits, setSplits] = useState<RevenueSplitEntry[]>([]);
   const [mode, setMode] = useState<'view' | 'invite' | 'edit-splits'>('view');
 
@@ -25,7 +26,12 @@ const CollaborationInvite: React.FC<CollaborationInviteProps> = ({
     if (totalBps !== 10000) return;
     inviteMutation.mutate(
       splits.map((s) => ({ creatorId: s.creatorId, revenueSplitBps: s.splitBps })),
-      { onSuccess: () => { setMode('view'); setSplits([]); } }
+      {
+        onSuccess: () => {
+          setMode('view');
+          setSplits([]);
+        },
+      }
     );
   };
 
@@ -33,7 +39,12 @@ const CollaborationInvite: React.FC<CollaborationInviteProps> = ({
     if (totalBps !== 10000) return;
     updateSplitMutation.mutate(
       splits.map((s) => ({ creatorId: s.creatorId, revenueSplitBps: s.splitBps })),
-      { onSuccess: () => { setMode('view'); setSplits([]); } }
+      {
+        onSuccess: () => {
+          setMode('view');
+          setSplits([]);
+        },
+      }
     );
   };
 
@@ -84,9 +95,7 @@ const CollaborationInvite: React.FC<CollaborationInviteProps> = ({
         <ul className="divide-y divide-gray-100" role="list">
           {collaborators.map((c) => (
             <li key={c.id} className="flex items-center justify-between py-2">
-              <span className="text-sm text-gray-700 truncate max-w-[180px]">
-                {c.creatorId}
-              </span>
+              <span className="text-sm text-gray-700 truncate max-w-[180px]">{c.creatorId}</span>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-mono text-gray-900">
                   {(c.revenueSplitBps / 100).toFixed(2)}%
@@ -96,8 +105,8 @@ const CollaborationInvite: React.FC<CollaborationInviteProps> = ({
                     c.status === 'accepted'
                       ? 'bg-green-100 text-green-700'
                       : c.status === 'declined'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-yellow-100 text-yellow-700'
                   }`}
                 >
                   {c.status}
@@ -111,21 +120,22 @@ const CollaborationInvite: React.FC<CollaborationInviteProps> = ({
       {/* Invite form */}
       {mode === 'invite' && (
         <div className="space-y-4">
-          <RevenueSplitEditor
-            entries={splits}
-            onChange={setSplits}
-            previewSats={10000}
-          />
+          <RevenueSplitEditor entries={splits} onChange={setSplits} previewSats={10000} />
           <div className="flex justify-end gap-2">
             <button
-              onClick={() => { setMode('view'); setSplits([]); }}
+              onClick={() => {
+                setMode('view');
+                setSplits([]);
+              }}
               className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
             >
               Cancel
             </button>
             <button
               onClick={handleInvite}
-              disabled={totalBps !== 10000 || splits.some((s) => !s.creatorId) || inviteMutation.isPending}
+              disabled={
+                totalBps !== 10000 || splits.some((s) => !s.creatorId) || inviteMutation.isPending
+              }
               className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               {inviteMutation.isPending ? 'Inviting...' : 'Send Invites'}
@@ -137,14 +147,13 @@ const CollaborationInvite: React.FC<CollaborationInviteProps> = ({
       {/* Edit splits */}
       {mode === 'edit-splits' && (
         <div className="space-y-4">
-          <RevenueSplitEditor
-            entries={splits}
-            onChange={setSplits}
-            previewSats={10000}
-          />
+          <RevenueSplitEditor entries={splits} onChange={setSplits} previewSats={10000} />
           <div className="flex justify-end gap-2">
             <button
-              onClick={() => { setMode('view'); setSplits([]); }}
+              onClick={() => {
+                setMode('view');
+                setSplits([]);
+              }}
               className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
             >
               Cancel

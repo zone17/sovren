@@ -84,7 +84,10 @@ const DiversificationGoals: React.FC = () => {
       </div>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); handleSave(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
         aria-label="Revenue diversification goals"
       >
         <fieldset className="space-y-3">

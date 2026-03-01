@@ -4,7 +4,12 @@
  * Part of Epic 005 - Backend Service Refactoring - Story E5-004
  */
 
-import { ServiceFactory, SafeServiceFactory, CompositeServiceFactory, ServiceFactoryRegistry } from '../ServiceFactory';
+import {
+  ServiceFactory,
+  SafeServiceFactory,
+  CompositeServiceFactory,
+  ServiceFactoryRegistry,
+} from '../ServiceFactory';
 import { ServiceContainer, ServiceRegistry } from '../../container/ServiceContainer';
 import { ServiceToken } from '../../interfaces/shared/IServiceRegistry';
 import { initializeFactories, SERVICE_TOKENS } from '../FactoryModule';
@@ -21,7 +26,9 @@ describe('ServiceFactory', () => {
   describe('Base ServiceFactory', () => {
     it('should create service instances', async () => {
       class TestService {
-        getValue() { return 'test'; }
+        getValue() {
+          return 'test';
+        }
       }
 
       class TestServiceFactory extends ServiceFactory<TestService> {
@@ -133,11 +140,15 @@ describe('ServiceFactory', () => {
       }
 
       class FactoryA extends ServiceFactory<ServiceA> {
-        create() { return new ServiceA(); }
+        create() {
+          return new ServiceA();
+        }
       }
 
       class FactoryB extends ServiceFactory<ServiceB> {
-        create() { return new ServiceB(); }
+        create() {
+          return new ServiceB();
+        }
       }
 
       composite.register('serviceA', new FactoryA(container));
@@ -153,15 +164,21 @@ describe('ServiceFactory', () => {
       const composite = new CompositeServiceFactory();
 
       class FactoryA extends ServiceFactory<any> {
-        create() { return { name: 'A' }; }
+        create() {
+          return { name: 'A' };
+        }
       }
 
       class FactoryB extends ServiceFactory<any> {
-        create() { return { name: 'B' }; }
+        create() {
+          return { name: 'B' };
+        }
       }
 
       class FactoryC extends ServiceFactory<any> {
-        create() { return { name: 'C' }; }
+        create() {
+          return { name: 'C' };
+        }
       }
 
       composite.register('a', new FactoryA(container));
@@ -182,7 +199,9 @@ describe('ServiceFactory', () => {
       const token = new ServiceToken<any>('TestService');
 
       class TestFactory extends ServiceFactory<any> {
-        create() { return { test: true }; }
+        create() {
+          return { test: true };
+        }
       }
 
       const factory = new TestFactory(container);
@@ -207,7 +226,9 @@ describe('ServiceFactory', () => {
       const token2 = new ServiceToken('Service2');
 
       class DummyFactory extends ServiceFactory<any> {
-        create() { return {}; }
+        create() {
+          return {};
+        }
       }
 
       registry.register(token1, new DummyFactory(container));
@@ -225,7 +246,9 @@ describe('ServiceFactory', () => {
       const token = new ServiceToken('TestService');
 
       class DummyFactory extends ServiceFactory<any> {
-        create() { return {}; }
+        create() {
+          return {};
+        }
       }
 
       registry.register(token, new DummyFactory(container));
@@ -270,7 +293,7 @@ describe('ServiceFactory', () => {
         token: tokenA,
         factory: (c) => ({ b: c.resolve(tokenB) }),
         lifetime: 'singleton',
-        dependencies: [tokenB]
+        dependencies: [tokenB],
       });
 
       // ServiceB depends on ServiceA (circular)
@@ -278,7 +301,7 @@ describe('ServiceFactory', () => {
         token: tokenB,
         factory: (c) => ({ a: c.resolve(tokenA) }),
         lifetime: 'singleton',
-        dependencies: [tokenA]
+        dependencies: [tokenA],
       });
 
       const validation = registry.validate();
@@ -286,7 +309,7 @@ describe('ServiceFactory', () => {
       expect(validation.valid).toBe(false);
       expect(validation.errors).toContainEqual(
         expect.objectContaining({
-          type: 'circular_dependency'
+          type: 'circular_dependency',
         })
       );
     });
@@ -299,7 +322,7 @@ describe('ServiceFactory', () => {
         token: tokenA,
         factory: (c) => ({ b: c.resolve(tokenB) }),
         lifetime: 'singleton',
-        dependencies: [tokenB]
+        dependencies: [tokenB],
       });
 
       const validation = registry.validate();
@@ -308,7 +331,7 @@ describe('ServiceFactory', () => {
       expect(validation.errors).toContainEqual(
         expect.objectContaining({
           type: 'missing_dependency',
-          message: expect.stringContaining('MissingService')
+          message: expect.stringContaining('MissingService'),
         })
       );
     });

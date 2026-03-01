@@ -41,15 +41,13 @@ export const AuthenticityBadge: React.FC<AuthenticityBadgeProps> = ({ contentId 
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">
-          {config.label}{data.nip05_verified && ' (NIP-05)'}
+          {config.label}
+          {data.nip05_verified && ' (NIP-05)'}
         </TooltipContent>
       </Tooltip>
 
       {showProvenance && (
-        <ProvenanceChainViewer
-          contentId={contentId}
-          onClose={() => setShowProvenance(false)}
-        />
+        <ProvenanceChainViewer contentId={contentId} onClose={() => setShowProvenance(false)} />
       )}
     </TooltipProvider>
   );

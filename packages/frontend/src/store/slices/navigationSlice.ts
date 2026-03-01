@@ -59,7 +59,7 @@ const navigationSlice = createSlice({
       // Add to history (max 10 items)
       state.navigationHistory = [
         action.payload,
-        ...state.navigationHistory.filter(path => path !== action.payload)
+        ...state.navigationHistory.filter((path) => path !== action.payload),
       ].slice(0, 10);
 
       state.isNavigating = false;
@@ -92,7 +92,7 @@ const navigationSlice = createSlice({
 
     // Tab actions
     addTab: (state, action: PayloadAction<Omit<Tab, 'isDirty'>>) => {
-      const existingTab = state.tabs.find(tab => tab.id === action.payload.id);
+      const existingTab = state.tabs.find((tab) => tab.id === action.payload.id);
       if (!existingTab) {
         state.tabs.push({
           ...action.payload,
@@ -103,7 +103,7 @@ const navigationSlice = createSlice({
     },
 
     removeTab: (state, action: PayloadAction<string>) => {
-      const index = state.tabs.findIndex(tab => tab.id === action.payload);
+      const index = state.tabs.findIndex((tab) => tab.id === action.payload);
       if (index !== -1) {
         state.tabs.splice(index, 1);
 
@@ -120,13 +120,13 @@ const navigationSlice = createSlice({
     },
 
     setActiveTab: (state, action: PayloadAction<string>) => {
-      if (state.tabs.some(tab => tab.id === action.payload)) {
+      if (state.tabs.some((tab) => tab.id === action.payload)) {
         state.activeTabId = action.payload;
       }
     },
 
     updateTabDirtyState: (state, action: PayloadAction<{ id: string; isDirty: boolean }>) => {
-      const tab = state.tabs.find(t => t.id === action.payload.id);
+      const tab = state.tabs.find((t) => t.id === action.payload.id);
       if (tab) {
         tab.isDirty = action.payload.isDirty;
       }
@@ -188,16 +188,15 @@ export const selectCurrentPath = (state: { navigation: NavigationState }) =>
 export const selectBreadcrumbs = (state: { navigation: NavigationState }) =>
   state.navigation.breadcrumbs;
 
-export const selectTabs = (state: { navigation: NavigationState }) =>
-  state.navigation.tabs;
+export const selectTabs = (state: { navigation: NavigationState }) => state.navigation.tabs;
 
 export const selectActiveTab = (state: { navigation: NavigationState }) =>
-  state.navigation.tabs.find(tab => tab.id === state.navigation.activeTabId);
+  state.navigation.tabs.find((tab) => tab.id === state.navigation.activeTabId);
 
 export const selectIsNavigating = (state: { navigation: NavigationState }) =>
   state.navigation.isNavigating;
 
-export const selectScrollPosition = (path: string) =>
-  (state: { navigation: NavigationState }) => state.navigation.scrollPositions[path] || 0;
+export const selectScrollPosition = (path: string) => (state: { navigation: NavigationState }) =>
+  state.navigation.scrollPositions[path] || 0;
 
 export default navigationSlice.reducer;

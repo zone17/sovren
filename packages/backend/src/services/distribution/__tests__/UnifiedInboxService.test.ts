@@ -203,9 +203,7 @@ describe('UnifiedInboxService', () => {
     it('should throw on database error', async () => {
       mockDb.in.mockResolvedValue({ error: new Error('DB error'), count: 0 });
 
-      await expect(
-        service.batchAction(creatorId, ['msg-1'], 'mark_read')
-      ).rejects.toThrow();
+      await expect(service.batchAction(creatorId, ['msg-1'], 'mark_read')).rejects.toThrow();
     });
 
     it('should return 0 when count is null', async () => {
@@ -215,5 +213,4 @@ describe('UnifiedInboxService', () => {
       expect(count).toBe(0);
     });
   });
-
 });

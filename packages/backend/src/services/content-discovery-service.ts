@@ -108,7 +108,7 @@ export class ContentDiscoveryService {
           .eq('follower_id', params.user_id);
 
         if (params.following_only && following) {
-          const creatorIds = following.map(f => f.creator_id);
+          const creatorIds = following.map((f) => f.creator_id);
           query = query.in('creator_id', creatorIds);
         }
 
@@ -153,10 +153,12 @@ export class ContentDiscoveryService {
         '24h': 24 * 60 * 60 * 1000,
         '7d': 7 * 24 * 60 * 60 * 1000,
         '30d': 30 * 24 * 60 * 60 * 1000,
-        'all': Date.now(),
+        all: Date.now(),
       };
 
-      const windowStart = new Date(Date.now() - (timeWindows[params.timeframe] || timeWindows['24h']));
+      const windowStart = new Date(
+        Date.now() - (timeWindows[params.timeframe] || timeWindows['24h'])
+      );
 
       let query = supabase
         .from('content')
@@ -315,10 +317,7 @@ export class ContentDiscoveryService {
   /**
    * Get similar content based on content ID
    */
-  async getSimilarContent(params: {
-    content_id: string;
-    limit: number;
-  }): Promise<ContentItem[]> {
+  async getSimilarContent(params: { content_id: string; limit: number }): Promise<ContentItem[]> {
     try {
       // Get the source content
       const { data: sourceContent, error: sourceError } = await supabase
@@ -351,10 +350,7 @@ export class ContentDiscoveryService {
   /**
    * Get exploration content (content outside user's usual preferences)
    */
-  async getExplorationContent(params: {
-    user_id?: string;
-    limit: number;
-  }): Promise<ContentItem[]> {
+  async getExplorationContent(params: { user_id?: string; limit: number }): Promise<ContentItem[]> {
     try {
       let excludeCategories: string[] = [];
 
@@ -368,11 +364,14 @@ export class ContentDiscoveryService {
           .limit(50);
 
         if (userHistory) {
-          const categories = userHistory.map(h => h.content?.category).filter(Boolean);
-          const categoryCounts = categories.reduce((acc, cat) => {
-            acc[cat] = (acc[cat] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
+          const categories = userHistory.map((h) => h.content?.category).filter(Boolean);
+          const categoryCounts = categories.reduce(
+            (acc, cat) => {
+              acc[cat] = (acc[cat] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>
+          );
 
           // Exclude top 3 most viewed categories
           excludeCategories = Object.entries(categoryCounts)
@@ -409,7 +408,7 @@ export class ContentDiscoveryService {
    * Helper: Map raw data to ContentItem format
    */
   private mapContentItems(data: any[]): ContentItem[] {
-    return data.map(item => ({
+    return data.map((item) => ({
       id: item.id,
       title: item.title,
       description: item.description,

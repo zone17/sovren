@@ -181,10 +181,11 @@ describe('ApiClient', () => {
   describe('Error Handling', () => {
     it('throws ApiError on non-OK response', async () => {
       fetchSpy.mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({ error: 'Resource not found', code: 'NOT_FOUND' }),
-          { status: 404, statusText: 'Not Found', headers: { 'Content-Type': 'application/json' } }
-        )
+        new Response(JSON.stringify({ error: 'Resource not found', code: 'NOT_FOUND' }), {
+          status: 404,
+          statusText: 'Not Found',
+          headers: { 'Content-Type': 'application/json' },
+        })
       );
 
       await expect(apiClient.getUserProfile('nonexistent')).rejects.toThrow(ApiError);
@@ -192,10 +193,11 @@ describe('ApiClient', () => {
 
     it('includes status and code in ApiError', async () => {
       fetchSpy.mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({ error: 'Invalid token', code: 'AUTHENTICATION_ERROR' }),
-          { status: 401, statusText: 'Unauthorized', headers: { 'Content-Type': 'application/json' } }
-        )
+        new Response(JSON.stringify({ error: 'Invalid token', code: 'AUTHENTICATION_ERROR' }), {
+          status: 401,
+          statusText: 'Unauthorized',
+          headers: { 'Content-Type': 'application/json' },
+        })
       );
 
       try {

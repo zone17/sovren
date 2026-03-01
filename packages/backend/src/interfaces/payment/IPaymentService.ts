@@ -4,9 +4,7 @@
  * Part of Epic 005 - Backend Service Refactoring
  */
 
-import {
-  Currency,
-} from '@/types/payment';
+import { Currency } from '@/types/payment';
 
 export enum PaymentStatus {
   PENDING = 'pending',
@@ -14,7 +12,7 @@ export enum PaymentStatus {
   COMPLETED = 'completed',
   FAILED = 'failed',
   CANCELLED = 'cancelled',
-  REFUNDED = 'refunded'
+  REFUNDED = 'refunded',
 }
 
 export enum PaymentMethod {
@@ -22,7 +20,7 @@ export enum PaymentMethod {
   ONCHAIN = 'onchain',
   LNURL = 'lnurl',
   WEBLN = 'webln',
-  KEYSEND = 'keysend'
+  KEYSEND = 'keysend',
 }
 
 export interface Invoice {

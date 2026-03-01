@@ -23,15 +23,19 @@ function createMockLogger(): ILogger {
 }
 
 // Helper to create work pattern rows
-function makePatternRow(date: string, opts: {
-  contentMins?: number;
-  engagementMins?: number;
-  managementMins?: number;
-  postCount?: number;
-  firstActivity?: string;
-  lastActivity?: string;
-} = {}) {
-  const totalMins = (opts.contentMins || 0) + (opts.engagementMins || 0) + (opts.managementMins || 0);
+function makePatternRow(
+  date: string,
+  opts: {
+    contentMins?: number;
+    engagementMins?: number;
+    managementMins?: number;
+    postCount?: number;
+    firstActivity?: string;
+    lastActivity?: string;
+  } = {}
+) {
+  const totalMins =
+    (opts.contentMins || 0) + (opts.engagementMins || 0) + (opts.managementMins || 0);
   return {
     date,
     content_time_mins: opts.contentMins || 0,
@@ -148,14 +152,16 @@ describe('BurnoutScoringService', () => {
       for (let w = 0; w < 4; w++) {
         for (let d = 0; d < 5; d++) {
           const day = 8 + w * 7 + d;
-          baseline.push(makePatternRow(`2026-01-${String(day).padStart(2, '0')}`, {
-            contentMins: 240,
-            engagementMins: 120,
-            managementMins: 120,
-            postCount: 1,
-            firstActivity: `2026-01-${String(day).padStart(2, '0')}T09:00:00Z`,
-            lastActivity: `2026-01-${String(day).padStart(2, '0')}T17:00:00Z`,
-          }));
+          baseline.push(
+            makePatternRow(`2026-01-${String(day).padStart(2, '0')}`, {
+              contentMins: 240,
+              engagementMins: 120,
+              managementMins: 120,
+              postCount: 1,
+              firstActivity: `2026-01-${String(day).padStart(2, '0')}T09:00:00Z`,
+              lastActivity: `2026-01-${String(day).padStart(2, '0')}T17:00:00Z`,
+            })
+          );
         }
       }
 
@@ -163,14 +169,16 @@ describe('BurnoutScoringService', () => {
       const currentWeek: any[] = [];
       for (let d = 0; d < 5; d++) {
         const day = 10 + d;
-        currentWeek.push(makePatternRow(`2026-02-${String(day).padStart(2, '0')}`, {
-          contentMins: 240,
-          engagementMins: 120,
-          managementMins: 120,
-          postCount: 1,
-          firstActivity: `2026-02-${String(day).padStart(2, '0')}T09:00:00Z`,
-          lastActivity: `2026-02-${String(day).padStart(2, '0')}T17:00:00Z`,
-        }));
+        currentWeek.push(
+          makePatternRow(`2026-02-${String(day).padStart(2, '0')}`, {
+            contentMins: 240,
+            engagementMins: 120,
+            managementMins: 120,
+            postCount: 1,
+            firstActivity: `2026-02-${String(day).padStart(2, '0')}T09:00:00Z`,
+            lastActivity: `2026-02-${String(day).padStart(2, '0')}T17:00:00Z`,
+          })
+        );
       }
 
       const mockDb = createMockDb({
@@ -191,18 +199,35 @@ describe('BurnoutScoringService', () => {
     it('returns proper factor structure', async () => {
       const baseline: any[] = [];
       for (let d = 0; d < 20; d++) {
-        baseline.push(makePatternRow(`2026-01-${String(10 + d).padStart(2, '0')}`, {
+        baseline.push(
+          makePatternRow(`2026-01-${String(10 + d).padStart(2, '0')}`, {
+            contentMins: 180,
+            engagementMins: 60,
+            managementMins: 60,
+            postCount: 1,
+          })
+        );
+      }
+
+      const currentWeek = [
+        makePatternRow('2026-02-10', {
           contentMins: 180,
           engagementMins: 60,
           managementMins: 60,
           postCount: 1,
-        }));
-      }
-
-      const currentWeek = [
-        makePatternRow('2026-02-10', { contentMins: 180, engagementMins: 60, managementMins: 60, postCount: 1 }),
-        makePatternRow('2026-02-11', { contentMins: 180, engagementMins: 60, managementMins: 60, postCount: 1 }),
-        makePatternRow('2026-02-12', { contentMins: 180, engagementMins: 60, managementMins: 60, postCount: 1 }),
+        }),
+        makePatternRow('2026-02-11', {
+          contentMins: 180,
+          engagementMins: 60,
+          managementMins: 60,
+          postCount: 1,
+        }),
+        makePatternRow('2026-02-12', {
+          contentMins: 180,
+          engagementMins: 60,
+          managementMins: 60,
+          postCount: 1,
+        }),
       ];
 
       const mockDb = createMockDb({
@@ -218,10 +243,10 @@ describe('BurnoutScoringService', () => {
       expect(result.factors.work_hours_trend).toHaveProperty('value');
       expect(result.factors.work_hours_trend).toHaveProperty('weight', 0.25);
       expect(result.factors.work_hours_trend).toHaveProperty('detail');
-      expect(result.factors.posting_frequency).toHaveProperty('weight', 0.20);
-      expect(result.factors.engagement_drop).toHaveProperty('weight', 0.20);
+      expect(result.factors.posting_frequency).toHaveProperty('weight', 0.2);
+      expect(result.factors.engagement_drop).toHaveProperty('weight', 0.2);
       expect(result.factors.hour_regularity).toHaveProperty('weight', 0.15);
-      expect(result.factors.rest_day_deficit).toHaveProperty('weight', 0.20);
+      expect(result.factors.rest_day_deficit).toHaveProperty('weight', 0.2);
 
       // Factor values should be between 0 and 1
       Object.values(result.factors).forEach((factor: any) => {
@@ -233,15 +258,15 @@ describe('BurnoutScoringService', () => {
     it('score is clamped between 0 and 100', async () => {
       const baseline: any[] = [];
       for (let d = 0; d < 14; d++) {
-        baseline.push(makePatternRow(`2026-01-${String(10 + d).padStart(2, '0')}`, {
-          contentMins: 60,
-          postCount: 1,
-        }));
+        baseline.push(
+          makePatternRow(`2026-01-${String(10 + d).padStart(2, '0')}`, {
+            contentMins: 60,
+            postCount: 1,
+          })
+        );
       }
 
-      const currentWeek = [
-        makePatternRow('2026-02-10', { contentMins: 60, postCount: 1 }),
-      ];
+      const currentWeek = [makePatternRow('2026-02-10', { contentMins: 60, postCount: 1 })];
 
       const mockDb = createMockDb({
         totalDays: 15,
@@ -260,23 +285,27 @@ describe('BurnoutScoringService', () => {
     it('generates recommendations when factors are elevated', async () => {
       const baseline: any[] = [];
       for (let d = 0; d < 20; d++) {
-        baseline.push(makePatternRow(`2026-01-${String(10 + d).padStart(2, '0')}`, {
-          contentMins: 120,
-          engagementMins: 60,
-          postCount: 2,
-        }));
+        baseline.push(
+          makePatternRow(`2026-01-${String(10 + d).padStart(2, '0')}`, {
+            contentMins: 120,
+            engagementMins: 60,
+            postCount: 2,
+          })
+        );
       }
 
       // Current week: overworking, 7 days active, irregular hours
       const currentWeek: any[] = [];
       for (let d = 0; d < 7; d++) {
-        currentWeek.push(makePatternRow(`2026-02-${String(10 + d).padStart(2, '0')}`, {
-          contentMins: 300,
-          engagementMins: 10,
-          postCount: 8,
-          firstActivity: `2026-02-${String(10 + d).padStart(2, '0')}T${String(6 + d * 2).padStart(2, '0')}:00:00Z`,
-          lastActivity: `2026-02-${String(10 + d).padStart(2, '0')}T23:00:00Z`,
-        }));
+        currentWeek.push(
+          makePatternRow(`2026-02-${String(10 + d).padStart(2, '0')}`, {
+            contentMins: 300,
+            engagementMins: 10,
+            postCount: 8,
+            firstActivity: `2026-02-${String(10 + d).padStart(2, '0')}T${String(6 + d * 2).padStart(2, '0')}:00:00Z`,
+            lastActivity: `2026-02-${String(10 + d).padStart(2, '0')}T23:00:00Z`,
+          })
+        );
       }
 
       const mockDb = createMockDb({
@@ -294,15 +323,15 @@ describe('BurnoutScoringService', () => {
     it('saves score to burnout_risk_history via upsert', async () => {
       const baseline: any[] = [];
       for (let d = 0; d < 14; d++) {
-        baseline.push(makePatternRow(`2026-01-${String(10 + d).padStart(2, '0')}`, {
-          contentMins: 120,
-          postCount: 1,
-        }));
+        baseline.push(
+          makePatternRow(`2026-01-${String(10 + d).padStart(2, '0')}`, {
+            contentMins: 120,
+            postCount: 1,
+          })
+        );
       }
 
-      const currentWeek = [
-        makePatternRow('2026-02-10', { contentMins: 120, postCount: 1 }),
-      ];
+      const currentWeek = [makePatternRow('2026-02-10', { contentMins: 120, postCount: 1 })];
 
       const mockDb = createMockDb({
         totalDays: 15,
@@ -334,10 +363,10 @@ describe('BurnoutScoringService', () => {
 
       expect(result.sensitivity).toBe('sensitive');
       expect(result.updated_at).toBeTruthy();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Burnout sensitivity updated',
-        { creatorId: 'creator-1', sensitivity: 'sensitive' }
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith('Burnout sensitivity updated', {
+        creatorId: 'creator-1',
+        sensitivity: 'sensitive',
+      });
     });
 
     it('throws on database error', async () => {
@@ -352,7 +381,9 @@ describe('BurnoutScoringService', () => {
 
       service = new BurnoutScoringService(mockDb, mockLogger);
 
-      await expect(service.setSensitivity('creator-1', 'relaxed')).rejects.toEqual({ message: 'Upsert failed' });
+      await expect(service.setSensitivity('creator-1', 'relaxed')).rejects.toEqual({
+        message: 'Upsert failed',
+      });
     });
   });
 
@@ -379,7 +410,9 @@ describe('BurnoutScoringService', () => {
       const chainable = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: { sensitivity_level: 'sensitive' }, error: null }),
+        single: vi
+          .fn()
+          .mockResolvedValue({ data: { sensitivity_level: 'sensitive' }, error: null }),
       };
 
       const mockDb = {

@@ -8,21 +8,24 @@ const RESOURCES: WellnessResource[] = [
   {
     id: '1',
     title: 'Creator Burnout Recovery Group',
-    description: 'Peer support community for creators experiencing burnout. Weekly virtual meetups and resources.',
+    description:
+      'Peer support community for creators experiencing burnout. Weekly virtual meetups and resources.',
     category: 'communities',
     url: 'https://creatorhealth.community',
   },
   {
     id: '2',
     title: 'The Sustainable Creator',
-    description: 'Evidence-based guide to sustainable content creation without sacrificing wellbeing.',
+    description:
+      'Evidence-based guide to sustainable content creation without sacrificing wellbeing.',
     category: 'articles',
     url: 'https://sustainablecreator.guide',
   },
   {
     id: '3',
     title: 'Focus Timer for Creators',
-    description: 'Pomodoro-based timer designed for creative work. Includes break reminders and session tracking.',
+    description:
+      'Pomodoro-based timer designed for creative work. Includes break reminders and session tracking.',
     category: 'tools',
     url: 'https://focustimer.app',
   },
@@ -103,7 +106,9 @@ interface WellnessResourcesProps {
   category?: ResourceCategory;
 }
 
-export const WellnessResources: React.FC<WellnessResourcesProps> = ({ category: initialCategory }) => {
+export const WellnessResources: React.FC<WellnessResourcesProps> = ({
+  category: initialCategory,
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<ResourceCategory | 'all'>(
     initialCategory ?? 'all'
   );

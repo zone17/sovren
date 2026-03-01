@@ -36,7 +36,10 @@ export interface INotificationService {
   sendNotification(notification: Notification): Promise<NotificationResult>;
   sendBulkNotifications(notifications: Notification[]): Promise<BulkNotificationResult>;
   getNotificationChannels(userId: string): Promise<NotificationChannel[]>;
-  updateNotificationPreferences(userId: string, preferences: NotificationPreferences): Promise<void>;
+  updateNotificationPreferences(
+    userId: string,
+    preferences: NotificationPreferences
+  ): Promise<void>;
   markAsRead(notificationId: string): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
   getUnreadCount(userId: string): Promise<number>;

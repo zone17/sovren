@@ -88,7 +88,7 @@ const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         </div>
       </div>
     `,
-    text: `Welcome to Sovren!\n\nHello {{name}}!\n\nThank you for joining Sovren. We're excited to have you on board!\n\nYour account has been successfully created. You can now start exploring our platform.\n\nGet started: {{loginUrl}}\n\nIf you have any questions, feel free to contact our support team.`
+    text: `Welcome to Sovren!\n\nHello {{name}}!\n\nThank you for joining Sovren. We're excited to have you on board!\n\nYour account has been successfully created. You can now start exploring our platform.\n\nGet started: {{loginUrl}}\n\nIf you have any questions, feel free to contact our support team.`,
   },
 
   paymentConfirmation: {
@@ -125,7 +125,7 @@ const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         </div>
       </div>
     `,
-    text: `Payment Confirmed!\n\nThank you for your purchase, {{name}}!\n\nWe've successfully processed your payment.\n\nPayment ID: {{paymentId}}\nAmount: {{amount}} {{currency}}\nDate: {{date}}\n\nYou'll receive your purchase confirmation shortly.`
+    text: `Payment Confirmed!\n\nThank you for your purchase, {{name}}!\n\nWe've successfully processed your payment.\n\nPayment ID: {{paymentId}}\nAmount: {{amount}} {{currency}}\nDate: {{date}}\n\nYou'll receive your purchase confirmation shortly.`,
   },
 
   paymentFailed: {
@@ -156,7 +156,7 @@ const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         </div>
       </div>
     `,
-    text: `Payment Issue\n\nHi {{name}},\n\nWe encountered an issue processing your payment.\n\nReason: {{failureReason}}\n\nYou can try again with a different payment method or contact your bank for assistance.\n\nTry again: {{retryUrl}}`
+    text: `Payment Issue\n\nHi {{name}},\n\nWe encountered an issue processing your payment.\n\nReason: {{failureReason}}\n\nYou can try again with a different payment method or contact your bank for assistance.\n\nTry again: {{retryUrl}}`,
   },
 
   passwordReset: {
@@ -185,8 +185,8 @@ const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         </div>
       </div>
     `,
-    text: `Password Reset\n\nHi {{name}},\n\nWe received a request to reset your password.\n\nClick here to reset: {{resetUrl}}\n\nThis link will expire in 1 hour. If you didn't request this reset, please ignore this email.`
-  }
+    text: `Password Reset\n\nHi {{name}},\n\nWe received a request to reset your password.\n\nClick here to reset: {{resetUrl}}\n\nThis link will expire in 1 hour. If you didn't request this reset, please ignore this email.`,
+  },
 };
 
 // 🚀 EMAIL SERVICE CLASS
@@ -272,7 +272,6 @@ export class EmailService {
         success: true,
         messageId: result.messageId,
       };
-
     } catch (error) {
       const err = error as Error;
       console.error('Email sending failed:', err);
@@ -313,7 +312,11 @@ export class EmailService {
     });
   }
 
-  async sendPaymentFailedEmail(to: string, name: string, failureReason: string): Promise<EmailResult> {
+  async sendPaymentFailedEmail(
+    to: string,
+    name: string,
+    failureReason: string
+  ): Promise<EmailResult> {
     return this.sendEmail({
       to,
       template: 'paymentFailed',

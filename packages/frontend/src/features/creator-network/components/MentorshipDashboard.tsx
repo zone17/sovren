@@ -1,5 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { useMyMentorships, useRespondToMentorship, useRegisterMentor } from '../hooks/useMentorship';
+import {
+  useMyMentorships,
+  useRespondToMentorship,
+  useRegisterMentor,
+} from '../hooks/useMentorship';
 import { AUDIENCE_SIZE_LABELS } from '../types/community';
 import type { Mentorship } from '@shared/types/community';
 
@@ -13,8 +17,9 @@ const STATUS_STYLES: Record<string, string> = {
 const MentorshipDashboard: React.FC = () => {
   const [showRegister, setShowRegister] = useState(false);
   const [niche, setNiche] = useState('');
-  const [audienceSizeRange, setAudienceSizeRange] =
-    useState<'0-1k' | '1k-10k' | '10k-100k' | '100k+'>('0-1k');
+  const [audienceSizeRange, setAudienceSizeRange] = useState<
+    '0-1k' | '1k-10k' | '10k-100k' | '100k+'
+  >('0-1k');
   const [bio, setBio] = useState('');
   const [maxMentees, setMaxMentees] = useState(3);
   const [pendingRespondId, setPendingRespondId] = useState<string | null>(null);
@@ -96,9 +101,7 @@ const MentorshipDashboard: React.FC = () => {
           />
           <select
             value={audienceSizeRange}
-            onChange={(e) =>
-              setAudienceSizeRange(e.target.value as typeof audienceSizeRange)
-            }
+            onChange={(e) => setAudienceSizeRange(e.target.value as typeof audienceSizeRange)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
             aria-label="Your audience size"
           >
@@ -158,14 +161,10 @@ const MentorshipDashboard: React.FC = () => {
       )}
 
       {/* Active */}
-      {active.length > 0 && (
-        <MentorshipSection title="Active Mentorships" mentorships={active} />
-      )}
+      {active.length > 0 && <MentorshipSection title="Active Mentorships" mentorships={active} />}
 
       {/* Past */}
-      {past.length > 0 && (
-        <MentorshipSection title="Past" mentorships={past} />
-      )}
+      {past.length > 0 && <MentorshipSection title="Past" mentorships={past} />}
 
       {mentorships.length === 0 && (
         <p className="text-sm text-gray-500 text-center py-8">
@@ -196,9 +195,7 @@ const MentorshipSection: React.FC<MentorshipSectionProps> = ({
         <li key={m.id} className="rounded-lg border bg-white p-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              {m.niche && (
-                <p className="text-sm font-medium text-gray-900">{m.niche}</p>
-              )}
+              {m.niche && <p className="text-sm font-medium text-gray-900">{m.niche}</p>}
               {m.goals.length > 0 && (
                 <ul className="mt-1 space-y-0.5">
                   {m.goals.map((goal: string, i: number) => (

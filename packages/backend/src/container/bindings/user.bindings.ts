@@ -29,78 +29,63 @@ export class UserServicesModule implements IServiceModule {
     // UserProfileService - SINGLETON
     // ===========================
     // User profile management (singleton)
-    registry.registerSingleton(
-      TYPES.UserProfileService,
-      (container) => {
-        const userRepo = container.resolve(TYPES.UserRepository);
-        const cache = container.resolve(TYPES.CacheService);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.UserProfileService, (container) => {
+      const userRepo = container.resolve(TYPES.UserRepository);
+      const cache = container.resolve(TYPES.CacheService);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new UserProfileService(userRepo, cache, eventBus, logger);
-      }
-    );
+      return new UserProfileService(userRepo, cache, eventBus, logger);
+    });
 
     // ===========================
     // UserPreferencesService - SINGLETON
     // ===========================
     // User preferences and settings (singleton)
-    registry.registerSingleton(
-      TYPES.UserPreferencesService,
-      (container) => {
-        const preferencesRepo = container.resolve(TYPES.UserPreferencesRepository);
-        const cache = container.resolve(TYPES.CacheService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.UserPreferencesService, (container) => {
+      const preferencesRepo = container.resolve(TYPES.UserPreferencesRepository);
+      const cache = container.resolve(TYPES.CacheService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new UserPreferencesService(preferencesRepo, cache, logger);
-      }
-    );
+      return new UserPreferencesService(preferencesRepo, cache, logger);
+    });
 
     // ===========================
     // UserActivityService - SINGLETON
     // ===========================
     // User activity tracking (singleton)
-    registry.registerSingleton(
-      TYPES.UserActivityService,
-      (container) => {
-        const database = container.resolve(TYPES.Database);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.UserActivityService, (container) => {
+      const database = container.resolve(TYPES.Database);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new UserActivityService(database, eventBus, logger);
-      }
-    );
+      return new UserActivityService(database, eventBus, logger);
+    });
 
     // ===========================
     // UserRelationshipService - SINGLETON
     // ===========================
     // User relationships and follows (singleton)
-    registry.registerSingleton(
-      TYPES.UserRelationshipService,
-      (container) => {
-        const userRepo = container.resolve(TYPES.UserRepository);
-        const cache = container.resolve(TYPES.CacheService);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.UserRelationshipService, (container) => {
+      const userRepo = container.resolve(TYPES.UserRepository);
+      const cache = container.resolve(TYPES.CacheService);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new UserRelationshipService(userRepo, cache, eventBus, logger);
-      }
-    );
+      return new UserRelationshipService(userRepo, cache, eventBus, logger);
+    });
 
     // ===========================
     // UserAnalyticsService - SINGLETON
     // ===========================
     // User behavior analytics (singleton)
-    registry.registerSingleton(
-      TYPES.UserAnalyticsService,
-      (container) => {
-        const database = container.resolve(TYPES.Database);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.UserAnalyticsService, (container) => {
+      const database = container.resolve(TYPES.Database);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new UserAnalyticsService(database, eventBus, logger);
-      }
-    );
+      return new UserAnalyticsService(database, eventBus, logger);
+    });
   }
 
   dependencies = [];

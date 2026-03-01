@@ -39,9 +39,7 @@ describe('RedFlagReport', () => {
     it('shows the always-review disclaimer in the empty state', () => {
       render(<RedFlagReport redFlags={[]} />);
 
-      expect(
-        screen.getByText(/Always review with a legal professional/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Always review with a legal professional/i)).toBeInTheDocument();
     });
 
     it('empty state has a status role and accessible label', () => {
@@ -82,9 +80,7 @@ describe('RedFlagReport', () => {
       expect(
         screen.getByText('Standard payment terms are 30–60 days. Negotiate a shorter window.')
       ).toBeInTheDocument();
-      expect(
-        screen.getByText('Clarify which specific IP is being assigned.')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Clarify which specific IP is being assigned.')).toBeInTheDocument();
     });
 
     it('renders human-readable label for exclusivity type', () => {
@@ -197,9 +193,7 @@ describe('RedFlagReport', () => {
     it('flag list has an accessible label', () => {
       render(<RedFlagReport redFlags={allFlags} />);
 
-      expect(
-        screen.getByRole('list', { name: 'Red flags found in contract' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('list', { name: 'Red flags found in contract' })).toBeInTheDocument();
     });
 
     it('section is labelled by the Red Flag Analysis heading', () => {

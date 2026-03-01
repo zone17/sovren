@@ -14,13 +14,8 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import {
-  PaymentState,
-  Payment,
-} from '@shared/types';
-import {
-  PaymentRetryService,
-} from '../PaymentRetryService';
+import { PaymentState, Payment } from '@shared/types';
+import { PaymentRetryService } from '../PaymentRetryService';
 import { PaymentStateMachine } from '../PaymentStateMachine';
 import { EmailIntegrationService } from '../../email-integration-service';
 
@@ -312,9 +307,7 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
         const payment: Payment = mockPayment;
 
         // Act: Should handle timeout
-        await expect(
-          (retryService as any).verifyPaymentStatus(payment)
-        ).resolves.toBeDefined();
+        await expect((retryService as any).verifyPaymentStatus(payment)).resolves.toBeDefined();
       });
 
       it('should handle malformed Lightning node responses', async () => {
@@ -369,9 +362,7 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
         const payment: Payment = mockPayment;
 
         // Act: Should not throw
-        await expect(
-          (retryService as any).verifyPaymentStatus(payment)
-        ).resolves.toBeDefined();
+        await expect((retryService as any).verifyPaymentStatus(payment)).resolves.toBeDefined();
       });
 
       it('should log verification attempts for debugging', async () => {
@@ -519,7 +510,7 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
       mockSupabase.update.mockResolvedValue({ error: null });
       mockSupabase.insert.mockResolvedValue({
         data: { id: 'new_retry_id' },
-        error: null
+        error: null,
       });
 
       // Mock verification to return false (still pending)
@@ -642,7 +633,7 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
 
       // Assert: All should complete without errors
       expect(results).toHaveLength(3);
-      results.forEach(result => expect(typeof result).toBe('boolean'));
+      results.forEach((result) => expect(typeof result).toBe('boolean'));
     });
 
     it('should handle payment verified between retry checks', async () => {
@@ -664,9 +655,7 @@ describe('PaymentRetryService - Payment Verification (PAY-001)', () => {
       const payment: Payment = mockPayment;
 
       // Act: Should handle gracefully
-      await expect(
-        (retryService as any).verifyPaymentStatus(payment)
-      ).resolves.toBeDefined();
+      await expect((retryService as any).verifyPaymentStatus(payment)).resolves.toBeDefined();
     });
   });
 

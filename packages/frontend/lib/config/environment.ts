@@ -20,7 +20,11 @@ const environmentSchema = z.object({
 
   // 📧 Email Configuration (Optional)
   SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.string().transform(val => parseInt(val, 10)).pipe(z.number()).optional(),
+  SMTP_PORT: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number())
+    .optional(),
   SMTP_USER: z.string().email().optional(),
   SMTP_PASS: z.string().optional(),
   FROM_EMAIL: z.string().email().optional(),
@@ -41,15 +45,38 @@ const environmentSchema = z.object({
   NOSTR_PRIVATE_KEY: z.string().optional(),
   NOSTR_PUBLIC_KEY: z.string().optional(),
   NOSTR_RELAYS: z.string().optional(), // Comma-separated relay URLs
-  NOSTR_AUTO_CONNECT: z.string().transform(val => val === 'true').default('true'),
-  NOSTR_CONNECTION_TIMEOUT: z.string().transform(val => parseInt(val, 10)).pipe(z.number().positive()).default('5000'),
-  NOSTR_MAX_RELAYS: z.string().transform(val => parseInt(val, 10)).pipe(z.number().positive()).default('10'),
-  NOSTR_CACHE_TTL: z.string().transform(val => parseInt(val, 10)).pipe(z.number().positive()).default('300000'),
+  NOSTR_AUTO_CONNECT: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('true'),
+  NOSTR_CONNECTION_TIMEOUT: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().positive())
+    .default('5000'),
+  NOSTR_MAX_RELAYS: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().positive())
+    .default('10'),
+  NOSTR_CACHE_TTL: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().positive())
+    .default('300000'),
 
   // 🔒 Rate Limiting Configuration
   RATE_LIMIT_REDIS_URL: z.string().url().optional(),
-  MAX_LOGIN_ATTEMPTS: z.string().transform(val => parseInt(val, 10)).pipe(z.number().positive()).default('5'),
-  LOCKOUT_DURATION: z.string().transform(val => parseInt(val, 10)).pipe(z.number().positive()).default('900'),
+  MAX_LOGIN_ATTEMPTS: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().positive())
+    .default('5'),
+  LOCKOUT_DURATION: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().positive())
+    .default('900'),
 
   // 📁 File Storage Configuration (Optional)
   AWS_ACCESS_KEY_ID: z.string().optional(),
@@ -58,19 +85,40 @@ const environmentSchema = z.object({
   AWS_REGION: z.string().default('us-east-1'),
 
   // 🧪 Development Configuration
-  ENABLE_API_DOCS: z.string().transform(val => val === 'true').default('false'),
-  DEBUG_MODE: z.string().transform(val => val === 'true').default('false'),
+  ENABLE_API_DOCS: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('false'),
+  DEBUG_MODE: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('false'),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
 
   // 🌐 CORS Configuration
   ALLOWED_ORIGINS: z.string().optional(),
-  CORS_CREDENTIALS: z.string().transform(val => val === 'true').default('true'),
+  CORS_CREDENTIALS: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('true'),
 
   // 📱 Feature Flags
-  ENABLE_PAYMENTS: z.string().transform(val => val === 'true').default('false'),
-  ENABLE_AI_FEATURES: z.string().transform(val => val === 'true').default('true'),
-  ENABLE_EMAIL_NOTIFICATIONS: z.string().transform(val => val === 'true').default('false'),
-  ENABLE_FILE_UPLOADS: z.string().transform(val => val === 'true').default('false'),
+  ENABLE_PAYMENTS: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('false'),
+  ENABLE_AI_FEATURES: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('true'),
+  ENABLE_EMAIL_NOTIFICATIONS: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('false'),
+  ENABLE_FILE_UPLOADS: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('false'),
 
   // Monitoring and Analytics
   ENABLE_ANALYTICS: z.boolean().optional(),
@@ -192,12 +240,14 @@ class EnvironmentConfig {
     return {
       privateKey: this.config.NOSTR_PRIVATE_KEY,
       publicKey: this.config.NOSTR_PUBLIC_KEY,
-      relays: this.config.NOSTR_RELAYS ? this.config.NOSTR_RELAYS.split(',').map(url => url.trim()) : [
-        'wss://relay.damus.io',
-        'wss://nos.lol',
-        'wss://relay.nostr.info',
-        'wss://nostr-pub.wellorder.net'
-      ],
+      relays: this.config.NOSTR_RELAYS
+        ? this.config.NOSTR_RELAYS.split(',').map((url) => url.trim())
+        : [
+            'wss://relay.damus.io',
+            'wss://nos.lol',
+            'wss://relay.nostr.info',
+            'wss://nostr-pub.wellorder.net',
+          ],
       autoConnect: this.config.NOSTR_AUTO_CONNECT,
       connectionTimeout: this.config.NOSTR_CONNECTION_TIMEOUT,
       maxRelays: this.config.NOSTR_MAX_RELAYS,
@@ -213,7 +263,11 @@ class EnvironmentConfig {
       awsSecretAccessKey: this.config.AWS_SECRET_ACCESS_KEY,
       awsS3Bucket: this.config.AWS_S3_BUCKET,
       awsRegion: this.config.AWS_REGION,
-      isConfigured: !!(this.config.AWS_ACCESS_KEY_ID && this.config.AWS_SECRET_ACCESS_KEY && this.config.AWS_S3_BUCKET),
+      isConfigured: !!(
+        this.config.AWS_ACCESS_KEY_ID &&
+        this.config.AWS_SECRET_ACCESS_KEY &&
+        this.config.AWS_S3_BUCKET
+      ),
     };
   }
 
@@ -229,7 +283,7 @@ class EnvironmentConfig {
   // 🌐 CORS Configuration
   get cors() {
     const allowedOrigins = this.config.ALLOWED_ORIGINS
-      ? this.config.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+      ? this.config.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
       : ['http://localhost:3000', 'https://localhost:3000'];
 
     return {
@@ -265,7 +319,7 @@ class EnvironmentConfig {
         jwtConfigured: !!this.config.JWT_SECRET,
         encryptionConfigured: !!this.config.ENCRYPTION_KEY,
         rateLimitingConfigured: !!this.config.RATE_LIMIT_REDIS_URL,
-      }
+      },
     };
   }
 }

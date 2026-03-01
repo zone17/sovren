@@ -1,6 +1,6 @@
 /**
  * 🎯 **SUPPORTER EXPERIENCE SERVICE (US-075 TO US-078)**
- * 
+ *
  * Elite Service Implementation:
  * ✅ Real-time data fetching with caching
  * ✅ Optimistic updates and offline support
@@ -76,8 +76,7 @@ const cache = new ServiceCache();
 
 // 🔧 **UTILITY FUNCTIONS**
 
-const delay = (ms: number): Promise<void> => 
-  new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 const retryFetch = async <T>(
   fetchFn: () => Promise<T>,
@@ -95,12 +94,9 @@ const retryFetch = async <T>(
   }
 };
 
-const apiRequest = async <T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> => {
+const apiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
   const startTime = performance.now();
-  
+
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
@@ -116,10 +112,10 @@ const apiRequest = async <T>(
 
     const data = await response.json();
     const endTime = performance.now();
-    
+
     // Performance monitoring
     console.log(`API Request: ${endpoint} completed in ${(endTime - startTime).toFixed(2)}ms`);
-    
+
     return data;
   } catch (error) {
     console.error(`API Request failed: ${endpoint}`, error);
@@ -129,7 +125,11 @@ const apiRequest = async <T>(
 
 // 📱 **MOCK DATA FOR DEVELOPMENT**
 
-const generateMockPersonalizedFeed = (userId: string, page: number = 1, filters: any = {}): PersonalizedFeed => {
+const generateMockPersonalizedFeed = (
+  userId: string,
+  page: number = 1,
+  filters: any = {}
+): PersonalizedFeed => {
   const mockItems: FeedContentItem[] = Array.from({ length: 20 }, (_, i) => ({
     id: `content-${page}-${i + 1}`,
     creatorId: `creator-${Math.floor(Math.random() * 10) + 1}`,
@@ -148,10 +148,13 @@ const generateMockPersonalizedFeed = (userId: string, page: number = 1, filters:
     subcategory: 'General',
     tags: [`tag${i}`, `category${Math.floor(i / 5)}`, 'popular'],
     isPremium: Math.random() > 0.7,
-    pricing: Math.random() > 0.7 ? {
-      sats: Math.floor(Math.random() * 1000) + 100,
-      currency: 'USD',
-    } : undefined,
+    pricing:
+      Math.random() > 0.7
+        ? {
+            sats: Math.floor(Math.random() * 1000) + 100,
+            currency: 'USD',
+          }
+        : undefined,
     engagement: {
       views: Math.floor(Math.random() * 10000) + 100,
       likes: Math.floor(Math.random() * 1000) + 10,
@@ -242,7 +245,7 @@ const generateMockCategories = (): Category[] => {
 
 const generateMockSearchResults = (query: SearchQuery): SearchResults => {
   const mockItems = generateMockPersonalizedFeed('user', 1).items.slice(0, query.pagination.limit);
-  
+
   return {
     query,
     results: mockItems,
@@ -262,21 +265,25 @@ const generateMockSearchResults = (query: SearchQuery): SearchResults => {
 };
 
 const generateMockTrendingContent = (timeframe: string): TrendingContent => {
-  const mockItems = generateMockPersonalizedFeed('user', 1).items.slice(0, 20).map((item, index) => ({
-    content: item,
-    trendingScore: Math.floor(Math.random() * 30) + 70, // 70-100
-    rank: index + 1,
-    category: item.category,
-    timeframe: timeframe as any,
-    trendStarted: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
-    reasons: [
-      {
-        type: ['viral', 'creator_boost', 'external_mention', 'algorithmic'][Math.floor(Math.random() * 4)] as any,
-        confidence: Math.floor(Math.random() * 30) + 70,
-        description: `This content is trending due to ${['high engagement', 'creator popularity', 'viral sharing'][Math.floor(Math.random() * 3)]}`,
-      },
-    ],
-  }));
+  const mockItems = generateMockPersonalizedFeed('user', 1)
+    .items.slice(0, 20)
+    .map((item, index) => ({
+      content: item,
+      trendingScore: Math.floor(Math.random() * 30) + 70, // 70-100
+      rank: index + 1,
+      category: item.category,
+      timeframe: timeframe as any,
+      trendStarted: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+      reasons: [
+        {
+          type: ['viral', 'creator_boost', 'external_mention', 'algorithmic'][
+            Math.floor(Math.random() * 4)
+          ] as any,
+          confidence: Math.floor(Math.random() * 30) + 70,
+          description: `This content is trending due to ${['high engagement', 'creator popularity', 'viral sharing'][Math.floor(Math.random() * 3)]}`,
+        },
+      ],
+    }));
 
   return {
     timeframe: timeframe as any,
@@ -316,46 +323,45 @@ export const useSupporterExperienceService = (userId: string) => {
   }, []);
 
   // 📺 **US-075: Load Personalized Feed**
-  const loadPersonalizedFeed = useCallback(async (
-    page: number = 1,
-    filters: any = {}
-  ) => {
-    const cacheKey = `feed-${userId}-${page}-${JSON.stringify(filters)}`;
-    const cached = cache.get<PersonalizedFeed>(cacheKey);
+  const loadPersonalizedFeed = useCallback(
+    async (page: number = 1, filters: any = {}) => {
+      const cacheKey = `feed-${userId}-${page}-${JSON.stringify(filters)}`;
+      const cached = cache.get<PersonalizedFeed>(cacheKey);
 
-    if (cached) {
-      setPersonalizedFeed(cached);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-
-      // In production, this would be a real API call
-      const mockData = generateMockPersonalizedFeed(userId, page, filters);
-      
-      // Simulate API delay
-      await delay(Math.random() * 300 + 100);
-
-      // Validate data
-      const validatedFeed = validatePersonalizedFeed(mockData);
-      
-      setPersonalizedFeed(validatedFeed);
-      cache.set(cacheKey, validatedFeed);
-
-    } catch (error: any) {
-      if (error.name !== 'AbortError') {
-        setError(error.message || 'Failed to load personalized feed');
-        console.error('Failed to load personalized feed:', error);
+      if (cached) {
+        setPersonalizedFeed(cached);
+        return;
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId]);
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        abortControllerRef.current?.abort();
+        abortControllerRef.current = new AbortController();
+
+        // In production, this would be a real API call
+        const mockData = generateMockPersonalizedFeed(userId, page, filters);
+
+        // Simulate API delay
+        await delay(Math.random() * 300 + 100);
+
+        // Validate data
+        const validatedFeed = validatePersonalizedFeed(mockData);
+
+        setPersonalizedFeed(validatedFeed);
+        cache.set(cacheKey, validatedFeed);
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          setError(error.message || 'Failed to load personalized feed');
+          console.error('Failed to load personalized feed:', error);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [userId]
+  );
 
   // 📂 **US-076: Load Categories**
   const loadCategories = useCallback(async () => {
@@ -376,13 +382,12 @@ export const useSupporterExperienceService = (userId: string) => {
 
       // In production: await apiRequest<Category[]>('/categories')
       const mockData = generateMockCategories();
-      
+
       // Simulate API delay
       await delay(Math.random() * 200 + 50);
 
       setCategories(mockData);
       cache.set(cacheKey, mockData, 10 * 60 * 1000); // 10 minutes cache
-
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         setError(error.message || 'Failed to load categories');
@@ -412,16 +417,15 @@ export const useSupporterExperienceService = (userId: string) => {
 
       // In production: await apiRequest<SearchResults>('/search', { method: 'POST', body: JSON.stringify(query) })
       const mockData = generateMockSearchResults(query);
-      
+
       // Simulate search processing time
       await delay(Math.random() * 400 + 100);
 
       // Validate data
       const validatedResults = validateSearchResults(mockData);
-      
+
       setSearchResults(validatedResults);
       cache.set(cacheKey, validatedResults, 2 * 60 * 1000); // 2 minutes cache
-
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         setError(error.message || 'Search failed');
@@ -451,16 +455,15 @@ export const useSupporterExperienceService = (userId: string) => {
 
       // In production: await apiRequest<TrendingContent>(`/trending?timeframe=${timeframe}`)
       const mockData = generateMockTrendingContent(timeframe);
-      
+
       // Simulate API delay
       await delay(Math.random() * 250 + 75);
 
       // Validate data
       const validatedTrending = validateTrendingContent(mockData);
-      
+
       setTrendingContent(validatedTrending);
       cache.set(cacheKey, validatedTrending, 1 * 60 * 1000); // 1 minute cache for trending
-
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         setError(error.message || 'Failed to load trending content');
@@ -515,7 +518,8 @@ export const useSupporterExperienceService = (userId: string) => {
 // 🔧 **ADDITIONAL HOOKS**
 
 export const usePersonalizedFeed = (userId: string, autoLoad: boolean = true) => {
-  const { personalizedFeed, loadPersonalizedFeed, isLoading, error } = useSupporterExperienceService(userId);
+  const { personalizedFeed, loadPersonalizedFeed, isLoading, error } =
+    useSupporterExperienceService(userId);
 
   useEffect(() => {
     if (autoLoad && userId) {
@@ -543,7 +547,8 @@ export const useSearch = () => {
 };
 
 export const useTrendingContent = (autoLoad: boolean = true, defaultTimeframe: string = '24h') => {
-  const { trendingContent, loadTrendingContent, isLoading, error } = useSupporterExperienceService('');
+  const { trendingContent, loadTrendingContent, isLoading, error } =
+    useSupporterExperienceService('');
 
   useEffect(() => {
     if (autoLoad) {

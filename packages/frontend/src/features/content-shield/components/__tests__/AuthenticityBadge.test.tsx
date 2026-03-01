@@ -10,9 +10,7 @@ const mockProvenance = {
   signature: 'sig-hex-value',
   nostr_event_id: 'event-hex-id',
   content_hash: 'sha256-hex',
-  relay_confirmations: [
-    { relay: 'wss://relay.damus.io', confirmed_at: '2026-02-15T10:00:05Z' },
-  ],
+  relay_confirmations: [{ relay: 'wss://relay.damus.io', confirmed_at: '2026-02-15T10:00:05Z' }],
   verification_status: 'verified' as const,
   nip05_verified: true,
 };

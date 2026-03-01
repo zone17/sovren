@@ -173,11 +173,7 @@ describe('Webhook Signature Verification (PAY-003) - Unit Tests', () => {
       // Tamper with payload
       const tamperedPayload = '1234567890.{"amount":99999}';
 
-      const isValid = verifySignatureWithRotation(
-        tamperedPayload,
-        signature,
-        TEST_WEBHOOK_SECRET
-      );
+      const isValid = verifySignatureWithRotation(tamperedPayload, signature, TEST_WEBHOOK_SECRET);
 
       expect(isValid).toBe(false);
     });
@@ -189,11 +185,7 @@ describe('Webhook Signature Verification (PAY-003) - Unit Tests', () => {
       // Tamper with timestamp
       const tamperedPayload = '9999999999.{"event":"payment.completed"}';
 
-      const isValid = verifySignatureWithRotation(
-        tamperedPayload,
-        signature,
-        TEST_WEBHOOK_SECRET
-      );
+      const isValid = verifySignatureWithRotation(tamperedPayload, signature, TEST_WEBHOOK_SECRET);
 
       expect(isValid).toBe(false);
     });
@@ -205,11 +197,7 @@ describe('Webhook Signature Verification (PAY-003) - Unit Tests', () => {
       // Add extra space
       const modifiedPayload = '1234567890.{ "event":"test"}';
 
-      const isValid = verifySignatureWithRotation(
-        modifiedPayload,
-        signature,
-        TEST_WEBHOOK_SECRET
-      );
+      const isValid = verifySignatureWithRotation(modifiedPayload, signature, TEST_WEBHOOK_SECRET);
 
       expect(isValid).toBe(false);
     });

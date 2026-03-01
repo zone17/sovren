@@ -1,1 +1,8 @@
-export { INotificationService, Notification, NotificationResult, BulkNotificationResult, NotificationChannel, NotificationPreferences } from '../INotificationService';
+export {
+  INotificationService,
+  Notification,
+  NotificationResult,
+  BulkNotificationResult,
+  NotificationChannel,
+  NotificationPreferences,
+} from '../INotificationService';

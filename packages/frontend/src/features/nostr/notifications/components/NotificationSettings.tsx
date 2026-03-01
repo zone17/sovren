@@ -20,9 +20,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   className = '',
 }) => {
   const service = getNotificationService();
-  const [preferences, setPreferences] = useState<NotificationPreferences>(
-    service.getPreferences()
-  );
+  const [preferences, setPreferences] = useState<NotificationPreferences>(service.getPreferences());
   const [saving, setSaving] = useState(false);
 
   // Load preferences on mount
@@ -81,10 +79,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2
-          id="settings-title"
-          className="text-xl font-semibold text-gray-900 dark:text-white"
-        >
+        <h2 id="settings-title" className="text-xl font-semibold text-gray-900 dark:text-white">
           Notification Settings
         </h2>
         {onClose && (
@@ -218,9 +213,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
 
       {/* Display Settings */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Display
-        </h3>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Display</h3>
         <div className="space-y-3">
           <ToggleSwitch
             label="Group by Date"
@@ -271,22 +264,13 @@ interface ToggleSwitchProps {
   onChange: (checked: boolean) => void;
 }
 
-const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
-  label,
-  description,
-  checked,
-  onChange,
-}) => {
+const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ label, description, checked, onChange }) => {
   return (
     <div className="flex items-start justify-between">
       <div className="flex-1">
-        <label className="text-sm font-medium text-gray-900 dark:text-white">
-          {label}
-        </label>
+        <label className="text-sm font-medium text-gray-900 dark:text-white">{label}</label>
         {description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            {description}
-          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>
         )}
       </div>
       <button

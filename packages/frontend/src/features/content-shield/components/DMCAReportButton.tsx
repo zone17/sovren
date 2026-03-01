@@ -21,12 +21,8 @@ export const DMCAReportButton: React.FC<DMCAReportButtonProps> = ({ alertId }) =
         {mutation.isPending ? 'Generating...' : 'DMCA Report'}
       </Button>
 
-      {mutation.isSuccess && (
-        <p className="text-xs text-green-600 mt-1">Report generated.</p>
-      )}
-      {mutation.isError && (
-        <p className="text-xs text-red-600 mt-1">Report generation failed.</p>
-      )}
+      {mutation.isSuccess && <p className="text-xs text-green-600 mt-1">Report generated.</p>}
+      {mutation.isError && <p className="text-xs text-red-600 mt-1">Report generation failed.</p>}
     </div>
   );
 };

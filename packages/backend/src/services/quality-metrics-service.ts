@@ -1186,4 +1186,3 @@ class RealTimeProcessor extends EventEmitter {
     // Test monitoring implementation
   }
 }
-

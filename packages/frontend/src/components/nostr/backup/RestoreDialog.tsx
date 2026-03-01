@@ -12,7 +12,12 @@
 
 import React, { useState, useCallback } from 'react';
 import { nostrBackupService } from '../../../services/nostr/NOSTRBackupService';
-import type { BackupFile, BackupVerification, RecoveryResult, RecoveryOptions } from '../../../services/nostr/types/backup';
+import type {
+  BackupFile,
+  BackupVerification,
+  RecoveryResult,
+  RecoveryOptions,
+} from '../../../services/nostr/types/backup';
 
 interface RestoreDialogProps {
   isOpen: boolean;
@@ -20,12 +25,10 @@ interface RestoreDialogProps {
   onSuccess?: (result: RecoveryResult) => void;
 }
 
-export const RestoreDialog: React.FC<RestoreDialogProps> = ({
-  isOpen,
-  onClose,
-  onSuccess,
-}) => {
-  const [step, setStep] = useState<'upload' | 'verify' | 'options' | 'password' | 'restoring' | 'success' | 'error'>('upload');
+export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [step, setStep] = useState<
+    'upload' | 'verify' | 'options' | 'password' | 'restoring' | 'success' | 'error'
+  >('upload');
   const [backupFile, setBackupFile] = useState<BackupFile | null>(null);
   const [verification, setVerification] = useState<BackupVerification | null>(null);
   const [password, setPassword] = useState('');
@@ -142,16 +145,19 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Restore NOSTR Backup
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Restore NOSTR Backup</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Close dialog"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -179,9 +185,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
                   <span className="text-blue-600 dark:text-blue-400 hover:text-blue-500 font-medium">
                     Choose backup file
                   </span>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    or drag and drop
-                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">or drag and drop</p>
                 </label>
                 <input
                   id="backup-file"
@@ -198,15 +202,19 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
           {/* Step 2: Verify */}
           {step === 'verify' && verification && (
             <div className="space-y-6">
-              <div className={`border rounded-lg p-4 ${
-                verification.valid
-                  ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
-                  : 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20'
-              }`}>
+              <div
+                className={`border rounded-lg p-4 ${
+                  verification.valid
+                    ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
+                    : 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20'
+                }`}
+              >
                 <div className="flex items-start">
                   <svg
                     className={`w-5 h-5 mr-3 flex-shrink-0 ${
-                      verification.valid ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'
+                      verification.valid
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-yellow-600 dark:text-yellow-400'
                     }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
@@ -218,9 +226,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
                     />
                   </svg>
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Backup file loaded
-                    </p>
+                    <p className="font-medium text-gray-900 dark:text-white">Backup file loaded</p>
                     <ul className="text-sm text-gray-700 dark:text-gray-300 mt-2 space-y-1">
                       <li>Version: {verification.version}</li>
                       <li>Content: {verification.contentType.replace(/_/g, ' ')}</li>
@@ -240,9 +246,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
 
               {verification.warnings.length > 0 && (
                 <div className="border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-                  <p className="font-medium text-yellow-800 dark:text-yellow-300 mb-2">
-                    Warnings:
-                  </p>
+                  <p className="font-medium text-yellow-800 dark:text-yellow-300 mb-2">Warnings:</p>
                   <ul className="text-sm text-yellow-700 dark:text-yellow-400 space-y-1">
                     {verification.warnings.map((warning, index) => (
                       <li key={index}>• {warning}</li>
@@ -253,7 +257,10 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
 
               {verification.encrypted && (
                 <div>
-                  <label htmlFor="restore-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label
+                    htmlFor="restore-password"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
                     Backup Password
                   </label>
                   <div className="relative">
@@ -299,7 +306,9 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
                     <input
                       type="checkbox"
                       checked={recoveryOptions.recoverKeys}
-                      onChange={(e) => setRecoveryOptions({ ...recoveryOptions, recoverKeys: e.target.checked })}
+                      onChange={(e) =>
+                        setRecoveryOptions({ ...recoveryOptions, recoverKeys: e.target.checked })
+                      }
                       className="mr-3"
                     />
                     <span className="text-gray-700 dark:text-gray-300">Recover keys</span>
@@ -309,7 +318,9 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
                     <input
                       type="checkbox"
                       checked={recoveryOptions.recoverEvents}
-                      onChange={(e) => setRecoveryOptions({ ...recoveryOptions, recoverEvents: e.target.checked })}
+                      onChange={(e) =>
+                        setRecoveryOptions({ ...recoveryOptions, recoverEvents: e.target.checked })
+                      }
                       className="mr-3"
                     />
                     <span className="text-gray-700 dark:text-gray-300">Recover events</span>
@@ -319,7 +330,12 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
                     <input
                       type="checkbox"
                       checked={recoveryOptions.recoverConfiguration}
-                      onChange={(e) => setRecoveryOptions({ ...recoveryOptions, recoverConfiguration: e.target.checked })}
+                      onChange={(e) =>
+                        setRecoveryOptions({
+                          ...recoveryOptions,
+                          recoverConfiguration: e.target.checked,
+                        })
+                      }
                       className="mr-3"
                     />
                     <span className="text-gray-700 dark:text-gray-300">Recover configuration</span>
@@ -330,11 +346,18 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
                       <input
                         type="checkbox"
                         checked={recoveryOptions.overwriteExisting}
-                        onChange={(e) => setRecoveryOptions({ ...recoveryOptions, overwriteExisting: e.target.checked })}
+                        onChange={(e) =>
+                          setRecoveryOptions({
+                            ...recoveryOptions,
+                            overwriteExisting: e.target.checked,
+                          })
+                        }
                         className="mr-3 mt-1"
                       />
                       <div>
-                        <span className="text-gray-700 dark:text-gray-300 font-medium">Overwrite existing data</span>
+                        <span className="text-gray-700 dark:text-gray-300 font-medium">
+                          Overwrite existing data
+                        </span>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           Replace existing keys and configuration (use with caution)
                         </p>
@@ -346,11 +369,18 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
                     <input
                       type="checkbox"
                       checked={recoveryOptions.verifyAfterRestore}
-                      onChange={(e) => setRecoveryOptions({ ...recoveryOptions, verifyAfterRestore: e.target.checked })}
+                      onChange={(e) =>
+                        setRecoveryOptions({
+                          ...recoveryOptions,
+                          verifyAfterRestore: e.target.checked,
+                        })
+                      }
                       className="mr-3 mt-1"
                     />
                     <div>
-                      <span className="text-gray-700 dark:text-gray-300 font-medium">Verify after restore</span>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">
+                        Verify after restore
+                      </span>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         Test restored keys and validate signatures
                       </p>
@@ -394,8 +424,18 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
             <div className="space-y-6">
               <div className="flex flex-col items-center py-8">
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-8 h-8 text-green-600 dark:text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -406,19 +446,27 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
               <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Keys recovered:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{result.keysRecovered}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {result.keysRecovered}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Events recovered:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{result.eventsRecovered}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {result.eventsRecovered}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Relays recovered:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{result.relaysRecovered}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {result.relaysRecovered}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Duration:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{(result.duration / 1000).toFixed(2)}s</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {(result.duration / 1000).toFixed(2)}s
+                  </span>
                 </div>
               </div>
 
@@ -429,8 +477,12 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
                   </p>
                   <ul className="text-sm text-green-700 dark:text-green-400 space-y-1">
                     <li>• Keys valid: {result.verificationResult.keysValid ? 'Yes' : 'No'}</li>
-                    <li>• Signatures valid: {result.verificationResult.signaturesValid ? 'Yes' : 'No'}</li>
-                    <li>• Configuration valid: {result.verificationResult.configValid ? 'Yes' : 'No'}</li>
+                    <li>
+                      • Signatures valid: {result.verificationResult.signaturesValid ? 'Yes' : 'No'}
+                    </li>
+                    <li>
+                      • Configuration valid: {result.verificationResult.configValid ? 'Yes' : 'No'}
+                    </li>
                   </ul>
                 </div>
               )}
@@ -449,16 +501,24 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({
             <div className="space-y-6">
               <div className="flex flex-col items-center py-8">
                 <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-8 h-8 text-red-600 dark:text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                   Restoration Failed
                 </h3>
-                <p className="text-red-600 dark:text-red-400 text-center max-w-md">
-                  {error}
-                </p>
+                <p className="text-red-600 dark:text-red-400 text-center max-w-md">{error}</p>
               </div>
 
               <div className="flex space-x-3">

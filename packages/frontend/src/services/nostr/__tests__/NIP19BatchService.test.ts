@@ -58,7 +58,8 @@ const VALID_NPUB_2 = 'npub13elfcs4fr0l0r8af98jlmgdh9c8tcxjvz9qkw038js35mp4dma8qm
 // note for eventId 'b9b0cc4e5d3c7e4a6e2a8e5d4c3b2a1e0d9c8b7a6e5d4c3b2a1e0d9c8b7a6e50' (64-char hex)
 const VALID_NOTE_1 = 'note1hxcvcnja83ly5m323ew5cwe2rcxeezm6dew5cwe2rcxeezm6degq7snf40';
 // nprofile for pubkey '7e7e9c42...' with wss://relay.damus.io
-const VALID_NPROFILE_1 = 'nprofile1qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hsqgr706wy92gmlmcel2ffuh76rdewp67p5nq3g9nnufu5ydxcdtwlfcz62u4e';
+const VALID_NPROFILE_1 =
+  'nprofile1qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hsqgr706wy92gmlmcel2ffuh76rdewp67p5nq3g9nnufu5ydxcdtwlfcz62u4e';
 
 describe('NIP19BatchService', () => {
   let service: NIP19BatchService;
@@ -143,10 +144,12 @@ describe('NIP19BatchService', () => {
     });
 
     it('should respect concurrency limits', async () => {
-      const inputs: EncodingInput[] = Array(100).fill(null).map(() => ({
-        type: 'npub' as const,
-        pubkey: '7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e',
-      }));
+      const inputs: EncodingInput[] = Array(100)
+        .fill(null)
+        .map(() => ({
+          type: 'npub' as const,
+          pubkey: '7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e',
+        }));
 
       const options: BatchOptions = {
         concurrency: 5,
@@ -188,10 +191,12 @@ describe('NIP19BatchService', () => {
 
     it('should report progress correctly', async () => {
       const progressReports: any[] = [];
-      const inputs: EncodingInput[] = Array(50).fill(null).map(() => ({
-        type: 'npub' as const,
-        pubkey: '7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e',
-      }));
+      const inputs: EncodingInput[] = Array(50)
+        .fill(null)
+        .map(() => ({
+          type: 'npub' as const,
+          pubkey: '7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e',
+        }));
 
       const options: BatchOptions = {
         chunkSize: 10,
@@ -261,12 +266,7 @@ describe('NIP19BatchService', () => {
 
   describe('Batch Validation', () => {
     it('should validate multiple identifiers', async () => {
-      const identifiers = [
-        VALID_NPUB_1,
-        'invalid',
-        VALID_NOTE_1,
-        VALID_NPROFILE_1,
-      ];
+      const identifiers = [VALID_NPUB_1, 'invalid', VALID_NOTE_1, VALID_NPROFILE_1];
 
       const result = await service.batchValidate(identifiers);
 
@@ -292,10 +292,12 @@ describe('NIP19BatchService', () => {
 
   describe('Performance', () => {
     it('should handle large batches efficiently', async () => {
-      const inputs: EncodingInput[] = Array(1000).fill(null).map(() => ({
-        type: 'npub' as const,
-        pubkey: '7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e',
-      }));
+      const inputs: EncodingInput[] = Array(1000)
+        .fill(null)
+        .map(() => ({
+          type: 'npub' as const,
+          pubkey: '7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e',
+        }));
 
       const startTime = Date.now();
       const result = await service.batchEncode(inputs, {
@@ -310,10 +312,12 @@ describe('NIP19BatchService', () => {
     });
 
     it('should process chunks in parallel', async () => {
-      const inputs: EncodingInput[] = Array(100).fill(null).map(() => ({
-        type: 'npub' as const,
-        pubkey: '7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e',
-      }));
+      const inputs: EncodingInput[] = Array(100)
+        .fill(null)
+        .map(() => ({
+          type: 'npub' as const,
+          pubkey: '7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e',
+        }));
 
       const serialResult = await service.batchEncode(inputs, {
         concurrency: 1,

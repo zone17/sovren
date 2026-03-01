@@ -21,7 +21,7 @@ export const PAYMENT_SERVICE_TOKENS = {
   CurrencyService: new ServiceToken<ICurrencyService>('CurrencyService'),
   EventBus: new ServiceToken<IEventBus>('EventBus'),
   Logger: new ServiceToken<ILogger>('Logger'),
-  Database: new ServiceToken<IDatabase>('Database')
+  Database: new ServiceToken<IDatabase>('Database'),
 };
 
 // Payment Service Interfaces
@@ -151,7 +151,7 @@ export class InvoiceServiceFactory extends SafeServiceFactory<IInvoiceService> {
     return [
       PAYMENT_SERVICE_TOKENS.EventBus,
       PAYMENT_SERVICE_TOKENS.Database,
-      PAYMENT_SERVICE_TOKENS.Logger
+      PAYMENT_SERVICE_TOKENS.Logger,
     ];
   }
 
@@ -174,7 +174,7 @@ export class InvoiceServiceFactory extends SafeServiceFactory<IInvoiceService> {
           createdAt: new Date(),
           expiresAt: new Date(Date.now() + 3600000), // 1 hour
           paymentRequest: `lnbc${data.amount}...`, // Mock Lightning invoice
-          metadata: data.metadata || {}
+          metadata: data.metadata || {},
         };
 
         // Publish event
@@ -216,7 +216,7 @@ export class InvoiceServiceFactory extends SafeServiceFactory<IInvoiceService> {
 
       async listInvoices(filter: any): Promise<Invoice[]> {
         return db.query<Invoice>('SELECT * FROM invoices WHERE status = ?', [filter.status]);
-      }
+      },
     };
   }
 }
@@ -234,7 +234,7 @@ export class PaymentProcessingServiceFactory extends SafeServiceFactory<IPayment
       PAYMENT_SERVICE_TOKENS.EventBus,
       PAYMENT_SERVICE_TOKENS.Database,
       PAYMENT_SERVICE_TOKENS.Logger,
-      PAYMENT_SERVICE_TOKENS.InvoiceService
+      PAYMENT_SERVICE_TOKENS.InvoiceService,
     ];
   }
 
@@ -259,7 +259,7 @@ export class PaymentProcessingServiceFactory extends SafeServiceFactory<IPayment
           const result: PaymentResult = {
             success: true,
             paymentId: `pay_${Date.now()}`,
-            transactionId: `tx_${Date.now()}`
+            transactionId: `tx_${Date.now()}`,
           };
 
           // Publish success event
@@ -290,7 +290,7 @@ export class PaymentProcessingServiceFactory extends SafeServiceFactory<IPayment
 
           return {
             success: false,
-            error: (error as Error).message
+            error: (error as Error).message,
           };
         }
       },
@@ -301,7 +301,10 @@ export class PaymentProcessingServiceFactory extends SafeServiceFactory<IPayment
       },
 
       async getPaymentStatus(paymentId: string): Promise<PaymentStatus> {
-        const results = await db.query<{status: PaymentStatus}>('SELECT status FROM payments WHERE id = ?', [paymentId]);
+        const results = await db.query<{ status: PaymentStatus }>(
+          'SELECT status FROM payments WHERE id = ?',
+          [paymentId]
+        );
         return results[0]?.status || 'pending';
       },
 
@@ -309,7 +312,7 @@ export class PaymentProcessingServiceFactory extends SafeServiceFactory<IPayment
         logger.info(`Retrying failed payment ${paymentId}`);
         // Retry logic
         return { success: true, paymentId };
-      }
+      },
     };
   }
 }
@@ -327,7 +330,7 @@ export class SubscriptionServiceFactory extends SafeServiceFactory<ISubscription
       PAYMENT_SERVICE_TOKENS.EventBus,
       PAYMENT_SERVICE_TOKENS.Database,
       PAYMENT_SERVICE_TOKENS.Logger,
-      PAYMENT_SERVICE_TOKENS.PaymentProcessingService
+      PAYMENT_SERVICE_TOKENS.PaymentProcessingService,
     ];
   }
 
@@ -346,7 +349,7 @@ export class SubscriptionServiceFactory extends SafeServiceFactory<ISubscription
           planId: data.planId,
           status: 'active' as const,
           createdAt: new Date(),
-          nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         };
 
         await eventBus.publish(
@@ -395,13 +398,19 @@ export class SubscriptionServiceFactory extends SafeServiceFactory<ISubscription
       },
 
       async listActiveSubscriptions(userId: string): Promise<any[]> {
-        return db.query('SELECT * FROM subscriptions WHERE user_id = ? AND status = ?', [userId, 'active']);
+        return db.query('SELECT * FROM subscriptions WHERE user_id = ? AND status = ?', [
+          userId,
+          'active',
+        ]);
       },
 
       async checkSubscriptionStatus(id: string): Promise<SubscriptionStatus> {
-        const results = await db.query<{status: SubscriptionStatus}>('SELECT status FROM subscriptions WHERE id = ?', [id]);
+        const results = await db.query<{ status: SubscriptionStatus }>(
+          'SELECT status FROM subscriptions WHERE id = ?',
+          [id]
+        );
         return results[0]?.status || 'cancelled';
-      }
+      },
     };
   }
 }

@@ -4,7 +4,6 @@
  * Comprehensive coverage for US-099 through US-102
  */
 
-
 import {
   AudienceLevel,
   ContentStyle,
@@ -26,10 +25,25 @@ import { CreatorRecommendationService } from '../creator-recommendation-service'
 function createMockChain() {
   const chain: Record<string, ReturnType<typeof vi.fn>> = {};
   const methods = [
-    'select', 'insert', 'upsert', 'update', 'delete',
-    'eq', 'neq', 'gt', 'gte', 'lt', 'lte',
-    'in', 'contains', 'overlaps', 'order', 'limit', 'range',
-    'single', 'maybeSingle',
+    'select',
+    'insert',
+    'upsert',
+    'update',
+    'delete',
+    'eq',
+    'neq',
+    'gt',
+    'gte',
+    'lt',
+    'lte',
+    'in',
+    'contains',
+    'overlaps',
+    'order',
+    'limit',
+    'range',
+    'single',
+    'maybeSingle',
   ];
   for (const m of methods) {
     chain[m] = vi.fn().mockReturnThis();
@@ -53,13 +67,20 @@ const mockDefaultChain = createMockChain();
 const mockSupabase = {
   from: vi.fn((table: string) => {
     switch (table) {
-      case 'creator_profiles': return mockProfilesChain;
-      case 'user_interest_mapping': return mockInterestMappingChain;
-      case 'creator_interest_mapping': return mockCreatorInterestChain;
-      case 'creator_discovery_sessions': return mockDiscoveryChain;
-      case 'follow_relationships': return mockFollowChain;
-      case 'interest_taxonomy': return mockTaxonomyChain;
-      default: return mockDefaultChain;
+      case 'creator_profiles':
+        return mockProfilesChain;
+      case 'user_interest_mapping':
+        return mockInterestMappingChain;
+      case 'creator_interest_mapping':
+        return mockCreatorInterestChain;
+      case 'creator_discovery_sessions':
+        return mockDiscoveryChain;
+      case 'follow_relationships':
+        return mockFollowChain;
+      case 'interest_taxonomy':
+        return mockTaxonomyChain;
+      default:
+        return mockDefaultChain;
     }
   }),
   rpc: vi.fn(),
@@ -102,7 +123,15 @@ describe('CreatorRecommendationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset all chain methods to returnThis (chainable) by default
-    for (const chain of [mockProfilesChain, mockInterestMappingChain, mockCreatorInterestChain, mockDiscoveryChain, mockFollowChain, mockTaxonomyChain, mockDefaultChain]) {
+    for (const chain of [
+      mockProfilesChain,
+      mockInterestMappingChain,
+      mockCreatorInterestChain,
+      mockDiscoveryChain,
+      mockFollowChain,
+      mockTaxonomyChain,
+      mockDefaultChain,
+    ]) {
       for (const [key, fn] of Object.entries(chain)) {
         fn.mockReset();
         if (key === 'single' || key === 'maybeSingle') {
@@ -505,7 +534,10 @@ describe('CreatorRecommendationService', () => {
 
         const result = await service.getInterestBasedSuggestions(suggestionRequest);
 
-        expect(mockCreatorInterestChain.in).toHaveBeenCalledWith('interest_id', ['interest_123', 'interest_456']);
+        expect(mockCreatorInterestChain.in).toHaveBeenCalledWith('interest_id', [
+          'interest_123',
+          'interest_456',
+        ]);
         expect(result.suggestions).toHaveLength(1);
       });
     });

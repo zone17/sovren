@@ -56,7 +56,10 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
 
   const cellMap = new Map<string, { intensity: number; total_mins: number }>();
   data?.heatmap.forEach((cell) => {
-    cellMap.set(`${cell.day}-${cell.hour}`, { intensity: cell.intensity, total_mins: cell.total_mins });
+    cellMap.set(`${cell.day}-${cell.hour}`, {
+      intensity: cell.intensity,
+      total_mins: cell.total_mins,
+    });
   });
 
   return (
@@ -116,7 +119,9 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
                             />
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs">
-                            <p className="font-medium">{day} {formatHour(hour)}</p>
+                            <p className="font-medium">
+                              {day} {formatHour(hour)}
+                            </p>
                             <p>{mins} min active</p>
                           </TooltipContent>
                         </Tooltip>

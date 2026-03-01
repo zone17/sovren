@@ -60,13 +60,15 @@ export abstract class ServiceFactory<T> {
 /**
  * Factory result type for error handling
  */
-export type FactoryResult<T> = {
-  success: true;
-  instance: T;
-} | {
-  success: false;
-  error: Error;
-};
+export type FactoryResult<T> =
+  | {
+      success: true;
+      instance: T;
+    }
+  | {
+      success: false;
+      error: Error;
+    };
 
 /**
  * Enhanced factory with error handling
@@ -82,7 +84,7 @@ export abstract class SafeServiceFactory<T> extends ServiceFactory<T> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error : new Error(String(error))
+        error: error instanceof Error ? error : new Error(String(error)),
       };
     }
   }

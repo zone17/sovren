@@ -1,33 +1,28 @@
 import { EventEmitter } from 'events';
-import {
-    finalizeEvent,
-    generateSecretKey,
-    getPublicKey,
-    verifyEvent
-} from 'nostr-tools/pure';
+import { finalizeEvent, generateSecretKey, getPublicKey, verifyEvent } from 'nostr-tools/pure';
 import type { Event as NostrToolsEvent } from 'nostr-tools/pure';
 import * as nip04 from 'nostr-tools/nip04';
 import { SimplePool } from 'nostr-tools/pool';
 import { parseFeatureFlags, FeatureFlags } from '../../../shared/src/featureFlags';
 import {
-    NostrContact,
-    NostrCryptographyError,
-    NostrDirectMessage,
-    NostrError,
-    NostrEvent,
-    NostrEventCacheEntry,
-    NostrEventKind,
-    NostrFilter,
-    NostrKeyPair,
-    NostrMobileConfig,
-    NostrRelayState,
-    NostrSchemas,
-    NostrServiceConfig,
-    NostrServiceState,
-    NostrSubscription,
-    NostrUserProfile,
-    NostrValidationError,
-    UnsignedNostrEvent
+  NostrContact,
+  NostrCryptographyError,
+  NostrDirectMessage,
+  NostrError,
+  NostrEvent,
+  NostrEventCacheEntry,
+  NostrEventKind,
+  NostrFilter,
+  NostrKeyPair,
+  NostrMobileConfig,
+  NostrRelayState,
+  NostrSchemas,
+  NostrServiceConfig,
+  NostrServiceState,
+  NostrSubscription,
+  NostrUserProfile,
+  NostrValidationError,
+  UnsignedNostrEvent,
 } from '../../../shared/src/types/nostr';
 import { config } from '../config/environment';
 import { relayPoolManager } from '../../src/services/nostr/RelayPoolManager';
@@ -124,7 +119,6 @@ export class NostrService extends EventEmitter {
 
       this.state.isInitialized = true;
       console.log('🌐 NOSTR service initialized successfully with RelayPoolManager');
-
     } catch (error) {
       console.error('❌ Failed to initialize NOSTR service:', error);
       throw new NostrError('Failed to initialize NOSTR service', 'INITIALIZATION_ERROR');
@@ -223,7 +217,7 @@ export class NostrService extends EventEmitter {
 
       // Sync state with RelayPoolManager
       const connectedUrls = relayPoolManager.getConnectedRelays();
-      this.state.connectedRelays = connectedUrls.map(url => ({
+      this.state.connectedRelays = connectedUrls.map((url) => ({
         url,
         state: NostrRelayState.CONNECTED,
         reconnectAttempts: 0,
@@ -285,9 +279,9 @@ export class NostrService extends EventEmitter {
     }
 
     // Validate contacts
-    contacts.forEach(contact => NostrSchemas.Contact.parse(contact));
+    contacts.forEach((contact) => NostrSchemas.Contact.parse(contact));
 
-    const tags = contacts.map(contact => {
+    const tags = contacts.map((contact) => {
       const tag = ['p', contact.pubkey];
       if (contact.relay) tag.push(contact.relay);
       if (contact.petname) tag.push(contact.petname);
@@ -345,7 +339,7 @@ export class NostrService extends EventEmitter {
 
     try {
       // Validate filters
-      filters.forEach(filter => NostrSchemas.Filter.parse(filter));
+      filters.forEach((filter) => NostrSchemas.Filter.parse(filter));
 
       // Subscribe using RelayPoolManager with automatic deduplication
       const subscriptionId = relayPoolManager.subscribe(
@@ -382,7 +376,6 @@ export class NostrService extends EventEmitter {
 
       console.log(`📡 Started subscription via RelayPoolManager: ${subscriptionId}`);
       return subscriptionId;
-
     } catch (error) {
       console.error('❌ Failed to create subscription:', error);
       throw new NostrError('Failed to create subscription', 'SUBSCRIPTION_ERROR');
@@ -416,12 +409,12 @@ export class NostrService extends EventEmitter {
     }
 
     const events = Array.from(this.state.eventCache.values())
-      .filter(entry => this.isEventCacheFresh(entry))
-      .map(entry => entry.event);
+      .filter((entry) => this.isEventCacheFresh(entry))
+      .map((entry) => entry.event);
 
     if (!filter) return events;
 
-    return events.filter(event => this.eventMatchesFilter(event, filter));
+    return events.filter((event) => this.eventMatchesFilter(event, filter));
   }
 
   /**
@@ -450,11 +443,11 @@ export class NostrService extends EventEmitter {
    */
   public async disconnect(): Promise<void> {
     // Clear reconnect timeouts
-    this.reconnectTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.reconnectTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.reconnectTimeouts.clear();
 
     // Close all subscriptions
-    this.state.subscriptions.forEach(sub => this.unsubscribe(sub.id));
+    this.state.subscriptions.forEach((sub) => this.unsubscribe(sub.id));
 
     // Disconnect from RelayPoolManager
     await relayPoolManager.disconnectAll();
@@ -489,7 +482,9 @@ export class NostrService extends EventEmitter {
       batchSize: this.featureFlags?.enableNostrMobileOptimizations ? 50 : 100,
       connectionPoolSize: this.featureFlags?.enableNostrMobileOptimizations ? 3 : 5,
       backgroundSyncInterval: this.featureFlags?.enableNostrMobileOptimizations ? 30000 : 10000,
-      cacheStrategy: this.featureFlags?.enableNostrMobileOptimizations ? 'conservative' : 'aggressive',
+      cacheStrategy: this.featureFlags?.enableNostrMobileOptimizations
+        ? 'conservative'
+        : 'aggressive',
       offlineMode: false,
     };
   }
@@ -577,10 +572,16 @@ export class NostrService extends EventEmitter {
       // Validate tag structure
       for (const tag of event.tags) {
         if (!Array.isArray(tag) || tag.length < 1) {
-          throw new NostrValidationError('Invalid NOSTR event: each tag must be a non-empty array', event);
+          throw new NostrValidationError(
+            'Invalid NOSTR event: each tag must be a non-empty array',
+            event
+          );
         }
         if (typeof tag[0] !== 'string') {
-          throw new NostrValidationError('Invalid NOSTR event: tag identifier must be a string', event);
+          throw new NostrValidationError(
+            'Invalid NOSTR event: tag identifier must be a string',
+            event
+          );
         }
       }
 
@@ -648,8 +649,8 @@ export class NostrService extends EventEmitter {
 
   private getConnectedRelayUrls(): string[] {
     return this.state.connectedRelays
-      .filter(relay => relay.state === NostrRelayState.CONNECTED)
-      .map(relay => relay.url);
+      .filter((relay) => relay.state === NostrRelayState.CONNECTED)
+      .map((relay) => relay.url);
   }
 
   private requireKeyPair(): NostrKeyPair {

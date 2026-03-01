@@ -3,11 +3,7 @@
  * EPIC-009: Multi-Platform Hub
  */
 
-import type {
-  PlatformOverview,
-  ContentComparison,
-  PlatformROI,
-} from '@shared/types/distribution';
+import type { PlatformOverview, ContentComparison, PlatformROI } from '@shared/types/distribution';
 
 export interface ICrossPlatformAnalyticsService {
   /** Get aggregate overview across all connected platforms */

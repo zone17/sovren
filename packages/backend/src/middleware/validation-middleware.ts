@@ -66,7 +66,7 @@ export const validate = (schemas: ValidationTargets) => {
       // Validate query parameters
       if (schemas.query) {
         try {
-          req.query = await schemas.query.parseAsync(req.query) as any;
+          req.query = (await schemas.query.parseAsync(req.query)) as any;
         } catch (error) {
           if (error instanceof ZodError) {
             errors.push(...formatZodErrors(error, 'query'));
@@ -213,9 +213,7 @@ export const nostrPubkeyValidator = z
 /**
  * Validate npub format
  */
-export const npubValidator = z
-  .string()
-  .regex(/^npub[0-9a-z]{59}$/, 'Invalid npub format');
+export const npubValidator = z.string().regex(/^npub[0-9a-z]{59}$/, 'Invalid npub format');
 
 /**
  * Validate Lightning invoice (BOLT11)

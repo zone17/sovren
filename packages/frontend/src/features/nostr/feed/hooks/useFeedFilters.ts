@@ -25,7 +25,7 @@ export const useFeedFilters = (
    * Update filters (merge with existing)
    */
   const updateFilters = useCallback((newFilters: Partial<FeedFilters>) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       ...newFilters,
     }));
@@ -42,7 +42,7 @@ export const useFeedFilters = (
    * Add author to filter
    */
   const addAuthor = useCallback((pubkey: string) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       authors: [...(prev.authors || []), pubkey],
     }));
@@ -52,9 +52,9 @@ export const useFeedFilters = (
    * Remove author from filter
    */
   const removeAuthor = useCallback((pubkey: string) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      authors: prev.authors?.filter(a => a !== pubkey),
+      authors: prev.authors?.filter((a) => a !== pubkey),
     }));
   }, []);
 
@@ -64,7 +64,7 @@ export const useFeedFilters = (
   const addHashtag = useCallback((tag: string) => {
     // Remove # if present
     const cleanTag = tag.startsWith('#') ? tag.substring(1) : tag;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       hashtags: [...(prev.hashtags || []), cleanTag],
     }));
@@ -75,9 +75,9 @@ export const useFeedFilters = (
    */
   const removeHashtag = useCallback((tag: string) => {
     const cleanTag = tag.startsWith('#') ? tag.substring(1) : tag;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      hashtags: prev.hashtags?.filter(h => h !== cleanTag),
+      hashtags: prev.hashtags?.filter((h) => h !== cleanTag),
     }));
   }, []);
 
@@ -85,7 +85,7 @@ export const useFeedFilters = (
    * Set date range filter
    */
   const setDateRange = useCallback((since?: number, until?: number) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       since,
       until,

@@ -127,9 +127,7 @@ const TaxSummary: React.FC = () => {
             <tbody className="divide-y divide-gray-100 bg-white">
               {filtered.map((summary: QuarterlyTaxSummary) => (
                 <tr key={`${summary.year}-${summary.quarter}`} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    {summary.quarter}
-                  </td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{summary.quarter}</td>
                   <td className="px-4 py-3 text-right text-sm text-gray-700">
                     {formatSats(summary.totalIncomeSats, { abbreviate: true, suffix: false })}
                   </td>

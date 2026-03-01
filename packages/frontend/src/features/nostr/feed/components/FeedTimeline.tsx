@@ -32,10 +32,7 @@ export const FeedTimeline = memo<FeedTimelineProps>(
     const [currentUserPubkey] = useState<string | undefined>(undefined); // TODO: Get from auth context
 
     // Hooks
-    const {
-      filters,
-      updateFilters,
-    } = useFeedFilters(initialFilters);
+    const { filters, updateFilters } = useFeedFilters(initialFilters);
 
     const {
       events,
@@ -75,7 +72,7 @@ export const FeedTimeline = memo<FeedTimelineProps>(
       }
 
       observerRef.current = new IntersectionObserver(
-        entries => {
+        (entries) => {
           const [entry] = entries;
           if (entry.isIntersecting && hasMore && !isLoading) {
             // Load more events
@@ -160,10 +157,8 @@ export const FeedTimeline = memo<FeedTimelineProps>(
           return b.engagement.reactions - a.engagement.reactions;
         case 'trending':
           // Trending = combination of recent + engagement
-          const trendScoreA =
-            a.engagement.reactions + a.engagement.reposts + a.engagement.replies;
-          const trendScoreB =
-            b.engagement.reactions + b.engagement.reposts + b.engagement.replies;
+          const trendScoreA = a.engagement.reactions + a.engagement.reposts + a.engagement.replies;
+          const trendScoreB = b.engagement.reactions + b.engagement.reposts + b.engagement.replies;
           const ageWeightA = Math.max(0, 1 - (Date.now() / 1000 - a.timestamp) / 86400);
           const ageWeightB = Math.max(0, 1 - (Date.now() / 1000 - b.timestamp) / 86400);
           return trendScoreB * ageWeightB - trendScoreA * ageWeightA;
@@ -219,10 +214,7 @@ export const FeedTimeline = memo<FeedTimelineProps>(
           {isLoading && events.length === 0 ? (
             // Initial loading state
             <div className="flex items-center justify-center py-16">
-              <Loader2
-                className="w-8 h-8 animate-spin text-blue-500"
-                aria-hidden="true"
-              />
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" aria-hidden="true" />
               <span className="sr-only">Loading feed...</span>
             </div>
           ) : events.length === 0 ? (
@@ -246,15 +238,9 @@ export const FeedTimeline = memo<FeedTimelineProps>(
 
               {/* Load More Trigger */}
               {hasMore && (
-                <div
-                  ref={loadMoreRef}
-                  className="flex items-center justify-center py-8"
-                >
+                <div ref={loadMoreRef} className="flex items-center justify-center py-8">
                   {isLoading ? (
-                    <Loader2
-                      className="w-6 h-6 animate-spin text-blue-500"
-                      aria-hidden="true"
-                    />
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-500" aria-hidden="true" />
                   ) : (
                     <span className="text-sm text-gray-500">Scroll for more</span>
                   )}

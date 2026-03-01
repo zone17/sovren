@@ -24,7 +24,7 @@ import type {
   Content,
   RecommendationOptions,
   TimePeriod,
-  UserInteraction
+  UserInteraction,
 } from '../../interfaces/content';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
@@ -97,7 +97,10 @@ export interface ContentInteraction {
 /**
  * Content recommendation service implementation
  */
-export class ContentRecommendationService extends EventEmitter implements IContentRecommendationService {
+export class ContentRecommendationService
+  extends EventEmitter
+  implements IContentRecommendationService
+{
   private readonly cacheTTL = 900; // 15 minutes in seconds
   private readonly precomputeThreshold = 1000; // Followers threshold for pre-computation
   private readonly maxRecommendations = 100;
@@ -107,7 +110,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
     collaborative: 0.4,
     contentBased: 0.3,
     trending: 0.2,
-    personalized: 0.1
+    personalized: 0.1,
   };
 
   // Algorithm parameters
@@ -129,10 +132,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
   /**
    * Get personalized recommendations for a user
    */
-  async getRecommendations(
-    userId: string,
-    options?: RecommendationOptions
-  ): Promise<Content[]> {
+  async getRecommendations(userId: string, options?: RecommendationOptions): Promise<Content[]> {
     const startTime = Date.now();
     const limit = options?.limit || 20;
     const algorithm = options?.algorithm || 'hybrid';
@@ -167,13 +167,13 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       }
 
       // Fetch full content objects
-      const contentIds = recommendations.map(r => r.contentId);
+      const contentIds = recommendations.map((r) => r.contentId);
       const content = await this.contentRepository.findByIds(contentIds);
 
       // Sort by recommendation score
       const sortedContent = content.sort((a: Content, b: Content) => {
-        const scoreA = recommendations.find(r => r.contentId === a.id)?.score || 0;
-        const scoreB = recommendations.find(r => r.contentId === b.id)?.score || 0;
+        const scoreA = recommendations.find((r) => r.contentId === a.id)?.score || 0;
+        const scoreB = recommendations.find((r) => r.contentId === b.id)?.score || 0;
         return scoreB - scoreA;
       });
 
@@ -186,14 +186,14 @@ export class ContentRecommendationService extends EventEmitter implements IConte
         userId,
         algorithm,
         count: sortedContent.length,
-        duration
+        duration,
       });
 
       this.logger.info('Recommendations generated', {
         userId,
         algorithm,
         count: sortedContent.length,
-        duration
+        duration,
       });
 
       return sortedContent;
@@ -241,7 +241,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
 
       // Sort and take top N
       similarities.sort((a, b) => b.score - a.score);
-      const topIds = similarities.slice(0, limit).map(s => s.contentId);
+      const topIds = similarities.slice(0, limit).map((s) => s.contentId);
 
       const similar = await this.contentRepository.findByIds(topIds);
 
@@ -273,7 +273,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       trendingData.sort((a, b) => b.trendScore - a.trendScore);
 
       // Get content objects
-      const contentIds = trendingData.slice(0, 20).map(t => t.contentId);
+      const contentIds = trendingData.slice(0, 20).map((t) => t.contentId);
       const content = await this.contentRepository.findByIds(contentIds);
 
       // Cache for 5 minutes (shorter TTL for trending)
@@ -295,7 +295,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       const interactions = await this.getUserInteractions(userId);
 
       // Calculate personalization score for each content
-      const scored = content.map(item => {
+      const scored = content.map((item) => {
         let score = 0;
 
         // Category preference
@@ -305,7 +305,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
 
         // Tag overlap
         const itemTags = item.tags || [];
-        const tagOverlap = itemTags.filter(tag => preferences.tags.includes(tag)).length;
+        const tagOverlap = itemTags.filter((tag) => preferences.tags.includes(tag)).length;
         score += (tagOverlap / Math.max(itemTags.length, 1)) * 0.3;
 
         // Author preference
@@ -314,7 +314,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
         }
 
         // Previous interactions
-        const hasInteracted = interactions.some(i => i.contentId === item.id);
+        const hasInteracted = interactions.some((i) => i.contentId === item.id);
         if (hasInteracted) {
           score += 0.2;
         }
@@ -325,7 +325,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       // Sort by personalization score
       scored.sort((a, b) => b.score - a.score);
 
-      return scored.map(s => s.content);
+      return scored.map((s) => s.content);
     } catch (error) {
       this.logger.error('Failed to personalize content', { userId, error });
       return content;
@@ -338,7 +338,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
   async trainModel(interactions: UserInteraction[]): Promise<void> {
     try {
       this.logger.info('Training recommendation model', {
-        interactionCount: interactions.length
+        interactionCount: interactions.length,
       });
 
       // In production, this would update ML models
@@ -378,10 +378,8 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       // Filter by category if specified
       let filtered = trending;
       if (category) {
-        const content = await this.contentRepository.findByIds(
-          trending.map(t => t.contentId)
-        );
-        filtered = trending.filter(t => {
+        const content = await this.contentRepository.findByIds(trending.map((t) => t.contentId));
+        filtered = trending.filter((t) => {
           const c = content.find((item: Content) => item.id === t.contentId);
           return c?.category === category;
         });
@@ -395,7 +393,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       });
 
       // Get content objects
-      const contentIds = filtered.slice(0, limit).map(t => t.contentId);
+      const contentIds = filtered.slice(0, limit).map((t) => t.contentId);
       const popular = await this.contentRepository.findByIds(contentIds);
 
       // Cache for 10 minutes
@@ -427,7 +425,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
           await Promise.all([
             this.getRecommendations(userId, { algorithm: 'hybrid', limit: 50 }),
             this.getRecommendations(userId, { algorithm: 'collaborative', limit: 30 }),
-            this.getRecommendations(userId, { algorithm: 'content-based', limit: 30 })
+            this.getRecommendations(userId, { algorithm: 'content-based', limit: 30 }),
           ]);
 
           processed++;
@@ -479,7 +477,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
               contentId: interaction.contentId,
               score: 0,
               reason: 'collaborative',
-              explanation: 'Users with similar interests enjoyed this content'
+              explanation: 'Users with similar interests enjoyed this content',
             });
           }
 
@@ -525,7 +523,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
 
       for (const candidate of candidates) {
         // Skip if user already interacted
-        if (interactions.some(i => i.contentId === candidate.id)) {
+        if (interactions.some((i) => i.contentId === candidate.id)) {
           continue;
         }
 
@@ -541,7 +539,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
             score: similarity,
             reason: 'content-based',
             explanation: 'Similar to content you enjoyed',
-            features: features.features
+            features: features.features,
           });
         }
       }
@@ -566,23 +564,32 @@ export class ContentRecommendationService extends EventEmitter implements IConte
     try {
       // Calculate proportional limits for each strategy
       const limits = {
-        collaborative: Math.ceil(limit * this.weights.collaborative / (this.weights.collaborative + this.weights.contentBased + this.weights.trending)),
-        contentBased: Math.ceil(limit * this.weights.contentBased / (this.weights.collaborative + this.weights.contentBased + this.weights.trending)),
-        trending: Math.ceil(limit * this.weights.trending / (this.weights.collaborative + this.weights.contentBased + this.weights.trending))
+        collaborative: Math.ceil(
+          (limit * this.weights.collaborative) /
+            (this.weights.collaborative + this.weights.contentBased + this.weights.trending)
+        ),
+        contentBased: Math.ceil(
+          (limit * this.weights.contentBased) /
+            (this.weights.collaborative + this.weights.contentBased + this.weights.trending)
+        ),
+        trending: Math.ceil(
+          (limit * this.weights.trending) /
+            (this.weights.collaborative + this.weights.contentBased + this.weights.trending)
+        ),
       };
 
       // Fetch recommendations from all strategies in parallel
       const [collaborative, contentBased, trending] = await Promise.all([
         this.getCollaborativeRecommendations(userId, preferences, limits.collaborative * 2),
         this.getContentBasedRecommendations(userId, preferences, limits.contentBased * 2),
-        this.getTrendingRecommendations(limits.trending * 2)
+        this.getTrendingRecommendations(limits.trending * 2),
       ]);
 
       // Combine and re-weight
       const combined = [
-        ...collaborative.map(r => ({ ...r, score: r.score * this.weights.collaborative })),
-        ...contentBased.map(r => ({ ...r, score: r.score * this.weights.contentBased })),
-        ...trending.map(r => ({ ...r, score: r.score * this.weights.trending }))
+        ...collaborative.map((r) => ({ ...r, score: r.score * this.weights.collaborative })),
+        ...contentBased.map((r) => ({ ...r, score: r.score * this.weights.contentBased })),
+        ...trending.map((r) => ({ ...r, score: r.score * this.weights.trending })),
       ];
 
       // Deduplicate and sort
@@ -602,7 +609,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
     try {
       const trending = await this.getTrendingContent(limit);
 
-      return trending.map(item => ({
+      return trending.map((item) => ({
         contentId: item.contentId,
         score: item.trendScore,
         reason: 'trending' as const,
@@ -611,8 +618,8 @@ export class ContentRecommendationService extends EventEmitter implements IConte
           views: item.views,
           likes: item.likes,
           shares: item.shares,
-          velocity: item.velocity
-        }
+          velocity: item.velocity,
+        },
       }));
     } catch (error) {
       this.logger.error('Trending recommendations failed', { error });
@@ -630,7 +637,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
   private async findSimilarUsers(userId: string): Promise<UserSimilarity[]> {
     try {
       const userInteractions = await this.getUserInteractions(userId);
-      const userContentIds = userInteractions.map(i => i.contentId);
+      const userContentIds = userInteractions.map((i) => i.contentId);
 
       // Get candidate users who interacted with similar content
       const candidates = await this.getCandidateUsers(userId, 100);
@@ -639,7 +646,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
 
       for (const candidateId of candidates) {
         const candidateInteractions = await this.getUserInteractions(candidateId);
-        const candidateContentIds = candidateInteractions.map(i => i.contentId);
+        const candidateContentIds = candidateInteractions.map((i) => i.contentId);
 
         const similarity = this.calculateJaccardSimilarity(userContentIds, candidateContentIds);
 
@@ -664,7 +671,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
     const s1 = new Set(set1);
     const s2 = new Set(set2);
 
-    const intersection = new Set([...s1].filter(x => s2.has(x)));
+    const intersection = new Set([...s1].filter((x) => s2.has(x)));
     const union = new Set([...s1, ...s2]);
 
     return union.size > 0 ? intersection.size / union.size : 0;
@@ -705,7 +712,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       const contentFeatures = await this.getContentFeatures(interaction.contentId);
 
       // Aggregate categorical features weighted by interaction score
-      Object.keys(contentFeatures.features).forEach(key => {
+      Object.keys(contentFeatures.features).forEach((key) => {
         features[key] = (features[key] || 0) + interaction.score;
       });
 
@@ -738,7 +745,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       }
     }
 
-    return avg.map(v => v / embeddings.length);
+    return avg.map((v) => v / embeddings.length);
   }
 
   /**
@@ -786,7 +793,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
         tags: user?.preferences?.tags || [],
         authors: user?.preferences?.favoriteAuthors || [],
         excludeCategories: user?.preferences?.excludeCategories || [],
-        minEngagementScore: user?.preferences?.minEngagementScore || 0.5
+        minEngagementScore: user?.preferences?.minEngagementScore || 0.5,
       };
 
       // Cache for 1 hour
@@ -800,7 +807,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
         categories: [],
         tags: [],
         authors: [],
-        excludeCategories: []
+        excludeCategories: [],
       };
     }
   }
@@ -820,7 +827,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       // Fetch from analytics repository
       const interactions = await this.analyticsRepository.getUserInteractions(userId, {
         limit: 100,
-        types: ['view', 'like', 'share', 'comment', 'save']
+        types: ['view', 'like', 'share', 'comment', 'save'],
       });
 
       // Convert to internal format
@@ -828,7 +835,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
         contentId: i.contentId,
         score: this.calculateInteractionScore(i.action, i.duration),
         timestamp: i.timestamp,
-        type: i.action
+        type: i.action,
       }));
 
       // Cache for 10 minutes
@@ -850,7 +857,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       like: 0.3,
       share: 0.5,
       comment: 0.4,
-      save: 0.6
+      save: 0.6,
     };
 
     let score = baseScores[action] || 0.1;
@@ -883,7 +890,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
         return {
           contentId,
           features: {},
-          embedding: new Array(this.defaultEmbeddingSize).fill(0)
+          embedding: new Array(this.defaultEmbeddingSize).fill(0),
         };
       }
 
@@ -895,11 +902,11 @@ export class ContentRecommendationService extends EventEmitter implements IConte
           tags: content.tags || [],
           authorId: content.authorId,
           wordCount: content.metadata?.wordCount || 0,
-          hasMedia: content.metadata?.hasMedia || false
+          hasMedia: content.metadata?.hasMedia || false,
         },
         embedding: content.embedding || new Array(this.defaultEmbeddingSize).fill(0),
         tags: content.tags,
-        category: content.category
+        category: content.category,
       };
 
       // Cache for 1 hour
@@ -911,7 +918,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       return {
         contentId,
         features: {},
-        embedding: new Array(this.defaultEmbeddingSize).fill(0)
+        embedding: new Array(this.defaultEmbeddingSize).fill(0),
       };
     }
   }
@@ -919,10 +926,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
   /**
    * Get trending content
    */
-  private async getTrendingContent(
-    limit: number,
-    period?: TimePeriod
-  ): Promise<TrendingContent[]> {
+  private async getTrendingContent(limit: number, period?: TimePeriod): Promise<TrendingContent[]> {
     try {
       const now = new Date();
       const start = period?.start || new Date(now.getTime() - 24 * 60 * 60 * 1000); // Last 24h
@@ -932,7 +936,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
       const metrics = await this.analyticsRepository.getEngagementMetrics({
         startDate: start,
         endDate: end,
-        limit
+        limit,
       });
 
       // Calculate trend scores
@@ -949,7 +953,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
           likes: m.likes,
           shares: m.shares,
           comments: m.comments,
-          velocity
+          velocity,
         };
       });
 
@@ -983,12 +987,12 @@ export class ContentRecommendationService extends EventEmitter implements IConte
     try {
       // Get users who interacted with similar content
       const userInteractions = await this.getUserInteractions(userId);
-      const contentIds = userInteractions.map(i => i.contentId);
+      const contentIds = userInteractions.map((i) => i.contentId);
 
       // Get users who also interacted with this content
       const candidates = await this.analyticsRepository.getUsersByContent(contentIds, {
         excludeUserId: userId,
-        limit
+        limit,
       });
 
       return candidates.map((c: any) => c.userId);
@@ -1022,7 +1026,7 @@ export class ContentRecommendationService extends EventEmitter implements IConte
 
       this.logger.info('Interaction matrix built', {
         users: Object.keys(matrix).length,
-        interactions: interactions.length
+        interactions: interactions.length,
       });
     } catch (error) {
       this.logger.error('Failed to build interaction matrix', { error });

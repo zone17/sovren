@@ -4,7 +4,10 @@
  * EPIC-009: Multi-platform message aggregation and routing
  */
 
-import type { IUnifiedInboxService, InboxQuery } from '../../interfaces/distribution/IUnifiedInboxService';
+import type {
+  IUnifiedInboxService,
+  InboxQuery,
+} from '../../interfaces/distribution/IUnifiedInboxService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type {
@@ -43,7 +46,10 @@ export class UnifiedInboxService implements IUnifiedInboxService {
   ): Promise<{ messages: InboxMessage[]; pagination: DistributionPagination }> {
     let dbQuery = this.db
       .from('inbox_messages')
-      .select('id, platform, author, author_avatar_url, content, type, parent_post_id, is_read, platform_created_at', { count: 'exact' })
+      .select(
+        'id, platform, author, author_avatar_url, content, type, parent_post_id, is_read, platform_created_at',
+        { count: 'exact' }
+      )
       .eq('creator_id', creatorId)
       .eq('is_archived', query.status === 'archived');
 
@@ -112,7 +118,9 @@ export class UnifiedInboxService implements IUnifiedInboxService {
     const platform = message.platform as SupportedPlatform;
     if (platform === 'nostr') {
       // NOSTR replies handled separately through existing NOSTR service
-      this.logger.info('[UnifiedInboxService] NOSTR reply delegated to NostrService', { messageId });
+      this.logger.info('[UnifiedInboxService] NOSTR reply delegated to NostrService', {
+        messageId,
+      });
       return;
     }
 
@@ -169,5 +177,4 @@ export class UnifiedInboxService implements IUnifiedInboxService {
 
     return count || 0;
   }
-
 }

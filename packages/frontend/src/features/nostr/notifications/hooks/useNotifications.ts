@@ -5,10 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getNotificationService } from '../services/NotificationService';
-import type {
-  NotificationFilter,
-  NotificationServiceState,
-} from '../types';
+import type { NotificationFilter, NotificationServiceState } from '../types';
 
 /**
  * Hook to manage notifications

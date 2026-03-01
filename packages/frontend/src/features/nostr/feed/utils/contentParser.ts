@@ -75,7 +75,7 @@ export const parseContent = (content: string): ParsedContent => {
 
   // Create text without media URLs
   let text = content;
-  [...images, ...videos].forEach(url => {
+  [...images, ...videos].forEach((url) => {
     text = text.replace(url, '').trim();
   });
 

@@ -7,8 +7,6 @@
 
 import type { Event as NostrEvent, Filter } from 'nostr-tools';
 
-
-
 /**
  * Relay connection status (extends consolidated RelayState)
  * @deprecated Use RelayState from @shared/types/nostr instead

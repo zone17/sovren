@@ -245,10 +245,7 @@ describe('ContractEditor', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'Analyze for Red Flags' }));
 
-      expect(mutate).toHaveBeenCalledWith(
-        sampleTemplate.templateText,
-        expect.any(Object)
-      );
+      expect(mutate).toHaveBeenCalledWith(sampleTemplate.templateText, expect.any(Object));
     });
 
     it('shows Analyzing... on button while analysis is pending', () => {
@@ -271,9 +268,11 @@ describe('ContractEditor', () => {
     it('shows red flag report after successful analysis', () => {
       let analyzeSuccessCallback: ((res: { data: typeof sampleRedFlags }) => void) | null = null;
 
-      const mutate = vi.fn((_text: string, opts: { onSuccess: (res: { data: typeof sampleRedFlags }) => void }) => {
-        analyzeSuccessCallback = opts.onSuccess;
-      });
+      const mutate = vi.fn(
+        (_text: string, opts: { onSuccess: (res: { data: typeof sampleRedFlags }) => void }) => {
+          analyzeSuccessCallback = opts.onSuccess;
+        }
+      );
 
       mockUseAnalyzeContract.mockReturnValue({ ...idleAnalyzeMutation, mutate });
 

@@ -1,5 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { useCircles, useSuggestedCircles, useJoinCircle, useCreateCircle } from '../hooks/useCircles';
+import {
+  useCircles,
+  useSuggestedCircles,
+  useJoinCircle,
+  useCreateCircle,
+} from '../hooks/useCircles';
 import type { CircleWithMemberCount } from '../types/community';
 
 const CirclesBrowser: React.FC = () => {
@@ -31,7 +36,12 @@ const CirclesBrowser: React.FC = () => {
   const handleCreate = () => {
     if (!name.trim()) return;
     createMutation.mutate(
-      { name: name.trim(), description: description.trim() || undefined, niche: niche.trim() || undefined, maxMembers },
+      {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        niche: niche.trim() || undefined,
+        maxMembers,
+      },
       {
         onSuccess: () => {
           setShowCreate(false);
@@ -174,7 +184,10 @@ interface CircleListProps {
 const CircleList: React.FC<CircleListProps> = ({ circles, onJoin, joiningId }) => (
   <ul className="space-y-3" role="list">
     {circles.map((circle) => (
-      <li key={circle.id} className="rounded-lg border bg-white p-4 flex items-start justify-between gap-4">
+      <li
+        key={circle.id}
+        className="rounded-lg border bg-white p-4 flex items-start justify-between gap-4"
+      >
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-medium text-gray-900 truncate">{circle.name}</span>
@@ -199,7 +212,11 @@ const CircleList: React.FC<CircleListProps> = ({ circles, onJoin, joiningId }) =
             className="shrink-0 rounded-md border border-indigo-300 px-3 py-1.5 text-sm text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={`Join ${circle.name}`}
           >
-            {circle.memberCount >= circle.maxMembers ? 'Full' : joiningId === circle.id ? 'Joining...' : 'Join'}
+            {circle.memberCount >= circle.maxMembers
+              ? 'Full'
+              : joiningId === circle.id
+                ? 'Joining...'
+                : 'Join'}
           </button>
         )}
       </li>

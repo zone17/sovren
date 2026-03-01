@@ -135,10 +135,13 @@ async function saveBackup(backupPath: string, events: LegacyEventData[]): Promis
     version: '1.0',
     timestamp: Date.now(),
     eventCount: events.length,
-    byKind: events.reduce((acc, { event }) => {
-      acc[event.kind] = (acc[event.kind] || 0) + 1;
-      return acc;
-    }, {} as Record<number, number>),
+    byKind: events.reduce(
+      (acc, { event }) => {
+        acc[event.kind] = (acc[event.kind] || 0) + 1;
+        return acc;
+      },
+      {} as Record<number, number>
+    ),
   };
 
   await fs.writeFile(
@@ -152,10 +155,7 @@ async function saveBackup(backupPath: string, events: LegacyEventData[]): Promis
     const chunk = events.slice(i, i + chunkSize);
     const chunkFile = path.join(backupPath, `events-chunk-${Math.floor(i / chunkSize)}.json`);
 
-    await fs.writeFile(
-      chunkFile,
-      JSON.stringify(chunk, null, 2)
-    );
+    await fs.writeFile(chunkFile, JSON.stringify(chunk, null, 2));
   }
 
   log(`✓ Backup saved to: ${backupPath}`, 'success');
@@ -233,7 +233,7 @@ function extractLocalStorageEvents(): LegacyEventData[] {
 
   // Check for cached events in localStorage
   const cacheKeys = Object.keys(localStorage).filter(
-    key => key.startsWith('nostr_event_') || key.startsWith('event_cache_')
+    (key) => key.startsWith('nostr_event_') || key.startsWith('event_cache_')
   );
 
   for (const key of cacheKeys) {
@@ -529,7 +529,9 @@ async function main() {
   }
 
   if (!options.force && !options.dryRun) {
-    const proceed = await confirm('This will migrate your NOSTR events to new cache structure. Continue?');
+    const proceed = await confirm(
+      'This will migrate your NOSTR events to new cache structure. Continue?'
+    );
     if (!proceed) {
       log('Migration cancelled by user.', 'warn');
       process.exit(0);

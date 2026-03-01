@@ -14,7 +14,8 @@ export const RecordWorkPatternSchema = z.object({
   type: z.enum(['content_creation', 'engagement', 'management']),
   duration_mins: z.number().int().positive().max(1440),
   timestamp: z.string().datetime(),
-  metadata: z.record(z.string(), z.string())
+  metadata: z
+    .record(z.string(), z.string())
     .refine((obj) => JSON.stringify(obj).length <= 10000, {
       message: 'Metadata must be less than 10KB',
     })
@@ -71,23 +72,26 @@ export const UpdateBoundariesSchema = z.object({
   dnd_mode: z
     .object({
       auto_response_enabled: z.boolean(),
-      auto_response_template: z.string().max(500).transform((val) => {
-        // Decode HTML entities first to prevent double-encoding bypass
-        let decoded = val
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&amp;/g, '&')
-          .replace(/&quot;/g, '"')
-          .replace(/&#x27;/g, "'")
-          .replace(/&#039;/g, "'");
-        // Strip HTML tags
-        decoded = decoded.replace(/<[^>]*>/g, '');
-        // Remove event handler patterns (onmouseover=, onclick=, etc.)
-        decoded = decoded.replace(/\bon\w+\s*=/gi, '');
-        // Remove javascript: URIs
-        decoded = decoded.replace(/javascript\s*:/gi, '');
-        return decoded;
-      }),
+      auto_response_template: z
+        .string()
+        .max(500)
+        .transform((val) => {
+          // Decode HTML entities first to prevent double-encoding bypass
+          let decoded = val
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#x27;/g, "'")
+            .replace(/&#039;/g, "'");
+          // Strip HTML tags
+          decoded = decoded.replace(/<[^>]*>/g, '');
+          // Remove event handler patterns (onmouseover=, onclick=, etc.)
+          decoded = decoded.replace(/\bon\w+\s*=/gi, '');
+          // Remove javascript: URIs
+          decoded = decoded.replace(/javascript\s*:/gi, '');
+          return decoded;
+        }),
     })
     .optional(),
   availability_status: z.enum(['hidden', 'available', 'creating', 'offline']).optional(),

@@ -106,11 +106,13 @@ const SessionMetadataSchema = z.object({
   device_info: DeviceInfoSchema,
   lightning_enabled: z.boolean().optional(),
   lightning_permissions: z.record(z.any()).optional(),
-  location: z.object({
-    country: z.string().optional(),
-    region: z.string().optional(),
-    city: z.string().optional(),
-  }).optional(),
+  location: z
+    .object({
+      country: z.string().optional(),
+      region: z.string().optional(),
+      city: z.string().optional(),
+    })
+    .optional(),
 });
 
 const CreateSessionSchema = z.object({
@@ -178,10 +180,7 @@ router.post(
       };
 
       // Create session
-      const session = await sessionManager.createSession(
-        validatedData.pubkey,
-        metadata
-      );
+      const session = await sessionManager.createSession(validatedData.pubkey, metadata);
 
       return res.status(201).json({
         success: true,
@@ -557,7 +556,7 @@ router.get(
       return res.status(200).json({
         success: true,
         data: {
-          sessions: sessions.map(s => ({
+          sessions: sessions.map((s) => ({
             id: s.id,
             device_id: s.device_id,
             device_info: s.device_info,

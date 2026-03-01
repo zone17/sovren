@@ -532,8 +532,12 @@ describe('LightningReceiptService', () => {
         .spyOn(receiptService as any, 'fetchPaymentData')
         .mockResolvedValue(mockPaymentData);
 
-      const receipt1 = await receiptService.generateReceipt({ paymentId: '550e8400-e29b-41d4-a716-446655440001' });
-      const receipt2 = await receiptService.generateReceipt({ paymentId: '550e8400-e29b-41d4-a716-446655440002' });
+      const receipt1 = await receiptService.generateReceipt({
+        paymentId: '550e8400-e29b-41d4-a716-446655440001',
+      });
+      const receipt2 = await receiptService.generateReceipt({
+        paymentId: '550e8400-e29b-41d4-a716-446655440002',
+      });
 
       expect(receipt1.security.verificationCode).not.toBe(receipt2.security.verificationCode);
       expect(receipt1.security.verificationCode).toMatch(/^[A-F0-9]{8}$/);

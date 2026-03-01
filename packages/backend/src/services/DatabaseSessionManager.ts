@@ -103,10 +103,7 @@ export class DatabaseSessionManager {
   /**
    * Create new session
    */
-  public async createSession(
-    pubkey: string,
-    metadata: SessionMetadata
-  ): Promise<Session> {
+  public async createSession(pubkey: string, metadata: SessionMetadata): Promise<Session> {
     // Generate secure session token
     const token = this.generateToken();
     const tokenHash = this.hashToken(token);
@@ -141,25 +138,23 @@ export class DatabaseSessionManager {
     await this.enforceSessionLimit(pubkey);
 
     // Insert into database
-    const { error } = await this.supabase
-      .from(this.tableName)
-      .insert({
-        id: session.id,
-        pubkey: session.pubkey,
-        user_id: session.user_id,
-        token_hash: session.token_hash,
-        device_id: session.device_id,
-        device_fingerprint: session.device_fingerprint,
-        device_info: session.device_info,
-        ip_address: session.ip_address,
-        user_agent: session.user_agent,
-        created_at: session.created_at,
-        expires_at: session.expires_at,
-        last_activity: session.last_activity,
-        is_active: session.is_active,
-        refresh_count: session.refresh_count,
-        metadata: session.metadata,
-      });
+    const { error } = await this.supabase.from(this.tableName).insert({
+      id: session.id,
+      pubkey: session.pubkey,
+      user_id: session.user_id,
+      token_hash: session.token_hash,
+      device_id: session.device_id,
+      device_fingerprint: session.device_fingerprint,
+      device_info: session.device_info,
+      ip_address: session.ip_address,
+      user_agent: session.user_agent,
+      created_at: session.created_at,
+      expires_at: session.expires_at,
+      last_activity: session.last_activity,
+      is_active: session.is_active,
+      refresh_count: session.refresh_count,
+      metadata: session.metadata,
+    });
 
     if (error) {
       throw new Error(`Failed to create session: ${error.message}`);
@@ -212,7 +207,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map(row => this.mapRowToSession(row));
+    return data.map((row) => this.mapRowToSession(row));
   }
 
   /**
@@ -285,10 +280,7 @@ export class DatabaseSessionManager {
   /**
    * Refresh session
    */
-  public async refreshSession(
-    sessionId: string,
-    token: string
-  ): Promise<Session | null> {
+  public async refreshSession(sessionId: string, token: string): Promise<Session | null> {
     const validation = await this.validateSession(sessionId, token);
 
     if (!validation.valid || !validation.session) {
@@ -363,10 +355,7 @@ export class DatabaseSessionManager {
   /**
    * Revoke all sessions for user
    */
-  public async revokeAllUserSessions(
-    pubkey: string,
-    exceptSessionId?: string
-  ): Promise<void> {
+  public async revokeAllUserSessions(pubkey: string, exceptSessionId?: string): Promise<void> {
     let query = this.supabase
       .from(this.tableName)
       .update({
@@ -420,7 +409,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map(row => this.mapRowToSession(row));
+    return data.map((row) => this.mapRowToSession(row));
   }
 
   /**
@@ -479,8 +468,7 @@ export class DatabaseSessionManager {
       totalSessionLength += lastActivity - created;
     }
 
-    stats.averageSessionLength =
-      data.length > 0 ? totalSessionLength / data.length : 0;
+    stats.averageSessionLength = data.length > 0 ? totalSessionLength / data.length : 0;
 
     return stats;
   }
@@ -503,7 +491,7 @@ export class DatabaseSessionManager {
       return [];
     }
 
-    return data.map(row => ({
+    return data.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
       action: row.action,
@@ -590,10 +578,7 @@ export class DatabaseSessionManager {
     if (sessions.length >= this.config.maxSessionsPerUser!) {
       // Revoke oldest sessions
       const toRevoke = sessions
-        .sort((a, b) =>
-          new Date(a.last_activity).getTime() -
-          new Date(b.last_activity).getTime()
-        )
+        .sort((a, b) => new Date(a.last_activity).getTime() - new Date(b.last_activity).getTime())
         .slice(0, sessions.length - this.config.maxSessionsPerUser! + 1);
 
       for (const session of toRevoke) {
@@ -630,15 +615,13 @@ export class DatabaseSessionManager {
       return;
     }
 
-    const { error } = await this.supabase
-      .from(this.activityTableName)
-      .insert({
-        id: `activity_${randomBytes(16).toString('hex')}`,
-        session_id: sessionId,
-        action,
-        metadata,
-        created_at: new Date().toISOString(),
-      });
+    const { error } = await this.supabase.from(this.activityTableName).insert({
+      id: `activity_${randomBytes(16).toString('hex')}`,
+      session_id: sessionId,
+      action,
+      metadata,
+      created_at: new Date().toISOString(),
+    });
 
     if (error) {
       console.error(`Failed to log session activity: ${error.message}`);

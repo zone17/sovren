@@ -259,19 +259,22 @@ export class LightningService extends EventEmitter {
     const pending = this.pendingLookups.get(id);
     if (pending) return pending;
 
-    const lookup = this.persistence.getInvoiceById(id).then(result => {
-      this.pendingLookups.delete(id);
-      if (result) {
-        this.invoiceCache.set(result.id, result);
-        if (result.payment_hash) {
-          this.paymentHashIndex.set(result.payment_hash, result.id);
+    const lookup = this.persistence
+      .getInvoiceById(id)
+      .then((result) => {
+        this.pendingLookups.delete(id);
+        if (result) {
+          this.invoiceCache.set(result.id, result);
+          if (result.payment_hash) {
+            this.paymentHashIndex.set(result.payment_hash, result.id);
+          }
         }
-      }
-      return result;
-    }).catch(err => {
-      this.pendingLookups.delete(id);
-      throw err;
-    });
+        return result;
+      })
+      .catch((err) => {
+        this.pendingLookups.delete(id);
+        throw err;
+      });
 
     this.pendingLookups.set(id, lookup);
     return lookup;
@@ -624,7 +627,10 @@ export class LightningService extends EventEmitter {
         let invoice: LightningInvoice | undefined;
         const indexedId = this.paymentHashIndex.get(payload.payment_hash);
         if (indexedId) {
-          invoice = this.invoiceCache.get(indexedId) ?? (await this.getInvoiceWithFallback(indexedId)) ?? undefined;
+          invoice =
+            this.invoiceCache.get(indexedId) ??
+            (await this.getInvoiceWithFallback(indexedId)) ??
+            undefined;
         }
         // Fall through to persistence by payment_hash on cache miss
         if (!invoice) {

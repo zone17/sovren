@@ -4,29 +4,17 @@
  * Coverage target: 95%+
  */
 
-import { z } from 'zod';
 import {
   CoverageMetricSchema,
   CoverageReportSchema,
   CodeQualityMetricSchema,
-  CodeQualityDashboardSchema,
   BugMetricSchema,
-  BugTrackingDashboardSchema,
   PerformanceBenchmarkSchema,
-  PerformanceDashboardSchema,
   QualityMetricsDashboardSchema,
-  QualityMetricsConfigSchema,
   type CoverageMetric,
-  type CodeQualityMetric,
-  type BugMetric,
-  type PerformanceBenchmark,
-  type QualityMetricsDashboard,
   type QualityThresholds,
   type RefactoringSuggestion,
-  type BugClassification,
-  type BugInput,
   type Anomaly,
-  type PerformanceOptimization,
 } from '../quality-metrics';
 
 describe('Quality Metrics Types - TS-006', () => {
@@ -266,7 +254,10 @@ describe('Quality Metrics Types - TS-006', () => {
           {
             type: 'heatmap' as const,
             data: {
-              matrix: [[0.8, 0.9], [0.7, 0.85]],
+              matrix: [
+                [0.8, 0.9],
+                [0.7, 0.85],
+              ],
               labels: ['File1', 'File2'],
               nested: [null, 42, true, 'value'],
             },
@@ -639,8 +630,17 @@ describe('Quality Metrics Types - TS-006', () => {
           },
           performance: {
             responseTime: { average: 200, p95: 350, p99: 500, max: 750 },
-            throughput: { requestsPerSecond: 1200, transactionsPerSecond: 950, concurrentUsers: 500 },
-            resources: { cpuUsage: 45.5, memoryUsage: 62.3, diskUsage: 35.8, networkUsage: 1250000 },
+            throughput: {
+              requestsPerSecond: 1200,
+              transactionsPerSecond: 950,
+              concurrentUsers: 500,
+            },
+            resources: {
+              cpuUsage: 45.5,
+              memoryUsage: 62.3,
+              diskUsage: 35.8,
+              networkUsage: 1250000,
+            },
             errors: { rate: 0.5, count: 25, types: {} },
           },
           comparisons: [],

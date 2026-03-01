@@ -655,9 +655,9 @@ export class TransactionHistoryService extends EventEmitter {
       }
 
       if (validated.metadata) {
-        updateData.metadata = supabase.raw(
-          `metadata || ?::jsonb`, [JSON.stringify(validated.metadata)]
-        );
+        updateData.metadata = supabase.raw(`metadata || ?::jsonb`, [
+          JSON.stringify(validated.metadata),
+        ]);
       }
 
       // Update database

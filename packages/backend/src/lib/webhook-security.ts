@@ -28,10 +28,7 @@ export function verifyWebhookHmac(
     return false;
   }
 
-  const expected = crypto
-    .createHmac(algorithm, secret)
-    .update(payload)
-    .digest('hex');
+  const expected = crypto.createHmac(algorithm, secret).update(payload).digest('hex');
 
   // Length check before timingSafeEqual (required: both buffers must be same length)
   if (signature.length !== expected.length) {
@@ -39,10 +36,7 @@ export function verifyWebhookHmac(
   }
 
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex'),
-      Buffer.from(expected, 'hex')
-    );
+    return crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'));
   } catch {
     // timingSafeEqual throws if buffers differ in byte length (e.g. invalid hex)
     return false;

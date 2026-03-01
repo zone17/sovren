@@ -67,7 +67,7 @@ import {
   RecentActivitySummary,
   AnalyticsAlert,
   ActionMetric,
-  ReferrerMetric
+  ReferrerMetric,
 } from '../../types/user-analytics';
 
 /**
@@ -93,14 +93,14 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     REALTIME: 30, // 30 seconds
     HOURLY: 3600, // 1 hour
     DAILY: 86400, // 24 hours
-    WEEKLY: 604800 // 7 days
+    WEEKLY: 604800, // 7 days
   };
 
   private readonly EVENT_BUFFER_SIZE = 1000;
   private readonly EVENT_BUFFER_FLUSH_INTERVAL = 30000; // 30 seconds
   private eventBuffer: EventBuffer = {
     events: [],
-    lastFlush: new Date()
+    lastFlush: new Date(),
   };
 
   constructor(
@@ -133,7 +133,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
    */
   private startBufferFlushTimer(): void {
     setInterval(() => {
-      this.flushEventBuffer().catch(error => {
+      this.flushEventBuffer().catch((error) => {
         this.logger.error('Failed to flush event buffer', { error });
       });
     }, this.EVENT_BUFFER_FLUSH_INTERVAL);
@@ -169,7 +169,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
 
       const newUsersResult = await this.db.query(newUsersQuery, [
         timeRange.startDate,
-        timeRange.endDate
+        timeRange.endDate,
       ]);
 
       // Get total users before period for growth rate
@@ -184,9 +184,8 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       const totalUsers = parseInt(totalBefore.rows[0].count) + newUsers;
 
       // Calculate growth rate
-      const growthRate = totalBefore.rows[0].count > 0
-        ? (newUsers / parseInt(totalBefore.rows[0].count)) * 100
-        : 0;
+      const growthRate =
+        totalBefore.rows[0].count > 0 ? (newUsers / parseInt(totalBefore.rows[0].count)) * 100 : 0;
 
       // Get conversion metrics
       const conversionMetrics = await this.calculateConversionRate(timeRange);
@@ -202,7 +201,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         sources,
         conversionRate: conversionMetrics.rate,
         averageTimeToSignup: conversionMetrics.avgTime,
-        topReferrers
+        topReferrers,
       };
 
       // Cache for 1 hour
@@ -211,7 +210,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       await this.auditLog.log({
         action: 'analytics.acquisition.retrieved',
         userId: 'system',
-        metadata: { timeRange }
+        metadata: { timeRange },
       });
 
       return metrics;
@@ -224,9 +223,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
   /**
    * Get engagement metrics (DAU/MAU/WAU)
    */
-  public async getEngagementMetrics(
-    timeRange: AnalyticsTimeRange
-  ): Promise<EngagementMetrics> {
+  public async getEngagementMetrics(timeRange: AnalyticsTimeRange): Promise<EngagementMetrics> {
     const cacheKey = `analytics:engagement:${timeRange.startDate.toISOString()}:${timeRange.endDate.toISOString()}`;
 
     const cached = await this.cache.get<EngagementMetrics>(cacheKey);
@@ -278,7 +275,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         averageSessionDuration: sessionMetrics.avgDuration,
         averageActionsPerUser: sessionMetrics.avgActions,
         engagementRate: totalUsers > 0 ? (mau / totalUsers) * 100 : 0,
-        timeSeriesData
+        timeSeriesData,
       };
 
       await this.cache.set(cacheKey, metrics, { ttl: this.CACHE_TTL.HOURLY });
@@ -311,7 +308,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         WHERE created_at >= $1 AND created_at < $2
       `;
       const cohortResult = await this.db.query(cohortQuery, [cohortDate, cohortEndDate]);
-      const cohortUserIds = cohortResult.rows.map(row => row.user_id);
+      const cohortUserIds = cohortResult.rows.map((row) => row.user_id);
       const cohortSize = cohortUserIds.length;
 
       if (cohortSize === 0) {
@@ -322,7 +319,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
           day7Retention: 0,
           day30Retention: 0,
           day90Retention: 0,
-          retentionCurve: []
+          retentionCurve: [],
         };
       }
 
@@ -331,7 +328,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         this.calculatePeriodRetention(cohortUserIds, cohortDate, 1),
         this.calculatePeriodRetention(cohortUserIds, cohortDate, 7),
         this.calculatePeriodRetention(cohortUserIds, cohortDate, 30),
-        this.calculatePeriodRetention(cohortUserIds, cohortDate, 90)
+        this.calculatePeriodRetention(cohortUserIds, cohortDate, 90),
       ]);
 
       // Build retention curve (daily for 90 days)
@@ -341,7 +338,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         retentionCurve.push({
           day,
           activeUsers: retention.activeUsers,
-          retentionRate: (retention.activeUsers / cohortSize) * 100
+          retentionRate: (retention.activeUsers / cohortSize) * 100,
         });
       }
 
@@ -352,7 +349,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         day7Retention: (retentionData[1].activeUsers / cohortSize) * 100,
         day30Retention: (retentionData[2].activeUsers / cohortSize) * 100,
         day90Retention: (retentionData[3].activeUsers / cohortSize) * 100,
-        retentionCurve
+        retentionCurve,
       };
 
       await this.cache.set(cacheKey, metrics, { ttl: this.CACHE_TTL.DAILY });
@@ -367,10 +364,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
   /**
    * Perform cohort analysis
    */
-  public async getCohortAnalysis(
-    startDate: Date,
-    endDate: Date
-  ): Promise<CohortAnalysis[]> {
+  public async getCohortAnalysis(startDate: Date, endDate: Date): Promise<CohortAnalysis[]> {
     const cacheKey = `analytics:cohort:${startDate.toISOString()}:${endDate.toISOString()}`;
 
     const cached = await this.cache.get<CohortAnalysis[]>(cacheKey);
@@ -395,21 +389,29 @@ export class UserAnalyticsService implements IUserAnalyticsService {
           FROM users
           WHERE created_at >= $1 AND created_at < $2
         `;
-        const cohortUsersResult = await this.db.query(cohortUsersQuery, [currentDate, cohortEndDate]);
+        const cohortUsersResult = await this.db.query(cohortUsersQuery, [
+          currentDate,
+          cohortEndDate,
+        ]);
         const cohortSize = cohortUsersResult.rows.length;
 
         if (cohortSize > 0) {
-          const userIds = cohortUsersResult.rows.map(row => row.user_id);
+          const userIds = cohortUsersResult.rows.map((row) => row.user_id);
 
           // Build retention data
           const retentionData: CohortRetentionData[] = [];
-          for (let period = 0; period <= 12; period++) { // 12 months
-            const retention = await this.calculatePeriodRetention(userIds, currentDate, period * 30);
+          for (let period = 0; period <= 12; period++) {
+            // 12 months
+            const retention = await this.calculatePeriodRetention(
+              userIds,
+              currentDate,
+              period * 30
+            );
             retentionData.push({
               period: period * 30,
               activeUsers: retention.activeUsers,
               retentionRate: (retention.activeUsers / cohortSize) * 100,
-              churnedUsers: cohortSize - retention.activeUsers
+              churnedUsers: cohortSize - retention.activeUsers,
             });
           }
 
@@ -436,7 +438,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
             retentionData,
             lifetimeValue: ltvData.avgLTV,
             churnRate,
-            averageLifespan
+            averageLifespan,
           });
         }
 
@@ -461,7 +463,8 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       const segments: UserSegment[] = [];
 
       // Build query based on criteria
-      let query = 'SELECT user_id, activity_level, content_preferences, location, created_at FROM users WHERE 1=1';
+      let query =
+        'SELECT user_id, activity_level, content_preferences, location, created_at FROM users WHERE 1=1';
       const params: any[] = [];
       let paramIndex = 1;
 
@@ -495,7 +498,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       }
 
       const result = await this.db.query(query, params);
-      const userIds = result.rows.map(row => row.user_id);
+      const userIds = result.rows.map((row) => row.user_id);
 
       if (userIds.length === 0) {
         return segments;
@@ -524,7 +527,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         averageEngagement: engagementMetrics.avgScore,
         averageLTV: ltvMetrics.avgLTV,
         churnRate: churnMetrics.rate,
-        topActions
+        topActions,
       });
 
       return segments;
@@ -587,15 +590,14 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         const stepResult = await this.db.query(stepQuery, [
           step.name,
           timeRange.startDate,
-          timeRange.endDate
+          timeRange.endDate,
         ]);
 
         const userCount = parseInt(stepResult.rows[0].count);
         const avgTime = parseFloat(stepResult.rows[0].avg_time) || 0;
 
-        const dropOffRate = previousStepUsers > 0
-          ? ((previousStepUsers - userCount) / previousStepUsers) * 100
-          : 0;
+        const dropOffRate =
+          previousStepUsers > 0 ? ((previousStepUsers - userCount) / previousStepUsers) * 100 : 0;
 
         const conversionToNext = i < funnelSteps.length - 1 ? 0 : 100; // Calculated in next iteration
 
@@ -606,7 +608,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
           users: userCount,
           dropOffRate,
           conversionToNext,
-          averageTimeOnStep: avgTime * 1000 // Convert to milliseconds
+          averageTimeOnStep: avgTime * 1000, // Convert to milliseconds
         });
 
         previousStepUsers = userCount;
@@ -614,9 +616,8 @@ export class UserAnalyticsService implements IUserAnalyticsService {
 
       // Calculate conversion rates
       for (let i = 0; i < steps.length - 1; i++) {
-        steps[i].conversionToNext = steps[i + 1].users > 0
-          ? (steps[i + 1].users / steps[i].users) * 100
-          : 0;
+        steps[i].conversionToNext =
+          steps[i + 1].users > 0 ? (steps[i + 1].users / steps[i].users) * 100 : 0;
       }
 
       // Identify drop-off points
@@ -632,7 +633,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         totalEntries,
         completionRate: totalEntries > 0 ? (completions / totalEntries) * 100 : 0,
         averageTimeToComplete: steps.reduce((sum, s) => sum + s.averageTimeOnStep, 0),
-        dropOffPoints
+        dropOffPoints,
       };
 
       await this.cache.set(cacheKey, funnel, { ttl: this.CACHE_TTL.HOURLY });
@@ -673,16 +674,14 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       const params = segment ? [segment] : [];
       const result = await this.db.query(query, params);
 
-      const revenues = result.rows.map(row => parseFloat(row.total_revenue));
-      const averageLTV = revenues.length > 0
-        ? revenues.reduce((sum, rev) => sum + rev, 0) / revenues.length
-        : 0;
+      const revenues = result.rows.map((row) => parseFloat(row.total_revenue));
+      const averageLTV =
+        revenues.length > 0 ? revenues.reduce((sum, rev) => sum + rev, 0) / revenues.length : 0;
 
       // Calculate median
       const sortedRevenues = [...revenues].sort((a, b) => a - b);
-      const medianLTV = sortedRevenues.length > 0
-        ? sortedRevenues[Math.floor(sortedRevenues.length / 2)]
-        : 0;
+      const medianLTV =
+        sortedRevenues.length > 0 ? sortedRevenues[Math.floor(sortedRevenues.length / 2)] : 0;
 
       // Build distribution
       const ltvDistribution: LTVDistribution[] = [
@@ -690,21 +689,19 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         { range: { min: 10, max: 50 }, userCount: 0, percentage: 0, revenue: 0 },
         { range: { min: 50, max: 100 }, userCount: 0, percentage: 0, revenue: 0 },
         { range: { min: 100, max: 500 }, userCount: 0, percentage: 0, revenue: 0 },
-        { range: { min: 500, max: Infinity }, userCount: 0, percentage: 0, revenue: 0 }
+        { range: { min: 500, max: Infinity }, userCount: 0, percentage: 0, revenue: 0 },
       ];
 
-      revenues.forEach(rev => {
-        const bucket = ltvDistribution.find(d => rev >= d.range.min && rev < d.range.max);
+      revenues.forEach((rev) => {
+        const bucket = ltvDistribution.find((d) => rev >= d.range.min && rev < d.range.max);
         if (bucket) {
           bucket.userCount++;
           bucket.revenue += rev;
         }
       });
 
-      ltvDistribution.forEach(bucket => {
-        bucket.percentage = revenues.length > 0
-          ? (bucket.userCount / revenues.length) * 100
-          : 0;
+      ltvDistribution.forEach((bucket) => {
+        bucket.percentage = revenues.length > 0 ? (bucket.userCount / revenues.length) * 100 : 0;
       });
 
       // Calculate payback period and CAC (simplified)
@@ -718,7 +715,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         ltvDistribution,
         paybackPeriod,
         customerAcquisitionCost,
-        ltvToCacRatio: customerAcquisitionCost > 0 ? averageLTV / customerAcquisitionCost : 0
+        ltvToCacRatio: customerAcquisitionCost > 0 ? averageLTV / customerAcquisitionCost : 0,
       };
 
       await this.cache.set(cacheKey, metrics, { ttl: this.CACHE_TTL.DAILY });
@@ -780,7 +777,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         totalUsers,
         predictedChurn,
         riskSegments,
-        retentionOpportunities
+        retentionOpportunities,
       };
 
       await this.cache.set(cacheKey, analysis, { ttl: this.CACHE_TTL.DAILY });
@@ -828,12 +825,13 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       const factors: ChurnRiskFactor[] = [];
 
       // Factor 1: Days since last activity
-      const daysSinceActivity = (Date.now() - new Date(user.last_activity).getTime()) / (24 * 60 * 60 * 1000);
+      const daysSinceActivity =
+        (Date.now() - new Date(user.last_activity).getTime()) / (24 * 60 * 60 * 1000);
       factors.push({
         factor: 'days_since_activity',
         weight: 0.3,
         value: daysSinceActivity,
-        impact: daysSinceActivity > 7 ? 'negative' : 'positive'
+        impact: daysSinceActivity > 7 ? 'negative' : 'positive',
       });
 
       // Factor 2: Engagement score
@@ -841,7 +839,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         factor: 'engagement_score',
         weight: 0.25,
         value: user.engagement_score || 0,
-        impact: user.engagement_score < 30 ? 'negative' : 'positive'
+        impact: user.engagement_score < 30 ? 'negative' : 'positive',
       });
 
       // Factor 3: Subscription status
@@ -849,25 +847,27 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         factor: 'subscription_status',
         weight: 0.2,
         value: user.subscription_status === 'active' ? 100 : 0,
-        impact: user.subscription_status === 'active' ? 'positive' : 'negative'
+        impact: user.subscription_status === 'active' ? 'positive' : 'negative',
       });
 
       // Factor 4: Account age
-      const accountAgeDays = (Date.now() - new Date(user.created_at).getTime()) / (24 * 60 * 60 * 1000);
+      const accountAgeDays =
+        (Date.now() - new Date(user.created_at).getTime()) / (24 * 60 * 60 * 1000);
       factors.push({
         factor: 'account_age',
         weight: 0.15,
         value: accountAgeDays,
-        impact: accountAgeDays < 30 ? 'negative' : 'positive'
+        impact: accountAgeDays < 30 ? 'negative' : 'positive',
       });
 
       // Factor 5: Activity level
-      const activityLevelScore = user.activity_level === 'high' ? 100 : user.activity_level === 'medium' ? 50 : 10;
+      const activityLevelScore =
+        user.activity_level === 'high' ? 100 : user.activity_level === 'medium' ? 50 : 10;
       factors.push({
         factor: 'activity_level',
         weight: 0.1,
         value: activityLevelScore,
-        impact: activityLevelScore < 30 ? 'negative' : 'positive'
+        impact: activityLevelScore < 30 ? 'negative' : 'positive',
       });
 
       // Calculate overall risk score (0-100)
@@ -883,7 +883,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         riskLevel,
         factors,
         lastActivity: new Date(user.last_activity),
-        recommendedActions
+        recommendedActions,
       };
 
       await this.cache.set(cacheKey, prediction, { ttl: this.CACHE_TTL.HOURLY });
@@ -922,10 +922,10 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       const result = await this.db.query(query, [timeRange.startDate, timeRange.endDate]);
 
       // Build trend points
-      const trends: TrendPoint[] = result.rows.map(row => ({
+      const trends: TrendPoint[] = result.rows.map((row) => ({
         timestamp: new Date(row.date),
         value: parseInt(row.cumulative_users),
-        trend: 'stable' as const
+        trend: 'stable' as const,
       }));
 
       // Calculate moving average
@@ -962,7 +962,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         growthType,
         projection,
         seasonality,
-        trends
+        trends,
       };
 
       await this.cache.set(cacheKey, growthTrends, { ttl: this.CACHE_TTL.DAILY });
@@ -1015,9 +1015,10 @@ export class UserAnalyticsService implements IUserAnalyticsService {
           score: user.engagement_score || 0,
           weight: 0.3,
           metrics: {
-            activityLevel: user.activity_level === 'high' ? 100 : user.activity_level === 'medium' ? 50 : 25,
-            daysSinceLastActivity: this.calculateRecencyScore(user.last_activity)
-          }
+            activityLevel:
+              user.activity_level === 'high' ? 100 : user.activity_level === 'medium' ? 50 : 25,
+            daysSinceLastActivity: this.calculateRecencyScore(user.last_activity),
+          },
         },
         {
           component: 'content_creation',
@@ -1025,17 +1026,21 @@ export class UserAnalyticsService implements IUserAnalyticsService {
           weight: 0.2,
           metrics: {
             contentCount: user.content_created_count || 0,
-            viewsPerContent: user.content_created_count > 0 ? (user.content_views_count / user.content_created_count) : 0
-          }
+            viewsPerContent:
+              user.content_created_count > 0
+                ? user.content_views_count / user.content_created_count
+                : 0,
+          },
         },
         {
           component: 'monetization',
-          score: user.subscription_status === 'active' ? 100 : user.payment_history_count > 0 ? 50 : 0,
+          score:
+            user.subscription_status === 'active' ? 100 : user.payment_history_count > 0 ? 50 : 0,
           weight: 0.25,
           metrics: {
             subscriptionActive: user.subscription_status === 'active' ? 1 : 0,
-            paymentCount: user.payment_history_count || 0
-          }
+            paymentCount: user.payment_history_count || 0,
+          },
         },
         {
           component: 'loyalty',
@@ -1043,28 +1048,26 @@ export class UserAnalyticsService implements IUserAnalyticsService {
           weight: 0.25,
           metrics: {
             accountAge: this.calculateAccountAge(user),
-            retentionRate: 85 // Would calculate from retention data
-          }
-        }
+            retentionRate: 85, // Would calculate from retention data
+          },
+        },
       ];
 
       // Calculate overall score (weighted average)
-      const overallScore = components.reduce(
-        (sum, c) => sum + c.score * c.weight,
-        0
-      );
+      const overallScore = components.reduce((sum, c) => sum + c.score * c.weight, 0);
 
       // Calculate engagement score (subset of overall)
-      const engagementScore = components.find(c => c.component === 'engagement')?.score || 0;
+      const engagementScore = components.find((c) => c.component === 'engagement')?.score || 0;
 
       // Calculate risk score (inverse of health)
       const riskScore = 100 - overallScore;
 
       // Calculate value score
-      const valueScore = components.find(c => c.component === 'monetization')?.score || 0;
+      const valueScore = components.find((c) => c.component === 'monetization')?.score || 0;
 
       // Determine health trend (would compare to historical data)
-      const healthTrend = overallScore > 70 ? 'improving' : overallScore < 40 ? 'declining' : 'stable';
+      const healthTrend =
+        overallScore > 70 ? 'improving' : overallScore < 40 ? 'declining' : 'stable';
 
       const healthScore: UserHealthScore = {
         userId,
@@ -1074,7 +1077,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         valueScore,
         components,
         lastUpdated: new Date(),
-        healthTrend
+        healthTrend,
       };
 
       await this.cache.set(cacheKey, healthScore, { ttl: this.CACHE_TTL.HOURLY });
@@ -1150,7 +1153,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         eventsPerSecond,
         recentSignups,
         recentActivity,
-        alerts
+        alerts,
       };
 
       await this.cache.set(cacheKey, dashboard, { ttl: this.CACHE_TTL.REALTIME });
@@ -1207,13 +1210,13 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         size,
         url: `/api/analytics/exports/${exportId}`, // Would be cloud URL
         expiresAt,
-        recordCount: Array.isArray(data) ? data.length : 1
+        recordCount: Array.isArray(data) ? data.length : 1,
       };
 
       await this.auditLog.log({
         action: 'analytics.export.created',
         userId: 'system',
-        metadata: { exportId, format: options.format, recordCount: result.recordCount }
+        metadata: { exportId, format: options.format, recordCount: result.recordCount },
       });
 
       return result;
@@ -1241,7 +1244,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         type: 'user.activity.tracked',
         aggregateId: event.userId,
         data: event,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     } catch (error) {
       this.logger.error('Failed to track activity', { error, event });
@@ -1257,9 +1260,10 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       this.logger.info('Starting analytics aggregation', { interval });
 
       const now = new Date();
-      const periodStart = interval === 'hourly'
-        ? new Date(now.getTime() - 60 * 60 * 1000)
-        : new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const periodStart =
+        interval === 'hourly'
+          ? new Date(now.getTime() - 60 * 60 * 1000)
+          : new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
       // Aggregate user activity
       await this.aggregateUserActivity(periodStart, now);
@@ -1359,7 +1363,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       userId: event.data.userId,
       eventType: 'user_created',
       eventData: event.data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -1369,7 +1373,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       userId: event.data.userId,
       eventType: 'user_login',
       eventData: event.data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -1379,7 +1383,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       userId: event.data.userId,
       eventType: 'user_activity',
       eventData: event.data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -1389,7 +1393,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       userId: event.data.userId,
       eventType: 'content_created',
       eventData: event.data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -1399,7 +1403,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       userId: event.data.userId,
       eventType: 'content_viewed',
       eventData: event.data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -1432,7 +1436,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
           event.sessionId,
           event.ipAddress,
           event.userAgent,
-          JSON.stringify(event.metadata)
+          JSON.stringify(event.metadata),
         ]);
       }
 
@@ -1451,7 +1455,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     const sourceMap = new Map<string, SignupSource>();
     let total = 0;
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
       const source = row.signup_source || 'organic';
       const count = parseInt(row.count);
       total += count;
@@ -1465,25 +1469,27 @@ export class UserAnalyticsService implements IUserAnalyticsService {
           campaign: row.signup_campaign,
           count,
           percentage: 0,
-          conversionRate: 0
+          conversionRate: 0,
         });
       }
     });
 
     const sources = Array.from(sourceMap.values());
-    sources.forEach(source => {
+    sources.forEach((source) => {
       source.percentage = total > 0 ? (source.count / total) * 100 : 0;
     });
 
     return sources;
   }
 
-  private async calculateConversionRate(timeRange: AnalyticsTimeRange): Promise<{ rate: number; avgTime: number }> {
+  private async calculateConversionRate(
+    timeRange: AnalyticsTimeRange
+  ): Promise<{ rate: number; avgTime: number }> {
     // Simplified conversion calculation
     // In real implementation, would track visitor -> signup funnel
     return {
       rate: 2.5, // 2.5% conversion rate
-      avgTime: 180000 // 3 minutes in milliseconds
+      avgTime: 180000, // 3 minutes in milliseconds
     };
   }
 
@@ -1504,11 +1510,11 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     try {
       const result = await this.db.query(query, [timeRange.startDate, timeRange.endDate]);
 
-      return result.rows.map(row => ({
+      return result.rows.map((row) => ({
         referrer: row.referrer,
         visits: parseInt(row.visits),
         signups: parseInt(row.signups),
-        conversionRate: row.visits > 0 ? (row.signups / row.visits) * 100 : 0
+        conversionRate: row.visits > 0 ? (row.signups / row.visits) * 100 : 0,
       }));
     } catch (error) {
       this.logger.warn('Failed to get top referrers', { error });
@@ -1516,7 +1522,9 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     }
   }
 
-  private async calculateSessionMetrics(timeRange: AnalyticsTimeRange): Promise<{ avgDuration: number; avgActions: number }> {
+  private async calculateSessionMetrics(
+    timeRange: AnalyticsTimeRange
+  ): Promise<{ avgDuration: number; avgActions: number }> {
     const query = `
       SELECT
         AVG(duration) as avg_duration,
@@ -1529,11 +1537,13 @@ export class UserAnalyticsService implements IUserAnalyticsService {
 
     return {
       avgDuration: parseFloat(result.rows[0].avg_duration) || 0,
-      avgActions: parseFloat(result.rows[0].avg_actions) || 0
+      avgActions: parseFloat(result.rows[0].avg_actions) || 0,
     };
   }
 
-  private async getEngagementTimeSeries(timeRange: AnalyticsTimeRange): Promise<EngagementTimeSeriesPoint[]> {
+  private async getEngagementTimeSeries(
+    timeRange: AnalyticsTimeRange
+  ): Promise<EngagementTimeSeriesPoint[]> {
     const query = `
       SELECT
         DATE(activity_timestamp) as date,
@@ -1549,12 +1559,12 @@ export class UserAnalyticsService implements IUserAnalyticsService {
 
     const result = await this.db.query(query, [timeRange.startDate, timeRange.endDate]);
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       timestamp: new Date(row.date),
       activeUsers: parseInt(row.active_users),
       sessions: parseInt(row.sessions),
       averageDuration: parseFloat(row.avg_duration) || 0,
-      bounceRate: parseFloat(row.bounce_rate) || 0
+      bounceRate: parseFloat(row.bounce_rate) || 0,
     }));
   }
 
@@ -1578,7 +1588,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     const result = await this.db.query(query, [userIds, periodStart, periodEnd]);
 
     return {
-      activeUsers: parseInt(result.rows[0].count)
+      activeUsers: parseInt(result.rows[0].count),
     };
   }
 
@@ -1596,7 +1606,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     const result = await this.db.query(query, [userIds]);
 
     return {
-      avgLTV: parseFloat(result.rows[0].avg_ltv) || 0
+      avgLTV: parseFloat(result.rows[0].avg_ltv) || 0,
     };
   }
 
@@ -1627,7 +1637,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     const result = await this.db.query(query, [userIds]);
 
     return {
-      avgScore: parseFloat(result.rows[0].avg_score) || 0
+      avgScore: parseFloat(result.rows[0].avg_score) || 0,
     };
   }
 
@@ -1648,7 +1658,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     const result = await this.db.query(query, [userIds, churnThreshold]);
 
     return {
-      rate: parseFloat(result.rows[0].churn_rate) || 0
+      rate: parseFloat(result.rows[0].churn_rate) || 0,
     };
   }
 
@@ -1668,11 +1678,11 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     try {
       const result = await this.db.query(query, [userIds]);
 
-      return result.rows.map(row => ({
+      return result.rows.map((row) => ({
         action: row.action_name,
         count: parseInt(row.count),
         uniqueUsers: parseInt(row.unique_users),
-        frequency: row.unique_users > 0 ? row.count / row.unique_users : 0
+        frequency: row.unique_users > 0 ? row.count / row.unique_users : 0,
       }));
     } catch (error) {
       this.logger.warn('Failed to get segment top actions', { error });
@@ -1680,13 +1690,15 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     }
   }
 
-  private async getFunnelDefinition(funnelId: string): Promise<Array<{ name: string; action: string }>> {
+  private async getFunnelDefinition(
+    funnelId: string
+  ): Promise<Array<{ name: string; action: string }>> {
     // In real implementation, would fetch from database
     return [
       { name: 'Landing Page', action: 'page_view' },
       { name: 'Sign Up Form', action: 'form_view' },
       { name: 'Account Created', action: 'signup_complete' },
-      { name: 'First Content', action: 'content_create' }
+      { name: 'First Content', action: 'content_create' },
     ];
   }
 
@@ -1699,13 +1711,14 @@ export class UserAnalyticsService implements IUserAnalyticsService {
 
       const dropOffRate = ((currentStep.users - nextStep.users) / currentStep.users) * 100;
 
-      if (dropOffRate > 20) { // Significant drop-off threshold
+      if (dropOffRate > 20) {
+        // Significant drop-off threshold
         dropOffs.push({
           step: currentStep.stepName,
           nextStep: nextStep.stepName,
           dropOffRate,
           userCount: currentStep.users - nextStep.users,
-          commonReasons: ['Unknown'] // Would analyze from user feedback
+          commonReasons: ['Unknown'], // Would analyze from user feedback
         });
       }
     }
@@ -1713,7 +1726,9 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     return dropOffs;
   }
 
-  private async generateChurnPredictions(timeRange: AnalyticsTimeRange): Promise<ChurnPrediction[]> {
+  private async generateChurnPredictions(
+    timeRange: AnalyticsTimeRange
+  ): Promise<ChurnPrediction[]> {
     // Get users who are at risk
     const query = `
       SELECT user_id
@@ -1727,7 +1742,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     const result = await this.db.query(query);
 
     const predictions = await Promise.all(
-      result.rows.map(row => this.predictUserChurn(row.user_id))
+      result.rows.map((row) => this.predictUserChurn(row.user_id))
     );
 
     return predictions;
@@ -1741,20 +1756,24 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         userCount: 100,
         riskScore: 65,
         churnRate: 35,
-        commonFactors: ['low_engagement', 'no_content_created']
+        commonFactors: ['low_engagement', 'no_content_created'],
       },
       {
         segment: 'Inactive Users (> 14 days)',
         userCount: 50,
         riskScore: 80,
         churnRate: 60,
-        commonFactors: ['long_inactivity', 'no_subscription']
-      }
+        commonFactors: ['long_inactivity', 'no_subscription'],
+      },
     ];
   }
 
-  private async identifyRetentionOpportunities(predictions: ChurnPrediction[]): Promise<RetentionOpportunity[]> {
-    const highRiskCount = predictions.filter(p => p.riskLevel === 'high' || p.riskLevel === 'critical').length;
+  private async identifyRetentionOpportunities(
+    predictions: ChurnPrediction[]
+  ): Promise<RetentionOpportunity[]> {
+    const highRiskCount = predictions.filter(
+      (p) => p.riskLevel === 'high' || p.riskLevel === 'critical'
+    ).length;
 
     return [
       {
@@ -1762,15 +1781,15 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         affectedUsers: highRiskCount,
         potentialImpact: 25, // 25% reduction in churn
         recommendedAction: 'Send personalized content recommendations',
-        estimatedCost: highRiskCount * 0.5 // $0.50 per user
-      }
+        estimatedCost: highRiskCount * 0.5, // $0.50 per user
+      },
     ];
   }
 
   private calculateChurnRiskScore(factors: ChurnRiskFactor[]): number {
     let score = 0;
 
-    factors.forEach(factor => {
+    factors.forEach((factor) => {
       let factorScore = 0;
 
       // Normalize factor value to 0-100 scale
@@ -1799,13 +1818,10 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     return 'low';
   }
 
-  private generateRetentionActions(
-    factors: ChurnRiskFactor[],
-    riskLevel: string
-  ): string[] {
+  private generateRetentionActions(factors: ChurnRiskFactor[], riskLevel: string): string[] {
     const actions: string[] = [];
 
-    factors.forEach(factor => {
+    factors.forEach((factor) => {
       if (factor.impact === 'negative') {
         switch (factor.factor) {
           case 'days_since_activity':
@@ -1834,12 +1850,14 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     return actions;
   }
 
-  private determineGrowthType(trends: TrendPoint[]): 'linear' | 'exponential' | 'plateau' | 'declining' {
+  private determineGrowthType(
+    trends: TrendPoint[]
+  ): 'linear' | 'exponential' | 'plateau' | 'declining' {
     if (trends.length < 3) return 'linear';
 
     const recentTrends = trends.slice(-10);
-    const upTrends = recentTrends.filter(t => t.trend === 'up').length;
-    const downTrends = recentTrends.filter(t => t.trend === 'down').length;
+    const upTrends = recentTrends.filter((t) => t.trend === 'up').length;
+    const downTrends = recentTrends.filter((t) => t.trend === 'down').length;
 
     if (upTrends > 7) return 'exponential';
     if (downTrends > 7) return 'declining';
@@ -1853,21 +1871,23 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         method: 'linear',
         projectedUsers: 0,
         projectionDate: new Date(),
-        confidenceInterval: { lower: 0, upper: 0 }
+        confidenceInterval: { lower: 0, upper: 0 },
       };
     }
 
     // Simple linear projection
     const recentTrends = trends.slice(-30); // Last 30 days
-    const avgDailyGrowth = recentTrends.length > 1
-      ? (recentTrends[recentTrends.length - 1].value - recentTrends[0].value) / recentTrends.length
-      : 0;
+    const avgDailyGrowth =
+      recentTrends.length > 1
+        ? (recentTrends[recentTrends.length - 1].value - recentTrends[0].value) /
+          recentTrends.length
+        : 0;
 
     const projectionDate = new Date();
     projectionDate.setDate(projectionDate.getDate() + 30); // 30 days ahead
 
     const currentValue = trends[trends.length - 1].value;
-    const projectedUsers = Math.round(currentValue + (avgDailyGrowth * 30));
+    const projectedUsers = Math.round(currentValue + avgDailyGrowth * 30);
 
     return {
       method: 'linear',
@@ -1875,9 +1895,9 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       projectionDate,
       confidenceInterval: {
         lower: Math.round(projectedUsers * 0.8),
-        upper: Math.round(projectedUsers * 1.2)
+        upper: Math.round(projectedUsers * 1.2),
       },
-      accuracy: 85
+      accuracy: 85,
     };
   }
 
@@ -1887,8 +1907,8 @@ export class UserAnalyticsService implements IUserAnalyticsService {
       {
         pattern: 'weekly',
         peakPeriods: ['Monday', 'Wednesday'],
-        averageVariance: 15
-      }
+        averageVariance: 15,
+      },
     ];
   }
 
@@ -1898,7 +1918,8 @@ export class UserAnalyticsService implements IUserAnalyticsService {
   }
 
   private calculateLoyaltyScore(user: any): number {
-    const accountAgeDays = (Date.now() - new Date(user.created_at).getTime()) / (24 * 60 * 60 * 1000);
+    const accountAgeDays =
+      (Date.now() - new Date(user.created_at).getTime()) / (24 * 60 * 60 * 1000);
     return Math.min((accountAgeDays / 365) * 100, 100); // 100 points at 1 year
   }
 
@@ -1921,11 +1942,11 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     try {
       const result = await this.db.query(query);
 
-      return result.rows.map(row => ({
+      return result.rows.map((row) => ({
         activityType: row.activity_type,
         count: parseInt(row.count),
         trend: 'stable' as const,
-        percentChange: 0
+        percentChange: 0,
       }));
     } catch (error) {
       this.logger.warn('Failed to get recent activity summary', { error });
@@ -1948,7 +1969,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         message: 'Active user count is below threshold',
         timestamp: new Date(),
         threshold: 10,
-        currentValue: activeUsers
+        currentValue: activeUsers,
       });
     }
 
@@ -1960,7 +1981,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
         message: 'Unusually high event rate detected',
         timestamp: new Date(),
         threshold: 1000,
-        currentValue: eventsPerSecond
+        currentValue: eventsPerSecond,
       });
     }
 
@@ -1999,7 +2020,7 @@ export class UserAnalyticsService implements IUserAnalyticsService {
     }
 
     // Add data rows
-    data.forEach(item => {
+    data.forEach((item) => {
       rows.push(Object.values(item).join(','));
     });
 

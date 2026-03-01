@@ -24,7 +24,12 @@ function createMockReq(overrides: Partial<Request> = {}): Request {
     ...overrides,
     get(name: string) {
       const lower = name.toLowerCase();
-      return (overrides.headers as Record<string, string>)?.[lower] ?? headers[lower] ?? (overrides.headers as Record<string, string>)?.[name] ?? headers[name];
+      return (
+        (overrides.headers as Record<string, string>)?.[lower] ??
+        headers[lower] ??
+        (overrides.headers as Record<string, string>)?.[name] ??
+        headers[name]
+      );
     },
     header(name: string) {
       return (req as any).get(name);

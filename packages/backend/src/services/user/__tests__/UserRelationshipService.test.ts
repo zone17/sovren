@@ -17,7 +17,7 @@ import {
   type BlockRequest,
   type MuteRequest,
   type FriendRequest,
-  type BulkFollowRequest
+  type BulkFollowRequest,
 } from '../../../types/user-relationship';
 
 describe('UserRelationshipService', () => {
@@ -45,14 +45,14 @@ describe('UserRelationshipService', () => {
       getEventStats: vi.fn().mockResolvedValue({}),
       clearEventStore: vi.fn().mockResolvedValue(undefined),
       isHealthy: vi.fn().mockResolvedValue(true),
-      dispose: vi.fn().mockResolvedValue(undefined)
+      dispose: vi.fn().mockResolvedValue(undefined),
     };
 
     mockLogger = {
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
-      error: vi.fn()
+      error: vi.fn(),
     };
 
     mockCache = {
@@ -69,7 +69,7 @@ describe('UserRelationshipService', () => {
       setMany: vi.fn().mockResolvedValue(undefined),
       remember: vi.fn().mockImplementation(async (key, factory) => factory()),
       healthCheck: vi.fn().mockResolvedValue(true),
-      dispose: vi.fn().mockResolvedValue(undefined)
+      dispose: vi.fn().mockResolvedValue(undefined),
     };
 
     service = new UserRelationshipService(mockEventBus, mockLogger, mockCache);
@@ -84,7 +84,7 @@ describe('UserRelationshipService', () => {
       it('should create a follow relationship successfully', async () => {
         const request: FollowRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         const relationship = await service.follow(request);
@@ -101,7 +101,7 @@ describe('UserRelationshipService', () => {
       it('should be idempotent - return existing follow if already following', async () => {
         const request: FollowRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         const first = await service.follow(request);
@@ -114,7 +114,7 @@ describe('UserRelationshipService', () => {
       it('should throw error if trying to follow self', async () => {
         const request: FollowRequest = {
           userId: 'user1',
-          targetUserId: 'user1'
+          targetUserId: 'user1',
         };
 
         await expect(service.follow(request)).rejects.toThrow(
@@ -125,12 +125,12 @@ describe('UserRelationshipService', () => {
       it('should throw error if blocked by target user', async () => {
         await service.block({
           userId: 'user2',
-          targetUserId: 'user1'
+          targetUserId: 'user1',
         });
 
         const request: FollowRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         await expect(service.follow(request)).rejects.toThrow(
@@ -141,12 +141,12 @@ describe('UserRelationshipService', () => {
       it('should throw error if user has blocked target', async () => {
         await service.block({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         const request: FollowRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         await expect(service.follow(request)).rejects.toThrow(
@@ -157,13 +157,13 @@ describe('UserRelationshipService', () => {
       it('should allow follow with force flag even if blocked', async () => {
         await service.block({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         const request: FollowRequest = {
           userId: 'user1',
           targetUserId: 'user2',
-          force: true
+          force: true,
         };
 
         const relationship = await service.follow(request);
@@ -173,12 +173,12 @@ describe('UserRelationshipService', () => {
 
       it('should create pending follow if target requires approval', async () => {
         await service.updatePrivacySettings('user2', {
-          requireApprovalForFollows: true
+          requireApprovalForFollows: true,
         });
 
         const request: FollowRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         const relationship = await service.follow(request);
@@ -188,27 +188,25 @@ describe('UserRelationshipService', () => {
       it('should invalidate caches after follow', async () => {
         const request: FollowRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         await service.follow(request);
 
-        expect(mockCache.invalidate).toHaveBeenCalledWith(
-          expect.stringContaining('relationship:')
-        );
+        expect(mockCache.invalidate).toHaveBeenCalledWith(expect.stringContaining('relationship:'));
       });
 
       it('should include metadata in relationship', async () => {
         const request: FollowRequest = {
           userId: 'user1',
           targetUserId: 'user2',
-          metadata: { source: 'web', campaign: 'summer2024' }
+          metadata: { source: 'web', campaign: 'summer2024' },
         };
 
         const relationship = await service.follow(request);
         expect(relationship.metadata).toEqual({
           source: 'web',
-          campaign: 'summer2024'
+          campaign: 'summer2024',
         });
       });
     });
@@ -219,7 +217,7 @@ describe('UserRelationshipService', () => {
 
         const result = await service.unfollow({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         expect(result).toBe(true);
@@ -229,7 +227,7 @@ describe('UserRelationshipService', () => {
       it('should return false if not following', async () => {
         const result = await service.unfollow({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         expect(result).toBe(false);
@@ -297,7 +295,7 @@ describe('UserRelationshipService', () => {
         const request: BlockRequest = {
           userId: 'user1',
           targetUserId: 'user2',
-          reason: 'spam'
+          reason: 'spam',
         };
 
         const relationship = await service.block(request);
@@ -311,7 +309,7 @@ describe('UserRelationshipService', () => {
       it('should be idempotent', async () => {
         const request: BlockRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         const first = await service.block(request);
@@ -346,7 +344,7 @@ describe('UserRelationshipService', () => {
 
         const result = await service.unblock({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         expect(result).toBe(true);
@@ -355,7 +353,7 @@ describe('UserRelationshipService', () => {
       it('should return false if not blocking', async () => {
         const result = await service.unblock({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         expect(result).toBe(false);
@@ -396,7 +394,7 @@ describe('UserRelationshipService', () => {
       it('should create a mute relationship successfully', async () => {
         const request: MuteRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         const relationship = await service.mute(request);
@@ -410,7 +408,7 @@ describe('UserRelationshipService', () => {
         const request: MuteRequest = {
           userId: 'user1',
           targetUserId: 'user2',
-          duration: 3600 // 1 hour
+          duration: 3600, // 1 hour
         };
 
         const relationship = await service.mute(request);
@@ -422,7 +420,7 @@ describe('UserRelationshipService', () => {
       it('should be idempotent', async () => {
         const request: MuteRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         const first = await service.mute(request);
@@ -446,7 +444,7 @@ describe('UserRelationshipService', () => {
 
         const result = await service.unmute({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         expect(result).toBe(true);
@@ -455,7 +453,7 @@ describe('UserRelationshipService', () => {
       it('should return false if not muting', async () => {
         const result = await service.unmute({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         expect(result).toBe(false);
@@ -483,7 +481,7 @@ describe('UserRelationshipService', () => {
         const request: FriendRequest = {
           userId: 'user1',
           targetUserId: 'user2',
-          message: 'Hello!'
+          message: 'Hello!',
         };
 
         const relationship = await service.sendFriendRequest(request);
@@ -496,12 +494,12 @@ describe('UserRelationshipService', () => {
 
       it('should throw error if friend requests not allowed', async () => {
         await service.updatePrivacySettings('user2', {
-          allowFriendRequests: false
+          allowFriendRequests: false,
         });
 
         const request: FriendRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         await expect(service.sendFriendRequest(request)).rejects.toThrow(
@@ -512,7 +510,7 @@ describe('UserRelationshipService', () => {
       it('should be idempotent', async () => {
         const request: FriendRequest = {
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         };
 
         const first = await service.sendFriendRequest(request);
@@ -526,13 +524,13 @@ describe('UserRelationshipService', () => {
       it('should accept friend request and create mutual follows', async () => {
         const friendRequest = await service.sendFriendRequest({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         const response = await service.respondToFriendRequest({
           requestId: friendRequest.id,
           userId: 'user2',
-          accepted: true
+          accepted: true,
         });
 
         expect(response.status).toBe(RelationshipStatus.ACTIVE);
@@ -547,13 +545,13 @@ describe('UserRelationshipService', () => {
       it('should reject friend request', async () => {
         const friendRequest = await service.sendFriendRequest({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         const response = await service.respondToFriendRequest({
           requestId: friendRequest.id,
           userId: 'user2',
-          accepted: false
+          accepted: false,
         });
 
         expect(response.status).toBe(RelationshipStatus.REJECTED);
@@ -562,14 +560,14 @@ describe('UserRelationshipService', () => {
       it('should throw error if not target user', async () => {
         const friendRequest = await service.sendFriendRequest({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         await expect(
           service.respondToFriendRequest({
             requestId: friendRequest.id,
             userId: 'user3',
-            accepted: true
+            accepted: true,
           })
         ).rejects.toThrow('Unauthorized to respond to this request');
       });
@@ -577,20 +575,20 @@ describe('UserRelationshipService', () => {
       it('should throw error if already processed', async () => {
         const friendRequest = await service.sendFriendRequest({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         await service.respondToFriendRequest({
           requestId: friendRequest.id,
           userId: 'user2',
-          accepted: true
+          accepted: true,
         });
 
         await expect(
           service.respondToFriendRequest({
             requestId: friendRequest.id,
             userId: 'user2',
-            accepted: true
+            accepted: true,
           })
         ).rejects.toThrow('Request already processed');
       });
@@ -600,7 +598,7 @@ describe('UserRelationshipService', () => {
       it('should cancel friend request successfully', async () => {
         const friendRequest = await service.sendFriendRequest({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         const result = await service.cancelFriendRequest(friendRequest.id, 'user1');
@@ -611,7 +609,7 @@ describe('UserRelationshipService', () => {
       it('should return false if not sender', async () => {
         const friendRequest = await service.sendFriendRequest({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         const result = await service.cancelFriendRequest(friendRequest.id, 'user3');
@@ -624,11 +622,11 @@ describe('UserRelationshipService', () => {
       it('should return pending friend requests for user', async () => {
         await service.sendFriendRequest({
           userId: 'user1',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
         await service.sendFriendRequest({
           userId: 'user3',
-          targetUserId: 'user2'
+          targetUserId: 'user2',
         });
 
         const requests = await service.getPendingFriendRequests('user2');
@@ -642,13 +640,13 @@ describe('UserRelationshipService', () => {
         for (let i = 0; i < 10; i++) {
           await service.sendFriendRequest({
             userId: `user${i}`,
-            targetUserId: 'target'
+            targetUserId: 'target',
           });
         }
 
         const requests = await service.getPendingFriendRequests('target', {
           limit: 5,
-          offset: 0
+          offset: 0,
         });
 
         expect(requests).toHaveLength(5);
@@ -677,7 +675,7 @@ describe('UserRelationshipService', () => {
 
         const response = await service.getFollowers('target', {
           limit: 10,
-          offset: 0
+          offset: 0,
         });
 
         expect(response.followers).toHaveLength(10);
@@ -727,7 +725,7 @@ describe('UserRelationshipService', () => {
 
         const response = await service.getFollowing('user1', {
           limit: 10,
-          offset: 0
+          offset: 0,
         });
 
         expect(response.following).toHaveLength(10);
@@ -773,7 +771,7 @@ describe('UserRelationshipService', () => {
         await service.mute({
           userId: 'user1',
           targetUserId: 'user2',
-          duration: -1 // Already expired
+          duration: -1, // Already expired
         });
 
         const muted = await service.getMutedUsers('user1');
@@ -855,7 +853,7 @@ describe('UserRelationshipService', () => {
 
         const recommendations = await service.getRecommendations('user1', 10);
 
-        const recommendedIds = recommendations.map(r => r.userId);
+        const recommendedIds = recommendations.map((r) => r.userId);
         expect(recommendedIds).not.toContain('user3');
       });
 
@@ -866,7 +864,7 @@ describe('UserRelationshipService', () => {
 
         const recommendations = await service.getRecommendations('user1', 10);
 
-        const recommendedIds = recommendations.map(r => r.userId);
+        const recommendedIds = recommendations.map((r) => r.userId);
         expect(recommendedIds).not.toContain('user3');
       });
 
@@ -887,7 +885,7 @@ describe('UserRelationshipService', () => {
       it('should follow multiple users successfully', async () => {
         const request: BulkFollowRequest = {
           userId: 'user1',
-          targetUserIds: ['user2', 'user3', 'user4']
+          targetUserIds: ['user2', 'user3', 'user4'],
         };
 
         const result = await service.bulkFollow(request);
@@ -902,7 +900,7 @@ describe('UserRelationshipService', () => {
 
         const request: BulkFollowRequest = {
           userId: 'user1',
-          targetUserIds: ['user2', 'user3', 'user4']
+          targetUserIds: ['user2', 'user3', 'user4'],
         };
 
         const result = await service.bulkFollow(request);
@@ -918,7 +916,7 @@ describe('UserRelationshipService', () => {
           userId: 'user1',
           targetUserIds: Array.from({ length: 25 }, (_, i) => `user${i}`),
           batchSize: 10,
-          delayMs: 10
+          delayMs: 10,
         };
 
         const startTime = Date.now();
@@ -938,7 +936,7 @@ describe('UserRelationshipService', () => {
 
         const request = {
           userId: 'user1',
-          targetUserIds: ['user2', 'user3', 'user4']
+          targetUserIds: ['user2', 'user3', 'user4'],
         };
 
         const result = await service.bulkUnfollow(request);
@@ -975,7 +973,7 @@ describe('UserRelationshipService', () => {
       it('should update privacy settings', async () => {
         const updated = await service.updatePrivacySettings('user1', {
           hideFollowers: true,
-          requireApprovalForFollows: true
+          requireApprovalForFollows: true,
         });
 
         expect(updated.hideFollowers).toBe(true);
@@ -984,7 +982,7 @@ describe('UserRelationshipService', () => {
 
       it('should emit event on update', async () => {
         await service.updatePrivacySettings('user1', {
-          hideFollowers: true
+          hideFollowers: true,
         });
 
         expect(mockEventBus.publish).toHaveBeenCalled();
@@ -1034,7 +1032,7 @@ describe('UserRelationshipService', () => {
           userId: 'user1',
           userIds: ['user2', 'user3', 'user4'],
           source: 'twitter',
-          metadata: { importDate: new Date().toISOString() }
+          metadata: { importDate: new Date().toISOString() },
         });
 
         expect(result.successCount).toBe(3);
@@ -1069,7 +1067,7 @@ describe('UserRelationshipService', () => {
 
         const results = await service.queryRelationships({
           userId: 'user1',
-          type: RelationshipType.FOLLOW
+          type: RelationshipType.FOLLOW,
         });
 
         expect(results).toHaveLength(1);
@@ -1083,7 +1081,7 @@ describe('UserRelationshipService', () => {
 
         const results = await service.queryRelationships({
           userId: 'user1',
-          pagination: { limit: 10, offset: 0 }
+          pagination: { limit: 10, offset: 0 },
         });
 
         expect(results).toHaveLength(10);
@@ -1095,7 +1093,7 @@ describe('UserRelationshipService', () => {
 
         const results = await service.queryRelationships({
           userId: 'user1',
-          status: RelationshipStatus.PENDING
+          status: RelationshipStatus.PENDING,
         });
 
         expect(results).toHaveLength(1);
@@ -1126,7 +1124,7 @@ describe('UserRelationshipService', () => {
         await service.mute({
           userId: 'user1',
           targetUserId: 'user2',
-          duration: -1 // Already expired
+          duration: -1, // Already expired
         });
 
         const cleanedCount = await service.cleanupExpiredRelationships();
@@ -1138,7 +1136,7 @@ describe('UserRelationshipService', () => {
         await service.mute({
           userId: 'user1',
           targetUserId: 'user2',
-          duration: 3600 // 1 hour from now
+          duration: 3600, // 1 hour from now
         });
 
         const cleanedCount = await service.cleanupExpiredRelationships();
@@ -1156,10 +1154,7 @@ describe('UserRelationshipService', () => {
       });
 
       it('should return true if no cache', async () => {
-        const serviceWithoutCache = new UserRelationshipService(
-          mockEventBus,
-          mockLogger
-        );
+        const serviceWithoutCache = new UserRelationshipService(mockEventBus, mockLogger);
 
         const result = await serviceWithoutCache.rebuildCache();
 
@@ -1208,7 +1203,10 @@ describe('UserRelationshipService', () => {
       const results: (UserRelationship | Error)[] = [];
       for (let i = 0; i < 101; i++) {
         try {
-          const result = await service.follow({ userId: 'ratelimit_user', targetUserId: `target_rl_${i}` });
+          const result = await service.follow({
+            userId: 'ratelimit_user',
+            targetUserId: `target_rl_${i}`,
+          });
           results.push(result);
         } catch (e) {
           results.push(e as Error);
@@ -1216,7 +1214,7 @@ describe('UserRelationshipService', () => {
       }
 
       const rateLimitErrors = results.filter(
-        r => r instanceof Error && r.message.includes('Rate limit exceeded')
+        (r) => r instanceof Error && r.message.includes('Rate limit exceeded')
       );
 
       expect(rateLimitErrors.length).toBeGreaterThan(0);
@@ -1225,9 +1223,9 @@ describe('UserRelationshipService', () => {
 
   describe('Error Handling', () => {
     it('should handle missing user IDs', async () => {
-      await expect(
-        service.follow({ userId: '', targetUserId: 'user2' })
-      ).rejects.toThrow('User IDs are required');
+      await expect(service.follow({ userId: '', targetUserId: 'user2' })).rejects.toThrow(
+        'User IDs are required'
+      );
     });
 
     it('should handle invalid relationship IDs', async () => {
@@ -1235,7 +1233,7 @@ describe('UserRelationshipService', () => {
         service.respondToFriendRequest({
           requestId: 'invalid-id',
           userId: 'user1',
-          accepted: true
+          accepted: true,
         })
       ).rejects.toThrow('Friend request not found');
     });

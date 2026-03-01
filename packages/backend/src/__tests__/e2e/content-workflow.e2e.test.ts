@@ -4,7 +4,6 @@
  * Part of US-E5-034: Integration Test Suite
  */
 
-
 import { createTestContainer, cleanupTestContainer } from '../fixtures/test-container-setup';
 import { createTestUser, createTestContent } from '../fixtures/test-data-factory';
 import type { IServiceContainer } from '../../interfaces/shared/IServiceRegistry';
@@ -43,7 +42,7 @@ describe('Content Workflow E2E Tests', () => {
       // Step 3: Publish
       await db.update('content', content.id, {
         status: 'published',
-        publishedAt: new Date()
+        publishedAt: new Date(),
       });
       await cache.set(`content:${content.id}`, content, 3600);
       await eventBus.publish('content.published', { contentId: content.id });

@@ -7,10 +7,10 @@
  * Comprehensive test suite for relay configuration migration.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { RelayConfigMigration, type MigrationResult } from '../migrate-relay-config';
+import { RelayConfigMigration } from '../migrate-relay-config';
 
 // ========================================
 // TEST SETUP
@@ -58,7 +58,7 @@ describe('Relay Configuration Migration - Discovery', () => {
     // For now, test the regex extraction logic
     const relayRegex = /['"]wss?:\/\/[^'"]+['"]/g;
     const matches = content.match(relayRegex) || [];
-    const urls = matches.map(m => m.replace(/['"]/g, ''));
+    const urls = matches.map((m) => m.replace(/['"]/g, ''));
 
     expect(urls).toHaveLength(3);
     expect(urls).toContain('wss://relay.damus.io');
@@ -79,7 +79,7 @@ describe('Relay Configuration Migration - Discovery', () => {
 
     const relayRegex = /['"]wss?:\/\/[^'"]+['"]/g;
     const matches = content.match(relayRegex) || [];
-    const urls = matches.map(m => m.replace(/['"]/g, ''));
+    const urls = matches.map((m) => m.replace(/['"]/g, ''));
 
     expect(urls).toHaveLength(2);
     expect(urls).toContain('wss://relay.snort.social');
@@ -182,23 +182,19 @@ describe('Relay Configuration Migration - Conversion', () => {
 
 describe('Relay Configuration Migration - Validation', () => {
   it('should validate relay URLs', () => {
-    const validUrls = [
-      'wss://relay.damus.io',
-      'ws://localhost:7000',
-      'wss://relay.nostr.band:443',
-    ];
+    const validUrls = ['wss://relay.damus.io', 'ws://localhost:7000', 'wss://relay.nostr.band:443'];
 
     const invalidUrls = [
-      'https://relay.damus.io',  // Not a WebSocket URL
-      'wss:/relay.damus.io',     // Missing slash
-      'relay.damus.io',          // Missing protocol
+      'https://relay.damus.io', // Not a WebSocket URL
+      'wss:/relay.damus.io', // Missing slash
+      'relay.damus.io', // Missing protocol
     ];
 
-    validUrls.forEach(url => {
+    validUrls.forEach((url) => {
       expect(url.startsWith('wss://') || url.startsWith('ws://')).toBe(true);
     });
 
-    invalidUrls.forEach(url => {
+    invalidUrls.forEach((url) => {
       expect(url.startsWith('wss://') || url.startsWith('ws://')).toBe(false);
     });
   });
@@ -209,7 +205,7 @@ describe('Relay Configuration Migration - Validation', () => {
       { url: 'wss://nos.lol', read: false, write: true },
     ];
 
-    const hasReadRelay = relays.some(r => r.read);
+    const hasReadRelay = relays.some((r) => r.read);
     expect(hasReadRelay).toBe(true);
   });
 
@@ -219,7 +215,7 @@ describe('Relay Configuration Migration - Validation', () => {
       { url: 'wss://nos.lol', read: false, write: true },
     ];
 
-    const hasWriteRelay = relays.some(r => r.write);
+    const hasWriteRelay = relays.some((r) => r.write);
     expect(hasWriteRelay).toBe(true);
   });
 
@@ -290,7 +286,7 @@ describe('Relay Configuration Migration - Environment Variables', () => {
       { url: 'wss://relay.nostr.band' },
     ];
 
-    const envValue = relays.map(r => r.url).join(',');
+    const envValue = relays.map((r) => r.url).join(',');
     expect(envValue).toBe('wss://relay.damus.io,wss://nos.lol,wss://relay.nostr.band');
   });
 
@@ -312,11 +308,7 @@ NOSTR_PRIVATE_KEY="abc123"
       }
     };
 
-    const updated = replaceOrAddEnvVar(
-      envContent,
-      'NOSTR_RELAYS',
-      'wss://new-relay.com'
-    );
+    const updated = replaceOrAddEnvVar(envContent, 'NOSTR_RELAYS', 'wss://new-relay.com');
 
     expect(updated).toContain('NOSTR_RELAYS="wss://new-relay.com"');
     expect(updated).toContain('NOSTR_PRIVATE_KEY="abc123"');
@@ -340,11 +332,7 @@ NOSTR_PRIVATE_KEY="abc123"
       }
     };
 
-    const updated = replaceOrAddEnvVar(
-      envContent,
-      'NOSTR_RELAYS',
-      'wss://new-relay.com'
-    );
+    const updated = replaceOrAddEnvVar(envContent, 'NOSTR_RELAYS', 'wss://new-relay.com');
 
     expect(updated).toContain('NOSTR_RELAYS="wss://new-relay.com"');
     expect(updated).toContain('NOSTR_PRIVATE_KEY="abc123"');
@@ -445,17 +433,17 @@ describe('Relay Configuration Migration - Error Handling', () => {
 
     const issues: string[] = [];
 
-    migratedRelays.forEach(relay => {
+    migratedRelays.forEach((relay) => {
       if (!relay.url.startsWith('wss://') && !relay.url.startsWith('ws://')) {
         issues.push(`Invalid relay URL: ${relay.url}`);
       }
     });
 
-    if (!migratedRelays.some(r => r.read)) {
+    if (!migratedRelays.some((r) => r.read)) {
       issues.push('No read relays configured');
     }
 
-    if (!migratedRelays.some(r => r.write)) {
+    if (!migratedRelays.some((r) => r.write)) {
       issues.push('No write relays configured');
     }
 
@@ -474,16 +462,13 @@ describe('Relay Configuration Migration - Integration', () => {
   it('should perform complete migration workflow', async () => {
     // 1. Create test source files with relays
     const testService = path.join(TEST_DIR, 'service.ts');
-    await fs.writeFile(
-      testService,
-      `const relays = ['wss://relay.damus.io', 'wss://nos.lol'];`
-    );
+    await fs.writeFile(testService, `const relays = ['wss://relay.damus.io', 'wss://nos.lol'];`);
 
     // 2. Discover relays
     const content = await fs.readFile(testService, 'utf-8');
     const relayRegex = /['"]wss?:\/\/[^'"]+['"]/g;
     const matches = content.match(relayRegex) || [];
-    const discovered = matches.map(m => m.replace(/['"]/g, ''));
+    const discovered = matches.map((m) => m.replace(/['"]/g, ''));
 
     expect(discovered).toHaveLength(2);
 
@@ -508,8 +493,8 @@ describe('Relay Configuration Migration - Integration', () => {
     }
 
     // 6. Validation
-    const hasReadRelay = converted.some(r => r.read);
-    const hasWriteRelay = converted.some(r => r.write);
+    const hasReadRelay = converted.some((r) => r.read);
+    const hasWriteRelay = converted.some((r) => r.write);
 
     expect(hasReadRelay).toBe(true);
     expect(hasWriteRelay).toBe(true);

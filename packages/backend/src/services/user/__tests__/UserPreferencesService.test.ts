@@ -14,7 +14,7 @@ import type { ILogger } from '../../../interfaces/shared/ILogger';
 import type {
   PreferenceUpdateRequest,
   BulkPreferenceUpdateRequest,
-  NotificationPreference
+  NotificationPreference,
 } from '../../../types/user-preferences';
 import { DEFAULT_PREFERENCES } from '../../../types/user-preferences';
 import { DomainEventType } from '../../../interfaces/shared/IEventBus';
@@ -194,12 +194,7 @@ describe('UserPreferencesService', () => {
     eventBus = new MockEventBus();
     logger = new MockLogger();
 
-    service = new UserPreferencesService(
-      repository,
-      cacheService,
-      eventBus,
-      logger
-    );
+    service = new UserPreferencesService(repository, cacheService, eventBus, logger);
   });
 
   afterEach(async () => {
@@ -230,7 +225,7 @@ describe('UserPreferencesService', () => {
       const second = await service.getPreferences(userId);
 
       expect(first).toEqual(second);
-      expect(logger.logs.filter(l => l.message.includes('Cache hit'))).toHaveLength(1);
+      expect(logger.logs.filter((l) => l.message.includes('Cache hit'))).toHaveLength(1);
     });
 
     it('should throw error for invalid user ID', async () => {
@@ -315,9 +310,9 @@ describe('UserPreferencesService', () => {
             fontSize: 'large',
             fontFamily: 'system-ui',
             layout: 'comfortable',
-            density: 'default'
-          }
-        }
+            density: 'default',
+          },
+        },
       };
 
       const updated = await service.updatePreferences(request);
@@ -335,8 +330,8 @@ describe('UserPreferencesService', () => {
       const request: PreferenceUpdateRequest = {
         userId,
         updates: {
-          display: { ...DEFAULT_PREFERENCES.display, theme: 'dark' }
-        }
+          display: { ...DEFAULT_PREFERENCES.display, theme: 'dark' },
+        },
       };
 
       await service.updatePreferences(request);
@@ -353,8 +348,8 @@ describe('UserPreferencesService', () => {
       const request: PreferenceUpdateRequest = {
         userId,
         updates: {
-          display: { ...DEFAULT_PREFERENCES.display, theme: 'dark' }
-        }
+          display: { ...DEFAULT_PREFERENCES.display, theme: 'dark' },
+        },
       };
 
       await service.updatePreferences(request);
@@ -371,9 +366,9 @@ describe('UserPreferencesService', () => {
       const request: PreferenceUpdateRequest = {
         userId,
         updates: {
-          display: { ...DEFAULT_PREFERENCES.display, theme: 'dark' }
+          display: { ...DEFAULT_PREFERENCES.display, theme: 'dark' },
         },
-        reason: 'User preference change'
+        reason: 'User preference change',
       };
 
       await service.updatePreferences(request);
@@ -394,9 +389,9 @@ describe('UserPreferencesService', () => {
             fontSize: 'medium',
             fontFamily: 'system-ui',
             layout: 'comfortable',
-            density: 'default'
-          }
-        }
+            density: 'default',
+          },
+        },
       };
 
       await expect(service.updatePreferences(request)).rejects.toThrow(
@@ -414,8 +409,8 @@ describe('UserPreferencesService', () => {
           eventType: 'payment_received',
           email: true,
           push: true,
-          inApp: true
-        }
+          inApp: true,
+        },
       ];
 
       const updated = await service.updateNotificationPreferences(userId, notifications);
@@ -427,7 +422,7 @@ describe('UserPreferencesService', () => {
       const userId = 'user301';
 
       const updated = await service.updatePrivacySettings(userId, {
-        profileVisibility: 'private'
+        profileVisibility: 'private',
       });
 
       expect(updated.privacy.profileVisibility).toBe('private');
@@ -437,7 +432,7 @@ describe('UserPreferencesService', () => {
       const userId = 'user302';
 
       const updated = await service.updateContentPreferences(userId, {
-        languages: ['en', 'es']
+        languages: ['en', 'es'],
       });
 
       expect(updated.content.languages).toEqual(['en', 'es']);
@@ -447,7 +442,7 @@ describe('UserPreferencesService', () => {
       const userId = 'user303';
 
       const updated = await service.updateDisplayPreferences(userId, {
-        theme: 'dark'
+        theme: 'dark',
       });
 
       expect(updated.display.theme).toBe('dark');
@@ -457,7 +452,7 @@ describe('UserPreferencesService', () => {
       const userId = 'user304';
 
       const updated = await service.updateCommunicationPreferences(userId, {
-        emailNotifications: false
+        emailNotifications: false,
       });
 
       expect(updated.communication.emailNotifications).toBe(false);
@@ -467,7 +462,7 @@ describe('UserPreferencesService', () => {
       const userId = 'user305';
 
       const updated = await service.updateAccessibilitySettings(userId, {
-        screenReader: true
+        screenReader: true,
       });
 
       expect(updated.accessibility.screenReader).toBe(true);
@@ -477,7 +472,7 @@ describe('UserPreferencesService', () => {
       const userId = 'user306';
 
       const updated = await service.updateDataExportPreferences(userId, {
-        format: 'csv'
+        format: 'csv',
       });
 
       expect(updated.dataExport.format).toBe('csv');
@@ -493,14 +488,14 @@ describe('UserPreferencesService', () => {
         updates: [
           {
             category: 'display',
-            value: { ...DEFAULT_PREFERENCES.display, theme: 'dark' }
+            value: { ...DEFAULT_PREFERENCES.display, theme: 'dark' },
           },
           {
             category: 'privacy',
-            value: { ...DEFAULT_PREFERENCES.privacy, profileVisibility: 'private' }
-          }
+            value: { ...DEFAULT_PREFERENCES.privacy, profileVisibility: 'private' },
+          },
         ],
-        atomic: true
+        atomic: true,
       };
 
       const updated = await service.bulkUpdatePreferences(request);
@@ -515,12 +510,10 @@ describe('UserPreferencesService', () => {
       const request: BulkPreferenceUpdateRequest = {
         userId,
         updates: [],
-        atomic: true
+        atomic: true,
       };
 
-      await expect(service.bulkUpdatePreferences(request)).rejects.toThrow(
-        'No updates provided'
-      );
+      await expect(service.bulkUpdatePreferences(request)).rejects.toThrow('No updates provided');
     });
 
     it('should validate all updates before applying', async () => {
@@ -531,15 +524,13 @@ describe('UserPreferencesService', () => {
         updates: [
           {
             category: 'display',
-            value: { theme: 'invalid' as any }
-          }
+            value: { theme: 'invalid' as any },
+          },
         ],
-        atomic: true
+        atomic: true,
       };
 
-      await expect(service.bulkUpdatePreferences(request)).rejects.toThrow(
-        'validation failed'
-      );
+      await expect(service.bulkUpdatePreferences(request)).rejects.toThrow('validation failed');
     });
   });
 
@@ -577,9 +568,7 @@ describe('UserPreferencesService', () => {
     it('should throw error for invalid preset', async () => {
       const userId = 'user503';
 
-      await expect(
-        service.applyPreset(userId, 'invalid' as any)
-      ).rejects.toThrow('Invalid preset');
+      await expect(service.applyPreset(userId, 'invalid' as any)).rejects.toThrow('Invalid preset');
     });
   });
 
@@ -637,8 +626,8 @@ describe('UserPreferencesService', () => {
           fontSize: 'medium',
           fontFamily: 'system-ui',
           layout: 'comfortable',
-          density: 'default'
-        }
+          density: 'default',
+        },
       });
 
       expect(result.valid).toBe(true);
@@ -652,8 +641,8 @@ describe('UserPreferencesService', () => {
           fontSize: 'medium',
           fontFamily: 'system-ui',
           layout: 'comfortable',
-          density: 'default'
-        }
+          density: 'default',
+        },
       });
 
       expect(result.valid).toBe(false);
@@ -669,12 +658,12 @@ describe('UserPreferencesService', () => {
           contentTypes: [],
           sensitiveContent: 'blur',
           autoplayVideos: false,
-          showSpoilers: false
-        }
+          showSpoilers: false,
+        },
       });
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.field === 'content.languages')).toBe(true);
+      expect(result.errors.some((e) => e.field === 'content.languages')).toBe(true);
     });
 
     it('should warn when all notifications disabled', async () => {
@@ -688,8 +677,8 @@ describe('UserPreferencesService', () => {
           newsletters: false,
           weeklyDigest: false,
           monthlyReport: false,
-          frequency: 'never'
-        }
+          frequency: 'never',
+        },
       });
 
       expect(result.warnings.length).toBeGreaterThan(0);
@@ -737,7 +726,7 @@ describe('UserPreferencesService', () => {
       const history = await service.getFieldHistory(userId, 'display');
 
       expect(history.length).toBe(2);
-      expect(history.every(h => h.field === 'display')).toBe(true);
+      expect(history.every((h) => h.field === 'display')).toBe(true);
     });
   });
 
@@ -787,9 +776,9 @@ describe('UserPreferencesService', () => {
 
       const exportData = await service.exportPreferences(userId1, 'json');
 
-      await expect(
-        service.importPreferences(userId2, exportData)
-      ).rejects.toThrow('User ID mismatch');
+      await expect(service.importPreferences(userId2, exportData)).rejects.toThrow(
+        'User ID mismatch'
+      );
     });
 
     it('should reject invalid imported preferences', async () => {
@@ -798,9 +787,9 @@ describe('UserPreferencesService', () => {
       const exportData = structuredClone(await service.exportPreferences(userId, 'json'));
       exportData.preferences.display.theme = 'invalid' as any;
 
-      await expect(
-        service.importPreferences(userId, exportData)
-      ).rejects.toThrow('Import validation failed');
+      await expect(service.importPreferences(userId, exportData)).rejects.toThrow(
+        'Import validation failed'
+      );
     });
   });
 
@@ -809,7 +798,7 @@ describe('UserPreferencesService', () => {
       const presets = await service.getAvailablePresets();
 
       expect(presets.length).toBe(3);
-      expect(presets.map(p => p.name)).toEqual(['beginner', 'creator', 'power_user']);
+      expect(presets.map((p) => p.name)).toEqual(['beginner', 'creator', 'power_user']);
     });
   });
 
@@ -861,9 +850,9 @@ describe('UserPreferencesService', () => {
       // Mock repository to throw error
       vi.spyOn(repository, 'update').mockRejectedValue(new Error('Database error'));
 
-      await expect(
-        service.updateDisplayPreferences(userId, { theme: 'dark' })
-      ).rejects.toThrow('Database error');
+      await expect(service.updateDisplayPreferences(userId, { theme: 'dark' })).rejects.toThrow(
+        'Database error'
+      );
     });
 
     it('should continue on history entry failure', async () => {
@@ -874,7 +863,7 @@ describe('UserPreferencesService', () => {
       // Should not throw
       await service.updateDisplayPreferences(userId, { theme: 'dark' });
 
-      expect(logger.logs.some(l => l.message.includes('Failed to add history entry'))).toBe(true);
+      expect(logger.logs.some((l) => l.message.includes('Failed to add history entry'))).toBe(true);
     });
 
     it('should continue on event emission failure', async () => {
@@ -885,7 +874,7 @@ describe('UserPreferencesService', () => {
       // Should not throw
       await service.updateDisplayPreferences(userId, { theme: 'dark' });
 
-      expect(logger.logs.some(l => l.message.includes('Failed to emit'))).toBe(true);
+      expect(logger.logs.some((l) => l.message.includes('Failed to emit'))).toBe(true);
     });
   });
 
@@ -899,13 +888,13 @@ describe('UserPreferencesService', () => {
       const updates = [
         service.updateDisplayPreferences(userId, { theme: 'dark' }),
         service.updatePrivacySettings(userId, { profileVisibility: 'private' }),
-        service.updateContentPreferences(userId, { languages: ['en', 'es'] })
+        service.updateContentPreferences(userId, { languages: ['en', 'es'] }),
       ];
 
       const results = await Promise.all(updates);
 
       expect(results).toHaveLength(3);
-      expect(results.every(r => r.userId === userId)).toBe(true);
+      expect(results.every((r) => r.userId === userId)).toBe(true);
     });
 
     it('should handle empty updates object', async () => {
@@ -913,7 +902,7 @@ describe('UserPreferencesService', () => {
 
       const request: PreferenceUpdateRequest = {
         userId,
-        updates: {}
+        updates: {},
       };
 
       const updated = await service.updatePreferences(request);

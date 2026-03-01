@@ -99,9 +99,7 @@ describe('JWT Secret Validation (P1-089)', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
 
-    expect(() => new NostrAuthService()).toThrow(
-      'JWT_SECRET environment variable is required'
-    );
+    expect(() => new NostrAuthService()).toThrow('JWT_SECRET environment variable is required');
 
     process.env.NODE_ENV = originalEnv;
   });
@@ -124,7 +122,9 @@ describe('NOSTR Utility Functions', () => {
     it('should create consistent signature message', () => {
       const message = createSignatureMessage('test-challenge', 1234567890);
 
-      expect(message).toBe('Sovren Authentication\nChallenge: test-challenge\nTimestamp: 1234567890');
+      expect(message).toBe(
+        'Sovren Authentication\nChallenge: test-challenge\nTimestamp: 1234567890'
+      );
     });
   });
 });

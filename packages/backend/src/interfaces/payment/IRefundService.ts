@@ -21,12 +21,9 @@ import type {
   RefundIdempotency,
   RefundWebhookEvent,
   CreateRefundRequest,
-  RefundNotification
+  RefundNotification,
 } from '../../types/refund';
-import {
-  RefundStatus,
-  RefundReason,
-} from '../../types/refund';
+import { RefundStatus, RefundReason } from '../../types/refund';
 
 /**
  * Refund service interface
@@ -264,11 +261,7 @@ export interface IRefundService {
    * @param initiatedBy - User initiating reversal
    * @returns Refund reversal record
    */
-  reverseRefund(
-    refundId: string,
-    reason: string,
-    initiatedBy: string
-  ): Promise<RefundReversal>;
+  reverseRefund(refundId: string, reason: string, initiatedBy: string): Promise<RefundReversal>;
 
   /**
    * Get refund reversal
@@ -328,11 +321,7 @@ export interface IRefundService {
    * @param endDate - End date range (optional)
    * @returns Refund statistics
    */
-  getRefundStatistics(
-    userId?: string,
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<RefundStatistics>;
+  getRefundStatistics(userId?: string, startDate?: Date, endDate?: Date): Promise<RefundStatistics>;
 
   /**
    * Get refund analytics
@@ -411,11 +400,7 @@ export interface IRefundService {
    * @param refundId - Refund ID
    * @param result - Refund result
    */
-  storeIdempotency(
-    key: string,
-    refundId: string,
-    result: RefundResult
-  ): Promise<void>;
+  storeIdempotency(key: string, refundId: string, result: RefundResult): Promise<void>;
 
   /**
    * Clear expired idempotency records
@@ -460,10 +445,7 @@ export interface IRefundService {
    * @param reason - Failure reason
    * @returns Refund record
    */
-  processAutomaticRefund(
-    transactionId: string,
-    reason: string
-  ): Promise<Refund>;
+  processAutomaticRefund(transactionId: string, reason: string): Promise<Refund>;
 
   /**
    * Schedule automatic refund

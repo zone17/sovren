@@ -50,7 +50,7 @@ class DecentralizedStorageService {
     const hash = this.generateHash(data);
 
     // Mock upload delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const metadata: StorageMetadata = {
       hash,
@@ -72,7 +72,7 @@ class DecentralizedStorageService {
    */
   async retrieve(hash: string): Promise<Blob | string | null> {
     // Mock retrieval delay
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     const stored = this.storage.get(hash);
     return stored?.data || null;
@@ -83,7 +83,7 @@ class DecentralizedStorageService {
    */
   async pin(hash: string): Promise<boolean> {
     // Mock pinning delay
-    await new Promise(resolve => setTimeout(resolve, 30));
+    await new Promise((resolve) => setTimeout(resolve, 30));
 
     const stored = this.storage.get(hash);
     if (stored) {
@@ -129,7 +129,7 @@ class DecentralizedStorageService {
     providers: Array<{ name: string; available: boolean; latency: number }>;
   }> {
     // Mock availability check
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const stored = this.storage.get(hash);
 
@@ -146,19 +146,22 @@ class DecentralizedStorageService {
   /**
    * Replicate content across multiple providers
    */
-  async replicate(hash: string, targetProviders: Array<'ipfs' | 'arweave' | 'nostr'>): Promise<{
+  async replicate(
+    hash: string,
+    targetProviders: Array<'ipfs' | 'arweave' | 'nostr'>
+  ): Promise<{
     success: boolean;
     replicated: Array<{ provider: string; hash: string; success: boolean }>;
   }> {
     // Mock replication delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     const stored = this.storage.get(hash);
     if (!stored) {
       return { success: false, replicated: [] };
     }
 
-    const replicated = targetProviders.map(provider => ({
+    const replicated = targetProviders.map((provider) => ({
       provider,
       hash: this.generateHash(stored.data, provider),
       success: true,
@@ -199,7 +202,9 @@ class DecentralizedStorageService {
       nostr: 'nostr_',
     }[provider];
 
-    return `${prefix}${btoa(content + timestamp).replace(/[/+=]/g, '').slice(0, 40)}`;
+    return `${prefix}${btoa(content + timestamp)
+      .replace(/[/+=]/g, '')
+      .slice(0, 40)}`;
   }
 }
 
@@ -216,8 +221,6 @@ export const uploadToArweave = (data: Blob | string) =>
 export const uploadToNostr = (data: Blob | string) =>
   decentralizedStorage.upload(data, { provider: 'nostr' });
 
-export const retrieveContent = (hash: string) =>
-  decentralizedStorage.retrieve(hash);
+export const retrieveContent = (hash: string) => decentralizedStorage.retrieve(hash);
 
-export const pinContent = (hash: string) =>
-  decentralizedStorage.pin(hash);
+export const pinContent = (hash: string) => decentralizedStorage.pin(hash);

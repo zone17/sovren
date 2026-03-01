@@ -15,7 +15,7 @@ describe('EventBusService', () => {
     mockLogger = {
       info: vi.fn(),
       error: vi.fn(),
-      warn: vi.fn()
+      warn: vi.fn(),
     };
     eventBus = new EventBusService(mockLogger);
   });
@@ -53,7 +53,7 @@ describe('EventBusService', () => {
           .withAggregateId('content_2')
           .withAggregateType('Content')
           .withSource('test')
-          .build()
+          .build(),
       ];
 
       await eventBus.publishBatch(events);
@@ -114,17 +114,14 @@ describe('EventBusService', () => {
       await eventBus.publish(event);
 
       // Wait for async processing
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(handler).toHaveBeenCalledWith(event);
     });
 
     it('should subscribe to multiple event types', async () => {
       const handler = vi.fn();
-      const eventTypes = [
-        DomainEventType.CONTENT_CREATED,
-        DomainEventType.CONTENT_PUBLISHED
-      ];
+      const eventTypes = [DomainEventType.CONTENT_CREATED, DomainEventType.CONTENT_PUBLISHED];
 
       eventBus.subscribeToMany(eventTypes, handler);
 
@@ -153,7 +150,7 @@ describe('EventBusService', () => {
       await eventBus.publish(event2);
       await eventBus.publish(event3);
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(handler).toHaveBeenCalledTimes(2);
       expect(handler).toHaveBeenCalledWith(event1);
@@ -183,12 +180,12 @@ describe('EventBusService', () => {
           .withAggregateId('content_1')
           .withAggregateType('Content')
           .withSource('test')
-          .build()
+          .build(),
       ];
 
       await eventBus.publishBatch(events);
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(handler).toHaveBeenCalledTimes(3);
       for (const event of events) {
@@ -200,10 +197,7 @@ describe('EventBusService', () => {
       const handler = vi.fn();
       const userId = 'user_123';
 
-      eventBus.subscribeWithFilter(
-        { userId },
-        handler
-      );
+      eventBus.subscribeWithFilter({ userId }, handler);
 
       const event1 = new DomainEventBuilder()
         .withType(DomainEventType.CONTENT_CREATED)
@@ -224,7 +218,7 @@ describe('EventBusService', () => {
       await eventBus.publish(event1);
       await eventBus.publish(event2);
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(handler).toHaveBeenCalledTimes(1);
       expect(handler).toHaveBeenCalledWith(event1);
@@ -246,7 +240,7 @@ describe('EventBusService', () => {
 
       await eventBus.publish(event);
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(handler).not.toHaveBeenCalled();
     });
@@ -287,7 +281,7 @@ describe('EventBusService', () => {
           .withAggregateType('Payment')
           .withUserId('user_2')
           .withSource('test')
-          .build()
+          .build(),
       ];
 
       await eventBus.publishBatch(events);
@@ -295,32 +289,34 @@ describe('EventBusService', () => {
 
     it('should query events by type', async () => {
       const results = await eventBus.queryEvents({
-        types: [DomainEventType.USER_REGISTERED, DomainEventType.USER_UPDATED]
+        types: [DomainEventType.USER_REGISTERED, DomainEventType.USER_UPDATED],
       });
 
       expect(results).toHaveLength(2);
-      expect(results.every(e =>
-        e.type === DomainEventType.USER_REGISTERED ||
-        e.type === DomainEventType.USER_UPDATED
-      )).toBe(true);
+      expect(
+        results.every(
+          (e) =>
+            e.type === DomainEventType.USER_REGISTERED || e.type === DomainEventType.USER_UPDATED
+        )
+      ).toBe(true);
     });
 
     it('should query events by aggregate type', async () => {
       const results = await eventBus.queryEvents({
-        aggregateTypes: ['User']
+        aggregateTypes: ['User'],
       });
 
       expect(results).toHaveLength(2);
-      expect(results.every(e => e.aggregateType === 'User')).toBe(true);
+      expect(results.every((e) => e.aggregateType === 'User')).toBe(true);
     });
 
     it('should query events by user ID', async () => {
       const results = await eventBus.queryEvents({
-        userId: 'user_1'
+        userId: 'user_1',
       });
 
       expect(results).toHaveLength(2);
-      expect(results.every(e => e.metadata.userId === 'user_1')).toBe(true);
+      expect(results.every((e) => e.metadata.userId === 'user_1')).toBe(true);
     });
 
     it('should support pagination', async () => {
@@ -350,7 +346,7 @@ describe('EventBusService', () => {
 
       const replayed = await eventBus.replayEvents({
         from: earlier,
-        to: later
+        to: later,
       });
 
       expect(replayed).toHaveLength(1);
@@ -372,7 +368,7 @@ describe('EventBusService', () => {
           .withAggregateId('payment_2')
           .withAggregateType('Payment')
           .withSource('test')
-          .build()
+          .build(),
       ];
 
       await eventBus.publishBatch(events);
@@ -381,11 +377,14 @@ describe('EventBusService', () => {
       const earlier = new Date(now.getTime() - 3600000);
       const later = new Date(now.getTime() + 3600000);
 
-      await eventBus.replayEventsToHandler({
-        from: earlier,
-        to: later,
-        filter: { types: [DomainEventType.PAYMENT_RECEIVED] }
-      }, handler);
+      await eventBus.replayEventsToHandler(
+        {
+          from: earlier,
+          to: later,
+          filter: { types: [DomainEventType.PAYMENT_RECEIVED] },
+        },
+        handler
+      );
 
       expect(handler).toHaveBeenCalledTimes(2);
     });
@@ -409,7 +408,7 @@ describe('EventBusService', () => {
       const replayed = await eventBus.replayEvents({
         from: new Date(now.getTime() - 3600000),
         to: new Date(now.getTime() + 3600000),
-        batchSize: 3
+        batchSize: 3,
       });
 
       expect(replayed).toHaveLength(10);
@@ -438,7 +437,7 @@ describe('EventBusService', () => {
       await eventBus.publish(event);
 
       // Wait for retry
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       expect(handler).toHaveBeenCalledTimes(2); // Initial + 1 retry
     });
@@ -448,7 +447,7 @@ describe('EventBusService', () => {
 
       const handler = vi.fn(async () => {
         // Simulate a very long running handler
-        await new Promise(resolve => setTimeout(resolve, 60000));
+        await new Promise((resolve) => setTimeout(resolve, 60000));
       });
 
       eventBus.subscribe(DomainEventType.SERVICE_ERROR, handler);
@@ -490,7 +489,7 @@ describe('EventBusService', () => {
 
       await eventBus.publish(event);
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(failingHandler).toHaveBeenCalled();
       expect(workingHandler).toHaveBeenCalled();

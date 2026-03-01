@@ -27,7 +27,7 @@ const createMockResponse = (body: unknown, ok = true, status = 200): Response =>
     status,
     json: vi.fn().mockResolvedValue(body),
     clone: vi.fn().mockReturnThis(),
-  } as unknown as Response);
+  }) as unknown as Response;
 
 describe('🔐 RealAuthService - Elite Backend Integration', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;

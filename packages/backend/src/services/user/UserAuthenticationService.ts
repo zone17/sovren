@@ -7,7 +7,7 @@ import {
   AuthSession,
   MFAType,
   MFASetup,
-  PasswordValidation
+  PasswordValidation,
 } from '../../interfaces/user';
 import { ICacheService } from '../../interfaces/ICacheService';
 import { IEventBusService } from '../../interfaces/IEventBusService';
@@ -65,7 +65,7 @@ export class UserAuthenticationService implements IUserAuthenticationService {
     @inject(TYPES.Cache) private readonly cache: ICacheService,
     @inject(TYPES.EventBus) private readonly eventBus: IEventBusService,
     @inject(TYPES.AuditLog) private readonly auditLog: IAuditLogService,
-    @inject(TYPES.Notification) private readonly notification: INotificationService,
+    @inject(TYPES.Notification) private readonly notification: INotificationService
   ) {
     this.logger = new Logger(UserAuthenticationService.name);
   }
@@ -179,12 +179,13 @@ export class UserAuthenticationService implements IUserAuthenticationService {
 
       this.logger.info('Login successful', { userId: user.id, sessionId });
       return session;
-
     } catch (error) {
       this.logger.error('Login failed', error);
-      throw error instanceof ServiceError ? error : new ServiceError('Authentication failed', {
-        cause: error,
-      });
+      throw error instanceof ServiceError
+        ? error
+        : new ServiceError('Authentication failed', {
+            cause: error,
+          });
     }
   }
 
@@ -226,7 +227,6 @@ export class UserAuthenticationService implements IUserAuthenticationService {
       });
 
       this.logger.info('Logout successful', { sessionId });
-
     } catch (error) {
       this.logger.error('Logout failed', error);
       throw new ServiceError('Logout failed', {
@@ -294,7 +294,6 @@ export class UserAuthenticationService implements IUserAuthenticationService {
       }
 
       return false;
-
     } catch (error) {
       this.logger.error('MFA verification failed', error);
       return false;
@@ -368,7 +367,6 @@ export class UserAuthenticationService implements IUserAuthenticationService {
       });
 
       return setup;
-
     } catch (error) {
       this.logger.error('MFA setup failed', error);
       throw new ServiceError('MFA setup failed', {
@@ -422,7 +420,6 @@ export class UserAuthenticationService implements IUserAuthenticationService {
       });
 
       return session;
-
     } catch (error) {
       this.logger.error('Session refresh failed', error);
       throw new ServiceError('Session refresh failed', {
@@ -466,7 +463,7 @@ export class UserAuthenticationService implements IUserAuthenticationService {
 
     // Check common passwords (simplified - use a proper library in production)
     const commonPasswords = ['password', '12345678', 'qwerty', 'abc123'];
-    if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
+    if (commonPasswords.some((common) => password.toLowerCase().includes(common))) {
       errors.push('Password is too common');
     }
 
@@ -496,10 +493,11 @@ export class UserAuthenticationService implements IUserAuthenticationService {
       this.logger.info('Locking account', { userId, reason });
 
       // Set lock in database
-      await this.db.query(
-        'UPDATE users SET locked_at = $1, lock_reason = $2 WHERE id = $3',
-        [new Date(), reason, userId]
-      );
+      await this.db.query('UPDATE users SET locked_at = $1, lock_reason = $2 WHERE id = $3', [
+        new Date(),
+        reason,
+        userId,
+      ]);
 
       // Set lock in cache for fast lookup
       await this.cache.set(
@@ -532,7 +530,6 @@ export class UserAuthenticationService implements IUserAuthenticationService {
           priority: 'high',
         });
       }
-
     } catch (error) {
       this.logger.error('Failed to lock account', error);
       throw new ServiceError('Failed to lock account', {
@@ -547,18 +544,14 @@ export class UserAuthenticationService implements IUserAuthenticationService {
   // ============================================================================
 
   private async getUserByUsername(username: string): Promise<any> {
-    const result = await this.db.query(
-      'SELECT * FROM users WHERE username = $1 OR email = $1',
-      [username]
-    );
+    const result = await this.db.query('SELECT * FROM users WHERE username = $1 OR email = $1', [
+      username,
+    ]);
     return result.rows[0];
   }
 
   private async getUserById(userId: string): Promise<any> {
-    const result = await this.db.query(
-      'SELECT * FROM users WHERE id = $1',
-      [userId]
-    );
+    const result = await this.db.query('SELECT * FROM users WHERE id = $1', [userId]);
     return result.rows[0];
   }
 
@@ -580,27 +573,17 @@ export class UserAuthenticationService implements IUserAuthenticationService {
   }
 
   private generateAccessToken(userId: string, sessionId: string): string {
-    return jwt.sign(
-      { userId, sessionId, type: 'access' },
-      this.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    return jwt.sign({ userId, sessionId, type: 'access' }, this.JWT_SECRET, { expiresIn: '24h' });
   }
 
   private generateRefreshToken(userId: string, sessionId: string): string {
-    return jwt.sign(
-      { userId, sessionId, type: 'refresh' },
-      this.JWT_REFRESH_SECRET,
-      { expiresIn: '30d' }
-    );
+    return jwt.sign({ userId, sessionId, type: 'refresh' }, this.JWT_REFRESH_SECRET, {
+      expiresIn: '30d',
+    });
   }
 
   private async storeSession(session: AuthSession): Promise<void> {
-    await this.cache.set(
-      `session:${session.sessionId}`,
-      session,
-      this.SESSION_DURATION
-    );
+    await this.cache.set(`session:${session.sessionId}`, session, this.SESSION_DURATION);
     await this.cache.set(
       `refresh:${session.refreshToken}`,
       session.sessionId,
@@ -616,28 +599,32 @@ export class UserAuthenticationService implements IUserAuthenticationService {
     const ipKey = `rate_limit:${ipAddress}`;
     const userKey = username ? `rate_limit:${username}` : null;
 
-    const ipAttempts = await this.cache.get<number>(ipKey) || 0;
+    const ipAttempts = (await this.cache.get<number>(ipKey)) || 0;
     if (ipAttempts >= this.RATE_LIMIT_MAX_ATTEMPTS) {
       throw new ServiceError('Rate limit exceeded', { code: 'RATE_LIMIT' });
     }
 
     if (userKey) {
-      const userAttempts = await this.cache.get<number>(userKey) || 0;
+      const userAttempts = (await this.cache.get<number>(userKey)) || 0;
       if (userAttempts >= this.MAX_LOGIN_ATTEMPTS) {
         throw new ServiceError('Too many failed attempts', { code: 'TOO_MANY_ATTEMPTS' });
       }
     }
   }
 
-  private async recordFailedAttempt(username: string, ipAddress: string, userId?: string): Promise<void> {
+  private async recordFailedAttempt(
+    username: string,
+    ipAddress: string,
+    userId?: string
+  ): Promise<void> {
     // Increment IP rate limit
     const ipKey = `rate_limit:${ipAddress}`;
-    const ipAttempts = await this.cache.get<number>(ipKey) || 0;
+    const ipAttempts = (await this.cache.get<number>(ipKey)) || 0;
     await this.cache.set(ipKey, ipAttempts + 1, this.RATE_LIMIT_WINDOW / 1000);
 
     // Increment user attempts
     const userKey = `failed_attempts:${username}`;
-    const attempts = await this.cache.get<number>(userKey) || 0;
+    const attempts = (await this.cache.get<number>(userKey)) || 0;
     await this.cache.set(userKey, attempts + 1, this.RATE_LIMIT_WINDOW / 1000);
 
     // Lock account if too many attempts
@@ -655,7 +642,11 @@ export class UserAuthenticationService implements IUserAuthenticationService {
     });
   }
 
-  private async clearFailedAttempts(username: string, ipAddress: string, userId: string): Promise<void> {
+  private async clearFailedAttempts(
+    username: string,
+    ipAddress: string,
+    userId: string
+  ): Promise<void> {
     await this.cache.delete(`failed_attempts:${username}`);
     await this.cache.delete(`rate_limit:${ipAddress}`);
     await this.cache.delete(`account_locked:${userId}`);
@@ -669,7 +660,7 @@ export class UserAuthenticationService implements IUserAuthenticationService {
   private async isNewDevice(userId: string, userAgent?: string): Promise<boolean> {
     if (!userAgent) return false;
 
-    const knownDevices = await this.cache.get<string[]>(`known_devices:${userId}`) || [];
+    const knownDevices = (await this.cache.get<string[]>(`known_devices:${userId}`)) || [];
     if (knownDevices.includes(userAgent)) {
       return false;
     }
@@ -717,10 +708,10 @@ export class UserAuthenticationService implements IUserAuthenticationService {
   }
 
   private async updateBackupCodes(userId: string, codes: string[]): Promise<void> {
-    await this.db.query(
-      'UPDATE user_mfa SET backup_codes = $1 WHERE user_id = $2',
-      [JSON.stringify(codes), userId]
-    );
+    await this.db.query('UPDATE user_mfa SET backup_codes = $1 WHERE user_id = $2', [
+      JSON.stringify(codes),
+      userId,
+    ]);
   }
 
   private async recordMFAUsage(userId: string, type: string): Promise<void> {

@@ -162,11 +162,7 @@ describe('Webhook Signature Verification (PAY-003)', () => {
       };
 
       const timestamp = Math.floor(Date.now() / 1000).toString();
-      const signature = generateWebhookSignature(
-        payload,
-        timestamp,
-        TEST_WEBHOOK_SECRET_ROTATION
-      );
+      const signature = generateWebhookSignature(payload, timestamp, TEST_WEBHOOK_SECRET_ROTATION);
 
       const response = await request(app)
         .post('/api/webhooks/lightning')
@@ -295,9 +291,7 @@ describe('Webhook Signature Verification (PAY-003)', () => {
         timestamp: Date.now(),
       };
 
-      const response = await request(app)
-        .post('/api/webhooks/lightning')
-        .send(payload); // No headers at all
+      const response = await request(app).post('/api/webhooks/lightning').send(payload); // No headers at all
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('success', false);
@@ -315,10 +309,7 @@ describe('Webhook Signature Verification (PAY-003)', () => {
 
       // Create timestamp from 6 minutes ago (361 seconds)
       const oldTimestamp = Math.floor(Date.now() / 1000) - 361;
-      const { payload: signedPayload, headers } = createSignedWebhookRequest(
-        payload,
-        oldTimestamp
-      );
+      const { payload: signedPayload, headers } = createSignedWebhookRequest(payload, oldTimestamp);
 
       const response = await request(app)
         .post('/api/webhooks/lightning')
@@ -390,10 +381,7 @@ describe('Webhook Signature Verification (PAY-003)', () => {
       for (let i = 0; i < 101; i++) {
         const { payload: signedPayload, headers } = createSignedWebhookRequest(payload);
         requests.push(
-          request(app)
-            .post('/api/webhooks/lightning')
-            .set(headers)
-            .send(signedPayload)
+          request(app).post('/api/webhooks/lightning').set(headers).send(signedPayload)
         );
       }
 
@@ -443,10 +431,7 @@ describe('Webhook Signature Verification (PAY-003)', () => {
 
       // Old timestamp (replay attack)
       const oldTimestamp = Math.floor(Date.now() / 1000) - 400;
-      const { payload: signedPayload, headers } = createSignedWebhookRequest(
-        payload,
-        oldTimestamp
-      );
+      const { payload: signedPayload, headers } = createSignedWebhookRequest(payload, oldTimestamp);
 
       await request(app)
         .post('/api/webhooks/lightning')

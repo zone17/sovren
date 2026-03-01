@@ -86,7 +86,9 @@ describe('ErrorMessage', () => {
 
       render(<ErrorMessage error={error} />);
 
-      expect(screen.getByText(/Affected Relays: wss:\/\/relay1.com, wss:\/\/relay2.com/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Affected Relays: wss:\/\/relay1.com, wss:\/\/relay2.com/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -173,7 +175,7 @@ describe('ErrorMessage', () => {
 
     it('disables retry button while retrying', async () => {
       const error = createMockError();
-      const onRetry = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+      const onRetry = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
       render(<ErrorMessage error={error} onRetry={onRetry} />);
 

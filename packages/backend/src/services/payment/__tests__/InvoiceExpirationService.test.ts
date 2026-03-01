@@ -13,7 +13,6 @@
  * @see Story #003: Add Invoice Expiration Handling to State Machine
  */
 
-
 import {
   InvoiceExpirationService,
   EmailService,
@@ -338,9 +337,7 @@ describe('InvoiceExpirationService', () => {
         }),
       });
 
-      (mockStateMachine.transition as any).mockRejectedValue(
-        new Error('Invalid transition')
-      );
+      (mockStateMachine.transition as any).mockRejectedValue(new Error('Invalid transition'));
 
       const service = createService({
         supabase: mockSupabase,
@@ -552,9 +549,7 @@ describe('InvoiceExpirationService', () => {
       service.start();
       service.start(); // Call again
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Invoice expiration scheduler already running'
-      );
+      expect(mockLogger.warn).toHaveBeenCalledWith('Invoice expiration scheduler already running');
     });
 
     it('should stop scheduler', () => {
@@ -727,9 +722,7 @@ describe('InvoiceExpirationService', () => {
       service.start();
       await service.shutdown();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Shutting down Invoice Expiration Service'
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith('Shutting down Invoice Expiration Service');
 
       const metrics = service.getMetrics();
       expect(metrics.isRunning).toBe(false);

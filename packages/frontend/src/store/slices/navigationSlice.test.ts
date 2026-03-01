@@ -84,10 +84,7 @@ describe('navigationSlice', () => {
     const breadcrumb3: Breadcrumb = { label: 'Settings', path: '/settings' };
 
     it('should handle setBreadcrumbs', () => {
-      const state = navigationReducer(
-        initialState,
-        setBreadcrumbs([breadcrumb1, breadcrumb2])
-      );
+      const state = navigationReducer(initialState, setBreadcrumbs([breadcrumb1, breadcrumb2]));
 
       expect(state.breadcrumbs).toHaveLength(2);
       expect(state.breadcrumbs[0]).toEqual(breadcrumb1);
@@ -114,10 +111,7 @@ describe('navigationSlice', () => {
     });
 
     it('should handle clearBreadcrumbs', () => {
-      let state = navigationReducer(
-        initialState,
-        setBreadcrumbs([breadcrumb1, breadcrumb2])
-      );
+      let state = navigationReducer(initialState, setBreadcrumbs([breadcrumb1, breadcrumb2]));
 
       state = navigationReducer(state, clearBreadcrumbs());
       expect(state.breadcrumbs).toHaveLength(0);

@@ -162,7 +162,9 @@ export interface PreferencePreset {
   name: 'beginner' | 'creator' | 'power_user';
   displayName: string;
   description: string;
-  preferences: Partial<Omit<UserPreferences, 'userId' | 'version' | 'createdAt' | 'updatedAt' | 'preset'>>;
+  preferences: Partial<
+    Omit<UserPreferences, 'userId' | 'version' | 'createdAt' | 'updatedAt' | 'preset'>
+  >;
 }
 
 /**
@@ -171,7 +173,10 @@ export interface PreferencePreset {
 export interface BulkPreferenceUpdateRequest {
   userId: string;
   updates: Array<{
-    category: keyof Omit<UserPreferences, 'userId' | 'version' | 'createdAt' | 'updatedAt' | 'preset'>;
+    category: keyof Omit<
+      UserPreferences,
+      'userId' | 'version' | 'createdAt' | 'updatedAt' | 'preset'
+    >;
     value: any;
   }>;
   atomic: boolean;
@@ -212,8 +217,8 @@ export const DEFAULT_PREFERENCES: Omit<UserPreferences, 'userId' | 'createdAt' |
     dataSharing: {
       analytics: true,
       thirdParty: false,
-      marketing: false
-    }
+      marketing: false,
+    },
   },
   content: {
     languages: ['en'],
@@ -221,14 +226,14 @@ export const DEFAULT_PREFERENCES: Omit<UserPreferences, 'userId' | 'createdAt' |
     contentTypes: ['text', 'image', 'video', 'audio'],
     sensitiveContent: 'blur',
     autoplayVideos: false,
-    showSpoilers: false
+    showSpoilers: false,
   },
   display: {
     theme: 'auto',
     fontSize: 'medium',
     fontFamily: 'system-ui',
     layout: 'comfortable',
-    density: 'default'
+    density: 'default',
   },
   communication: {
     emailNotifications: true,
@@ -239,7 +244,7 @@ export const DEFAULT_PREFERENCES: Omit<UserPreferences, 'userId' | 'createdAt' |
     newsletters: false,
     weeklyDigest: true,
     monthlyReport: false,
-    frequency: 'realtime'
+    frequency: 'realtime',
   },
   accessibility: {
     screenReader: false,
@@ -249,7 +254,7 @@ export const DEFAULT_PREFERENCES: Omit<UserPreferences, 'userId' | 'createdAt' |
     largeClickTargets: false,
     audioDescriptions: false,
     closedCaptions: false,
-    focusIndicators: false
+    focusIndicators: false,
   },
   dataExport: {
     format: 'json',
@@ -257,9 +262,9 @@ export const DEFAULT_PREFERENCES: Omit<UserPreferences, 'userId' | 'createdAt' |
     includeContent: true,
     includeAnalytics: false,
     frequency: 'manual',
-    autoExport: false
+    autoExport: false,
   },
-  version: 1
+  version: 1,
 };
 
 /**
@@ -282,8 +287,8 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         dataSharing: {
           analytics: true,
           thirdParty: false,
-          marketing: false
-        }
+          marketing: false,
+        },
       },
       content: {
         languages: ['en'],
@@ -291,14 +296,14 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         contentTypes: ['text', 'image'],
         sensitiveContent: 'hide',
         autoplayVideos: false,
-        showSpoilers: false
+        showSpoilers: false,
       },
       display: {
         theme: 'auto',
         fontSize: 'medium',
         fontFamily: 'system-ui',
         layout: 'comfortable',
-        density: 'comfortable'
+        density: 'comfortable',
       },
       communication: {
         emailNotifications: true,
@@ -309,7 +314,7 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         newsletters: false,
         weeklyDigest: true,
         monthlyReport: false,
-        frequency: 'daily'
+        frequency: 'daily',
       },
       accessibility: {
         screenReader: false,
@@ -319,7 +324,7 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         largeClickTargets: false,
         audioDescriptions: false,
         closedCaptions: false,
-        focusIndicators: false
+        focusIndicators: false,
       },
       dataExport: {
         format: 'json',
@@ -327,9 +332,9 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         includeContent: true,
         includeAnalytics: false,
         frequency: 'manual',
-        autoExport: false
-      }
-    }
+        autoExport: false,
+      },
+    },
   },
   {
     name: 'creator',
@@ -347,8 +352,8 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         dataSharing: {
           analytics: true,
           thirdParty: false,
-          marketing: true
-        }
+          marketing: true,
+        },
       },
       content: {
         languages: ['en'],
@@ -356,14 +361,14 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         contentTypes: ['text', 'image', 'video', 'audio'],
         sensitiveContent: 'blur',
         autoplayVideos: true,
-        showSpoilers: false
+        showSpoilers: false,
       },
       display: {
         theme: 'dark',
         fontSize: 'medium',
         fontFamily: 'system-ui',
         layout: 'spacious',
-        density: 'comfortable'
+        density: 'comfortable',
       },
       communication: {
         emailNotifications: true,
@@ -374,7 +379,7 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         newsletters: true,
         weeklyDigest: true,
         monthlyReport: true,
-        frequency: 'realtime'
+        frequency: 'realtime',
       },
       accessibility: {
         screenReader: false,
@@ -384,7 +389,7 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         largeClickTargets: false,
         audioDescriptions: false,
         closedCaptions: true,
-        focusIndicators: true
+        focusIndicators: true,
       },
       dataExport: {
         format: 'json',
@@ -392,9 +397,9 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         includeContent: true,
         includeAnalytics: true,
         frequency: 'monthly',
-        autoExport: true
-      }
-    }
+        autoExport: true,
+      },
+    },
   },
   {
     name: 'power_user',
@@ -412,8 +417,8 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         dataSharing: {
           analytics: false,
           thirdParty: false,
-          marketing: false
-        }
+          marketing: false,
+        },
       },
       content: {
         languages: ['en'],
@@ -421,14 +426,14 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         contentTypes: ['text', 'image', 'video', 'audio'],
         sensitiveContent: 'show',
         autoplayVideos: false,
-        showSpoilers: true
+        showSpoilers: true,
       },
       display: {
         theme: 'dark',
         fontSize: 'small',
         fontFamily: 'monospace',
         layout: 'compact',
-        density: 'compact'
+        density: 'compact',
       },
       communication: {
         emailNotifications: false,
@@ -439,7 +444,7 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         newsletters: false,
         weeklyDigest: false,
         monthlyReport: false,
-        frequency: 'realtime'
+        frequency: 'realtime',
       },
       accessibility: {
         screenReader: false,
@@ -449,7 +454,7 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         largeClickTargets: false,
         audioDescriptions: false,
         closedCaptions: false,
-        focusIndicators: true
+        focusIndicators: true,
       },
       dataExport: {
         format: 'json',
@@ -457,8 +462,8 @@ export const PREFERENCE_PRESETS: PreferencePreset[] = [
         includeContent: true,
         includeAnalytics: true,
         frequency: 'weekly',
-        autoExport: true
-      }
-    }
-  }
+        autoExport: true,
+      },
+    },
+  },
 ];

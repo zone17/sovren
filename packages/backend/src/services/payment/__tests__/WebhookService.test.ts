@@ -15,7 +15,7 @@ import {
   WebhookDeliveryStatus,
   CircuitBreakerState,
   type WebhookEventPayload,
-  type CreateWebhookEndpointParams
+  type CreateWebhookEndpointParams,
 } from '../../../types/webhook';
 
 // Mock implementations
@@ -76,7 +76,7 @@ class MockCacheService implements ICacheService {
   });
 
   mget = vi.fn(async <T>(keys: string[]): Promise<(T | null)[]> => {
-    return keys.map(key => this.cache.get(key) || null);
+    return keys.map((key) => this.cache.get(key) || null);
   });
 
   mset = vi.fn(async <T>(entries: Array<[string, T]>): Promise<void> => {
@@ -109,7 +109,7 @@ describe('WebhookService', () => {
     userId: 'user-123',
     url: 'https://example.com/webhook',
     description: 'Test webhook endpoint',
-    events: [WebhookEventType.PAYMENT_SUCCEEDED, WebhookEventType.SUBSCRIPTION_CREATED]
+    events: [WebhookEventType.PAYMENT_SUCCEEDED, WebhookEventType.SUBSCRIPTION_CREATED],
   });
 
   const createTestPayload = (): WebhookEventPayload => ({
@@ -121,9 +121,9 @@ describe('WebhookService', () => {
       object: {
         id: 'pay-123',
         amount: 1000,
-        status: 'completed'
-      }
-    }
+        status: 'completed',
+      },
+    },
   });
 
   beforeEach(() => {
@@ -157,7 +157,7 @@ describe('WebhookService', () => {
         expect(auditLog.log).toHaveBeenCalledWith(
           expect.objectContaining({
             action: 'webhook.endpoint.created',
-            userId: params.userId
+            userId: params.userId,
           })
         );
       });
@@ -166,7 +166,9 @@ describe('WebhookService', () => {
         const params = createTestEndpointParams();
         params.url = 'http://example.com/webhook';
 
-        await expect(service.registerEndpoint(params)).rejects.toThrow('Invalid endpoint URL - must be HTTPS');
+        await expect(service.registerEndpoint(params)).rejects.toThrow(
+          'Invalid endpoint URL - must be HTTPS'
+        );
       });
 
       it('should accept custom headers and timeout', async () => {
@@ -196,22 +198,22 @@ describe('WebhookService', () => {
 
         const updated = await service.updateEndpoint(endpoint.id, {
           description: 'Updated description',
-          enabled: false
+          enabled: false,
         });
 
         expect(updated.description).toBe('Updated description');
         expect(updated.enabled).toBe(false);
         expect(auditLog.log).toHaveBeenCalledWith(
           expect.objectContaining({
-            action: 'webhook.endpoint.updated'
+            action: 'webhook.endpoint.updated',
           })
         );
       });
 
       it('should reject invalid endpoint ID', async () => {
-        await expect(
-          service.updateEndpoint('invalid-id', { enabled: false })
-        ).rejects.toThrow('Webhook endpoint invalid-id not found');
+        await expect(service.updateEndpoint('invalid-id', { enabled: false })).rejects.toThrow(
+          'Webhook endpoint invalid-id not found'
+        );
       });
 
       it('should validate new URL if provided', async () => {
@@ -233,7 +235,7 @@ describe('WebhookService', () => {
           metadata: { key: 'value' },
           headers: { 'X-New': 'header' },
           timeout: 10000,
-          ipAllowlist: ['1.1.1.1']
+          ipAllowlist: ['1.1.1.1'],
         });
 
         expect(updated.url).toBe('https://new.example.com/webhook');
@@ -257,7 +259,7 @@ describe('WebhookService', () => {
         expect(deleted).toBeNull();
         expect(auditLog.log).toHaveBeenCalledWith(
           expect.objectContaining({
-            action: 'webhook.endpoint.deleted'
+            action: 'webhook.endpoint.deleted',
           })
         );
       });
@@ -295,18 +297,27 @@ describe('WebhookService', () => {
     describe('listEndpoints', () => {
       it('should list endpoints for a user', async () => {
         await service.registerEndpoint(createTestEndpointParams());
-        await service.registerEndpoint({ ...createTestEndpointParams(), url: 'https://other.com/webhook' });
+        await service.registerEndpoint({
+          ...createTestEndpointParams(),
+          url: 'https://other.com/webhook',
+        });
 
         const endpoints = await service.listEndpoints('user-123');
 
         expect(endpoints).toHaveLength(2);
-        expect(endpoints.every(e => e.userId === 'user-123')).toBe(true);
+        expect(endpoints.every((e) => e.userId === 'user-123')).toBe(true);
       });
 
       it('should support pagination', async () => {
         await service.registerEndpoint(createTestEndpointParams());
-        await service.registerEndpoint({ ...createTestEndpointParams(), url: 'https://other.com/webhook' });
-        await service.registerEndpoint({ ...createTestEndpointParams(), url: 'https://third.com/webhook' });
+        await service.registerEndpoint({
+          ...createTestEndpointParams(),
+          url: 'https://other.com/webhook',
+        });
+        await service.registerEndpoint({
+          ...createTestEndpointParams(),
+          url: 'https://third.com/webhook',
+        });
 
         const page1 = await service.listEndpoints('user-123', 2, 0);
         const page2 = await service.listEndpoints('user-123', 2, 2);
@@ -356,7 +367,9 @@ describe('WebhookService', () => {
         await service.subscribeToEvents(endpoint.id, [WebhookEventType.PAYMENT_SUCCEEDED]);
 
         const updated = await service.getEndpoint(endpoint.id);
-        expect(updated?.events.filter(e => e === WebhookEventType.PAYMENT_SUCCEEDED)).toHaveLength(1);
+        expect(
+          updated?.events.filter((e) => e === WebhookEventType.PAYMENT_SUCCEEDED)
+        ).toHaveLength(1);
       });
     });
 
@@ -378,13 +391,15 @@ describe('WebhookService', () => {
         await service.registerEndpoint({
           ...createTestEndpointParams(),
           userId: 'user-456',
-          url: 'https://other.com/webhook'
+          url: 'https://other.com/webhook',
         });
 
         const endpoints = await service.getSubscribedEndpoints(WebhookEventType.PAYMENT_SUCCEEDED);
 
         expect(endpoints).toHaveLength(2);
-        expect(endpoints.every(e => e.events.includes(WebhookEventType.PAYMENT_SUCCEEDED))).toBe(true);
+        expect(endpoints.every((e) => e.events.includes(WebhookEventType.PAYMENT_SUCCEEDED))).toBe(
+          true
+        );
       });
 
       it('should only return enabled endpoints', async () => {
@@ -392,7 +407,7 @@ describe('WebhookService', () => {
         await service.registerEndpoint({
           ...createTestEndpointParams(),
           userId: 'user-456',
-          url: 'https://other.com/webhook'
+          url: 'https://other.com/webhook',
         });
 
         await service.disableEndpoint(endpoint1.id);
@@ -412,14 +427,14 @@ describe('WebhookService', () => {
         await service.registerEndpoint({
           ...createTestEndpointParams(),
           userId: 'user-456',
-          url: 'https://other.com/webhook'
+          url: 'https://other.com/webhook',
         });
 
         const payload = createTestPayload();
         const results = await service.sendWebhook(WebhookEventType.PAYMENT_SUCCEEDED, payload);
 
         expect(results).toHaveLength(2);
-        expect(results.every(r => r.status === WebhookDeliveryStatus.QUEUED)).toBe(true);
+        expect(results.every((r) => r.status === WebhookDeliveryStatus.QUEUED)).toBe(true);
       });
 
       it('should handle empty subscriptions', async () => {
@@ -646,8 +661,16 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
 
         const deliveries = await service.queryDeliveries({ endpointId: endpoint.id });
 
@@ -658,15 +681,19 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         await service.subscribeToEvents(endpoint.id, [WebhookEventType.REFUND_CREATED]);
 
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, createTestPayload());
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          createTestPayload()
+        );
         await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.REFUND_CREATED, {
           ...createTestPayload(),
-          type: WebhookEventType.REFUND_CREATED
+          type: WebhookEventType.REFUND_CREATED,
         });
 
         const deliveries = await service.queryDeliveries({
           endpointId: endpoint.id,
-          eventType: WebhookEventType.REFUND_CREATED
+          eventType: WebhookEventType.REFUND_CREATED,
         });
 
         expect(deliveries).toHaveLength(1);
@@ -678,12 +705,16 @@ describe('WebhookService', () => {
         const payload = createTestPayload();
 
         const startDate = new Date();
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
 
         const deliveries = await service.queryDeliveries({
           endpointId: endpoint.id,
           startDate,
-          endDate: new Date(Date.now() + 1000)
+          endDate: new Date(Date.now() + 1000),
         });
 
         expect(deliveries.length).toBeGreaterThan(0);
@@ -695,7 +726,11 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
 
         const deliveries = await service.getEndpointDeliveries(endpoint.id);
 
@@ -733,7 +768,11 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        const result = await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
         await service.moveToDeadLetterQueue(result.deliveryId);
 
         const dlq = await service.getDeadLetterQueue();
@@ -747,7 +786,11 @@ describe('WebhookService', () => {
         const payload = createTestPayload();
 
         for (let i = 0; i < 3; i++) {
-          const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+          const result = await service.sendWebhookToEndpoint(
+            endpoint.id,
+            WebhookEventType.PAYMENT_SUCCEEDED,
+            payload
+          );
           await service.moveToDeadLetterQueue(result.deliveryId);
         }
 
@@ -764,7 +807,11 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        const result = await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
         await service.moveToDeadLetterQueue(result.deliveryId);
 
         const dlq = await service.getDeadLetterQueue();
@@ -800,11 +847,19 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        const result1 = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
-        const result2 = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        const result1 = await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
+        const result2 = await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
 
         const replays = await service.replayDeliveries({
-          deliveryIds: [result1.deliveryId, result2.deliveryId]
+          deliveryIds: [result1.deliveryId, result2.deliveryId],
         });
 
         expect(replays).toHaveLength(2);
@@ -814,11 +869,19 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
 
         const replays = await service.replayDeliveries({
-          endpointId: endpoint.id
+          endpointId: endpoint.id,
         });
 
         expect(replays.length).toBeGreaterThan(0);
@@ -830,7 +893,11 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        const result = await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
         await service.moveToDeadLetterQueue(result.deliveryId);
 
         const dlq = await service.getDeadLetterQueue();
@@ -852,7 +919,7 @@ describe('WebhookService', () => {
         const result = await service.sendTestEvent({
           endpointId: endpoint.id,
           eventType: WebhookEventType.PAYMENT_SUCCEEDED,
-          testData: { test: true }
+          testData: { test: true },
         });
 
         expect(result.status).toBe(WebhookDeliveryStatus.QUEUED);
@@ -908,7 +975,7 @@ describe('WebhookService', () => {
 
         const updated = await service.rotateSecret({
           endpointId: endpoint.id,
-          newSecret: customSecret
+          newSecret: customSecret,
         });
 
         expect(updated.secret).toBe(customSecret);
@@ -1016,7 +1083,7 @@ describe('WebhookService', () => {
         const endpoint1 = await service.registerEndpoint(createTestEndpointParams());
         const endpoint2 = await service.registerEndpoint({
           ...createTestEndpointParams(),
-          url: 'https://other.com/webhook'
+          url: 'https://other.com/webhook',
         });
 
         await service.disableEndpoint(endpoint1.id);
@@ -1024,7 +1091,7 @@ describe('WebhookService', () => {
 
         const result = await service.bulkManageEndpoints({
           endpointIds: [endpoint1.id, endpoint2.id],
-          action: 'enable'
+          action: 'enable',
         });
 
         expect(result.success).toBe(2);
@@ -1040,12 +1107,12 @@ describe('WebhookService', () => {
         const endpoint1 = await service.registerEndpoint(createTestEndpointParams());
         const endpoint2 = await service.registerEndpoint({
           ...createTestEndpointParams(),
-          url: 'https://other.com/webhook'
+          url: 'https://other.com/webhook',
         });
 
         const result = await service.bulkManageEndpoints({
           endpointIds: [endpoint1.id, endpoint2.id],
-          action: 'disable'
+          action: 'disable',
         });
 
         expect(result.success).toBe(2);
@@ -1055,12 +1122,12 @@ describe('WebhookService', () => {
         const endpoint1 = await service.registerEndpoint(createTestEndpointParams());
         const endpoint2 = await service.registerEndpoint({
           ...createTestEndpointParams(),
-          url: 'https://other.com/webhook'
+          url: 'https://other.com/webhook',
         });
 
         const result = await service.bulkManageEndpoints({
           endpointIds: [endpoint1.id, endpoint2.id],
-          action: 'delete'
+          action: 'delete',
         });
 
         expect(result.success).toBe(2);
@@ -1075,7 +1142,7 @@ describe('WebhookService', () => {
         const endpoint1 = await service.registerEndpoint(createTestEndpointParams());
         const endpoint2 = await service.registerEndpoint({
           ...createTestEndpointParams(),
-          url: 'https://other.com/webhook'
+          url: 'https://other.com/webhook',
         });
 
         const original1 = endpoint1.secret;
@@ -1083,7 +1150,7 @@ describe('WebhookService', () => {
 
         const result = await service.bulkManageEndpoints({
           endpointIds: [endpoint1.id, endpoint2.id],
-          action: 'rotate_secrets'
+          action: 'rotate_secrets',
         });
 
         expect(result.success).toBe(2);
@@ -1099,7 +1166,7 @@ describe('WebhookService', () => {
 
         const result = await service.bulkManageEndpoints({
           endpointIds: [endpoint.id, 'invalid-id'],
-          action: 'enable'
+          action: 'enable',
         });
 
         expect(result.success).toBe(1);
@@ -1114,10 +1181,14 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
         await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.SUBSCRIPTION_CREATED, {
           ...payload,
-          type: WebhookEventType.SUBSCRIPTION_CREATED
+          type: WebhookEventType.SUBSCRIPTION_CREATED,
         });
 
         const stats = await service.getEndpointStats(endpoint.id);
@@ -1137,9 +1208,17 @@ describe('WebhookService', () => {
         const payload = createTestPayload();
 
         const startDate = new Date();
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
 
-        const stats = await service.getEndpointStats(endpoint.id, startDate, new Date(Date.now() + 1000));
+        const stats = await service.getEndpointStats(
+          endpoint.id,
+          startDate,
+          new Date(Date.now() + 1000)
+        );
 
         expect(stats.totalDeliveries).toBeGreaterThan(0);
       });
@@ -1151,7 +1230,7 @@ describe('WebhookService', () => {
         await service.registerEndpoint({
           ...createTestEndpointParams(),
           userId: 'user-456',
-          url: 'https://other.com/webhook'
+          url: 'https://other.com/webhook',
         });
 
         const stats = await service.getSystemStats();
@@ -1172,7 +1251,11 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
 
         const metrics = await service.getDeliveryMetrics();
 
@@ -1201,13 +1284,17 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        const result = await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
         await service.deliverWebhook(result.deliveryId);
 
         expect(callback).toHaveBeenCalledWith(
           expect.objectContaining({
             type: 'delivery.success',
-            endpointId: endpoint.id
+            endpointId: endpoint.id,
           })
         );
       });
@@ -1244,7 +1331,11 @@ describe('WebhookService', () => {
         const endpoint = await service.registerEndpoint(createTestEndpointParams());
         const payload = createTestPayload();
 
-        await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+        await service.sendWebhookToEndpoint(
+          endpoint.id,
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          payload
+        );
 
         const processed = await service.processPendingDeliveries();
 
@@ -1314,7 +1405,11 @@ describe('WebhookService', () => {
 
     it('should handle missing endpoint in send webhook', async () => {
       await expect(
-        service.sendWebhookToEndpoint('invalid-id', WebhookEventType.PAYMENT_SUCCEEDED, createTestPayload())
+        service.sendWebhookToEndpoint(
+          'invalid-id',
+          WebhookEventType.PAYMENT_SUCCEEDED,
+          createTestPayload()
+        )
       ).rejects.toThrow('Webhook endpoint invalid-id not found');
     });
 
@@ -1334,7 +1429,11 @@ describe('WebhookService', () => {
       const endpoint = await service.registerEndpoint(createTestEndpointParams());
       const payload = createTestPayload();
 
-      const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+      const result = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
       await service.moveToDeadLetterQueue(result.deliveryId);
 
       const dlq = await service.getDeadLetterQueue();
@@ -1377,7 +1476,7 @@ describe('WebhookService', () => {
     it('should handle empty query results', async () => {
       const deliveries = await service.queryDeliveries({
         endpointId: 'non-existent',
-        limit: 10
+        limit: 10,
       });
 
       expect(deliveries).toEqual([]);
@@ -1419,7 +1518,7 @@ describe('WebhookService', () => {
 
     it('should handle replay with empty delivery list', async () => {
       const results = await service.replayDeliveries({
-        deliveryIds: []
+        deliveryIds: [],
       });
 
       expect(results).toEqual([]);
@@ -1435,7 +1534,7 @@ describe('WebhookService', () => {
         endpointId: endpoint.id,
         startDate: new Date(Date.now() - 1000),
         endDate: new Date(Date.now() + 1000),
-        onlyFailed: true
+        onlyFailed: true,
       });
 
       expect(Array.isArray(results)).toBe(true);
@@ -1444,7 +1543,7 @@ describe('WebhookService', () => {
     it('should handle bulk operation with empty endpoint list', async () => {
       const result = await service.bulkManageEndpoints({
         endpointIds: [],
-        action: 'enable'
+        action: 'enable',
       });
 
       expect(result.success).toBe(0);
@@ -1455,7 +1554,11 @@ describe('WebhookService', () => {
       const endpoint = await service.registerEndpoint(createTestEndpointParams());
       const payload = createTestPayload();
 
-      const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+      const result = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
 
       // Force the replay to handle potential errors
       const replayResult = await service.replayDelivery(result.deliveryId);
@@ -1478,7 +1581,11 @@ describe('WebhookService', () => {
       const endpoint = await service.registerEndpoint(createTestEndpointParams());
       const payload = createTestPayload();
 
-      const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+      const result = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
 
       // Delete endpoint to simulate missing scenario
       await service.deleteEndpoint(endpoint.id);
@@ -1528,7 +1635,11 @@ describe('WebhookService', () => {
       // Open circuit
       await service.openCircuit(endpoint.id);
 
-      const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+      const result = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
 
       expect(result.status).toBe(WebhookDeliveryStatus.CIRCUIT_OPEN);
       expect(result.errorMessage).toContain('Circuit breaker is open');
@@ -1538,7 +1649,11 @@ describe('WebhookService', () => {
       const endpoint = await service.registerEndpoint(createTestEndpointParams());
       const payload = createTestPayload();
 
-      const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+      const result = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
 
       // The delivery should be queued successfully
       expect(result.status).toBe(WebhookDeliveryStatus.QUEUED);
@@ -1556,7 +1671,7 @@ describe('WebhookService', () => {
       await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
       await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.SUBSCRIPTION_CREATED, {
         ...payload,
-        type: WebhookEventType.SUBSCRIPTION_CREATED
+        type: WebhookEventType.SUBSCRIPTION_CREATED,
       });
 
       const stats = await service.getEndpointStats(endpoint.id);
@@ -1602,10 +1717,18 @@ describe('WebhookService', () => {
       const payload = createTestPayload();
 
       // Create and process multiple deliveries
-      const result1 = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+      const result1 = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
       await service.deliverWebhook(result1.deliveryId);
 
-      const result2 = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+      const result2 = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
       await service.deliverWebhook(result2.deliveryId);
 
       const metrics = await service.getDeliveryMetrics();
@@ -1617,11 +1740,15 @@ describe('WebhookService', () => {
       const endpoint = await service.registerEndpoint(createTestEndpointParams());
       const payload = createTestPayload();
 
-      const result = await service.sendWebhookToEndpoint(endpoint.id, WebhookEventType.PAYMENT_SUCCEEDED, payload);
+      const result = await service.sendWebhookToEndpoint(
+        endpoint.id,
+        WebhookEventType.PAYMENT_SUCCEEDED,
+        payload
+      );
 
       // Test replay by event type
       const replays = await service.replayDeliveries({
-        eventType: WebhookEventType.PAYMENT_SUCCEEDED
+        eventType: WebhookEventType.PAYMENT_SUCCEEDED,
       });
 
       expect(Array.isArray(replays)).toBe(true);
@@ -1656,7 +1783,7 @@ describe('WebhookService', () => {
         limit: 10,
         offset: 0,
         sortBy: 'createdAt',
-        sortOrder: 'desc'
+        sortOrder: 'desc',
       });
 
       expect(Array.isArray(deliveries)).toBe(true);
@@ -1668,7 +1795,7 @@ describe('WebhookService', () => {
       // Mix valid and invalid endpoint IDs
       const result = await service.bulkManageEndpoints({
         endpointIds: [endpoint.id, 'invalid-1', 'invalid-2'],
-        action: 'enable'
+        action: 'enable',
       });
 
       expect(result.success).toBe(1);

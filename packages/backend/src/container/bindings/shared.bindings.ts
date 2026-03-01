@@ -31,99 +31,84 @@ export class SharedServicesModule implements IServiceModule {
     // ===========================
     // Central event-driven communication
     // Stateful: Maintains event subscriptions and event store
-    registry.registerSingletonFactory(
-      TYPES.EventBusService,
-      (container) => {
-        const logger = container.resolveOptional(TYPES.Logger);
-        return new EventBusService(logger);
-      }
-    );
+    registry.registerSingletonFactory(TYPES.EventBusService, (container) => {
+      const logger = container.resolveOptional(TYPES.Logger);
+      return new EventBusService(logger);
+    });
 
     // ===========================
     // CacheService - SINGLETON
     // ===========================
     // Redis-based caching with state
     // Stateful: Maintains connection pool and statistics
-    registry.registerSingletonFactory(
-      TYPES.CacheService,
-      (container) => {
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
-        const config = container.resolve(TYPES.Config);
+    registry.registerSingletonFactory(TYPES.CacheService, (container) => {
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
+      const config = container.resolve(TYPES.Config);
 
-        // Get cache configuration from config service
-        const cacheConfig = {
-          provider: config.get('CACHE_PROVIDER', 'redis'),
-          prefix: config.get('CACHE_PREFIX', 'sovren'),
-          defaultTtl: parseInt(config.get('CACHE_DEFAULT_TTL', '3600'), 10),
-          redis: {
-            host: config.get('REDIS_HOST', 'localhost'),
-            port: parseInt(config.get('REDIS_PORT', '6379'), 10),
-            password: config.get('REDIS_PASSWORD'),
-            db: parseInt(config.get('REDIS_DB', '0'), 10),
-          },
-          warmup: {
-            enabled: config.get('CACHE_WARMUP_ENABLED', 'false') === 'true',
-            interval: parseInt(config.get('CACHE_WARMUP_INTERVAL', '3600'), 10),
-          },
-        };
+      // Get cache configuration from config service
+      const cacheConfig = {
+        provider: config.get('CACHE_PROVIDER', 'redis'),
+        prefix: config.get('CACHE_PREFIX', 'sovren'),
+        defaultTtl: parseInt(config.get('CACHE_DEFAULT_TTL', '3600'), 10),
+        redis: {
+          host: config.get('REDIS_HOST', 'localhost'),
+          port: parseInt(config.get('REDIS_PORT', '6379'), 10),
+          password: config.get('REDIS_PASSWORD'),
+          db: parseInt(config.get('REDIS_DB', '0'), 10),
+        },
+        warmup: {
+          enabled: config.get('CACHE_WARMUP_ENABLED', 'false') === 'true',
+          interval: parseInt(config.get('CACHE_WARMUP_INTERVAL', '3600'), 10),
+        },
+      };
 
-        return new CacheService(eventBus, logger, cacheConfig);
-      }
-    );
+      return new CacheService(eventBus, logger, cacheConfig);
+    });
 
     // ===========================
     // EmailService - TRANSIENT
     // ===========================
     // Stateless email sending
     // New instance per resolution for isolated email operations
-    registry.registerTransient(
-      TYPES.EmailService,
-      (container) => {
-        const config = container.resolve(TYPES.Config);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerTransient(TYPES.EmailService, (container) => {
+      const config = container.resolve(TYPES.Config);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new EmailService(config, logger);
-      }
-    );
+      return new EmailService(config, logger);
+    });
 
     // ===========================
     // NotificationService - TRANSIENT
     // ===========================
     // Multi-channel notification dispatch with BullMQ queue backend
-    registry.registerTransient(
-      TYPES.NotificationService,
-      (container) => {
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
-        const cache = container.resolveOptional(TYPES.CacheService);
-        const emailService = container.resolveOptional(TYPES.EmailService);
-        const queueService = container.resolveOptional(TYPES.QueueService);
+    registry.registerTransient(TYPES.NotificationService, (container) => {
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
+      const cache = container.resolveOptional(TYPES.CacheService);
+      const emailService = container.resolveOptional(TYPES.EmailService);
+      const queueService = container.resolveOptional(TYPES.QueueService);
 
-        return new NotificationService(
-          eventBus,
-          logger,
-          cache ?? undefined,
-          emailService ?? undefined,
-          queueService ?? undefined
-        );
-      }
-    );
+      return new NotificationService(
+        eventBus,
+        logger,
+        cache ?? undefined,
+        emailService ?? undefined,
+        queueService ?? undefined
+      );
+    });
 
     // ===========================
     // AuditLogService - TRANSIENT
     // ===========================
     // Audit trail and compliance logging
     // Stateless: Writes to database without maintaining state
-    registry.registerTransient(
-      TYPES.AuditLogService,
-      (container) => {
-        const database = container.resolve(TYPES.Database);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerTransient(TYPES.AuditLogService, (container) => {
+      const database = container.resolve(TYPES.Database);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new AuditLogService(database, logger);
-      }
-    );
+      return new AuditLogService(database, logger);
+    });
   }
 
   /**

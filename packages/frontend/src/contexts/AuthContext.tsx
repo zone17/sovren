@@ -10,6 +10,10 @@ export { AuthProvider, useAuth } from '../features/auth/services/AuthContext';
 
 // Re-export types for convenience
 export type {
-    AuthContextValue,
-    LoginCredentials, NostrChallenge, NostrSignature, SignupData, User
+  AuthContextValue,
+  LoginCredentials,
+  NostrChallenge,
+  NostrSignature,
+  SignupData,
+  User,
 } from '../features/auth/types';

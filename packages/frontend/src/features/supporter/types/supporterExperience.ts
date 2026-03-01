@@ -1,6 +1,6 @@
 /**
  * 🎯 **SUPPORTER EXPERIENCE TYPES (US-075 TO US-078)**
- * 
+ *
  * Elite Engineering Standards:
  * ✅ Comprehensive Zod validation schemas
  * ✅ Type-safe interfaces for all data structures
@@ -61,10 +61,12 @@ export const FeedContentItemSchema = z.object({
   subcategory: z.string().optional(),
   tags: z.array(z.string()),
   isPremium: z.boolean(),
-  pricing: z.object({
-    sats: z.number().nonnegative(),
-    currency: z.string().optional(),
-  }).optional(),
+  pricing: z
+    .object({
+      sats: z.number().nonnegative(),
+      currency: z.string().optional(),
+    })
+    .optional(),
   engagement: z.object({
     views: z.number().nonnegative(),
     likes: z.number().nonnegative(),
@@ -141,14 +143,18 @@ export const SearchQuerySchema = z.object({
     categories: z.array(z.string()).optional(),
     contentTypes: z.array(z.string()).optional(),
     creators: z.array(z.string().uuid()).optional(),
-    dateRange: z.object({
-      from: z.string().datetime().optional(),
-      to: z.string().datetime().optional(),
-    }).optional(),
-    priceRange: z.object({
-      min: z.number().nonnegative().optional(),
-      max: z.number().nonnegative().optional(),
-    }).optional(),
+    dateRange: z
+      .object({
+        from: z.string().datetime().optional(),
+        to: z.string().datetime().optional(),
+      })
+      .optional(),
+    priceRange: z
+      .object({
+        min: z.number().nonnegative().optional(),
+        max: z.number().nonnegative().optional(),
+      })
+      .optional(),
     isPremium: z.boolean().optional(),
     language: z.string().optional(),
   }),

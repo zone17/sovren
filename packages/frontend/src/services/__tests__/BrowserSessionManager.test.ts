@@ -3,8 +3,6 @@
  * WHY: Ensure browser session management works correctly
  */
 
-
-
 describe('BrowserSessionManager', () => {
   it('should be tested comprehensively', () => {
     expect(true).toBe(true);

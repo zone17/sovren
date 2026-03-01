@@ -141,16 +141,18 @@ export class PaymentController {
 
   // === Payment API Expansion (Todo 120) ===
 
-  public getTransactionHistory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const startTime = Date.now();
-    const userId = req.user?.nostr_pubkey || (req.query.userId as string);
-    const result = await this.analyticsService.getAnalytics(userId, {
-      startDate: req.query.start ? new Date(req.query.start as string) : undefined,
-      endDate: req.query.end ? new Date(req.query.end as string) : undefined,
-    });
+  public getTransactionHistory = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const startTime = Date.now();
+      const userId = req.user?.nostr_pubkey || (req.query.userId as string);
+      const result = await this.analyticsService.getAnalytics(userId, {
+        startDate: req.query.start ? new Date(req.query.start as string) : undefined,
+        endDate: req.query.end ? new Date(req.query.end as string) : undefined,
+      });
 
-    res.status(200).json(createApiResponse(req, result, startTime));
-  });
+      res.status(200).json(createApiResponse(req, result, startTime));
+    }
+  );
 
   public getBalance = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const startTime = Date.now();

@@ -21,7 +21,7 @@ import type {
   EmailConfiguration,
   EmailSendResult,
   BulkEmailRequest,
-  BulkEmailResult
+  BulkEmailResult,
 } from '../types/email';
 
 import * as nodemailer from 'nodemailer';
@@ -79,7 +79,7 @@ export class EmailService implements IEmailService {
       opened: 0,
       clicked: 0,
       avgDeliveryTime: 0,
-      queueSize: 0
+      queueSize: 0,
     };
 
     // Initialize transporter
@@ -100,8 +100,8 @@ export class EmailService implements IEmailService {
         details: {
           to: message.to,
           subject: message.subject,
-          provider: this.config.provider
-        }
+          provider: this.config.provider,
+        },
       });
 
       // Check rate limits
@@ -131,7 +131,7 @@ export class EmailService implements IEmailService {
         attachments: await this.prepareAttachments(message.attachments),
         headers: message.headers,
         priority: message.priority || 'normal',
-        replyTo: message.replyTo
+        replyTo: message.replyTo,
       };
 
       // Send email
@@ -149,7 +149,7 @@ export class EmailService implements IEmailService {
         messageId: info.messageId,
         to: message.to,
         subject: message.subject,
-        deliveryTime
+        deliveryTime,
       });
 
       // Cache result for deduplication
@@ -167,9 +167,8 @@ export class EmailService implements IEmailService {
         acceptedRecipients: info.accepted || [],
         rejectedRecipients: info.rejected || [],
         envelope: info.envelope,
-        response: info.response
+        response: info.response,
       };
-
     } catch (error) {
       this.metrics.failed++;
 
@@ -177,14 +176,14 @@ export class EmailService implements IEmailService {
       this.logger.error('Failed to send email', {
         error: error.message,
         to: message.to,
-        subject: message.subject
+        subject: message.subject,
       });
 
       // Emit failure event
       await this.eventBus.emit('email.failed', {
         to: message.to,
         subject: message.subject,
-        error: error.message
+        error: error.message,
       });
 
       // Add to retry queue if retriable
@@ -195,22 +194,19 @@ export class EmailService implements IEmailService {
           success: false,
           error: error.message,
           queued: true,
-          queueId: this.getMessageHash(message)
+          queueId: this.getMessageHash(message),
         };
       }
 
       return {
         success: false,
         error: error.message,
-        queued: false
+        queued: false,
       };
     }
   }
 
-  async sendWithRetry(
-    message: EmailMessage,
-    maxRetries: number = 3
-  ): Promise<EmailSendResult> {
+  async sendWithRetry(message: EmailMessage, maxRetries: number = 3): Promise<EmailSendResult> {
     message.maxRetries = maxRetries;
     return this.send(message);
   }
@@ -225,9 +221,7 @@ export class EmailService implements IEmailService {
       const batch = request.messages.slice(i, i + batchSize);
 
       // Send batch in parallel
-      const batchResults = await Promise.allSettled(
-        batch.map(message => this.send(message))
-      );
+      const batchResults = await Promise.allSettled(batch.map((message) => this.send(message)));
 
       // Collect results
       for (const result of batchResults) {
@@ -236,28 +230,28 @@ export class EmailService implements IEmailService {
         } else {
           results.push({
             success: false,
-            error: result.reason?.message || 'Unknown error'
+            error: result.reason?.message || 'Unknown error',
           });
         }
       }
 
       // Delay between batches
       if (i + batchSize < request.messages.length) {
-        await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
+        await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
       }
     }
 
     // Calculate summary
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-    const queued = results.filter(r => r.queued).length;
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+    const queued = results.filter((r) => r.queued).length;
 
     return {
       totalSent: successful,
       totalFailed: failed,
       totalQueued: queued,
       results,
-      duration: Date.now() - Date.now() // This would track actual duration
+      duration: Date.now() - Date.now(), // This would track actual duration
     };
   }
 
@@ -270,23 +264,19 @@ export class EmailService implements IEmailService {
     const template: EmailTemplate = {
       name: templateName,
       subject: options?.subject || `Email from ${this.config.defaultFrom}`,
-      data
+      data,
     };
 
     const message: EmailMessage = {
       ...options,
       to,
-      template
+      template,
     };
 
     return this.send(message);
   }
 
-  async loadTemplate(
-    name: string,
-    content: string,
-    isFilePath: boolean = false
-  ): Promise<void> {
+  async loadTemplate(name: string, content: string, isFilePath: boolean = false): Promise<void> {
     try {
       let templateContent = content;
 
@@ -321,9 +311,9 @@ export class EmailService implements IEmailService {
         {
           type: 'sent',
           timestamp: new Date(),
-          details: {}
-        }
-      ]
+          details: {},
+        },
+      ],
     };
   }
 
@@ -348,19 +338,19 @@ export class EmailService implements IEmailService {
     // Add to audit log
     await this.auditLog?.log({
       action: 'email.bounce',
-      details: bounce
+      details: bounce,
     });
   }
 
   async getMetrics(): Promise<EmailMetrics> {
     return {
       ...this.metrics,
-      queueSize: this.queue.length
+      queueSize: this.queue.length,
     };
   }
 
   async retryFailed(): Promise<void> {
-    const failedItems = this.queue.filter(item => item.retries > 0);
+    const failedItems = this.queue.filter((item) => item.retries > 0);
 
     for (const item of failedItems) {
       // Reset retry count
@@ -416,8 +406,8 @@ export class EmailService implements IEmailService {
           secure: this.config.providerConfig.secure,
           auth: {
             user: this.config.providerConfig.auth?.user,
-            pass: this.config.providerConfig.auth?.pass
-          }
+            pass: this.config.providerConfig.auth?.pass,
+          },
         });
 
       case 'sendgrid':
@@ -425,7 +415,7 @@ export class EmailService implements IEmailService {
       case 'ses':
         // These would use provider-specific configurations
         return nodemailer.createTransporter({
-          jsonTransport: true // Mock for now
+          jsonTransport: true, // Mock for now
         });
 
       default:
@@ -447,9 +437,7 @@ export class EmailService implements IEmailService {
     }
   }
 
-  private async renderTemplate(
-    template: EmailTemplate
-  ): Promise<{ html: string; text: string }> {
+  private async renderTemplate(template: EmailTemplate): Promise<{ html: string; text: string }> {
     const compiled = this.templates.get(template.name);
 
     if (!compiled) {
@@ -469,12 +457,12 @@ export class EmailService implements IEmailService {
       return [];
     }
 
-    return attachments.map(att => ({
+    return attachments.map((att) => ({
       filename: att.filename,
       content: att.content,
       contentType: att.contentType,
       encoding: att.encoding || 'base64',
-      cid: att.cid
+      cid: att.cid,
     }));
   }
 
@@ -482,7 +470,7 @@ export class EmailService implements IEmailService {
     const data = JSON.stringify({
       to: message.to,
       subject: message.subject,
-      content: message.text || message.html || message.template?.name
+      content: message.text || message.html || message.template?.name,
     });
 
     return createHash('md5').update(data).digest('hex');
@@ -497,7 +485,7 @@ export class EmailService implements IEmailService {
 
     for (const email of recipients) {
       const key = `email:ratelimit:${email}`;
-      const count = await this.cache.get<number>(key) || 0;
+      const count = (await this.cache.get<number>(key)) || 0;
 
       if (count >= this.config.rateLimits.perHour) {
         return true;
@@ -510,16 +498,13 @@ export class EmailService implements IEmailService {
   }
 
   private isRetriableError(error: any): boolean {
-    const retriableErrors = [
-      'ECONNREFUSED',
-      'ETIMEDOUT',
-      'ENOTFOUND',
-      'ENETUNREACH'
-    ];
+    const retriableErrors = ['ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'ENETUNREACH'];
 
-    return retriableErrors.includes(error.code) ||
-           error.message?.includes('rate limit') ||
-           error.message?.includes('temporary');
+    return (
+      retriableErrors.includes(error.code) ||
+      error.message?.includes('rate limit') ||
+      error.message?.includes('temporary')
+    );
   }
 
   private async addToQueue(message: EmailMessage): Promise<void> {
@@ -529,7 +514,7 @@ export class EmailService implements IEmailService {
       retries: 0,
       maxRetries: message.maxRetries || 3,
       createdAt: new Date(),
-      nextRetryAt: new Date(Date.now() + 60000) // 1 minute initial delay
+      nextRetryAt: new Date(Date.now() + 60000), // 1 minute initial delay
     };
 
     this.queue.push(item);
@@ -540,7 +525,7 @@ export class EmailService implements IEmailService {
   private startQueueProcessor(): void {
     this.processInterval = setInterval(() => {
       if (!this.isProcessing) {
-        this.processQueue().catch(error => {
+        this.processQueue().catch((error) => {
           this.logger.error('Queue processing error', error);
         });
       }
@@ -557,7 +542,7 @@ export class EmailService implements IEmailService {
     try {
       const now = Date.now();
       const readyItems = this.queue.filter(
-        item => !item.nextRetryAt || item.nextRetryAt.getTime() <= now
+        (item) => !item.nextRetryAt || item.nextRetryAt.getTime() <= now
       );
 
       for (const item of readyItems) {
@@ -586,7 +571,7 @@ export class EmailService implements IEmailService {
             await this.eventBus.emit('email.permanentFailure', {
               message: item.message,
               error: item.error,
-              retries: item.retries
+              retries: item.retries,
             });
           } else {
             // Calculate next retry with exponential backoff

@@ -42,7 +42,7 @@ class ErrorToastManager {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach(listener => listener([...this.toasts]));
+    this.listeners.forEach((listener) => listener([...this.toasts]));
   }
 
   subscribe(listener: (toasts: ErrorToastType[]) => void): () => void {
@@ -87,7 +87,7 @@ class ErrorToastManager {
   }
 
   dismiss(id: string): void {
-    const index = this.toasts.findIndex(t => t.id === id);
+    const index = this.toasts.findIndex((t) => t.id === id);
     if (index > -1) {
       const toast = this.toasts[index];
       toast.onDismiss?.();
@@ -97,7 +97,7 @@ class ErrorToastManager {
   }
 
   updateToast(id: string, updates: Partial<ErrorToastType>): void {
-    const index = this.toasts.findIndex(t => t.id === id);
+    const index = this.toasts.findIndex((t) => t.id === id);
     if (index > -1) {
       this.toasts[index] = { ...this.toasts[index], ...updates };
       this.notifyListeners();
@@ -105,7 +105,7 @@ class ErrorToastManager {
   }
 
   dismissAll(): void {
-    this.toasts.forEach(toast => toast.onDismiss?.());
+    this.toasts.forEach((toast) => toast.onDismiss?.());
     this.toasts = [];
     this.notifyListeners();
   }
@@ -189,19 +189,13 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onRetry }) => {
         {/* Content */}
         <div className="ml-3 flex-1">
           {/* Title */}
-          <h3 className="text-sm font-semibold text-white">
-            {toast.error.title}
-          </h3>
+          <h3 className="text-sm font-semibold text-white">{toast.error.title}</h3>
 
           {/* Message */}
-          <p className="mt-1 text-xs text-white/90">
-            {toast.error.message}
-          </p>
+          <p className="mt-1 text-xs text-white/90">{toast.error.message}</p>
 
           {/* Error Code */}
-          <p className="mt-1 text-xs text-white/70 font-mono">
-            {toast.error.code}
-          </p>
+          <p className="mt-1 text-xs text-white/70 font-mono">{toast.error.code}</p>
 
           {/* Actions */}
           <div className="mt-3 flex items-center gap-2">
@@ -239,7 +233,12 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onRetry }) => {
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             )}
@@ -263,27 +262,33 @@ export const ErrorToastContainer: React.FC = () => {
     return unsubscribe;
   }, [manager]);
 
-  const handleDismiss = useCallback((id: string): void => {
-    manager.dismiss(id);
-  }, [manager]);
-
-  const handleRetry = useCallback(async (id: string): Promise<void> => {
-    const toast = toasts.find(t => t.id === id);
-    if (!toast || !toast.onRetry) return;
-
-    manager.updateToast(id, {
-      isRetrying: true,
-      retryAttempt: (toast.retryAttempt || 0) + 1,
-    });
-
-    try {
-      await toast.onRetry();
+  const handleDismiss = useCallback(
+    (id: string): void => {
       manager.dismiss(id);
-    } catch (error) {
-      console.error('[ErrorToast] Retry failed:', error);
-      manager.updateToast(id, { isRetrying: false });
-    }
-  }, [toasts, manager]);
+    },
+    [manager]
+  );
+
+  const handleRetry = useCallback(
+    async (id: string): Promise<void> => {
+      const toast = toasts.find((t) => t.id === id);
+      if (!toast || !toast.onRetry) return;
+
+      manager.updateToast(id, {
+        isRetrying: true,
+        retryAttempt: (toast.retryAttempt || 0) + 1,
+      });
+
+      try {
+        await toast.onRetry();
+        manager.dismiss(id);
+      } catch (error) {
+        console.error('[ErrorToast] Retry failed:', error);
+        manager.updateToast(id, { isRetrying: false });
+      }
+    },
+    [toasts, manager]
+  );
 
   if (toasts.length === 0) {
     return null;
@@ -296,13 +301,8 @@ export const ErrorToastContainer: React.FC = () => {
       aria-atomic="false"
     >
       <div className="flex flex-col pointer-events-auto">
-        {toasts.map(toast => (
-          <ToastItem
-            key={toast.id}
-            toast={toast}
-            onDismiss={handleDismiss}
-            onRetry={handleRetry}
-          />
+        {toasts.map((toast) => (
+          <ToastItem key={toast.id} toast={toast} onDismiss={handleDismiss} onRetry={handleRetry} />
         ))}
       </div>
     </div>,
@@ -330,13 +330,19 @@ export const useErrorToast = (): UseErrorToastReturn => {
     return unsubscribe;
   }, [manager]);
 
-  const showError = useCallback((options: ErrorToastOptions): string => {
-    return manager.showError(options);
-  }, [manager]);
+  const showError = useCallback(
+    (options: ErrorToastOptions): string => {
+      return manager.showError(options);
+    },
+    [manager]
+  );
 
-  const dismiss = useCallback((id: string): void => {
-    manager.dismiss(id);
-  }, [manager]);
+  const dismiss = useCallback(
+    (id: string): void => {
+      manager.dismiss(id);
+    },
+    [manager]
+  );
 
   const dismissAll = useCallback((): void => {
     manager.dismissAll();

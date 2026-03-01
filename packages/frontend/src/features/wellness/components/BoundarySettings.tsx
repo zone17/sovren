@@ -37,8 +37,12 @@ export const BoundarySettings: React.FC = () => {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
-        <CardContent><Skeleton className="h-64 w-full" /></CardContent>
+        <CardHeader>
+          <Skeleton className="h-5 w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-64 w-full" />
+        </CardContent>
       </Card>
     );
   }
@@ -75,9 +79,8 @@ export const BoundarySettings: React.FC = () => {
 
   const safeMax = Number(form.weekly_engagement_budget_mins) || 0;
   const safeCurrent = Number(form.engagement_used_mins) || 0;
-  const engagementPercent = safeMax > 0
-    ? Math.min(Math.max((safeCurrent / safeMax) * 100, 0), 100)
-    : 0;
+  const engagementPercent =
+    safeMax > 0 ? Math.min(Math.max((safeCurrent / safeMax) * 100, 0), 100) : 0;
 
   return (
     <Card>
@@ -107,7 +110,9 @@ export const BoundarySettings: React.FC = () => {
                   value={form.focus_hours.start}
                   onChange={(e) =>
                     setForm((prev) =>
-                      prev ? { ...prev, focus_hours: { ...prev.focus_hours, start: e.target.value } } : prev
+                      prev
+                        ? { ...prev, focus_hours: { ...prev.focus_hours, start: e.target.value } }
+                        : prev
                     )
                   }
                   className="w-28"
@@ -119,7 +124,9 @@ export const BoundarySettings: React.FC = () => {
                   value={form.focus_hours.end}
                   onChange={(e) =>
                     setForm((prev) =>
-                      prev ? { ...prev, focus_hours: { ...prev.focus_hours, end: e.target.value } } : prev
+                      prev
+                        ? { ...prev, focus_hours: { ...prev.focus_hours, end: e.target.value } }
+                        : prev
                     )
                   }
                   className="w-28"
@@ -158,7 +165,9 @@ export const BoundarySettings: React.FC = () => {
               value={form.weekly_engagement_budget_mins}
               onChange={(e) =>
                 setForm((prev) =>
-                  prev ? { ...prev, weekly_engagement_budget_mins: parseInt(e.target.value) || 0 } : prev
+                  prev
+                    ? { ...prev, weekly_engagement_budget_mins: parseInt(e.target.value) || 0 }
+                    : prev
                 )
               }
               className="w-24"
@@ -169,7 +178,11 @@ export const BoundarySettings: React.FC = () => {
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
-                engagementPercent > 90 ? 'bg-red-500' : engagementPercent > 70 ? 'bg-yellow-500' : 'bg-green-500'
+                engagementPercent > 90
+                  ? 'bg-red-500'
+                  : engagementPercent > 70
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500'
               }`}
               style={{ width: `${engagementPercent}%` }}
             />
@@ -211,7 +224,10 @@ export const BoundarySettings: React.FC = () => {
               onChange={(e) =>
                 setForm((prev) =>
                   prev
-                    ? { ...prev, dnd_mode: { ...prev.dnd_mode, auto_response_template: e.target.value } }
+                    ? {
+                        ...prev,
+                        dnd_mode: { ...prev.dnd_mode, auto_response_template: e.target.value },
+                      }
                     : prev
                 )
               }
@@ -230,7 +246,9 @@ export const BoundarySettings: React.FC = () => {
             {STATUS_OPTIONS.map(({ value, label }) => (
               <button
                 key={value}
-                onClick={() => setForm((prev) => (prev ? { ...prev, availability_status: value } : prev))}
+                onClick={() =>
+                  setForm((prev) => (prev ? { ...prev, availability_status: value } : prev))
+                }
                 className={`flex-1 py-2 text-xs rounded ${
                   form.availability_status === value
                     ? 'bg-blue-100 text-blue-700 font-medium'
@@ -257,11 +275,7 @@ export const BoundarySettings: React.FC = () => {
         </div>
 
         {/* Save button */}
-        <Button
-          onClick={handleSave}
-          disabled={updateMutation.isPending}
-          className="w-full"
-        >
+        <Button onClick={handleSave} disabled={updateMutation.isPending} className="w-full">
           {updateMutation.isPending ? 'Saving...' : 'Save Boundaries'}
         </Button>
 

@@ -22,11 +22,9 @@ import type {
   WebhookBulkManagementRequest,
   WebhookHealthCheck,
   WebhookNotification,
-  DeadLetterQueueEntry
+  DeadLetterQueueEntry,
 } from '../../types/webhook';
-import {
-  WebhookEventType,
-} from '../../types/webhook';
+import { WebhookEventType } from '../../types/webhook';
 
 /**
  * Webhook Service Interface
@@ -98,12 +96,19 @@ export interface IWebhookService {
   /**
    * Send a webhook event to all subscribed endpoints
    */
-  sendWebhook(eventType: WebhookEventType, payload: WebhookEventPayload): Promise<WebhookDeliveryResult[]>;
+  sendWebhook(
+    eventType: WebhookEventType,
+    payload: WebhookEventPayload
+  ): Promise<WebhookDeliveryResult[]>;
 
   /**
    * Send a webhook to a specific endpoint
    */
-  sendWebhookToEndpoint(endpointId: string, eventType: WebhookEventType, payload: WebhookEventPayload): Promise<WebhookDeliveryResult>;
+  sendWebhookToEndpoint(
+    endpointId: string,
+    eventType: WebhookEventType,
+    payload: WebhookEventPayload
+  ): Promise<WebhookDeliveryResult>;
 
   /**
    * Deliver a webhook (internal - called by job queue)
@@ -122,7 +127,12 @@ export interface IWebhookService {
   /**
    * Verify webhook signature
    */
-  verifySignature(payload: string, signature: string, secret: string, timestamp: number): WebhookSignatureVerification;
+  verifySignature(
+    payload: string,
+    signature: string,
+    secret: string,
+    timestamp: number
+  ): WebhookSignatureVerification;
 
   /**
    * RETRY LOGIC
@@ -160,7 +170,11 @@ export interface IWebhookService {
   /**
    * Get delivery history for an endpoint
    */
-  getEndpointDeliveries(endpointId: string, limit?: number, offset?: number): Promise<WebhookDelivery[]>;
+  getEndpointDeliveries(
+    endpointId: string,
+    limit?: number,
+    offset?: number
+  ): Promise<WebhookDelivery[]>;
 
   /**
    * DEAD LETTER QUEUE
@@ -250,7 +264,9 @@ export interface IWebhookService {
   /**
    * Get rate limit status for endpoint
    */
-  getRateLimitStatus(endpointId: string): Promise<{ limited: boolean; remaining: number; resetAt: Date }>;
+  getRateLimitStatus(
+    endpointId: string
+  ): Promise<{ limited: boolean; remaining: number; resetAt: Date }>;
 
   /**
    * CIRCUIT BREAKER
@@ -283,7 +299,9 @@ export interface IWebhookService {
   /**
    * Bulk enable/disable/delete endpoints
    */
-  bulkManageEndpoints(request: WebhookBulkManagementRequest): Promise<{ success: number; failed: number }>;
+  bulkManageEndpoints(
+    request: WebhookBulkManagementRequest
+  ): Promise<{ success: number; failed: number }>;
 
   /**
    * STATISTICS & MONITORING
@@ -292,7 +310,11 @@ export interface IWebhookService {
   /**
    * Get endpoint statistics
    */
-  getEndpointStats(endpointId: string, startDate?: Date, endDate?: Date): Promise<WebhookEndpointStats>;
+  getEndpointStats(
+    endpointId: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<WebhookEndpointStats>;
 
   /**
    * Get system-wide webhook statistics

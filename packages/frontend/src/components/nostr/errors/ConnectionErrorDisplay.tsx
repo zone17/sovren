@@ -19,7 +19,9 @@ import { ErrorMessage } from './ErrorMessage';
 /**
  * Connection status badge
  */
-const StatusBadge: React.FC<{ status: 'disconnected' | 'error' | 'timeout' | 'retrying' }> = ({ status }) => {
+const StatusBadge: React.FC<{ status: 'disconnected' | 'error' | 'timeout' | 'retrying' }> = ({
+  status,
+}) => {
   const getStatusClasses = (): string => {
     switch (status) {
       case 'disconnected':
@@ -117,8 +119,19 @@ const RelayErrorItem: React.FC<RelayErrorItemProps> = ({ error, onRetry, compact
           className="ml-2 p-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:text-gray-400 dark:disabled:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
           aria-label={`Retry connection to ${error.url}`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
         </button>
       </div>
@@ -212,9 +225,9 @@ export const ConnectionErrorDisplay: React.FC<ConnectionErrorDisplayProps> = ({
     return null;
   }
 
-  const disconnectedCount = errors.filter(e => e.status === 'disconnected').length;
-  const errorCount = errors.filter(e => e.status === 'error').length;
-  const timeoutCount = errors.filter(e => e.status === 'timeout').length;
+  const disconnectedCount = errors.filter((e) => e.status === 'disconnected').length;
+  const errorCount = errors.filter((e) => e.status === 'error').length;
+  const timeoutCount = errors.filter((e) => e.status === 'timeout').length;
 
   return (
     <div className={`${className}`} role="region" aria-label="Connection errors">
@@ -251,8 +264,19 @@ export const ConnectionErrorDisplay: React.FC<ConnectionErrorDisplayProps> = ({
               className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               aria-label="Dismiss connection errors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -261,7 +285,7 @@ export const ConnectionErrorDisplay: React.FC<ConnectionErrorDisplayProps> = ({
 
       {/* Error List */}
       <div className={compact ? 'space-y-2' : 'space-y-3'}>
-        {errors.map(error => (
+        {errors.map((error) => (
           <RelayErrorItem
             key={error.url}
             error={error}

@@ -40,9 +40,7 @@ describe('InboxFilterBar', () => {
       render(<InboxFilterBar filters={defaultFilters} onChange={onChange} />);
 
       const platformSelect = screen.getByLabelText('Filter by platform');
-      const options = Array.from((platformSelect as HTMLSelectElement).options).map(
-        (o) => o.text
-      );
+      const options = Array.from((platformSelect as HTMLSelectElement).options).map((o) => o.text);
 
       expect(options).toContain('All Platforms');
       expect(options).toContain('X (Twitter)');

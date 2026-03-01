@@ -4,7 +4,6 @@
  * Part of US-E5-034: Integration Test Suite
  */
 
-
 import { createTestContainer, cleanupTestContainer } from '../fixtures/test-container-setup';
 import { createTestUser, createTestInvoice, scenarios } from '../fixtures/test-data-factory';
 import { createMockLightningService } from '../fixtures/mock-services';
@@ -41,14 +40,11 @@ describe('Payment Workflow E2E Tests', () => {
       await db.insert('users', user);
 
       // Step 2: Create invoice
-      const lightningInvoice = await lightning.createInvoice(
-        invoice.amount,
-        invoice.description
-      );
+      const lightningInvoice = await lightning.createInvoice(invoice.amount, invoice.description);
       const createdInvoice = {
         ...invoice,
         paymentRequest: lightningInvoice.payment_request,
-        paymentHash: lightningInvoice.payment_hash
+        paymentHash: lightningInvoice.payment_hash,
       };
       await db.insert('invoices', createdInvoice);
       await cache.set(`invoice:${invoice.id}`, createdInvoice, 3600);
@@ -81,7 +77,7 @@ describe('Payment Workflow E2E Tests', () => {
       const db = container.resolve({ name: 'IDatabase' });
       const expiredInvoice = {
         ...invoice,
-        expiresAt: new Date(Date.now() - 3600000) // Expired 1 hour ago
+        expiresAt: new Date(Date.now() - 3600000), // Expired 1 hour ago
       };
 
       await db.insert('users', user);
@@ -178,9 +174,7 @@ describe('Payment Workflow E2E Tests', () => {
     it('should process multiple payments for same user', async () => {
       // Arrange
       const user = createTestUser();
-      const invoices = Array.from({ length: 5 }, () =>
-        createTestInvoice({ userId: user.id })
-      );
+      const invoices = Array.from({ length: 5 }, () => createTestInvoice({ userId: user.id }));
       const db = container.resolve({ name: 'IDatabase' });
 
       await db.insert('users', user);

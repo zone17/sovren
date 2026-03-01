@@ -5,12 +5,7 @@
  * EPIC-008: Content Shield (US-E8-004b)
  */
 
-import type {
-  ContentAlert,
-  AlertDetail,
-  AlertStatus,
-  Pagination,
-} from '@shared/types/provenance';
+import type { ContentAlert, AlertDetail, AlertStatus, Pagination } from '@shared/types/provenance';
 import { ALERT_STATUS_TRANSITIONS } from '@shared/types/provenance';
 import type { IAlertService } from '../../interfaces/provenance/IAlertService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';

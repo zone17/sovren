@@ -34,25 +34,22 @@ export const useContentStream = (filters?: {
       queryClient.setQueryData(contentKeys.detail(content.id), content);
 
       // Also update in any lists that might contain this content
-      queryClient.setQueriesData(
-        { queryKey: contentKeys.lists() },
-        (oldData: any) => {
-          if (!oldData) return oldData;
+      queryClient.setQueriesData({ queryKey: contentKeys.lists() }, (oldData: any) => {
+        if (!oldData) return oldData;
 
-          // Update the content in paginated results
-          const updatedPages = oldData.pages?.map((page: any) => ({
-            ...page,
-            content: page.content?.map((item: ContentItemDetail) =>
-              item.id === content.id ? content : item
-            ),
-          }));
+        // Update the content in paginated results
+        const updatedPages = oldData.pages?.map((page: any) => ({
+          ...page,
+          content: page.content?.map((item: ContentItemDetail) =>
+            item.id === content.id ? content : item
+          ),
+        }));
 
-          return {
-            ...oldData,
-            pages: updatedPages,
-          };
-        }
-      );
+        return {
+          ...oldData,
+          pages: updatedPages,
+        };
+      });
     };
 
     const handleContentDelete = (contentId: string) => {
@@ -60,22 +57,19 @@ export const useContentStream = (filters?: {
       queryClient.removeQueries({ queryKey: contentKeys.detail(contentId) });
 
       // Remove from lists
-      queryClient.setQueriesData(
-        { queryKey: contentKeys.lists() },
-        (oldData: any) => {
-          if (!oldData) return oldData;
+      queryClient.setQueriesData({ queryKey: contentKeys.lists() }, (oldData: any) => {
+        if (!oldData) return oldData;
 
-          const updatedPages = oldData.pages?.map((page: any) => ({
-            ...page,
-            content: page.content?.filter((item: ContentItemDetail) => item.id !== contentId),
-          }));
+        const updatedPages = oldData.pages?.map((page: any) => ({
+          ...page,
+          content: page.content?.filter((item: ContentItemDetail) => item.id !== contentId),
+        }));
 
-          return {
-            ...oldData,
-            pages: updatedPages,
-          };
-        }
-      );
+        return {
+          ...oldData,
+          pages: updatedPages,
+        };
+      });
     };
 
     // TODO: Connect to actual NOSTR subscription service

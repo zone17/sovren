@@ -56,9 +56,7 @@ const ExpenseTracker: React.FC = () => {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h4 className="text-sm font-semibold text-gray-900">Expenses</h4>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Total: {formatSats(totalExpenses)}
-          </p>
+          <p className="text-xs text-gray-500 mt-0.5">Total: {formatSats(totalExpenses)}</p>
         </div>
         <div className="flex items-center gap-3">
           <select
@@ -95,7 +93,10 @@ const ExpenseTracker: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="expense-description" className="block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="expense-description"
+                className="block text-xs font-medium text-gray-700"
+              >
                 Description
               </label>
               <input
@@ -136,7 +137,9 @@ const ExpenseTracker: React.FC = () => {
                 min="1"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={form.amountSats || ''}
-                onChange={(e) => setForm((prev) => ({ ...prev, amountSats: Number(e.target.value) }))}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, amountSats: Number(e.target.value) }))
+                }
                 required
               />
             </div>

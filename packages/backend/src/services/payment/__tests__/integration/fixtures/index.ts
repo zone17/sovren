@@ -4,32 +4,13 @@
  * Comprehensive test data factories for payment integration testing
  */
 
-import type {
-  PaymentInvoice,
-  PaymentTransaction,
-  PaymentProvider
-} from '../../../types/payment';
-import {
-  PaymentMethod,
-  PaymentStatus,
-} from '../../../types/payment';
-import type {
-  Subscription,
-  SubscriptionPlan
-} from '../../../types/subscription';
-import {
-  SubscriptionStatus,
-  SubscriptionTier,
-} from '../../../types/subscription';
-import {
-  Currency,
-} from '../../../types/currency';
-import type {
-  WebhookEndpoint
-} from '../../../types/webhook';
-import {
-  WebhookEventType,
-} from '../../../types/webhook';
+import type { PaymentInvoice, PaymentTransaction, PaymentProvider } from '../../../types/payment';
+import { PaymentMethod, PaymentStatus } from '../../../types/payment';
+import type { Subscription, SubscriptionPlan } from '../../../types/subscription';
+import { SubscriptionStatus, SubscriptionTier } from '../../../types/subscription';
+import { Currency } from '../../../types/currency';
+import type { WebhookEndpoint } from '../../../types/webhook';
+import { WebhookEventType } from '../../../types/webhook';
 
 /**
  * Generate unique ID
@@ -54,7 +35,7 @@ export function createMockInvoice(overrides?: Partial<PaymentInvoice>): PaymentI
     status: 'pending' as PaymentStatus,
     createdAt: new Date(),
     metadata: {},
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -76,7 +57,7 @@ export function createMockTransaction(overrides?: Partial<PaymentTransaction>): 
     completedAt: new Date(),
     retryCount: 0,
     metadata: {},
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -97,7 +78,7 @@ export function createMockPlan(overrides?: Partial<SubscriptionPlan>): Subscript
     metadata: {},
     createdAt: new Date(),
     updatedAt: new Date(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -118,7 +99,7 @@ export function createMockSubscription(overrides?: Partial<Subscription>): Subsc
     createdAt: now,
     updatedAt: now,
     metadata: {},
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -132,10 +113,7 @@ export function createMockWebhookEndpoint(overrides?: Partial<WebhookEndpoint>):
     url: 'https://example.com/webhook',
     description: 'Test webhook',
     secret: 'whsec_test_' + 'a'.repeat(64),
-    events: [
-      'payment.received' as WebhookEventType,
-      'payment.failed' as WebhookEventType
-    ],
+    events: ['payment.received' as WebhookEventType, 'payment.failed' as WebhookEventType],
     enabled: true,
     timeout: 30000,
     createdAt: new Date(),
@@ -143,19 +121,22 @@ export function createMockWebhookEndpoint(overrides?: Partial<WebhookEndpoint>):
     failureCount: 0,
     circuitState: 'closed',
     metadata: {},
-    ...overrides
+    ...overrides,
   };
 }
 
 /**
  * Batch create mock transactions
  */
-export function createMockTransactions(count: number, overrides?: Partial<PaymentTransaction>): PaymentTransaction[] {
+export function createMockTransactions(
+  count: number,
+  overrides?: Partial<PaymentTransaction>
+): PaymentTransaction[] {
   return Array.from({ length: count }, (_, i) =>
     createMockTransaction({
       ...overrides,
       id: generateId(`tx_${i}`),
-      createdAt: new Date(Date.now() - (count - i) * 60000) // Spread over time
+      createdAt: new Date(Date.now() - (count - i) * 60000), // Spread over time
     })
   );
 }
@@ -163,11 +144,14 @@ export function createMockTransactions(count: number, overrides?: Partial<Paymen
 /**
  * Batch create mock subscriptions
  */
-export function createMockSubscriptions(count: number, overrides?: Partial<Subscription>): Subscription[] {
+export function createMockSubscriptions(
+  count: number,
+  overrides?: Partial<Subscription>
+): Subscription[] {
   return Array.from({ length: count }, (_, i) =>
     createMockSubscription({
       ...overrides,
-      id: generateId(`sub_${i}`)
+      id: generateId(`sub_${i}`),
     })
   );
 }
@@ -176,7 +160,7 @@ export function createMockSubscriptions(count: number, overrides?: Partial<Subsc
  * Wait helper for async tests
  */
 export function wait(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -226,17 +210,26 @@ export class MockWebhookServer {
  * Mock Lightning Node for testing
  */
 export class MockLightningNode {
-  private invoices = new Map<string, {
-    paid: boolean;
-    amount: number;
-    expiresAt: Date;
-  }>();
-  private payments = new Map<string, {
-    status: 'pending' | 'succeeded' | 'failed';
-    amount: number;
-  }>();
+  private invoices = new Map<
+    string,
+    {
+      paid: boolean;
+      amount: number;
+      expiresAt: Date;
+    }
+  >();
+  private payments = new Map<
+    string,
+    {
+      status: 'pending' | 'succeeded' | 'failed';
+      amount: number;
+    }
+  >();
 
-  createInvoice(amount: number, description: string): {
+  createInvoice(
+    amount: number,
+    description: string
+  ): {
     bolt11: string;
     paymentHash: string;
     expiresAt: Date;
@@ -350,7 +343,7 @@ export class TestDatabase {
 
   async findAll<T>(collection: string): Promise<T[]> {
     const coll = this.data.get(collection);
-    return coll ? Array.from(coll.values()) as T[] : [];
+    return coll ? (Array.from(coll.values()) as T[]) : [];
   }
 
   async delete(collection: string, id: string): Promise<void> {
@@ -386,27 +379,25 @@ export class TestMetricsCollector {
   }
 
   getMetrics(name?: string): typeof this.metrics {
-    return name
-      ? this.metrics.filter(m => m.name === name)
-      : this.metrics;
+    return name ? this.metrics.filter((m) => m.name === name) : this.metrics;
   }
 
   getAverage(name: string): number {
-    const filtered = this.metrics.filter(m => m.name === name);
+    const filtered = this.metrics.filter((m) => m.name === name);
     if (filtered.length === 0) return 0;
     return filtered.reduce((sum, m) => sum + m.value, 0) / filtered.length;
   }
 
   getMax(name: string): number {
-    const filtered = this.metrics.filter(m => m.name === name);
+    const filtered = this.metrics.filter((m) => m.name === name);
     if (filtered.length === 0) return 0;
-    return Math.max(...filtered.map(m => m.value));
+    return Math.max(...filtered.map((m) => m.value));
   }
 
   getMin(name: string): number {
-    const filtered = this.metrics.filter(m => m.name === name);
+    const filtered = this.metrics.filter((m) => m.name === name);
     if (filtered.length === 0) return 0;
-    return Math.min(...filtered.map(m => m.value));
+    return Math.min(...filtered.map((m) => m.value));
   }
 
   reset(): void {

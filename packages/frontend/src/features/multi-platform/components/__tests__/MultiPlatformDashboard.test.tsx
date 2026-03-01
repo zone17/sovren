@@ -42,7 +42,9 @@ describe('MultiPlatformDashboard', () => {
     render(<MultiPlatformDashboard />, { wrapper: createWrapper() });
 
     expect(
-      screen.getByText('Connect, publish, and manage your content across all platforms from one place.')
+      screen.getByText(
+        'Connect, publish, and manage your content across all platforms from one place.'
+      )
     ).toBeInTheDocument();
   });
 });

@@ -27,12 +27,14 @@ export const CallbackQuerySchema = z.object({
 export const PublishBodySchema = z.object({
   content_id: z.string().uuid(),
   platforms: z.array(platformEnum).min(1).max(10),
-  schedule: z.object({
-    mastodon: z.string().datetime().optional(),
-    bluesky: z.string().datetime().optional(),
-    twitter: z.string().datetime().optional(),
-    youtube: z.string().datetime().optional(),
-  }).optional(),
+  schedule: z
+    .object({
+      mastodon: z.string().datetime().optional(),
+      bluesky: z.string().datetime().optional(),
+      twitter: z.string().datetime().optional(),
+      youtube: z.string().datetime().optional(),
+    })
+    .optional(),
   use_repurposed: z.boolean().default(false),
 });
 

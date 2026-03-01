@@ -3,10 +3,7 @@
  * EPIC-009: Multi-Platform Hub
  */
 
-import type {
-  CrossPostEntry,
-  SupportedPlatform,
-} from '@shared/types/distribution';
+import type { CrossPostEntry, SupportedPlatform } from '@shared/types/distribution';
 
 export interface PublishRequest {
   content_id: string;

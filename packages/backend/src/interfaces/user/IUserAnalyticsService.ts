@@ -23,7 +23,7 @@ import {
   AnalyticsExportResult,
   AnalyticsTimeRange,
   AnalyticsQueryFilters,
-  UserActivityEvent
+  UserActivityEvent,
 } from '../../types/user-analytics';
 
 /**

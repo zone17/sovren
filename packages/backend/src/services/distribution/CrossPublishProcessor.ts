@@ -38,7 +38,11 @@ export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData>
     // Conditional update: only transition to 'publishing' if not already cancelled (avoids TOCTOU race)
     const { data: updated } = await this.db
       .from('cross_posts')
-      .update({ status: 'publishing', attempt_count: job.attemptsMade + 1, updated_at: new Date().toISOString() })
+      .update({
+        status: 'publishing',
+        attempt_count: job.attemptsMade + 1,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', crossPostId)
       .neq('status', 'cancelled')
       .select('id');
@@ -78,7 +82,9 @@ export class CrossPublishProcessor implements IJobProcessor<CrossPublishJobData>
         throw new Error(`Content ${contentId} not found`);
       }
 
-      contentText = content.title ? `${content.title}\n\n${content.body || ''}` : (content.body || '');
+      contentText = content.title
+        ? `${content.title}\n\n${content.body || ''}`
+        : content.body || '';
     }
 
     // Format content per platform constraints

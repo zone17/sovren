@@ -8,6 +8,9 @@ import type { BurnoutRiskScore, SensitivityLevel } from '@shared/types/wellness'
 
 export interface IBurnoutScoringService {
   calculateScore(creatorId: string): Promise<BurnoutRiskScore>;
-  setSensitivity(creatorId: string, sensitivity: SensitivityLevel): Promise<{ sensitivity: SensitivityLevel; updated_at: string }>;
+  setSensitivity(
+    creatorId: string,
+    sensitivity: SensitivityLevel
+  ): Promise<{ sensitivity: SensitivityLevel; updated_at: string }>;
   getSensitivity(creatorId: string): Promise<SensitivityLevel>;
 }

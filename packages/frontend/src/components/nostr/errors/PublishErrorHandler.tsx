@@ -75,9 +75,8 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
   };
 
   const totalRelays = error.failedRelays.length + error.successfulRelays.length;
-  const successRate = totalRelays > 0
-    ? Math.round((error.successfulRelays.length / totalRelays) * 100)
-    : 0;
+  const successRate =
+    totalRelays > 0 ? Math.round((error.successfulRelays.length / totalRelays) * 100) : 0;
 
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
@@ -107,8 +106,19 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
           className="ml-4 p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           aria-label="Clear error"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -117,7 +127,9 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
       <div className="grid grid-cols-3 gap-3 mb-3">
         <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/50 rounded">
           <p className="text-xs text-gray-600 dark:text-gray-400">Success Rate</p>
-          <p className={`text-lg font-bold ${successRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p
+            className={`text-lg font-bold ${successRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+          >
             {successRate}%
           </p>
         </div>
@@ -129,9 +141,7 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
         </div>
         <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/50 rounded">
           <p className="text-xs text-gray-600 dark:text-gray-400">Retries</p>
-          <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-            {error.retryCount}
-          </p>
+          <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{error.retryCount}</p>
         </div>
       </div>
 
@@ -176,9 +186,12 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
                 Failed Relays ({error.failedRelays.length})
               </h5>
               <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                {error.failedRelays.map(relay => (
+                {error.failedRelays.map((relay) => (
                   <li key={relay} className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" aria-hidden="true" />
+                    <span
+                      className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <span className="truncate">{relay}</span>
                   </li>
                 ))}
@@ -193,9 +206,12 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
                 Successful Relays ({error.successfulRelays.length})
               </h5>
               <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                {error.successfulRelays.map(relay => (
+                {error.successfulRelays.map((relay) => (
                   <li key={relay} className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0" aria-hidden="true" />
+                    <span
+                      className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <span className="truncate">{relay}</span>
                   </li>
                 ))}
@@ -265,7 +281,7 @@ export const PublishErrorHandler: React.FC<PublishErrorHandlerProps> = ({
 
       {/* Error List */}
       <div className="space-y-3">
-        {displayErrors.map(error => (
+        {displayErrors.map((error) => (
           <PublishErrorItem
             key={error.eventId}
             error={error}
@@ -278,7 +294,8 @@ export const PublishErrorHandler: React.FC<PublishErrorHandlerProps> = ({
       {/* Show More */}
       {hasMore && (
         <p className="text-sm text-center text-gray-500 dark:text-gray-400 mt-4">
-          {errors.length - maxErrors} more error{errors.length - maxErrors !== 1 ? 's' : ''} not shown
+          {errors.length - maxErrors} more error{errors.length - maxErrors !== 1 ? 's' : ''} not
+          shown
         </p>
       )}
     </div>

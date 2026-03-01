@@ -67,12 +67,7 @@ describe('ContentVersioningService', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    service = new ContentVersioningService(
-      mockDb,
-      mockCache,
-      mockEventBus,
-      mockAuditLog
-    );
+    service = new ContentVersioningService(mockDb, mockCache, mockEventBus, mockAuditLog);
   });
 
   describe('createVersion', () => {
@@ -111,17 +106,20 @@ describe('ContentVersioningService', () => {
       // Arrange
       (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [{ version_number: 1 }] }) // Latest version is 1
-        .mockResolvedValueOnce({ // Get previous version for delta
-          rows: [{
-            id: 'version-1',
-            content_id: 'content-123',
-            version_number: 1,
-            delta: null,
-            snapshot: JSON.stringify(mockContent),
-            created_by: 'user-123',
-            created_at: new Date(),
-            message: 'Initial',
-          }]
+        .mockResolvedValueOnce({
+          // Get previous version for delta
+          rows: [
+            {
+              id: 'version-1',
+              content_id: 'content-123',
+              version_number: 1,
+              delta: null,
+              snapshot: JSON.stringify(mockContent),
+              created_by: 'user-123',
+              created_at: new Date(),
+              message: 'Initial',
+            },
+          ],
         })
         .mockResolvedValueOnce({ rows: [] }) // Insert version
         .mockResolvedValueOnce({ rows: [] }) // Update content version
@@ -137,7 +135,7 @@ describe('ContentVersioningService', () => {
       expect(result.delta?.length).toBeGreaterThan(0);
 
       // Verify delta contains the changes
-      const titleChange = result.delta?.find(op => op.path === '/title');
+      const titleChange = result.delta?.find((op) => op.path === '/title');
       expect(titleChange).toBeDefined();
       expect(titleChange?.op).toBe('replace');
       expect(titleChange?.value).toBe('Updated Test Article');
@@ -428,7 +426,7 @@ describe('ContentVersioningService', () => {
 
       // Act & Assert
       await expect(service.revert('content-123', 'version-1')).rejects.toThrow(ServiceError);
-      const error = await service.revert('content-123', 'version-1').catch(e => e);
+      const error = await service.revert('content-123', 'version-1').catch((e) => e);
       // The inner error is wrapped by the outer catch: 'Content revert failed'
       expect(error.message).toContain('Content revert failed');
     });
@@ -510,7 +508,7 @@ describe('ContentVersioningService', () => {
       expect(result.modified.length).toBeGreaterThan(0);
 
       // Check for title modification
-      const titleModification = result.modified.find(m => m.field === 'title');
+      const titleModification = result.modified.find((m) => m.field === 'title');
       expect(titleModification).toBeDefined();
       expect(titleModification?.oldValue).toBe('Test Article');
       expect(titleModification?.newValue).toBe('Updated Test Article');
@@ -549,7 +547,7 @@ describe('ContentVersioningService', () => {
       (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [version1Row] })
         .mockResolvedValueOnce({ rows: [version2Row] });
-      const error = await service.compareVersions('version-1', 'version-2').catch(e => e);
+      const error = await service.compareVersions('version-1', 'version-2').catch((e) => e);
       expect(error.message).toContain('Version comparison failed');
     });
   });
@@ -591,8 +589,9 @@ describe('ContentVersioningService', () => {
         .mockResolvedValueOnce({ rows: [version2Row] }) // reconstruct v2 - snapshot (returns early, 2===2)
         .mockResolvedValueOnce({ rows: [{ version_number: 2 }] }) // createVersion - get latest -> next=3
         .mockResolvedValueOnce({ rows: [version1Row] }) // createVersion -> getPreviousVersion(2) -> reconstructContent - find snapshot
-        .mockResolvedValueOnce({                        // createVersion -> reconstructContent - get deltas from v1 to v2
-          rows: [{ version_number: 2, delta: null, snapshot: JSON.stringify(version2Content) }]
+        .mockResolvedValueOnce({
+          // createVersion -> reconstructContent - get deltas from v1 to v2
+          rows: [{ version_number: 2, delta: null, snapshot: JSON.stringify(version2Content) }],
         })
         .mockResolvedValueOnce({ rows: [] }) // createVersion insert
         .mockResolvedValueOnce({ rows: [] }) // createVersion update
@@ -771,16 +770,19 @@ describe('ContentVersioningService', () => {
 
       (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [{ version_number: 1 }] }) // Latest version
-        .mockResolvedValueOnce({ // Previous version
-          rows: [{
-            id: 'v1',
-            content_id: 'content-123',
-            version_number: 1,
-            snapshot: JSON.stringify(content1),
-            delta: null,
-            created_by: 'user-123',
-            created_at: new Date(),
-          }]
+        .mockResolvedValueOnce({
+          // Previous version
+          rows: [
+            {
+              id: 'v1',
+              content_id: 'content-123',
+              version_number: 1,
+              snapshot: JSON.stringify(content1),
+              delta: null,
+              created_by: 'user-123',
+              created_at: new Date(),
+            },
+          ],
         })
         .mockResolvedValueOnce({ rows: [] }) // Insert
         .mockResolvedValueOnce({ rows: [] }) // Update
@@ -793,8 +795,8 @@ describe('ContentVersioningService', () => {
       expect(version.delta).toBeDefined();
       expect(version.delta?.length).toBeGreaterThan(0);
 
-      const titleOp = version.delta?.find(op => op.path === '/title');
-      const contentOp = version.delta?.find(op => op.path === '/content');
+      const titleOp = version.delta?.find((op) => op.path === '/title');
+      const contentOp = version.delta?.find((op) => op.path === '/content');
 
       expect(titleOp?.op).toBe('replace');
       expect(titleOp?.value).toBe('New Title');
@@ -815,13 +817,9 @@ describe('ContentVersioningService', () => {
         created_at: new Date(),
       };
 
-      const delta2 = [
-        { op: 'replace' as const, path: '/title', value: 'Version 2 Title' },
-      ];
+      const delta2 = [{ op: 'replace' as const, path: '/title', value: 'Version 2 Title' }];
 
-      const delta3 = [
-        { op: 'replace' as const, path: '/content', value: 'Version 3 Content' },
-      ];
+      const delta3 = [{ op: 'replace' as const, path: '/content', value: 'Version 3 Content' }];
 
       // v3 is a delta version (no snapshot)
       const v3Row = {
@@ -837,14 +835,15 @@ describe('ContentVersioningService', () => {
       (mockCache.get as any).mockResolvedValue(null);
       (mockDb.query as any)
         .mockResolvedValueOnce({ rows: [snapshotRow] }) // getVersion('v1')
-        .mockResolvedValueOnce({ rows: [v3Row] })       // getVersion('v3')
+        .mockResolvedValueOnce({ rows: [v3Row] }) // getVersion('v3')
         .mockResolvedValueOnce({ rows: [snapshotRow] }) // reconstructContent(123, 1) - find snapshot (returns early, 1===1)
         .mockResolvedValueOnce({ rows: [snapshotRow] }) // reconstructContent(123, 3) - find snapshot (v1 is nearest)
-        .mockResolvedValueOnce({                        // reconstructContent(123, 3) - get deltas from v1 to v3
+        .mockResolvedValueOnce({
+          // reconstructContent(123, 3) - get deltas from v1 to v3
           rows: [
             { version_number: 2, delta: JSON.stringify(delta2) },
             { version_number: 3, delta: JSON.stringify(delta3) },
-          ]
+          ],
         });
 
       // Act - Compare v1 and v3 (tests internal reconstruction)
@@ -903,8 +902,7 @@ describe('ContentVersioningService', () => {
 
     it('should handle concurrent version creation', async () => {
       // Arrange
-      (mockDb.query as any)
-        .mockResolvedValue({ rows: [] });
+      (mockDb.query as any).mockResolvedValue({ rows: [] });
 
       // Act - Simulate concurrent creates
       const promises = [
@@ -942,8 +940,8 @@ describe('ContentVersioningService', () => {
       await service.createVersion(mockContent);
 
       // Assert - Should trigger auto-prune
-      const deleteCall = (mockDb.query as any).mock.calls.find(
-        call => call[0].includes('DELETE FROM content_versions')
+      const deleteCall = (mockDb.query as any).mock.calls.find((call) =>
+        call[0].includes('DELETE FROM content_versions')
       );
       expect(deleteCall).toBeDefined();
     });

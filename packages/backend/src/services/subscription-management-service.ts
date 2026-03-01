@@ -142,7 +142,10 @@ export class SubscriptionManagementService extends EventEmitter {
     this.analyticsService = new AnalyticsService();
     this.wsService = new WebSocketService();
     this.recurringPaymentJobs = new Map();
-    this.subscriptionCache = new TTLCache<string, Subscription>({ maxSize: 10_000, ttlMs: 300_000 });
+    this.subscriptionCache = new TTLCache<string, Subscription>({
+      maxSize: 10_000,
+      ttlMs: 300_000,
+    });
 
     this.initializeService();
   }
@@ -453,19 +456,16 @@ export class SubscriptionManagementService extends EventEmitter {
         this.logger.error('Subscription creation step failed, rolling back', stepError);
 
         if (tierCountIncremented) {
-          const ok = await this.retryOperation(
-            async () => {
-              const { error } = await supabase
-                .from('subscription_tiers')
-                .update({
-                  current_subscribers: supabase.raw('GREATEST(current_subscribers - 1, 0)'),
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', tier.id);
-              if (error) throw error;
-            },
-            'Rollback tier count'
-          );
+          const ok = await this.retryOperation(async () => {
+            const { error } = await supabase
+              .from('subscription_tiers')
+              .update({
+                current_subscribers: supabase.raw('GREATEST(current_subscribers - 1, 0)'),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', tier.id);
+            if (error) throw error;
+          }, 'Rollback tier count');
           if (!ok) {
             this.logger.error('ALERT: Orphaned tier count increment', {
               tier_id: tier.id,
@@ -476,16 +476,13 @@ export class SubscriptionManagementService extends EventEmitter {
         }
 
         if (recurringPaymentId) {
-          const ok = await this.retryOperation(
-            async () => {
-              const { error } = await supabase
-                .from('recurring_payments')
-                .delete()
-                .eq('id', recurringPaymentId);
-              if (error) throw error;
-            },
-            'Rollback recurring payment'
-          );
+          const ok = await this.retryOperation(async () => {
+            const { error } = await supabase
+              .from('recurring_payments')
+              .delete()
+              .eq('id', recurringPaymentId);
+            if (error) throw error;
+          }, 'Rollback recurring payment');
           if (!ok) {
             this.logger.error('ALERT: Orphaned recurring payment', {
               recurring_payment_id: recurringPaymentId,
@@ -496,16 +493,13 @@ export class SubscriptionManagementService extends EventEmitter {
         }
 
         if (subscriptionInserted) {
-          const ok = await this.retryOperation(
-            async () => {
-              const { error } = await supabase
-                .from('subscriptions')
-                .delete()
-                .eq('id', subscription.id);
-              if (error) throw error;
-            },
-            'Rollback subscription'
-          );
+          const ok = await this.retryOperation(async () => {
+            const { error } = await supabase
+              .from('subscriptions')
+              .delete()
+              .eq('id', subscription.id);
+            if (error) throw error;
+          }, 'Rollback subscription');
           if (!ok) {
             this.logger.error('ALERT: Orphaned subscription', {
               subscription_id: subscription.id,
@@ -1117,7 +1111,7 @@ export class SubscriptionManagementService extends EventEmitter {
       } catch (err) {
         this.logger.warn(`${label} attempt ${attempt}/${maxRetries} failed`, err);
         if (attempt < maxRetries) {
-          await new Promise(r => setTimeout(r, 100 * attempt));
+          await new Promise((r) => setTimeout(r, 100 * attempt));
         }
       }
     }

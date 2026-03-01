@@ -3,11 +3,7 @@
  * EPIC-009: Multi-Platform Hub
  */
 
-import type {
-  AllPlatform,
-  InboxMessage,
-  DistributionPagination,
-} from '@shared/types/distribution';
+import type { AllPlatform, InboxMessage, DistributionPagination } from '@shared/types/distribution';
 
 export interface InboxQuery {
   platform: AllPlatform | 'all';

@@ -19,11 +19,7 @@ export {
 } from './healthCheckService';
 
 // Real-time Service
-export {
-  RealtimeService,
-  initRealtimeService,
-  getRealtimeService,
-} from './realtimeService';
+export { RealtimeService, initRealtimeService, getRealtimeService } from './realtimeService';
 
 // Deployment Metrics Service
 export {

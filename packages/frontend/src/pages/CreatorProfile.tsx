@@ -17,8 +17,18 @@ const MOCK_PROFILES: Record<string, UserProfile> = {
     lightning_address: 'sophia@sovren.app',
     stats: { follower_count: 1500, post_count: 45, total_supporters: 200 },
     subscription_tiers: [
-      { id: 'tier-1', name: 'Basic', price_sats: 1000, features: ['Access to weekly posts', 'Community chat'] },
-      { id: 'tier-2', name: 'Premium', price_sats: 5000, features: ['All posts', 'Monthly Q&A', 'Early access', 'High-res downloads'] },
+      {
+        id: 'tier-1',
+        name: 'Basic',
+        price_sats: 1000,
+        features: ['Access to weekly posts', 'Community chat'],
+      },
+      {
+        id: 'tier-2',
+        name: 'Premium',
+        price_sats: 5000,
+        features: ['All posts', 'Monthly Q&A', 'Early access', 'High-res downloads'],
+      },
     ],
     created_at: '2025-01-15T00:00:00Z',
   },
@@ -35,9 +45,7 @@ const TierCard: React.FC<TierCardProps> = ({ tier, onSubscribe }) => (
   <div className="bg-white rounded-xl border border-gray-200 p-6 hover:border-amber-400 transition-colors">
     <h3 className="text-lg font-bold text-gray-900">{tier.name}</h3>
     <div className="mt-2">
-      <span className="text-3xl font-bold text-gray-900">
-        {tier.price_sats.toLocaleString()}
-      </span>
+      <span className="text-3xl font-bold text-gray-900">{tier.price_sats.toLocaleString()}</span>
       <span className="text-gray-500 ml-1">sats/month</span>
     </div>
     <ul className="mt-4 space-y-2" role="list" aria-label={`${tier.name} features`}>
@@ -198,10 +206,7 @@ const CreatorProfilePage: React.FC = () => {
           </div>
 
           {/* Tabs */}
-          <nav
-            className="mt-8 flex border-b border-gray-200 -mb-px"
-            aria-label="Profile sections"
-          >
+          <nav className="mt-8 flex border-b border-gray-200 -mb-px" aria-label="Profile sections">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -225,7 +230,9 @@ const CreatorProfilePage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'tiers' && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Support {profile.display_name}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Support {profile.display_name}
+            </h2>
             <p className="text-gray-600 mb-6">
               Choose a subscription tier to access premium content and support this creator.
             </p>

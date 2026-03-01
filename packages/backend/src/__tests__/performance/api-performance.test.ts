@@ -13,7 +13,10 @@ import { performance } from 'perf_hooks';
 
 describe('API Performance Tests', () => {
   // Performance measurement utilities
-  function measurePerformance(fn: () => Promise<void>, iterations = 100): Promise<PerformanceMetrics> {
+  function measurePerformance(
+    fn: () => Promise<void>,
+    iterations = 100
+  ): Promise<PerformanceMetrics> {
     return new Promise(async (resolve) => {
       const timings: number[] = [];
 
@@ -57,7 +60,11 @@ describe('API Performance Tests', () => {
     iterations: number;
   }
 
-  function reportMetrics(name: string, metrics: PerformanceMetrics, targets: PerformanceTargets): void {
+  function reportMetrics(
+    name: string,
+    metrics: PerformanceMetrics,
+    targets: PerformanceTargets
+  ): void {
     console.log(`\n${name} Performance:`);
     console.log(`  Average: ${metrics.average.toFixed(2)}ms`);
     console.log(`  Min: ${metrics.min.toFixed(2)}ms`);

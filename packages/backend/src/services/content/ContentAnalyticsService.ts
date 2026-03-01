@@ -21,7 +21,7 @@ import {
   AggregationDimension,
   MetricType,
   ContentPerformance,
-  AnalyticsDashboard
+  AnalyticsDashboard,
 } from '../../types/analytics';
 
 interface ICacheService {
@@ -42,7 +42,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     hour: 60 * 60 * 1000,
     day: 24 * 60 * 60 * 1000,
     week: 7 * 24 * 60 * 60 * 1000,
-    month: 30 * 24 * 60 * 60 * 1000
+    month: 30 * 24 * 60 * 60 * 1000,
   };
   private flushInterval: NodeJS.Timeout | null = null;
 
@@ -77,8 +77,8 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
           ...metadata,
           userAgent: metadata?.userAgent,
           referrer: metadata?.referrer,
-          sessionId: metadata?.sessionId
-        }
+          sessionId: metadata?.sessionId,
+        },
       };
 
       // Add to buffer for batch processing
@@ -99,14 +99,14 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
       this.logger.debug('Engagement tracked', {
         contentId,
         userId,
-        eventType
+        eventType,
       });
     } catch (error) {
       this.logger.error('Failed to track engagement', {
         contentId,
         userId,
         eventType,
-        error
+        error,
       });
       this.metrics.incrementCounter('analytics.engagement.error');
     }
@@ -148,8 +148,8 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
         timeSeries,
         performance,
         totalEvents: rawMetrics.length,
-        uniqueUsers: new Set(rawMetrics.map(m => m.userId)).size,
-        generatedAt: new Date()
+        uniqueUsers: new Set(rawMetrics.map((m) => m.userId)).size,
+        generatedAt: new Date(),
       };
 
       // Cache result
@@ -170,9 +170,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Get dashboard metrics
    */
-  async getDashboardMetrics(
-    contentIds?: string[]
-  ): Promise<AnalyticsDashboard> {
+  async getDashboardMetrics(contentIds?: string[]): Promise<AnalyticsDashboard> {
     try {
       const now = new Date();
       const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -186,16 +184,16 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
           endDate: now,
           dimensions: [AggregationDimension.HOUR],
           metrics: [MetricType.VIEW, MetricType.LIKE, MetricType.SHARE],
-          includeTimeSeries: true
+          includeTimeSeries: true,
         }),
         this.getAnalytics({
           contentIds,
           startDate: weekAgo,
           endDate: now,
           dimensions: [AggregationDimension.DAY],
-          metrics: [MetricType.VIEW, MetricType.LIKE, MetricType.SHARE, MetricType.COMMENT]
+          metrics: [MetricType.VIEW, MetricType.LIKE, MetricType.SHARE, MetricType.COMMENT],
         }),
-        this.getRealtimeMetrics(contentIds)
+        this.getRealtimeMetrics(contentIds),
       ]);
 
       // Get top performing content
@@ -209,14 +207,14 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
           totalComments: dailyMetrics.metrics.comments || 0,
           uniqueViewers: dailyMetrics.uniqueUsers,
           engagementRate: this.calculateEngagementRate(dailyMetrics.metrics),
-          averageViewDuration: dailyMetrics.metrics.averageViewDuration || 0
+          averageViewDuration: dailyMetrics.metrics.averageViewDuration || 0,
         },
         daily: dailyMetrics,
         weekly: weeklyMetrics,
         realtime: realtimeMetrics,
         topContent,
         trends: this.calculateTrends(dailyMetrics, weeklyMetrics),
-        generatedAt: now
+        generatedAt: now,
       };
     } catch (error) {
       this.logger.error('Failed to generate dashboard metrics', { error });
@@ -227,20 +225,17 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Update real-time metrics
    */
-  private async updateRealtimeMetrics(
-    contentId: string,
-    eventType: MetricType
-  ): Promise<void> {
+  private async updateRealtimeMetrics(contentId: string, eventType: MetricType): Promise<void> {
     const key = `realtime:${contentId}:${eventType}`;
     const ttl = 300; // 5 minutes
 
     // Increment counter
-    const current = await this.cache.get<number>(key) || 0;
+    const current = (await this.cache.get<number>(key)) || 0;
     await this.cache.set(key, current + 1, ttl);
 
     // Update aggregated realtime metrics
     const aggregateKey = `realtime:${contentId}:aggregate`;
-    const aggregate = await this.cache.get<Record<string, number>>(aggregateKey) || {};
+    const aggregate = (await this.cache.get<Record<string, number>>(aggregateKey)) || {};
     aggregate[eventType] = (aggregate[eventType] || 0) + 1;
     await this.cache.set(aggregateKey, aggregate, ttl);
   }
@@ -248,9 +243,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Get real-time metrics
    */
-  private async getRealtimeMetrics(
-    contentIds?: string[]
-  ): Promise<Record<string, any>> {
+  private async getRealtimeMetrics(contentIds?: string[]): Promise<Record<string, any>> {
     const metrics: Record<string, any> = {};
 
     const ids = contentIds || Array.from(this.metricsBuffer.keys());
@@ -276,12 +269,12 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     const aggregated: Record<string, any> = {};
 
     // Initialize counters
-    query.metrics?.forEach(metric => {
+    query.metrics?.forEach((metric) => {
       aggregated[`${metric}s`] = 0;
     });
 
     // Count metrics
-    metrics.forEach(metric => {
+    metrics.forEach((metric) => {
       const key = `${metric.eventType}s`;
       if (key in aggregated) {
         aggregated[key]++;
@@ -290,7 +283,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
 
     // Group by dimensions if specified
     if (query.dimensions && query.dimensions.length > 0) {
-      query.dimensions.forEach(dimension => {
+      query.dimensions.forEach((dimension) => {
         aggregated[dimension] = this.groupByDimension(metrics, dimension);
       });
     }
@@ -298,8 +291,8 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     // Calculate derived metrics
     if (metrics.length > 0) {
       const viewDurations = metrics
-        .filter(m => m.eventType === MetricType.VIEW && m.metadata?.duration)
-        .map(m => m.metadata!.duration as number);
+        .filter((m) => m.eventType === MetricType.VIEW && m.metadata?.duration)
+        .map((m) => m.metadata!.duration as number);
 
       if (viewDurations.length > 0) {
         aggregated.averageViewDuration =
@@ -319,7 +312,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   ): Record<string, number> {
     const grouped: Record<string, number> = {};
 
-    metrics.forEach(metric => {
+    metrics.forEach((metric) => {
       let key: string;
 
       switch (dimension) {
@@ -372,12 +365,12 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     for (let time = startTime; time <= endTime; time += intervalMs) {
       timeSeries.set(time, {
         timestamp: new Date(time),
-        metrics: {}
+        metrics: {},
       });
     }
 
     // Aggregate metrics into time buckets
-    metrics.forEach(metric => {
+    metrics.forEach((metric) => {
       const bucketTime = Math.floor(metric.timestamp.getTime() / intervalMs) * intervalMs;
       const bucket = timeSeries.get(bucketTime);
 
@@ -393,22 +386,18 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Calculate content performance indicators
    */
-  private calculatePerformance(
-    metrics: Record<string, any>
-  ): ContentPerformance {
+  private calculatePerformance(metrics: Record<string, any>): ContentPerformance {
     const views = metrics.views || 0;
     const likes = metrics.likes || 0;
     const shares = metrics.shares || 0;
     const comments = metrics.comments || 0;
 
-    const engagementRate = views > 0
-      ? ((likes + shares + comments) / views) * 100
-      : 0;
+    const engagementRate = views > 0 ? ((likes + shares + comments) / views) * 100 : 0;
 
     const viralityScore = this.calculateViralityScore({
       views,
       shares,
-      timeDecay: 1.0
+      timeDecay: 1.0,
     });
 
     return {
@@ -417,7 +406,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
       averageViewDuration: metrics.averageViewDuration || 0,
       completionRate: metrics.completionRate || 0,
       interactionRate: views > 0 ? ((likes + comments) / views) * 100 : 0,
-      shareRate: views > 0 ? (shares / views) * 100 : 0
+      shareRate: views > 0 ? (shares / views) * 100 : 0,
     };
   }
 
@@ -445,9 +434,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     const views = metrics.views || 0;
     if (views === 0) return 0;
 
-    const engagements = (metrics.likes || 0) +
-                       (metrics.shares || 0) +
-                       (metrics.comments || 0);
+    const engagements = (metrics.likes || 0) + (metrics.shares || 0) + (metrics.comments || 0);
 
     return (engagements / views) * 100;
   }
@@ -455,9 +442,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Get top performing content
    */
-  private async getTopPerformingContent(
-    limit: number
-  ): Promise<ContentPerformance[]> {
+  private async getTopPerformingContent(limit: number): Promise<ContentPerformance[]> {
     // In production, query from database
     // For now, return mock data
     return [];
@@ -466,19 +451,13 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
   /**
    * Calculate trends
    */
-  private calculateTrends(
-    daily: AnalyticsResult,
-    weekly: AnalyticsResult
-  ): Record<string, any> {
+  private calculateTrends(daily: AnalyticsResult, weekly: AnalyticsResult): Record<string, any> {
     return {
-      viewsTrend: this.calculateGrowthRate(
-        weekly.metrics.views || 0,
-        daily.metrics.views || 0
-      ),
+      viewsTrend: this.calculateGrowthRate(weekly.metrics.views || 0, daily.metrics.views || 0),
       engagementTrend: this.calculateGrowthRate(
         weekly.performance?.engagementRate || 0,
         daily.performance?.engagementRate || 0
-      )
+      ),
     };
   }
 
@@ -515,12 +494,12 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
         // Store in time-series database
         this.logger.debug('Flushing metrics', {
           contentId,
-          count: metrics.length
+          count: metrics.length,
         });
       }
 
       this.emit('metrics:flushed', {
-        contentCount: bufferCopy.size
+        contentCount: bufferCopy.size,
       });
     } catch (error) {
       this.logger.error('Failed to flush metrics buffer', { error });
@@ -536,14 +515,17 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     const metrics: EngagementMetrics[] = [];
 
     if (query.contentIds) {
-      query.contentIds.forEach(id => {
+      query.contentIds.forEach((id) => {
         const contentMetrics = this.metricsBuffer.get(id);
         if (contentMetrics) {
-          metrics.push(...contentMetrics.filter(m =>
-            m.timestamp >= query.startDate &&
-            m.timestamp <= query.endDate &&
-            (!query.metrics || query.metrics.includes(m.eventType))
-          ));
+          metrics.push(
+            ...contentMetrics.filter(
+              (m) =>
+                m.timestamp >= query.startDate &&
+                m.timestamp <= query.endDate &&
+                (!query.metrics || query.metrics.includes(m.eventType))
+            )
+          );
         }
       });
     }
@@ -559,7 +541,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   }
 
   /**
@@ -571,7 +553,7 @@ export class ContentAnalyticsService extends EventEmitter implements IContentAna
       start: query.startDate.toISOString(),
       end: query.endDate.toISOString(),
       metrics: query.metrics?.sort(),
-      dimensions: query.dimensions?.sort()
+      dimensions: query.dimensions?.sort(),
     })}`;
   }
 

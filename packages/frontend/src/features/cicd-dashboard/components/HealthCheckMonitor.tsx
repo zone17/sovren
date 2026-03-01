@@ -95,9 +95,7 @@ export const HealthCheckMonitor: React.FC<HealthCheckMonitorProps> = ({
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Health Status
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900">Health Status</h2>
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${overallColor}`}>
             {getHealthStatusIcon(overallStatus)} {overallStatus.toUpperCase()}
           </span>
@@ -127,9 +125,7 @@ export const HealthCheckMonitor: React.FC<HealthCheckMonitorProps> = ({
                       <p className="text-sm font-medium text-gray-900">
                         {getEndpointName(check.endpoint)}
                       </p>
-                      <p className="text-xs text-gray-500 font-mono">
-                        {check.endpoint}
-                      </p>
+                      <p className="text-xs text-gray-500 font-mono">{check.endpoint}</p>
                     </div>
                   </div>
 
@@ -137,9 +133,7 @@ export const HealthCheckMonitor: React.FC<HealthCheckMonitorProps> = ({
                     {/* Response Time */}
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Response Time</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {check.responseTime}ms
-                      </p>
+                      <p className="text-sm font-medium text-gray-900">{check.responseTime}ms</p>
                     </div>
 
                     {/* Status Badge */}
@@ -150,9 +144,7 @@ export const HealthCheckMonitor: React.FC<HealthCheckMonitorProps> = ({
 
                   {/* Error Message (if any) */}
                   {check.error && (
-                    <div className="mt-2 text-xs text-red-600">
-                      Error: {check.error}
-                    </div>
+                    <div className="mt-2 text-xs text-red-600">Error: {check.error}</div>
                   )}
                 </div>
               );

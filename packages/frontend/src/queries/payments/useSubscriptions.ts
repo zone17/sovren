@@ -5,7 +5,9 @@ import { paymentKeys } from './useInvoices';
 /**
  * Fetch subscriptions with pagination and filters
  */
-const fetchSubscriptions = async (filters?: SubscriptionFilters): Promise<SubscriptionsResponse> => {
+const fetchSubscriptions = async (
+  filters?: SubscriptionFilters
+): Promise<SubscriptionsResponse> => {
   const params = new URLSearchParams();
 
   if (filters?.page) params.append('page', filters.page.toString());

@@ -65,7 +65,10 @@ export interface IUserActivityService {
    * @param types - Activity types to include
    * @returns AsyncIterator for streaming activities
    */
-  getActivityStream(userId?: string, types?: ActivityType[]): AsyncIterableIterator<ActivityStreamEvent>;
+  getActivityStream(
+    userId?: string,
+    types?: ActivityType[]
+  ): AsyncIterableIterator<ActivityStreamEvent>;
 
   // Session Management
   /**
@@ -188,7 +191,10 @@ export interface IUserActivityService {
    * @param recentMinutes - How far back to analyze (default 60)
    * @returns Suspicious activity analysis
    */
-  detectSuspiciousActivity(userId: string, recentMinutes?: number): Promise<SuspiciousActivityResult>;
+  detectSuspiciousActivity(
+    userId: string,
+    recentMinutes?: number
+  ): Promise<SuspiciousActivityResult>;
 
   /**
    * Check rate limit for a specific activity type

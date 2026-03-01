@@ -35,7 +35,10 @@ const RevenueSplitEditor: React.FC<RevenueSplitEditorProps> = ({
 
   const allocations = useMemo(() => {
     if (entries.length === 0) return [];
-    return allocateSats(previewSats, entries.map((e) => e.splitBps));
+    return allocateSats(
+      previewSats,
+      entries.map((e) => e.splitBps)
+    );
   }, [entries, previewSats]);
 
   const updateEntry = (index: number, pctString: string) => {
@@ -64,11 +67,7 @@ const RevenueSplitEditor: React.FC<RevenueSplitEditorProps> = ({
         <h3 className="text-sm font-semibold text-gray-900">Revenue Split</h3>
         <span
           className={`text-xs font-medium ${
-            isValid
-              ? 'text-green-600'
-              : totalBps > 10000
-              ? 'text-red-600'
-              : 'text-yellow-600'
+            isValid ? 'text-green-600' : totalBps > 10000 ? 'text-red-600' : 'text-yellow-600'
           }`}
           role="status"
           aria-live="polite"
@@ -145,9 +144,7 @@ const RevenueSplitEditor: React.FC<RevenueSplitEditorProps> = ({
                 <span className="truncate max-w-[180px]">
                   {entry.displayName ?? (entry.creatorId || `Collaborator ${i + 1}`)}
                 </span>
-                <span className="font-mono">
-                  {allocations[i]?.toLocaleString() ?? '0'} sats
-                </span>
+                <span className="font-mono">{allocations[i]?.toLocaleString() ?? '0'} sats</span>
               </li>
             ))}
           </ul>

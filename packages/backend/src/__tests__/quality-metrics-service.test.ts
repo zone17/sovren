@@ -1,4 +1,3 @@
-
 import {
   BugMetric,
   CodeQualityMetric,

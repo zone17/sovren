@@ -13,7 +13,6 @@
  * - Performance metrics
  */
 
-
 // ============================================
 // CONNECTION STATES
 // ============================================
@@ -461,7 +460,11 @@ export interface WebSocketManagerConfig {
  */
 export interface WebSocketConnectionEvents {
   /** Connection state changed */
-  'state:changed': (connectionId: string, oldState: ConnectionState, newState: ConnectionState) => void;
+  'state:changed': (
+    connectionId: string,
+    oldState: ConnectionState,
+    newState: ConnectionState
+  ) => void;
   /** Connection opened */
   'connection:open': (connectionId: string) => void;
   /** Connection closed */

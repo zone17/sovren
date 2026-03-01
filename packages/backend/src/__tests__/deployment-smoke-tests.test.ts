@@ -23,9 +23,7 @@ describe('Deployment Smoke Tests', () => {
     });
 
     it('should have required environment variables defined', () => {
-      const requiredVars = [
-        'NODE_ENV',
-      ];
+      const requiredVars = ['NODE_ENV'];
 
       requiredVars.forEach((varName) => {
         expect(process.env[varName]).toBeDefined();
@@ -189,21 +187,37 @@ describe('Deployment Smoke Tests', () => {
 describe('Deployment Workflow Validation', () => {
   describe('GitHub Actions Workflows', () => {
     it('should have backend-deployment workflow', () => {
-      const workflowPath = path.join(__dirname, '../../../..', '.github/workflows/backend-deployment.yml');
+      const workflowPath = path.join(
+        __dirname,
+        '../../../..',
+        '.github/workflows/backend-deployment.yml'
+      );
       const exists = fs.existsSync(workflowPath);
       expect(exists).toBe(true);
     });
 
     it('should have deploy-blue-green workflow or backend-deployment covers it', () => {
-      const blueGreenPath = path.join(__dirname, '../../../..', '.github/workflows/deploy-blue-green.yml');
-      const backendPath = path.join(__dirname, '../../../..', '.github/workflows/backend-deployment.yml');
+      const blueGreenPath = path.join(
+        __dirname,
+        '../../../..',
+        '.github/workflows/deploy-blue-green.yml'
+      );
+      const backendPath = path.join(
+        __dirname,
+        '../../../..',
+        '.github/workflows/backend-deployment.yml'
+      );
       // Blue-green deployment is handled within backend-deployment.yml
       const exists = fs.existsSync(blueGreenPath) || fs.existsSync(backendPath);
       expect(exists).toBe(true);
     });
 
     it('should have automated-rollback workflow', () => {
-      const workflowPath = path.join(__dirname, '../../../..', '.github/workflows/automated-rollback.yml');
+      const workflowPath = path.join(
+        __dirname,
+        '../../../..',
+        '.github/workflows/automated-rollback.yml'
+      );
       const exists = fs.existsSync(workflowPath);
       expect(exists).toBe(true);
     });
@@ -223,7 +237,11 @@ describe('Deployment Workflow Validation', () => {
     });
 
     it('should have implementation summary', () => {
-      const docPath = path.join(__dirname, '../../../..', 'docs/deployment/EPIC_006_IMPLEMENTATION_SUMMARY.md');
+      const docPath = path.join(
+        __dirname,
+        '../../../..',
+        'docs/deployment/EPIC_006_IMPLEMENTATION_SUMMARY.md'
+      );
       const exists = fs.existsSync(docPath);
       expect(exists).toBe(true);
     });

@@ -7,10 +7,7 @@
  */
 
 import type { IUserRelationshipService } from '../../interfaces/user/IUserRelationshipService';
-import type {
-  IEventBus
-} from '../../interfaces/shared/IEventBus';
-
+import type { IEventBus } from '../../interfaces/shared/IEventBus';
 
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
@@ -40,14 +37,14 @@ import type {
   RelationshipMetrics,
   PaginationOptions,
   RelationshipGraphNode,
-  UserRelationshipInfo
+  UserRelationshipInfo,
 } from '../../types/user-relationship';
-import {
-  RelationshipType,
-  RelationshipStatus,
-} from '../../types/user-relationship';
+import { RelationshipType, RelationshipStatus } from '../../types/user-relationship';
 
-import { DomainEventBuilder, DomainEventType as EventType } from '../../interfaces/shared/IEventBus';
+import {
+  DomainEventBuilder,
+  DomainEventType as EventType,
+} from '../../interfaces/shared/IEventBus';
 import crypto from 'crypto';
 
 /**
@@ -63,7 +60,7 @@ class RelationshipGraph {
         followers: new Set(),
         following: new Set(),
         blocked: new Set(),
-        muted: new Set()
+        muted: new Set(),
       });
     }
     return this.nodes.get(userId)!;
@@ -134,7 +131,7 @@ class RelationshipGraph {
     const node = this.nodes.get(userId);
     if (!node) return [];
 
-    return Array.from(node.following).filter(targetId => {
+    return Array.from(node.following).filter((targetId) => {
       const targetNode = this.nodes.get(targetId);
       return targetNode && targetNode.following.has(userId);
     });
@@ -171,14 +168,10 @@ export class UserRelationshipService implements IUserRelationshipService {
     pendingRequests: 0,
     mutualFollows: 0,
     avgFollowersPerUser: 0,
-    avgFollowingPerUser: 0
+    avgFollowingPerUser: 0,
   };
 
-  constructor(
-    eventBus: IEventBus,
-    logger: ILogger,
-    cache?: ICacheService
-  ) {
+  constructor(eventBus: IEventBus, logger: ILogger, cache?: ICacheService) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.cache = cache;
@@ -238,7 +231,7 @@ export class UserRelationshipService implements IUserRelationshipService {
         : RelationshipStatus.ACTIVE,
       createdAt: new Date(),
       updatedAt: new Date(),
-      metadata: request.metadata
+      metadata: request.metadata,
     };
 
     // Store relationship
@@ -354,7 +347,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       status: RelationshipStatus.ACTIVE,
       createdAt: new Date(),
       updatedAt: new Date(),
-      metadata: { ...request.metadata, reason: request.reason }
+      metadata: { ...request.metadata, reason: request.reason },
     };
 
     this.relationships.set(relationship.id, relationship);
@@ -411,11 +404,7 @@ export class UserRelationshipService implements IUserRelationshipService {
     const result = this.graph.isBlocking(userId, targetUserId);
 
     if (this.cache) {
-      await this.cache.set(
-        `relationship:blocking:${userId}:${targetUserId}`,
-        result,
-        3600
-      );
+      await this.cache.set(`relationship:blocking:${userId}:${targetUserId}`, result, 3600);
     }
 
     return result;
@@ -446,9 +435,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       return existing;
     }
 
-    const expiresAt = request.duration
-      ? new Date(Date.now() + request.duration * 1000)
-      : undefined;
+    const expiresAt = request.duration ? new Date(Date.now() + request.duration * 1000) : undefined;
 
     const relationship: UserRelationship = {
       id: this.generateId(),
@@ -459,7 +446,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       createdAt: new Date(),
       updatedAt: new Date(),
       expiresAt,
-      metadata: request.metadata
+      metadata: request.metadata,
     };
 
     this.relationships.set(relationship.id, relationship);
@@ -507,20 +494,14 @@ export class UserRelationshipService implements IUserRelationshipService {
 
   async isMuting(userId: string, targetUserId: string): Promise<boolean> {
     if (this.cache) {
-      const cached = await this.cache.get<boolean>(
-        `relationship:muting:${userId}:${targetUserId}`
-      );
+      const cached = await this.cache.get<boolean>(`relationship:muting:${userId}:${targetUserId}`);
       if (cached !== null) return cached;
     }
 
     const result = this.graph.isMuting(userId, targetUserId);
 
     if (this.cache) {
-      await this.cache.set(
-        `relationship:muting:${userId}:${targetUserId}`,
-        result,
-        3600
-      );
+      await this.cache.set(`relationship:muting:${userId}:${targetUserId}`, result, 3600);
     }
 
     return result;
@@ -562,7 +543,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       status: RelationshipStatus.PENDING,
       createdAt: new Date(),
       updatedAt: new Date(),
-      metadata: { ...request.metadata, message: request.message }
+      metadata: { ...request.metadata, message: request.message },
     };
 
     this.relationships.set(relationship.id, relationship);
@@ -607,11 +588,11 @@ export class UserRelationshipService implements IUserRelationshipService {
       // Create bidirectional follows
       await this.follow({
         userId: relationship.sourceUserId,
-        targetUserId: relationship.targetUserId
+        targetUserId: relationship.targetUserId,
       });
       await this.follow({
         userId: relationship.targetUserId,
-        targetUserId: relationship.sourceUserId
+        targetUserId: relationship.sourceUserId,
       });
     }
 
@@ -657,9 +638,10 @@ export class UserRelationshipService implements IUserRelationshipService {
     pagination?: PaginationOptions
   ): Promise<UserRelationship[]> {
     const requests = Array.from(this.relationships.values()).filter(
-      r => r.targetUserId === userId &&
-           r.type === RelationshipType.FRIEND_REQUEST &&
-           r.status === RelationshipStatus.PENDING
+      (r) =>
+        r.targetUserId === userId &&
+        r.type === RelationshipType.FRIEND_REQUEST &&
+        r.status === RelationshipStatus.PENDING
     );
 
     return this.paginateResults(requests, pagination);
@@ -685,17 +667,17 @@ export class UserRelationshipService implements IUserRelationshipService {
     const offset = pagination?.offset || 0;
 
     const paginatedIds = followerIds.slice(offset, offset + limit);
-    const followers: UserRelationshipInfo[] = paginatedIds.map(followerId => ({
+    const followers: UserRelationshipInfo[] = paginatedIds.map((followerId) => ({
       userId: followerId,
       relationship: this.findRelationship(followerId, userId, RelationshipType.FOLLOW)!,
-      isMutual: this.graph.isFollowing(userId, followerId)
+      isMutual: this.graph.isFollowing(userId, followerId),
     }));
 
     const response: FollowerListResponse = {
       followers,
       total: followerIds.length,
       hasMore: offset + limit < followerIds.length,
-      nextCursor: offset + limit < followerIds.length ? String(offset + limit) : undefined
+      nextCursor: offset + limit < followerIds.length ? String(offset + limit) : undefined,
     };
 
     // Cache response
@@ -721,17 +703,17 @@ export class UserRelationshipService implements IUserRelationshipService {
     const offset = pagination?.offset || 0;
 
     const paginatedIds = followingIds.slice(offset, offset + limit);
-    const following: UserRelationshipInfo[] = paginatedIds.map(targetId => ({
+    const following: UserRelationshipInfo[] = paginatedIds.map((targetId) => ({
       userId: targetId,
       relationship: this.findRelationship(userId, targetId, RelationshipType.FOLLOW)!,
-      isMutual: this.graph.isFollowing(targetId, userId)
+      isMutual: this.graph.isFollowing(targetId, userId),
     }));
 
     const response: FollowingListResponse = {
       following,
       total: followingIds.length,
       hasMore: offset + limit < followingIds.length,
-      nextCursor: offset + limit < followingIds.length ? String(offset + limit) : undefined
+      nextCursor: offset + limit < followingIds.length ? String(offset + limit) : undefined,
     };
 
     if (this.cache) {
@@ -747,8 +729,8 @@ export class UserRelationshipService implements IUserRelationshipService {
   ): Promise<UserRelationship[]> {
     const mutualIds = this.graph.getMutualFollows(userId);
     const relationships = mutualIds
-      .map(targetId => this.findRelationship(userId, targetId, RelationshipType.FOLLOW))
-      .filter(r => r !== null) as UserRelationship[];
+      .map((targetId) => this.findRelationship(userId, targetId, RelationshipType.FOLLOW))
+      .filter((r) => r !== null) as UserRelationship[];
 
     return this.paginateResults(relationships, pagination);
   }
@@ -758,23 +740,22 @@ export class UserRelationshipService implements IUserRelationshipService {
     pagination?: PaginationOptions
   ): Promise<UserRelationship[]> {
     const relationships = Array.from(this.relationships.values()).filter(
-      r => r.sourceUserId === userId &&
-           r.type === RelationshipType.BLOCK &&
-           r.status === RelationshipStatus.ACTIVE
+      (r) =>
+        r.sourceUserId === userId &&
+        r.type === RelationshipType.BLOCK &&
+        r.status === RelationshipStatus.ACTIVE
     );
 
     return this.paginateResults(relationships, pagination);
   }
 
-  async getMutedUsers(
-    userId: string,
-    pagination?: PaginationOptions
-  ): Promise<UserRelationship[]> {
+  async getMutedUsers(userId: string, pagination?: PaginationOptions): Promise<UserRelationship[]> {
     const relationships = Array.from(this.relationships.values()).filter(
-      r => r.sourceUserId === userId &&
-           r.type === RelationshipType.MUTE &&
-           r.status === RelationshipStatus.ACTIVE &&
-           (!r.expiresAt || r.expiresAt > new Date())
+      (r) =>
+        r.sourceUserId === userId &&
+        r.type === RelationshipType.MUTE &&
+        r.status === RelationshipStatus.ACTIVE &&
+        (!r.expiresAt || r.expiresAt > new Date())
     );
 
     return this.paginateResults(relationships, pagination);
@@ -787,9 +768,7 @@ export class UserRelationshipService implements IUserRelationshipService {
   async getRelationshipStats(userId: string): Promise<RelationshipStats> {
     // Check cache
     if (this.cache) {
-      const cached = await this.cache.get<RelationshipStats>(
-        `relationship:stats:${userId}`
-      );
+      const cached = await this.cache.get<RelationshipStats>(`relationship:stats:${userId}`);
       if (cached) return cached;
     }
 
@@ -798,14 +777,20 @@ export class UserRelationshipService implements IUserRelationshipService {
       followingCount: this.graph.getFollowing(userId).length,
       mutualFollowCount: this.graph.getMutualFollows(userId).length,
       blockedCount: Array.from(this.relationships.values()).filter(
-        r => r.sourceUserId === userId && r.type === RelationshipType.BLOCK && r.status === RelationshipStatus.ACTIVE
+        (r) =>
+          r.sourceUserId === userId &&
+          r.type === RelationshipType.BLOCK &&
+          r.status === RelationshipStatus.ACTIVE
       ).length,
       mutedCount: Array.from(this.relationships.values()).filter(
-        r => r.sourceUserId === userId && r.type === RelationshipType.MUTE && r.status === RelationshipStatus.ACTIVE
+        (r) =>
+          r.sourceUserId === userId &&
+          r.type === RelationshipType.MUTE &&
+          r.status === RelationshipStatus.ACTIVE
       ).length,
       pendingRequestCount: Array.from(this.relationships.values()).filter(
-        r => r.targetUserId === userId && r.status === RelationshipStatus.PENDING
-      ).length
+        (r) => r.targetUserId === userId && r.status === RelationshipStatus.PENDING
+      ).length,
     };
 
     // Cache stats
@@ -833,7 +818,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       targetUserId,
       isMutual,
       sourceRelationship: sourceRelationship || undefined,
-      targetRelationship: targetRelationship || undefined
+      targetRelationship: targetRelationship || undefined,
     };
   }
 
@@ -862,7 +847,7 @@ export class UserRelationshipService implements IUserRelationshipService {
 
     for (const followedUserId of following) {
       const secondDegree = this.graph.getFollowing(followedUserId);
-      secondDegree.forEach(uid => {
+      secondDegree.forEach((uid) => {
         if (uid !== userId && !following.has(uid) && !blocked.has(uid)) {
           potentialUsers.add(uid);
         }
@@ -871,7 +856,7 @@ export class UserRelationshipService implements IUserRelationshipService {
 
     // Calculate scores
     for (const targetUserId of potentialUsers) {
-      const mutualFollowers = Array.from(following).filter(followedId =>
+      const mutualFollowers = Array.from(following).filter((followedId) =>
         this.graph.isFollowing(followedId, targetUserId)
       ).length;
 
@@ -881,7 +866,7 @@ export class UserRelationshipService implements IUserRelationshipService {
         userId: targetUserId,
         score,
         reason: `${mutualFollowers} mutual connection${mutualFollowers !== 1 ? 's' : ''}`,
-        mutualFollowers
+        mutualFollowers,
       });
     }
 
@@ -919,9 +904,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       const batch = request.targetUserIds.slice(i, i + batchSize);
 
       const results = await Promise.allSettled(
-        batch.map(targetUserId =>
-          this.follow({ userId: request.userId, targetUserId })
-        )
+        batch.map((targetUserId) => this.follow({ userId: request.userId, targetUserId }))
       );
 
       results.forEach((result, index) => {
@@ -931,7 +914,7 @@ export class UserRelationshipService implements IUserRelationshipService {
         } else {
           failed.push({
             userId: targetUserId,
-            error: result.reason?.message || 'Unknown error'
+            error: result.reason?.message || 'Unknown error',
           });
         }
       });
@@ -947,7 +930,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       failed,
       total: request.targetUserIds.length,
       successCount: successful.length,
-      failureCount: failed.length
+      failureCount: failed.length,
     };
   }
 
@@ -964,9 +947,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       const batch = request.targetUserIds.slice(i, i + batchSize);
 
       const results = await Promise.allSettled(
-        batch.map(targetUserId =>
-          this.unfollow({ userId: request.userId, targetUserId })
-        )
+        batch.map((targetUserId) => this.unfollow({ userId: request.userId, targetUserId }))
       );
 
       results.forEach((result, index) => {
@@ -976,7 +957,7 @@ export class UserRelationshipService implements IUserRelationshipService {
         } else {
           failed.push({
             userId: targetUserId,
-            error: result.status === 'rejected' ? result.reason?.message : 'Not following'
+            error: result.status === 'rejected' ? result.reason?.message : 'Not following',
           });
         }
       });
@@ -991,7 +972,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       failed,
       total: request.targetUserIds.length,
       successCount: successful.length,
-      failureCount: failed.length
+      failureCount: failed.length,
     };
   }
 
@@ -1016,7 +997,7 @@ export class UserRelationshipService implements IUserRelationshipService {
         hideFollowing: false,
         requireApprovalForFollows: false,
         allowFriendRequests: true,
-        allowMessages: true
+        allowMessages: true,
       };
       this.privacySettings.set(userId, settings);
     }
@@ -1065,23 +1046,16 @@ export class UserRelationshipService implements IUserRelationshipService {
     userId: string,
     targetUserId: string
   ): Promise<RelationshipValidationResult> {
-    const [
-      isBlocked,
-      isBlockedBy,
-      isMuted,
-      isMutedBy,
-      isFollowing,
-      isFollowedBy,
-      targetPrivacy
-    ] = await Promise.all([
-      this.isBlocking(userId, targetUserId),
-      this.isBlockedBy(userId, targetUserId),
-      this.isMuting(userId, targetUserId),
-      this.isMuting(targetUserId, userId),
-      this.isFollowing(userId, targetUserId),
-      this.isFollowing(targetUserId, userId),
-      this.getPrivacySettings(targetUserId)
-    ]);
+    const [isBlocked, isBlockedBy, isMuted, isMutedBy, isFollowing, isFollowedBy, targetPrivacy] =
+      await Promise.all([
+        this.isBlocking(userId, targetUserId),
+        this.isBlockedBy(userId, targetUserId),
+        this.isMuting(userId, targetUserId),
+        this.isMuting(targetUserId, userId),
+        this.isFollowing(userId, targetUserId),
+        this.isFollowing(targetUserId, userId),
+        this.getPrivacySettings(targetUserId),
+      ]);
 
     return {
       valid: !isBlocked && !isBlockedBy,
@@ -1094,7 +1068,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       isMutedBy,
       isFollowing,
       isFollowedBy,
-      requiresApproval: targetPrivacy.requireApprovalForFollows
+      requiresApproval: targetPrivacy.requireApprovalForFollows,
     };
   }
 
@@ -1105,14 +1079,14 @@ export class UserRelationshipService implements IUserRelationshipService {
   async importFollows(request: ImportFollowsRequest): Promise<BulkOperationResult> {
     this.logger.info('Import follows request', {
       source: request.source,
-      count: request.userIds.length
+      count: request.userIds.length,
     });
 
     return this.bulkFollow({
       userId: request.userId,
       targetUserIds: request.userIds,
       batchSize: 20,
-      delayMs: 50
+      delayMs: 50,
     });
   }
 
@@ -1121,12 +1095,12 @@ export class UserRelationshipService implements IUserRelationshipService {
     const following = this.graph.getFollowing(userId);
 
     const blocked = Array.from(this.relationships.values())
-      .filter(r => r.sourceUserId === userId && r.type === RelationshipType.BLOCK)
-      .map(r => r.targetUserId);
+      .filter((r) => r.sourceUserId === userId && r.type === RelationshipType.BLOCK)
+      .map((r) => r.targetUserId);
 
     const muted = Array.from(this.relationships.values())
-      .filter(r => r.sourceUserId === userId && r.type === RelationshipType.MUTE)
-      .map(r => r.targetUserId);
+      .filter((r) => r.sourceUserId === userId && r.type === RelationshipType.MUTE)
+      .map((r) => r.targetUserId);
 
     return {
       userId,
@@ -1134,7 +1108,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       following,
       blocked,
       muted,
-      exportedAt: new Date()
+      exportedAt: new Date(),
     };
   }
 
@@ -1144,20 +1118,20 @@ export class UserRelationshipService implements IUserRelationshipService {
 
   async queryRelationships(options: RelationshipQueryOptions): Promise<UserRelationship[]> {
     let results = Array.from(this.relationships.values()).filter(
-      r => r.sourceUserId === options.userId || r.targetUserId === options.userId
+      (r) => r.sourceUserId === options.userId || r.targetUserId === options.userId
     );
 
     // Apply filters
     if (options.type) {
-      results = results.filter(r => r.type === options.type);
+      results = results.filter((r) => r.type === options.type);
     }
 
     if (options.status) {
-      results = results.filter(r => r.status === options.status);
+      results = results.filter((r) => r.status === options.status);
     }
 
     if (!options.includeExpired) {
-      results = results.filter(r => !r.expiresAt || r.expiresAt > new Date());
+      results = results.filter((r) => !r.expiresAt || r.expiresAt > new Date());
     }
 
     // Sort
@@ -1179,14 +1153,17 @@ export class UserRelationshipService implements IUserRelationshipService {
 
   async getMetrics(): Promise<RelationshipMetrics> {
     const totalUsers = this.graph['nodes'].size;
-    const mutualFollows = Array.from(this.graph['nodes'].values())
-      .reduce((sum, node) => sum + this.graph.getMutualFollows(node.userId).length, 0) / 2;
+    const mutualFollows =
+      Array.from(this.graph['nodes'].values()).reduce(
+        (sum, node) => sum + this.graph.getMutualFollows(node.userId).length,
+        0
+      ) / 2;
 
     return {
       ...this.metrics,
       mutualFollows,
       avgFollowersPerUser: totalUsers > 0 ? this.metrics.activeFollows / totalUsers : 0,
-      avgFollowingPerUser: totalUsers > 0 ? this.metrics.activeFollows / totalUsers : 0
+      avgFollowingPerUser: totalUsers > 0 ? this.metrics.activeFollows / totalUsers : 0,
     };
   }
 
@@ -1294,10 +1271,7 @@ export class UserRelationshipService implements IUserRelationshipService {
     return null;
   }
 
-  private paginateResults<T>(
-    results: T[],
-    pagination?: PaginationOptions
-  ): T[] {
+  private paginateResults<T>(results: T[], pagination?: PaginationOptions): T[] {
     if (!pagination) return results;
 
     const limit = pagination.limit || 50;
@@ -1315,7 +1289,7 @@ export class UserRelationshipService implements IUserRelationshipService {
       this.cache.invalidate(`relationship:stats:${userId}`),
       this.cache.invalidate(`relationship:stats:${targetUserId}`),
       this.cache.invalidate(`relationship:recommendations:${userId}`),
-      this.cache.invalidate(`relationship:recommendations:${targetUserId}`)
+      this.cache.invalidate(`relationship:recommendations:${targetUserId}`),
     ]);
   }
 
@@ -1333,7 +1307,7 @@ export class UserRelationshipService implements IUserRelationshipService {
             sourceUserId: relationship.sourceUserId,
             targetUserId: relationship.targetUserId,
             type: relationship.type,
-            status: relationship.status
+            status: relationship.status,
           })
           .withUserId(relationship.sourceUserId)
           .withSource('UserRelationshipService')
@@ -1353,7 +1327,7 @@ export class UserRelationshipService implements IUserRelationshipService {
     if (!tracker || tracker.resetAt < now) {
       tracker = {
         count: 0,
-        resetAt: new Date(now.getTime() + 3600000) // 1 hour from now
+        resetAt: new Date(now.getTime() + 3600000), // 1 hour from now
       };
       this.operationCounts.set(key, tracker);
     }
@@ -1366,6 +1340,6 @@ export class UserRelationshipService implements IUserRelationshipService {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

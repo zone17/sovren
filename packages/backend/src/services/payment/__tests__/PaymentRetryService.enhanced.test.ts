@@ -16,14 +16,8 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import {
-  PaymentState,
-  Payment,
-} from '@shared/types';
-import {
-  PaymentRetryService,
-  RetryConfig,
-} from '../PaymentRetryService';
+import { PaymentState, Payment } from '@shared/types';
+import { PaymentRetryService, RetryConfig } from '../PaymentRetryService';
 import { PaymentStateMachine } from '../PaymentStateMachine';
 import { EmailIntegrationService } from '../../email-integration-service';
 
@@ -218,7 +212,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         );
 
         // Assert: All delays should be capped
-        delays.forEach(delay => {
+        delays.forEach((delay) => {
           expect(delay).toBeGreaterThanOrEqual(0);
           expect(delay).toBeLessThanOrEqual(60000);
         });
@@ -270,7 +264,7 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         expect(uniqueDelays.size).toBeGreaterThan(1);
 
         // Assert: All delays within valid range
-        delays.forEach(delay => {
+        delays.forEach((delay) => {
           expect(delay).toBeGreaterThanOrEqual(0);
           expect(delay).toBeLessThanOrEqual(4000); // 1000 * 2^2
         });
@@ -288,7 +282,9 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
         // Assert: Standard deviation should indicate spread
         const mean = concurrentDelays.reduce((sum, d) => sum + d, 0) / concurrentDelays.length;
-        const variance = concurrentDelays.reduce((sum, d) => sum + Math.pow(d - mean, 2), 0) / concurrentDelays.length;
+        const variance =
+          concurrentDelays.reduce((sum, d) => sum + Math.pow(d - mean, 2), 0) /
+          concurrentDelays.length;
         const stdDev = Math.sqrt(variance);
 
         // Expect some variation (std dev > 0)
@@ -361,13 +357,13 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         const bucketSize = maxDelay / 10;
         const buckets = Array(10).fill(0);
 
-        samples.forEach(delay => {
+        samples.forEach((delay) => {
           const bucketIndex = Math.min(Math.floor(delay / bucketSize), 9);
           buckets[bucketIndex]++;
         });
 
         // Each bucket should have roughly 10% of samples (100 ± 50)
-        buckets.forEach(count => {
+        buckets.forEach((count) => {
           expect(count).toBeGreaterThan(50);
           expect(count).toBeLessThan(150);
         });
@@ -637,9 +633,9 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         mockSupabase.from = vi.fn(() => mockChain) as any;
 
         // Act & Assert: Should throw circuit breaker error
-        await expect(
-          retryService.scheduleRetry(mockPayment.id, 'network_error')
-        ).rejects.toThrow(/circuit breaker.*open/i);
+        await expect(retryService.scheduleRetry(mockPayment.id, 'network_error')).rejects.toThrow(
+          /circuit breaker.*open/i
+        );
       });
     });
 
@@ -739,16 +735,18 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
       it('should include circuit breaker state in metrics', async () => {
         // Arrange: Mock metrics RPC response
         mockSupabase.rpc = vi.fn().mockResolvedValue({
-          data: [{
-            total_retries: 100,
-            successful_retries: 80,
-            failed_retries: 20,
-            pending_retries: 5,
-            success_rate: 0.8,
-            avg_attempts_to_success: 2.5,
-            circuit_breaker_open: false,
-            circuit_breaker_failure_count: 2,
-          }],
+          data: [
+            {
+              total_retries: 100,
+              successful_retries: 80,
+              failed_retries: 20,
+              pending_retries: 5,
+              success_rate: 0.8,
+              avg_attempts_to_success: 2.5,
+              circuit_breaker_open: false,
+              circuit_breaker_failure_count: 2,
+            },
+          ],
           error: null,
         });
 
@@ -768,11 +766,13 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
 
         // Mock metrics
         mockSupabase.rpc = vi.fn().mockResolvedValue({
-          data: [{
-            circuit_breaker_open: true,
-            circuit_breaker_failure_count: 5,
-            circuit_breaker_opened_at: new Date(),
-          }],
+          data: [
+            {
+              circuit_breaker_open: true,
+              circuit_breaker_failure_count: 5,
+              circuit_breaker_opened_at: new Date(),
+            },
+          ],
           error: null,
         });
 
@@ -789,11 +789,13 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
         const openedAt = new Date(Date.now() - 30000);
 
         mockSupabase.rpc = vi.fn().mockResolvedValue({
-          data: [{
-            circuit_breaker_open: true,
-            circuit_breaker_opened_at: openedAt,
-            circuit_breaker_open_duration_ms: 30000,
-          }],
+          data: [
+            {
+              circuit_breaker_open: true,
+              circuit_breaker_opened_at: openedAt,
+              circuit_breaker_open_duration_ms: 30000,
+            },
+          ],
           error: null,
         });
 
@@ -809,11 +811,13 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
       it('should track average delay with jitter applied', async () => {
         // Arrange: Mock metrics
         mockSupabase.rpc = vi.fn().mockResolvedValue({
-          data: [{
-            avg_retry_delay_ms: 2500, // Average with jitter
-            avg_retry_delay_without_jitter_ms: 5000, // Theoretical without jitter
-            jitter_reduction_percentage: 50,
-          }],
+          data: [
+            {
+              avg_retry_delay_ms: 2500, // Average with jitter
+              avg_retry_delay_without_jitter_ms: 5000, // Theoretical without jitter
+              jitter_reduction_percentage: 50,
+            },
+          ],
           error: null,
         });
 
@@ -830,15 +834,17 @@ describe('PaymentRetryService - Enhanced Exponential Backoff (PAY-009)', () => {
       it('should provide histogram of retry delays', async () => {
         // Arrange: Mock histogram data
         mockSupabase.rpc = vi.fn().mockResolvedValue({
-          data: [{
-            delay_histogram: {
-              '0-1000ms': 20,
-              '1000-5000ms': 30,
-              '5000-15000ms': 25,
-              '15000-60000ms': 15,
-              '60000ms+': 10,
+          data: [
+            {
+              delay_histogram: {
+                '0-1000ms': 20,
+                '1000-5000ms': 30,
+                '5000-15000ms': 25,
+                '15000-60000ms': 15,
+                '60000ms+': 10,
+              },
             },
-          }],
+          ],
           error: null,
         });
 

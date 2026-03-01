@@ -42,10 +42,7 @@ export class PerformanceBenchmark {
   /**
    * Run benchmark
    */
-  async benchmark<T>(
-    config: BenchmarkConfig,
-    fn: () => Promise<T>
-  ): Promise<BenchmarkResult> {
+  async benchmark<T>(config: BenchmarkConfig, fn: () => Promise<T>): Promise<BenchmarkResult> {
     const { name, thresholdMs, warmupRuns = 3, testRuns = 10, parallel = false } = config;
 
     // Warmup runs
@@ -168,13 +165,13 @@ export class PerformanceBenchmark {
     }
 
     // Summary
-    const passed = results.filter(r => r.passed).length;
+    const passed = results.filter((r) => r.passed).length;
     const failed = results.length - passed;
 
     console.log(`Overall: ${passed}/${results.length} benchmarks passed\n`);
 
     // Detailed results
-    results.forEach(result => {
+    results.forEach((result) => {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
       const statusColor = result.passed ? '\x1b[32m' : '\x1b[31m';
       const resetColor = '\x1b[0m';

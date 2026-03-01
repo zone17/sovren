@@ -691,14 +691,14 @@ export class LightningReceiptService extends EventEmitter {
     if (process.env.NODE_ENV === 'production') {
       throw new Error(
         'RECEIPT_SIGNATURE_SECRET environment variable is required in production. ' +
-        'Set it to a strong random string (32+ characters).'
+          'Set it to a strong random string (32+ characters).'
       );
     }
 
     // Non-production: use a clearly-marked dev-only secret with warning
     console.warn(
       '[ReceiptService] WARNING: Using dev-only receipt signing secret. ' +
-      'Set RECEIPT_SIGNATURE_SECRET environment variable for production.'
+        'Set RECEIPT_SIGNATURE_SECRET environment variable for production.'
     );
     return 'DEV-ONLY-receipt-secret-DO-NOT-USE-IN-PRODUCTION';
   }

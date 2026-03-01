@@ -133,10 +133,9 @@ describe('ContentScannerProcessor', () => {
 
       await processor.onCompleted(job);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Relay scan job completed',
-        { jobId: 'job-123' }
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith('Relay scan job completed', {
+        jobId: 'job-123',
+      });
     });
   });
 

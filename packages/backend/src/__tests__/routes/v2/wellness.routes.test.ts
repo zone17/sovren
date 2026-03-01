@@ -207,9 +207,7 @@ describe('Wellness Routes (v2)', () => {
     });
 
     it('applies authenticate middleware to protected routes', () => {
-      const protectedRoutes = capturedRoutes.filter(
-        (r) => r.path !== '/benchmark'
-      );
+      const protectedRoutes = capturedRoutes.filter((r) => r.path !== '/benchmark');
       protectedRoutes.forEach((route) => {
         // authenticate should be one of the middlewares
         expect(route.middlewares.length).toBeGreaterThanOrEqual(1);
@@ -364,7 +362,15 @@ describe('Wellness Routes (v2)', () => {
       mockUpdateBoundaries.mockResolvedValue(mockData);
 
       const req = makeRequest({
-        body: { focus_hours: { enabled: false, start: '22:00', end: '08:00', timezone: 'UTC', days: ['monday'] } },
+        body: {
+          focus_hours: {
+            enabled: false,
+            start: '22:00',
+            end: '08:00',
+            timezone: 'UTC',
+            days: ['monday'],
+          },
+        },
       });
       const { res, json } = makeResponse();
 
@@ -377,7 +383,13 @@ describe('Wellness Routes (v2)', () => {
 
   describe('POST /pulse', () => {
     it('returns 201 with pulse check-in data', async () => {
-      const mockData = { id: 'pulse-1', energy: 4, motivation: 3, stress: 2, composite_score: 3.67 };
+      const mockData = {
+        id: 'pulse-1',
+        energy: 4,
+        motivation: 3,
+        stress: 2,
+        composite_score: 3.67,
+      };
       mockRecordPulse.mockResolvedValue(mockData);
 
       const req = makeRequest({ body: { energy: 4, motivation: 3, stress: 2 } });
@@ -455,7 +467,12 @@ describe('Wellness Routes (v2)', () => {
 
   describe('DELETE /data', () => {
     it('returns 200 with deletion summary', async () => {
-      const mockDeleted = { wellness_snapshots: 52, creator_work_patterns: 365, pulse_checkins: 24, boundary_config: 1 };
+      const mockDeleted = {
+        wellness_snapshots: 52,
+        creator_work_patterns: 365,
+        pulse_checkins: 24,
+        boundary_config: 1,
+      };
       mockDeleteAllWellnessData.mockResolvedValue(mockDeleted);
 
       const req = makeRequest();
@@ -516,22 +533,38 @@ describe('Wellness Validators', () => {
 
   describe('RecordPulseSchema', () => {
     it('accepts valid pulse', () => {
-      const result = validators.RecordPulseSchema.safeParse({ energy: 4, motivation: 3, stress: 2 });
+      const result = validators.RecordPulseSchema.safeParse({
+        energy: 4,
+        motivation: 3,
+        stress: 2,
+      });
       expect(result.success).toBe(true);
     });
 
     it('rejects energy below 1', () => {
-      const result = validators.RecordPulseSchema.safeParse({ energy: 0, motivation: 3, stress: 2 });
+      const result = validators.RecordPulseSchema.safeParse({
+        energy: 0,
+        motivation: 3,
+        stress: 2,
+      });
       expect(result.success).toBe(false);
     });
 
     it('rejects energy above 5', () => {
-      const result = validators.RecordPulseSchema.safeParse({ energy: 6, motivation: 3, stress: 2 });
+      const result = validators.RecordPulseSchema.safeParse({
+        energy: 6,
+        motivation: 3,
+        stress: 2,
+      });
       expect(result.success).toBe(false);
     });
 
     it('rejects non-integer values', () => {
-      const result = validators.RecordPulseSchema.safeParse({ energy: 3.5, motivation: 3, stress: 2 });
+      const result = validators.RecordPulseSchema.safeParse({
+        energy: 3.5,
+        motivation: 3,
+        stress: 2,
+      });
       expect(result.success).toBe(false);
     });
   });

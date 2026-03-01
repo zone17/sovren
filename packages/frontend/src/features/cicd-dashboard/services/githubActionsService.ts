@@ -46,15 +46,12 @@ export class GitHubActionsService {
   /**
    * Make authenticated GitHub API request
    */
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
     const headers: HeadersInit = {
-      'Accept': 'application/vnd.github+json',
-      'Authorization': `Bearer ${this.token}`,
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${this.token}`,
       'X-GitHub-Api-Version': this.apiVersion,
       ...options.headers,
     };
@@ -67,9 +64,7 @@ export class GitHubActionsService {
 
       if (!response.ok) {
         const error: GitHubAPIError = await response.json();
-        throw new Error(
-          `GitHub API error: ${error.message} (${response.status})`
-        );
+        throw new Error(`GitHub API error: ${error.message} (${response.status})`);
       }
 
       return response.json() as Promise<T>;
@@ -164,8 +159,8 @@ export class GitHubActionsService {
     const endpoint = `/repos/${this.owner}/${this.repo}/actions/jobs/${jobId}/logs`;
 
     const headers: HeadersInit = {
-      'Accept': 'application/vnd.github+json',
-      'Authorization': `Bearer ${this.token}`,
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${this.token}`,
       'X-GitHub-Api-Version': this.apiVersion,
     };
 
@@ -185,8 +180,8 @@ export class GitHubActionsService {
     const endpoint = `/repos/${this.owner}/${this.repo}/actions/runs/${runId}/logs`;
 
     const headers: HeadersInit = {
-      'Accept': 'application/vnd.github+json',
-      'Authorization': `Bearer ${this.token}`,
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${this.token}`,
       'X-GitHub-Api-Version': this.apiVersion,
     };
 
@@ -243,10 +238,7 @@ export class GitHubActionsService {
   /**
    * Get workflow run attempt
    */
-  async getWorkflowRunAttempt(
-    runId: number,
-    attemptNumber: number
-  ): Promise<GitHubWorkflowRun> {
+  async getWorkflowRunAttempt(runId: number, attemptNumber: number): Promise<GitHubWorkflowRun> {
     const endpoint = `/repos/${this.owner}/${this.repo}/actions/runs/${runId}/attempts/${attemptNumber}`;
     return this.request<GitHubWorkflowRun>(endpoint);
   }
@@ -281,9 +273,7 @@ export function initGitHubActionsService(config: GitHubRepoConfig): GitHubAction
  */
 export function getGitHubActionsService(): GitHubActionsService {
   if (!githubActionsServiceInstance) {
-    throw new Error(
-      'GitHubActionsService not initialized. Call initGitHubActionsService first.'
-    );
+    throw new Error('GitHubActionsService not initialized. Call initGitHubActionsService first.');
   }
   return githubActionsServiceInstance;
 }

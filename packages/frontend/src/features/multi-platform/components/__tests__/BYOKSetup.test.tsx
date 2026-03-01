@@ -165,7 +165,9 @@ describe('BYOKSetup', () => {
       mockUseBYOK.mockReturnValue({ ...defaultBYOK, status: 'validating', isPending: true });
       render(<BYOKSetup />, { wrapper: createWrapper() });
 
-      expect(screen.getByLabelText('Validate and save API keys')).toHaveTextContent('Validating...');
+      expect(screen.getByLabelText('Validate and save API keys')).toHaveTextContent(
+        'Validating...'
+      );
     });
   });
 

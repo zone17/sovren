@@ -205,7 +205,12 @@ export interface FacetedResult {
 }
 
 export interface IContentSearchService {
-  search(query: string, filters?: SearchFilters, page?: number, size?: number): Promise<SearchResult>;
+  search(
+    query: string,
+    filters?: SearchFilters,
+    page?: number,
+    size?: number
+  ): Promise<SearchResult>;
   indexContent(content: Content): Promise<void>;
   removeFromIndex(contentId: string): Promise<void>;
   suggest(partial: string): Promise<string[]>;

@@ -9,7 +9,6 @@
  * @see Story #002: Implement Payment State Machine Service
  */
 
-
 import { SupabaseClient } from '@supabase/supabase-js';
 import { PaymentStateMachine } from '../PaymentStateMachine';
 import {
@@ -138,11 +137,9 @@ describe('PaymentStateMachine', () => {
 
         (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
-        const result = await stateMachine.transition(
-          payment.id,
-          PaymentState.PROCESSING,
-          { initiator: 'test' }
-        );
+        const result = await stateMachine.transition(payment.id, PaymentState.PROCESSING, {
+          initiator: 'test',
+        });
 
         expect(result.success).toBe(true);
         expect(result.payment.state).toBe(PaymentState.PROCESSING);
@@ -408,9 +405,9 @@ describe('PaymentStateMachine', () => {
         }),
       });
 
-      await expect(
-        stateMachine.transition(payment.id, PaymentState.PENDING)
-      ).rejects.toThrow(InvalidTransitionError);
+      await expect(stateMachine.transition(payment.id, PaymentState.PENDING)).rejects.toThrow(
+        InvalidTransitionError
+      );
     });
 
     it('should reject COMPLETED → FAILED', async () => {
@@ -424,9 +421,9 @@ describe('PaymentStateMachine', () => {
         }),
       });
 
-      await expect(
-        stateMachine.transition(payment.id, PaymentState.FAILED)
-      ).rejects.toThrow(InvalidTransitionError);
+      await expect(stateMachine.transition(payment.id, PaymentState.FAILED)).rejects.toThrow(
+        InvalidTransitionError
+      );
     });
 
     it('should reject EXPIRED → PENDING (terminal state)', async () => {
@@ -440,9 +437,9 @@ describe('PaymentStateMachine', () => {
         }),
       });
 
-      await expect(
-        stateMachine.transition(payment.id, PaymentState.PENDING)
-      ).rejects.toThrow(InvalidTransitionError);
+      await expect(stateMachine.transition(payment.id, PaymentState.PENDING)).rejects.toThrow(
+        InvalidTransitionError
+      );
     });
 
     it('should reject REFUNDED → COMPLETED (terminal state)', async () => {
@@ -456,9 +453,9 @@ describe('PaymentStateMachine', () => {
         }),
       });
 
-      await expect(
-        stateMachine.transition(payment.id, PaymentState.COMPLETED)
-      ).rejects.toThrow(InvalidTransitionError);
+      await expect(stateMachine.transition(payment.id, PaymentState.COMPLETED)).rejects.toThrow(
+        InvalidTransitionError
+      );
     });
   });
 
@@ -493,9 +490,9 @@ describe('PaymentStateMachine', () => {
         error: { message: 'Database error' },
       });
 
-      await expect(
-        stateMachine.transition(payment.id, PaymentState.PROCESSING)
-      ).rejects.toThrow(StateTransitionError);
+      await expect(stateMachine.transition(payment.id, PaymentState.PROCESSING)).rejects.toThrow(
+        StateTransitionError
+      );
     });
   });
 
@@ -1095,9 +1092,9 @@ describe('PaymentStateMachine', () => {
 
       (mockSupabase.rpc as any).mockResolvedValue({ data: {}, error: null });
 
-      await expect(
-        stateMachine.transition(payment.id, PaymentState.PROCESSING)
-      ).rejects.toThrow(StateTransitionError);
+      await expect(stateMachine.transition(payment.id, PaymentState.PROCESSING)).rejects.toThrow(
+        StateTransitionError
+      );
     });
   });
 });

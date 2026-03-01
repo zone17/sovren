@@ -44,7 +44,10 @@ export const UpdateUserProfileSchema = z.object({
       .object({
         twitter: z.string().max(200).optional(),
         github: z.string().max(200).optional(),
-        nostr: z.string().regex(/^npub[0-9a-z]+$/).optional(),
+        nostr: z
+          .string()
+          .regex(/^npub[0-9a-z]+$/)
+          .optional(),
       })
       .optional(),
   }),

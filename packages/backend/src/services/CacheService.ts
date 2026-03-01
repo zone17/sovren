@@ -14,7 +14,7 @@ import type {
   CacheStats,
   CacheConfiguration,
   CacheInvalidationPattern,
-  CacheWarmupStrategy
+  CacheWarmupStrategy,
 } from '../types/cache';
 
 import * as Redis from 'ioredis';
@@ -148,7 +148,7 @@ class InMemoryCacheProvider implements ICacheProvider {
 
   async keys(pattern: string): Promise<string[]> {
     const regex = new RegExp(pattern.replace('*', '.*'));
-    return Array.from(this.store.keys()).filter(key => regex.test(key));
+    return Array.from(this.store.keys()).filter((key) => regex.test(key));
   }
 
   async ttl(key: string): Promise<number> {
@@ -172,7 +172,7 @@ class InMemoryCacheProvider implements ICacheProvider {
   }
 
   async mget(keys: string[]): Promise<(string | null)[]> {
-    return Promise.all(keys.map(key => this.get(key)));
+    return Promise.all(keys.map((key) => this.get(key)));
   }
 
   async mset(entries: Array<{ key: string; value: string; ttl?: number }>): Promise<void> {
@@ -203,11 +203,7 @@ export class CacheService implements ICacheService {
   private readonly invalidationPatterns: Map<string, CacheInvalidationPattern> = new Map();
   private warmupInterval?: NodeJS.Timeout;
 
-  constructor(
-    eventBus: IEventBus,
-    logger: ILogger,
-    config: CacheConfiguration
-  ) {
+  constructor(eventBus: IEventBus, logger: ILogger, config: CacheConfiguration) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.config = config;
@@ -229,7 +225,7 @@ export class CacheService implements ICacheService {
       avgGetTime: 0,
       avgSetTime: 0,
       memoryUsage: 0,
-      keyCount: 0
+      keyCount: 0,
     };
 
     // Start warmup process if configured
@@ -262,19 +258,13 @@ export class CacheService implements ICacheService {
         // Raw string value — valid when T is string
         return value as T & string;
       }
-
     } catch (error) {
       this.logger.error(`Cache get error for key ${key}`, error);
       return null;
     }
   }
 
-  async set<T>(
-    key: string,
-    value: T,
-    ttl?: number,
-    options?: CacheOptions
-  ): Promise<void> {
+  async set<T>(key: string, value: T, ttl?: number, options?: CacheOptions): Promise<void> {
     const startTime = performance.now();
 
     try {
@@ -302,9 +292,8 @@ export class CacheService implements ICacheService {
       await this.eventBus.emit('cache.set', {
         key,
         ttl: effectiveTtl,
-        tags: options?.tags
+        tags: options?.tags,
       });
-
     } catch (error) {
       this.logger.error(`Cache set error for key ${key}`, error);
       throw error;
@@ -329,7 +318,6 @@ export class CacheService implements ICacheService {
       }
 
       return result;
-
     } catch (error) {
       this.logger.error(`Cache delete error for key ${key}`, error);
       return false;
@@ -363,11 +351,10 @@ export class CacheService implements ICacheService {
       // Emit event
       await this.eventBus.emit('cache.invalidate', {
         pattern,
-        count
+        count,
       });
 
       return count;
-
     } catch (error) {
       this.logger.error(`Cache invalidation error for pattern ${pattern}`, error);
       return 0;
@@ -385,7 +372,7 @@ export class CacheService implements ICacheService {
 
         if (taggedKeys) {
           const parsed = JSON.parse(taggedKeys) as string[];
-          parsed.forEach(key => keys.add(key));
+          parsed.forEach((key) => keys.add(key));
         }
       }
 
@@ -406,7 +393,6 @@ export class CacheService implements ICacheService {
       this.logger.info(`Cache invalidation by tags: ${tags.join(', ')} (${count} keys deleted)`);
 
       return count;
-
     } catch (error) {
       this.logger.error(`Cache invalidation by tags error`, error);
       return 0;
@@ -427,7 +413,6 @@ export class CacheService implements ICacheService {
 
       // Emit event
       await this.eventBus.emit('cache.flush', {});
-
     } catch (error) {
       this.logger.error('Cache flush error', error);
       throw error;
@@ -454,7 +439,6 @@ export class CacheService implements ICacheService {
       }
 
       return result;
-
     } catch (error) {
       this.logger.error(`Cache set TTL error for key ${key}`, error);
       return false;
@@ -463,7 +447,7 @@ export class CacheService implements ICacheService {
 
   async getMany<T>(keys: string[]): Promise<Map<string, T | null>> {
     try {
-      const prefixedKeys = keys.map(key => this.getPrefixedKey(key));
+      const prefixedKeys = keys.map((key) => this.getPrefixedKey(key));
       const values = await this.provider.mget(prefixedKeys);
 
       const result = new Map<string, T | null>();
@@ -485,7 +469,6 @@ export class CacheService implements ICacheService {
       });
 
       return result;
-
     } catch (error) {
       this.logger.error('Cache mget error', error);
       return new Map();
@@ -494,10 +477,10 @@ export class CacheService implements ICacheService {
 
   async setMany<T>(entries: Array<{ key: string; value: T; ttl?: number }>): Promise<void> {
     try {
-      const serialized = entries.map(entry => ({
+      const serialized = entries.map((entry) => ({
         key: this.getPrefixedKey(entry.key),
         value: typeof entry.value === 'string' ? entry.value : JSON.stringify(entry.value),
-        ttl: entry.ttl || this.config.defaultTtl
+        ttl: entry.ttl || this.config.defaultTtl,
       }));
 
       await this.provider.mset(serialized);
@@ -505,18 +488,13 @@ export class CacheService implements ICacheService {
       this.stats.sets += entries.length;
 
       this.logger.debug(`Cache mset: ${entries.length} keys`);
-
     } catch (error) {
       this.logger.error('Cache mset error', error);
       throw error;
     }
   }
 
-  async remember<T>(
-    key: string,
-    factory: () => Promise<T>,
-    ttl?: number
-  ): Promise<T> {
+  async remember<T>(key: string, factory: () => Promise<T>, ttl?: number): Promise<T> {
     // Try to get from cache
     const cached = await this.get<T>(key);
     if (cached !== null) {
@@ -540,9 +518,8 @@ export class CacheService implements ICacheService {
         ...this.stats,
         hitRate: this.calculateHitRate(),
         keyCount: keys.length,
-        memoryUsage: await this.estimateMemoryUsage()
+        memoryUsage: await this.estimateMemoryUsage(),
       };
-
     } catch (error) {
       this.logger.error('Failed to get cache stats', error);
       return this.stats;
@@ -568,16 +545,11 @@ export class CacheService implements ICacheService {
         const data = await strategy.dataLoader();
 
         for (const item of data) {
-          await this.set(
-            strategy.keyGenerator(item),
-            item,
-            strategy.ttl || this.config.defaultTtl
-          );
+          await this.set(strategy.keyGenerator(item), item, strategy.ttl || this.config.defaultTtl);
         }
 
         this.logger.info(`Cache warmup completed: ${strategy.name} (${data.length} items)`);
       }
-
     } catch (error) {
       this.logger.error('Cache warmup error', error);
     }
@@ -587,7 +559,7 @@ export class CacheService implements ICacheService {
     this.invalidationPatterns.set(pattern.name, pattern);
 
     // Subscribe to events
-    pattern.events.forEach(event => {
+    pattern.events.forEach((event) => {
       this.eventBus.on(event, async (data) => {
         const keysToInvalidate = pattern.keyGenerator(data);
 
@@ -644,7 +616,8 @@ export class CacheService implements ICacheService {
 
   private updateSetStats(duration: number): void {
     this.stats.sets++;
-    this.stats.avgSetTime = (this.stats.avgSetTime * (this.stats.sets - 1) + duration) / this.stats.sets;
+    this.stats.avgSetTime =
+      (this.stats.avgSetTime * (this.stats.sets - 1) + duration) / this.stats.sets;
   }
 
   private calculateHitRate(): number {
@@ -685,7 +658,7 @@ export class CacheService implements ICacheService {
       if (!existing) continue;
 
       const keys = JSON.parse(existing) as string[];
-      const filtered = keys.filter(k => k !== key);
+      const filtered = keys.filter((k) => k !== key);
 
       if (filtered.length > 0) {
         await this.provider.set(tagKey, JSON.stringify(filtered), 86400);

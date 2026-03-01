@@ -12,11 +12,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import {
-  PaymentState,
-  Payment,
-  PaymentNotFoundError,
-} from '@shared/types';
+import { PaymentState, Payment, PaymentNotFoundError } from '@shared/types';
 import { PaymentStateMachine } from './PaymentStateMachine';
 import { EmailIntegrationService } from '../email-integration-service';
 
@@ -488,14 +484,10 @@ export class PaymentRetryService {
 
       if (isVerified) {
         // Success! Transition to COMPLETED
-        await this.stateMachine.transition(
-          payment.id,
-          PaymentState.COMPLETED,
-          {
-            retry_attempt: retryAttempt.attempt_number,
-            verified_via_retry: true,
-          }
-        );
+        await this.stateMachine.transition(payment.id, PaymentState.COMPLETED, {
+          retry_attempt: retryAttempt.attempt_number,
+          verified_via_retry: true,
+        });
 
         // Mark retry as successful
         await this.supabase
@@ -504,10 +496,7 @@ export class PaymentRetryService {
           .eq('id', retryAttemptId);
 
         // Clear next_retry_at on payment
-        await this.supabase
-          .from('payments')
-          .update({ next_retry_at: null })
-          .eq('id', payment.id);
+        await this.supabase.from('payments').update({ next_retry_at: null }).eq('id', payment.id);
 
         // PAY-009: Record success in circuit breaker
         this.recordRetrySuccess();
@@ -526,10 +515,7 @@ export class PaymentRetryService {
           .eq('id', retryAttemptId);
 
         // Clear next_retry_at so new retry can be scheduled
-        await this.supabase
-          .from('payments')
-          .update({ next_retry_at: null })
-          .eq('id', payment.id);
+        await this.supabase.from('payments').update({ next_retry_at: null }).eq('id', payment.id);
 
         // PAY-009: Record failure in circuit breaker
         this.recordRetryFailure();
@@ -705,10 +691,7 @@ export class PaymentRetryService {
    * @param endDate End of metrics window (default: now)
    * @returns Promise resolving to retry metrics
    */
-  async getRetryMetrics(
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<RetryMetrics> {
+  async getRetryMetrics(startDate?: Date, endDate?: Date): Promise<RetryMetrics> {
     const start = startDate || new Date(Date.now() - 24 * 60 * 60 * 1000);
     const end = endDate || new Date();
 
@@ -758,7 +741,8 @@ export class PaymentRetryService {
    */
   private calculateBackoffDelayWithJitter(attemptNumber: number): number {
     // Calculate exponential backoff
-    const exponentialDelay = this.config.baseDelay * Math.pow(this.config.backoffMultiplier, attemptNumber);
+    const exponentialDelay =
+      this.config.baseDelay * Math.pow(this.config.backoffMultiplier, attemptNumber);
 
     // Cap at maxDelay
     const cappedDelay = Math.min(exponentialDelay, this.config.maxDelay);
@@ -928,10 +912,7 @@ export class PaymentRetryService {
    * @param errorCode Error code from failed attempt
    * @throws {PaymentNotRetryableError} If error is not retryable
    */
-  private async validateRetryEligibility(
-    payment: Payment,
-    errorCode: string
-  ): Promise<void> {
+  private async validateRetryEligibility(payment: Payment, errorCode: string): Promise<void> {
     // Check if error is retryable
     if (!this.isRetryable(errorCode)) {
       this.logger?.warn('Payment error is not retryable', {
@@ -967,16 +948,12 @@ export class PaymentRetryService {
     });
 
     // Transition to FAILED state
-    await this.stateMachine.transition(
-      payment.id,
-      PaymentState.FAILED,
-      {
-        reason: 'max_retries_exceeded',
-        attempts: payment.retry_count || 0,
-        final_error_code: errorCode,
-        final_error_message: errorMessage,
-      }
-    );
+    await this.stateMachine.transition(payment.id, PaymentState.FAILED, {
+      reason: 'max_retries_exceeded',
+      attempts: payment.retry_count || 0,
+      final_error_code: errorCode,
+      final_error_message: errorMessage,
+    });
 
     // Send notification email if service available
     if (this.emailService && payment.user_id) {
@@ -1171,7 +1148,6 @@ export class PaymentRetryService {
       });
 
       return false;
-
     } catch (error) {
       // Step 10: Error handling - gracefully handle Lightning node errors
       // Network errors, timeouts, etc. should not throw - just return false

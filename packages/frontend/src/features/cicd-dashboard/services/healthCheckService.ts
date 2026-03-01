@@ -125,7 +125,7 @@ export class HealthCheckService {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
       });
 
@@ -134,11 +134,7 @@ export class HealthCheckService {
       const responseTime = Date.now() - startTime;
       const statusCode = response.status;
 
-      const status = determineHealthStatus(
-        responseTime,
-        endpoint.threshold,
-        statusCode
-      );
+      const status = determineHealthStatus(responseTime, endpoint.threshold, statusCode);
 
       let details: HealthCheckDetails | undefined;
 
@@ -197,11 +193,8 @@ export class HealthCheckService {
   /**
    * Check all health endpoints for an environment
    */
-  async checkEnvironment(
-    environment: 'staging' | 'production'
-  ): Promise<HealthCheckResult[]> {
-    const baseUrl =
-      environment === 'staging' ? this.stagingBaseUrl : this.productionBaseUrl;
+  async checkEnvironment(environment: 'staging' | 'production'): Promise<HealthCheckResult[]> {
+    const baseUrl = environment === 'staging' ? this.stagingBaseUrl : this.productionBaseUrl;
 
     const endpoints: HealthCheckEndpoint[] = [
       { path: '/health', baseUrl, threshold: RESPONSE_TIME_THRESHOLDS['/health'] },
@@ -211,9 +204,7 @@ export class HealthCheckService {
     ];
 
     // Check all endpoints in parallel
-    const results = await Promise.all(
-      endpoints.map((endpoint) => this.checkEndpoint(endpoint))
-    );
+    const results = await Promise.all(endpoints.map((endpoint) => this.checkEndpoint(endpoint)));
 
     return results;
   }
@@ -332,9 +323,7 @@ let healthCheckServiceInstance: HealthCheckService | null = null;
 /**
  * Initialize health check service
  */
-export function initHealthCheckService(
-  config: HealthCheckServiceConfig
-): HealthCheckService {
+export function initHealthCheckService(config: HealthCheckServiceConfig): HealthCheckService {
   healthCheckServiceInstance = new HealthCheckService(config);
   return healthCheckServiceInstance;
 }
@@ -344,9 +333,7 @@ export function initHealthCheckService(
  */
 export function getHealthCheckService(): HealthCheckService {
   if (!healthCheckServiceInstance) {
-    throw new Error(
-      'HealthCheckService not initialized. Call initHealthCheckService first.'
-    );
+    throw new Error('HealthCheckService not initialized. Call initHealthCheckService first.');
   }
   return healthCheckServiceInstance;
 }

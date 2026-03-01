@@ -1,5 +1,9 @@
 import React from 'react';
-import { usePlatformStatus, useConnectPlatform, useDisconnectPlatform } from '../hooks/usePlatformConnections';
+import {
+  usePlatformStatus,
+  useConnectPlatform,
+  useDisconnectPlatform,
+} from '../hooks/usePlatformConnections';
 import { PLATFORM_DISPLAY } from '../types';
 
 const PlatformConnector: React.FC = () => {
@@ -50,10 +54,7 @@ const PlatformConnector: React.FC = () => {
               className="flex items-center justify-between rounded-md border p-3"
             >
               <div className="flex items-center gap-3">
-                <div
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: display.color }}
-                />
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: display.color }} />
                 <div>
                   <p className="font-medium text-gray-900">{display.name}</p>
                   {status.connected && status.username && (

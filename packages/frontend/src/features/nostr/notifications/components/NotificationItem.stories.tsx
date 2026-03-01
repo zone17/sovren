@@ -14,7 +14,8 @@ const meta: Meta<typeof NotificationItem> = {
     layout: 'padded',
     docs: {
       description: {
-        component: 'Individual notification item component. Displays notification content, author info, timestamp, and action buttons.',
+        component:
+          'Individual notification item component. Displays notification content, author info, timestamp, and action buttons.',
       },
     },
   },
@@ -177,7 +178,8 @@ export const LongContent: Story = {
   args: {
     notification: {
       ...baseNotification,
-      content: 'Alice mentioned you in a very long post about the future of decentralized social media, NOSTR protocol improvements, Bitcoin Lightning Network integration, and the importance of creator monetization in web3. This notification has a lot of text to demonstrate how the component handles long content.',
+      content:
+        'Alice mentioned you in a very long post about the future of decentralized social media, NOSTR protocol improvements, Bitcoin Lightning Network integration, and the importance of creator monetization in web3. This notification has a lot of text to demonstrate how the component handles long content.',
     },
     showActions: true,
   },
@@ -219,7 +221,8 @@ export const InteractiveDemo: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Click the notification to see the onClick behavior. Click the mark as read or delete buttons to see actions.',
+        story:
+          'Click the notification to see the onClick behavior. Click the mark as read or delete buttons to see actions.',
       },
     },
   },

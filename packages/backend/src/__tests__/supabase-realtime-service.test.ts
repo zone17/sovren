@@ -417,9 +417,7 @@ describe('SupabaseRealtimeService', () => {
 
       // Verify mockChannel.on was called with INSERT event
       const onCalls = mockChannel.on.mock.calls;
-      const insertCall = onCalls.find(
-        (call: any) => call[1]?.event === 'INSERT'
-      );
+      const insertCall = onCalls.find((call: any) => call[1]?.event === 'INSERT');
       expect(insertCall).toBeDefined();
 
       const eventHandler = insertCall![2];

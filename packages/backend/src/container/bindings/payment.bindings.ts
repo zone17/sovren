@@ -31,107 +31,86 @@ export class PaymentServicesModule implements IServiceModule {
     // PaymentProcessingService - SCOPED
     // ===========================
     // Core payment processing (per request)
-    registry.registerSingleton(
-      TYPES.PaymentProcessingService,
-      (container) => {
-        const paymentRepo = container.resolve(TYPES.PaymentRepository);
-        const lightning = container.resolve(TYPES.LightningService);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.PaymentProcessingService, (container) => {
+      const paymentRepo = container.resolve(TYPES.PaymentRepository);
+      const lightning = container.resolve(TYPES.LightningService);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new PaymentProcessingService(paymentRepo, lightning, eventBus, logger);
-      }
-    );
+      return new PaymentProcessingService(paymentRepo, lightning, eventBus, logger);
+    });
 
     // ===========================
     // CurrencyService - TRANSIENT
     // ===========================
     // Multi-currency support (stateless)
-    registry.registerTransient(
-      TYPES.CurrencyService,
-      (container) => {
-        const config = container.resolve(TYPES.Config);
-        const cache = container.resolve(TYPES.CacheService);
+    registry.registerTransient(TYPES.CurrencyService, (container) => {
+      const config = container.resolve(TYPES.Config);
+      const cache = container.resolve(TYPES.CacheService);
 
-        return new CurrencyService(config, cache);
-      }
-    );
+      return new CurrencyService(config, cache);
+    });
 
     // ===========================
     // SubscriptionService - SCOPED
     // ===========================
     // Subscription management (per request)
-    registry.registerSingleton(
-      TYPES.SubscriptionService,
-      (container) => {
-        const subscriptionRepo = container.resolve(TYPES.SubscriptionRepository);
-        const paymentProcessing = container.resolve(TYPES.PaymentProcessingService);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.SubscriptionService, (container) => {
+      const subscriptionRepo = container.resolve(TYPES.SubscriptionRepository);
+      const paymentProcessing = container.resolve(TYPES.PaymentProcessingService);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new SubscriptionService(subscriptionRepo, paymentProcessing, eventBus, logger);
-      }
-    );
+      return new SubscriptionService(subscriptionRepo, paymentProcessing, eventBus, logger);
+    });
 
     // ===========================
     // RefundService - SCOPED
     // ===========================
     // Refund processing and tracking (per request)
-    registry.registerSingleton(
-      TYPES.RefundService,
-      (container) => {
-        const paymentRepo = container.resolve(TYPES.PaymentRepository);
-        const paymentProcessing = container.resolve(TYPES.PaymentProcessingService);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.RefundService, (container) => {
+      const paymentRepo = container.resolve(TYPES.PaymentRepository);
+      const paymentProcessing = container.resolve(TYPES.PaymentProcessingService);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new RefundService(paymentRepo, paymentProcessing, eventBus, logger);
-      }
-    );
+      return new RefundService(paymentRepo, paymentProcessing, eventBus, logger);
+    });
 
     // ===========================
     // PaymentAnalyticsService - SCOPED
     // ===========================
     // Payment analytics and reporting (per request)
-    registry.registerSingleton(
-      TYPES.PaymentAnalyticsService,
-      (container) => {
-        const paymentRepo = container.resolve(TYPES.PaymentRepository);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.PaymentAnalyticsService, (container) => {
+      const paymentRepo = container.resolve(TYPES.PaymentRepository);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new PaymentAnalyticsService(paymentRepo, eventBus, logger);
-      }
-    );
+      return new PaymentAnalyticsService(paymentRepo, eventBus, logger);
+    });
 
     // ===========================
     // WebhookService - SCOPED
     // ===========================
     // Webhook management and delivery (per request)
-    registry.registerSingleton(
-      TYPES.WebhookService,
-      (container) => {
-        const database = container.resolve(TYPES.Database);
-        const eventBus = container.resolve(TYPES.EventBusService);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.WebhookService, (container) => {
+      const database = container.resolve(TYPES.Database);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new WebhookService(database, eventBus, logger);
-      }
-    );
+      return new WebhookService(database, eventBus, logger);
+    });
 
     // ===========================
     // InvoiceService - SCOPED
     // ===========================
     // Invoice generation and management (per request)
-    registry.registerSingleton(
-      TYPES.InvoiceService,
-      (container) => {
-        const paymentRepo = container.resolve(TYPES.PaymentRepository);
-        const logger = container.resolve(TYPES.Logger);
+    registry.registerSingleton(TYPES.InvoiceService, (container) => {
+      const paymentRepo = container.resolve(TYPES.PaymentRepository);
+      const logger = container.resolve(TYPES.Logger);
 
-        return new InvoiceService(paymentRepo, logger);
-      }
-    );
+      return new InvoiceService(paymentRepo, logger);
+    });
   }
 
   dependencies = [];

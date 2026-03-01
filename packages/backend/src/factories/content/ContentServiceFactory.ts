@@ -15,13 +15,15 @@ export const CONTENT_SERVICE_TOKENS = {
   ContentPublishingService: new ServiceToken<IContentPublishingService>('ContentPublishingService'),
   ContentModerationService: new ServiceToken<IContentModerationService>('ContentModerationService'),
   ContentSearchService: new ServiceToken<IContentSearchService>('ContentSearchService'),
-  ContentRecommendationService: new ServiceToken<IContentRecommendationService>('ContentRecommendationService'),
+  ContentRecommendationService: new ServiceToken<IContentRecommendationService>(
+    'ContentRecommendationService'
+  ),
   ContentAnalyticsService: new ServiceToken<IContentAnalyticsService>('ContentAnalyticsService'),
   ContentVersioningService: new ServiceToken<IContentVersioningService>('ContentVersioningService'),
   EventBus: new ServiceToken<IEventBus>('EventBus'),
   Logger: new ServiceToken<ILogger>('Logger'),
   Database: new ServiceToken<IDatabase>('Database'),
-  CacheService: new ServiceToken<ICacheService>('CacheService')
+  CacheService: new ServiceToken<ICacheService>('CacheService'),
 };
 
 // Content Service Interfaces
@@ -175,7 +177,7 @@ export class ContentCreationServiceFactory extends SafeServiceFactory<IContentCr
     return [
       CONTENT_SERVICE_TOKENS.EventBus,
       CONTENT_SERVICE_TOKENS.Database,
-      CONTENT_SERVICE_TOKENS.Logger
+      CONTENT_SERVICE_TOKENS.Logger,
     ];
   }
 
@@ -197,7 +199,7 @@ export class ContentCreationServiceFactory extends SafeServiceFactory<IContentCr
           tags: data.tags || [],
           createdAt: new Date(),
           updatedAt: new Date(),
-          metadata: data.metadata || {}
+          metadata: data.metadata || {},
         };
 
         await eventBus.publish(
@@ -231,7 +233,7 @@ export class ContentCreationServiceFactory extends SafeServiceFactory<IContentCr
         return {
           valid: errors.length === 0,
           errors: errors.length > 0 ? errors : undefined,
-          warnings: warnings.length > 0 ? warnings : undefined
+          warnings: warnings.length > 0 ? warnings : undefined,
         };
       },
 
@@ -239,7 +241,13 @@ export class ContentCreationServiceFactory extends SafeServiceFactory<IContentCr
         logger.info('Saving draft', { title: draft.title });
         await db.execute(
           'INSERT INTO content_drafts (title, body, author_id, tags, metadata) VALUES (?, ?, ?, ?, ?)',
-          [draft.title, draft.body, draft.authorId, JSON.stringify(draft.tags), JSON.stringify(draft.metadata)]
+          [
+            draft.title,
+            draft.body,
+            draft.authorId,
+            JSON.stringify(draft.tags),
+            JSON.stringify(draft.metadata),
+          ]
         );
       },
 
@@ -262,10 +270,10 @@ export class ContentCreationServiceFactory extends SafeServiceFactory<IContentCr
           metadata: {
             ...content.metadata,
             enriched: true,
-            enrichedAt: new Date().toISOString()
-          }
+            enrichedAt: new Date().toISOString(),
+          },
         };
-      }
+      },
     };
   }
 }
@@ -283,7 +291,7 @@ export class ContentPublishingServiceFactory extends SafeServiceFactory<IContent
       CONTENT_SERVICE_TOKENS.EventBus,
       CONTENT_SERVICE_TOKENS.Database,
       CONTENT_SERVICE_TOKENS.Logger,
-      CONTENT_SERVICE_TOKENS.CacheService
+      CONTENT_SERVICE_TOKENS.CacheService,
     ];
   }
 
@@ -299,10 +307,11 @@ export class ContentPublishingServiceFactory extends SafeServiceFactory<IContent
 
         const publishedAt = new Date();
 
-        await db.execute(
-          'UPDATE content SET status = ?, published_at = ? WHERE id = ?',
-          ['published', publishedAt, contentId]
-        );
+        await db.execute('UPDATE content SET status = ?, published_at = ? WHERE id = ?', [
+          'published',
+          publishedAt,
+          contentId,
+        ]);
 
         // Clear cache if available
         if (cache) {
@@ -323,24 +332,22 @@ export class ContentPublishingServiceFactory extends SafeServiceFactory<IContent
           success: true,
           contentId,
           publishedAt,
-          url: `https://sovren.app/content/${contentId}`
+          url: `https://sovren.app/content/${contentId}`,
         };
       },
 
       async schedule(contentId: string, publishAt: Date): Promise<void> {
         logger.info(`Scheduling content ${contentId} for ${publishAt}`);
-        await db.execute(
-          'UPDATE content SET status = ?, scheduled_at = ? WHERE id = ?',
-          ['scheduled', publishAt, contentId]
-        );
+        await db.execute('UPDATE content SET status = ?, scheduled_at = ? WHERE id = ?', [
+          'scheduled',
+          publishAt,
+          contentId,
+        ]);
       },
 
       async unpublish(contentId: string): Promise<void> {
         logger.info(`Unpublishing content ${contentId}`);
-        await db.execute(
-          'UPDATE content SET status = ? WHERE id = ?',
-          ['unpublished', contentId]
-        );
+        await db.execute('UPDATE content SET status = ? WHERE id = ?', ['unpublished', contentId]);
       },
 
       async distributeToChannels(contentId: string, channels: string[]): Promise<void> {
@@ -358,7 +365,7 @@ export class ContentPublishingServiceFactory extends SafeServiceFactory<IContent
             .withSource('ContentPublishingService')
             .build()
         );
-      }
+      },
     };
   }
 }
@@ -376,7 +383,7 @@ export class ContentModerationServiceFactory extends SafeServiceFactory<IContent
       CONTENT_SERVICE_TOKENS.EventBus,
       CONTENT_SERVICE_TOKENS.Logger,
       CONTENT_SERVICE_TOKENS.Database,
-      CONTENT_SERVICE_TOKENS.CacheService
+      CONTENT_SERVICE_TOKENS.CacheService,
     ];
   }
 
@@ -387,13 +394,14 @@ export class ContentModerationServiceFactory extends SafeServiceFactory<IContent
     const cache = this.resolve(CONTENT_SERVICE_TOKENS.CacheService);
 
     // Import the actual service implementation
-    const { ContentModerationService } = await import('../../services/content/ContentModerationService.v2');
+    const { ContentModerationService } =
+      await import('../../services/content/ContentModerationService.v2');
 
     // Create mock/stub dependencies
     const auditLog: any = {
       log: async (entry: any) => {
         logger.debug('Audit log entry', entry);
-      }
+      },
     };
 
     const aiService: any = {
@@ -402,9 +410,9 @@ export class ContentModerationServiceFactory extends SafeServiceFactory<IContent
         return {
           categories: [],
           confidence: 0.5,
-          details: { mock: true }
+          details: { mock: true },
         };
-      }
+      },
     };
 
     const contentRepo: any = {
@@ -416,15 +424,15 @@ export class ContentModerationServiceFactory extends SafeServiceFactory<IContent
         if (results.length === 0) return null;
         return {
           authorId: results[0].author_id,
-          content: results[0].content
+          content: results[0].content,
         };
       },
       updateContentStatus: async (contentId: string, status: string) => {
-        await db.execute(
-          'UPDATE content SET moderation_status = ? WHERE id = ?',
-          [status, contentId]
-        );
-      }
+        await db.execute('UPDATE content SET moderation_status = ? WHERE id = ?', [
+          status,
+          contentId,
+        ]);
+      },
     };
 
     const metrics: any = {
@@ -433,7 +441,7 @@ export class ContentModerationServiceFactory extends SafeServiceFactory<IContent
       },
       incrementCounter: (metric: string) => {
         logger.debug('Metrics counter', { metric });
-      }
+      },
     };
 
     return new ContentModerationService(
@@ -460,7 +468,7 @@ export class ContentSearchServiceFactory extends SafeServiceFactory<IContentSear
     return [
       CONTENT_SERVICE_TOKENS.Database,
       CONTENT_SERVICE_TOKENS.Logger,
-      CONTENT_SERVICE_TOKENS.CacheService
+      CONTENT_SERVICE_TOKENS.CacheService,
     ];
   }
 
@@ -491,7 +499,7 @@ export class ContentSearchServiceFactory extends SafeServiceFactory<IContentSear
           await cache.set(cacheKey, results, 300); // 5 minutes
         }
 
-        return results.map(r => ({ ...r, score: 1.0 }));
+        return results.map((r) => ({ ...r, score: 1.0 }));
       },
 
       async indexContent(content: Content): Promise<void> {
@@ -504,18 +512,18 @@ export class ContentSearchServiceFactory extends SafeServiceFactory<IContentSear
       },
 
       async getSuggestions(query: string): Promise<string[]> {
-        const results = await db.query<{title: string}>(
+        const results = await db.query<{ title: string }>(
           'SELECT DISTINCT title FROM content WHERE title LIKE ? LIMIT 10',
           [`${query}%`]
         );
-        return results.map(r => r.title);
+        return results.map((r) => r.title);
       },
 
       async advancedSearch(criteria: any): Promise<SearchResult[]> {
         logger.info('Advanced search', criteria);
         // Advanced search implementation
         return [];
-      }
+      },
     };
   }
 }
@@ -534,7 +542,7 @@ export class ContentVersioningServiceFactory extends SafeServiceFactory<IContent
       CONTENT_SERVICE_TOKENS.Database,
       CONTENT_SERVICE_TOKENS.CacheService,
       CONTENT_SERVICE_TOKENS.EventBus,
-      CONTENT_SERVICE_TOKENS.Logger
+      CONTENT_SERVICE_TOKENS.Logger,
     ];
   }
 
@@ -545,7 +553,8 @@ export class ContentVersioningServiceFactory extends SafeServiceFactory<IContent
     const logger = this.resolve(CONTENT_SERVICE_TOKENS.Logger);
 
     // Import the actual service implementation
-    const { ContentVersioningService } = await import('../../services/content/ContentVersioningService');
+    const { ContentVersioningService } =
+      await import('../../services/content/ContentVersioningService');
 
     // Create audit log dependency
     const auditLog: any = {
@@ -560,7 +569,7 @@ export class ContentVersioningServiceFactory extends SafeServiceFactory<IContent
             .withSource('ContentVersioningService')
             .build()
         );
-      }
+      },
     };
 
     return new ContentVersioningService(db, cache, eventBus, auditLog);

@@ -92,9 +92,7 @@ export const PlatformComparison: React.FC = () => {
       )}
 
       {comparison && comparison.length === 0 && submittedId && (
-        <p className="mt-3 text-sm text-gray-500">
-          No cross-platform data found for this content.
-        </p>
+        <p className="mt-3 text-sm text-gray-500">No cross-platform data found for this content.</p>
       )}
     </div>
   );

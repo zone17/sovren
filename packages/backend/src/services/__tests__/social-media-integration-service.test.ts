@@ -15,7 +15,6 @@
  * - Security testing
  */
 
-
 import {
   CreateSocialPostRequest,
   GetAnalyticsRequest,
@@ -938,7 +937,9 @@ describe('SocialMediaIntegrationService', () => {
         totalImpressions: 100,
       });
       (service as any).analyzeTrends = vi.fn().mockResolvedValue([]);
-      (service as any).cacheAnalytics = vi.fn().mockRejectedValue(new Error('Redis connection failed'));
+      (service as any).cacheAnalytics = vi
+        .fn()
+        .mockRejectedValue(new Error('Redis connection failed'));
 
       const analyticsRequest: GetAnalyticsRequest = {
         platforms: [SocialPlatform.TWITTER],

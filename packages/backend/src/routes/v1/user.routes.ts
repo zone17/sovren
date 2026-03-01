@@ -111,7 +111,8 @@ router.get(
   authenticate,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().getPreferences(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getPreferences(req, res, next)
 );
 
 /**
@@ -143,7 +144,8 @@ router.put(
   authenticate,
   rateLimiters.user.updatePreferences,
   validate({ params: UserValidators.userIdParam, body: UserValidators.updateUserPreferences }),
-  (req: Request, res: Response, next: NextFunction) => getController().updatePreferences(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().updatePreferences(req, res, next)
 );
 
 /**
@@ -249,7 +251,8 @@ router.get(
   authenticate,
   rateLimiters.user.analytics,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().getUserAnalytics(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getUserAnalytics(req, res, next)
 );
 
 // === User Relationship Endpoints (Todo 119) ===
@@ -429,7 +432,8 @@ router.get(
   authenticate,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().getBlockedUsers(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getBlockedUsers(req, res, next)
 );
 
 /**
@@ -453,7 +457,8 @@ router.get(
   optionalAuth,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().getRelationshipStats(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getRelationshipStats(req, res, next)
 );
 
 /**
@@ -479,7 +484,8 @@ router.post(
   authenticate,
   rateLimiters.user.follow,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().sendFriendRequest(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().sendFriendRequest(req, res, next)
 );
 
 /**
@@ -505,7 +511,8 @@ router.put(
   authenticate,
   rateLimiters.user.follow,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().respondToFriendRequest(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().respondToFriendRequest(req, res, next)
 );
 
 /**
@@ -531,7 +538,8 @@ router.get(
   authenticate,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().getRecommendations(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().getRecommendations(req, res, next)
 );
 
 /**
@@ -557,7 +565,8 @@ router.get(
   authenticate,
   rateLimiters.user.read,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().exportRelationships(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().exportRelationships(req, res, next)
 );
 
 /**
@@ -609,7 +618,8 @@ router.put(
   authenticate,
   rateLimiters.user.updateProfile,
   validate({ params: UserValidators.userIdParam }),
-  (req: Request, res: Response, next: NextFunction) => getController().updatePrivacySettings(req, res, next)
+  (req: Request, res: Response, next: NextFunction) =>
+    getController().updatePrivacySettings(req, res, next)
 );
 
 export default router;

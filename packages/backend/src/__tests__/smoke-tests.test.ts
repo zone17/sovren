@@ -246,9 +246,7 @@ describe('Smoke Tests - Post-Deployment Validation', () => {
       expect(response.body.services.redis).toHaveProperty('responseTime');
       expect(response.body.services.redis).toHaveProperty('lastChecked');
 
-      expect(['healthy', 'degraded', 'unhealthy']).toContain(
-        response.body.services.redis.status
-      );
+      expect(['healthy', 'degraded', 'unhealthy']).toContain(response.body.services.redis.status);
     }, 15000);
 
     it('should report lightning status in health check', async () => {
@@ -271,9 +269,7 @@ describe('Smoke Tests - Post-Deployment Validation', () => {
       expect(response.body.services.nostr).toHaveProperty('responseTime');
       expect(response.body.services.nostr).toHaveProperty('lastChecked');
 
-      expect(['healthy', 'degraded', 'unhealthy']).toContain(
-        response.body.services.nostr.status
-      );
+      expect(['healthy', 'degraded', 'unhealthy']).toContain(response.body.services.nostr.status);
     }, 15000);
   });
 
@@ -307,9 +303,7 @@ describe('Smoke Tests - Post-Deployment Validation', () => {
       expect(response.body).toHaveProperty('environment');
       expect(response.body).toHaveProperty('version');
 
-      expect(['development', 'test', 'staging', 'production']).toContain(
-        response.body.environment
-      );
+      expect(['development', 'test', 'staging', 'production']).toContain(response.body.environment);
     }, 15000);
   });
 });

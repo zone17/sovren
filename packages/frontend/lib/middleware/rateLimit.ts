@@ -59,7 +59,8 @@ export async function rateLimiter(
 ): Promise<RateLimitResult> {
   try {
     // 🧹 Periodic cleanup
-    if (Math.random() < 0.1) { // 10% chance to trigger cleanup
+    if (Math.random() < 0.1) {
+      // 10% chance to trigger cleanup
       cleanup();
     }
 
@@ -99,7 +100,6 @@ export async function rateLimiter(
       success: true,
       remaining: config.maxRequests - record.count,
     };
-
   } catch (error) {
     console.error('Rate limiter error:', error);
 

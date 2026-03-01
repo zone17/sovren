@@ -129,7 +129,10 @@ const cmsUiSlice = createSlice({
     },
 
     // Draft management
-    createDraft: (state, action: PayloadAction<Omit<DraftState, 'lastModified' | 'autoSaveVersion'>>) => {
+    createDraft: (
+      state,
+      action: PayloadAction<Omit<DraftState, 'lastModified' | 'autoSaveVersion'>>
+    ) => {
       const draft: DraftState = {
         ...action.payload,
         lastModified: new Date().toISOString(),

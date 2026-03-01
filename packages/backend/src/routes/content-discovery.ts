@@ -82,59 +82,48 @@ const FeedbackSchema = z.object({
  * Get personalized content feed for the authenticated user
  * US-006: Content Discovery - Personalized Feed
  */
-router.get(
-  '/feed',
-  optionalAuth,
-  validateRequest(FeedSchema, 'query'),
-  async (req, res) => {
-    try {
-      const userId = req.user?.id || req.user?.nostr_pubkey;
-      const {
-        categories,
-        exclude_categories,
-        following_only,
-        premium_only,
-        page,
-        limit,
-      } = req.query as z.infer<typeof FeedSchema>;
+router.get('/feed', optionalAuth, validateRequest(FeedSchema, 'query'), async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.nostr_pubkey;
+    const { categories, exclude_categories, following_only, premium_only, page, limit } =
+      req.query as z.infer<typeof FeedSchema>;
 
-      // Get personalized feed based on user preferences and history
-      const feedItems = await getDiscoveryService().getPersonalizedFeed({
-        user_id: userId,
-        categories,
-        exclude_categories,
-        following_only,
-        premium_only,
-        page,
-        limit,
-      });
+    // Get personalized feed based on user preferences and history
+    const feedItems = await getDiscoveryService().getPersonalizedFeed({
+      user_id: userId,
+      categories,
+      exclude_categories,
+      following_only,
+      premium_only,
+      page,
+      limit,
+    });
 
-      res.json({
-        success: true,
-        data: feedItems.items,
-        meta: {
-          pagination: {
-            page,
-            limit,
-            total: feedItems.total,
-            totalPages: Math.ceil(feedItems.total / limit),
-          },
-          personalization: {
-            enabled: !!userId,
-            following_count: feedItems.following_count || 0,
-          },
+    res.json({
+      success: true,
+      data: feedItems.items,
+      meta: {
+        pagination: {
+          page,
+          limit,
+          total: feedItems.total,
+          totalPages: Math.ceil(feedItems.total / limit),
         },
-      });
-    } catch (error) {
-      console.error('Failed to get personalized feed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve content feed',
-        code: 'FEED_ERROR',
-      });
-    }
+        personalization: {
+          enabled: !!userId,
+          following_count: feedItems.following_count || 0,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Failed to get personalized feed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve content feed',
+      code: 'FEED_ERROR',
+    });
   }
-);
+});
 
 /**
  * GET /api/content/discovery/trending
@@ -246,53 +235,48 @@ router.get(
  * Search for content with advanced filters
  * US-006: Content Discovery - Search
  */
-router.post(
-  '/search',
-  optionalAuth,
-  validateRequest(SearchSchema),
-  async (req, res) => {
-    try {
-      const userId = req.user?.id || req.user?.nostr_pubkey;
-      const searchParams = req.body as z.infer<typeof SearchSchema>;
+router.post('/search', optionalAuth, validateRequest(SearchSchema), async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.nostr_pubkey;
+    const searchParams = req.body as z.infer<typeof SearchSchema>;
 
-      const searchResults = await getDiscoveryService().searchContent({
-        ...searchParams,
-        user_id: userId,
-      });
+    const searchResults = await getDiscoveryService().searchContent({
+      ...searchParams,
+      user_id: userId,
+    });
 
-      // Track search for analytics and recommendations
-      if (userId) {
-        await getRecommendationService().trackSearch(userId, searchParams.query);
-      }
-
-      res.json({
-        success: true,
-        data: searchResults.items,
-        meta: {
-          query: searchParams.query,
-          pagination: {
-            page: searchParams.page,
-            limit: searchParams.limit,
-            total: searchResults.total,
-            totalPages: Math.ceil(searchResults.total / searchParams.limit),
-          },
-          filters: {
-            category: searchParams.category,
-            tags: searchParams.tags,
-            premium_only: searchParams.premium_only,
-          },
-        },
-      });
-    } catch (error) {
-      console.error('Failed to search content:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to search content',
-        code: 'SEARCH_ERROR',
-      });
+    // Track search for analytics and recommendations
+    if (userId) {
+      await getRecommendationService().trackSearch(userId, searchParams.query);
     }
+
+    res.json({
+      success: true,
+      data: searchResults.items,
+      meta: {
+        query: searchParams.query,
+        pagination: {
+          page: searchParams.page,
+          limit: searchParams.limit,
+          total: searchResults.total,
+          totalPages: Math.ceil(searchResults.total / searchParams.limit),
+        },
+        filters: {
+          category: searchParams.category,
+          tags: searchParams.tags,
+          premium_only: searchParams.premium_only,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Failed to search content:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search content',
+      code: 'SEARCH_ERROR',
+    });
   }
-);
+});
 
 /**
  * GET /api/content/discovery/recommendations/creators

@@ -33,7 +33,7 @@ interface NostrEvent {
 
 const SIMILARITY_THRESHOLDS = {
   exact_copy: 0.95,
-  derivative: 0.70,
+  derivative: 0.7,
 } as const;
 
 export class ContentScannerProcessor implements IJobProcessor<RelayScanJobData> {

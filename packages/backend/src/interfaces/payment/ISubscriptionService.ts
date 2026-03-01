@@ -21,16 +21,10 @@ import type {
   CancelSubscriptionOptions,
   PauseSubscriptionOptions,
   SubscriptionWebhookEvent,
-  SubscriptionUsage
+  SubscriptionUsage,
 } from '../../types/subscription';
-import {
-  SubscriptionEventType,
-  BillingInterval,
-  SubscriptionTier,
-} from '../../types/subscription';
-import {
-  Currency,
-} from '../../types/currency';
+import { SubscriptionEventType, BillingInterval, SubscriptionTier } from '../../types/subscription';
+import { Currency } from '../../types/currency';
 
 /**
  * Subscription service interface
@@ -97,7 +91,9 @@ export interface ISubscriptionService {
    * @param plan - Plan details
    * @returns Created plan
    */
-  createPlan(plan: Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>): Promise<SubscriptionPlan>;
+  createPlan(
+    plan: Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<SubscriptionPlan>;
 
   /**
    * Get plan by ID
@@ -220,7 +216,10 @@ export interface ISubscriptionService {
    * @param newPlanId - New plan ID
    * @returns Updated subscription with proration
    */
-  upgradeSubscription(subscriptionId: string, newPlanId: string): Promise<{
+  upgradeSubscription(
+    subscriptionId: string,
+    newPlanId: string
+  ): Promise<{
     subscription: Subscription;
     proration: ProrationResult;
     invoice?: SubscriptionInvoice;
@@ -248,10 +247,7 @@ export interface ISubscriptionService {
    * @param newPlanId - New plan ID
    * @returns Proration calculation
    */
-  calculateProration(
-    subscriptionId: string,
-    newPlanId: string
-  ): Promise<ProrationResult>;
+  calculateProration(subscriptionId: string, newPlanId: string): Promise<ProrationResult>;
 
   /**
    * Apply pending plan change
@@ -291,10 +287,7 @@ export interface ISubscriptionService {
    * @param paymentMethodId - New payment method ID
    * @returns Updated subscription
    */
-  updatePaymentMethod(
-    subscriptionId: string,
-    paymentMethodId: string
-  ): Promise<Subscription>;
+  updatePaymentMethod(subscriptionId: string, paymentMethodId: string): Promise<Subscription>;
 
   /**
    * Get next billing date
@@ -309,10 +302,7 @@ export interface ISubscriptionService {
    * @param interval - New billing interval
    * @returns Updated subscription
    */
-  updateBillingInterval(
-    subscriptionId: string,
-    interval: BillingInterval
-  ): Promise<Subscription>;
+  updateBillingInterval(subscriptionId: string, interval: BillingInterval): Promise<Subscription>;
 
   /**
    * INVOICING
@@ -324,10 +314,7 @@ export interface ISubscriptionService {
    * @param invoiceType - Type of invoice
    * @returns Created invoice
    */
-  createInvoice(
-    subscriptionId: string,
-    invoiceType: string
-  ): Promise<SubscriptionInvoice>;
+  createInvoice(subscriptionId: string, invoiceType: string): Promise<SubscriptionInvoice>;
 
   /**
    * Get invoices for subscription
@@ -335,10 +322,7 @@ export interface ISubscriptionService {
    * @param limit - Result limit
    * @returns List of invoices
    */
-  getSubscriptionInvoices(
-    subscriptionId: string,
-    limit?: number
-  ): Promise<SubscriptionInvoice[]>;
+  getSubscriptionInvoices(subscriptionId: string, limit?: number): Promise<SubscriptionInvoice[]>;
 
   /**
    * Get invoice by ID
@@ -512,10 +496,7 @@ export interface ISubscriptionService {
    * @param currency - Target currency
    * @returns Subscription with converted prices
    */
-  getSubscriptionInCurrency(
-    subscriptionId: string,
-    currency: Currency
-  ): Promise<Subscription>;
+  getSubscriptionInCurrency(subscriptionId: string, currency: Currency): Promise<Subscription>;
 
   /**
    * Update subscription currency

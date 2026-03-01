@@ -11,7 +11,7 @@ import {
   UserSegmentCriteria,
   AnalyticsExportOptions,
   AnalyticsTimeRange,
-  UserActivityEvent
+  UserActivityEvent,
 } from '../../../types/user-analytics';
 
 /**
@@ -39,10 +39,28 @@ class MockDatabase {
     if (sql.includes('signup_source')) {
       return {
         rows: [
-          { count: '500', signup_source: 'organic', signup_medium: null, signup_campaign: null, referrer: null },
-          { count: '300', signup_source: 'referral', signup_medium: 'social', signup_campaign: 'summer2024', referrer: 'twitter.com' },
-          { count: '200', signup_source: 'paid', signup_medium: 'cpc', signup_campaign: 'google_ads', referrer: 'google.com' }
-        ]
+          {
+            count: '500',
+            signup_source: 'organic',
+            signup_medium: null,
+            signup_campaign: null,
+            referrer: null,
+          },
+          {
+            count: '300',
+            signup_source: 'referral',
+            signup_medium: 'social',
+            signup_campaign: 'summer2024',
+            referrer: 'twitter.com',
+          },
+          {
+            count: '200',
+            signup_source: 'paid',
+            signup_medium: 'cpc',
+            signup_campaign: 'google_ads',
+            referrer: 'google.com',
+          },
+        ],
       };
     }
 
@@ -61,11 +79,13 @@ class MockDatabase {
 
     if (sql.includes('user_sessions')) {
       return {
-        rows: [{
-          count: '50',
-          avg_duration: '180',
-          avg_actions: '5.5'
-        }]
+        rows: [
+          {
+            count: '50',
+            avg_duration: '180',
+            avg_actions: '5.5',
+          },
+        ],
       };
     }
 
@@ -80,7 +100,7 @@ class MockDatabase {
           active_users: '500' + i,
           sessions: '800' + i,
           avg_duration: '200',
-          bounce_rate: '25.5'
+          bounce_rate: '25.5',
         });
       }
       return { rows: mockData };
@@ -91,8 +111,8 @@ class MockDatabase {
         rows: [
           { user_id: 'user1', total_revenue: '150.00' },
           { user_id: 'user2', total_revenue: '300.00' },
-          { user_id: 'user3', total_revenue: '75.00' }
-        ]
+          { user_id: 'user3', total_revenue: '75.00' },
+        ],
       };
     }
 
@@ -109,7 +129,7 @@ class MockDatabase {
         mockData.push({
           date: date.toISOString(),
           new_users: '' + (10 + i),
-          cumulative_users: '' + (100 + i * 10)
+          cumulative_users: '' + (100 + i * 10),
         });
       }
       return { rows: mockData };
@@ -117,39 +137,56 @@ class MockDatabase {
 
     if (sql.includes('user_id') && sql.includes('WHERE user_id =')) {
       return {
-        rows: [{
-          user_id: params[0],
-          created_at: new Date('2024-01-01'),
-          last_activity: new Date('2024-10-01'),
-          activity_level: 'high',
-          engagement_score: 75,
-          content_created_count: 10,
-          content_views_count: 500,
-          subscription_status: 'active',
-          payment_history_count: 5
-        }]
+        rows: [
+          {
+            user_id: params[0],
+            created_at: new Date('2024-01-01'),
+            last_activity: new Date('2024-10-01'),
+            activity_level: 'high',
+            engagement_score: 75,
+            content_created_count: 10,
+            content_views_count: 500,
+            subscription_status: 'active',
+            payment_history_count: 5,
+          },
+        ],
       };
     }
 
     // Cohort user query: SELECT user_id FROM users WHERE created_at >= ...
-    if (sql.includes('user_id') && sql.includes('users') && sql.includes('created_at') && !sql.includes('COUNT')) {
+    if (
+      sql.includes('user_id') &&
+      sql.includes('users') &&
+      sql.includes('created_at') &&
+      !sql.includes('COUNT')
+    ) {
       return {
         rows: [
           { user_id: 'user1' },
           { user_id: 'user2' },
           { user_id: 'user3' },
           { user_id: 'user4' },
-          { user_id: 'user5' }
-        ]
+          { user_id: 'user5' },
+        ],
       };
     }
 
     if (sql.includes('activity_level')) {
       return {
         rows: [
-          { user_id: 'user1', activity_level: 'high', location: 'US', created_at: new Date('2024-01-01') },
-          { user_id: 'user2', activity_level: 'high', location: 'US', created_at: new Date('2024-01-15') }
-        ]
+          {
+            user_id: 'user1',
+            activity_level: 'high',
+            location: 'US',
+            created_at: new Date('2024-01-01'),
+          },
+          {
+            user_id: 'user2',
+            activity_level: 'high',
+            location: 'US',
+            created_at: new Date('2024-01-15'),
+          },
+        ],
       };
     }
 
@@ -308,7 +345,7 @@ describe('UserAnalyticsService', () => {
   describe('User Acquisition Metrics', () => {
     const timeRange: AnalyticsTimeRange = {
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-01-31')
+      endDate: new Date('2024-01-31'),
     };
 
     it('should return user acquisition metrics', async () => {
@@ -324,7 +361,9 @@ describe('UserAnalyticsService', () => {
 
     it('should cache acquisition metrics', async () => {
       await service.getUserAcquisitionMetrics(timeRange);
-      const cached = await mockCache.get(`analytics:acquisition:${timeRange.startDate.toISOString()}:${timeRange.endDate.toISOString()}`);
+      const cached = await mockCache.get(
+        `analytics:acquisition:${timeRange.startDate.toISOString()}:${timeRange.endDate.toISOString()}`
+      );
 
       expect(cached).toBeDefined();
     });
@@ -340,9 +379,9 @@ describe('UserAnalyticsService', () => {
       const metrics = await service.getUserAcquisitionMetrics(timeRange);
 
       expect(metrics.sources).toHaveLength(3);
-      expect(metrics.sources.find(s => s.source === 'organic')).toBeDefined();
-      expect(metrics.sources.find(s => s.source === 'referral')).toBeDefined();
-      expect(metrics.sources.find(s => s.source === 'paid')).toBeDefined();
+      expect(metrics.sources.find((s) => s.source === 'organic')).toBeDefined();
+      expect(metrics.sources.find((s) => s.source === 'referral')).toBeDefined();
+      expect(metrics.sources.find((s) => s.source === 'paid')).toBeDefined();
     });
 
     it('should calculate source percentages', async () => {
@@ -356,14 +395,14 @@ describe('UserAnalyticsService', () => {
       await service.getUserAcquisitionMetrics(timeRange);
 
       const logs = mockAuditLog.getLogs();
-      expect(logs.some(log => log.action === 'analytics.acquisition.retrieved')).toBe(true);
+      expect(logs.some((log) => log.action === 'analytics.acquisition.retrieved')).toBe(true);
     });
   });
 
   describe('Engagement Metrics', () => {
     const timeRange: AnalyticsTimeRange = {
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-01-31')
+      endDate: new Date('2024-01-31'),
     };
 
     it('should return engagement metrics', async () => {
@@ -393,7 +432,9 @@ describe('UserAnalyticsService', () => {
 
     it('should cache engagement metrics', async () => {
       await service.getEngagementMetrics(timeRange);
-      const cached = await mockCache.get(`analytics:engagement:${timeRange.startDate.toISOString()}:${timeRange.endDate.toISOString()}`);
+      const cached = await mockCache.get(
+        `analytics:engagement:${timeRange.startDate.toISOString()}:${timeRange.endDate.toISOString()}`
+      );
 
       expect(cached).toBeDefined();
     });
@@ -485,7 +526,9 @@ describe('UserAnalyticsService', () => {
 
     it('should cache cohort analysis', async () => {
       await service.getCohortAnalysis(startDate, endDate);
-      const cached = await mockCache.get(`analytics:cohort:${startDate.toISOString()}:${endDate.toISOString()}`);
+      const cached = await mockCache.get(
+        `analytics:cohort:${startDate.toISOString()}:${endDate.toISOString()}`
+      );
 
       expect(cached).toBeDefined();
     });
@@ -494,7 +537,7 @@ describe('UserAnalyticsService', () => {
   describe('User Segmentation', () => {
     it('should segment users by activity level', async () => {
       const criteria: UserSegmentCriteria = {
-        activityLevel: 'high'
+        activityLevel: 'high',
       };
 
       const segments = await service.segmentUsers(criteria);
@@ -509,7 +552,7 @@ describe('UserAnalyticsService', () => {
 
     it('should segment users by location', async () => {
       const criteria: UserSegmentCriteria = {
-        location: ['US', 'CA']
+        location: ['US', 'CA'],
       };
 
       const segments = await service.segmentUsers(criteria);
@@ -518,7 +561,7 @@ describe('UserAnalyticsService', () => {
 
     it('should segment users by tenure', async () => {
       const criteria: UserSegmentCriteria = {
-        tenure: { min: 30, max: 90 }
+        tenure: { min: 30, max: 90 },
       };
 
       const segments = await service.segmentUsers(criteria);
@@ -527,7 +570,7 @@ describe('UserAnalyticsService', () => {
 
     it('should include segment metrics', async () => {
       const criteria: UserSegmentCriteria = {
-        activityLevel: 'high'
+        activityLevel: 'high',
       };
 
       const segments = await service.segmentUsers(criteria);
@@ -542,7 +585,7 @@ describe('UserAnalyticsService', () => {
     it('should generate segment name from criteria', async () => {
       const criteria: UserSegmentCriteria = {
         activityLevel: 'high',
-        location: ['US']
+        location: ['US'],
       };
 
       const segments = await service.segmentUsers(criteria);
@@ -556,7 +599,7 @@ describe('UserAnalyticsService', () => {
   describe('User Journey Funnel', () => {
     const timeRange: AnalyticsTimeRange = {
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-01-31')
+      endDate: new Date('2024-01-31'),
     };
 
     it('should analyze user journey funnel', async () => {
@@ -582,7 +625,9 @@ describe('UserAnalyticsService', () => {
 
     it('should cache funnel analysis', async () => {
       await service.analyzeUserJourney('onboarding', timeRange);
-      const cached = await mockCache.get(`analytics:journey:onboarding:${timeRange.startDate.toISOString()}`);
+      const cached = await mockCache.get(
+        `analytics:journey:onboarding:${timeRange.startDate.toISOString()}`
+      );
 
       expect(cached).toBeDefined();
     });
@@ -628,7 +673,7 @@ describe('UserAnalyticsService', () => {
   describe('Churn Analysis', () => {
     const timeRange: AnalyticsTimeRange = {
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-01-31')
+      endDate: new Date('2024-01-31'),
     };
 
     it('should analyze churn', async () => {
@@ -714,7 +759,7 @@ describe('UserAnalyticsService', () => {
   describe('User Growth Trends', () => {
     const timeRange: AnalyticsTimeRange = {
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-01-31')
+      endDate: new Date('2024-01-31'),
     };
 
     it('should return growth trends', async () => {
@@ -842,8 +887,8 @@ describe('UserAnalyticsService', () => {
       metrics: ['acquisition', 'engagement'],
       timeRange: {
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-01-31')
-      }
+        endDate: new Date('2024-01-31'),
+      },
     };
 
     it('should export analytics as CSV', async () => {
@@ -873,7 +918,7 @@ describe('UserAnalyticsService', () => {
       await service.exportAnalytics(exportOptions);
 
       const logs = mockAuditLog.getLogs();
-      expect(logs.some(log => log.action === 'analytics.export.created')).toBe(true);
+      expect(logs.some((log) => log.action === 'analytics.export.created')).toBe(true);
     });
   });
 
@@ -883,7 +928,7 @@ describe('UserAnalyticsService', () => {
         userId: 'user123',
         eventType: 'page_view',
         eventData: { page: '/dashboard' },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       await service.trackActivity(event);
@@ -898,7 +943,7 @@ describe('UserAnalyticsService', () => {
           userId: `user${i}`,
           eventType: 'test_event',
           eventData: {},
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
@@ -914,7 +959,7 @@ describe('UserAnalyticsService', () => {
         userId: 'user123',
         eventType: 'page_view',
         eventData: { page: '/dashboard' },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       await service.trackActivity(event);
@@ -927,7 +972,7 @@ describe('UserAnalyticsService', () => {
         userId: 'user123',
         eventType: 'test',
         eventData: {},
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Should handle errors gracefully
@@ -954,9 +999,9 @@ describe('UserAnalyticsService', () => {
       const filters = {
         timeRange: {
           startDate: new Date('2024-01-01'),
-          endDate: new Date('2024-01-31')
+          endDate: new Date('2024-01-31'),
         },
-        metrics: ['engagement', 'retention']
+        metrics: ['engagement', 'retention'],
       };
 
       const results = await service.queryAnalytics(filters);
@@ -968,9 +1013,9 @@ describe('UserAnalyticsService', () => {
       const filters = {
         timeRange: {
           startDate: new Date('2024-01-01'),
-          endDate: new Date('2024-01-31')
+          endDate: new Date('2024-01-31'),
         },
-        groupBy: 'day' as const
+        groupBy: 'day' as const,
       };
 
       const results = await service.queryAnalytics(filters);
@@ -982,10 +1027,10 @@ describe('UserAnalyticsService', () => {
       const filters = {
         timeRange: {
           startDate: new Date('2024-01-01'),
-          endDate: new Date('2024-01-31')
+          endDate: new Date('2024-01-31'),
         },
         limit: 10,
-        offset: 0
+        offset: 0,
       };
 
       const results = await service.queryAnalytics(filters);
@@ -999,7 +1044,7 @@ describe('UserAnalyticsService', () => {
       // Populate cache
       await service.getUserAcquisitionMetrics({
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-01-31')
+        endDate: new Date('2024-01-31'),
       });
 
       // Refresh cache
@@ -1012,7 +1057,7 @@ describe('UserAnalyticsService', () => {
       // Populate cache
       await service.getUserAcquisitionMetrics({
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-01-31')
+        endDate: new Date('2024-01-31'),
       });
 
       // Refresh all
@@ -1025,27 +1070,37 @@ describe('UserAnalyticsService', () => {
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
       const badDb = {
-        query: vi.fn().mockRejectedValue(new Error('Database error'))
+        query: vi.fn().mockRejectedValue(new Error('Database error')),
       };
 
       const badService = new (UserAnalyticsService as any)(
-        badDb, mockCache, mockEventBus, mockAuditLog, mockLogger
+        badDb,
+        mockCache,
+        mockEventBus,
+        mockAuditLog,
+        mockLogger
       );
 
-      await expect(badService.getUserAcquisitionMetrics({
-        startDate: new Date(),
-        endDate: new Date()
-      })).rejects.toThrow();
+      await expect(
+        badService.getUserAcquisitionMetrics({
+          startDate: new Date(),
+          endDate: new Date(),
+        })
+      ).rejects.toThrow();
     });
 
     it('should handle cache errors gracefully', async () => {
       const badCache = {
         get: vi.fn().mockRejectedValue(new Error('Cache error')),
-        set: vi.fn().mockRejectedValue(new Error('Cache error'))
+        set: vi.fn().mockRejectedValue(new Error('Cache error')),
       };
 
       const badService = new (UserAnalyticsService as any)(
-        mockDb, badCache, mockEventBus, mockAuditLog, mockLogger
+        mockDb,
+        badCache,
+        mockEventBus,
+        mockAuditLog,
+        mockLogger
       );
 
       // Should still work without cache
@@ -1053,7 +1108,7 @@ describe('UserAnalyticsService', () => {
         userId: 'user123',
         eventType: 'test',
         eventData: {},
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     });
   });
@@ -1063,7 +1118,7 @@ describe('UserAnalyticsService', () => {
       // Test that aggregation methods don't expose PII
       const metrics = await service.getEngagementMetrics({
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-01-31')
+        endDate: new Date('2024-01-31'),
       });
 
       // Aggregates should not contain individual user IDs
@@ -1073,7 +1128,7 @@ describe('UserAnalyticsService', () => {
     it('should aggregate data for privacy', async () => {
       const metrics = await service.getUserAcquisitionMetrics({
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-01-31')
+        endDate: new Date('2024-01-31'),
       });
 
       // Should provide counts, not individual records

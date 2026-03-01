@@ -58,7 +58,8 @@ export class UserRepository {
         if (!usernameRegex.test(userData.username)) {
           return {
             success: false,
-            error: 'Invalid username format. Use only letters, numbers, and underscores (1-50 characters)',
+            error:
+              'Invalid username format. Use only letters, numbers, and underscores (1-50 characters)',
           };
         }
 
@@ -92,7 +93,8 @@ export class UserRepository {
 
       if (error) {
         // Handle database-specific errors
-        if (error.code === '23505') { // Unique constraint violation
+        if (error.code === '23505') {
+          // Unique constraint violation
           return {
             success: false,
             error: 'User with this NOSTR key or username already exists',
@@ -142,7 +144,8 @@ export class UserRepository {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') { // No rows found
+        if (error.code === 'PGRST116') {
+          // No rows found
           return {
             success: false,
             error: 'User not found',
@@ -191,7 +194,8 @@ export class UserRepository {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') { // No rows found
+        if (error.code === 'PGRST116') {
+          // No rows found
           return {
             success: false,
             error: 'User not found',
@@ -223,7 +227,10 @@ export class UserRepository {
    * ✏️ Update User Profile
    * WHY: Secure profile updates with validation
    */
-  async update(userId: string, updates: UpdateUserProfile): Promise<UserRepositoryResult<UserProfile>> {
+  async update(
+    userId: string,
+    updates: UpdateUserProfile
+  ): Promise<UserRepositoryResult<UserProfile>> {
     try {
       // Validate username if being updated
       if (updates.username) {
@@ -355,10 +362,7 @@ export class UserRepository {
     roleDistribution: Record<string, number>;
   }> {
     try {
-      const { data, error } = await this.db.client
-        .from('user_stats')
-        .select('*')
-        .single();
+      const { data, error } = await this.db.client.from('user_stats').select('*').single();
 
       if (error || !data) {
         // Fallback to manual calculation
@@ -375,7 +379,7 @@ export class UserRepository {
         }
 
         const roleDistribution: Record<string, number> = {};
-        users.forEach(user => {
+        users.forEach((user) => {
           const role = user.role || 'supporter';
           roleDistribution[role] = (roleDistribution[role] || 0) + 1;
         });

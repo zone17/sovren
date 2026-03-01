@@ -95,7 +95,11 @@ describe('BoundaryService', () => {
       expect(result.focus_hours.end).toBe('17:00');
       expect(result.focus_hours.timezone).toBe('America/New_York');
       expect(result.focus_hours.days).toEqual([
-        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
       ]);
       expect(result.weekly_engagement_budget_mins).toBe(120);
       expect(result.engagement_used_mins).toBe(0); // Always calculated
@@ -237,7 +241,9 @@ describe('BoundaryService', () => {
         }),
         { onConflict: 'creator_id' }
       );
-      expect(mockLogger.info).toHaveBeenCalledWith('Boundaries updated', { creatorId: 'creator-1' });
+      expect(mockLogger.info).toHaveBeenCalledWith('Boundaries updated', {
+        creatorId: 'creator-1',
+      });
     });
 
     it('handles partial updates (only focus_hours)', async () => {

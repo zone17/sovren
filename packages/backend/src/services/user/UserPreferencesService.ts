@@ -35,12 +35,9 @@ import type {
   DisplayPreferences,
   CommunicationPreferences,
   AccessibilitySettings,
-  DataExportPreferences
+  DataExportPreferences,
 } from '../../types/user-preferences';
-import {
-  DEFAULT_PREFERENCES,
-  PREFERENCE_PRESETS
-} from '../../types/user-preferences';
+import { DEFAULT_PREFERENCES, PREFERENCE_PRESETS } from '../../types/user-preferences';
 import { DomainEventBuilder, DomainEventType } from '../../interfaces/shared/IEventBus';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -72,10 +69,7 @@ export class UserPreferencesService implements IUserPreferencesService {
   /**
    * Get user preferences with optional query options
    */
-  async getPreferences(
-    userId: string,
-    options?: PreferenceQueryOptions
-  ): Promise<UserPreferences> {
+  async getPreferences(userId: string, options?: PreferenceQueryOptions): Promise<UserPreferences> {
     this.validateUserId(userId);
 
     // Try cache first
@@ -160,15 +154,13 @@ export class UserPreferencesService implements IUserPreferencesService {
   /**
    * Update user preferences
    */
-  async updatePreferences(
-    request: PreferenceUpdateRequest
-  ): Promise<UserPreferences> {
+  async updatePreferences(request: PreferenceUpdateRequest): Promise<UserPreferences> {
     this.validateUserId(request.userId);
 
     // Validate updates
     const validation = await this.validatePreferences(request.updates);
     if (!validation.valid) {
-      const errors = validation.errors.map(e => e.message).join(', ');
+      const errors = validation.errors.map((e) => e.message).join(', ');
       throw new Error(`Preference validation failed: ${errors}`);
     }
 
@@ -194,7 +186,7 @@ export class UserPreferencesService implements IUserPreferencesService {
         newValue: change.newValue,
         reason: request.reason,
         changedBy: request.userId,
-        changedAt: new Date()
+        changedAt: new Date(),
       });
     }
 
@@ -215,7 +207,7 @@ export class UserPreferencesService implements IUserPreferencesService {
   ): Promise<UserPreferences> {
     return this.updatePreferences({
       userId,
-      updates: { notifications: preferences }
+      updates: { notifications: preferences },
     });
   }
 
@@ -231,7 +223,7 @@ export class UserPreferencesService implements IUserPreferencesService {
 
     return this.updatePreferences({
       userId,
-      updates: { privacy: merged }
+      updates: { privacy: merged },
     });
   }
 
@@ -247,7 +239,7 @@ export class UserPreferencesService implements IUserPreferencesService {
 
     return this.updatePreferences({
       userId,
-      updates: { content: merged }
+      updates: { content: merged },
     });
   }
 
@@ -263,7 +255,7 @@ export class UserPreferencesService implements IUserPreferencesService {
 
     return this.updatePreferences({
       userId,
-      updates: { display: merged }
+      updates: { display: merged },
     });
   }
 
@@ -279,7 +271,7 @@ export class UserPreferencesService implements IUserPreferencesService {
 
     return this.updatePreferences({
       userId,
-      updates: { communication: merged }
+      updates: { communication: merged },
     });
   }
 
@@ -295,7 +287,7 @@ export class UserPreferencesService implements IUserPreferencesService {
 
     return this.updatePreferences({
       userId,
-      updates: { accessibility: merged }
+      updates: { accessibility: merged },
     });
   }
 
@@ -311,16 +303,14 @@ export class UserPreferencesService implements IUserPreferencesService {
 
     return this.updatePreferences({
       userId,
-      updates: { dataExport: merged }
+      updates: { dataExport: merged },
     });
   }
 
   /**
    * Bulk update preferences with atomic transaction support
    */
-  async bulkUpdatePreferences(
-    request: BulkPreferenceUpdateRequest
-  ): Promise<UserPreferences> {
+  async bulkUpdatePreferences(request: BulkPreferenceUpdateRequest): Promise<UserPreferences> {
     this.validateUserId(request.userId);
 
     if (request.updates.length === 0) {
@@ -340,7 +330,7 @@ export class UserPreferencesService implements IUserPreferencesService {
       // Validate all updates
       const validation = await this.validatePreferences(updates);
       if (!validation.valid) {
-        const errors = validation.errors.map(e => e.message).join(', ');
+        const errors = validation.errors.map((e) => e.message).join(', ');
         throw new Error(`Bulk update validation failed: ${errors}`);
       }
 
@@ -363,7 +353,7 @@ export class UserPreferencesService implements IUserPreferencesService {
             newValue: change.newValue,
             reason: 'Bulk update',
             changedBy: request.userId,
-            changedAt: new Date()
+            changedAt: new Date(),
           });
         }
 
@@ -378,10 +368,9 @@ export class UserPreferencesService implements IUserPreferencesService {
         return this.updatePreferences({
           userId: request.userId,
           updates,
-          reason: 'Bulk update'
+          reason: 'Bulk update',
         });
       }
-
     } catch (error) {
       this.logger.error(`Bulk update failed for user ${request.userId}`, error);
       throw error;
@@ -397,7 +386,7 @@ export class UserPreferencesService implements IUserPreferencesService {
   ): Promise<UserPreferences> {
     this.validateUserId(userId);
 
-    const presetConfig = PREFERENCE_PRESETS.find(p => p.name === preset);
+    const presetConfig = PREFERENCE_PRESETS.find((p) => p.name === preset);
     if (!presetConfig) {
       throw new Error(`Invalid preset: ${preset}`);
     }
@@ -408,9 +397,9 @@ export class UserPreferencesService implements IUserPreferencesService {
       userId,
       updates: {
         ...presetConfig.preferences,
-        preset
+        preset,
       },
-      reason: `Applied ${preset} preset`
+      reason: `Applied ${preset} preset`,
     });
   }
 
@@ -424,13 +413,13 @@ export class UserPreferencesService implements IUserPreferencesService {
 
     const defaults = {
       ...DEFAULT_PREFERENCES,
-      preset: 'custom' as const
+      preset: 'custom' as const,
     };
 
     return this.updatePreferences({
       userId,
       updates: defaults,
-      reason: 'Reset to defaults'
+      reason: 'Reset to defaults',
     });
   }
 
@@ -476,20 +465,24 @@ export class UserPreferencesService implements IUserPreferencesService {
     // Validate privacy settings
     if (preferences.privacy) {
       const validVisibility = ['public', 'private', 'followers_only'];
-      if (preferences.privacy.profileVisibility &&
-          !validVisibility.includes(preferences.privacy.profileVisibility)) {
+      if (
+        preferences.privacy.profileVisibility &&
+        !validVisibility.includes(preferences.privacy.profileVisibility)
+      ) {
         errors.push({
           field: 'privacy.profileVisibility',
           message: 'Invalid profile visibility value',
-          code: 'INVALID_VISIBILITY'
+          code: 'INVALID_VISIBILITY',
         });
       }
-      if (preferences.privacy.activityVisibility &&
-          !validVisibility.includes(preferences.privacy.activityVisibility)) {
+      if (
+        preferences.privacy.activityVisibility &&
+        !validVisibility.includes(preferences.privacy.activityVisibility)
+      ) {
         errors.push({
           field: 'privacy.activityVisibility',
           message: 'Invalid activity visibility value',
-          code: 'INVALID_VISIBILITY'
+          code: 'INVALID_VISIBILITY',
         });
       }
     }
@@ -500,17 +493,19 @@ export class UserPreferencesService implements IUserPreferencesService {
         errors.push({
           field: 'content.languages',
           message: 'At least one language must be selected',
-          code: 'EMPTY_LANGUAGES'
+          code: 'EMPTY_LANGUAGES',
         });
       }
 
       const validSensitiveContent = ['show', 'blur', 'hide'];
-      if (preferences.content.sensitiveContent &&
-          !validSensitiveContent.includes(preferences.content.sensitiveContent)) {
+      if (
+        preferences.content.sensitiveContent &&
+        !validSensitiveContent.includes(preferences.content.sensitiveContent)
+      ) {
         errors.push({
           field: 'content.sensitiveContent',
           message: 'Invalid sensitive content value',
-          code: 'INVALID_SENSITIVE_CONTENT'
+          code: 'INVALID_SENSITIVE_CONTENT',
         });
       }
     }
@@ -518,32 +513,29 @@ export class UserPreferencesService implements IUserPreferencesService {
     // Validate display preferences
     if (preferences.display) {
       const validThemes = ['light', 'dark', 'auto'];
-      if (preferences.display.theme &&
-          !validThemes.includes(preferences.display.theme)) {
+      if (preferences.display.theme && !validThemes.includes(preferences.display.theme)) {
         errors.push({
           field: 'display.theme',
           message: 'Invalid theme value',
-          code: 'INVALID_THEME'
+          code: 'INVALID_THEME',
         });
       }
 
       const validFontSizes = ['small', 'medium', 'large', 'xlarge'];
-      if (preferences.display.fontSize &&
-          !validFontSizes.includes(preferences.display.fontSize)) {
+      if (preferences.display.fontSize && !validFontSizes.includes(preferences.display.fontSize)) {
         errors.push({
           field: 'display.fontSize',
           message: 'Invalid font size value',
-          code: 'INVALID_FONT_SIZE'
+          code: 'INVALID_FONT_SIZE',
         });
       }
 
       const validLayouts = ['compact', 'comfortable', 'spacious'];
-      if (preferences.display.layout &&
-          !validLayouts.includes(preferences.display.layout)) {
+      if (preferences.display.layout && !validLayouts.includes(preferences.display.layout)) {
         errors.push({
           field: 'display.layout',
           message: 'Invalid layout value',
-          code: 'INVALID_LAYOUT'
+          code: 'INVALID_LAYOUT',
         });
       }
     }
@@ -551,22 +543,26 @@ export class UserPreferencesService implements IUserPreferencesService {
     // Validate communication preferences
     if (preferences.communication) {
       const validFrequencies = ['realtime', 'daily', 'weekly', 'never'];
-      if (preferences.communication.frequency &&
-          !validFrequencies.includes(preferences.communication.frequency)) {
+      if (
+        preferences.communication.frequency &&
+        !validFrequencies.includes(preferences.communication.frequency)
+      ) {
         errors.push({
           field: 'communication.frequency',
           message: 'Invalid frequency value',
-          code: 'INVALID_FREQUENCY'
+          code: 'INVALID_FREQUENCY',
         });
       }
 
       // Warn if all notifications are disabled
-      if (preferences.communication.emailNotifications === false &&
-          preferences.communication.pushNotifications === false &&
-          preferences.communication.smsNotifications === false) {
+      if (
+        preferences.communication.emailNotifications === false &&
+        preferences.communication.pushNotifications === false &&
+        preferences.communication.smsNotifications === false
+      ) {
         warnings.push({
           field: 'communication',
-          message: 'All notification channels are disabled'
+          message: 'All notification channels are disabled',
         });
       }
     }
@@ -574,22 +570,23 @@ export class UserPreferencesService implements IUserPreferencesService {
     // Validate data export preferences
     if (preferences.dataExport) {
       const validFormats = ['json', 'csv', 'xml'];
-      if (preferences.dataExport.format &&
-          !validFormats.includes(preferences.dataExport.format)) {
+      if (preferences.dataExport.format && !validFormats.includes(preferences.dataExport.format)) {
         errors.push({
           field: 'dataExport.format',
           message: 'Invalid export format',
-          code: 'INVALID_FORMAT'
+          code: 'INVALID_FORMAT',
         });
       }
 
       const validExportFrequencies = ['manual', 'weekly', 'monthly', 'quarterly'];
-      if (preferences.dataExport.frequency &&
-          !validExportFrequencies.includes(preferences.dataExport.frequency)) {
+      if (
+        preferences.dataExport.frequency &&
+        !validExportFrequencies.includes(preferences.dataExport.frequency)
+      ) {
         errors.push({
           field: 'dataExport.frequency',
           message: 'Invalid export frequency',
-          code: 'INVALID_EXPORT_FREQUENCY'
+          code: 'INVALID_EXPORT_FREQUENCY',
         });
       }
     }
@@ -597,7 +594,7 @@ export class UserPreferencesService implements IUserPreferencesService {
     return {
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -641,7 +638,7 @@ export class UserPreferencesService implements IUserPreferencesService {
       userId,
       preferences,
       exportedAt: new Date(),
-      format
+      format,
     };
 
     if (includeHistory) {
@@ -656,10 +653,7 @@ export class UserPreferencesService implements IUserPreferencesService {
   /**
    * Import user preferences
    */
-  async importPreferences(
-    userId: string,
-    data: PreferenceExportResult
-  ): Promise<UserPreferences> {
+  async importPreferences(userId: string, data: PreferenceExportResult): Promise<UserPreferences> {
     this.validateUserId(userId);
 
     if (data.userId !== userId) {
@@ -669,7 +663,7 @@ export class UserPreferencesService implements IUserPreferencesService {
     // Validate imported preferences
     const validation = await this.validatePreferences(data.preferences);
     if (!validation.valid) {
-      const errors = validation.errors.map(e => e.message).join(', ');
+      const errors = validation.errors.map((e) => e.message).join(', ');
       throw new Error(`Import validation failed: ${errors}`);
     }
 
@@ -679,22 +673,24 @@ export class UserPreferencesService implements IUserPreferencesService {
     return this.updatePreferences({
       userId,
       updates: data.preferences,
-      reason: 'Imported preferences'
+      reason: 'Imported preferences',
     });
   }
 
   /**
    * Get available preference presets
    */
-  async getAvailablePresets(): Promise<Array<{
-    name: string;
-    displayName: string;
-    description: string;
-  }>> {
-    return PREFERENCE_PRESETS.map(preset => ({
+  async getAvailablePresets(): Promise<
+    Array<{
+      name: string;
+      displayName: string;
+      description: string;
+    }>
+  > {
+    return PREFERENCE_PRESETS.map((preset) => ({
       name: preset.name,
       displayName: preset.displayName,
-      description: preset.description
+      description: preset.description,
     }));
   }
 
@@ -738,7 +734,7 @@ export class UserPreferencesService implements IUserPreferencesService {
       userId,
       ...defaults,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     return this.repository.create(preferences);
@@ -789,7 +785,7 @@ export class UserPreferencesService implements IUserPreferencesService {
       changes.push({
         field: key,
         oldValue,
-        newValue
+        newValue,
       });
     }
 
@@ -825,7 +821,7 @@ export class UserPreferencesService implements IUserPreferencesService {
           .withPayload({
             action: 'preferences_updated',
             changes,
-            version: preferences.version
+            version: preferences.version,
           })
           .withUserId(userId)
           .withSource('UserPreferencesService')

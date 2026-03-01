@@ -50,7 +50,7 @@ export class SecretError extends Error {
   constructor(
     public type: SecretErrorType,
     message: string,
-    public originalError?: Error,
+    public originalError?: Error
   ) {
     super(message);
     this.name = 'SecretError';
@@ -122,7 +122,9 @@ export class SecretsService {
         maxAttempts: this.config.retry.maxAttempts,
       });
 
-      console.log(`[SecretsService] Initialized with AWS Secrets Manager (region: ${this.config.awsRegion})`);
+      console.log(
+        `[SecretsService] Initialized with AWS Secrets Manager (region: ${this.config.awsRegion})`
+      );
     } else {
       console.log('[SecretsService] Initialized with environment variable fallback');
     }
@@ -146,7 +148,7 @@ export class SecretsService {
     if (!this.initialized) {
       throw new SecretError(
         SecretErrorType.VALIDATION_ERROR,
-        'SecretsService not initialized. Call initialize() first.',
+        'SecretsService not initialized. Call initialize() first.'
       );
     }
 
@@ -160,7 +162,7 @@ export class SecretsService {
     this.stats.cacheMisses++;
 
     // Find secret mapping
-    const mapping = this.config.secrets.find(s => s.envVar === envVarName);
+    const mapping = this.config.secrets.find((s) => s.envVar === envVarName);
 
     // If using AWS secrets and mapping exists, try AWS first
     if (this.config.useAwsSecrets && mapping) {
@@ -175,7 +177,9 @@ export class SecretsService {
           throw error;
         }
         // Otherwise, fall through to env var fallback
-        console.warn(`[SecretsService] AWS lookup failed for ${envVarName}, falling back to env var`);
+        console.warn(
+          `[SecretsService] AWS lookup failed for ${envVarName}, falling back to env var`
+        );
       }
     }
 
@@ -190,7 +194,7 @@ export class SecretsService {
         this.stats.errors++;
         throw new SecretError(
           SecretErrorType.NOT_FOUND,
-          `Required secret '${envVarName}' not found in AWS Secrets Manager or environment variables`,
+          `Required secret '${envVarName}' not found in AWS Secrets Manager or environment variables`
         );
       }
 
@@ -222,7 +226,7 @@ export class SecretsService {
           console.error(`[SecretsService] Failed to load secret ${name}:`, error);
           secrets[name] = '';
         }
-      }),
+      })
     );
 
     return secrets;
@@ -239,7 +243,7 @@ export class SecretsService {
     this.cache.clear();
 
     // Reload all configured secrets
-    const secretNames = this.config.secrets.map(s => s.envVar);
+    const secretNames = this.config.secrets.map((s) => s.envVar);
     await this.getSecrets(secretNames);
 
     this.stats.lastRefresh = new Date();
@@ -294,7 +298,7 @@ export class SecretsService {
    * @private
    */
   private setCachedSecret(key: string, value: string): void {
-    const expiresAt = Date.now() + (this.config.cacheTtlSeconds * 1000);
+    const expiresAt = Date.now() + this.config.cacheTtlSeconds * 1000;
 
     this.cache.set(key, {
       value,
@@ -310,7 +314,7 @@ export class SecretsService {
     if (!this.secretsManager) {
       throw new SecretError(
         SecretErrorType.AWS_ERROR,
-        'AWS Secrets Manager client not initialized',
+        'AWS Secrets Manager client not initialized'
       );
     }
 
@@ -330,10 +334,7 @@ export class SecretsService {
         const buff = Buffer.from(response.SecretBinary);
         secretValue = buff.toString('utf-8');
       } else {
-        throw new SecretError(
-          SecretErrorType.INVALID_SECRET,
-          `Secret ${secretName} has no value`,
-        );
+        throw new SecretError(SecretErrorType.INVALID_SECRET, `Secret ${secretName} has no value`);
       }
 
       // If jsonKey is specified, parse as JSON and extract key
@@ -345,7 +346,7 @@ export class SecretsService {
           if (value === undefined) {
             throw new SecretError(
               SecretErrorType.INVALID_SECRET,
-              `JSON key '${jsonKey}' not found in secret ${secretName}`,
+              `JSON key '${jsonKey}' not found in secret ${secretName}`
             );
           }
 
@@ -357,20 +358,19 @@ export class SecretsService {
           throw new SecretError(
             SecretErrorType.INVALID_SECRET,
             `Failed to parse JSON secret ${secretName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            error instanceof Error ? error : undefined,
+            error instanceof Error ? error : undefined
           );
         }
       }
 
       return secretValue;
-
     } catch (error) {
       // Handle specific AWS errors
       if (error instanceof ResourceNotFoundException) {
         throw new SecretError(
           SecretErrorType.NOT_FOUND,
           `Secret '${secretName}' not found in AWS Secrets Manager`,
-          error,
+          error
         );
       }
 
@@ -378,7 +378,7 @@ export class SecretsService {
         throw new SecretError(
           SecretErrorType.INVALID_SECRET,
           `Invalid secret request for '${secretName}': ${error.message}`,
-          error,
+          error
         );
       }
 
@@ -387,7 +387,7 @@ export class SecretsService {
         throw new SecretError(
           SecretErrorType.NETWORK_ERROR,
           `Network error loading secret '${secretName}': ${error.message}`,
-          error,
+          error
         );
       }
 
@@ -400,7 +400,7 @@ export class SecretsService {
       throw new SecretError(
         SecretErrorType.AWS_ERROR,
         `AWS error loading secret '${secretName}': ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error : undefined,
+        error instanceof Error ? error : undefined
       );
     }
   }

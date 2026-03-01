@@ -22,7 +22,7 @@ export function createMockCache(config?: { real?: boolean }): ICacheService {
     set: async <T>(key: string, value: T, ttl?: number): Promise<void> => {
       cache.set(key, {
         value,
-        expiresAt: ttl ? Date.now() + ttl * 1000 : undefined
+        expiresAt: ttl ? Date.now() + ttl * 1000 : undefined,
       });
     },
 
@@ -40,8 +40,8 @@ export function createMockCache(config?: { real?: boolean }): ICacheService {
 
     ttl: async (key: string): Promise<number> => {
       const entry = cache.get(key);
-      if (!entry) return -2;  // Key doesn't exist (Redis convention)
-      if (!entry.expiresAt) return -1;  // Key exists but no TTL
+      if (!entry) return -2; // Key doesn't exist (Redis convention)
+      if (!entry.expiresAt) return -1; // Key exists but no TTL
       const remaining = Math.floor((entry.expiresAt - Date.now()) / 1000);
       return remaining > 0 ? remaining : -2;
     },
@@ -55,6 +55,6 @@ export function createMockCache(config?: { real?: boolean }): ICacheService {
     },
 
     getSize: () => cache.size,
-    getKeys: () => Array.from(cache.keys())
+    getKeys: () => Array.from(cache.keys()),
   };
 }

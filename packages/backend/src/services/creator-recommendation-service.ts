@@ -454,7 +454,9 @@ export class CreatorRecommendationService {
 
           return {
             recommendation: {
-              id: rec.id || `rec_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
+              id:
+                rec.id ||
+                `rec_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
               userId: request.userId,
               recommendedCreatorId: rec.recommended_creator_id,
               algorithmUsed: request.algorithm || RecommendationAlgorithm.HYBRID,

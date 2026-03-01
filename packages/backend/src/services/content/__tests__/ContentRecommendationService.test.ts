@@ -41,12 +41,12 @@ describe('ContentRecommendationService', () => {
       hashtags: ['test'],
       language: 'en',
       hasMedia: false,
-      lastModified: new Date()
+      lastModified: new Date(),
     },
     version: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
-    publishedAt: new Date()
+    publishedAt: new Date(),
   };
 
   const mockUserInteraction: UserInteraction = {
@@ -54,7 +54,7 @@ describe('ContentRecommendationService', () => {
     contentId: testContentId,
     action: 'view',
     timestamp: new Date(),
-    duration: 120
+    duration: 120,
   };
 
   beforeEach(() => {
@@ -63,7 +63,7 @@ describe('ContentRecommendationService', () => {
       info: vi.fn(),
       debug: vi.fn(),
       error: vi.fn(),
-      warn: vi.fn()
+      warn: vi.fn(),
     } as any;
 
     mockCache = {
@@ -84,34 +84,37 @@ describe('ContentRecommendationService', () => {
       warmup: vi.fn(),
       registerInvalidationPattern: vi.fn(),
       healthCheck: vi.fn().mockResolvedValue(true),
-      dispose: vi.fn().mockResolvedValue(undefined)
+      dispose: vi.fn().mockResolvedValue(undefined),
     };
 
     mockContentRepository = {
       findById: vi.fn().mockResolvedValue(mockContent),
       findByIds: vi.fn().mockResolvedValue([mockContent]),
-      findPublished: vi.fn().mockResolvedValue([mockContent])
+      findPublished: vi.fn().mockResolvedValue([mockContent]),
     };
 
     mockAnalyticsRepository = {
-      getUserInteractions: vi.fn().mockResolvedValue([{
-        contentId: testContentId,
-        action: 'view',
-        timestamp: new Date(),
-        duration: 120
-      }]),
-      getEngagementMetrics: vi.fn().mockResolvedValue([{
-        contentId: testContentId,
-        views: 100,
-        likes: 10,
-        shares: 5,
-        comments: 3,
-        publishedAt: new Date(Date.now() - 3600000) // 1 hour ago
-      }]),
-      getUsersByContent: vi.fn().mockResolvedValue([
-        { userId: 'user-456' },
-        { userId: 'user-789' }
-      ])
+      getUserInteractions: vi.fn().mockResolvedValue([
+        {
+          contentId: testContentId,
+          action: 'view',
+          timestamp: new Date(),
+          duration: 120,
+        },
+      ]),
+      getEngagementMetrics: vi.fn().mockResolvedValue([
+        {
+          contentId: testContentId,
+          views: 100,
+          likes: 10,
+          shares: 5,
+          comments: 3,
+          publishedAt: new Date(Date.now() - 3600000), // 1 hour ago
+        },
+      ]),
+      getUsersByContent: vi
+        .fn()
+        .mockResolvedValue([{ userId: 'user-456' }, { userId: 'user-789' }]),
     };
 
     mockUserRepository = {
@@ -122,13 +125,12 @@ describe('ContentRecommendationService', () => {
           tags: ['javascript'],
           favoriteAuthors: ['author-789'],
           excludeCategories: [],
-          minEngagementScore: 0.5
-        }
+          minEngagementScore: 0.5,
+        },
       }),
-      findPopularUsers: vi.fn().mockResolvedValue([
-        { id: 'popular-user-1' },
-        { id: 'popular-user-2' }
-      ])
+      findPopularUsers: vi
+        .fn()
+        .mockResolvedValue([{ id: 'popular-user-1' }, { id: 'popular-user-2' }]),
     };
 
     service = new ContentRecommendationService(
@@ -152,9 +154,7 @@ describe('ContentRecommendationService', () => {
       const result = await service.getRecommendations(testUserId);
 
       expect(result).toEqual(cachedContent);
-      expect(mockCache.get).toHaveBeenCalledWith(
-        expect.stringContaining('recommendations:')
-      );
+      expect(mockCache.get).toHaveBeenCalledWith(expect.stringContaining('recommendations:'));
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Cache hit for recommendations',
         expect.any(Object)
@@ -166,13 +166,13 @@ describe('ContentRecommendationService', () => {
 
       const result = await service.getRecommendations(testUserId, {
         algorithm: 'hybrid',
-        limit: 10
+        limit: 10,
       });
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
         id: testContentId,
-        title: 'Test Content'
+        title: 'Test Content',
       });
       expect(mockCache.set).toHaveBeenCalled();
     });
@@ -182,7 +182,7 @@ describe('ContentRecommendationService', () => {
 
       const result = await service.getRecommendations(testUserId, {
         algorithm: 'collaborative',
-        limit: 10
+        limit: 10,
       });
 
       expect(mockAnalyticsRepository.getUserInteractions).toHaveBeenCalled();
@@ -195,7 +195,7 @@ describe('ContentRecommendationService', () => {
 
       const result = await service.getRecommendations(testUserId, {
         algorithm: 'content-based',
-        limit: 10
+        limit: 10,
       });
 
       expect(mockAnalyticsRepository.getUserInteractions).toHaveBeenCalled();
@@ -226,7 +226,7 @@ describe('ContentRecommendationService', () => {
           userId: testUserId,
           algorithm: 'hybrid',
           count: expect.any(Number),
-          duration: expect.any(Number)
+          duration: expect.any(Number),
         })
       );
     });
@@ -252,9 +252,7 @@ describe('ContentRecommendationService', () => {
       const result = await service.getSimilar(testContentId, 5);
 
       expect(result).toEqual(cachedSimilar);
-      expect(mockCache.get).toHaveBeenCalledWith(
-        `similar:${testContentId}:5`
-      );
+      expect(mockCache.get).toHaveBeenCalledWith(`similar:${testContentId}:5`);
     });
 
     it('should find similar content using cosine similarity', async () => {
@@ -262,7 +260,7 @@ describe('ContentRecommendationService', () => {
       const similarContent = {
         ...mockContent,
         id: 'content-similar-1',
-        embedding: new Array(768).fill(0.5)
+        embedding: new Array(768).fill(0.5),
       };
 
       mockContent.embedding = new Array(768).fill(0.5);
@@ -277,7 +275,11 @@ describe('ContentRecommendationService', () => {
 
     it('should exclude the source content from results', async () => {
       mockCache.get.mockResolvedValue(null);
-      const similarContent = { ...mockContent, id: 'similar-1', embedding: new Array(768).fill(0.5) };
+      const similarContent = {
+        ...mockContent,
+        id: 'similar-1',
+        embedding: new Array(768).fill(0.5),
+      };
       mockContent.embedding = new Array(768).fill(0.5);
       mockContentRepository.findPublished.mockResolvedValue([mockContent, similarContent]);
       mockContentRepository.findByIds.mockResolvedValue([similarContent]);
@@ -285,7 +287,7 @@ describe('ContentRecommendationService', () => {
       const result = await service.getSimilar(testContentId, 5);
 
       // Result should only contain similar content, not source
-      expect(result.find(c => c.id === testContentId)).toBeUndefined();
+      expect(result.find((c) => c.id === testContentId)).toBeUndefined();
     });
 
     it('should return empty array on error', async () => {
@@ -322,7 +324,7 @@ describe('ContentRecommendationService', () => {
       mockCache.get.mockResolvedValue(null);
       const period = {
         start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-        end: new Date()
+        end: new Date(),
       };
 
       const result = await service.getTrending(period);
@@ -330,7 +332,7 @@ describe('ContentRecommendationService', () => {
       expect(mockAnalyticsRepository.getEngagementMetrics).toHaveBeenCalledWith(
         expect.objectContaining({
           startDate: period.start,
-          endDate: period.end
+          endDate: period.end,
         })
       );
     });
@@ -353,7 +355,7 @@ describe('ContentRecommendationService', () => {
       const contents = [
         { ...mockContent, id: 'content-1', category: 'technology' },
         { ...mockContent, id: 'content-2', category: 'sports' },
-        { ...mockContent, id: 'content-3', category: 'technology', tags: ['javascript'] }
+        { ...mockContent, id: 'content-3', category: 'technology', tags: ['javascript'] },
       ];
 
       const result = await service.personalizeFor(testUserId, contents);
@@ -367,7 +369,7 @@ describe('ContentRecommendationService', () => {
     it('should boost content from favorite authors', async () => {
       const contents = [
         { ...mockContent, id: 'content-1', authorId: 'author-123' },
-        { ...mockContent, id: 'content-2', authorId: 'author-789' } // favorite
+        { ...mockContent, id: 'content-2', authorId: 'author-789' }, // favorite
       ];
 
       const result = await service.personalizeFor(testUserId, contents);
@@ -379,7 +381,7 @@ describe('ContentRecommendationService', () => {
     it('should boost content with tag overlap', async () => {
       const contents = [
         { ...mockContent, id: 'content-1', tags: ['python', 'django'] },
-        { ...mockContent, id: 'content-2', tags: ['javascript', 'react'] }
+        { ...mockContent, id: 'content-2', tags: ['javascript', 'react'] },
       ];
 
       const result = await service.personalizeFor(testUserId, contents);
@@ -403,7 +405,7 @@ describe('ContentRecommendationService', () => {
     it('should cache interactions for model training', async () => {
       const interactions: UserInteraction[] = [
         mockUserInteraction,
-        { ...mockUserInteraction, userId: 'user-456', contentId: 'content-789' }
+        { ...mockUserInteraction, userId: 'user-456', contentId: 'content-789' },
       ];
 
       await service.trainModel(interactions);
@@ -418,16 +420,12 @@ describe('ContentRecommendationService', () => {
     it('should build interaction matrix', async () => {
       const interactions: UserInteraction[] = [
         mockUserInteraction,
-        { ...mockUserInteraction, userId: 'user-456' }
+        { ...mockUserInteraction, userId: 'user-456' },
       ];
 
       await service.trainModel(interactions);
 
-      expect(mockCache.set).toHaveBeenCalledWith(
-        'interaction:matrix',
-        expect.any(Object),
-        3600
-      );
+      expect(mockCache.set).toHaveBeenCalledWith('interaction:matrix', expect.any(Object), 3600);
     });
 
     it('should emit model trained event', async () => {
@@ -438,7 +436,7 @@ describe('ContentRecommendationService', () => {
       await service.trainModel(interactions);
 
       expect(eventSpy).toHaveBeenCalledWith({
-        count: interactions.length
+        count: interactions.length,
       });
     });
 
@@ -470,7 +468,7 @@ describe('ContentRecommendationService', () => {
       mockContentRepository.findByIds.mockResolvedValue([techContent, sportsContent]);
       mockAnalyticsRepository.getEngagementMetrics.mockResolvedValue([
         { contentId: techContent.id, views: 100, likes: 10, shares: 5, comments: 3 },
-        { contentId: sportsContent.id, views: 200, likes: 20, shares: 10, comments: 6 }
+        { contentId: sportsContent.id, views: 200, likes: 20, shares: 10, comments: 6 },
       ]);
 
       const result = await service.getPopular('technology', 10);
@@ -536,7 +534,7 @@ describe('ContentRecommendationService', () => {
       expect(completedSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           processed: expect.any(Number),
-          total: expect.any(Number)
+          total: expect.any(Number),
         })
       );
     });
@@ -622,7 +620,7 @@ describe('ContentRecommendationService', () => {
       const service2 = service as any;
       const interactions = [
         { contentId: 'content-1', score: 0.5, timestamp: new Date(), type: 'view' as const },
-        { contentId: 'content-2', score: 0.8, timestamp: new Date(), type: 'like' as const }
+        { contentId: 'content-2', score: 0.8, timestamp: new Date(), type: 'like' as const },
       ];
 
       const profile = await service2.buildUserContentProfile(interactions);
@@ -637,7 +635,7 @@ describe('ContentRecommendationService', () => {
 
       const embeddings = [
         [1, 2, 3],
-        [3, 4, 5]
+        [3, 4, 5],
       ];
 
       const avg = service2.averageEmbeddings(embeddings);
@@ -662,7 +660,7 @@ describe('ContentRecommendationService', () => {
       const recommendations = [
         { contentId: 'content-1', score: 0.8, reason: 'collaborative', explanation: 'test' },
         { contentId: 'content-1', score: 0.6, reason: 'trending', explanation: 'test' },
-        { contentId: 'content-2', score: 0.7, reason: 'content-based', explanation: 'test' }
+        { contentId: 'content-2', score: 0.7, reason: 'content-based', explanation: 'test' },
       ];
 
       const unique = service2.deduplicateRecommendations(recommendations);
@@ -704,7 +702,7 @@ describe('ContentRecommendationService', () => {
         likes: 20,
         shares: 10,
         comments: 5,
-        publishedAt: new Date(Date.now() - 3600000) // 1 hour ago
+        publishedAt: new Date(Date.now() - 3600000), // 1 hour ago
       };
 
       mockAnalyticsRepository.getEngagementMetrics.mockResolvedValue([recentContent]);
@@ -749,7 +747,7 @@ describe('ContentRecommendationService', () => {
       mockCache.get.mockResolvedValue(null);
 
       const result = await service.getRecommendations(testUserId, {
-        algorithm: 'content-based'
+        algorithm: 'content-based',
       });
 
       // Should fallback to trending
@@ -777,7 +775,7 @@ describe('ContentRecommendationService', () => {
       await service.getRecommendations(testUserId); // 15 min TTL
 
       const setCalls = mockCache.set.mock.calls;
-      expect(setCalls.some(call => call[2] === 900)).toBe(true); // recommendations: 15 min
+      expect(setCalls.some((call) => call[2] === 900)).toBe(true); // recommendations: 15 min
     });
   });
 
@@ -792,7 +790,7 @@ describe('ContentRecommendationService', () => {
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: testUserId,
-          algorithm: 'hybrid'
+          algorithm: 'hybrid',
         })
       );
     });
@@ -808,7 +806,7 @@ describe('ContentRecommendationService', () => {
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: testUserId,
-          error: expect.any(Error)
+          error: expect.any(Error),
         })
       );
     });
@@ -823,9 +821,7 @@ describe('ContentRecommendationService', () => {
 
       service.emit('test-event');
       expect(spy).not.toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ContentRecommendationService shut down'
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith('ContentRecommendationService shut down');
     });
   });
 });

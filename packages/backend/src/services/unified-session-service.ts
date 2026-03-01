@@ -154,10 +154,7 @@ export class DatabaseSessionManager extends UnifiedSessionManager {
 
   protected async deleteSession(sessionId: string): Promise<void> {
     try {
-      const { error } = await this.client
-        .from('unified_sessions')
-        .delete()
-        .eq('id', sessionId);
+      const { error } = await this.client.from('unified_sessions').delete().eq('id', sessionId);
 
       if (error) {
         throw new Error(`Database delete failed: ${error.message}`);
@@ -192,10 +189,7 @@ export class DatabaseSessionManager extends UnifiedSessionManager {
     }
   }
 
-  protected async retrieveActivities(
-    sessionId: string,
-    limit: number
-  ): Promise<SessionActivity[]> {
+  protected async retrieveActivities(sessionId: string, limit: number): Promise<SessionActivity[]> {
     try {
       const { data, error } = await this.client
         .from('unified_session_activities')
@@ -267,7 +261,10 @@ export class DatabaseSessionManager extends UnifiedSessionManager {
   /**
    * Get session activity summary for a pubkey
    */
-  async getActivitySummary(pubkey: string, days: number = 7): Promise<{
+  async getActivitySummary(
+    pubkey: string,
+    days: number = 7
+  ): Promise<{
     totalActivities: number;
     activitiesByType: Record<string, number>;
     riskDistribution: { low: number; medium: number; high: number };

@@ -9,11 +9,9 @@ import type {
   FingerprintRegistry,
   CompareResult,
   HashType,
-  Pagination
+  Pagination,
 } from '@shared/types/provenance';
-import {
-  ContentType,
-} from '@shared/types/provenance';
+import { ContentType } from '@shared/types/provenance';
 
 export interface CreateFingerprintInput {
   content_id: string;
@@ -28,8 +26,15 @@ export interface CompareInput {
 }
 
 export interface IFingerprintService {
-  createFingerprint(creatorId: string, input: CreateFingerprintInput): Promise<{ content_id: string; fingerprints: Fingerprint[]; created_at: string }>;
-  getRegistry(creatorId: string, page: number, limit: number): Promise<{ data: FingerprintRegistry; pagination: Pagination }>;
+  createFingerprint(
+    creatorId: string,
+    input: CreateFingerprintInput
+  ): Promise<{ content_id: string; fingerprints: Fingerprint[]; created_at: string }>;
+  getRegistry(
+    creatorId: string,
+    page: number,
+    limit: number
+  ): Promise<{ data: FingerprintRegistry; pagination: Pagination }>;
   compare(creatorId: string, input: CompareInput): Promise<CompareResult>;
   computeSimHash(text: string): string;
   computeHammingDistance(hash1: string, hash2: string): number;

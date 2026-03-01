@@ -1,12 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProvenanceChain } from '../hooks/useProvenanceChain';
 
@@ -45,9 +40,7 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
         )}
 
         {error && (
-          <p className="text-sm text-gray-500 py-4 text-center">
-            Failed to load provenance data.
-          </p>
+          <p className="text-sm text-gray-500 py-4 text-center">Failed to load provenance data.</p>
         )}
 
         {data && (
@@ -117,7 +110,10 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
                   {data.relay_confirmations.map((conf, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+                        <span
+                          className="w-2 h-2 rounded-full bg-green-500 shrink-0"
+                          aria-hidden="true"
+                        />
                         <span className="text-xs text-gray-700 font-mono">{conf.relay}</span>
                       </div>
                       <span className="text-[10px] text-gray-400">
@@ -134,9 +130,7 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
               <span className="text-xs font-medium text-gray-600">NIP-05 Verification</span>
               <Badge
                 className={
-                  data.nip05_verified
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-500'
+                  data.nip05_verified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                 }
               >
                 {data.nip05_verified ? 'Verified' : 'Not Verified'}

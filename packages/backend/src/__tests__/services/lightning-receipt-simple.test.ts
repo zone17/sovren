@@ -103,9 +103,20 @@ describe('Lightning Receipt Service - Simple Test', () => {
       amount: 1000,
       fee: 10,
       timestamp: Date.now(),
-      creator: { id: 'c1', name: 'Creator', displayName: 'Creator', lightningAddress: 'c@test.com', profile: {} },
+      creator: {
+        id: 'c1',
+        name: 'Creator',
+        displayName: 'Creator',
+        lightningAddress: 'c@test.com',
+        profile: {},
+      },
       supporter: { id: 's1', name: 'Supporter', anonymous: false, message: 'Thanks!' },
-      invoice: { bolt11: 'lnbc...', description: 'Test', memo: 'Test', expiresAt: Date.now() + 3600000 },
+      invoice: {
+        bolt11: 'lnbc...',
+        description: 'Test',
+        memo: 'Test',
+        expiresAt: Date.now() + 3600000,
+      },
     });
 
     // Generate receipt

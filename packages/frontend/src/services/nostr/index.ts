@@ -17,7 +17,10 @@ export { NIP65Service, nip65Service } from './NIP65Service';
 export { MonitoringService, monitoringService } from './MonitoringService';
 export { RateLimiter, rateLimiter } from './RateLimiter';
 export { RateLimitMonitor, rateLimitMonitor } from './RateLimitMonitor';
-export { WebSocketConnectionManager, webSocketConnectionManager } from './WebSocketConnectionManager';
+export {
+  WebSocketConnectionManager,
+  webSocketConnectionManager,
+} from './WebSocketConnectionManager';
 export { WebSocketPool } from './WebSocketPool';
 export type { EventCacheConfig, EventMetadata, CacheStats } from './EventCacheService';
 export type { CheckLimitOptions } from './RateLimiter';
@@ -36,23 +39,10 @@ export type {
   NIP05CacheConfig,
   NIP05Statistics,
 } from './NIP05Service';
-export type {
-  ProfilePointer,
-  EventPointer,
-  AddressPointer,
-  QRCodeOptions,
-} from './NIP19Service';
-export type {
-  DelegationResult,
-  DelegationValidationResult,
-} from './NIP26Service';
-export type {
-  RelayListOptions,
-} from './NIP65Service';
-export {
-  SovrenNIPService,
-  createSovrenNIPService,
-} from './SovrenNIPService';
+export type { ProfilePointer, EventPointer, AddressPointer, QRCodeOptions } from './NIP19Service';
+export type { DelegationResult, DelegationValidationResult } from './NIP26Service';
+export type { RelayListOptions } from './NIP65Service';
+export { SovrenNIPService, createSovrenNIPService } from './SovrenNIPService';
 export type {
   SovrenEventResult,
   SovrenBatchResult,

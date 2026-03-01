@@ -81,9 +81,7 @@ describe('FingerprintCoverage', () => {
 
     render(<FingerprintCoverage creatorId="test-creator" />, { wrapper: createWrapper() });
 
-    expect(
-      screen.getByText(/50 pieces of content are not yet fingerprinted/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/50 pieces of content are not yet fingerprinted/)).toBeInTheDocument();
   });
 
   it('does not show warning when all content is fingerprinted', () => {

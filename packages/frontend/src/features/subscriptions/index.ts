@@ -8,11 +8,7 @@
  */
 
 // Components
-export {
-  SubscriptionManager,
-  UserSubscriptionManager,
-  SubscriptionCard,
-} from './components';
+export { SubscriptionManager, UserSubscriptionManager, SubscriptionCard } from './components';
 
 export type {
   SubscriptionCardProps,
@@ -25,8 +21,4 @@ export type {
 export { useUserSubscriptionService } from './services/useUserSubscriptionService';
 
 // Types
-export type {
-  UserSubscription,
-  PaymentMethod,
-  SubscriptionHistory,
-} from './types';
+export type { UserSubscription, PaymentMethod, SubscriptionHistory } from './types';

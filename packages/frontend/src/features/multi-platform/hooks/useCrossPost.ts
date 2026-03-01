@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { distributionApi } from '../services/distributionApi';
 import type { CrossPostStatus, PublishPayload, RepurposePayload } from '../types';
 
-const TERMINAL_STATUSES: ReadonlySet<CrossPostStatus> = new Set(['published', 'failed', 'cancelled']);
+const TERMINAL_STATUSES: ReadonlySet<CrossPostStatus> = new Set([
+  'published',
+  'failed',
+  'cancelled',
+]);
 
 export function usePublish() {
   const queryClient = useQueryClient();

@@ -47,9 +47,7 @@ export const LightningPaymentFlow: React.FC<LightningPaymentFlowProps> = ({
 
       {/* Amount */}
       <div className="text-center mb-6 py-4 bg-gray-50 rounded-lg">
-        <p className="text-3xl font-bold text-gray-900">
-          {amountSats.toLocaleString()}
-        </p>
+        <p className="text-3xl font-bold text-gray-900">{amountSats.toLocaleString()}</p>
         <p className="text-sm text-gray-500 mt-1">satoshis</p>
       </div>
 

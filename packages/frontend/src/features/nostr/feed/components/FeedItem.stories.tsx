@@ -143,9 +143,7 @@ export const WithImage: Story = {
     feedEvent: createMockFeedEvent({
       parsedContent: {
         text: 'Check out this amazing sunset!',
-        images: [
-          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-        ],
+        images: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'],
         videos: [],
         links: [],
         mentions: [],
@@ -316,7 +314,7 @@ export const DarkMode: Story = {
     },
   },
   decorators: [
-    Story => (
+    (Story) => (
       <div className="dark">
         <div className="bg-gray-900 p-4">
           <Story />
