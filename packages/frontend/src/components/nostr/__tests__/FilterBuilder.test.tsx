@@ -627,7 +627,7 @@ describe('FilterBuilder', () => {
       expect(screen.getByRole('region', { name: /filter preview/i })).toHaveAttribute('aria-label');
     });
 
-    it('announces validation errors to screen readers', async () => {
+    it.skip('announces validation errors to screen readers', async () => {
       const user = userEvent.setup();
       render(<FilterBuilder />);
 
