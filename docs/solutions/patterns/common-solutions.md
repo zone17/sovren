@@ -2674,6 +2674,79 @@ git fetch origin main:main        # ← ADD THIS LINE
 
 ---
 
+## 72. Auto-Merge vs Merge Queue — Know What You're Using
+
+**Recurrence:** 1 P2 — `merge_group` trigger in ci.yml implied merge queue was active, but the repo was actually using auto-merge. When branch protection was rebuilt via API, merge queue was assumed missing and couldn't be re-enabled (it was never enabled).
+
+### The Two Features
+
+| Feature         | What it does                                                | GitHub plan                                     | Config location                                               |
+| --------------- | ----------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------- |
+| **Auto-merge**  | PR merges automatically once required checks + reviews pass | Free (public repos)                             | Settings → General → "Allow auto-merge"                       |
+| **Merge queue** | PRs enter a queue, tested in batches, merged in order       | Team/Enterprise (or public repos with rulesets) | Settings → Branches → protection rule → "Require merge queue" |
+
+### How to Tell Which You're Using
+
+```bash
+# Auto-merge enabled?
+gh api repos/{owner}/{repo} -q '.allow_auto_merge'
+# true = auto-merge is on
+
+# Merge queue enabled?
+gh api graphql -f query='{ repository(owner:"{owner}", name:"{repo}") { mergeQueue(branch:"main") { id } } }'
+# null = no merge queue
+```
+
+### When You Need Which
+
+**Auto-merge is sufficient when:**
+
+- < 20 PRs/day to main
+- CI runs < 15 minutes
+- Low risk of PRs conflicting mid-flight
+- `gh pr merge --auto --squash` is your merge command
+
+**Merge queue is needed when:**
+
+- 50+ PRs/day (PRs can pass CI individually but break when combined)
+- Long CI (30+ min) where serialized testing wastes hours
+- Multiple squads frequently touching the same files
+
+### The `merge_group` Trigger
+
+If your workflow has `on: merge_group:` but merge queue isn't enabled, the trigger is harmless — it simply never fires. Remove it to avoid implying merge queue is active:
+
+```yaml
+# BEFORE (implies merge queue is active)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+  workflow_dispatch:
+
+# AFTER (honest about what's configured)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+```
+
+Also remove `merge_group` from `cancel-in-progress` conditions if present.
+
+### Prevention
+
+- After any CI/CD restructuring, verify: `gh api repos/{owner}/{repo} -q '.allow_auto_merge'`
+- Don't add `merge_group` trigger unless merge queue is actually enabled
+- Document which merge strategy the repo uses in CLAUDE.md or BRANCHING_STRATEGY.md
+- `PUT` to branch protection replaces ALL settings — always read current config first and include all existing settings in the payload
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2777,3 +2850,4 @@ CONTEXT TO LOAD:
 | Path-filtered job skips block merge             | 69        | common-solutions.md  |
 | `cancel-in-progress` kills deploy on main       | 70        | common-solutions.md  |
 | Local main stale after squash-merge             | 71        | common-solutions.md  |
+| `merge_group` trigger but no merge queue        | 72        | common-solutions.md  |

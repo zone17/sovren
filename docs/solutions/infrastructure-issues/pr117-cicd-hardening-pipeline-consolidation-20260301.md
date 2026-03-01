@@ -147,7 +147,7 @@ All `backend-deployment.yml`, `automated-rollback.yml`, `release.yml`, `quality-
 
 ## Results
 
-- **PR #117 merged** via `gh pr merge --auto --squash` through merge queue
+- **PR #117 merged** via `gh pr merge --auto --squash` (auto-merge, not merge queue)
 - **Post-merge CI passed** (run 22544281836)
 - **Net change**: -4,561 lines (13 workflow deletions), +817 lines (new jobs, configs, doc updates)
 - **Pipeline**: 1 active workflow (`ci.yml`) + 2 automation workflows (`stale.yml`, `dependabot.yml`)
@@ -184,6 +184,7 @@ All `backend-deployment.yml`, `automated-rollback.yml`, `release.yml`, `quality-
 | Fan-in aggregator job               | CI Architecture | common-solutions.md #69              |
 | Event-gated `cancel-in-progress`    | CI Safety       | common-solutions.md #70              |
 | Build output non-empty verification | CI Quality      | Already documented in #66 (extended) |
+| Auto-merge vs merge queue           | CI Config       | common-solutions.md #72              |
 
 ## Files Changed
 
