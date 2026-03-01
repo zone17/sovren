@@ -186,38 +186,14 @@ describe('Deployment Smoke Tests', () => {
 
 describe('Deployment Workflow Validation', () => {
   describe('GitHub Actions Workflows', () => {
-    it('should have backend-deployment workflow', () => {
-      const workflowPath = path.join(
-        __dirname,
-        '../../../..',
-        '.github/workflows/backend-deployment.yml'
-      );
+    it('should have consolidated CI workflow', () => {
+      const workflowPath = path.join(__dirname, '../../../..', '.github/workflows/ci.yml');
       const exists = fs.existsSync(workflowPath);
       expect(exists).toBe(true);
     });
 
-    it('should have deploy-blue-green workflow or backend-deployment covers it', () => {
-      const blueGreenPath = path.join(
-        __dirname,
-        '../../../..',
-        '.github/workflows/deploy-blue-green.yml'
-      );
-      const backendPath = path.join(
-        __dirname,
-        '../../../..',
-        '.github/workflows/backend-deployment.yml'
-      );
-      // Blue-green deployment is handled within backend-deployment.yml
-      const exists = fs.existsSync(blueGreenPath) || fs.existsSync(backendPath);
-      expect(exists).toBe(true);
-    });
-
-    it('should have automated-rollback workflow', () => {
-      const workflowPath = path.join(
-        __dirname,
-        '../../../..',
-        '.github/workflows/automated-rollback.yml'
-      );
+    it('should have stale PR automation workflow', () => {
+      const workflowPath = path.join(__dirname, '../../../..', '.github/workflows/stale.yml');
       const exists = fs.existsSync(workflowPath);
       expect(exists).toBe(true);
     });
