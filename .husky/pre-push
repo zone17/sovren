@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Sovren Pre-Push Quality Gate
 # Runs project-scoped tests for changed packages only.
 # Uses git diff origin/main...HEAD to find branch changes.
