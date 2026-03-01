@@ -19,8 +19,8 @@ import type {
   NostrEntropySource,
   NostrKeyStorageType,
   NostrKeySecurityLevel,
-} from '@shared/types/nostr';
-import { NostrEnhancedKeyPairSchema } from '@shared/types/nostr';
+} from '@shared/types/nostr/index';
+import { NostrEnhancedKeyPairSchema } from '@shared/types/nostr/index';
 
 // Extended Key Management Types (not yet in consolidated types)
 export interface NostrKeyManagementConfig {
@@ -234,9 +234,11 @@ export class KeyManagementService {
   /**
    * Generate a new key pair
    */
-  async generateKeyPair(
-    metadata?: { name?: string; description?: string; tags?: string[] }
-  ): Promise<NostrEnhancedKeyPair> {
+  async generateKeyPair(metadata?: {
+    name?: string;
+    description?: string;
+    tags?: string[];
+  }): Promise<NostrEnhancedKeyPair> {
     try {
       // Collect entropy
       const entropy = await this.collectEntropy();
@@ -404,10 +406,7 @@ export class KeyManagementService {
   /**
    * Export key in various formats
    */
-  async exportKey(
-    keyId: string,
-    format: 'nsec' | 'hex' | 'npub' = 'nsec'
-  ): Promise<string> {
+  async exportKey(keyId: string, format: 'nsec' | 'hex' | 'npub' = 'nsec'): Promise<string> {
     const keyPair = await this.getKey(keyId);
     if (!keyPair) {
       throw new Error('Key not found');
@@ -516,7 +515,7 @@ export class KeyManagementService {
     }
 
     // Try to identify extension
-    const metadata = window.nostr._metadata;
+    const metadata = (window.nostr as any)?._metadata;
     const extensionName = metadata?.name || this.identifyExtension();
 
     return {
@@ -542,7 +541,7 @@ export class KeyManagementService {
     }
 
     try {
-      const publicKey = await window.nostr.getPublicKey();
+      const publicKey = await window.nostr!.getPublicKey();
 
       const extension: NostrBrowserExtension = {
         extensionId: 'connected',
@@ -587,7 +586,7 @@ export class KeyManagementService {
   private identifyExtension(): string {
     if (!window.nostr) return 'None';
 
-    const metadata = window.nostr._metadata;
+    const metadata = (window.nostr as any)?._metadata;
     if (metadata?.name) {
       return metadata.name;
     }
@@ -665,7 +664,7 @@ export class KeyManagementService {
     const securityScore = this.calculateSecurityScore(keyPair);
 
     return {
-      valid: issues.filter(i => i.severity === 'error').length === 0,
+      valid: issues.filter((i) => i.severity === 'error').length === 0,
       issues,
       securityScore,
       recommendations,
@@ -769,13 +768,10 @@ export class KeyManagementService {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
 
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      passwordBuffer,
-      'PBKDF2',
-      false,
-      ['deriveBits', 'deriveKey']
-    );
+    const keyMaterial = await crypto.subtle.importKey('raw', passwordBuffer, 'PBKDF2', false, [
+      'deriveBits',
+      'deriveKey',
+    ]);
 
     const salt = crypto.getRandomValues(new Uint8Array(32));
 
@@ -813,10 +809,7 @@ export class KeyManagementService {
   /**
    * Update security level
    */
-  async updateSecurityLevel(
-    keyId: string,
-    level: NostrKeySecurityLevel
-  ): Promise<void> {
+  async updateSecurityLevel(keyId: string, level: NostrKeySecurityLevel): Promise<void> {
     const keyPair = await this.getKey(keyId);
     if (!keyPair) {
       throw new Error('Key not found');
@@ -879,11 +872,10 @@ export class KeyManagementService {
    */
   private async initializeEncryption(): Promise<void> {
     // Generate a random encryption key for the session
-    this.encryptionKey = await crypto.subtle.generateKey(
-      { name: 'AES-GCM', length: 256 },
-      true,
-      ['encrypt', 'decrypt']
-    );
+    this.encryptionKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+      'encrypt',
+      'decrypt',
+    ]);
   }
 
   /**

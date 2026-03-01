@@ -14,7 +14,7 @@ import { SubscriptionManagerService } from '../SubscriptionManagerService';
 import { KeyManagementService } from '../KeyManagementService';
 import { RelayPoolManager } from '../RelayPoolManager';
 import { RateLimitOperation, RequestPriority } from '../types/rate-limit';
-import type { NostrEvent, EventTemplate } from '@shared/types/nostr';
+import type { NostrEvent, EventTemplate } from '@shared/types/nostr/index';
 
 // Mock dependencies
 vi.mock('../RelayPoolManager');

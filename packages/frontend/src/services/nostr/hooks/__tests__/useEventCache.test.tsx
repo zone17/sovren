@@ -5,12 +5,12 @@
  * TDD approach: Test React Query integration with EventCacheService
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import type { NostrEvent } from '@shared/types/nostr';
-import { NostrEventKind } from '@shared/types/nostr';
+import type { NostrEvent } from '@shared/types/nostr/index';
+import { NostrEventKind } from '@shared/types/nostr/index';
 import {
   useEvent,
   useEvents,
@@ -29,9 +29,7 @@ describe('useEventCache Hooks', () => {
 
   const createWrapper = () => {
     const QueryWrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
     return QueryWrapper;
   };
@@ -98,20 +96,14 @@ describe('useEventCache Hooks', () => {
       const event = createMockEvent({ id: 'event1' + 'a'.repeat(58) });
 
       // First, add event to cache
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         setResult.current.mutate({ event });
       });
 
       // Now query the event
-      const { result } = renderHook(
-        () => useEvent(event.id),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useEvent(event.id), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -122,10 +114,9 @@ describe('useEventCache Hooks', () => {
     });
 
     it('should return null for non-existent event', async () => {
-      const { result } = renderHook(
-        () => useEvent('nonexistent' + 'a'.repeat(52)),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useEvent('nonexistent' + 'a'.repeat(52)), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -135,10 +126,9 @@ describe('useEventCache Hooks', () => {
     });
 
     it('should use 5 minute stale time for events', () => {
-      const { result } = renderHook(
-        () => useEvent('event1' + 'a'.repeat(58)),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useEvent('event1' + 'a'.repeat(58)), {
+        wrapper: createWrapper(),
+      });
 
       // Query should be configured with 5 minute stale time
       expect(result.current).toBeDefined();
@@ -153,10 +143,7 @@ describe('useEventCache Hooks', () => {
       ];
 
       // Add events to cache
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       for (const event of events) {
         await waitFor(() => {
@@ -165,10 +152,9 @@ describe('useEventCache Hooks', () => {
       }
 
       // Query multiple events
-      const { result } = renderHook(
-        () => useEvents(events.map(e => e.id)),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useEvents(events.map((e) => e.id)), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -178,10 +164,7 @@ describe('useEventCache Hooks', () => {
     });
 
     it('should be disabled when eventIds array is empty', () => {
-      const { result } = renderHook(
-        () => useEvents([]),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useEvents([]), { wrapper: createWrapper() });
 
       expect(result.current.isFetching).toBe(false);
     });
@@ -203,10 +186,7 @@ describe('useEventCache Hooks', () => {
       ];
 
       // Add events to cache
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       for (const event of events) {
         await waitFor(() => {
@@ -215,10 +195,9 @@ describe('useEventCache Hooks', () => {
       }
 
       // Query by author
-      const { result } = renderHook(
-        () => useEventQuery({ authors: ['alice' + 'a'.repeat(59)] }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useEventQuery({ authors: ['alice' + 'a'.repeat(59)] }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -229,10 +208,9 @@ describe('useEventCache Hooks', () => {
     });
 
     it('should use 5 minute stale time', () => {
-      const { result } = renderHook(
-        () => useEventQuery({ kinds: [1] }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useEventQuery({ kinds: [1] }), {
+        wrapper: createWrapper(),
+      });
 
       expect(result.current).toBeDefined();
     });
@@ -249,20 +227,14 @@ describe('useEventCache Hooks', () => {
       });
 
       // Add profile to cache
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         setResult.current.mutate({ event: profileEvent });
       });
 
       // Query profile
-      const { result } = renderHook(
-        () => useProfile(pubkey),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useProfile(pubkey), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -273,10 +245,9 @@ describe('useEventCache Hooks', () => {
     });
 
     it('should return null for non-existent profile', async () => {
-      const { result } = renderHook(
-        () => useProfile('nonexistent' + 'a'.repeat(52)),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useProfile('nonexistent' + 'a'.repeat(52)), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -298,10 +269,7 @@ describe('useEventCache Hooks', () => {
       );
 
       // Add profiles to cache
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       for (const profile of profiles) {
         await waitFor(() => {
@@ -310,10 +278,7 @@ describe('useEventCache Hooks', () => {
       }
 
       // Query profiles
-      const { result } = renderHook(
-        () => useProfiles(pubkeys),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useProfiles(pubkeys), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -324,10 +289,7 @@ describe('useEventCache Hooks', () => {
     });
 
     it('should be disabled when pubkeys array is empty', () => {
-      const { result } = renderHook(
-        () => useProfiles([]),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useProfiles([]), { wrapper: createWrapper() });
 
       expect(result.current.isFetching).toBe(false);
     });
@@ -337,10 +299,7 @@ describe('useEventCache Hooks', () => {
     it('should add event to cache', async () => {
       const event = createMockEvent({ id: 'event1' + 'a'.repeat(58) });
 
-      const { result } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         result.current.mutate({ event });
@@ -358,10 +317,7 @@ describe('useEventCache Hooks', () => {
         kind: NostrEventKind.TEXT_NOTE,
       });
 
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       // Set up a query to be invalidated
       const { result: queryResult } = renderHook(
@@ -387,15 +343,11 @@ describe('useEventCache Hooks', () => {
         kind: NostrEventKind.SET_METADATA,
       });
 
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
-      const { result: profileResult } = renderHook(
-        () => useProfile(pubkey),
-        { wrapper: createWrapper() }
-      );
+      const { result: profileResult } = renderHook(() => useProfile(pubkey), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         setResult.current.mutate({ event: profileEvent });
@@ -409,10 +361,7 @@ describe('useEventCache Hooks', () => {
 
   describe('useCacheStats Hook', () => {
     it('should fetch cache statistics', async () => {
-      const { result } = renderHook(
-        () => useCacheStats(),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useCacheStats(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -425,10 +374,7 @@ describe('useEventCache Hooks', () => {
     });
 
     it('should auto-refresh stats every 30 seconds', () => {
-      const { result } = renderHook(
-        () => useCacheStats(),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useCacheStats(), { wrapper: createWrapper() });
 
       expect(result.current).toBeDefined();
       // Note: refetchInterval is configured in the hook
@@ -443,20 +389,16 @@ describe('useEventCache Hooks', () => {
       });
 
       // Add event
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         setResult.current.mutate({ event });
       });
 
       // Invalidate by pubkey pattern
-      const { result: invalidateResult } = renderHook(
-        () => useInvalidateCache(),
-        { wrapper: createWrapper() }
-      );
+      const { result: invalidateResult } = renderHook(() => useInvalidateCache(), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         invalidateResult.current.mutate('pubkey:alice' + 'a'.repeat(59));
@@ -473,10 +415,7 @@ describe('useEventCache Hooks', () => {
       const event = createMockEvent({ id: 'event1' + 'a'.repeat(58) });
 
       // Step 1: Set event
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         setResult.current.mutate({ event });
@@ -487,10 +426,9 @@ describe('useEventCache Hooks', () => {
       });
 
       // Step 2: Get event
-      const { result: getResult } = renderHook(
-        () => useEvent(event.id),
-        { wrapper: createWrapper() }
-      );
+      const { result: getResult } = renderHook(() => useEvent(event.id), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(getResult.current.isSuccess).toBe(true);
@@ -499,10 +437,9 @@ describe('useEventCache Hooks', () => {
       expect(getResult.current.data?.id).toBe(event.id);
 
       // Step 3: Invalidate
-      const { result: invalidateResult } = renderHook(
-        () => useInvalidateCache(),
-        { wrapper: createWrapper() }
-      );
+      const { result: invalidateResult } = renderHook(() => useInvalidateCache(), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         invalidateResult.current.mutate('all:*');
@@ -530,20 +467,16 @@ describe('useEventCache Hooks', () => {
       });
 
       // Set old profile
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         setResult.current.mutate({ event: oldProfile });
       });
 
       // Query profile
-      const { result: profileResult } = renderHook(
-        () => useProfile(pubkey),
-        { wrapper: createWrapper() }
-      );
+      const { result: profileResult } = renderHook(() => useProfile(pubkey), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(profileResult.current.isSuccess).toBe(true);
@@ -566,10 +499,7 @@ describe('useEventCache Hooks', () => {
       const event = createMockEvent({ id: 'event1' + 'a'.repeat(58) });
 
       // Add event
-      const { result: setResult } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result: setResult } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         setResult.current.mutate({ event });
@@ -596,10 +526,7 @@ describe('useEventCache Hooks', () => {
         })
       );
 
-      const { result } = renderHook(
-        () => useSetEvent(),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useSetEvent(), { wrapper: createWrapper() });
 
       const start = performance.now();
 

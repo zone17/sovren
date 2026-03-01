@@ -8,10 +8,10 @@
  * Testing two-tier caching, filter queries, deduplication, and eviction
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { EventCacheService } from '../EventCacheService';
-import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
-import { NostrEventKind } from '@shared/types/nostr';
+import type { NostrEvent, NostrFilter } from '@shared/types/nostr/index';
+import { NostrEventKind } from '@shared/types/nostr/index';
 
 describe('EventCacheService', () => {
   let cacheService: EventCacheService;
@@ -142,11 +142,11 @@ describe('EventCacheService', () => {
 
       await cacheService.setMany(events);
 
-      const ids = events.map(e => e.id);
+      const ids = events.map((e) => e.id);
       const retrieved = await cacheService.getMany(ids);
 
       expect(retrieved).toHaveLength(3);
-      expect(retrieved.map(e => e.id)).toEqual(ids);
+      expect(retrieved.map((e) => e.id)).toEqual(ids);
     });
 
     it('should handle partial results for mixed IDs', async () => {
@@ -175,11 +175,11 @@ describe('EventCacheService', () => {
     it('should update existing event on duplicate', async () => {
       const event1 = createMockEvent({
         id: 'event1' + 'a'.repeat(58),
-        content: 'Original'
+        content: 'Original',
       });
       const event2 = createMockEvent({
         id: 'event1' + 'a'.repeat(58),
-        content: 'Updated'
+        content: 'Updated',
       });
 
       await cacheService.set(event1);
@@ -236,53 +236,53 @@ describe('EventCacheService', () => {
 
     it('should query events by author', async () => {
       const filter: NostrFilter = {
-        authors: ['alice' + 'a'.repeat(59)]
+        authors: ['alice' + 'a'.repeat(59)],
       };
 
       const results = await cacheService.query(filter);
 
       expect(results).toHaveLength(2);
-      expect(results.every(e => e.pubkey === 'alice' + 'a'.repeat(59))).toBe(true);
+      expect(results.every((e) => e.pubkey === 'alice' + 'a'.repeat(59))).toBe(true);
     });
 
     it('should query events by kind', async () => {
       const filter: NostrFilter = {
-        kinds: [NostrEventKind.TEXT_NOTE]
+        kinds: [NostrEventKind.TEXT_NOTE],
       };
 
       const results = await cacheService.query(filter);
 
       expect(results).toHaveLength(2);
-      expect(results.every(e => e.kind === NostrEventKind.TEXT_NOTE)).toBe(true);
+      expect(results.every((e) => e.kind === NostrEventKind.TEXT_NOTE)).toBe(true);
     });
 
     it('should query events by IDs', async () => {
       const filter: NostrFilter = {
-        ids: ['event1' + 'a'.repeat(58), 'event3' + 'a'.repeat(58)]
+        ids: ['event1' + 'a'.repeat(58), 'event3' + 'a'.repeat(58)],
       };
 
       const results = await cacheService.query(filter);
 
       expect(results).toHaveLength(2);
-      expect(results.map(e => e.id)).toContain('event1' + 'a'.repeat(58));
-      expect(results.map(e => e.id)).toContain('event3' + 'a'.repeat(58));
+      expect(results.map((e) => e.id)).toContain('event1' + 'a'.repeat(58));
+      expect(results.map((e) => e.id)).toContain('event3' + 'a'.repeat(58));
     });
 
     it('should query events with time range filters', async () => {
       const filter: NostrFilter = {
         since: 2000,
-        until: 4000
+        until: 4000,
       };
 
       const results = await cacheService.query(filter);
 
       expect(results).toHaveLength(3);
-      expect(results.every(e => e.created_at >= 2000 && e.created_at <= 4000)).toBe(true);
+      expect(results.every((e) => e.created_at >= 2000 && e.created_at <= 4000)).toBe(true);
     });
 
     it('should query events with limit', async () => {
       const filter: NostrFilter = {
-        limit: 2
+        limit: 2,
       };
 
       const results = await cacheService.query(filter);
@@ -292,7 +292,7 @@ describe('EventCacheService', () => {
 
     it('should query events with tag filters', async () => {
       const filter: NostrFilter = {
-        '#t': ['bitcoin']
+        '#t': ['bitcoin'],
       };
 
       const results = await cacheService.query(filter);
@@ -315,7 +315,7 @@ describe('EventCacheService', () => {
 
     it('should return empty array for no matches', async () => {
       const filter: NostrFilter = {
-        authors: ['nonexistent' + 'a'.repeat(52)]
+        authors: ['nonexistent' + 'a'.repeat(52)],
       };
 
       const results = await cacheService.query(filter);
@@ -325,7 +325,7 @@ describe('EventCacheService', () => {
 
     it('should sort results by created_at descending by default', async () => {
       const filter: NostrFilter = {
-        kinds: [NostrEventKind.TEXT_NOTE]
+        kinds: [NostrEventKind.TEXT_NOTE],
       };
 
       const results = await cacheService.query(filter);
@@ -341,7 +341,7 @@ describe('EventCacheService', () => {
       await cacheService.set(event, { ttl: 100 }); // 100ms TTL
 
       // Wait for expiration
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       const retrieved = await cacheService.get(event.id);
       expect(retrieved).toBeNull();
@@ -355,7 +355,7 @@ describe('EventCacheService', () => {
       await cacheService.set(event2, { ttl: 10000 }); // Long TTL
 
       // Wait for first event to expire
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       const results = await cacheService.query({});
 
@@ -367,7 +367,7 @@ describe('EventCacheService', () => {
       const event = createMockEvent({ id: 'event1' + 'a'.repeat(58) });
 
       await cacheService.set(event, { ttl: 100 });
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       await cacheService.cleanup();
 
@@ -455,7 +455,7 @@ describe('EventCacheService', () => {
       ];
 
       await cacheService.setMany(events);
-      await cacheService.deleteMany(events.map(e => e.id));
+      await cacheService.deleteMany(events.map((e) => e.id));
 
       const stats = await cacheService.getStats();
       expect(stats.memoryCount).toBe(0);
@@ -576,11 +576,11 @@ describe('EventCacheService', () => {
       const events = Array.from({ length: 100 }, (_, i) =>
         createMockEvent({
           id: `event${i}`.padEnd(64, 'a'),
-          content: `Event ${i}`
+          content: `Event ${i}`,
         })
       );
 
-      await Promise.all(events.map(e => cacheService.set(e)));
+      await Promise.all(events.map((e) => cacheService.set(e)));
 
       const stats = await cacheService.getStats();
       expect(stats.memoryCount).toBe(100);
@@ -590,20 +590,18 @@ describe('EventCacheService', () => {
       const event = createMockEvent({ id: 'event1' + 'a'.repeat(58) });
       await cacheService.set(event);
 
-      const reads = Array.from({ length: 50 }, () =>
-        cacheService.get(event.id)
-      );
+      const reads = Array.from({ length: 50 }, () => cacheService.get(event.id));
 
       const results = await Promise.all(reads);
 
-      expect(results.every(r => r?.id === event.id)).toBe(true);
+      expect(results.every((r) => r?.id === event.id)).toBe(true);
     });
 
     it('should handle concurrent queries', async () => {
       const events = Array.from({ length: 20 }, (_, i) =>
         createMockEvent({
           id: `event${i}`.padEnd(64, 'a'),
-          kind: i % 2 === 0 ? NostrEventKind.TEXT_NOTE : NostrEventKind.SET_METADATA
+          kind: i % 2 === 0 ? NostrEventKind.TEXT_NOTE : NostrEventKind.SET_METADATA,
         })
       );
 
@@ -615,7 +613,7 @@ describe('EventCacheService', () => {
 
       const results = await Promise.all(queries);
 
-      expect(results.every(r => r.length === 10)).toBe(true);
+      expect(results.every((r) => r.length === 10)).toBe(true);
     });
   });
 
@@ -735,7 +733,7 @@ describe('EventCacheService', () => {
       await cacheService.invalidate('kind:1');
 
       const remaining = await cacheService.query({});
-      expect(remaining.every(e => e.kind !== NostrEventKind.TEXT_NOTE)).toBe(true);
+      expect(remaining.every((e) => e.kind !== NostrEventKind.TEXT_NOTE)).toBe(true);
     });
 
     it('should invalidate all with wildcard', async () => {
@@ -810,7 +808,7 @@ describe('EventCacheService', () => {
 
       await cacheService.set(event, { ttl: 100 });
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       await cacheService.cleanup();
 
@@ -891,7 +889,7 @@ describe('EventCacheService', () => {
       );
 
       const start = performance.now();
-      await Promise.all(events.map(e => cacheService.set(e)));
+      await Promise.all(events.map((e) => cacheService.set(e)));
       const duration = performance.now() - start;
 
       console.log(`1000 concurrent sets in ${duration.toFixed(2)}ms`);

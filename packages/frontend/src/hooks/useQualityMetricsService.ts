@@ -613,6 +613,7 @@ export const useQualityMetricsService = (
         }
       };
     }
+    return undefined;
   }, [refreshInterval, loading, refreshDashboard]);
 
   /**

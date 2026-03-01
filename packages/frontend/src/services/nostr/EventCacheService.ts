@@ -19,8 +19,8 @@
  * - Persistent cache (max 10000 events in IndexedDB)
  */
 
-import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
-import { NostrEventSchema } from '@shared/types/nostr';
+import type { NostrEvent, NostrFilter } from '@shared/types/nostr/index';
+import { NostrEventSchema } from '@shared/types/nostr/index';
 
 // ========================================
 // Types
@@ -127,7 +127,10 @@ class IndexedDBHelper {
 
         // Create sync queue store for offline support
         if (!db.objectStoreNames.contains('syncQueue')) {
-          const syncStore = db.createObjectStore('syncQueue', { keyPath: 'queueId', autoIncrement: true });
+          const syncStore = db.createObjectStore('syncQueue', {
+            keyPath: 'queueId',
+            autoIncrement: true,
+          });
           syncStore.createIndex('timestamp', 'timestamp', { unique: false });
           syncStore.createIndex('status', 'status', { unique: false });
         }
@@ -340,10 +343,7 @@ export class EventCacheService {
 
   private async initIndexedDB(): Promise<void> {
     try {
-      this.indexedDB = new IndexedDBHelper(
-        this.config.dbName,
-        this.config.dbVersion
-      );
+      this.indexedDB = new IndexedDBHelper(this.config.dbName, this.config.dbVersion);
       await this.indexedDB.init();
     } catch (error) {
       console.warn('IndexedDB initialization failed, using memory-only cache:', error);
@@ -359,10 +359,7 @@ export class EventCacheService {
   // Set Operations
   // ========================================
 
-  async set(
-    event: NostrEvent,
-    options: Partial<EventMetadata> = {}
-  ): Promise<void> {
+  async set(event: NostrEvent, options: Partial<EventMetadata> = {}): Promise<void> {
     const startTime = this.config.enableAnalytics ? performance.now() : 0;
 
     // Validate event
@@ -425,7 +422,7 @@ export class EventCacheService {
   }
 
   async setMany(events: NostrEvent[]): Promise<void> {
-    await Promise.all(events.map(event => this.set(event)));
+    await Promise.all(events.map((event) => this.set(event)));
   }
 
   // ========================================
@@ -500,7 +497,7 @@ export class EventCacheService {
   }
 
   async getMany(ids: string[]): Promise<NostrEvent[]> {
-    const events = await Promise.all(ids.map(id => this.get(id)));
+    const events = await Promise.all(ids.map((id) => this.get(id)));
     return events.filter((e): e is NostrEvent => e !== null);
   }
 
@@ -536,14 +533,14 @@ export class EventCacheService {
       for (const author of filter.authors) {
         const ids = this.indexByPubkey.get(author);
         if (ids) {
-          ids.forEach(id => candidates.add(id));
+          ids.forEach((id) => candidates.add(id));
         }
       }
     } else if (filter.kinds && filter.kinds.length > 0) {
       for (const kind of filter.kinds) {
         const ids = this.indexByKind.get(kind);
         if (ids) {
-          ids.forEach(id => candidates.add(id));
+          ids.forEach((id) => candidates.add(id));
         }
       }
     } else {
@@ -605,16 +602,14 @@ export class EventCacheService {
     }
 
     // Tag filters
-    const tagFilters = Object.keys(filter).filter(key => key.startsWith('#'));
+    const tagFilters = Object.keys(filter).filter((key) => key.startsWith('#'));
     for (const tagKey of tagFilters) {
       const tagName = tagKey.substring(1);
       const values = filter[tagKey as keyof NostrFilter] as string[];
 
       if (!values || values.length === 0) continue;
 
-      const hasTag = event.tags.some(
-        tag => tag[0] === tagName && values.includes(tag[1])
-      );
+      const hasTag = event.tags.some((tag) => tag[0] === tagName && values.includes(tag[1]));
 
       if (!hasTag) return false;
     }
@@ -651,7 +646,7 @@ export class EventCacheService {
   }
 
   async deleteMany(ids: string[]): Promise<void> {
-    await Promise.all(ids.map(id => this.delete(id)));
+    await Promise.all(ids.map((id) => this.delete(id)));
   }
 
   async clear(): Promise<void> {
@@ -996,8 +991,10 @@ export class EventCacheService {
    */
   private async checkMemoryLimit(): Promise<void> {
     // Update memory usage
-    this.memoryUsageBytes = Array.from(this.memoryCache.values())
-      .reduce((sum, cached) => sum + this.estimateEventSize(cached.event), 0);
+    this.memoryUsageBytes = Array.from(this.memoryCache.values()).reduce(
+      (sum, cached) => sum + this.estimateEventSize(cached.event),
+      0
+    );
 
     this.stats.memoryBytes = this.memoryUsageBytes;
     this.performanceMetrics.storage.memoryUsage = this.memoryUsageBytes;
@@ -1009,8 +1006,10 @@ export class EventCacheService {
       await this.evictLRU();
 
       // Recalculate
-      this.memoryUsageBytes = Array.from(this.memoryCache.values())
-        .reduce((sum, cached) => sum + this.estimateEventSize(cached.event), 0);
+      this.memoryUsageBytes = Array.from(this.memoryCache.values()).reduce(
+        (sum, cached) => sum + this.estimateEventSize(cached.event),
+        0
+      );
     }
   }
 
@@ -1020,7 +1019,7 @@ export class EventCacheService {
   private startAutomaticCleanup(): void {
     // Clean up every 5 minutes
     this.cleanupInterval = setInterval(() => {
-      this.cleanup().catch(error => {
+      this.cleanup().catch((error) => {
         console.warn('Automatic cleanup failed:', error);
       });
     }, 300000);
@@ -1076,10 +1075,14 @@ export class EventCacheService {
     metric.avgTime = metric.totalTime / metric.count;
 
     // Update overall average latency
-    const totalOps = Object.values(this.performanceMetrics.operations)
-      .reduce((sum, op) => sum + op.count, 0);
-    const totalTime = Object.values(this.performanceMetrics.operations)
-      .reduce((sum, op) => sum + op.totalTime, 0);
+    const totalOps = Object.values(this.performanceMetrics.operations).reduce(
+      (sum, op) => sum + op.count,
+      0
+    );
+    const totalTime = Object.values(this.performanceMetrics.operations).reduce(
+      (sum, op) => sum + op.totalTime,
+      0
+    );
     this.stats.averageLatency = totalOps > 0 ? totalTime / totalOps : 0;
   }
 

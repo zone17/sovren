@@ -1,6 +1,5 @@
-
 import '@testing-library/jest-dom';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   AccessControlMetrics,
@@ -276,9 +275,7 @@ const mockUserManagementService = {
 describe('AutonomousUserManagementDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAutonomousUserManagement).mockReturnValue(
-      mockUserManagementService as any
-    );
+    vi.mocked(useAutonomousUserManagement).mockReturnValue(mockUserManagementService as any);
   });
 
   // Helper function to wait for tab content to load

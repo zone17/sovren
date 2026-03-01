@@ -11,8 +11,7 @@
 // 🎨 **UI COMPONENTS** (preserved hierarchy)
 export * from './ui';
 
-// 🚀 **FEATURE COMPONENTS** (new structure)
-export * from '../features';
+// Feature components are imported directly from '@/features/*'
 
 /**
  * 📋 **MIGRATION NOTES**

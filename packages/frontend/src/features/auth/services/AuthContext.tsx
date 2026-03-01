@@ -59,7 +59,7 @@ const demoAuthService: TempAuthService = {
       updated_at: new Date().toISOString(),
       email_verified: true,
       nostr_verified: true,
-      permissions: ['read', 'write', 'create', 'publish'],
+      permissions: ['read', 'write', 'create', 'publish'] as any,
     };
 
     localStorage.setItem('demo_user', JSON.stringify(demoUser));
@@ -81,7 +81,7 @@ const demoAuthService: TempAuthService = {
       updated_at: new Date().toISOString(),
       email_verified: true,
       nostr_verified: true,
-      permissions: ['read', 'write', 'create', 'publish'],
+      permissions: ['read', 'write', 'create', 'publish'] as any,
     };
 
     localStorage.setItem('demo_user', JSON.stringify(demoUser));
@@ -103,7 +103,7 @@ const demoAuthService: TempAuthService = {
       updated_at: new Date().toISOString(),
       email_verified: true,
       nostr_verified: true,
-      permissions: ['read', 'write', 'create', 'publish'],
+      permissions: ['read', 'write', 'create', 'publish'] as any,
     };
 
     localStorage.setItem('demo_user', JSON.stringify(demoUser));

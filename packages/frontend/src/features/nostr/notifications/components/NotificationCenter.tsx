@@ -58,11 +58,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const groupedNotifications = useMemo(() => {
     const preferences = service.getPreferences();
     if (!preferences.groupByDate) {
-      return [{
-        label: 'All Notifications',
-        notifications: filteredNotifications,
-        unreadCount: filteredNotifications.filter((n) => !n.read).length,
-      }];
+      return [
+        {
+          label: 'All Notifications',
+          notifications: filteredNotifications,
+          unreadCount: filteredNotifications.filter((n) => !n.read).length,
+        },
+      ];
     }
 
     const now = Math.floor(Date.now() / 1000);
@@ -134,6 +136,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+    return undefined;
   }, [isOpen]);
 
   // Get filter tabs
@@ -252,7 +255,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 {notifications.length > 0 && (
                   <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800">
                     <span className="text-xs text-gray-600 dark:text-gray-400">
-                      {filteredNotifications.length} notification{filteredNotifications.length !== 1 ? 's' : ''}
+                      {filteredNotifications.length} notification
+                      {filteredNotifications.length !== 1 ? 's' : ''}
                     </span>
                     {unreadCount > 0 && (
                       <button

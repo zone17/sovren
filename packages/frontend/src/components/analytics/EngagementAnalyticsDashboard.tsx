@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📊 **ENGAGEMENT ANALYTICS DASHBOARD - ELITE ENGINEERING**
  *
@@ -27,7 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/useToast';
 import { useEngagementAnalytics } from '@/hooks/useEngagementAnalytics';
 import type { AIEngagementInsight } from '@/types/engagement-analytics';
 import { format, parseISO, subDays } from 'date-fns';

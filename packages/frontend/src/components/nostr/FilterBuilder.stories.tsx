@@ -9,7 +9,7 @@
 
 import type { Meta, StoryObj } from '@storybook/react';
 import { FilterBuilder } from './FilterBuilder';
-import type { NostrFilter } from '@shared/types/nostr';
+import type { NostrFilter } from '@shared/types/nostr/index';
 import { useState } from 'react';
 
 // ========================================
@@ -111,7 +111,8 @@ export const WithCurrentUser: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'When a pubkey is provided, user-specific presets (User Notes, Mentions) are enabled.',
+        story:
+          'When a pubkey is provided, user-specific presets (User Notes, Mentions) are enabled.',
       },
     },
   },
@@ -373,7 +374,8 @@ export const EmptyFilter: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Empty filter with no constraints. Will show validation warnings about potentially expensive queries.',
+        story:
+          'Empty filter with no constraints. Will show validation warnings about potentially expensive queries.',
       },
     },
   },
@@ -397,9 +399,7 @@ export const Interactive: Story = {
         {filter && Object.keys(filter).length > 0 && (
           <div className="p-4 bg-muted rounded-lg">
             <h3 className="font-semibold mb-2">Current Filter State:</h3>
-            <pre className="text-xs overflow-x-auto">
-              {JSON.stringify(filter, null, 2)}
-            </pre>
+            <pre className="text-xs overflow-x-auto">{JSON.stringify(filter, null, 2)}</pre>
           </div>
         )}
       </div>

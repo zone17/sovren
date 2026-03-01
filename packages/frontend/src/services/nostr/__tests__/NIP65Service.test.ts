@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools/pure';
+import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
 import { NIP65Service } from '../NIP65Service';
 import { KeyManagementService } from '../KeyManagementService';
 import { RelayPoolManager } from '../RelayPoolManager';
@@ -15,7 +15,7 @@ import type {
   RelayMetadata,
   RelayListEvent,
   RelayPreferenceUpdate,
-} from '@shared/types/nostr';
+} from '@shared/types/nostr/index';
 
 // Mock dependencies
 vi.mock('../KeyManagementService');
@@ -82,35 +82,23 @@ describe('NIP65Service', () => {
       expect(event.content).toBe('');
       expect(event.tags).toContainEqual(['r', 'wss://relay.damus.io']);
       expect(event.tags).toContainEqual(['r', 'wss://nos.lol']);
-      expect((relayPool.publishEvent as any)).toHaveBeenCalledWith(event);
+      expect(relayPool.publishEvent as any).toHaveBeenCalledWith(event);
     });
 
     it('should publish relay list with read-only relays', async () => {
-      const relays: RelayMetadata[] = [
-        { url: 'wss://relay.nostr.band', read: true, write: false },
-      ];
+      const relays: RelayMetadata[] = [{ url: 'wss://relay.nostr.band', read: true, write: false }];
 
       const event = await service.publishRelayList(relays);
 
-      expect(event.tags).toContainEqual([
-        'r',
-        'wss://relay.nostr.band',
-        'read',
-      ]);
+      expect(event.tags).toContainEqual(['r', 'wss://relay.nostr.band', 'read']);
     });
 
     it('should publish relay list with write-only relays', async () => {
-      const relays: RelayMetadata[] = [
-        { url: 'wss://write.relay.com', read: false, write: true },
-      ];
+      const relays: RelayMetadata[] = [{ url: 'wss://write.relay.com', read: false, write: true }];
 
       const event = await service.publishRelayList(relays);
 
-      expect(event.tags).toContainEqual([
-        'r',
-        'wss://write.relay.com',
-        'write',
-      ]);
+      expect(event.tags).toContainEqual(['r', 'wss://write.relay.com', 'write']);
     });
 
     it('should publish relay list with mixed capabilities', async () => {
@@ -143,36 +131,26 @@ describe('NIP65Service', () => {
       // NIP65Service.publishRelayList passes the private key directly to finalizeEvent,
       // which requires a Uint8Array. Provide raw key bytes as the custom private key.
       const customKeyBytes = generateSecretKey();
-      const relays: RelayMetadata[] = [
-        { url: 'wss://relay.damus.io', read: true, write: true },
-      ];
+      const relays: RelayMetadata[] = [{ url: 'wss://relay.damus.io', read: true, write: true }];
 
       await service.publishRelayList(relays, customKeyBytes as unknown as string);
 
       // Should not call KeyManagement for private key
-      expect((keyManagement.getPrivateKey as any)).not.toHaveBeenCalled();
+      expect(keyManagement.getPrivateKey as any).not.toHaveBeenCalled();
     });
 
     it('should throw error for empty relay list', async () => {
-      await expect(service.publishRelayList([])).rejects.toThrow(
-        'Relay list cannot be empty'
-      );
+      await expect(service.publishRelayList([])).rejects.toThrow('Relay list cannot be empty');
     });
 
     it('should throw error for relay without URL', async () => {
-      const relays = [
-        { url: '', read: true, write: true },
-      ] as RelayMetadata[];
+      const relays = [{ url: '', read: true, write: true }] as RelayMetadata[];
 
-      await expect(service.publishRelayList(relays)).rejects.toThrow(
-        'Relay URL is required'
-      );
+      await expect(service.publishRelayList(relays)).rejects.toThrow('Relay URL is required');
     });
 
     it('should throw error for relay with neither read nor write', async () => {
-      const relays: RelayMetadata[] = [
-        { url: 'wss://relay.com', read: false, write: false },
-      ];
+      const relays: RelayMetadata[] = [{ url: 'wss://relay.com', read: false, write: false }];
 
       await expect(service.publishRelayList(relays)).rejects.toThrow(
         'Relay must support at least read or write'
@@ -182,13 +160,9 @@ describe('NIP65Service', () => {
     it('should throw error if no private key available', async () => {
       (keyManagement.getPrivateKey as any).mockResolvedValue(null);
 
-      const relays: RelayMetadata[] = [
-        { url: 'wss://relay.damus.io', read: true, write: true },
-      ];
+      const relays: RelayMetadata[] = [{ url: 'wss://relay.damus.io', read: true, write: true }];
 
-      await expect(service.publishRelayList(relays)).rejects.toThrow(
-        'No private key available'
-      );
+      await expect(service.publishRelayList(relays)).rejects.toThrow('No private key available');
     });
   });
 
@@ -356,7 +330,7 @@ describe('NIP65Service', () => {
       const relayList2 = await service.fetchRelayList(testPublicKey);
 
       expect(relayList2).toEqual(relayList1);
-      expect((relayPool.subscribe as any)).not.toHaveBeenCalled();
+      expect(relayPool.subscribe as any).not.toHaveBeenCalled();
     });
 
     it('should return default relays if none found', async () => {
@@ -483,9 +457,7 @@ describe('NIP65Service', () => {
         return 'sub-id';
       });
 
-      const changes: RelayPreferenceUpdate[] = [
-        { url: 'wss://relay.damus.io', remove: true },
-      ];
+      const changes: RelayPreferenceUpdate[] = [{ url: 'wss://relay.damus.io', remove: true }];
 
       const promise = service.updateRelayPreferences(changes);
       await vi.advanceTimersByTimeAsync(10100);
@@ -594,7 +566,7 @@ describe('NIP65Service', () => {
       await vi.advanceTimersByTimeAsync(10100);
       await promise2;
 
-      expect((relayPool.subscribe as any)).toHaveBeenCalled();
+      expect(relayPool.subscribe as any).toHaveBeenCalled();
     });
 
     it('should clear all cache', () => {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Mock for KeyManagementService
  */

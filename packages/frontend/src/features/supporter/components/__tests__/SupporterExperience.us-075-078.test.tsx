@@ -1,6 +1,6 @@
 /**
  * 🎯 **SUPPORTER EXPERIENCE TESTS (US-075 TO US-078)**
- * 
+ *
  * Elite Testing Standards:
  * ✅ Test-Driven Development (TDD) approach
  * ✅ Comprehensive coverage for all user stories
@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor, within, cleanup } from '@testing-library/react';
+import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import SupporterExperience from '../SupporterExperience';
@@ -33,7 +33,9 @@ vi.mock('@/hooks/useFeatureFlags', () => ({
   }),
 }));
 
-const mockUseSupporterExperienceService = useSupporterExperienceService as vi.MockedFunction<typeof useSupporterExperienceService>;
+const mockUseSupporterExperienceService = useSupporterExperienceService as vi.MockedFunction<
+  typeof useSupporterExperienceService
+>;
 
 // Test data
 const mockPersonalizedFeed = {
@@ -199,7 +201,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
   describe('📺 US-075: Personalized Feed', () => {
     test('renders personalized feed with content items', async () => {
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Your Feed')).toBeInTheDocument();
         expect(screen.getByText('Amazing Test Content')).toBeInTheDocument();
@@ -209,7 +211,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('displays personalization score and metrics', async () => {
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         expect(screen.getByText(/Personalization Score: 85%/)).toBeInTheDocument();
         expect(screen.getByText(/Diversity: 75%/)).toBeInTheDocument();
@@ -219,7 +221,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
     test('supports different view modes (grid/list)', async () => {
       const user = userEvent.setup();
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         expect(screen.getByLabelText('Grid view')).toBeInTheDocument();
         expect(screen.getByLabelText('List view')).toBeInTheDocument();
@@ -228,7 +230,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       // Test view mode switching
       const listButton = screen.getByLabelText('List view');
       await user.click(listButton);
-      
+
       expect(listButton).toHaveClass('bg-blue-100');
     });
 
@@ -241,7 +243,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       });
 
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         const sortSelect = screen.getByDisplayValue('Recommended');
         expect(sortSelect).toBeInTheDocument();
@@ -250,11 +252,14 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       // Test sorting change
       const sortSelect = screen.getByDisplayValue('Recommended');
       await user.selectOptions(sortSelect, 'trending');
-      
+
       await waitFor(() => {
-        expect(mockLoadFeed).toHaveBeenCalledWith(1, expect.objectContaining({
-          sortBy: 'trending',
-        }));
+        expect(mockLoadFeed).toHaveBeenCalledWith(
+          1,
+          expect.objectContaining({
+            sortBy: 'trending',
+          })
+        );
       });
     });
 
@@ -267,23 +272,23 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       });
 
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         const loadMoreButton = screen.getByText('Load More Content');
         expect(loadMoreButton).toBeInTheDocument();
       });
 
       await user.click(screen.getByText('Load More Content'));
-      
+
       expect(mockLoadFeed).toHaveBeenCalledWith(2);
     });
 
     test('handles content interaction correctly', async () => {
       const user = userEvent.setup();
       const onContentInteraction = vi.fn();
-      
+
       render(<SupporterExperience {...defaultProps} onContentInteraction={onContentInteraction} />);
-      
+
       await waitFor(() => {
         const contentCard = screen.getByText('Amazing Test Content').closest('.content-card');
         expect(contentCard).toBeInTheDocument();
@@ -291,17 +296,17 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
       const contentCard = screen.getByText('Amazing Test Content').closest('.content-card');
       await user.click(contentCard!);
-      
+
       expect(onContentInteraction).toHaveBeenCalledWith('content-1', 'click');
     });
 
     test('displays engagement metrics correctly', async () => {
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('👁 1000')).toBeInTheDocument(); // Views
-        expect(screen.getByText('❤️ 50')).toBeInTheDocument();   // Likes
-        expect(screen.getByText('💬 25')).toBeInTheDocument();   // Comments
+        expect(screen.getByText('❤️ 50')).toBeInTheDocument(); // Likes
+        expect(screen.getByText('💬 25')).toBeInTheDocument(); // Comments
       });
     });
   });
@@ -311,7 +316,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
     beforeEach(async () => {
       const user = userEvent.setup();
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         const browseTab = screen.getByText('📂 Browse');
         expect(browseTab).toBeInTheDocument();
@@ -347,7 +352,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
     test('filters categories by search term', async () => {
       const user = userEvent.setup();
-      
+
       await waitFor(() => {
         const searchInput = screen.getByPlaceholderText('Search categories...');
         expect(searchInput).toBeInTheDocument();
@@ -384,7 +389,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
     beforeEach(async () => {
       const user = userEvent.setup();
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         const searchTab = screen.getByText('🔍 Search');
         expect(searchTab).toBeInTheDocument();
@@ -416,7 +421,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       render(<SupporterExperience {...defaultProps} onSearchQuery={onSearchQuery} />);
 
       await user.click(screen.getByText('🔍 Search'));
-      
+
       await waitFor(() => {
         const searchInput = screen.getByPlaceholderText(/Search for content/);
         expect(searchInput).toBeInTheDocument();
@@ -424,14 +429,14 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
       await user.type(screen.getByPlaceholderText(/Search for content/), 'test query');
       await user.click(screen.getByText('Search'));
-      
+
       expect(mockSearchContent).toHaveBeenCalledWith({
         query: 'test query',
         filters: expect.any(Object),
         sort: { field: 'relevance', order: 'desc' },
         pagination: { page: 1, limit: 20 },
       });
-      
+
       expect(onSearchQuery).toHaveBeenCalledWith('test query');
     });
 
@@ -449,10 +454,10 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       render(<SupporterExperience {...defaultProps} />);
 
       await user.click(screen.getByText('🔍 Search'));
-      
+
       const searchInput = await screen.findByPlaceholderText(/Search for content/);
       await user.type(searchInput, 'test query{enter}');
-      
+
       expect(mockSearchContent).toHaveBeenCalled();
     });
 
@@ -463,7 +468,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       render(<SupporterExperience {...defaultProps} />);
 
       await user.click(screen.getByText('🔍 Search'));
-      
+
       await waitFor(() => {
         expect(screen.getByText(/Found 1 results in 45ms/)).toBeInTheDocument();
         expect(screen.getByText('Amazing Test Content')).toBeInTheDocument();
@@ -477,7 +482,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       render(<SupporterExperience {...defaultProps} />);
 
       await user.click(screen.getByText('🔍 Search'));
-      
+
       await waitFor(() => {
         const advancedFiltersButton = screen.getByText('Show Advanced Filters');
         expect(advancedFiltersButton).toBeInTheDocument();
@@ -485,7 +490,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
       // Show advanced filters
       await user.click(screen.getByText('Show Advanced Filters'));
-      
+
       await waitFor(() => {
         expect(screen.getByText('Content Type')).toBeInTheDocument();
         expect(screen.getByText('Date Range')).toBeInTheDocument();
@@ -493,7 +498,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
       // Hide advanced filters
       await user.click(screen.getByText('Hide Advanced Filters'));
-      
+
       await waitFor(() => {
         expect(screen.queryByText('Content Type')).not.toBeInTheDocument();
       });
@@ -506,7 +511,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       render(<SupporterExperience {...defaultProps} />);
 
       await user.click(screen.getByText('🔍 Search'));
-      
+
       await waitFor(() => {
         const searchButton = screen.getByText('Search');
         expect(searchButton).toBeDisabled();
@@ -514,7 +519,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
       const searchInput = screen.getByPlaceholderText(/Search for content/);
       await user.type(searchInput, 'test');
-      
+
       await waitFor(() => {
         const searchButton = screen.getByText('Search');
         expect(searchButton).not.toBeDisabled();
@@ -527,7 +532,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
     beforeEach(async () => {
       const user = userEvent.setup();
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         const trendingTab = screen.getByText('📈 Trending');
         expect(trendingTab).toBeInTheDocument();
@@ -577,14 +582,14 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       render(<SupporterExperience {...defaultProps} />);
 
       await user.click(screen.getByText('📈 Trending'));
-      
+
       await waitFor(() => {
         const hourButton = screen.getByText('⚡ Last Hour');
         expect(hourButton).toBeInTheDocument();
       });
 
       await user.click(screen.getByText('⚡ Last Hour'));
-      
+
       expect(mockLoadTrendingContent).toHaveBeenCalledWith('1h');
     });
 
@@ -607,15 +612,19 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       render(<SupporterExperience {...defaultProps} onContentInteraction={onContentInteraction} />);
 
       await user.click(screen.getByText('📈 Trending'));
-      
+
       await waitFor(() => {
-        const trendingCard = screen.getByText('Amazing Test Content').closest('.trending-content-card');
+        const trendingCard = screen
+          .getByText('Amazing Test Content')
+          .closest('.trending-content-card');
         expect(trendingCard).toBeInTheDocument();
       });
 
-      const trendingCard = screen.getByText('Amazing Test Content').closest('.trending-content-card');
+      const trendingCard = screen
+        .getByText('Amazing Test Content')
+        .closest('.trending-content-card');
       await user.click(trendingCard!);
-      
+
       expect(onContentInteraction).toHaveBeenCalledWith('content-1', 'click');
     });
   });
@@ -645,7 +654,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       });
 
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Something went wrong')).toBeInTheDocument();
         expect(screen.getByText('Failed to load content')).toBeInTheDocument();
@@ -655,13 +664,13 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       // Test retry functionality
       const retryButton = screen.getByText('Try Again');
       await user.click(retryButton);
-      
+
       // Would reload the page in real implementation
     });
 
     test('supports all feature flags correctly', () => {
       const { rerender } = render(<SupporterExperience {...defaultProps} />);
-      
+
       // Test with all features enabled
       expect(screen.getByText('🏠 Your Feed')).toBeInTheDocument();
       expect(screen.getByText('📂 Browse')).toBeInTheDocument();
@@ -672,7 +681,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
     test('tab navigation works correctly', async () => {
       const user = userEvent.setup();
       render(<SupporterExperience {...defaultProps} />);
-      
+
       // Should start on feed tab
       await waitFor(() => {
         const feedTab = screen.getByText('🏠 Your Feed');
@@ -681,7 +690,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
 
       // Navigate to browse tab
       await user.click(screen.getByText('📂 Browse'));
-      
+
       await waitFor(() => {
         const browseTab = screen.getByText('📂 Browse');
         expect(browseTab).toHaveClass('border-blue-500');
@@ -698,7 +707,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       });
 
       render(<SupporterExperience {...defaultProps} />);
-      
+
       // Check for mobile-friendly elements
       expect(screen.getByRole('navigation')).toBeInTheDocument();
       expect(screen.getByText('Your Feed')).toBeInTheDocument();
@@ -732,7 +741,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       });
 
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Your Feed')).toBeInTheDocument();
         // Should handle empty state gracefully
@@ -754,9 +763,9 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       });
 
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await user.click(screen.getByText('🔍 Search'));
-      
+
       await waitFor(() => {
         expect(screen.getByText(/Found 0 results/)).toBeInTheDocument();
       });
@@ -765,19 +774,19 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
     test('prevents double-click interactions', async () => {
       const user = userEvent.setup();
       const onContentInteraction = vi.fn();
-      
+
       render(<SupporterExperience {...defaultProps} onContentInteraction={onContentInteraction} />);
-      
+
       await waitFor(() => {
         const contentCard = screen.getByText('Amazing Test Content').closest('.content-card');
         expect(contentCard).toBeInTheDocument();
       });
 
       const contentCard = screen.getByText('Amazing Test Content').closest('.content-card');
-      
+
       // Rapid double-click
       await user.dblClick(contentCard!);
-      
+
       // Should only trigger once (or handle appropriately)
       expect(onContentInteraction).toHaveBeenCalledTimes(2); // dblClick triggers 2 clicks
     });
@@ -790,7 +799,7 @@ describe('🎯 SupporterExperience Component (US-075 to US-078)', () => {
       });
 
       render(<SupporterExperience {...defaultProps} />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Something went wrong')).toBeInTheDocument();
         expect(screen.getByText('Network timeout')).toBeInTheDocument();
@@ -823,16 +832,16 @@ describe('⚡ Performance Benchmarks', () => {
 
   test('component renders within performance budget', async () => {
     const startTime = performance.now();
-    
+
     render(<SupporterExperience userId="test-user" />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Your Feed')).toBeInTheDocument();
     });
 
     const endTime = performance.now();
     const renderTime = endTime - startTime;
-    
+
     // Should render within 100ms for optimal UX
     expect(renderTime).toBeLessThan(100);
   });
@@ -853,16 +862,16 @@ describe('⚡ Performance Benchmarks', () => {
     });
 
     const startTime = performance.now();
-    
+
     render(<SupporterExperience userId="test-user" />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Your Feed')).toBeInTheDocument();
     });
 
     const endTime = performance.now();
     const renderTime = endTime - startTime;
-    
+
     // Should handle large datasets within reasonable time
     expect(renderTime).toBeLessThan(500);
   });
@@ -873,7 +882,7 @@ describe('📊 Test Coverage Summary', () => {
   test('validates comprehensive test coverage', () => {
     const coverageAreas = [
       'US-075: Personalized Feed',
-      'US-076: Category Browsing', 
+      'US-076: Category Browsing',
       'US-077: Search Functionality',
       'US-078: Trending Content',
       'Integration Tests',
@@ -883,9 +892,9 @@ describe('📊 Test Coverage Summary', () => {
       'Mobile Responsiveness',
       'Feature Flag Support',
     ];
-    
+
     // All coverage areas should be tested
     expect(coverageAreas).toHaveLength(10);
-    expect(coverageAreas.every(area => area.length > 0)).toBe(true);
+    expect(coverageAreas.every((area) => area.length > 0)).toBe(true);
   });
 });

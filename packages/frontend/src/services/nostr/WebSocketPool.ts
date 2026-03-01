@@ -31,12 +31,12 @@
  */
 
 import { EventEmitter } from 'events';
-import type {
-  ConnectionPoolConfig,
-  WebSocketConnection,
+import {
+  type ConnectionPoolConfig,
+  type WebSocketConnection,
   ConnectionState,
-  PoolStats,
-  ConnectionLoad,
+  type PoolStats,
+  type ConnectionLoad,
   DEFAULT_POOL_CONFIG,
 } from './types/websocket';
 
@@ -342,20 +342,13 @@ export class WebSocketPool extends EventEmitter {
     const allConnections = this.getAllConnections();
     const connectedConnections = this.getConnectedConnections();
 
-    const activeConnections = connectedConnections.filter(
-      (c) => c.subscriptionIds.size > 0
-    ).length;
-    const idleConnections = connectedConnections.filter(
-      (c) => c.subscriptionIds.size === 0
-    ).length;
+    const activeConnections = connectedConnections.filter((c) => c.subscriptionIds.size > 0).length;
+    const idleConnections = connectedConnections.filter((c) => c.subscriptionIds.size === 0).length;
     const failedConnections = allConnections.filter(
       (c) => c.state === ConnectionState.FAILED
     ).length;
 
-    const totalSubscriptions = allConnections.reduce(
-      (sum, c) => sum + c.subscriptionIds.size,
-      0
-    );
+    const totalSubscriptions = allConnections.reduce((sum, c) => sum + c.subscriptionIds.size, 0);
 
     const maxPossibleSubscriptions =
       connectedConnections.length * this.config.maxSubscriptionsPerConnection;

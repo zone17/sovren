@@ -16,12 +16,7 @@ import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vites
 import { EventPublisherService } from '../EventPublisherService';
 import { KeyManagementService } from '../KeyManagementService';
 import { RelayPoolManager } from '../RelayPoolManager';
-import type {
-  NostrEvent,
-  NostrEventKind,
-  EventTemplate,
-  PublishResult,
-} from '@shared/types/nostr';
+import type { NostrEvent, EventTemplate } from '@shared/types/nostr/index';
 
 // Mock dependencies
 vi.mock('../KeyManagementService');
@@ -67,19 +62,17 @@ describe('EventPublisherService', () => {
     // Setup RelayPoolManager mock
     mockRelayPool = {
       isInitialized: vi.fn().mockReturnValue(true),
-      getConnectedRelays: vi.fn().mockReturnValue([
-        'wss://relay.damus.io',
-        'wss://nos.lol',
-        'wss://relay.nostr.info',
-      ]),
+      getConnectedRelays: vi
+        .fn()
+        .mockReturnValue(['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.info']),
       publishEvent: vi.fn().mockResolvedValue([
         { relay: 'wss://relay.damus.io', success: true, latency: 100 },
         { relay: 'wss://nos.lol', success: true, latency: 150 },
         { relay: 'wss://relay.nostr.info', success: true, latency: 200 },
       ]),
-      publishEventToFastest: vi.fn().mockResolvedValue([
-        { relay: 'wss://relay.damus.io', success: true, latency: 100 },
-      ]),
+      publishEventToFastest: vi
+        .fn()
+        .mockResolvedValue([{ relay: 'wss://relay.damus.io', success: true, latency: 100 }]),
       getFastestRelays: vi.fn().mockReturnValue(['wss://relay.damus.io']),
     } as any;
 
@@ -116,9 +109,7 @@ describe('EventPublisherService', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation();
       await publisherService.initialize();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('already initialized')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('already initialized'));
       consoleSpy.mockRestore();
     });
 
@@ -240,10 +231,7 @@ describe('EventPublisherService', () => {
 
       const signedEvent = await publisherService.signEvent(unsignedEvent);
 
-      expect(mockKeyManagement.signEvent).toHaveBeenCalledWith(
-        'test-key-id',
-        expect.any(Object)
-      );
+      expect(mockKeyManagement.signEvent).toHaveBeenCalledWith('test-key-id', expect.any(Object));
       expect(signedEvent.sig).toBe(mockSignature);
       expect(signedEvent.id).toBe(mockEventId);
     });
@@ -260,10 +248,7 @@ describe('EventPublisherService', () => {
       const customKeyId = 'custom-key-id';
       await publisherService.signEvent(unsignedEvent, customKeyId);
 
-      expect(mockKeyManagement.signEvent).toHaveBeenCalledWith(
-        customKeyId,
-        expect.any(Object)
-      );
+      expect(mockKeyManagement.signEvent).toHaveBeenCalledWith(customKeyId, expect.any(Object));
     });
 
     it('should sign event with browser extension', async () => {
@@ -277,10 +262,7 @@ describe('EventPublisherService', () => {
 
       await publisherService.signEvent(unsignedEvent, 'extension');
 
-      expect(mockKeyManagement.signEvent).toHaveBeenCalledWith(
-        'extension',
-        expect.any(Object)
-      );
+      expect(mockKeyManagement.signEvent).toHaveBeenCalledWith('extension', expect.any(Object));
     });
 
     it('should throw error if no active key', async () => {
@@ -364,7 +346,7 @@ describe('EventPublisherService', () => {
       const result = await publisherService.validateEvent(futureEvent);
 
       expect(result.warnings.length).toBeGreaterThan(0);
-      expect(result.warnings.some(w => w.code === 'FUTURE_TIMESTAMP')).toBe(true);
+      expect(result.warnings.some((w) => w.code === 'FUTURE_TIMESTAMP')).toBe(true);
     });
 
     it('should validate replaceable events', async () => {
@@ -490,7 +472,14 @@ describe('EventPublisherService', () => {
       mockRelayPool.publishEvent.mockImplementation(async () => {
         attemptCount++;
         if (attemptCount < 3) {
-          return [{ relay: 'wss://relay.damus.io', success: false, error: new Error('Failed'), latency: 100 }];
+          return [
+            {
+              relay: 'wss://relay.damus.io',
+              success: false,
+              error: new Error('Failed'),
+              latency: 100,
+            },
+          ];
         }
         return [{ relay: 'wss://relay.damus.io', success: true, latency: 100 }];
       });
@@ -675,9 +664,7 @@ describe('EventPublisherService', () => {
         content: 'Test',
       };
 
-      await expect(publisherService.createAndPublish(template)).rejects.toThrow(
-        'Signing failed'
-      );
+      await expect(publisherService.createAndPublish(template)).rejects.toThrow('Signing failed');
     });
 
     it('should handle relay pool errors', async () => {

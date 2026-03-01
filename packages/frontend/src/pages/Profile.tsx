@@ -194,7 +194,7 @@ const Profile: React.FC = () => {
                 </ul>
               </div>
 
-              <Button variant="primary" className="w-full">
+              <Button variant="default" className="w-full">
                 🔧 Admin Dashboard
               </Button>
             </div>

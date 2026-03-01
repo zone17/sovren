@@ -15,13 +15,9 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import {
-  SubscriptionCard,
-  Subscription,
-  SubscriptionCardProps,
-} from '../SubscriptionCard';
+import { SubscriptionCard, Subscription } from '../SubscriptionCard';
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);
@@ -62,7 +58,9 @@ describe('SubscriptionCard', () => {
       const subscription = createMockSubscription();
       render(<SubscriptionCard subscription={subscription} />);
 
-      expect(screen.getByRole('article', { name: /Subscription: Test Creator/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('article', { name: /Subscription: Test Creator/i })
+      ).toBeInTheDocument();
       expect(screen.getByText('Test Creator')).toBeInTheDocument();
       expect(screen.getByText('Premium content subscription')).toBeInTheDocument();
       expect(screen.getByText('Premium')).toBeInTheDocument();
@@ -199,13 +197,7 @@ describe('SubscriptionCard', () => {
 
     it('displays subscriber count in creator variant with stats', () => {
       const subscription = createMockSubscription({ subscriberCount: 42 });
-      render(
-        <SubscriptionCard
-          subscription={subscription}
-          variant="creator"
-          showStats={true}
-        />
-      );
+      render(<SubscriptionCard subscription={subscription} variant="creator" showStats={true} />);
 
       expect(screen.getByText('Subscribers')).toBeInTheDocument();
       expect(screen.getByText('42')).toBeInTheDocument();
@@ -290,13 +282,7 @@ describe('SubscriptionCard', () => {
     it('calls onEdit when Edit button is clicked (creator variant)', () => {
       const subscription = createMockSubscription();
       const actions = createMockActions();
-      render(
-        <SubscriptionCard
-          subscription={subscription}
-          variant="creator"
-          actions={actions}
-        />
-      );
+      render(<SubscriptionCard subscription={subscription} variant="creator" actions={actions} />);
 
       const editButton = screen.getByRole('button', { name: /Edit subscription/i });
       fireEvent.click(editButton);
@@ -344,13 +330,7 @@ describe('SubscriptionCard', () => {
     it('calls onDelete when Delete button is clicked (creator variant)', () => {
       const subscription = createMockSubscription();
       const actions = createMockActions();
-      render(
-        <SubscriptionCard
-          subscription={subscription}
-          variant="creator"
-          actions={actions}
-        />
-      );
+      render(<SubscriptionCard subscription={subscription} variant="creator" actions={actions} />);
 
       const deleteButton = screen.getByRole('button', { name: /Delete subscription tier/i });
       fireEvent.click(deleteButton);
@@ -362,13 +342,7 @@ describe('SubscriptionCard', () => {
     it('disables all action buttons when disabled prop is true', () => {
       const subscription = createMockSubscription({ status: 'active' });
       const actions = createMockActions();
-      render(
-        <SubscriptionCard
-          subscription={subscription}
-          actions={actions}
-          disabled={true}
-        />
-      );
+      render(<SubscriptionCard subscription={subscription} actions={actions} disabled={true} />);
 
       const viewButton = screen.getByRole('button', { name: /View subscription details/i });
       const pauseButton = screen.getByRole('button', { name: /Pause subscription/i });
@@ -395,7 +369,9 @@ describe('SubscriptionCard', () => {
 
       expect(screen.getByRole('button', { name: /Pause subscription/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cancel subscription/i })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Resume subscription/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Resume subscription/i })
+      ).not.toBeInTheDocument();
     });
 
     it('only renders Resume button for paused subscriptions', () => {
@@ -411,13 +387,7 @@ describe('SubscriptionCard', () => {
     it('does not render Edit button in user variant', () => {
       const subscription = createMockSubscription();
       const actions = createMockActions();
-      render(
-        <SubscriptionCard
-          subscription={subscription}
-          variant="user"
-          actions={actions}
-        />
-      );
+      render(<SubscriptionCard subscription={subscription} variant="user" actions={actions} />);
 
       expect(screen.queryByRole('button', { name: /Edit subscription/i })).not.toBeInTheDocument();
     });
@@ -425,15 +395,11 @@ describe('SubscriptionCard', () => {
     it('does not render Delete button in user variant', () => {
       const subscription = createMockSubscription();
       const actions = createMockActions();
-      render(
-        <SubscriptionCard
-          subscription={subscription}
-          variant="user"
-          actions={actions}
-        />
-      );
+      render(<SubscriptionCard subscription={subscription} variant="user" actions={actions} />);
 
-      expect(screen.queryByRole('button', { name: /Delete subscription tier/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Delete subscription tier/i })
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -451,7 +417,9 @@ describe('SubscriptionCard', () => {
       const actions = createMockActions();
       render(<SubscriptionCard subscription={subscription} actions={actions} />);
 
-      expect(screen.getByRole('button', { name: /View subscription details/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /View subscription details/i })
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Pause subscription/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cancel subscription/i })).toBeInTheDocument();
     });
@@ -529,13 +497,7 @@ describe('SubscriptionCard', () => {
 
     it('handles zero subscriber count', () => {
       const subscription = createMockSubscription({ subscriberCount: 0 });
-      render(
-        <SubscriptionCard
-          subscription={subscription}
-          variant="creator"
-          showStats={true}
-        />
-      );
+      render(<SubscriptionCard subscription={subscription} variant="creator" showStats={true} />);
 
       expect(screen.getByText('0')).toBeInTheDocument();
     });

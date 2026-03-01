@@ -28,7 +28,8 @@
 
 import { EventEmitter } from 'events';
 import { SimplePool } from 'nostr-tools/pool';
-import type { Event as NostrEvent, Filter } from 'nostr-tools/pure';
+import type { Event as NostrEvent } from 'nostr-tools/pure';
+type Filter = Record<string, any>;
 import { RelayConfig } from '@shared/config/relay-config';
 import {
   RelayPoolConfig,
@@ -123,7 +124,7 @@ export class RelayPoolManager extends EventEmitter {
   public async connectAll(): Promise<void> {
     const connectionPromises = Array.from(this.connections.keys())
       .slice(0, this.config.maxRelays)
-      .map(url => this.connect(url));
+      .map((url) => this.connect(url));
 
     await Promise.allSettled(connectionPromises);
   }
@@ -169,7 +170,11 @@ export class RelayPoolManager extends EventEmitter {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
 
-      this.emit('relay:error', url, error instanceof Error ? error : new Error('Connection failed'));
+      this.emit(
+        'relay:error',
+        url,
+        error instanceof Error ? error : new Error('Connection failed')
+      );
       console.error(`❌ Failed to connect to relay: ${url}`, error);
 
       // Schedule reconnection if enabled
@@ -208,16 +213,13 @@ export class RelayPoolManager extends EventEmitter {
    */
   public async disconnectAll(): Promise<void> {
     const urls = Array.from(this.connections.keys());
-    await Promise.all(urls.map(url => this.disconnect(url)));
+    await Promise.all(urls.map((url) => this.disconnect(url)));
   }
 
   /**
    * Publish event to relays
    */
-  public async publishEvent(
-    event: NostrEvent,
-    relays?: string[]
-  ): Promise<PublishResult[]> {
+  public async publishEvent(event: NostrEvent, relays?: string[]): Promise<PublishResult[]> {
     const targetRelays = relays || this.getConnectedRelays();
 
     if (targetRelays.length === 0) {
@@ -225,7 +227,7 @@ export class RelayPoolManager extends EventEmitter {
     }
 
     const results: PublishResult[] = [];
-    const publishPromises = targetRelays.map(async relay => {
+    const publishPromises = targetRelays.map(async (relay) => {
       const startTime = Date.now();
 
       try {
@@ -290,14 +292,14 @@ export class RelayPoolManager extends EventEmitter {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       lastResults = await this.publishEvent(event);
 
-      const successCount = lastResults.filter(r => r.success).length;
+      const successCount = lastResults.filter((r) => r.success).length;
       if (successCount > 0) {
         return lastResults;
       }
 
       // Wait before retry with exponential backoff
       if (attempt < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
     }
 
@@ -319,7 +321,7 @@ export class RelayPoolManager extends EventEmitter {
       throw new Error('No connected relays available for subscription');
     }
 
-    const sub = this.pool.subscribeMany(relays, filters, {
+    const sub = this.pool.subscribeMany(relays, filters as any, {
       onevent: (event: NostrEvent) => {
         // Deduplicate events
         if (this.config.enableDeduplication) {
@@ -388,13 +390,13 @@ export class RelayPoolManager extends EventEmitter {
     const connected = this.getConnectedRelays();
 
     return connected
-      .map(url => ({
+      .map((url) => ({
         url,
         latency: this.connections.get(url)!.health.metrics.latency,
       }))
       .sort((a, b) => a.latency - b.latency)
       .slice(0, count)
-      .map(item => item.url);
+      .map((item) => item.url);
   }
 
   /**
@@ -404,7 +406,7 @@ export class RelayPoolManager extends EventEmitter {
     const connected = this.getConnectedRelays();
 
     const sorted = connected
-      .map(url => ({
+      .map((url) => ({
         url,
         score: this.connections.get(url)!.health.score,
       }))
@@ -489,7 +491,7 @@ export class RelayPoolManager extends EventEmitter {
     await this.disconnect(url);
 
     this.connections.delete(url);
-    this.config.relays = this.config.relays.filter(r => r !== url);
+    this.config.relays = this.config.relays.filter((r) => r !== url);
 
     console.log(`➖ Removed relay: ${url}`);
   }
@@ -641,7 +643,7 @@ export class RelayPoolManager extends EventEmitter {
 
     const timer = setTimeout(() => {
       this.reconnectTimers.delete(url);
-      this.connect(url).catch(error => {
+      this.connect(url).catch((error) => {
         console.error(`Reconnection failed for ${url}:`, error);
       });
     }, delay);
@@ -682,9 +684,7 @@ export class RelayPoolManager extends EventEmitter {
     const now = Date.now();
     const connectedTime = connection.connectedAt || now;
     const totalTime = now - connectedTime;
-    const disconnectedTime = connection.disconnectedAt
-      ? now - connection.disconnectedAt
-      : 0;
+    const disconnectedTime = connection.disconnectedAt ? now - connection.disconnectedAt : 0;
     metrics.uptime = totalTime > 0 ? ((totalTime - disconnectedTime) / totalTime) * 100 : 100;
 
     // Update health score and status
@@ -746,10 +746,7 @@ export class RelayPoolManager extends EventEmitter {
     const performCheck = () => {
       this.performHealthCheck();
 
-      this.healthCheckTimer = setTimeout(
-        performCheck,
-        this.config.healthCheckInterval
-      );
+      this.healthCheckTimer = setTimeout(performCheck, this.config.healthCheckInterval);
     };
 
     performCheck();

@@ -418,6 +418,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
       }, 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [error, success]);
 
   return (

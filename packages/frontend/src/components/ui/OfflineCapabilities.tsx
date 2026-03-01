@@ -126,7 +126,7 @@ class ServiceWorkerManager {
     if (!this.registration) return;
 
     const status: ServiceWorkerStatus = {
-      state: this.registration.active?.state || 'installing',
+      state: (this.registration.active?.state || 'installing') as ServiceWorkerStatus['state'],
       scope: this.registration.scope,
       scriptURL: this.registration.active?.scriptURL || '',
       updateAvailable: !!this.registration.waiting,
@@ -438,7 +438,7 @@ export const OfflineCapabilities: React.FC<OfflineCapabilitiesProps> = ({
 }) => {
   // Feature flags
   const { flags } = useFeatureFlags();
-  const isEnabled = flags.enableOfflineCapabilities && enableOfflineMode;
+  const isEnabled = flags?.enableOfflineCapabilities && enableOfflineMode;
 
   // State management
   const [serviceWorkerStatus, setServiceWorkerStatus] = useState<ServiceWorkerStatus | null>(null);

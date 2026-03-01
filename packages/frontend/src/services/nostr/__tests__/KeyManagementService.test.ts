@@ -18,7 +18,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 // nostr/index.ts, but in the test environment the re-export is undefined due to the
 // large barrel file having mixed import/export patterns. We provide a passthrough mock
 // that uses the actual zod schema from the direct subpath.
-vi.mock('@shared/types/nostr', async (importOriginal) => {
+vi.mock('@shared/types/nostr/index', async (importOriginal) => {
   const actual = await importOriginal<Record<string, any>>();
   // If the schema is already defined, use it; otherwise import from direct path
   if (actual.NostrEnhancedKeyPairSchema) return actual;

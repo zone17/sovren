@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { FeedItem } from '../components/FeedItem';
@@ -155,9 +155,7 @@ describe('FeedItem', () => {
       const handleClick = vi.fn();
       const handleLike = vi.fn();
 
-      render(
-        <FeedItem feedEvent={mockFeedEvent} onClick={handleClick} onLike={handleLike} />
-      );
+      render(<FeedItem feedEvent={mockFeedEvent} onClick={handleClick} onLike={handleLike} />);
 
       const likeButton = screen.getByLabelText(/like post/i);
       await userEvent.click(likeButton);
@@ -171,10 +169,7 @@ describe('FeedItem', () => {
     it('has proper ARIA labels', () => {
       render(<FeedItem feedEvent={mockFeedEvent} />);
 
-      expect(screen.getByRole('article')).toHaveAttribute(
-        'aria-label',
-        'Post by Test User'
-      );
+      expect(screen.getByRole('article')).toHaveAttribute('aria-label', 'Post by Test User');
       expect(screen.getByLabelText(/like post/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/repost/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/reply to post/i)).toBeInTheDocument();

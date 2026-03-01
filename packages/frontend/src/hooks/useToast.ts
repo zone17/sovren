@@ -113,7 +113,7 @@ class ToastManager {
       position: options.position || DEFAULT_TOAST_OPTIONS.position,
       className: options.className || DEFAULT_TOAST_OPTIONS.className,
       action: options.action,
-      icon: options.icon,
+      icon: options.icon as any,
       onDismiss: options.onDismiss,
       onAction: options.onAction,
     };

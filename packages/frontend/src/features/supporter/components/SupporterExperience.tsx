@@ -1,6 +1,6 @@
 /**
  * 🎯 **SUPPORTER EXPERIENCE COMPONENT (US-075 TO US-078)**
- * 
+ *
  * Elite React Implementation:
  * ✅ Legendary-tier component architecture
  * ✅ Mobile-first responsive design
@@ -13,13 +13,13 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  FeedContentItem, 
-  PersonalizedFeed, 
-  Category, 
-  SearchQuery, 
-  SearchResults, 
-  TrendingContent
+import {
+  FeedContentItem,
+  PersonalizedFeed,
+  Category,
+  SearchQuery,
+  SearchResults,
+  TrendingContent,
 } from '../types/supporterExperience';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useSupporterExperienceService } from '../services/supporterExperienceService';
@@ -43,10 +43,13 @@ const PersonalizedFeedComponent: React.FC<{
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filters, setFilters] = useState(feed.filters);
 
-  const handleFilterUpdate = useCallback((newFilters: any) => {
-    setFilters(newFilters);
-    onFilterChange(newFilters);
-  }, [onFilterChange]);
+  const handleFilterUpdate = useCallback(
+    (newFilters: any) => {
+      setFilters(newFilters);
+      onFilterChange(newFilters);
+    },
+    [onFilterChange]
+  );
 
   return (
     <div className="personalized-feed">
@@ -104,7 +107,9 @@ const PersonalizedFeedComponent: React.FC<{
             <input
               type="checkbox"
               checked={filters.showFollowedOnly}
-              onChange={(e) => handleFilterUpdate({ ...filters, showFollowedOnly: e.target.checked })}
+              onChange={(e) =>
+                handleFilterUpdate({ ...filters, showFollowedOnly: e.target.checked })
+              }
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">Following only</span>
@@ -125,9 +130,12 @@ const PersonalizedFeedComponent: React.FC<{
       </div>
 
       {/* Content Grid/List */}
-      <div className={`content-grid ${viewMode === 'grid' 
-        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' 
-        : 'space-y-4'}`}
+      <div
+        className={`content-grid ${
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+            : 'space-y-4'
+        }`}
       >
         {feed.items.map((item) => (
           <ContentCard
@@ -153,8 +161,8 @@ const PersonalizedFeedComponent: React.FC<{
 
       {/* Pagination Info */}
       <div className="pagination-info mt-4 text-center text-sm text-gray-500">
-        Page {feed.pagination.page} of {feed.pagination.totalPages} 
-        ({feed.pagination.totalItems} total items)
+        Page {feed.pagination.page} of {feed.pagination.totalPages}({feed.pagination.totalItems}{' '}
+        total items)
       </div>
     </div>
   );
@@ -173,14 +181,15 @@ const CategoryBrowsingComponent: React.FC<{
 
   const filteredCategories = useMemo(() => {
     if (!searchTerm) return categories;
-    return categories.filter(cat => 
-      cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cat.description.toLowerCase().includes(searchTerm.toLowerCase())
+    return categories.filter(
+      (cat) =>
+        cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cat.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [categories, searchTerm]);
 
-  const featuredCategories = useMemo(() => 
-    categories.filter(cat => cat.isPopular || cat.isTrending),
+  const featuredCategories = useMemo(
+    () => categories.filter((cat) => cat.isPopular || cat.isTrending),
     [categories]
   );
 
@@ -189,7 +198,7 @@ const CategoryBrowsingComponent: React.FC<{
       {/* Header */}
       <div className="category-header mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Browse Categories</h2>
-        
+
         {/* Search */}
         <div className="relative">
           <input
@@ -199,8 +208,16 @@ const CategoryBrowsingComponent: React.FC<{
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
           />
-          <svg className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+          <svg
+            className="absolute left-3 top-3.5 w-5 h-5 text-gray-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+              clipRule="evenodd"
+            />
           </svg>
         </div>
       </div>
@@ -268,11 +285,14 @@ const SearchComponent: React.FC<{
     }
   }, [query, filters, onSearch]);
 
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  }, [handleSearch]);
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleSearch();
+      }
+    },
+    [handleSearch]
+  );
 
   return (
     <div className="search-component">
@@ -288,8 +308,16 @@ const SearchComponent: React.FC<{
               onKeyPress={handleKeyPress}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             />
-            <svg className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            <svg
+              className="absolute left-3 top-3.5 w-5 h-5 text-gray-400"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <button
@@ -360,7 +388,8 @@ const SearchComponent: React.FC<{
         <div className="search-results">
           <div className="results-header mb-4">
             <p className="text-gray-600">
-              Found {searchResults.pagination.totalResults} results in {searchResults.analytics.searchTime}ms
+              Found {searchResults.pagination.totalResults} results in{' '}
+              {searchResults.analytics.searchTime}ms
             </p>
           </div>
 
@@ -403,10 +432,13 @@ const TrendingContentComponent: React.FC<{
 }> = ({ trendingContent, onTimeframeChange, onContentClick }) => {
   const [activeTimeframe, setActiveTimeframe] = useState(trendingContent.timeframe);
 
-  const handleTimeframeChange = useCallback((timeframe: string) => {
-    setActiveTimeframe(timeframe as any);
-    onTimeframeChange(timeframe);
-  }, [onTimeframeChange]);
+  const handleTimeframeChange = useCallback(
+    (timeframe: string) => {
+      setActiveTimeframe(timeframe as any);
+      onTimeframeChange(timeframe);
+    },
+    [onTimeframeChange]
+  );
 
   const timeframeOptions = [
     { value: '1h', label: 'Last Hour', icon: '⚡' },
@@ -421,7 +453,7 @@ const TrendingContentComponent: React.FC<{
       {/* Header */}
       <div className="trending-header mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Trending Now</h2>
-        
+
         {/* Timeframe Selector */}
         <div className="timeframe-selector flex flex-wrap gap-2 mb-4">
           {timeframeOptions.map((option) => (
@@ -490,15 +522,16 @@ const TrendingContentComponent: React.FC<{
             <div key={category.categoryId} className="category-stat bg-white p-4 rounded-lg border">
               <div className="flex justify-between items-center">
                 <h4 className="font-medium text-gray-900">{category.name}</h4>
-                <span className={`text-sm px-2 py-1 rounded ${
-                  category.growth > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                }`}>
-                  {category.growth > 0 ? '+' : ''}{(category.growth * 100).toFixed(1)}%
+                <span
+                  className={`text-sm px-2 py-1 rounded ${
+                    category.growth > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                  }`}
+                >
+                  {category.growth > 0 ? '+' : ''}
+                  {(category.growth * 100).toFixed(1)}%
                 </span>
               </div>
-              <div className="text-2xl font-bold text-blue-600 mt-2">
-                {category.trendingCount}
-              </div>
+              <div className="text-2xl font-bold text-blue-600 mt-2">{category.trendingCount}</div>
               <div className="text-sm text-gray-500">trending items</div>
             </div>
           ))}
@@ -517,12 +550,11 @@ const SupporterExperience: React.FC<SupporterExperienceProps> = ({
   onContentInteraction,
   onSearchQuery,
 }) => {
-  const {
-    enablePersonalizedFeed,
-    enableCategoryBrowsing,
-    enableAdvancedSearch,
-    enableTrendingContent,
-  } = useFeatureFlags();
+  const { flags } = useFeatureFlags();
+  const enablePersonalizedFeed = flags?.enablePersonalizedFeed ?? true;
+  const enableCategoryBrowsing = flags?.enableCategoryBrowsing ?? true;
+  const enableAdvancedSearch = flags?.enableAdvancedSearch ?? true;
+  const enableTrendingContent = flags?.enableTrendingContent ?? true;
 
   const {
     personalizedFeed,
@@ -553,23 +585,29 @@ const SupporterExperience: React.FC<SupporterExperienceProps> = ({
     }
   }, [activeTab, enablePersonalizedFeed, enableCategoryBrowsing, enableTrendingContent]);
 
-  const handleContentClick = useCallback((content: FeedContentItem) => {
-    onContentInteraction?.(content.id, 'click');
-    // Navigate to content detail page
-  }, [onContentInteraction]);
+  const handleContentClick = useCallback(
+    (content: FeedContentItem) => {
+      onContentInteraction?.(content.id, 'click');
+      // Navigate to content detail page
+    },
+    [onContentInteraction]
+  );
 
-  const handleSearch = useCallback((query: SearchQuery) => {
-    setSearchQuery(query);
-    searchContent(query);
-    onSearchQuery?.(query.query);
-  }, [searchContent, onSearchQuery]);
+  const handleSearch = useCallback(
+    (query: SearchQuery) => {
+      setSearchQuery(query);
+      searchContent(query);
+      onSearchQuery?.(query.query);
+    },
+    [searchContent, onSearchQuery]
+  );
 
   const tabs = [
     { id: 'feed', label: 'Your Feed', icon: '🏠', enabled: enablePersonalizedFeed },
     { id: 'categories', label: 'Browse', icon: '📂', enabled: enableCategoryBrowsing },
     { id: 'search', label: 'Search', icon: '🔍', enabled: enableAdvancedSearch },
     { id: 'trending', label: 'Trending', icon: '📈', enabled: enableTrendingContent },
-  ].filter(tab => tab.enabled);
+  ].filter((tab) => tab.enabled);
 
   if (error) {
     return (
@@ -677,7 +715,9 @@ const ContentCard: React.FC<{
     >
       {/* Thumbnail */}
       {content.thumbnailUrl && (
-        <div className={`thumbnail ${viewMode === 'list' ? 'w-32 h-20' : 'w-full h-40'} bg-gray-200 rounded-lg mb-3 overflow-hidden`}>
+        <div
+          className={`thumbnail ${viewMode === 'list' ? 'w-32 h-20' : 'w-full h-40'} bg-gray-200 rounded-lg mb-3 overflow-hidden`}
+        >
           <img
             src={content.thumbnailUrl}
             alt={content.title}
@@ -744,14 +784,14 @@ const CategoryCard: React.FC<{
         <h3 className="font-semibold text-gray-900">{category.name}</h3>
         {category.isTrending && <span className="text-orange-500">🔥</span>}
       </div>
-      
+
       <p className="text-gray-600 text-sm mb-3">{category.description}</p>
-      
+
       <div className="flex justify-between text-sm text-gray-500">
         <span>{category.metadata.contentCount} items</span>
         <span>{category.metadata.creatorCount} creators</span>
       </div>
-      
+
       {isFeatured && (
         <div className="mt-2 text-xs text-blue-600 font-medium">
           {category.isPopular ? '⭐ Popular' : '🔥 Trending'}
@@ -774,11 +814,11 @@ const SearchResultCard: React.FC<{ content: FeedContentItem }> = ({ content }) =
             />
           </div>
         )}
-        
+
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900 mb-1">{content.title}</h3>
           <p className="text-gray-600 text-sm mb-2">{content.description}</p>
-          
+
           <div className="flex items-center justify-between text-sm text-gray-500">
             <div className="flex items-center space-x-4">
               <span>{content.creatorName}</span>
@@ -797,8 +837,9 @@ const TrendingContentCard: React.FC<{
   rank: number;
   onClick: () => void;
 }> = ({ item, rank, onClick }) => {
-  const trendingColor = rank <= 3 ? 'text-orange-500' : rank <= 10 ? 'text-yellow-500' : 'text-gray-500';
-  
+  const trendingColor =
+    rank <= 3 ? 'text-orange-500' : rank <= 10 ? 'text-yellow-500' : 'text-gray-500';
+
   return (
     <div
       onClick={onClick}
@@ -809,7 +850,7 @@ const TrendingContentCard: React.FC<{
         <div className={`rank-badge text-2xl font-bold ${trendingColor} w-12 text-center`}>
           #{rank}
         </div>
-        
+
         {/* Thumbnail */}
         {item.content.thumbnailUrl && (
           <div className="thumbnail w-20 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
@@ -820,7 +861,7 @@ const TrendingContentCard: React.FC<{
             />
           </div>
         )}
-        
+
         {/* Content Info */}
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900 mb-1">{item.content.title}</h3>
@@ -832,7 +873,7 @@ const TrendingContentCard: React.FC<{
             </span>
           </div>
         </div>
-        
+
         {/* Trending Reasons */}
         <div className="trending-reasons flex flex-wrap gap-1">
           {item.reasons.slice(0, 2).map((reason: any, index: number) => (

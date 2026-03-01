@@ -22,8 +22,6 @@ import layoutReducer, {
   toggleZenMode,
   resetLayout,
   type LayoutState,
-  type PanelConfig,
-  type ViewMode,
 } from './layoutSlice';
 
 describe('layoutSlice', () => {
@@ -114,25 +112,16 @@ describe('layoutSlice', () => {
 
   describe('Panel actions', () => {
     it('should handle resizePanel within bounds', () => {
-      const state = layoutReducer(
-        getInitialState(),
-        resizePanel({ id: 'sidebar', size: 300 })
-      );
+      const state = layoutReducer(getInitialState(), resizePanel({ id: 'sidebar', size: 300 }));
 
       expect(state.panels.sidebar.size).toBe(300);
     });
 
     it('should clamp panel size to min/max bounds', () => {
-      let state = layoutReducer(
-        getInitialState(),
-        resizePanel({ id: 'sidebar', size: 100 })
-      );
+      let state = layoutReducer(getInitialState(), resizePanel({ id: 'sidebar', size: 100 }));
       expect(state.panels.sidebar.size).toBe(150); // minSize
 
-      state = layoutReducer(
-        getInitialState(),
-        resizePanel({ id: 'sidebar', size: 600 })
-      );
+      state = layoutReducer(getInitialState(), resizePanel({ id: 'sidebar', size: 600 }));
       expect(state.panels.sidebar.size).toBe(500); // maxSize
     });
 
@@ -220,10 +209,7 @@ describe('layoutSlice', () => {
     });
 
     it('should handle setMobileMenuOpen', () => {
-      const state = layoutReducer(
-        getInitialState(),
-        setMobileMenuOpen(true)
-      );
+      const state = layoutReducer(getInitialState(), setMobileMenuOpen(true));
 
       expect(state.isMobileMenuOpen).toBe(true);
     });
@@ -245,10 +231,7 @@ describe('layoutSlice', () => {
     });
 
     it('should handle setSplitOrientation', () => {
-      const state = layoutReducer(
-        getInitialState(),
-        setSplitOrientation('horizontal')
-      );
+      const state = layoutReducer(getInitialState(), setSplitOrientation('horizontal'));
 
       expect(state.splitOrientation).toBe('horizontal');
     });

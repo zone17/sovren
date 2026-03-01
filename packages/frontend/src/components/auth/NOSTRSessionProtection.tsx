@@ -513,6 +513,7 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
         clearInterval(concurrentDetectionInterval);
       };
     }
+    return undefined;
   }, [currentSession, validateSession, detectConcurrentSessions]);
 
   // 🎨 Auto-clear messages
@@ -524,6 +525,7 @@ export const NOSTRSessionProtection: React.FC<SessionProtectionProps> = ({
       }, 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [error, success]);
 
   // 🧹 Cleanup on unmount

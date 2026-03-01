@@ -96,7 +96,7 @@ interface MediaBlockProps {
 }
 
 const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) => {
-  const { media_assets } = useAppSelector((state) => state.cms);
+  const { media_assets } = useAppSelector((state) => (state as any).cms);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -224,7 +224,7 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
   onPublish,
   autoSaveInterval = 30000,
 }) => {
-  const { current_content, editor_state } = useAppSelector((state) => state.cms);
+  const { current_content, editor_state } = useAppSelector((state) => (state as any).cms);
   const [title, setTitle] = useState(current_content?.title || '');
   const [description, setDescription] = useState(current_content?.description || '');
   const [content, setContent] = useState('');

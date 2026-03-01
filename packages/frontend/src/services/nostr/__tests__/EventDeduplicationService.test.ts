@@ -16,15 +16,10 @@
  * Target: ≥90% coverage
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { NostrEvent } from '@shared/types/nostr';
-import { NostrEventKind } from '@shared/types/nostr';
-import {
-  EventDeduplicationService,
-  DeduplicationConfig,
-  DeduplicationStats,
-  DeduplicationResult,
-} from '../EventDeduplicationService';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import type { NostrEvent } from '@shared/types/nostr/index';
+import { NostrEventKind } from '@shared/types/nostr/index';
+import { EventDeduplicationService, DeduplicationConfig } from '../EventDeduplicationService';
 
 describe('EventDeduplicationService', () => {
   let service: EventDeduplicationService;
@@ -381,7 +376,7 @@ describe('EventDeduplicationService', () => {
       await service.checkDuplicate(event, 'wss://relay1.com');
 
       // Wait 2 seconds (within default 5s window)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Late arrival from another relay
       const result = await service.checkDuplicate(event, 'wss://relay2.com');
@@ -401,7 +396,7 @@ describe('EventDeduplicationService', () => {
       await customService.checkDuplicate(event);
 
       // Wait for window to expire
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       // Check should still detect as duplicate (event in cache)
       const result = await customService.checkDuplicate(event);
@@ -470,11 +465,11 @@ describe('EventDeduplicationService', () => {
       const event3 = createEvent({ content: 'Event 3 content' });
 
       const events = [
-        event1,         // First occurrence of event1
-        event2,         // First occurrence of event2
-        event1,         // Duplicate of event1
-        event3,         // First occurrence of event3
-        event2,         // Duplicate of event2
+        event1, // First occurrence of event1
+        event2, // First occurrence of event2
+        event1, // Duplicate of event1
+        event3, // First occurrence of event3
+        event2, // Duplicate of event2
       ];
 
       const results = await service.checkDuplicateBatch(events);
@@ -482,9 +477,9 @@ describe('EventDeduplicationService', () => {
       expect(results).toHaveLength(5);
       expect(results[0].isDuplicate).toBe(false); // event1 first
       expect(results[1].isDuplicate).toBe(false); // event2 first
-      expect(results[2].isDuplicate).toBe(true);  // event1 duplicate
+      expect(results[2].isDuplicate).toBe(true); // event1 duplicate
       expect(results[3].isDuplicate).toBe(false); // event3 first
-      expect(results[4].isDuplicate).toBe(true);  // event2 duplicate
+      expect(results[4].isDuplicate).toBe(true); // event2 duplicate
     });
 
     it('should handle empty batch', async () => {
@@ -495,10 +490,7 @@ describe('EventDeduplicationService', () => {
     it('should maintain relay information in batch', async () => {
       const event = createEvent();
 
-      const results = await service.checkDuplicateBatch(
-        [event, event],
-        'wss://relay.test.com'
-      );
+      const results = await service.checkDuplicateBatch([event, event], 'wss://relay.test.com');
 
       expect(results[0].isDuplicate).toBe(false);
       expect(results[1].isDuplicate).toBe(true);
@@ -676,7 +668,7 @@ describe('EventDeduplicationService', () => {
       ]);
 
       // At least one should be unique
-      const uniqueResults = results.filter(r => !r.isDuplicate);
+      const uniqueResults = results.filter((r) => !r.isDuplicate);
       expect(uniqueResults.length).toBeGreaterThan(0);
     });
   });
@@ -715,7 +707,7 @@ describe('EventDeduplicationService', () => {
       const events = Array.from({ length: 1000 }, () => createEvent());
 
       const start = performance.now();
-      await Promise.all(events.map(e => service.checkDuplicate(e)));
+      await Promise.all(events.map((e) => service.checkDuplicate(e)));
       const duration = performance.now() - start;
 
       // Should complete in less than 1 second

@@ -196,7 +196,10 @@ const ActiveSubscriptionsTab: React.FC<{
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-gray-600">Amount</p>
-                  <p className="font-semibold">⚡ {formatSats(subscription.amount_sats, { abbreviate: true, suffix: false })} sats</p>
+                  <p className="font-semibold">
+                    ⚡ {formatSats(subscription.amount_sats, { abbreviate: true, suffix: false })}{' '}
+                    sats
+                  </p>
                   <p className="text-xs text-gray-500">
                     ≈ ${((subscription.amount_sats / 100000000) * 30000).toFixed(2)} USD
                   </p>
@@ -243,7 +246,11 @@ const ActiveSubscriptionsTab: React.FC<{
                     <div>
                       <p className="text-gray-600">Value Received</p>
                       <p className="font-semibold">
-                        ⚡ {formatSats(subscription.usage_stats.total_value_received, { abbreviate: true, suffix: false })}
+                        ⚡{' '}
+                        {formatSats(subscription.usage_stats.total_value_received, {
+                          abbreviate: true,
+                          suffix: false,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -612,7 +619,9 @@ const SubscriptionHistoryTab: React.FC<{
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">⚡ {formatSats(item.amount_sats, { abbreviate: true, suffix: false })}</p>
+                    <p className="font-semibold">
+                      ⚡ {formatSats(item.amount_sats, { abbreviate: true, suffix: false })}
+                    </p>
                     <p className="text-xs text-gray-500">
                       ≈ ${((item.amount_sats / 100000000) * 30000).toFixed(2)}
                     </p>
@@ -638,7 +647,8 @@ const SubscriptionHistoryTab: React.FC<{
 
 // Main Component
 export const UserSubscriptionManager: React.FC = () => {
-  const featureFlags = useFeatureFlags();
+  const { flags: featureFlagsData } = useFeatureFlags();
+  const featureFlags = featureFlagsData ?? ({} as any);
   const {
     subscriptions,
     paymentMethods,

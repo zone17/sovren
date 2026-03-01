@@ -15,13 +15,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NIP05Service } from '../NIP05Service';
-import type {
-  NIP05Identifier,
-  NIP05VerificationResult,
-  NIP05VerificationStatus,
-  NIP05ErrorCode,
-  NIP05WellKnownResponse,
-} from '@shared/types/nip05';
+import type { NIP05WellKnownResponse } from '@shared/types/nip05';
 
 // ========================================
 // Test Setup

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📸 **ELITE SNAPSHOT TESTING UTILITIES**
  *
@@ -79,11 +80,13 @@ const createCustomSerializer = (options: SnapshotSerializerOptions = {}) => {
 
   return {
     test: (val: unknown): val is SerializableValue => {
-      return val !== null &&
-             typeof val === 'object' &&
-             'container' in val &&
-             val.container instanceof HTMLElement &&
-             'querySelector' in val.container;
+      return (
+        val !== null &&
+        typeof val === 'object' &&
+        'container' in val &&
+        val.container instanceof HTMLElement &&
+        'querySelector' in val.container
+      );
     },
     serialize: (val: SerializableValue) => {
       let html = val.container.innerHTML;

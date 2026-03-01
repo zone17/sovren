@@ -7,7 +7,7 @@ import { NotificationService, getNotificationService } from '../services/Notific
 import { Notification, NotificationType, NotificationPreferences } from '../types';
 
 // In-memory store shared across mock DB operations so get() can look up what add() stored
-let mockDbStore: Map<string, any> = new Map();
+const mockDbStore: Map<string, any> = new Map();
 
 /** Create a request that fires onsuccess asynchronously (microtask) with the given result. */
 function makeAsyncRequest(result: unknown = undefined) {
@@ -20,12 +20,18 @@ function makeAsyncRequest(result: unknown = undefined) {
       // Fire via queueMicrotask so Promises inside the service resolve properly
       if (fn) queueMicrotask(() => fn({ target: req }));
     },
-    get() { return _onsuccess; },
+    get() {
+      return _onsuccess;
+    },
     configurable: true,
   });
   Object.defineProperty(req, 'onerror', {
-    set(fn: any) { _onerror = fn; },
-    get() { return _onerror; },
+    set(fn: any) {
+      _onerror = fn;
+    },
+    get() {
+      return _onerror;
+    },
     configurable: true,
   });
   return req;
@@ -40,7 +46,9 @@ class MockIDBObjectStore {
   add = vi.fn((value: any) => {
     const req = makeAsyncRequest();
     // Store the value keyed by its id so get() can retrieve it
-    queueMicrotask(() => { mockDbStore.set(value.id, value); });
+    queueMicrotask(() => {
+      mockDbStore.set(value.id, value);
+    });
     return req;
   });
   get = vi.fn((id: string) => {
@@ -49,12 +57,16 @@ class MockIDBObjectStore {
   });
   put = vi.fn((value: any) => {
     const req = makeAsyncRequest();
-    queueMicrotask(() => { mockDbStore.set(value.id, value); });
+    queueMicrotask(() => {
+      mockDbStore.set(value.id, value);
+    });
     return req;
   });
   delete = vi.fn((id: string) => {
     const req = makeAsyncRequest();
-    queueMicrotask(() => { mockDbStore.delete(id); });
+    queueMicrotask(() => {
+      mockDbStore.delete(id);
+    });
     return req;
   });
   index = vi.fn(() => ({
@@ -81,7 +93,11 @@ const mockIDBKeyRange = {
   only: vi.fn((value: any) => ({ value })),
 };
 // @ts-ignore
-Object.defineProperty(globalThis, 'IDBKeyRange', { value: mockIDBKeyRange, writable: true, configurable: true });
+Object.defineProperty(globalThis, 'IDBKeyRange', {
+  value: mockIDBKeyRange,
+  writable: true,
+  configurable: true,
+});
 
 const mockIndexedDB = {
   open: vi.fn(() => {
@@ -96,7 +112,9 @@ const mockIndexedDB = {
         // Tests that need DB operations must await waitForInit() before calling service methods.
         if (fn) setTimeout(() => fn({ target: request }), 0);
       },
-      get() { return _onsuccess; },
+      get() {
+        return _onsuccess;
+      },
       configurable: true,
     });
     request.onerror = null;
@@ -106,12 +124,16 @@ const mockIndexedDB = {
 };
 
 // @ts-ignore
-Object.defineProperty(globalThis, "indexedDB", { value: mockIndexedDB, writable: true, configurable: true });
+Object.defineProperty(globalThis, 'indexedDB', {
+  value: mockIndexedDB,
+  writable: true,
+  configurable: true,
+});
 
 /** Wait for the NotificationService to finish initialization (DB open + load + cleanup). */
 async function waitForInit() {
   // Allow setTimeout(0) for openDatabase onsuccess to fire, then drain microtasks
-  await new Promise(resolve => setTimeout(resolve, 10));
+  await new Promise((resolve) => setTimeout(resolve, 10));
 }
 
 // Mock localStorage

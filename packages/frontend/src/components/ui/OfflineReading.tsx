@@ -458,7 +458,7 @@ export const OfflineReading: React.FC<OfflineReadingProps> = ({
 }) => {
   // Feature flags
   const { flags } = useFeatureFlags();
-  const isEnabled = flags.enableOfflineCapabilities && flags.enableOfflineReading;
+  const isEnabled = flags?.enableOfflineCapabilities && flags?.enableOfflineReading;
 
   // State management
   const [currentArticle, setCurrentArticle] = useState<Article | null>(null);

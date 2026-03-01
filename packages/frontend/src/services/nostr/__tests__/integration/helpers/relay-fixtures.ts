@@ -6,7 +6,7 @@
  */
 
 import { SimplePool } from 'nostr-tools';
-import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
+import type { NostrEvent, NostrFilter } from '@shared/types/nostr/index';
 
 /**
  * Relay fixture for testing
@@ -102,10 +102,7 @@ export class RelayFixture {
   /**
    * Query events (one-time fetch)
    */
-  async queryEvents(
-    filters: NostrFilter[],
-    timeoutMs: number = 5000
-  ): Promise<NostrEvent[]> {
+  async queryEvents(filters: NostrFilter[], timeoutMs: number = 5000): Promise<NostrEvent[]> {
     const events: NostrEvent[] = [];
 
     return new Promise((resolve, reject) => {
@@ -158,7 +155,7 @@ export class MultiRelayFixture {
 
   constructor(relayUrls: string[]) {
     this.relayUrls = relayUrls;
-    this.fixtures = relayUrls.map(url => new RelayFixture(url));
+    this.fixtures = relayUrls.map((url) => new RelayFixture(url));
   }
 
   /**
@@ -169,7 +166,7 @@ export class MultiRelayFixture {
     failed: string[];
   }> {
     const results = await Promise.allSettled(
-      this.fixtures.map(fixture => fixture.connect(timeoutMs))
+      this.fixtures.map((fixture) => fixture.connect(timeoutMs))
     );
 
     const successful: string[] = [];
@@ -191,7 +188,7 @@ export class MultiRelayFixture {
    * Disconnect from all relays
    */
   disconnectAll(): void {
-    this.fixtures.forEach(fixture => fixture.disconnect());
+    this.fixtures.forEach((fixture) => fixture.disconnect());
   }
 
   /**
@@ -202,7 +199,7 @@ export class MultiRelayFixture {
     timeoutMs: number = 3000
   ): Promise<Array<{ relay: string; success: boolean; latency: number; error?: Error }>> {
     const results = await Promise.all(
-      this.fixtures.map(async fixture => {
+      this.fixtures.map(async (fixture) => {
         const result = await fixture.publishEvent(event, timeoutMs);
         return {
           relay: fixture.getUrl(),
@@ -222,11 +219,11 @@ export class MultiRelayFixture {
     onEvent: (event: NostrEvent, relay: string) => void,
     onEOSE?: (relay: string) => void
   ): { subIds: string[]; unsubscribeAll: () => void } {
-    const subscriptions = this.fixtures.map(fixture => {
+    const subscriptions = this.fixtures.map((fixture) => {
       const url = fixture.getUrl();
       return fixture.subscribe(
         filters,
-        event => onEvent(event, url),
+        (event) => onEvent(event, url),
         () => {
           if (onEOSE) onEOSE(url);
         }
@@ -234,9 +231,9 @@ export class MultiRelayFixture {
     });
 
     return {
-      subIds: subscriptions.map(sub => sub.subId),
+      subIds: subscriptions.map((sub) => sub.subId),
       unsubscribeAll: () => {
-        subscriptions.forEach(sub => sub.unsubscribe());
+        subscriptions.forEach((sub) => sub.unsubscribe());
       },
     };
   }
@@ -245,23 +242,21 @@ export class MultiRelayFixture {
    * Get connected relay count
    */
   getConnectedCount(): number {
-    return this.fixtures.filter(f => f.isConnected()).length;
+    return this.fixtures.filter((f) => f.isConnected()).length;
   }
 
   /**
    * Get connected relay URLs
    */
   getConnectedUrls(): string[] {
-    return this.fixtures
-      .filter(f => f.isConnected())
-      .map(f => f.getUrl());
+    return this.fixtures.filter((f) => f.isConnected()).map((f) => f.getUrl());
   }
 
   /**
    * Cleanup all fixtures
    */
   cleanup(): void {
-    this.fixtures.forEach(fixture => fixture.cleanup());
+    this.fixtures.forEach((fixture) => fixture.cleanup());
   }
 }
 
@@ -270,7 +265,10 @@ export class MultiRelayFixture {
  */
 export class MockRelay {
   private events: Map<string, NostrEvent> = new Map();
-  private subscriptions: Map<string, { filters: NostrFilter[]; callback: (event: NostrEvent) => void }> = new Map();
+  private subscriptions: Map<
+    string,
+    { filters: NostrFilter[]; callback: (event: NostrEvent) => void }
+  > = new Map();
   private connected: boolean = true;
   private latencyMs: number;
 
@@ -349,7 +347,7 @@ export class MockRelay {
    * Check if event matches filters
    */
   private matchesFilters(event: NostrEvent, filters: NostrFilter[]): boolean {
-    return filters.some(filter => {
+    return filters.some((filter) => {
       if (filter.kinds && !filter.kinds.includes(event.kind)) return false;
       if (filter.authors && !filter.authors.includes(event.pubkey)) return false;
       if (filter.ids && !filter.ids.includes(event.id)) return false;
@@ -363,7 +361,7 @@ export class MockRelay {
    * Simulate network latency
    */
   private simulateLatency(): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, this.latencyMs));
+    return new Promise((resolve) => setTimeout(resolve, this.latencyMs));
   }
 
   /**

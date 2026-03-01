@@ -7,11 +7,11 @@
  */
 
 export { FilterBuilder } from './FilterBuilder';
-export { default as NostrKeyManagement } from './NostrKeyManagement';
+export { NostrKeyManagement } from './NostrKeyManagement';
 export { DMInbox } from './DMInbox';
 export { NostrMonitoringDashboard } from './NostrMonitoringDashboard';
 export { default as NostrMonitoringDashboardDefault } from './NostrMonitoringDashboard';
 
 // Re-export types for convenience
-export type { NostrFilter, NostrFilterBuilder, CommonFilters } from '@shared/types/nostr';
+export type { NostrFilter, NostrFilterBuilder, CommonFilters } from '@shared/types/nostr/index';
 export type { NostrMonitoringDashboardProps } from './NostrMonitoringDashboard';

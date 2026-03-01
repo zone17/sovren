@@ -12,7 +12,6 @@ import {
   RateLimitOperation,
   RateLimitDenialReason,
   RequestPriority,
-  RateLimitAlertType,
   type RateLimitConfig,
   type RateLimitEvent,
   type RateLimitAlert,
@@ -94,7 +93,7 @@ describe('RateLimiter', () => {
         rateLimiter.checkLimit({ operation: RateLimitOperation.PUBLISH_EVENT }),
       ]);
 
-      expect(results.every(r => r.allowed)).toBe(true);
+      expect(results.every((r) => r.allowed)).toBe(true);
     });
 
     it('should deny requests exceeding rate limit', async () => {
@@ -142,7 +141,7 @@ describe('RateLimiter', () => {
       expect(deniedResult.allowed).toBe(false);
 
       // Wait for tokens to refill (1 second)
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await new Promise((resolve) => setTimeout(resolve, 1100));
 
       // Should be allowed again
       const allowedResult = await rateLimiter.checkLimit({
@@ -166,7 +165,7 @@ describe('RateLimiter', () => {
           )
       );
 
-      expect(results.every(r => r.allowed)).toBe(true);
+      expect(results.every((r) => r.allowed)).toBe(true);
 
       // The 6th should fail
       const result = await rateLimiter.checkLimit({
@@ -194,7 +193,7 @@ describe('RateLimiter', () => {
             })
           )
       );
-      expect(publishResults.every(r => r.allowed)).toBe(true);
+      expect(publishResults.every((r) => r.allowed)).toBe(true);
 
       const subscribeResults = await Promise.all(
         Array(3)
@@ -206,7 +205,7 @@ describe('RateLimiter', () => {
             })
           )
       );
-      expect(subscribeResults.every(r => r.allowed)).toBe(true);
+      expect(subscribeResults.every((r) => r.allowed)).toBe(true);
 
       // Both should be exhausted now
       const publishDenied = await rateLimiter.checkLimit({
@@ -262,7 +261,7 @@ describe('RateLimiter', () => {
             })
           )
       );
-      expect(results.every(r => r.allowed)).toBe(true);
+      expect(results.every((r) => r.allowed)).toBe(true);
 
       // 4th should fail
       const deniedResult = await rateLimiter.checkLimit({
@@ -289,7 +288,7 @@ describe('RateLimiter', () => {
             })
           )
       );
-      expect(results.every(r => r.allowed)).toBe(true);
+      expect(results.every((r) => r.allowed)).toBe(true);
     });
 
     it('should track relay statistics', async () => {
@@ -336,8 +335,7 @@ describe('RateLimiter', () => {
       // Make 30 requests across different operations (global limit)
       const requests = [];
       for (let i = 0; i < 30; i++) {
-        const operation =
-          i % 2 === 0 ? RateLimitOperation.QUERY : RateLimitOperation.FETCH_EVENT;
+        const operation = i % 2 === 0 ? RateLimitOperation.QUERY : RateLimitOperation.FETCH_EVENT;
         requests.push(
           rateLimiter.checkLimit({
             operation,
@@ -347,7 +345,7 @@ describe('RateLimiter', () => {
       }
 
       const results = await Promise.all(requests);
-      expect(results.every(r => r.allowed)).toBe(true);
+      expect(results.every((r) => r.allowed)).toBe(true);
 
       // 31st request should fail (global limit exceeded)
       const deniedResult = await rateLimiter.checkLimit({
@@ -420,13 +418,17 @@ describe('RateLimiter', () => {
       const queuePromises = Array(5)
         .fill(null)
         .map(() =>
-          rateLimiter.checkLimit({
-            operation: RateLimitOperation.PUBLISH_EVENT,
-          }).catch(() => { /* silenced: destroyed by afterEach */ })
+          rateLimiter
+            .checkLimit({
+              operation: RateLimitOperation.PUBLISH_EVENT,
+            })
+            .catch(() => {
+              /* silenced: destroyed by afterEach */
+            })
         );
 
       // Wait a bit for queue to fill
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // This should be rejected (queue full)
       const result = await rateLimiter.checkLimit({
@@ -510,7 +512,7 @@ describe('RateLimiter', () => {
         });
 
       // Add small delay between queuing to ensure order
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const normalPromise = rateLimiter
         .checkLimit({
@@ -521,7 +523,7 @@ describe('RateLimiter', () => {
           results.push({ priority: RequestPriority.NORMAL, time: Date.now() });
         });
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const highPromise = rateLimiter
         .checkLimit({
@@ -665,7 +667,7 @@ describe('RateLimiter', () => {
           )
       );
 
-      expect(results.every(r => r.allowed)).toBe(true);
+      expect(results.every((r) => r.allowed)).toBe(true);
     });
   });
 
@@ -703,7 +705,7 @@ describe('RateLimiter', () => {
       }
 
       // Should eventually emit an alert
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(alerts.length).toBeGreaterThan(0);
     });

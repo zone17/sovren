@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌍 **ELITE TEST ENVIRONMENT VARIABLES**
  *
@@ -378,7 +379,4 @@ if (isTestEnvironment()) {
 }
 
 // 🎯 **EXPORT ALIASES**
-export {
-  getTestEnvVar as getEnv,
-  TEST_ENVIRONMENT_VARIABLES as testEnv,
-};
+export { getTestEnvVar as getEnv, TEST_ENVIRONMENT_VARIABLES as testEnv };

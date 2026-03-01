@@ -3,7 +3,7 @@
  * US-315: Quick validation tests for key management
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('KeyManagementService - Basic Validation', () => {
   it('should import without errors', async () => {

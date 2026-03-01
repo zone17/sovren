@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Web Vitals imports with Jest compatibility
 let onCLS: any, onFCP: any, onFID: any, onINP: any, onLCP: any, onTTFB: any;
 

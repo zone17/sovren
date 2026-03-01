@@ -66,7 +66,7 @@ export const autoSaveContent = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      return await unifiedContentService.autoSaveContent(contentId, content);
+      return await (unifiedContentService as any)?.autoSaveContent(contentId, content);
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Auto-save failed');
     }

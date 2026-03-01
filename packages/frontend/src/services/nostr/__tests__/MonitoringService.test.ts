@@ -19,13 +19,8 @@ import { MonitoringService } from '../MonitoringService';
 import { RelayPoolManager } from '../RelayPoolManager';
 import { EventPublisherService } from '../EventPublisherService';
 import { SubscriptionManagerService } from '../SubscriptionManagerService';
-import {
-  AlertType,
-  AlertSeverity,
-  HealthStatus,
-} from '../types/monitoring';
+import { AlertType, AlertSeverity, HealthStatus } from '../types/monitoring';
 import { RelayStatus, RelayHealth } from '../types';
-import type { NostrEvent } from '@shared/types/nostr';
 
 // Mock dependencies
 vi.mock('../RelayPoolManager');
@@ -87,9 +82,7 @@ describe('MonitoringService', () => {
 
       await monitoringService.initialize();
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Already initialized')
-      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Already initialized'));
 
       consoleWarnSpy.mockRestore();
     });
@@ -99,18 +92,13 @@ describe('MonitoringService', () => {
 
       await monitoringService.initialize({ enabled: false });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Monitoring disabled')
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Monitoring disabled'));
 
       consoleLogSpy.mockRestore();
     });
 
     it('should initialize relay metrics for all configured relays', async () => {
-      mockRelayPool.getConfiguredRelays.mockReturnValue([
-        'wss://relay1.com',
-        'wss://relay2.com',
-      ]);
+      mockRelayPool.getConfiguredRelays.mockReturnValue(['wss://relay1.com', 'wss://relay2.com']);
 
       await monitoringService.initialize();
 
@@ -158,13 +146,13 @@ describe('MonitoringService', () => {
 
       // Trigger relay connected event
       const connectHandler = (mockRelayPool.on as any).mock.calls.find(
-        call => call[0] === 'relay:connected'
+        (call) => call[0] === 'relay:connected'
       )?.[1];
 
       connectHandler('wss://relay1.com');
 
       const metrics = monitoringService.getMetrics();
-      const relayMetric = metrics.relayHealth.find(r => r.url === 'wss://relay1.com');
+      const relayMetric = metrics.relayHealth.find((r) => r.url === 'wss://relay1.com');
 
       expect(relayMetric).toBeDefined();
       expect(relayMetric?.status).toBe(RelayStatus.CONNECTED);
@@ -180,7 +168,7 @@ describe('MonitoringService', () => {
 
       // Trigger disconnect
       const disconnectHandler = (mockRelayPool.on as any).mock.calls.find(
-        call => call[0] === 'relay:disconnected'
+        (call) => call[0] === 'relay:disconnected'
       )?.[1];
 
       disconnectHandler('wss://relay1.com');
@@ -212,7 +200,7 @@ describe('MonitoringService', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.CONNECTED);
 
       const connectHandler = (mockRelayPool.on as any).mock.calls.find(
-        call => call[0] === 'relay:connected'
+        (call) => call[0] === 'relay:connected'
       )?.[1];
 
       connectHandler('wss://relay1.com');
@@ -271,9 +259,7 @@ describe('MonitoringService', () => {
       const publishResult = {
         success: true,
         eventId: 'event123',
-        relayResults: [
-          { relay: 'wss://relay1.com', success: true, latency: 150 },
-        ],
+        relayResults: [{ relay: 'wss://relay1.com', success: true, latency: 150 }],
         publishedTo: ['wss://relay1.com'],
         failedRelays: [],
         timestamp: Date.now(),
@@ -282,7 +268,7 @@ describe('MonitoringService', () => {
 
       // Trigger publish event
       const publishHandler = (mockPublisher.on as any).mock.calls.find(
-        call => call[0] === 'event:published'
+        (call) => call[0] === 'event:published'
       )?.[1];
 
       publishHandler(publishResult);
@@ -312,7 +298,7 @@ describe('MonitoringService', () => {
       };
 
       const publishHandler = (mockPublisher.on as any).mock.calls.find(
-        call => call[0] === 'event:published'
+        (call) => call[0] === 'event:published'
       )?.[1];
 
       publishHandler(publishResult);
@@ -326,7 +312,7 @@ describe('MonitoringService', () => {
       // Publish multiple events with different latencies
       const latencies = [100, 150, 200, 250, 300, 400, 500, 600, 800, 1000];
 
-      latencies.forEach(latency => {
+      latencies.forEach((latency) => {
         const publishResult = {
           success: true,
           eventId: `event${latency}`,
@@ -338,7 +324,7 @@ describe('MonitoringService', () => {
         };
 
         const publishHandler = (mockPublisher.on as any).mock.calls.find(
-          call => call[0] === 'event:published'
+          (call) => call[0] === 'event:published'
         )?.[1];
 
         publishHandler(publishResult);
@@ -346,7 +332,7 @@ describe('MonitoringService', () => {
 
       const metrics = monitoringService.getMetrics();
       const relay1Metrics = metrics.publishing.perRelayMetrics.find(
-        m => m.relay === 'wss://relay1.com'
+        (m) => m.relay === 'wss://relay1.com'
       );
 
       expect(relay1Metrics).toBeDefined();
@@ -378,7 +364,7 @@ describe('MonitoringService', () => {
         };
 
         const publishHandler = (mockPublisher.on as any).mock.calls.find(
-          call => call[0] === 'event:published'
+          (call) => call[0] === 'event:published'
         )?.[1];
 
         publishHandler(publishResult);
@@ -415,7 +401,7 @@ describe('MonitoringService', () => {
         };
 
         const publishHandler = (mockPublisher.on as any).mock.calls.find(
-          call => call[0] === 'event:published'
+          (call) => call[0] === 'event:published'
         )?.[1];
 
         publishHandler(publishResult);
@@ -496,13 +482,11 @@ describe('MonitoringService', () => {
       // Simulate publish events with various latencies
       const latencies = [50, 100, 150, 200, 300, 500, 1000];
 
-      latencies.forEach(latency => {
+      latencies.forEach((latency) => {
         const publishResult = {
           success: true,
           eventId: `event${latency}`,
-          relayResults: [
-            { relay: 'wss://relay1.com', success: true, latency },
-          ],
+          relayResults: [{ relay: 'wss://relay1.com', success: true, latency }],
           publishedTo: ['wss://relay1.com'],
           failedRelays: [],
           timestamp: Date.now(),
@@ -510,7 +494,7 @@ describe('MonitoringService', () => {
         };
 
         const publishHandler = (mockPublisher.on as any).mock.calls.find(
-          call => call[0] === 'event:published'
+          (call) => call[0] === 'event:published'
         )?.[1];
 
         publishHandler(publishResult);
@@ -558,7 +542,7 @@ describe('MonitoringService', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.DISCONNECTED);
 
       const disconnectHandler = (mockRelayPool.on as any).mock.calls.find(
-        call => call[0] === 'relay:disconnected'
+        (call) => call[0] === 'relay:disconnected'
       )?.[1];
 
       disconnectHandler('wss://relay1.com');
@@ -573,7 +557,7 @@ describe('MonitoringService', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.ERROR);
 
       const errorHandler = (mockRelayPool.on as any).mock.calls.find(
-        call => call[0] === 'relay:error'
+        (call) => call[0] === 'relay:error'
       )?.[1];
 
       errorHandler('wss://relay1.com', new Error('Connection failed'));
@@ -593,7 +577,7 @@ describe('MonitoringService', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.ERROR);
 
       const errorHandler = (mockRelayPool.on as any).mock.calls.find(
-        call => call[0] === 'relay:error'
+        (call) => call[0] === 'relay:error'
       )?.[1];
 
       errorHandler('wss://relay1.com', new Error('Error 1'));
@@ -626,7 +610,7 @@ describe('MonitoringService', () => {
       mockRelayPool.getRelayStatus.mockReturnValue(RelayStatus.ERROR);
 
       const errorHandler = (mockRelayPool.on as any).mock.calls.find(
-        call => call[0] === 'relay:error'
+        (call) => call[0] === 'relay:error'
       )?.[1];
 
       // Create more than max alerts
@@ -808,9 +792,7 @@ describe('MonitoringService', () => {
       const publishResult = {
         success: true,
         eventId: 'event123',
-        relayResults: [
-          { relay: 'wss://relay1.com', success: true, latency: 100 },
-        ],
+        relayResults: [{ relay: 'wss://relay1.com', success: true, latency: 100 }],
         publishedTo: ['wss://relay1.com'],
         failedRelays: [],
         timestamp: Date.now(),
@@ -818,7 +800,7 @@ describe('MonitoringService', () => {
       };
 
       const publishHandler = (mockPublisher.on as any).mock.calls.find(
-        call => call[0] === 'event:published'
+        (call) => call[0] === 'event:published'
       )?.[1];
 
       publishHandler(publishResult);
@@ -840,10 +822,7 @@ describe('MonitoringService', () => {
   // ============================================
 
   function setupDefaultMocks() {
-    mockRelayPool.getConfiguredRelays.mockReturnValue([
-      'wss://relay1.com',
-      'wss://relay2.com',
-    ]);
+    mockRelayPool.getConfiguredRelays.mockReturnValue(['wss://relay1.com', 'wss://relay2.com']);
 
     mockRelayPool.getRelayHealth.mockReturnValue({
       url: 'wss://relay.com',

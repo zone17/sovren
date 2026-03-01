@@ -19,7 +19,7 @@ vi.mock('@noble/secp256k1', async () => {
 
 import { getPublicKey, generateSecretKey, finalizeEvent } from 'nostr-tools/pure';
 import { NIP26Service } from '../NIP26Service';
-import type { NostrEvent, DelegationConditions } from '@shared/types/nostr';
+import type { NostrEvent, DelegationConditions } from '@shared/types/nostr/index';
 
 describe('NIP26Service', () => {
   let service: NIP26Service;
@@ -31,7 +31,9 @@ describe('NIP26Service', () => {
   let delegateePublicKey: string;
 
   function bytesToHex(bytes: Uint8Array): string {
-    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    return Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
   }
 
   beforeEach(() => {
@@ -90,9 +92,7 @@ describe('NIP26Service', () => {
         delegatorPrivateKey
       );
 
-      expect(result.token.conditions).toBe(
-        `created_at>${now}&created_at<${now + 3600}`
-      );
+      expect(result.token.conditions).toBe(`created_at>${now}&created_at<${now + 3600}`);
     });
 
     it('should create delegation with all conditions', async () => {
@@ -109,9 +109,7 @@ describe('NIP26Service', () => {
         delegatorPrivateKey
       );
 
-      expect(result.token.conditions).toBe(
-        `kind=1&created_at>${now}&created_at<${now + 3600}`
-      );
+      expect(result.token.conditions).toBe(`kind=1&created_at>${now}&created_at<${now + 3600}`);
     });
 
     it('should throw error for invalid delegatee public key', async () => {
@@ -126,11 +124,7 @@ describe('NIP26Service', () => {
       const conditions: DelegationConditions = { kind: 1 };
 
       await expect(
-        service.createDelegation(
-          delegateePublicKey,
-          conditions,
-          'invalid-key'
-        )
+        service.createDelegation(delegateePublicKey, conditions, 'invalid-key')
       ).rejects.toThrow('Invalid private key format');
     });
 
@@ -138,11 +132,7 @@ describe('NIP26Service', () => {
       const conditions: DelegationConditions = {};
 
       await expect(
-        service.createDelegation(
-          delegateePublicKey,
-          conditions,
-          delegatorPrivateKey
-        )
+        service.createDelegation(delegateePublicKey, conditions, delegatorPrivateKey)
       ).rejects.toThrow('At least one delegation condition must be specified');
     });
 
@@ -150,11 +140,7 @@ describe('NIP26Service', () => {
       const conditions: DelegationConditions = { kind: -1 };
 
       await expect(
-        service.createDelegation(
-          delegateePublicKey,
-          conditions,
-          delegatorPrivateKey
-        )
+        service.createDelegation(delegateePublicKey, conditions, delegatorPrivateKey)
       ).rejects.toThrow('Event kind must be non-negative');
     });
 
@@ -166,11 +152,7 @@ describe('NIP26Service', () => {
       };
 
       await expect(
-        service.createDelegation(
-          delegateePublicKey,
-          conditions,
-          delegatorPrivateKey
-        )
+        service.createDelegation(delegateePublicKey, conditions, delegatorPrivateKey)
       ).rejects.toThrow('created_at_after must be less than created_at_before');
     });
   });
@@ -484,9 +466,7 @@ describe('NIP26Service', () => {
         delegatorPrivateKey
       );
 
-      expect(delegation.token.conditions).toBe(
-        'created_at>1&created_at<2147483647'
-      );
+      expect(delegation.token.conditions).toBe('created_at>1&created_at<2147483647');
     });
 
     it('should handle multiple tags in event', async () => {
@@ -501,12 +481,7 @@ describe('NIP26Service', () => {
         {
           kind: 1,
           content: 'Test',
-          tags: [
-            ['t', 'nostr'],
-            ['t', 'test'],
-            delegation.tag,
-            ['p', delegatorPublicKey],
-          ],
+          tags: [['t', 'nostr'], ['t', 'test'], delegation.tag, ['p', delegatorPublicKey]],
           created_at: Math.floor(Date.now() / 1000),
           pubkey: delegateePublicKey,
         },

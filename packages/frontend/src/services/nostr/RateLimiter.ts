@@ -471,7 +471,7 @@ export class RateLimiter extends EventEmitter {
         createdAt: Date.now(),
         timeout: Date.now() + this.config.queueTimeout,
         retries: 0,
-        resolve,
+        resolve: resolve as any,
         reject,
       };
 
