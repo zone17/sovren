@@ -346,7 +346,7 @@ jobs:
             EMPTY=$(find packages/frontend/dist/assets -name '*.js' -size -10c | wc -l | tr -d ' ')
             TOTAL=$(find packages/frontend/dist/assets -name '*.js' | wc -l | tr -d ' ')
             echo "JS chunks: $TOTAL total, $EMPTY empty (<10 bytes)"
-            if [ "$EMPTY" -gt 5 ]; then
+            if [ "$EMPTY" -gt 0 ]; then
               echo "::error::$EMPTY of $TOTAL JS chunks are nearly empty — possible treeshake bug"
               exit 1
             fi
@@ -598,50 +598,49 @@ jobs:
   ci-complete:
     name: CI Complete
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, security, test-gate, build, e2e]
+    needs: [lint, typecheck, security, test-gate, build, e2e, docker]
     if: always()
     steps:
       - name: Evaluate results
         run: |
-          for result in \
-            "${{ needs.lint.result }}" \
-            "${{ needs.typecheck.result }}" \
-            "${{ needs.security.result }}" \
-            "${{ needs.test-gate.result }}" \
-            "${{ needs.build.result }}" \
-            "${{ needs.e2e.result }}"; do
+          # Check all jobs — skipped is OK (conditional jobs), failure/cancelled is not
+          declare -A results=(
+            [lint]="${{ needs.lint.result }}"
+            [typecheck]="${{ needs.typecheck.result }}"
+            [security]="${{ needs.security.result }}"
+            [test-gate]="${{ needs.test-gate.result }}"
+            [build]="${{ needs.build.result }}"
+            [e2e]="${{ needs.e2e.result }}"
+            [docker]="${{ needs.docker.result }}"
+          )
+          FAILED=0
+          for job in "${!results[@]}"; do
+            result="${results[$job]}"
             if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
-              echo "::error::CI failed — a required job reported: $result"
-              exit 1
+              echo "::error::CI failed — job '$job' reported: $result"
+              FAILED=1
             fi
           done
+          if [[ "$FAILED" == "1" ]]; then
+            exit 1
+          fi
           echo "All CI jobs passed or were skipped"
-      - name: CI summary
-        if: always()
-        run: |
-          echo "## CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Result |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| typecheck | ${{ needs.typecheck.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| security | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| test-gate | ${{ needs.test-gate.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| e2e | ${{ needs.e2e.result }} |" >> $GITHUB_STEP_SUMMARY
 
   # ===========================================
-  # CodeQL SAST (main push + weekly schedule only)
+  # CodeQL SAST (main push + workflow_dispatch only, not PRs — too slow)
+  # Not in ci-complete gate — advisory, results go to GitHub Security tab.
   # ===========================================
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       security-events: write
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
       - uses: github/codeql-action/init@v3
         with:
           languages: javascript-typescript
