@@ -83,11 +83,15 @@ jobs:
 
       - name: ESLint (changed files)
         if: steps.changed.outputs.count != '0'
-        run: npx eslint ${{ steps.changed.outputs.files }} --no-error-on-unmatched-pattern
+        env:
+          FILES: ${{ steps.changed.outputs.files }}
+        run: npx eslint $FILES --no-error-on-unmatched-pattern
 
       - name: Prettier (changed files)
         if: steps.changed.outputs.count != '0'
-        run: npx prettier --check ${{ steps.changed.outputs.files }} --no-error-on-unmatched-pattern
+        env:
+          FILES: ${{ steps.changed.outputs.files }}
+        run: npx prettier --check $FILES --no-error-on-unmatched-pattern
 
       - name: No files changed
         if: steps.changed.outputs.count == '0'
@@ -127,8 +131,9 @@ jobs:
 
       - name: TypeScript (per-package)
         if: steps.changed.outputs.count != '0'
+        env:
+          CHANGED: ${{ steps.changed.outputs.files }}
         run: |
-          CHANGED="${{ steps.changed.outputs.files }}"
           ERRORS=0
 
           # Run tsc per package with correct path resolution
@@ -140,7 +145,7 @@ jobs:
             fi
             TSC_OUTPUT=$(npx tsc -p "$TSCONFIG" --noEmit --pretty false 2>&1 || true)
             for FILE in $CHANGED; do
-              FILE_ERRORS=$(echo "$TSC_OUTPUT" | grep "^$FILE(" || true)
+              FILE_ERRORS=$(echo "$TSC_OUTPUT" | grep -F "$FILE(" || true)
               if [ -n "$FILE_ERRORS" ]; then
                 echo "$FILE_ERRORS"
                 ERRORS=$((ERRORS + 1))

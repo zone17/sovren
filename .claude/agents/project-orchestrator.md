@@ -51,20 +51,17 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ### PHASE 1: PLANNING (Sequential - Each Depends on Previous)
 
 2. **Invoke product-strategy agent**
-
    - Input: Project idea + Design artifacts
    - Output: Complete PRD with personas, SMART metrics, MoSCoW prioritization
    - Quality Gate: PRD approved, metrics defined, stakeholder alignment
 
 3. **Invoke technical-architecture agent**
-
    - Input: PRD + Design system
    - Output: Tech stack, C4 diagrams, ADRs, OpenAPI spec, security architecture
    - Quality Gate: All ADRs documented, API contracts defined, tech stack approved
    - **CRITICAL**: Ensure alignment with Sovren's feature-based architecture pattern
 
 4. **Invoke database-schema agent**
-
    - Input: Architecture + Data requirements
    - Output: Schema (DBML), ERD, migrations (up/down), indexes, performance analysis
    - Quality Gate: Schema validated, migrations tested bidirectionally
@@ -77,18 +74,15 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ### PHASE 2: FOUNDATION (Sequential - Infrastructure First)
 
 6. **Invoke infrastructure agent**
-
    - Priority: FREE tier (AWS/Railway/Vercel)
    - Output: Cloud resources, database instances, networking, IAM
    - Quality Gate: All provisioned, IaC committed, costs within FREE tier
 
 7. **Invoke cicd-pipeline agent**
-
    - Output: GitHub Actions, automated testing, auto-deploy, rollback mechanism
    - Quality Gate: Pipeline operational, tests in CI, deployments working
 
 8. **Invoke monitoring agent**
-
    - Output: Prometheus + Grafana, alert rules, dashboards, Loki, Sentry
    - Quality Gate: All metrics collecting, alerts configured, logs aggregating
 
@@ -159,7 +153,6 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 ### PHASE 4: QUALITY ASSURANCE (Sequential)
 
 11. **Invoke test-automation agent**
-
     - Output: E2E tests, performance tests (k6), visual regression, accessibility tests
     - Quality Gate: All tests passing, coverage ≥80% (≥95% critical), no flaky tests
 
@@ -180,7 +173,6 @@ Receive a project idea and coordinate all specialized agents to deliver producti
 **Reference**: docs/development/DEPLOYMENT_INTEGRATION_STANDARDS.md
 
 14. **Merge to Main Branch**
-
     - Trigger: All quality gates passed
     - Action: Merge PRs → CI/CD auto-triggers
     - **Automated workflows execute**:
@@ -191,7 +183,6 @@ Receive a project idea and coordinate all specialized agents to deliver producti
       - Smoke tests (28+ tests)
 
 15. **Staging Deployment (Automatic on Main Merge)**
-
     - **Auto-deploys**: No manual intervention required
     - **Quality Gates**:
       ✓ Deployment successful (< 10 minutes)
@@ -212,39 +203,34 @@ Receive a project idea and coordinate all specialized agents to deliver producti
       ```
 
 16. **Production Deployment (Manual Approval Required)**
-
-    - **Trigger**: Manual workflow dispatch
-    - **Command**: `gh workflow run backend-deployment.yml -f environment=production`
-    - **Blue-green deployment** with progressive traffic shift (10% → 50% → 100%)
+    - **Trigger**: Manual — Vercel auto-deploys frontend; backend uses Docker image promotion
+    - **Process**: Promote staging Docker image to production after validation
     - **Quality Gates**:
+      ✓ All CI jobs pass via `ci.yml` (`CI / CI Complete` required check)
       ✓ Manual approval (1 required reviewer)
-      ✓ Zero-downtime deployment
       ✓ Health checks pass at each traffic stage
       ✓ Error rate < 5%
       ✓ Response time P95 < 1000ms
-      ✓ Automatic rollback if thresholds breached (< 2 minutes)
     - **Validation**:
       ```bash
       # Verify production health
       curl https://api.sovren.dev/health
-      # Monitor deployment
-      gh run watch
+      # Monitor CI status
+      gh run list --workflow=ci.yml --limit 5
       ```
 
 17. **Emergency Rollback (If Needed)**
-    - **Command**: `gh workflow run automated-rollback.yml -f environment=production`
-    - **Automatic Triggers**:
+    - **Process**: Revert to previous Docker image tag or Vercel deployment
+    - **Triggers for rollback**:
       - HTTP 5xx error rate > 5% for 2 minutes
       - Response time P95 > 1000ms
       - Health check failures > 3 consecutive
-      - Manual trigger via workflow_dispatch
-    - **Rollback Time**: < 2 minutes guaranteed
+    - **Rollback Time**: < 2 minutes for Vercel instant rollback; Docker image revert varies
     - **Notification**: Slack alert to team
 
 ### PHASE 7: VALIDATION & HANDOFF
 
 17. **Post-Deployment Validation**
-
     - Monitor for 1 hour, verify user flows, confirm monitoring active
 
 18. **Generate Project Delivery Report**
