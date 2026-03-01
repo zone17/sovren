@@ -1,10 +1,10 @@
 import {
-    NostrContact,
-    NostrCryptographyError,
-    NostrError,
-    NostrEventKind,
-    NostrUserProfile,
-    NostrValidationError
+  NostrContact,
+  NostrCryptographyError,
+  NostrError,
+  NostrEventKind,
+  NostrUserProfile,
+  NostrValidationError,
 } from '../../../../shared/src/types/nostr';
 import { NostrService } from '../nostrService';
 
@@ -97,7 +97,8 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
     });
 
     it('should skip initialization when feature flag is disabled', async () => {
-      const mockParseFeatureFlags = require('../../../../shared/src/featureFlags').parseFeatureFlags;
+      const mockParseFeatureFlags =
+        require('../../../../shared/src/featureFlags').parseFeatureFlags;
       mockParseFeatureFlags.mockReturnValueOnce({
         enableNostrIntegration: false,
       });
@@ -155,12 +156,14 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
     it('should reject invalid private key length', async () => {
       const invalidPrivateKey = 'invalid-key';
 
-      await expect(nostrService.importKeyPair(invalidPrivateKey))
-        .rejects.toThrow(NostrCryptographyError);
+      await expect(nostrService.importKeyPair(invalidPrivateKey)).rejects.toThrow(
+        NostrCryptographyError
+      );
     });
 
     it('should throw error when key generation is disabled', async () => {
-      const mockParseFeatureFlags = require('../../../../shared/src/featureFlags').parseFeatureFlags;
+      const mockParseFeatureFlags =
+        require('../../../../shared/src/featureFlags').parseFeatureFlags;
       mockParseFeatureFlags.mockReturnValueOnce({
         enableNostrIntegration: true,
         enableNostrKeyGeneration: false,
@@ -169,8 +172,9 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
       // Re-initialize with disabled flag
       await nostrService.initialize();
 
-      await expect(nostrService.generateKeyPair())
-        .rejects.toThrow('Key generation disabled by feature flag');
+      await expect(nostrService.generateKeyPair()).rejects.toThrow(
+        'Key generation disabled by feature flag'
+      );
     });
   });
 
@@ -211,7 +215,8 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
     });
 
     it('should throw error when relay connections are disabled', async () => {
-      const mockParseFeatureFlags = require('../../../../shared/src/featureFlags').parseFeatureFlags;
+      const mockParseFeatureFlags =
+        require('../../../../shared/src/featureFlags').parseFeatureFlags;
       mockParseFeatureFlags.mockReturnValueOnce({
         enableNostrIntegration: true,
         enableNostrRelay: false,
@@ -220,8 +225,9 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
       // Re-initialize with disabled relay flag
       await nostrService.initialize();
 
-      await expect(nostrService.connectToRelays())
-        .rejects.toThrow('Relay connections disabled by feature flag');
+      await expect(nostrService.connectToRelays()).rejects.toThrow(
+        'Relay connections disabled by feature flag'
+      );
     });
   });
 
@@ -301,7 +307,8 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
     });
 
     it('should throw error when publishing is disabled', async () => {
-      const mockParseFeatureFlags = require('../../../../shared/src/featureFlags').parseFeatureFlags;
+      const mockParseFeatureFlags =
+        require('../../../../shared/src/featureFlags').parseFeatureFlags;
       mockParseFeatureFlags.mockReturnValueOnce({
         enableNostrIntegration: true,
         enableNostrEventPublishing: false,
@@ -310,8 +317,9 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
       // Re-initialize with disabled publishing
       await nostrService.initialize();
 
-      await expect(nostrService.publishNote('test'))
-        .rejects.toThrow('Event publishing disabled by feature flag');
+      await expect(nostrService.publishNote('test')).rejects.toThrow(
+        'Event publishing disabled by feature flag'
+      );
     });
   });
 
@@ -346,13 +354,15 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
       const mockPool = nostrService['pool'];
       let eventCallback: any;
 
-      vi.spyOn(mockPool, 'subscribeMany').mockReturnValue({
-        on: vi.fn(),
-        close: vi.fn(),
-      } as any).mockImplementation((relays, filters, options) => {
-        eventCallback = options.onevent;
-        return { on: vi.fn(), close: vi.fn() };
-      });
+      vi.spyOn(mockPool, 'subscribeMany')
+        .mockReturnValue({
+          on: vi.fn(),
+          close: vi.fn(),
+        } as any)
+        .mockImplementation((relays, filters, options) => {
+          eventCallback = options.onevent;
+          return { on: vi.fn(), close: vi.fn() };
+        });
 
       const mockVerifyEvent = require('nostr-tools').verifyEvent;
       mockVerifyEvent.mockReturnValue(true);
@@ -395,7 +405,8 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
     });
 
     it('should throw error when subscription is disabled', () => {
-      const mockParseFeatureFlags = require('../../../../shared/src/featureFlags').parseFeatureFlags;
+      const mockParseFeatureFlags =
+        require('../../../../shared/src/featureFlags').parseFeatureFlags;
       mockParseFeatureFlags.mockReturnValueOnce({
         enableNostrIntegration: true,
         enableNostrEventSubscription: false,
@@ -420,7 +431,8 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
     });
 
     it('should return empty array when caching is disabled', () => {
-      const mockParseFeatureFlags = require('../../../../shared/src/featureFlags').parseFeatureFlags;
+      const mockParseFeatureFlags =
+        require('../../../../shared/src/featureFlags').parseFeatureFlags;
       mockParseFeatureFlags.mockReturnValueOnce({
         enableNostrIntegration: true,
         enableNostrEventCaching: false,
@@ -558,7 +570,7 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
           to: 'b'.repeat(64),
           content: 'encrypted',
           timestamp: Date.now(),
-        }
+        },
       ];
       nostrService['state'].directMessages = testMessages;
 
@@ -595,8 +607,7 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
         encrypted: false,
       };
 
-      await expect(nostrService.publishNote('test'))
-        .rejects.toThrow(NostrCryptographyError);
+      await expect(nostrService.publishNote('test')).rejects.toThrow(NostrCryptographyError);
     });
 
     it('should handle network errors during publishing', async () => {
@@ -612,8 +623,7 @@ describe('🌐 NOSTR Service - Elite Implementation', () => {
 
       await nostrService.initialize();
 
-      await expect(nostrService.publishNote('test'))
-        .rejects.toThrow(NostrError);
+      await expect(nostrService.publishNote('test')).rejects.toThrow(NostrError);
     });
   });
 });

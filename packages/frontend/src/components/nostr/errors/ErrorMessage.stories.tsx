@@ -9,7 +9,7 @@ import { ErrorMessage } from './ErrorMessage';
 import {
   ErrorSeverity as ErrorSeverityEnum,
   ErrorCategory as ErrorCategoryEnum,
-  NostrErrorCode as NostrErrorCodeEnum
+  NostrErrorCode as NostrErrorCodeEnum,
 } from './types';
 import type { NostrErrorMetadata } from './types';
 
@@ -20,7 +20,8 @@ const meta: Meta<typeof ErrorMessage> = {
     layout: 'padded',
     docs: {
       description: {
-        component: 'Generic error message component with multiple severity levels and customization options.',
+        component:
+          'Generic error message component with multiple severity levels and customization options.',
       },
     },
   },
@@ -131,7 +132,8 @@ export const CriticalSeverity: Story = {
       code: NostrErrorCodeEnum.NO_RELAYS_AVAILABLE,
       severity: ErrorSeverityEnum.CRITICAL,
       title: 'No Relays Available',
-      message: 'Cannot connect to any configured relays. Application functionality is severely limited.',
+      message:
+        'Cannot connect to any configured relays. Application functionality is severely limited.',
       troubleshootingHints: [
         'Check your network connection immediately',
         'Verify relay URLs in configuration',
@@ -146,7 +148,7 @@ export const WithRetry: Story = {
     error: baseError,
     onRetry: () => {
       console.log('Retry clicked');
-      return new Promise(resolve => setTimeout(resolve, 2000));
+      return new Promise((resolve) => setTimeout(resolve, 2000));
     },
   },
 };
@@ -163,7 +165,7 @@ export const WithRetryAndDismiss: Story = {
     error: baseError,
     onRetry: () => {
       console.log('Retry clicked');
-      return new Promise(resolve => setTimeout(resolve, 2000));
+      return new Promise((resolve) => setTimeout(resolve, 2000));
     },
     onDismiss: () => console.log('Dismiss clicked'),
   },
@@ -272,7 +274,8 @@ export const LongContent: Story = {
   args: {
     error: {
       ...baseError,
-      message: 'This is a very long error message that contains multiple paragraphs of text. It demonstrates how the component handles lengthy error descriptions. This is important for errors that require detailed explanations or context. The component should handle this gracefully without breaking the layout.',
+      message:
+        'This is a very long error message that contains multiple paragraphs of text. It demonstrates how the component handles lengthy error descriptions. This is important for errors that require detailed explanations or context. The component should handle this gracefully without breaking the layout.',
       troubleshootingHints: [
         'First troubleshooting hint with lots of detail about what might be wrong and how to diagnose the issue',
         'Second hint that also contains substantial information about potential solutions',

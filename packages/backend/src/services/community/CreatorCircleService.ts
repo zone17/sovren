@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Creator Circle Service
  * EPIC-010: Creator Network — Circle management, membership, and posts

@@ -140,9 +140,7 @@ export function deploymentMonitoring(req: Request, res: Response, next: NextFunc
   httpActiveConnections.inc();
 
   res.on('finish', () => {
-    const route = req.route?.path
-      ? normalizeRoute(req.route.path)
-      : '/unmatched';
+    const route = req.route?.path ? normalizeRoute(req.route.path) : '/unmatched';
     const statusCode = res.statusCode.toString();
     const labels = { method: req.method, route, status_code: statusCode };
 
@@ -158,7 +156,6 @@ export function deploymentMonitoring(req: Request, res: Response, next: NextFunc
   next();
 }
 
-
 /**
  * Prometheus metrics endpoint handler.
  * Returns metrics in the standard Prometheus exposition format.
@@ -173,7 +170,6 @@ export async function getPrometheusMetrics(req: Request, res: Response): Promise
     res.status(500).end('Error collecting metrics');
   }
 }
-
 
 /**
  * Returns all Prometheus metrics as a structured JSON object.

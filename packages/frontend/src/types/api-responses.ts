@@ -254,7 +254,7 @@ export async function fetchWithTypes<T>(
       return {
         data: null as T,
         status: 'error',
-        message: error.message
+        message: error.message,
       };
     }
 
@@ -267,13 +267,13 @@ export async function fetchWithTypes<T>(
     // Wrap non-standard responses
     return {
       data: data as T,
-      status: 'success'
+      status: 'success',
     };
   } catch (error) {
     return {
       data: null as T,
       status: 'error',
-      message: error instanceof Error ? error.message : 'Network error occurred'
+      message: error instanceof Error ? error.message : 'Network error occurred',
     };
   }
 }
@@ -287,10 +287,7 @@ export async function fetchPaginatedWithTypes<T>(
   if (params?.page) urlWithParams.searchParams.set('page', params.page.toString());
   if (params?.limit) urlWithParams.searchParams.set('limit', params.limit.toString());
 
-  const response = await fetchWithTypes<PaginatedResponse<T>>(
-    urlWithParams.toString(),
-    options
-  );
+  const response = await fetchWithTypes<PaginatedResponse<T>>(urlWithParams.toString(), options);
 
   if (response.status === 'error' || !response.data) {
     return {
@@ -299,8 +296,8 @@ export async function fetchPaginatedWithTypes<T>(
         page: params?.page || 1,
         limit: params?.limit || 20,
         total: 0,
-        hasMore: false
-      }
+        hasMore: false,
+      },
     };
   }
 

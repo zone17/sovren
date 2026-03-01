@@ -25,19 +25,19 @@ vi.mock('../EventCacheService');
 
 // Import enums after mocks so they are available as runtime values
 import {
-  SovrenEventKind as SovrenEventKindEnum,
+  SovrenEventKindEnum,
   CreatorCategory,
   SocialPlatform,
   AnalyticsEventType,
   RecommendationSource,
-} from '@shared/types/nostr';
+} from '@shared/types/nostr/index';
 import type {
   CreatorProfileExtendedContent,
   ContentMonetizationContent,
   AnalyticsEventContent,
   SubscriptionManagementContent,
   ContentRecommendationsContent,
-} from '@shared/types/nostr';
+} from '@shared/types/nostr/index';
 
 describe('SovrenNIPService', () => {
   let service: SovrenNIPService;
@@ -77,17 +77,11 @@ describe('SovrenNIPService', () => {
       get: vi.fn().mockResolvedValue(null),
     };
 
-    service = new SovrenNIPService(
-      mockPublisher,
-      mockKeyManager,
-      mockRelayPool,
-      mockCache,
-      {
-        enableCache: true,
-        cacheTTL: 3600,
-        strictValidation: true,
-      }
-    );
+    service = new SovrenNIPService(mockPublisher, mockKeyManager, mockRelayPool, mockCache, {
+      enableCache: true,
+      cacheTTL: 3600,
+      strictValidation: true,
+    });
   });
 
   afterEach(() => {
@@ -247,10 +241,7 @@ describe('SovrenNIPService', () => {
     });
 
     it('should publish monetization settings successfully', async () => {
-      const result = await service.publishMonetizationSettings(
-        'content-123',
-        validMonetization
-      );
+      const result = await service.publishMonetizationSettings('content-123', validMonetization);
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
@@ -301,10 +292,7 @@ describe('SovrenNIPService', () => {
     });
 
     it('should track analytics event successfully', async () => {
-      const result = await service.trackAnalyticsEvent(
-        'analytics-123',
-        validAnalytics
-      );
+      const result = await service.trackAnalyticsEvent('analytics-123', validAnalytics);
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();

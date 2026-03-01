@@ -432,7 +432,7 @@ export const ContentCaching: React.FC<ContentCachingProps> = ({
 }) => {
   // Feature flags
   const { flags } = useFeatureFlags();
-  const isEnabled = flags.enableOfflineCapabilities && flags.enableContentCaching;
+  const isEnabled = flags?.enableOfflineCapabilities && flags?.enableContentCaching;
 
   // State management
   const [analytics, setAnalytics] = useState<CacheAnalytics | null>(null);

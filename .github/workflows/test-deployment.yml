@@ -1,18 +1,13 @@
 name: Test Deployment Pipeline
 
+# DEPRECATED: Functionality consolidated into ci.yml
+# Kept for emergency manual use only.
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/backend-deployment.yml'
-      - 'scripts/deploy/**'
-      - 'tests/deployment/**'
-      - 'tests/deployment/utils/**'
-  push:
-    branches:
-      - main
-    paths:
-      - 'tests/deployment/**'
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'DEPRECATED - Use ci.yml instead. Type CONFIRM to run.'
+        required: true
 
 permissions: read-all
 

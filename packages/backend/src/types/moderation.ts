@@ -15,7 +15,7 @@ export enum ModerationStatus {
   WARNED = 'warned',
   APPEALED = 'appealed',
   APPEAL_APPROVED = 'appeal_approved',
-  APPEAL_REJECTED = 'appeal_rejected'
+  APPEAL_REJECTED = 'appeal_rejected',
 }
 
 export enum ModerationAction {
@@ -24,7 +24,7 @@ export enum ModerationAction {
   FLAG_REVIEW = 'flag_review',
   WARNING = 'warning',
   AUTO_APPROVE = 'auto_approve',
-  AUTO_REJECT = 'auto_reject'
+  AUTO_REJECT = 'auto_reject',
 }
 
 export enum ModerationSeverity {
@@ -32,7 +32,7 @@ export enum ModerationSeverity {
   LOW = 1,
   MEDIUM = 2,
   HIGH = 3,
-  CRITICAL = 4
+  CRITICAL = 4,
 }
 
 export enum ModerationCategory {
@@ -45,14 +45,14 @@ export enum ModerationCategory {
   TOXIC = 'toxic',
   HARASSMENT = 'harassment',
   COPYRIGHT = 'copyright',
-  SCAM = 'scam'
+  SCAM = 'scam',
 }
 
 export enum AppealStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  WITHDRAWN = 'withdrawn'
+  WITHDRAWN = 'withdrawn',
 }
 
 // ============================================================================

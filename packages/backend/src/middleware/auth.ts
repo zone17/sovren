@@ -2,7 +2,12 @@ import { nostrAuth } from '@/services/nostr-auth';
 import { NextFunction, Request, Response } from 'express';
 import logger from '../lib/logger';
 import { AppError } from '../lib/app-error';
-import { UnauthorizedError, AuthorizationError, ValidationError, ServiceError } from '../utils/errors';
+import {
+  UnauthorizedError,
+  AuthorizationError,
+  ValidationError,
+  ServiceError,
+} from '../utils/errors';
 
 /**
  * Request type for handlers behind the `authenticate` middleware.
@@ -82,9 +87,11 @@ export const authenticate = async (
 export const authorize = (allowedRoles: Array<'creator' | 'supporter' | 'admin'>) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      next(new UnauthorizedError('Authentication required', {
-        details: 'User must be authenticated to access this resource',
-      }));
+      next(
+        new UnauthorizedError('Authentication required', {
+          details: 'User must be authenticated to access this resource',
+        })
+      );
       return;
     }
 
@@ -167,9 +174,11 @@ export const requireNostrSignature = async (
     const { signature, challenge, timestamp } = req.body;
 
     if (!signature || !challenge || !timestamp) {
-      next(new ValidationError('NOSTR signature verification required', {
-        details: 'Required fields: signature, challenge, timestamp',
-      }));
+      next(
+        new ValidationError('NOSTR signature verification required', {
+          details: 'Required fields: signature, challenge, timestamp',
+        })
+      );
       return;
     }
 
@@ -200,7 +209,6 @@ export const requireNostrSignature = async (
   }
 };
 
-
 // 🔒 Resource ownership middleware
 export const requireOwnership = (resourcePubkeyField: string = 'nostr_pubkey') => {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -222,9 +230,11 @@ export const requireOwnership = (resourcePubkeyField: string = 'nostr_pubkey') =
       req.body[resourcePubkeyField];
 
     if (!resourcePubkey) {
-      next(new ValidationError('Resource identifier missing', {
-        details: `Required field: ${resourcePubkeyField}`,
-      }));
+      next(
+        new ValidationError('Resource identifier missing', {
+          details: `Required field: ${resourcePubkeyField}`,
+        })
+      );
       return;
     }
 
@@ -237,4 +247,3 @@ export const requireOwnership = (resourcePubkeyField: string = 'nostr_pubkey') =
     next();
   };
 };
-

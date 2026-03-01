@@ -135,7 +135,8 @@ const AlertDetailPanel: React.FC<AlertDetailPanelProps> = ({ alertId, onClose })
           />
         </div>
         <span className="text-sm font-medium text-gray-700">
-          {(data.comparison.similarity_score * 100).toFixed(0)}% — {data.comparison.match_level.replace('_', ' ')}
+          {(data.comparison.similarity_score * 100).toFixed(0)}% —{' '}
+          {data.comparison.match_level.replace('_', ' ')}
         </span>
       </div>
 
@@ -216,10 +217,7 @@ export const AlertsFeed: React.FC = () => {
 
         {/* Selected alert detail */}
         {selectedAlertId && (
-          <AlertDetailPanel
-            alertId={selectedAlertId}
-            onClose={() => setSelectedAlertId(null)}
-          />
+          <AlertDetailPanel alertId={selectedAlertId} onClose={() => setSelectedAlertId(null)} />
         )}
 
         {/* Alert list */}
@@ -231,11 +229,7 @@ export const AlertsFeed: React.FC = () => {
           </div>
         )}
 
-        {error && (
-          <p className="text-sm text-gray-500 text-center py-6">
-            Failed to load alerts.
-          </p>
-        )}
+        {error && <p className="text-sm text-gray-500 text-center py-6">Failed to load alerts.</p>}
 
         {response && !isLoading && (
           <>
@@ -246,11 +240,7 @@ export const AlertsFeed: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {response.data.map((alert: ContentAlert) => (
-                  <AlertCard
-                    key={alert.id}
-                    alert={alert}
-                    onSelect={setSelectedAlertId}
-                  />
+                  <AlertCard key={alert.id} alert={alert} onSelect={setSelectedAlertId} />
                 ))}
               </div>
             )}

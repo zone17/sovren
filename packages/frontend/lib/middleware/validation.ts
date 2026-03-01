@@ -104,17 +104,18 @@ export function validateRequest<T>(
       success: false,
       errors,
     };
-
   } catch (error) {
     console.error('Validation error:', error);
 
     return {
       success: false,
-      errors: [{
-        field: 'validation',
-        message: 'Invalid input format',
-        code: 'VALIDATION_ERROR',
-      }],
+      errors: [
+        {
+          field: 'validation',
+          message: 'Invalid input format',
+          code: 'VALIDATION_ERROR',
+        },
+      ],
     };
   }
 }
@@ -124,11 +125,13 @@ function checkFieldLengths<T>(data: T, maxLength: number): ValidationResult<T> {
   if (typeof data === 'string' && data.length > maxLength) {
     return {
       success: false,
-      errors: [{
-        field: 'input',
-        message: `Field exceeds maximum length of ${maxLength}`,
-        code: 'FIELD_TOO_LONG',
-      }],
+      errors: [
+        {
+          field: 'input',
+          message: `Field exceeds maximum length of ${maxLength}`,
+          code: 'FIELD_TOO_LONG',
+        },
+      ],
     };
   }
 
@@ -146,11 +149,13 @@ function checkFieldLengths<T>(data: T, maxLength: number): ValidationResult<T> {
       if (key.length > 100) {
         return {
           success: false,
-          errors: [{
-            field: key,
-            message: 'Field name too long',
-            code: 'FIELD_NAME_TOO_LONG',
-          }],
+          errors: [
+            {
+              field: key,
+              message: 'Field name too long',
+              code: 'FIELD_NAME_TOO_LONG',
+            },
+          ],
         };
       }
 
@@ -228,9 +233,7 @@ export const amountSchema = z
   .multipleOf(0.01, 'Amount must have at most 2 decimal places');
 
 // 🆔 UUID VALIDATION
-export const uuidSchema = z
-  .string()
-  .uuid('Invalid UUID format');
+export const uuidSchema = z.string().uuid('Invalid UUID format');
 
 // 📱 PHONE VALIDATION
 export const phoneSchema = z
@@ -239,11 +242,7 @@ export const phoneSchema = z
   .optional();
 
 // 🌐 URL VALIDATION
-export const urlSchema = z
-  .string()
-  .url('Invalid URL format')
-  .max(2048, 'URL too long')
-  .optional();
+export const urlSchema = z.string().url('Invalid URL format').max(2048, 'URL too long').optional();
 
 // 🧪 Testing utilities
 export const __testing = {

@@ -25,17 +25,11 @@ import type {
   RealtimeDashboardMetrics,
   AnalyticsServiceMetrics,
   PaymentAnalyticsEvent,
-  TimeSeriesDataPoint
+  TimeSeriesDataPoint,
 } from '../../types/payment-analytics';
-import {
-  AnalyticsPeriod,
-} from '../../types/payment-analytics';
-import {
-  Currency,
-} from '../../types/currency';
-import {
-  PaymentMethod,
-} from '../../types/payment';
+import { AnalyticsPeriod } from '../../types/payment-analytics';
+import { Currency } from '../../types/currency';
+import { PaymentMethod } from '../../types/payment';
 
 /**
  * Payment Analytics Service Interface
@@ -79,10 +73,7 @@ export interface IPaymentAnalyticsService {
    * @param forecastDays - Number of days to forecast (optional)
    * @returns Revenue trend analytics with forecast
    */
-  getRevenueTrend(
-    query: AnalyticsQuery,
-    forecastDays?: number
-  ): Promise<RevenueTrendAnalytics>;
+  getRevenueTrend(query: AnalyticsQuery, forecastDays?: number): Promise<RevenueTrendAnalytics>;
 
   /**
    * TRANSACTION METRICS
@@ -346,9 +337,7 @@ export interface IPaymentAnalyticsService {
    * @param query - Analytics query
    * @returns Map of currency to revenue in base currency
    */
-  getRevenueBreakdownInBaseCurrency(
-    query: AnalyticsQuery
-  ): Promise<Map<Currency, number>>;
+  getRevenueBreakdownInBaseCurrency(query: AnalyticsQuery): Promise<Map<Currency, number>>;
 
   /**
    * Set base currency for consolidation
@@ -373,11 +362,7 @@ export interface IPaymentAnalyticsService {
    * @param endDate - End date (optional)
    * @returns Aggregation job ID
    */
-  triggerAggregation(
-    period: AnalyticsPeriod,
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<string>;
+  triggerAggregation(period: AnalyticsPeriod, startDate?: Date, endDate?: Date): Promise<string>;
 
   /**
    * Get aggregation job status
@@ -458,12 +443,17 @@ export interface IPaymentAnalyticsService {
    * Get query performance metrics
    * @returns Performance metrics by query type
    */
-  getQueryPerformanceMetrics(): Promise<Map<string, {
-    count: number;
-    averageTime: number;
-    minTime: number;
-    maxTime: number;
-  }>>;
+  getQueryPerformanceMetrics(): Promise<
+    Map<
+      string,
+      {
+        count: number;
+        averageTime: number;
+        minTime: number;
+        maxTime: number;
+      }
+    >
+  >;
 
   /**
    * UTILITY METHODS

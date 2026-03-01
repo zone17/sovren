@@ -79,9 +79,7 @@ describe('Lightning API Routes', () => {
 
     it('should handle errors', async () => {
       // Mock service error
-      (lightningService.getNodeInfo as any).mockRejectedValue(
-        new Error('Failed to get node info')
-      );
+      (lightningService.getNodeInfo as any).mockRejectedValue(new Error('Failed to get node info'));
 
       const response = await request(app).get('/api/lightning/node-info').expect(500);
 

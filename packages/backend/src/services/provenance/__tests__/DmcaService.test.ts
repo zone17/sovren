@@ -95,9 +95,9 @@ describe('DmcaService', () => {
         error: { code: 'PGRST116' },
       });
 
-      await expect(
-        service.generateReport('creator-pubkey-abc', 'nonexistent')
-      ).rejects.toThrow(/Alert/);
+      await expect(service.generateReport('creator-pubkey-abc', 'nonexistent')).rejects.toThrow(
+        /Alert/
+      );
     });
 
     it('should throw NotFoundError when alert belongs to another creator', async () => {
@@ -106,9 +106,7 @@ describe('DmcaService', () => {
         error: { code: 'PGRST116', message: 'not found' },
       });
 
-      await expect(
-        service.generateReport('other-creator', 'alert-1')
-      ).rejects.toThrow(/Alert/);
+      await expect(service.generateReport('other-creator', 'alert-1')).rejects.toThrow(/Alert/);
     });
 
     it('should throw NotFoundError when provenance record is missing', async () => {
@@ -116,9 +114,9 @@ describe('DmcaService', () => {
         .mockReturnValueOnce({ data: mockAlert, error: null })
         .mockReturnValueOnce({ data: null, error: { code: 'PGRST116' } });
 
-      await expect(
-        service.generateReport('creator-pubkey-abc', 'alert-1')
-      ).rejects.toThrow(/Provenance record/);
+      await expect(service.generateReport('creator-pubkey-abc', 'alert-1')).rejects.toThrow(
+        /Provenance record/
+      );
     });
 
     it('should handle null relay_confirmations in provenance', async () => {
@@ -140,10 +138,10 @@ describe('DmcaService', () => {
 
       await service.generateReport('creator-pubkey-abc', 'alert-1');
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'DMCA report generated',
-        { alertId: 'alert-1', creatorId: 'creator-pubkey-abc' }
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith('DMCA report generated', {
+        alertId: 'alert-1',
+        creatorId: 'creator-pubkey-abc',
+      });
     });
   });
 });

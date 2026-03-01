@@ -1,25 +1,13 @@
 name: 🔒 Dependency Security Audit
 
+# DEPRECATED: Functionality consolidated into ci.yml
+# Kept for emergency manual use only.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'package.json'
-      - 'package-lock.json'
-      - 'packages/*/package.json'
-      - 'packages/*/package-lock.json'
-      - '.github/workflows/dependency-audit.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'package.json'
-      - 'package-lock.json'
-      - 'packages/*/package.json'
-      - 'packages/*/package-lock.json'
-  schedule:
-    # Run daily at 6 AM UTC
-    - cron: '0 6 * * *'
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'DEPRECATED - Use ci.yml instead. Type CONFIRM to run.'
+        required: true
 
 permissions: read-all
 

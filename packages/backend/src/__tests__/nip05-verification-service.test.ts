@@ -1,5 +1,3 @@
-
-import { SupabaseDatabase } from '../config/database';
 import { createNIP05VerificationService } from '../services/nip05-verification-service';
 
 // Mock DNS with vi.hoisted so promisify captures our mock at import time
@@ -198,9 +196,7 @@ describe('NIP-05 Verification Service', () => {
       });
 
       // checkDomainLimits: select().eq().eq() resolves via then
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: [], error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: [], error: null }));
 
       // Mock successful HTTP verification
       mockFetch.mockResolvedValue({
@@ -497,9 +493,7 @@ describe('NIP-05 Verification Service', () => {
 
     it('should revoke verification', async () => {
       // update().eq() resolves via then
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: null, error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: null, error: null }));
 
       const result = await service.revokeVerification('verification-id', 'Test reason');
 
@@ -527,9 +521,7 @@ describe('NIP-05 Verification Service', () => {
       });
 
       // updateVerificationRecord calls update().eq() which resolves via then
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: null, error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: null, error: null }));
 
       // Mock successful HTTP verification
       mockFetch.mockResolvedValue({
@@ -559,9 +551,7 @@ describe('NIP-05 Verification Service', () => {
       };
 
       // update().eq() resolves via then
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: null, error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: null, error: null }));
 
       const result = await service.updateVerificationRecord('verification-id', mockResult);
 
@@ -586,9 +576,7 @@ describe('NIP-05 Verification Service', () => {
         error: 'Verification failed',
       };
 
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: null, error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: null, error: null }));
 
       const result = await service.updateVerificationRecord('verification-id', mockResult);
 
@@ -795,15 +783,11 @@ describe('NIP-05 Verification Service', () => {
           return Promise.resolve({ data: null, error: { code: 'PGRST116' } });
         }
         // insert().select().single() fails with unique constraint
-        return Promise.reject(
-          new Error('duplicate key value violates unique constraint')
-        );
+        return Promise.reject(new Error('duplicate key value violates unique constraint'));
       });
 
       // checkDomainLimits
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: [], error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: [], error: null }));
 
       const result = await service.createVerificationRequest(request);
 

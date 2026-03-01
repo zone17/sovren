@@ -29,14 +29,30 @@ export class ServiceError extends AppError {
 
 export class ValidationError extends AppError {
   constructor(message: string, options?: ServiceErrorOptions) {
-    super(400, 'VALIDATION_ERROR', message, options?.details, true, options?.context, options?.cause);
+    super(
+      400,
+      'VALIDATION_ERROR',
+      message,
+      options?.details,
+      true,
+      options?.context,
+      options?.cause
+    );
     this.name = 'ValidationError';
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(resource: string, options?: ServiceErrorOptions) {
-    super(404, 'NOT_FOUND', `${resource} not found`, options?.details, true, options?.context, options?.cause);
+    super(
+      404,
+      'NOT_FOUND',
+      `${resource} not found`,
+      options?.details,
+      true,
+      options?.context,
+      options?.cause
+    );
     this.name = 'NotFoundError';
   }
 }
@@ -50,14 +66,30 @@ export class ConflictError extends AppError {
 
 export class UnauthorizedError extends AppError {
   constructor(message: string = 'Unauthorized', options?: ServiceErrorOptions) {
-    super(401, 'AUTHENTICATION_ERROR', message, options?.details, true, options?.context, options?.cause);
+    super(
+      401,
+      'AUTHENTICATION_ERROR',
+      message,
+      options?.details,
+      true,
+      options?.context,
+      options?.cause
+    );
     this.name = 'UnauthorizedError';
   }
 }
 
 export class AuthorizationError extends AppError {
   constructor(message: string = 'Insufficient permissions', options?: ServiceErrorOptions) {
-    super(403, 'AUTHORIZATION_ERROR', message, options?.details, true, options?.context, options?.cause);
+    super(
+      403,
+      'AUTHORIZATION_ERROR',
+      message,
+      options?.details,
+      true,
+      options?.context,
+      options?.cause
+    );
     this.name = 'AuthorizationError';
   }
 }

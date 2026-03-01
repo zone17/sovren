@@ -11,8 +11,12 @@ export const RestDayTracker: React.FC = () => {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
-        <CardContent><Skeleton className="h-16 w-full" /></CardContent>
+        <CardHeader>
+          <Skeleton className="h-5 w-32" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-16 w-full" />
+        </CardContent>
       </Card>
     );
   }
@@ -42,13 +46,15 @@ export const RestDayTracker: React.FC = () => {
           <span className={`text-3xl font-bold ${onTarget ? 'text-green-600' : 'text-orange-600'}`}>
             {restDays}
           </span>
-          <span className="text-sm text-gray-500">
-            / {REST_DAY_TARGET} target this week
-          </span>
+          <span className="text-sm text-gray-500">/ {REST_DAY_TARGET} target this week</span>
         </div>
 
         {/* Segmented bar */}
-        <div className="flex h-3 rounded-full overflow-hidden mb-2" role="img" aria-label={`${workDays} work days, ${restDays} rest days this week`}>
+        <div
+          className="flex h-3 rounded-full overflow-hidden mb-2"
+          role="img"
+          aria-label={`${workDays} work days, ${restDays} rest days this week`}
+        >
           <div
             className="bg-blue-500 transition-all duration-500"
             style={{ width: `${((7 - restDays) / 7) * 100}%` }}
@@ -65,9 +71,7 @@ export const RestDayTracker: React.FC = () => {
         </div>
 
         {!onTarget && (
-          <p className="text-xs text-orange-600 mt-3">
-            Consider scheduling a rest day this week.
-          </p>
+          <p className="text-xs text-orange-600 mt-3">Consider scheduling a rest day this week.</p>
         )}
       </CardContent>
     </Card>

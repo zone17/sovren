@@ -57,7 +57,7 @@ describe('Redux Store Integration', () => {
       // Breadcrumbs
       const breadcrumbs = [
         { label: 'Home', path: '/' },
-        { label: 'Dashboard', path: '/dashboard' }
+        { label: 'Dashboard', path: '/dashboard' },
       ];
       store.dispatch(setBreadcrumbs(breadcrumbs));
       expect(store.getState().navigation.breadcrumbs).toEqual(breadcrumbs);
@@ -95,12 +95,20 @@ describe('Redux Store Integration', () => {
       // UI slices should only contain client-side state
       const uiSliceKeys = Object.keys(state.ui);
       const clientOnlyKeys = [
-        'theme', 'sidebarOpen', 'sidebarCollapsed', 'modal',
-        'toasts', 'notifications', 'activeView', 'searchQuery',
-        'selectedFilters', 'formData', 'preferences'
+        'theme',
+        'sidebarOpen',
+        'sidebarCollapsed',
+        'modal',
+        'toasts',
+        'notifications',
+        'activeView',
+        'searchQuery',
+        'selectedFilters',
+        'formData',
+        'preferences',
       ];
 
-      clientOnlyKeys.forEach(key => {
+      clientOnlyKeys.forEach((key) => {
         expect(uiSliceKeys).toContain(key);
       });
 

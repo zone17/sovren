@@ -226,11 +226,13 @@ export const RevenueAnalytics: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Revenue Analytics</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Track your earnings and subscriber metrics
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Track your earnings and subscriber metrics</p>
         </div>
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-lg" role="radiogroup" aria-label="Timeframe selection">
+        <div
+          className="flex gap-1 bg-gray-100 p-1 rounded-lg"
+          role="radiogroup"
+          aria-label="Timeframe selection"
+        >
           {timeframeOptions.map((opt) => (
             <button
               key={opt.value}

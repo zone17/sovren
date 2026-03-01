@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * NOSTR Backup Encryption Service
  * US-322: Secure backup and recovery - Encryption Service

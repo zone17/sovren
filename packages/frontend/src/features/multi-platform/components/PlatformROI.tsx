@@ -20,10 +20,7 @@ export const PlatformROI: React.FC = () => {
 
   if (isError) {
     return (
-      <div
-        role="alert"
-        className="rounded-lg border border-red-200 bg-red-50 p-4 text-center"
-      >
+      <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
         <p className="text-sm text-red-600">Failed to load ROI data.</p>
       </div>
     );
@@ -36,7 +33,9 @@ export const PlatformROI: React.FC = () => {
   return (
     <div className="rounded-lg border bg-white p-6">
       <h3 className="text-lg font-semibold text-gray-900">Platform ROI</h3>
-      <p className="mt-1 text-sm text-gray-500">Engagement per hour invested, ranked by efficiency.</p>
+      <p className="mt-1 text-sm text-gray-500">
+        Engagement per hour invested, ranked by efficiency.
+      </p>
 
       <div className="mt-4 space-y-3" aria-label="Platform ROI ranking">
         {roi.map((item) => {

@@ -67,8 +67,9 @@ export function usePaymentFlow(options: UsePaymentFlowOptions): UsePaymentFlowRe
 
       const mockPaymentRequest =
         'lnbc' + options.amountSats + 'u1p3' + Math.random().toString(36).substring(2, 15);
-      const mockPaymentHash =
-        Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      const mockPaymentHash = Array.from({ length: 64 }, () =>
+        Math.floor(Math.random() * 16).toString(16)
+      ).join('');
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
       setState({

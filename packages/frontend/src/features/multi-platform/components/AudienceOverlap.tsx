@@ -42,9 +42,7 @@ export const AudienceOverlap: React.FC = () => {
 
       <div className="mt-4 grid grid-cols-3 gap-3 text-center">
         <div className="rounded-md bg-indigo-50 p-3">
-          <p className="text-xl font-bold text-indigo-700">
-            {estimatedUnique.toLocaleString()}
-          </p>
+          <p className="text-xl font-bold text-indigo-700">{estimatedUnique.toLocaleString()}</p>
           <p className="text-xs text-indigo-600">Est. Unique Reach</p>
         </div>
         <div className="rounded-md bg-amber-50 p-3">

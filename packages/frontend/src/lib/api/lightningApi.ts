@@ -96,10 +96,7 @@ class LightningApiClient {
   /**
    * Make authenticated request to API with timeout and retry logic
    */
-  private async makeRequest<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = this.getAuthToken();
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -248,13 +245,7 @@ class LightningApiClient {
             resolve(invoice);
           } else if (attempts >= maxAttempts) {
             clearInterval(pollInterval);
-            reject(
-              new LightningApiError(
-                'Payment polling timeout',
-                'POLLING_TIMEOUT',
-                408
-              )
-            );
+            reject(new LightningApiError('Payment polling timeout', 'POLLING_TIMEOUT', 408));
           }
         } catch (error) {
           clearInterval(pollInterval);

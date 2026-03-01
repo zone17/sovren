@@ -8,11 +8,7 @@
  */
 
 // Re-export from userSubscription.ts
-export type {
-  UserSubscription,
-  PaymentMethod,
-  SubscriptionHistory,
-} from './userSubscription';
+export type { UserSubscription, PaymentMethod, SubscriptionHistory } from './userSubscription';
 
 // Re-export from SubscriptionCard component
 export type {

@@ -572,7 +572,13 @@ describe('🎯 DragDrop Component - US-088.5', () => {
     const dragData = { id: 'test-item', type: 'task' };
 
     render(
-      <DragDrop onDragStart={onDragStart} onDragEnd={onDragEnd} dragData={dragData} acceptDrops haptic>
+      <DragDrop
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        dragData={dragData}
+        acceptDrops
+        haptic
+      >
         <div data-testid="drop-zone">Drop zone</div>
       </DragDrop>
     );
@@ -798,10 +804,28 @@ describe('🎯 useTouchTargetAudit Hook - US-089.2', () => {
       // Return small size for first button ("Too small"), normal for second
       const el = this as HTMLElement;
       if (el.textContent === 'Too small') {
-        return { width: 20, height: 20, top: 0, left: 0, right: 20, bottom: 20, x: 0, y: 0 } as DOMRect;
+        return {
+          width: 20,
+          height: 20,
+          top: 0,
+          left: 0,
+          right: 20,
+          bottom: 20,
+          x: 0,
+          y: 0,
+        } as DOMRect;
       }
       if (el.textContent === 'Perfect size') {
-        return { width: 44, height: 44, top: 0, left: 0, right: 44, bottom: 44, x: 0, y: 0 } as DOMRect;
+        return {
+          width: 44,
+          height: 44,
+          top: 0,
+          left: 0,
+          right: 44,
+          bottom: 44,
+          x: 0,
+          y: 0,
+        } as DOMRect;
       }
       return { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0 } as DOMRect;
     };
@@ -841,7 +865,16 @@ describe('🎯 useTouchTargetAudit Hook - US-089.2', () => {
     Element.prototype.getBoundingClientRect = function () {
       const el = this as HTMLElement;
       if (el.getAttribute('data-testid') === 'small-button') {
-        return { width: 20, height: 20, top: 0, left: 0, right: 20, bottom: 20, x: 0, y: 0 } as DOMRect;
+        return {
+          width: 20,
+          height: 20,
+          top: 0,
+          left: 0,
+          right: 20,
+          bottom: 20,
+          x: 0,
+          y: 0,
+        } as DOMRect;
       }
       return { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0 } as DOMRect;
     };

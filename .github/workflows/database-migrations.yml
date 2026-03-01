@@ -1,27 +1,17 @@
 name: 🗄️ Database Migration Deployment
 
+# DEPRECATED: Functionality consolidated into ci.yml
+# Kept for emergency manual use only.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/migrations/**'
-      - 'supabase/config.toml'
-      - '.github/workflows/database-migrations.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'supabase/migrations/**'
-      - 'supabase/config.toml'
   workflow_dispatch:
     inputs:
+      confirm:
+        description: 'DEPRECATED - Use ci.yml instead. Type CONFIRM to run.'
+        required: true
       environment:
         description: 'Target deployment environment'
         required: true
         default: 'staging'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
         type: choice
         options:
           - staging
@@ -35,6 +25,10 @@ concurrency:
         required: false
         default: false
         type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions: read-all
 

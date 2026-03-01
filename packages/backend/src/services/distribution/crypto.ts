@@ -43,12 +43,7 @@ export function encryptToken(plaintext: string, key: Buffer): EncryptedToken {
  * @param authTag - Authentication tag for integrity verification
  * @returns The original plaintext token (NEVER log the return value)
  */
-export function decryptToken(
-  encrypted: Buffer,
-  key: Buffer,
-  iv: Buffer,
-  authTag: Buffer
-): string {
+export function decryptToken(encrypted: Buffer, key: Buffer, iv: Buffer, authTag: Buffer): string {
   if (key.length !== KEY_LENGTH) {
     throw new Error(`Encryption key must be ${KEY_LENGTH} bytes (${KEY_LENGTH * 8} bits)`);
   }

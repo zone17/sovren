@@ -15,7 +15,7 @@ const RepurposePreview: React.FC<RepurposePreviewProps> = ({ contentId }) => {
     repurposeMutation.mutate({
       content_id: contentId,
       platforms: ['twitter', 'mastodon', 'bluesky', 'youtube'],
-    });
+    } as any);
   };
 
   if (isLoading) {
@@ -42,7 +42,7 @@ const RepurposePreview: React.FC<RepurposePreviewProps> = ({ contentId }) => {
         </button>
       </div>
 
-      {(!repurposed || repurposed.length === 0) ? (
+      {!repurposed || repurposed.length === 0 ? (
         <p className="mt-4 text-sm text-gray-500">
           No repurposed versions yet. Click Generate to create platform-optimized versions.
         </p>
@@ -85,9 +85,7 @@ const RepurposePreview: React.FC<RepurposePreviewProps> = ({ contentId }) => {
                     )}
                   </div>
                 </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
-                  {version.text}
-                </p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{version.text}</p>
               </div>
             );
           })}

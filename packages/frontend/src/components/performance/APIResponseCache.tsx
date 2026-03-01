@@ -434,8 +434,8 @@ class APIResponseCacheManager {
     const results: number[] = [];
     let hits = 0;
     let misses = 0;
-    let hitTimes: number[] = [];
-    let missTimes: number[] = [];
+    const hitTimes: number[] = [];
+    const missTimes: number[] = [];
 
     for (const request of testRequests) {
       const startTime = Date.now();

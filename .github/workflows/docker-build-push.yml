@@ -15,21 +15,14 @@
 
 name: Docker Build & Push
 
+# DEPRECATED: Functionality consolidated into ci.yml
+# Kept for emergency manual use only.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'packages/backend/**'
-      - '.github/workflows/docker-build-push.yml'
-      - 'docker-compose.prod.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'packages/backend/**'
   workflow_dispatch:
     inputs:
+      confirm:
+        description: 'DEPRECATED - Use ci.yml instead. Type CONFIRM to run.'
+        required: true
       environment:
         description: 'Deployment environment'
         required: true

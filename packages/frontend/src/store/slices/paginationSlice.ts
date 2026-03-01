@@ -67,10 +67,7 @@ const paginationSlice = createSlice({
   initialState,
   reducers: {
     // Pagination actions
-    setPage: (
-      state,
-      action: PayloadAction<{ section: string; page: number }>
-    ) => {
+    setPage: (state, action: PayloadAction<{ section: string; page: number }>) => {
       if (!state.pages[action.payload.section]) {
         state.pages[action.payload.section] = {
           currentPage: 1,
@@ -82,10 +79,7 @@ const paginationSlice = createSlice({
       state.pages[action.payload.section].currentPage = action.payload.page;
     },
 
-    setPageSize: (
-      state,
-      action: PayloadAction<{ section: string; pageSize: number }>
-    ) => {
+    setPageSize: (state, action: PayloadAction<{ section: string; pageSize: number }>) => {
       if (!state.pages[action.payload.section]) {
         state.pages[action.payload.section] = {
           currentPage: 1,
@@ -145,10 +139,7 @@ const paginationSlice = createSlice({
       }
     },
 
-    toggleSortDirection: (
-      state,
-      action: PayloadAction<{ section: string; field: string }>
-    ) => {
+    toggleSortDirection: (state, action: PayloadAction<{ section: string; field: string }>) => {
       const currentSort = state.sorting[action.payload.section];
       if (currentSort && currentSort.field === action.payload.field) {
         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
@@ -169,10 +160,7 @@ const paginationSlice = createSlice({
     },
 
     // Filter actions
-    setFilters: (
-      state,
-      action: PayloadAction<{ section: string; filters: FilterConfig }>
-    ) => {
+    setFilters: (state, action: PayloadAction<{ section: string; filters: FilterConfig }>) => {
       state.filters[action.payload.section] = action.payload.filters;
       // Reset to page 1 when filters change
       if (state.pages[action.payload.section]) {
@@ -194,8 +182,7 @@ const paginationSlice = createSlice({
       if (action.payload.value === null || action.payload.value === undefined) {
         delete state.filters[action.payload.section][action.payload.filterKey];
       } else {
-        state.filters[action.payload.section][action.payload.filterKey] =
-          action.payload.value;
+        state.filters[action.payload.section][action.payload.filterKey] = action.payload.value;
       }
       // Reset to page 1 when filters change
       if (state.pages[action.payload.section]) {
@@ -244,35 +231,27 @@ export const {
 } = paginationSlice.actions;
 
 // Selectors
-export const selectPagination = (section: string) =>
-  (state: { pagination: PaginationState }) =>
-    state.pagination.pages[section] || {
-      currentPage: 1,
-      pageSize: state.pagination.defaultPageSizes[section] || 20,
-      totalItems: 0,
-      totalPages: 0,
-    };
+export const selectPagination = (section: string) => (state: { pagination: PaginationState }) =>
+  state.pagination.pages[section] || {
+    currentPage: 1,
+    pageSize: state.pagination.defaultPageSizes[section] || 20,
+    totalItems: 0,
+    totalPages: 0,
+  };
 
-export const selectCurrentPage = (section: string) =>
-  (state: { pagination: PaginationState }) =>
-    state.pagination.pages[section]?.currentPage || 1;
+export const selectCurrentPage = (section: string) => (state: { pagination: PaginationState }) =>
+  state.pagination.pages[section]?.currentPage || 1;
 
-export const selectPageSize = (section: string) =>
-  (state: { pagination: PaginationState }) =>
-    state.pagination.pages[section]?.pageSize ||
-    state.pagination.defaultPageSizes[section] ||
-    20;
+export const selectPageSize = (section: string) => (state: { pagination: PaginationState }) =>
+  state.pagination.pages[section]?.pageSize || state.pagination.defaultPageSizes[section] || 20;
 
-export const selectSorting = (section: string) =>
-  (state: { pagination: PaginationState }) =>
-    state.pagination.sorting[section] || null;
+export const selectSorting = (section: string) => (state: { pagination: PaginationState }) =>
+  state.pagination.sorting[section] || null;
 
-export const selectFilters = (section: string) =>
-  (state: { pagination: PaginationState }) =>
-    state.pagination.filters[section] || {};
+export const selectFilters = (section: string) => (state: { pagination: PaginationState }) =>
+  state.pagination.filters[section] || {};
 
-export const selectHasFilters = (section: string) =>
-  (state: { pagination: PaginationState }) =>
-    Object.keys(state.pagination.filters[section] || {}).length > 0;
+export const selectHasFilters = (section: string) => (state: { pagination: PaginationState }) =>
+  Object.keys(state.pagination.filters[section] || {}).length > 0;
 
 export default paginationSlice.reducer;

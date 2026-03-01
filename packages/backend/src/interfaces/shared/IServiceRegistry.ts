@@ -139,4 +139,3 @@ export interface ServiceMetadata {
   healthCheck?: () => Promise<boolean>;
   metrics?: string[];
 }
-

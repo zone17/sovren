@@ -8,7 +8,7 @@ import { constants } from 'zlib';
 
 // Elite Build Performance Monitoring
 const buildStartTime = Date.now();
-let buildMetrics = {
+const buildMetrics = {
   startTime: buildStartTime,
   endTime: 0,
   duration: 0,
@@ -375,10 +375,7 @@ export default defineConfig(async ({ mode, command }) => {
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
-        exclude: [
-          'node_modules/',
-          'src/setupTests.ts',
-        ],
+        exclude: ['node_modules/', 'src/setupTests.ts'],
       },
     },
   };

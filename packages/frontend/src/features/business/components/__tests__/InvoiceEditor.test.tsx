@@ -328,10 +328,7 @@ describe('InvoiceEditor', () => {
       let saveSuccessCallback: ((res: { data: { id: string } }) => void) | null = null;
 
       const mutate = vi.fn(
-        (
-          _data: unknown,
-          opts: { onSuccess: (res: { data: { id: string } }) => void }
-        ) => {
+        (_data: unknown, opts: { onSuccess: (res: { data: { id: string } }) => void }) => {
           saveSuccessCallback = opts.onSuccess;
         }
       );
@@ -352,15 +349,13 @@ describe('InvoiceEditor', () => {
         saveSuccessCallback!({ data: { id: 'invoice-123' } });
       });
 
-      expect(
-        screen.getByRole('button', { name: /Generate Payment Link/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Generate Payment Link/i })).toBeInTheDocument();
     });
 
     it('shows payment link section when payment link is generated', () => {
-      let paymentSuccessCallback: (
-        (res: { data: { lnurlPay: string; qrCode: string } }) => void
-      ) | null = null;
+      let paymentSuccessCallback:
+        | ((res: { data: { lnurlPay: string; qrCode: string } }) => void)
+        | null = null;
 
       const payMutate = vi.fn(
         (
@@ -373,10 +368,7 @@ describe('InvoiceEditor', () => {
 
       let saveSuccessCallback: ((res: { data: { id: string } }) => void) | null = null;
       const saveMutate = vi.fn(
-        (
-          _data: unknown,
-          opts: { onSuccess: (res: { data: { id: string } }) => void }
-        ) => {
+        (_data: unknown, opts: { onSuccess: (res: { data: { id: string } }) => void }) => {
           saveSuccessCallback = opts.onSuccess;
         }
       );
@@ -410,7 +402,9 @@ describe('InvoiceEditor', () => {
 
       // Wrap in act because onSuccess triggers setPaymentLink state update.
       act(() => {
-        paymentSuccessCallback!({ data: { lnurlPay: 'lnurl1test', qrCode: 'data:image/png;base64' } });
+        paymentSuccessCallback!({
+          data: { lnurlPay: 'lnurl1test', qrCode: 'data:image/png;base64' },
+        });
       });
 
       expect(screen.getByText('Payment Link Generated')).toBeInTheDocument();

@@ -31,13 +31,13 @@ const server = setupServer(
   http.get('/api/users', () => {
     return HttpResponse.json([
       { id: '1', name: 'User 1', email: 'user1@test.com' },
-      { id: '2', name: 'User 2', email: 'user2@test.com' }
+      { id: '2', name: 'User 2', email: 'user2@test.com' },
     ]);
   }),
   http.get('/api/posts', () => {
     return HttpResponse.json([
       { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' },
-      { id: '2', title: 'Post 2', content: 'Content 2', userId: '2' }
+      { id: '2', title: 'Post 2', content: 'Content 2', userId: '2' },
     ]);
   }),
   http.put('/api/users/:id', async ({ params, request }) => {
@@ -66,8 +66,8 @@ describe('React Query + Redux Integration', () => {
     // Fresh store for each test
     store = configureStore({
       reducer: {
-        ui: uiSlice.reducer
-      }
+        ui: uiSlice.reducer,
+      },
     });
 
     // Fresh query client with short cache time for testing
@@ -76,17 +76,15 @@ describe('React Query + Redux Integration', () => {
         queries: {
           staleTime: 0,
           gcTime: 1000,
-          retry: false
-        }
-      }
+          retry: false,
+        },
+      },
     });
   });
 
   const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </Provider>
   );
 
@@ -100,18 +98,12 @@ describe('React Query + Redux Integration', () => {
 
         return (
           <div>
-            {users?.map(user => (
+            {users?.map((user) => (
               <div key={user.id}>
-                <button onClick={() => setSelectedItem('user', user)}>
-                  {user.name}
-                </button>
+                <button onClick={() => setSelectedItem('user', user)}>{user.name}</button>
               </div>
             ))}
-            {selectedItem && (
-              <div data-testid="selected-user">
-                Selected: {selectedItem.name}
-              </div>
-            )}
+            {selectedItem && <div data-testid="selected-user">Selected: {selectedItem.name}</div>}
           </div>
         );
       };
@@ -140,7 +132,7 @@ describe('React Query + Redux Integration', () => {
       expect(state.ui.selectedItem).toEqual({
         id: '1',
         name: 'User 1',
-        email: 'user1@test.com'
+        email: 'user1@test.com',
       });
     });
   });
@@ -159,7 +151,7 @@ describe('React Query + Redux Integration', () => {
               onSuccess: () => {
                 setNotification({ type: 'success', message: 'User updated!' });
                 refetch(); // Invalidate cache
-              }
+              },
             }
           );
         };
@@ -167,7 +159,7 @@ describe('React Query + Redux Integration', () => {
         return (
           <div>
             <button onClick={handleUpdate}>Update User</button>
-            {users?.map(user => (
+            {users?.map((user) => (
               <div key={user.id}>{user.name}</div>
             ))}
           </div>
@@ -181,12 +173,12 @@ describe('React Query + Redux Integration', () => {
           if (url.searchParams.get('updated') === 'true') {
             return HttpResponse.json([
               { id: '1', name: 'Updated User', email: 'user1@test.com' },
-              { id: '2', name: 'User 2', email: 'user2@test.com' }
+              { id: '2', name: 'User 2', email: 'user2@test.com' },
             ]);
           }
           return HttpResponse.json([
             { id: '1', name: 'User 1', email: 'user1@test.com' },
-            { id: '2', name: 'User 2', email: 'user2@test.com' }
+            { id: '2', name: 'User 2', email: 'user2@test.com' },
           ]);
         })
       );
@@ -210,7 +202,7 @@ describe('React Query + Redux Integration', () => {
         const state = store.getState();
         expect(state.ui.notification).toEqual({
           type: 'success',
-          message: 'User updated!'
+          message: 'User updated!',
         });
       });
     });
@@ -227,13 +219,13 @@ describe('React Query + Redux Integration', () => {
 
           if (filter === 'user1') {
             return HttpResponse.json([
-              { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' }
+              { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' },
             ]);
           }
 
           return HttpResponse.json([
             { id: '1', title: 'Post 1', content: 'Content 1', userId: '1' },
-            { id: '2', title: 'Post 2', content: 'Content 2', userId: '2' }
+            { id: '2', title: 'Post 2', content: 'Content 2', userId: '2' },
           ]);
         })
       );
@@ -247,7 +239,7 @@ describe('React Query + Redux Integration', () => {
             <button onClick={() => setFilter('user1')}>Filter User 1</button>
             <button onClick={() => setFilter(null)}>Clear Filter</button>
             <div data-testid="post-count">Posts: {posts?.length || 0}</div>
-            {posts?.map(post => (
+            {posts?.map((post) => (
               <div key={post.id}>{post.title}</div>
             ))}
           </div>
@@ -295,7 +287,7 @@ describe('React Query + Redux Integration', () => {
           const newPost = {
             title: 'Optimistic Post',
             content: 'This will fail',
-            userId: '1'
+            userId: '1',
           };
 
           // Optimistic update
@@ -309,15 +301,13 @@ describe('React Query + Redux Integration', () => {
           }
         };
 
-        const allPosts = optimisticPost
-          ? [...(posts || []), optimisticPost]
-          : posts || [];
+        const allPosts = optimisticPost ? [...(posts || []), optimisticPost] : posts || [];
 
         return (
           <div>
             <button onClick={handleCreate}>Create Post</button>
             <div data-testid="post-count">Posts: {allPosts.length}</div>
-            {allPosts.map(post => (
+            {allPosts.map((post) => (
               <div key={post.id} data-testid={`post-${post.id}`}>
                 {post.title}
               </div>
@@ -369,7 +359,7 @@ describe('React Query + Redux Integration', () => {
           if (isError && error) {
             setError({
               message: error.message || 'Failed to fetch users',
-              code: 'FETCH_ERROR'
+              code: 'FETCH_ERROR',
             });
           }
         }, [isError, error, setError]);
@@ -410,7 +400,7 @@ describe('React Query + Redux Integration', () => {
       const state = store.getState();
       expect(state.ui.error).toEqual({
         message: 'Failed to fetch users',
-        code: 'FETCH_ERROR'
+        code: 'FETCH_ERROR',
       });
     });
   });
@@ -426,12 +416,12 @@ describe('React Query + Redux Integration', () => {
           // Simulate concurrent updates
           Promise.all([
             setBulkState({ loading: true, section: 'users' }),
-            setBulkState({ loading: true, section: 'posts' })
+            setBulkState({ loading: true, section: 'posts' }),
           ]).then(() => {
             setBulkState({
               loading: false,
               section: 'all',
-              timestamp: Date.now()
+              timestamp: Date.now(),
             });
           });
         };
@@ -501,10 +491,13 @@ describe('React Query + Redux Integration', () => {
       };
 
       // Set initial persisted state
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        theme: 'dark',
-        layout: 'grid'
-      }));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          theme: 'dark',
+          layout: 'grid',
+        })
+      );
 
       render(
         <TestWrapper>
@@ -537,18 +530,19 @@ describe('React Query + Redux Integration', () => {
         http.get('/api/users/:userId/posts', ({ params }) => {
           postFetchCount++;
           const { userId } = params;
-          return HttpResponse.json([
-            { id: '1', title: `Post by User ${userId}` }
-          ]);
+          return HttpResponse.json([{ id: '1', title: `Post by User ${userId}` }]);
         })
       );
 
       const TestComponent = () => {
         const [userId, setUserId] = React.useState('1');
         const { data: user } = useUsersQuery(userId);
-        const { data: posts } = usePostsQuery({ userId }, {
-          enabled: !!user
-        });
+        const { data: posts } = usePostsQuery(
+          { userId },
+          {
+            enabled: !!user,
+          }
+        );
 
         return (
           <div>
@@ -595,7 +589,7 @@ describe('Coverage Metrics', () => {
       statements: 96.2,
       branches: 95.8,
       functions: 97.1,
-      lines: 96.5
+      lines: 96.5,
     };
 
     Object.entries(coverageReport).forEach(([_metric, value]) => {

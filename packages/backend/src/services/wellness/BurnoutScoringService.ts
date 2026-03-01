@@ -253,7 +253,8 @@ export class BurnoutScoringService implements IBurnoutScoringService {
         return BurnoutScoringService.DEFAULT_SENSITIVITY;
       }
 
-      const level = (data.sensitivity_level as SensitivityLevel) || BurnoutScoringService.DEFAULT_SENSITIVITY;
+      const level =
+        (data.sensitivity_level as SensitivityLevel) || BurnoutScoringService.DEFAULT_SENSITIVITY;
 
       // Cache the result
       this.sensitivityCache.set(creatorId, {

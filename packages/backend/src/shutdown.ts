@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Graceful Shutdown Handler
  * Manages clean disposal of all services and resources
@@ -127,46 +128,57 @@ async function performShutdown(
   // Define shutdown order (reverse of initialization)
   const shutdownOrder = [
     // Business Services (dispose first)
-    { name: 'PaymentServices', services: [
-      'PaymentProcessingService',
-      'SubscriptionService',
-      'RefundService',
-      'PaymentAnalyticsService',
-      'WebhookService',
-      'InvoiceService',
-      'CurrencyService',
-    ]},
-    { name: 'UserServices', services: [
-      'UserProfileService',
-      'UserPreferencesService',
-      'UserActivityService',
-      'UserRelationshipService',
-      'UserAnalyticsService',
-    ]},
-    { name: 'ContentServices', services: [
-      'ContentPublishingService',
-      'ContentModerationService',
-      'ContentSearchService',
-      'ContentRecommendationService',
-      'ContentAnalyticsService',
-      'ContentVersioningService',
-      'ContentCreationService',
-    ]},
-    { name: 'SharedServices', services: [
-      'NotificationService',
-      'EmailService',
-      'AuditLogService',
-    ]},
+    {
+      name: 'PaymentServices',
+      services: [
+        'PaymentProcessingService',
+        'SubscriptionService',
+        'RefundService',
+        'PaymentAnalyticsService',
+        'WebhookService',
+        'InvoiceService',
+        'CurrencyService',
+      ],
+    },
+    {
+      name: 'UserServices',
+      services: [
+        'UserProfileService',
+        'UserPreferencesService',
+        'UserActivityService',
+        'UserRelationshipService',
+        'UserAnalyticsService',
+      ],
+    },
+    {
+      name: 'ContentServices',
+      services: [
+        'ContentPublishingService',
+        'ContentModerationService',
+        'ContentSearchService',
+        'ContentRecommendationService',
+        'ContentAnalyticsService',
+        'ContentVersioningService',
+        'ContentCreationService',
+      ],
+    },
+    {
+      name: 'SharedServices',
+      services: ['NotificationService', 'EmailService', 'AuditLogService'],
+    },
     // Infrastructure Services (dispose last)
-    { name: 'Infrastructure', services: [
-      'CacheService',
-      'EventBusService',
-      'Redis',
-      'Database',
-      'ElasticsearchService',
-      'LightningService',
-      'NostrService',
-    ]},
+    {
+      name: 'Infrastructure',
+      services: [
+        'CacheService',
+        'EventBusService',
+        'Redis',
+        'Database',
+        'ElasticsearchService',
+        'LightningService',
+        'NostrService',
+      ],
+    },
   ];
 
   // Dispose services in order

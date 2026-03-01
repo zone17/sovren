@@ -97,18 +97,19 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
   }
 
   const statusColor = getStatusColor(deployment.status);
-  const progress = deployment.stages.length > 0
-    ? (deployment.stages.filter(s => s.status === 'success').length / deployment.stages.length) * 100
-    : 0;
+  const progress =
+    deployment.stages.length > 0
+      ? (deployment.stages.filter((s) => s.status === 'success').length /
+          deployment.stages.length) *
+        100
+      : 0;
 
   return (
     <div className="bg-white rounded-lg shadow">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Current Deployment
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900">Current Deployment</h2>
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColor}`}>
             {deployment.status.replace('_', ' ').toUpperCase()}
           </span>
@@ -128,9 +129,7 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
           <div>
             <p className="text-sm text-gray-500">Duration</p>
             <p className="text-base font-medium text-gray-900">
-              {deployment.duration
-                ? formatDuration(deployment.duration)
-                : 'In progress...'}
+              {deployment.duration ? formatDuration(deployment.duration) : 'In progress...'}
             </p>
           </div>
           <div>
@@ -141,9 +140,7 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
           </div>
           <div>
             <p className="text-sm text-gray-500">Author</p>
-            <p className="text-base font-medium text-gray-900">
-              {deployment.author}
-            </p>
+            <p className="text-base font-medium text-gray-900">{deployment.author}</p>
           </div>
         </div>
 
@@ -187,9 +184,7 @@ export const DeploymentStatusPanel: React.FC<DeploymentStatusPanelProps> = ({
                     </div>
                   </div>
                   {stage.duration && (
-                    <span className="text-xs text-gray-500">
-                      {formatDuration(stage.duration)}
-                    </span>
+                    <span className="text-xs text-gray-500">{formatDuration(stage.duration)}</span>
                   )}
                 </div>
               ))}

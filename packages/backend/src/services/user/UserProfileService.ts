@@ -25,16 +25,15 @@ import type {
   SocialMediaLink,
   ProfileVisibility,
   AvatarMetadata,
-  ProfileAnalytics
 } from '../../types/user-profile';
 import {
   PROFILE_CONSTRAINTS,
   PROFILE_COMPLETION_WEIGHTS,
   PROFILE_CACHE_KEYS,
   PROFILE_EVENT_TYPES,
-  PROFILE_AUDIT_ACTIONS
+  PROFILE_AUDIT_ACTIONS,
 } from '../../types/user-profile';
-import crypto, { createHash } from 'crypto';
+import crypto from 'crypto';
 import sharp from 'sharp';
 
 /**
@@ -110,7 +109,7 @@ export class UserProfileService implements IUserProfileService {
     PROFILE: 3600, // 1 hour
     ANALYTICS: 300, // 5 minutes
     SEARCH: 600, // 10 minutes
-    COMPLETION: 1800 // 30 minutes
+    COMPLETION: 1800, // 30 minutes
   };
 
   constructor(
@@ -136,7 +135,9 @@ export class UserProfileService implements IUserProfileService {
     // Validate request
     const validation = this.validateProfile(request);
     if (!validation.valid) {
-      const error = new Error(`Profile validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+      const error = new Error(
+        `Profile validation failed: ${validation.errors.map((e) => e.message).join(', ')}`
+      );
       this.logger.error('Profile validation failed', error);
       throw error;
     }
@@ -177,11 +178,11 @@ export class UserProfileService implements IUserProfileService {
         followersGained: 0,
         followersGainedToday: 0,
         followersGainedThisWeek: 0,
-        followersGainedThisMonth: 0
+        followersGainedThisMonth: 0,
       },
       createdAt: now,
       updatedAt: now,
-      completionScore: this.calculateCompletionScore(request)
+      completionScore: this.calculateCompletionScore(request),
     };
 
     // Store profile
@@ -204,16 +205,19 @@ export class UserProfileService implements IUserProfileService {
       entityType: 'profile',
       entityId: profile.id,
       newValue: profile,
-      timestamp: now
+      timestamp: now,
     });
 
     // Emit event
     await this.emitEvent(PROFILE_EVENT_TYPES.PROFILE_CREATED, profile.id, 'profile', {
       userId: profile.userId,
-      profile
+      profile,
     });
 
-    this.logger.info('Profile created successfully', { userId: profile.userId, profileId: profile.id });
+    this.logger.info('Profile created successfully', {
+      userId: profile.userId,
+      profileId: profile.id,
+    });
 
     return profile;
   }
@@ -281,7 +285,9 @@ export class UserProfileService implements IUserProfileService {
     // Validate updates
     const validation = this.validateProfile(request);
     if (!validation.valid) {
-      throw new Error(`Profile validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+      throw new Error(
+        `Profile validation failed: ${validation.errors.map((e) => e.message).join(', ')}`
+      );
     }
 
     // Check username availability if changing
@@ -308,7 +314,7 @@ export class UserProfileService implements IUserProfileService {
       ...profile,
       ...request,
       updatedAt: new Date(),
-      lastProfileUpdateAt: new Date()
+      lastProfileUpdateAt: new Date(),
     };
 
     // Recalculate completion score
@@ -328,14 +334,14 @@ export class UserProfileService implements IUserProfileService {
       entityId: profile.id,
       oldValue: oldValues,
       newValue: request,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Emit event
     await this.emitEvent(PROFILE_EVENT_TYPES.PROFILE_UPDATED, profile.id, 'profile', {
       userId,
       changes: request,
-      profile: updatedProfile
+      profile: updatedProfile,
     });
 
     this.logger.info('Profile updated successfully', { userId, profileId: profile.id });
@@ -370,13 +376,13 @@ export class UserProfileService implements IUserProfileService {
       entityType: 'profile',
       entityId: profile.id,
       oldValue: profile,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Emit event
     await this.emitEvent(PROFILE_EVENT_TYPES.PROFILE_DELETED, profile.id, 'profile', {
       userId,
-      profile
+      profile,
     });
 
     this.logger.info('Profile deleted successfully', { userId, profileId: profile.id });
@@ -402,7 +408,9 @@ export class UserProfileService implements IUserProfileService {
       }
 
       if (request.imageData.length > PROFILE_CONSTRAINTS.avatar.maxSize) {
-        throw new Error(`Image size exceeds maximum of ${PROFILE_CONSTRAINTS.avatar.maxSize / 1024 / 1024}MB`);
+        throw new Error(
+          `Image size exceeds maximum of ${PROFILE_CONSTRAINTS.avatar.maxSize / 1024 / 1024}MB`
+        );
       }
 
       // Process image with sharp
@@ -411,9 +419,10 @@ export class UserProfileService implements IUserProfileService {
 
       // Validate dimensions
       if (
-        metadata.width && metadata.height &&
+        metadata.width &&
+        metadata.height &&
         (metadata.width > PROFILE_CONSTRAINTS.avatar.maxDimensions.width ||
-         metadata.height > PROFILE_CONSTRAINTS.avatar.maxDimensions.height)
+          metadata.height > PROFILE_CONSTRAINTS.avatar.maxDimensions.height)
       ) {
         throw new Error('Image dimensions exceed maximum of 2048x2048 pixels');
       }
@@ -440,7 +449,7 @@ export class UserProfileService implements IUserProfileService {
         height: 512,
         size: processedImage.length,
         mimeType: 'image/jpeg',
-        uploadedAt: new Date()
+        uploadedAt: new Date(),
       };
 
       // Update profile
@@ -459,26 +468,26 @@ export class UserProfileService implements IUserProfileService {
         entityType: 'profile',
         entityId: profile.id,
         newValue: avatar,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Emit event
       await this.emitEvent(PROFILE_EVENT_TYPES.AVATAR_UPLOADED, profile.id, 'profile', {
         userId: request.userId,
-        avatar
+        avatar,
       });
 
       this.logger.info('Avatar uploaded successfully', { userId: request.userId });
 
       return {
         success: true,
-        avatar
+        avatar,
       };
     } catch (error) {
       this.logger.error('Avatar upload failed', error as Error);
       return {
         success: false,
-        error: (error as Error).message
+        error: (error as Error).message,
       };
     }
   }
@@ -512,7 +521,7 @@ export class UserProfileService implements IUserProfileService {
       entityType: 'profile',
       entityId: profile.id,
       oldValue: oldAvatar,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     this.logger.info('Avatar deleted successfully', { userId });
@@ -533,18 +542,18 @@ export class UserProfileService implements IUserProfileService {
     }
 
     // Check if platform already exists
-    const existingIndex = profile.socialLinks.findIndex(l => l.platform === link.platform);
+    const existingIndex = profile.socialLinks.findIndex((l) => l.platform === link.platform);
     if (existingIndex !== -1) {
       // Replace existing link
       profile.socialLinks[existingIndex] = {
         ...link,
-        verified: false
+        verified: false,
       };
     } else {
       // Add new link
       profile.socialLinks.push({
         ...link,
-        verified: false
+        verified: false,
       });
     }
 
@@ -562,13 +571,13 @@ export class UserProfileService implements IUserProfileService {
       entityType: 'profile',
       entityId: profile.id,
       newValue: link,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Emit event
     await this.emitEvent(PROFILE_EVENT_TYPES.SOCIAL_LINK_ADDED, profile.id, 'profile', {
       userId,
-      link
+      link,
     });
 
     return profile;
@@ -585,8 +594,8 @@ export class UserProfileService implements IUserProfileService {
       throw new Error(`Profile not found for user ${userId}`);
     }
 
-    const removedLink = profile.socialLinks.find(l => l.platform === platform);
-    profile.socialLinks = profile.socialLinks.filter(l => l.platform !== platform);
+    const removedLink = profile.socialLinks.find((l) => l.platform === platform);
+    profile.socialLinks = profile.socialLinks.filter((l) => l.platform !== platform);
 
     profile.updatedAt = new Date();
     profile.completionScore = this.calculateCompletionScore(profile);
@@ -602,13 +611,13 @@ export class UserProfileService implements IUserProfileService {
       entityType: 'profile',
       entityId: profile.id,
       oldValue: removedLink,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Emit event
     await this.emitEvent(PROFILE_EVENT_TYPES.SOCIAL_LINK_REMOVED, profile.id, 'profile', {
       userId,
-      platform
+      platform,
     });
 
     return profile;
@@ -618,7 +627,10 @@ export class UserProfileService implements IUserProfileService {
    * Verify social media link
    */
   async verifySocialLink(request: VerifySocialLinkRequest): Promise<VerifySocialLinkResult> {
-    this.logger.info('Verifying social link', { userId: request.userId, platform: request.platform });
+    this.logger.info('Verifying social link', {
+      userId: request.userId,
+      platform: request.platform,
+    });
 
     try {
       const profile = await this.getProfile(request.userId);
@@ -626,7 +638,7 @@ export class UserProfileService implements IUserProfileService {
         throw new Error(`Profile not found for user ${request.userId}`);
       }
 
-      const linkIndex = profile.socialLinks.findIndex(l => l.platform === request.platform);
+      const linkIndex = profile.socialLinks.findIndex((l) => l.platform === request.platform);
       if (linkIndex === -1) {
         throw new Error(`Social link for platform ${request.platform} not found`);
       }
@@ -651,27 +663,27 @@ export class UserProfileService implements IUserProfileService {
         entityType: 'profile',
         entityId: profile.id,
         newValue: { platform: request.platform, verified, verifiedAt },
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Emit event
       await this.emitEvent(PROFILE_EVENT_TYPES.SOCIAL_LINK_VERIFIED, profile.id, 'profile', {
         userId: request.userId,
         platform: request.platform,
-        verifiedAt
+        verifiedAt,
       });
 
       return {
         success: true,
         verified,
-        verifiedAt
+        verifiedAt,
       };
     } catch (error) {
       this.logger.error('Social link verification failed', error as Error);
       return {
         success: false,
         verified: false,
-        error: (error as Error).message
+        error: (error as Error).message,
       };
     }
   }
@@ -703,14 +715,14 @@ export class UserProfileService implements IUserProfileService {
       entityId: profile.id,
       oldValue: oldVisibility,
       newValue: visibility,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Emit event
     await this.emitEvent(PROFILE_EVENT_TYPES.VISIBILITY_CHANGED, profile.id, 'profile', {
       userId,
       oldVisibility,
-      newVisibility: visibility
+      newVisibility: visibility,
     });
 
     return profile;
@@ -739,29 +751,30 @@ export class UserProfileService implements IUserProfileService {
     // Apply filters
     if (query.query) {
       const searchTerm = query.query.toLowerCase();
-      profiles = profiles.filter(p =>
-        p.username?.toLowerCase().includes(searchTerm) ||
-        p.displayName?.toLowerCase().includes(searchTerm) ||
-        p.bio?.toLowerCase().includes(searchTerm)
+      profiles = profiles.filter(
+        (p) =>
+          p.username?.toLowerCase().includes(searchTerm) ||
+          p.displayName?.toLowerCase().includes(searchTerm) ||
+          p.bio?.toLowerCase().includes(searchTerm)
       );
     }
 
     if (query.location) {
-      profiles = profiles.filter(p =>
+      profiles = profiles.filter((p) =>
         p.location?.toLowerCase().includes(query.location!.toLowerCase())
       );
     }
 
     if (query.verifiedOnly) {
-      profiles = profiles.filter(p => p.verificationBadge);
+      profiles = profiles.filter((p) => p.verificationBadge);
     }
 
     if (query.visibility) {
-      profiles = profiles.filter(p => p.visibility === query.visibility);
+      profiles = profiles.filter((p) => p.visibility === query.visibility);
     }
 
     if (query.minCompletionScore !== undefined) {
-      profiles = profiles.filter(p => p.completionScore >= query.minCompletionScore!);
+      profiles = profiles.filter((p) => p.completionScore >= query.minCompletionScore!);
     }
 
     // Sort
@@ -798,7 +811,7 @@ export class UserProfileService implements IUserProfileService {
       total,
       page,
       pageSize,
-      hasMore: offset + pageSize < total
+      hasMore: offset + pageSize < total,
     };
 
     // Cache result
@@ -818,7 +831,7 @@ export class UserProfileService implements IUserProfileService {
     this.logger.debug('Recording profile view', { profileId, viewerId });
 
     // Find profile by ID
-    const profile = Array.from(this.profiles.values()).find(p => p.id === profileId);
+    const profile = Array.from(this.profiles.values()).find((p) => p.id === profileId);
     if (!profile) {
       return; // Silently ignore if profile not found
     }
@@ -840,8 +853,8 @@ export class UserProfileService implements IUserProfileService {
       profileId,
       viewerId,
       timestamp: new Date(),
-      ...metadata
-    }).catch(err => this.logger.error('Failed to emit profile view event', err));
+      ...metadata,
+    }).catch((err) => this.logger.error('Failed to emit profile view event', err));
   }
 
   /**
@@ -874,7 +887,7 @@ export class UserProfileService implements IUserProfileService {
       userId,
       period: {
         start: startDate,
-        end: endDate
+        end: endDate,
       },
       metrics: {
         totalViews: profile.analytics.profileViews,
@@ -882,11 +895,12 @@ export class UserProfileService implements IUserProfileService {
         averageViewsPerDay: profile.analytics.profileViewsThisMonth / 30,
         followersGained: profile.analytics.followersGained,
         followersLost: 0,
-        engagementRate: profile.analytics.profileViews > 0
-          ? (profile.analytics.followersGained / profile.analytics.profileViews) * 100
-          : 0
+        engagementRate:
+          profile.analytics.profileViews > 0
+            ? (profile.analytics.followersGained / profile.analytics.profileViews) * 100
+            : 0,
       },
-      timeline: [] // Would be populated from time-series data
+      timeline: [], // Would be populated from time-series data
     };
 
     // Cache result
@@ -969,7 +983,7 @@ export class UserProfileService implements IUserProfileService {
       percentage: profile.completionScore,
       missingFields,
       completedFields,
-      suggestions
+      suggestions,
     };
 
     // Cache result
@@ -986,36 +1000,40 @@ export class UserProfileService implements IUserProfileService {
 
     // Display name validation
     if (data.displayName !== undefined) {
-      if (data.displayName.length < PROFILE_CONSTRAINTS.displayName.minLength ||
-          data.displayName.length > PROFILE_CONSTRAINTS.displayName.maxLength) {
+      if (
+        data.displayName.length < PROFILE_CONSTRAINTS.displayName.minLength ||
+        data.displayName.length > PROFILE_CONSTRAINTS.displayName.maxLength
+      ) {
         errors.push({
           field: 'displayName',
           message: PROFILE_CONSTRAINTS.displayName.message,
-          code: 'INVALID_DISPLAY_NAME'
+          code: 'INVALID_DISPLAY_NAME',
         });
       } else if (!PROFILE_CONSTRAINTS.displayName.pattern.test(data.displayName)) {
         errors.push({
           field: 'displayName',
           message: PROFILE_CONSTRAINTS.displayName.message,
-          code: 'INVALID_DISPLAY_NAME_FORMAT'
+          code: 'INVALID_DISPLAY_NAME_FORMAT',
         });
       }
     }
 
     // Username validation
     if (data.username !== undefined) {
-      if (data.username.length < PROFILE_CONSTRAINTS.username.minLength ||
-          data.username.length > PROFILE_CONSTRAINTS.username.maxLength) {
+      if (
+        data.username.length < PROFILE_CONSTRAINTS.username.minLength ||
+        data.username.length > PROFILE_CONSTRAINTS.username.maxLength
+      ) {
         errors.push({
           field: 'username',
           message: PROFILE_CONSTRAINTS.username.message,
-          code: 'INVALID_USERNAME'
+          code: 'INVALID_USERNAME',
         });
       } else if (!PROFILE_CONSTRAINTS.username.pattern.test(data.username)) {
         errors.push({
           field: 'username',
           message: PROFILE_CONSTRAINTS.username.message,
-          code: 'INVALID_USERNAME_FORMAT'
+          code: 'INVALID_USERNAME_FORMAT',
         });
       }
     }
@@ -1025,16 +1043,19 @@ export class UserProfileService implements IUserProfileService {
       errors.push({
         field: 'bio',
         message: PROFILE_CONSTRAINTS.bio.message,
-        code: 'BIO_TOO_LONG'
+        code: 'BIO_TOO_LONG',
       });
     }
 
     // Location validation
-    if (data.location !== undefined && data.location.length > PROFILE_CONSTRAINTS.location.maxLength) {
+    if (
+      data.location !== undefined &&
+      data.location.length > PROFILE_CONSTRAINTS.location.maxLength
+    ) {
       errors.push({
         field: 'location',
         message: PROFILE_CONSTRAINTS.location.message,
-        code: 'LOCATION_TOO_LONG'
+        code: 'LOCATION_TOO_LONG',
       });
     }
 
@@ -1043,13 +1064,13 @@ export class UserProfileService implements IUserProfileService {
       errors.push({
         field: 'website',
         message: PROFILE_CONSTRAINTS.website.message,
-        code: 'INVALID_WEBSITE_URL'
+        code: 'INVALID_WEBSITE_URL',
       });
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -1120,14 +1141,14 @@ export class UserProfileService implements IUserProfileService {
       oldValue: oldStatus,
       newValue: status,
       metadata: { targetUserId: userId },
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Emit event
     await this.emitEvent(PROFILE_EVENT_TYPES.VERIFICATION_COMPLETED, profile.id, 'profile', {
       userId,
       status,
-      adminUserId
+      adminUserId,
     });
 
     return profile;
@@ -1143,7 +1164,7 @@ export class UserProfileService implements IUserProfileService {
     lastUpdate?: Date;
   }> {
     let cacheConnected = false;
-    let dbConnected = true; // Using in-memory storage for now
+    const dbConnected = true; // Using in-memory storage for now
 
     try {
       await this.cache.getStats();
@@ -1156,7 +1177,7 @@ export class UserProfileService implements IUserProfileService {
       healthy: cacheConnected && dbConnected,
       cacheConnected,
       dbConnected,
-      lastUpdate: new Date()
+      lastUpdate: new Date(),
     };
   }
 
@@ -1203,7 +1224,7 @@ export class UserProfileService implements IUserProfileService {
     const keysToDelete = [
       PROFILE_CACHE_KEYS.profile(userId),
       PROFILE_CACHE_KEYS.profileAnalytics(userId),
-      PROFILE_CACHE_KEYS.profileCompletion(userId)
+      PROFILE_CACHE_KEYS.profileCompletion(userId),
     ];
 
     if (oldUsername) {
@@ -1213,7 +1234,7 @@ export class UserProfileService implements IUserProfileService {
       keysToDelete.push(PROFILE_CACHE_KEYS.profileByUsername(newUsername.toLowerCase()));
     }
 
-    await Promise.all(keysToDelete.map(key => this.cache.delete(key)));
+    await Promise.all(keysToDelete.map((key) => this.cache.delete(key)));
 
     // Invalidate search cache
     await this.cache.deletePattern('profile:search:*');
@@ -1237,8 +1258,8 @@ export class UserProfileService implements IUserProfileService {
       metadata: {
         timestamp: new Date(),
         version: '1.0.0',
-        source: 'UserProfileService'
-      }
+        source: 'UserProfileService',
+      },
     };
 
     await this.eventBus.publish(event);

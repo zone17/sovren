@@ -15,8 +15,6 @@ import { KeyManagementService } from './KeyManagementService';
 import { BackupEncryptionService } from './BackupEncryptionService';
 import type {
   BackupContentType,
-  BackupFormat,
-  BackupCompressionType,
   BackupFile,
   BackupData,
   KeysBackupData,
@@ -239,16 +237,10 @@ export class NOSTRBackupService {
     if (backupFile.encrypted && password) {
       try {
         // Attempt decryption to verify password
-        const decryptedData = await this.encryption.decryptBackup(
-          backupFile.data as any,
-          password
-        );
+        const decryptedData = await this.encryption.decryptBackup(backupFile.data as any, password);
 
         // Verify checksum
-        checksumValid = await this.encryption.verifyChecksum(
-          decryptedData,
-          backupFile.checksum
-        );
+        checksumValid = await this.encryption.verifyChecksum(decryptedData, backupFile.checksum);
 
         if (!checksumValid) {
           errors.push({
@@ -315,10 +307,7 @@ export class NOSTRBackupService {
       }
 
       // Decrypt backup data
-      const decryptedJson = await this.encryption.decryptBackup(
-        backupFile.data as any,
-        password
-      );
+      const decryptedJson = await this.encryption.decryptBackup(backupFile.data as any, password);
       const backupData: BackupData = JSON.parse(decryptedJson);
 
       // Default recovery options
@@ -341,9 +330,7 @@ export class NOSTRBackupService {
             recoveryOptions.overwriteExisting
           );
         } catch (error) {
-          errors.push(
-            `Key recovery failed: ${error instanceof Error ? error.message : 'Unknown'}`
-          );
+          errors.push(`Key recovery failed: ${error instanceof Error ? error.message : 'Unknown'}`);
         }
       }
 
@@ -451,9 +438,7 @@ export class NOSTRBackupService {
 
     console.log('[NOSTRBackup] Backup schedule configured', {
       frequency: validated.frequency,
-      nextBackup: validated.nextBackup
-        ? new Date(validated.nextBackup).toISOString()
-        : 'manual',
+      nextBackup: validated.nextBackup ? new Date(validated.nextBackup).toISOString() : 'manual',
     });
 
     return validated;
@@ -579,10 +564,7 @@ export class NOSTRBackupService {
   /**
    * Recover keys from backup
    */
-  private async recoverKeys(
-    keysData: KeysBackupData,
-    overwriteExisting: boolean
-  ): Promise<number> {
+  private async recoverKeys(keysData: KeysBackupData, overwriteExisting: boolean): Promise<number> {
     let recovered = 0;
 
     for (const keyData of keysData.keys) {
@@ -653,7 +635,7 @@ export class NOSTRBackupService {
   ): Promise<RecoveryResult['verificationResult']> {
     let keysValid = true;
     let signaturesValid = true;
-    let configValid = true;
+    const configValid = true;
 
     // Verify keys were restored
     if (backupData.keys) {

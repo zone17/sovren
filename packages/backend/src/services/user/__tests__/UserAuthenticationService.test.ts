@@ -122,16 +122,14 @@ describe('UserAuthenticationService', () => {
     // Reset all mocks
     vi.resetAllMocks();
     (uuidv4 as any).mockReturnValue('session-123');
-    (jwt.sign as any).mockImplementation((payload, secret, options) =>
-      `token-${payload.type}`
-    );
+    (jwt.sign as any).mockImplementation((payload, secret, options) => `token-${payload.type}`);
     (jwt.verify as any).mockImplementation(() => ({
       userId: 'user-123',
       sessionId: 'session-123',
-      type: 'refresh'
+      type: 'refresh',
     }));
     (jwt.decode as any).mockImplementation(() => ({
-      exp: Math.floor(Date.now() / 1000) + 3600
+      exp: Math.floor(Date.now() / 1000) + 3600,
     }));
   });
 
@@ -156,10 +154,12 @@ describe('UserAuthenticationService', () => {
         requiresMFA: false,
       });
       expect(mockEventBus.emit).toHaveBeenCalledWith('user.login', expect.any(Object));
-      expect(mockAuditLog.log).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'auth.login',
-        userId: 'user-123',
-      }));
+      expect(mockAuditLog.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'auth.login',
+          userId: 'user-123',
+        })
+      );
     });
 
     it('should require MFA when enabled', async () => {
@@ -206,21 +206,19 @@ describe('UserAuthenticationService', () => {
       mockCache.get.mockResolvedValue(10); // Max attempts reached
 
       // Act & Assert
-      await expect(service.login(mockCredentials))
-        .rejects.toThrow(ServiceError);
-      await expect(service.login(mockCredentials))
-        .rejects.toThrow('Rate limit exceeded');
+      await expect(service.login(mockCredentials)).rejects.toThrow(ServiceError);
+      await expect(service.login(mockCredentials)).rejects.toThrow('Rate limit exceeded');
     });
 
     it('should lock account after max failed attempts', async () => {
       // Arrange
       const lockSpy = vi.spyOn(service, 'lockAccount').mockResolvedValue(undefined);
       mockCache.get
-        .mockResolvedValueOnce(null)  // checkRateLimit: IP rate limit
-        .mockResolvedValueOnce(0)     // checkRateLimit: user attempts
-        .mockResolvedValueOnce(null)  // isAccountLocked
-        .mockResolvedValueOnce(0)     // recordFailedAttempt: IP attempts
-        .mockResolvedValueOnce(4);    // recordFailedAttempt: user attempts (4+1 >= 5 triggers lock)
+        .mockResolvedValueOnce(null) // checkRateLimit: IP rate limit
+        .mockResolvedValueOnce(0) // checkRateLimit: user attempts
+        .mockResolvedValueOnce(null) // isAccountLocked
+        .mockResolvedValueOnce(0) // recordFailedAttempt: IP attempts
+        .mockResolvedValueOnce(4); // recordFailedAttempt: user attempts (4+1 >= 5 triggers lock)
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
       (argon2.verify as any).mockResolvedValue(false); // Wrong password
 
@@ -232,10 +230,7 @@ describe('UserAuthenticationService', () => {
       }
 
       // Assert
-      expect(lockSpy).toHaveBeenCalledWith(
-        'user-123',
-        'Too many failed login attempts'
-      );
+      expect(lockSpy).toHaveBeenCalledWith('user-123', 'Too many failed login attempts');
     });
 
     it('should reject locked accounts', async () => {
@@ -247,8 +242,7 @@ describe('UserAuthenticationService', () => {
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
 
       // Act & Assert
-      await expect(service.login(mockCredentials))
-        .rejects.toThrow('Account is temporarily locked');
+      await expect(service.login(mockCredentials)).rejects.toThrow('Account is temporarily locked');
     });
 
     it('should send notification for new device login', async () => {
@@ -305,8 +299,7 @@ describe('UserAuthenticationService', () => {
       mockCache.get.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.logout('invalid-session'))
-        .rejects.toThrow('Logout failed');
+      await expect(service.logout('invalid-session')).rejects.toThrow('Logout failed');
     });
   });
 
@@ -337,7 +330,7 @@ describe('UserAuthenticationService', () => {
     it('should verify valid backup code and remove it', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
-            (OTPAuth.TOTP as any).mockImplementation(() => ({
+      (OTPAuth.TOTP as any).mockImplementation(() => ({
         validate: vi.fn().mockReturnValue(null),
       }));
       (OTPAuth.Secret as any).fromBase32 = vi.fn().mockReturnValue('mock-secret');
@@ -361,7 +354,7 @@ describe('UserAuthenticationService', () => {
         backupCodes: ['hashed-code-1', 'hashed-code-2'], // Only 2 codes
       };
       mockDb.query.mockResolvedValue({ rows: [lowBackupSettings] });
-            (OTPAuth.TOTP as any).mockImplementation(() => ({
+      (OTPAuth.TOTP as any).mockImplementation(() => ({
         validate: vi.fn().mockReturnValue(null),
       }));
       (OTPAuth.Secret as any).fromBase32 = vi.fn().mockReturnValue('mock-secret');
@@ -383,7 +376,7 @@ describe('UserAuthenticationService', () => {
     it('should return false for invalid token', async () => {
       // Arrange
       mockDb.query.mockResolvedValue({ rows: [mfaSettings] });
-            (OTPAuth.TOTP as any).mockImplementation(() => ({
+      (OTPAuth.TOTP as any).mockImplementation(() => ({
         validate: vi.fn().mockReturnValue(null),
       }));
       (OTPAuth.Secret as any).fromBase32 = vi.fn().mockReturnValue('mock-secret');
@@ -418,11 +411,7 @@ describe('UserAuthenticationService', () => {
         qrCode: 'data:image/png;base64,...',
       });
       expect(result.backupCodes).toHaveLength(8);
-      expect(mockCache.set).toHaveBeenCalledWith(
-        'mfa_setup:user-123',
-        expect.any(Object),
-        600
-      );
+      expect(mockCache.set).toHaveBeenCalledWith('mfa_setup:user-123', expect.any(Object), 600);
     });
 
     it('should throw error for unsupported MFA type', async () => {
@@ -430,8 +419,7 @@ describe('UserAuthenticationService', () => {
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
 
       // Act & Assert
-      await expect(service.setupMFA('user-123', 'webauthn'))
-        .rejects.toThrow('MFA setup failed');
+      await expect(service.setupMFA('user-123', 'webauthn')).rejects.toThrow('MFA setup failed');
     });
   });
 
@@ -454,11 +442,7 @@ describe('UserAuthenticationService', () => {
       // Assert
       expect(result.accessToken).toBe('token-access');
       expect(result.refreshToken).toBe('token-refresh');
-      expect(mockCache.set).toHaveBeenCalledWith(
-        'blacklist:old-refresh',
-        true,
-        expect.any(Number)
-      );
+      expect(mockCache.set).toHaveBeenCalledWith('blacklist:old-refresh', true, expect.any(Number));
     });
 
     it('should reject blacklisted refresh token', async () => {
@@ -466,8 +450,9 @@ describe('UserAuthenticationService', () => {
       mockCache.get.mockResolvedValue(true); // Token is blacklisted
 
       // Act & Assert
-      await expect(service.refreshSession('blacklisted-token'))
-        .rejects.toThrow('Session refresh failed');
+      await expect(service.refreshSession('blacklisted-token')).rejects.toThrow(
+        'Session refresh failed'
+      );
     });
   });
 
@@ -546,24 +531,22 @@ describe('UserAuthenticationService', () => {
         mockDb.query.mockResolvedValue({ rows: [mockUser] });
         (argon2.verify as any).mockResolvedValue(false);
 
-        await expect(service.login(mockCredentials))
-          .rejects.toThrow('Invalid credentials');
+        await expect(service.login(mockCredentials)).rejects.toThrow('Invalid credentials');
       }
 
       // 10th attempt should hit rate limit
       mockCache.get.mockResolvedValueOnce(10);
-      await expect(service.login(mockCredentials))
-        .rejects.toThrow('Rate limit exceeded');
+      await expect(service.login(mockCredentials)).rejects.toThrow('Rate limit exceeded');
     });
 
     it('should track rate limits per username', async () => {
       // Arrange - 4 failed attempts (one below lockout threshold)
       mockCache.get
-        .mockResolvedValueOnce(2)     // checkRateLimit: IP attempts
-        .mockResolvedValueOnce(0)     // checkRateLimit: user attempts
-        .mockResolvedValueOnce(null)  // isAccountLocked
-        .mockResolvedValueOnce(2)     // recordFailedAttempt: IP attempts
-        .mockResolvedValueOnce(4);    // recordFailedAttempt: user attempts
+        .mockResolvedValueOnce(2) // checkRateLimit: IP attempts
+        .mockResolvedValueOnce(0) // checkRateLimit: user attempts
+        .mockResolvedValueOnce(null) // isAccountLocked
+        .mockResolvedValueOnce(2) // recordFailedAttempt: IP attempts
+        .mockResolvedValueOnce(4); // recordFailedAttempt: user attempts
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
       (argon2.verify as any).mockResolvedValue(false);
 
@@ -575,18 +558,14 @@ describe('UserAuthenticationService', () => {
       }
 
       // Assert - Should increment and trigger lockout on 5th attempt
-      expect(mockCache.set).toHaveBeenCalledWith(
-        'failed_attempts:testuser',
-        5,
-        900
-      );
+      expect(mockCache.set).toHaveBeenCalledWith('failed_attempts:testuser', 5, 900);
     });
 
     it('should clear failed attempts on successful login', async () => {
       // Arrange
       mockCache.get
-        .mockResolvedValueOnce(0)     // checkRateLimit: IP attempts
-        .mockResolvedValueOnce(3)     // checkRateLimit: user attempts
+        .mockResolvedValueOnce(0) // checkRateLimit: IP attempts
+        .mockResolvedValueOnce(3) // checkRateLimit: user attempts
         .mockResolvedValueOnce(null); // isAccountLocked
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
       (argon2.verify as any).mockResolvedValue(true);
@@ -608,8 +587,7 @@ describe('UserAuthenticationService', () => {
       mockDb.query.mockResolvedValue({ rows: [mockUser] });
 
       // Act
-      await expect(service.login(mockCredentials))
-        .rejects.toThrow('Invalid credentials');
+      await expect(service.login(mockCredentials)).rejects.toThrow('Invalid credentials');
 
       // Assert - argon2.verify provides constant-time comparison
       expect(argon2.verify).toHaveBeenCalled();
@@ -636,7 +614,7 @@ describe('UserAuthenticationService', () => {
       // Arrange
       const expiredToken = 'expired-token';
       (jwt.decode as any).mockReturnValue({
-        exp: Math.floor(Date.now() / 1000) - 3600 // Expired 1 hour ago
+        exp: Math.floor(Date.now() / 1000) - 3600, // Expired 1 hour ago
       });
 
       // Act
@@ -654,10 +632,8 @@ describe('UserAuthenticationService', () => {
       mockDb.query.mockRejectedValue(new Error('Database connection lost'));
 
       // Act & Assert
-      await expect(service.login(mockCredentials))
-        .rejects.toThrow(ServiceError);
-      await expect(service.login(mockCredentials))
-        .rejects.toThrow('Authentication failed');
+      await expect(service.login(mockCredentials)).rejects.toThrow(ServiceError);
+      await expect(service.login(mockCredentials)).rejects.toThrow('Authentication failed');
     });
 
     it('should handle MFA setup errors gracefully', async () => {
@@ -665,8 +641,7 @@ describe('UserAuthenticationService', () => {
       mockDb.query.mockRejectedValue(new Error('Database error'));
 
       // Act & Assert
-      await expect(service.setupMFA('user-123', 'totp'))
-        .rejects.toThrow('MFA setup failed');
+      await expect(service.setupMFA('user-123', 'totp')).rejects.toThrow('MFA setup failed');
     });
   });
 });

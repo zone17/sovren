@@ -43,10 +43,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Update meta theme-color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute(
-        'content',
-        effectiveTheme === 'dark' ? '#1a1a1a' : '#ffffff'
-      );
+      metaThemeColor.setAttribute('content', effectiveTheme === 'dark' ? '#1a1a1a' : '#ffffff');
     }
   }, [theme]);
 
@@ -98,9 +95,7 @@ export const useTheme = () => {
 
   const effectiveTheme = React.useMemo(() => {
     if (theme === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return theme;
   }, [theme]);

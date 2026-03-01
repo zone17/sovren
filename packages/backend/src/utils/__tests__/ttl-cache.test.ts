@@ -22,7 +22,11 @@ describe('TTLCache', () => {
 
   it('should expire entries after TTL', () => {
     vi.useFakeTimers();
-    const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 1000, cleanupIntervalMs: 500 });
+    const cache = new TTLCache<string, number>({
+      maxSize: 10,
+      ttlMs: 1000,
+      cleanupIntervalMs: 500,
+    });
     cache.set('a', 1);
     expect(cache.get('a')).toBe(1);
 
@@ -74,7 +78,11 @@ describe('TTLCache', () => {
 
   it('should support has()', () => {
     vi.useFakeTimers();
-    const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 1000, cleanupIntervalMs: 500 });
+    const cache = new TTLCache<string, number>({
+      maxSize: 10,
+      ttlMs: 1000,
+      cleanupIntervalMs: 500,
+    });
     cache.set('a', 1);
     expect(cache.has('a')).toBe(true);
     expect(cache.has('b')).toBe(false);
@@ -86,7 +94,11 @@ describe('TTLCache', () => {
 
   it('should return non-expired values from values()', () => {
     vi.useFakeTimers();
-    const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 1000, cleanupIntervalMs: 5000 });
+    const cache = new TTLCache<string, number>({
+      maxSize: 10,
+      ttlMs: 1000,
+      cleanupIntervalMs: 5000,
+    });
     cache.set('a', 1);
     cache.set('b', 2);
 
@@ -109,7 +121,11 @@ describe('TTLCache', () => {
 
   it('should clean up interval on destroy()', () => {
     vi.useFakeTimers();
-    const cache = new TTLCache<string, number>({ maxSize: 10, ttlMs: 1000, cleanupIntervalMs: 500 });
+    const cache = new TTLCache<string, number>({
+      maxSize: 10,
+      ttlMs: 1000,
+      cleanupIntervalMs: 500,
+    });
     cache.set('a', 1);
     cache.destroy();
     expect(cache.size).toBe(0);

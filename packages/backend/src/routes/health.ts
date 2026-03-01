@@ -104,7 +104,8 @@ router.get('/ready', async (req: Request, res: Response) => {
         status: 'degraded',
         timestamp: new Date().toISOString(),
         issues: {
-          redis: redisHealth.error || 'Redis unavailable — features requiring cache/queues degraded',
+          redis:
+            redisHealth.error || 'Redis unavailable — features requiring cache/queues degraded',
         },
       });
     } else {
@@ -203,7 +204,8 @@ router.get('/health/ready', async (req: Request, res: Response) => {
         status: 'degraded',
         timestamp: new Date().toISOString(),
         issues: {
-          redis: redisHealth.error || 'Redis unavailable — features requiring cache/queues degraded',
+          redis:
+            redisHealth.error || 'Redis unavailable — features requiring cache/queues degraded',
         },
       });
     } else {

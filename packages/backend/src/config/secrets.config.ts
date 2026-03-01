@@ -161,7 +161,7 @@ export function getSecretsConfig(): SecretsConfig {
     retry: {
       maxAttempts: 3,
       baseDelay: 1000, // 1 second
-      maxDelay: 5000,  // 5 seconds
+      maxDelay: 5000, // 5 seconds
     },
   };
 }
@@ -180,7 +180,7 @@ export function validateSecretsConfig(config: SecretsConfig): {
 
   // Check required secrets in production
   if (config.environment === 'production') {
-    const requiredSecrets = config.secrets.filter(s => s.required);
+    const requiredSecrets = config.secrets.filter((s) => s.required);
 
     for (const secret of requiredSecrets) {
       if (!process.env[secret.envVar]) {

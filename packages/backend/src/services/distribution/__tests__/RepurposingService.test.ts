@@ -87,7 +87,11 @@ describe('RepurposingService', () => {
     });
 
     it('should include backlink in all repurposed versions', async () => {
-      const results = await service.repurpose(creatorId, contentId, ['twitter', 'mastodon', 'bluesky']);
+      const results = await service.repurpose(creatorId, contentId, [
+        'twitter',
+        'mastodon',
+        'bluesky',
+      ]);
 
       for (const result of results) {
         expect(result.backlink_url).toContain(contentId);

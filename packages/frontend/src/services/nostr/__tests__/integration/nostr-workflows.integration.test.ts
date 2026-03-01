@@ -19,7 +19,7 @@
  * For CI/CD, we use fake-indexeddb and in-memory relay simulation.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { KeyManagementService } from '../../KeyManagementService';
 import { RelayPoolManager } from '../../RelayPoolManager';
 import { EventPublisherService } from '../../EventPublisherService';
@@ -32,11 +32,7 @@ import type { NostrEvent, UnsignedNostrEvent } from '@sovren/shared/types/nostr'
 import type { NostrEnhancedKeyPair } from '@sovren/shared/types/nostr';
 
 // Test environment setup
-const TEST_RELAYS = [
-  'wss://relay.damus.io',
-  'wss://relay.nostr.band',
-  'wss://nos.lol',
-];
+const TEST_RELAYS = ['wss://relay.damus.io', 'wss://relay.nostr.band', 'wss://nos.lol'];
 
 // Performance thresholds (ms)
 const PERF_THRESHOLDS = {
@@ -59,7 +55,11 @@ class MockIDBDatabase {
   }
 
   transaction(storeNames: string | string[], mode: IDBTransactionMode = 'readonly') {
-    return new MockIDBTransaction(this, Array.isArray(storeNames) ? storeNames : [storeNames], mode);
+    return new MockIDBTransaction(
+      this,
+      Array.isArray(storeNames) ? storeNames : [storeNames],
+      mode
+    );
   }
 
   createObjectStore(name: string, options?: IDBObjectStoreParameters) {
@@ -211,8 +211,16 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
 
   beforeAll(async () => {
     // Setup global mocks
-    Object.defineProperty(globalThis, "indexedDB", { value: mockIndexedDB as any, writable: true, configurable: true });
-    Object.defineProperty(globalThis, "crypto", { value: mockCrypto as any, writable: true, configurable: true });
+    Object.defineProperty(globalThis, 'indexedDB', {
+      value: mockIndexedDB as any,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(globalThis, 'crypto', {
+      value: mockCrypto as any,
+      writable: true,
+      configurable: true,
+    });
 
     // Initialize all services
     keyManagement = KeyManagementService.getInstance();
@@ -367,11 +375,13 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       const publishTime = performance.now() - startPublish;
 
       expect(results).toHaveLength(3);
-      expect(results.every(r => r.success)).toBe(true);
+      expect(results.every((r) => r.success)).toBe(true);
       expect(publishTime).toBeLessThan(PERF_THRESHOLDS.EVENT_PUBLISH);
 
       const avgLatency = results.reduce((sum, r) => sum + r.latency, 0) / results.length;
-      console.log(`[Event Publishing] Published to ${results.length} relays in ${publishTime.toFixed(2)}ms (avg latency: ${avgLatency.toFixed(2)}ms)`);
+      console.log(
+        `[Event Publishing] Published to ${results.length} relays in ${publishTime.toFixed(2)}ms (avg latency: ${avgLatency.toFixed(2)}ms)`
+      );
     });
 
     it('should verify event delivery', async () => {
@@ -454,12 +464,14 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       expect(subTime).toBeLessThan(PERF_THRESHOLDS.SUBSCRIPTION_LATENCY);
 
       // Wait for events
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(receivedEvents.length).toBeGreaterThan(0);
       expect(eoseReceived).toBe(true);
 
-      console.log(`[Subscription] Received ${receivedEvents.length} events in ${subTime.toFixed(2)}ms`);
+      console.log(
+        `[Subscription] Received ${receivedEvents.length} events in ${subTime.toFixed(2)}ms`
+      );
 
       // Cleanup
       await subscriptionManager.unsubscribe(subscriptionId);
@@ -486,7 +498,7 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       const dedupTime = performance.now() - startDedup;
 
       expect(isDupe1).toBe(false); // First time
-      expect(isDupe2).toBe(true);  // Duplicate
+      expect(isDupe2).toBe(true); // Duplicate
       expect(dedupTime).toBeLessThan(PERF_THRESHOLDS.DEDUPLICATION);
 
       console.log(`[Deduplication] Processed in ${dedupTime.toFixed(2)}ms`);
@@ -546,11 +558,9 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
 
       vi.spyOn(nip04Service, 'encryptMessage').mockResolvedValue('encrypted_content?iv=base64_iv');
 
-      const encrypted = await nip04Service.encryptMessage(
-        message,
-        recipientKey.publicKey,
-        { keyId: senderKey.keyId }
-      );
+      const encrypted = await nip04Service.encryptMessage(message, recipientKey.publicKey, {
+        keyId: senderKey.keyId,
+      });
       const encryptTime = performance.now() - startEncrypt;
 
       expect(encrypted).toContain('?iv=');
@@ -559,11 +569,10 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       console.log(`[NIP-04] Message encrypted in ${encryptTime.toFixed(2)}ms`);
 
       // Step 2: Create DM event
-      const dmEvent = await nip04Service.createDMEvent(
-        recipientKey.publicKey,
-        encrypted,
-        { keyId: senderKey.keyId, sign: true }
-      );
+      const dmEvent = await nip04Service.createDMEvent(recipientKey.publicKey, encrypted, {
+        keyId: senderKey.keyId,
+        sign: true,
+      });
 
       expect(dmEvent.kind).toBe(4); // NIP-04 DM kind
       expect(dmEvent.tags).toContainEqual(['p', recipientKey.publicKey]);
@@ -586,16 +595,18 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       });
 
       await subscriptionManager.subscribe({
-        filters: [{
-          kinds: [4],
-          '#p': [recipientKey.publicKey],
-        }],
+        filters: [
+          {
+            kinds: [4],
+            '#p': [recipientKey.publicKey],
+          },
+        ],
         onEvent: (event) => {
           receivedDMs.push(event);
         },
       });
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(receivedDMs).toHaveLength(1);
       expect(receivedDMs[0].content).toBe(encrypted);
@@ -605,11 +616,9 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
 
       vi.spyOn(nip04Service, 'decryptMessage').mockResolvedValue(message);
 
-      const decrypted = await nip04Service.decryptMessage(
-        encrypted,
-        senderKey.publicKey,
-        { keyId: recipientKey.keyId }
-      );
+      const decrypted = await nip04Service.decryptMessage(encrypted, senderKey.publicKey, {
+        keyId: recipientKey.keyId,
+      });
       const decryptTime = performance.now() - startDecrypt;
 
       expect(decrypted).toBe(message);
@@ -760,7 +769,7 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       }
 
       // Add all events
-      events.forEach(e => eventCache.addEvent(e));
+      events.forEach((e) => eventCache.addEvent(e));
 
       // Check stats
       const stats = eventCache.getStats();
@@ -795,7 +804,9 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       const duration = performance.now() - start;
 
       expect(duration).toBeLessThan(PERF_THRESHOLDS.EVENT_PUBLISH);
-      console.log(`[Performance] Event publish: ${duration.toFixed(2)}ms (threshold: ${PERF_THRESHOLDS.EVENT_PUBLISH}ms)`);
+      console.log(
+        `[Performance] Event publish: ${duration.toFixed(2)}ms (threshold: ${PERF_THRESHOLDS.EVENT_PUBLISH}ms)`
+      );
     });
 
     it('should meet subscription latency threshold', async () => {
@@ -809,7 +820,9 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       const duration = performance.now() - start;
 
       expect(duration).toBeLessThan(PERF_THRESHOLDS.SUBSCRIPTION_LATENCY);
-      console.log(`[Performance] Subscription: ${duration.toFixed(2)}ms (threshold: ${PERF_THRESHOLDS.SUBSCRIPTION_LATENCY}ms)`);
+      console.log(
+        `[Performance] Subscription: ${duration.toFixed(2)}ms (threshold: ${PERF_THRESHOLDS.SUBSCRIPTION_LATENCY}ms)`
+      );
     });
 
     it('should meet cache hit performance threshold', async () => {
@@ -830,7 +843,9 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       const duration = performance.now() - start;
 
       expect(duration).toBeLessThan(PERF_THRESHOLDS.CACHE_HIT);
-      console.log(`[Performance] Cache hit: ${duration.toFixed(2)}ms (threshold: ${PERF_THRESHOLDS.CACHE_HIT}ms)`);
+      console.log(
+        `[Performance] Cache hit: ${duration.toFixed(2)}ms (threshold: ${PERF_THRESHOLDS.CACHE_HIT}ms)`
+      );
     });
 
     it('should meet deduplication performance threshold', async () => {
@@ -851,7 +866,9 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
       const duration = performance.now() - start;
 
       expect(duration).toBeLessThan(PERF_THRESHOLDS.DEDUPLICATION);
-      console.log(`[Performance] Deduplication: ${duration.toFixed(2)}ms (threshold: ${PERF_THRESHOLDS.DEDUPLICATION}ms)`);
+      console.log(
+        `[Performance] Deduplication: ${duration.toFixed(2)}ms (threshold: ${PERF_THRESHOLDS.DEDUPLICATION}ms)`
+      );
     });
   });
 
@@ -904,9 +921,7 @@ describe('NOSTR Integration Tests - Complete Workflows', () => {
 
       const keyPair = await keyManagement.generateKeyPair();
 
-      await expect(
-        keyManagement.signEvent(keyPair.keyId, malformedEvent)
-      ).rejects.toThrow();
+      await expect(keyManagement.signEvent(keyPair.keyId, malformedEvent)).rejects.toThrow();
 
       console.log(`[Error Handling] Malformed event rejected`);
     });

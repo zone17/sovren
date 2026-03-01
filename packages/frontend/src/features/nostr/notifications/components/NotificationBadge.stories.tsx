@@ -13,7 +13,8 @@ const meta: Meta<typeof NotificationBadge> = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'Badge component to display unread notification count. Supports different variants, sizes, and display modes (count or dot).',
+        component:
+          'Badge component to display unread notification count. Supports different variants, sizes, and display modes (count or dot).',
       },
     },
   },

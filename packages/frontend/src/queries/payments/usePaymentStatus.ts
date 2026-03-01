@@ -47,9 +47,9 @@ export const usePaymentStatus = (
     enabled: !!paymentHash,
     staleTime: 0, // Always fetch fresh
     gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Poll every 2 seconds while pending, stop when completed or failed
-      if (data?.status === 'pending') {
+      if ((query?.state as any)?.data?.status === 'pending') {
         return 2000;
       }
       return false;

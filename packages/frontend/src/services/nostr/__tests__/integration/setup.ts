@@ -115,7 +115,7 @@ export async function waitFor<T>(
       // Continue waiting
     }
 
-    await new Promise(resolve => setTimeout(resolve, interval));
+    await new Promise((resolve) => setTimeout(resolve, interval));
   }
 
   throw new Error(`waitFor timeout after ${timeout}ms`);
@@ -304,7 +304,7 @@ export async function retryWithBackoff<T>(
 
       if (attempt < maxRetries - 1) {
         const delay = Math.min(backoffMs * Math.pow(2, attempt), maxBackoffMs);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }

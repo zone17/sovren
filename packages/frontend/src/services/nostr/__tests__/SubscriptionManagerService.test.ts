@@ -20,7 +20,7 @@
 import { SubscriptionManagerService } from '../SubscriptionManagerService';
 import { RelayPoolManager } from '../RelayPoolManager';
 import { EventCacheService } from '../EventCacheService';
-import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
+import type { NostrEvent, NostrFilter } from '@shared/types/nostr/index';
 
 // ========================================
 // Mock Dependencies
@@ -38,7 +38,9 @@ vi.mock('../RateLimiter', () => {
     updateConfig: vi.fn(),
     setRelayLimit: vi.fn(),
     getMetrics: vi.fn().mockReturnValue({ overall: {}, byOperation: new Map(), queue: {} }),
-    getQueueMetrics: vi.fn().mockReturnValue({ size: 0, totalQueued: 0, totalProcessed: 0, totalTimedOut: 0 }),
+    getQueueMetrics: vi
+      .fn()
+      .mockReturnValue({ size: 0, totalQueued: 0, totalProcessed: 0, totalTimedOut: 0 }),
     on: vi.fn().mockReturnThis(),
     off: vi.fn().mockReturnThis(),
     removeAllListeners: vi.fn(),
@@ -456,8 +458,8 @@ describe('SubscriptionManagerService', () => {
       const subscriptions = service.getSubscriptions();
 
       expect(subscriptions).toHaveLength(2);
-      expect(subscriptions.map(s => s.id)).toContain(subId1);
-      expect(subscriptions.map(s => s.id)).toContain(subId2);
+      expect(subscriptions.map((s) => s.id)).toContain(subId1);
+      expect(subscriptions.map((s) => s.id)).toContain(subId2);
     });
 
     it('should return empty array when no subscriptions', () => {
@@ -529,9 +531,7 @@ describe('SubscriptionManagerService', () => {
     });
 
     it('should deduplicate array values in filters', () => {
-      const filters: NostrFilter[] = [
-        { kinds: [1, 1, 6, 6], authors: ['pubkey1', 'pubkey1'] },
-      ];
+      const filters: NostrFilter[] = [{ kinds: [1, 1, 6, 6], authors: ['pubkey1', 'pubkey1'] }];
 
       const optimized = (service as any).optimizeFilters(filters);
 

@@ -43,9 +43,7 @@ describe('useFeedFilters', () => {
     });
 
     it('merges new filters with existing filters', () => {
-      const { result } = renderHook(() =>
-        useFeedFilters({ kinds: [1], authors: ['pubkey1'] })
-      );
+      const { result } = renderHook(() => useFeedFilters({ kinds: [1], authors: ['pubkey1'] }));
 
       act(() => {
         result.current.updateFilters({ hashtags: ['nostr'] });
@@ -59,9 +57,7 @@ describe('useFeedFilters', () => {
     });
 
     it('overwrites existing filter values', () => {
-      const { result } = renderHook(() =>
-        useFeedFilters({ kinds: [1], search: 'old' })
-      );
+      const { result } = renderHook(() => useFeedFilters({ kinds: [1], search: 'old' }));
 
       act(() => {
         result.current.updateFilters({ search: 'new' });
@@ -104,9 +100,7 @@ describe('useFeedFilters', () => {
     });
 
     it('appends to existing authors', () => {
-      const { result } = renderHook(() =>
-        useFeedFilters({ kinds: [1], authors: ['pubkey1'] })
-      );
+      const { result } = renderHook(() => useFeedFilters({ kinds: [1], authors: ['pubkey1'] }));
 
       act(() => {
         result.current.addAuthor('pubkey2');
@@ -130,9 +124,7 @@ describe('useFeedFilters', () => {
     });
 
     it('handles removing non-existent author', () => {
-      const { result } = renderHook(() =>
-        useFeedFilters({ kinds: [1], authors: ['pubkey1'] })
-      );
+      const { result } = renderHook(() => useFeedFilters({ kinds: [1], authors: ['pubkey1'] }));
 
       act(() => {
         result.current.removeAuthor('pubkey2');
@@ -165,9 +157,7 @@ describe('useFeedFilters', () => {
     });
 
     it('appends to existing hashtags', () => {
-      const { result } = renderHook(() =>
-        useFeedFilters({ kinds: [1], hashtags: ['nostr'] })
-      );
+      const { result } = renderHook(() => useFeedFilters({ kinds: [1], hashtags: ['nostr'] }));
 
       act(() => {
         result.current.addHashtag('bitcoin');

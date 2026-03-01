@@ -39,39 +39,37 @@ const SORT_OPTIONS: Array<{
 /**
  * FeedSort Component
  */
-export const FeedSort = memo<FeedSortProps>(
-  ({ currentSort, onChange, className = '' }) => {
-    return (
-      <div
-        className={`feed-sort flex items-center gap-2 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 ${className}`}
-        role="tablist"
-        aria-label="Feed sort options"
-      >
-        {SORT_OPTIONS.map(option => {
-          const Icon = option.icon;
-          const isActive = currentSort === option.value;
+export const FeedSort = memo<FeedSortProps>(({ currentSort, onChange, className = '' }) => {
+  return (
+    <div
+      className={`feed-sort flex items-center gap-2 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 ${className}`}
+      role="tablist"
+      aria-label="Feed sort options"
+    >
+      {SORT_OPTIONS.map((option) => {
+        const Icon = option.icon;
+        const isActive = currentSort === option.value;
 
-          return (
-            <button
-              key={option.value}
-              onClick={() => onChange(option.value)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                isActive
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-              role="tab"
-              aria-selected={isActive}
-              aria-label={`${option.label}: ${option.description}`}
-            >
-              <Icon className="w-4 h-4" aria-hidden="true" />
-              <span>{option.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
-);
+        return (
+          <button
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isActive
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+            role="tab"
+            aria-selected={isActive}
+            aria-label={`${option.label}: ${option.description}`}
+          >
+            <Icon className="w-4 h-4" aria-hidden="true" />
+            <span>{option.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+});
 
 FeedSort.displayName = 'FeedSort';

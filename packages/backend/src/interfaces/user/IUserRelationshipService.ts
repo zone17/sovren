@@ -29,7 +29,7 @@ import type {
   ImportFollowsRequest,
   ExportFollowsResponse,
   RelationshipMetrics,
-  PaginationOptions
+  PaginationOptions,
 } from '../../types/user-relationship';
 
 /**
@@ -156,10 +156,7 @@ export interface IUserRelationshipService {
    * @param pagination - Pagination options
    * @returns FollowerListResponse with paginated followers
    */
-  getFollowers(
-    userId: string,
-    pagination?: PaginationOptions
-  ): Promise<FollowerListResponse>;
+  getFollowers(userId: string, pagination?: PaginationOptions): Promise<FollowerListResponse>;
 
   /**
    * Get following list for a user
@@ -167,10 +164,7 @@ export interface IUserRelationshipService {
    * @param pagination - Pagination options
    * @returns FollowingListResponse with paginated following
    */
-  getFollowing(
-    userId: string,
-    pagination?: PaginationOptions
-  ): Promise<FollowingListResponse>;
+  getFollowing(userId: string, pagination?: PaginationOptions): Promise<FollowingListResponse>;
 
   /**
    * Get mutual follows (friends) for a user
@@ -178,10 +172,7 @@ export interface IUserRelationshipService {
    * @param pagination - Pagination options
    * @returns Array of mutual relationships
    */
-  getMutualFollows(
-    userId: string,
-    pagination?: PaginationOptions
-  ): Promise<UserRelationship[]>;
+  getMutualFollows(userId: string, pagination?: PaginationOptions): Promise<UserRelationship[]>;
 
   /**
    * Get blocked users list
@@ -189,10 +180,7 @@ export interface IUserRelationshipService {
    * @param pagination - Pagination options
    * @returns Array of blocked relationships
    */
-  getBlockedUsers(
-    userId: string,
-    pagination?: PaginationOptions
-  ): Promise<UserRelationship[]>;
+  getBlockedUsers(userId: string, pagination?: PaginationOptions): Promise<UserRelationship[]>;
 
   /**
    * Get muted users list
@@ -200,10 +188,7 @@ export interface IUserRelationshipService {
    * @param pagination - Pagination options
    * @returns Array of muted relationships
    */
-  getMutedUsers(
-    userId: string,
-    pagination?: PaginationOptions
-  ): Promise<UserRelationship[]>;
+  getMutedUsers(userId: string, pagination?: PaginationOptions): Promise<UserRelationship[]>;
 
   // Statistics
   /**
@@ -219,10 +204,7 @@ export interface IUserRelationshipService {
    * @param targetUserId - Second user ID
    * @returns MutualRelationshipResult with mutual status
    */
-  checkMutualRelationship(
-    userId: string,
-    targetUserId: string
-  ): Promise<MutualRelationshipResult>;
+  checkMutualRelationship(userId: string, targetUserId: string): Promise<MutualRelationshipResult>;
 
   // Recommendations
   /**
@@ -231,10 +213,7 @@ export interface IUserRelationshipService {
    * @param limit - Maximum number of recommendations
    * @returns Array of recommendations with scores
    */
-  getRecommendations(
-    userId: string,
-    limit?: number
-  ): Promise<RelationshipRecommendation[]>;
+  getRecommendations(userId: string, limit?: number): Promise<RelationshipRecommendation[]>;
 
   // Bulk Operations
   /**
@@ -277,10 +256,7 @@ export interface IUserRelationshipService {
    * @param targetUserId - Target user ID
    * @returns RelationshipValidationResult with all relationship states
    */
-  validateRelationship(
-    userId: string,
-    targetUserId: string
-  ): Promise<RelationshipValidationResult>;
+  validateRelationship(userId: string, targetUserId: string): Promise<RelationshipValidationResult>;
 
   // Import/Export
   /**

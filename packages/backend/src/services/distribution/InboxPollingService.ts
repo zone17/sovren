@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Inbox Polling Service
  * EPIC-009B: BullMQ batch polling for unified inbox

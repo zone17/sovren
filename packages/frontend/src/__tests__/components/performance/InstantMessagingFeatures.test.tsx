@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { InstantMessagingFeatures } from '../../../components/performance/InstantMessagingFeatures';
@@ -159,12 +159,7 @@ describe('InstantMessagingFeatures Component', () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       const onMessageSent = vi.fn();
 
-      render(
-        <InstantMessagingFeatures
-          {...defaultProps}
-          onMessageSent={onMessageSent}
-        />
-      );
+      render(<InstantMessagingFeatures {...defaultProps} onMessageSent={onMessageSent} />);
 
       const textarea = screen.getByPlaceholderText('Type your message...');
 

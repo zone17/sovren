@@ -195,7 +195,12 @@ class ApiClient {
   async searchContent(
     params: ContentSearchParams
   ): Promise<PaginatedResponse<ContentSearchResult>> {
-    return this.request('GET', '/api/v1/content/search', undefined, params as QueryParams);
+    return this.request(
+      'GET',
+      '/api/v1/content/search',
+      undefined,
+      params as unknown as QueryParams
+    );
   }
 
   async getContentRecommendations(

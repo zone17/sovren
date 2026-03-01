@@ -24,13 +24,9 @@ import type {
   PaymentWebhookEvent,
   PaymentError,
   PaymentRetryConfig,
-  PaymentLimits
+  PaymentLimits,
 } from '../../types/payment';
-import {
-  PaymentStatus,
-  PaymentMethod,
-  PaymentFailureReason,
-} from '../../types/payment';
+import { PaymentStatus, PaymentMethod, PaymentFailureReason } from '../../types/payment';
 import { DomainEventType, DomainEventBuilder } from '../../interfaces/shared/IEventBus';
 import crypto, { createHash, randomBytes } from 'crypto';
 import { performance } from 'perf_hooks';
@@ -43,7 +39,12 @@ interface IPaymentRepository {
   getInvoice(invoiceId: string): Promise<LightningInvoice | null>;
   getInvoiceByHash(paymentHash: string): Promise<LightningInvoice | null>;
   updateInvoice(invoice: LightningInvoice): Promise<void>;
-  listUserInvoices(userId: string, status?: PaymentStatus, limit?: number, offset?: number): Promise<LightningInvoice[]>;
+  listUserInvoices(
+    userId: string,
+    status?: PaymentStatus,
+    limit?: number,
+    offset?: number
+  ): Promise<LightningInvoice[]>;
 
   saveTransaction(transaction: PaymentTransaction): Promise<void>;
   getTransaction(transactionId: string): Promise<PaymentTransaction | null>;
@@ -86,10 +87,15 @@ class InMemoryPaymentRepository implements IPaymentRepository {
     this.invoicesByHash.set(invoice.paymentHash, invoice);
   }
 
-  async listUserInvoices(userId: string, status?: PaymentStatus, limit = 100, offset = 0): Promise<LightningInvoice[]> {
-    let invoices = Array.from(this.invoices.values()).filter(inv => inv.userId === userId);
+  async listUserInvoices(
+    userId: string,
+    status?: PaymentStatus,
+    limit = 100,
+    offset = 0
+  ): Promise<LightningInvoice[]> {
+    let invoices = Array.from(this.invoices.values()).filter((inv) => inv.userId === userId);
     if (status) {
-      invoices = invoices.filter(inv => inv.status === status);
+      invoices = invoices.filter((inv) => inv.status === status);
     }
     return invoices.slice(offset, offset + limit);
   }
@@ -110,25 +116,25 @@ class InMemoryPaymentRepository implements IPaymentRepository {
     let transactions = Array.from(this.transactions.values());
 
     if (query.userId) {
-      transactions = transactions.filter(tx => tx.userId === query.userId);
+      transactions = transactions.filter((tx) => tx.userId === query.userId);
     }
     if (query.status) {
-      transactions = transactions.filter(tx => tx.status === query.status);
+      transactions = transactions.filter((tx) => tx.status === query.status);
     }
     if (query.method) {
-      transactions = transactions.filter(tx => tx.method === query.method);
+      transactions = transactions.filter((tx) => tx.method === query.method);
     }
     if (query.startDate) {
-      transactions = transactions.filter(tx => tx.createdAt >= query.startDate!);
+      transactions = transactions.filter((tx) => tx.createdAt >= query.startDate!);
     }
     if (query.endDate) {
-      transactions = transactions.filter(tx => tx.createdAt <= query.endDate!);
+      transactions = transactions.filter((tx) => tx.createdAt <= query.endDate!);
     }
     if (query.minAmount) {
-      transactions = transactions.filter(tx => tx.amount >= query.minAmount!);
+      transactions = transactions.filter((tx) => tx.amount >= query.minAmount!);
     }
     if (query.maxAmount) {
-      transactions = transactions.filter(tx => tx.amount <= query.maxAmount!);
+      transactions = transactions.filter((tx) => tx.amount <= query.maxAmount!);
     }
 
     // Sort
@@ -137,7 +143,7 @@ class InMemoryPaymentRepository implements IPaymentRepository {
     transactions.sort((a, b) => {
       const aVal = a[sortBy] as any;
       const bVal = b[sortBy] as any;
-      return sortOrder === 'desc' ? (bVal > aVal ? 1 : -1) : (aVal > bVal ? 1 : -1);
+      return sortOrder === 'desc' ? (bVal > aVal ? 1 : -1) : aVal > bVal ? 1 : -1;
     });
 
     // Paginate
@@ -155,7 +161,7 @@ class InMemoryPaymentRepository implements IPaymentRepository {
   }
 
   async listTransactionRefunds(transactionId: string): Promise<PaymentRefund[]> {
-    return Array.from(this.refunds.values()).filter(ref => ref.transactionId === transactionId);
+    return Array.from(this.refunds.values()).filter((ref) => ref.transactionId === transactionId);
   }
 
   async saveIdempotency(record: PaymentIdempotency): Promise<void> {
@@ -172,14 +178,18 @@ class InMemoryPaymentRepository implements IPaymentRepository {
  */
 class PaymentStateMachine {
   private static readonly ALLOWED_TRANSITIONS: Record<PaymentStatus, PaymentStatus[]> = {
-    [PaymentStatus.PENDING]: [PaymentStatus.PROCESSING, PaymentStatus.CANCELLED, PaymentStatus.EXPIRED],
+    [PaymentStatus.PENDING]: [
+      PaymentStatus.PROCESSING,
+      PaymentStatus.CANCELLED,
+      PaymentStatus.EXPIRED,
+    ],
     [PaymentStatus.PROCESSING]: [PaymentStatus.COMPLETED, PaymentStatus.FAILED],
     [PaymentStatus.COMPLETED]: [PaymentStatus.REFUNDED, PaymentStatus.PARTIALLY_REFUNDED],
     [PaymentStatus.FAILED]: [PaymentStatus.PENDING], // Allow retry
     [PaymentStatus.CANCELLED]: [],
     [PaymentStatus.EXPIRED]: [],
     [PaymentStatus.REFUNDED]: [],
-    [PaymentStatus.PARTIALLY_REFUNDED]: [PaymentStatus.REFUNDED]
+    [PaymentStatus.PARTIALLY_REFUNDED]: [PaymentStatus.REFUNDED],
   };
 
   static canTransition(from: PaymentStatus, to: PaymentStatus): boolean {
@@ -210,7 +220,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     totalTransactions: 0,
     successfulPayments: 0,
     failedPayments: 0,
-    totalProcessingTime: 0
+    totalProcessingTime: 0,
   };
   private expirationCheckInterval?: NodeJS.Timeout;
 
@@ -236,15 +246,15 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       retryableErrors: [
         PaymentFailureReason.NETWORK_ERROR,
         PaymentFailureReason.TIMEOUT,
-        PaymentFailureReason.ROUTE_NOT_FOUND
-      ]
+        PaymentFailureReason.ROUTE_NOT_FOUND,
+      ],
     };
 
     // Default payment limits
     this.limits = limits || {
-      minAmount: 1,              // 1 satoshi minimum
-      maxAmount: 100_000_000,    // 1 BTC maximum
-      invoiceExpiry: 3600        // 1 hour default
+      minAmount: 1, // 1 satoshi minimum
+      maxAmount: 100_000_000, // 1 BTC maximum
+      invoiceExpiry: 3600, // 1 hour default
     };
 
     // Start expiration check process
@@ -268,7 +278,9 @@ export class PaymentProcessingService implements IPaymentProcessingService {
         if (existing && existing.invoiceId) {
           const invoice = await this.repository.getInvoice(existing.invoiceId);
           if (invoice) {
-            this.logger.info('Returning existing invoice from idempotency key', { invoiceId: invoice.id });
+            this.logger.info('Returning existing invoice from idempotency key', {
+              invoiceId: invoice.id,
+            });
             return invoice;
           }
         }
@@ -281,7 +293,11 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
       // Create BOLT11 payment request (simplified for now)
-      const paymentRequest = this.generateBolt11Invoice(params.amount, paymentHash, params.description);
+      const paymentRequest = this.generateBolt11Invoice(
+        params.amount,
+        paymentHash,
+        params.description
+      );
 
       // Create invoice
       const invoice: LightningInvoice = {
@@ -297,7 +313,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
         expiresAt,
         createdAt: new Date(),
         metadata: params.metadata,
-        idempotencyKey: params.idempotencyKey
+        idempotencyKey: params.idempotencyKey,
       };
 
       // Save invoice
@@ -310,7 +326,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       if (params.idempotencyKey) {
         await this.storeIdempotency(params.idempotencyKey, invoiceId, {
           success: true,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
@@ -321,18 +337,17 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       await this.emitEvent(DomainEventType.INVOICE_CREATED, invoiceId, {
         userId: params.userId,
         amount: params.amount,
-        paymentHash
+        paymentHash,
       });
 
       const duration = performance.now() - startTime;
       this.logger.info('Invoice created successfully', {
         invoiceId,
         amount: params.amount,
-        duration: `${duration.toFixed(2)}ms`
+        duration: `${duration.toFixed(2)}ms`,
       });
 
       return invoice;
-
     } catch (error) {
       this.logger.error('Failed to create invoice', error);
       throw error;
@@ -444,7 +459,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
         retryCount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
-        metadata: params.metadata
+        metadata: params.metadata,
       };
 
       await this.repository.saveTransaction(transaction);
@@ -469,7 +484,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
         await this.emitEvent(DomainEventType.PAYMENT_RECEIVED, invoice.id, {
           userId: invoice.userId,
           amount: invoice.amount,
-          transactionId
+          transactionId,
         });
 
         // Notify subscribers
@@ -480,9 +495,8 @@ export class PaymentProcessingService implements IPaymentProcessingService {
           userId: invoice.userId,
           amount: invoice.amount,
           status: PaymentStatus.COMPLETED,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
-
       } else {
         transaction.status = PaymentStatus.FAILED;
         transaction.failureReason = result.error?.reason;
@@ -495,7 +509,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
         await this.emitEvent(DomainEventType.PAYMENT_FAILED, invoice.id, {
           userId: invoice.userId,
           error: result.error?.message,
-          reason: result.error?.reason
+          reason: result.error?.reason,
         });
 
         // Notify subscribers
@@ -506,7 +520,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
           userId: invoice.userId,
           amount: invoice.amount,
           status: PaymentStatus.FAILED,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
@@ -522,11 +536,10 @@ export class PaymentProcessingService implements IPaymentProcessingService {
         invoiceId: invoice.id,
         transactionId,
         success: result.success,
-        duration: `${duration.toFixed(2)}ms`
+        duration: `${duration.toFixed(2)}ms`,
       });
 
       return result;
-
     } catch (error) {
       this.logger.error('Payment processing failed', error);
       throw error;
@@ -540,7 +553,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       return {
         valid: false,
         paymentHash,
-        error: 'Invoice not found'
+        error: 'Invoice not found',
       };
     }
 
@@ -551,7 +564,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
         return {
           valid: false,
           paymentHash,
-          error: 'Preimage does not match payment hash'
+          error: 'Preimage does not match payment hash',
         };
       }
     }
@@ -562,7 +575,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       preimage: invoice.preimage,
       amount: invoice.amount,
       amountExpected: invoice.amount,
-      confirmedAt: invoice.paidAt
+      confirmedAt: invoice.paidAt,
     };
   }
 
@@ -594,7 +607,8 @@ export class PaymentProcessingService implements IPaymentProcessingService {
 
     // Calculate backoff delay
     const delay = Math.min(
-      this.retryConfig.initialDelay * Math.pow(this.retryConfig.backoffMultiplier, transaction.retryCount),
+      this.retryConfig.initialDelay *
+        Math.pow(this.retryConfig.backoffMultiplier, transaction.retryCount),
       this.retryConfig.maxDelay
     );
 
@@ -608,7 +622,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     return this.processPayment({
       invoiceId: transaction.invoiceId,
       method: transaction.method,
-      idempotencyKey: `retry-${transactionId}-${transaction.retryCount}`
+      idempotencyKey: `retry-${transactionId}-${transaction.retryCount}`,
     });
   }
 
@@ -643,14 +657,16 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       reason,
       status: PaymentStatus.PROCESSING,
       initiatedBy: transaction.userId,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     await this.repository.saveRefund(refund);
 
     // Update transaction status
     const isPartialRefund = refundAmount < transaction.amount;
-    transaction.status = isPartialRefund ? PaymentStatus.PARTIALLY_REFUNDED : PaymentStatus.REFUNDED;
+    transaction.status = isPartialRefund
+      ? PaymentStatus.PARTIALLY_REFUNDED
+      : PaymentStatus.REFUNDED;
     transaction.updatedAt = new Date();
     await this.repository.updateTransaction(transaction);
 
@@ -658,7 +674,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     await this.emitEvent(DomainEventType.PAYMENT_REFUNDED, transactionId, {
       refundId,
       amount: refundAmount,
-      partial: isPartialRefund
+      partial: isPartialRefund,
     });
 
     this.logger.info('Refund initiated', { refundId, transactionId, amount: refundAmount });
@@ -703,7 +719,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       paymentHash: transaction.paymentHash,
       preimage: transaction.preimage || '',
       paidAt: transaction.completedAt || new Date(),
-      metadata: transaction.metadata
+      metadata: transaction.metadata,
     };
   }
 
@@ -739,7 +755,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       userId,
       startDate,
       endDate,
-      limit: Number.MAX_SAFE_INTEGER
+      limit: Number.MAX_SAFE_INTEGER,
     };
 
     const transactions = await this.repository.queryTransactions(query);
@@ -755,7 +771,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       successRate: 0,
       averageProcessingTime: 0,
       paymentsByMethod: {} as Record<PaymentMethod, number>,
-      paymentsByStatus: {} as Record<PaymentStatus, number>
+      paymentsByStatus: {} as Record<PaymentStatus, number>,
     };
 
     for (const tx of transactions) {
@@ -781,7 +797,8 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       stats.successRate = (stats.successfulPayments / transactions.length) * 100;
     }
 
-    stats.averageProcessingTime = this.metrics.totalProcessingTime / this.metrics.totalTransactions || 0;
+    stats.averageProcessingTime =
+      this.metrics.totalProcessingTime / this.metrics.totalTransactions || 0;
 
     return stats;
   }
@@ -801,18 +818,14 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     return this.repository.getIdempotency(key);
   }
 
-  async storeIdempotency(
-    key: string,
-    invoiceId: string,
-    result: PaymentResult
-  ): Promise<void> {
+  async storeIdempotency(key: string, invoiceId: string, result: PaymentResult): Promise<void> {
     const record: PaymentIdempotency = {
       key,
       invoiceId,
       status: result.success ? PaymentStatus.COMPLETED : PaymentStatus.FAILED,
       result,
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 86400000) // 24 hours
+      expiresAt: new Date(Date.now() + 86400000), // 24 hours
     };
 
     await this.repository.saveIdempotency(record);
@@ -848,7 +861,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     // Emit expiration event
     await this.emitEvent(DomainEventType.INVOICE_EXPIRED, invoiceId, {
       userId: invoice.userId,
-      amount: invoice.amount
+      amount: invoice.amount,
     });
 
     this.logger.info('Invoice expired', { invoiceId });
@@ -880,7 +893,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       PaymentMethod.LIGHTNING,
       PaymentMethod.ONCHAIN,
       PaymentMethod.LNURL,
-      PaymentMethod.WEBLN
+      PaymentMethod.WEBLN,
     ];
   }
 
@@ -911,19 +924,21 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     averageProcessingTime: number;
   }> {
     const uptime = Date.now() - this.metrics.uptime;
-    const successRate = this.metrics.totalTransactions > 0
-      ? (this.metrics.successfulPayments / this.metrics.totalTransactions) * 100
-      : 0;
-    const avgProcessingTime = this.metrics.totalTransactions > 0
-      ? this.metrics.totalProcessingTime / this.metrics.totalTransactions
-      : 0;
+    const successRate =
+      this.metrics.totalTransactions > 0
+        ? (this.metrics.successfulPayments / this.metrics.totalTransactions) * 100
+        : 0;
+    const avgProcessingTime =
+      this.metrics.totalTransactions > 0
+        ? this.metrics.totalProcessingTime / this.metrics.totalTransactions
+        : 0;
 
     return {
       uptime,
       totalInvoices: this.metrics.totalInvoices,
       totalTransactions: this.metrics.totalTransactions,
       successRate,
-      averageProcessingTime: avgProcessingTime
+      averageProcessingTime: avgProcessingTime,
     };
   }
 
@@ -988,7 +1003,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       preimage,
       amount: transaction.amount,
       fee: Math.floor(transaction.amount * 0.001), // 0.1% fee
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -1002,7 +1017,7 @@ export class PaymentProcessingService implements IPaymentProcessingService {
       code,
       message,
       reason,
-      retryable
+      retryable,
     };
   }
 
@@ -1048,6 +1063,6 @@ export class PaymentProcessingService implements IPaymentProcessingService {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

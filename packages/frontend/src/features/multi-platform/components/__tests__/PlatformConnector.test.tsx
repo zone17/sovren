@@ -25,7 +25,12 @@ function createWrapper() {
 
 describe('PlatformConnector', () => {
   const mockStatuses = [
-    { platform: 'mastodon', connected: true, username: '@user@mastodon.social', status: 'connected' },
+    {
+      platform: 'mastodon',
+      connected: true,
+      username: '@user@mastodon.social',
+      status: 'connected',
+    },
     { platform: 'bluesky', connected: false, username: null, status: 'disconnected' },
     { platform: 'twitter', connected: false, username: null, status: 'disconnected' },
   ];
@@ -33,7 +38,9 @@ describe('PlatformConnector', () => {
   beforeEach(() => {
     mockUsePlatformStatus.mockReturnValue({ data: mockStatuses, isLoading: false });
     mockUseConnectPlatform.mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { authorization_url: 'https://oauth.example.com' } }),
+      mutateAsync: vi
+        .fn()
+        .mockResolvedValue({ data: { authorization_url: 'https://oauth.example.com' } }),
       isPending: false,
     });
     mockUseDisconnectPlatform.mockReturnValue({

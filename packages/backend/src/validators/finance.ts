@@ -10,30 +10,33 @@ import { z } from 'zod';
 // Shared constants
 // ============================================================================
 
-const MAX_FILLED_TEXT = 64 * 1024;   // 64 KB — contract body
-const MAX_DESCRIPTION = 4 * 1024;    // 4 KB — general description fields
+const MAX_FILLED_TEXT = 64 * 1024; // 64 KB — contract body
+const MAX_DESCRIPTION = 4 * 1024; // 4 KB — general description fields
 const MAX_TEMPLATE_TEXT = 64 * 1024; // 64 KB — template bodies
 
 const REVENUE_SOURCES = [
-  'subscriptions', 'tips', 'sponsorships', 'services',
-  'affiliate', 'marketplace', 'other',
+  'subscriptions',
+  'tips',
+  'sponsorships',
+  'services',
+  'affiliate',
+  'marketplace',
+  'other',
 ] as const;
 
-const EXPENSE_TYPES = [
-  'equipment', 'software', 'services', 'travel', 'office', 'other',
-] as const;
+const EXPENSE_TYPES = ['equipment', 'software', 'services', 'travel', 'office', 'other'] as const;
 
-const CONTRACT_STATUSES = [
-  'draft', 'sent', 'signed', 'expired', 'terminated',
-] as const;
+const CONTRACT_STATUSES = ['draft', 'sent', 'signed', 'expired', 'terminated'] as const;
 
 const CONTRACT_CATEGORIES = [
-  'sponsorship', 'licensing', 'freelance', 'collaboration', 'general',
+  'sponsorship',
+  'licensing',
+  'freelance',
+  'collaboration',
+  'general',
 ] as const;
 
-const INVOICE_STATUSES = [
-  'draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled',
-] as const;
+const INVOICE_STATUSES = ['draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled'] as const;
 
 const RECURRING_INTERVALS = ['weekly', 'biweekly', 'monthly', 'quarterly'] as const;
 
@@ -59,12 +62,14 @@ export const CreateContractSchema = z.object({
   filledText: z.string().min(1).max(MAX_FILLED_TEXT),
 });
 
-export const UpdateContractSchema = z.object({
-  filledText: z.string().min(1).max(MAX_FILLED_TEXT).optional(),
-  status: z.enum(CONTRACT_STATUSES).optional(),
-}).refine(obj => obj.filledText !== undefined || obj.status !== undefined, {
-  message: 'At least one of filledText or status must be provided',
-});
+export const UpdateContractSchema = z
+  .object({
+    filledText: z.string().min(1).max(MAX_FILLED_TEXT).optional(),
+    status: z.enum(CONTRACT_STATUSES).optional(),
+  })
+  .refine((obj) => obj.filledText !== undefined || obj.status !== undefined, {
+    message: 'At least one of filledText or status must be provided',
+  });
 
 export const AnalyzeContractSchema = z.object({
   text: z.string().min(1).max(MAX_FILLED_TEXT),

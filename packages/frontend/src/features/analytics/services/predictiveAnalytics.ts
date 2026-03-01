@@ -9,20 +9,20 @@
  */
 
 import type {
-    AnalyticsMetric,
-    AnomalyDetection,
-    BusinessRecommendation,
-    ContentRecommendation,
-    FeatureInsight,
-    PerformanceDataPoint,
-    PerformanceForecast,
-    PerformanceHint,
-    PerformanceTrend,
-    RealtimeRecommendations,
-    SessionData,
-    TimeFrame,
-    UIOptimization,
-    UserBehaviorPrediction,
+  AnalyticsMetric,
+  AnomalyDetection,
+  BusinessRecommendation,
+  ContentRecommendation,
+  FeatureInsight,
+  PerformanceDataPoint,
+  PerformanceForecast,
+  PerformanceHint,
+  PerformanceTrend,
+  RealtimeRecommendations,
+  SessionData,
+  TimeFrame,
+  UIOptimization,
+  UserBehaviorPrediction,
 } from '../types';
 
 // 🎯 **PERFORMANCE MONITORING INTERFACE**
@@ -401,7 +401,6 @@ class PredictiveAnalyticsEngine {
       features: ['usagePatterns', 'userSegments', 'timeFactors'],
       predictions: 0,
     });
-
   }
 
   private startDataCollection(): void {
@@ -411,7 +410,6 @@ class PredictiveAnalyticsEngine {
       this.collectUserInteractionData();
       this.collectFeatureUsageData();
     }, 30000); // Every 30 seconds
-
   }
 
   private extractBehaviorFeatures(sessionData: SessionData): BehaviorFeatures {

@@ -14,10 +14,14 @@ const LEVEL_CONFIG: Record<BurnoutLevel, { color: string; bg: string; label: str
 
 function gaugeStrokeColor(level: BurnoutLevel): string {
   switch (level) {
-    case 'low': return '#22c55e';
-    case 'moderate': return '#eab308';
-    case 'high': return '#f97316';
-    case 'critical': return '#ef4444';
+    case 'low':
+      return '#22c55e';
+    case 'moderate':
+      return '#eab308';
+    case 'high':
+      return '#f97316';
+    case 'critical':
+      return '#ef4444';
   }
 }
 
@@ -47,7 +51,8 @@ const RiskFactorBreakdown: React.FC<RiskFactorBreakdownProps> = ({ factors }) =>
             className="h-full rounded-full transition-all duration-500"
             style={{
               width: `${factor.value * 100}%`,
-              backgroundColor: factor.value > 0.6 ? '#ef4444' : factor.value > 0.3 ? '#eab308' : '#22c55e',
+              backgroundColor:
+                factor.value > 0.6 ? '#ef4444' : factor.value > 0.3 ? '#eab308' : '#22c55e',
             }}
           />
         </div>
@@ -122,7 +127,14 @@ export const BurnoutRiskGauge: React.FC = () => {
         >
           {/* Gauge */}
           <div className="flex flex-col items-center">
-            <svg width="120" height="120" viewBox="0 0 120 120" className="transform -rotate-90" role="img" aria-label={`Burnout risk gauge showing ${score} out of 100`}>
+            <svg
+              width="120"
+              height="120"
+              viewBox="0 0 120 120"
+              className="transform -rotate-90"
+              role="img"
+              aria-label={`Burnout risk gauge showing ${score} out of 100`}
+            >
               <circle cx="60" cy="60" r="45" fill="none" stroke="#e5e7eb" strokeWidth="10" />
               <circle
                 cx="60"
@@ -149,13 +161,11 @@ export const BurnoutRiskGauge: React.FC = () => {
 
           {/* Top recommendation */}
           {data.recommendations.length > 0 && (
-            <p className="text-xs text-gray-500 text-center mt-2 px-2">
-              {data.recommendations[0]}
-            </p>
+            <p className="text-xs text-gray-500 text-center mt-2 px-2">{data.recommendations[0]}</p>
           )}
         </button>
 
-        {expanded && <RiskFactorBreakdown factors={data.factors} />}
+        {expanded && <RiskFactorBreakdown factors={data.factors as any} />}
       </CardContent>
     </Card>
   );

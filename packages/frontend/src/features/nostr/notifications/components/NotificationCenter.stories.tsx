@@ -5,7 +5,6 @@
 
 import type { Meta, StoryObj } from '@storybook/react';
 import { NotificationCenter } from './NotificationCenter';
-import { NotificationType } from '../types';
 
 const meta: Meta<typeof NotificationCenter> = {
   title: 'Features/NOSTR/Notifications/NotificationCenter',
@@ -14,7 +13,8 @@ const meta: Meta<typeof NotificationCenter> = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'Main notification center component with bell button, panel, filtering, and settings. Manages notification display and interactions.',
+        component:
+          'Main notification center component with bell button, panel, filtering, and settings. Manages notification display and interactions.',
       },
     },
   },
@@ -143,7 +143,8 @@ export const InteractiveDemo: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Full interactive demo. Click the bell to open, filter notifications, mark as read, and access settings.',
+        story:
+          'Full interactive demo. Click the bell to open, filter notifications, mark as read, and access settings.',
       },
     },
   },

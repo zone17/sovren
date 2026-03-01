@@ -182,7 +182,7 @@ export const FeedItem = memo<FeedItemProps>(
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-sm text-blue-500 hover:underline break-all"
-                  onClick={e => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {link}
                 </a>
@@ -230,9 +230,7 @@ export const FeedItem = memo<FeedItemProps>(
                 aria-pressed={engagement.isLikedByUser}
               >
                 <Heart
-                  className={`w-5 h-5 ${
-                    engagement.isLikedByUser ? 'fill-current' : ''
-                  }`}
+                  className={`w-5 h-5 ${engagement.isLikedByUser ? 'fill-current' : ''}`}
                   aria-hidden="true"
                 />
                 <span className="text-sm">{formatCount(engagement.reactions)}</span>
@@ -240,7 +238,7 @@ export const FeedItem = memo<FeedItemProps>(
 
               {/* Share Button */}
               <button
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-2 hover:text-purple-500 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-full p-1"
                 aria-label="Share post"
               >

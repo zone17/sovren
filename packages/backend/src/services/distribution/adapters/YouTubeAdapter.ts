@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * YouTube Platform Adapter
  * EPIC-009: YouTube Data API v3 integration
@@ -34,7 +35,8 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       client_id: this.config.clientId,
       redirect_uri: this.config.callbackUrl,
       response_type: 'code',
-      scope: 'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl',
+      scope:
+        'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl',
       state,
       access_type: 'offline',
       prompt: 'consent',

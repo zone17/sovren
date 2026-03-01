@@ -207,12 +207,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900 dark:text-gray-100 mb-1">
-          {notification.content}
-        </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {formattedTime}
-        </p>
+        <p className="text-sm text-gray-900 dark:text-gray-100 mb-1">{notification.content}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{formattedTime}</p>
       </div>
 
       {/* Actions */}

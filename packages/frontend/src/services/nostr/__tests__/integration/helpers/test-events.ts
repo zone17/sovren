@@ -5,7 +5,7 @@
  * Factory functions for creating test NOSTR events
  */
 
-import type { UnsignedNostrEvent, NostrFilter } from '@shared/types/nostr';
+import type { UnsignedNostrEvent, NostrFilter } from '@shared/types/nostr/index';
 
 /**
  * Test Event Factory
@@ -71,7 +71,11 @@ export class TestEventFactory {
   /**
    * Create repost (kind 6)
    */
-  static repost(eventId: string, authorPubkey: string, originalEventJson?: string): UnsignedNostrEvent {
+  static repost(
+    eventId: string,
+    authorPubkey: string,
+    originalEventJson?: string
+  ): UnsignedNostrEvent {
     return {
       kind: 6,
       content: originalEventJson || '',
@@ -90,7 +94,7 @@ export class TestEventFactory {
     return {
       kind: 5,
       content: reason,
-      tags: eventIds.map(id => ['e', id]),
+      tags: eventIds.map((id) => ['e', id]),
       created_at: Math.floor(Date.now() / 1000),
     };
   }
@@ -98,11 +102,13 @@ export class TestEventFactory {
   /**
    * Create contact list (kind 3)
    */
-  static contactList(contacts: Array<{
-    pubkey: string;
-    relay?: string;
-    petname?: string;
-  }>): UnsignedNostrEvent {
+  static contactList(
+    contacts: Array<{
+      pubkey: string;
+      relay?: string;
+      petname?: string;
+    }>
+  ): UnsignedNostrEvent {
     const tags = contacts.map(({ pubkey, relay, petname }) => {
       const tag = ['p', pubkey];
       if (relay) tag.push(relay);
@@ -121,11 +127,13 @@ export class TestEventFactory {
   /**
    * Create relay list metadata (kind 10002 - NIP-65)
    */
-  static relayList(relays: Array<{
-    url: string;
-    read?: boolean;
-    write?: boolean;
-  }>): UnsignedNostrEvent {
+  static relayList(
+    relays: Array<{
+      url: string;
+      read?: boolean;
+      write?: boolean;
+    }>
+  ): UnsignedNostrEvent {
     const tags = relays.map(({ url, read, write }) => {
       const tag = ['r', url];
       if (read && !write) tag.push('read');
@@ -161,7 +169,7 @@ export class TestEventFactory {
     if (data.image) tags.push(['image', data.image]);
     if (data.published_at) tags.push(['published_at', data.published_at.toString()]);
     if (data.tags) {
-      data.tags.forEach(tag => tags.push(['t', tag]));
+      data.tags.forEach((tag) => tags.push(['t', tag]));
     }
 
     return {
@@ -288,9 +296,7 @@ export class TestEventFactory {
    * Batch create text notes
    */
   static batchTextNotes(count: number, prefix: string = 'Note'): UnsignedNostrEvent[] {
-    return Array.from({ length: count }, (_, i) =>
-      this.textNote(`${prefix} ${i + 1}`)
-    );
+    return Array.from({ length: count }, (_, i) => this.textNote(`${prefix} ${i + 1}`));
   }
 }
 
@@ -429,7 +435,9 @@ export function generateTestKeys(seed: string = 'test') {
   }, 0);
 
   const privateKey = Math.abs(hash).toString(16).padStart(64, '0');
-  const publicKey = Math.abs(hash * 2).toString(16).padStart(64, '0');
+  const publicKey = Math.abs(hash * 2)
+    .toString(16)
+    .padStart(64, '0');
 
   return {
     privateKey,

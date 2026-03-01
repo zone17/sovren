@@ -44,9 +44,8 @@ describe('Deployment Monitoring Middleware', () => {
     });
 
     it('should increment request counter on response finish', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'GET',
@@ -74,9 +73,8 @@ describe('Deployment Monitoring Middleware', () => {
     });
 
     it('should record request duration histogram', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'POST',
@@ -102,9 +100,8 @@ describe('Deployment Monitoring Middleware', () => {
     });
 
     it('should increment error counter on 4xx responses', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'GET',
@@ -130,9 +127,8 @@ describe('Deployment Monitoring Middleware', () => {
     });
 
     it('should increment error counter on 5xx responses', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'POST',
@@ -158,9 +154,8 @@ describe('Deployment Monitoring Middleware', () => {
     });
 
     it('should NOT increment error counter on 2xx responses', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'GET',
@@ -216,9 +211,8 @@ describe('Deployment Monitoring Middleware', () => {
 
   describe('Route normalization', () => {
     it('should normalize UUIDs in route paths', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'GET',
@@ -245,9 +239,8 @@ describe('Deployment Monitoring Middleware', () => {
     });
 
     it('should normalize 64-char hex strings (pubkeys) in route paths', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const pubkey = 'a'.repeat(64);
       const req = {
@@ -274,9 +267,8 @@ describe('Deployment Monitoring Middleware', () => {
     });
 
     it('should normalize numeric IDs in route paths', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'GET',
@@ -305,9 +297,8 @@ describe('Deployment Monitoring Middleware', () => {
 
   describe('Active connections gauge', () => {
     it('should increment on request start and decrement on finish', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'GET',
@@ -365,9 +356,8 @@ describe('Deployment Monitoring Middleware', () => {
     });
 
     it('should return 500 on metrics collection error', async () => {
-      const { getPrometheusMetrics, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { getPrometheusMetrics, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       // Force an error by mocking the registry
       vi.spyOn(metricsRegistry, 'metrics').mockRejectedValueOnce(new Error('Collection failed'));
@@ -388,7 +378,8 @@ describe('Deployment Monitoring Middleware', () => {
 
   describe('Deployment health check', () => {
     it.skip('should return healthy status via getDeploymentHealth (function not exported)', async () => {
-      const { getDeploymentHealth } = await import('../../middleware/deployment-monitoring') as any;
+      const { getDeploymentHealth } =
+        (await import('../../middleware/deployment-monitoring')) as any;
 
       const req = {} as Request;
       const res = {

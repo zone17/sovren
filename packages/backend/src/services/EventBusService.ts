@@ -13,7 +13,6 @@ import {
   EventSubscription,
   EventReplayOptions,
   DomainEventType,
-  ValidationResult
 } from '../interfaces/shared/IEventBus';
 
 /**
@@ -101,13 +100,13 @@ export class EventBusService implements IEventBus {
       id: subscriptionId,
       eventTypes: [eventType],
       handler,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.subscriptions.set(subscriptionId, {
       subscription,
       handler,
-      errorCount: 0
+      errorCount: 0,
     });
 
     // Add to event type index
@@ -131,13 +130,13 @@ export class EventBusService implements IEventBus {
       id: subscriptionId,
       eventTypes,
       handler,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.subscriptions.set(subscriptionId, {
       subscription,
       handler,
-      errorCount: 0
+      errorCount: 0,
     });
 
     // Add to event type indexes
@@ -161,13 +160,13 @@ export class EventBusService implements IEventBus {
       id: subscriptionId,
       eventTypes: [],
       handler,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.subscriptions.set(subscriptionId, {
       subscription,
       handler,
-      errorCount: 0
+      errorCount: 0,
     });
 
     this.wildcardSubscriptions.add(subscriptionId);
@@ -186,14 +185,14 @@ export class EventBusService implements IEventBus {
       eventTypes: filter.types || [],
       handler,
       filter,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.subscriptions.set(subscriptionId, {
       subscription,
       handler,
       filter,
-      errorCount: 0
+      errorCount: 0,
     });
 
     // If filter includes specific types, add to indexes
@@ -246,7 +245,7 @@ export class EventBusService implements IEventBus {
    * Get a specific event by ID
    */
   async getEvent(eventId: string): Promise<DomainEvent | null> {
-    const stored = this.eventStore.find(s => s.event.id === eventId);
+    const stored = this.eventStore.find((s) => s.event.id === eventId);
     return stored?.event || null;
   }
 
@@ -254,27 +253,27 @@ export class EventBusService implements IEventBus {
    * Query events with filter
    */
   async queryEvents(filter: EventFilter, limit = 100, offset = 0): Promise<DomainEvent[]> {
-    let filtered = this.eventStore.map(s => s.event);
+    let filtered = this.eventStore.map((s) => s.event);
 
     // Apply filters
     if (filter.types && filter.types.length > 0) {
-      filtered = filtered.filter(e => filter.types!.includes(e.type));
+      filtered = filtered.filter((e) => filter.types!.includes(e.type));
     }
 
     if (filter.aggregateTypes && filter.aggregateTypes.length > 0) {
-      filtered = filtered.filter(e => filter.aggregateTypes!.includes(e.aggregateType));
+      filtered = filtered.filter((e) => filter.aggregateTypes!.includes(e.aggregateType));
     }
 
     if (filter.userId) {
-      filtered = filtered.filter(e => e.metadata.userId === filter.userId);
+      filtered = filtered.filter((e) => e.metadata.userId === filter.userId);
     }
 
     if (filter.after) {
-      filtered = filtered.filter(e => e.metadata.timestamp >= filter.after!);
+      filtered = filtered.filter((e) => e.metadata.timestamp >= filter.after!);
     }
 
     if (filter.before) {
-      filtered = filtered.filter(e => e.metadata.timestamp <= filter.before!);
+      filtered = filtered.filter((e) => e.metadata.timestamp <= filter.before!);
     }
 
     // Apply pagination
@@ -288,7 +287,7 @@ export class EventBusService implements IEventBus {
     const events = await this.queryEvents({
       ...options.filter,
       after: options.from,
-      before: options.to
+      before: options.to,
     });
 
     const batchSize = options.batchSize || 100;
@@ -330,7 +329,7 @@ export class EventBusService implements IEventBus {
    * Get active subscriptions
    */
   getActiveSubscriptions(): EventSubscription[] {
-    return Array.from(this.subscriptions.values()).map(e => e.subscription);
+    return Array.from(this.subscriptions.values()).map((e) => e.subscription);
   }
 
   /**
@@ -436,10 +435,7 @@ export class EventBusService implements IEventBus {
       setTimeout(() => reject(new Error('Handler timeout')), timeoutMs);
     });
 
-    await Promise.race([
-      handler(event),
-      timeoutPromise
-    ]);
+    await Promise.race([handler(event), timeoutPromise]);
   }
 
   /**
@@ -465,7 +461,7 @@ export class EventBusService implements IEventBus {
           handlers.push({
             subscriptionId,
             handler: entry.handler,
-            entry
+            entry,
           });
         }
       }
@@ -478,7 +474,7 @@ export class EventBusService implements IEventBus {
         handlers.push({
           subscriptionId,
           handler: entry.handler,
-          entry
+          entry,
         });
       }
     }
@@ -552,7 +548,7 @@ export class EventBusService implements IEventBus {
       event,
       timestamp: new Date(),
       processed: false,
-      retryCount: 0
+      retryCount: 0,
     });
 
     // Trim store if too large
@@ -580,7 +576,7 @@ export class EventBusService implements IEventBus {
    * Delay helper
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**

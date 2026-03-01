@@ -21,17 +21,12 @@ const CircleManagement: React.FC<CircleManagementProps> = ({
   const removeMutation = useRemoveMember();
 
   const handleRemove = (memberId: string) => {
-    removeMutation.mutate(
-      { circleId, memberId },
-      { onSuccess: () => setConfirmRemove(null) }
-    );
+    removeMutation.mutate({ circleId, memberId }, { onSuccess: () => setConfirmRemove(null) });
   };
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">
-        {circleName} — Members
-      </h2>
+      <h2 className="text-lg font-semibold text-gray-900">{circleName} — Members</h2>
 
       <ul className="divide-y divide-gray-100 rounded-lg border bg-white" role="list">
         {members.map((member) => (
@@ -42,7 +37,9 @@ const CircleManagement: React.FC<CircleManagementProps> = ({
               </div>
               <div>
                 <span className="text-sm font-medium text-gray-900">
-                  {member.creatorId === currentUserId ? 'You' : `Creator ${member.creatorId.slice(0, 8)}`}
+                  {member.creatorId === currentUserId
+                    ? 'You'
+                    : `Creator ${member.creatorId.slice(0, 8)}`}
                 </span>
                 <span
                   className={`ml-2 rounded-full px-2 py-0.5 text-xs ${

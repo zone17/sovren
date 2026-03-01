@@ -5,12 +5,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Event as NostrEvent } from 'nostr-tools';
-import type {
-  FeedFilters,
-  FeedState,
-  FeedEvent,
-  UseFeedSubscriptionReturn,
-} from '../types';
+import type { FeedFilters, FeedState, FeedEvent, UseFeedSubscriptionReturn } from '../types';
 import { parseContent } from '../utils/contentParser';
 
 /**
@@ -98,7 +93,7 @@ export const useFeedSubscription = (): UseFeedSubscriptionReturn => {
    * Subscribe to feed with filters
    */
   const subscribe = useCallback((_filters: FeedFilters) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     // Generate subscription ID
     const subId = `feed_${Date.now()}`;
@@ -113,13 +108,11 @@ export const useFeedSubscription = (): UseFeedSubscriptionReturn => {
       // 4. Update state with new events
 
       // Generate mock events
-      const mockEvents = Array.from({ length: 20 }, (_, i) =>
-        generateMockEvent(i)
-      );
+      const mockEvents = Array.from({ length: 20 }, (_, i) => generateMockEvent(i));
 
       const feedEvents = mockEvents.map(transformToFeedEvent);
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         events: feedEvents,
         isLoading: false,
@@ -137,7 +130,7 @@ export const useFeedSubscription = (): UseFeedSubscriptionReturn => {
       // In production: SubscriptionManager.unsubscribe(subscriptionRef.current)
       subscriptionRef.current = null;
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isSubscribed: false,
         subscriptionId: null,
@@ -149,16 +142,14 @@ export const useFeedSubscription = (): UseFeedSubscriptionReturn => {
    * Refresh feed (re-subscribe with same filters)
    */
   const refresh = useCallback(() => {
-    setState(prev => ({ ...prev, events: [], isLoading: true }));
+    setState((prev) => ({ ...prev, events: [], isLoading: true }));
 
     // Simulate refresh
     setTimeout(() => {
-      const mockEvents = Array.from({ length: 20 }, (_, i) =>
-        generateMockEvent(i)
-      );
+      const mockEvents = Array.from({ length: 20 }, (_, i) => generateMockEvent(i));
       const feedEvents = mockEvents.map(transformToFeedEvent);
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         events: feedEvents,
         isLoading: false,
@@ -172,7 +163,7 @@ export const useFeedSubscription = (): UseFeedSubscriptionReturn => {
   const addOptimisticUpdate = useCallback((event: NostrEvent) => {
     const feedEvent = transformToFeedEvent(event);
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       events: [feedEvent, ...prev.events],
     }));

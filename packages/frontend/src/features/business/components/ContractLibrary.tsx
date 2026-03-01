@@ -98,7 +98,10 @@ const ContractLibrary: React.FC<ContractLibraryProps> = ({ onSelectTemplate }) =
         </h3>
 
         {contracts && contracts.length > 0 ? (
-          <ul className="mt-3 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white" role="list">
+          <ul
+            className="mt-3 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white"
+            role="list"
+          >
             {contracts.map((contract) => (
               <li key={contract.id} className="flex items-center justify-between px-4 py-3">
                 <div>
@@ -116,7 +119,9 @@ const ContractLibrary: React.FC<ContractLibraryProps> = ({ onSelectTemplate }) =
             ))}
           </ul>
         ) : (
-          <p className="mt-3 text-sm text-gray-500">No contracts yet. Start from a template above.</p>
+          <p className="mt-3 text-sm text-gray-500">
+            No contracts yet. Start from a template above.
+          </p>
         )}
       </section>
     </div>

@@ -173,7 +173,7 @@ export const DarkMode: Story = {
     },
   },
   decorators: [
-    Story => (
+    (Story) => (
       <div className="dark h-screen">
         <Story />
       </div>

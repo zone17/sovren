@@ -61,7 +61,9 @@ const RevenueMix: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-gray-900">Revenue Mix</h4>
-        <span className="text-sm text-gray-500">Total: {formatSats(totalSats, { abbreviate: true })}</span>
+        <span className="text-sm text-gray-500">
+          Total: {formatSats(totalSats, { abbreviate: true })}
+        </span>
       </div>
 
       {/* Concentration risk warning */}
@@ -72,8 +74,8 @@ const RevenueMix: React.FC = () => {
           aria-live="polite"
         >
           <p className="text-xs font-medium text-orange-800">
-            Concentration Risk: {risk.dominantSource} accounts for{' '}
-            {risk.concentration.toFixed(0)}% of revenue.
+            Concentration Risk: {risk.dominantSource} accounts for {risk.concentration.toFixed(0)}%
+            of revenue.
           </p>
           <p className="text-xs text-orange-600 mt-0.5">
             Diversify to reduce dependency on a single source.
@@ -128,7 +130,9 @@ const RevenueMix: React.FC = () => {
               <span className="text-sm capitalize text-gray-700">{entry.source}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">{formatSats(entry.amountSats, { abbreviate: true })}</span>
+              <span className="text-gray-500">
+                {formatSats(entry.amountSats, { abbreviate: true })}
+              </span>
               <span className="font-medium text-gray-900 w-12 text-right">
                 {entry.percentage.toFixed(1)}%
               </span>

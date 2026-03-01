@@ -18,7 +18,7 @@ import type {
   DisplayPreferences,
   CommunicationPreferences,
   AccessibilitySettings,
-  DataExportPreferences
+  DataExportPreferences,
 } from '../../types/user-preferences';
 
 /**
@@ -28,10 +28,7 @@ export interface IUserPreferencesService {
   /**
    * Get user preferences with optional query options
    */
-  getPreferences(
-    userId: string,
-    options?: PreferenceQueryOptions
-  ): Promise<UserPreferences>;
+  getPreferences(userId: string, options?: PreferenceQueryOptions): Promise<UserPreferences>;
 
   /**
    * Get specific preference category
@@ -47,9 +44,7 @@ export interface IUserPreferencesService {
   /**
    * Update user preferences
    */
-  updatePreferences(
-    request: PreferenceUpdateRequest
-  ): Promise<UserPreferences>;
+  updatePreferences(request: PreferenceUpdateRequest): Promise<UserPreferences>;
 
   /**
    * Update specific preference categories
@@ -92,9 +87,7 @@ export interface IUserPreferencesService {
   /**
    * Bulk update preferences with atomic transaction support
    */
-  bulkUpdatePreferences(
-    request: BulkPreferenceUpdateRequest
-  ): Promise<UserPreferences>;
+  bulkUpdatePreferences(request: BulkPreferenceUpdateRequest): Promise<UserPreferences>;
 
   /**
    * Apply a preference preset
@@ -117,9 +110,7 @@ export interface IUserPreferencesService {
   /**
    * Validate preference values
    */
-  validatePreferences(
-    preferences: Partial<UserPreferences>
-  ): Promise<PreferenceValidationResult>;
+  validatePreferences(preferences: Partial<UserPreferences>): Promise<PreferenceValidationResult>;
 
   /**
    * Get preference change history
@@ -151,19 +142,18 @@ export interface IUserPreferencesService {
   /**
    * Import user preferences
    */
-  importPreferences(
-    userId: string,
-    data: PreferenceExportResult
-  ): Promise<UserPreferences>;
+  importPreferences(userId: string, data: PreferenceExportResult): Promise<UserPreferences>;
 
   /**
    * Get available preference presets
    */
-  getAvailablePresets(): Promise<Array<{
-    name: string;
-    displayName: string;
-    description: string;
-  }>>;
+  getAvailablePresets(): Promise<
+    Array<{
+      name: string;
+      displayName: string;
+      description: string;
+    }>
+  >;
 
   /**
    * Check if user has customized preferences

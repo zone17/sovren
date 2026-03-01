@@ -119,9 +119,7 @@ export const DeploymentDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                CI/CD Deployment Dashboard
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900">CI/CD Deployment Dashboard</h1>
               <p className="text-sm text-gray-500 mt-1">
                 Real-time monitoring and management of deployment pipelines
               </p>
@@ -143,9 +141,7 @@ export const DeploymentDashboard: React.FC = () => {
               {/* Environment Selector */}
               <select
                 value={selectedEnvironment}
-                onChange={(e) =>
-                  setSelectedEnvironment(e.target.value as DeploymentEnvironment)
-                }
+                onChange={(e) => setSelectedEnvironment(e.target.value as DeploymentEnvironment)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="staging">Staging</option>
@@ -190,17 +186,12 @@ export const DeploymentDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Deployment Status */}
           <div className="lg:col-span-2 space-y-6">
-            <DeploymentStatusPanel
-              deployment={currentDeployment}
-              isLoading={deploymentLoading}
-            />
+            <DeploymentStatusPanel deployment={currentDeployment} isLoading={deploymentLoading} />
 
             {/* Action Buttons */}
             {currentDeployment && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Actions
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
                 <div className="flex space-x-4">
                   {currentDeployment.status === 'failed' && (
                     <button
@@ -246,9 +237,7 @@ export const DeploymentDashboard: React.FC = () => {
             {recentDeployments.length > 0 && (
               <div className="bg-white rounded-lg shadow">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Recent Deployments
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Recent Deployments</h3>
                 </div>
                 <div className="px-6 py-4">
                   <div className="space-y-2">
@@ -275,8 +264,8 @@ export const DeploymentDashboard: React.FC = () => {
                               deployment.status === 'success'
                                 ? 'bg-green-100 text-green-800'
                                 : deployment.status === 'failed'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-gray-100 text-gray-800'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
                             }`}
                           >
                             {deployment.status}
@@ -292,16 +281,11 @@ export const DeploymentDashboard: React.FC = () => {
 
           {/* Right Column - Health & Metrics */}
           <div className="space-y-6">
-            <HealthCheckMonitor
-              healthChecks={healthChecks}
-              isLoading={healthLoading}
-            />
+            <HealthCheckMonitor healthChecks={healthChecks} isLoading={healthLoading} />
 
             {/* Quick Stats */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Quick Stats
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Total Deployments</span>
@@ -329,13 +313,19 @@ export const DeploymentDashboard: React.FC = () => {
                       isHealthy
                         ? 'text-green-600'
                         : isDegraded
-                        ? 'text-yellow-600'
-                        : isUnhealthy
-                        ? 'text-red-600'
-                        : 'text-gray-600'
+                          ? 'text-yellow-600'
+                          : isUnhealthy
+                            ? 'text-red-600'
+                            : 'text-gray-600'
                     }`}
                   >
-                    {isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isUnhealthy ? 'Unhealthy' : 'Unknown'}
+                    {isHealthy
+                      ? 'Healthy'
+                      : isDegraded
+                        ? 'Degraded'
+                        : isUnhealthy
+                          ? 'Unhealthy'
+                          : 'Unknown'}
                   </span>
                 </div>
               </div>

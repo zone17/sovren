@@ -92,7 +92,10 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ templateId, onSaved, on
           rows={16}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
           value={filledText}
-          onChange={(e) => { setFilledText(e.target.value); setAnalyzed(false); }}
+          onChange={(e) => {
+            setFilledText(e.target.value);
+            setAnalyzed(false);
+          }}
           aria-label="Contract text editor"
         />
       </div>

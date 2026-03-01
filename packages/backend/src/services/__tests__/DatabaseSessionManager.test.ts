@@ -25,8 +25,13 @@ function createChainMock() {
 
   const chain: any = {};
 
-  chain._resolve = (value: any) => { _result = value; };
-  chain.from = vi.fn(() => { _result = { data: null, error: null }; return chain; });
+  chain._resolve = (value: any) => {
+    _result = value;
+  };
+  chain.from = vi.fn(() => {
+    _result = { data: null, error: null };
+    return chain;
+  });
   chain.insert = vi.fn(() => chain);
   chain.select = vi.fn(() => chain);
   chain.update = vi.fn(() => chain);
@@ -114,13 +119,22 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should enforce session limit per user', async () => {
-      const existingSessions = Array(5).fill(null).map((_, i) => ({
-        id: `session_${i}`, pubkey: mockPubkey, user_id: 'uid', token_hash: 'hash',
-        device_id: `dev_${i}`, device_fingerprint: `fp_${i}`, device_info: mockDeviceInfo,
-        is_active: true, created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date(Date.now() - i * 1000).toISOString(), refresh_count: 0,
-      }));
+      const existingSessions = Array(5)
+        .fill(null)
+        .map((_, i) => ({
+          id: `session_${i}`,
+          pubkey: mockPubkey,
+          user_id: 'uid',
+          token_hash: 'hash',
+          device_id: `dev_${i}`,
+          device_fingerprint: `fp_${i}`,
+          device_info: mockDeviceInfo,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 86400000).toISOString(),
+          last_activity: new Date(Date.now() - i * 1000).toISOString(),
+          refresh_count: 0,
+        }));
 
       let callCount = 0;
       mockChain.from = vi.fn(() => {
@@ -139,7 +153,10 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should generate unique session IDs', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [], error: null });
+        return mockChain;
+      });
 
       const session1 = await sessionManager.createSession(mockPubkey, mockMetadata);
       const session2 = await sessionManager.createSession(mockPubkey, mockMetadata);
@@ -147,7 +164,10 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should hash the token before storing', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [], error: null });
+        return mockChain;
+      });
 
       const session = await sessionManager.createSession(mockPubkey, mockMetadata);
       expect(session.token_hash).toBeDefined();
@@ -156,7 +176,10 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should log session creation activity', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [], error: null });
+        return mockChain;
+      });
 
       await sessionManager.createSession(mockPubkey, mockMetadata);
       expect(mockChain.from).toHaveBeenCalledWith('session_activities');
@@ -167,18 +190,27 @@ describe('DatabaseSessionManager', () => {
     it('should validate a valid session', async () => {
       const token = 'test_token';
       const mockSession = {
-        id: 'session_test', pubkey: mockPubkey, user_id: 'uid',
-        token_hash: hashToken(token), device_id: 'dev1', device_fingerprint: 'fp1',
-        device_info: mockDeviceInfo, is_active: true,
+        id: 'session_test',
+        pubkey: mockPubkey,
+        user_id: 'uid',
+        token_hash: hashToken(token),
+        device_id: 'dev1',
+        device_fingerprint: 'fp1',
+        device_info: mockDeviceInfo,
+        is_active: true,
         expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date().toISOString(), refresh_count: 0,
+        last_activity: new Date().toISOString(),
+        refresh_count: 0,
       };
 
       let callCount = 0;
       mockChain.from = vi.fn(() => {
         callCount++;
-        if (callCount === 1) { mockChain._resolve({ data: mockSession, error: null }); }
-        else { mockChain._resolve({ data: null, error: null }); }
+        if (callCount === 1) {
+          mockChain._resolve({ data: mockSession, error: null });
+        } else {
+          mockChain._resolve({ data: null, error: null });
+        }
         return mockChain;
       });
 
@@ -190,14 +222,23 @@ describe('DatabaseSessionManager', () => {
     it('should reject expired sessions', async () => {
       const token = 'test_token';
       const mockSession = {
-        id: 'session_test', pubkey: mockPubkey, user_id: 'uid',
-        token_hash: hashToken(token), device_id: 'dev1', device_fingerprint: 'fp1',
-        device_info: mockDeviceInfo, is_active: true,
+        id: 'session_test',
+        pubkey: mockPubkey,
+        user_id: 'uid',
+        token_hash: hashToken(token),
+        device_id: 'dev1',
+        device_fingerprint: 'fp1',
+        device_info: mockDeviceInfo,
+        is_active: true,
         expires_at: new Date(Date.now() - 1000).toISOString(),
-        last_activity: new Date().toISOString(), refresh_count: 0,
+        last_activity: new Date().toISOString(),
+        refresh_count: 0,
       };
 
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: mockSession, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: mockSession, error: null });
+        return mockChain;
+      });
 
       const validation = await sessionManager.validateSession('session_test', token, mockMetadata);
       expect(validation.valid).toBe(false);
@@ -208,14 +249,23 @@ describe('DatabaseSessionManager', () => {
     it('should reject inactive sessions', async () => {
       const token = 'test_token';
       const mockSession = {
-        id: 'session_test', pubkey: mockPubkey, user_id: 'uid',
-        token_hash: hashToken(token), device_id: 'dev1', device_fingerprint: 'fp1',
-        device_info: mockDeviceInfo, is_active: false,
+        id: 'session_test',
+        pubkey: mockPubkey,
+        user_id: 'uid',
+        token_hash: hashToken(token),
+        device_id: 'dev1',
+        device_fingerprint: 'fp1',
+        device_info: mockDeviceInfo,
+        is_active: false,
         expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date().toISOString(), refresh_count: 0,
+        last_activity: new Date().toISOString(),
+        refresh_count: 0,
       };
 
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: mockSession, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: mockSession, error: null });
+        return mockChain;
+      });
 
       const validation = await sessionManager.validateSession('session_test', token, mockMetadata);
       expect(validation.valid).toBe(false);
@@ -223,9 +273,16 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should reject non-existent sessions', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: null, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: null, error: null });
+        return mockChain;
+      });
 
-      const validation = await sessionManager.validateSession('nonexistent', 'test_token', mockMetadata);
+      const validation = await sessionManager.validateSession(
+        'nonexistent',
+        'test_token',
+        mockMetadata
+      );
       expect(validation.valid).toBe(false);
       expect(validation.reason).toBe('Session not found');
     });
@@ -233,18 +290,27 @@ describe('DatabaseSessionManager', () => {
     it('should update last activity on successful validation', async () => {
       const token = 'test_token';
       const mockSession = {
-        id: 'session_test', pubkey: mockPubkey, user_id: 'uid',
-        token_hash: hashToken(token), device_id: 'dev1', device_fingerprint: 'fp1',
-        device_info: mockDeviceInfo, is_active: true,
+        id: 'session_test',
+        pubkey: mockPubkey,
+        user_id: 'uid',
+        token_hash: hashToken(token),
+        device_id: 'dev1',
+        device_fingerprint: 'fp1',
+        device_info: mockDeviceInfo,
+        is_active: true,
         expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date(Date.now() - 60000).toISOString(), refresh_count: 0,
+        last_activity: new Date(Date.now() - 60000).toISOString(),
+        refresh_count: 0,
       };
 
       let callCount = 0;
       mockChain.from = vi.fn(() => {
         callCount++;
-        if (callCount === 1) { mockChain._resolve({ data: mockSession, error: null }); }
-        else { mockChain._resolve({ data: null, error: null }); }
+        if (callCount === 1) {
+          mockChain._resolve({ data: mockSession, error: null });
+        } else {
+          mockChain._resolve({ data: null, error: null });
+        }
         return mockChain;
       });
 
@@ -257,18 +323,27 @@ describe('DatabaseSessionManager', () => {
     it('should refresh a valid session', async () => {
       const token = 'test_token';
       const mockSession = {
-        id: 'session_test', pubkey: mockPubkey, user_id: 'uid',
-        token_hash: hashToken(token), device_id: 'dev1', device_fingerprint: 'fp1',
-        device_info: mockDeviceInfo, is_active: true,
+        id: 'session_test',
+        pubkey: mockPubkey,
+        user_id: 'uid',
+        token_hash: hashToken(token),
+        device_id: 'dev1',
+        device_fingerprint: 'fp1',
+        device_info: mockDeviceInfo,
+        is_active: true,
         expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date().toISOString(), refresh_count: 0,
+        last_activity: new Date().toISOString(),
+        refresh_count: 0,
       };
 
       let callCount = 0;
       mockChain.from = vi.fn(() => {
         callCount++;
-        if (callCount === 1) { mockChain._resolve({ data: mockSession, error: null }); }
-        else { mockChain._resolve({ data: null, error: null }); }
+        if (callCount === 1) {
+          mockChain._resolve({ data: mockSession, error: null });
+        } else {
+          mockChain._resolve({ data: null, error: null });
+        }
         return mockChain;
       });
 
@@ -280,18 +355,27 @@ describe('DatabaseSessionManager', () => {
     it('should generate a new token on refresh', async () => {
       const token = 'test_token';
       const mockSession = {
-        id: 'session_test', pubkey: mockPubkey, user_id: 'uid',
-        token_hash: hashToken(token), device_id: 'dev1', device_fingerprint: 'fp1',
-        device_info: mockDeviceInfo, is_active: true,
+        id: 'session_test',
+        pubkey: mockPubkey,
+        user_id: 'uid',
+        token_hash: hashToken(token),
+        device_id: 'dev1',
+        device_fingerprint: 'fp1',
+        device_info: mockDeviceInfo,
+        is_active: true,
         expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date().toISOString(), refresh_count: 0,
+        last_activity: new Date().toISOString(),
+        refresh_count: 0,
       };
 
       let callCount = 0;
       mockChain.from = vi.fn(() => {
         callCount++;
-        if (callCount === 1) { mockChain._resolve({ data: mockSession, error: null }); }
-        else { mockChain._resolve({ data: null, error: null }); }
+        if (callCount === 1) {
+          mockChain._resolve({ data: mockSession, error: null });
+        } else {
+          mockChain._resolve({ data: null, error: null });
+        }
         return mockChain;
       });
 
@@ -304,18 +388,27 @@ describe('DatabaseSessionManager', () => {
     it('should increment refresh count', async () => {
       const token = 'test_token';
       const mockSession = {
-        id: 'session_test', pubkey: mockPubkey, user_id: 'uid',
-        token_hash: hashToken(token), device_id: 'dev1', device_fingerprint: 'fp1',
-        device_info: mockDeviceInfo, is_active: true,
+        id: 'session_test',
+        pubkey: mockPubkey,
+        user_id: 'uid',
+        token_hash: hashToken(token),
+        device_id: 'dev1',
+        device_fingerprint: 'fp1',
+        device_info: mockDeviceInfo,
+        is_active: true,
         expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date().toISOString(), refresh_count: 2,
+        last_activity: new Date().toISOString(),
+        refresh_count: 2,
       };
 
       let callCount = 0;
       mockChain.from = vi.fn(() => {
         callCount++;
-        if (callCount === 1) { mockChain._resolve({ data: mockSession, error: null }); }
-        else { mockChain._resolve({ data: null, error: null }); }
+        if (callCount === 1) {
+          mockChain._resolve({ data: mockSession, error: null });
+        } else {
+          mockChain._resolve({ data: null, error: null });
+        }
         return mockChain;
       });
 
@@ -327,7 +420,10 @@ describe('DatabaseSessionManager', () => {
 
   describe('revokeSession', () => {
     it('should revoke an active session', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: null, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: null, error: null });
+        return mockChain;
+      });
 
       await sessionManager.revokeSession('session_test');
       expect(mockChain.update).toHaveBeenCalled();
@@ -335,7 +431,10 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should log revocation activity', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: null, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: null, error: null });
+        return mockChain;
+      });
 
       await sessionManager.revokeSession('session_test');
       expect(mockChain.from).toHaveBeenCalledWith('session_activities');
@@ -345,18 +444,26 @@ describe('DatabaseSessionManager', () => {
       let callCount = 0;
       mockChain.from = vi.fn(() => {
         callCount++;
-        if (callCount === 1) { mockChain._resolve({ error: { message: 'Database error' } }); }
-        else { mockChain._resolve({ data: null, error: null }); }
+        if (callCount === 1) {
+          mockChain._resolve({ error: { message: 'Database error' } });
+        } else {
+          mockChain._resolve({ data: null, error: null });
+        }
         return mockChain;
       });
 
-      await expect(sessionManager.revokeSession('session_test')).rejects.toThrow('Failed to revoke session');
+      await expect(sessionManager.revokeSession('session_test')).rejects.toThrow(
+        'Failed to revoke session'
+      );
     });
   });
 
   describe('revokeAllUserSessions', () => {
     it('should revoke all sessions except specified one', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: null, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: null, error: null });
+        return mockChain;
+      });
 
       await sessionManager.revokeAllUserSessions(mockPubkey, 'session_keep');
       expect(mockChain.neq).toHaveBeenCalledWith('id', 'session_keep');
@@ -364,7 +471,10 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should revoke all sessions when no exception specified', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: null, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: null, error: null });
+        return mockChain;
+      });
 
       await sessionManager.revokeAllUserSessions(mockPubkey);
       expect(mockChain.update).toHaveBeenCalled();
@@ -380,7 +490,10 @@ describe('DatabaseSessionManager', () => {
         device_info: { ...mockDeviceInfo, deviceType: 'mobile' as const },
       };
 
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [], error: null });
+        return mockChain;
+      });
 
       const session1 = await sessionManager.createSession(mockPubkey, mockMetadata);
       const session2 = await sessionManager.createSession(mockPubkey, device2Metadata);
@@ -391,19 +504,31 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should enforce max 5 devices per user', async () => {
-      const existingSessions = Array(5).fill(null).map((_, i) => ({
-        id: `session_${i}`, pubkey: mockPubkey, user_id: 'uid', token_hash: 'hash',
-        device_id: `dev_${i}`, device_fingerprint: `device_${i}`, device_info: mockDeviceInfo,
-        is_active: true, created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 86400000).toISOString(),
-        last_activity: new Date(Date.now() - i * 1000).toISOString(), refresh_count: 0,
-      }));
+      const existingSessions = Array(5)
+        .fill(null)
+        .map((_, i) => ({
+          id: `session_${i}`,
+          pubkey: mockPubkey,
+          user_id: 'uid',
+          token_hash: 'hash',
+          device_id: `dev_${i}`,
+          device_fingerprint: `device_${i}`,
+          device_info: mockDeviceInfo,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 86400000).toISOString(),
+          last_activity: new Date(Date.now() - i * 1000).toISOString(),
+          refresh_count: 0,
+        }));
 
       let callCount = 0;
       mockChain.from = vi.fn(() => {
         callCount++;
-        if (callCount === 1) { mockChain._resolve({ data: existingSessions, error: null }); }
-        else { mockChain._resolve({ data: null, error: null }); }
+        if (callCount === 1) {
+          mockChain._resolve({ data: existingSessions, error: null });
+        } else {
+          mockChain._resolve({ data: null, error: null });
+        }
         return mockChain;
       });
 
@@ -416,11 +541,30 @@ describe('DatabaseSessionManager', () => {
   describe('Activity tracking', () => {
     it('should retrieve session activities', async () => {
       const mockActivities = [
-        { id: 'act_1', session_id: 'session_test', action: 'login', created_at: new Date().toISOString(), ip_address: '192.168.1.1', user_agent: 'Mozilla/5.0', metadata: {} },
-        { id: 'act_2', session_id: 'session_test', action: 'api_call', created_at: new Date().toISOString(), ip_address: '192.168.1.1', user_agent: 'Mozilla/5.0', metadata: {} },
+        {
+          id: 'act_1',
+          session_id: 'session_test',
+          action: 'login',
+          created_at: new Date().toISOString(),
+          ip_address: '192.168.1.1',
+          user_agent: 'Mozilla/5.0',
+          metadata: {},
+        },
+        {
+          id: 'act_2',
+          session_id: 'session_test',
+          action: 'api_call',
+          created_at: new Date().toISOString(),
+          ip_address: '192.168.1.1',
+          user_agent: 'Mozilla/5.0',
+          metadata: {},
+        },
       ];
 
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: mockActivities, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: mockActivities, error: null });
+        return mockChain;
+      });
 
       const activities = await sessionManager.getSessionActivities('session_test', 100);
       expect(activities).toHaveLength(2);
@@ -428,7 +572,10 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should limit activities to last 100 by default', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [], error: null });
+        return mockChain;
+      });
 
       await sessionManager.getSessionActivities('session_test');
       expect(mockChain.limit).toHaveBeenCalledWith(100);
@@ -438,12 +585,39 @@ describe('DatabaseSessionManager', () => {
   describe('getSessionStats', () => {
     it('should calculate session statistics', async () => {
       const mockSessions = [
-        { id: 'session_1', pubkey: mockPubkey, is_active: true, expires_at: new Date(Date.now() + 86400000).toISOString(), created_at: new Date(Date.now() - 3600000).toISOString(), last_activity: new Date().toISOString(), device_info: { deviceType: 'desktop' } },
-        { id: 'session_2', pubkey: mockPubkey, is_active: true, expires_at: new Date(Date.now() - 1000).toISOString(), created_at: new Date(Date.now() - 7200000).toISOString(), last_activity: new Date(Date.now() - 3600000).toISOString(), device_info: { deviceType: 'mobile' } },
-        { id: 'session_3', pubkey: mockPubkey, is_active: false, expires_at: new Date(Date.now() + 86400000).toISOString(), created_at: new Date(Date.now() - 1800000).toISOString(), last_activity: new Date(Date.now() - 600000).toISOString(), device_info: { deviceType: 'tablet' } },
+        {
+          id: 'session_1',
+          pubkey: mockPubkey,
+          is_active: true,
+          expires_at: new Date(Date.now() + 86400000).toISOString(),
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+          last_activity: new Date().toISOString(),
+          device_info: { deviceType: 'desktop' },
+        },
+        {
+          id: 'session_2',
+          pubkey: mockPubkey,
+          is_active: true,
+          expires_at: new Date(Date.now() - 1000).toISOString(),
+          created_at: new Date(Date.now() - 7200000).toISOString(),
+          last_activity: new Date(Date.now() - 3600000).toISOString(),
+          device_info: { deviceType: 'mobile' },
+        },
+        {
+          id: 'session_3',
+          pubkey: mockPubkey,
+          is_active: false,
+          expires_at: new Date(Date.now() + 86400000).toISOString(),
+          created_at: new Date(Date.now() - 1800000).toISOString(),
+          last_activity: new Date(Date.now() - 600000).toISOString(),
+          device_info: { deviceType: 'tablet' },
+        },
       ];
 
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: mockSessions, error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: mockSessions, error: null });
+        return mockChain;
+      });
 
       const stats = await sessionManager.getSessionStats(mockPubkey);
       expect(stats.total).toBe(3);
@@ -456,7 +630,13 @@ describe('DatabaseSessionManager', () => {
 
   describe('cleanExpiredSessions', () => {
     it('should remove expired sessions', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [{ id: 'session_1' }, { id: 'session_2' }, { id: 'session_3' }], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({
+          data: [{ id: 'session_1' }, { id: 'session_2' }, { id: 'session_3' }],
+          error: null,
+        });
+        return mockChain;
+      });
 
       const count = await sessionManager.cleanExpiredSessions();
       expect(count).toBe(3);
@@ -465,7 +645,10 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should return 0 when no sessions are expired', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [], error: null });
+        return mockChain;
+      });
 
       const count = await sessionManager.cleanExpiredSessions();
       expect(count).toBe(0);
@@ -473,10 +656,38 @@ describe('DatabaseSessionManager', () => {
   });
 
   describe('querySessions', () => {
-    const fullRow = { id: 'session_1', pubkey: 'a'.repeat(64), user_id: 'uid', token_hash: 'h', device_id: 'd', device_fingerprint: 'fp', device_info: { userAgent: '', platform: '', deviceType: 'desktop' as const, browser: '', browserVersion: '', os: '', osVersion: '', fingerprint: '', screenResolution: '', timezone: '', language: '' }, is_active: true, created_at: new Date().toISOString(), expires_at: new Date().toISOString(), last_activity: new Date().toISOString(), refresh_count: 0 };
+    const fullRow = {
+      id: 'session_1',
+      pubkey: 'a'.repeat(64),
+      user_id: 'uid',
+      token_hash: 'h',
+      device_id: 'd',
+      device_fingerprint: 'fp',
+      device_info: {
+        userAgent: '',
+        platform: '',
+        deviceType: 'desktop' as const,
+        browser: '',
+        browserVersion: '',
+        os: '',
+        osVersion: '',
+        fingerprint: '',
+        screenResolution: '',
+        timezone: '',
+        language: '',
+      },
+      is_active: true,
+      created_at: new Date().toISOString(),
+      expires_at: new Date().toISOString(),
+      last_activity: new Date().toISOString(),
+      refresh_count: 0,
+    };
 
     it('should query sessions by pubkey', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [fullRow], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [fullRow], error: null });
+        return mockChain;
+      });
 
       const sessions = await sessionManager.querySessions({ pubkey: mockPubkey });
       expect(mockChain.eq).toHaveBeenCalledWith('pubkey', mockPubkey);
@@ -484,23 +695,35 @@ describe('DatabaseSessionManager', () => {
     });
 
     it('should query sessions by device_id', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [fullRow], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [fullRow], error: null });
+        return mockChain;
+      });
 
       await sessionManager.querySessions({ deviceId: 'device_123' });
       expect(mockChain.eq).toHaveBeenCalledWith('device_id', 'device_123');
     });
 
     it('should query active sessions only', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [fullRow], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [fullRow], error: null });
+        return mockChain;
+      });
 
       await sessionManager.querySessions({ active: true });
       expect(mockChain.eq).toHaveBeenCalledWith('is_active', true);
     });
 
     it('should apply date range filters', async () => {
-      mockChain.from = vi.fn(() => { mockChain._resolve({ data: [], error: null }); return mockChain; });
+      mockChain.from = vi.fn(() => {
+        mockChain._resolve({ data: [], error: null });
+        return mockChain;
+      });
 
-      await sessionManager.querySessions({ since: new Date(Date.now() - 86400000), until: new Date() });
+      await sessionManager.querySessions({
+        since: new Date(Date.now() - 86400000),
+        until: new Date(),
+      });
       expect(mockChain.gte).toHaveBeenCalled();
     });
   });

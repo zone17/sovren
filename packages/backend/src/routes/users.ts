@@ -37,7 +37,12 @@ const adminRateLimit = rateLimit({
 
 // 🎯 Request/Response schemas
 const CreateUserProfileSchema = z.object({
-  username: z.string().min(1).max(50).regex(/^[a-zA-Z0-9_]+$/).optional(),
+  username: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-zA-Z0-9_]+$/)
+    .optional(),
   display_name: z.string().max(100).optional(),
   bio: z.string().max(500).optional(),
   avatar_url: z.string().url().optional(),

@@ -145,7 +145,10 @@ export const NostrMonitoringDashboard: React.FC<NostrMonitoringDashboardProps> =
 
       {/* Active Alerts */}
       {metrics.activeAlerts.length > 0 && (
-        <AlertsPanel alerts={metrics.activeAlerts} onAcknowledge={(id) => monitoring.acknowledgeAlert(id)} />
+        <AlertsPanel
+          alerts={metrics.activeAlerts}
+          onAcknowledge={(id) => monitoring.acknowledgeAlert(id)}
+        />
       )}
 
       {/* Metrics Grid */}
@@ -180,9 +183,7 @@ export const NostrMonitoringDashboard: React.FC<NostrMonitoringDashboardProps> =
         />
 
         {/* Memory Metrics */}
-        {showDetails && (
-          <MemoryMetricsCard metrics={metrics.memory} compact={compact} />
-        )}
+        {showDetails && <MemoryMetricsCard metrics={metrics.memory} compact={compact} />}
       </div>
     </div>
   );
@@ -300,24 +301,16 @@ const AlertsPanel: React.FC<{
     <div className="alerts-panel">
       <h3>Active Alerts ({alerts.length})</h3>
       <div className="alerts-list">
-        {alerts.map(alert => (
-          <div
-            key={alert.id}
-            className={`alert alert-${getSeverityColor(alert.severity)}`}
-          >
+        {alerts.map((alert) => (
+          <div key={alert.id} className={`alert alert-${getSeverityColor(alert.severity)}`}>
             <div className="alert-header">
               <span className="severity">{alert.severity.toUpperCase()}</span>
               <span className="title">{alert.title}</span>
-              <span className="timestamp">
-                {new Date(alert.timestamp).toLocaleTimeString()}
-              </span>
+              <span className="timestamp">{new Date(alert.timestamp).toLocaleTimeString()}</span>
             </div>
             <div className="alert-message">{alert.message}</div>
             {alert.relay && <div className="alert-relay">Relay: {alert.relay}</div>}
-            <button
-              className="acknowledge-btn"
-              onClick={() => onAcknowledge(alert.id)}
-            >
+            <button className="acknowledge-btn" onClick={() => onAcknowledge(alert.id)}>
               Acknowledge
             </button>
           </div>
@@ -348,7 +341,13 @@ const ConnectionHealthCard: React.FC<{
       <MetricItem
         label="Health Score"
         value={`${health.averageHealthScore.toFixed(0)}/100`}
-        color={health.averageHealthScore > 80 ? 'green' : health.averageHealthScore > 50 ? 'yellow' : 'red'}
+        color={
+          health.averageHealthScore > 80
+            ? 'green'
+            : health.averageHealthScore > 50
+              ? 'yellow'
+              : 'red'
+        }
       />
       <MetricItem
         label="Avg Uptime"
@@ -358,14 +357,16 @@ const ConnectionHealthCard: React.FC<{
       <MetricItem
         label="Avg Latency"
         value={`${health.averageLatency.toFixed(0)}ms`}
-        color={health.averageLatency < 500 ? 'green' : health.averageLatency < 1000 ? 'yellow' : 'red'}
+        color={
+          health.averageLatency < 500 ? 'green' : health.averageLatency < 1000 ? 'yellow' : 'red'
+        }
       />
     </div>
 
     {showDetails && !compact && (
       <div className="relay-details">
         <h4>Relay Status</h4>
-        {relayHealth.slice(0, 5).map(relay => (
+        {relayHealth.slice(0, 5).map((relay) => (
           <div key={relay.url} className="relay-item">
             <span className={`status-dot status-${relay.status}`}></span>
             <span className="relay-url">{relay.url}</span>
@@ -390,11 +391,7 @@ const PublishingMetricsCard: React.FC<{
     <h3>Publishing Metrics</h3>
 
     <div className="metric-summary">
-      <MetricItem
-        label="Total Events"
-        value={metrics.totalEvents.toString()}
-        color="blue"
-      />
+      <MetricItem label="Total Events" value={metrics.totalEvents.toString()} color="blue" />
       <MetricItem
         label="Success Rate"
         value={`${metrics.successRate.toFixed(1)}%`}
@@ -439,11 +436,7 @@ const SubscriptionMetricsCard: React.FC<{
     <h3>Subscription Metrics</h3>
 
     <div className="metric-summary">
-      <MetricItem
-        label="Active Subs"
-        value={metrics.activeSubscriptions.toString()}
-        color="blue"
-      />
+      <MetricItem label="Active Subs" value={metrics.activeSubscriptions.toString()} color="blue" />
       <MetricItem
         label="Total Events"
         value={metrics.totalEventsReceived.toString()}
@@ -493,11 +486,7 @@ const PerformanceMetricsCard: React.FC<{
         value={`${metrics.throughput.eventsPerSecond} ev/s`}
         color="blue"
       />
-      <MetricItem
-        label="p50 Latency"
-        value={`${metrics.latency.p50.toFixed(0)}ms`}
-        color="green"
-      />
+      <MetricItem label="p50 Latency" value={`${metrics.latency.p50.toFixed(0)}ms`} color="green" />
       <MetricItem
         label="p95 Latency"
         value={`${metrics.latency.p95.toFixed(0)}ms`}
@@ -534,21 +523,9 @@ const MemoryMetricsCard: React.FC<{
     <h3>Memory Metrics</h3>
 
     <div className="metric-summary">
-      <MetricItem
-        label="Event Cache"
-        value={metrics.eventCacheSize.toString()}
-        color="blue"
-      />
-      <MetricItem
-        label="Subscriptions"
-        value={metrics.subscriptionCount.toString()}
-        color="blue"
-      />
-      <MetricItem
-        label="Seen Events"
-        value={metrics.seenEventIdsCount.toString()}
-        color="blue"
-      />
+      <MetricItem label="Event Cache" value={metrics.eventCacheSize.toString()} color="blue" />
+      <MetricItem label="Subscriptions" value={metrics.subscriptionCount.toString()} color="blue" />
+      <MetricItem label="Seen Events" value={metrics.seenEventIdsCount.toString()} color="blue" />
     </div>
   </div>
 );
@@ -582,10 +559,7 @@ const LatencyBar: React.FC<{
     <div className="latency-bar">
       <span className="bar-label">{label}</span>
       <div className="bar-container">
-        <div
-          className={`bar-fill color-${color}`}
-          style={{ width: `${percentage}%` }}
-        ></div>
+        <div className={`bar-fill color-${color}`} style={{ width: `${percentage}%` }}></div>
       </div>
       <span className="bar-value">{value.toFixed(0)}ms</span>
     </div>

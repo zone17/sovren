@@ -20,7 +20,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 // nostr/index.ts, but in the test environment the re-export is undefined due to the
 // large barrel file having mixed import/export patterns. We provide a passthrough mock
 // that uses the actual zod schema from the direct subpath.
-vi.mock('@shared/types/nostr', async (importOriginal) => {
+vi.mock('@shared/types/nostr/index', async (importOriginal) => {
   const actual = await importOriginal<Record<string, any>>();
   if (actual.NostrEnhancedKeyPairSchema) return actual;
   const keys = await import('@shared/types/nostr/keys');
@@ -62,24 +62,46 @@ function makeIdbStore(storeName: string) {
   if (!idbPersistentStores[storeName]) idbPersistentStores[storeName] = new Map();
   const data = idbPersistentStores[storeName];
   return {
-    put: (value: any) => makeIdbRequest(() => { data.set(value.keyId ?? value.id ?? String(Date.now()), value); }),
+    put: (value: any) =>
+      makeIdbRequest(() => {
+        data.set(value.keyId ?? value.id ?? String(Date.now()), value);
+      }),
     get: (key: string) => makeIdbRequest(() => data.get(key)),
     getAll: () => makeIdbRequest(() => Array.from(data.values())),
-    delete: (key: string) => makeIdbRequest(() => { data.delete(key); }),
-    clear: () => makeIdbRequest(() => { data.clear(); }),
+    delete: (key: string) =>
+      makeIdbRequest(() => {
+        data.delete(key);
+      }),
+    clear: () =>
+      makeIdbRequest(() => {
+        data.clear();
+      }),
   };
 }
 
 function createIdbMock() {
   const mockDB: any = {
     objectStoreNames: { contains: () => false },
-    createObjectStore: (name: string) => { if (!idbPersistentStores[name]) idbPersistentStores[name] = new Map(); return makeIdbStore(name); },
-    transaction: (_names: string[], _mode: string) => ({ objectStore: (name: string) => makeIdbStore(name) }),
+    createObjectStore: (name: string) => {
+      if (!idbPersistentStores[name]) idbPersistentStores[name] = new Map();
+      return makeIdbStore(name);
+    },
+    transaction: (_names: string[], _mode: string) => ({
+      objectStore: (name: string) => makeIdbStore(name),
+    }),
     close: () => {},
   };
-  const openRequest: any = { onerror: null, onsuccess: null, onupgradeneeded: null, result: undefined };
+  const openRequest: any = {
+    onerror: null,
+    onsuccess: null,
+    onupgradeneeded: null,
+    result: undefined,
+  };
   queueMicrotask(() => {
-    if (openRequest.onupgradeneeded) { openRequest.result = mockDB; openRequest.onupgradeneeded({ target: openRequest } as any); }
+    if (openRequest.onupgradeneeded) {
+      openRequest.result = mockDB;
+      openRequest.onupgradeneeded({ target: openRequest } as any);
+    }
     openRequest.result = mockDB;
     if (openRequest.onsuccess) openRequest.onsuccess({ target: openRequest } as any);
   });
@@ -88,7 +110,9 @@ function createIdbMock() {
 
 function makeIdbDeleteRequest(): any {
   const req: any = { onsuccess: null, onerror: null, result: undefined };
-  queueMicrotask(() => { if (req.onsuccess) req.onsuccess({ target: req } as any); });
+  queueMicrotask(() => {
+    if (req.onsuccess) req.onsuccess({ target: req } as any);
+  });
   return req;
 }
 
@@ -98,7 +122,12 @@ const mockIndexedDB = {
 };
 
 // AES-GCM CryptoKey stub
-const mockCryptoKey = { type: 'secret', algorithm: { name: 'AES-GCM' }, extractable: true, usages: ['encrypt', 'decrypt'] };
+const mockCryptoKey = {
+  type: 'secret',
+  algorithm: { name: 'AES-GCM' },
+  extractable: true,
+  usages: ['encrypt', 'decrypt'],
+};
 
 // Mock WebCrypto API
 const mockCrypto = {
@@ -186,8 +215,16 @@ describe('NIP04Service', () => {
     mockIndexedDB.deleteDatabase.mockImplementation(() => makeIdbDeleteRequest());
 
     // Setup global mocks
-    Object.defineProperty(globalThis, 'crypto', { value: mockCrypto as any, writable: true, configurable: true });
-    Object.defineProperty(globalThis, 'indexedDB', { value: mockIndexedDB as any, writable: true, configurable: true });
+    Object.defineProperty(globalThis, 'crypto', {
+      value: mockCrypto as any,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(globalThis, 'indexedDB', {
+      value: mockIndexedDB as any,
+      writable: true,
+      configurable: true,
+    });
     (window as any).nostr = mockNostrExtension;
 
     // Reset singletons so each test gets fresh instances with mocked IDB
@@ -204,11 +241,9 @@ describe('NIP04Service', () => {
     //   decrypt(ciphertext, recipient.pubKey) → ECDH(sender.privKey, recipient.pubKey) = same secret
     // The test file calls decrypt(..., TEST_KEYS.sender.publicKey) which would use the wrong
     // ECDH secret — those tests are updated below to use TEST_KEYS.recipient.publicKey instead.
-    const senderKp = await keyManagementService.importKey(
-      TEST_KEYS.sender.privateKey,
-      'hex',
-      { name: 'Sender Key' }
-    );
+    const senderKp = await keyManagementService.importKey(TEST_KEYS.sender.privateKey, 'hex', {
+      name: 'Sender Key',
+    });
     await keyManagementService.setActiveKey(senderKp.keyId);
 
     service = NIP04Service.getInstance();

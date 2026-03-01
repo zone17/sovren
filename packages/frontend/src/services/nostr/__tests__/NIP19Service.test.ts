@@ -8,24 +8,14 @@
  * Coverage Target: ≥95%
  */
 
-
-import {
-  NIP19Service,
-  NIP19Error,
-  InvalidPrefixError,
-  InvalidEncodingError,
-  MalformedDataError,
-  InvalidChecksumError,
-  ValidationError,
-} from '../NIP19Service';
+import { NIP19Service, NIP19Error, InvalidEncodingError, ValidationError } from '../NIP19Service';
 import type {
   DecodedKey,
   DecodedNote,
   DecodedProfile,
   DecodedEvent,
   DecodedAddress,
-  NIP19EntityType,
-} from '@shared/types/nostr';
+} from '@shared/types/nostr/index';
 
 describe('NIP19Service', () => {
   let service: NIP19Service;
@@ -218,7 +208,9 @@ describe('NIP19Service', () => {
         const pubkey = '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d';
         const identifier = 'test';
 
-        expect(() => service.encodeAddress({ kind, pubkey, identifier })).toThrow(/kind.*30000.*39999/i);
+        expect(() => service.encodeAddress({ kind, pubkey, identifier })).toThrow(
+          /kind.*30000.*39999/i
+        );
       });
 
       it('should throw error for missing required fields', () => {
@@ -586,9 +578,18 @@ describe('NIP19Service', () => {
 
     it('should preserve data integrity through encode/decode cycle', () => {
       const testData = [
-        { type: 'pubkey', value: '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d' },
-        { type: 'privkey', value: '5c0c523f52a5b6fad39ed2403092df8cebc36318b39383bca6c00808626fab3a' },
-        { type: 'eventId', value: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' },
+        {
+          type: 'pubkey',
+          value: '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d',
+        },
+        {
+          type: 'privkey',
+          value: '5c0c523f52a5b6fad39ed2403092df8cebc36318b39383bca6c00808626fab3a',
+        },
+        {
+          type: 'eventId',
+          value: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        },
       ];
 
       testData.forEach(({ type, value }) => {
@@ -782,7 +783,9 @@ describe('NIP19Service', () => {
           '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d'
         );
 
-        expect(() => service.decodeBatch([npub, 'invalid-bech32'])).toThrow(/batch decoding failed/i);
+        expect(() => service.decodeBatch([npub, 'invalid-bech32'])).toThrow(
+          /batch decoding failed/i
+        );
       });
 
       it('should preserve data integrity through batch encode/decode', () => {
@@ -873,7 +876,9 @@ describe('NIP19Service', () => {
     describe('ValidationError', () => {
       it('should throw ValidationError for invalid hex length', () => {
         expect(() => service.encodePubkey('invalid')).toThrow(ValidationError);
-        expect(() => service.encodePubkey('invalid')).toThrow(/must be a 64-character hexadecimal string/i);
+        expect(() => service.encodePubkey('invalid')).toThrow(
+          /must be a 64-character hexadecimal string/i
+        );
       });
 
       it('should throw ValidationError for non-hex characters', () => {
@@ -921,7 +926,9 @@ describe('NIP19Service', () => {
       it('should throw an error for unknown prefix strings', () => {
         // Any string with unknown prefix will throw some NIP19Error
         try {
-          service.decode('unknown1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq9waw5y');
+          service.decode(
+            'unknown1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq9waw5y'
+          );
           fail('Should have thrown an error');
         } catch (error) {
           expect(error).toBeInstanceOf(NIP19Error);
@@ -952,7 +959,9 @@ describe('NIP19Service', () => {
     describe('InvalidChecksumError', () => {
       it('should throw InvalidChecksumError for corrupted data', () => {
         // Create a valid npub and corrupt the checksum
-        const validNpub = service.encodePubkey('3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d');
+        const validNpub = service.encodePubkey(
+          '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d'
+        );
         const corruptedNpub = validNpub.slice(0, -6) + 'XXXXXX';
 
         try {
@@ -1044,7 +1053,8 @@ describe('NIP19Service', () => {
   describe('Advanced Edge Cases', () => {
     it('should encode very long relay URLs to nrelay format', () => {
       // nostr-tools decode() does not support nrelay; only test encoding
-      const longRelayUrl = 'wss://very-long-relay-domain-name-that-is-quite-excessive.example.com/path/to/relay';
+      const longRelayUrl =
+        'wss://very-long-relay-domain-name-that-is-quite-excessive.example.com/path/to/relay';
       const nrelay = service.encodeRelay(longRelayUrl);
 
       expect(nrelay).toMatch(/^nrelay1/);
@@ -1115,9 +1125,9 @@ describe('NIP19Service', () => {
       const pubkey = '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d';
 
       invalidKinds.forEach((kind) => {
-        expect(() =>
-          service.encodeAddress({ kind, pubkey, identifier: 'test' })
-        ).toThrow(ValidationError);
+        expect(() => service.encodeAddress({ kind, pubkey, identifier: 'test' })).toThrow(
+          ValidationError
+        );
       });
     });
 

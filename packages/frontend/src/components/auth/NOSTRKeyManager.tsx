@@ -459,6 +459,7 @@ export const NOSTRKeyManager: React.FC<KeyManagerProps> = ({
       }, 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [error, success]);
 
   if (!isKeyManagementEnabled) {

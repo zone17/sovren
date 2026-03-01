@@ -17,7 +17,8 @@ import type { NostrEnhancedKeyPair } from '@sovren/shared/types/nostr';
  */
 export class MockRelayServer {
   private events: Map<string, NostrEvent> = new Map();
-  private subscriptions: Map<string, { filters: Filter[]; callback: (event: NostrEvent) => void }> = new Map();
+  private subscriptions: Map<string, { filters: Filter[]; callback: (event: NostrEvent) => void }> =
+    new Map();
   private connected = true;
   private latency: number;
 
@@ -277,7 +278,9 @@ export class TestDataFactory {
   /**
    * Create contact list event
    */
-  static createContactList(contacts: Array<{ pubkey: string; relay?: string; petname?: string }>): UnsignedNostrEvent {
+  static createContactList(
+    contacts: Array<{ pubkey: string; relay?: string; petname?: string }>
+  ): UnsignedNostrEvent {
     const tags = contacts.map(({ pubkey, relay, petname }) => {
       const tag = ['p', pubkey];
       if (relay) tag.push(relay);
@@ -296,7 +299,9 @@ export class TestDataFactory {
   /**
    * Create relay list metadata event (NIP-65)
    */
-  static createRelayListMetadata(relays: Array<{ url: string; read?: boolean; write?: boolean }>): UnsignedNostrEvent {
+  static createRelayListMetadata(
+    relays: Array<{ url: string; read?: boolean; write?: boolean }>
+  ): UnsignedNostrEvent {
     const tags = relays.map(({ url, read, write }) => {
       const tag = ['r', url];
       if (read && !write) tag.push('read');
@@ -453,7 +458,8 @@ export class NostrAssertions {
     if (!event.pubkey) throw new Error('Event missing pubkey');
     if (!event.sig) throw new Error('Event missing signature');
     if (typeof event.kind !== 'number') throw new Error('Event missing or invalid kind');
-    if (typeof event.created_at !== 'number') throw new Error('Event missing or invalid created_at');
+    if (typeof event.created_at !== 'number')
+      throw new Error('Event missing or invalid created_at');
     if (!Array.isArray(event.tags)) throw new Error('Event tags must be an array');
     if (typeof event.content !== 'string') throw new Error('Event content must be a string');
   }

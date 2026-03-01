@@ -17,12 +17,9 @@ import type {
   ProcessPaymentParams,
   PaymentHistoryQuery,
   PaymentIdempotency,
-  PaymentWebhookEvent
+  PaymentWebhookEvent,
 } from '../../types/payment';
-import {
-  PaymentStatus,
-  PaymentMethod,
-} from '../../types/payment';
+import { PaymentStatus, PaymentMethod } from '../../types/payment';
 
 /**
  * Payment processing service interface
@@ -129,11 +126,7 @@ export interface IPaymentProcessingService {
    * @param reason - Refund reason (optional)
    * @returns Refund record
    */
-  initiateRefund(
-    transactionId: string,
-    amount?: number,
-    reason?: string
-  ): Promise<PaymentRefund>;
+  initiateRefund(transactionId: string, amount?: number, reason?: string): Promise<PaymentRefund>;
 
   /**
    * Get refund by ID
@@ -185,11 +178,7 @@ export interface IPaymentProcessingService {
    * @param endDate - End date range (optional)
    * @returns Payment statistics
    */
-  getStatistics(
-    userId?: string,
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<PaymentStatistics>;
+  getStatistics(userId?: string, startDate?: Date, endDate?: Date): Promise<PaymentStatistics>;
 
   /**
    * IDEMPOTENCY MANAGEMENT
@@ -208,11 +197,7 @@ export interface IPaymentProcessingService {
    * @param invoiceId - Invoice ID
    * @param result - Payment result
    */
-  storeIdempotency(
-    key: string,
-    invoiceId: string,
-    result: PaymentResult
-  ): Promise<void>;
+  storeIdempotency(key: string, invoiceId: string, result: PaymentResult): Promise<void>;
 
   /**
    * INVOICE EXPIRATION

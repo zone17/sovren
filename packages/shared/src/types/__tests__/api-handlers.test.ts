@@ -6,7 +6,6 @@
 import { z } from 'zod';
 import {
   TypedRequest,
-  TypedResponse,
   ApiResponse,
   PaginationQuerySchema,
   ApiErrorCode,
@@ -306,21 +305,18 @@ describe('API Handler Types', () => {
 
   describe('RouteValidationSchemas', () => {
     it('should define validation schemas for route', () => {
-      const schemas: RouteValidationSchemas<
-        { email: string },
-        { id: string },
-        { limit: string }
-      > = {
-        body: z.object({
-          email: z.string().email(),
-        }),
-        params: z.object({
-          id: z.string().uuid(),
-        }),
-        query: z.object({
-          limit: z.string(),
-        }),
-      };
+      const schemas: RouteValidationSchemas<{ email: string }, { id: string }, { limit: string }> =
+        {
+          body: z.object({
+            email: z.string().email(),
+          }),
+          params: z.object({
+            id: z.string().uuid(),
+          }),
+          query: z.object({
+            limit: z.string(),
+          }),
+        };
 
       // Test body validation
       const bodyResult = schemas.body?.safeParse({ email: 'test@example.com' });

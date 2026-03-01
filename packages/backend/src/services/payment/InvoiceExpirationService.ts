@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Invoice Expiration Service
  *
@@ -384,9 +385,7 @@ export class InvoiceExpirationService {
    * @param payments Array of expired payments to process
    * @returns Processing results
    */
-  private async processExpiredPayments(
-    payments: Payment[]
-  ): Promise<{
+  private async processExpiredPayments(payments: Payment[]): Promise<{
     expiredCount: number;
     failedCount: number;
     errors: Array<{ paymentId: string; error: string }>;

@@ -15,14 +15,12 @@ const DistributionPanel: React.FC<DistributionPanelProps> = ({ contentId }) => {
   const { data: publishStatus } = usePublishStatus(contentId);
 
   const connectedPlatforms = (statuses || []).filter(
-    (s) => s.connected && s.platform !== 'nostr'
+    (s) => s.connected && (s.platform as string) !== 'nostr'
   );
 
   const togglePlatform = (platform: SupportedPlatform) => {
     setSelectedPlatforms((prev) =>
-      prev.includes(platform)
-        ? prev.filter((p) => p !== platform)
-        : [...prev, platform]
+      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
     );
   };
 
@@ -37,9 +35,7 @@ const DistributionPanel: React.FC<DistributionPanelProps> = ({ contentId }) => {
   return (
     <div className="rounded-lg border bg-white p-6">
       <h3 className="text-lg font-semibold text-gray-900">Distribute Content</h3>
-      <p className="mt-1 text-sm text-gray-500">
-        Select platforms to cross-post your content.
-      </p>
+      <p className="mt-1 text-sm text-gray-500">Select platforms to cross-post your content.</p>
 
       {connectedPlatforms.length === 0 ? (
         <p className="mt-4 text-sm text-amber-600">
@@ -73,7 +69,9 @@ const DistributionPanel: React.FC<DistributionPanelProps> = ({ contentId }) => {
             onClick={handlePublish}
             disabled={selectedPlatforms.length === 0 || publishMutation.isPending}
           >
-            {publishMutation.isPending ? 'Publishing...' : `Publish to ${selectedPlatforms.length} platform(s)`}
+            {publishMutation.isPending
+              ? 'Publishing...'
+              : `Publish to ${selectedPlatforms.length} platform(s)`}
           </button>
         </>
       )}
@@ -85,17 +83,20 @@ const DistributionPanel: React.FC<DistributionPanelProps> = ({ contentId }) => {
           {publishStatus.map((entry) => {
             const display = PLATFORM_DISPLAY[entry.platform];
             return (
-              <div key={entry.id} className="flex items-center justify-between rounded border p-2 text-sm">
+              <div
+                key={entry.id}
+                className="flex items-center justify-between rounded border p-2 text-sm"
+              >
                 <span className="font-medium">{display?.name || entry.platform}</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs ${
                     entry.status === 'published'
                       ? 'bg-green-100 text-green-700'
                       : entry.status === 'failed'
-                      ? 'bg-red-100 text-red-700'
-                      : entry.status === 'queued'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-600'
+                        ? 'bg-red-100 text-red-700'
+                        : entry.status === 'queued'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-600'
                   }`}
                 >
                   {entry.status}

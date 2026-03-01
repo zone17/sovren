@@ -17,13 +17,13 @@ import {
 } from '@/store/slices/uiSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircleIcon,
-  XCircleIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  XMarkIcon,
-  BellIcon,
-} from '@heroicons/react/24/outline';
+  CheckCircle as CheckCircleIcon,
+  XCircle as XCircleIcon,
+  AlertTriangle as ExclamationTriangleIcon,
+  Info as InformationCircleIcon,
+  X as XMarkIcon,
+  Bell as BellIcon,
+} from 'lucide-react';
 
 interface NotificationProviderProps {
   children: React.ReactNode;
@@ -34,10 +34,7 @@ interface NotificationProviderProps {
 }
 
 // Toast component
-const ToastItem: React.FC<{ toast: Toast; onDismiss: () => void }> = ({
-  toast,
-  onDismiss,
-}) => {
+const ToastItem: React.FC<{ toast: Toast; onDismiss: () => void }> = ({ toast, onDismiss }) => {
   const icons = {
     success: <CheckCircleIcon className="w-5 h-5 text-green-500" />,
     error: <XCircleIcon className="w-5 h-5 text-red-500" />,
@@ -58,6 +55,7 @@ const ToastItem: React.FC<{ toast: Toast; onDismiss: () => void }> = ({
       const timer = setTimeout(onDismiss, toast.duration);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [toast.duration, onDismiss]);
 
   return (
@@ -76,9 +74,7 @@ const ToastItem: React.FC<{ toast: Toast; onDismiss: () => void }> = ({
       aria-live="polite"
     >
       {icons[toast.type]}
-      <p className="flex-1 text-sm text-gray-900 dark:text-gray-100">
-        {toast.message}
-      </p>
+      <p className="flex-1 text-sm text-gray-900 dark:text-gray-100">{toast.message}</p>
       <button
         onClick={onDismiss}
         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -132,12 +128,8 @@ const NotificationItem: React.FC<{
       <div className="flex items-start gap-3">
         <BellIcon className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-            {notification.title}
-          </h3>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {notification.message}
-          </p>
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">{notification.title}</h3>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{notification.message}</p>
           {notification.actionUrl && (
             <a
               href={notification.actionUrl}
@@ -228,10 +220,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
             <AnimatePresence mode="popLayout">
               {toasts.slice(0, maxToasts).map((toast) => (
                 <div key={toast.id} className="pointer-events-auto">
-                  <ToastItem
-                    toast={toast}
-                    onDismiss={() => handleToastDismiss(toast.id)}
-                  />
+                  <ToastItem toast={toast} onDismiss={() => handleToastDismiss(toast.id)} />
                 </div>
               ))}
             </AnimatePresence>
@@ -309,12 +298,7 @@ export const useNotification = () => {
   const notifications = useAppSelector(selectNotifications);
 
   const showNotification = useCallback(
-    (
-      title: string,
-      message: string,
-      type: Notification['type'] = 'info',
-      actionUrl?: string
-    ) => {
+    (title: string, message: string, type: Notification['type'] = 'info', actionUrl?: string) => {
       dispatch({
         type: 'ui/addNotification',
         payload: { title, message, type, actionUrl },

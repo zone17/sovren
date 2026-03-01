@@ -3,10 +3,7 @@
  * EPIC-009: Multi-Platform Hub
  */
 
-import type {
-  RepurposedContent,
-  SupportedPlatform,
-} from '@shared/types/distribution';
+import type { RepurposedContent, SupportedPlatform } from '@shared/types/distribution';
 
 export interface IRepurposingService {
   /** Generate platform-optimized versions of source content */

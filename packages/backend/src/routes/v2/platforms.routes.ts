@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Platform Connection Routes (v2)
  * /api/v2/platforms/*

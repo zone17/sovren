@@ -5,7 +5,10 @@
  */
 
 import type { CreatorBoundaries, AvailabilityStatus, DayOfWeek } from '@shared/types/wellness';
-import type { IBoundaryService, BoundaryUpdateInput } from '../../interfaces/wellness/IBoundaryService';
+import type {
+  IBoundaryService,
+  BoundaryUpdateInput,
+} from '../../interfaces/wellness/IBoundaryService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 
@@ -55,7 +58,10 @@ export class BoundaryService implements IBoundaryService {
     return this.mapRowToBoundaries(data);
   }
 
-  async updateBoundaries(creatorId: string, input: BoundaryUpdateInput): Promise<CreatorBoundaries> {
+  async updateBoundaries(
+    creatorId: string,
+    input: BoundaryUpdateInput
+  ): Promise<CreatorBoundaries> {
     const now = new Date().toISOString();
 
     // Build the upsert payload

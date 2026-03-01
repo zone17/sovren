@@ -13,8 +13,12 @@ export const FingerprintCoverage: React.FC<FingerprintCoverageProps> = ({ creato
   if (isLoading) {
     return (
       <Card>
-        <CardHeader><Skeleton className="h-5 w-44" /></CardHeader>
-        <CardContent><Skeleton className="h-40 w-full" /></CardContent>
+        <CardHeader>
+          <Skeleton className="h-5 w-44" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-40 w-full" />
+        </CardContent>
       </Card>
     );
   }
@@ -44,7 +48,13 @@ export const FingerprintCoverage: React.FC<FingerprintCoverageProps> = ({ creato
         <div className="flex items-center gap-6">
           {/* Donut chart */}
           <div className="relative shrink-0">
-            <svg width="120" height="120" viewBox="0 0 120 120" role="img" aria-label={`${coverage.toFixed(0)}% fingerprint coverage`}>
+            <svg
+              width="120"
+              height="120"
+              viewBox="0 0 120 120"
+              role="img"
+              aria-label={`${coverage.toFixed(0)}% fingerprint coverage`}
+            >
               <circle cx="60" cy="60" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="10" />
               <circle
                 cx="60"

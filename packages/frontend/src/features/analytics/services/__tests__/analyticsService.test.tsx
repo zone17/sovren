@@ -9,11 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import React from 'react';
-import {
-  analyticsService,
-  useCreatorEarnings,
-  analyticsKeys
-} from '../analyticsService';
+import { analyticsService, useCreatorEarnings, analyticsKeys } from '../analyticsService';
 import { AnalyticsError, AnalyticsEvent } from '../../types';
 import { server } from '../../../../test-utils/msw/server';
 
@@ -190,16 +186,12 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
         return null;
       });
 
-      await expect(analyticsService.getCreatorEarnings('7d')).rejects.toThrow(
-        AnalyticsError
-      );
+      await expect(analyticsService.getCreatorEarnings('7d')).rejects.toThrow(AnalyticsError);
     });
 
     test('should use demo user when available', async () => {
       const mockEarnings = createMockEarnings();
-      server.use(
-        http.get(`${API_BASE}/earnings`, () => HttpResponse.json(mockEarnings))
-      );
+      server.use(http.get(`${API_BASE}/earnings`, () => HttpResponse.json(mockEarnings)));
 
       const result = await analyticsService.getCreatorEarnings('7d');
       expect(result).toEqual(mockEarnings);
@@ -212,7 +204,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
       const mockEarnings = createMockEarnings();
       server.use(
         http.get(`${API_BASE}/earnings`, async () => {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
           return HttpResponse.json(mockEarnings);
         })
       );
@@ -278,9 +270,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
   describe('Lightning Payment Analytics', () => {
     test('should fetch payments with filters', async () => {
       const mockPayments = createMockPayments();
-      server.use(
-        http.get(`${API_BASE}/payments`, () => HttpResponse.json(mockPayments))
-      );
+      server.use(http.get(`${API_BASE}/payments`, () => HttpResponse.json(mockPayments)));
 
       const filters = {
         dateRange: {
@@ -297,9 +287,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     });
 
     test('should handle empty payments response', async () => {
-      server.use(
-        http.get(`${API_BASE}/payments`, () => HttpResponse.json([]))
-      );
+      server.use(http.get(`${API_BASE}/payments`, () => HttpResponse.json([])));
 
       const result = await analyticsService.getLightningPayments();
       expect(result).toEqual([]);
@@ -310,14 +298,11 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
   describe('React Query Integration', () => {
     test('useCreatorEarnings hook should work with proper error handling', async () => {
       const mockEarnings = createMockEarnings();
-      server.use(
-        http.get(`${API_BASE}/earnings`, () => HttpResponse.json(mockEarnings))
-      );
+      server.use(http.get(`${API_BASE}/earnings`, () => HttpResponse.json(mockEarnings)));
 
-      const { result } = renderHook(
-        () => useCreatorEarnings('7d'),
-        { wrapper: createWrapper(queryClient) }
-      );
+      const { result } = renderHook(() => useCreatorEarnings('7d'), {
+        wrapper: createWrapper(queryClient),
+      });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -328,14 +313,13 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     });
 
     test('should handle query errors gracefully', async () => {
-      const spy = vi.spyOn(analyticsService, 'getCreatorEarnings').mockRejectedValue(
-        new AnalyticsError('Auth failed', 'AUTH_REQUIRED')
-      );
+      const spy = vi
+        .spyOn(analyticsService, 'getCreatorEarnings')
+        .mockRejectedValue(new AnalyticsError('Auth failed', 'AUTH_REQUIRED'));
 
-      const { result } = renderHook(
-        () => useCreatorEarnings('7d'),
-        { wrapper: createWrapper(queryClient) }
-      );
+      const { result } = renderHook(() => useCreatorEarnings('7d'), {
+        wrapper: createWrapper(queryClient),
+      });
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
@@ -369,7 +353,9 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
       await analyticsService.connectRealTime();
 
       expect(MockWebSocket).toHaveBeenCalledWith(
-        expect.stringContaining('ws://localhost:3001/analytics?token=mock-jwt-token&userId=test-user-123')
+        expect.stringContaining(
+          'ws://localhost:3001/analytics?token=mock-jwt-token&userId=test-user-123'
+        )
       );
     });
 
@@ -417,7 +403,9 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
 
       const exportConfig = {
         format: 'json' as const,
-        data_types: ['earnings', 'payments'] as Array<'content' | 'subscribers' | 'earnings' | 'payments'>,
+        data_types: ['earnings', 'payments'] as Array<
+          'content' | 'subscribers' | 'earnings' | 'payments'
+        >,
         date_range: {
           start: '2024-01-01T00:00:00.000Z',
           end: '2024-01-08T00:00:00.000Z',
@@ -461,9 +449,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     });
 
     test('should handle malformed response data', async () => {
-      server.use(
-        http.get(`${API_BASE}/earnings`, () => HttpResponse.json({ invalid: 'data' }))
-      );
+      server.use(http.get(`${API_BASE}/earnings`, () => HttpResponse.json({ invalid: 'data' })));
 
       await expect(analyticsService.getCreatorEarnings('7d')).rejects.toThrow();
     });
@@ -472,9 +458,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
   // ⚡ **PERFORMANCE TESTS**
   describe('Performance Tests', () => {
     test('should complete operations within acceptable time limits', async () => {
-      server.use(
-        http.get(`${API_BASE}/earnings`, () => HttpResponse.json(createMockEarnings()))
-      );
+      server.use(http.get(`${API_BASE}/earnings`, () => HttpResponse.json(createMockEarnings())));
 
       const startTime = Date.now();
       await analyticsService.getCreatorEarnings('7d');
@@ -484,9 +468,7 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
     });
 
     test('should handle concurrent requests efficiently', async () => {
-      server.use(
-        http.get(`${API_BASE}/earnings`, () => HttpResponse.json(createMockEarnings()))
-      );
+      server.use(http.get(`${API_BASE}/earnings`, () => HttpResponse.json(createMockEarnings())));
 
       const startTime = Date.now();
       const results = await Promise.all([
@@ -498,16 +480,14 @@ describe('📊 Analytics Service Comprehensive Tests', () => {
 
       expect(duration).toBeLessThan(10000);
       expect(results).toHaveLength(3);
-      results.forEach(result => expect(result).toBeDefined());
+      results.forEach((result) => expect(result).toBeDefined());
     });
   });
 
   // 🔄 **CLEANUP TESTS**
   describe('Service Cleanup', () => {
     test('should cleanup resources properly', async () => {
-      server.use(
-        http.get(`${API_BASE}/earnings`, () => HttpResponse.json(createMockEarnings()))
-      );
+      server.use(http.get(`${API_BASE}/earnings`, () => HttpResponse.json(createMockEarnings())));
 
       await analyticsService.connectRealTime();
       await analyticsService.getCreatorEarnings('7d');

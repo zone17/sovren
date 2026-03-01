@@ -67,6 +67,9 @@ const getCurrentUser = (): User | null => {
       bio: undefined,
       created_at: new Date((payload.iat || 0) * 1000).toISOString(),
       updated_at: new Date().toISOString(),
+      email_verified: false,
+      nostr_verified: false,
+      permissions: [],
     };
   } catch (error) {
     // Invalid token

@@ -1,6 +1,6 @@
 /**
  * 🧪 **TDD TESTS FOR US-067 TO US-070: CREATOR DASHBOARD ANALYTICS**
- * 
+ *
  * Elite Engineering Standards:
  * ✅ Test-Driven Development (TDD) - Red, Green, Refactor
  * ✅ Comprehensive coverage for all user stories
@@ -11,32 +11,19 @@
  * ✅ Accessibility compliance (WCAG 2.1 AA)
  */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { Provider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
-import { configureStore } from '@reduxjs/toolkit';
-
 // Test utilities
-import { TestProviders } from '../../../../test-utils/test-providers';
 
 // Components and services
-import { CreatorDashboard } from '../CreatorDashboard';
 
 // Types
-import type { 
-  CreatorEarnings, 
-  ContentPerformanceMetrics,
-  AudienceGrowthData,
-  RevenueTrackingData 
-} from '../../types';
+import type { CreatorEarnings } from '../../types';
 
 // Mock feature flags for US-067 through US-070
 const mockFeatureFlags = {
-  enableAnalyticsDashboard: true,        // US-067
-  enableContentPerformance: true,       // US-068
-  enableAudienceGrowth: true,           // US-069
-  enableRevenueTracking: true,          // US-070
+  enableAnalyticsDashboard: true, // US-067
+  enableContentPerformance: true, // US-068
+  enableAudienceGrowth: true, // US-069
+  enableRevenueTracking: true, // US-070
   enableAdvancedAnalytics: true,
   enableRealTimeUpdates: true,
   enableExportFeatures: true,

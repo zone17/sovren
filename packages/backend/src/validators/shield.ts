@@ -40,7 +40,7 @@ export const GetFingerprintsQuerySchema = z.object({
 export const CompareSchema = z.object({
   hash_type: z.enum(['simhash', 'phash']),
   hash_value: z.string().regex(/^[0-9a-f]{16}$/, 'Must be a 16-character hex string'),
-  threshold: z.number().min(0).max(1).default(0.70),
+  threshold: z.number().min(0).max(1).default(0.7),
 });
 
 // ============================================================================

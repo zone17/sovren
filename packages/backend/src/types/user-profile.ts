@@ -289,32 +289,35 @@ export const PROFILE_CONSTRAINTS = {
     minLength: 1,
     maxLength: 100,
     pattern: /^[\w\s\-.']+$/,
-    message: 'Display name must be 1-100 characters and contain only letters, numbers, spaces, hyphens, periods, and apostrophes'
+    message:
+      'Display name must be 1-100 characters and contain only letters, numbers, spaces, hyphens, periods, and apostrophes',
   },
   username: {
     minLength: 3,
     maxLength: 30,
     pattern: /^[a-zA-Z0-9_-]+$/,
-    message: 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens'
+    message:
+      'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens',
   },
   bio: {
     maxLength: 500,
-    message: 'Bio must not exceed 500 characters'
+    message: 'Bio must not exceed 500 characters',
   },
   location: {
     maxLength: 100,
-    message: 'Location must not exceed 100 characters'
+    message: 'Location must not exceed 100 characters',
   },
   website: {
     pattern: /^https?:\/\/.+\..+$/,
-    message: 'Website must be a valid HTTP or HTTPS URL'
+    message: 'Website must be a valid HTTP or HTTPS URL',
   },
   avatar: {
     maxSize: 5 * 1024 * 1024, // 5MB
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     maxDimensions: { width: 2048, height: 2048 },
-    message: 'Avatar must be a valid image (JPEG, PNG, WebP, GIF) and not exceed 5MB or 2048x2048 pixels'
-  }
+    message:
+      'Avatar must be a valid image (JPEG, PNG, WebP, GIF) and not exceed 5MB or 2048x2048 pixels',
+  },
 } as const;
 
 /**
@@ -340,7 +343,7 @@ export const PROFILE_CACHE_KEYS = {
   profileAnalytics: (userId: string) => `profile:analytics:${userId}`,
   profileCompletion: (userId: string) => `profile:completion:${userId}`,
   profileSearch: (query: string) => `profile:search:${query}`,
-  allProfiles: 'profile:*'
+  allProfiles: 'profile:*',
 } as const;
 
 /**
@@ -357,7 +360,7 @@ export const PROFILE_EVENT_TYPES = {
   SOCIAL_LINK_REMOVED: 'profile.social_link.removed',
   VISIBILITY_CHANGED: 'profile.visibility.changed',
   VERIFICATION_REQUESTED: 'profile.verification.requested',
-  VERIFICATION_COMPLETED: 'profile.verification.completed'
+  VERIFICATION_COMPLETED: 'profile.verification.completed',
 } as const;
 
 /**
@@ -372,5 +375,5 @@ export const PROFILE_AUDIT_ACTIONS = {
   SOCIAL_LINK_ADD: 'profile.social_link.add',
   SOCIAL_LINK_VERIFY: 'profile.social_link.verify',
   SOCIAL_LINK_REMOVE: 'profile.social_link.remove',
-  VISIBILITY_CHANGE: 'profile.visibility.change'
+  VISIBILITY_CHANGE: 'profile.visibility.change',
 } as const;

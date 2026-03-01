@@ -11,6 +11,7 @@ export interface FeatureFlags {
   enableExportFeatures: boolean;
   enableNotifications: boolean;
   enableBackendIntegration: boolean;
+  [key: string]: boolean;
 }
 
 export function useFeatureFlags(): {

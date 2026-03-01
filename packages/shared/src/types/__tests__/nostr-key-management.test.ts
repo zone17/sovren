@@ -21,7 +21,6 @@ import {
   NostrKeyRecoverySchema,
   NostrKeyManagementConfigSchema,
   type NostrEnhancedKeyPair,
-  type NostrKeyDerivation,
   type NostrKeyManagementState,
   type NostrKeyManagementResult,
   type NostrKeyValidationResult,
@@ -213,7 +212,8 @@ describe('NOSTR Key Management Types - TS-007', () => {
     it('should validate mnemonic backup', () => {
       const validBackup = {
         keyId: '123e4567-e89b-12d3-a456-426614174000',
-        mnemonic: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+        mnemonic:
+          'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
         wordCount: 12,
         language: 'english',
         checksum: 'abc123',
@@ -311,7 +311,15 @@ describe('NOSTR Key Management Types - TS-007', () => {
     });
 
     it('should validate all operation types', () => {
-      const operations = ['generate', 'sign', 'encrypt', 'decrypt', 'backup', 'recover', 'rotate'] as const;
+      const operations = [
+        'generate',
+        'sign',
+        'encrypt',
+        'decrypt',
+        'backup',
+        'recover',
+        'rotate',
+      ] as const;
 
       operations.forEach((operation) => {
         const analytics = {

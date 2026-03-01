@@ -311,7 +311,7 @@ describe('ErrorToast', () => {
 
     it('disables retry button while retrying', async () => {
       const error = createMockError();
-      const onRetry = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+      const onRetry = vi.fn(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
       render(<ErrorToastContainer />);
 
@@ -399,5 +399,4 @@ describe('ErrorToast', () => {
       expect(screen.getByRole('button', { name: 'Dismiss' })).toBeInTheDocument();
     });
   });
-
 });

@@ -4,6 +4,10 @@
  */
 
 export type { IProvenanceService } from './IProvenanceService';
-export type { IFingerprintService, CreateFingerprintInput, CompareInput } from './IFingerprintService';
+export type {
+  IFingerprintService,
+  CreateFingerprintInput,
+  CompareInput,
+} from './IFingerprintService';
 export type { IAlertService } from './IAlertService';
 export type { IDmcaService } from './IDmcaService';

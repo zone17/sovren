@@ -230,7 +230,9 @@ describe('CirclesBrowser', () => {
       render(<CirclesBrowser />, { wrapper: createWrapper() });
 
       fireEvent.click(screen.getByRole('button', { name: 'Create Circle' }));
-      fireEvent.change(screen.getByLabelText('Circle name'), { target: { value: 'Photographers' } });
+      fireEvent.change(screen.getByLabelText('Circle name'), {
+        target: { value: 'Photographers' },
+      });
       fireEvent.change(screen.getByLabelText('Circle niche'), { target: { value: 'photography' } });
       fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
@@ -264,7 +266,10 @@ describe('CirclesBrowser', () => {
 
       fireEvent.click(screen.getByRole('button', { name: `Join ${sampleCircle.name}` }));
 
-      expect(mutate).toHaveBeenCalledWith(sampleCircle.id, expect.objectContaining({ onSettled: expect.any(Function) }));
+      expect(mutate).toHaveBeenCalledWith(
+        sampleCircle.id,
+        expect.objectContaining({ onSettled: expect.any(Function) })
+      );
     });
 
     it('shows Joining... on the button after Join is clicked', () => {

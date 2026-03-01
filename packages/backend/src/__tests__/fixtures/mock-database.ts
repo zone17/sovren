@@ -17,7 +17,7 @@ export function createMockDatabase(config?: { real?: boolean }): any {
           return { rows: [], rowCount: 0 };
         },
         commit: async () => {},
-        rollback: async () => {}
+        rollback: async () => {},
       });
     },
 
@@ -59,6 +59,6 @@ export function createMockDatabase(config?: { real?: boolean }): any {
 
     clear: () => {
       data.clear();
-    }
+    },
   };
 }

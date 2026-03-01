@@ -17,11 +17,7 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NostrMonitoringDashboard } from '../NostrMonitoringDashboard';
 import { MonitoringService } from '@/services/nostr/MonitoringService';
-import {
-  HealthStatus,
-  AlertSeverity,
-  AlertType,
-} from '@/services/nostr/types/monitoring';
+import { HealthStatus, AlertSeverity, AlertType } from '@/services/nostr/types/monitoring';
 
 // Mock MonitoringService
 vi.mock('@/services/nostr/MonitoringService');
@@ -497,10 +493,7 @@ describe('NostrMonitoringDashboard', () => {
       render(<NostrMonitoringDashboard />);
 
       await waitFor(() => {
-        expect(mockMonitoring.on).toHaveBeenCalledWith(
-          'metrics:updated',
-          expect.any(Function)
-        );
+        expect(mockMonitoring.on).toHaveBeenCalledWith('metrics:updated', expect.any(Function));
       });
     });
 
@@ -550,10 +543,7 @@ describe('NostrMonitoringDashboard', () => {
 
       unmount();
 
-      expect(mockMonitoring.off).toHaveBeenCalledWith(
-        'metrics:updated',
-        expect.any(Function)
-      );
+      expect(mockMonitoring.off).toHaveBeenCalledWith('metrics:updated', expect.any(Function));
     });
   });
 
@@ -609,9 +599,7 @@ describe('NostrMonitoringDashboard', () => {
 
   describe('Custom Styling', () => {
     it('should apply custom className', async () => {
-      const { container } = render(
-        <NostrMonitoringDashboard className="custom-dashboard" />
-      );
+      const { container } = render(<NostrMonitoringDashboard className="custom-dashboard" />);
 
       await waitFor(() => {
         expect(container.querySelector('.custom-dashboard')).toBeInTheDocument();

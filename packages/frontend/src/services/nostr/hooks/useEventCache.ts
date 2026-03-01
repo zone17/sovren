@@ -20,8 +20,8 @@ import {
   type UseQueryOptions,
   type UseMutationOptions,
 } from '@tanstack/react-query';
-import type { NostrEvent, NostrFilter } from '@shared/types/nostr';
-import { getEventCache, type EventCacheConfig } from '../EventCacheService';
+import type { NostrEvent, NostrFilter } from '@shared/types/nostr/index';
+import { getEventCache } from '../EventCacheService';
 
 // ========================================
 // Query Key Factories
@@ -249,9 +249,7 @@ export function useSetEvent(
 /**
  * Hook to batch add events to cache
  */
-export function useSetEvents(
-  options?: UseMutationOptions<void, Error, NostrEvent[]>
-) {
+export function useSetEvents(options?: UseMutationOptions<void, Error, NostrEvent[]>) {
   const cache = getEventCache();
   const queryClient = useQueryClient();
 
@@ -286,9 +284,7 @@ export function useSetEvents(
 /**
  * Hook to delete event from cache
  */
-export function useDeleteEvent(
-  options?: UseMutationOptions<void, Error, string>
-) {
+export function useDeleteEvent(options?: UseMutationOptions<void, Error, string>) {
   const cache = getEventCache();
   const queryClient = useQueryClient();
 
@@ -308,9 +304,7 @@ export function useDeleteEvent(
 /**
  * Hook to clear entire cache
  */
-export function useClearCache(
-  options?: UseMutationOptions<void, Error, void>
-) {
+export function useClearCache(options?: UseMutationOptions<void, Error, void>) {
   const cache = getEventCache();
   const queryClient = useQueryClient();
 
@@ -383,9 +377,7 @@ export function useInvalidateOnPublish() {
 /**
  * Hook to get cache statistics
  */
-export function useCacheStats(
-  options?: Omit<UseQueryOptions<any>, 'queryKey' | 'queryFn'>
-) {
+export function useCacheStats(options?: Omit<UseQueryOptions<any>, 'queryKey' | 'queryFn'>) {
   const cache = getEventCache();
 
   return useQuery({

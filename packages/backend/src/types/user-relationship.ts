@@ -12,7 +12,7 @@ export enum RelationshipType {
   FOLLOW = 'follow',
   BLOCK = 'block',
   MUTE = 'mute',
-  FRIEND_REQUEST = 'friend_request'
+  FRIEND_REQUEST = 'friend_request',
 }
 
 /**
@@ -22,7 +22,7 @@ export enum RelationshipStatus {
   ACTIVE = 'active',
   PENDING = 'pending',
   REJECTED = 'rejected',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 /**

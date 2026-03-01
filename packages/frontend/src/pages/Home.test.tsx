@@ -53,9 +53,7 @@ describe('Home Component - Code of Craft Standards', () => {
 
     it('renders the subheading', () => {
       renderWithProviders(<Home />);
-      expect(
-        screen.getByText(/Monetize your audience\. Own your platform/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Monetize your audience\. Own your platform/i)).toBeInTheDocument();
     });
 
     it('renders NOSTR & Lightning badge in footer', () => {
@@ -103,9 +101,7 @@ describe('Home Component - Code of Craft Standards', () => {
   describe('Content', () => {
     it('renders the open source description text', () => {
       renderWithProviders(<Home />);
-      expect(
-        screen.getByText(/Built by creators, for creators/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Built by creators, for creators/i)).toBeInTheDocument();
     });
 
     it('renders no deplatforming bullet', () => {

@@ -17,8 +17,7 @@ import { OptimizationSuggestionPanel } from '@/components/analytics/Optimization
 import type { OptimizationSuggestion } from '@/types/engagement-analytics';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 // =====================================================
 // MOCK DATA
@@ -128,10 +127,7 @@ vi.mock('@/components/ui/select', () => ({
     </div>
   ),
   SelectItem: ({ children, value, onValueChange }: any) => (
-    <button
-      data-testid={`select-item-${value}`}
-      onClick={() => onValueChange?.(value)}
-    >
+    <button data-testid={`select-item-${value}`} onClick={() => onValueChange?.(value)}>
       {children}
     </button>
   ),
@@ -520,7 +516,9 @@ describe('OptimizationSuggestionPanel', () => {
 
       // Rapid filter changes using mocked SelectItem buttons
       fireEvent.click(screen.getByTestId('select-item-high'));
-      await waitFor(() => expect(screen.getByText('Add Hook in First 15 Seconds')).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByText('Add Hook in First 15 Seconds')).toBeInTheDocument()
+      );
 
       // Change to medium filter
       fireEvent.click(screen.getByTestId('select-item-medium'));

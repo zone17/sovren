@@ -28,7 +28,7 @@ export enum WebhookEventType {
   // Invoice events
   INVOICE_CREATED = 'invoice.created',
   INVOICE_PAID = 'invoice.paid',
-  INVOICE_FAILED = 'invoice.failed'
+  INVOICE_FAILED = 'invoice.failed',
 }
 
 /**
@@ -42,7 +42,7 @@ export enum WebhookDeliveryStatus {
   FAILED = 'failed',
   RATE_LIMITED = 'rate_limited',
   CIRCUIT_OPEN = 'circuit_open',
-  DEAD_LETTER = 'dead_letter'
+  DEAD_LETTER = 'dead_letter',
 }
 
 /**
@@ -51,30 +51,30 @@ export enum WebhookDeliveryStatus {
 export enum CircuitBreakerState {
   CLOSED = 'closed',
   OPEN = 'open',
-  HALF_OPEN = 'half_open'
+  HALF_OPEN = 'half_open',
 }
 
 /**
  * Webhook endpoint configuration
  */
 export interface WebhookEndpoint {
-  id: string;                          // Unique endpoint ID
-  userId: string;                      // Endpoint owner
-  url: string;                         // HTTPS endpoint URL
-  description?: string;                // Endpoint description
-  secret: string;                      // Signing secret (HMAC)
-  events: WebhookEventType[];          // Subscribed events
-  enabled: boolean;                    // Is endpoint active
-  metadata?: Record<string, any>;      // Custom metadata
-  headers?: Record<string, string>;    // Custom headers to send
-  timeout?: number;                    // Request timeout (ms, default: 30000)
-  ipAllowlist?: string[];              // Allowed source IPs
-  createdAt: Date;                     // Creation timestamp
-  updatedAt: Date;                     // Last update timestamp
-  lastDeliveryAt?: Date;               // Last successful delivery
-  failureCount: number;                // Consecutive failure count
-  circuitState: CircuitBreakerState;   // Circuit breaker state
-  circuitOpenedAt?: Date;              // Circuit opened timestamp
+  id: string; // Unique endpoint ID
+  userId: string; // Endpoint owner
+  url: string; // HTTPS endpoint URL
+  description?: string; // Endpoint description
+  secret: string; // Signing secret (HMAC)
+  events: WebhookEventType[]; // Subscribed events
+  enabled: boolean; // Is endpoint active
+  metadata?: Record<string, any>; // Custom metadata
+  headers?: Record<string, string>; // Custom headers to send
+  timeout?: number; // Request timeout (ms, default: 30000)
+  ipAllowlist?: string[]; // Allowed source IPs
+  createdAt: Date; // Creation timestamp
+  updatedAt: Date; // Last update timestamp
+  lastDeliveryAt?: Date; // Last successful delivery
+  failureCount: number; // Consecutive failure count
+  circuitState: CircuitBreakerState; // Circuit breaker state
+  circuitOpenedAt?: Date; // Circuit opened timestamp
 }
 
 /**
@@ -109,39 +109,39 @@ export interface UpdateWebhookEndpointParams {
  * Webhook event payload
  */
 export interface WebhookEventPayload {
-  id: string;                          // Event ID
-  type: WebhookEventType;              // Event type
-  created: number;                     // Unix timestamp
-  livemode: boolean;                   // Production vs test mode
+  id: string; // Event ID
+  type: WebhookEventType; // Event type
+  created: number; // Unix timestamp
+  livemode: boolean; // Production vs test mode
   data: {
-    object: any;                       // Event data
-    previous?: any;                    // Previous state (for updates)
+    object: any; // Event data
+    previous?: any; // Previous state (for updates)
   };
-  metadata?: Record<string, any>;      // Custom metadata
+  metadata?: Record<string, any>; // Custom metadata
 }
 
 /**
  * Webhook delivery attempt
  */
 export interface WebhookDelivery {
-  id: string;                          // Delivery ID
-  endpointId: string;                  // Target endpoint ID
-  eventType: WebhookEventType;         // Event type
-  payload: WebhookEventPayload;        // Event payload
-  signature: string;                   // HMAC-SHA256 signature
-  status: WebhookDeliveryStatus;       // Current status
-  attempt: number;                     // Current attempt number (0-6)
-  maxAttempts: number;                 // Maximum attempts (6)
-  nextRetryAt?: Date;                  // Next retry timestamp
-  lastAttemptAt?: Date;                // Last attempt timestamp
-  responseStatus?: number;             // HTTP response status
-  responseBody?: string;               // HTTP response body
+  id: string; // Delivery ID
+  endpointId: string; // Target endpoint ID
+  eventType: WebhookEventType; // Event type
+  payload: WebhookEventPayload; // Event payload
+  signature: string; // HMAC-SHA256 signature
+  status: WebhookDeliveryStatus; // Current status
+  attempt: number; // Current attempt number (0-6)
+  maxAttempts: number; // Maximum attempts (6)
+  nextRetryAt?: Date; // Next retry timestamp
+  lastAttemptAt?: Date; // Last attempt timestamp
+  responseStatus?: number; // HTTP response status
+  responseBody?: string; // HTTP response body
   responseHeaders?: Record<string, string>; // HTTP response headers
-  errorMessage?: string;               // Error message
-  duration?: number;                   // Request duration (ms)
-  createdAt: Date;                     // Creation timestamp
-  deliveredAt?: Date;                  // Successful delivery timestamp
-  failedAt?: Date;                     // Final failure timestamp
+  errorMessage?: string; // Error message
+  duration?: number; // Request duration (ms)
+  createdAt: Date; // Creation timestamp
+  deliveredAt?: Date; // Successful delivery timestamp
+  failedAt?: Date; // Final failure timestamp
 }
 
 /**
@@ -225,27 +225,27 @@ export interface WebhookSystemStats {
  * Webhook retry configuration
  */
 export interface WebhookRetryConfig {
-  maxAttempts: number;                 // Maximum retry attempts (6)
-  delays: number[];                    // Delay between attempts (ms)
-  retryableStatusCodes: number[];      // HTTP status codes to retry
+  maxAttempts: number; // Maximum retry attempts (6)
+  delays: number[]; // Delay between attempts (ms)
+  retryableStatusCodes: number[]; // HTTP status codes to retry
 }
 
 /**
  * Webhook rate limit configuration
  */
 export interface WebhookRateLimitConfig {
-  windowMs: number;                    // Rate limit window (ms)
-  maxDeliveries: number;               // Max deliveries per window
+  windowMs: number; // Rate limit window (ms)
+  maxDeliveries: number; // Max deliveries per window
 }
 
 /**
  * Webhook circuit breaker configuration
  */
 export interface WebhookCircuitBreakerConfig {
-  failureThreshold: number;            // Failures before opening (5)
-  successThreshold: number;            // Successes to close (3)
-  halfOpenTimeout: number;             // Time before half-open (ms)
-  resetTimeout: number;                // Time before attempting reset (ms)
+  failureThreshold: number; // Failures before opening (5)
+  successThreshold: number; // Successes to close (3)
+  halfOpenTimeout: number; // Time before half-open (ms)
+  resetTimeout: number; // Time before attempting reset (ms)
 }
 
 /**
@@ -262,19 +262,19 @@ export interface WebhookTestEventRequest {
  */
 export interface WebhookSecretRotationRequest {
   endpointId: string;
-  newSecret?: string;                  // Optional - auto-generate if not provided
+  newSecret?: string; // Optional - auto-generate if not provided
 }
 
 /**
  * Webhook replay request
  */
 export interface WebhookReplayRequest {
-  deliveryIds?: string[];              // Specific deliveries to replay
-  endpointId?: string;                 // Replay all for endpoint
-  eventType?: WebhookEventType;        // Replay all of event type
-  startDate?: Date;                    // Date range start
-  endDate?: Date;                      // Date range end
-  onlyFailed?: boolean;                // Only replay failed deliveries
+  deliveryIds?: string[]; // Specific deliveries to replay
+  endpointId?: string; // Replay all for endpoint
+  eventType?: WebhookEventType; // Replay all of event type
+  startDate?: Date; // Date range start
+  endDate?: Date; // Date range end
+  onlyFailed?: boolean; // Only replay failed deliveries
 }
 
 /**

@@ -1,40 +1,40 @@
-import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
-import { Badge } from "./badge";
+import '@testing-library/jest-dom';
+import { render, screen } from '@testing-library/react';
+import { Badge } from './badge';
 
-describe("Badge Component", () => {
-  it("renders correctly", () => {
+describe('Badge Component', () => {
+  it('renders correctly', () => {
     render(<Badge>Test Badge</Badge>);
-    expect(screen.getByText("Test Badge")).toBeInTheDocument();
+    expect(screen.getByText('Test Badge')).toBeInTheDocument();
   });
 
-  it("default variant styling", () => {
+  it('default variant styling', () => {
     render(<Badge>Default</Badge>);
-    const badge = screen.getByText("Default");
-    expect(badge).toHaveClass("bg-primary");
+    const badge = screen.getByText('Default');
+    expect(badge).toHaveClass('bg-primary');
   });
 
-  it("secondary variant styling", () => {
+  it('secondary variant styling', () => {
     render(<Badge variant="secondary">Secondary</Badge>);
-    const badge = screen.getByText("Secondary");
-    expect(badge).toHaveClass("bg-secondary");
+    const badge = screen.getByText('Secondary');
+    expect(badge).toHaveClass('bg-secondary');
   });
 
-  it("destructive variant styling", () => {
+  it('destructive variant styling', () => {
     render(<Badge variant="destructive">Destructive</Badge>);
-    const badge = screen.getByText("Destructive");
-    expect(badge).toHaveClass("bg-destructive");
+    const badge = screen.getByText('Destructive');
+    expect(badge).toHaveClass('bg-destructive');
   });
 
-  it("success variant styling", () => {
+  it('success variant styling', () => {
     render(<Badge variant="success">Success</Badge>);
-    const badge = screen.getByText("Success");
-    expect(badge).toHaveClass("bg-green-500");
+    const badge = screen.getByText('Success');
+    expect(badge).toHaveClass('bg-green-500');
   });
 
-  it("outline variant styling", () => {
+  it('outline variant styling', () => {
     render(<Badge variant="outline">Outline</Badge>);
-    const badge = screen.getByText("Outline");
-    expect(badge).toHaveClass("text-foreground");
+    const badge = screen.getByText('Outline');
+    expect(badge).toHaveClass('text-foreground');
   });
 });

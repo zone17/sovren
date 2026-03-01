@@ -5,7 +5,13 @@ import ShieldDashboard from '../ShieldDashboard';
 
 vi.mock('@/features/auth', () => ({
   useAuth: () => ({
-    user: { id: 'test-user', email: 'test@example.com', name: 'Test User', role: 'creator', nostr_pubkey: 'npub1test' },
+    user: {
+      id: 'test-user',
+      email: 'test@example.com',
+      name: 'Test User',
+      role: 'creator',
+      nostr_pubkey: 'npub1test',
+    },
     isLoading: false,
     isAuthenticated: true,
   }),

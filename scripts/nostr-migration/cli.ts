@@ -35,7 +35,6 @@
 import * as readline from 'readline/promises';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { createHash } from 'crypto';
 
 // Import migration scripts
 // Note: These would be imported from their respective files
@@ -422,16 +421,16 @@ class MigrationOrchestrator {
     const selected: MigrationComponent[] = [];
 
     if (relays) {
-      selected.push(COMPONENTS.find(c => c.id === 'relay-config')!);
+      selected.push(COMPONENTS.find((c) => c.id === 'relay-config')!);
     }
     if (keys) {
-      selected.push(COMPONENTS.find(c => c.id === 'keys')!);
+      selected.push(COMPONENTS.find((c) => c.id === 'keys')!);
     }
     if (events) {
-      selected.push(COMPONENTS.find(c => c.id === 'events')!);
+      selected.push(COMPONENTS.find((c) => c.id === 'events')!);
     }
     if (subscriptions) {
-      selected.push(COMPONENTS.find(c => c.id === 'subscriptions')!);
+      selected.push(COMPONENTS.find((c) => c.id === 'subscriptions')!);
     }
 
     return selected;
@@ -459,10 +458,7 @@ class MigrationOrchestrator {
     }
   }
 
-  private async migrateComponent(
-    component: MigrationComponent,
-    backupPath: string
-  ): Promise<void> {
+  private async migrateComponent(component: MigrationComponent, backupPath: string): Promise<void> {
     this.logger.section(`Migrating: ${component.name}`);
 
     const progress: MigrationProgress = {
@@ -501,7 +497,6 @@ class MigrationOrchestrator {
       this.state.setComponentMigrated(component.id, { progress });
 
       this.logger.success(`${component.name} migration completed`);
-
     } catch (error) {
       const err = error as Error;
       progress.status = 'failed';
@@ -528,7 +523,7 @@ class MigrationOrchestrator {
 
     for (let i = 0; i < itemCount; i++) {
       // Simulate migration work
-      await new Promise(resolve => setTimeout(resolve, this.options.dryRun ? 10 : 100));
+      await new Promise((resolve) => setTimeout(resolve, this.options.dryRun ? 10 : 100));
 
       progress.current = i + 1;
       progress.percentage = Math.round((progress.current / progress.total) * 100);
@@ -600,7 +595,7 @@ class MigrationOrchestrator {
     let failedItems = 0;
     let success = true;
 
-    Object.values(this.progress).forEach(p => {
+    Object.values(this.progress).forEach((p) => {
       totalItems += p.total;
       migratedItems += p.current;
 
@@ -652,16 +647,16 @@ class MigrationOrchestrator {
     console.log('\n📋 Component Status:\n');
 
     Object.entries(report.components).forEach(([id, progress]) => {
-      const component = COMPONENTS.find(c => c.id === id);
-      const statusIcon = progress.status === 'completed' ? '✅' :
-                        progress.status === 'failed' ? '❌' : '⏸️';
+      const component = COMPONENTS.find((c) => c.id === id);
+      const statusIcon =
+        progress.status === 'completed' ? '✅' : progress.status === 'failed' ? '❌' : '⏸️';
 
       console.log(`${statusIcon} ${component?.name || id}`);
       console.log(`   Items: ${progress.current}/${progress.total} (${progress.percentage}%)`);
 
       if (progress.errors.length > 0) {
         console.log(`   Errors: ${progress.errors.length}`);
-        progress.errors.forEach(err => {
+        progress.errors.forEach((err) => {
           console.log(`     - ${err}`);
         });
       }
@@ -724,7 +719,7 @@ class MigrationOrchestrator {
 
     console.log('Component Status:\n');
 
-    COMPONENTS.forEach(component => {
+    COMPONENTS.forEach((component) => {
       const migrated = this.state.isComponentMigrated(component.id);
       const statusIcon = migrated ? '✅' : '⬜';
       console.log(`${statusIcon} ${component.name}`);
@@ -788,15 +783,48 @@ async function runInteractiveWizard(): Promise<CLIOptions> {
     );
 
     if (mode === 4) {
-      return { all: false, keys: false, relays: false, events: false, subscriptions: false, dryRun: false, force: false, verbose: false, status: false, rollback: false };
+      return {
+        all: false,
+        keys: false,
+        relays: false,
+        events: false,
+        subscriptions: false,
+        dryRun: false,
+        force: false,
+        verbose: false,
+        status: false,
+        rollback: false,
+      };
     }
 
     if (mode === 2) {
-      return { all: false, keys: false, relays: false, events: false, subscriptions: false, dryRun: false, force: false, verbose: false, status: true, rollback: false };
+      return {
+        all: false,
+        keys: false,
+        relays: false,
+        events: false,
+        subscriptions: false,
+        dryRun: false,
+        force: false,
+        verbose: false,
+        status: true,
+        rollback: false,
+      };
     }
 
     if (mode === 3) {
-      return { all: false, keys: false, relays: false, events: false, subscriptions: false, dryRun: false, force: false, verbose: false, status: false, rollback: true };
+      return {
+        all: false,
+        keys: false,
+        relays: false,
+        events: false,
+        subscriptions: false,
+        dryRun: false,
+        force: false,
+        verbose: false,
+        status: false,
+        rollback: true,
+      };
     }
 
     const options: CLIOptions = {
@@ -816,12 +844,7 @@ async function runInteractiveWizard(): Promise<CLIOptions> {
     if (mode === 1) {
       const components = await select(
         'Select components to migrate (multiple selection coming):',
-        [
-          'Relay Configuration',
-          'Key Storage',
-          'Event Cache',
-          'Subscriptions',
-        ],
+        ['Relay Configuration', 'Key Storage', 'Event Cache', 'Subscriptions'],
         rl
       );
 
@@ -838,7 +861,6 @@ async function runInteractiveWizard(): Promise<CLIOptions> {
     options.verbose = await confirm('Enable verbose logging?', rl);
 
     return options;
-
   } finally {
     rl.close();
   }
@@ -894,7 +916,7 @@ async function main() {
 
 // Run if executed directly
 if (require.main === module) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error('Fatal error:', error);
     process.exit(1);
   });

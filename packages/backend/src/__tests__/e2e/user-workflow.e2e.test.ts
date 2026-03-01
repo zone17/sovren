@@ -4,7 +4,6 @@
  * Part of US-E5-034: Integration Test Suite
  */
 
-
 import { createTestContainer, cleanupTestContainer } from '../fixtures/test-container-setup';
 import { createTestUser, createTestContent, scenarios } from '../fixtures/test-data-factory';
 import type { IServiceContainer } from '../../interfaces/shared/IServiceRegistry';
@@ -61,7 +60,7 @@ describe('User Workflow E2E Tests', () => {
       const updates = {
         username: 'newusername',
         bio: 'Updated bio',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       await db.update('users', user.id, updates);
@@ -94,7 +93,7 @@ describe('User Workflow E2E Tests', () => {
       // Step 3: Publish content
       await db.update('content', content.id, {
         status: 'published',
-        publishedAt: new Date()
+        publishedAt: new Date(),
       });
       await eventBus.publish('content.published', { contentId: content.id });
 
@@ -111,7 +110,7 @@ describe('User Workflow E2E Tests', () => {
       const premiumContent = createTestContent({
         userId: creator.id,
         isPremium: true,
-        visibility: 'subscribers'
+        visibility: 'subscribers',
       });
 
       const db = container.resolve({ name: 'IDatabase' });
@@ -147,7 +146,7 @@ describe('User Workflow E2E Tests', () => {
 
       // Step 3: Process initial payment (mocked)
       await eventBus.publish('subscription.payment_processed', {
-        subscriptionId: subscription.id
+        subscriptionId: subscription.id,
       });
 
       // Assert
@@ -170,7 +169,7 @@ describe('User Workflow E2E Tests', () => {
       await db.update('subscriptions', subscription.id, {
         status: 'canceled',
         cancelAt,
-        canceledAt: new Date()
+        canceledAt: new Date(),
       });
       await eventBus.publish('subscription.canceled', { subscriptionId: subscription.id });
 
@@ -195,7 +194,7 @@ describe('User Workflow E2E Tests', () => {
         userId: user.id,
         timestamp: new Date(),
         ipAddress: '192.168.1.1',
-        userAgent: 'Test Browser'
+        userAgent: 'Test Browser',
       };
 
       await db.insert('user_activity', loginActivity);
@@ -220,7 +219,7 @@ describe('User Workflow E2E Tests', () => {
         userId: user.id,
         contentId: content.id,
         type: 'view',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       await db.insert('interactions', interaction);
@@ -250,14 +249,14 @@ describe('User Workflow E2E Tests', () => {
         id: 'sub1',
         userId: subscriber1.id,
         creatorId: creator.id,
-        status: 'active'
+        status: 'active',
       });
 
       await db.insert('subscriptions', {
         id: 'sub2',
         userId: subscriber2.id,
         creatorId: creator.id,
-        status: 'active'
+        status: 'active',
       });
 
       // Assert

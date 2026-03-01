@@ -85,7 +85,7 @@ function log(message: string, type: 'info' | 'success' | 'error' | 'warn' = 'inf
  */
 function calculateChecksum(data: unknown[]): string {
   const sorted = data
-    .map(item => JSON.stringify(item))
+    .map((item) => JSON.stringify(item))
     .sort()
     .join('|');
 
@@ -104,17 +104,14 @@ async function generateReport(
   const report = {
     timestamp,
     summary: {
-      allValid: Object.values(results).every(r => r.valid),
+      allValid: Object.values(results).every((r) => r.valid),
       totalErrors: Object.values(results).reduce((sum, r) => sum + r.errors.length, 0),
       totalWarnings: Object.values(results).reduce((sum, r) => sum + r.warnings.length, 0),
     },
     results,
   };
 
-  await fs.writeFile(
-    outputPath,
-    JSON.stringify(report, null, 2)
-  );
+  await fs.writeFile(outputPath, JSON.stringify(report, null, 2));
 
   log(`📄 Validation report saved to: ${outputPath}`, 'success');
 }
@@ -164,13 +161,9 @@ async function validateKeyMigration(options: ValidationOptions): Promise<Validat
     }
 
     // Match keys by public key
-    const legacyPubkeys = new Set(
-      legacyKeys.map(k => k.publicKey || k.pubkey).filter(Boolean)
-    );
+    const legacyPubkeys = new Set(legacyKeys.map((k) => k.publicKey || k.pubkey).filter(Boolean));
 
-    const migratedPubkeys = new Set(
-      migratedKeys.map(k => k.publicKey).filter(Boolean)
-    );
+    const migratedPubkeys = new Set(migratedKeys.map((k) => k.publicKey).filter(Boolean));
 
     // Check for missing keys
     for (const pubkey of legacyPubkeys) {
@@ -192,17 +185,17 @@ async function validateKeyMigration(options: ValidationOptions): Promise<Validat
       }
 
       if (!key.migrated || !key.migratedFrom) {
-        result.warnings.push(`Key missing migration metadata: ${key.publicKey?.substring(0, 16)}...`);
+        result.warnings.push(
+          `Key missing migration metadata: ${key.publicKey?.substring(0, 16)}...`
+        );
       }
     }
 
     // Calculate checksums
     result.stats.checksum.legacy = calculateChecksum(
-      legacyKeys.map(k => k.publicKey || k.pubkey)
+      legacyKeys.map((k) => k.publicKey || k.pubkey)
     );
-    result.stats.checksum.migrated = calculateChecksum(
-      migratedKeys.map(k => k.publicKey)
-    );
+    result.stats.checksum.migrated = calculateChecksum(migratedKeys.map((k) => k.publicKey));
     result.stats.checksum.matches = result.stats.checksum.legacy === result.stats.checksum.migrated;
 
     if (!result.stats.checksum.matches) {
@@ -218,8 +211,14 @@ async function validateKeyMigration(options: ValidationOptions): Promise<Validat
       log(`  Migrated keys:  ${result.stats.totalMigrated}`, 'info');
       log(`  Matched:        ${result.stats.matched}`, 'success');
       log(`  Missing:        ${result.stats.missing}`, result.stats.missing > 0 ? 'error' : 'info');
-      log(`  Corrupted:      ${result.stats.corrupted}`, result.stats.corrupted > 0 ? 'error' : 'info');
-      log(`  Checksum match: ${result.stats.checksum.matches}`, result.stats.checksum.matches ? 'success' : 'error');
+      log(
+        `  Corrupted:      ${result.stats.corrupted}`,
+        result.stats.corrupted > 0 ? 'error' : 'info'
+      );
+      log(
+        `  Checksum match: ${result.stats.checksum.matches}`,
+        result.stats.checksum.matches ? 'success' : 'error'
+      );
     }
   } catch (error) {
     result.errors.push(`Validation error: ${error}`);
@@ -263,7 +262,7 @@ async function validateEventMigration(options: ValidationOptions): Promise<Valid
     for (const storeName of storeNames) {
       if (legacyDB.objectStoreNames.contains(storeName)) {
         const events = await legacyDB.getAll(storeName);
-        legacyEvents.push(...events.map(e => e.event || e));
+        legacyEvents.push(...events.map((e) => e.event || e));
       }
     }
 
@@ -276,14 +275,12 @@ async function validateEventMigration(options: ValidationOptions): Promise<Valid
 
     // Count verification (allowing for deduplication)
     if (result.stats.totalMigrated > result.stats.totalLegacy) {
-      result.errors.push(
-        `More migrated events than legacy (possible duplicate legacy data)`
-      );
+      result.errors.push(`More migrated events than legacy (possible duplicate legacy data)`);
     }
 
     // Match events by ID
-    const legacyIds = new Set(legacyEvents.map(e => e.id).filter(Boolean));
-    const migratedIds = new Set(migratedEvents.map(e => e.event?.id).filter(Boolean));
+    const legacyIds = new Set(legacyEvents.map((e) => e.id).filter(Boolean));
+    const migratedIds = new Set(migratedEvents.map((e) => e.event?.id).filter(Boolean));
 
     // Check for missing events
     for (const eventId of legacyIds) {
@@ -341,10 +338,16 @@ async function validateEventMigration(options: ValidationOptions): Promise<Valid
 
     // Calculate checksums
     result.stats.checksum.legacy = calculateChecksum(
-      legacyEvents.map(e => e.id).filter(Boolean).sort()
+      legacyEvents
+        .map((e) => e.id)
+        .filter(Boolean)
+        .sort()
     );
     result.stats.checksum.migrated = calculateChecksum(
-      migratedEvents.map(e => e.event?.id).filter(Boolean).sort()
+      migratedEvents
+        .map((e) => e.event?.id)
+        .filter(Boolean)
+        .sort()
     );
     result.stats.checksum.matches = result.stats.checksum.legacy === result.stats.checksum.migrated;
 
@@ -361,9 +364,18 @@ async function validateEventMigration(options: ValidationOptions): Promise<Valid
       log(`  Legacy events:    ${result.stats.totalLegacy}`, 'info');
       log(`  Migrated events:  ${result.stats.totalMigrated}`, 'info');
       log(`  Matched:          ${result.stats.matched}`, 'success');
-      log(`  Missing:          ${result.stats.missing}`, result.stats.missing > 0 ? 'warn' : 'info');
-      log(`  Corrupted:        ${result.stats.corrupted}`, result.stats.corrupted > 0 ? 'error' : 'info');
-      log(`  Checksum match:   ${result.stats.checksum.matches}`, result.stats.checksum.matches ? 'success' : 'warn');
+      log(
+        `  Missing:          ${result.stats.missing}`,
+        result.stats.missing > 0 ? 'warn' : 'info'
+      );
+      log(
+        `  Corrupted:        ${result.stats.corrupted}`,
+        result.stats.corrupted > 0 ? 'error' : 'info'
+      );
+      log(
+        `  Checksum match:   ${result.stats.checksum.matches}`,
+        result.stats.checksum.matches ? 'success' : 'warn'
+      );
     }
   } catch (error) {
     result.errors.push(`Validation error: ${error}`);
@@ -377,7 +389,9 @@ async function validateEventMigration(options: ValidationOptions): Promise<Valid
 // SUBSCRIPTION VALIDATION
 // ========================================
 
-async function validateSubscriptionMigration(options: ValidationOptions): Promise<ValidationResult> {
+async function validateSubscriptionMigration(
+  options: ValidationOptions
+): Promise<ValidationResult> {
   const result: ValidationResult = {
     valid: true,
     errors: [],
@@ -419,8 +433,8 @@ async function validateSubscriptionMigration(options: ValidationOptions): Promis
     result.stats.totalMigrated = migratedSubs.length;
 
     // Match subscriptions by ID
-    const legacyIds = new Set(legacySubs.map(s => s.id || s.subscriptionId).filter(Boolean));
-    const migratedIds = new Set(migratedSubs.map(s => s.id).filter(Boolean));
+    const legacyIds = new Set(legacySubs.map((s) => s.id || s.subscriptionId).filter(Boolean));
+    const migratedIds = new Set(migratedSubs.map((s) => s.id).filter(Boolean));
 
     for (const subId of legacyIds) {
       if (migratedIds.has(subId)) {
@@ -446,10 +460,16 @@ async function validateSubscriptionMigration(options: ValidationOptions): Promis
 
     // Calculate checksums
     result.stats.checksum.legacy = calculateChecksum(
-      legacySubs.map(s => s.id || s.subscriptionId).filter(Boolean).sort()
+      legacySubs
+        .map((s) => s.id || s.subscriptionId)
+        .filter(Boolean)
+        .sort()
     );
     result.stats.checksum.migrated = calculateChecksum(
-      migratedSubs.map(s => s.id).filter(Boolean).sort()
+      migratedSubs
+        .map((s) => s.id)
+        .filter(Boolean)
+        .sort()
     );
     result.stats.checksum.matches = result.stats.checksum.legacy === result.stats.checksum.migrated;
 
@@ -460,9 +480,18 @@ async function validateSubscriptionMigration(options: ValidationOptions): Promis
       log(`  Legacy subscriptions:    ${result.stats.totalLegacy}`, 'info');
       log(`  Migrated subscriptions:  ${result.stats.totalMigrated}`, 'info');
       log(`  Matched:                 ${result.stats.matched}`, 'success');
-      log(`  Missing:                 ${result.stats.missing}`, result.stats.missing > 0 ? 'warn' : 'info');
-      log(`  Corrupted:               ${result.stats.corrupted}`, result.stats.corrupted > 0 ? 'error' : 'info');
-      log(`  Checksum match:          ${result.stats.checksum.matches}`, result.stats.checksum.matches ? 'success' : 'warn');
+      log(
+        `  Missing:                 ${result.stats.missing}`,
+        result.stats.missing > 0 ? 'warn' : 'info'
+      );
+      log(
+        `  Corrupted:               ${result.stats.corrupted}`,
+        result.stats.corrupted > 0 ? 'error' : 'info'
+      );
+      log(
+        `  Checksum match:          ${result.stats.checksum.matches}`,
+        result.stats.checksum.matches ? 'success' : 'warn'
+      );
     }
   } catch (error) {
     result.errors.push(`Validation error: ${error}`);
@@ -554,12 +583,12 @@ async function main() {
     for (const [category, result] of Object.entries(results)) {
       if (result.errors.length > 0) {
         log(`\n${category.toUpperCase()} ERRORS:`, 'error');
-        result.errors.forEach(err => log(`  • ${err}`, 'error'));
+        result.errors.forEach((err) => log(`  • ${err}`, 'error'));
       }
 
       if (result.warnings.length > 0 && options.verbose) {
         log(`\n${category.toUpperCase()} WARNINGS:`, 'warn');
-        result.warnings.forEach(warn => log(`  • ${warn}`, 'warn'));
+        result.warnings.forEach((warn) => log(`  • ${warn}`, 'warn'));
       }
     }
   }

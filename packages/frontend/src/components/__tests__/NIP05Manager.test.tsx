@@ -106,9 +106,7 @@ describe('🔍 NIP05Manager Component', () => {
 
   describe('📝 Basic Rendering', () => {
     it('should render loading state initially', () => {
-      (global.fetch as MockFetch).mockImplementation(
-        () => new Promise(() => {})
-      ); // Never resolves
+      (global.fetch as MockFetch).mockImplementation(() => new Promise(() => {})); // Never resolves
       render(<NIP05Manager />);
 
       expect(screen.getByText('Loading NIP-05 verifications...')).toBeInTheDocument();
@@ -142,9 +140,7 @@ describe('🔍 NIP05Manager Component', () => {
     });
 
     it('should render empty state when no verifications exist', async () => {
-      (global.fetch as MockFetch).mockResolvedValue(
-        createMockResponse({ verifications: [] })
-      );
+      (global.fetch as MockFetch).mockResolvedValue(createMockResponse({ verifications: [] }));
       render(<NIP05Manager />);
 
       await waitFor(() => {
@@ -272,9 +268,7 @@ describe('🔍 NIP05Manager Component', () => {
 
   describe('🚨 Error Handling', () => {
     it('should display error message when API call fails', async () => {
-      (global.fetch as MockFetch).mockRejectedValue(
-        new Error('Network error')
-      );
+      (global.fetch as MockFetch).mockRejectedValue(new Error('Network error'));
       render(<NIP05Manager />);
 
       // Component catches error and displays err.message ('Network error')
@@ -287,9 +281,7 @@ describe('🔍 NIP05Manager Component', () => {
       (global.fetch as MockFetch).mockResolvedValueOnce(
         createMockResponse({ verifications: mockVerifications })
       );
-      (global.fetch as MockFetch).mockResolvedValueOnce(
-        createMockResponse(null, false)
-      );
+      (global.fetch as MockFetch).mockResolvedValueOnce(createMockResponse(null, false));
 
       render(<NIP05Manager />);
 

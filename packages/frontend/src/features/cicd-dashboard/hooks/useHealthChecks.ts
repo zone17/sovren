@@ -24,14 +24,8 @@ interface UseHealthChecksReturn {
   refresh: () => Promise<void>;
 }
 
-export function useHealthChecks(
-  options: UseHealthChecksOptions = {}
-): UseHealthChecksReturn {
-  const {
-    environment = 'all',
-    pollingInterval = 30000,
-    enabled = true,
-  } = options;
+export function useHealthChecks(options: UseHealthChecksOptions = {}): UseHealthChecksReturn {
+  const { environment = 'all', pollingInterval = 30000, enabled = true } = options;
 
   const [healthChecks, setHealthChecks] = useState<HealthCheckResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);

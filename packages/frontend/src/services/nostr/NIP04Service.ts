@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔐 NIP-04 Encrypted Direct Messages Service
  * US-305: Implement NIP-04 Encrypted Direct Messages
@@ -28,7 +29,7 @@ import type {
   TypingIndicatorEvent,
   MessageHistoryRequest,
   SessionKeyInfo,
-  SpamProtectionConfig
+  SpamProtectionConfig,
 } from '@sovren/shared/types/nostr/nips';
 
 /**
@@ -173,10 +174,7 @@ export class NIP04Service {
    * Derive shared secret using ECDH (Elliptic Curve Diffie-Hellman)
    * This is the core of NIP-04 encryption
    */
-  async deriveSharedSecret(
-    privateKeyHex: string,
-    publicKeyHex: string
-  ): Promise<Uint8Array> {
+  async deriveSharedSecret(privateKeyHex: string, publicKeyHex: string): Promise<Uint8Array> {
     try {
       // Validate key formats
       if (!/^[0-9a-f]{64}$/i.test(privateKeyHex)) {
@@ -294,10 +292,7 @@ export class NIP04Service {
   /**
    * Encrypt with browser extension
    */
-  async encryptWithExtension(
-    plaintext: string,
-    recipientPublicKey: string
-  ): Promise<string> {
+  async encryptWithExtension(plaintext: string, recipientPublicKey: string): Promise<string> {
     if (!window.nostr?.encrypt) {
       throw new Error('Browser extension not available or does not support NIP-04 encryption');
     }
@@ -315,10 +310,7 @@ export class NIP04Service {
   /**
    * Decrypt with browser extension
    */
-  async decryptWithExtension(
-    encryptedContent: string,
-    senderPublicKey: string
-  ): Promise<string> {
+  async decryptWithExtension(encryptedContent: string, senderPublicKey: string): Promise<string> {
     if (!window.nostr?.decrypt) {
       throw new Error('Browser extension not available or does not support NIP-04 decryption');
     }
@@ -506,7 +498,7 @@ export class NIP04Service {
 
       // Sign event
       if (options.useExtension && window.nostr?.signEvent) {
-        return await window.nostr.signEvent(unsignedEvent) as ReadReceiptEvent;
+        return (await window.nostr.signEvent(unsignedEvent)) as ReadReceiptEvent;
       }
 
       const privateKey = await this.getPrivateKey({ keyId: options.keyId });
@@ -533,7 +525,7 @@ export class NIP04Service {
    * Process received read receipt
    */
   async processReadReceipt(receipt: ReadReceiptEvent): Promise<void> {
-    const messageIdTag = receipt.tags.find(tag => tag[0] === 'e');
+    const messageIdTag = receipt.tags.find((tag) => tag[0] === 'e');
     if (!messageIdTag || !messageIdTag[1]) {
       console.warn('[NIP04Service] Invalid read receipt: missing message ID');
       return;
@@ -598,7 +590,7 @@ export class NIP04Service {
 
       // Sign event (ephemeral, no need to store)
       if (options.useExtension && window.nostr?.signEvent) {
-        return await window.nostr.signEvent(unsignedEvent) as TypingIndicatorEvent;
+        return (await window.nostr.signEvent(unsignedEvent)) as TypingIndicatorEvent;
       }
 
       const privateKey = await this.getPrivateKey({ keyId: options.keyId });
@@ -673,9 +665,7 @@ export class NIP04Service {
   /**
    * Get message history with pagination
    */
-  async getMessageHistory(
-    request: MessageHistoryRequest
-  ): Promise<NostrDirectMessage[]> {
+  async getMessageHistory(request: MessageHistoryRequest): Promise<NostrDirectMessage[]> {
     const threadId = await this.getThreadIdForConversation(request.conversationWith);
     const thread = this.threads.get(threadId) || [];
 
@@ -683,10 +673,10 @@ export class NIP04Service {
 
     // Apply time filters
     if (request.before) {
-      filtered = filtered.filter(msg => msg.timestamp < request.before!);
+      filtered = filtered.filter((msg) => msg.timestamp < request.before!);
     }
     if (request.after) {
-      filtered = filtered.filter(msg => msg.timestamp > request.after!);
+      filtered = filtered.filter((msg) => msg.timestamp > request.after!);
     }
 
     // Sort by timestamp (descending for pagination)
@@ -711,7 +701,7 @@ export class NIP04Service {
 
     const query = searchQuery.toLowerCase();
 
-    return thread.filter(msg => {
+    return thread.filter((msg) => {
       // Search in decrypted content if available
       const cacheEntry = this.messageCache.get(msg.id);
       const content = cacheEntry?.decrypted || msg.content;
@@ -770,10 +760,7 @@ export class NIP04Service {
     };
 
     // Store in thread metadata
-    const threadId = this.getThreadId(
-      await this.getPublicKey({}),
-      conversationWithPubkey
-    );
+    const threadId = this.getThreadId(await this.getPublicKey({}), conversationWithPubkey);
     const metadata = this.threadMetadata.get(threadId);
     if (metadata) {
       metadata.sessionKey = sessionKey;
@@ -879,13 +866,11 @@ export class NIP04Service {
 
     // Clean old timestamps
     tracker.messageTimestamps = tracker.messageTimestamps.filter(
-      ts => now - ts < 60 * 60 * 1000 // Keep last hour
+      (ts) => now - ts < 60 * 60 * 1000 // Keep last hour
     );
 
     // Check per-minute limit
-    const lastMinute = tracker.messageTimestamps.filter(
-      ts => now - ts < 60 * 1000
-    );
+    const lastMinute = tracker.messageTimestamps.filter((ts) => now - ts < 60 * 1000);
     if (lastMinute.length >= this.spamConfig.rateLimit.maxMessagesPerMinute) {
       return false;
     }

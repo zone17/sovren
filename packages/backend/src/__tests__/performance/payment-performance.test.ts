@@ -129,9 +129,7 @@ describe('Payment System Performance Tests', () => {
       const concurrentPayments = 10;
       const startTime = performance.now();
 
-      await Promise.all(
-        Array.from({ length: concurrentPayments }, () => mockPaymentOp(80))
-      );
+      await Promise.all(Array.from({ length: concurrentPayments }, () => mockPaymentOp(80)));
 
       const endTime = performance.now();
       const duration = endTime - startTime;
@@ -280,11 +278,7 @@ describe('Payment System Performance Tests', () => {
     it('should handle multiple currency conversions', async () => {
       const metrics = await measurePerformance(async () => {
         // Convert to multiple currencies
-        await Promise.all([
-          mockPaymentOp(15),
-          mockPaymentOp(15),
-          mockPaymentOp(15),
-        ]);
+        await Promise.all([mockPaymentOp(15), mockPaymentOp(15), mockPaymentOp(15)]);
       }, 50);
 
       reportMetrics('Multi-Currency Conversion', metrics, target * 2);
@@ -330,9 +324,7 @@ describe('Payment System Performance Tests', () => {
       const concurrentWebhooks = 20;
       const startTime = performance.now();
 
-      await Promise.all(
-        Array.from({ length: concurrentWebhooks }, () => mockPaymentOp(200))
-      );
+      await Promise.all(Array.from({ length: concurrentWebhooks }, () => mockPaymentOp(200)));
 
       const endTime = performance.now();
       const duration = endTime - startTime;
@@ -406,9 +398,7 @@ describe('Payment System Performance Tests', () => {
       const startTime = performance.now();
 
       // Simulate concurrent operations on same payment
-      await Promise.all(
-        Array.from({ length: concurrentOps }, () => mockPaymentOp(80))
-      );
+      await Promise.all(Array.from({ length: concurrentOps }, () => mockPaymentOp(80)));
 
       const endTime = performance.now();
       const duration = endTime - startTime;
@@ -448,9 +438,7 @@ describe('Payment System Performance Tests', () => {
       const transactions = 1000;
       const startTime = performance.now();
 
-      const promises = Array.from({ length: transactions }, () =>
-        mockPaymentOp(50)
-      );
+      const promises = Array.from({ length: transactions }, () => mockPaymentOp(50));
 
       await Promise.all(promises);
 

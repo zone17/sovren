@@ -17,7 +17,7 @@ export function createMockEventBus(config?: { real?: boolean }): IEventBusServic
       const wildcardHandlers = subscribers.get(`${event.split('.')[0]}.*`) || [];
       const allHandlers = [...handlers, ...wildcardHandlers];
 
-      await Promise.all(allHandlers.map(handler => handler(payload)));
+      await Promise.all(allHandlers.map((handler) => handler(payload)));
     },
 
     subscribe: <T>(event: string, handler: (payload: T) => void | Promise<void>): void => {
@@ -42,6 +42,6 @@ export function createMockEventBus(config?: { real?: boolean }): IEventBusServic
     clear: () => {
       subscribers.clear();
       publishedEvents.length = 0;
-    }
+    },
   };
 }

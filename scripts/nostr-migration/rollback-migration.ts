@@ -133,8 +133,8 @@ async function findBackups(category: keyof typeof DATABASE_CONFIGS): Promise<str
     const entries = await fs.readdir(backupDir, { withFileTypes: true });
 
     const backupDirs = entries
-      .filter(entry => entry.isDirectory())
-      .map(entry => path.join(backupDir, entry.name))
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => path.join(backupDir, entry.name))
       .sort()
       .reverse(); // Most recent first
 
@@ -157,7 +157,7 @@ async function readBackupMetadata(backupPath: string): Promise<BackupMetadata | 
     // Try reading from main backup file
     try {
       const files = await fs.readdir(backupPath);
-      const backupFile = files.find(f => f.includes('backup.json'));
+      const backupFile = files.find((f) => f.includes('backup.json'));
 
       if (backupFile) {
         const content = await fs.readFile(path.join(backupPath, backupFile), 'utf-8');
@@ -217,10 +217,7 @@ async function selectBackup(category: keyof typeof DATABASE_CONFIGS): Promise<st
 /**
  * Restore keys from backup
  */
-async function rollbackKeys(
-  backupPath: string,
-  options: RollbackOptions
-): Promise<RollbackStats> {
+async function rollbackKeys(backupPath: string, options: RollbackOptions): Promise<RollbackStats> {
   const stats: RollbackStats = {
     totalRestored: 0,
     failed: 0,
@@ -312,7 +309,7 @@ async function rollbackEvents(
   try {
     // Read backup chunks
     const files = await fs.readdir(backupPath);
-    const chunkFiles = files.filter(f => f.startsWith('events-chunk-'));
+    const chunkFiles = files.filter((f) => f.startsWith('events-chunk-'));
 
     let allEvents = [];
     for (const chunkFile of chunkFiles) {
@@ -472,13 +469,18 @@ async function main() {
 
   const args = process.argv.slice(2);
   const options: RollbackOptions = {
-    backupPath: args.find(a => a.startsWith('--backup-path='))?.split('=')[1],
+    backupPath: args.find((a) => a.startsWith('--backup-path='))?.split('=')[1],
     dryRun: args.includes('--dry-run'),
     force: args.includes('--force'),
     verbose: args.includes('--verbose') || args.includes('-v'),
-    rollbackKeys: args.includes('--keys') || args.length === 0 || args.every(a => a.startsWith('--')),
-    rollbackEvents: args.includes('--events') || args.length === 0 || args.every(a => a.startsWith('--')),
-    rollbackSubscriptions: args.includes('--subscriptions') || args.length === 0 || args.every(a => a.startsWith('--')),
+    rollbackKeys:
+      args.includes('--keys') || args.length === 0 || args.every((a) => a.startsWith('--')),
+    rollbackEvents:
+      args.includes('--events') || args.length === 0 || args.every((a) => a.startsWith('--')),
+    rollbackSubscriptions:
+      args.includes('--subscriptions') ||
+      args.length === 0 ||
+      args.every((a) => a.startsWith('--')),
     deleteNewDatabase: args.includes('--delete-new'),
   };
 
@@ -508,7 +510,7 @@ async function main() {
 
   // Rollback keys
   if (options.rollbackKeys) {
-    const backupPath = options.backupPath || await selectBackup('keys');
+    const backupPath = options.backupPath || (await selectBackup('keys'));
     if (backupPath) {
       results.keys = await rollbackKeys(backupPath, options);
     } else {
@@ -518,7 +520,7 @@ async function main() {
 
   // Rollback events
   if (options.rollbackEvents) {
-    const backupPath = options.backupPath || await selectBackup('events');
+    const backupPath = options.backupPath || (await selectBackup('events'));
     if (backupPath) {
       results.events = await rollbackEvents(backupPath, options);
     } else {
@@ -528,7 +530,7 @@ async function main() {
 
   // Rollback subscriptions
   if (options.rollbackSubscriptions) {
-    const backupPath = options.backupPath || await selectBackup('subscriptions');
+    const backupPath = options.backupPath || (await selectBackup('subscriptions'));
     if (backupPath) {
       results.subscriptions = await rollbackSubscriptions(backupPath, options);
     } else {

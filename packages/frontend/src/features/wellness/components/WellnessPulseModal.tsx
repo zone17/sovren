@@ -50,9 +50,7 @@ export const WellnessPulseModal: React.FC<WellnessPulseModalProps> = ({ isOpen, 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Wellness Check-In</DialogTitle>
-          <DialogDescription>
-            Quick pulse check. How are you feeling right now?
-          </DialogDescription>
+          <DialogDescription>Quick pulse check. How are you feeling right now?</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

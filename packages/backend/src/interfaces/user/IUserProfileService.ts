@@ -20,7 +20,7 @@ import type {
   ProfileCompletion,
   ProfileValidationResult,
   SocialMediaLink,
-  ProfileVisibility
+  ProfileVisibility,
 } from '../../types/user-profile';
 
 /**
@@ -84,7 +84,10 @@ export interface IUserProfileService {
    * @param link - Social media link data
    * @returns Updated profile
    */
-  addSocialLink(userId: string, link: Omit<SocialMediaLink, 'verified' | 'verifiedAt'>): Promise<UserProfile>;
+  addSocialLink(
+    userId: string,
+    link: Omit<SocialMediaLink, 'verified' | 'verifiedAt'>
+  ): Promise<UserProfile>;
 
   /**
    * Remove social media link from profile
@@ -135,7 +138,10 @@ export interface IUserProfileService {
    * @param filter - Analytics filter (date range, aggregation)
    * @returns Analytics data with metrics and timeline
    */
-  getProfileAnalytics(userId: string, filter?: ProfileAnalyticsFilter): Promise<ProfileAnalyticsResult>;
+  getProfileAnalytics(
+    userId: string,
+    filter?: ProfileAnalyticsFilter
+  ): Promise<ProfileAnalyticsResult>;
 
   /**
    * Calculate profile completion score

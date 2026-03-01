@@ -147,10 +147,7 @@ describe('RevenueSplitEditor', () => {
 
       fireEvent.click(screen.getByLabelText('Add collaborator'));
 
-      expect(onChange).toHaveBeenCalledWith([
-        ...splitEntries,
-        { creatorId: '', splitBps: 0 },
-      ]);
+      expect(onChange).toHaveBeenCalledWith([...splitEntries, { creatorId: '', splitBps: 0 }]);
     });
 
     it('calls onChange without the removed entry when Remove is clicked', () => {
@@ -212,9 +209,7 @@ describe('RevenueSplitEditor', () => {
 
   describe('Preview calculations', () => {
     it('renders sats allocation correctly for a 70/30 split', () => {
-      render(
-        <RevenueSplitEditor entries={splitEntries} onChange={vi.fn()} previewSats={10000} />
-      );
+      render(<RevenueSplitEditor entries={splitEntries} onChange={vi.fn()} previewSats={10000} />);
 
       // Alice: 70% of 10000 = 7000 sats
       // Bob: 30% of 10000 = 3000 sats
@@ -229,9 +224,7 @@ describe('RevenueSplitEditor', () => {
     });
 
     it('shows custom previewSats in the preview label', () => {
-      render(
-        <RevenueSplitEditor entries={splitEntries} onChange={vi.fn()} previewSats={50000} />
-      );
+      render(<RevenueSplitEditor entries={splitEntries} onChange={vi.fn()} previewSats={50000} />);
 
       expect(screen.getByText(/For a 50,000 sat payment/)).toBeInTheDocument();
     });

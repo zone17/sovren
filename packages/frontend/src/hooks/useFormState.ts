@@ -6,11 +6,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import {
-  setFormData,
-  updateFormField,
-  clearFormData,
-} from '@/store/slices/uiSlice';
+import { setFormData, updateFormField, clearFormData } from '@/store/slices/uiSlice';
 
 export type FormComplexity = 'simple' | 'complex';
 
@@ -56,9 +52,7 @@ export function useFormState<T extends Record<string, any>>({
   );
 
   // Local state for simple forms or as a buffer for Redux forms
-  const [localValues, setLocalValues] = useState<T>(
-    reduxFormData || initialValues
-  );
+  const [localValues, setLocalValues] = useState<T>(reduxFormData || initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,10 +119,7 @@ export function useFormState<T extends Record<string, any>>({
       if (e) e.preventDefault();
 
       // Mark all fields as touched
-      const allTouched = Object.keys(values).reduce(
-        (acc, key) => ({ ...acc, [key]: true }),
-        {}
-      );
+      const allTouched = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
       setTouched(allTouched);
 
       // Validate
@@ -256,13 +247,7 @@ export function analyzeFormComplexity(fields: string[]): FormComplexity {
  */
 export const FORM_STATE_GUIDELINES = {
   // Simple forms - use local state
-  simple: [
-    'LoginForm',
-    'SearchForm',
-    'CommentForm',
-    'NewsletterSignupForm',
-    'ContactForm',
-  ],
+  simple: ['LoginForm', 'SearchForm', 'CommentForm', 'NewsletterSignupForm', 'ContactForm'],
 
   // Complex forms - use Redux
   complex: [
@@ -288,7 +273,7 @@ export const FORM_STATE_GUIDELINES = {
     complexity: {
       'single step': 'local',
       'multi step': 'redux',
-      'wizard': 'redux',
+      wizard: 'redux',
     },
   },
 };

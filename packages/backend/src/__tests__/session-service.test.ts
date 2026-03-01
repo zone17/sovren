@@ -1,4 +1,3 @@
-
 import { createHash } from 'crypto';
 import { CreateSessionRequest, DeviceInfo, SessionService } from '../services/session-service';
 
@@ -137,9 +136,7 @@ describe('SessionService', () => {
       const sessionRequest = createMockSessionRequest();
 
       // enforceSessionLimits: succeeds
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: [], error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: [], error: null }));
       // insert().select().single() fails
       mockChain.single.mockResolvedValue({
         data: null,
@@ -189,9 +186,7 @@ describe('SessionService', () => {
     it('should handle empty session list', async () => {
       const userId = '123e4567-e89b-12d3-a456-426614174000';
 
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: [], error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: [], error: null }));
 
       const result = await sessionService.listUserSessions(userId);
 
@@ -218,9 +213,7 @@ describe('SessionService', () => {
       const sessionId = 'session_123';
 
       // update().eq().eq() chain resolves successfully, then logSessionActivity also succeeds
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: null, error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: null, error: null }));
 
       const result = await sessionService.updateLastActivity(sessionId, 'api_call');
 
@@ -255,9 +248,7 @@ describe('SessionService', () => {
       // First call: select().eq().eq().single() => session found
       mockChain.single.mockResolvedValue({ data: mockSession, error: null });
       // Subsequent then calls: update + logSessionActivity succeed
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: null, error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: null, error: null }));
 
       const result = await sessionService.revokeSession(sessionId, userId);
 
@@ -343,9 +334,7 @@ describe('SessionService', () => {
       // getSessionByTokenHash: single() returns expired session
       mockChain.single.mockResolvedValue({ data: mockSession, error: null });
       // revokeSession calls: select -> single (session found), then update + log
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: null, error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: null, error: null }));
 
       const result = await sessionService.getSessionByTokenHash(tokenHash);
 
@@ -394,9 +383,7 @@ describe('SessionService', () => {
     });
 
     it('should handle no expired sessions', async () => {
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: [], error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: [], error: null }));
 
       const result = await sessionService.cleanupExpiredSessions();
 
@@ -468,9 +455,7 @@ describe('SessionService', () => {
       };
 
       // enforceSessionLimits: no existing sessions
-      mockChain.then.mockImplementation((resolve: any) =>
-        resolve({ data: [], error: null })
-      );
+      mockChain.then.mockImplementation((resolve: any) => resolve({ data: [], error: null }));
       // insert session succeeds
       mockChain.single.mockResolvedValue({
         data: { id: 'session_123', ...requestWithMalformedDevice },

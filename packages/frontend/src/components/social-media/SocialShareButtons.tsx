@@ -270,7 +270,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
         const shareRequest: SocialShareRequest = {
           contentId,
           platform,
-          customMessage: customMessages[platform],
+          customMessage: (customMessages as Record<string, string>)[platform],
         };
 
         // Execute share

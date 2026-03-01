@@ -50,8 +50,9 @@ export interface SupabaseQueryBuilder<T = Record<string, unknown>> {
 }
 
 /** Filter/modifier builder that resolves to a SupabaseResponse via PromiseLike */
-export interface SupabaseFilterBuilder<T = Record<string, unknown>>
-  extends PromiseLike<SupabaseResponse<T[]>> {
+export interface SupabaseFilterBuilder<T = Record<string, unknown>> extends PromiseLike<
+  SupabaseResponse<T[]>
+> {
   // Filters
   eq(column: string, value: unknown): SupabaseFilterBuilder<T>;
   neq(column: string, value: unknown): SupabaseFilterBuilder<T>;

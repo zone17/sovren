@@ -215,7 +215,10 @@ export const PaymentHistory: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="main">
+      <div
+        className="flex flex-col items-center justify-center min-h-[400px] space-y-4"
+        role="main"
+      >
         <Spinner size="lg" />
         <p className="text-sm text-gray-500">Loading payment history...</p>
       </div>
@@ -230,7 +233,10 @@ export const PaymentHistory: React.FC = () => {
         : 'Error loading payment history. Please try again.';
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="main">
+      <div
+        className="flex flex-col items-center justify-center min-h-[400px] space-y-4"
+        role="main"
+      >
         <AlertCircle className="w-12 h-12 text-red-500" />
         <p className="text-sm text-red-600">{errorMessage}</p>
         <Button onClick={() => refetch()} variant="outline" size="sm">
@@ -244,7 +250,10 @@ export const PaymentHistory: React.FC = () => {
   // Empty state
   if (payments.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="main">
+      <div
+        className="flex flex-col items-center justify-center min-h-[400px] space-y-4"
+        role="main"
+      >
         <div className="p-6 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600 text-center">
             No payments yet. Make your first Lightning payment to see it here!

@@ -24,9 +24,8 @@ beforeEach(async () => {
 describe('P1-037: Route Metrics Fix', () => {
   describe('Route label resolution in finish callback', () => {
     it('should use req.route.path when available at finish time', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       // Simulate Express behavior: req.route is NOT set when middleware runs,
       // but IS set by the time res.on('finish') fires
@@ -61,9 +60,8 @@ describe('P1-037: Route Metrics Fix', () => {
     });
 
     it('should produce /unmatched label when req.route is undefined at finish', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'GET',
@@ -92,9 +90,8 @@ describe('P1-037: Route Metrics Fix', () => {
     });
 
     it('should produce /unmatched when route is not set', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'GET',
@@ -121,9 +118,8 @@ describe('P1-037: Route Metrics Fix', () => {
     });
 
     it('should normalize UUIDs in route.path when route is set', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'DELETE',
@@ -153,9 +149,8 @@ describe('P1-037: Route Metrics Fix', () => {
 
   describe('Timer labels applied at observation time', () => {
     it('should start timer without labels and apply them at finish', async () => {
-      const { deploymentMonitoring, metricsRegistry } = await import(
-        '../../middleware/deployment-monitoring'
-      );
+      const { deploymentMonitoring, metricsRegistry } =
+        await import('../../middleware/deployment-monitoring');
 
       const req = {
         method: 'POST',

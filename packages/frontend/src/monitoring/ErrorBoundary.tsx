@@ -148,12 +148,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     });
 
     // Report to Sentry (real error tracking)
-    sentryBreadcrumb(
-      `Error boundary caught: ${displayName || level}`,
-      'error-boundary',
-      'error',
-      { componentName: displayName, level }
-    );
+    sentryBreadcrumb(`Error boundary caught: ${displayName || level}`, 'error-boundary', 'error', {
+      componentName: displayName,
+      level,
+    });
     sentryCaptureError(error, {
       componentName: displayName,
       level,

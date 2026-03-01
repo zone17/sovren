@@ -40,7 +40,9 @@ describe('ProvenanceService', () => {
         signature: 'sig-hex-123',
         nostr_event_id: 'nevent-id',
         content_hash: 'sha256-hash',
-        relay_confirmations: [{ relay: 'wss://relay.example.com', confirmed_at: '2026-02-15T10:01:00Z' }],
+        relay_confirmations: [
+          { relay: 'wss://relay.example.com', confirmed_at: '2026-02-15T10:01:00Z' },
+        ],
         verification_status: 'verified',
       };
 

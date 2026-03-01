@@ -32,9 +32,7 @@ export function useInviteCollaborators(contentId: string) {
           collaborationApi.inviteCollaborator(contentId, c.creatorId, c.revenueSplitBps)
         )
       );
-      const failures = results.filter(
-        (r): r is PromiseRejectedResult => r.status === 'rejected'
-      );
+      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
       if (failures.length > 0) {
         console.error(`${failures.length}/${results.length} invites failed`);
         if (failures.length === results.length) {

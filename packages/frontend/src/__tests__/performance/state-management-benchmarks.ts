@@ -15,7 +15,6 @@
 import { performance } from 'perf_hooks';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient } from '@tanstack/react-query';
-import { renderHook, act } from '@testing-library/react';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -63,8 +62,8 @@ export class StateManagementBenchmarks {
     this.store = configureStore({
       reducer: {
         ui: uiSlice.reducer,
-        auth: authSlice.reducer
-      }
+        auth: authSlice.reducer,
+      },
     });
   }
 
@@ -73,9 +72,9 @@ export class StateManagementBenchmarks {
       defaultOptions: {
         queries: {
           staleTime: 5 * 60 * 1000, // 5 minutes
-          gcTime: 10 * 60 * 1000 // 10 minutes
-        }
-      }
+          gcTime: 10 * 60 * 1000, // 10 minutes
+        },
+      },
     });
   }
 
@@ -112,7 +111,7 @@ export class StateManagementBenchmarks {
       unit: 'ms',
       target: 16,
       passed: p95Time < 16,
-      percentile: 95
+      percentile: 95,
     };
 
     this.results.push(result);
@@ -131,7 +130,7 @@ export class StateManagementBenchmarks {
     // Populate cache
     for (let i = 0; i < 10; i++) {
       await this.queryClient.setQueryData([queryKey[0], queryKey[1], i], {
-        data: `cached-${i}`
+        data: `cached-${i}`,
       });
     }
 
@@ -155,7 +154,7 @@ export class StateManagementBenchmarks {
       value: parseFloat(hitRate.toFixed(2)),
       unit: '%',
       target: 80,
-      passed: hitRate > 80
+      passed: hitRate > 80,
     };
 
     this.results.push(result);
@@ -169,11 +168,11 @@ export class StateManagementBenchmarks {
   async benchmarkRerenderCounts(): Promise<BenchmarkResult> {
     // Simulate component renders with state changes
     const beforeMigration = {
-      rerenders: 0
+      rerenders: 0,
     };
 
     const afterMigration = {
-      rerenders: 0
+      rerenders: 0,
     };
 
     // Before migration pattern (Redux for everything)
@@ -209,7 +208,7 @@ export class StateManagementBenchmarks {
       value: parseFloat(improvement.toFixed(2)),
       unit: '%',
       target: 50, // Target 50% reduction
-      passed: improvement > 50
+      passed: improvement > 50,
     };
 
     this.results.push(result);
@@ -246,7 +245,7 @@ export class StateManagementBenchmarks {
       value: parseFloat(bundleSizeIncrease.toFixed(2)),
       unit: 'KB',
       target: 5,
-      passed: bundleSizeIncrease < 5
+      passed: bundleSizeIncrease < 5,
     };
 
     this.results.push(result);
@@ -262,12 +261,14 @@ export class StateManagementBenchmarks {
 
     // Populate store with data
     for (let i = 0; i < 1000; i++) {
-      this.store.dispatch(uiSlice.actions.addNotification({
-        id: `notification-${i}`,
-        type: 'info',
-        message: `Test notification ${i}`,
-        timestamp: Date.now()
-      }));
+      this.store.dispatch(
+        uiSlice.actions.addNotification({
+          id: `notification-${i}`,
+          type: 'info',
+          message: `Test notification ${i}`,
+          timestamp: Date.now(),
+        })
+      );
     }
 
     const afterMemory = process.memoryUsage().heapUsed;
@@ -279,7 +280,7 @@ export class StateManagementBenchmarks {
       value: parseFloat(memoryIncrease.toFixed(2)),
       unit: 'MB',
       target: 10, // Target <10MB for 1000 items
-      passed: memoryIncrease < 10
+      passed: memoryIncrease < 10,
     };
 
     this.results.push(result);
@@ -305,7 +306,7 @@ export class StateManagementBenchmarks {
       value: parseFloat(tti.toFixed(2)),
       unit: 'ms',
       target: 3000, // Target <3 seconds
-      passed: tti < 3000
+      passed: tti < 3000,
     };
 
     this.results.push(result);
@@ -318,13 +319,13 @@ export class StateManagementBenchmarks {
       this.initializeStore(),
       this.initializeQueryClient(),
       this.loadInitialData(),
-      this.setupSubscriptions()
+      this.setupSubscriptions(),
     ]);
   }
 
   private async loadInitialData(): Promise<void> {
     // Simulate loading initial data
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         this.queryClient.setQueryData(['user'], { id: '1', name: 'Test User' });
         this.queryClient.setQueryData(['posts'], []);
@@ -335,7 +336,7 @@ export class StateManagementBenchmarks {
 
   private async setupSubscriptions(): Promise<void> {
     // Simulate setting up subscriptions
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         this.store.subscribe(() => {
           // Subscription handler
@@ -355,7 +356,7 @@ export class StateManagementBenchmarks {
       'Component Re-renders': 60,
       'Bundle Size': 3,
       'Redux Store Memory': 5,
-      'Time to Interactive': 2500
+      'Time to Interactive': 2500,
     };
 
     let regressionsPassed = true;
@@ -363,12 +364,15 @@ export class StateManagementBenchmarks {
     for (const result of this.results) {
       const baseline = baselineResults[result.name];
       if (baseline) {
-        const regression = result.metric === 'Cache Hit Rate' || result.metric === 'Render Count Reduction'
-          ? result.value < baseline * 0.9 // 10% regression threshold for rates
-          : result.value > baseline * 1.1; // 10% regression threshold for times
+        const regression =
+          result.metric === 'Cache Hit Rate' || result.metric === 'Render Count Reduction'
+            ? result.value < baseline * 0.9 // 10% regression threshold for rates
+            : result.value > baseline * 1.1; // 10% regression threshold for times
 
         if (regression) {
-          console.warn(`⚠️ Performance regression detected for ${result.name}: ${result.value} vs baseline ${baseline}`);
+          console.warn(
+            `⚠️ Performance regression detected for ${result.name}: ${result.value} vs baseline ${baseline}`
+          );
           regressionsPassed = false;
         }
       }
@@ -389,8 +393,8 @@ export class StateManagementBenchmarks {
     await this.benchmarkMemoryUsage();
     await this.benchmarkTimeToInteractive();
 
-    const passed = this.results.filter(r => r.passed).length;
-    const failed = this.results.filter(r => !r.passed).length;
+    const passed = this.results.filter((r) => r.passed).length;
+    const failed = this.results.filter((r) => !r.passed).length;
 
     const report: PerformanceReport = {
       timestamp: new Date().toISOString(),
@@ -399,7 +403,7 @@ export class StateManagementBenchmarks {
         total: this.results.length,
         passed,
         failed,
-        passRate: (passed / this.results.length) * 100
+        passRate: (passed / this.results.length) * 100,
       },
       comparison: {
         beforeMigration: {
@@ -408,7 +412,7 @@ export class StateManagementBenchmarks {
           'Component Rerenders': 50,
           'Bundle Size': 250,
           'Memory Usage': 8,
-          'TTI': 3500
+          TTI: 3500,
         },
         afterMigration: {
           'Redux Dispatch Time': this.results[0].value,
@@ -416,17 +420,17 @@ export class StateManagementBenchmarks {
           'Component Rerenders': this.results[2].value,
           'Bundle Size': this.results[3].value,
           'Memory Usage': this.results[4].value,
-          'TTI': this.results[5].value
+          TTI: this.results[5].value,
         },
         improvements: {
-          'Redux Dispatch Time': `${((12 - this.results[0].value) / 12 * 100).toFixed(1)}% faster`,
+          'Redux Dispatch Time': `${(((12 - this.results[0].value) / 12) * 100).toFixed(1)}% faster`,
           'Cache Hit Rate': `+${this.results[1].value}% cache hits`,
           'Component Rerenders': `${this.results[2].value}% reduction`,
           'Bundle Size': `+${this.results[3].value}KB`,
-          'Memory Usage': `${((8 - this.results[4].value) / 8 * 100).toFixed(1)}% reduction`,
-          'TTI': `${((3500 - this.results[5].value) / 3500 * 100).toFixed(1)}% faster`
-        }
-      }
+          'Memory Usage': `${(((8 - this.results[4].value) / 8) * 100).toFixed(1)}% reduction`,
+          TTI: `${(((3500 - this.results[5].value) / 3500) * 100).toFixed(1)}% faster`,
+        },
+      },
     };
 
     // Save report to file
@@ -452,20 +456,20 @@ export class StateManagementBenchmarks {
         metric: 'Redux Dispatch Time',
         threshold: 20,
         condition: 'greater_than',
-        severity: 'warning'
+        severity: 'warning',
       },
       {
         metric: 'Cache Hit Rate',
         threshold: 70,
         condition: 'less_than',
-        severity: 'warning'
+        severity: 'warning',
       },
       {
         metric: 'TTI',
         threshold: 4000,
         condition: 'greater_than',
-        severity: 'critical'
-      }
+        severity: 'critical',
+      },
     ];
 
     // In a real implementation, this would integrate with monitoring tools
@@ -481,9 +485,11 @@ export const runPerformanceBenchmarks = async (): Promise<PerformanceReport> => 
 
   console.log('📈 Performance Benchmark Results:');
   console.log('================================');
-  report.benchmarks.forEach(result => {
+  report.benchmarks.forEach((result) => {
     const status = result.passed ? '✅' : '❌';
-    console.log(`${status} ${result.name}: ${result.value}${result.unit} (target: ${result.target}${result.unit})`);
+    console.log(
+      `${status} ${result.name}: ${result.value}${result.unit} (target: ${result.target}${result.unit})`
+    );
   });
   console.log('================================');
   console.log(`Overall Pass Rate: ${report.summary.passRate.toFixed(1)}%`);
@@ -494,10 +500,10 @@ export const runPerformanceBenchmarks = async (): Promise<PerformanceReport> => 
 // Run if executed directly
 if (require.main === module) {
   runPerformanceBenchmarks()
-    .then(report => {
+    .then((report) => {
       process.exit(report.summary.failed > 0 ? 1 : 0);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('❌ Benchmark failed:', error);
       process.exit(1);
     });

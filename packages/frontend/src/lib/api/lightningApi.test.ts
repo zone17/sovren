@@ -294,9 +294,7 @@ describe('LightningAPI', () => {
         })
       );
 
-      await expect(
-        lightningApi.createInvoice({ amount: 1000 })
-      ).rejects.toThrow();
+      await expect(lightningApi.createInvoice({ amount: 1000 })).rejects.toThrow();
     });
 
     it('should handle timeout errors', async () => {
@@ -330,9 +328,7 @@ describe('LightningAPI', () => {
       });
       fetchSpy.mockResolvedValueOnce(badResponse);
 
-      await expect(
-        lightningApi.createInvoice({ amount: 1000 })
-      ).rejects.toThrow();
+      await expect(lightningApi.createInvoice({ amount: 1000 })).rejects.toThrow();
     });
   });
 

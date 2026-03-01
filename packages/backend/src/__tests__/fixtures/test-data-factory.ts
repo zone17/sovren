@@ -13,7 +13,7 @@ import type {
   Content,
   NostrEvent,
   Webhook,
-  RefundRequest
+  RefundRequest,
 } from '../../types';
 
 /**
@@ -29,7 +29,7 @@ export const createTestUser = (overrides: Partial<User> = {}): User => ({
   isActive: true,
   isVerified: false,
   role: 'user',
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -48,7 +48,7 @@ export const createTestInvoice = (overrides: Partial<Invoice> = {}): Invoice => 
   createdAt: new Date(),
   updatedAt: new Date(),
   metadata: {},
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -66,7 +66,7 @@ export const createTestPayment = (overrides: Partial<Payment> = {}): Payment => 
   createdAt: new Date(),
   updatedAt: new Date(),
   metadata: {},
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -89,7 +89,7 @@ export const createTestSubscription = (overrides: Partial<Subscription> = {}): S
   createdAt: new Date(),
   updatedAt: new Date(),
   metadata: {},
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -109,7 +109,7 @@ export const createTestContent = (overrides: Partial<Content> = {}): Content => 
   updatedAt: new Date(),
   publishedAt: new Date(),
   metadata: {},
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -123,7 +123,7 @@ export const createTestNostrEvent = (overrides: Partial<NostrEvent> = {}): Nostr
   tags: [],
   content: 'Test nostr event',
   sig: generateSignature(),
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -138,7 +138,7 @@ export const createTestWebhook = (overrides: Partial<Webhook> = {}): Webhook => 
   createdAt: new Date(),
   updatedAt: new Date(),
   metadata: {},
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -154,7 +154,7 @@ export const createTestRefund = (overrides: Partial<RefundRequest> = {}): Refund
   createdAt: new Date(),
   updatedAt: new Date(),
   metadata: {},
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -215,20 +215,16 @@ function generateRandomString(length: number): string {
  * Batch Test Data Generation
  */
 export const createTestBatch = {
-  users: (count: number): User[] =>
-    Array.from({ length: count }, () => createTestUser()),
+  users: (count: number): User[] => Array.from({ length: count }, () => createTestUser()),
 
-  invoices: (count: number): Invoice[] =>
-    Array.from({ length: count }, () => createTestInvoice()),
+  invoices: (count: number): Invoice[] => Array.from({ length: count }, () => createTestInvoice()),
 
-  payments: (count: number): Payment[] =>
-    Array.from({ length: count }, () => createTestPayment()),
+  payments: (count: number): Payment[] => Array.from({ length: count }, () => createTestPayment()),
 
   subscriptions: (count: number): Subscription[] =>
     Array.from({ length: count }, () => createTestSubscription()),
 
-  content: (count: number): Content[] =>
-    Array.from({ length: count }, () => createTestContent()),
+  content: (count: number): Content[] => Array.from({ length: count }, () => createTestContent()),
 };
 
 /**
@@ -243,7 +239,7 @@ export const scenarios = {
     const invoice = createTestInvoice({ userId: user.id });
     const payment = createTestPayment({
       userId: user.id,
-      invoiceId: invoice.id
+      invoiceId: invoice.id,
     });
 
     return { user, invoice, payment };
@@ -257,7 +253,7 @@ export const scenarios = {
     const creator = createTestUser({ role: 'creator' });
     const subscription = createTestSubscription({
       userId: subscriber.id,
-      creatorId: creator.id
+      creatorId: creator.id,
     });
 
     return { subscriber, creator, subscription };
@@ -270,7 +266,7 @@ export const scenarios = {
     const creator = createTestUser({ role: 'creator' });
     const content = createTestContent({
       userId: creator.id,
-      isPremium: true
+      isPremium: true,
     });
 
     return { creator, content };
@@ -285,12 +281,12 @@ export const scenarios = {
     const payment = createTestPayment({
       userId: user.id,
       invoiceId: invoice.id,
-      status: 'completed'
+      status: 'completed',
     });
     const refund = createTestRefund({ paymentId: payment.id });
 
     return { user, invoice, payment, refund };
-  }
+  },
 };
 
 /**
@@ -301,28 +297,28 @@ export const mockResponses = {
     createInvoice: (amount: number) => ({
       payment_request: generateBolt11Invoice(),
       payment_hash: generatePaymentHash(),
-      expires_at: Math.floor(Date.now() / 1000) + 3600
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
     }),
 
     checkPayment: (paymentHash: string) => ({
       settled: true,
       settle_date: Math.floor(Date.now() / 1000),
-      amt_paid_sat: 1000
-    })
+      amt_paid_sat: 1000,
+    }),
   },
 
   nostr: {
     publishEvent: (event: NostrEvent) => ({
       success: true,
-      eventId: event.id
-    })
+      eventId: event.id,
+    }),
   },
 
   email: {
     send: (to: string, subject: string) => ({
       messageId: uuidv4(),
       accepted: [to],
-      rejected: []
-    })
-  }
+      rejected: [],
+    }),
+  },
 };

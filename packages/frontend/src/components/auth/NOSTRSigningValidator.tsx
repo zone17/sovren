@@ -302,7 +302,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
         ).length;
 
         // Detection heuristics
-        let compromiseReasons: string[] = [];
+        const compromiseReasons: string[] = [];
         let confidence = 0;
 
         // Too many recent failures
@@ -418,6 +418,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
       }, 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [error, success]);
 
   return (

@@ -37,10 +37,10 @@ import * as readline from 'readline/promises';
 // ========================================
 
 interface LegacyKeyData {
-  privateKey?: string;  // Hex format
-  publicKey?: string;   // Hex format
-  nsec?: string;        // NIP-19 format
-  npub?: string;        // NIP-19 format
+  privateKey?: string; // Hex format
+  publicKey?: string; // Hex format
+  nsec?: string; // NIP-19 format
+  npub?: string; // NIP-19 format
   source: 'localStorage' | 'indexedDB' | 'extension';
   timestamp?: number;
 }
@@ -122,10 +122,10 @@ async function confirm(message: string): Promise<boolean> {
  */
 function log(message: string, type: 'info' | 'success' | 'error' | 'warn' = 'info') {
   const colors = {
-    info: '\x1b[36m',    // Cyan
+    info: '\x1b[36m', // Cyan
     success: '\x1b[32m', // Green
-    error: '\x1b[31m',   // Red
-    warn: '\x1b[33m',    // Yellow
+    error: '\x1b[31m', // Red
+    warn: '\x1b[33m', // Yellow
     reset: '\x1b[0m',
   };
 
@@ -536,7 +536,9 @@ async function main() {
 
   // Confirm migration
   if (!options.force && !options.dryRun) {
-    const proceed = await confirm('This will migrate your NOSTR keys to encrypted storage. Continue?');
+    const proceed = await confirm(
+      'This will migrate your NOSTR keys to encrypted storage. Continue?'
+    );
     if (!proceed) {
       log('Migration cancelled by user.', 'warn');
       process.exit(0);

@@ -67,10 +67,7 @@ const RedFlagReport: React.FC<RedFlagReportProps> = ({ redFlags }) => {
         {redFlags.map((flag, index) => {
           const styles = SEVERITY_STYLES[flag.severity];
           return (
-            <li
-              key={`${flag.type}-${index}`}
-              className={`rounded-lg border p-3 ${styles.badge}`}
-            >
+            <li key={`${flag.type}-${index}`} className={`rounded-lg border p-3 ${styles.badge}`}>
               <div className="flex items-start gap-2">
                 <span className={`mt-0.5 text-lg leading-none ${styles.icon}`} aria-hidden="true">
                   {flag.severity === 'high' ? '!' : flag.severity === 'medium' ? '⚠' : '○'}

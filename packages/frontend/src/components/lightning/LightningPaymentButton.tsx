@@ -100,9 +100,7 @@ export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
       setPaymentStatus('failed');
 
       const errorMessage =
-        error instanceof LightningApiError
-          ? error.message
-          : 'Failed to create Lightning invoice';
+        error instanceof LightningApiError ? error.message : 'Failed to create Lightning invoice';
 
       onError?.(errorMessage);
       toast({
@@ -140,9 +138,7 @@ export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
       setPaymentStatus('failed');
 
       const errorMessage =
-        error instanceof LightningApiError
-          ? error.message
-          : 'Failed to verify payment';
+        error instanceof LightningApiError ? error.message : 'Failed to verify payment';
 
       onError?.(errorMessage);
       toast({

@@ -28,9 +28,7 @@ describe('Home Page - Sovren Creator Platform', () => {
 
     test('SHOULD show platform description subtitle', () => {
       renderHome();
-      expect(
-        screen.getByText(/Monetize your audience\. Own your platform/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Monetize your audience\. Own your platform/i)).toBeInTheDocument();
     });
 
     test('SHOULD have NOSTR & Lightning badge in footer', () => {
@@ -93,9 +91,7 @@ describe('Home Page - Sovren Creator Platform', () => {
 
     test('SHOULD show Bitcoin payment description', () => {
       renderHome();
-      expect(
-        screen.getByText(/Get paid instantly, anywhere in the world/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Get paid instantly, anywhere in the world/i)).toBeInTheDocument();
     });
   });
 

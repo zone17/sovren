@@ -22,7 +22,6 @@ import {
   CheckCircle,
   Clock,
   Crown,
-  DollarSign,
   Shield,
   Star,
   Users,
@@ -247,7 +246,11 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   } ${className}`;
 
   return (
-    <Card className={cardClassName} role="article" aria-label={`Subscription: ${subscription.name}`}>
+    <Card
+      className={cardClassName}
+      role="article"
+      aria-label={`Subscription: ${subscription.name}`}
+    >
       {/* HEADER */}
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
@@ -288,7 +291,9 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           </div>
 
           {/* Status Badge */}
-          <Badge className={`${getStatusColor(subscription.status)} flex items-center gap-1 flex-shrink-0 ml-2`}>
+          <Badge
+            className={`${getStatusColor(subscription.status)} flex items-center gap-1 flex-shrink-0 ml-2`}
+          >
             {getStatusIcon(subscription.status)}
             <span className="capitalize">{subscription.status}</span>
           </Badge>
@@ -301,11 +306,11 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             <span className="text-2xl font-bold text-gray-900">
               {formatSats(subscription.amount, { abbreviate: true, suffix: false })}
             </span>
-            <span className="text-sm text-gray-600">{getBillingLabel(subscription.billingInterval)}</span>
+            <span className="text-sm text-gray-600">
+              {getBillingLabel(subscription.billingInterval)}
+            </span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            ≈ ${satsToUSD(subscription.amount)} USD
-          </p>
+          <p className="text-xs text-gray-500 mt-1">≈ ${satsToUSD(subscription.amount)} USD</p>
         </div>
       </CardHeader>
 
@@ -359,7 +364,10 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             <ul className="space-y-1">
               {subscription.benefits.slice(0, 3).map((benefit, index) => (
                 <li key={index} className="flex items-start gap-2 text-sm text-gray-600">
-                  <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle
+                    className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5"
+                    aria-hidden="true"
+                  />
                   <span>{benefit}</span>
                 </li>
               ))}

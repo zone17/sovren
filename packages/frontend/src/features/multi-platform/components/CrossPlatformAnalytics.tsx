@@ -48,7 +48,10 @@ const CrossPlatformAnalytics: React.FC = () => {
               {overview.platforms.map((p) => {
                 const display = PLATFORM_DISPLAY[p.platform];
                 return (
-                  <div key={p.platform} className="flex items-center justify-between rounded-md border p-3">
+                  <div
+                    key={p.platform}
+                    className="flex items-center justify-between rounded-md border p-3"
+                  >
                     <div className="flex items-center gap-2">
                       <div
                         className="h-2.5 w-2.5 rounded-full"
@@ -58,17 +61,20 @@ const CrossPlatformAnalytics: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <span>{p.followers.toLocaleString()} followers</span>
-                      <span className="text-gray-500">{p.engagement_rate.toFixed(1)}% engagement</span>
+                      <span className="text-gray-500">
+                        {p.engagement_rate.toFixed(1)}% engagement
+                      </span>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs ${
                           p.growth_30d > 0
                             ? 'bg-green-100 text-green-700'
                             : p.growth_30d < 0
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-600'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-gray-100 text-gray-600'
                         }`}
                       >
-                        {p.growth_30d > 0 ? '+' : ''}{p.growth_30d}%
+                        {p.growth_30d > 0 ? '+' : ''}
+                        {p.growth_30d}%
                       </span>
                     </div>
                   </div>
@@ -82,7 +88,9 @@ const CrossPlatformAnalytics: React.FC = () => {
       {/* ROI Table */}
       {roi && roi.length > 0 && (
         <div className="rounded-lg border bg-white p-6">
-          <h4 className="text-md font-semibold text-gray-900">Platform ROI (Engagement per Hour)</h4>
+          <h4 className="text-md font-semibold text-gray-900">
+            Platform ROI (Engagement per Hour)
+          </h4>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

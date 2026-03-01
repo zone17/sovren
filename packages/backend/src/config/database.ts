@@ -48,10 +48,10 @@ export function createDatabaseConfig(): DatabaseConfig {
     return DatabaseConfigSchema.parse(config);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missingFields = error.errors.map(err => err.path.join('.')).join(', ');
+      const missingFields = error.errors.map((err) => err.path.join('.')).join(', ');
       throw new Error(
         `Database configuration error: Missing or invalid fields: ${missingFields}. ` +
-        'Please check your environment variables.'
+          'Please check your environment variables.'
       );
     }
     throw error;
@@ -108,17 +108,15 @@ export class SupabaseDatabase implements DatabaseClient {
    */
   async isHealthy(): Promise<boolean> {
     // In development mode with placeholder credentials, always return healthy
-    if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') &&
-        this.config.supabaseUrl.includes('development')) {
+    if (
+      (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') &&
+      this.config.supabaseUrl.includes('development')
+    ) {
       return true;
     }
 
     try {
-      const { error } = await this.client
-        .from('_health_check')
-        .select('1')
-        .limit(1)
-        .maybeSingle();
+      const { error } = await this.client.from('_health_check').select('1').limit(1).maybeSingle();
 
       return !error;
     } catch {
@@ -138,11 +136,7 @@ export class SupabaseDatabase implements DatabaseClient {
     const startTime = Date.now();
 
     try {
-      const { error } = await this.client
-        .from('_health_check')
-        .select('1')
-        .limit(1)
-        .maybeSingle();
+      const { error } = await this.client.from('_health_check').select('1').limit(1).maybeSingle();
 
       const latency = Date.now() - startTime;
 

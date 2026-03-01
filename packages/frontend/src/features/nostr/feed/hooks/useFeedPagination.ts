@@ -9,9 +9,7 @@ import type { UseFeedPaginationReturn } from '../types';
 /**
  * Hook for managing feed pagination
  */
-export const useFeedPagination = (
-  pageSize: number = 20
-): UseFeedPaginationReturn => {
+export const useFeedPagination = (pageSize: number = 20): UseFeedPaginationReturn => {
   const [state, setState] = useState({
     page: 0,
     pageSize,
@@ -24,7 +22,7 @@ export const useFeedPagination = (
    * Load next page
    */
   const loadMore = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       page: prev.page + 1,
       isLoadingMore: true,

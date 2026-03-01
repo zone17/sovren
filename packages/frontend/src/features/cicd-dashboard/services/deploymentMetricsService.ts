@@ -17,17 +17,11 @@ import type {
  */
 export function calculateDeploymentMetrics(deployment: Deployment): DeploymentMetrics {
   const totalSmokeTests = deployment.smokeTests.length;
-  const passedSmokeTests = deployment.smokeTests.filter(
-    (test) => test.status === 'passed'
-  ).length;
-  const failedSmokeTests = deployment.smokeTests.filter(
-    (test) => test.status === 'failed'
-  ).length;
+  const passedSmokeTests = deployment.smokeTests.filter((test) => test.status === 'passed').length;
+  const failedSmokeTests = deployment.smokeTests.filter((test) => test.status === 'failed').length;
 
   const healthChecks = deployment.healthChecks;
-  const successfulHealthChecks = healthChecks.filter(
-    (check) => check.status === 'healthy'
-  ).length;
+  const successfulHealthChecks = healthChecks.filter((check) => check.status === 'healthy').length;
 
   return {
     filesChanged: deployment.metrics.filesChanged,
@@ -38,11 +32,8 @@ export function calculateDeploymentMetrics(deployment: Deployment): DeploymentMe
     responseTimeP95: deployment.metrics.responseTimeP95,
     responseTimeP99: deployment.metrics.responseTimeP99,
     healthCheckSuccessRate:
-      healthChecks.length > 0
-        ? (successfulHealthChecks / healthChecks.length) * 100
-        : 0,
-    smokeTestPassRate:
-      totalSmokeTests > 0 ? (passedSmokeTests / totalSmokeTests) * 100 : 0,
+      healthChecks.length > 0 ? (successfulHealthChecks / healthChecks.length) * 100 : 0,
+    smokeTestPassRate: totalSmokeTests > 0 ? (passedSmokeTests / totalSmokeTests) * 100 : 0,
     totalSmokeTests,
     passedSmokeTests,
     failedSmokeTests,
@@ -79,15 +70,9 @@ export function calculateDeploymentAnalytics(
   }
 
   // Count deployment statuses
-  const successfulDeployments = deployments.filter(
-    (d) => d.status === 'success'
-  ).length;
-  const failedDeployments = deployments.filter(
-    (d) => d.status === 'failed'
-  ).length;
-  const rolledBackDeployments = deployments.filter(
-    (d) => d.status === 'rolled_back'
-  ).length;
+  const successfulDeployments = deployments.filter((d) => d.status === 'success').length;
+  const failedDeployments = deployments.filter((d) => d.status === 'failed').length;
+  const rolledBackDeployments = deployments.filter((d) => d.status === 'rolled_back').length;
 
   // Calculate success rate
   const successRate = (successfulDeployments / totalDeployments) * 100;
@@ -97,12 +82,9 @@ export function calculateDeploymentAnalytics(
   const durations = deploymentsWithDuration.map((d) => d.duration!);
 
   const averageDuration =
-    durations.length > 0
-      ? durations.reduce((sum, d) => sum + d, 0) / durations.length
-      : 0;
+    durations.length > 0 ? durations.reduce((sum, d) => sum + d, 0) / durations.length : 0;
 
-  const medianDuration =
-    durations.length > 0 ? calculateMedian(durations) : 0;
+  const medianDuration = durations.length > 0 ? calculateMedian(durations) : 0;
 
   // Calculate rollback metrics
   const rollbackTimes = deployments
@@ -130,8 +112,7 @@ export function calculateDeploymentAnalytics(
 
   // Calculate change failure rate
   const changesIntroducingFailures = failedDeployments + rolledBackDeployments;
-  const changeFailureRate =
-    (changesIntroducingFailures / totalDeployments) * 100;
+  const changeFailureRate = (changesIntroducingFailures / totalDeployments) * 100;
 
   // Calculate size distribution
   let small = 0,
@@ -321,22 +302,19 @@ export function calculateDeploymentTrend(
         : 0,
     deploymentFrequencyTrend:
       previousPeriodMetrics.deploymentFrequency > 0
-        ? ((currentPeriodMetrics.deploymentFrequency -
-            previousPeriodMetrics.deploymentFrequency) /
+        ? ((currentPeriodMetrics.deploymentFrequency - previousPeriodMetrics.deploymentFrequency) /
             previousPeriodMetrics.deploymentFrequency) *
           100
         : 0,
     averageDurationTrend:
       previousPeriodMetrics.averageDuration > 0
-        ? ((currentPeriodMetrics.averageDuration -
-            previousPeriodMetrics.averageDuration) /
+        ? ((currentPeriodMetrics.averageDuration - previousPeriodMetrics.averageDuration) /
             previousPeriodMetrics.averageDuration) *
           100
         : 0,
     changeFailureRateTrend:
       previousPeriodMetrics.changeFailureRate > 0
-        ? ((currentPeriodMetrics.changeFailureRate -
-            previousPeriodMetrics.changeFailureRate) /
+        ? ((currentPeriodMetrics.changeFailureRate - previousPeriodMetrics.changeFailureRate) /
             previousPeriodMetrics.changeFailureRate) *
           100
         : 0,
@@ -361,19 +339,13 @@ export function getDeploymentHealthScore(deployment: Deployment): number {
     (check) => check.status === 'healthy'
   ).length;
   const healthCheckScore =
-    deployment.healthChecks.length > 0
-      ? (healthyChecks / deployment.healthChecks.length) * 20
-      : 0;
+    deployment.healthChecks.length > 0 ? (healthyChecks / deployment.healthChecks.length) * 20 : 0;
   score += healthCheckScore;
 
   // Smoke tests = 20 points
-  const passedTests = deployment.smokeTests.filter(
-    (test) => test.status === 'passed'
-  ).length;
+  const passedTests = deployment.smokeTests.filter((test) => test.status === 'passed').length;
   const smokeTestScore =
-    deployment.smokeTests.length > 0
-      ? (passedTests / deployment.smokeTests.length) * 20
-      : 0;
+    deployment.smokeTests.length > 0 ? (passedTests / deployment.smokeTests.length) * 20 : 0;
   score += smokeTestScore;
 
   // Performance = 20 points

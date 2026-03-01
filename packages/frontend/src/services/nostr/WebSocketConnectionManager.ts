@@ -38,23 +38,22 @@
 
 import { EventEmitter } from 'events';
 import { WebSocketPool } from './WebSocketPool';
-import type {
-  WebSocketManagerConfig,
-  WebSocketConnection,
-  WebSocketOptions,
+import {
+  type WebSocketManagerConfig,
+  type WebSocketConnection,
+  type WebSocketOptions,
   ConnectionState,
-  WebSocketMetadata,
-  ReconnectionState,
-  ReconnectionAttempt,
-  HeartbeatState,
-  ConnectionHealthMetrics,
-  HealthScoreComponents,
-  QuarantineInfo,
-  BandwidthStats,
-  CloseReason,
-  ConnectionManagerMetrics,
-  PerformanceBenchmarks,
-  WebSocketConnectionEvents,
+  type WebSocketMetadata,
+  type ReconnectionState,
+  type ReconnectionAttempt,
+  type HeartbeatState,
+  type ConnectionHealthMetrics,
+  type HealthScoreComponents,
+  type QuarantineInfo,
+  type BandwidthStats,
+  type CloseReason,
+  type ConnectionManagerMetrics,
+  type PerformanceBenchmarks,
   DEFAULT_MANAGER_CONFIG,
   DEFAULT_WEBSOCKET_OPTIONS,
   DEFAULT_RECONNECTION_CONFIG,
@@ -75,7 +74,7 @@ export class WebSocketConnectionManager extends EventEmitter {
   private pools: Map<string, WebSocketPool> = new Map();
   private connections: Map<string, WebSocketConnection> = new Map();
   private messageQueue: Map<string, Array<{ type: string; data: unknown }>> = new Map();
-  private deduplicationCache: Set<string> = new Map();
+  private deduplicationCache: Set<string> = new Set();
 
   private healthCheckTimer?: NodeJS.Timeout;
   private metricsTimer?: NodeJS.Timeout;
@@ -159,10 +158,7 @@ export class WebSocketConnectionManager extends EventEmitter {
   /**
    * Connect to relay
    */
-  async connect(
-    url: string,
-    options?: Partial<WebSocketOptions>
-  ): Promise<WebSocketConnection> {
+  async connect(url: string, options?: Partial<WebSocketOptions>): Promise<WebSocketConnection> {
     const startTime = Date.now();
 
     // Get or create pool for relay
@@ -177,7 +173,9 @@ export class WebSocketConnectionManager extends EventEmitter {
     // Check if we need a new connection or can reuse existing
     const existingConnection = pool.getOptimalConnection();
     if (existingConnection && pool.hasSubscriptionCapacity(existingConnection.metadata.id)) {
-      console.log(`[WebSocketConnectionManager] Reusing connection ${existingConnection.metadata.id}`);
+      console.log(
+        `[WebSocketConnectionManager] Reusing connection ${existingConnection.metadata.id}`
+      );
       return existingConnection;
     }
 
@@ -325,10 +323,7 @@ export class WebSocketConnectionManager extends EventEmitter {
   /**
    * Create new connection object
    */
-  private createConnection(
-    url: string,
-    options?: Partial<WebSocketOptions>
-  ): WebSocketConnection {
+  private createConnection(url: string, options?: Partial<WebSocketOptions>): WebSocketConnection {
     const metadata: WebSocketMetadata = {
       id: this.generateConnectionId(),
       url,
@@ -463,7 +458,8 @@ export class WebSocketConnectionManager extends EventEmitter {
 
     // Calculate delay with exponential backoff
     let delay = Math.min(
-      reconnection.initialDelay * Math.pow(reconnection.backoffMultiplier, state.currentAttempt - 1),
+      reconnection.initialDelay *
+        Math.pow(reconnection.backoffMultiplier, state.currentAttempt - 1),
       reconnection.maxDelay
     );
 
@@ -706,7 +702,9 @@ export class WebSocketConnectionManager extends EventEmitter {
     if (connection.state !== ConnectionState.CONNECTED || !connection.socket) {
       // Queue message for later
       connection.pendingMessages.push({ type: 'user', data: message });
-      console.log(`[WebSocketConnectionManager] Queued message for ${connectionId} (not connected)`);
+      console.log(
+        `[WebSocketConnectionManager] Queued message for ${connectionId} (not connected)`
+      );
       return;
     }
 
@@ -723,7 +721,7 @@ export class WebSocketConnectionManager extends EventEmitter {
       // Clean cache (keep last 1000)
       if (this.deduplicationCache.size > 1000) {
         const firstKey = this.deduplicationCache.values().next().value;
-        this.deduplicationCache.delete(firstKey);
+        this.deduplicationCache.delete(firstKey as string);
       }
     }
 
@@ -740,7 +738,10 @@ export class WebSocketConnectionManager extends EventEmitter {
 
       this.emit('message:sent', connectionId, message);
     } catch (error) {
-      console.error(`[WebSocketConnectionManager] Failed to send message to ${connectionId}:`, error);
+      console.error(
+        `[WebSocketConnectionManager] Failed to send message to ${connectionId}:`,
+        error
+      );
       throw error;
     }
   }
@@ -881,7 +882,7 @@ export class WebSocketConnectionManager extends EventEmitter {
       reliability: 0.25,
       uptime: 0.15,
       throughput: 0.15,
-      errorRate: 0.20,
+      errorRate: 0.2,
     };
 
     const overallScore =
@@ -954,7 +955,9 @@ export class WebSocketConnectionManager extends EventEmitter {
       return;
     }
 
-    console.log(`[WebSocketConnectionManager] Releasing connection ${connection.metadata.id} from quarantine`);
+    console.log(
+      `[WebSocketConnectionManager] Releasing connection ${connection.metadata.id} from quarantine`
+    );
 
     connection.quarantine.active = false;
     this.updateConnectionState(connection, ConnectionState.DISCONNECTED);
@@ -1057,16 +1060,22 @@ export class WebSocketConnectionManager extends EventEmitter {
     pool.on('warmup:needed', (relayUrl: string) => {
       // Create warmup connection
       this.connect(relayUrl).catch((error) => {
-        console.error(`[WebSocketConnectionManager] Warmup connection failed for ${relayUrl}:`, error);
+        console.error(
+          `[WebSocketConnectionManager] Warmup connection failed for ${relayUrl}:`,
+          error
+        );
       });
     });
 
-    pool.on('rebalance:needed', async (data: { fromConnection: string; toConnection: string; subscriptionCount: number }) => {
-      // Handle subscription rebalancing (would need subscription manager integration)
-      console.log(
-        `[WebSocketConnectionManager] Rebalance requested: move ${data.subscriptionCount} subscriptions from ${data.fromConnection} to ${data.toConnection}`
-      );
-    });
+    pool.on(
+      'rebalance:needed',
+      async (data: { fromConnection: string; toConnection: string; subscriptionCount: number }) => {
+        // Handle subscription rebalancing (would need subscription manager integration)
+        console.log(
+          `[WebSocketConnectionManager] Rebalance requested: move ${data.subscriptionCount} subscriptions from ${data.fromConnection} to ${data.toConnection}`
+        );
+      }
+    );
   }
 
   /**
@@ -1255,10 +1264,8 @@ export class WebSocketConnectionManager extends EventEmitter {
     const p99MessageLatency = sorted[Math.floor(sorted.length * 0.99)] || 0;
 
     const metrics = this.getMetrics();
-    const messagesPerSecond =
-      metrics.bandwidth.sendRate + metrics.bandwidth.receiveRate;
-    const throughputBytesPerSecond =
-      metrics.bandwidth.bytesSent + metrics.bandwidth.bytesReceived;
+    const messagesPerSecond = metrics.bandwidth.sendRate + metrics.bandwidth.receiveRate;
+    const throughputBytesPerSecond = metrics.bandwidth.bytesSent + metrics.bandwidth.bytesReceived;
 
     const allConnections = Array.from(this.connections.values());
     const totalAttempts = allConnections.reduce(

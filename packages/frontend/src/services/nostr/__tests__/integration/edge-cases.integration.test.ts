@@ -17,7 +17,7 @@ import { EventCacheService } from '../../EventCacheService';
 import { EventDeduplicationService } from '../../EventDeduplicationService';
 import { SubscriptionManagerService } from '../../SubscriptionManagerService';
 import type { NostrEvent, UnsignedNostrEvent } from '@sovren/shared/types/nostr';
-import { MockRelayServer, TestDataFactory, PerformanceMeasurement, wait } from './test-helpers';
+import { TestDataFactory, PerformanceMeasurement } from './test-helpers';
 
 // Mock globals
 const mockIndexedDB = {
@@ -53,8 +53,16 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
   let perfMeasure: PerformanceMeasurement;
 
   beforeAll(async () => {
-    Object.defineProperty(globalThis, "indexedDB", { value: mockIndexedDB as any, writable: true, configurable: true });
-    Object.defineProperty(globalThis, "crypto", { value: mockCrypto as any, writable: true, configurable: true });
+    Object.defineProperty(globalThis, 'indexedDB', {
+      value: mockIndexedDB as any,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(globalThis, 'crypto', {
+      value: mockCrypto as any,
+      writable: true,
+      configurable: true,
+    });
 
     keyManagement = KeyManagementService.getInstance();
     relayPool = RelayPoolManager.getInstance();
@@ -209,7 +217,7 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
       ]);
 
       expect(keys).toHaveLength(5);
-      const uniqueKeys = new Set(keys.map(k => k.publicKey));
+      const uniqueKeys = new Set(keys.map((k) => k.publicKey));
       expect(uniqueKeys.size).toBe(5); // All unique
     });
 
@@ -259,7 +267,7 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
 
       const { duration } = await perfMeasure.measure('publish-100-events', async () => {
         const signed = await Promise.all(
-          events.map(e => keyManagement.signEvent(keyPair.keyId, e))
+          events.map((e) => keyManagement.signEvent(keyPair.keyId, e))
         );
 
         // Mock publishing
@@ -267,11 +275,13 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
           { relay: 'wss://test.relay', success: true, latency: 100 },
         ]);
 
-        return Promise.all(signed.map(e => relayPool.publishEvent(e)));
+        return Promise.all(signed.map((e) => relayPool.publishEvent(e)));
       });
 
       const eventsPerSecond = (eventCount / duration) * 1000;
-      console.log(`[Stress Test] Published ${eventCount} events in ${duration.toFixed(2)}ms (${eventsPerSecond.toFixed(0)} events/sec)`);
+      console.log(
+        `[Stress Test] Published ${eventCount} events in ${duration.toFixed(2)}ms (${eventsPerSecond.toFixed(0)} events/sec)`
+      );
 
       expect(duration).toBeLessThan(10000); // Should complete in 10 seconds
     });
@@ -314,19 +324,21 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
       }));
 
       const { duration: addDuration } = await perfMeasure.measure('cache-add-1000', async () => {
-        events.forEach(e => eventCache.addEvent(e));
+        events.forEach((e) => eventCache.addEvent(e));
         return Promise.resolve();
       });
 
       const { duration: getDuration } = await perfMeasure.measure('cache-get-1000', async () => {
-        events.forEach(e => eventCache.getEvent(e.id));
+        events.forEach((e) => eventCache.getEvent(e.id));
         return Promise.resolve();
       });
 
       const avgAddTime = addDuration / operationCount;
       const avgGetTime = getDuration / operationCount;
 
-      console.log(`[Stress Test] Cache add: ${avgAddTime.toFixed(4)}ms/op, get: ${avgGetTime.toFixed(4)}ms/op`);
+      console.log(
+        `[Stress Test] Cache add: ${avgAddTime.toFixed(4)}ms/op, get: ${avgGetTime.toFixed(4)}ms/op`
+      );
 
       expect(avgAddTime).toBeLessThan(1); // Should be sub-millisecond
       expect(avgGetTime).toBeLessThan(0.1); // Cache hits should be very fast
@@ -402,7 +414,7 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
         keyManagement.listKeys(),
       ]);
 
-      const fulfilled = operations.filter(op => op.status === 'fulfilled');
+      const fulfilled = operations.filter((op) => op.status === 'fulfilled');
       expect(fulfilled.length).toBe(4);
     });
 
@@ -420,15 +432,13 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
       ]);
 
       const signedEvents = await Promise.all(
-        events.map(e => keyManagement.signEvent(keyPair.keyId, e))
+        events.map((e) => keyManagement.signEvent(keyPair.keyId, e))
       );
 
-      const publishResults = await Promise.all(
-        signedEvents.map(e => relayPool.publishEvent(e))
-      );
+      const publishResults = await Promise.all(signedEvents.map((e) => relayPool.publishEvent(e)));
 
       expect(publishResults).toHaveLength(3);
-      expect(publishResults.every(r => r[0].success)).toBe(true);
+      expect(publishResults.every((r) => r[0].success)).toBe(true);
     });
 
     it('should handle concurrent cache reads and writes', async () => {
@@ -450,7 +460,7 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
         Promise.resolve(eventCache.getEvent(event.id)),
       ]);
 
-      expect(operations.every(op => op.status === 'fulfilled')).toBe(true);
+      expect(operations.every((op) => op.status === 'fulfilled')).toBe(true);
     });
 
     it('should handle concurrent subscriptions with same filter', async () => {
@@ -575,7 +585,9 @@ describe('NOSTR Edge Cases & Stress Tests', () => {
     });
 
     it('should handle subscription creation/destruction cycles', async () => {
-      vi.spyOn(subscriptionManager, 'subscribe').mockImplementation(async () => Math.random().toString());
+      vi.spyOn(subscriptionManager, 'subscribe').mockImplementation(async () =>
+        Math.random().toString()
+      );
       vi.spyOn(subscriptionManager, 'unsubscribe').mockResolvedValue(undefined);
 
       for (let i = 0; i < 50; i++) {

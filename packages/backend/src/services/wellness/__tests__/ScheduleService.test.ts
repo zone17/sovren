@@ -86,7 +86,10 @@ describe('ScheduleService', () => {
       for (let w = 0; w < 4; w++) {
         for (let d = 0; d < 7; d++) {
           const dayNum = 10 + w * 7 + d;
-          const dateStr = dayNum <= 31 ? `2026-01-${String(dayNum).padStart(2, '0')}` : `2026-02-${String(dayNum - 31).padStart(2, '0')}`;
+          const dateStr =
+            dayNum <= 31
+              ? `2026-01-${String(dayNum).padStart(2, '0')}`
+              : `2026-02-${String(dayNum - 31).padStart(2, '0')}`;
           patterns.push({
             date: dateStr,
             content_time_mins: 300,

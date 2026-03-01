@@ -37,7 +37,7 @@ import { createHash } from 'crypto';
 interface LegacyRelayConfig {
   url: string;
   source: 'hardcoded' | 'localStorage' | 'config';
-  location?: string;  // File path or storage key
+  location?: string; // File path or storage key
   read?: boolean;
   write?: boolean;
 }
@@ -168,7 +168,6 @@ class RelayConfigMigration {
         warnings: this.warnings,
         report,
       };
-
     } catch (error) {
       const err = error as Error;
       console.error('❌ Migration failed:', err.message);
@@ -205,7 +204,10 @@ class RelayConfigMigration {
     const localStoragePath = path.join(BACKUP_DIR, 'localStorage.json');
 
     try {
-      const exists = await fs.access(localStoragePath).then(() => true).catch(() => false);
+      const exists = await fs
+        .access(localStoragePath)
+        .then(() => true)
+        .catch(() => false);
       if (exists) {
         const data = JSON.parse(await fs.readFile(localStoragePath, 'utf-8'));
 
@@ -241,13 +243,16 @@ class RelayConfigMigration {
       const fullPath = path.join(process.cwd(), configPath);
 
       try {
-        const exists = await fs.access(fullPath).then(() => true).catch(() => false);
+        const exists = await fs
+          .access(fullPath)
+          .then(() => true)
+          .catch(() => false);
         if (!exists) continue;
 
         const content = await fs.readFile(fullPath, 'utf-8');
         const relayUrls = this.extractRelayUrls(content);
 
-        relayUrls.forEach(url => {
+        relayUrls.forEach((url) => {
           if (!this.isDuplicate(url)) {
             this.legacyRelays.push({
               url,
@@ -278,7 +283,10 @@ class RelayConfigMigration {
       const fullPath = path.join(process.cwd(), searchPath);
 
       try {
-        const exists = await fs.access(fullPath).then(() => true).catch(() => false);
+        const exists = await fs
+          .access(fullPath)
+          .then(() => true)
+          .catch(() => false);
         if (!exists) continue;
 
         await this.searchDirectory(fullPath);
@@ -303,7 +311,7 @@ class RelayConfigMigration {
         const content = await fs.readFile(fullPath, 'utf-8');
         const relayUrls = this.extractRelayUrls(content);
 
-        relayUrls.forEach(url => {
+        relayUrls.forEach((url) => {
           if (!this.isDuplicate(url)) {
             this.legacyRelays.push({
               url,
@@ -326,15 +334,15 @@ class RelayConfigMigration {
     const matches = content.match(relayRegex) || [];
 
     return matches
-      .map(match => match.replace(/['"]/g, ''))
-      .filter(url => url.startsWith('wss://') || url.startsWith('ws://'));
+      .map((match) => match.replace(/['"]/g, ''))
+      .filter((url) => url.startsWith('wss://') || url.startsWith('ws://'));
   }
 
   /**
    * Check if relay URL is already discovered
    */
   private isDuplicate(url: string): boolean {
-    return this.legacyRelays.some(relay => relay.url === url);
+    return this.legacyRelays.some((relay) => relay.url === url);
   }
 
   /**
@@ -346,7 +354,7 @@ class RelayConfigMigration {
     // Group by URL and merge configurations
     const relayMap = new Map<string, LegacyRelayConfig[]>();
 
-    this.legacyRelays.forEach(relay => {
+    this.legacyRelays.forEach((relay) => {
       const existing = relayMap.get(relay.url) || [];
       existing.push(relay);
       relayMap.set(relay.url, existing);
@@ -356,14 +364,14 @@ class RelayConfigMigration {
     let priority = 1;
 
     relayMap.forEach((configs, url) => {
-      const read = configs.some(c => c.read !== false);
-      const write = configs.some(c => c.write !== false);
+      const read = configs.some((c) => c.read !== false);
+      const write = configs.some((c) => c.write !== false);
 
       this.migratedRelays.push({
         url,
         read,
         write,
-        search: true,  // Enable search by default
+        search: true, // Enable search by default
         priority: priority++,
         metadata: this.inferMetadata(url),
       });
@@ -466,7 +474,7 @@ export const getSearchRelays = (): string[] => {
   private async updateEnvironmentVariables(): Promise<void> {
     console.log('🔧 Updating environment variables...');
 
-    const relayUrls = this.migratedRelays.map(r => r.url).join(',');
+    const relayUrls = this.migratedRelays.map((r) => r.url).join(',');
     const envVar = `NOSTR_RELAYS="${relayUrls}"\n`;
 
     // Update .env file
@@ -515,7 +523,10 @@ export const getSearchRelays = (): string[] => {
 
     // Backup relay config file if exists
     try {
-      const exists = await fs.access(RELAY_CONFIG_PATH).then(() => true).catch(() => false);
+      const exists = await fs
+        .access(RELAY_CONFIG_PATH)
+        .then(() => true)
+        .catch(() => false);
       if (exists) {
         const content = await fs.readFile(RELAY_CONFIG_PATH, 'utf-8');
         await fs.writeFile(path.join(backupDir, 'relays.ts'), content);
@@ -558,19 +569,19 @@ export const getSearchRelays = (): string[] => {
     }
 
     // Validate relay URLs
-    this.migratedRelays.forEach(relay => {
+    this.migratedRelays.forEach((relay) => {
       if (!relay.url.startsWith('wss://') && !relay.url.startsWith('ws://')) {
         issues.push(`Invalid relay URL: ${relay.url}`);
       }
     });
 
     // Validate at least one read relay
-    if (!this.migratedRelays.some(r => r.read)) {
+    if (!this.migratedRelays.some((r) => r.read)) {
       issues.push('No read relays configured');
     }
 
     // Validate at least one write relay
-    if (!this.migratedRelays.some(r => r.write)) {
+    if (!this.migratedRelays.some((r) => r.write)) {
       issues.push('No write relays configured');
     }
 
@@ -591,13 +602,16 @@ export const getSearchRelays = (): string[] => {
 
     console.log('\n📋 Migration Summary:');
     console.log(`   Legacy relays found: ${this.legacyRelays.length}`);
-    console.log(`   Unique URLs: ${new Set(this.legacyRelays.map(r => r.url)).size}`);
+    console.log(`   Unique URLs: ${new Set(this.legacyRelays.map((r) => r.url)).size}`);
     console.log('\n   Sources:');
 
-    const sourceCounts = this.legacyRelays.reduce((acc, r) => {
-      acc[r.source] = (acc[r.source] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const sourceCounts = this.legacyRelays.reduce(
+      (acc, r) => {
+        acc[r.source] = (acc[r.source] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     Object.entries(sourceCounts).forEach(([source, count]) => {
       console.log(`     - ${source}: ${count}`);
@@ -646,12 +660,12 @@ export const getSearchRelays = (): string[] => {
 
     if (this.warnings.length > 0) {
       console.log(`\n⚠️  Warnings: ${this.warnings.length}`);
-      this.warnings.forEach(w => console.log(`   - ${w}`));
+      this.warnings.forEach((w) => console.log(`   - ${w}`));
     }
 
     if (this.errors.length > 0) {
       console.log(`\n❌ Errors: ${this.errors.length}`);
-      this.errors.forEach(e => console.log(`   - ${e}`));
+      this.errors.forEach((e) => console.log(`   - ${e}`));
     }
 
     console.log('='.repeat(60) + '\n');
@@ -712,7 +726,7 @@ async function main() {
 
 // Run if executed directly
 if (require.main === module) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error('❌ Fatal error:', error);
     process.exit(1);
   });

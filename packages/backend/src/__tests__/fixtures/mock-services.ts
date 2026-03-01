@@ -30,7 +30,7 @@ export function createMockLogger(): ILogger {
     getLogs: () => logs,
     clearLogs: () => {
       logs.length = 0;
-    }
+    },
   };
 }
 
@@ -53,7 +53,7 @@ export function createMockDatabase(config?: { real?: boolean }): any {
           return { rows: [], rowCount: 0 };
         },
         commit: async () => {},
-        rollback: async () => {}
+        rollback: async () => {},
       });
     },
 
@@ -95,7 +95,7 @@ export function createMockDatabase(config?: { real?: boolean }): any {
 
     clear: () => {
       data.clear();
-    }
+    },
   };
 }
 
@@ -119,7 +119,7 @@ export function createMockCache(config?: { real?: boolean }): ICacheService {
     set: async <T>(key: string, value: T, ttl?: number): Promise<void> => {
       cache.set(key, {
         value,
-        expiresAt: ttl ? Date.now() + ttl * 1000 : undefined
+        expiresAt: ttl ? Date.now() + ttl * 1000 : undefined,
       });
     },
 
@@ -143,14 +143,14 @@ export function createMockCache(config?: { real?: boolean }): ICacheService {
     },
 
     increment: async (key: string, amount = 1): Promise<number> => {
-      const current = await cache.get(key) || 0;
+      const current = (await cache.get(key)) || 0;
       const newValue = (current as number) + amount;
       await cache.set(key, newValue);
       return newValue;
     },
 
     getSize: () => cache.size,
-    getKeys: () => Array.from(cache.keys())
+    getKeys: () => Array.from(cache.keys()),
   };
 }
 
@@ -166,7 +166,7 @@ export function createMockEventBus(config?: { real?: boolean }): IEventBusServic
       publishedEvents.push({ event, payload, timestamp: new Date() });
 
       const handlers = subscribers.get(event) || [];
-      await Promise.all(handlers.map(handler => handler(payload)));
+      await Promise.all(handlers.map((handler) => handler(payload)));
     },
 
     subscribe: <T>(event: string, handler: (payload: T) => void | Promise<void>): void => {
@@ -191,7 +191,7 @@ export function createMockEventBus(config?: { real?: boolean }): IEventBusServic
     clear: () => {
       subscribers.clear();
       publishedEvents.length = 0;
-    }
+    },
   };
 }
 
@@ -212,7 +212,7 @@ export function createMockLightningService(): any {
         amount,
         description,
         expires_at: Math.floor(Date.now() / 1000) + 3600,
-        settled: false
+        settled: false,
       };
       invoices.set(paymentHash, invoice);
       return invoice;
@@ -238,11 +238,11 @@ export function createMockLightningService(): any {
         payment_hash: paymentHash,
         payment_request: paymentRequest,
         status: 'pending',
-        created_at: Date.now()
+        created_at: Date.now(),
       };
       payments.set(paymentHash, payment);
       return payment;
-    }
+    },
   };
 }
 
@@ -263,14 +263,14 @@ export function createMockEmailService(): any {
       return {
         messageId: `msg_${Date.now()}`,
         accepted: [to],
-        rejected: []
+        rejected: [],
       };
     },
 
     getSentEmails: () => sentEmails,
     clearSentEmails: () => {
       sentEmails.length = 0;
-    }
+    },
   };
 }
 
@@ -285,7 +285,7 @@ export function createMockNostrService(): any {
       publishedEvents.push({ ...event, publishedAt: new Date() });
       return {
         success: true,
-        eventId: event.id
+        eventId: event.id,
       };
     },
 
@@ -297,7 +297,7 @@ export function createMockNostrService(): any {
     getPublishedEvents: () => publishedEvents,
     clearPublishedEvents: () => {
       publishedEvents.length = 0;
-    }
+    },
   };
 }
 
@@ -308,7 +308,7 @@ export function createMockExchangeRateService(): any {
   const rates: Record<string, number> = {
     'BTC/USD': 45000,
     'BTC/EUR': 40000,
-    'BTC/SAT': 100000000
+    'BTC/SAT': 100000000,
   };
 
   return {
@@ -318,6 +318,6 @@ export function createMockExchangeRateService(): any {
 
     setRate: (pair: string, rate: number) => {
       rates[pair] = rate;
-    }
+    },
   };
 }

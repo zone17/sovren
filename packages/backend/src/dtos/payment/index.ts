@@ -236,10 +236,13 @@ export interface PaymentAnalyticsResponseDTO {
     currency: string;
     count: number;
   }>;
-  paymentMethods: Record<string, {
-    count: number;
-    amount: number;
-  }>;
+  paymentMethods: Record<
+    string,
+    {
+      count: number;
+      amount: number;
+    }
+  >;
   topProducts: Array<{
     productId: string;
     name: string;

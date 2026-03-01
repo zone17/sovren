@@ -83,7 +83,10 @@ export class FingerprintService implements IFingerprintService {
       fingerprints.push(fp);
     }
 
-    this.logger.info('Fingerprint created', { contentId: input.content_id, type: input.content_type });
+    this.logger.info('Fingerprint created', {
+      contentId: input.content_id,
+      type: input.content_type,
+    });
     return { content_id: input.content_id, fingerprints, created_at: now };
   }
 
@@ -144,8 +147,9 @@ export class FingerprintService implements IFingerprintService {
 
   async compare(creatorId: string, input: CompareInput): Promise<CompareResult> {
     // Time-window filter: default 90 days, configurable via input or env
-    const windowDays = (input as any).windowDays
-      || parseInt(process.env.FINGERPRINT_COMPARE_WINDOW_DAYS || '90', 10);
+    const windowDays =
+      (input as any).windowDays ||
+      parseInt(process.env.FINGERPRINT_COMPARE_WINDOW_DAYS || '90', 10);
     const fullScan = (input as any).fullScan === true;
 
     let query = this.db
@@ -286,7 +290,7 @@ export class FingerprintService implements IFingerprintService {
 
   private getMatchLevel(similarity: number): MatchLevel {
     if (similarity > 0.95) return 'exact_copy';
-    if (similarity >= 0.70) return 'derivative';
+    if (similarity >= 0.7) return 'derivative';
     return 'coincidental';
   }
 

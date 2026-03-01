@@ -32,9 +32,7 @@ const AuthErrorFallback: React.FC<AuthErrorFallbackProps> = ({ error, resetError
             />
           </svg>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Authentication Error</h2>
-          <p className="text-gray-600">
-            We encountered an issue with the authentication system.
-          </p>
+          <p className="text-gray-600">We encountered an issue with the authentication system.</p>
         </div>
 
         {process.env.NODE_ENV === 'development' && (
@@ -51,7 +49,9 @@ const AuthErrorFallback: React.FC<AuthErrorFallbackProps> = ({ error, resetError
             Try Again
           </button>
           <button
-            onClick={() => { window.location.href = '/'; }}
+            onClick={() => {
+              window.location.href = '/';
+            }}
             className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
             Go to Home

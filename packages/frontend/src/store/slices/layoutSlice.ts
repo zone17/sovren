@@ -150,10 +150,7 @@ const layoutSlice = createSlice({
     resizePanel: (state, action: PayloadAction<{ id: string; size: number }>) => {
       const panel = state.panels[action.payload.id];
       if (panel) {
-        panel.size = Math.max(
-          panel.minSize,
-          Math.min(panel.maxSize, action.payload.size)
-        );
+        panel.size = Math.max(panel.minSize, Math.min(panel.maxSize, action.payload.size));
       }
     },
 
@@ -174,14 +171,14 @@ const layoutSlice = createSlice({
     floatPanel: (state, action: PayloadAction<string>) => {
       if (!state.floatingPanels.includes(action.payload)) {
         state.floatingPanels.push(action.payload);
-        state.dockedPanels = state.dockedPanels.filter(id => id !== action.payload);
+        state.dockedPanels = state.dockedPanels.filter((id) => id !== action.payload);
       }
     },
 
     dockPanel: (state, action: PayloadAction<string>) => {
       if (!state.dockedPanels.includes(action.payload)) {
         state.dockedPanels.push(action.payload);
-        state.floatingPanels = state.floatingPanels.filter(id => id !== action.payload);
+        state.floatingPanels = state.floatingPanels.filter((id) => id !== action.payload);
       }
     },
 
@@ -204,7 +201,7 @@ const layoutSlice = createSlice({
 
       // Auto-collapse panels on mobile
       if (action.payload === 'mobile') {
-        Object.keys(state.panels).forEach(key => {
+        Object.keys(state.panels).forEach((key) => {
           state.panels[key].isCollapsed = true;
         });
         state.isMobileMenuOpen = false;
@@ -233,7 +230,7 @@ const layoutSlice = createSlice({
       state.focusModeEnabled = !state.focusModeEnabled;
       if (state.focusModeEnabled) {
         // Collapse all panels in focus mode
-        Object.keys(state.panels).forEach(key => {
+        Object.keys(state.panels).forEach((key) => {
           state.panels[key].isCollapsed = true;
         });
       }
@@ -244,7 +241,7 @@ const layoutSlice = createSlice({
       if (state.zenModeEnabled) {
         state.focusModeEnabled = true;
         // Hide everything except content
-        Object.keys(state.panels).forEach(key => {
+        Object.keys(state.panels).forEach((key) => {
           state.panels[key].isCollapsed = true;
         });
       }
@@ -313,14 +310,13 @@ export const {
 export const selectWorkspaceLayout = (state: { layout: LayoutState }) =>
   state.layout.workspaceLayout;
 
-export const selectPanel = (id: string) =>
-  (state: { layout: LayoutState }) => state.layout.panels[id];
+export const selectPanel = (id: string) => (state: { layout: LayoutState }) =>
+  state.layout.panels[id];
 
-export const selectViewMode = (section: string) =>
-  (state: { layout: LayoutState }) => state.layout.viewModes[section] || 'list';
+export const selectViewMode = (section: string) => (state: { layout: LayoutState }) =>
+  state.layout.viewModes[section] || 'list';
 
-export const selectBreakpoint = (state: { layout: LayoutState }) =>
-  state.layout.breakpoint;
+export const selectBreakpoint = (state: { layout: LayoutState }) => state.layout.breakpoint;
 
 export const selectIsMobile = (state: { layout: LayoutState }) =>
   state.layout.breakpoint === 'mobile';
@@ -328,10 +324,8 @@ export const selectIsMobile = (state: { layout: LayoutState }) =>
 export const selectIsTablet = (state: { layout: LayoutState }) =>
   state.layout.breakpoint === 'tablet';
 
-export const selectFocusMode = (state: { layout: LayoutState }) =>
-  state.layout.focusModeEnabled;
+export const selectFocusMode = (state: { layout: LayoutState }) => state.layout.focusModeEnabled;
 
-export const selectZenMode = (state: { layout: LayoutState }) =>
-  state.layout.zenModeEnabled;
+export const selectZenMode = (state: { layout: LayoutState }) => state.layout.zenModeEnabled;
 
 export default layoutSlice.reducer;

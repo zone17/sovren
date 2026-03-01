@@ -14,15 +14,11 @@ import type {
   CurrencyFormatOptions,
   FormattedCurrency,
   CurrencyStatistics,
-  SatoshiConversion,
   RateStalenessResult,
   ExchangeRateUpdateEvent,
-  CurrencyPair
+  CurrencyPair,
 } from '../../types/currency';
-import {
-  Currency,
-  ExchangeRateProvider,
-} from '../../types/currency';
+import { Currency, ExchangeRateProvider } from '../../types/currency';
 
 /**
  * Currency service interface
@@ -119,12 +115,7 @@ export interface ICurrencyService {
    * @param rate - Exchange rate
    * @param expiresIn - Expiration time in seconds (optional)
    */
-  setManualRate(
-    from: Currency,
-    to: Currency,
-    rate: number,
-    expiresIn?: number
-  ): Promise<void>;
+  setManualRate(from: Currency, to: Currency, rate: number, expiresIn?: number): Promise<void>;
 
   /**
    * HISTORICAL RATES
@@ -137,11 +128,7 @@ export interface ICurrencyService {
    * @param timestamp - Historical timestamp
    * @returns Historical rate
    */
-  getHistoricalRate(
-    from: Currency,
-    to: Currency,
-    timestamp: Date
-  ): Promise<HistoricalRate | null>;
+  getHistoricalRate(from: Currency, to: Currency, timestamp: Date): Promise<HistoricalRate | null>;
 
   /**
    * Query historical rates
@@ -157,11 +144,7 @@ export interface ICurrencyService {
    * @param days - Number of days (default: 30)
    * @returns Array of historical rates
    */
-  getRateTrend(
-    from: Currency,
-    to: Currency,
-    days?: number
-  ): Promise<HistoricalRate[]>;
+  getRateTrend(from: Currency, to: Currency, days?: number): Promise<HistoricalRate[]>;
 
   /**
    * CURRENCY FORMATTING
@@ -174,11 +157,7 @@ export interface ICurrencyService {
    * @param options - Formatting options
    * @returns Formatted currency string
    */
-  format(
-    amount: number,
-    currency: Currency,
-    options?: CurrencyFormatOptions
-  ): FormattedCurrency;
+  format(amount: number, currency: Currency, options?: CurrencyFormatOptions): FormattedCurrency;
 
   /**
    * Format satoshis with unit

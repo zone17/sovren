@@ -25,7 +25,7 @@
  * 4. Content hash comparison (fallback)
  */
 
-import type { NostrEvent } from '@shared/types/nostr';
+import type { NostrEvent } from '@shared/types/nostr/index';
 
 // ========================================
 // Utility Functions (Local Implementations)
@@ -53,7 +53,7 @@ function getEventCoordinate(event: NostrEvent): string | null {
     return null;
   }
 
-  const dTag = event.tags.find(tag => tag[0] === 'd');
+  const dTag = event.tags.find((tag) => tag[0] === 'd');
   const identifier = dTag?.[1] || '';
 
   return `${event.kind}:${event.pubkey}:${identifier}`;
@@ -338,10 +338,7 @@ export class EventDeduplicationService {
   /**
    * Check if event is a duplicate
    */
-  public async checkDuplicate(
-    event: NostrEvent,
-    relay?: string
-  ): Promise<DeduplicationResult> {
+  public async checkDuplicate(event: NostrEvent, relay?: string): Promise<DeduplicationResult> {
     const startTime = performance.now();
 
     try {
@@ -610,10 +607,7 @@ export class EventDeduplicationService {
   }
 
   private isReplaceableEventKind(kind: number): boolean {
-    return (
-      isReplaceableEvent(kind) ||
-      isParameterizedReplaceableEvent(kind)
-    );
+    return isReplaceableEvent(kind) || isParameterizedReplaceableEvent(kind);
   }
 
   private getReplaceableEventKey(event: NostrEvent): string {
@@ -632,7 +626,7 @@ export class EventDeduplicationService {
 
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
 
@@ -683,16 +677,12 @@ export class EventDeduplicationService {
       duplicateCount: this.stats.duplicateCount,
       uniqueCount: this.stats.uniqueCount,
       duplicateRate:
-        this.stats.totalChecks > 0
-          ? this.stats.duplicateCount / this.stats.totalChecks
-          : 0,
+        this.stats.totalChecks > 0 ? this.stats.duplicateCount / this.stats.totalChecks : 0,
       cacheSize: this.eventCache.size(),
       replaceableCount: this.stats.replaceableCount,
       evictions: this.stats.evictions,
       averageCheckTime:
-        this.stats.totalChecks > 0
-          ? this.stats.totalCheckTime / this.stats.totalChecks
-          : 0,
+        this.stats.totalChecks > 0 ? this.stats.totalCheckTime / this.stats.totalChecks : 0,
       perRelayStats,
       memoryUsage,
     };

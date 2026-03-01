@@ -51,7 +51,11 @@ describe('BurnoutRiskGauge', () => {
   });
 
   it('shows error state', () => {
-    mockUseBurnoutScore.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fail') });
+    mockUseBurnoutScore.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('fail'),
+    });
     render(<BurnoutRiskGauge />, { wrapper: createWrapper() });
     expect(screen.getByText('Failed to load burnout risk score.')).toBeInTheDocument();
   });

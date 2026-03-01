@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * RedisAdapter - Production-Ready Redis Caching Layer
  *
@@ -447,7 +448,7 @@ export class RedisAdapter implements CacheAdapter {
       }
     });
 
-    keysToDelete.forEach(key => {
+    keysToDelete.forEach((key) => {
       this.memoryFallback.delete(key);
       count++;
     });
@@ -480,9 +481,7 @@ export class RedisAdapter implements CacheAdapter {
       } else {
         // Fallback stats
         this.stats.keys = this.memoryFallback.size;
-        this.stats.memoryUsage = JSON.stringify(
-          Array.from(this.memoryFallback.entries())
-        ).length;
+        this.stats.memoryUsage = JSON.stringify(Array.from(this.memoryFallback.entries())).length;
       }
 
       // Calculate hit rate

@@ -43,12 +43,11 @@ export const BYOKSetup: React.FC = () => {
     }
   };
 
-  const handleFieldChange = (field: keyof BYOKSubmitPayload) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (status !== 'idle') reset();
-  };
+  const handleFieldChange =
+    (field: keyof BYOKSubmitPayload) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
+      if (status !== 'idle') reset();
+    };
 
   const inputClass =
     'w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-400';
@@ -180,8 +179,8 @@ export const BYOKSetup: React.FC = () => {
           ))}
 
           <p className="text-xs text-gray-400">
-            Keys are encrypted with AES-256-GCM and stored separately from your OAuth tokens.
-            Sovren never uses your keys for any purpose other than reading your X/Twitter data.
+            Keys are encrypted with AES-256-GCM and stored separately from your OAuth tokens. Sovren
+            never uses your keys for any purpose other than reading your X/Twitter data.
           </p>
 
           <div className="flex justify-end gap-2">

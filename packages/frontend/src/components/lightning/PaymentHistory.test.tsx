@@ -27,7 +27,11 @@ vi.mock('../../lib/api/lightningApi', () => ({
     getUserPaymentHistory: vi.fn(),
   },
   LightningApiError: class LightningApiError extends Error {
-    constructor(message: string, public code: string, public statusCode?: number) {
+    constructor(
+      message: string,
+      public code: string,
+      public statusCode?: number
+    ) {
       super(message);
       this.name = 'LightningApiError';
     }
@@ -662,10 +666,7 @@ describe('PaymentHistory', () => {
         createdAt: Date.now() - 86400000 * 30, // 30 days ago
       });
 
-      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([
-        recentPayment,
-        oldPayment,
-      ]);
+      (lightningApi.getUserPaymentHistory as any).mockResolvedValue([recentPayment, oldPayment]);
 
       render(<PaymentHistory />, { wrapper: createWrapper() });
 

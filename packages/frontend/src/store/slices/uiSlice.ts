@@ -141,7 +141,10 @@ const uiSlice = createSlice({
     },
 
     // Notification actions
-    addNotification: (state, action: PayloadAction<Omit<Notification, 'id' | 'createdAt' | 'read'>>) => {
+    addNotification: (
+      state,
+      action: PayloadAction<Omit<Notification, 'id' | 'createdAt' | 'read'>>
+    ) => {
       const notification: Notification = {
         ...action.payload,
         id: `notif-${Date.now()}-${Math.random()}`,

@@ -5,10 +5,7 @@
  * Part of Epic 005 - Backend Service Refactoring
  */
 
-import type {
-  UserPreferences,
-  PreferenceChangeHistory
-} from '../../types/user-preferences';
+import type { UserPreferences, PreferenceChangeHistory } from '../../types/user-preferences';
 
 /**
  * Repository interface for user preferences data access
@@ -23,7 +20,11 @@ export interface IUserPreferencesRepository {
   // History operations
   addHistoryEntry(entry: PreferenceChangeHistory): Promise<void>;
   getHistory(userId: string, limit?: number, offset?: number): Promise<PreferenceChangeHistory[]>;
-  getFieldHistory(userId: string, field: string, limit?: number): Promise<PreferenceChangeHistory[]>;
+  getFieldHistory(
+    userId: string,
+    field: string,
+    limit?: number
+  ): Promise<PreferenceChangeHistory[]>;
 }
 
 /**
@@ -43,10 +44,7 @@ export class UserPreferencesRepository implements IUserPreferencesRepository {
     return preferences;
   }
 
-  async update(
-    userId: string,
-    updates: Partial<UserPreferences>
-  ): Promise<UserPreferences> {
+  async update(userId: string, updates: Partial<UserPreferences>): Promise<UserPreferences> {
     const existing = await this.findById(userId);
     if (!existing) {
       throw new Error(`Preferences not found for user: ${userId}`);
@@ -57,7 +55,7 @@ export class UserPreferencesRepository implements IUserPreferencesRepository {
       ...updates,
       userId,
       updatedAt: new Date(),
-      version: existing.version + 1
+      version: existing.version + 1,
     };
 
     this.preferences.set(userId, updated);
@@ -82,11 +80,7 @@ export class UserPreferencesRepository implements IUserPreferencesRepository {
     this.history.set(entry.userId, userHistory);
   }
 
-  async getHistory(
-    userId: string,
-    limit = 100,
-    offset = 0
-  ): Promise<PreferenceChangeHistory[]> {
+  async getHistory(userId: string, limit = 100, offset = 0): Promise<PreferenceChangeHistory[]> {
     const userHistory = this.history.get(userId) || [];
     return userHistory
       .sort((a, b) => b.changedAt.getTime() - a.changedAt.getTime())
@@ -100,7 +94,7 @@ export class UserPreferencesRepository implements IUserPreferencesRepository {
   ): Promise<PreferenceChangeHistory[]> {
     const userHistory = this.history.get(userId) || [];
     return userHistory
-      .filter(entry => entry.field === field)
+      .filter((entry) => entry.field === field)
       .sort((a, b) => b.changedAt.getTime() - a.changedAt.getTime())
       .slice(0, limit);
   }

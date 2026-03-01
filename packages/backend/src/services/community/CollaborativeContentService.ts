@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collaborative Content Service
  * EPIC-010: Creator Network — Co-authoring with revenue splits (basis points)

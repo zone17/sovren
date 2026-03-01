@@ -279,7 +279,9 @@ describe('Cache Performance Tests', () => {
       const l1Cache = new Map<string, any>(); // Memory (fast)
       const l2Cache = new Map<string, any>(); // Redis (medium)
 
-      async function getMultiLayer(key: string): Promise<{ value: any; layer: string; latency: number }> {
+      async function getMultiLayer(
+        key: string
+      ): Promise<{ value: any; layer: string; latency: number }> {
         const start = performance.now();
 
         // L1: Memory cache

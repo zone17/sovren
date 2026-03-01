@@ -17,7 +17,8 @@ import {
 } from '@aws-sdk/client-secrets-manager';
 
 // Only run these tests if LOCALSTACK_ENDPOINT is set
-const shouldRunIntegrationTests = process.env.LOCALSTACK_ENDPOINT || process.env.RUN_INTEGRATION_TESTS === 'true';
+const shouldRunIntegrationTests =
+  process.env.LOCALSTACK_ENDPOINT || process.env.RUN_INTEGRATION_TESTS === 'true';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 
@@ -89,7 +90,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new DeleteSecretCommand({
           SecretId: testSecretName,
           ForceDeleteWithoutRecovery: true,
-        }),
+        })
       );
     } catch (error) {
       // Secret might not exist, ignore
@@ -100,7 +101,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new DeleteSecretCommand({
           SecretId: 'sovren/integration-test/json-secret',
           ForceDeleteWithoutRecovery: true,
-        }),
+        })
       );
     } catch (error) {
       // Secret might not exist, ignore
@@ -123,7 +124,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: testSecretName,
           SecretString: 'integration-test-value',
-        }),
+        })
       );
 
       // Retrieve secret through our service
@@ -144,7 +145,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: 'sovren/integration-test/json-secret',
           SecretString: jsonSecret,
-        }),
+        })
       );
 
       const value = await secretsService.getSecret('JSON_TEST_SECRET');
@@ -157,7 +158,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: testSecretName,
           SecretString: 'cached-value',
-        }),
+        })
       );
 
       // First call - should hit AWS
@@ -181,7 +182,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: testSecretName,
           SecretString: 'initial-value',
-        }),
+        })
       );
 
       const value1 = await secretsService.getSecret('INTEGRATION_TEST_SECRET');
@@ -192,7 +193,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new UpdateSecretCommand({
           SecretId: testSecretName,
           SecretString: 'updated-value',
-        }),
+        })
       );
 
       // Clear cache and retrieve again
@@ -205,9 +206,9 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
     it('should handle secret not found error', async () => {
       // Don't create the secret - it won't exist
 
-      await expect(
-        secretsService.getSecret('INTEGRATION_TEST_SECRET'),
-      ).rejects.toThrow('not found');
+      await expect(secretsService.getSecret('INTEGRATION_TEST_SECRET')).rejects.toThrow(
+        'not found'
+      );
     });
 
     it('should handle binary secrets', async () => {
@@ -217,7 +218,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: testSecretName,
           SecretBinary: binaryData,
-        }),
+        })
       );
 
       const value = await secretsService.getSecret('INTEGRATION_TEST_SECRET');
@@ -233,14 +234,14 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: testSecretName,
           SecretString: 'secret-1',
-        }),
+        })
       );
 
       await localStackClient.send(
         new CreateSecretCommand({
           Name: 'sovren/integration-test/json-secret',
           SecretString: JSON.stringify({ database: { password: 'secret-2' } }),
-        }),
+        })
       );
 
       // Retrieve all at once
@@ -261,7 +262,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: testSecretName,
           SecretString: 'initial-value',
-        }),
+        })
       );
 
       // Load secret
@@ -272,7 +273,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new UpdateSecretCommand({
           SecretId: testSecretName,
           SecretString: 'refreshed-value',
-        }),
+        })
       );
 
       // Refresh cache
@@ -290,7 +291,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: testSecretName,
           SecretString: 'performance-test-value',
-        }),
+        })
       );
 
       const iterations = 100;
@@ -306,7 +307,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
       const duration = Date.now() - startTime;
 
       // All should return same value
-      results.forEach(value => {
+      results.forEach((value) => {
         expect(value).toBe('performance-test-value');
       });
 
@@ -328,8 +329,8 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
             new CreateSecretCommand({
               Name: `sovren/integration-test/secret-${i}`,
               SecretString: `value-${i}`,
-            }),
-          ),
+            })
+          )
         );
 
       await Promise.all(secretPromises);
@@ -387,12 +388,12 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
                 new DeleteSecretCommand({
                   SecretId: `sovren/integration-test/secret-${i}`,
                   ForceDeleteWithoutRecovery: true,
-                }),
+                })
               )
               .catch(() => {
                 /* ignore */
-              }),
-          ),
+              })
+          )
       );
 
       await multiSecretService.shutdown();
@@ -409,7 +410,7 @@ describeIf(shouldRunIntegrationTests)('SecretsService - Integration Tests', () =
         new CreateSecretCommand({
           Name: testSecretName,
           SecretString: 'recovery-test-value',
-        }),
+        })
       );
 
       const value = await secretsService.getSecret('INTEGRATION_TEST_SECRET');

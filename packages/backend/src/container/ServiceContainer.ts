@@ -13,7 +13,7 @@ import type {
   ServiceLifetime,
   ValidationResult,
   DependencyGraph,
-  IServiceModule
+  IServiceModule,
 } from '../interfaces/shared/IServiceRegistry';
 
 /**
@@ -166,7 +166,9 @@ export class ServiceContainer implements IServiceContainer {
   private createInstance<T>(descriptor: ServiceDescriptor<T>): T {
     const result = descriptor.factory(this);
     if (result instanceof Promise) {
-      throw new Error(`Service '${descriptor.token.name}' returns a Promise. Use resolveAsync() instead.`);
+      throw new Error(
+        `Service '${descriptor.token.name}' returns a Promise. Use resolveAsync() instead.`
+      );
     }
     return result;
   }
@@ -204,7 +206,7 @@ export class ServiceRegistry implements IServiceRegistry {
       token,
       factory: () => implementation,
       lifetime: 'singleton',
-      dependencies: []
+      dependencies: [],
     });
   }
 
@@ -213,7 +215,7 @@ export class ServiceRegistry implements IServiceRegistry {
       token,
       factory,
       lifetime: 'singleton',
-      dependencies: []
+      dependencies: [],
     });
   }
 
@@ -222,7 +224,7 @@ export class ServiceRegistry implements IServiceRegistry {
       token,
       factory,
       lifetime: 'scoped',
-      dependencies: []
+      dependencies: [],
     });
   }
 
@@ -231,7 +233,7 @@ export class ServiceRegistry implements IServiceRegistry {
       token,
       factory,
       lifetime: 'transient',
-      dependencies: []
+      dependencies: [],
     });
   }
 
@@ -269,7 +271,7 @@ export class ServiceRegistry implements IServiceRegistry {
         errors.push({
           type: 'circular_dependency',
           message: `Circular dependency detected for '${tokenName}'`,
-          token: tokenName
+          token: tokenName,
         });
         return true;
       }
@@ -303,7 +305,7 @@ export class ServiceRegistry implements IServiceRegistry {
             errors.push({
               type: 'missing_dependency',
               message: `Missing dependency '${dep.name}' for service '${tokenName}'`,
-              token: tokenName
+              token: tokenName,
             });
           }
         }
@@ -313,7 +315,7 @@ export class ServiceRegistry implements IServiceRegistry {
     return {
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -330,7 +332,7 @@ export class ServiceRegistry implements IServiceRegistry {
         id: tokenName,
         token: tokenName,
         lifetime: descriptor.lifetime,
-        metadata: descriptor.metadata
+        metadata: descriptor.metadata,
       });
 
       if (descriptor.dependencies) {
@@ -338,7 +340,7 @@ export class ServiceRegistry implements IServiceRegistry {
           edges.push({
             from: tokenName,
             to: dep.name,
-            optional: false
+            optional: false,
           });
         }
       }
@@ -350,7 +352,9 @@ export class ServiceRegistry implements IServiceRegistry {
   createContainer(): IServiceContainer {
     const validation = this.validate();
     if (!validation.valid) {
-      throw new Error(`Registry validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+      throw new Error(
+        `Registry validation failed: ${validation.errors.map((e) => e.message).join(', ')}`
+      );
     }
     return new ServiceContainer(this);
   }
@@ -360,7 +364,7 @@ export class ServiceRegistry implements IServiceRegistry {
   }
 
   getRegisteredTokens(): ServiceToken<any>[] {
-    return Array.from(this.descriptors.values()).map(d => d.token);
+    return Array.from(this.descriptors.values()).map((d) => d.token);
   }
 }
 

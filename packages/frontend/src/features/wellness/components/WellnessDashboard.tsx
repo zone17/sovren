@@ -24,9 +24,7 @@ export const WellnessDashboard: React.FC = () => {
               Monitor your work patterns and maintain sustainable habits.
             </p>
           </div>
-          <Button onClick={() => setPulseModalOpen(true)}>
-            Pulse Check-In
-          </Button>
+          <Button onClick={() => setPulseModalOpen(true)}>Pulse Check-In</Button>
         </div>
 
         {/* Top row: Burnout gauge + Rest days */}
@@ -49,10 +47,7 @@ export const WellnessDashboard: React.FC = () => {
         <WellnessResources />
 
         {/* Pulse check-in modal */}
-        <WellnessPulseModal
-          isOpen={pulseModalOpen}
-          onClose={() => setPulseModalOpen(false)}
-        />
+        <WellnessPulseModal isOpen={pulseModalOpen} onClose={() => setPulseModalOpen(false)} />
       </div>
     </WellnessErrorBoundary>
   );

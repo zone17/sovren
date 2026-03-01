@@ -64,9 +64,7 @@ function convertWorkflowRunToDeployment(
 ): Deployment {
   const startTime = new Date(run.created_at);
   const endTime = run.updated_at ? new Date(run.updated_at) : undefined;
-  const duration = endTime
-    ? endTime.getTime() - startTime.getTime()
-    : undefined;
+  const duration = endTime ? endTime.getTime() - startTime.getTime() : undefined;
 
   let status: Deployment['status'] = 'queued';
   if (run.status === 'completed') {
@@ -143,13 +141,10 @@ export function useDeploymentStatus(
       const githubService = getGitHubActionsService();
 
       // Fetch workflow runs for backend deployment
-      const response = await githubService.listWorkflowRuns(
-        'backend-deployment.yml',
-        {
-          per_page: 10,
-          status: 'completed',
-        }
-      );
+      const response = await githubService.listWorkflowRuns('backend-deployment.yml', {
+        per_page: 10,
+        status: 'completed',
+      });
 
       if (!isMountedRef.current) return;
 
@@ -157,8 +152,7 @@ export function useDeploymentStatus(
       const deployments = response.workflow_runs.map((run) => {
         // Determine environment from workflow run
         const runEnvironment =
-          run.name.toLowerCase().includes('staging') ||
-          run.head_branch === 'main'
+          run.name.toLowerCase().includes('staging') || run.head_branch === 'main'
             ? 'staging'
             : 'production';
 
@@ -174,9 +168,7 @@ export function useDeploymentStatus(
       setRecentDeployments(filtered);
 
       // Set current deployment (in progress or most recent)
-      const inProgress = filtered.find(
-        (d) => d.status === 'in_progress' || d.status === 'queued'
-      );
+      const inProgress = filtered.find((d) => d.status === 'in_progress' || d.status === 'queued');
       setCurrentDeployment(inProgress || filtered[0] || null);
 
       setIsLoading(false);

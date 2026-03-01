@@ -11,12 +11,7 @@ import { z } from 'zod';
 // Common Schemas
 // ============================================================================
 
-const MetadataValueSchema = z.union([
-  z.string().max(10000),
-  z.number(),
-  z.boolean(),
-  z.null(),
-]);
+const MetadataValueSchema = z.union([z.string().max(10000), z.number(), z.boolean(), z.null()]);
 
 const MetadataSchema = z
   .record(z.string(), MetadataValueSchema)

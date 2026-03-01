@@ -151,8 +151,9 @@ export class UserService {
       }
 
       // Check cache first
-      const cachedUser = Array.from(this.users.values())
-        .find(user => user.username?.toLowerCase() === username.toLowerCase());
+      const cachedUser = Array.from(this.users.values()).find(
+        (user) => user.username?.toLowerCase() === username.toLowerCase()
+      );
 
       if (cachedUser) {
         return {
@@ -205,7 +206,10 @@ export class UserService {
    * ✏️ Update User Profile
    * WHY: Profile maintenance and updates
    */
-  async updateProfile(nostrPubkey: string, updates: UpdateUserProfile): Promise<{
+  async updateProfile(
+    nostrPubkey: string,
+    updates: UpdateUserProfile
+  ): Promise<{
     success: boolean;
     user?: UserProfile;
     error?: string;
@@ -313,7 +317,7 @@ export class UserService {
 
       // Return cached users for now (in production, this would be paginated database query)
       const userList = Array.from(this.users.values())
-        .filter(user => user.is_active)
+        .filter((user) => user.is_active)
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
       return {
@@ -350,12 +354,13 @@ export class UserService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const newUsersToday = Array.from(this.users.values())
-        .filter(user => user.created_at >= today).length;
+      const newUsersToday = Array.from(this.users.values()).filter(
+        (user) => user.created_at >= today
+      ).length;
 
       const stats = {
         totalUsers: dbStats.totalUsers || this.stats.totalUsers,
-        activeUsers: Array.from(this.users.values()).filter(user => user.is_active).length,
+        activeUsers: Array.from(this.users.values()).filter((user) => user.is_active).length,
         newUsersToday,
         roleDistribution: dbStats.roleDistribution,
       };
@@ -406,19 +411,19 @@ export class UserService {
    */
   private updateStats(): void {
     const users = Array.from(this.users.values());
-    const activeUsers = users.filter(user => user.is_active);
+    const activeUsers = users.filter((user) => user.is_active);
 
     this.stats = {
       totalUsers: users.length,
       activeUsers: activeUsers.length,
-      newUsersToday: users.filter(user => {
+      newUsersToday: users.filter((user) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return user.created_at >= today;
       }).length,
-      totalCreators: activeUsers.filter(user => user.role === 'creator').length,
-      totalSupporters: activeUsers.filter(user => user.role === 'supporter').length,
-      totalAdmins: activeUsers.filter(user => user.role === 'admin').length,
+      totalCreators: activeUsers.filter((user) => user.role === 'creator').length,
+      totalSupporters: activeUsers.filter((user) => user.role === 'supporter').length,
+      totalAdmins: activeUsers.filter((user) => user.role === 'admin').length,
     };
   }
 
@@ -426,11 +431,7 @@ export class UserService {
    * 🔍 Search Users
    * WHY: User discovery functionality
    */
-  async searchUsers(query: {
-    q: string;
-    limit: number;
-    offset: number;
-  }): Promise<{
+  async searchUsers(query: { q: string; limit: number; offset: number }): Promise<{
     success: boolean;
     users?: UserProfile[];
     total?: number;
@@ -441,11 +442,11 @@ export class UserService {
       const searchTerm = query.q.toLowerCase();
 
       const allUsers = Array.from(this.users.values())
-        .filter(user =>
-          user.is_active && (
-            user.username?.toLowerCase().includes(searchTerm) ||
-            user.display_name?.toLowerCase().includes(searchTerm)
-          )
+        .filter(
+          (user) =>
+            user.is_active &&
+            (user.username?.toLowerCase().includes(searchTerm) ||
+              user.display_name?.toLowerCase().includes(searchTerm))
         )
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 

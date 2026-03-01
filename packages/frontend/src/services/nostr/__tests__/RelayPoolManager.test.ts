@@ -33,11 +33,7 @@ vi.mock('nostr-tools/pool', () => ({
 
 describe('RelayPoolManager', () => {
   let manager: RelayPoolManager;
-  const mockRelays = [
-    'wss://relay.damus.io',
-    'wss://nos.lol',
-    'wss://relay.nostr.info',
-  ];
+  const mockRelays = ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.info'];
 
   beforeEach(() => {
     // Reset singleton instance before each test
@@ -438,7 +434,7 @@ describe('RelayPoolManager', () => {
       const results = await manager.publishEvent(mockEvent);
 
       // Should still return results, but with errors
-      expect(results.some(r => r.error)).toBe(true);
+      expect(results.some((r) => r.error)).toBe(true);
     });
 
     it('should retry publishing on transient failures', async () => {
@@ -637,7 +633,9 @@ describe('RelayPoolManager', () => {
       await manager.connect(slowRelay, { timeout: 100 });
 
       const status = manager.getRelayStatus(slowRelay);
-      expect([RelayStatus.ERROR, RelayStatus.DISCONNECTED, RelayStatus.CONNECTED]).toContain(status);
+      expect([RelayStatus.ERROR, RelayStatus.DISCONNECTED, RelayStatus.CONNECTED]).toContain(
+        status
+      );
     });
 
     it('should emit error events on connection failure', async () => {

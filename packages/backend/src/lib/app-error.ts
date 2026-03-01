@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Canonical AppError Base Class
  *

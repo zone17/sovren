@@ -18,7 +18,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from '@typescript-eslint/parser';
-import { ESLintUtils } from '@typescript-eslint/utils';
 import chalk from 'chalk';
 import ora from 'ora';
 import { glob } from 'glob';
@@ -63,13 +62,10 @@ export class StateManagementMigrator {
       verbose: false,
       components: [],
       slices: [],
-      ...config
+      ...config,
     };
 
-    this.backupPath = path.join(
-      this.config.backupDir,
-      `backup-${Date.now()}`
-    );
+    this.backupPath = path.join(this.config.backupDir, `backup-${Date.now()}`);
 
     this.spinner = ora();
   }
@@ -110,9 +106,9 @@ export class StateManagementMigrator {
       return {
         success: validationResult,
         filesModified: Array.from(this.modifiedFiles),
-        errors: this.issues.filter(i => i.severity === 'error').map(i => i.message),
-        warnings: this.issues.filter(i => i.severity === 'warning').map(i => i.message),
-        rollbackPath: this.backupPath
+        errors: this.issues.filter((i) => i.severity === 'error').map((i) => i.message),
+        warnings: this.issues.filter((i) => i.severity === 'warning').map((i) => i.message),
+        rollbackPath: this.backupPath,
       };
     } catch (error) {
       this.log(`Migration failed: ${error.message}`, 'error');
@@ -129,12 +125,7 @@ export class StateManagementMigrator {
   private async validateProject(): Promise<void> {
     this.spinner.start('Validating project structure...');
 
-    const requiredPaths = [
-      'package.json',
-      'tsconfig.json',
-      'src/store',
-      'src/hooks'
-    ];
+    const requiredPaths = ['package.json', 'tsconfig.json', 'src/store', 'src/hooks'];
 
     for (const reqPath of requiredPaths) {
       const fullPath = path.join(this.config.projectRoot, reqPath);
@@ -154,7 +145,7 @@ export class StateManagementMigrator {
         file: 'package.json',
         line: 0,
         message: 'React Query not installed. Run: npm install @tanstack/react-query',
-        severity: 'error'
+        severity: 'error',
       });
     }
 
@@ -173,7 +164,7 @@ export class StateManagementMigrator {
 
     // Find all files that will be modified
     const filesToBackup = await glob('src/**/*.{ts,tsx}', {
-      cwd: this.config.projectRoot
+      cwd: this.config.projectRoot,
     });
 
     for (const file of filesToBackup) {
@@ -199,7 +190,7 @@ export class StateManagementMigrator {
 
     const serverDataSlices = new Map<string, string[]>();
     const slicePaths = await glob('src/store/slices/*.{ts,tsx}', {
-      cwd: this.config.projectRoot
+      cwd: this.config.projectRoot,
     });
 
     for (const slicePath of slicePaths) {
@@ -213,7 +204,7 @@ export class StateManagementMigrator {
         /load\w+/gi,
         /get\w+/gi,
         /\basync\b/gi,
-        /createAsyncThunk/gi
+        /createAsyncThunk/gi,
       ];
 
       const foundPatterns: string[] = [];
@@ -230,7 +221,7 @@ export class StateManagementMigrator {
           file: slicePath,
           line: 0,
           message: `Found server data patterns: ${foundPatterns.join(', ')}`,
-          severity: 'warning'
+          severity: 'warning',
         });
       }
     }
@@ -245,9 +236,10 @@ export class StateManagementMigrator {
   private async migrateComponents(serverDataSlices: Map<string, string[]>): Promise<void> {
     this.spinner.start('Migrating components...');
 
-    const componentPaths = this.config.components.length > 0
-      ? this.config.components
-      : await glob('src/**/*.{tsx}', { cwd: this.config.projectRoot });
+    const componentPaths =
+      this.config.components.length > 0
+        ? this.config.components
+        : await glob('src/**/*.{tsx}', { cwd: this.config.projectRoot });
 
     for (const componentPath of componentPaths) {
       const fullPath = path.join(this.config.projectRoot, componentPath);
@@ -267,7 +259,11 @@ export class StateManagementMigrator {
       // Pattern 2: useDispatch for async actions → useMutation
       const dispatchPattern = /dispatch\((\w+)\((.*?)\)\)/g;
       content = content.replace(dispatchPattern, (match, actionName, params) => {
-        if (actionName.includes('fetch') || actionName.includes('create') || actionName.includes('update')) {
+        if (
+          actionName.includes('fetch') ||
+          actionName.includes('create') ||
+          actionName.includes('update')
+        ) {
           modified = true;
           const mutationName = actionName.replace('fetch', 'get');
           return `${mutationName}Mutation.mutate(${params})`;
@@ -279,7 +275,8 @@ export class StateManagementMigrator {
       if (modified) {
         const hasReactQueryImport = content.includes('@tanstack/react-query');
         if (!hasReactQueryImport) {
-          const importStatement = "import { useQuery, useMutation } from '@tanstack/react-query';\n";
+          const importStatement =
+            "import { useQuery, useMutation } from '@tanstack/react-query';\n";
           content = importStatement + content;
         }
 
@@ -466,7 +463,7 @@ export function useDelete${capitalizedName}Mutation() {
 
     // Check for remaining Redux async patterns
     const files = await glob('src/**/*.{ts,tsx}', {
-      cwd: this.config.projectRoot
+      cwd: this.config.projectRoot,
     });
 
     for (const file of files) {
@@ -479,7 +476,7 @@ export function useDelete${capitalizedName}Mutation() {
           file,
           line: 0,
           message: 'Still contains createAsyncThunk - may need manual migration',
-          severity: 'warning'
+          severity: 'warning',
         });
       }
 
@@ -489,15 +486,15 @@ export function useDelete${capitalizedName}Mutation() {
           ecmaVersion: 2020,
           sourceType: 'module',
           ecmaFeatures: {
-            jsx: true
-          }
+            jsx: true,
+          },
         });
       } catch (error) {
         this.issues.push({
           file,
           line: error.lineNumber || 0,
           message: `Parse error: ${error.message}`,
-          severity: 'error'
+          severity: 'error',
         });
         isValid = false;
       }
@@ -519,10 +516,12 @@ export function useDelete${capitalizedName}Mutation() {
 **Mode**: ${this.config.dryRun ? 'Dry Run' : 'Live'}
 
 ## Modified Files
-${Array.from(this.modifiedFiles).map(f => `- ${f}`).join('\n')}
+${Array.from(this.modifiedFiles)
+  .map((f) => `- ${f}`)
+  .join('\n')}
 
 ## Issues Found
-${this.issues.map(i => `- [${i.severity.toUpperCase()}] ${i.file}: ${i.message}`).join('\n')}
+${this.issues.map((i) => `- [${i.severity.toUpperCase()}] ${i.file}: ${i.message}`).join('\n')}
 
 ## Next Steps
 1. Review modified files
@@ -558,7 +557,7 @@ npm run migrate:rollback ${this.backupPath}
     }
 
     const backupFiles = await glob('**/*', {
-      cwd: this.backupPath
+      cwd: this.backupPath,
     });
 
     for (const file of backupFiles) {
@@ -577,9 +576,7 @@ npm run migrate:rollback ${this.backupPath}
 
   private isServerData(name: string): boolean {
     const serverDataIndicators = ['user', 'post', 'comment', 'api', 'data'];
-    return serverDataIndicators.some(indicator =>
-      name.toLowerCase().includes(indicator)
-    );
+    return serverDataIndicators.some((indicator) => name.toLowerCase().includes(indicator));
   }
 
   private capitalize(str: string): string {
@@ -646,21 +643,22 @@ if (require.main === module) {
 
   console.log(chalk.bold('\n🔄 State Management Migration Tool\n'));
 
-  migrator.migrate()
-    .then(result => {
+  migrator
+    .migrate()
+    .then((result) => {
       if (result.success) {
         console.log(chalk.green.bold('\n✅ Migration completed successfully!\n'));
         console.log(`Files modified: ${result.filesModified.length}`);
         if (result.warnings.length > 0) {
           console.log(chalk.yellow(`\nWarnings: ${result.warnings.length}`));
-          result.warnings.forEach(w => console.log(chalk.yellow(`  - ${w}`)));
+          result.warnings.forEach((w) => console.log(chalk.yellow(`  - ${w}`)));
         }
       } else {
         console.log(chalk.red.bold('\n❌ Migration failed!\n'));
-        result.errors.forEach(e => console.log(chalk.red(`  - ${e}`)));
+        result.errors.forEach((e) => console.log(chalk.red(`  - ${e}`)));
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error(chalk.red.bold(`\n❌ Migration error: ${error.message}\n`));
       process.exit(1);
     });

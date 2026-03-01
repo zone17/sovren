@@ -40,14 +40,17 @@ vi.mock('../BackupEncryptionService', () => {
       hashData: vi.fn().mockResolvedValue('a'.repeat(64)),
       verifyChecksum: vi.fn().mockResolvedValue(true),
       validatePasswordStrength: vi.fn().mockImplementation((password: string) => {
-        const isValid = password.length >= 12 &&
+        const isValid =
+          password.length >= 12 &&
           /[A-Z]/.test(password) &&
           /[0-9]/.test(password) &&
           /[^A-Za-z0-9]/.test(password);
         if (!isValid) {
-          throw new Error('Password does not meet requirements: ' +
-            'At least 12 characters, At least one uppercase letter, ' +
-            'At least one number, At least one special character');
+          throw new Error(
+            'Password does not meet requirements: ' +
+              'At least 12 characters, At least one uppercase letter, ' +
+              'At least one number, At least one special character'
+          );
         }
         return {
           valid: isValid,
@@ -57,7 +60,9 @@ vi.mock('../BackupEncryptionService', () => {
       }),
       generateSecurePassword: vi.fn().mockImplementation((length = 32) => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join(
+          ''
+        );
       }),
     })),
   };
@@ -517,9 +522,7 @@ describe('NOSTRBackupService', () => {
     it('should handle key management errors', async () => {
       keyManagement.listKeys.mockRejectedValue(new Error('Key fetch failed'));
 
-      await expect(
-        service.createBackup('TestP@ssw0rd123!', 'complete')
-      ).rejects.toThrow();
+      await expect(service.createBackup('TestP@ssw0rd123!', 'complete')).rejects.toThrow();
     });
 
     it('should handle encryption errors', async () => {

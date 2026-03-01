@@ -254,7 +254,10 @@ describe('Shield Routes (v2)', () => {
 
   describe('POST /fingerprint', () => {
     it('returns 201 with fingerprint data', async () => {
-      const mockData = { content_id: 'content-1', fingerprints: [{ hash_type: 'simhash', hash_value: 'abc' }] };
+      const mockData = {
+        content_id: 'content-1',
+        fingerprints: [{ hash_type: 'simhash', hash_value: 'abc' }],
+      };
       mockCreateFingerprint.mockResolvedValue(mockData);
 
       const req = makeRequest({
@@ -274,11 +277,21 @@ describe('Shield Routes (v2)', () => {
     it('returns 200 with registry for own creator', async () => {
       const mockResult = {
         data: { total_fingerprinted: 142, total_content: 200, coverage_percentage: 71 },
-        pagination: { page: 1, limit: 20, total: 142, totalPages: 8, hasNext: true, hasPrev: false },
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 142,
+          totalPages: 8,
+          hasNext: true,
+          hasPrev: false,
+        },
       };
       mockGetRegistry.mockResolvedValue(mockResult);
 
-      const req = makeRequest({ params: { creatorId: 'test-pubkey-123' }, query: { page: '1', limit: '20' } });
+      const req = makeRequest({
+        params: { creatorId: 'test-pubkey-123' },
+        query: { page: '1', limit: '20' },
+      });
       const { res, json } = makeResponse();
 
       const route = getRoute('GET', '/fingerprints/:creatorId')!;
@@ -305,11 +318,14 @@ describe('Shield Routes (v2)', () => {
 
   describe('POST /compare', () => {
     it('returns 200 with comparison results', async () => {
-      const mockData = { matches: [{ content_id: 'content-1', similarity: 0.92 }], total_compared: 142 };
+      const mockData = {
+        matches: [{ content_id: 'content-1', similarity: 0.92 }],
+        total_compared: 142,
+      };
       mockCompare.mockResolvedValue(mockData);
 
       const req = makeRequest({
-        body: { hash_type: 'simhash', hash_value: 'abc123def4567890', threshold: 0.70 },
+        body: { hash_type: 'simhash', hash_value: 'abc123def4567890', threshold: 0.7 },
       });
       const { res, json } = makeResponse();
 
@@ -459,7 +475,7 @@ describe('Shield Validators', () => {
       const result = validators.CompareSchema.safeParse({
         hash_type: 'simhash',
         hash_value: 'abc123def4567890',
-        threshold: 0.70,
+        threshold: 0.7,
       });
       expect(result.success).toBe(true);
     });
@@ -468,7 +484,7 @@ describe('Shield Validators', () => {
       const result = validators.CompareSchema.safeParse({
         hash_type: 'simhash',
         hash_value: 'not-a-valid-hex',
-        threshold: 0.70,
+        threshold: 0.7,
       });
       expect(result.success).toBe(false);
     });

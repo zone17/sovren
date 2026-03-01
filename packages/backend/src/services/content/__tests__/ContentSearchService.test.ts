@@ -6,12 +6,7 @@
 
 import { ContentSearchService } from '../ContentSearchService';
 import { Client } from '@elastic/elasticsearch';
-import type {
-  SearchQuery,
-  SearchResult,
-  ContentDocument,
-  ElasticsearchConfig
-} from '../../../types/search';
+import type { SearchQuery, ContentDocument, ElasticsearchConfig } from '../../../types/search';
 import type { ICacheService } from '../../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../../interfaces/shared/ILogger';
 
@@ -22,7 +17,7 @@ import type { ILogger } from '../../../interfaces/shared/ILogger';
 class MockElasticsearchClient {
   public indices = {
     exists: vi.fn(),
-    create: vi.fn()
+    create: vi.fn(),
   };
   public search = vi.fn();
   public index = vi.fn();
@@ -84,12 +79,12 @@ class MockCacheService implements ICacheService {
 
   async getMany<T>(keys: string[]): Promise<Map<string, T | null>> {
     const result = new Map<string, T | null>();
-    keys.forEach(key => result.set(key, this.cache.get(key) || null));
+    keys.forEach((key) => result.set(key, this.cache.get(key) || null));
     return result;
   }
 
   async setMany<T>(entries: Array<{ key: string; value: T; ttl?: number }>): Promise<void> {
-    entries.forEach(entry => this.cache.set(entry.key, entry.value));
+    entries.forEach((entry) => this.cache.set(entry.key, entry.value));
   }
 
   async remember<T>(key: string, factory: () => Promise<T>, ttl?: number): Promise<T> {
@@ -129,7 +124,7 @@ class MockLogger implements ILogger {
 // Mock the Elasticsearch client
 vi.mock('@elastic/elasticsearch', () => {
   return {
-    Client: vi.fn().mockImplementation(() => new MockElasticsearchClient())
+    Client: vi.fn().mockImplementation(() => new MockElasticsearchClient()),
   };
 });
 
@@ -149,7 +144,7 @@ describe('ContentSearchService', () => {
     mockCache = new MockCacheService();
     mockLogger = new MockLogger();
     config = {
-      node: 'http://localhost:9200'
+      node: 'http://localhost:9200',
     };
 
     // Setup default mock responses before creating service
@@ -165,7 +160,7 @@ describe('ContentSearchService', () => {
     mockEsClient = mockClient;
 
     // Wait for async initialization
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
   });
 
   afterEach(async () => {
@@ -189,11 +184,11 @@ describe('ContentSearchService', () => {
       const newService = new ContentSearchService(mockCache, newLogger, config);
 
       // Wait for async initialization
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(newMockClient.indices.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          index: 'sovren_content'
+          index: 'sovren_content',
         })
       );
 
@@ -211,7 +206,7 @@ describe('ContentSearchService', () => {
       const newService = new ContentSearchService(mockCache, newLogger, config);
 
       // Wait for async initialization
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(newMockClient.indices.create).not.toHaveBeenCalled();
 
@@ -229,7 +224,7 @@ describe('ContentSearchService', () => {
       const newService = new ContentSearchService(mockCache, newLogger, config);
 
       // Wait for async initialization
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(newLogger.error).toHaveBeenCalledWith(
         'Failed to initialize Elasticsearch index',
@@ -248,14 +243,14 @@ describe('ContentSearchService', () => {
     it('should work with match_all query when no search term provided', async () => {
       const queryWithoutTerm: SearchQuery = {
         page: 1,
-        pageSize: 10
+        pageSize: 10,
       };
 
       mockEsClient.search.mockResolvedValue({
         body: {
           hits: { total: { value: 10 }, hits: [], max_score: 1.0 },
-          took: 5
-        }
+          took: 5,
+        },
       });
 
       const result = await service.search(queryWithoutTerm);
@@ -264,8 +259,8 @@ describe('ContentSearchService', () => {
       expect(mockEsClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.objectContaining({
-            query: { match_all: {} }
-          })
+            query: { match_all: {} },
+          }),
         })
       );
     });
@@ -281,15 +276,15 @@ describe('ContentSearchService', () => {
           { field: 'views', type: 'range', range: { gte: 100, lte: 1000 } },
           { field: 'featured', type: 'exists' },
           { field: 'title', type: 'prefix', value: 'test' },
-          { field: 'slug', type: 'wildcard', value: 'test*' }
-        ]
+          { field: 'slug', type: 'wildcard', value: 'test*' },
+        ],
       };
 
       mockEsClient.search.mockResolvedValue({
         body: {
           hits: { total: { value: 0 }, hits: [], max_score: 0 },
-          took: 5
-        }
+          took: 5,
+        },
       });
 
       await service.search(queryWithAllFilters);
@@ -305,11 +300,11 @@ describe('ContentSearchService', () => {
                   { range: { views: { gte: 100, lte: 1000 } } },
                   { exists: { field: 'featured' } },
                   { prefix: { title: 'test' } },
-                  { wildcard: { slug: 'test*' } }
-                ])
-              })
-            })
-          })
+                  { wildcard: { slug: 'test*' } },
+                ]),
+              }),
+            }),
+          }),
         })
       );
     });
@@ -323,8 +318,8 @@ describe('ContentSearchService', () => {
           { name: 'tags', field: 'tags', type: 'terms', size: 10 },
           { name: 'views_range', field: 'views', type: 'range', ranges: [{ from: 0, to: 100 }] },
           { name: 'published_date', field: 'publishedAt', type: 'date_histogram', interval: '1d' },
-          { name: 'view_stats', field: 'views', type: 'stats' }
-        ]
+          { name: 'view_stats', field: 'views', type: 'stats' },
+        ],
       };
 
       mockEsClient.search.mockResolvedValue({
@@ -335,9 +330,9 @@ describe('ContentSearchService', () => {
             tags: { buckets: [] },
             views_range: { buckets: [] },
             published_date: { buckets: [] },
-            view_stats: { count: 0, min: 0, max: 0, avg: 0, sum: 0 }
-          }
-        }
+            view_stats: { count: 0, min: 0, max: 0, avg: 0, sum: 0 },
+          },
+        },
       });
 
       const result = await service.search(queryWithAllFacets);
@@ -349,14 +344,14 @@ describe('ContentSearchService', () => {
       const queryWithoutSort: SearchQuery = {
         searchTerm: 'test',
         page: 1,
-        pageSize: 10
+        pageSize: 10,
       };
 
       mockEsClient.search.mockResolvedValue({
         body: {
           hits: { total: { value: 0 }, hits: [], max_score: 0 },
-          took: 5
-        }
+          took: 5,
+        },
       });
 
       await service.search(queryWithoutSort);
@@ -364,8 +359,8 @@ describe('ContentSearchService', () => {
       expect(mockEsClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.objectContaining({
-            sort: [{ _score: { order: 'desc' } }]
-          })
+            sort: [{ _score: { order: 'desc' } }],
+          }),
         })
       );
     });
@@ -375,16 +370,14 @@ describe('ContentSearchService', () => {
         searchTerm: 'test',
         page: 1,
         pageSize: 10,
-        sort: [
-          { field: 'views', order: 'desc', mode: 'avg', missing: '_last' }
-        ]
+        sort: [{ field: 'views', order: 'desc', mode: 'avg', missing: '_last' }],
       };
 
       mockEsClient.search.mockResolvedValue({
         body: {
           hits: { total: { value: 0 }, hits: [], max_score: 0 },
-          took: 5
-        }
+          took: 5,
+        },
       });
 
       await service.search(queryWithAdvancedSort);
@@ -392,10 +385,8 @@ describe('ContentSearchService', () => {
       expect(mockEsClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.objectContaining({
-            sort: [
-              { views: { order: 'desc', mode: 'avg', missing: '_last' } }
-            ]
-          })
+            sort: [{ views: { order: 'desc', mode: 'avg', missing: '_last' } }],
+          }),
         })
       );
     });
@@ -405,14 +396,14 @@ describe('ContentSearchService', () => {
         searchTerm: 'test',
         page: 1,
         pageSize: 10,
-        fields: ['id', 'title', 'summary']
+        fields: ['id', 'title', 'summary'],
       };
 
       mockEsClient.search.mockResolvedValue({
         body: {
           hits: { total: { value: 0 }, hits: [], max_score: 0 },
-          took: 5
-        }
+          took: 5,
+        },
       });
 
       await service.search(queryWithFields);
@@ -420,8 +411,8 @@ describe('ContentSearchService', () => {
       expect(mockEsClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.objectContaining({
-            _source: ['id', 'title', 'summary']
-          })
+            _source: ['id', 'title', 'summary'],
+          }),
         })
       );
     });
@@ -431,7 +422,7 @@ describe('ContentSearchService', () => {
     const mockSearchQuery: SearchQuery = {
       searchTerm: 'test query',
       page: 1,
-      pageSize: 10
+      pageSize: 10,
     };
 
     const mockEsResponse = {
@@ -451,8 +442,8 @@ describe('ContentSearchService', () => {
                 tags: ['test'],
                 status: 'published',
                 createdAt: new Date(),
-                updatedAt: new Date()
-              }
+                updatedAt: new Date(),
+              },
             },
             {
               _id: '2',
@@ -465,13 +456,13 @@ describe('ContentSearchService', () => {
                 tags: ['test', 'example'],
                 status: 'published',
                 createdAt: new Date(),
-                updatedAt: new Date()
-              }
-            }
-          ]
+                updatedAt: new Date(),
+              },
+            },
+          ],
         },
-        took: 15
-      }
+        took: 15,
+      },
     };
 
     beforeEach(() => {
@@ -543,8 +534,8 @@ describe('ContentSearchService', () => {
         ...mockSearchQuery,
         filters: [
           { field: 'status', type: 'term', value: 'published' },
-          { field: 'tags', type: 'terms', values: ['test', 'example'] }
-        ]
+          { field: 'tags', type: 'terms', values: ['test', 'example'] },
+        ],
       };
 
       await service.search(queryWithFilters);
@@ -556,11 +547,11 @@ describe('ContentSearchService', () => {
               bool: expect.objectContaining({
                 filter: expect.arrayContaining([
                   { term: { status: 'published' } },
-                  { terms: { tags: ['test', 'example'] } }
-                ])
-              })
-            })
-          })
+                  { terms: { tags: ['test', 'example'] } },
+                ]),
+              }),
+            }),
+          }),
         })
       );
     });
@@ -568,9 +559,7 @@ describe('ContentSearchService', () => {
     it('should support faceted search', async () => {
       const queryWithFacets: SearchQuery = {
         ...mockSearchQuery,
-        facets: [
-          { name: 'tags', field: 'tags', type: 'terms', size: 10 }
-        ]
+        facets: [{ name: 'tags', field: 'tags', type: 'terms', size: 10 }],
       };
 
       mockEsClient.search.mockResolvedValue({
@@ -580,11 +569,11 @@ describe('ContentSearchService', () => {
             tags: {
               buckets: [
                 { key: 'test', doc_count: 5 },
-                { key: 'example', doc_count: 3 }
-              ]
-            }
-          }
-        }
+                { key: 'example', doc_count: 3 },
+              ],
+            },
+          },
+        },
       });
 
       const result = await service.search(queryWithFacets);
@@ -600,8 +589,8 @@ describe('ContentSearchService', () => {
         ...mockSearchQuery,
         dateRange: {
           from: new Date('2024-01-01'),
-          to: new Date('2024-12-31')
-        }
+          to: new Date('2024-12-31'),
+        },
       };
 
       await service.search(queryWithDateRange);
@@ -614,13 +603,13 @@ describe('ContentSearchService', () => {
                 filter: expect.arrayContaining([
                   expect.objectContaining({
                     range: expect.objectContaining({
-                      publishedAt: expect.any(Object)
-                    })
-                  })
-                ])
-              })
-            })
-          })
+                      publishedAt: expect.any(Object),
+                    }),
+                  }),
+                ]),
+              }),
+            }),
+          }),
         })
       );
     });
@@ -630,8 +619,8 @@ describe('ContentSearchService', () => {
         ...mockSearchQuery,
         sort: [
           { field: 'publishedAt', order: 'desc' },
-          { field: 'title.raw', order: 'asc' }
-        ]
+          { field: 'title.raw', order: 'asc' },
+        ],
       };
 
       await service.search(queryWithSort);
@@ -639,11 +628,8 @@ describe('ContentSearchService', () => {
       expect(mockEsClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.objectContaining({
-            sort: [
-              { publishedAt: { order: 'desc' } },
-              { 'title.raw': { order: 'asc' } }
-            ]
-          })
+            sort: [{ publishedAt: { order: 'desc' } }, { 'title.raw': { order: 'asc' } }],
+          }),
         })
       );
     });
@@ -654,8 +640,8 @@ describe('ContentSearchService', () => {
         highlight: {
           fields: ['title', 'content'],
           fragmentSize: 200,
-          numberOfFragments: 2
-        }
+          numberOfFragments: 2,
+        },
       };
 
       await service.search(queryWithHighlight);
@@ -666,10 +652,10 @@ describe('ContentSearchService', () => {
             highlight: expect.objectContaining({
               fields: {
                 title: { fragment_size: 200, number_of_fragments: 2 },
-                content: { fragment_size: 200, number_of_fragments: 2 }
-              }
-            })
-          })
+                content: { fragment_size: 200, number_of_fragments: 2 },
+              },
+            }),
+          }),
         })
       );
     });
@@ -707,12 +693,12 @@ describe('ContentSearchService', () => {
                 options: [
                   { text: 'test content' },
                   { text: 'test article' },
-                  { text: 'testing guide' }
-                ]
-              }
-            ]
-          }
-        }
+                  { text: 'testing guide' },
+                ],
+              },
+            ],
+          },
+        },
       });
 
       const suggestions = await service.suggest('test');
@@ -721,8 +707,8 @@ describe('ContentSearchService', () => {
       expect(mockEsClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.objectContaining({
-            suggest: expect.any(Object)
-          })
+            suggest: expect.any(Object),
+          }),
         })
       );
     });
@@ -766,10 +752,10 @@ describe('ContentSearchService', () => {
         hashtags: [],
         language: 'en',
         hasMedia: false,
-        lastModified: new Date()
+        lastModified: new Date(),
       },
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     beforeEach(() => {
@@ -783,7 +769,7 @@ describe('ContentSearchService', () => {
         expect.objectContaining({
           index: 'sovren_content',
           id: '123',
-          refresh: 'wait_for'
+          refresh: 'wait_for',
         })
       );
       expect(mockLogger.info).toHaveBeenCalledWith('Document indexed', { id: '123' });
@@ -800,9 +786,7 @@ describe('ContentSearchService', () => {
     it('should throw error if document has no id', async () => {
       const invalidDoc = { ...mockDocument, id: undefined } as any;
 
-      await expect(service.indexDocument(invalidDoc)).rejects.toThrow(
-        'Document must have an id'
-      );
+      await expect(service.indexDocument(invalidDoc)).rejects.toThrow('Document must have an id');
     });
 
     it('should handle indexing errors', async () => {
@@ -829,7 +813,7 @@ describe('ContentSearchService', () => {
         expect.objectContaining({
           index: 'sovren_content',
           id: '123',
-          refresh: 'wait_for'
+          refresh: 'wait_for',
         })
       );
       expect(mockLogger.info).toHaveBeenCalledWith('Document updated', { id: '123' });
@@ -868,7 +852,7 @@ describe('ContentSearchService', () => {
         expect.objectContaining({
           index: 'sovren_content',
           id: '123',
-          refresh: 'wait_for'
+          refresh: 'wait_for',
         })
       );
       expect(mockLogger.info).toHaveBeenCalledWith('Document deleted from index', { id: '123' });
@@ -918,10 +902,10 @@ describe('ContentSearchService', () => {
           hashtags: [],
           language: 'en',
           hasMedia: false,
-          lastModified: new Date()
+          lastModified: new Date(),
         },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       {
         id: '2',
@@ -939,19 +923,19 @@ describe('ContentSearchService', () => {
           hashtags: [],
           language: 'en',
           hasMedia: false,
-          lastModified: new Date()
+          lastModified: new Date(),
         },
         createdAt: new Date(),
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     ];
 
     beforeEach(() => {
       mockEsClient.bulk.mockResolvedValue({
         body: {
           errors: false,
-          items: []
-        }
+          items: [],
+        },
       });
     });
 
@@ -972,10 +956,8 @@ describe('ContentSearchService', () => {
       mockEsClient.bulk.mockResolvedValue({
         body: {
           errors: true,
-          items: [
-            { index: { error: { type: 'error', reason: 'Failed to index' } } }
-          ]
-        }
+          items: [{ index: { error: { type: 'error', reason: 'Failed to index' } } }],
+        },
       });
 
       await expect(service.bulkIndex(mockDocuments)).rejects.toThrow('Bulk indexing failed');
@@ -1022,14 +1004,14 @@ describe('ContentSearchService', () => {
       const mockQuery: SearchQuery = {
         searchTerm: 'test',
         page: 1,
-        pageSize: 10
+        pageSize: 10,
       };
 
       mockEsClient.search.mockResolvedValue({
         body: {
           hits: { total: { value: 5 }, hits: [], max_score: 1.0 },
-          took: 10
-        }
+          took: 10,
+        },
       });
 
       await service.search(mockQuery);
@@ -1039,7 +1021,7 @@ describe('ContentSearchService', () => {
       expect(analytics[0]).toMatchObject({
         query: 'test',
         resultsCount: 5,
-        page: 1
+        page: 1,
       });
     });
 
@@ -1049,8 +1031,8 @@ describe('ContentSearchService', () => {
         mockEsClient.search.mockResolvedValue({
           body: {
             hits: { total: { value: 0 }, hits: [], max_score: 0 },
-            took: 10
-          }
+            took: 10,
+          },
         });
 
         await service.search({ searchTerm: `test${i}`, page: 1, pageSize: 10 });

@@ -94,7 +94,10 @@ describe('WellnessService', () => {
     it('sets engagement_time_mins for engagement type', async () => {
       mockDb = {
         from: vi.fn(),
-        rpc: vi.fn().mockResolvedValue({ data: [{ id: 'uuid-2', created_at: '2026-02-15T10:00:00Z' }], error: null }),
+        rpc: vi.fn().mockResolvedValue({
+          data: [{ id: 'uuid-2', created_at: '2026-02-15T10:00:00Z' }],
+          error: null,
+        }),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -105,18 +108,24 @@ describe('WellnessService', () => {
         timestamp: '2026-02-15T12:00:00Z',
       });
 
-      expect(mockDb.rpc).toHaveBeenCalledWith('upsert_work_pattern', expect.objectContaining({
-        p_content_time_mins: 0,
-        p_engagement_time_mins: 30,
-        p_management_time_mins: 0,
-        p_post_count: 0,
-      }));
+      expect(mockDb.rpc).toHaveBeenCalledWith(
+        'upsert_work_pattern',
+        expect.objectContaining({
+          p_content_time_mins: 0,
+          p_engagement_time_mins: 30,
+          p_management_time_mins: 0,
+          p_post_count: 0,
+        })
+      );
     });
 
     it('sets management_time_mins for management type', async () => {
       mockDb = {
         from: vi.fn(),
-        rpc: vi.fn().mockResolvedValue({ data: [{ id: 'uuid-3', created_at: '2026-02-15T10:00:00Z' }], error: null }),
+        rpc: vi.fn().mockResolvedValue({
+          data: [{ id: 'uuid-3', created_at: '2026-02-15T10:00:00Z' }],
+          error: null,
+        }),
       } as unknown as ISupabaseClient;
 
       service = new WellnessService(mockDb, mockLogger);
@@ -127,12 +136,15 @@ describe('WellnessService', () => {
         timestamp: '2026-02-15T14:00:00Z',
       });
 
-      expect(mockDb.rpc).toHaveBeenCalledWith('upsert_work_pattern', expect.objectContaining({
-        p_content_time_mins: 0,
-        p_engagement_time_mins: 0,
-        p_management_time_mins: 20,
-        p_post_count: 0,
-      }));
+      expect(mockDb.rpc).toHaveBeenCalledWith(
+        'upsert_work_pattern',
+        expect.objectContaining({
+          p_content_time_mins: 0,
+          p_engagement_time_mins: 0,
+          p_management_time_mins: 20,
+          p_post_count: 0,
+        })
+      );
     });
 
     it('throws and logs on RPC error', async () => {
@@ -162,9 +174,27 @@ describe('WellnessService', () => {
   describe('getWorkPatterns', () => {
     it('returns aggregated work patterns for 7d period', async () => {
       const patterns = [
-        { date: '2026-02-08', content_time_mins: 120, engagement_time_mins: 60, management_time_mins: 30, total_hours: '3.5' },
-        { date: '2026-02-09', content_time_mins: 90, engagement_time_mins: 45, management_time_mins: 15, total_hours: '2.5' },
-        { date: '2026-02-10', content_time_mins: 150, engagement_time_mins: 30, management_time_mins: 60, total_hours: '4.0' },
+        {
+          date: '2026-02-08',
+          content_time_mins: 120,
+          engagement_time_mins: 60,
+          management_time_mins: 30,
+          total_hours: '3.5',
+        },
+        {
+          date: '2026-02-09',
+          content_time_mins: 90,
+          engagement_time_mins: 45,
+          management_time_mins: 15,
+          total_hours: '2.5',
+        },
+        {
+          date: '2026-02-10',
+          content_time_mins: 150,
+          engagement_time_mins: 30,
+          management_time_mins: 60,
+          total_hours: '4.0',
+        },
       ];
 
       const chainable = {
@@ -257,7 +287,9 @@ describe('WellnessService', () => {
 
       service = new WellnessService(mockDb, mockLogger);
 
-      await expect(service.getWorkPatterns('creator-1', '7d')).rejects.toEqual({ message: 'Query failed' });
+      await expect(service.getWorkPatterns('creator-1', '7d')).rejects.toEqual({
+        message: 'Query failed',
+      });
     });
   });
 
@@ -421,10 +453,38 @@ describe('WellnessService', () => {
   describe('getPulseHistory', () => {
     it('returns pulse history with trend calculation', async () => {
       const entries = [
-        { id: 'p1', energy: 4, motivation: 4, stress: 2, composite_score: '4.00', created_at: '2026-02-14T10:00:00Z' },
-        { id: 'p2', energy: 3, motivation: 3, stress: 3, composite_score: '3.00', created_at: '2026-02-13T10:00:00Z' },
-        { id: 'p3', energy: 2, motivation: 2, stress: 4, composite_score: '2.00', created_at: '2026-02-12T10:00:00Z' },
-        { id: 'p4', energy: 3, motivation: 3, stress: 3, composite_score: '3.00', created_at: '2026-02-11T10:00:00Z' },
+        {
+          id: 'p1',
+          energy: 4,
+          motivation: 4,
+          stress: 2,
+          composite_score: '4.00',
+          created_at: '2026-02-14T10:00:00Z',
+        },
+        {
+          id: 'p2',
+          energy: 3,
+          motivation: 3,
+          stress: 3,
+          composite_score: '3.00',
+          created_at: '2026-02-13T10:00:00Z',
+        },
+        {
+          id: 'p3',
+          energy: 2,
+          motivation: 2,
+          stress: 4,
+          composite_score: '2.00',
+          created_at: '2026-02-12T10:00:00Z',
+        },
+        {
+          id: 'p4',
+          energy: 3,
+          motivation: 3,
+          stress: 3,
+          composite_score: '3.00',
+          created_at: '2026-02-11T10:00:00Z',
+        },
       ];
 
       const dataChainable = {
@@ -462,7 +522,14 @@ describe('WellnessService', () => {
 
     it('returns stable trend with fewer than 4 entries', async () => {
       const entries = [
-        { id: 'p1', energy: 3, motivation: 3, stress: 3, composite_score: '3.00', created_at: '2026-02-14T10:00:00Z' },
+        {
+          id: 'p1',
+          energy: 3,
+          motivation: 3,
+          stress: 3,
+          composite_score: '3.00',
+          created_at: '2026-02-14T10:00:00Z',
+        },
       ];
 
       const dataChainable = {
@@ -560,7 +627,9 @@ describe('WellnessService', () => {
 
       service = new WellnessService(mockDb, mockLogger);
 
-      await expect(service.deletePulseHistory('creator-1')).rejects.toEqual({ message: 'Delete failed' });
+      await expect(service.deletePulseHistory('creator-1')).rejects.toEqual({
+        message: 'Delete failed',
+      });
     });
   });
 
@@ -582,7 +651,9 @@ describe('WellnessService', () => {
 
       const result = await service.deleteAllWellnessData('creator-1');
 
-      expect(mockDb.rpc).toHaveBeenCalledWith('delete_all_wellness_data', { p_creator_id: 'creator-1' });
+      expect(mockDb.rpc).toHaveBeenCalledWith('delete_all_wellness_data', {
+        p_creator_id: 'creator-1',
+      });
       expect(result).toEqual(rpcResult);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Atomically deleted all wellness data',
@@ -609,7 +680,13 @@ describe('WellnessService', () => {
       const chainable = {
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
-          data: { sample_size: 5, avg_weekly_hours: '30.0', p25_hours: '20.0', p50_hours: '30.0', p75_hours: '40.0' },
+          data: {
+            sample_size: 5,
+            avg_weekly_hours: '30.0',
+            p25_hours: '20.0',
+            p50_hours: '30.0',
+            p75_hours: '40.0',
+          },
           error: null,
         }),
       };
@@ -643,13 +720,15 @@ describe('WellnessService', () => {
       mockDb = {
         from: vi.fn(() => chainable),
         rpc: vi.fn().mockResolvedValue({
-          data: [{
-            sample_count: 150,
-            avg_score: '3.5',
-            p25_score: '2.8',
-            p50_score: '3.5',
-            p75_score: '4.2',
-          }],
+          data: [
+            {
+              sample_count: 150,
+              avg_score: '3.5',
+              p25_score: '2.8',
+              p50_score: '3.5',
+              p75_score: '4.2',
+            },
+          ],
           error: null,
         }),
       } as unknown as ISupabaseClient;

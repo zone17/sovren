@@ -9,13 +9,13 @@ import type { Event as NostrEvent } from 'nostr-tools';
  * Enumeration of all notification types supported by the system
  */
 export enum NotificationType {
-  MENTION = 'mention',        // Tagged in event (kind 1)
-  REPLY = 'reply',           // Reply to your event
-  REACTION = 'reaction',     // Reaction to your event (kind 7)
-  REPOST = 'repost',         // Repost of your event (kind 6)
-  DM = 'dm',                 // Direct message (kind 4)
-  FOLLOW = 'follow',         // New follower (kind 3)
-  ZAP = 'zap',              // Lightning payment received (kind 9735)
+  MENTION = 'mention', // Tagged in event (kind 1)
+  REPLY = 'reply', // Reply to your event
+  REACTION = 'reaction', // Reaction to your event (kind 7)
+  REPOST = 'repost', // Repost of your event (kind 6)
+  DM = 'dm', // Direct message (kind 4)
+  FOLLOW = 'follow', // New follower (kind 3)
+  ZAP = 'zap', // Lightning payment received (kind 9735)
 }
 
 /**
@@ -33,14 +33,14 @@ export interface NotificationAuthor {
  * Core notification data structure
  */
 export interface Notification {
-  id: string;                // Unique notification ID
-  type: NotificationType;    // Type of notification
-  event: NostrEvent;         // The NOSTR event that triggered this notification
+  id: string; // Unique notification ID
+  type: NotificationType; // Type of notification
+  event: NostrEvent; // The NOSTR event that triggered this notification
   author: NotificationAuthor; // Author of the event
-  content: string;           // Formatted notification message
-  createdAt: number;         // Unix timestamp (seconds)
-  read: boolean;             // Read status
-  url?: string;              // Link to event/thread (naddr/nevent)
+  content: string; // Formatted notification message
+  createdAt: number; // Unix timestamp (seconds)
+  read: boolean; // Read status
+  url?: string; // Link to event/thread (naddr/nevent)
   metadata?: NotificationMetadata; // Type-specific metadata
 }
 
@@ -49,20 +49,20 @@ export interface Notification {
  */
 export interface NotificationMetadata {
   // For reactions
-  reactionContent?: string;  // The emoji or reaction content
+  reactionContent?: string; // The emoji or reaction content
 
   // For replies
-  parentEventId?: string;    // The event being replied to
+  parentEventId?: string; // The event being replied to
 
   // For reposts
-  originalEventId?: string;  // The event being reposted
+  originalEventId?: string; // The event being reposted
 
   // For zaps
-  zapAmount?: number;        // Amount in millisats
-  zapComment?: string;       // Comment attached to zap
+  zapAmount?: number; // Amount in millisats
+  zapComment?: string; // Comment attached to zap
 
   // For DMs
-  encrypted?: boolean;       // Whether DM is encrypted
+  encrypted?: boolean; // Whether DM is encrypted
 }
 
 /**
@@ -78,9 +78,9 @@ export interface NotificationPreferences {
   enableZaps: boolean;
   playSound: boolean;
   showDesktopNotifications: boolean;
-  soundVolume: number;       // 0-1
-  groupByDate: boolean;      // Group notifications by date
-  autoMarkRead: boolean;     // Mark as read when viewed
+  soundVolume: number; // 0-1
+  groupByDate: boolean; // Group notifications by date
+  autoMarkRead: boolean; // Mark as read when viewed
 }
 
 /**
@@ -107,8 +107,8 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
 export interface NotificationFilter {
   types?: NotificationType[];
   read?: boolean;
-  startDate?: number;        // Unix timestamp
-  endDate?: number;          // Unix timestamp
+  startDate?: number; // Unix timestamp
+  endDate?: number; // Unix timestamp
   authorPubkey?: string;
   limit?: number;
   offset?: number;
@@ -118,7 +118,7 @@ export interface NotificationFilter {
  * Notification group for date-based grouping
  */
 export interface NotificationGroup {
-  label: string;             // "Today", "Yesterday", "This Week", etc.
+  label: string; // "Today", "Yesterday", "This Week", etc.
   notifications: Notification[];
   unreadCount: number;
 }
@@ -186,14 +186,14 @@ export interface NotificationEventHandlers {
 export interface NotificationStorageSchema {
   id: string;
   type: NotificationType;
-  eventId: string;           // NOSTR event ID
-  eventJson: string;         // Serialized event
+  eventId: string; // NOSTR event ID
+  eventJson: string; // Serialized event
   authorPubkey: string;
   content: string;
   createdAt: number;
   read: boolean;
   url?: string;
-  metadataJson?: string;     // Serialized metadata
+  metadataJson?: string; // Serialized metadata
 }
 
 /**

@@ -62,10 +62,7 @@ export class RealtimeService {
       console.error('Failed to connect:', error);
 
       // Fallback to SSE if WebSocket fails
-      if (
-        this.config.preferredType === 'websocket' &&
-        this.config.fallbackToSSE
-      ) {
+      if (this.config.preferredType === 'websocket' && this.config.fallbackToSSE) {
         try {
           await this.connectSSE();
           this.reconnectAttempts = 0;
@@ -503,9 +500,7 @@ export function initRealtimeService(config: RealtimeServiceConfig): RealtimeServ
  */
 export function getRealtimeService(): RealtimeService {
   if (!realtimeServiceInstance) {
-    throw new Error(
-      'RealtimeService not initialized. Call initRealtimeService first.'
-    );
+    throw new Error('RealtimeService not initialized. Call initRealtimeService first.');
   }
   return realtimeServiceInstance;
 }

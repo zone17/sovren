@@ -34,7 +34,9 @@ describe('DMCAReportButton', () => {
 
   it('renders the button with correct label', () => {
     render(<DMCAReportButton alertId="alert-1" />, { wrapper: createWrapper() });
-    expect(screen.getByRole('button', { name: /Generate DMCA takedown report/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Generate DMCA takedown report/ })
+    ).toBeInTheDocument();
     expect(screen.getByText('DMCA Report')).toBeInTheDocument();
   });
 

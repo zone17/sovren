@@ -2,7 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import { useWellnessPulseHistory } from '../hooks/useWellnessPulse';
 import type { PulsePeriod, TrendDirection } from '../types';
 
@@ -23,8 +31,12 @@ export const WellnessTrend: React.FC<WellnessTrendProps> = ({ period: initialPer
   if (isLoading) {
     return (
       <Card>
-        <CardHeader><Skeleton className="h-5 w-36" /></CardHeader>
-        <CardContent><Skeleton className="h-48 w-full" /></CardContent>
+        <CardHeader>
+          <Skeleton className="h-5 w-36" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-48 w-full" />
+        </CardContent>
       </Card>
     );
   }
@@ -62,7 +74,10 @@ export const WellnessTrend: React.FC<WellnessTrendProps> = ({ period: initialPer
         .slice()
         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
         .map((entry) => ({
-          date: new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          date: new Date(entry.created_at).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+          }),
           score: entry.composite_score,
           energy: entry.energy,
           motivation: entry.motivation,

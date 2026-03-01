@@ -13,9 +13,4 @@ export {
   REDIS_TEST_URL,
 } from './redis-test-client';
 
-export {
-  truncateAll,
-  seedTestUser,
-  seedTestContent,
-  seedTestPayment,
-} from './db-helpers';
+export { truncateAll, seedTestUser, seedTestContent, seedTestPayment } from './db-helpers';

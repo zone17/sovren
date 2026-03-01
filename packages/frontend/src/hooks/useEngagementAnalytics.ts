@@ -325,7 +325,7 @@ export const useEngagementAnalytics = (params: UseEngagementAnalyticsParams) => 
     prefetchNextTimeframe,
 
     // Metadata
-    lastUpdated: metrics?.generated_at ? new Date(metrics.generated_at) : null,
+    lastUpdated: metrics?.content_id ? new Date(metrics.content_id) : null,
     cacheStatus: {
       metrics: !!metrics,
       patterns: patterns.length > 0,

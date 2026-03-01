@@ -79,7 +79,10 @@ describe('UnifiedInbox', () => {
 
   it('shows empty state when no messages', () => {
     mockUseInboxMessages.mockReturnValue({
-      data: { messages: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false } },
+      data: {
+        messages: [],
+        pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
+      },
       isLoading: false,
     });
 

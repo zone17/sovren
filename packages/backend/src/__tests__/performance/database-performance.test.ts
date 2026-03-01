@@ -25,16 +25,16 @@ interface PerformanceMetrics {
 }
 
 interface QueryPerformanceTargets {
-  simple: number;    // Simple SELECT/INSERT
-  complex: number;   // Complex queries with JOINs
-  write: number;     // INSERT/UPDATE/DELETE
+  simple: number; // Simple SELECT/INSERT
+  complex: number; // Complex queries with JOINs
+  write: number; // INSERT/UPDATE/DELETE
 }
 
 describe('Database Performance Tests', () => {
   const targets: QueryPerformanceTargets = {
-    simple: 10,    // 10ms
-    complex: 100,  // 100ms
-    write: 20,     // 20ms
+    simple: 10, // 10ms
+    complex: 100, // 100ms
+    write: 20, // 20ms
   };
 
   // Performance measurement utility
@@ -89,9 +89,9 @@ describe('Database Performance Tests', () => {
   // Mock database operations
   const mockDbQuery = async (complexity: 'simple' | 'complex' | 'write'): Promise<void> => {
     const delays = {
-      simple: 2 + Math.random() * 8,     // 2-10ms
-      complex: 30 + Math.random() * 70,  // 30-100ms
-      write: 5 + Math.random() * 15,     // 5-20ms
+      simple: 2 + Math.random() * 8, // 2-10ms
+      complex: 30 + Math.random() * 70, // 30-100ms
+      write: 5 + Math.random() * 15, // 5-20ms
     };
 
     return new Promise((resolve) => {
@@ -307,9 +307,7 @@ describe('Database Performance Tests', () => {
       const concurrentTransactions = 10;
       const startTime = performance.now();
 
-      const promises = Array.from({ length: concurrentTransactions }, () =>
-        mockDbQuery('write')
-      );
+      const promises = Array.from({ length: concurrentTransactions }, () => mockDbQuery('write'));
 
       await Promise.all(promises);
 
@@ -358,9 +356,7 @@ describe('Database Performance Tests', () => {
       const startTime = performance.now();
 
       // Create more requests than pool size
-      const promises = Array.from({ length: requests }, () =>
-        mockDbQuery('simple')
-      );
+      const promises = Array.from({ length: requests }, () => mockDbQuery('simple'));
 
       await Promise.all(promises);
 
@@ -464,9 +460,7 @@ describe('Database Performance Tests', () => {
       const concurrentQueries = 50;
       const startTime = performance.now();
 
-      const promises = Array.from({ length: concurrentQueries }, () =>
-        mockDbQuery('simple')
-      );
+      const promises = Array.from({ length: concurrentQueries }, () => mockDbQuery('simple'));
 
       await Promise.all(promises);
 
@@ -478,7 +472,9 @@ describe('Database Performance Tests', () => {
       console.log(`  Concurrent Queries: ${concurrentQueries}`);
       console.log(`  Total Duration: ${duration.toFixed(2)}ms`);
       console.log(`  Average per Query: ${avgDuration.toFixed(2)}ms`);
-      console.log(`  Throughput: ${(concurrentQueries / (duration / 1000)).toFixed(2)} queries/sec`);
+      console.log(
+        `  Throughput: ${(concurrentQueries / (duration / 1000)).toFixed(2)} queries/sec`
+      );
 
       // Average query time should not degrade significantly under load
       expect(avgDuration).toBeLessThan(targets.simple * 2);

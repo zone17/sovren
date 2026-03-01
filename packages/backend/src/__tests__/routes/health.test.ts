@@ -35,7 +35,14 @@ vi.mock('express', async () => {
 });
 
 // Use vi.hoisted() to declare mock functions before vi.mock factories run (hoisting)
-const { mockRedisPing, mockRedisAvailable, mockSupabaseSelect, mockSupabaseLimit, mockFetch, mockWsClose } = vi.hoisted(() => ({
+const {
+  mockRedisPing,
+  mockRedisAvailable,
+  mockSupabaseSelect,
+  mockSupabaseLimit,
+  mockFetch,
+  mockWsClose,
+} = vi.hoisted(() => ({
   mockRedisPing: vi.fn().mockResolvedValue('PONG'),
   mockRedisAvailable: vi.fn().mockReturnValue(true),
   mockSupabaseSelect: vi.fn().mockReturnThis(),

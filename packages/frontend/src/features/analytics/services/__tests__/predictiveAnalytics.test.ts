@@ -4,11 +4,11 @@
  */
 
 import {
-    analyzeFeatureUsage,
-    detectAnomalies,
-    forecastPerformance,
-    getRealtimeRecommendations,
-    predictUserBehavior
+  analyzeFeatureUsage,
+  detectAnomalies,
+  forecastPerformance,
+  getRealtimeRecommendations,
+  predictUserBehavior,
 } from '../predictiveAnalytics';
 
 describe('Predictive Analytics Service', () => {
@@ -80,9 +80,7 @@ describe('Predictive Analytics Service', () => {
         clickSequence: [1000, 2000],
         maxScrollDepth: 50,
         pageViews: 2,
-        interactions: [
-          { type: 'click' as const, element: 'button', timestamp: Date.now() },
-        ],
+        interactions: [{ type: 'click' as const, element: 'button', timestamp: Date.now() }],
         timestamp: Date.now(),
         userAgent: 'test-agent',
       };

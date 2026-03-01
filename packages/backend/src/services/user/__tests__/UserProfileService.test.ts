@@ -12,7 +12,6 @@ import type {
   UpdateProfileRequest,
   AvatarUploadRequest,
   ProfileSearchQuery,
-  VerifySocialLinkRequest
 } from '../../../types/user-profile';
 
 // Mock sharp image processing
@@ -82,7 +81,7 @@ class MockCacheService {
       keys: this.cache.size,
       memoryUsage: 0,
       evictions: 0,
-      hitRate: 0
+      hitRate: 0,
     };
   }
 
@@ -212,7 +211,7 @@ describe('UserProfileService', () => {
       bio: 'Software developer',
       location: 'San Francisco',
       website: 'https://johndoe.com',
-      visibility: 'public'
+      visibility: 'public',
     };
 
     it('should create a new profile successfully', async () => {
@@ -245,7 +244,7 @@ describe('UserProfileService', () => {
         followersGained: 0,
         followersGainedToday: 0,
         followersGainedThisWeek: 0,
-        followersGainedThisMonth: 0
+        followersGainedThisMonth: 0,
       });
     });
 
@@ -258,7 +257,7 @@ describe('UserProfileService', () => {
     it('should emit profile created event', async () => {
       await service.createProfile(validRequest);
       expect(mockEventBus.events.length).toBeGreaterThan(0);
-      const event = mockEventBus.events.find(e => e.type === 'profile.created');
+      const event = mockEventBus.events.find((e) => e.type === 'profile.created');
       expect(event).toBeDefined();
     });
 
@@ -278,15 +277,17 @@ describe('UserProfileService', () => {
 
       const duplicateUsernameRequest: CreateProfileRequest = {
         userId: 'user_456',
-        username: 'johndoe'
+        username: 'johndoe',
       };
 
-      await expect(service.createProfile(duplicateUsernameRequest)).rejects.toThrow('Username johndoe is already taken');
+      await expect(service.createProfile(duplicateUsernameRequest)).rejects.toThrow(
+        'Username johndoe is already taken'
+      );
     });
 
     it('should handle profile without optional fields', async () => {
       const minimalRequest: CreateProfileRequest = {
-        userId: 'user_minimal'
+        userId: 'user_minimal',
       };
 
       const profile = await service.createProfile(minimalRequest);
@@ -298,41 +299,45 @@ describe('UserProfileService', () => {
     it('should reject invalid display name', async () => {
       const invalidRequest: CreateProfileRequest = {
         userId: 'user_invalid',
-        displayName: 'a' // Too short (min 1 char, but pattern fails)
+        displayName: 'a', // Too short (min 1 char, but pattern fails)
       };
 
-      await expect(service.createProfile({ ...invalidRequest, displayName: '' }))
-        .rejects.toThrow('Profile validation failed');
+      await expect(service.createProfile({ ...invalidRequest, displayName: '' })).rejects.toThrow(
+        'Profile validation failed'
+      );
     });
 
     it('should reject invalid username format', async () => {
       const invalidRequest: CreateProfileRequest = {
         userId: 'user_invalid',
-        username: 'john doe' // Spaces not allowed
+        username: 'john doe', // Spaces not allowed
       };
 
-      await expect(service.createProfile(invalidRequest))
-        .rejects.toThrow('Profile validation failed');
+      await expect(service.createProfile(invalidRequest)).rejects.toThrow(
+        'Profile validation failed'
+      );
     });
 
     it('should reject invalid website URL', async () => {
       const invalidRequest: CreateProfileRequest = {
         userId: 'user_invalid',
-        website: 'not-a-url'
+        website: 'not-a-url',
       };
 
-      await expect(service.createProfile(invalidRequest))
-        .rejects.toThrow('Profile validation failed');
+      await expect(service.createProfile(invalidRequest)).rejects.toThrow(
+        'Profile validation failed'
+      );
     });
 
     it('should reject bio exceeding max length', async () => {
       const invalidRequest: CreateProfileRequest = {
         userId: 'user_invalid',
-        bio: 'a'.repeat(501) // Max 500
+        bio: 'a'.repeat(501), // Max 500
       };
 
-      await expect(service.createProfile(invalidRequest))
-        .rejects.toThrow('Profile validation failed');
+      await expect(service.createProfile(invalidRequest)).rejects.toThrow(
+        'Profile validation failed'
+      );
     });
   });
 
@@ -340,7 +345,7 @@ describe('UserProfileService', () => {
     it('should retrieve an existing profile', async () => {
       const created = await service.createProfile({
         userId: 'user_123',
-        displayName: 'John Doe'
+        displayName: 'John Doe',
       });
 
       const retrieved = await service.getProfile('user_123');
@@ -368,7 +373,7 @@ describe('UserProfileService', () => {
     it('should retrieve profile by username', async () => {
       await service.createProfile({
         userId: 'user_123',
-        username: 'johndoe'
+        username: 'johndoe',
       });
 
       const profile = await service.getProfileByUsername('johndoe');
@@ -379,7 +384,7 @@ describe('UserProfileService', () => {
     it('should be case-insensitive', async () => {
       await service.createProfile({
         userId: 'user_123',
-        username: 'JohnDoe'
+        username: 'JohnDoe',
       });
 
       const profile = await service.getProfileByUsername('johndoe');
@@ -396,12 +401,12 @@ describe('UserProfileService', () => {
     it('should update profile fields', async () => {
       await service.createProfile({
         userId: 'user_123',
-        displayName: 'John Doe'
+        displayName: 'John Doe',
       });
 
       const updates: UpdateProfileRequest = {
         displayName: 'Jane Doe',
-        bio: 'Updated bio'
+        bio: 'Updated bio',
       };
 
       const updated = await service.updateProfile('user_123', updates);
@@ -417,7 +422,7 @@ describe('UserProfileService', () => {
 
       await service.updateProfile('user_123', {
         displayName: 'John Doe',
-        bio: 'Software developer'
+        bio: 'Software developer',
       });
 
       const updatedProfile = await service.getProfile('user_123');
@@ -425,18 +430,17 @@ describe('UserProfileService', () => {
     });
 
     it('should throw error for non-existent profile', async () => {
-      await expect(service.updateProfile('nonexistent', {}))
-        .rejects.toThrow('Profile not found');
+      await expect(service.updateProfile('nonexistent', {})).rejects.toThrow('Profile not found');
     });
 
     it('should handle username changes', async () => {
       await service.createProfile({
         userId: 'user_123',
-        username: 'oldname'
+        username: 'oldname',
       });
 
       await service.updateProfile('user_123', {
-        username: 'newname'
+        username: 'newname',
       });
 
       const byOldName = await service.getProfileByUsername('oldname');
@@ -450,8 +454,9 @@ describe('UserProfileService', () => {
       await service.createProfile({ userId: 'user_1', username: 'john' });
       await service.createProfile({ userId: 'user_2', username: 'jane' });
 
-      await expect(service.updateProfile('user_2', { username: 'john' }))
-        .rejects.toThrow('Username john is already taken');
+      await expect(service.updateProfile('user_2', { username: 'john' })).rejects.toThrow(
+        'Username john is already taken'
+      );
     });
 
     it('should invalidate caches after update', async () => {
@@ -474,7 +479,7 @@ describe('UserProfileService', () => {
 
       await service.updateProfile('user_123', { displayName: 'Updated' });
 
-      const event = mockEventBus.events.find(e => e.type === 'profile.updated');
+      const event = mockEventBus.events.find((e) => e.type === 'profile.updated');
       expect(event).toBeDefined();
     });
   });
@@ -490,14 +495,13 @@ describe('UserProfileService', () => {
     });
 
     it('should throw error for non-existent profile', async () => {
-      await expect(service.deleteProfile('nonexistent'))
-        .rejects.toThrow('Profile not found');
+      await expect(service.deleteProfile('nonexistent')).rejects.toThrow('Profile not found');
     });
 
     it('should remove username index', async () => {
       await service.createProfile({
         userId: 'user_123',
-        username: 'johndoe'
+        username: 'johndoe',
       });
 
       await service.deleteProfile('user_123');
@@ -520,7 +524,7 @@ describe('UserProfileService', () => {
 
       await service.deleteProfile('user_123');
 
-      const event = mockEventBus.events.find(e => e.type === 'profile.deleted');
+      const event = mockEventBus.events.find((e) => e.type === 'profile.deleted');
       expect(event).toBeDefined();
     });
   });
@@ -536,7 +540,7 @@ describe('UserProfileService', () => {
         userId: 'user_123',
         imageData: imageBuffer,
         mimeType: 'image/jpeg',
-        filename: 'avatar.jpg'
+        filename: 'avatar.jpg',
       };
 
       const result = await service.uploadAvatar(request);
@@ -553,7 +557,7 @@ describe('UserProfileService', () => {
         userId: 'user_123',
         imageData: Buffer.from('data'),
         mimeType: 'image/svg+xml', // Not allowed
-        filename: 'avatar.svg'
+        filename: 'avatar.svg',
       };
 
       const result = await service.uploadAvatar(request);
@@ -572,7 +576,7 @@ describe('UserProfileService', () => {
         userId: 'user_123',
         imageData: largeBuffer,
         mimeType: 'image/jpeg',
-        filename: 'large.jpg'
+        filename: 'large.jpg',
       };
 
       const result = await service.uploadAvatar(request);
@@ -591,7 +595,7 @@ describe('UserProfileService', () => {
         userId: 'user_123',
         imageData: imageBuffer,
         mimeType: 'image/jpeg',
-        filename: 'avatar.jpg'
+        filename: 'avatar.jpg',
       });
 
       const updatedProfile = await service.getProfile('user_123');
@@ -608,7 +612,7 @@ describe('UserProfileService', () => {
         userId: 'user_123',
         imageData: Buffer.from('data'),
         mimeType: 'image/jpeg',
-        filename: 'avatar.jpg'
+        filename: 'avatar.jpg',
       });
 
       await service.deleteAvatar('user_123');
@@ -623,7 +627,7 @@ describe('UserProfileService', () => {
         userId: 'user_123',
         imageData: Buffer.from('data'),
         mimeType: 'image/jpeg',
-        filename: 'avatar.jpg'
+        filename: 'avatar.jpg',
       });
 
       const withAvatar = await service.getProfile('user_123');
@@ -644,7 +648,7 @@ describe('UserProfileService', () => {
         const link = {
           platform: 'twitter' as const,
           url: 'https://twitter.com/johndoe',
-          username: 'johndoe'
+          username: 'johndoe',
         };
 
         const profile = await service.addSocialLink('user_123', link);
@@ -659,12 +663,12 @@ describe('UserProfileService', () => {
 
         await service.addSocialLink('user_123', {
           platform: 'twitter',
-          url: 'https://twitter.com/old'
+          url: 'https://twitter.com/old',
         });
 
         const profile = await service.addSocialLink('user_123', {
           platform: 'twitter',
-          url: 'https://twitter.com/new'
+          url: 'https://twitter.com/new',
         });
 
         expect(profile.socialLinks).toHaveLength(1);
@@ -677,10 +681,10 @@ describe('UserProfileService', () => {
 
         await service.addSocialLink('user_123', {
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
-        const event = mockEventBus.events.find(e => e.type === 'profile.social_link.added');
+        const event = mockEventBus.events.find((e) => e.type === 'profile.social_link.added');
         expect(event).toBeDefined();
       });
     });
@@ -691,7 +695,7 @@ describe('UserProfileService', () => {
 
         await service.addSocialLink('user_123', {
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
         const profile = await service.removeSocialLink('user_123', 'twitter');
@@ -704,14 +708,14 @@ describe('UserProfileService', () => {
 
         await service.addSocialLink('user_123', {
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
         mockEventBus.clear();
 
         await service.removeSocialLink('user_123', 'twitter');
 
-        const event = mockEventBus.events.find(e => e.type === 'profile.social_link.removed');
+        const event = mockEventBus.events.find((e) => e.type === 'profile.social_link.removed');
         expect(event).toBeDefined();
       });
     });
@@ -722,13 +726,13 @@ describe('UserProfileService', () => {
 
         await service.addSocialLink('user_123', {
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
         const result = await service.verifySocialLink({
           userId: 'user_123',
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
         expect(result.success).toBe(true);
@@ -741,13 +745,13 @@ describe('UserProfileService', () => {
 
         await service.addSocialLink('user_123', {
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
         await service.verifySocialLink({
           userId: 'user_123',
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
         const profile = await service.getProfile('user_123');
@@ -759,7 +763,7 @@ describe('UserProfileService', () => {
 
         await service.addSocialLink('user_123', {
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
         mockEventBus.clear();
@@ -767,10 +771,10 @@ describe('UserProfileService', () => {
         await service.verifySocialLink({
           userId: 'user_123',
           platform: 'twitter',
-          url: 'https://twitter.com/johndoe'
+          url: 'https://twitter.com/johndoe',
         });
 
-        const event = mockEventBus.events.find(e => e.type === 'profile.social_link.verified');
+        const event = mockEventBus.events.find((e) => e.type === 'profile.social_link.verified');
         expect(event).toBeDefined();
       });
     });
@@ -780,7 +784,7 @@ describe('UserProfileService', () => {
     it('should update profile visibility', async () => {
       await service.createProfile({
         userId: 'user_123',
-        visibility: 'public'
+        visibility: 'public',
       });
 
       const profile = await service.updateVisibility('user_123', 'private');
@@ -794,7 +798,7 @@ describe('UserProfileService', () => {
 
       await service.updateVisibility('user_123', 'followers-only');
 
-      const event = mockEventBus.events.find(e => e.type === 'profile.visibility.changed');
+      const event = mockEventBus.events.find((e) => e.type === 'profile.visibility.changed');
       expect(event).toBeDefined();
     });
   });
@@ -807,7 +811,7 @@ describe('UserProfileService', () => {
         displayName: 'Alice Developer',
         username: 'alice',
         bio: 'Full-stack developer',
-        location: 'San Francisco'
+        location: 'San Francisco',
       });
 
       await service.createProfile({
@@ -815,7 +819,7 @@ describe('UserProfileService', () => {
         displayName: 'Bob Designer',
         username: 'bob',
         bio: 'UI/UX designer',
-        location: 'New York'
+        location: 'New York',
       });
 
       await service.createProfile({
@@ -823,13 +827,13 @@ describe('UserProfileService', () => {
         displayName: 'Charlie Developer',
         username: 'charlie',
         bio: 'Backend developer',
-        location: 'San Francisco'
+        location: 'San Francisco',
       });
     });
 
     it('should search profiles by query term', async () => {
       const result = await service.searchProfiles({
-        query: 'developer'
+        query: 'developer',
       });
 
       expect(result.profiles.length).toBeGreaterThanOrEqual(2);
@@ -838,17 +842,17 @@ describe('UserProfileService', () => {
 
     it('should filter by location', async () => {
       const result = await service.searchProfiles({
-        location: 'San Francisco'
+        location: 'San Francisco',
       });
 
       expect(result.profiles.length).toBe(2);
-      expect(result.profiles.every(p => p.location === 'San Francisco')).toBe(true);
+      expect(result.profiles.every((p) => p.location === 'San Francisco')).toBe(true);
     });
 
     it('should paginate results', async () => {
       const result = await service.searchProfiles({
         page: 1,
-        pageSize: 2
+        pageSize: 2,
       });
 
       expect(result.profiles.length).toBe(2);
@@ -860,7 +864,7 @@ describe('UserProfileService', () => {
     it('should sort by completion score', async () => {
       const result = await service.searchProfiles({
         sortBy: 'relevance',
-        sortOrder: 'desc'
+        sortOrder: 'desc',
       });
 
       // Results should be sorted by completion score descending
@@ -909,7 +913,7 @@ describe('UserProfileService', () => {
 
       await service.recordProfileView(profile.id, 'viewer_456');
 
-      const event = mockEventBus.events.find(e => e.type === 'profile.viewed');
+      const event = mockEventBus.events.find((e) => e.type === 'profile.viewed');
       expect(event).toBeDefined();
     });
 
@@ -967,7 +971,7 @@ describe('UserProfileService', () => {
         userId: 'user_123',
         displayName: 'John Doe',
         username: 'johndoe',
-        bio: 'Software developer'
+        bio: 'Software developer',
       });
 
       const completion = await service.getProfileCompletion('user_123');
@@ -1006,7 +1010,7 @@ describe('UserProfileService', () => {
         displayName: 'John Doe',
         username: 'johndoe',
         bio: 'Software developer',
-        website: 'https://johndoe.com'
+        website: 'https://johndoe.com',
       });
 
       expect(result.valid).toBe(true);
@@ -1015,38 +1019,38 @@ describe('UserProfileService', () => {
 
     it('should reject invalid display name', () => {
       const result = service.validateProfile({
-        displayName: '' // Empty
+        displayName: '', // Empty
       });
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.field === 'displayName')).toBe(true);
+      expect(result.errors.some((e) => e.field === 'displayName')).toBe(true);
     });
 
     it('should reject short username', () => {
       const result = service.validateProfile({
-        username: 'ab' // Too short (min 3)
+        username: 'ab', // Too short (min 3)
       });
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.field === 'username')).toBe(true);
+      expect(result.errors.some((e) => e.field === 'username')).toBe(true);
     });
 
     it('should reject long bio', () => {
       const result = service.validateProfile({
-        bio: 'a'.repeat(501) // Max 500
+        bio: 'a'.repeat(501), // Max 500
       });
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.field === 'bio')).toBe(true);
+      expect(result.errors.some((e) => e.field === 'bio')).toBe(true);
     });
 
     it('should reject invalid website URL', () => {
       const result = service.validateProfile({
-        website: 'not-a-url'
+        website: 'not-a-url',
       });
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.field === 'website')).toBe(true);
+      expect(result.errors.some((e) => e.field === 'website')).toBe(true);
     });
   });
 
@@ -1059,7 +1063,7 @@ describe('UserProfileService', () => {
     it('should return false for taken username', async () => {
       await service.createProfile({
         userId: 'user_123',
-        username: 'johndoe'
+        username: 'johndoe',
       });
 
       const available = await service.isUsernameAvailable('johndoe');
@@ -1069,7 +1073,7 @@ describe('UserProfileService', () => {
     it('should return true when excluding current user', async () => {
       await service.createProfile({
         userId: 'user_123',
-        username: 'johndoe'
+        username: 'johndoe',
       });
 
       const available = await service.isUsernameAvailable('johndoe', 'user_123');
@@ -1079,7 +1083,7 @@ describe('UserProfileService', () => {
     it('should be case-insensitive', async () => {
       await service.createProfile({
         userId: 'user_123',
-        username: 'JohnDoe'
+        username: 'JohnDoe',
       });
 
       const available = await service.isUsernameAvailable('johndoe');
@@ -1096,7 +1100,7 @@ describe('UserProfileService', () => {
       const profiles = await service.getProfilesBatch(['user_1', 'user_2', 'user_3']);
 
       expect(profiles).toHaveLength(3);
-      expect(profiles.map(p => p.userId)).toEqual(['user_1', 'user_2', 'user_3']);
+      expect(profiles.map((p) => p.userId)).toEqual(['user_1', 'user_2', 'user_3']);
     });
 
     it('should handle non-existent profiles', async () => {
@@ -1135,7 +1139,7 @@ describe('UserProfileService', () => {
 
       await service.updateVerificationStatus('user_123', 'verified', 'admin_456');
 
-      const event = mockEventBus.events.find(e => e.type === 'profile.verification.completed');
+      const event = mockEventBus.events.find((e) => e.type === 'profile.verification.completed');
       expect(event).toBeDefined();
     });
   });

@@ -1,11 +1,13 @@
 name: 📊 Performance Monitoring
 
+# DEPRECATED: Functionality consolidated into ci.yml
+# Kept for emergency manual use only.
 on:
-  schedule:
-    # Run performance tests every 6 hours
-    - cron: '0 */6 * * *'
   workflow_dispatch:
     inputs:
+      confirm:
+        description: 'DEPRECATED - Use ci.yml instead. Type CONFIRM to run.'
+        required: true
       environment:
         description: 'Environment to test'
         required: true

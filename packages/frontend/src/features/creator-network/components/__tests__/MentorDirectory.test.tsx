@@ -110,7 +110,9 @@ describe('MentorDirectory', () => {
       // The audience range label appears both in the select option and in the card badge.
       // Use getAllByText and assert at least one instance is in the document.
       expect(screen.getAllByText('10K – 100K').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText('Professional photographer with 10 years experience.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Professional photographer with 10 years experience.')
+      ).toBeInTheDocument();
     });
 
     it('renders max mentees count', () => {

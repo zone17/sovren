@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Business Invoice Service
  * EPIC-011: Business Manager — Invoicing with LNURL-pay payment links

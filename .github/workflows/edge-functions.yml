@@ -1,16 +1,13 @@
 name: 🚀 Supabase Edge Functions CI/CD
 
+# DEPRECATED: Functionality consolidated into ci.yml
+# Kept for emergency manual use only.
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'supabase/functions/**'
-      - '.github/workflows/edge-functions.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'supabase/functions/**'
-      - '.github/workflows/edge-functions.yml'
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'DEPRECATED - Use ci.yml instead. Type CONFIRM to run.'
+        required: true
 
 permissions: read-all
 

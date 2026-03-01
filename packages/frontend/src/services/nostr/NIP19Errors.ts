@@ -122,10 +122,7 @@ export class NIP19Error extends Error {
   /**
    * Create error for invalid format
    */
-  public static invalidFormat(
-    input: string,
-    expectedFormat?: string
-  ): NIP19Error {
+  public static invalidFormat(input: string, expectedFormat?: string): NIP19Error {
     return new NIP19Error({
       type: NIP19ErrorType.INVALID_FORMAT,
       message: `Invalid bech32 format: ${input}`,
@@ -162,11 +159,7 @@ export class NIP19Error extends Error {
   /**
    * Create error for invalid length
    */
-  public static invalidLength(
-    field: string,
-    expected: number,
-    actual: number
-  ): NIP19Error {
+  public static invalidLength(field: string, expected: number, actual: number): NIP19Error {
     return new NIP19Error({
       type: NIP19ErrorType.INVALID_LENGTH,
       message: `Invalid length for ${field}: expected ${expected}, got ${actual}`,
@@ -245,12 +238,13 @@ export class NIP19ErrorHandler {
    * Handle and log error
    */
   public static handle(error: Error | NIP19Error): void {
-    const nip19Error = error instanceof NIP19Error
-      ? error
-      : new NIP19Error({
-          type: NIP19ErrorType.DECODE_FAILED,
-          message: error.message,
-        });
+    const nip19Error =
+      error instanceof NIP19Error
+        ? error
+        : new NIP19Error({
+            type: NIP19ErrorType.DECODE_FAILED,
+            message: error.message,
+          });
 
     this.errors.push(nip19Error);
 

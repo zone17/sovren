@@ -466,6 +466,7 @@ export const NetworkPerformanceOptimizer: React.FC<NetworkPerformanceOptimizerPr
       return () => clearInterval(interval);
     } catch (error) {
       console.error('Failed to initialize network optimizations:', error);
+      return undefined;
     } finally {
       setIsOptimizing(false);
     }

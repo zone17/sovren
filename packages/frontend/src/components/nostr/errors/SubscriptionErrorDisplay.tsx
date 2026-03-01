@@ -92,8 +92,19 @@ const SubscriptionErrorItem: React.FC<SubscriptionErrorItemProps> = ({
           className="ml-4 p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           aria-label="Close subscription"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -105,7 +116,7 @@ const SubscriptionErrorItem: React.FC<SubscriptionErrorItemProps> = ({
             Affected Relays ({error.affectedRelays.length})
           </p>
           <div className="flex flex-wrap gap-1">
-            {error.affectedRelays.map(relay => {
+            {error.affectedRelays.map((relay) => {
               const hostname = (() => {
                 try {
                   return new URL(relay).hostname;
@@ -157,12 +168,20 @@ const SubscriptionErrorItem: React.FC<SubscriptionErrorItemProps> = ({
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
 
           {isExpanded && (
-            <div id={`filter-errors-${error.subscriptionId}`} className="mt-2 p-3 bg-red-50 dark:bg-red-900/10 rounded">
+            <div
+              id={`filter-errors-${error.subscriptionId}`}
+              className="mt-2 p-3 bg-red-50 dark:bg-red-900/10 rounded"
+            >
               <ul className="text-xs text-red-800 dark:text-red-300 space-y-1 list-disc list-inside">
                 {error.filterErrors.map((filterError, index) => (
                   <li key={index}>{filterError}</li>
@@ -229,7 +248,7 @@ export const SubscriptionErrorDisplay: React.FC<SubscriptionErrorDisplayProps> =
 
       {/* Error List */}
       <div className="space-y-3">
-        {errors.map(error => (
+        {errors.map((error) => (
           <SubscriptionErrorItem
             key={error.subscriptionId}
             error={error}

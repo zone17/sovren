@@ -10,7 +10,7 @@ import { ErrorToastContainer, errorToast } from './ErrorToast';
 import {
   ErrorSeverity as ErrorSeverityEnum,
   ErrorCategory as ErrorCategoryEnum,
-  NostrErrorCode as NostrErrorCodeEnum
+  NostrErrorCode as NostrErrorCodeEnum,
 } from './types';
 import type { NostrErrorMetadata } from './types';
 
@@ -26,7 +26,8 @@ const ToastDemo: React.FC<{ onShow: () => void }> = ({ onShow }) => {
           Show Toast
         </button>
         <p className="mt-4 text-sm text-gray-600">
-          Click the button to show the toast notification. Toasts will appear in the top-right corner.
+          Click the button to show the toast notification. Toasts will appear in the top-right
+          corner.
         </p>
       </div>
       <ErrorToastContainer />
@@ -41,7 +42,8 @@ const meta: Meta<typeof ToastDemo> = {
     layout: 'fullscreen',
     docs: {
       description: {
-        component: 'Toast notification system for displaying errors with auto-dismiss and retry functionality.',
+        component:
+          'Toast notification system for displaying errors with auto-dismiss and retry functionality.',
       },
     },
   },
@@ -64,12 +66,14 @@ const createError = (overrides?: Partial<NostrErrorMetadata>): NostrErrorMetadat
 export const InfoToast: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        code: NostrErrorCodeEnum.EOSE_NOT_RECEIVED,
-        severity: ErrorSeverityEnum.INFO,
-        title: 'Loading Complete',
-        message: 'All events have been loaded from the relay',
-      }));
+      errorToast.show(
+        createError({
+          code: NostrErrorCodeEnum.EOSE_NOT_RECEIVED,
+          severity: ErrorSeverityEnum.INFO,
+          title: 'Loading Complete',
+          message: 'All events have been loaded from the relay',
+        })
+      );
     },
   },
 };
@@ -77,12 +81,14 @@ export const InfoToast: Story = {
 export const WarningToast: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        code: NostrErrorCodeEnum.RATE_LIMIT_EXCEEDED,
-        severity: ErrorSeverityEnum.WARNING,
-        title: 'Rate Limit Warning',
-        message: 'Approaching rate limit. Please slow down.',
-      }));
+      errorToast.show(
+        createError({
+          code: NostrErrorCodeEnum.RATE_LIMIT_EXCEEDED,
+          severity: ErrorSeverityEnum.WARNING,
+          title: 'Rate Limit Warning',
+          message: 'Approaching rate limit. Please slow down.',
+        })
+      );
     },
   },
 };
@@ -90,12 +96,14 @@ export const WarningToast: Story = {
 export const ErrorToast: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        code: NostrErrorCodeEnum.PUBLISH_FAILED,
-        severity: ErrorSeverityEnum.ERROR,
-        title: 'Publish Failed',
-        message: 'Failed to publish event to relay',
-      }));
+      errorToast.show(
+        createError({
+          code: NostrErrorCodeEnum.PUBLISH_FAILED,
+          severity: ErrorSeverityEnum.ERROR,
+          title: 'Publish Failed',
+          message: 'Failed to publish event to relay',
+        })
+      );
     },
   },
 };
@@ -103,12 +111,14 @@ export const ErrorToast: Story = {
 export const CriticalToast: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        code: NostrErrorCodeEnum.NO_RELAYS_AVAILABLE,
-        severity: ErrorSeverityEnum.CRITICAL,
-        title: 'Critical: No Relays',
-        message: 'Cannot connect to any relays. Application is offline.',
-      }));
+      errorToast.show(
+        createError({
+          code: NostrErrorCodeEnum.NO_RELAYS_AVAILABLE,
+          severity: ErrorSeverityEnum.CRITICAL,
+          title: 'Critical: No Relays',
+          message: 'Cannot connect to any relays. Application is offline.',
+        })
+      );
     },
   },
 };
@@ -120,7 +130,7 @@ export const WithRetry: Story = {
         retryable: true,
         onRetry: async () => {
           console.log('Retrying...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           console.log('Retry complete');
         },
       });
@@ -147,11 +157,14 @@ export const WithCustomAction: Story = {
 export const NonDismissible: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        severity: ErrorSeverityEnum.CRITICAL,
-      }), {
-        dismissible: false,
-      });
+      errorToast.show(
+        createError({
+          severity: ErrorSeverityEnum.CRITICAL,
+        }),
+        {
+          dismissible: false,
+        }
+      );
     },
   },
 };
@@ -169,25 +182,31 @@ export const CustomDuration: Story = {
 export const MultipleToasts: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        title: 'First Error',
-        message: 'This is the first error',
-      }));
+      errorToast.show(
+        createError({
+          title: 'First Error',
+          message: 'This is the first error',
+        })
+      );
 
       setTimeout(() => {
-        errorToast.show(createError({
-          severity: ErrorSeverityEnum.WARNING,
-          title: 'Second Warning',
-          message: 'This is a warning',
-        }));
+        errorToast.show(
+          createError({
+            severity: ErrorSeverityEnum.WARNING,
+            title: 'Second Warning',
+            message: 'This is a warning',
+          })
+        );
       }, 500);
 
       setTimeout(() => {
-        errorToast.show(createError({
-          severity: ErrorSeverityEnum.INFO,
-          title: 'Third Info',
-          message: 'This is informational',
-        }));
+        errorToast.show(
+          createError({
+            severity: ErrorSeverityEnum.INFO,
+            title: 'Third Info',
+            message: 'This is informational',
+          })
+        );
       }, 1000);
     },
   },
@@ -196,19 +215,22 @@ export const MultipleToasts: Story = {
 export const ConnectionError: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        code: NostrErrorCodeEnum.CONNECTION_TIMEOUT,
-        category: ErrorCategoryEnum.CONNECTION,
-        severity: ErrorSeverityEnum.ERROR,
-        title: 'Connection Timeout',
-        message: 'Could not connect to wss://relay.damus.io',
-      }), {
-        retryable: true,
-        onRetry: () => {
-          console.log('Retrying connection...');
-          return new Promise(resolve => setTimeout(resolve, 2000));
-        },
-      });
+      errorToast.show(
+        createError({
+          code: NostrErrorCodeEnum.CONNECTION_TIMEOUT,
+          category: ErrorCategoryEnum.CONNECTION,
+          severity: ErrorSeverityEnum.ERROR,
+          title: 'Connection Timeout',
+          message: 'Could not connect to wss://relay.damus.io',
+        }),
+        {
+          retryable: true,
+          onRetry: () => {
+            console.log('Retrying connection...');
+            return new Promise((resolve) => setTimeout(resolve, 2000));
+          },
+        }
+      );
     },
   },
 };
@@ -216,19 +238,22 @@ export const ConnectionError: Story = {
 export const PublishError: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        code: NostrErrorCodeEnum.EVENT_VALIDATION_FAILED,
-        category: ErrorCategoryEnum.PUBLISHING,
-        severity: ErrorSeverityEnum.ERROR,
-        title: 'Validation Failed',
-        message: 'Event signature is invalid',
-      }), {
-        retryable: true,
-        onRetry: async () => {
-          console.log('Retrying publish...');
-          await new Promise(resolve => setTimeout(resolve, 1500));
-        },
-      });
+      errorToast.show(
+        createError({
+          code: NostrErrorCodeEnum.EVENT_VALIDATION_FAILED,
+          category: ErrorCategoryEnum.PUBLISHING,
+          severity: ErrorSeverityEnum.ERROR,
+          title: 'Validation Failed',
+          message: 'Event signature is invalid',
+        }),
+        {
+          retryable: true,
+          onRetry: async () => {
+            console.log('Retrying publish...');
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+          },
+        }
+      );
     },
   },
 };
@@ -236,13 +261,15 @@ export const PublishError: Story = {
 export const SubscriptionError: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        code: NostrErrorCodeEnum.SUBSCRIPTION_TIMEOUT,
-        category: ErrorCategoryEnum.SUBSCRIPTION,
-        severity: ErrorSeverityEnum.WARNING,
-        title: 'Subscription Timeout',
-        message: 'Subscription did not receive EOSE within timeout',
-      }));
+      errorToast.show(
+        createError({
+          code: NostrErrorCodeEnum.SUBSCRIPTION_TIMEOUT,
+          category: ErrorCategoryEnum.SUBSCRIPTION,
+          severity: ErrorSeverityEnum.WARNING,
+          title: 'Subscription Timeout',
+          message: 'Subscription did not receive EOSE within timeout',
+        })
+      );
     },
   },
 };
@@ -266,10 +293,13 @@ export const WithCallback: Story = {
 export const LongMessage: Story = {
   args: {
     onShow: () => {
-      errorToast.show(createError({
-        title: 'Operation Failed',
-        message: 'This is a longer error message that demonstrates how the toast handles multiple lines of text and wrapping behavior.',
-      }));
+      errorToast.show(
+        createError({
+          title: 'Operation Failed',
+          message:
+            'This is a longer error message that demonstrates how the toast handles multiple lines of text and wrapping behavior.',
+        })
+      );
     },
   },
 };
@@ -293,16 +323,18 @@ export const StressTest: Story = {
       // Show maximum toasts rapidly
       for (let i = 0; i < 10; i++) {
         setTimeout(() => {
-          errorToast.show(createError({
-            title: `Error ${i + 1}`,
-            message: `This is error number ${i + 1}`,
-            severity: [
-              ErrorSeverityEnum.INFO,
-              ErrorSeverityEnum.WARNING,
-              ErrorSeverityEnum.ERROR,
-              ErrorSeverityEnum.CRITICAL,
-            ][i % 4],
-          }));
+          errorToast.show(
+            createError({
+              title: `Error ${i + 1}`,
+              message: `This is error number ${i + 1}`,
+              severity: [
+                ErrorSeverityEnum.INFO,
+                ErrorSeverityEnum.WARNING,
+                ErrorSeverityEnum.ERROR,
+                ErrorSeverityEnum.CRITICAL,
+              ][i % 4],
+            })
+          );
         }, i * 300);
       }
     },

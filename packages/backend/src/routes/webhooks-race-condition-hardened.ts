@@ -382,10 +382,7 @@ router.post(
 
       if (isOutOfOrder && webhookId) {
         // Mark webhook as out-of-order (for monitoring)
-        await supabase
-          .from('webhook_events')
-          .update({ is_out_of_order: true })
-          .eq('id', webhookId);
+        await supabase.from('webhook_events').update({ is_out_of_order: true }).eq('id', webhookId);
 
         console.warn(
           `[WEBHOOK] Out-of-order detected: payment=${paymentId}, event=${event}, timestamp=${timestamp}`
@@ -394,7 +391,7 @@ router.post(
 
       // Process webhook event based on type
       let targetState: PaymentState | null = null;
-      let metadata: Record<string, unknown> = {
+      const metadata: Record<string, unknown> = {
         webhookEvent: event,
         timestamp,
         webhookId,
@@ -412,10 +409,13 @@ router.post(
           metadata.amount = amount;
 
           // Update payment record with preimage (within same transaction)
-          await supabase.from('payments').update({
-            preimage,
-            invoice_status: 'settled',
-          }).eq('id', paymentId);
+          await supabase
+            .from('payments')
+            .update({
+              preimage,
+              invoice_status: 'settled',
+            })
+            .eq('id', paymentId);
           break;
 
         case 'payment.failed':

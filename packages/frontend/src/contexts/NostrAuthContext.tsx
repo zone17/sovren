@@ -15,7 +15,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { KeyManagementService } from '../services/nostr/KeyManagementService';
-import type { NostrEnhancedKeyPair } from '@shared/types/nostr';
+import type { NostrEnhancedKeyPair } from '@shared/types/nostr/index';
 import { createSignatureMessage } from '@shared/types/nostr/auth';
 
 // =====================================================

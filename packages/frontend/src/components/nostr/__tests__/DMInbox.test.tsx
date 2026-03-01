@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { DMInbox } from '../DMInbox';
@@ -24,7 +24,7 @@ import { NIP04Service } from '@/services/nostr/NIP04Service';
 import { EventPublisherService } from '@/services/nostr/EventPublisherService';
 import { SubscriptionManagerService } from '@/services/nostr/SubscriptionManagerService';
 import { KeyManagementService } from '@/services/nostr/KeyManagementService';
-import type { NostrEvent, NostrDirectMessage } from '@shared/types/nostr';
+import type { NostrEvent, NostrDirectMessage } from '@shared/types/nostr/index';
 
 expect.extend(toHaveNoViolations);
 
@@ -346,10 +346,7 @@ describe('DMInbox - Interactions', () => {
     fireEvent.click(threadItem.closest('[data-testid="thread-item"]')!);
 
     await waitFor(() => {
-      expect(mockNIP04Service.markAsRead).toHaveBeenCalledWith(
-        mockUserPubkey,
-        mockRecipientPubkey
-      );
+      expect(mockNIP04Service.markAsRead).toHaveBeenCalledWith(mockUserPubkey, mockRecipientPubkey);
     });
   });
 
@@ -364,14 +361,20 @@ describe('DMInbox - Interactions', () => {
     if (subscribeCall) {
       const onEvent = subscribeCall[1];
 
-      await onEvent(createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'Message 1', Date.now() - 2000));
-      await onEvent(createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'Message 2', Date.now() - 1000));
+      await onEvent(
+        createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'Message 1', Date.now() - 2000)
+      );
+      await onEvent(
+        createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'Message 2', Date.now() - 1000)
+      );
 
       // Select thread to view messages
       const threadItem = await screen.findByText('Message 2');
       fireEvent.click(threadItem.closest('[data-testid="thread-item"]')!);
 
-      await onEvent(createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'Message 3', Date.now()));
+      await onEvent(
+        createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'Message 3', Date.now())
+      );
 
       // Wait for auto-scroll to happen
       await waitFor(
@@ -599,7 +602,9 @@ describe('DMInbox - Accessibility', () => {
 
     const subscribeCall = mockSubscriptionManager.subscribe.mock.calls[0];
     const onEvent = subscribeCall[1];
-    await onEvent(createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'New message!', Date.now()));
+    await onEvent(
+      createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'New message!', Date.now())
+    );
 
     await waitFor(() => {
       // Use querySelector to avoid visibility check that fails for sr-only elements in jsdom
@@ -705,7 +710,12 @@ describe('DMInbox - Edge Cases', () => {
     if (subscribeCall) {
       const onEvent = subscribeCall[1];
 
-      const duplicateEvent = createMockDMEvent(mockRecipientPubkey, mockUserPubkey, 'Duplicate', Date.now());
+      const duplicateEvent = createMockDMEvent(
+        mockRecipientPubkey,
+        mockUserPubkey,
+        'Duplicate',
+        Date.now()
+      );
 
       // Send same event twice
       await onEvent(duplicateEvent);
@@ -807,7 +817,9 @@ describe('DMInbox - Edge Cases', () => {
       const threadItem = await screen.findByText('Hello!');
       fireEvent.click(threadItem.closest('[data-testid="thread-item"]')!);
 
-      const deleteButton = document.querySelector('[aria-label="Delete conversation"]') as HTMLElement;
+      const deleteButton = document.querySelector(
+        '[aria-label="Delete conversation"]'
+      ) as HTMLElement;
       fireEvent.click(deleteButton);
 
       await waitFor(() => {

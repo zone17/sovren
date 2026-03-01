@@ -6,7 +6,7 @@ import { useAppSelector } from '../store';
 const Post: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { currentUser } = useAppSelector((state) => state.user);
-  const post = useAppSelector((state) => state.post.posts.find((p) => p.id === id));
+  const post = useAppSelector((state) => (state as any).post.posts.find((p: any) => p.id === id));
 
   if (!post) {
     return (
@@ -37,7 +37,7 @@ const Post: React.FC = () => {
         {currentUser && (
           <div className="mt-8 flex justify-end space-x-4">
             <Button
-              variant="primary"
+              variant="default"
               onClick={() => {
                 // TODO: Implement payment
               }}

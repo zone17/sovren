@@ -6,11 +6,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getRealtimeService } from '../services';
-import type {
-  WebSocketMessage,
-  WebSocketStatus,
-  RealtimeConnectionState,
-} from '../types';
+import type { WebSocketMessage, WebSocketStatus, RealtimeConnectionState } from '../types';
 
 interface UseRealtimeUpdatesOptions {
   enabled?: boolean;

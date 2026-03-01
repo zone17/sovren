@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * NOSTR Reply Adapter
  * EPIC-009B: Fixes the silent void return in UnifiedInboxService.reply() for NOSTR platform

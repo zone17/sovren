@@ -263,9 +263,10 @@ export class RateLimitMonitor extends EventEmitter {
     const alerts = this.rateLimiter.getAlerts(10); // Last 10 alerts
 
     // Calculate health status
-    const denialRate = metrics.overall.totalRequests > 0
-      ? metrics.overall.denied / metrics.overall.totalRequests
-      : 0;
+    const denialRate =
+      metrics.overall.totalRequests > 0
+        ? metrics.overall.denied / metrics.overall.totalRequests
+        : 0;
 
     const queueUtilization = metrics.queue.size / 1000; // Assuming max queue size of 1000
 
@@ -286,15 +287,13 @@ export class RateLimitMonitor extends EventEmitter {
     };
 
     // Per-operation metrics
-    const operations = Array.from(metrics.byOperation.entries()).map(
-      ([operation, stats]) => ({
-        operation,
-        requests: stats.totalRequests,
-        allowed: stats.allowed,
-        denied: stats.denied,
-        successRate: stats.successRate,
-      })
-    );
+    const operations = Array.from(metrics.byOperation.entries()).map(([operation, stats]) => ({
+      operation,
+      requests: stats.totalRequests,
+      allowed: stats.allowed,
+      denied: stats.denied,
+      successRate: stats.successRate,
+    }));
 
     // Top relays by request volume
     const topRelays = Array.from(metrics.byRelay.entries())
@@ -498,7 +497,7 @@ export class RateLimitMonitor extends EventEmitter {
 
     // Group metrics by name for proper Prometheus format
     const groupedMetrics = new Map<string, PrometheusMetric[]>();
-    metrics.forEach(metric => {
+    metrics.forEach((metric) => {
       if (!groupedMetrics.has(metric.name)) {
         groupedMetrics.set(metric.name, []);
       }
@@ -514,7 +513,7 @@ export class RateLimitMonitor extends EventEmitter {
       lines.push(`# TYPE ${name} ${first.type}`);
 
       // Add metric values
-      metricGroup.forEach(metric => {
+      metricGroup.forEach((metric) => {
         const labels = metric.labels
           ? `{${Object.entries(metric.labels)
               .map(([k, v]) => `${k}="${v}"`)
@@ -538,13 +537,17 @@ export class RateLimitMonitor extends EventEmitter {
    */
   exportJSON(): string {
     const metrics = this.rateLimiter.getMetrics();
-    return JSON.stringify(metrics, (key, value) => {
-      // Convert Maps to objects for JSON serialization
-      if (value instanceof Map) {
-        return Object.fromEntries(value);
-      }
-      return value;
-    }, 2);
+    return JSON.stringify(
+      metrics,
+      (key, value) => {
+        // Convert Maps to objects for JSON serialization
+        if (value instanceof Map) {
+          return Object.fromEntries(value);
+        }
+        return value;
+      },
+      2
+    );
   }
 
   /**

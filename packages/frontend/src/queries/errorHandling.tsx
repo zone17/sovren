@@ -99,7 +99,7 @@ export const errorRecovery = {
         const delay = baseDelay * Math.pow(2, attempt);
         const jitter = Math.random() * 1000; // Add jitter to prevent thundering herd
 
-        await new Promise(resolve => setTimeout(resolve, delay + jitter));
+        await new Promise((resolve) => setTimeout(resolve, delay + jitter));
       }
     }
     throw lastError;
@@ -109,7 +109,7 @@ export const errorRecovery = {
   fallbackToCache: (queryKey: string[], queryClient: QueryClient) => {
     const cachedData = queryClient.getQueryData(queryKey);
     if (cachedData) {
-      toast.info('Using cached data due to connection issues');
+      (toast as any).info('Using cached data due to connection issues');
       return cachedData;
     }
     return null;
@@ -188,10 +188,7 @@ interface QueryErrorBoundaryProps {
   fallback?: ReactNode;
 }
 
-class QueryErrorBoundary extends Component<
-  QueryErrorBoundaryProps,
-  QueryErrorBoundaryState
-> {
+class QueryErrorBoundary extends Component<QueryErrorBoundaryProps, QueryErrorBoundaryState> {
   constructor(props: QueryErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
@@ -224,9 +221,7 @@ class QueryErrorBoundary extends Component<
           <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
             <div className="text-center max-w-md">
               <span className="text-6xl">❌</span>
-              <h2 className="mt-4 text-2xl font-semibold text-gray-900">
-                Something went wrong
-              </h2>
+              <h2 className="mt-4 text-2xl font-semibold text-gray-900">Something went wrong</h2>
               <p className="mt-2 text-gray-600">
                 We encountered an error loading this content. Please try again.
               </p>
@@ -256,9 +251,7 @@ export const ReactQueryErrorBoundary: React.FC<{ children: ReactNode }> = ({ chi
             <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
               <div className="text-center max-w-md">
                 <span className="text-6xl">🔄</span>
-                <h2 className="mt-4 text-2xl font-semibold text-gray-900">
-                  Loading Error
-                </h2>
+                <h2 className="mt-4 text-2xl font-semibold text-gray-900">Loading Error</h2>
                 <p className="mt-2 text-gray-600">
                   We had trouble loading this data. Let's try again.
                 </p>
@@ -296,7 +289,7 @@ export const LoadingSkeleton: React.FC<{ type?: 'text' | 'card' | 'list' }> = ({
   if (type === 'list') {
     return (
       <div className="animate-pulse space-y-4">
-        {[1, 2, 3].map(i => (
+        {[1, 2, 3].map((i) => (
           <div key={i} className="flex space-x-4">
             <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
             <div className="flex-1 space-y-2 py-1">
@@ -335,7 +328,7 @@ export const ErrorDisplay: React.FC<{
       case ErrorType.AUTHENTICATION:
         return 'You need to log in to access this content.';
       case ErrorType.AUTHORIZATION:
-        return 'You don\'t have permission to view this content.';
+        return "You don't have permission to view this content.";
       case ErrorType.VALIDATION:
         return httpError?.message || 'Invalid request. Please check your input.';
       case ErrorType.SERVER:

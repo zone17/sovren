@@ -160,9 +160,7 @@ describe('PlatformConnectionService', () => {
       updateChain.in.mockResolvedValue({ error: null });
       const deleteChain = createMockChain();
       // First .eq() returns chain (for further chaining), second .eq() resolves (terminal)
-      deleteChain.eq
-        .mockReturnValueOnce(deleteChain)
-        .mockResolvedValueOnce({ error: null });
+      deleteChain.eq.mockReturnValueOnce(deleteChain).mockResolvedValueOnce({ error: null });
 
       let callCount = 0;
       mockDb.from = vi.fn().mockImplementation((table: string) => {
