@@ -602,17 +602,14 @@ gh run watch
 curl https://api-staging.sovren.dev/health
 ```
 
-**Production (Manual Approval)**:
+**Production (Manual)**:
 
 ```bash
-# Trigger production deployment
-gh workflow run backend-deployment.yml -f environment=production
+# Frontend: Vercel auto-deploys on merge to main
+# Backend: Promote staging Docker image to production
 
-# Approve in GitHub UI (requires 1 reviewer)
-# Navigate to: Actions → Backend Deployment → Review deployments → Approve
-
-# Monitor deployment
-gh run watch
+# Monitor CI
+gh run list --workflow=ci.yml --limit 5
 
 # Verify production
 curl https://api.sovren.dev/health
@@ -621,8 +618,8 @@ curl https://api.sovren.dev/health
 **Emergency Rollback**:
 
 ```bash
-# Rollback in < 2 minutes
-gh workflow run automated-rollback.yml -f environment=production
+# Frontend: Vercel dashboard → instant rollback to previous deployment
+# Backend: Revert to previous Docker image tag
 ```
 
 ### Frontend Deployment
@@ -633,14 +630,14 @@ gh workflow run automated-rollback.yml -f environment=production
 - Build command: `npm run vercel-build`
 - Output: `packages/frontend/dist`
 - Auto-deploys on push to main
-- Production: Manual workflow trigger
+- Production: Auto-deploys on merge to main
 
 ### Backend Deployment
 
 **Docker Containers** (100% automated):
 
 - Development: `docker-compose.dev.yml` (local)
-- Production: Blue-green deployment with GitHub Actions
+- Production: Docker image built by CI (`ci.yml`), promoted manually
 - Multi-stage builds (image size < 150MB)
 - Multi-architecture support (amd64, arm64)
 - GHCR: Image signing, SBOM, SLSA provenance
@@ -649,8 +646,8 @@ gh workflow run automated-rollback.yml -f environment=production
 ### Deployment Commands Reference
 
 ```bash
-# View deployment status
-gh run list --workflow=backend-deployment.yml --limit 5
+# View CI status
+gh run list --workflow=ci.yml --limit 5
 
 # Run deployment tests
 npm run test:deployment
@@ -694,3 +691,204 @@ This codebase follows **Elite Engineering Standards** (11 Commandments):
 11. Visualize architecture and workflows (Mermaid diagrams mandatory)
 
 **Achievement Status**: Elite Score 99/100 - Top 1% quality benchmark
+
+# CI/CD Monitoring — Claude Code Standards
+
+This section defines how Claude Code should assist engineers with CI/CD pipeline monitoring,
+debugging, and automated repair across all repositories in this organization.
+
+---
+
+## CI Watching Protocol
+
+When an engineer asks you to monitor, check, or watch CI/CD — follow this workflow:
+
+### 1. Check current state first
+
+```bash
+gh run list --limit 5 --json databaseId,displayTitle,status,conclusion,workflowName,headBranch,createdAt
+```
+
+### 2. Watch the active run live
+
+```bash
+gh run watch <run-id> --exit-status
+```
+
+This refreshes every 3 seconds automatically. Do not poll manually.
+
+### 3. On failure — get logs immediately
+
+```bash
+gh run view <run-id> --log-failed
+```
+
+Parse the error, identify the root cause, and present a clear diagnosis before suggesting any fix.
+
+---
+
+## Pipeline Architecture (This Org)
+
+Our pipelines run in this order — always check failures in this context:
+
+| Stage             | Jobs                                     | Branch        |
+| ----------------- | ---------------------------------------- | ------------- |
+| Code Quality      | lint, typecheck, format                  | all branches  |
+| Security Scan     | npm-audit, trivy-fs                      | all branches  |
+| Build & Test      | unit, integration, coverage              | all branches  |
+| E2E Tests         | playwright                               | all branches  |
+| Build Image       | docker-build, ghcr-push                  | main, develop |
+| Image Scan        | trivy-container                          | main, develop |
+| Deploy Staging    | deploy, smoke-tests                      | develop       |
+| Deploy Production | blue-green, health-check, rollback-guard | main only     |
+
+If a failure occurs in **Deploy Production**, always check:
+
+1. Health endpoint response: `curl -f https://<service>/health`
+2. Rollback status: `gh api repos/:owner/:repo/deployments`
+3. Alert the engineer immediately — do not attempt auto-fix in production
+
+---
+
+## Environments
+
+| Environment | Branch     | Auto-deploy | Auto-fix allowed     |
+| ----------- | ---------- | ----------- | -------------------- |
+| development | feature/\* | No          | Yes                  |
+| staging     | develop    | Yes         | Yes                  |
+| production  | main       | Yes         | **No — notify only** |
+
+---
+
+## Auto-Fix Rules
+
+When auto-fixing CI failures, follow these rules strictly:
+
+**✅ Safe to fix automatically:**
+
+- ESLint errors → `npx eslint . --fix`
+- Prettier formatting → `npx prettier . --write`
+- `npm audit` low/medium severity → `npm audit fix`
+- Missing `chmod +x` on scripts
+- TypeScript type errors in non-critical paths
+- Import path errors
+
+**⚠️ Fix but notify engineer:**
+
+- Failing unit tests (fix source, not just the test)
+- Coverage threshold failures (must add real tests, not skip)
+- Missing environment variables in workflow (add to `.env.example`)
+
+**🚫 Never auto-fix — always notify:**
+
+- Production deployment failures
+- Security scan HIGH or CRITICAL findings
+- Database migration failures
+- Any failure in `deploy-production` job
+- Trivy container scan failures (require security review)
+
+When notifying about a no-auto-fix situation, format your message as:
+
+```
+⚠️  MANUAL ACTION REQUIRED
+Job:   <job-name>
+Error: <concise error description>
+File:  <file:line if applicable>
+Why:   <reason auto-fix was skipped>
+Next:  <recommended human action>
+```
+
+---
+
+## gh CLI Command Reference
+
+Keep these commands ready for CI diagnostics:
+
+```bash
+# List recent runs
+gh run list --limit 10
+
+# Filter by branch
+gh run list --branch <branch-name>
+
+# Watch run live (blocks until complete)
+gh run watch <run-id> --exit-status
+
+# View full logs
+gh run view <run-id> --log
+
+# View only failed step logs
+gh run view <run-id> --log-failed
+
+# Re-run failed jobs only (preserves passing jobs)
+gh run rerun <run-id> --failed
+
+# Re-run entire workflow
+gh run rerun <run-id>
+
+# View deployment environments
+gh api repos/:owner/:repo/environments
+
+# Get latest deployment for environment
+gh api "repos/:owner/:repo/deployments?environment=staging&per_page=1"
+
+# Get deployment statuses
+gh api repos/:owner/:repo/deployments/<deploy-id>/statuses
+```
+
+---
+
+## Slash Commands Available
+
+| Command                     | Description                          |
+| --------------------------- | ------------------------------------ |
+| `/watch-ci`                 | Watch current branch's latest CI run |
+| `/watch-ci --fix`           | Watch and auto-fix failures          |
+| `/watch-ci --env staging`   | Watch staging deployment             |
+| `/watch-ci --branch <name>` | Watch a specific branch              |
+| `/watch-ci --run <id>`      | Watch a specific run ID              |
+
+---
+
+## Commit Convention for CI Fixes
+
+When Claude Code commits a CI fix, always use:
+
+```
+fix(ci): <what-was-fixed>
+
+Auto-repaired by Claude Code
+Run: <gh-run-url>
+Error: <one-line error summary>
+```
+
+Example:
+
+```
+fix(ci): resolve ESLint no-unused-vars in UserService
+
+Auto-repaired by Claude Code
+Run: https://github.com/org/repo/actions/runs/12345
+Error: 'token' is assigned a value but never used (line 142)
+```
+
+---
+
+## Failure Notification Format
+
+When reporting a failure to an engineer, always use this structure:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ Pipeline Failed — <workflow> on <branch>
+   Run: #<id> | Duration: <time> | Triggered by: <actor>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Failed Job:  <job-name>
+Failed Step: <step-name>
+Error:       <concise error — 1-2 lines>
+File/Line:   <if applicable>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Diagnosis:   <root cause in plain English>
+Suggested:   <recommended fix>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```

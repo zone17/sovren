@@ -1,7 +1,4 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# 🚀 Sovren Commit Message Quality Gate
+# Sovren Commit Message Quality Gate
 # Enforcing TDD practices and quality standards
 
 commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,50}'

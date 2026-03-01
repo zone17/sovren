@@ -1,86 +1,46 @@
 version: 2
 updates:
-  # NPM dependencies for root workspace
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "Etc/UTC"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "sovren/security-team"
-    labels:
-      - "dependencies"
-      - "security"
-    commit-message:
-      prefix: "deps"
-      include: "scope"
-    # Group minor/patch updates to reduce PR noise
+      interval: weekly
+      day: monday
     groups:
-      production-dependencies:
-        patterns:
-          - "*"
-        exclude-patterns:
-          - "@types/*"
-          - "eslint*"
-          - "prettier*"
-          - "@storybook/*"
-          - "jest*"
-          - "@testing-library/*"
-        update-types:
-          - "minor"
-          - "patch"
       dev-dependencies:
-        patterns:
-          - "@types/*"
-          - "eslint*"
-          - "prettier*"
-          - "@storybook/*"
-          - "jest*"
-          - "@testing-library/*"
-        update-types:
-          - "minor"
-          - "patch"
-    # Security updates always get individual PRs
+        patterns: ['@types/*', 'eslint*', 'prettier*', 'vitest*', '@playwright/*', '@testing-library/*']
+        update-types: ['minor', 'patch']
+      production-dependencies:
+        patterns: ['*']
+        exclude-patterns: ['@types/*', 'eslint*', 'prettier*', 'vitest*', '@playwright/*', '@testing-library/*']
+        update-types: ['minor', 'patch']
     ignore:
-      # Avoid major version bumps automatically
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "Etc/UTC"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "ci"
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+    labels: ['dependencies']
     commit-message:
-      prefix: "ci"
+      prefix: 'chore(deps)'
 
-  # Docker base images
-  - package-ecosystem: "docker"
-    directory: "/packages/backend"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "docker"
+      interval: weekly
+      day: monday
+    labels: ['ci']
     commit-message:
-      prefix: "docker"
+      prefix: 'ci(deps)'
 
-  - package-ecosystem: "docker"
-    directory: "/packages/frontend"
+  - package-ecosystem: docker
+    directory: /packages/backend
     schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "docker"
+      interval: weekly
+    labels: ['dependencies', 'docker']
     commit-message:
-      prefix: "docker"
+      prefix: 'chore(docker)'
+
+  - package-ecosystem: docker
+    directory: /packages/frontend
+    schedule:
+      interval: weekly
+    labels: ['dependencies', 'docker']
+    commit-message:
+      prefix: 'chore(docker)'

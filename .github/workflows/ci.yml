@@ -17,7 +17,7 @@ permissions: read-all
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
 
 env:
   REGISTRY: ghcr.io
@@ -83,11 +83,15 @@ jobs:
 
       - name: ESLint (changed files)
         if: steps.changed.outputs.count != '0'
-        run: npx eslint ${{ steps.changed.outputs.files }} --no-error-on-unmatched-pattern
+        env:
+          FILES: ${{ steps.changed.outputs.files }}
+        run: npx eslint $FILES --no-error-on-unmatched-pattern
 
       - name: Prettier (changed files)
         if: steps.changed.outputs.count != '0'
-        run: npx prettier --check ${{ steps.changed.outputs.files }} --no-error-on-unmatched-pattern
+        env:
+          FILES: ${{ steps.changed.outputs.files }}
+        run: npx prettier --check $FILES --no-error-on-unmatched-pattern
 
       - name: No files changed
         if: steps.changed.outputs.count == '0'
@@ -127,8 +131,9 @@ jobs:
 
       - name: TypeScript (per-package)
         if: steps.changed.outputs.count != '0'
+        env:
+          CHANGED: ${{ steps.changed.outputs.files }}
         run: |
-          CHANGED="${{ steps.changed.outputs.files }}"
           ERRORS=0
 
           # Run tsc per package with correct path resolution
@@ -140,7 +145,7 @@ jobs:
             fi
             TSC_OUTPUT=$(npx tsc -p "$TSCONFIG" --noEmit --pretty false 2>&1 || true)
             for FILE in $CHANGED; do
-              FILE_ERRORS=$(echo "$TSC_OUTPUT" | grep "^$FILE(" || true)
+              FILE_ERRORS=$(echo "$TSC_OUTPUT" | grep -F "$FILE(" || true)
               if [ -n "$FILE_ERRORS" ]; then
                 echo "$FILE_ERRORS"
                 ERRORS=$((ERRORS + 1))
@@ -340,6 +345,18 @@ jobs:
           test -d packages/frontend/dist || { echo "Frontend build output missing"; exit 1; }
           test -f packages/frontend/dist/index.html || { echo "index.html missing"; exit 1; }
 
+      - name: Verify JS chunks are non-empty
+        run: |
+          if [ -d "packages/frontend/dist/assets" ]; then
+            EMPTY=$(find packages/frontend/dist/assets -name '*.js' -size -10c | wc -l | tr -d ' ')
+            TOTAL=$(find packages/frontend/dist/assets -name '*.js' | wc -l | tr -d ' ')
+            echo "JS chunks: $TOTAL total, $EMPTY empty (<10 bytes)"
+            if [ "$EMPTY" -gt 0 ]; then
+              echo "::error::$EMPTY of $TOTAL JS chunks are nearly empty — possible treeshake bug"
+              exit 1
+            fi
+          fi
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -483,7 +500,7 @@ jobs:
     name: Deploy Staging
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [build, docker, e2e]
+    needs: [build, e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: staging
@@ -579,3 +596,59 @@ jobs:
             {
               "text": "${{ job.status == 'success' && 'Production deployment successful' || 'Production deployment FAILED' }} - ${{ github.sha }}"
             }
+
+  # ===========================================
+  # CI Complete — fan-in gate for branch protection
+  # ===========================================
+  ci-complete:
+    name: CI Complete
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, security, test-gate, build, e2e, docker]
+    if: always()
+    steps:
+      - name: Evaluate results
+        run: |
+          # Check all jobs — skipped is OK (conditional jobs), failure/cancelled is not
+          declare -A results=(
+            [lint]="${{ needs.lint.result }}"
+            [typecheck]="${{ needs.typecheck.result }}"
+            [security]="${{ needs.security.result }}"
+            [test-gate]="${{ needs.test-gate.result }}"
+            [build]="${{ needs.build.result }}"
+            [e2e]="${{ needs.e2e.result }}"
+            [docker]="${{ needs.docker.result }}"
+          )
+          FAILED=0
+          for job in "${!results[@]}"; do
+            result="${results[$job]}"
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "::error::CI failed — job '$job' reported: $result"
+              FAILED=1
+            fi
+          done
+          if [[ "$FAILED" == "1" ]]; then
+            exit 1
+          fi
+          echo "All CI jobs passed or were skipped"
+
+  # ===========================================
+  # CodeQL SAST (main push + workflow_dispatch only, not PRs — too slow)
+  # Not in ci-complete gate — advisory, results go to GitHub Security tab.
+  # ===========================================
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3

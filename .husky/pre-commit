@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Sovren Pre-Commit Quality Gates
 # Fast checks: anti-patterns, lint-staged, security tests, related unit tests
 # Target: <90s. Build and Vercel validation moved to CI.

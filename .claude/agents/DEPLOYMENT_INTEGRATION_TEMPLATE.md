@@ -11,6 +11,7 @@
 **Every agent MUST integrate with the automated CI/CD pipeline when completing stories.**
 
 Stories are **NOT COMPLETE** until:
+
 - ✅ CI/CD quality gates passing
 - ✅ Staging deployment successful
 - ✅ Health checks passing
@@ -23,10 +24,11 @@ Stories are **NOT COMPLETE** until:
 
 When completing ANY story, agents MUST include this section in their output:
 
-```markdown
+````markdown
 ## Deployment Status ✅
 
 ### CI/CD Pipeline
+
 - [x] PR created: #[PR-NUMBER]
 - [x] CI/CD checks: All passing ✅
   - Quality gates: ✅ PASS
@@ -35,6 +37,7 @@ When completing ANY story, agents MUST include this section in their output:
   - Tests: ✅ PASS (coverage: XX%)
 
 ### Staging Deployment
+
 - [x] Auto-deployment: Success ✅
 - [x] Deployment time: [X] minutes
 - [x] Health checks: All passing ✅
@@ -47,49 +50,59 @@ When completing ANY story, agents MUST include this section in their output:
 - [x] Response time P95: < 1000ms ✅
 
 ### Production Deployment
+
 - [ ] Pending manual approval
-- [ ] Command: `gh workflow run backend-deployment.yml -f environment=production`
+- [ ] Frontend: Vercel auto-deploys on merge to main
+- [ ] Backend: Promote staging Docker image to production
 - [ ] Requires: 1 approving reviewer
 
 ### Deployment Verification Commands
 
 \```bash
-# View deployment status
-gh run list --workflow=backend-deployment.yml --limit 5
 
-# Monitor deployment
+# View CI status
+
+gh run list --workflow=ci.yml --limit 5
+
+# Monitor CI run
+
 gh run watch
 
 # Verify staging health
+
 curl https://api-staging.sovren.dev/health
 
 # Check smoke tests
+
 npm run test:smoke
 
-# View deployment logs
+# View CI logs
+
 gh run view --log
 
-# Trigger production deployment (after approval)
-gh workflow run backend-deployment.yml -f environment=production
+# Frontend: Vercel auto-deploys; check Vercel dashboard for status
 
-# Emergency rollback (if needed)
-gh workflow run automated-rollback.yml -f environment=staging
+# Backend: Promote Docker image to production manually
+
+# Emergency rollback: revert Vercel deployment or Docker image tag
+
 \```
 
 ### Health Check Response (Staging)
+
 \```json
 {
-  "status": "healthy",
-  "timestamp": "2025-10-27T...",
-  "uptime": XXX,
-  "version": "1.0.0",
-  "services": {
-    "database": "connected",
-    "cache": "connected"
-  }
+"status": "healthy",
+"timestamp": "2025-10-27T...",
+"uptime": XXX,
+"version": "1.0.0",
+"services": {
+"database": "connected",
+"cache": "connected"
+}
 }
 \```
-```
+````
 
 ---
 
@@ -98,6 +111,7 @@ gh workflow run automated-rollback.yml -f environment=staging
 ### Backend API Builder Agent
 
 **Additional Checks**:
+
 - ✅ Health check endpoints implemented (/health, /ready, /live)
 - ✅ Database migrations included in deployment
 - ✅ API documentation updated (OpenAPI spec)
@@ -105,13 +119,14 @@ gh workflow run automated-rollback.yml -f environment=staging
 - ✅ Integration tests passing (testcontainers)
 
 **Health Check Implementation**:
+
 ```typescript
 // Required for all new services
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     service: 'service-name',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -132,6 +147,7 @@ app.get('/ready', async (req, res) => {
 ### Elite Frontend Dev Agent
 
 **Additional Checks**:
+
 - ✅ Vercel preview deployment verified
 - ✅ Lighthouse CI checks passing (≥90)
 - ✅ Bundle size within limits (< 250KB per chunk)
@@ -139,10 +155,10 @@ app.get('/ready', async (req, res) => {
 - ✅ Accessibility checks passing (WCAG 2.1 AA)
 
 **Frontend Deployment**:
+
 ```bash
-# Preview URL provided in PR comments
-# Production deployment (after backend deployed)
-gh workflow run release.yml -f environment=production
+# Preview URL provided in PR comments by Vercel
+# Production: Vercel auto-deploys on merge to main — no manual workflow needed
 ```
 
 ---
@@ -150,6 +166,7 @@ gh workflow run release.yml -f environment=production
 ### CICD Pipeline Architect Agent
 
 **Additional Checks**:
+
 - ✅ Workflow changes tested in feature branch
 - ✅ Deployment procedures documented
 - ✅ Secrets updated if new integrations added
@@ -160,6 +177,7 @@ gh workflow run release.yml -f environment=production
 ### Test Automation Engineer Agent
 
 **Additional Checks**:
+
 - ✅ Deployment tests added for new features
 - ✅ Smoke test suite updated if new endpoints added
 - ✅ Test coverage > 90% for deployment logic
@@ -170,6 +188,7 @@ gh workflow run release.yml -f environment=production
 ### Technical Docs Writer Agent
 
 **Additional Checks**:
+
 - ✅ Deployment documentation updated if procedures changed
 - ✅ Health check endpoints documented
 - ✅ Troubleshooting guides updated with new scenarios
@@ -180,6 +199,7 @@ gh workflow run release.yml -f environment=production
 ### Infrastructure Provisioner Agent
 
 **Additional Checks**:
+
 - ✅ Terraform configs updated if infrastructure changed
 - ✅ Infrastructure changes applied to staging first
 - ✅ Infrastructure changes tested before production
@@ -232,8 +252,8 @@ gh run watch
 ### 4. Validate Staging Deployment
 
 ```bash
-# Check deployment status
-gh run list --workflow=backend-deployment.yml --limit 1
+# Check CI status
+gh run list --workflow=ci.yml --limit 1
 
 # Verify health
 curl https://api-staging.sovren.dev/health
@@ -248,13 +268,10 @@ gh run view --log
 ### 5. Production Deployment (Manual)
 
 ```bash
-# Trigger production deployment
-gh workflow run backend-deployment.yml -f environment=production
+# Frontend: Vercel auto-deploys on merge to main
+# Backend: Promote staging Docker image to production
 
-# Approve in GitHub UI
-# Navigate to: Actions → Backend Deployment → Review deployments → Approve
-
-# Monitor deployment
+# Monitor CI
 gh run watch
 
 # Verify production health
@@ -275,17 +292,12 @@ curl https://api.sovren.dev/health
 ### Manual Rollback
 
 ```bash
-# Emergency rollback (< 2 minutes)
-gh workflow run automated-rollback.yml -f environment=staging
-
-# Or for production
-gh workflow run automated-rollback.yml -f environment=production
-
-# Monitor rollback
-gh run watch
+# Frontend: Use Vercel dashboard to instantly roll back to previous deployment
+# Backend: Revert to previous Docker image tag
 
 # Verify rollback success
 curl https://api-staging.sovren.dev/health
+curl https://api.sovren.dev/health
 ```
 
 ---
@@ -304,6 +316,7 @@ Every service MUST implement these 4 endpoints:
 ## Quality Gates (Must Pass Before Deployment)
 
 ### Pre-Deployment Checks
+
 - ✅ All tests passing (≥95% coverage for services)
 - ✅ ESLint checks passing (0 errors/warnings)
 - ✅ TypeScript type checks passing
@@ -315,6 +328,7 @@ Every service MUST implement these 4 endpoints:
 - ✅ Image signed with Cosign
 
 ### Post-Deployment Validation
+
 - ✅ Deployment time < 10 minutes
 - ✅ Health checks passing (all 4 endpoints)
 - ✅ Smoke tests passing (28/28)
@@ -349,8 +363,7 @@ gh run view --log
 # Check staging health
 curl https://api-staging.sovren.dev/health
 
-# Rollback if needed
-gh workflow run automated-rollback.yml -f environment=staging
+# Rollback if needed: revert Docker image tag or use Vercel dashboard
 ```
 
 ### Issue: Health Checks Failing
@@ -395,6 +408,7 @@ npm test -- smoke-tests.test.ts -t "test name"
 **This template is MANDATORY for all agents.**
 
 Non-compliance will result in:
+
 - ❌ PR rejection
 - ❌ Blocked merge to main
 - ❌ Failed deployment
