@@ -353,6 +353,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [build]
+    # Advisory-only — E2E needs Supabase auth credentials not yet configured in CI.
+    # TODO: Remove continue-on-error after Supabase test project secrets are added.
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4
