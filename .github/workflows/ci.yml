@@ -384,6 +384,15 @@ jobs:
         env:
           CI: true
           E2E_BASE_URL: http://localhost:4173
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          E2E_CREATOR_EMAIL: ${{ secrets.E2E_CREATOR_EMAIL }}
+          E2E_CREATOR_PASSWORD: ${{ secrets.E2E_CREATOR_PASSWORD }}
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          E2E_SIGNUP_NAME: ${{ secrets.E2E_SIGNUP_NAME }}
+          E2E_SIGNUP_EMAIL: ${{ secrets.E2E_SIGNUP_EMAIL }}
+          E2E_SIGNUP_PASSWORD: ${{ secrets.E2E_SIGNUP_PASSWORD }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
