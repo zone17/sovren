@@ -2488,6 +2488,133 @@ Any `VITE_*` variable used via `import.meta.env.*` must be in the CI **Build** s
 
 ---
 
+## 68. GitHub Actions `env:` Indirection for Script Injection Prevention
+
+**Recurrence:** 1 P2 — 4 locations in `ci.yml` interpolated `${{ steps.changed.outputs.files }}` directly into `run:` blocks.
+
+### Problem
+
+GitHub Actions expressions (`${{ }}`) in `run:` blocks are evaluated before the shell runs. The expression value is string-concatenated directly into the script. If the value contains shell metacharacters (`;`, `|`, `$()`, `` ` ``), they execute as shell commands.
+
+```yaml
+# VULNERABLE — filenames with metacharacters execute as shell commands
+- name: Lint
+  run: npx eslint ${{ steps.changed.outputs.files }}
+```
+
+### Fix
+
+Move `${{ }}` expressions to `env:` blocks. The shell receives them as pre-set environment variables, not as interpolated strings.
+
+```yaml
+# SAFE — env: evaluated before shell, variable expansion is safe
+- name: Lint
+  env:
+    FILES: ${{ steps.changed.outputs.files }}
+  run: npx eslint $FILES --no-error-on-unmatched-pattern
+```
+
+### Rule
+
+- **Never** use `${{ }}` in `run:` blocks for values that come from PR/issue/commit metadata or step outputs
+- **Safe exceptions**: `${{ needs.*.result }}` (GitHub-controlled string enum), `${{ github.event_name }}` (GitHub-controlled)
+- **Also**: Use `grep -F` (fixed-string) instead of `grep` when matching filenames — prevents regex metacharacter interpretation
+
+### Detection
+
+```bash
+# Find ${{ }} in run: blocks (potential injection)
+grep -n 'run:.*\${{' .github/workflows/*.yml
+# Better: look for step outputs or PR metadata in run blocks
+grep -A5 'run: |' .github/workflows/*.yml | grep '\${{ steps\.\|github\.event\.\(pull_request\|issue\|comment\)'
+```
+
+---
+
+## 69. Fan-In Aggregator Job for Branch Protection
+
+**Recurrence:** 1 P2 — 3 separate required checks blocked merge when path-filtered jobs were correctly skipped.
+
+### Problem
+
+Branch protection with multiple required status checks breaks when jobs use path filtering. A docs-only PR skips the test job, but branch protection waits forever for the "Tests" check that will never run.
+
+```yaml
+# BROKEN — branch protection requires all 3 checks
+# A PR touching only docs/ skips "Tests" → merge blocked forever
+jobs:
+  lint: ...
+  tests:
+    if: contains(steps.filter.outputs.changes, 'src')
+  build: ...
+```
+
+### Fix
+
+Add a single fan-in job that all quality jobs feed into. Branch protection requires only this one check. Skipped jobs report as `"skipped"` which the fan-in treats as success.
+
+```yaml
+ci-complete:
+  name: CI Complete
+  runs-on: ubuntu-latest
+  needs: [lint, typecheck, security, test-gate, build, e2e]
+  if: always()
+  steps:
+    - name: Evaluate results
+      run: |
+        for r in "${{ needs.lint.result }}" "${{ needs.typecheck.result }}" \
+                 "${{ needs.security.result }}" "${{ needs.test-gate.result }}" \
+                 "${{ needs.build.result }}" "${{ needs.e2e.result }}"; do
+          if [[ "$r" == "failure" || "$r" == "cancelled" ]]; then
+            echo "::error::CI failed — a required job reported: $r"
+            exit 1
+          fi
+        done
+        echo "All CI jobs passed or were skipped"
+```
+
+### Rule
+
+- Single required check in branch protection: `CI / CI Complete`
+- Fan-in job uses `if: always()` to run even when upstream jobs skip
+- Only `"failure"` and `"cancelled"` are treated as errors — `"skipped"` and `"success"` both pass
+- Add a CI summary step for visibility in the Actions UI
+
+---
+
+## 70. Event-Gated `cancel-in-progress` for Deploy Safety
+
+**Recurrence:** 1 P2 — `cancel-in-progress: true` cancelled main push runs (which trigger staging deploys) when a new push arrived.
+
+### Problem
+
+```yaml
+# BROKEN — cancels ALL concurrent runs, including deploy-on-main
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+A push to main triggers a CI run that includes staging deployment. If another push arrives before it completes, `cancel-in-progress: true` cancels the first run — potentially mid-deploy.
+
+### Fix
+
+Gate `cancel-in-progress` on event type. Only cancel for PRs and merge queue (where fast feedback matters). Never cancel main push or workflow_dispatch runs.
+
+```yaml
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+```
+
+### Rule
+
+- `cancel-in-progress: true` is safe for PR feedback loops
+- `cancel-in-progress: false` (or event-gated) for branches that trigger deployments
+- If the workflow includes deploy jobs, always gate cancellation
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2587,3 +2714,6 @@ CONTEXT TO LOAD:
 | Redundant workflows accumulating                | 65        | common-solutions.md  |
 | Production build JS chunks are empty (1 byte)   | 66        | common-solutions.md  |
 | VITE\_\* env var undefined in production bundle | 67        | common-solutions.md  |
+| `${{ }}` in run: block — shell injection risk   | 68        | common-solutions.md  |
+| Path-filtered job skips block merge             | 69        | common-solutions.md  |
+| `cancel-in-progress` kills deploy on main       | 70        | common-solutions.md  |

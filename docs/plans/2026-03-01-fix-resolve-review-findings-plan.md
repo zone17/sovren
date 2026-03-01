@@ -60,7 +60,7 @@ FILE_ERRORS=$(echo "$TSC_OUTPUT" | grep -F "$FILE(" || true)
 
 - [x] No `${{ steps.changed.outputs.* }}` remains in any `run:` block
 - [x] grep uses `-F` for fixed-string matching
-- [ ] CI passes on the branch
+- [x] CI passes on the branch
 
 ## Finding 2: Stale Workflow References (P3 — Todo #608)
 
