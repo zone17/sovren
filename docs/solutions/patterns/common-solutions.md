@@ -2284,6 +2284,128 @@ try {
 
 ---
 
+## 62. Per-Package tsc in Monorepos — Never Root-Only
+
+**Recurrence:** 1 P1 (2,610 phantom errors from root tsc). Path aliases differ per package.
+
+### Pattern
+
+```yaml
+# CI: run tsc per-package, not from root
+- name: TypeScript (per-package)
+  run: |
+    for PKG in backend frontend; do
+      npx tsc -p "packages/$PKG/tsconfig.json" --noEmit
+    done
+```
+
+**Why root tsc fails:** Root tsconfig defines `@sovren/*` paths. Backend uses `@/*`. Frontend uses `@shared/*`. Running tsc from root resolves against root paths → 455 false TS2307 errors.
+
+**Checklist:**
+
+- [ ] CI runs `tsc -p packages/{pkg}/tsconfig.json` per package
+- [ ] Root tsconfig only has workspace-level paths
+- [ ] Per-package tsconfigs have their own `baseUrl` and `paths`
+- [ ] ESLint parser uses per-package tsconfig via `project` option
+
+**Detection:** `npx tsc --noEmit 2>&1 | grep TS2307 | head -5` — if you see path alias errors, you're running from wrong tsconfig.
+
+---
+
+## 63. ESLint Rule Severity Matrix for Legacy Codebases
+
+**Recurrence:** 1 P1 (6,636 violations from inflated rules). Every inherited codebase has this.
+
+### Pattern
+
+| Tier           | Action                    | Examples                                           |
+| -------------- | ------------------------- | -------------------------------------------------- |
+| Keep ERROR     | Legitimate safety         | `no-debugger`, `prefer-const`, `no-var`            |
+| Downgrade WARN | Fix incrementally         | `no-case-declarations`, `no-redeclare`             |
+| Turn OFF       | Noisy / handled elsewhere | `no-explicit-any`, `no-console`                    |
+| Replace        | Better plugin exists      | `no-unused-vars` → `unused-imports/no-unused-vars` |
+
+```javascript
+// eslint.config.js — unused-imports replaces no-unused-vars
+plugins: { 'unused-imports': unusedImports },
+rules: {
+  'no-unused-vars': 'off',
+  '@typescript-eslint/no-unused-vars': 'off',
+  'unused-imports/no-unused-imports': 'error',
+  'unused-imports/no-unused-vars': ['warn', {
+    varsIgnorePattern: '^_', argsIgnorePattern: '^_'
+  }],
+}
+```
+
+**Checklist:**
+
+- [ ] Classify every rule as keep/downgrade/off/replace
+- [ ] Run `npx eslint . --fix` after config change (auto-removes unused imports)
+- [ ] Verify 0 errors remain (warnings OK for incremental fix)
+- [ ] Document disabled rules with owner and deadline
+
+**Detection:** `npx eslint . 2>&1 | grep "error" | wc -l` — should be 0. Warnings tracked separately.
+
+---
+
+## 64. Advisory CI Jobs for Missing Infrastructure
+
+**Recurrence:** E2E tests need Supabase secrets, integration tests need Docker. Blocking CI on unavailable infrastructure creates permanent red builds.
+
+### Pattern
+
+```yaml
+e2e:
+  name: E2E Tests
+  continue-on-error: true # Advisory until secrets configured
+  # TODO: Remove continue-on-error after Supabase test secrets added
+```
+
+**When to use:**
+
+- Job needs secrets not yet in CI (Supabase, Stripe, etc.)
+- Job needs infrastructure not available (Docker, GPUs)
+- Job is informational, not a quality gate
+
+**When NOT to use:**
+
+- Job is a required merge check (lint, typecheck, unit tests)
+- Job validates code correctness (not infrastructure)
+
+**Checklist:**
+
+- [ ] `continue-on-error: true` added with TODO comment
+- [ ] Job NOT in `test-gate` blocking list
+- [ ] Tracking issue for missing infrastructure
+- [ ] Remove `continue-on-error` once infra available
+
+---
+
+## 65. Satellite Workflow Deprecation — Don't Delete, Disable
+
+**Recurrence:** 13 redundant workflows accumulated. Deleting loses history; deprecating preserves it.
+
+### Pattern
+
+```yaml
+# .github/workflows/old-workflow.yml
+name: Old Workflow (DEPRECATED)
+on:
+  workflow_dispatch:
+    # DEPRECATED — consolidated into ci.yml
+    # Manual-only trigger preserves history while preventing automatic runs
+```
+
+**Checklist:**
+
+- [ ] Changed trigger to `workflow_dispatch` only
+- [ ] Added DEPRECATED label to workflow name
+- [ ] Added comment explaining consolidation target
+- [ ] Updated CI docs to reference consolidated workflow
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2377,3 +2499,7 @@ CONTEXT TO LOAD:
 | ServiceError cause leaks stack trace to client | 61        | common-solutions.md  |
 | PostgREST filter injection via metacharacters  | 11        | critical-patterns.md |
 | VIEW exposes admin/inactive users              | 12        | critical-patterns.md |
+| Root tsc generates phantom path alias errors   | 62        | common-solutions.md  |
+| ESLint has 1000+ violations, all noise         | 63        | common-solutions.md  |
+| CI job needs missing infra (secrets/Docker)    | 64        | common-solutions.md  |
+| Redundant workflows accumulating               | 65        | common-solutions.md  |
