@@ -2406,6 +2406,88 @@ on:
 
 ---
 
+## 66. Rollup treeshake moduleSideEffects:false Empties All JS Chunks
+
+**Recurrence:** 1 P1 — production build produced blank white page for 5+ PRs before diagnosis.
+
+### Problem
+
+```typescript
+// vite.config.ts — BROKEN
+rollupOptions: {
+  treeshake: {
+    moduleSideEffects: false,    // Strips EVERYTHING
+    propertyReadSideEffects: false,
+    unknownGlobalSideEffects: false,
+  },
+}
+```
+
+All JS chunks become 1 byte (empty). CSS still generates. Build reports success. App is a blank page.
+
+### Fix
+
+```typescript
+// vite.config.ts — FIXED
+rollupOptions: {
+  treeshake: true,  // Use Rollup defaults
+}
+```
+
+### Detection
+
+```bash
+# Check for the dangerous setting
+grep -r "moduleSideEffects.*false" vite.config.* rollup.config.*
+# Check for empty chunks after build
+find dist/assets/js -name '*.js' -size -10c | wc -l
+```
+
+### Why It's Invisible
+
+Local dev server (`npm run dev`) does NOT apply Rollup treeshaking. Tests against dev server pass. Only production builds (`npm run build` + `vite preview`) are affected. Always test E2E against production build.
+
+---
+
+## 67. Vite VITE\_\* Env Vars Must Be Present at Build Time
+
+**Recurrence:** 1 P1 — CI E2E tests failed because `VITE_SUPABASE_URL` was only in the E2E step, not the Build step.
+
+### Problem
+
+Vite statically replaces `import.meta.env.VITE_*` at **build time** via string substitution. If the variable isn't set when `npm run build` runs, it becomes `undefined` in the bundle.
+
+```yaml
+# BROKEN — vars only in E2E step
+- name: Build frontend
+  run: npm run build
+  env:
+    NODE_ENV: production
+    # Missing: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+
+- name: Run E2E tests
+  env:
+    VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }} # Too late!
+```
+
+### Fix
+
+```yaml
+# FIXED — vars in Build step
+- name: Build frontend
+  run: npm run build
+  env:
+    NODE_ENV: production
+    VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+    VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+```
+
+### Rule
+
+Any `VITE_*` variable used via `import.meta.env.*` must be in the CI **Build** step env, not just the runtime/test step. This is fundamentally different from Node.js `process.env` which is read at runtime.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2421,85 +2503,87 @@ CONTEXT TO LOAD:
 
 ## Index: Which Pattern Solves Which Issue
 
-| Issue You're Seeing                            | Pattern # | File                 |
-| ---------------------------------------------- | --------- | -------------------- |
-| Race condition on capacity/count               | 1a-1c     | critical-patterns.md |
-| User can access others' data                   | 2         | critical-patterns.md |
-| Query loads too much into memory               | 3         | critical-patterns.md |
-| Two inserts, second might fail                 | 4         | critical-patterns.md |
-| Payment data could be lost                     | 5         | critical-patterns.md |
-| URL from user input fetched server-side        | 6a-6c     | critical-patterns.md |
-| DNS TOCTOU between validate and fetch          | 6b        | critical-patterns.md |
-| IPv6 encoding bypasses SSRF check              | 6c        | critical-patterns.md |
-| Can delete a paid/active entity                | 7         | critical-patterns.md |
-| Button fires duplicate mutations               | 1         | common-solutions.md  |
-| Map grows without bound                        | 2         | common-solutions.md  |
-| New env var not validated                      | 3         | common-solutions.md  |
-| Inconsistent error responses                   | 4         | common-solutions.md  |
-| snake_case in API response                     | 5         | common-solutions.md  |
-| Worker running for stub function               | 6         | common-solutions.md  |
-| Tests break after service change               | 7         | common-solutions.md  |
-| New routes missing rate limit                  | 8         | common-solutions.md  |
-| Named route not matching                       | 9         | common-solutions.md  |
-| `db: any` in constructor                       | 10        | common-solutions.md  |
-| Vitest OOM / worker crashes                    | 11        | common-solutions.md  |
-| `git diff --cached` empty at push              | 12        | common-solutions.md  |
-| Batch op fails on single rejection             | 13        | common-solutions.md  |
-| Same utility in 3+ files                       | 14        | common-solutions.md  |
-| Hook loops agents on pre-existing issues       | 15        | common-solutions.md  |
-| Security file changed, no tests ran            | 16        | common-solutions.md  |
-| Test framework migrated, hooks broken          | 17        | common-solutions.md  |
-| Hook error suppressed, failures hidden         | 18        | common-solutions.md  |
-| grep breaks on macOS / portability issue       | 19        | common-solutions.md  |
-| `forEach(async` does nothing / returns early   | 20        | common-solutions.md  |
-| Need to cancel BullMQ job without DB lookup    | 21        | common-solutions.md  |
-| Promise.race leaks setTimeout handle           | 22        | common-solutions.md  |
-| Duplicate items cause redundant I/O            | 23        | common-solutions.md  |
-| Bare `Error` in service method → 500           | 24        | common-solutions.md  |
-| DB insert + queue enqueue partial failure      | 4c        | critical-patterns.md |
-| Todos from prior sprint, many may be stale     | 25        | common-solutions.md  |
-| E2E tests mock API via `page.route()`          | 26        | common-solutions.md  |
-| New test type exists locally but not in CI     | 8a-8c     | critical-patterns.md |
-| NOSTR verifyEvent with `id: ''`                | 9a-9b     | critical-patterns.md |
-| Fixed method but standalone utility broken     | 28        | common-solutions.md  |
-| Silent fallback with no logging                | 29        | common-solutions.md  |
-| String duplicated across packages              | 10a       | critical-patterns.md |
-| Lazy init with no logging                      | 10b       | critical-patterns.md |
-| New spec silently excluded from test run       | 30        | common-solutions.md  |
-| Type guard uses `any` instead of `unknown`     | 31        | common-solutions.md  |
-| Agent can't create new artifact from CLAUDE.md | 32        | common-solutions.md  |
-| WebSocket mock silently ignored by MSW v2      | 33        | common-solutions.md  |
-| React effects don't fire with fake timers      | 34        | common-solutions.md  |
-| Error-state test times out (React Query)       | 35        | common-solutions.md  |
-| vi.mock factory: variable before init          | 36        | common-solutions.md  |
-| React 19 hoisted after npm update              | 37        | common-solutions.md  |
-| Action bumped, notifications silently fail     | 38        | common-solutions.md  |
-| Lockfile keeps stale workspace resolutions     | 39        | common-solutions.md  |
-| Migrated dead code nobody imports              | 40        | common-solutions.md  |
-| `resetAllMocks` wipes mock implementations     | 41        | common-solutions.md  |
-| Nested test data leaks between tests           | 42        | common-solutions.md  |
-| ESM default export mock returns undefined      | 43        | common-solutions.md  |
-| Fire-and-forget assertion fails intermittently | 44        | common-solutions.md  |
-| Class mock methods undefined after reset       | 45        | common-solutions.md  |
-| Service constructor captures undefined fetch   | 46        | common-solutions.md  |
-| Stale branches, stashes, orphaned PRs pile up  | 47        | common-solutions.md  |
-| Branch not deleted after squash-merge to main  | 48        | common-solutions.md  |
-| New tool added, untracked artifacts in tree    | 49        | common-solutions.md  |
-| >10 vi.fn() stubs for one service interface    | 50        | common-solutions.md  |
-| `as any` for private field in test helper      | 51        | common-solutions.md  |
-| Timer handles leaked after test run            | 52        | common-solutions.md  |
-| >5 `as any` casts in test factory consumers    | 53        | common-solutions.md  |
-| Re-export used locally but not in scope        | 54        | common-solutions.md  |
-| Stub file name-collides on case-insensitive FS | 55        | common-solutions.md  |
-| Spread in logger metadata shadows built-ins    | 56        | common-solutions.md  |
-| Monitoring endpoint missing from `/api` root   | 57        | common-solutions.md  |
-| keepPreviousData shows stale filter results    | 58        | common-solutions.md  |
-| Nullable DB col crashes TS at runtime          | 59        | common-solutions.md  |
-| ILIKE `%query%` causes sequential scan         | 60        | common-solutions.md  |
-| ServiceError cause leaks stack trace to client | 61        | common-solutions.md  |
-| PostgREST filter injection via metacharacters  | 11        | critical-patterns.md |
-| VIEW exposes admin/inactive users              | 12        | critical-patterns.md |
-| Root tsc generates phantom path alias errors   | 62        | common-solutions.md  |
-| ESLint has 1000+ violations, all noise         | 63        | common-solutions.md  |
-| CI job needs missing infra (secrets/Docker)    | 64        | common-solutions.md  |
-| Redundant workflows accumulating               | 65        | common-solutions.md  |
+| Issue You're Seeing                             | Pattern # | File                 |
+| ----------------------------------------------- | --------- | -------------------- |
+| Race condition on capacity/count                | 1a-1c     | critical-patterns.md |
+| User can access others' data                    | 2         | critical-patterns.md |
+| Query loads too much into memory                | 3         | critical-patterns.md |
+| Two inserts, second might fail                  | 4         | critical-patterns.md |
+| Payment data could be lost                      | 5         | critical-patterns.md |
+| URL from user input fetched server-side         | 6a-6c     | critical-patterns.md |
+| DNS TOCTOU between validate and fetch           | 6b        | critical-patterns.md |
+| IPv6 encoding bypasses SSRF check               | 6c        | critical-patterns.md |
+| Can delete a paid/active entity                 | 7         | critical-patterns.md |
+| Button fires duplicate mutations                | 1         | common-solutions.md  |
+| Map grows without bound                         | 2         | common-solutions.md  |
+| New env var not validated                       | 3         | common-solutions.md  |
+| Inconsistent error responses                    | 4         | common-solutions.md  |
+| snake_case in API response                      | 5         | common-solutions.md  |
+| Worker running for stub function                | 6         | common-solutions.md  |
+| Tests break after service change                | 7         | common-solutions.md  |
+| New routes missing rate limit                   | 8         | common-solutions.md  |
+| Named route not matching                        | 9         | common-solutions.md  |
+| `db: any` in constructor                        | 10        | common-solutions.md  |
+| Vitest OOM / worker crashes                     | 11        | common-solutions.md  |
+| `git diff --cached` empty at push               | 12        | common-solutions.md  |
+| Batch op fails on single rejection              | 13        | common-solutions.md  |
+| Same utility in 3+ files                        | 14        | common-solutions.md  |
+| Hook loops agents on pre-existing issues        | 15        | common-solutions.md  |
+| Security file changed, no tests ran             | 16        | common-solutions.md  |
+| Test framework migrated, hooks broken           | 17        | common-solutions.md  |
+| Hook error suppressed, failures hidden          | 18        | common-solutions.md  |
+| grep breaks on macOS / portability issue        | 19        | common-solutions.md  |
+| `forEach(async` does nothing / returns early    | 20        | common-solutions.md  |
+| Need to cancel BullMQ job without DB lookup     | 21        | common-solutions.md  |
+| Promise.race leaks setTimeout handle            | 22        | common-solutions.md  |
+| Duplicate items cause redundant I/O             | 23        | common-solutions.md  |
+| Bare `Error` in service method → 500            | 24        | common-solutions.md  |
+| DB insert + queue enqueue partial failure       | 4c        | critical-patterns.md |
+| Todos from prior sprint, many may be stale      | 25        | common-solutions.md  |
+| E2E tests mock API via `page.route()`           | 26        | common-solutions.md  |
+| New test type exists locally but not in CI      | 8a-8c     | critical-patterns.md |
+| NOSTR verifyEvent with `id: ''`                 | 9a-9b     | critical-patterns.md |
+| Fixed method but standalone utility broken      | 28        | common-solutions.md  |
+| Silent fallback with no logging                 | 29        | common-solutions.md  |
+| String duplicated across packages               | 10a       | critical-patterns.md |
+| Lazy init with no logging                       | 10b       | critical-patterns.md |
+| New spec silently excluded from test run        | 30        | common-solutions.md  |
+| Type guard uses `any` instead of `unknown`      | 31        | common-solutions.md  |
+| Agent can't create new artifact from CLAUDE.md  | 32        | common-solutions.md  |
+| WebSocket mock silently ignored by MSW v2       | 33        | common-solutions.md  |
+| React effects don't fire with fake timers       | 34        | common-solutions.md  |
+| Error-state test times out (React Query)        | 35        | common-solutions.md  |
+| vi.mock factory: variable before init           | 36        | common-solutions.md  |
+| React 19 hoisted after npm update               | 37        | common-solutions.md  |
+| Action bumped, notifications silently fail      | 38        | common-solutions.md  |
+| Lockfile keeps stale workspace resolutions      | 39        | common-solutions.md  |
+| Migrated dead code nobody imports               | 40        | common-solutions.md  |
+| `resetAllMocks` wipes mock implementations      | 41        | common-solutions.md  |
+| Nested test data leaks between tests            | 42        | common-solutions.md  |
+| ESM default export mock returns undefined       | 43        | common-solutions.md  |
+| Fire-and-forget assertion fails intermittently  | 44        | common-solutions.md  |
+| Class mock methods undefined after reset        | 45        | common-solutions.md  |
+| Service constructor captures undefined fetch    | 46        | common-solutions.md  |
+| Stale branches, stashes, orphaned PRs pile up   | 47        | common-solutions.md  |
+| Branch not deleted after squash-merge to main   | 48        | common-solutions.md  |
+| New tool added, untracked artifacts in tree     | 49        | common-solutions.md  |
+| >10 vi.fn() stubs for one service interface     | 50        | common-solutions.md  |
+| `as any` for private field in test helper       | 51        | common-solutions.md  |
+| Timer handles leaked after test run             | 52        | common-solutions.md  |
+| >5 `as any` casts in test factory consumers     | 53        | common-solutions.md  |
+| Re-export used locally but not in scope         | 54        | common-solutions.md  |
+| Stub file name-collides on case-insensitive FS  | 55        | common-solutions.md  |
+| Spread in logger metadata shadows built-ins     | 56        | common-solutions.md  |
+| Monitoring endpoint missing from `/api` root    | 57        | common-solutions.md  |
+| keepPreviousData shows stale filter results     | 58        | common-solutions.md  |
+| Nullable DB col crashes TS at runtime           | 59        | common-solutions.md  |
+| ILIKE `%query%` causes sequential scan          | 60        | common-solutions.md  |
+| ServiceError cause leaks stack trace to client  | 61        | common-solutions.md  |
+| PostgREST filter injection via metacharacters   | 11        | critical-patterns.md |
+| VIEW exposes admin/inactive users               | 12        | critical-patterns.md |
+| Root tsc generates phantom path alias errors    | 62        | common-solutions.md  |
+| ESLint has 1000+ violations, all noise          | 63        | common-solutions.md  |
+| CI job needs missing infra (secrets/Docker)     | 64        | common-solutions.md  |
+| Redundant workflows accumulating                | 65        | common-solutions.md  |
+| Production build JS chunks are empty (1 byte)   | 66        | common-solutions.md  |
+| VITE\_\* env var undefined in production bundle | 67        | common-solutions.md  |
