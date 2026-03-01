@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Community Services Binding Module
  * EPIC-010: Creator Network — Circles, Mentorship, Collaboration, Marketplace

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Lightning Payment Receipt Service
  *

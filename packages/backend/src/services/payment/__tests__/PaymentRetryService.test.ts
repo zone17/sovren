@@ -17,13 +17,9 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import {
   PaymentState,
   Payment,
-  PaymentNotFoundError,
 } from '@shared/types';
 import {
   PaymentRetryService,
-  PaymentNotRetryableError,
-  MaxRetriesExceededError,
-  RetryAlreadyScheduledError,
 } from '../PaymentRetryService';
 import { PaymentStateMachine } from '../PaymentStateMachine';
 import { EmailIntegrationService } from '../../email-integration-service';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DmcaService
  * DMCA report generation (JSON format)

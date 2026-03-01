@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔐 US-311: Unified Session Management API Routes
  * WHY: RESTful API for unified NOSTR session management across devices

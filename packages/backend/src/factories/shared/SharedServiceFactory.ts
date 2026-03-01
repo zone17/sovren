@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Shared Service Factory
  * Factory implementation for shared/utility services

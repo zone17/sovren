@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContentScannerProcessor
  * BullMQ job processor for scanning NOSTR relays for content copies

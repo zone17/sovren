@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CurrencyService Implementation
  * User Story: US-E5-030

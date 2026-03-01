@@ -8,21 +8,8 @@
 import { UserAnalyticsService } from '../UserAnalyticsService';
 import {
   IUserAnalyticsService,
-  UserAcquisitionMetrics,
-  EngagementMetrics,
-  RetentionMetrics,
-  CohortAnalysis,
-  UserSegment,
   UserSegmentCriteria,
-  UserJourneyFunnel,
-  LifetimeValueMetrics,
-  ChurnAnalysis,
-  ChurnPrediction,
-  UserGrowthTrends,
-  UserHealthScore,
-  RealtimeDashboardData,
   AnalyticsExportOptions,
-  AnalyticsExportResult,
   AnalyticsTimeRange,
   UserActivityEvent
 } from '../../../types/user-analytics';

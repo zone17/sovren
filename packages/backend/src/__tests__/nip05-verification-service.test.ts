@@ -1,5 +1,4 @@
 
-import { SupabaseDatabase } from '../config/database';
 import { createNIP05VerificationService } from '../services/nip05-verification-service';
 
 // Mock DNS with vi.hoisted so promisify captures our mock at import time

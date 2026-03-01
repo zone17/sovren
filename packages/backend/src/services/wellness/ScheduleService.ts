@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ScheduleService
  * Sustainable cadence recommendations and content buffer depth

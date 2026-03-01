@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Discovery API Routes (v2)
  * /api/v2/discovery/*

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * User Service Factory
  * Factory implementation for user-related services

@@ -8,7 +8,6 @@ import { ContentSearchService } from '../ContentSearchService';
 import { Client } from '@elastic/elasticsearch';
 import type {
   SearchQuery,
-  SearchResult,
   ContentDocument,
   ElasticsearchConfig
 } from '../../../types/search';

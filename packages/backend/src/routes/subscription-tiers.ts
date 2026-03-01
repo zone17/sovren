@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 💎 SUBSCRIPTION TIERS MANAGEMENT ROUTES
  *

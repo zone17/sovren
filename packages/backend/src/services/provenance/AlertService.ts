@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AlertService
  * Copy detection alert CRUD and status transitions

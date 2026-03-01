@@ -23,7 +23,6 @@
 import request from 'supertest';
 import crypto from 'crypto';
 import express, { Express } from 'express';
-import { PaymentState } from '@shared/types';
 
 // Mock Express app for testing
 let app: Express;

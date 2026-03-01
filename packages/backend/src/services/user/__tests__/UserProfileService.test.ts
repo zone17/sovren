@@ -11,8 +11,7 @@ import type {
   CreateProfileRequest,
   UpdateProfileRequest,
   AvatarUploadRequest,
-  ProfileSearchQuery,
-  VerifySocialLinkRequest
+  ProfileSearchQuery
 } from '../../../types/user-profile';
 
 // Mock sharp image processing

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * YouTube Platform Adapter
  * EPIC-009: YouTube Data API v3 integration

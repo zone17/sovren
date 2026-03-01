@@ -12,7 +12,6 @@ import type { ICacheService } from '../../../interfaces/shared/ICacheService';
 import type { IEventBus } from '../../../interfaces/shared/IEventBus';
 import type { ILogger } from '../../../interfaces/shared/ILogger';
 import type {
-  UserPreferences,
   PreferenceUpdateRequest,
   BulkPreferenceUpdateRequest,
   NotificationPreference

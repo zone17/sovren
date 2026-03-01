@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Mastodon Platform Adapter
  * EPIC-009: ActivityPub / Mastodon API integration

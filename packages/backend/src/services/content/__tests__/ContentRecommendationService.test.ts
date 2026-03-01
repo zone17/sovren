@@ -6,7 +6,6 @@
  * @story US-E5-015
  */
 
-import { EventEmitter } from 'events';
 import { ContentRecommendationService } from '../ContentRecommendationService';
 import type { ICacheService } from '../../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../../interfaces/shared/ILogger';

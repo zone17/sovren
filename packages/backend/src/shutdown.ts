@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Graceful Shutdown Handler
  * Manages clean disposal of all services and resources

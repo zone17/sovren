@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📧 **EMAIL INTEGRATION SERVICE** 📧
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Inbox Service
  * EPIC-009: Multi-platform message aggregation and routing

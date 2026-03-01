@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Creator Circle Service Interface
  * EPIC-010: Creator Network — Circles

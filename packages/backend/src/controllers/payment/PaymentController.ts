@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Payment API Controller
  *

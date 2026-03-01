@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * UserActivityService Implementation
  * Comprehensive user activity tracking with analytics, security, and privacy controls

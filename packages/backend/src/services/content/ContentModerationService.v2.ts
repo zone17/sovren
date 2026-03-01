@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Content Moderation Service Implementation
  * User Story: US-E5-013

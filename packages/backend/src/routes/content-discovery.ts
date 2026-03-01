@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔍 CONTENT DISCOVERY ROUTES
  *

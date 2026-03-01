@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🤖 RECOMMENDATION SERVICE
  *

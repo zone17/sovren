@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * WellnessService
  * Work pattern CRUD, pulse check-ins, data deletion

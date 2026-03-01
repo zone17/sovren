@@ -11,7 +11,7 @@
 
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { PaymentStateMachine, TransitionResult } from '../PaymentStateMachine';
+import { PaymentStateMachine } from '../PaymentStateMachine';
 import {
   PaymentState,
   Payment,
@@ -621,7 +621,7 @@ describe('PaymentStateMachine', () => {
       const updatedPayment = createMockPayment(PaymentState.PROCESSING);
 
       // Mock setup for concurrent calls - provide complete mock chain for all calls
-      let callCount = 0;
+      const callCount = 0;
       (mockSupabase.from as any).mockImplementation(() => ({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({

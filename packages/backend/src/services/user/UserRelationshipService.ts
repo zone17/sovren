@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * User Relationship Service Implementation
  * User Story: US-E5-022

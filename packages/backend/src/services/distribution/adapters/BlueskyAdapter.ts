@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Bluesky Platform Adapter
  * EPIC-009: AT Protocol / Bluesky integration

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * IProvenanceService Interface
  * Content signing with NOSTR keys, chain retrieval

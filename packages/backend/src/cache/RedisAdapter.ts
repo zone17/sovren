@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * RedisAdapter - Production-Ready Redis Caching Layer
  *

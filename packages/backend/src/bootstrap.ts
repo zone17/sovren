@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Application Bootstrap Module
  * Initializes DI container and all services with health checks

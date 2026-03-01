@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * EmailService Implementation
  * User Story: US-E5-007

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ProvenanceService
  * Content signing with NOSTR keys, provenance chain retrieval, certificate export

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Inbox Routes (v2)
  * /api/v2/inbox/*

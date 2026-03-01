@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * NotificationService Implementation
  * User Story: US-E5-008

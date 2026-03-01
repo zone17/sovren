@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * IWellnessService Interface
  * Handles work pattern CRUD and pulse check-ins

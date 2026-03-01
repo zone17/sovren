@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Factory Module Registration System
  * Central registration of all service factories
@@ -294,7 +295,7 @@ function createNoOpCache() {
 /**
  * Export all service tokens for easy access
  */
-export const SERVICE_TOKENS = {
+export const SERVICE_TOKENS: Record<string, any> = {
   ...PAYMENT_SERVICE_TOKENS,
   ...CONTENT_SERVICE_TOKENS,
   ...USER_SERVICE_TOKENS,

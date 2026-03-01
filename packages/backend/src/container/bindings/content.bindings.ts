@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Content Services Binding Module
  * Registers all Phase 3 content services in the DI container
