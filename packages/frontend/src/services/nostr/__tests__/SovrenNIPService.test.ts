@@ -25,7 +25,7 @@ vi.mock('../EventCacheService');
 
 // Import enums after mocks so they are available as runtime values
 import {
-  SovrenEventKind as SovrenEventKindEnum,
+  SovrenEventKindEnum,
   CreatorCategory,
   SocialPlatform,
   AnalyticsEventType,
