@@ -2747,6 +2747,150 @@ Also remove `merge_group` from `cancel-in-progress` conditions if present.
 
 ---
 
+## 73. Branch Protection PUT Is Full-Replace — Always Read-Modify-Write
+
+**Recurrence:** 1 P1 — during PR #127-#130 sprint, a `PUT` to branch protection that only set `required_status_checks` silently zeroed out `enforce_admins`, `required_pull_request_reviews`, and all other fields. Lost the entire protection config.
+
+### The Problem
+
+GitHub's `PUT /repos/{owner}/{repo}/branches/{branch}/protection` replaces the ENTIRE protection object. Fields not in the payload are reset to defaults (usually `null` or `false`).
+
+### The Fix: Read-Modify-Write
+
+```bash
+# Step 1: ALWAYS read current config first
+CURRENT=$(gh api repos/{owner}/{repo}/branches/main/protection)
+
+# Step 2: Modify the one field you need, include ALL others
+gh api repos/{owner}/{repo}/branches/main/protection \
+  --method PUT \
+  --input <(echo "$CURRENT" | jq '{
+    required_status_checks: .required_status_checks,
+    enforce_admins: false,  # ← your change
+    required_pull_request_reviews: .required_pull_request_reviews,
+    restrictions: .restrictions
+  }')
+```
+
+### Checklist
+
+- [ ] Read current protection state before any PUT
+- [ ] Include ALL fields in the PUT payload (required_status_checks, enforce_admins, required_pull_request_reviews, restrictions, required_linear_history, allow_force_pushes, allow_deletions)
+- [ ] Verify protection state after PUT: `gh api repos/{owner}/{repo}/branches/main/protection`
+- [ ] Note: merge queue is configured via rulesets API, NOT branch protection PUT
+
+---
+
+## 74. GitHub Actions Check Name = Job Name, Not Workflow/Job
+
+**Recurrence:** 1 P1 — branch protection required `CI / CI Complete` but GitHub reports checks as just `CI Complete` (the job `name:` field). Auto-merge waited forever for a check that never arrived.
+
+### The Format
+
+GitHub Actions check names use ONLY the job `name:` value:
+
+```yaml
+# ci.yml
+name: CI # ← workflow name (NOT part of check name)
+
+jobs:
+  ci-complete:
+    name: CI Complete # ← THIS is the check name reported to GitHub
+```
+
+The check name is `CI Complete`, not `CI / CI Complete`.
+
+### Verification
+
+After any workflow/job rename:
+
+```bash
+# Get exact check names from a recent run
+gh api repos/{owner}/{repo}/commits/{SHA}/check-runs \
+  --jq '.check_runs[] | .name' | sort
+
+# Compare against branch protection
+gh api repos/{owner}/{repo}/branches/main/protection \
+  --jq '.required_status_checks.contexts[]'
+
+# These MUST match character-for-character
+```
+
+### Prevention
+
+Add the check name as a comment in ci.yml:
+
+```yaml
+ci-complete:
+  name: CI Complete # Branch protection requires exactly: "CI Complete"
+```
+
+---
+
+## 75. Vercel Ignored Build Step for Monorepos
+
+**Recurrence:** 1 P2 — Vercel creates "pending" deployment status on ALL PRs. Non-frontend PRs hang forever, blocking auto-merge. This bit us twice (PR #117 sprint and PRs #118-#124).
+
+### The Problem
+
+Vercel deploys a preview for every PR by default. In a monorepo, non-frontend PRs (docs, backend, CI config) create a pending deployment that never resolves. GitHub's auto-merge waits for ALL statuses to resolve, not just required checks.
+
+### The Fix
+
+Configure in Vercel dashboard → Settings → Git → Ignored Build Step:
+
+```bash
+git diff HEAD^ HEAD --quiet -- packages/frontend/
+```
+
+- Exits 0 (proceed with build) when frontend files changed
+- Exits 1 (skip build) when only non-frontend files changed
+- Vercel reports "Canceled by Ignored Build Step" immediately (resolves the status)
+
+### Checklist
+
+- [ ] Configure Ignored Build Step in Vercel dashboard
+- [ ] Test with a non-frontend PR (should show "Canceled" not "pending")
+- [ ] Verify auto-merge works on a non-frontend PR
+- [ ] The "Configuration Settings differ" warning is normal — just save
+
+---
+
+## 76. CI Thresholds Must Have Explanatory Comments
+
+**Recurrence:** 1 P2 — empty chunk detection used `>0` threshold but the original plan (and correct value) was `>5`. Without a comment explaining the reasoning, the wrong threshold shipped and broke a Dependabot PR.
+
+### The Rule
+
+Every numeric threshold in CI must include a comment explaining:
+
+1. What scenario the threshold detects
+2. Why this specific value (not higher/lower)
+3. Reference to the original issue/pattern
+
+### Example
+
+```yaml
+- name: Verify JS chunks are non-empty
+  run: |
+    # Threshold: >5 chunks under 10 bytes indicates treeshake collapse (see common-solutions.md #66)
+    # 1-2 small chunks from dep resolution changes are benign; mass collapse is the bug
+    EMPTY=$(find packages/frontend/dist/assets -name '*.js' -size -10c | wc -l | tr -d ' ')
+    if [ "$EMPTY" -gt 5 ]; then
+      echo "::error::$EMPTY JS chunks are nearly empty — possible treeshake bug"
+      exit 1
+    fi
+```
+
+### Anti-Pattern
+
+```yaml
+# BAD — no explanation, wrong threshold, will break on innocent changes
+if [ "$EMPTY" -gt 0 ]; then
+```
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2851,3 +2995,7 @@ CONTEXT TO LOAD:
 | `cancel-in-progress` kills deploy on main       | 70        | common-solutions.md  |
 | Local main stale after squash-merge             | 71        | common-solutions.md  |
 | `merge_group` trigger but no merge queue        | 72        | common-solutions.md  |
+| Branch protection PUT zeroed other settings     | 73        | common-solutions.md  |
+| Check name mismatch blocks auto-merge           | 74        | common-solutions.md  |
+| Vercel pending status blocks non-frontend PRs   | 75        | common-solutions.md  |
+| CI threshold has no comment, ships wrong value  | 76        | common-solutions.md  |
