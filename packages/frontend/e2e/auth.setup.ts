@@ -62,15 +62,48 @@ setup('authenticate as creator via NOSTR', async ({ page, request }) => {
         localStorage.setItem('auth_token', t);
       }, token);
     } else {
-      // Fallback: navigate to login and let demo auth handle it
-      await page.goto(`${baseURL}/login`);
-      await page.waitForURL(/\/(wellness|dashboard|profile)/, { timeout: 10_000 });
+      // Fallback: backend auth failed, inject demo user into localStorage
+      await page.goto(baseURL);
+      await page.evaluate(() => {
+        const demoUser = {
+          id: 'e2e-demo-creator-fallback-' + Date.now(),
+          name: 'E2E Creator',
+          email: 'e2e-creator@sovren.test',
+          role: 'creator',
+          nostr_pubkey: 'e2e0000000000000000000000000000000000000000000000000000000000000001',
+          nostr_verified: true,
+          email_verified: true,
+          permissions: ['content.create', 'content.edit', 'content.publish', 'payments.receive'],
+          created_at: new Date().toISOString(),
+        };
+        localStorage.setItem('demo_user', JSON.stringify(demoUser));
+        localStorage.setItem('auth_token', 'e2e-demo-token-' + Date.now());
+      });
+      await page.reload();
     }
   } else {
-    // Demo auth mode: navigate to login, the demo auth service auto-redirects
-    await page.goto(`${baseURL}/login`);
-    // Demo mode should redirect to dashboard/profile without user interaction
-    await page.waitForURL(/\/(wellness|dashboard|profile)/, { timeout: 10_000 });
+    // Demo auth mode: inject a demo user directly into localStorage.
+    // The Login component no longer auto-redirects — it requires user interaction.
+    // Instead, seed localStorage with demo_user (for VITE_DEMO_MODE) and auth_token
+    // so AuthProvider.verifyAuth() finds an authenticated session on mount.
+    await page.goto(baseURL);
+    await page.evaluate(() => {
+      const demoUser = {
+        id: 'e2e-demo-creator-' + Date.now(),
+        name: 'E2E Creator',
+        email: 'e2e-creator@sovren.test',
+        role: 'creator',
+        nostr_pubkey: 'e2e0000000000000000000000000000000000000000000000000000000000000001',
+        nostr_verified: true,
+        email_verified: true,
+        permissions: ['content.create', 'content.edit', 'content.publish', 'payments.receive'],
+        created_at: new Date().toISOString(),
+      };
+      localStorage.setItem('demo_user', JSON.stringify(demoUser));
+      localStorage.setItem('auth_token', 'e2e-demo-token-' + Date.now());
+    });
+    // Reload so AuthProvider picks up the injected state
+    await page.reload();
   }
 
   await page.context().storageState({ path: authFile });
