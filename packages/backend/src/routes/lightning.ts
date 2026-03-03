@@ -65,7 +65,7 @@ router.post('/invoice', authenticate, async (req, res) => {
       amount,
       description: description || 'Sovren Creator Support',
       creatorId,
-      supporterId: req.user.id,
+      supporterId: req.user!.id as string,
       expiryMinutes: expirySeconds ? Math.ceil(expirySeconds / 60) : undefined,
     });
 
@@ -149,7 +149,7 @@ router.post('/subscription', authenticate, async (req, res) => {
       amount,
       description: `Subscription: ${tier}`,
       creatorId,
-      supporterId: req.user.id,
+      supporterId: req.user!.id as string,
       metadata: { tier, interval },
     });
 
@@ -172,7 +172,7 @@ router.post('/subscription', authenticate, async (req, res) => {
 router.get('/user/payments', authenticate, async (req, res) => {
   try {
     const lightning = LightningService.getInstance();
-    const payments = await lightning.getCreatorPayments(req.user.id);
+    const payments = await lightning.getCreatorPayments(req.user!.id as string);
     res.json(payments);
   } catch (error) {
     logger.error('Error getting payment history:', { error: String(error) });
