@@ -1,18 +1,29 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { shieldApi } from '../services/shieldApi';
 import type { AlertStatus } from '../types';
+import { shieldKeys } from './shieldKeys';
 
 export function useAlerts(status: AlertStatus = 'new', page = 1, limit = 20) {
-  return useQuery({
-    queryKey: ['shield', 'alerts', status, page],
+  const hasInitialData = useRef(false);
+
+  const query = useQuery({
+    queryKey: shieldKeys.alertList(status, page),
     queryFn: () => shieldApi.getAlerts(status, page, limit),
     staleTime: 1 * 60 * 1000, // 1 minute — alerts are time-sensitive
+    placeholderData: hasInitialData.current ? keepPreviousData : undefined,
   });
+
+  if (query.data) {
+    hasInitialData.current = true;
+  }
+
+  return query;
 }
 
 export function useAlertDetail(alertId: string) {
   return useQuery({
-    queryKey: ['shield', 'alerts', 'detail', alertId],
+    queryKey: shieldKeys.alertDetail(alertId),
     queryFn: () => shieldApi.getAlertDetail(alertId),
     select: (res) => res.data,
     staleTime: 1 * 60 * 1000,
@@ -27,7 +38,7 @@ export function useUpdateAlertStatus() {
     mutationFn: ({ alertId, status }: { alertId: string; status: AlertStatus }) =>
       shieldApi.updateAlertStatus(alertId, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['shield', 'alerts'] });
+      queryClient.invalidateQueries({ queryKey: shieldKeys.alerts() });
     },
   });
 }

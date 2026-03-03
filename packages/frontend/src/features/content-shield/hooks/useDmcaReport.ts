@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { shieldApi } from '../services/shieldApi';
 import type { ReportFormat } from '../types';
+import { shieldKeys } from './shieldKeys';
 
 export function useDmcaReport() {
   const queryClient = useQueryClient();
@@ -10,7 +11,7 @@ export function useDmcaReport() {
       shieldApi.generateDmcaReport(alertId, format),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['shield', 'alerts', 'detail', variables.alertId],
+        queryKey: shieldKeys.alertDetail(variables.alertId),
       });
     },
   });
