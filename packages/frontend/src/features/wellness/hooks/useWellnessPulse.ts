@@ -2,12 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { wellnessApi } from '../services/wellnessApi';
 import type { PulsePeriod, PulseSubmission } from '../types';
 
-export function useWellnessPulseHistory(period: PulsePeriod = '90d') {
+export function useWellnessPulseHistory(
+  period: PulsePeriod = '90d',
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: ['wellness', 'pulse', period],
     queryFn: () => wellnessApi.getPulseHistory(period),
     select: (res) => res.data,
     staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled ?? true,
   });
 }
 

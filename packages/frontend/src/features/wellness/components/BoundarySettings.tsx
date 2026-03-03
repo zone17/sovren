@@ -25,14 +25,39 @@ const STATUS_OPTIONS: { value: AvailabilityStatus; label: string }[] = [
   { value: 'offline', label: 'Offline' },
 ];
 
+const DEFAULT_BOUNDARIES: BoundaryConfig = {
+  focus_hours: {
+    enabled: false,
+    start: '09:00',
+    end: '17:00',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+  },
+  weekly_engagement_budget_mins: 120,
+  engagement_used_mins: 0,
+  dnd_mode: {
+    active: false,
+    auto_response_enabled: false,
+    auto_response_template: "I'm currently in focus mode. I'll respond when I'm back.",
+  },
+  availability_status: 'available',
+  availability_public: true,
+  notification_batching: true,
+};
+
 export const BoundarySettings: React.FC = () => {
   const { data, isLoading, error } = useBoundaries();
   const updateMutation = useUpdateBoundaries();
   const [form, setForm] = useState<BoundaryConfig | null>(null);
 
   useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+    if (data) {
+      setForm(data);
+    } else if (!isLoading && !error) {
+      // No data yet — show form with sensible defaults
+      setForm(DEFAULT_BOUNDARIES);
+    }
+  }, [data, isLoading, error]);
 
   if (isLoading) {
     return (
@@ -47,11 +72,22 @@ export const BoundarySettings: React.FC = () => {
     );
   }
 
-  if (error || !form) {
+  if (error) {
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-gray-500">
           Failed to load boundary settings.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // form may be null briefly while useEffect runs — show skeleton
+  if (!form) {
+    return (
+      <Card>
+        <CardContent>
+          <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
     );

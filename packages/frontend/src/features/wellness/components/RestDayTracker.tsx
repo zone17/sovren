@@ -21,11 +21,24 @@ export const RestDayTracker: React.FC = () => {
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-gray-500">
           Failed to load rest day data.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">Rest Days</CardTitle>
+        </CardHeader>
+        <CardContent className="py-6 text-center text-sm text-gray-500">
+          No activity tracked yet. Rest day tracking starts after your first week.
         </CardContent>
       </Card>
     );

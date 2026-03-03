@@ -54,8 +54,21 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
     );
   }
 
+  if (!data || data.heatmap.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-base font-semibold">Work Activity</CardTitle>
+        </CardHeader>
+        <CardContent className="py-6 text-center text-sm text-gray-500">
+          No activity data yet. Start working to see your patterns.
+        </CardContent>
+      </Card>
+    );
+  }
+
   const cellMap = new Map<string, { intensity: number; total_mins: number }>();
-  data?.heatmap.forEach((cell) => {
+  data.heatmap.forEach((cell) => {
     cellMap.set(`${cell.day}-${cell.hour}`, {
       intensity: cell.intensity,
       total_mins: cell.total_mins,
@@ -143,7 +156,7 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
           </div>
         </TooltipProvider>
 
-        {data?.peak_hours && data.peak_hours.length > 0 && (
+        {data.peak_hours && data.peak_hours.length > 0 && (
           <p className="text-xs text-gray-500 mt-3">
             Peak hours: {data.peak_hours.map(formatHour).join(', ')}
           </p>
