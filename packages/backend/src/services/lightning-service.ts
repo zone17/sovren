@@ -281,6 +281,31 @@ export class LightningService extends EventEmitter {
   }
 
   /**
+   * Look up an invoice by its payment_hash (used by GET /invoice/:paymentHash).
+   * Checks the in-memory index first, then falls back to persistence.
+   */
+  public async getInvoiceByPaymentHash(hash: string): Promise<LightningInvoice | null> {
+    const indexedId = this.paymentHashIndex.get(hash);
+    if (indexedId) {
+      const cached = this.invoiceCache.get(indexedId);
+      if (cached) return cached;
+      // Cache miss but index hit — try persistence
+      const persisted = await this.persistence.getInvoiceById(indexedId);
+      if (persisted) {
+        this.invoiceCache.set(persisted.id, persisted);
+        return persisted;
+      }
+    }
+    // Full fallback: persistence lookup by payment_hash
+    const persisted = await this.persistence.getInvoiceByPaymentHash(hash);
+    if (persisted) {
+      this.invoiceCache.set(persisted.id, persisted);
+      this.paymentHashIndex.set(persisted.payment_hash, persisted.id);
+    }
+    return persisted;
+  }
+
+  /**
    * Create Lightning invoice for creator support
    */
   public async createInvoice(params: {
@@ -602,8 +627,15 @@ export class LightningService extends EventEmitter {
     try {
       this.requireInitialization();
 
-      // Verify webhook signature if provided (constant-time comparison)
-      if (signature && this.config.webhookSecret) {
+      // Verify webhook signature (constant-time comparison)
+      if (this.config.webhookSecret) {
+        if (!signature) {
+          return {
+            success: false,
+            error: 'Missing webhook signature',
+          };
+        }
+
         const isValid = verifyWebhookHmac(
           JSON.stringify(payload),
           signature,

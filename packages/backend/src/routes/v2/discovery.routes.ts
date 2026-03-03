@@ -20,6 +20,7 @@ import logger from '../../lib/logger';
 import { DISCOVERY_CATEGORIES } from '@shared/types/discovery';
 import type {
   CreatorSearchResult,
+  CreatorProfileDetail,
   DiscoveryCategory,
   DiscoveryResponse,
 } from '@shared/types/discovery';
@@ -135,6 +136,75 @@ router.get(
     };
 
     res.json(createApiResponse(req, responseData, { raw: true }));
+  })
+);
+
+// ── GET /creators/:id — Individual creator profile ──
+
+const creatorIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+router.get(
+  '/creators/:id',
+  optionalAuth,
+  validate({ params: creatorIdParamSchema }),
+  asyncHandler(async (req, res) => {
+    const { id } = req.params as z.infer<typeof creatorIdParamSchema>;
+    const db = getDatabase().client;
+
+    // Query creator with security_barrier filters (critical-patterns.md #12)
+    const { data: row, error } = await db
+      .from('discovery_creators')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !row) {
+      throw new ServiceError('Creator not found', 404);
+    }
+
+    const creatorRow = row as DiscoveryCreatorRow;
+
+    // Fetch subscription tiers for this creator
+    const { data: tiers } = await db
+      .from('subscription_tiers')
+      .select('id, name, price_sats, features')
+      .eq('creator_id', id)
+      .eq('active', true)
+      .order('price_sats', { ascending: true });
+
+    // Fetch nostr pubkey and lightning address from users table
+    const { data: userData } = await db
+      .from('users')
+      .select('nostr_pubkey, lightning_address')
+      .eq('id', creatorRow.user_id)
+      .single();
+
+    const profile: CreatorProfileDetail = {
+      id: creatorRow.id,
+      displayName: creatorRow.display_name,
+      username: creatorRow.username,
+      avatarUrl: creatorRow.avatar_url,
+      bio: creatorRow.bio,
+      nip05Verified: creatorRow.nip05_verified,
+      categories: creatorRow.categories ?? [],
+      tags: creatorRow.tags,
+      followerCount: creatorRow.follower_count,
+      contentCount: creatorRow.content_count,
+      verified: creatorRow.verified,
+      createdAt: creatorRow.created_at,
+      nostrPubkey: userData?.nostr_pubkey ?? '',
+      lightningAddress: userData?.lightning_address ?? null,
+      subscriptionTiers: (tiers ?? []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        priceSats: t.price_sats,
+        features: t.features ?? [],
+      })),
+    };
+
+    res.json(createApiResponse(req, profile, { raw: true }));
   })
 );
 

@@ -13,6 +13,11 @@ export interface LightningPaymentButtonProps {
   amount: number;
 
   /**
+   * Creator ID for the payment recipient
+   */
+  creatorId?: string;
+
+  /**
    * Description for the payment
    */
   description?: string;
@@ -60,6 +65,7 @@ export interface LightningPaymentButtonProps {
 
 export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
   amount,
+  creatorId,
   description = 'Payment to Sovren',
   buttonText = 'Pay with Lightning',
   className = '',
@@ -85,6 +91,7 @@ export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
       // Call backend API to create Lightning invoice
       const invoice = await lightningApi.createInvoice({
         amount,
+        creatorId,
         description,
         expirySeconds: 3600, // 1 hour expiry
       });

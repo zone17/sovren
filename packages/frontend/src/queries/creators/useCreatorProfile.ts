@@ -1,12 +1,12 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { CreatorProfile } from '@/types/creator';
+import type { CreatorProfileDetail } from '@shared/types/discovery';
 import { creatorsKeys } from './useCreators';
 
 /**
- * Fetch individual creator profile
+ * Fetch individual creator profile from v2 discovery API
  */
-const fetchCreatorProfile = async (creatorId: string): Promise<CreatorProfile> => {
-  const response = await fetch(`/api/creators/${creatorId}`, {
+const fetchCreatorProfile = async (creatorId: string): Promise<CreatorProfileDetail> => {
+  const response = await fetch(`/api/v2/discovery/creators/${creatorId}`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -27,9 +27,9 @@ const fetchCreatorProfile = async (creatorId: string): Promise<CreatorProfile> =
  */
 export const useCreatorProfile = (
   creatorId: string,
-  options?: Omit<UseQueryOptions<CreatorProfile, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<CreatorProfileDetail, Error>, 'queryKey' | 'queryFn'>
 ) => {
-  return useQuery<CreatorProfile, Error>({
+  return useQuery<CreatorProfileDetail, Error>({
     queryKey: creatorsKeys.detail(creatorId),
     queryFn: () => fetchCreatorProfile(creatorId),
     staleTime: 5 * 60 * 1000, // 5 minutes

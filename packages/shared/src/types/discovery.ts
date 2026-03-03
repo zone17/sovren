@@ -35,6 +35,21 @@ export interface CreatorSearchResult {
   createdAt: string;
 }
 
+/**
+ * Detailed creator profile for /creator/:id page.
+ * Extends search result with lightning address and subscription tiers.
+ */
+export interface CreatorProfileDetail extends CreatorSearchResult {
+  nostrPubkey: string;
+  lightningAddress: string | null;
+  subscriptionTiers: Array<{
+    id: string;
+    name: string;
+    priceSats: number;
+    features: string[];
+  }>;
+}
+
 export interface DiscoveryFilters {
   query?: string;
   category?: DiscoveryCategory;

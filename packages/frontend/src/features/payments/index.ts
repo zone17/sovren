@@ -1,3 +1,1 @@
-export { LightningPaymentFlow } from './components';
-export { usePaymentFlow } from './hooks/usePaymentFlow';
-export type { PaymentFlowState, PaymentStatus } from './types';
+// Real payment UI uses LightningPaymentButton from @/components/lightning/
