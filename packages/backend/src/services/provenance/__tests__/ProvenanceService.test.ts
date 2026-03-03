@@ -4,6 +4,11 @@
  * EPIC-008: Content Shield (US-E8-002, US-E8-007)
  */
 
+vi.mock('nostr-tools/pure', () => ({
+  getEventHash: vi.fn().mockReturnValue('mocked-event-hash'),
+  verifyEvent: vi.fn().mockReturnValue(true),
+}));
+
 import { ProvenanceService } from '../ProvenanceService';
 
 function createMockDb() {
@@ -56,7 +61,7 @@ describe('ProvenanceService', () => {
       expect(result!.signature).toBe('sig-hex-123');
       expect(result!.relay_confirmations).toHaveLength(1);
       expect(result!.verification_status).toBe('verified');
-      expect(result!.nip05_verified).toBe(true);
+      expect(result!.nip05_verified).toBe(false);
     });
 
     it('should return null when not found (PGRST116)', async () => {
@@ -160,6 +165,22 @@ describe('ProvenanceService', () => {
   });
 
   describe('signContent', () => {
+    it('should reject signing when callerId does not match creatorId (ownership check)', async () => {
+      await expect(
+        service.signContent(
+          {
+            contentId: 'content-1',
+            creatorId: 'pubkey-abc',
+            contentBody: 'content',
+            nostrEventId: 'event',
+            signature: 'sig',
+            relays: [],
+          },
+          'different-user'
+        )
+      ).rejects.toThrow(/Cannot sign provenance for content you do not own/);
+    });
+
     it('should create provenance record and return it', async () => {
       const insertedData = {
         content_id: 'content-1',
@@ -176,14 +197,17 @@ describe('ProvenanceService', () => {
 
       mockDb._chain.single.mockReturnValue({ data: insertedData, error: null });
 
-      const result = await service.signContent({
-        contentId: 'content-1',
-        creatorId: 'pubkey-abc',
-        contentBody: 'Hello, this is my original article content.',
-        nostrEventId: 'nevent-id-123',
-        signature: 'nostr-sig-hex',
-        relays: ['wss://relay.example.com'],
-      });
+      const result = await service.signContent(
+        {
+          contentId: 'content-1',
+          creatorId: 'pubkey-abc',
+          contentBody: 'Hello, this is my original article content.',
+          nostrEventId: 'nevent-id-123',
+          signature: 'nostr-sig-hex',
+          relays: ['wss://relay.example.com'],
+        },
+        'pubkey-abc'
+      );
 
       expect(result.content_id).toBe('content-1');
       expect(result.author_pubkey).toBe('pubkey-abc');
@@ -211,14 +235,17 @@ describe('ProvenanceService', () => {
         error: null,
       });
 
-      await service.signContent({
-        contentId: 'content-1',
-        creatorId: 'pubkey-abc',
-        contentBody: 'Test content',
-        nostrEventId: 'event-id',
-        signature: 'sig',
-        relays: [],
-      });
+      await service.signContent(
+        {
+          contentId: 'content-1',
+          creatorId: 'pubkey-abc',
+          contentBody: 'Test content',
+          nostrEventId: 'event-id',
+          signature: 'sig',
+          relays: [],
+        },
+        'pubkey-abc'
+      );
 
       // Verify upsert was called with content_hash
       expect(mockDb._chain.upsert).toHaveBeenCalled();
@@ -233,14 +260,17 @@ describe('ProvenanceService', () => {
       });
 
       await expect(
-        service.signContent({
-          contentId: 'content-1',
-          creatorId: 'pubkey-abc',
-          contentBody: 'content',
-          nostrEventId: 'event',
-          signature: 'sig',
-          relays: [],
-        })
+        service.signContent(
+          {
+            contentId: 'content-1',
+            creatorId: 'pubkey-abc',
+            contentBody: 'content',
+            nostrEventId: 'event',
+            signature: 'sig',
+            relays: [],
+          },
+          'pubkey-abc'
+        )
       ).rejects.toBeTruthy();
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -267,14 +297,17 @@ describe('ProvenanceService', () => {
         error: null,
       });
 
-      const result = await service.signContent({
-        contentId: 'content-1',
-        creatorId: 'pubkey-abc',
-        contentBody: 'content',
-        nostrEventId: 'event-id',
-        signature: 'sig',
-        relays: ['wss://relay1.example.com', 'wss://relay2.example.com'],
-      });
+      const result = await service.signContent(
+        {
+          contentId: 'content-1',
+          creatorId: 'pubkey-abc',
+          contentBody: 'content',
+          nostrEventId: 'event-id',
+          signature: 'sig',
+          relays: ['wss://relay1.example.com', 'wss://relay2.example.com'],
+        },
+        'pubkey-abc'
+      );
 
       expect(result.relay_confirmations).toHaveLength(2);
     });

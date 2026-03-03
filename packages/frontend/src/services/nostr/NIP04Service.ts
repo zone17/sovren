@@ -87,21 +87,8 @@ interface RateLimitTracker {
   messageTimestamps: number[];
 }
 
-/**
- * Browser extension interface
- */
-interface NostrExtension {
-  getPublicKey(): Promise<string>;
-  signEvent(event: any): Promise<any>;
-  encrypt?(pubkey: string, plaintext: string): Promise<string>;
-  decrypt?(pubkey: string, ciphertext: string): Promise<string>;
-}
-
-declare global {
-  interface Window {
-    nostr?: NostrExtension;
-  }
-}
+// NIP-07 Browser Extension type — uses SovrenWindowNostr from KeyManagementService.ts
+// The global Window.nostr declaration lives in KeyManagementService.ts
 
 /**
  * NIP-04 Encrypted Direct Messages Service (Singleton)

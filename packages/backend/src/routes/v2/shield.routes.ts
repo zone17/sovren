@@ -94,14 +94,18 @@ router.post(
   mutationRateLimiter,
   validate({ body: ShieldValidators.signProvenanceBody }),
   asyncHandler(async (req, res) => {
-    const data = await getProvenanceService().signContent({
-      contentId: req.body.content_id,
-      creatorId: getAuthUser(req).nostr_pubkey,
-      contentBody: req.body.content_body,
-      nostrEventId: req.body.nostr_event_id,
-      signature: req.body.signature,
-      relays: req.body.relays || [],
-    });
+    const callerId = getAuthUser(req).nostr_pubkey;
+    const data = await getProvenanceService().signContent(
+      {
+        contentId: req.body.content_id,
+        creatorId: callerId,
+        contentBody: req.body.content_body,
+        nostrEventId: req.body.nostr_event_id,
+        signature: req.body.signature,
+        relays: req.body.relays || [],
+      },
+      callerId
+    );
     res.status(201).json(createApiResponse(req, data));
   })
 );

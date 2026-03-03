@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * IProvenanceService Interface
  * Content signing with NOSTR keys, chain retrieval
@@ -19,7 +18,7 @@ export interface SignContentInput {
 export interface IProvenanceService {
   getProvenanceChain(contentId: string): Promise<ProvenanceRecord | null>;
   getCertificate(contentId: string, creatorId: string): Promise<ProvenanceCertificate>;
-  signContent(input: SignContentInput): Promise<ProvenanceRecord>;
+  signContent(input: SignContentInput, callerId: string): Promise<ProvenanceRecord>;
   revokeProvenance(
     contentId: string,
     creatorId: string
