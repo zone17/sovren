@@ -27,7 +27,7 @@ export const createTestQueryClient = (): QueryClient => {
         staleTime: 0, // All queries are stale immediately in tests
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-        refetchOnMount: false,
+        // refetchOnMount intentionally NOT set — default true allows hooks to fire in tests
       },
       mutations: {
         retry: false,
