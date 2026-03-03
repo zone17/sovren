@@ -16,6 +16,8 @@ export { useAlertDetail, useAlerts, useUpdateAlertStatus } from './hooks/useAler
 export { useDmcaReport } from './hooks/useDmcaReport';
 export { useFingerprintCoverage } from './hooks/useFingerprintCoverage';
 export { useProvenanceChain } from './hooks/useProvenanceChain';
+export { useSignProvenance } from './hooks/useSignProvenance';
+export { shieldKeys } from './hooks/shieldKeys';
 
 // API Service
 export { shieldApi } from './services/shieldApi';

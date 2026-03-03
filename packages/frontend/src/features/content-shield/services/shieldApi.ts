@@ -13,6 +13,15 @@ import type {
 
 const BASE = '/api/v2/shield';
 
+// Sync with packages/backend/src/validators/shield.ts → SignProvenanceBodySchema
+export interface SignProvenanceBody {
+  content_id: string;
+  content_body: string;
+  nostr_event_id: string;
+  signature: string;
+  relays?: string[];
+}
+
 export const shieldApi = {
   // -- Provenance --
 
@@ -63,5 +72,11 @@ export const shieldApi = {
     return apiClient.post(`${BASE}/alerts/${alertId}/dmca-report`, undefined, {
       format,
     });
+  },
+
+  // -- Provenance Signing --
+
+  signProvenance(body: SignProvenanceBody): Promise<ApiResponse<{ signed: boolean }>> {
+    return apiClient.post(`${BASE}/provenance/sign`, body);
   },
 };
