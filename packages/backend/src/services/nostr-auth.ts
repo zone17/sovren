@@ -478,7 +478,8 @@ export const nostrAuth = new NostrAuthService(
         .select('role')
         .eq('nostr_pubkey', pubkey)
         .single();
-      return data?.role || 'supporter';
+      const VALID_JWT_ROLES = new Set(['creator', 'supporter']);
+      return VALID_JWT_ROLES.has(data?.role) ? data.role : 'supporter';
     } catch (err) {
       logger.error('Failed to fetch user role from DB, defaulting to supporter', { pubkey, err });
       return 'supporter';

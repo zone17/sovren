@@ -4,6 +4,11 @@ import { Button } from '../components/ui';
 import { useAuth } from '../features/auth';
 import { createSignatureMessage } from '@shared/types/nostr/auth';
 
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { generateNostrChallenge, authenticateNostr } = useAuth();
@@ -26,6 +31,7 @@ const Login: React.FC = () => {
       const privateKey = generateSecretKey();
       const publicKey = getPublicKey(privateKey);
       setPrivateKeyInput(Buffer.from(privateKey).toString('hex'));
+      privateKey.fill(0); // Zero key material after hex conversion
       setPublicKeyInput(publicKey);
       setError(null);
     } catch (err) {
@@ -70,12 +76,7 @@ const Login: React.FC = () => {
       const timestamp = serverTimestamp ?? Math.floor(Date.now() / 1000);
 
       // Step 3: Build message hash per backend contract
-      const message = createSignatureMessage(challenge, timestamp);
-      const msgBytes = new TextEncoder().encode(message);
-      const msgHashBuffer = await crypto.subtle.digest('SHA-256', msgBytes);
-      const hashHex = Array.from(new Uint8Array(msgHashBuffer))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
+      const hashHex = await sha256Hex(createSignatureMessage(challenge, timestamp));
 
       // Step 4: Build NIP-42 event and sign via extension
       const unsignedEvent = {
@@ -157,12 +158,7 @@ const Login: React.FC = () => {
       const timestamp = serverTimestamp ?? Math.floor(Date.now() / 1000);
 
       // Build message hash
-      const message = createSignatureMessage(challenge, timestamp);
-      const msgBytes = new TextEncoder().encode(message);
-      const msgHashBuffer = await crypto.subtle.digest('SHA-256', msgBytes);
-      const hashHex = Array.from(new Uint8Array(msgHashBuffer))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
+      const hashHex = await sha256Hex(createSignatureMessage(challenge, timestamp));
 
       // Build and sign NIP-42 event
       const eventData = {

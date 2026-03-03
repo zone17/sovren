@@ -37,6 +37,7 @@ type QueryParams = Record<string, string | number | boolean | undefined>;
 class ApiClient {
   private baseUrl: string;
   private _token: string | null = null;
+  private _sessionExpiredDispatched = false;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -56,6 +57,7 @@ class ApiClient {
 
   setToken(token: string | null): void {
     this._token = token;
+    this._sessionExpiredDispatched = false;
     if (typeof window !== 'undefined') {
       if (token) {
         localStorage.setItem('auth_token', token);
@@ -101,7 +103,12 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      if (response.status === 401 && typeof window !== 'undefined') {
+      if (
+        response.status === 401 &&
+        typeof window !== 'undefined' &&
+        !this._sessionExpiredDispatched
+      ) {
+        this._sessionExpiredDispatched = true;
         window.dispatchEvent(new CustomEvent('auth:session-expired'));
       }
       const errorData = await response.json().catch(() => ({
