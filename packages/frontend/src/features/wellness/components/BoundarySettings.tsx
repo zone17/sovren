@@ -62,8 +62,8 @@ export const BoundarySettings: React.FC = () => {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-40" />
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">Boundaries</CardTitle>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-64 w-full" />
@@ -75,6 +75,9 @@ export const BoundarySettings: React.FC = () => {
   if (error) {
     return (
       <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">Boundaries</CardTitle>
+        </CardHeader>
         <CardContent className="py-6 text-center text-sm text-gray-500">
           Failed to load boundary settings.
         </CardContent>

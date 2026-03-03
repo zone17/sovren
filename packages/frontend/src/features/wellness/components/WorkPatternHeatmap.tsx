@@ -47,6 +47,9 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
   if (error) {
     return (
       <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-base font-semibold">Work Activity</CardTitle>
+        </CardHeader>
         <CardContent className="py-6 text-center text-sm text-gray-500">
           Failed to load activity heatmap.
         </CardContent>
