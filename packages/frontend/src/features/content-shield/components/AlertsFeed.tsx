@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAlertDetail, useAlerts, useUpdateAlertStatus } from '../hooks/useAlerts';
 import { useDmcaReport } from '../hooks/useDmcaReport';
+import { ALERT_STATUS_TRANSITIONS } from '@sovren/shared/types/provenance';
 import type { AlertStatus, ContentAlert, MatchLevel } from '../types';
 
 const STATUS_TABS: AlertStatus[] = ['new', 'reviewed', 'resolved', 'false_positive', 'reported'];
@@ -21,14 +22,6 @@ const MATCH_COLORS: Record<MatchLevel, string> = {
   exact_copy: 'bg-red-500',
   derivative: 'bg-orange-500',
   coincidental: 'bg-green-500',
-};
-
-const VALID_TRANSITIONS: Record<AlertStatus, AlertStatus[]> = {
-  new: ['reviewed', 'false_positive'],
-  reviewed: ['resolved', 'false_positive', 'reported'],
-  reported: ['resolved'],
-  resolved: [],
-  false_positive: [],
 };
 
 // --- Alert Card ---
@@ -93,7 +86,7 @@ const AlertDetailPanel: React.FC<AlertDetailPanelProps> = ({ alertId, onClose })
     );
   }
 
-  const transitions = VALID_TRANSITIONS[data.status];
+  const transitions = ALERT_STATUS_TRANSITIONS[data.status];
 
   return (
     <div className="p-4 border rounded-lg space-y-4">
@@ -277,5 +270,3 @@ export const AlertsFeed: React.FC = () => {
     </Card>
   );
 };
-
-export default AlertsFeed;

@@ -16,7 +16,9 @@ function truncate(str: string, len = 12): string {
 }
 
 function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text);
+  navigator.clipboard.writeText(text).catch(() => {
+    // Clipboard API may be unavailable in insecure contexts
+  });
 }
 
 export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
@@ -107,8 +109,8 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
                 <p className="text-xs text-gray-400">No relay confirmations yet.</p>
               ) : (
                 <div className="space-y-1.5">
-                  {data.relay_confirmations.map((conf, i) => (
-                    <div key={i} className="flex items-center justify-between">
+                  {data.relay_confirmations.map((conf) => (
+                    <div key={conf.relay} className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span
                           className="w-2 h-2 rounded-full bg-green-500 shrink-0"
@@ -161,5 +163,3 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
     </Dialog>
   );
 };
-
-export default ProvenanceChainViewer;

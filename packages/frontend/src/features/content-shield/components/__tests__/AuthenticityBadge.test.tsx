@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import AuthenticityBadge from '../AuthenticityBadge';
+import { AuthenticityBadge } from '../AuthenticityBadge';
 
 const mockProvenance = {
   content_id: 'test-id',
@@ -20,8 +20,7 @@ vi.mock('../../hooks/useProvenanceChain', () => ({
 }));
 
 vi.mock('../ProvenanceChainViewer', () => ({
-  __esModule: true,
-  default: ({ onClose }: { onClose: () => void }) => (
+  ProvenanceChainViewer: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="provenance-viewer">
       <button onClick={onClose}>Close Viewer</button>
     </div>

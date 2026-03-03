@@ -106,5 +106,3 @@ export const FingerprintCoverage: React.FC<FingerprintCoverageProps> = ({ creato
     </Card>
   );
 };
-
-export default FingerprintCoverage;

@@ -9,11 +9,12 @@ vi.mock('nostr-tools/pure', () => ({
   verifyEvent: vi.fn().mockReturnValue(true),
 }));
 
+import { verifyEvent } from 'nostr-tools/pure';
 import { ProvenanceService } from '../ProvenanceService';
 
 function createMockDb() {
   const chain: any = {};
-  const methods = ['select', 'eq', 'single', 'upsert', 'update', 'from'];
+  const methods = ['select', 'eq', 'single', 'insert', 'upsert', 'update', 'from'];
   for (const method of methods) {
     chain[method] = vi.fn().mockReturnValue(chain);
   }
@@ -34,6 +35,8 @@ describe('ProvenanceService', () => {
     mockDb = createMockDb();
     service = new ProvenanceService(mockDb as any, mockLogger);
     vi.clearAllMocks();
+    // Reset verifyEvent to return true by default
+    vi.mocked(verifyEvent).mockReturnValue(true);
   });
 
   describe('getProvenanceChain', () => {
@@ -143,7 +146,8 @@ describe('ProvenanceService', () => {
       );
     });
 
-    it('should throw NotFoundError when creator does not own the content', async () => {
+    // #612: Ownership checks throw AuthorizationError, not NotFoundError
+    it('should throw AuthorizationError when creator does not own the content', async () => {
       mockDb._chain.single.mockReturnValue({
         data: {
           content_id: 'content-1',
@@ -159,7 +163,7 @@ describe('ProvenanceService', () => {
       });
 
       await expect(service.getCertificate('content-1', 'pubkey-abc')).rejects.toThrow(
-        /Provenance record/
+        /Not authorized/
       );
     });
   });
@@ -175,6 +179,7 @@ describe('ProvenanceService', () => {
             nostrEventId: 'event',
             signature: 'sig',
             relays: [],
+            eventCreatedAt: 1709500000,
           },
           'different-user'
         )
@@ -205,6 +210,7 @@ describe('ProvenanceService', () => {
           nostrEventId: 'nevent-id-123',
           signature: 'nostr-sig-hex',
           relays: ['wss://relay.example.com'],
+          eventCreatedAt: 1709500000,
         },
         'pubkey-abc'
       );
@@ -220,7 +226,50 @@ describe('ProvenanceService', () => {
       );
     });
 
-    it('should compute SHA-256 hash of content body', async () => {
+    // #609: Backend uses raw content body (not hash), matching tags, and client timestamp
+    it('should reconstruct event with raw content body and client timestamp', async () => {
+      mockDb._chain.single.mockReturnValue({
+        data: {
+          content_id: 'content-1',
+          creator_id: 'pubkey-abc',
+          created_at: '2026-02-15T10:00:00Z',
+          signature: 'sig',
+          nostr_event_id: 'event-id',
+          content_hash: 'sha256-hash',
+          relay_confirmations: [],
+          verification_status: 'verified',
+        },
+        error: null,
+      });
+
+      const { getEventHash } = await import('nostr-tools/pure');
+
+      await service.signContent(
+        {
+          contentId: 'content-1',
+          creatorId: 'pubkey-abc',
+          contentBody: 'Test content',
+          nostrEventId: 'event-id',
+          signature: 'sig',
+          relays: [],
+          eventCreatedAt: 1709500000,
+        },
+        'pubkey-abc'
+      );
+
+      // Verify getEventHash was called with raw content body and matching tags
+      expect(getEventHash).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: 1,
+          pubkey: 'pubkey-abc',
+          created_at: 1709500000,
+          tags: [['t', 'sovren-content']],
+          content: 'Test content', // Raw content, not hash
+        })
+      );
+    });
+
+    it('should compute SHA-256 hash of content body for storage', async () => {
       mockDb._chain.single.mockReturnValue({
         data: {
           content_id: 'content-1',
@@ -243,20 +292,45 @@ describe('ProvenanceService', () => {
           nostrEventId: 'event-id',
           signature: 'sig',
           relays: [],
+          eventCreatedAt: 1709500000,
         },
         'pubkey-abc'
       );
 
-      // Verify upsert was called with content_hash
-      expect(mockDb._chain.upsert).toHaveBeenCalled();
-      const upsertCall = mockDb._chain.upsert.mock.calls[0];
-      expect(upsertCall[0].content_hash).toMatch(/^[0-9a-f]{64}$/); // SHA-256 hex
+      // #615: Verify insert (not upsert) was called with content_hash
+      expect(mockDb._chain.insert).toHaveBeenCalled();
+      const insertCall = mockDb._chain.insert.mock.calls[0];
+      expect(insertCall[0].content_hash).toMatch(/^[0-9a-f]{64}$/); // SHA-256 hex
     });
 
-    it('should throw on database error', async () => {
+    // #613: Invalid signatures must be rejected, not stored as 'unverified'
+    it('should reject invalid NOSTR signatures', async () => {
+      vi.mocked(verifyEvent).mockReturnValue(false);
+
+      await expect(
+        service.signContent(
+          {
+            contentId: 'content-1',
+            creatorId: 'pubkey-abc',
+            contentBody: 'content',
+            nostrEventId: 'event',
+            signature: 'invalid-sig',
+            relays: [],
+            eventCreatedAt: 1709500000,
+          },
+          'pubkey-abc'
+        )
+      ).rejects.toThrow(/Invalid NOSTR signature/);
+
+      // Should NOT have attempted database insert
+      expect(mockDb._chain.insert).not.toHaveBeenCalled();
+    });
+
+    // #615: Duplicate content_id returns clear error, not silent overwrite
+    it('should reject duplicate content_id with clear error', async () => {
       mockDb._chain.single.mockReturnValue({
         data: null,
-        error: { message: 'Unique constraint violated' },
+        error: { code: '23505', message: 'Unique constraint violated' },
       });
 
       await expect(
@@ -268,6 +342,29 @@ describe('ProvenanceService', () => {
             nostrEventId: 'event',
             signature: 'sig',
             relays: [],
+            eventCreatedAt: 1709500000,
+          },
+          'pubkey-abc'
+        )
+      ).rejects.toThrow(/Provenance record already exists/);
+    });
+
+    it('should throw on database error', async () => {
+      mockDb._chain.single.mockReturnValue({
+        data: null,
+        error: { message: 'DB connection failed' },
+      });
+
+      await expect(
+        service.signContent(
+          {
+            contentId: 'content-1',
+            creatorId: 'pubkey-abc',
+            contentBody: 'content',
+            nostrEventId: 'event',
+            signature: 'sig',
+            relays: [],
+            eventCreatedAt: 1709500000,
           },
           'pubkey-abc'
         )
@@ -305,6 +402,7 @@ describe('ProvenanceService', () => {
           nostrEventId: 'event-id',
           signature: 'sig',
           relays: ['wss://relay1.example.com', 'wss://relay2.example.com'],
+          eventCreatedAt: 1709500000,
         },
         'pubkey-abc'
       );
@@ -367,7 +465,8 @@ describe('ProvenanceService', () => {
       );
     });
 
-    it('should throw NotFoundError when creator does not own the record', async () => {
+    // #612: Ownership checks throw AuthorizationError, not NotFoundError
+    it('should throw AuthorizationError when creator does not own the record', async () => {
       mockDb._chain.single.mockReturnValue({
         data: {
           content_id: 'content-1',
@@ -383,7 +482,7 @@ describe('ProvenanceService', () => {
       });
 
       await expect(service.revokeProvenance('content-1', 'pubkey-abc')).rejects.toThrow(
-        /Provenance record/
+        /Not authorized/
       );
     });
   });

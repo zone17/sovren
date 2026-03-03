@@ -78,8 +78,9 @@ export class ProvenanceService implements IProvenanceService {
       throw new NotFoundError(`Provenance record for content ${contentId}`);
     }
 
+    // #612: Ownership checks use AuthorizationError (403), not NotFoundError (404)
     if (provenance.author_pubkey !== creatorId) {
-      throw new NotFoundError(`Provenance record for content ${contentId}`);
+      throw new AuthorizationError('Not authorized to access this provenance record');
     }
 
     return {
@@ -110,6 +111,8 @@ export class ProvenanceService implements IProvenanceService {
    *
    * Security: verifies NOSTR signature before storing (critical-patterns.md #9)
    * Security: checks content ownership before signing (critical-patterns.md #2)
+   * Security: rejects invalid signatures (#613) — never stores 'unverified'
+   * Security: uses insert not upsert (#615) — prevents silent overwrite
    */
   async signContent(input: SignContentInput, callerId: string): Promise<ProvenanceRecord> {
     // Ownership check: only the content creator can sign provenance
@@ -120,14 +123,14 @@ export class ProvenanceService implements IProvenanceService {
 
     const contentHash = createHash('sha256').update(input.contentBody).digest('hex');
 
-    // Verify NOSTR signature before storing (critical-patterns.md #9)
-    // verifyEvent() requires a computed event ID — never use id: ''
+    // #609: Reconstruct the exact event the frontend signed.
+    // Uses raw content body (not hash), matching tags, and client's timestamp.
     const eventData = {
       kind: 1,
       pubkey: input.creatorId,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [] as string[][],
-      content: contentHash,
+      created_at: input.eventCreatedAt,
+      tags: [['t', 'sovren-content']],
+      content: input.contentBody,
     };
     const event = {
       ...eventData,
@@ -136,32 +139,40 @@ export class ProvenanceService implements IProvenanceService {
     };
 
     const isValid = verifyEvent(event);
-    const verificationStatus: VerificationStatus = isValid ? 'verified' : 'unverified';
+
+    // #613: Reject invalid signatures — never store unverified records
+    if (!isValid) {
+      throw new AuthorizationError('Invalid NOSTR signature');
+    }
+
+    const verificationStatus: VerificationStatus = 'verified';
 
     const relayConfirmations = input.relays.map((relay) => ({
       relay,
       confirmed_at: new Date().toISOString(),
     }));
 
+    // #615: Use insert instead of upsert to prevent silent provenance overwrite
     const { data, error } = await this.db
       .from<ProvenanceRow>('provenance_records')
-      .upsert(
-        {
-          content_id: input.contentId,
-          creator_id: input.creatorId,
-          signature: input.signature,
-          nostr_event_id: input.nostrEventId,
-          content_hash: contentHash,
-          relay_confirmations: relayConfirmations,
-          verification_status: verificationStatus,
-          status: 'active',
-        },
-        { onConflict: 'content_id' }
-      )
+      .insert({
+        content_id: input.contentId,
+        creator_id: input.creatorId,
+        signature: input.signature,
+        nostr_event_id: input.nostrEventId,
+        content_hash: contentHash,
+        relay_confirmations: relayConfirmations,
+        verification_status: verificationStatus,
+        status: 'active',
+      })
       .select()
       .single();
 
     if (error) {
+      // Handle unique constraint violation (content already has provenance)
+      if (error.code === '23505') {
+        throw new AuthorizationError('Provenance record already exists for this content');
+      }
       this.logger.error('Failed to sign content', { contentId: input.contentId, error });
       throw error;
     }
@@ -205,8 +216,9 @@ export class ProvenanceService implements IProvenanceService {
       throw new NotFoundError(`Provenance record for content ${contentId}`);
     }
 
+    // #612: Ownership checks use AuthorizationError (403), not NotFoundError (404)
     if (provenance.author_pubkey !== creatorId) {
-      throw new NotFoundError(`Provenance record for content ${contentId}`);
+      throw new AuthorizationError('Not authorized to revoke this provenance record');
     }
 
     const { error } = await this.db

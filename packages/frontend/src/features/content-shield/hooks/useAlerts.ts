@@ -6,6 +6,13 @@ import { shieldKeys } from './shieldKeys';
 
 export function useAlerts(status: AlertStatus = 'new', page = 1, limit = 20) {
   const hasInitialData = useRef(false);
+  const prevStatus = useRef(status);
+
+  // #617: Reset keepPreviousData gate when filter changes to prevent wrong-status flash
+  if (prevStatus.current !== status) {
+    hasInitialData.current = false;
+    prevStatus.current = status;
+  }
 
   const query = useQuery({
     queryKey: shieldKeys.alertList(status, page),

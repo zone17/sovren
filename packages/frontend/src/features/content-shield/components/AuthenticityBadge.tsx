@@ -3,7 +3,7 @@ import { HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProvenanceChain } from '../hooks/useProvenanceChain';
 import type { VerificationStatus } from '../types';
-import ProvenanceChainViewer from './ProvenanceChainViewer';
+import { ProvenanceChainViewer } from './ProvenanceChainViewer';
 
 const STATUS_CONFIG: Record<VerificationStatus, { icon: string; label: string; color: string }> = {
   verified: { icon: 'V', label: 'Verified', color: 'text-green-600 bg-green-50 border-green-200' },
@@ -15,6 +15,9 @@ interface AuthenticityBadgeProps {
   contentId: string;
 }
 
+// TODO(#620): N+1 — each badge fires its own useProvenanceChain query.
+// Accept for MVP (2 mock items, staleTime 5min). When real data is wired,
+// replace with POST /api/v2/shield/provenance/batch accepting contentId[].
 export const AuthenticityBadge: React.FC<AuthenticityBadgeProps> = ({ contentId }) => {
   const { data, isLoading, isError } = useProvenanceChain(contentId);
   const [showProvenance, setShowProvenance] = useState(false);
@@ -61,5 +64,3 @@ export const AuthenticityBadge: React.FC<AuthenticityBadgeProps> = ({ contentId 
     </TooltipProvider>
   );
 };
-
-export default AuthenticityBadge;

@@ -19,6 +19,14 @@ export type { Fingerprint as FingerprintEntry } from '@sovren/shared/types/prove
 export type { FingerprintRegistry as FingerprintCoverageData } from '@sovren/shared/types/provenance';
 export type { DmcaReport as DMCAReport } from '@sovren/shared/types/provenance';
 
+// Top-level imports for types used in sub-interfaces below
+import type {
+  MatchLevel,
+  HashType,
+  RelayConfirmation,
+  Pagination,
+} from '@sovren/shared/types/provenance';
+
 // --- Frontend-only types (UI state, component props) ---
 
 /** Report format for DMCA report generation */
@@ -45,8 +53,8 @@ export interface AlertDetected {
 
 export interface AlertComparison {
   similarity_score: number;
-  match_level: import('@sovren/shared/types/provenance').MatchLevel;
-  hash_type: import('@sovren/shared/types/provenance').HashType;
+  match_level: MatchLevel;
+  hash_type: HashType;
   highlighted_sections: string[];
 }
 
@@ -63,7 +71,7 @@ export interface DMCAOriginalContent {
   provenance_signature: string;
   nostr_event_id: string;
   content_hash: string;
-  relay_confirmations: import('@sovren/shared/types/provenance').RelayConfirmation[];
+  relay_confirmations: RelayConfirmation[];
 }
 
 export interface DMCAInfringingContent {
@@ -71,7 +79,7 @@ export interface DMCAInfringingContent {
   author_pubkey: string;
   detected_at: string;
   similarity_score: number;
-  match_level: import('@sovren/shared/types/provenance').MatchLevel;
+  match_level: MatchLevel;
 }
 
 // --- API wrappers (frontend-only) ---
@@ -85,5 +93,5 @@ export interface ApiResponse<T> {
 export interface PaginatedApiResponse<T> {
   success: boolean;
   data: T;
-  pagination: import('@sovren/shared/types/provenance').Pagination;
+  pagination: Pagination;
 }

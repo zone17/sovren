@@ -5,6 +5,13 @@ import { shieldKeys } from './shieldKeys';
 
 export function useFingerprintCoverage(creatorId: string, page = 1, limit = 20) {
   const hasInitialData = useRef(false);
+  const prevCreatorId = useRef(creatorId);
+
+  // #617: Reset keepPreviousData gate when filter changes to prevent stale data flash
+  if (prevCreatorId.current !== creatorId) {
+    hasInitialData.current = false;
+    prevCreatorId.current = creatorId;
+  }
 
   const query = useQuery({
     queryKey: shieldKeys.fingerprintCoverage(creatorId, page),

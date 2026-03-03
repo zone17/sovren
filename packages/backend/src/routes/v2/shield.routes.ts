@@ -103,6 +103,7 @@ router.post(
         nostrEventId: req.body.nostr_event_id,
         signature: req.body.signature,
         relays: req.body.relays || [],
+        eventCreatedAt: req.body.event_created_at,
       },
       callerId
     );

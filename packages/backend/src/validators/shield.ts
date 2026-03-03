@@ -74,11 +74,12 @@ export const DmcaReportQuerySchema = z.object({
 // ============================================================================
 
 export const SignProvenanceBodySchema = z.object({
-  content_id: z.string().min(1).max(255),
+  content_id: z.string().uuid(),
   content_body: z.string().min(1).max(1_000_000), // 1MB limit
-  nostr_event_id: z.string().min(1).max(255),
-  signature: z.string().min(1).max(2048),
+  nostr_event_id: z.string().regex(/^[0-9a-f]{64}$/, 'Must be a 64-char hex NOSTR event ID'),
+  signature: z.string().regex(/^[0-9a-f]{128}$/, 'Must be a 128-char hex Schnorr signature'),
   relays: z.array(z.string().url()).max(20).optional().default([]),
+  event_created_at: z.number().int().positive(),
 });
 
 // ============================================================================

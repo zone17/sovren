@@ -13,6 +13,7 @@ export interface SignContentInput {
   nostrEventId: string;
   signature: string;
   relays: string[];
+  eventCreatedAt: number;
 }
 
 export interface IProvenanceService {

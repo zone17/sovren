@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import AlertsFeed from '../AlertsFeed';
+import { AlertsFeed } from '../AlertsFeed';
 
 const mockAlerts = [
   {

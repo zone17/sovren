@@ -20,6 +20,7 @@ export interface SignProvenanceBody {
   nostr_event_id: string;
   signature: string;
   relays?: string[];
+  event_created_at: number;
 }
 
 export const shieldApi = {
