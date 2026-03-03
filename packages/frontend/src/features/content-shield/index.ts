@@ -17,6 +17,7 @@ export { useDmcaReport } from './hooks/useDmcaReport';
 export { useFingerprintCoverage } from './hooks/useFingerprintCoverage';
 export { useProvenanceChain } from './hooks/useProvenanceChain';
 export { useSignProvenance } from './hooks/useSignProvenance';
+export { usePublishWithProvenance } from './hooks/usePublishWithProvenance';
 export { shieldKeys } from './hooks/shieldKeys';
 
 // API Service
