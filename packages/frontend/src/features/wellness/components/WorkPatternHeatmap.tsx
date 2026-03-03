@@ -34,8 +34,8 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-base font-semibold">Work Activity</CardTitle>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-48 w-full" />
