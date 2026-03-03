@@ -76,6 +76,7 @@ export default defineConfig({
             '**/MobileComponents.test.tsx',
             '**/NIP19BatchService.test.ts',
             '**/Post.test.tsx',
+            '**/Login.test.tsx',
             '**/UserSubscriptionManager.test.tsx',
           ],
           setupFiles: [
