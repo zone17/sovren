@@ -148,9 +148,12 @@ export class NostrAuthService {
       }
 
       // Verify timestamp is within acceptable range (prevent replay attacks)
-      const timeDiff = Math.abs(Date.now() - timestamp);
-      if (timeDiff > 300000) {
-        // 5 minutes
+      // Auto-detect ms vs seconds: Unix seconds won't exceed 1e12 until year 33658
+      const timestampSec = timestamp > 1e12 ? Math.floor(timestamp / 1000) : timestamp;
+      const nowSec = Math.floor(Date.now() / 1000);
+      const timeDiff = Math.abs(nowSec - timestampSec);
+      if (timeDiff > 300) {
+        // 5 minutes in seconds
         return {
           valid: false,
           pubkey,
@@ -169,15 +172,17 @@ export class NostrAuthService {
       }
 
       // Create message to verify (challenge + timestamp)
-      const message = this.createSignatureMessage(challenge, timestamp);
+      // Use timestampSec to match frontend which always sends seconds to createSignatureMessage
+      const message = this.createSignatureMessage(challenge, timestampSec);
       const messageHash = createHash('sha256').update(message).digest('hex');
 
       // Create a NOSTR event for verification — compute the proper event ID
+      // Uses NIP-42 auth event kind (22242) with challenge in tags for auditability
       const eventData: UnsignedEvent = {
-        kind: 1,
+        kind: 22242,
         pubkey,
-        created_at: Math.floor(timestamp / 1000),
-        tags: [],
+        created_at: timestampSec,
+        tags: [['challenge', challenge]],
         content: messageHash,
       };
       const event: NostrEvent = {
@@ -405,6 +410,19 @@ export class NostrAuthService {
   }
 
   /**
+   * 👤 Get user role from DB (public wrapper around userRoleFetcher)
+   * Falls back to 'supporter' for new users or on DB error.
+   */
+  async getUserRole(pubkey: string): Promise<'creator' | 'supporter'> {
+    if (!this.userRoleFetcher) {
+      return 'supporter';
+    }
+    const role = await this.userRoleFetcher(pubkey);
+    // userRoleFetcher returns undefined only if the user is not found — treat as new user
+    return (role as 'creator' | 'supporter') || 'supporter';
+  }
+
+  /**
    * 📊 Get service statistics
    */
   getStats(): {
@@ -461,7 +479,8 @@ export const nostrAuth = new NostrAuthService(
         .eq('nostr_pubkey', pubkey)
         .single();
       return data?.role || 'supporter';
-    } catch {
+    } catch (err) {
+      logger.error('Failed to fetch user role from DB, defaulting to supporter', { pubkey, err });
       return 'supporter';
     }
   }
@@ -473,32 +492,4 @@ export { createSignatureMessage } from '@shared/types/nostr/auth';
 
 export const validateNostrPubkey = (pubkey: string): boolean => {
   return /^[0-9a-fA-F]{64}$/.test(pubkey);
-};
-
-export const isValidSignature = async (
-  signature: string,
-  message: string,
-  pubkey: string
-): Promise<boolean> => {
-  try {
-    const messageHash = createHash('sha256').update(message).digest('hex');
-
-    // Create a NOSTR event for verification — compute the proper event ID
-    const eventData: UnsignedEvent = {
-      kind: 1,
-      pubkey,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [],
-      content: messageHash,
-    };
-    const event: NostrEvent = {
-      ...eventData,
-      id: getEventHash(eventData),
-      sig: signature,
-    };
-
-    return verifyEvent(event);
-  } catch {
-    return false;
-  }
 };
