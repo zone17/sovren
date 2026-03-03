@@ -4,10 +4,11 @@
  * Runs in chromium-authenticated project (uses stored creator auth state).
  * File convention: *.auth.spec.ts — auto-matched by Playwright config.
  *
- * 3 tests:
+ * 4 tests:
  *   1. Dashboard loads with heading visible and no error boundary
  *   2. Copy Detection Alerts section heading is visible (always rendered as CardTitle)
- *   3. Shield page navigates to /shield URL
+ *   3. Fingerprint Coverage section heading is visible (always rendered as CardTitle)
+ *   4. Shield page navigates to /shield URL
  */
 import { expect, test } from '@playwright/test';
 import { ShieldPage } from './pages/shield.page';
@@ -30,6 +31,12 @@ test.describe('Content Shield Dashboard', () => {
     // The title is always visible regardless of loading or error state
     // because the CardHeader is always rendered.
     await expect(shieldPage.alertsHeading).toBeVisible();
+  });
+
+  test('fingerprint coverage section is visible on the dashboard', async () => {
+    // FingerprintCoverage always renders CardTitle "Fingerprint Coverage"
+    // in all states (loading, error, data) — same pattern as AlertsFeed.
+    await expect(shieldPage.fingerprintHeading).toBeVisible();
   });
 
   test('navigates to the /shield route', async ({ page }) => {
