@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
@@ -15,10 +16,13 @@ vi.mock('../lib/auth', () => ({
 }));
 
 const renderWithProviders = (component: React.ReactElement): void => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <BrowserRouter>
-      <AuthProvider>{component}</AuthProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>{component}</AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

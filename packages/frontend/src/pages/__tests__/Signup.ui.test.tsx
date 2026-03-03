@@ -5,6 +5,7 @@
  * Following systematic methodology from successful recoveries
  */
 import { configureStore } from '@reduxjs/toolkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
@@ -28,14 +29,17 @@ const mockStore = configureStore({
 // }));
 
 const renderSignup = () => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <AuthProvider>
-      <Provider store={mockStore}>
-        <BrowserRouter>
-          <Signup />
-        </BrowserRouter>
-      </Provider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <Provider store={mockStore}>
+            <Signup />
+          </Provider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
