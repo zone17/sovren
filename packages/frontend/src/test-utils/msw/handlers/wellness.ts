@@ -1,5 +1,10 @@
 import { http, HttpResponse } from 'msw';
 
+// In the test environment, VITE_API_URL = 'http://localhost:3000/api'.
+// apiClient.get('/api/v2/wellness/risk-score') → http://localhost:3000/api/api/v2/wellness/risk-score
+// MSW node interceptor matches by full URL, so we must register both base styles.
+// Using a wildcard origin ('*/') lets MSW match regardless of the base URL prefix.
+
 const BASE = '/api/v2/wellness';
 
 /** Wrap data in the ApiResponse<T> envelope the backend returns */
@@ -9,7 +14,7 @@ function ok<T>(data: T) {
 
 export const wellnessHandlers = [
   // -- Burnout Risk --
-  http.get(`${BASE}/risk-score`, () => {
+  http.get('*' + BASE + '/risk-score', () => {
     return ok({
       score: 35,
       level: 'low',
@@ -20,7 +25,7 @@ export const wellnessHandlers = [
   }),
 
   // -- Work Patterns --
-  http.get(`${BASE}/patterns`, () => {
+  http.get('*' + BASE + '/patterns', () => {
     return ok({
       period: '7d',
       total_hours: 40,
@@ -30,7 +35,7 @@ export const wellnessHandlers = [
     });
   }),
 
-  http.get(`${BASE}/patterns/heatmap`, () => {
+  http.get('*' + BASE + '/patterns/heatmap', () => {
     return ok({
       period: '7d',
       entries: [],
@@ -38,14 +43,14 @@ export const wellnessHandlers = [
   }),
 
   // -- Pulse Check-Ins --
-  http.get(`${BASE}/pulse/history`, () => {
+  http.get('*' + BASE + '/pulse/history', () => {
     return ok({
       entries: [],
       period: '90d',
     });
   }),
 
-  http.post(`${BASE}/pulse`, () => {
+  http.post('*' + BASE + '/pulse', () => {
     return ok({
       id: 'pulse-1',
       energy: 7,
@@ -56,30 +61,30 @@ export const wellnessHandlers = [
   }),
 
   // -- Sensitivity (sub-resource of risk-score) --
-  http.get(`${BASE}/sensitivity`, () => {
+  http.get('*' + BASE + '/sensitivity', () => {
     return ok({ sensitivity: 'medium' });
   }),
 
-  http.put(`${BASE}/risk-score/sensitivity`, () => {
+  http.put('*' + BASE + '/risk-score/sensitivity', () => {
     return ok({ sensitivity: 'medium', updated_at: new Date().toISOString() });
   }),
 
   // -- Schedule --
-  http.get(`${BASE}/schedule`, () => {
+  http.get('*' + BASE + '/schedule', () => {
     return ok({ recommendations: [], generated_at: new Date().toISOString() });
   }),
 
-  http.get(`${BASE}/schedule/recommendations`, () => {
+  http.get('*' + BASE + '/schedule/recommendations', () => {
     return ok({ recommendations: [], generated_at: new Date().toISOString() });
   }),
 
   // -- Buffer Depth --
-  http.get(`${BASE}/buffer-depth`, () => {
+  http.get('*' + BASE + '/buffer-depth', () => {
     return ok({ status: 'healthy', depth_days: 7 });
   }),
 
   // -- Boundaries --
-  http.get(`${BASE}/boundaries`, () => {
+  http.get('*' + BASE + '/boundaries', () => {
     return ok({
       focus_hours: { start: '09:00', end: '17:00' },
       weekly_engagement_budget_mins: 120,
@@ -89,7 +94,7 @@ export const wellnessHandlers = [
     });
   }),
 
-  http.put(`${BASE}/boundaries`, () => {
+  http.put('*' + BASE + '/boundaries', () => {
     return ok({
       focus_hours: { start: '09:00', end: '17:00' },
       weekly_engagement_budget_mins: 120,
@@ -100,12 +105,12 @@ export const wellnessHandlers = [
   }),
 
   // -- Pulse data deletion --
-  http.delete(`${BASE}/pulse`, () => {
+  http.delete('*' + BASE + '/pulse', () => {
     return ok({ deleted_count: 0 });
   }),
 
   // -- Benchmarks --
-  http.get(`${BASE}/benchmark`, () => {
+  http.get('*' + BASE + '/benchmark', () => {
     return ok(null);
   }),
 ];

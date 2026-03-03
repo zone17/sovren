@@ -5,7 +5,7 @@ const CHALLENGE_EXPIRES = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
 export const authHandlers = [
   // NOSTR auth challenge — POST /api/auth/challenge
-  http.post('/api/auth/challenge', () => {
+  http.post('*/api/auth/challenge', () => {
     return HttpResponse.json({
       success: true,
       data: {
@@ -17,7 +17,7 @@ export const authHandlers = [
   }),
 
   // NOSTR authenticate — POST /api/auth/authenticate
-  http.post('/api/auth/authenticate', () => {
+  http.post('*/api/auth/authenticate', () => {
     return HttpResponse.json({
       success: true,
       data: {
@@ -32,16 +32,28 @@ export const authHandlers = [
     });
   }),
 
-  // Logout — DELETE /api/auth/login
-  http.delete('/api/auth/login', () => {
+  // Logout — DELETE /api/auth/login or POST /api/auth/logout
+  http.delete('*/api/auth/login', () => {
+    return HttpResponse.json({ success: true, data: null });
+  }),
+
+  http.post('*/api/auth/logout', () => {
     return HttpResponse.json({ success: true, data: null });
   }),
 
   // Current user session
-  http.get('/api/auth/user', () => {
+  http.get('*/api/auth/user', () => {
     return HttpResponse.json({
       success: true,
       data: TEST_USER,
+    });
+  }),
+
+  // Token verification
+  http.get('*/api/auth/verify', () => {
+    return HttpResponse.json({
+      success: true,
+      data: { valid: true, user: TEST_USER },
     });
   }),
 ];
