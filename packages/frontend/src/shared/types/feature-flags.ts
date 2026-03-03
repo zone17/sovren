@@ -10,6 +10,6 @@ export interface FeatureFlags {
 }
 
 export const featureFlags: FeatureFlags = {
-  // 🔗 **FRONTEND-BACKEND INTEGRATION**
-  enableBackendIntegration: import.meta.env.VITE_ENABLE_BACKEND === 'true',
+  // Default true — only false when explicitly disabled
+  enableBackendIntegration: import.meta.env.VITE_ENABLE_BACKEND !== 'false',
 };

@@ -28,7 +28,6 @@ const AuthenticateRequestSchema = z.object({
   challenge: z.string().min(1, 'challenge is required'),
   timestamp: z.number(),
   signature: z.string().min(1, 'Signature is required'),
-  role: z.enum(['creator', 'supporter']).optional().default('supporter'),
 });
 
 // 🎲 Generate authentication challenge
@@ -77,8 +76,11 @@ router.post('/authenticate', authRateLimit, async (req: Request, res: Response) 
       });
     }
 
-    // Generate JWT token
-    const token = await nostrAuth.generateJWT(verification.pubkey, validatedData.role);
+    // Fetch role from DB — never trust the client to self-assign a role
+    const role = await nostrAuth.getUserRole(verification.pubkey);
+
+    // Generate JWT token with DB-fetched role
+    const token = await nostrAuth.generateJWT(verification.pubkey, role);
 
     return res.status(200).json({
       success: true,
@@ -86,7 +88,7 @@ router.post('/authenticate', authRateLimit, async (req: Request, res: Response) 
         token,
         user: {
           nostr_pubkey: verification.pubkey,
-          role: validatedData.role,
+          role,
           signature_verified: true,
         },
         expires_in: '24h',

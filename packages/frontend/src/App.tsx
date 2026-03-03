@@ -283,12 +283,12 @@ function App(): React.ReactElement {
               }
             />
 
-            {/* Wellness Dashboard */}
+            {/* Wellness Dashboard — creators only, show access denied for supporters */}
             <Route
               path="/wellness"
               element={
                 <Layout>
-                  <ProtectedRoute>
+                  <ProtectedRoute requireRole="creator" showAccessDenied={true}>
                     <WellnessErrorBoundary>
                       <WellnessDashboard />
                     </WellnessErrorBoundary>

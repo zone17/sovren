@@ -48,11 +48,24 @@ export const SustainableScheduler: React.FC = () => {
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-gray-500">
           Failed to load schedule recommendations.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">Sustainable Schedule</CardTitle>
+        </CardHeader>
+        <CardContent className="py-6 text-center text-sm text-gray-500">
+          Schedule insights coming soon. Start posting to receive recommendations.
         </CardContent>
       </Card>
     );

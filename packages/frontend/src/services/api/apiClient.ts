@@ -29,7 +29,7 @@ import type {
   UserProfileUpdate,
 } from './types';
 
-const DEFAULT_BASE_URL = 'http://localhost:3001';
+const DEFAULT_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -37,6 +37,7 @@ type QueryParams = Record<string, string | number | boolean | undefined>;
 class ApiClient {
   private baseUrl: string;
   private _token: string | null = null;
+  private _sessionExpiredDispatched = false;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -56,6 +57,7 @@ class ApiClient {
 
   setToken(token: string | null): void {
     this._token = token;
+    this._sessionExpiredDispatched = false;
     if (typeof window !== 'undefined') {
       if (token) {
         localStorage.setItem('auth_token', token);
@@ -101,6 +103,14 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      if (
+        response.status === 401 &&
+        typeof window !== 'undefined' &&
+        !this._sessionExpiredDispatched
+      ) {
+        this._sessionExpiredDispatched = true;
+        window.dispatchEvent(new CustomEvent('auth:session-expired'));
+      }
       const errorData = await response.json().catch(() => ({
         error: response.statusText,
         code: 'UNKNOWN_ERROR',

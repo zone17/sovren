@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { Provider } from 'react-redux';
@@ -25,12 +26,15 @@ const renderWithProviders = (component: React.ReactElement): ReturnType<typeof r
     },
   });
 
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <AuthProvider>
-      <Provider store={store}>
-        <BrowserRouter>{component}</BrowserRouter>
-      </Provider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Provider store={store}>
+          <BrowserRouter>{component}</BrowserRouter>
+        </Provider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

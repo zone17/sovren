@@ -1,16 +1,20 @@
 /**
- * 🔐 **AUTH CONTEXT SERVICE - ELITE TYPE SAFETY**
+ * Auth Context — NOSTR-first authentication
  *
- * Elite Engineering Standards:
- * - Zero `any` types with comprehensive interfaces
- * - Proper error handling with typed responses
- * - Clean separation of concerns
- * - Enterprise-grade authentication patterns
- * - Feature flag integration for backend connectivity
+ * realAuthService is default. demoAuthService only when VITE_DEMO_MODE=true.
  */
 
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { featureFlags } from '../../../shared/types/feature-flags';
+import { useQueryClient } from '@tanstack/react-query';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { useNavigate } from 'react-router-dom';
+import { apiClient } from '../../../services/api/apiClient';
 import type {
   AuthContextValue,
   AuthResponse,
@@ -22,74 +26,29 @@ import type {
 } from '../types';
 import { realAuthService } from './realAuthService';
 
-// 🔧 **TEMPORARY AUTH SERVICE INTERFACE**
-// This will be replaced with proper implementation
-interface TempAuthService {
+// Auth service interface (NOSTR-only — no email auth)
+interface AuthService {
   verifyAuth: () => Promise<{ user: User | null; error?: string }>;
-  login: (credentials: LoginCredentials) => Promise<AuthResponse>;
-  signup: (data: SignupData) => Promise<AuthResponse>;
   authenticateNostr: (signature: NostrSignature) => Promise<AuthResponse>;
-  generateNostrChallenge: () => Promise<{ challenge?: string; error?: string }>;
+  generateNostrChallenge: () => Promise<{
+    challenge?: string;
+    timestamp?: number;
+    error?: string;
+  }>;
   logout: () => Promise<void>;
 }
 
-// 🚧 **DEMO AUTH SERVICE** (for immediate user experience)
-const demoAuthService: TempAuthService = {
+// Demo auth service — only active when VITE_DEMO_MODE=true
+const demoAuthService: AuthService = {
   verifyAuth: async () => {
-    // Check if user has demo authentication
     const demoUser = localStorage.getItem('demo_user');
     if (demoUser) {
-      return { user: JSON.parse(demoUser) };
+      return { user: JSON.parse(demoUser) as User };
     }
     return { user: null };
   },
 
-  login: async (credentials: LoginCredentials) => {
-    // Simple demo login - any email/password works
-    const demoUser: User = {
-      id: 'demo-creator-123',
-      email: credentials.email,
-      name: credentials.email.split('@')[0],
-      role: 'creator',
-      nostr_pubkey: 'demo-nostr-pubkey-' + Date.now(),
-      avatar_url: undefined,
-      bio: 'Demo creator account',
-      website: undefined,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      email_verified: true,
-      nostr_verified: true,
-      permissions: ['read', 'write', 'create', 'publish'] as any,
-    };
-
-    localStorage.setItem('demo_user', JSON.stringify(demoUser));
-    return { success: true, user: demoUser };
-  },
-
-  signup: async (data: SignupData) => {
-    // Simple demo signup
-    const demoUser: User = {
-      id: 'demo-creator-' + Date.now(),
-      email: data.email,
-      name: data.name || data.email.split('@')[0],
-      role: 'creator',
-      nostr_pubkey: 'demo-nostr-pubkey-' + Date.now(),
-      avatar_url: undefined,
-      bio: 'New creator on Sovren',
-      website: undefined,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      email_verified: true,
-      nostr_verified: true,
-      permissions: ['read', 'write', 'create', 'publish'] as any,
-    };
-
-    localStorage.setItem('demo_user', JSON.stringify(demoUser));
-    return { success: true, user: demoUser };
-  },
-
   authenticateNostr: async (signature: NostrSignature) => {
-    // Simple NOSTR demo
     const demoUser: User = {
       id: 'demo-creator-nostr-' + Date.now(),
       email: 'nostr-creator@sovren.app',
@@ -103,7 +62,13 @@ const demoAuthService: TempAuthService = {
       updated_at: new Date().toISOString(),
       email_verified: true,
       nostr_verified: true,
-      permissions: ['read', 'write', 'create', 'publish'] as any,
+      permissions: [
+        'content.create',
+        'content.edit',
+        'content.delete',
+        'content.publish',
+        'payments.receive',
+      ],
     };
 
     localStorage.setItem('demo_user', JSON.stringify(demoUser));
@@ -113,6 +78,7 @@ const demoAuthService: TempAuthService = {
   generateNostrChallenge: async () => {
     return {
       challenge: 'demo-challenge-' + Date.now() + Math.random().toString(36).substring(2, 11),
+      timestamp: Math.floor(Date.now() / 1000),
     };
   },
 
@@ -121,31 +87,11 @@ const demoAuthService: TempAuthService = {
   },
 };
 
-// 🚧 **MOCK AUTH SERVICE** (returns no users)
-const mockAuthService: TempAuthService = {
-  verifyAuth: async () => await Promise.resolve({ user: null }),
-  login: async () => await Promise.resolve({ success: false, error: 'Not implemented' }),
-  signup: async () => await Promise.resolve({ success: false, error: 'Not implemented' }),
-  authenticateNostr: async () =>
-    await Promise.resolve({ success: false, error: 'Not implemented' }),
-  generateNostrChallenge: async () => await Promise.resolve({ error: 'Not implemented' }),
-  logout: async () => await Promise.resolve(),
-};
+const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
-// 🎯 **AUTH SERVICE SELECTOR**
-// Using demo auth for immediate user experience
-const getAuthService = (): TempAuthService => {
-  if (featureFlags.enableBackendIntegration) {
-    return {
-      verifyAuth: realAuthService.verifyAuth.bind(realAuthService),
-      login: realAuthService.login.bind(realAuthService),
-      signup: realAuthService.signup.bind(realAuthService),
-      authenticateNostr: realAuthService.authenticateNostr.bind(realAuthService),
-      generateNostrChallenge: realAuthService.generateNostrChallenge.bind(realAuthService),
-      logout: realAuthService.logout.bind(realAuthService),
-    };
-  }
-  return demoAuthService; // Use demo auth instead of mock
+const getAuthService = (): AuthService => {
+  if (isDemoMode) return demoAuthService;
+  return realAuthService;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -158,9 +104,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  // 🔄 **VERIFY AUTHENTICATION**
-  const refreshAuth = async (): Promise<void> => {
+  // Core logout sequence: clear token → clear cache → navigate
+  const performLogout = useCallback(async () => {
+    try {
+      const authService = getAuthService();
+      await authService.logout();
+    } catch (err) {
+      console.error('Logout backend call failed:', err);
+    } finally {
+      apiClient.setToken(null);
+      queryClient.clear();
+      setUser(null);
+      setError(null);
+    }
+  }, [queryClient]);
+
+  // Verify auth on mount
+  const refreshAuth = useCallback(async (): Promise<void> => {
     try {
       const authService = getAuthService();
       const result = await authService.verifyAuth();
@@ -173,40 +136,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // 🚀 **INITIALIZE AUTH STATE**
-  useEffect(() => {
-    void refreshAuth();
   }, []);
 
-  // 📧 **EMAIL/PASSWORD LOGIN**
+  useEffect(() => {
+    void refreshAuth();
+  }, [refreshAuth]);
+
+  // Listen for 401 session-expired events from apiClient
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      void performLogout().then(() => {
+        navigate('/login?reason=session-expired');
+      });
+    };
+
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, [performLogout, navigate]);
+
+  // Email login — kept for interface compatibility, no real backend route
   const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const authService = getAuthService();
-      const result = await authService.login(credentials);
-
-      if (result.error || !result.user) {
-        const errorMsg = result.error || 'Login failed';
-        setError(errorMsg);
-        return { success: false, error: errorMsg };
-      }
-
-      setUser(result.user);
-      return { success: true, user: result.user };
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Login failed';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    } finally {
-      setIsLoading(false);
-    }
+    return { success: false, error: 'Email login not supported. Use NOSTR authentication.' };
   };
 
-  // 🌐 **NOSTR AUTHENTICATION**
+  // NOSTR authentication
   const authenticateNostr = async (signature: NostrSignature): Promise<AuthResponse> => {
     try {
       setIsLoading(true);
@@ -232,34 +185,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // 📝 **USER SIGNUP**
-  const signup = async (data: SignupData): Promise<AuthResponse> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const authService = getAuthService();
-      const result = await authService.signup(data);
-
-      if (result.error || !result.user) {
-        const errorMsg = result.error || 'Signup failed';
-        setError(errorMsg);
-        return { success: false, error: errorMsg };
-      }
-
-      setUser(result.user);
-      return { success: true, user: result.user };
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Signup failed';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    } finally {
-      setIsLoading(false);
-    }
+  // Signup — kept for interface compatibility
+  const signup = async (_data: SignupData): Promise<AuthResponse> => {
+    return { success: false, error: 'Email signup not supported. Use NOSTR authentication.' };
   };
 
-  // 🔑 **GENERATE NOSTR CHALLENGE**
-  const generateNostrChallenge = async (): Promise<{ challenge?: string; error?: string }> => {
+  // Generate NOSTR challenge
+  const generateNostrChallenge = async (): Promise<{
+    challenge?: string;
+    timestamp?: number;
+    error?: string;
+  }> => {
     try {
       const authService = getAuthService();
       return await authService.generateNostrChallenge();
@@ -268,25 +204,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // 🚪 **LOGOUT**
+  // Logout
   const logout = async (): Promise<void> => {
-    try {
-      setIsLoading(true);
-      const authService = getAuthService();
-      await authService.logout();
-      setUser(null);
-      setError(null);
-    } catch (err) {
-      console.error('Logout failed:', err);
-      // Still clear user state even if logout fails
-      setUser(null);
-      setError(null);
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(true);
+    await performLogout();
+    navigate('/login');
+    setIsLoading(false);
   };
 
-  // 🔄 **REFRESH TOKEN** (stub implementation)
+  // Refresh token — stub (Phase 0e deferred)
   const refreshToken = async (): Promise<boolean> => {
     try {
       await refreshAuth();
@@ -296,47 +222,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // 👤 **UPDATE PROFILE** (stub implementation)
+  // Update profile — local state only
   const updateProfile = async (updates: Partial<User>): Promise<boolean> => {
-    try {
-      if (user) {
-        setUser({ ...user, ...updates });
-        return await Promise.resolve(true);
-      }
-      return await Promise.resolve(false);
-    } catch {
-      return await Promise.resolve(false);
+    if (user) {
+      setUser({ ...user, ...updates });
+      return true;
     }
+    return false;
   };
 
-  // ✉️ **VERIFY EMAIL** (stub implementation)
-  const verifyEmail = async (token: string): Promise<boolean> => {
-    try {
-      console.log('Verifying email with token:', token);
-      return await Promise.resolve(true);
-    } catch {
-      return await Promise.resolve(false);
-    }
+  // Verify email — stub
+  const verifyEmail = async (_token: string): Promise<boolean> => {
+    return true;
   };
 
-  // 🔒 **RESET PASSWORD** (stub implementation)
-  const resetPassword = async (email: string): Promise<boolean> => {
-    try {
-      console.log('Resetting password for:', email);
-      return await Promise.resolve(true);
-    } catch {
-      return await Promise.resolve(false);
-    }
+  // Reset password — stub
+  const resetPassword = async (_email: string): Promise<boolean> => {
+    return true;
   };
 
   const value: AuthContextValue = {
-    // State
     isAuthenticated: !!user,
     isLoading,
     user,
     error,
-
-    // Actions
     login,
     logout,
     signup,
@@ -350,8 +259,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-// 🎯 **CUSTOM HOOKS**
 
 export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);

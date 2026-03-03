@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { LoginPage } from './pages/login.page';
-import { ProfilePage } from './pages/profile.page';
 import { SignupPage } from './pages/signup.page';
-import { TEST_USER, SIGNUP_USER } from './fixtures/test-credentials';
 
 test.describe('Authentication', () => {
   test.beforeEach(async ({ page }) => {
@@ -11,44 +9,12 @@ test.describe('Authentication', () => {
     await page.evaluate(() => localStorage.clear());
   });
 
-  test('email login redirects to profile', async ({ page }) => {
+  test('login page shows NOSTR extension sign-in', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
-    await loginPage.loginWithEmail(TEST_USER.email, TEST_USER.password);
 
-    await expect(page).toHaveURL(/\/profile/);
-
-    const profilePage = new ProfilePage(page);
-    await expect(profilePage.userName).toBeVisible();
-  });
-
-  test('email signup redirects to profile', async ({ page }) => {
-    const signupPage = new SignupPage(page);
-    await signupPage.goto();
-    await signupPage.signupWithEmail(SIGNUP_USER.name, SIGNUP_USER.email, SIGNUP_USER.password);
-
-    await expect(page).toHaveURL(/\/profile/);
-
-    const profilePage = new ProfilePage(page);
-    await expect(profilePage.userName).toBeVisible();
-  });
-
-  test('protected route redirects to login when unauthenticated', async ({ page }) => {
-    await page.goto('/profile');
-    await expect(page).toHaveURL(/\/login/);
-  });
-
-  test('logout clears session', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.loginWithEmail(TEST_USER.email, TEST_USER.password);
-    await expect(page).toHaveURL(/\/profile/);
-
-    const profilePage = new ProfilePage(page);
-    await profilePage.logout();
-
-    await page.goto('/profile');
-    await expect(page).toHaveURL(/\/login/);
+    await expect(loginPage.heading).toBeVisible();
+    await expect(loginPage.extensionButton).toBeVisible();
   });
 
   test('login page links to signup', async ({ page }) => {

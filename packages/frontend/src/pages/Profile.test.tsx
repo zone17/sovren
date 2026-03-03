@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
@@ -103,12 +104,15 @@ vi.mock('../features/auth/services/AuthContext', () => {
 // Elite render function with AuthProvider wrapper
 const renderWithTestWrapper = (user: TestUser = mockCreatorUser): void => {
   currentTestUser = user;
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <AuthProvider>
-      <BrowserRouter>
-        <Profile />
-      </BrowserRouter>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Profile />
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 
