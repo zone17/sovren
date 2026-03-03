@@ -1,16 +1,12 @@
 /**
- * 🔐 **REAL AUTH SERVICE - ELITE BACKEND INTEGRATION**
+ * Real Auth Service — NOSTR backend integration
  *
- * Elite Engineering Standards:
- * - Zero `any` types with comprehensive interfaces
- * - Proper error handling with typed responses
- * - Clean separation of concerns
- * - Enterprise-grade authentication patterns
- * - Backend API integration with JWT handling
- * - NOSTR-first authentication architecture
+ * Uses apiClient for all HTTP transport. Domain logic (role mapping, permissions)
+ * lives here. Email auth methods removed — backend has no email auth routes.
  */
 
-import type { AuthResponse, LoginCredentials, NostrSignature, SignupData, User } from '../types';
+import { apiClient } from '../../../services/api/apiClient';
+import type { AuthResponse, NostrSignature, User } from '../types';
 
 // 🌐 **API RESPONSE INTERFACES**
 interface BackendAuthResponse {
@@ -24,12 +20,6 @@ interface BackendAuthResponse {
       lastSignIn?: string;
       nostr_pubkey?: string;
       role?: 'admin' | 'creator' | 'supporter';
-    };
-    session?: {
-      accessToken: string;
-      refreshToken?: string;
-      expiresAt?: number;
-      tokenType?: string;
     };
     token?: string;
   };
@@ -52,239 +42,58 @@ interface BackendChallengeResponse {
 
 // 🔧 **REAL AUTH SERVICE IMPLEMENTATION**
 export class RealAuthService {
-  private baseUrl: string;
-
-  constructor() {
-    this.baseUrl = '/api';
-  }
-
   /**
-   * 🔍 **Verify current authentication status**
+   * Verify current authentication status via JWT
    */
   async verifyAuth(): Promise<{ user: User | null; error?: string }> {
     try {
-      const token = localStorage.getItem('auth_token');
-
+      const token = apiClient.getToken();
       if (!token) {
         return { user: null };
       }
 
-      const response = await fetch(`${this.baseUrl}/auth/verify`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        localStorage.removeItem('auth_token');
-        return { user: null, error: 'Token invalid or expired' };
-      }
-
-      const result = (await response.json()) as BackendAuthResponse;
+      const result = await apiClient.get<BackendAuthResponse>('/api/auth/verify');
 
       if (!result.success || !result.data?.user) {
-        localStorage.removeItem('auth_token');
+        apiClient.setToken(null);
         return { user: null, error: result.error || 'Authentication verification failed' };
       }
 
-      // Transform backend user to frontend User type
-      const user: User = {
-        id: result.data.user.id,
-        email: result.data.user.email,
-        name: result.data.user.name || result.data.user.email,
-        role: this.mapBackendRole(result.data.user.role),
-        nostr_pubkey: result.data.user.nostr_pubkey,
-        avatar_url: undefined,
-        bio: undefined,
-        website: undefined,
-        created_at: new Date().toISOString(), // Backend should provide this
-        updated_at: new Date().toISOString(),
-        email_verified: result.data.user.emailVerified || false,
-        nostr_verified: !!result.data.user.nostr_pubkey,
-        permissions: this.getRolePermissions(this.mapBackendRole(result.data.user.role)),
-      };
-
+      const user = this.mapUser(result.data.user);
       return { user };
     } catch (error) {
       console.error('Auth verification failed:', error);
-      localStorage.removeItem('auth_token');
+      apiClient.setToken(null);
       return { user: null, error: 'Network error during authentication verification' };
     }
   }
 
   /**
-   * 📧 **Email/Password Login**
-   */
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    try {
-      const response = await fetch(`${this.baseUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      const result = (await response.json()) as BackendAuthResponse;
-
-      if (!response.ok || !result.success) {
-        return {
-          success: false,
-          error: result.error || result.message || 'Login failed',
-        };
-      }
-
-      // Store the token
-      if (result.data?.session?.accessToken) {
-        localStorage.setItem('auth_token', result.data.session.accessToken);
-      } else if (result.data?.token) {
-        localStorage.setItem('auth_token', result.data.token);
-      }
-
-      // Transform backend user to frontend User type
-      if (result.data?.user) {
-        const user: User = {
-          id: result.data.user.id,
-          email: result.data.user.email,
-          name: result.data.user.name || result.data.user.email,
-          role: this.mapBackendRole(result.data.user.role),
-          nostr_pubkey: result.data.user.nostr_pubkey,
-          avatar_url: undefined,
-          bio: undefined,
-          website: undefined,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          email_verified: result.data.user.emailVerified || false,
-          nostr_verified: !!result.data.user.nostr_pubkey,
-          permissions: this.getRolePermissions(this.mapBackendRole(result.data.user.role)),
-        };
-
-        return { success: true, user };
-      }
-
-      return { success: false, error: 'Login response missing user data' };
-    } catch (error) {
-      console.error('Login failed:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Network error during login',
-      };
-    }
-  }
-
-  /**
-   * 📝 **User Signup**
-   */
-  async signup(data: SignupData): Promise<AuthResponse> {
-    try {
-      const response = await fetch(`${this.baseUrl}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = (await response.json()) as BackendAuthResponse;
-
-      if (!response.ok || !result.success) {
-        return {
-          success: false,
-          error: result.error || result.message || 'Signup failed',
-        };
-      }
-
-      // Store the token
-      if (result.data?.session?.accessToken) {
-        localStorage.setItem('auth_token', result.data.session.accessToken);
-      } else if (result.data?.token) {
-        localStorage.setItem('auth_token', result.data.token);
-      }
-
-      // Transform backend user to frontend User type
-      if (result.data?.user) {
-        const user: User = {
-          id: result.data.user.id,
-          email: result.data.user.email,
-          name: data.name,
-          role: data.role,
-          nostr_pubkey: undefined,
-          avatar_url: undefined,
-          bio: undefined,
-          website: undefined,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          email_verified: result.data.user.emailVerified || false,
-          nostr_verified: false,
-          permissions: this.getRolePermissions(data.role),
-        };
-
-        return { success: true, user };
-      }
-
-      return { success: false, error: 'Signup response missing user data' };
-    } catch (error) {
-      console.error('Signup failed:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Network error during signup',
-      };
-    }
-  }
-
-  /**
-   * 🌐 **NOSTR Authentication - Core NOSTR Protocol Implementation**
+   * NOSTR Authentication — core auth path
    */
   async authenticateNostr(signature: NostrSignature): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/authenticate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nostr_pubkey: signature.pubkey,
-          challenge: signature.challenge,
-          timestamp: signature.timestamp,
-          signature: signature.signature,
-          role: 'supporter', // Default role for NOSTR auth
-        }),
+      const result = await apiClient.post<BackendAuthResponse>('/api/auth/authenticate', {
+        nostr_pubkey: signature.pubkey,
+        challenge: signature.challenge,
+        timestamp: signature.timestamp,
+        signature: signature.signature,
+        event: signature.event,
       });
 
-      const result = (await response.json()) as BackendAuthResponse;
-
-      if (!response.ok || !result.success) {
+      if (!result.success) {
         return {
           success: false,
           error: result.error || result.message || 'NOSTR authentication failed',
         };
       }
 
-      // Store the token
       if (result.data?.token) {
-        localStorage.setItem('auth_token', result.data.token);
+        apiClient.setToken(result.data.token);
       }
 
-      // Transform backend user to frontend User type
       if (result.data?.user) {
-        const user: User = {
-          id: result.data.user.id || signature.pubkey.slice(0, 8),
-          email: result.data.user.email || `${signature.pubkey.slice(0, 8)}@nostr.local`,
-          name: result.data.user.name || signature.pubkey.slice(0, 8),
-          role: this.mapBackendRole(result.data.user.role),
-          nostr_pubkey: signature.pubkey,
-          avatar_url: undefined,
-          bio: undefined,
-          website: undefined,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          email_verified: false,
-          nostr_verified: true, // Always true for NOSTR authentication
-          permissions: this.getRolePermissions(this.mapBackendRole(result.data.user.role)),
-        };
-
+        const user = this.mapUser(result.data.user, signature.pubkey);
         return { success: true, user };
       }
 
@@ -299,28 +108,25 @@ export class RealAuthService {
   }
 
   /**
-   * 🔑 **Generate NOSTR Challenge - Core NOSTR Protocol**
+   * Generate NOSTR challenge — returns both challenge and timestamp
    */
-  async generateNostrChallenge(): Promise<{ challenge?: string; error?: string }> {
+  async generateNostrChallenge(): Promise<{
+    challenge?: string;
+    timestamp?: number;
+    error?: string;
+  }> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/challenge`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      });
+      const result = await apiClient.post<BackendChallengeResponse>('/api/auth/challenge', {});
 
-      const result = (await response.json()) as BackendChallengeResponse;
-
-      if (!response.ok || !result.success) {
-        return {
-          error: result.error || 'Failed to generate NOSTR challenge',
-        };
+      if (!result.success) {
+        return { error: result.error || 'Failed to generate NOSTR challenge' };
       }
 
       if (result.data?.challenge) {
-        return { challenge: result.data.challenge };
+        return {
+          challenge: result.data.challenge,
+          timestamp: result.data.timestamp,
+        };
       }
 
       return { error: 'Challenge response missing challenge data' };
@@ -333,34 +139,47 @@ export class RealAuthService {
   }
 
   /**
-   * 🚪 **Logout**
+   * Logout — clears token via apiClient
    */
   async logout(): Promise<void> {
     try {
-      const token = localStorage.getItem('auth_token');
-
-      if (token) {
-        // Attempt to logout on backend
-        await fetch(`${this.baseUrl}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+      if (apiClient.getToken()) {
+        await apiClient.post('/api/auth/logout', {});
       }
     } catch (error) {
       console.error('Backend logout failed:', error);
-      // Continue with local logout even if backend fails
     } finally {
-      // Always clear local storage
-      localStorage.removeItem('auth_token');
+      apiClient.setToken(null);
     }
   }
 
-  /**
-   * 🔧 **Helper: Map backend role to frontend role**
-   */
+  // -- Private helpers --
+
+  private mapUser(
+    backendUser: NonNullable<BackendAuthResponse['data']>['user'],
+    fallbackPubkey?: string
+  ): User {
+    if (!backendUser) {
+      throw new Error('mapUser called with undefined user');
+    }
+    const role = this.mapBackendRole(backendUser.role);
+    return {
+      id: backendUser.id || (fallbackPubkey ? fallbackPubkey.slice(0, 8) : ''),
+      email: backendUser.email || `${fallbackPubkey?.slice(0, 8) ?? ''}@nostr.local`,
+      name: backendUser.name || backendUser.email || (fallbackPubkey?.slice(0, 8) ?? ''),
+      role,
+      nostr_pubkey: backendUser.nostr_pubkey ?? fallbackPubkey,
+      avatar_url: undefined,
+      bio: undefined,
+      website: undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      email_verified: backendUser.emailVerified ?? false,
+      nostr_verified: !!(backendUser.nostr_pubkey ?? fallbackPubkey),
+      permissions: this.getRolePermissions(role),
+    };
+  }
+
   private mapBackendRole(backendRole?: string): 'creator' | 'supporter' | 'admin' {
     switch (backendRole) {
       case 'admin':
@@ -373,9 +192,6 @@ export class RealAuthService {
     }
   }
 
-  /**
-   * 🔧 **Helper: Get role permissions**
-   */
   private getRolePermissions(
     role: 'creator' | 'supporter' | 'admin'
   ): (
@@ -417,5 +233,4 @@ export class RealAuthService {
   }
 }
 
-// 🎯 **Export singleton instance**
 export const realAuthService = new RealAuthService();

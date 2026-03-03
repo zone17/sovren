@@ -79,6 +79,7 @@ export interface NostrSignature {
   pubkey: string;
   challenge: string;
   timestamp: number;
+  event?: Record<string, unknown>;
 }
 
 // 🔄 **AUTH API RESPONSES**
@@ -113,7 +114,7 @@ export interface AuthContextValue {
   logout: () => Promise<void>;
   signup: (data: SignupData) => Promise<AuthResponse>;
   authenticateNostr: (signature: NostrSignature) => Promise<AuthResponse>;
-  generateNostrChallenge: () => Promise<{ challenge?: string; error?: string }>;
+  generateNostrChallenge: () => Promise<{ challenge?: string; timestamp?: number; error?: string }>;
   refreshToken: () => Promise<boolean>;
   updateProfile: (updates: Partial<User>) => Promise<boolean>;
   verifyEmail: (token: string) => Promise<boolean>;

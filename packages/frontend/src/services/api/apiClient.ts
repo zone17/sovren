@@ -29,7 +29,7 @@ import type {
   UserProfileUpdate,
 } from './types';
 
-const DEFAULT_BASE_URL = 'http://localhost:3001';
+const DEFAULT_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -101,6 +101,9 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      if (response.status === 401 && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:session-expired'));
+      }
       const errorData = await response.json().catch(() => ({
         error: response.statusText,
         code: 'UNKNOWN_ERROR',
