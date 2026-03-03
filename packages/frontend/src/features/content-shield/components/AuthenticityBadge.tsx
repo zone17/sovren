@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProvenanceChain } from '../hooks/useProvenanceChain';
 import type { VerificationStatus } from '../types';
@@ -15,12 +16,20 @@ interface AuthenticityBadgeProps {
 }
 
 export const AuthenticityBadge: React.FC<AuthenticityBadgeProps> = ({ contentId }) => {
-  const { data, isLoading } = useProvenanceChain(contentId);
+  const { data, isLoading, isError } = useProvenanceChain(contentId);
   const [showProvenance, setShowProvenance] = useState(false);
 
   if (isLoading) {
     return (
       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 animate-pulse" />
+    );
+  }
+
+  if (isError) {
+    return (
+      <span className="inline-flex items-center text-gray-400" title="Verification unavailable">
+        <HelpCircle className="h-4 w-4" />
+      </span>
     );
   }
 

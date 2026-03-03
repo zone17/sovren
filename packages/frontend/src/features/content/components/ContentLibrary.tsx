@@ -12,6 +12,7 @@
 
 import { Edit, Eye, Grid, List, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
+import { AuthenticityBadge } from '@/features/content-shield';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -157,7 +158,10 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
             <div className="flex items-center gap-3 flex-1">
               <span className="text-2xl">{getTypeIcon(item.type)}</span>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
+                  {item.status === 'published' && <AuthenticityBadge contentId={item.id} />}
+                </div>
                 <p className="text-sm text-gray-600 truncate">{item.description}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
@@ -204,7 +208,10 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
                 </Button>
               </div>
             </div>
-            <CardTitle className="text-lg leading-tight">{item.title}</CardTitle>
+            <div className="flex items-center gap-1.5">
+              <CardTitle className="text-lg leading-tight">{item.title}</CardTitle>
+              {item.status === 'published' && <AuthenticityBadge contentId={item.id} />}
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
