@@ -14,7 +14,7 @@
 // Lightning API Types based on backend contracts
 export interface CreateInvoiceRequest {
   amount: number;
-  creatorId?: string;
+  creatorId: string;
   description?: string;
   expirySeconds?: number;
   metadata?: Record<string, string>;

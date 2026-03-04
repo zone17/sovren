@@ -166,20 +166,20 @@ router.get(
 
     const creatorRow = row as DiscoveryCreatorRow;
 
-    // Fetch subscription tiers for this creator
-    const { data: tiers } = await db
-      .from('subscription_tiers')
-      .select('id, name, price_sats, features')
-      .eq('creator_id', id)
-      .eq('active', true)
-      .order('price_sats', { ascending: true });
-
-    // Fetch nostr pubkey and lightning address from users table
-    const { data: userData } = await db
-      .from('users')
-      .select('nostr_pubkey, lightning_address')
-      .eq('id', creatorRow.user_id)
-      .single();
+    // Fetch subscription tiers and user data in parallel
+    const [{ data: tiers }, { data: userData }] = await Promise.all([
+      db
+        .from('subscription_tiers')
+        .select('id, name, price_sats, features')
+        .eq('creator_id', id)
+        .eq('active', true)
+        .order('price_sats', { ascending: true }),
+      db
+        .from('users')
+        .select('nostr_pubkey, lightning_address')
+        .eq('id', creatorRow.user_id)
+        .single(),
+    ]);
 
     const profile: CreatorProfileDetail = {
       id: creatorRow.id,

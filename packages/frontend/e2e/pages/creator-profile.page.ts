@@ -19,7 +19,7 @@ export class CreatorProfilePage {
   constructor(page: Page) {
     this.page = page;
     this.displayName = page.getByRole('heading', { level: 1 }).first();
-    this.username = page.locator('text=@').first();
+    this.username = page.getByText(/@\w+/).first();
     this.bio = page.locator('.max-w-2xl').first();
     this.followerCount = page.getByText(/followers/).first();
     this.postCount = page.getByText(/posts/).first();

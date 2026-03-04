@@ -125,6 +125,13 @@ router.get('/node-info', authenticate, async (req, res) => {
   }
 });
 
+const CreateSubscriptionBodySchema = z.object({
+  creatorId: z.string().uuid(),
+  tier: z.string().min(1),
+  amount: z.number().positive(),
+  interval: z.enum(['daily', 'weekly', 'monthly', 'yearly']),
+});
+
 /**
  * @route POST /api/lightning/subscription
  * @desc Create a new Lightning subscription
@@ -132,16 +139,12 @@ router.get('/node-info', authenticate, async (req, res) => {
  */
 router.post('/subscription', authenticate, async (req, res) => {
   try {
-    const { creatorId, tier, amount, interval } = req.body;
-
-    if (!creatorId || !tier || !amount || !interval) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const parsed = CreateSubscriptionBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues[0].message });
     }
 
-    const validIntervals = ['daily', 'weekly', 'monthly', 'yearly'];
-    if (!validIntervals.includes(interval)) {
-      return res.status(400).json({ error: 'Invalid interval' });
-    }
+    const { creatorId, tier, amount, interval } = parsed.data;
 
     // For now, create an invoice for the first payment
     const lightning = LightningService.getInstance();

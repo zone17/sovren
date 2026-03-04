@@ -50,8 +50,8 @@ const TierCard: React.FC<TierCardProps> = ({ tier, onSubscribe }) => (
 );
 
 const CreatorProfilePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const { data: profile, isLoading, isError, error } = useCreatorProfile(id!);
+  const { id = '' } = useParams<{ id: string }>();
+  const { data: profile, isLoading, isError, error } = useCreatorProfile(id);
   const [activeTab, setActiveTab] = useState<ProfileTab>('tiers');
   const [isFollowing, setIsFollowing] = useState(false);
   const [paymentTier, setPaymentTier] = useState<{ amount: number; name: string } | null>(null);
@@ -244,7 +244,7 @@ const CreatorProfilePage: React.FC = () => {
           description={`Subscribe to ${profile.displayName} - ${paymentTier.name}`}
           onSuccess={() => setPaymentTier(null)}
           onCancel={() => setPaymentTier(null)}
-          className="hidden"
+          autoOpen
         />
       )}
     </div>
