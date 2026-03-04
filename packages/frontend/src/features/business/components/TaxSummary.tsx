@@ -41,17 +41,9 @@ const TaxSummary: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 w-40 rounded bg-gray-200" />
-        <div className="h-48 rounded bg-gray-100" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
+      {/* Controls — always visible so users can interact during loading */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h4 className="text-sm font-semibold text-gray-900">Quarterly Tax Summary</h4>
         <div className="flex items-center gap-3">
@@ -71,7 +63,7 @@ const TaxSummary: React.FC = () => {
             type="button"
             className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 transition-colors"
             onClick={() => void handleExport('csv')}
-            disabled={exporting}
+            disabled={exporting || isLoading}
             aria-label="Export tax data as CSV"
           >
             Export CSV
@@ -80,7 +72,7 @@ const TaxSummary: React.FC = () => {
             type="button"
             className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 transition-colors"
             onClick={() => void handleExport('json')}
-            disabled={exporting}
+            disabled={exporting || isLoading}
             aria-label="Export tax data as JSON"
           >
             Export JSON
@@ -88,7 +80,11 @@ const TaxSummary: React.FC = () => {
         </div>
       </div>
 
-      {!summaries || summaries.length === 0 ? (
+      {isLoading ? (
+        <div className="animate-pulse space-y-4">
+          <div className="h-48 rounded bg-gray-100" />
+        </div>
+      ) : !summaries || summaries.length === 0 ? (
         <p className="text-sm text-gray-500">No tax data available for {selectedYear}.</p>
       ) : (
         <div className="overflow-x-auto">
