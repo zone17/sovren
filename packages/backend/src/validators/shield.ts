@@ -11,7 +11,7 @@ import { z } from 'zod';
 // ============================================================================
 
 export const ContentIdParamSchema = z.object({
-  contentId: z.string().min(1),
+  contentId: z.string().uuid(),
 });
 
 export const CertificateQuerySchema = z.object({
@@ -78,8 +78,24 @@ export const SignProvenanceBodySchema = z.object({
   content_body: z.string().min(1).max(1_000_000), // 1MB limit
   nostr_event_id: z.string().regex(/^[0-9a-f]{64}$/, 'Must be a 64-char hex NOSTR event ID'),
   signature: z.string().regex(/^[0-9a-f]{128}$/, 'Must be a 128-char hex Schnorr signature'),
-  relays: z.array(z.string().url()).max(20).optional().default([]),
-  event_created_at: z.number().int().positive(),
+  relays: z
+    .array(
+      z
+        .string()
+        .url()
+        .refine(
+          (url) => url.startsWith('wss://') || url.startsWith('ws://'),
+          'Relay URLs must use ws:// or wss:// protocol'
+        )
+    )
+    .max(20)
+    .optional()
+    .default([]),
+  event_created_at: z
+    .number()
+    .int()
+    .min(1_600_000_000)
+    .max(Math.floor(Date.now() / 1000) + 600),
 });
 
 // ============================================================================

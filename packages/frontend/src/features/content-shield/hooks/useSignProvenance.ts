@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { SignProvenanceBody } from '../services/shieldApi';
+import type { SignProvenanceBody } from '../types';
 import { shieldApi } from '../services/shieldApi';
 import { shieldKeys } from './shieldKeys';
 

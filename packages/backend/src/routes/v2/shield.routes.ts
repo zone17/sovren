@@ -159,8 +159,8 @@ router.get(
       throw new AuthorizationError('Can only view your own fingerprint registry');
     }
 
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
     const result = await getFingerprintService().getRegistry(
       getAuthUser(req).nostr_pubkey,
       page,
@@ -193,8 +193,8 @@ router.get(
   validate({ query: ShieldValidators.getAlertsQuery }),
   asyncHandler(async (req, res) => {
     const status = (req.query.status as AlertStatus) || 'new';
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
     const result = await getAlertService().getAlerts(
       getAuthUser(req).nostr_pubkey,
       status,

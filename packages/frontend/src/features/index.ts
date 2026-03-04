@@ -46,7 +46,6 @@ export {
   AlertsFeed,
   FingerprintCoverage,
   ProvenanceChainViewer,
-  DMCAReportButton,
   ContentShieldErrorBoundary,
   useAlertDetail,
   useAlerts,
@@ -62,9 +61,9 @@ export type {
   ContentAlert,
   DMCAReport,
   FingerprintCoverageData,
-  FingerprintEntry,
   MatchLevel,
   ProvenanceData,
   RelayConfirmation,
+  SignProvenanceBody,
   VerificationStatus,
 } from './content-shield';

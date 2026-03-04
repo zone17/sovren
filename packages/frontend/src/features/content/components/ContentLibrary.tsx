@@ -1,13 +1,5 @@
 /**
- * 📚 **UNIFIED CONTENT LIBRARY - CONSOLIDATED BROWSING INTERFACE**
- *
- * Elite Engineering Standards:
- * ✅ Single library consolidating all content browsing duplicates
- * ✅ Performance optimization with virtualization
- * ✅ Mobile-first responsive design
- * ✅ Advanced filtering and search capabilities
- * ✅ Real-time content updates
- * ✅ Accessibility compliance (WCAG 2.1 AA)
+ * Unified Content Library - Consolidated Browsing Interface
  */
 
 import { Edit, Eye, Grid, List, Plus, Search, Trash2 } from 'lucide-react';
@@ -39,6 +31,156 @@ interface ContentLibraryProps {
   className?: string;
 }
 
+// #646: Module-scope helpers — avoid per-render recreations
+function getStatusColor(status: string): string {
+  switch (status) {
+    case 'published':
+      return 'bg-green-100 text-green-800';
+    case 'draft':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'archived':
+      return 'bg-gray-100 text-gray-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+}
+
+function getTypeIcon(type: string): string {
+  switch (type) {
+    case 'article':
+      return '\u{1F4DD}';
+    case 'video':
+      return '\u{1F3A5}';
+    case 'podcast':
+      return '\u{1F3A7}';
+    case 'image':
+      return '\u{1F5BC}\uFE0F';
+    case 'series':
+      return '\u{1F4DA}';
+    default:
+      return '\u{1F4C4}';
+  }
+}
+
+// #646: React.memo at module scope with explicit props interface
+interface ContentItemCardProps {
+  item: ContentItem;
+  viewMode: 'grid' | 'list';
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+const ContentItemCard = React.memo<ContentItemCardProps>(
+  ({ item, viewMode, onView, onEdit, onDelete }) => {
+    if (viewMode === 'list') {
+      return (
+        <div className="flex items-center justify-between p-4 border-b hover:bg-gray-50">
+          <div className="flex items-center gap-3 flex-1">
+            <span className="text-2xl">{getTypeIcon(item.type)}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
+                {item.status === 'published' && <AuthenticityBadge contentId={item.id} />}
+              </div>
+              <p className="text-sm text-gray-600 truncate">{item.description}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
+                <span className="text-xs text-gray-500">{item.author}</span>
+                <span className="text-xs text-gray-500">&bull;</span>
+                <span className="text-xs text-gray-500">
+                  {new Date(item.updatedAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => onView(item.id)}>
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => onEdit(item.id)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => onDelete(item.id)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">{getTypeIcon(item.type)}</span>
+              <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={() => onView(item.id)}>
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onEdit(item.id)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onDelete(item.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-lg leading-tight">{item.title}</CardTitle>
+            {item.status === 'published' && <AuthenticityBadge contentId={item.id} />}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
+          <div className="flex flex-wrap gap-1 mb-3">
+            {item.tags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>{item.author}</span>
+            <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+);
+
+// Static mock data — moved to module scope to avoid per-render recreation
+const MOCK_CONTENT: ContentItem[] = [
+  {
+    id: '1',
+    title: 'Getting Started with Lightning Network',
+    type: 'article',
+    status: 'published',
+    description:
+      'A comprehensive guide to understanding and using the Lightning Network for fast Bitcoin payments.',
+    createdAt: '2024-12-01T10:00:00Z',
+    updatedAt: '2024-12-15T14:30:00Z',
+    author: 'John Doe',
+    tags: ['bitcoin', 'lightning', 'tutorial'],
+  },
+  {
+    id: '2',
+    title: 'NOSTR Protocol Deep Dive',
+    type: 'video',
+    status: 'draft',
+    description:
+      'Technical exploration of the NOSTR protocol and its implications for decentralized social media.',
+    createdAt: '2024-12-10T09:15:00Z',
+    updatedAt: '2024-12-20T16:45:00Z',
+    author: 'Jane Smith',
+    tags: ['nostr', 'protocol', 'decentralized'],
+  },
+];
+
 export const ContentLibrary: React.FC<ContentLibraryProps> = ({
   onCreateNew,
   onEditContent,
@@ -46,43 +188,13 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
   onDeleteContent,
   className = '',
 }) => {
-  // Local State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Mock data - in real implementation, this would come from Redux store
-  const mockContent: ContentItem[] = [
-    {
-      id: '1',
-      title: 'Getting Started with Lightning Network',
-      type: 'article',
-      status: 'published',
-      description:
-        'A comprehensive guide to understanding and using the Lightning Network for fast Bitcoin payments.',
-      createdAt: '2024-12-01T10:00:00Z',
-      updatedAt: '2024-12-15T14:30:00Z',
-      author: 'John Doe',
-      tags: ['bitcoin', 'lightning', 'tutorial'],
-    },
-    {
-      id: '2',
-      title: 'NOSTR Protocol Deep Dive',
-      type: 'video',
-      status: 'draft',
-      description:
-        'Technical exploration of the NOSTR protocol and its implications for decentralized social media.',
-      createdAt: '2024-12-10T09:15:00Z',
-      updatedAt: '2024-12-20T16:45:00Z',
-      author: 'Jane Smith',
-      tags: ['nostr', 'protocol', 'decentralized'],
-    },
-  ];
-
-  // Filter content based on search and filters
   const filteredContent = useMemo(() => {
-    return mockContent.filter((item) => {
+    return MOCK_CONTENT.filter((item) => {
       const matchesSearch =
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -93,9 +205,8 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
 
       return matchesSearch && matchesType && matchesStatus;
     });
-  }, [mockContent, searchQuery, selectedType, selectedStatus]);
+  }, [searchQuery, selectedType, selectedStatus]);
 
-  // Handle content actions
   const handleView = useCallback(
     (contentId: string) => {
       onViewContent?.(contentId);
@@ -117,119 +228,6 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
       }
     },
     [onDeleteContent]
-  );
-
-  // Content Item Component
-  const ContentItemCard = React.memo<{ item: ContentItem; viewMode: 'grid' | 'list' }>(
-    ({ item, viewMode }) => {
-      const getStatusColor = (status: string) => {
-        switch (status) {
-          case 'published':
-            return 'bg-green-100 text-green-800';
-          case 'draft':
-            return 'bg-yellow-100 text-yellow-800';
-          case 'archived':
-            return 'bg-gray-100 text-gray-800';
-          default:
-            return 'bg-gray-100 text-gray-800';
-        }
-      };
-
-      const getTypeIcon = (type: string) => {
-        switch (type) {
-          case 'article':
-            return '📝';
-          case 'video':
-            return '🎥';
-          case 'podcast':
-            return '🎧';
-          case 'image':
-            return '🖼️';
-          case 'series':
-            return '📚';
-          default:
-            return '📄';
-        }
-      };
-
-      if (viewMode === 'list') {
-        return (
-          <div className="flex items-center justify-between p-4 border-b hover:bg-gray-50">
-            <div className="flex items-center gap-3 flex-1">
-              <span className="text-2xl">{getTypeIcon(item.type)}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
-                  {item.status === 'published' && <AuthenticityBadge contentId={item.id} />}
-                </div>
-                <p className="text-sm text-gray-600 truncate">{item.description}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
-                  <span className="text-xs text-gray-500">{item.author}</span>
-                  <span className="text-xs text-gray-500">•</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(item.updatedAt).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" onClick={() => handleView(item.id)}>
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)}>
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="pb-2">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{getTypeIcon(item.type)}</span>
-                <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={() => handleView(item.id)}>
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CardTitle className="text-lg leading-tight">{item.title}</CardTitle>
-              {item.status === 'published' && <AuthenticityBadge contentId={item.id} />}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
-            <div className="flex flex-wrap gap-1 mb-3">
-              {item.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>{item.author}</span>
-              <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
   );
 
   return (
@@ -307,7 +305,7 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
       <div className="flex-1 overflow-auto p-6">
         {filteredContent.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-4">📚</div>
+            <div className="text-4xl mb-4">{'\u{1F4DA}'}</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Content Found</h3>
             <p className="text-gray-600 mb-4">
               {searchQuery || selectedType !== 'all' || selectedStatus !== 'all'
@@ -330,7 +328,14 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
             }
           >
             {filteredContent.map((item) => (
-              <ContentItemCard key={item.id} item={item} viewMode={viewMode} />
+              <ContentItemCard
+                key={item.id}
+                item={item}
+                viewMode={viewMode}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}

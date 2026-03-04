@@ -17,7 +17,7 @@ import type {
 } from '../../interfaces/provenance/IProvenanceService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
-import { NotFoundError, AuthorizationError } from '../../utils/errors';
+import { NotFoundError, AuthorizationError, ConflictError } from '../../utils/errors';
 
 /** DB row shape for provenance_records table */
 interface ProvenanceRow {
@@ -37,6 +37,21 @@ export class ProvenanceService implements IProvenanceService {
     private readonly db: ISupabaseClient,
     private readonly logger: ILogger
   ) {}
+
+  /** #638: DRY mapping from DB row to domain type */
+  private toProvenanceRecord(row: ProvenanceRow): ProvenanceRecord {
+    return {
+      content_id: row.content_id,
+      author_pubkey: row.creator_id,
+      created_at: row.created_at,
+      signature: row.signature,
+      nostr_event_id: row.nostr_event_id,
+      content_hash: row.content_hash,
+      relay_confirmations: row.relay_confirmations || [],
+      verification_status: row.verification_status,
+      nip05_verified: false,
+    };
+  }
 
   async getProvenanceChain(contentId: string): Promise<ProvenanceRecord | null> {
     const { data, error } = await this.db
@@ -58,17 +73,7 @@ export class ProvenanceService implements IProvenanceService {
       return null;
     }
 
-    return {
-      content_id: data.content_id,
-      author_pubkey: data.creator_id,
-      created_at: data.created_at,
-      signature: data.signature,
-      nostr_event_id: data.nostr_event_id,
-      content_hash: data.content_hash,
-      relay_confirmations: data.relay_confirmations || [],
-      verification_status: data.verification_status,
-      nip05_verified: false,
-    };
+    return this.toProvenanceRecord(data);
   }
 
   async getCertificate(contentId: string, creatorId: string): Promise<ProvenanceCertificate> {
@@ -99,7 +104,7 @@ export class ProvenanceService implements IProvenanceService {
         relay_confirmations: provenance.relay_confirmations,
       },
       generated_at: new Date().toISOString(),
-      verification_url: `https://sovren.dev/verify/${contentId}`,
+      verification_url: `${process.env.APP_URL || 'https://sovren.dev'}/verify/${contentId}`,
     };
   }
 
@@ -132,9 +137,15 @@ export class ProvenanceService implements IProvenanceService {
       tags: [['t', 'sovren-content']],
       content: input.contentBody,
     };
+    // #625: Compute event hash server-side and verify it matches the client-provided ID
+    const computedEventId = getEventHash(eventData);
+    if (computedEventId !== input.nostrEventId) {
+      throw new AuthorizationError('NOSTR event ID does not match computed hash');
+    }
+
     const event = {
       ...eventData,
-      id: getEventHash(eventData),
+      id: computedEventId,
       sig: input.signature,
     };
 
@@ -169,9 +180,9 @@ export class ProvenanceService implements IProvenanceService {
       .single();
 
     if (error) {
-      // Handle unique constraint violation (content already has provenance)
+      // #633: ConflictError (409) for unique constraint violations, not AuthorizationError
       if (error.code === '23505') {
-        throw new AuthorizationError('Provenance record already exists for this content');
+        throw new ConflictError('Provenance record already exists for this content');
       }
       this.logger.error('Failed to sign content', { contentId: input.contentId, error });
       throw error;
@@ -188,17 +199,7 @@ export class ProvenanceService implements IProvenanceService {
       verificationStatus,
     });
 
-    return {
-      content_id: data.content_id,
-      author_pubkey: data.creator_id,
-      created_at: data.created_at,
-      signature: data.signature,
-      nostr_event_id: data.nostr_event_id,
-      content_hash: data.content_hash,
-      relay_confirmations: data.relay_confirmations || [],
-      verification_status: data.verification_status,
-      nip05_verified: false,
-    };
+    return this.toProvenanceRecord(data);
   }
 
   /**
@@ -206,26 +207,29 @@ export class ProvenanceService implements IProvenanceService {
    * The DB trigger (enforce_provenance_immutability) allows UPDATE on status only.
    * Full DELETE is blocked at the database level for all roles.
    */
+  /**
+   * #632: Atomic single-query revocation — no TOCTOU race.
+   * The WHERE clause guards on content_id + creator_id + status='active'.
+   * If no row matches, either the record doesn't exist, isn't owned by the
+   * caller, or is already revoked.
+   */
   async revokeProvenance(
     contentId: string,
     creatorId: string
   ): Promise<{ content_id: string; status: string; revoked_at: string }> {
-    const provenance = await this.getProvenanceChain(contentId);
-
-    if (!provenance) {
-      throw new NotFoundError(`Provenance record for content ${contentId}`);
-    }
-
-    // #612: Ownership checks use AuthorizationError (403), not NotFoundError (404)
-    if (provenance.author_pubkey !== creatorId) {
-      throw new AuthorizationError('Not authorized to revoke this provenance record');
-    }
-
-    const { error } = await this.db
+    const { data, error } = await this.db
       .from<ProvenanceRow>('provenance_records')
       .update({ status: 'revoked' })
       .eq('content_id', contentId)
-      .eq('creator_id', creatorId);
+      .eq('creator_id', creatorId)
+      .eq('status', 'active')
+      .select()
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      // No matching row — either not found, not owned, or already revoked
+      throw new NotFoundError(`Active provenance record for content ${contentId}`);
+    }
 
     if (error) {
       this.logger.error('Failed to revoke provenance record', { contentId, error });

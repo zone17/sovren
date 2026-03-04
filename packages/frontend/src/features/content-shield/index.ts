@@ -6,7 +6,6 @@ export { AuthenticityBadge } from './components/AuthenticityBadge';
 export { AlertsFeed } from './components/AlertsFeed';
 export { FingerprintCoverage } from './components/FingerprintCoverage';
 export { ProvenanceChainViewer } from './components/ProvenanceChainViewer';
-export { DMCAReportButton } from './components/DMCAReportButton';
 
 // Error Boundary
 export { ContentShieldErrorBoundary } from './ErrorBoundary';
@@ -18,6 +17,7 @@ export { useFingerprintCoverage } from './hooks/useFingerprintCoverage';
 export { useProvenanceChain } from './hooks/useProvenanceChain';
 export { useSignProvenance } from './hooks/useSignProvenance';
 export { usePublishWithProvenance } from './hooks/usePublishWithProvenance';
+
 // API Service
 export { shieldApi } from './services/shieldApi';
 
@@ -28,9 +28,9 @@ export type {
   ContentAlert,
   DMCAReport,
   FingerprintCoverageData,
-  FingerprintEntry,
   MatchLevel,
   ProvenanceData,
   RelayConfirmation,
+  SignProvenanceBody,
   VerificationStatus,
 } from './types';

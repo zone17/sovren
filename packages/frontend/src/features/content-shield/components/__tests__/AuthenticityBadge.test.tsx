@@ -28,7 +28,7 @@ vi.mock('../ProvenanceChainViewer', () => ({
 }));
 
 import { useProvenanceChain } from '../../hooks/useProvenanceChain';
-const mockUseProvenanceChain = useProvenanceChain as any;
+const mockUseProvenanceChain = vi.mocked(useProvenanceChain);
 
 function createWrapper() {
   const queryClient = new QueryClient({
