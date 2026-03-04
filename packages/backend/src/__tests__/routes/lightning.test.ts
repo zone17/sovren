@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import lightningRoutes from '../../routes/lightning';
-import { lightningService } from '../../services/lightning/lightningService';
+import { lightningService } from '../../services/lightning-service';
 
 // Mock the authentication middleware (#627: getAuthUser pattern)
 vi.mock('../../middleware/auth', () => ({
@@ -57,7 +57,7 @@ vi.mock('../../utils/errors', () => ({
 }));
 
 // Mock the lightning service
-vi.mock('../../services/lightning/lightningService', () => ({
+vi.mock('../../services/lightning-service', () => ({
   lightningService: {
     getNodeInfo: vi.fn(),
     createInvoice: vi.fn(),

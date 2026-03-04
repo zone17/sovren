@@ -14,7 +14,7 @@ import { validate } from '../middleware/validation-middleware';
 import { asyncHandler } from '../utils/asyncHandler';
 import { createApiResponse } from '../utils/api-response';
 import { ValidationError } from '../utils/errors';
-import { lightningService } from '../services/lightning/lightningService';
+import { lightningService } from '../services/lightning-service';
 
 const router = express.Router();
 
