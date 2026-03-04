@@ -176,7 +176,6 @@ export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
     if (autoOpen) {
       handleOpen();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Function to handle dialog close
