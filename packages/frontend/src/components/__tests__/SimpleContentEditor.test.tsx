@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -74,8 +75,15 @@ const renderWithProvider = (
     ...options.initialCMSState,
   };
   const store = createTestStore(mergedState);
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return {
-    ...render(<Provider store={store}>{component}</Provider>),
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <Provider store={store}>{component}</Provider>
+      </QueryClientProvider>
+    ),
     store,
   };
 };
@@ -447,10 +455,15 @@ describe('SimpleContentEditor - Elite Standards Compliance', () => {
       });
 
       // Rerender with same props
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      });
       rerender(
-        <Provider store={createTestStore(mockInitialState)}>
-          <WrappedEditor />
-        </Provider>
+        <QueryClientProvider client={queryClient}>
+          <Provider store={createTestStore(mockInitialState)}>
+            <WrappedEditor />
+          </Provider>
+        </QueryClientProvider>
       );
 
       expect(renderSpy).toHaveBeenCalledTimes(2); // Initial + rerender
