@@ -10,19 +10,11 @@
 import { Router } from 'express';
 import { container } from '../../container';
 import { TYPES } from '../../container/types';
-import {
-  authenticate,
-  optionalAuth,
-  requireAuth,
-  getAuthUser,
-} from '../../middleware/auth';
+import { authenticate, optionalAuth, requireAuth, getAuthUser } from '../../middleware/auth';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
-import {
-  CreateCommentSchema,
-  CommentsPaginationSchema,
-} from '../../validators/community';
+import { CreateCommentSchema, CommentsPaginationSchema } from '../../validators/community';
 import { ValidationError } from '../../utils/errors';
 import type { ICommentsService } from '../../interfaces/community/ICommentsService';
 
@@ -146,10 +138,7 @@ router.delete(
   requireAuth,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    await getCommentsService().deleteComment(
-      getAuthUser(req).nostr_pubkey,
-      req.params.commentId
-    );
+    await getCommentsService().deleteComment(getAuthUser(req).nostr_pubkey, req.params.commentId);
 
     res.json(createApiResponse(req, null));
   })

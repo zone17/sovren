@@ -191,7 +191,11 @@ export function CommentItem({
         {showReplies && !isReply && (
           <div className="mt-3">
             {repliesLoading && (
-              <div role="status" aria-label="Loading replies..." className="text-xs text-gray-400 py-2">
+              <div
+                role="status"
+                aria-label="Loading replies..."
+                className="text-xs text-gray-400 py-2"
+              >
                 Loading replies...
               </div>
             )}

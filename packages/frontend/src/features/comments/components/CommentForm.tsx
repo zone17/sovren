@@ -51,9 +51,7 @@ export function CommentForm({
 
   const isReply = Boolean(parentCommentId);
   const inputId = isReply ? `reply-input-${parentCommentId}` : 'comment-input';
-  const labelText = isReply
-    ? `Reply to ${parentAuthorName ?? 'comment'}`
-    : 'Add a comment';
+  const labelText = isReply ? `Reply to ${parentAuthorName ?? 'comment'}` : 'Add a comment';
   const submitLabel = isReply
     ? `Post reply${parentAuthorName ? ` to ${parentAuthorName}` : ''}`
     : 'Post comment';
@@ -88,10 +86,7 @@ export function CommentForm({
     return (
       <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 text-center">
         <p className="text-sm text-gray-600">
-          <a
-            href="/login"
-            className="font-medium text-amber-700 hover:text-amber-800 underline"
-          >
+          <a href="/login" className="font-medium text-amber-700 hover:text-amber-800 underline">
             Sign in to comment
           </a>
         </p>
@@ -139,7 +134,11 @@ export function CommentForm({
             aria-live="polite"
             aria-atomic="true"
             className={`text-xs ${
-              isOverLimit ? 'text-red-600 font-medium' : charCount > MAX_CHARS * 0.9 ? 'text-amber-600' : 'text-gray-400'
+              isOverLimit
+                ? 'text-red-600 font-medium'
+                : charCount > MAX_CHARS * 0.9
+                  ? 'text-amber-600'
+                  : 'text-gray-400'
             }`}
           >
             {charCount}/{MAX_CHARS}

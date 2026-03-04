@@ -89,10 +89,7 @@ describe('CommentItem', () => {
 
   describe('Content rendering', () => {
     it('renders author display name', () => {
-      render(
-        <CommentItem comment={makeComment()} contentId={CONTENT_ID} />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment()} contentId={CONTENT_ID} />, { wrapper });
       expect(screen.getByText('Alice')).toBeInTheDocument();
     });
 
@@ -111,7 +108,12 @@ describe('CommentItem', () => {
 
     it('renders username @handle when displayName differs from username', () => {
       const comment = makeComment({
-        author: { id: USER_ID, displayName: 'Alice Smith', avatarUrl: null, username: 'alicesmith' },
+        author: {
+          id: USER_ID,
+          displayName: 'Alice Smith',
+          avatarUrl: null,
+          username: 'alicesmith',
+        },
       });
 
       render(<CommentItem comment={comment} contentId={CONTENT_ID} />, { wrapper });
@@ -120,10 +122,7 @@ describe('CommentItem', () => {
     });
 
     it('renders time element with datetime attribute', () => {
-      render(
-        <CommentItem comment={makeComment()} contentId={CONTENT_ID} />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment()} contentId={CONTENT_ID} />, { wrapper });
 
       const timeEl = document.querySelector('time');
       expect(timeEl).not.toBeNull();
@@ -131,10 +130,7 @@ describe('CommentItem', () => {
     });
 
     it('renders avatar fallback initial when avatarUrl is null', () => {
-      render(
-        <CommentItem comment={makeComment()} contentId={CONTENT_ID} />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment()} contentId={CONTENT_ID} />, { wrapper });
 
       // The initial div has aria-hidden — look via text content
       expect(document.querySelector('[aria-hidden="true"]')?.textContent).toBe('A');
@@ -142,7 +138,12 @@ describe('CommentItem', () => {
 
     it('renders avatar img when avatarUrl is set', () => {
       const comment = makeComment({
-        author: { id: USER_ID, displayName: 'Alice', avatarUrl: 'https://example.com/alice.jpg', username: 'alice' },
+        author: {
+          id: USER_ID,
+          displayName: 'Alice',
+          avatarUrl: 'https://example.com/alice.jpg',
+          username: 'alice',
+        },
       });
 
       render(<CommentItem comment={comment} contentId={CONTENT_ID} />, { wrapper });
@@ -155,11 +156,7 @@ describe('CommentItem', () => {
   describe('Delete button visibility', () => {
     it('shows delete button for comment owner', () => {
       render(
-        <CommentItem
-          comment={makeComment()}
-          contentId={CONTENT_ID}
-          currentUserId={USER_ID}
-        />,
+        <CommentItem comment={makeComment()} contentId={CONTENT_ID} currentUserId={USER_ID} />,
         { wrapper }
       );
 
@@ -195,10 +192,7 @@ describe('CommentItem', () => {
     });
 
     it('hides delete button when currentUserId is undefined', () => {
-      render(
-        <CommentItem comment={makeComment()} contentId={CONTENT_ID} />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment()} contentId={CONTENT_ID} />, { wrapper });
 
       expect(screen.queryByRole('button', { name: /delete comment/i })).not.toBeInTheDocument();
     });
@@ -207,11 +201,7 @@ describe('CommentItem', () => {
   describe('Delete dialog', () => {
     it('opens delete dialog on delete button click', () => {
       render(
-        <CommentItem
-          comment={makeComment()}
-          contentId={CONTENT_ID}
-          currentUserId={USER_ID}
-        />,
+        <CommentItem comment={makeComment()} contentId={CONTENT_ID} currentUserId={USER_ID} />,
         { wrapper }
       );
 
@@ -223,11 +213,7 @@ describe('CommentItem', () => {
 
     it('closes dialog on Cancel click', () => {
       render(
-        <CommentItem
-          comment={makeComment()}
-          contentId={CONTENT_ID}
-          currentUserId={USER_ID}
-        />,
+        <CommentItem comment={makeComment()} contentId={CONTENT_ID} currentUserId={USER_ID} />,
         { wrapper }
       );
 
@@ -242,11 +228,7 @@ describe('CommentItem', () => {
       mockUseDeleteComment.mockReturnValue({ mutate: mockMutate, isPending: false });
 
       render(
-        <CommentItem
-          comment={makeComment()}
-          contentId={CONTENT_ID}
-          currentUserId={USER_ID}
-        />,
+        <CommentItem comment={makeComment()} contentId={CONTENT_ID} currentUserId={USER_ID} />,
         { wrapper }
       );
 
@@ -260,11 +242,7 @@ describe('CommentItem', () => {
       mockUseDeleteComment.mockReturnValue({ mutate: vi.fn(), isPending: true });
 
       render(
-        <CommentItem
-          comment={makeComment()}
-          contentId={CONTENT_ID}
-          currentUserId={USER_ID}
-        />,
+        <CommentItem comment={makeComment()} contentId={CONTENT_ID} currentUserId={USER_ID} />,
         { wrapper }
       );
 
@@ -277,10 +255,7 @@ describe('CommentItem', () => {
 
   describe('Reply button', () => {
     it('shows reply button for top-level comment', () => {
-      render(
-        <CommentItem comment={makeComment()} contentId={CONTENT_ID} />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment()} contentId={CONTENT_ID} />, { wrapper });
 
       expect(screen.getByRole('button', { name: /reply to alice/i })).toBeInTheDocument();
     });
@@ -299,13 +274,7 @@ describe('CommentItem', () => {
     });
 
     it('toggles inline reply form on reply button click', () => {
-      render(
-        <CommentItem
-          comment={makeComment()}
-          contentId={CONTENT_ID}
-        />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment()} contentId={CONTENT_ID} />, { wrapper });
 
       fireEvent.click(screen.getByRole('button', { name: /reply to alice/i }));
 
@@ -315,22 +284,17 @@ describe('CommentItem', () => {
 
   describe('Show/hide replies', () => {
     it('shows replies toggle button when replyCount > 0', () => {
-      render(
-        <CommentItem
-          comment={makeComment({ replyCount: 3 })}
-          contentId={CONTENT_ID}
-        />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment({ replyCount: 3 })} contentId={CONTENT_ID} />, {
+        wrapper,
+      });
 
       expect(screen.getByRole('button', { name: /show 3 replies/i })).toBeInTheDocument();
     });
 
     it('hides replies toggle when replyCount is 0', () => {
-      render(
-        <CommentItem comment={makeComment({ replyCount: 0 })} contentId={CONTENT_ID} />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment({ replyCount: 0 })} contentId={CONTENT_ID} />, {
+        wrapper,
+      });
 
       expect(screen.queryByRole('button', { name: /replies/i })).not.toBeInTheDocument();
     });
@@ -348,13 +312,9 @@ describe('CommentItem', () => {
         isLoading: false,
       });
 
-      render(
-        <CommentItem
-          comment={makeComment({ replyCount: 1 })}
-          contentId={CONTENT_ID}
-        />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment({ replyCount: 1 })} contentId={CONTENT_ID} />, {
+        wrapper,
+      });
 
       fireEvent.click(screen.getByRole('button', { name: /show 1 reply/i }));
 
@@ -366,13 +326,9 @@ describe('CommentItem', () => {
     it('shows loading state while fetching replies', () => {
       mockUseReplies.mockReturnValue({ data: undefined, isLoading: true });
 
-      render(
-        <CommentItem
-          comment={makeComment({ replyCount: 2 })}
-          contentId={CONTENT_ID}
-        />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment({ replyCount: 2 })} contentId={CONTENT_ID} />, {
+        wrapper,
+      });
 
       fireEvent.click(screen.getByRole('button', { name: /show 2 replies/i }));
 
@@ -385,10 +341,9 @@ describe('CommentItem', () => {
         isLoading: false,
       });
 
-      render(
-        <CommentItem comment={makeComment({ replyCount: 1 })} contentId={CONTENT_ID} />,
-        { wrapper }
-      );
+      render(<CommentItem comment={makeComment({ replyCount: 1 })} contentId={CONTENT_ID} />, {
+        wrapper,
+      });
 
       const toggleBtn = screen.getByRole('button', { name: /show 1 reply/i });
       expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');

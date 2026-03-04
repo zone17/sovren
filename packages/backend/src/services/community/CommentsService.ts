@@ -13,10 +13,7 @@
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICommentsService } from '../../interfaces/community/ICommentsService';
-import type {
-  CommentWithAuthor,
-  CommentsPaginatedResponse,
-} from '@shared/types/comments';
+import type { CommentWithAuthor, CommentsPaginatedResponse } from '@shared/types/comments';
 import { TTLCache } from '../../utils/ttl-cache';
 import {
   UnauthorizedError,

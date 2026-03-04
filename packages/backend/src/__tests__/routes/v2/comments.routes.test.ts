@@ -120,7 +120,11 @@ function makeRequest(overrides: Partial<Request> = {}): Request {
   } as unknown as Request;
 }
 
-function makeResponse(): { res: Response; json: ReturnType<typeof vi.fn>; status: ReturnType<typeof vi.fn> } {
+function makeResponse(): {
+  res: Response;
+  json: ReturnType<typeof vi.fn>;
+  status: ReturnType<typeof vi.fn>;
+} {
   const json = vi.fn();
   const statusFn = vi.fn().mockReturnThis();
   const res = {
@@ -260,7 +264,10 @@ describe('Comments Routes (v2)', () => {
     });
 
     it('passes callerPubkey from authenticated user', async () => {
-      mockListComments.mockResolvedValue({ items: [], pagination: { page: 1, limit: 20, total: 0, hasNext: false } });
+      mockListComments.mockResolvedValue({
+        items: [],
+        pagination: { page: 1, limit: 20, total: 0, hasNext: false },
+      });
 
       const req = makeRequest({
         user: { nostr_pubkey: 'caller-pubkey', role: 'creator' } as Request['user'],
@@ -272,15 +279,17 @@ describe('Comments Routes (v2)', () => {
       const route = getRoute('GET', '/:contentId')!;
       await route.handler(req, res, nextFn);
 
-      expect(mockListComments).toHaveBeenCalledWith(
-        'content-123',
-        'caller-pubkey',
-        { page: 1, limit: 20 }
-      );
+      expect(mockListComments).toHaveBeenCalledWith('content-123', 'caller-pubkey', {
+        page: 1,
+        limit: 20,
+      });
     });
 
     it('passes null callerPubkey for anonymous users', async () => {
-      mockListComments.mockResolvedValue({ items: [], pagination: { page: 1, limit: 20, total: 0, hasNext: false } });
+      mockListComments.mockResolvedValue({
+        items: [],
+        pagination: { page: 1, limit: 20, total: 0, hasNext: false },
+      });
 
       const req = makeRequest({
         user: undefined,
@@ -384,11 +393,9 @@ describe('Comments Routes (v2)', () => {
       const route = getRoute('POST', '/:contentId')!;
       await route.handler(req, res, nextFn);
 
-      expect(mockCreateComment).toHaveBeenCalledWith(
-        'my-pubkey',
-        'content-123',
-        { commentText: 'Hi!' }
-      );
+      expect(mockCreateComment).toHaveBeenCalledWith('my-pubkey', 'content-123', {
+        commentText: 'Hi!',
+      });
     });
   });
 

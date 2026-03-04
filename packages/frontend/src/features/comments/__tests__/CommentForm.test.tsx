@@ -94,11 +94,7 @@ describe('CommentForm', () => {
 
     it('renders reply label when parentCommentId and parentAuthorName are provided', () => {
       render(
-        <CommentForm
-          contentId="content-1"
-          parentCommentId="parent-1"
-          parentAuthorName="Bob"
-        />,
+        <CommentForm contentId="content-1" parentCommentId="parent-1" parentAuthorName="Bob" />,
         { wrapper }
       );
 

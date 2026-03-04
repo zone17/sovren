@@ -48,10 +48,7 @@ export const commentsApi = {
    * Create a new comment or reply on a piece of content.
    * Requires authentication.
    */
-  createComment(
-    contentId: string,
-    payload: CreateCommentBody
-  ): Promise<CommentWithAuthor> {
+  createComment(contentId: string, payload: CreateCommentBody): Promise<CommentWithAuthor> {
     return apiClient.post(`${BASE}/${contentId}`, payload);
   },
 

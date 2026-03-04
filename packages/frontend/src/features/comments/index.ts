@@ -7,12 +7,7 @@
 export { CommentList, CommentForm, CommentItem } from './components';
 
 // Hooks
-export {
-  useComments,
-  useReplies,
-  useCreateComment,
-  useDeleteComment,
-} from './hooks/useComments';
+export { useComments, useReplies, useCreateComment, useDeleteComment } from './hooks/useComments';
 
 // API service
 export { commentsApi } from './services/commentsApi';

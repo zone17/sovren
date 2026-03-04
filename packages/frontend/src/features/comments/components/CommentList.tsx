@@ -32,9 +32,7 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
       <h2 id="comments-heading" className="text-xl font-semibold text-gray-900 mb-4">
         Comments
         {pagination && pagination.total > 0 && (
-          <span className="ml-2 text-sm font-normal text-gray-500">
-            ({pagination.total})
-          </span>
+          <span className="ml-2 text-sm font-normal text-gray-500">({pagination.total})</span>
         )}
       </h2>
 
@@ -81,9 +79,7 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
           role="alert"
           className="rounded-lg bg-red-50 border border-red-200 p-4 flex items-center gap-3"
         >
-          <p className="text-sm text-red-700 flex-1">
-            Failed to load comments. Please try again.
-          </p>
+          <p className="text-sm text-red-700 flex-1">Failed to load comments. Please try again.</p>
           <button
             type="button"
             onClick={() => void refetch()}
@@ -103,7 +99,12 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
       {!isLoading && !isError && items.length > 0 && (
         <>
           {/* aria-live region announces new comments without disrupting reading */}
-          <div aria-live="polite" aria-atomic="false" className="sr-only" id="comments-live-region" />
+          <div
+            aria-live="polite"
+            aria-atomic="false"
+            className="sr-only"
+            id="comments-live-region"
+          />
 
           <ul role="list" aria-label="Comments" className="space-y-4">
             {items.map((comment) => (

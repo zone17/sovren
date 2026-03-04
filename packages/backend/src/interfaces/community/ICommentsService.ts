@@ -4,10 +4,7 @@
  * Squad B, Sprint 2
  */
 
-import type {
-  CommentWithAuthor,
-  CommentsPaginatedResponse,
-} from '@shared/types/comments';
+import type { CommentWithAuthor, CommentsPaginatedResponse } from '@shared/types/comments';
 
 export interface ICommentsService {
   /**

@@ -71,7 +71,9 @@ test.describe('View comments (anonymous)', () => {
     await expect(deleteButtons).toHaveCount(0);
   });
 
-  test('reply button is NOT visible for anonymous users (no canDelete, no interaction)', async ({ page }) => {
+  test('reply button is NOT visible for anonymous users (no canDelete, no interaction)', async ({
+    page,
+  }) => {
     // Anonymous users may still see Reply buttons — but they cannot submit (form shows sign-in)
     // Here we verify that clicking Reply shows the sign-in form (not a functional reply form)
     const replyButtons = page.getByRole('button', { name: /reply to/i });
