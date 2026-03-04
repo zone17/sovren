@@ -165,7 +165,7 @@ describe('CommentsService', () => {
         count: 1,
       });
 
-      const result = await service.listComments(CONTENT_ID, null, { page: 1, limit: 20 });
+      const result = await service.listComments(CONTENT_ID, { page: 1, limit: 20 });
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe(COMMENT_ID);
@@ -177,7 +177,7 @@ describe('CommentsService', () => {
     it('throws NotFoundError for missing content', async () => {
       contentChain.single = vi.fn().mockResolvedValue({ data: null, error: null });
 
-      await expect(service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })).rejects.toThrow(
+      await expect(service.listComments(CONTENT_ID, { page: 1, limit: 20 })).rejects.toThrow(
         NotFoundError
       );
     });
@@ -188,7 +188,7 @@ describe('CommentsService', () => {
         error: null,
       });
 
-      await expect(service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })).rejects.toThrow(
+      await expect(service.listComments(CONTENT_ID, { page: 1, limit: 20 })).rejects.toThrow(
         NotFoundError
       );
     });
@@ -204,7 +204,7 @@ describe('CommentsService', () => {
         count: null,
       });
 
-      await expect(service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })).rejects.toThrow(
+      await expect(service.listComments(CONTENT_ID, { page: 1, limit: 20 })).rejects.toThrow(
         ServiceError
       );
     });
@@ -222,7 +222,7 @@ describe('CommentsService', () => {
         count: 45,
       });
 
-      const result = await service.listComments(CONTENT_ID, null, { page: 1, limit: 20 });
+      const result = await service.listComments(CONTENT_ID, { page: 1, limit: 20 });
 
       expect(result.pagination.hasNext).toBe(true);
       expect(result.pagination.total).toBe(45);
@@ -239,7 +239,7 @@ describe('CommentsService', () => {
         count: 0,
       });
 
-      const result = await service.listComments(CONTENT_ID, null, { page: 1, limit: 20 });
+      const result = await service.listComments(CONTENT_ID, { page: 1, limit: 20 });
 
       expect(result.items).toHaveLength(0);
       expect(result.pagination.total).toBe(0);
@@ -261,7 +261,7 @@ describe('CommentsService', () => {
         count: 1,
       });
 
-      const result = await service.listComments(CONTENT_ID, null, { page: 1, limit: 20 });
+      const result = await service.listComments(CONTENT_ID, { page: 1, limit: 20 });
 
       expect(result.items[0].author.displayName).toBe('Anonymous');
     });

@@ -4,7 +4,7 @@
  * Squad B, Sprint 2
  */
 
-export type CommentStatus = 'active' | 'hidden' | 'deleted' | 'moderated';
+export type CommentStatus = 'active' | 'deleted' | 'moderated';
 
 export interface Comment {
   id: string;

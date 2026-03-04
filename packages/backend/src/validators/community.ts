@@ -143,3 +143,6 @@ export const CommentsPaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
+
+/** Validate route params as UUID format — rejects non-UUID strings early (P1 security) */
+export const UuidParamSchema = z.string().uuid('Invalid ID format');

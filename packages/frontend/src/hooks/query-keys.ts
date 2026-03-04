@@ -12,5 +12,4 @@ export const commentKeys = {
   list: (contentId: string, filters?: Record<string, unknown>) =>
     [...commentKeys.byContent(contentId), 'list', filters] as const,
   replies: (commentId: string) => [...commentKeys.all, 'replies', commentId] as const,
-  count: (contentId: string) => [...commentKeys.byContent(contentId), 'count'] as const,
 };

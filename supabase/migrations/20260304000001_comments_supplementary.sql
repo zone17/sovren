@@ -67,11 +67,21 @@ CREATE TRIGGER trg_reply_count
   FOR EACH ROW EXECUTE FUNCTION update_reply_count();
 
 -- 4. updated_at trigger (reuses the project-wide update_updated_at() function)
+-- Guard: baseline migration may already create this trigger; DROP IF EXISTS prevents duplicate.
+DROP TRIGGER IF EXISTS set_comments_updated_at ON comments;
 CREATE TRIGGER set_comments_updated_at
   BEFORE UPDATE ON comments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- 5. Composite partial index for efficient top-level comment listing
+-- 5. Fix parent_comment_id FK: CASCADE conflicts with soft-delete model.
+-- Baseline uses ON DELETE CASCADE which would hard-delete all replies if a parent is
+-- hard-deleted (e.g., admin SQL cleanup). Change to SET NULL to preserve reply data.
+ALTER TABLE comments DROP CONSTRAINT IF EXISTS comments_parent_comment_id_fkey;
+ALTER TABLE comments
+  ADD CONSTRAINT comments_parent_comment_id_fkey
+  FOREIGN KEY (parent_comment_id) REFERENCES comments(id) ON DELETE SET NULL;
+
+-- 6. Composite partial index for efficient top-level comment listing
 -- Regular CREATE INDEX (not CONCURRENTLY) — table has zero rows at migration time,
 -- lock duration is negligible. CONCURRENTLY cannot run inside a transaction block.
 CREATE INDEX idx_comments_content_status_top_level

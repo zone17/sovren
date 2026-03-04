@@ -10,12 +10,10 @@ export interface ICommentsService {
   /**
    * List top-level comments for a piece of content.
    * @param contentId - UUID of the content
-   * @param callerPubkey - NOSTR pubkey of the caller (null for anonymous)
    * @param pagination - Page/limit options
    */
   listComments(
     contentId: string,
-    callerPubkey: string | null,
     pagination: { page: number; limit: number }
   ): Promise<CommentsPaginatedResponse>;
 

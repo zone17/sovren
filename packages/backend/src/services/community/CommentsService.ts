@@ -130,7 +130,6 @@ export class CommentsService implements ICommentsService {
 
   async listComments(
     contentId: string,
-    callerPubkey: string | null,
     { page, limit }: { page: number; limit: number }
   ): Promise<CommentsPaginatedResponse> {
     // Content access check (D10) — return 404 for missing or non-published content
@@ -241,8 +240,9 @@ export class CommentsService implements ICommentsService {
     if (payload.parentCommentId) {
       const { data: parent } = await this.db
         .from('comments')
-        .select('parent_comment_id, status')
+        .select('parent_comment_id, status, content_id')
         .eq('id', payload.parentCommentId)
+        .eq('content_id', contentId) // Prevent cross-content parent references (review #626)
         .single();
 
       if (!parent) throw new NotFoundError('Parent comment');

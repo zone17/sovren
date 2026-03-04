@@ -83,8 +83,10 @@ export function useDeleteComment(contentId: string) {
       // Cancel outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: commentKeys.byContent(contentId) });
 
-      // Snapshot all cached comment lists for this content so we can roll back
-      const snapshot = queryClient.getQueryData(commentKeys.list(contentId, {}));
+      // Snapshot ALL cached comment pages for this content so we can roll back every page
+      const snapshots = queryClient.getQueriesData<{ items: CommentWithAuthor[] }>({
+        queryKey: commentKeys.byContent(contentId),
+      });
 
       // Optimistically remove the comment from every cached page
       queryClient.setQueriesData<{ items: CommentWithAuthor[] }>(
@@ -98,13 +100,15 @@ export function useDeleteComment(contentId: string) {
         }
       );
 
-      return { snapshot };
+      return { snapshots };
     },
 
     onError: (_err, _commentId, context) => {
-      // Restore the snapshot on error
-      if (context?.snapshot !== undefined) {
-        queryClient.setQueryData(commentKeys.list(contentId, {}), context.snapshot);
+      // Restore ALL page snapshots on error
+      if (context?.snapshots) {
+        for (const [key, data] of context.snapshots) {
+          queryClient.setQueryData(key, data);
+        }
       }
     },
 

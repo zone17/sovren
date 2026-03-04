@@ -98,14 +98,6 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
       {/* Comment list */}
       {!isLoading && !isError && items.length > 0 && (
         <>
-          {/* aria-live region announces new comments without disrupting reading */}
-          <div
-            aria-live="polite"
-            aria-atomic="false"
-            className="sr-only"
-            id="comments-live-region"
-          />
-
           <ul role="list" aria-label="Comments" className="space-y-4">
             {items.map((comment) => (
               <li key={comment.id}>

@@ -110,6 +110,11 @@ vi.mock('../../../container/types', () => ({
 // Helpers
 // ============================================================================
 
+// Valid UUID fixtures for route param validation
+const CONTENT_ID = '00000000-0000-4000-a000-000000000001';
+const COMMENT_ID = '00000000-0000-4000-a000-000000000002';
+const COMMENT_ID_2 = '00000000-0000-4000-a000-000000000003';
+
 function makeRequest(overrides: Partial<Request> = {}): Request {
   return {
     user: { nostr_pubkey: 'test-pubkey-123', role: 'creator' },
@@ -196,7 +201,7 @@ describe('Comments Routes (v2)', () => {
       };
       mockListReplies.mockResolvedValue(mockData);
 
-      const req = makeRequest({ params: { commentId: 'comment-123' }, query: { page: '1' } });
+      const req = makeRequest({ params: { commentId: COMMENT_ID }, query: { page: '1' } });
       const { res, json } = makeResponse();
 
       const route = getRoute('GET', '/:commentId/replies')!;
@@ -205,9 +210,19 @@ describe('Comments Routes (v2)', () => {
       expect(json).toHaveBeenCalledWith({ success: true, data: mockData });
     });
 
+    it('throws ValidationError for non-UUID commentId', async () => {
+      const req = makeRequest({ params: { commentId: 'not-a-uuid' }, query: {} });
+      const { res } = makeResponse();
+
+      const route = getRoute('GET', '/:commentId/replies')!;
+      await expect(route.handler(req, res, nextFn)).rejects.toMatchObject({
+        name: 'ValidationError',
+      });
+    });
+
     it('throws ValidationError for invalid pagination params', async () => {
       const req = makeRequest({
-        params: { commentId: 'comment-123' },
+        params: { commentId: COMMENT_ID },
         query: { page: '-5', limit: '999' }, // limit > 50
       });
       const { res } = makeResponse();
@@ -225,13 +240,13 @@ describe('Comments Routes (v2)', () => {
       };
       mockListReplies.mockResolvedValue(mockData);
 
-      const req = makeRequest({ params: { commentId: 'comment-123' }, query: {} });
+      const req = makeRequest({ params: { commentId: COMMENT_ID }, query: {} });
       const { res, json } = makeResponse();
 
       const route = getRoute('GET', '/:commentId/replies')!;
       await route.handler(req, res, nextFn);
 
-      expect(mockListReplies).toHaveBeenCalledWith('comment-123', { page: 1, limit: 20 });
+      expect(mockListReplies).toHaveBeenCalledWith(COMMENT_ID, { page: 1, limit: 20 });
       expect(json).toHaveBeenCalled();
     });
   });
@@ -254,7 +269,7 @@ describe('Comments Routes (v2)', () => {
       };
       mockListComments.mockResolvedValue(mockData);
 
-      const req = makeRequest({ params: { contentId: 'content-123' } });
+      const req = makeRequest({ params: { contentId: CONTENT_ID } });
       const { res, json } = makeResponse();
 
       const route = getRoute('GET', '/:contentId')!;
@@ -263,15 +278,14 @@ describe('Comments Routes (v2)', () => {
       expect(json).toHaveBeenCalledWith({ success: true, data: mockData });
     });
 
-    it('passes callerPubkey from authenticated user', async () => {
+    it('calls listComments with contentId and pagination (no callerPubkey)', async () => {
       mockListComments.mockResolvedValue({
         items: [],
         pagination: { page: 1, limit: 20, total: 0, hasNext: false },
       });
 
       const req = makeRequest({
-        user: { nostr_pubkey: 'caller-pubkey', role: 'creator' } as Request['user'],
-        params: { contentId: 'content-123' },
+        params: { contentId: CONTENT_ID },
         query: {},
       });
       const { res } = makeResponse();
@@ -279,34 +293,25 @@ describe('Comments Routes (v2)', () => {
       const route = getRoute('GET', '/:contentId')!;
       await route.handler(req, res, nextFn);
 
-      expect(mockListComments).toHaveBeenCalledWith('content-123', 'caller-pubkey', {
-        page: 1,
-        limit: 20,
-      });
+      expect(mockListComments).toHaveBeenCalledWith(CONTENT_ID, { page: 1, limit: 20 });
     });
 
-    it('passes null callerPubkey for anonymous users', async () => {
-      mockListComments.mockResolvedValue({
-        items: [],
-        pagination: { page: 1, limit: 20, total: 0, hasNext: false },
-      });
-
+    it('throws ValidationError for non-UUID contentId', async () => {
       const req = makeRequest({
-        user: undefined,
-        params: { contentId: 'content-123' },
+        params: { contentId: 'not-a-uuid' },
         query: {},
       });
       const { res } = makeResponse();
 
       const route = getRoute('GET', '/:contentId')!;
-      await route.handler(req, res, nextFn);
-
-      expect(mockListComments).toHaveBeenCalledWith('content-123', null, { page: 1, limit: 20 });
+      await expect(route.handler(req, res, nextFn)).rejects.toMatchObject({
+        name: 'ValidationError',
+      });
     });
 
     it('throws ValidationError for page < 1', async () => {
       const req = makeRequest({
-        params: { contentId: 'content-123' },
+        params: { contentId: CONTENT_ID },
         query: { page: '0' },
       });
       const { res } = makeResponse();
@@ -328,7 +333,7 @@ describe('Comments Routes (v2)', () => {
       mockCreateComment.mockResolvedValue(created);
 
       const req = makeRequest({
-        params: { contentId: 'content-123' },
+        params: { contentId: CONTENT_ID },
         body: { commentText: 'Hello!' },
       });
       const { res, json, status } = makeResponse();
@@ -340,9 +345,22 @@ describe('Comments Routes (v2)', () => {
       expect(json).toHaveBeenCalledWith({ success: true, data: created });
     });
 
+    it('throws ValidationError for non-UUID contentId', async () => {
+      const req = makeRequest({
+        params: { contentId: 'not-a-uuid' },
+        body: { commentText: 'Hello!' },
+      });
+      const { res } = makeResponse();
+
+      const route = getRoute('POST', '/:contentId')!;
+      await expect(route.handler(req, res, nextFn)).rejects.toMatchObject({
+        name: 'ValidationError',
+      });
+    });
+
     it('throws ValidationError for empty commentText', async () => {
       const req = makeRequest({
-        params: { contentId: 'content-123' },
+        params: { contentId: CONTENT_ID },
         body: { commentText: '' },
       });
       const { res } = makeResponse();
@@ -355,7 +373,7 @@ describe('Comments Routes (v2)', () => {
 
     it('throws ValidationError for commentText > 2000 chars', async () => {
       const req = makeRequest({
-        params: { contentId: 'content-123' },
+        params: { contentId: CONTENT_ID },
         body: { commentText: 'a'.repeat(2001) },
       });
       const { res } = makeResponse();
@@ -368,7 +386,7 @@ describe('Comments Routes (v2)', () => {
 
     it('throws ValidationError for non-UUID parentCommentId', async () => {
       const req = makeRequest({
-        params: { contentId: 'content-123' },
+        params: { contentId: CONTENT_ID },
         body: { commentText: 'Hi!', parentCommentId: 'not-a-uuid' },
       });
       const { res } = makeResponse();
@@ -385,7 +403,7 @@ describe('Comments Routes (v2)', () => {
 
       const req = makeRequest({
         user: { nostr_pubkey: 'my-pubkey', role: 'creator' } as Request['user'],
-        params: { contentId: 'content-123' },
+        params: { contentId: CONTENT_ID },
         body: { commentText: 'Hi!' },
       });
       const { res } = makeResponse();
@@ -393,7 +411,7 @@ describe('Comments Routes (v2)', () => {
       const route = getRoute('POST', '/:contentId')!;
       await route.handler(req, res, nextFn);
 
-      expect(mockCreateComment).toHaveBeenCalledWith('my-pubkey', 'content-123', {
+      expect(mockCreateComment).toHaveBeenCalledWith('my-pubkey', CONTENT_ID, {
         commentText: 'Hi!',
       });
     });
@@ -407,7 +425,7 @@ describe('Comments Routes (v2)', () => {
     it('returns 200 with null data on success', async () => {
       mockDeleteComment.mockResolvedValue(undefined);
 
-      const req = makeRequest({ params: { commentId: 'comment-123' } });
+      const req = makeRequest({ params: { commentId: COMMENT_ID } });
       const { res, json } = makeResponse();
 
       const route = getRoute('DELETE', '/:commentId')!;
@@ -416,19 +434,29 @@ describe('Comments Routes (v2)', () => {
       expect(json).toHaveBeenCalledWith({ success: true, data: null });
     });
 
+    it('throws ValidationError for non-UUID commentId', async () => {
+      const req = makeRequest({ params: { commentId: 'not-a-uuid' } });
+      const { res } = makeResponse();
+
+      const route = getRoute('DELETE', '/:commentId')!;
+      await expect(route.handler(req, res, nextFn)).rejects.toMatchObject({
+        name: 'ValidationError',
+      });
+    });
+
     it('calls deleteComment with callerPubkey and commentId', async () => {
       mockDeleteComment.mockResolvedValue(undefined);
 
       const req = makeRequest({
         user: { nostr_pubkey: 'owner-pubkey', role: 'creator' } as Request['user'],
-        params: { commentId: 'comment-456' },
+        params: { commentId: COMMENT_ID_2 },
       });
       const { res } = makeResponse();
 
       const route = getRoute('DELETE', '/:commentId')!;
       await route.handler(req, res, nextFn);
 
-      expect(mockDeleteComment).toHaveBeenCalledWith('owner-pubkey', 'comment-456');
+      expect(mockDeleteComment).toHaveBeenCalledWith('owner-pubkey', COMMENT_ID_2);
     });
 
     it('propagates service errors (e.g., AuthorizationError)', async () => {
@@ -436,7 +464,7 @@ describe('Comments Routes (v2)', () => {
       authErr.name = 'AuthorizationError';
       mockDeleteComment.mockRejectedValue(authErr);
 
-      const req = makeRequest({ params: { commentId: 'comment-123' } });
+      const req = makeRequest({ params: { commentId: COMMENT_ID } });
       const { res } = makeResponse();
 
       const route = getRoute('DELETE', '/:commentId')!;

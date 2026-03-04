@@ -172,23 +172,6 @@ describe('CommentList', () => {
 
       expect(screen.getByText('(42)')).toBeInTheDocument();
     });
-
-    it('shows aria-live polite region for new comment announcements', () => {
-      mockUseComments.mockReturnValue({
-        data: {
-          items: [makeComment()],
-          pagination: { page: 1, limit: 20, total: 1, hasNext: false },
-        },
-        isLoading: false,
-        isError: false,
-        refetch: mockRefetch,
-      });
-
-      render(<CommentList contentId="content-1" />, { wrapper });
-
-      const liveRegion = document.getElementById('comments-live-region');
-      expect(liveRegion).toHaveAttribute('aria-live', 'polite');
-    });
   });
 
   describe('Pagination', () => {

@@ -14,7 +14,11 @@ import { authenticate, optionalAuth, requireAuth, getAuthUser } from '../../midd
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
-import { CreateCommentSchema, CommentsPaginationSchema } from '../../validators/community';
+import {
+  CreateCommentSchema,
+  CommentsPaginationSchema,
+  UuidParamSchema,
+} from '../../validators/community';
 import { ValidationError } from '../../utils/errors';
 import type { ICommentsService } from '../../interfaces/community/ICommentsService';
 
@@ -49,13 +53,18 @@ router.get(
   optionalAuth,
   readOnlyRateLimiter,
   asyncHandler(async (req, res) => {
+    const commentIdResult = UuidParamSchema.safeParse(req.params.commentId);
+    if (!commentIdResult.success) {
+      throw new ValidationError('Invalid comment ID format');
+    }
+
     const paginationResult = CommentsPaginationSchema.safeParse(req.query);
     if (!paginationResult.success) {
       throw new ValidationError(paginationResult.error.issues[0]?.message ?? 'Invalid pagination');
     }
 
     const data = await getCommentsService().listReplies(
-      req.params.commentId,
+      commentIdResult.data,
       paginationResult.data
     );
 
@@ -77,15 +86,18 @@ router.get(
   optionalAuth,
   readOnlyRateLimiter,
   asyncHandler(async (req, res) => {
+    const contentIdResult = UuidParamSchema.safeParse(req.params.contentId);
+    if (!contentIdResult.success) {
+      throw new ValidationError('Invalid content ID format');
+    }
+
     const paginationResult = CommentsPaginationSchema.safeParse(req.query);
     if (!paginationResult.success) {
       throw new ValidationError(paginationResult.error.issues[0]?.message ?? 'Invalid pagination');
     }
 
-    const callerPubkey = req.user?.nostr_pubkey ?? null;
     const data = await getCommentsService().listComments(
-      req.params.contentId,
-      callerPubkey,
+      contentIdResult.data,
       paginationResult.data
     );
 
@@ -108,6 +120,11 @@ router.post(
   requireAuth,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
+    const contentIdResult = UuidParamSchema.safeParse(req.params.contentId);
+    if (!contentIdResult.success) {
+      throw new ValidationError('Invalid content ID format');
+    }
+
     const result = CreateCommentSchema.safeParse(req.body);
     if (!result.success) {
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
@@ -115,7 +132,7 @@ router.post(
 
     const data = await getCommentsService().createComment(
       getAuthUser(req).nostr_pubkey,
-      req.params.contentId,
+      contentIdResult.data,
       result.data
     );
 
@@ -138,7 +155,12 @@ router.delete(
   requireAuth,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    await getCommentsService().deleteComment(getAuthUser(req).nostr_pubkey, req.params.commentId);
+    const commentIdResult = UuidParamSchema.safeParse(req.params.commentId);
+    if (!commentIdResult.success) {
+      throw new ValidationError('Invalid comment ID format');
+    }
+
+    await getCommentsService().deleteComment(getAuthUser(req).nostr_pubkey, commentIdResult.data);
 
     res.json(createApiResponse(req, null));
   })

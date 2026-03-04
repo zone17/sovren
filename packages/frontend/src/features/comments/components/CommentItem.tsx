@@ -90,8 +90,8 @@ export function CommentItem({
 
   return (
     <article className="flex gap-3">
-      {/* Author avatar */}
-      {comment.author.avatarUrl ? (
+      {/* Author avatar — only render img for http(s) URLs to prevent javascript: XSS (#628) */}
+      {comment.author.avatarUrl && /^https?:\/\//i.test(comment.author.avatarUrl) ? (
         <img
           src={comment.author.avatarUrl}
           alt=""
@@ -226,14 +226,17 @@ export function CommentItem({
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="delete-dialog-title"
+          aria-labelledby={`delete-dialog-title-${comment.id}`}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
           onClick={(e) => {
             if (e.target === e.currentTarget) handleDeleteCancel();
           }}
         >
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
-            <h3 id="delete-dialog-title" className="text-base font-semibold text-gray-900 mb-2">
+            <h3
+              id={`delete-dialog-title-${comment.id}`}
+              className="text-base font-semibold text-gray-900 mb-2"
+            >
               Delete comment?
             </h3>
             <p className="text-sm text-gray-600 mb-4">
