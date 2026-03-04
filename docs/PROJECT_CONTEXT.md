@@ -137,23 +137,25 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 
 **Full details**: `docs/solutions/patterns/common-solutions.md` — reference by number.
 
-| #   | Pattern                                           | Category   |
-| --- | ------------------------------------------------- | ---------- |
-| 1   | Double-submit prevention (useRef + disabled)      | Frontend   |
-| 2   | TTLCache for in-memory Maps                       | Backend    |
-| 3   | Environment variable validation (Zod)             | Infra      |
-| 4   | Error response format (createApiResponse)         | Backend    |
-| 7   | Supabase mock chain pattern                       | Testing    |
-| 13  | Promise.allSettled for batch operations           | Backend    |
-| 15  | Task hooks must NOT run full quality gates        | DevOps     |
-| 16  | Security-critical file mapping                    | Testing    |
-| 17  | Hook migration checklist                          | DevOps     |
-| 25  | Stale todo detection — triage before implementing | Process    |
-| 26  | E2E tests must not mock API calls                 | Testing    |
-| 50  | Real services > vi.fn() for integration tests     | Testing    |
-| 62  | Per-package tsc in monorepos                      | TypeScript |
-| 68  | env: indirection for ${{ }} injection prevention  | CI/CD      |
-| 69  | Fan-in aggregator job for branch protection       | CI/CD      |
+| #   | Pattern                                            | Category   |
+| --- | -------------------------------------------------- | ---------- |
+| 1   | Double-submit prevention (useRef + disabled)       | Frontend   |
+| 2   | TTLCache for in-memory Maps                        | Backend    |
+| 3   | Environment variable validation (Zod)              | Infra      |
+| 4   | Error response format (createApiResponse)          | Backend    |
+| 7   | Supabase mock chain pattern                        | Testing    |
+| 13  | Promise.allSettled for batch operations            | Backend    |
+| 15  | Task hooks must NOT run full quality gates         | DevOps     |
+| 16  | Security-critical file mapping                     | Testing    |
+| 17  | Hook migration checklist                           | DevOps     |
+| 25  | Stale todo detection — triage before implementing  | Process    |
+| 26  | E2E tests must not mock API calls                  | Testing    |
+| 50  | Real services > vi.fn() for integration tests      | Testing    |
+| 62  | Per-package tsc in monorepos                       | TypeScript |
+| 68  | env: indirection for ${{ }} injection prevention   | CI/CD      |
+| 69  | Fan-in aggregator job for branch protection        | CI/CD      |
+| 81  | Blob download via apiClient (never relative fetch) | Frontend   |
+| 82  | Loading state must not hide structural UI          | Frontend   |
 
 ---
 
