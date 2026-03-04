@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useToast } from '../../hooks/use-toast';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -11,6 +11,11 @@ export interface LightningPaymentButtonProps {
    * Amount in satoshis
    */
   amount: number;
+
+  /**
+   * Creator ID for the payment recipient
+   */
+  creatorId: string;
 
   /**
    * Description for the payment
@@ -43,6 +48,11 @@ export interface LightningPaymentButtonProps {
   onCancel?: () => void;
 
   /**
+   * Auto-open the payment dialog on mount
+   */
+  autoOpen?: boolean;
+
+  /**
    * Disable the button
    */
   disabled?: boolean;
@@ -60,12 +70,14 @@ export interface LightningPaymentButtonProps {
 
 export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
   amount,
+  creatorId,
   description = 'Payment to Sovren',
   buttonText = 'Pay with Lightning',
   className = '',
   onSuccess,
   onError,
   onCancel,
+  autoOpen = false,
   disabled = false,
   variant = 'default',
   size = 'default',
@@ -85,6 +97,7 @@ export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
       // Call backend API to create Lightning invoice
       const invoice = await lightningApi.createInvoice({
         amount,
+        creatorId,
         description,
         expirySeconds: 3600, // 1 hour expiry
       });
@@ -157,6 +170,13 @@ export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
     setCurrentPaymentHash(null);
     await createInvoice();
   };
+
+  // Auto-open dialog when autoOpen prop is true
+  useEffect(() => {
+    if (autoOpen) {
+      handleOpen();
+    }
+  }, []);
 
   // Function to handle dialog close
   const handleClose = () => {

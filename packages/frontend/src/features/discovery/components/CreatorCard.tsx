@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Button } from '../../../components/ui/button';
 import type { CreatorSearchResult } from '../types';
 
@@ -83,15 +84,15 @@ export const CreatorCard = ({ creator }: CreatorCardProps) => {
 
       {/* Footer with action */}
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
-        <Button
-          variant="default"
-          size="sm"
-          disabled
-          title="Creator profiles coming in Sprint 1"
-          aria-label={`View ${creator.displayName || creator.username || 'creator'}'s profile — coming soon`}
-        >
-          Coming Soon
-        </Button>
+        <Link to={`/creator/${creator.id}`}>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={`View ${creator.displayName || creator.username || 'creator'}'s profile`}
+          >
+            View Profile
+          </Button>
+        </Link>
       </div>
     </article>
   );

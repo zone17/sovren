@@ -1,15 +1,15 @@
 import { http } from 'msw';
-import { jsonOk, TEST_TIMESTAMP } from './helpers';
+import { jsonOk } from './helpers';
 
+/** Matches FrontendInvoiceShape from backend lightning routes */
 const sampleInvoice = {
   paymentRequest: 'lnbc10u1ptest',
   paymentHash: 'abc123def456',
   amount: 1000,
-  description: 'test',
-  expiresAt: '2026-01-15T13:00:00.000Z',
-  createdAt: TEST_TIMESTAMP,
+  description: 'Sovren Creator Support',
+  createdAt: 1705312800,
+  expiresAt: 1705316400,
   settled: false,
-  status: 'pending',
 };
 
 export const lightningHandlers = [
@@ -17,15 +17,23 @@ export const lightningHandlers = [
     return jsonOk(sampleInvoice);
   }),
 
-  http.get('/api/lightning/invoice/:id', ({ params }) => {
-    return jsonOk({ ...sampleInvoice, id: params.id as string });
+  http.get('/api/lightning/invoice/:paymentHash', () => {
+    return jsonOk(sampleInvoice);
   }),
 
-  http.get('/api/lightning/status', () => {
-    return jsonOk({ balance: 50000, pending: 0 });
+  http.get('/api/lightning/node-info', () => {
+    return jsonOk({ totalInvoices: 10, totalPaid: 5, balance: 50000 });
   }),
 
-  http.get('/api/lightning/payments', () => {
-    return jsonOk({ payments: [], total: 0 });
+  http.get('/api/lightning/user/payments', () => {
+    return jsonOk([]);
+  }),
+
+  http.get('/api/lightning/user/subscriptions', () => {
+    return jsonOk([]);
+  }),
+
+  http.post('/api/lightning/subscription', () => {
+    return jsonOk(sampleInvoice);
   }),
 ];
