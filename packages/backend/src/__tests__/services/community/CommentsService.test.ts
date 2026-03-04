@@ -177,9 +177,9 @@ describe('CommentsService', () => {
     it('throws NotFoundError for missing content', async () => {
       contentChain.single = vi.fn().mockResolvedValue({ data: null, error: null });
 
-      await expect(
-        service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })
-      ).rejects.toThrow(NotFoundError);
+      await expect(service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })).rejects.toThrow(
+        NotFoundError
+      );
     });
 
     it('throws NotFoundError for non-published content', async () => {
@@ -188,9 +188,9 @@ describe('CommentsService', () => {
         error: null,
       });
 
-      await expect(
-        service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })
-      ).rejects.toThrow(NotFoundError);
+      await expect(service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })).rejects.toThrow(
+        NotFoundError
+      );
     });
 
     it('throws ServiceError on DB query failure', async () => {
@@ -204,15 +204,13 @@ describe('CommentsService', () => {
         count: null,
       });
 
-      await expect(
-        service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })
-      ).rejects.toThrow(ServiceError);
+      await expect(service.listComments(CONTENT_ID, null, { page: 1, limit: 20 })).rejects.toThrow(
+        ServiceError
+      );
     });
 
     it('calculates hasNext correctly when more pages exist', async () => {
-      const rows = Array.from({ length: 20 }, (_, i) =>
-        makeCommentRow({ id: `comment-${i}` })
-      );
+      const rows = Array.from({ length: 20 }, (_, i) => makeCommentRow({ id: `comment-${i}` }));
 
       contentChain.single = vi.fn().mockResolvedValue({
         data: { id: CONTENT_ID, status: 'published' },
@@ -302,9 +300,9 @@ describe('CommentsService', () => {
     it('throws NotFoundError when parent comment does not exist', async () => {
       commentsChain.single = vi.fn().mockResolvedValue({ data: null, error: null });
 
-      await expect(
-        service.listReplies('nonexistent-id', { page: 1, limit: 20 })
-      ).rejects.toThrow(NotFoundError);
+      await expect(service.listReplies('nonexistent-id', { page: 1, limit: 20 })).rejects.toThrow(
+        NotFoundError
+      );
     });
 
     it('throws NotFoundError when parent comment belongs to non-published content', async () => {
@@ -313,9 +311,9 @@ describe('CommentsService', () => {
         error: null,
       });
 
-      await expect(
-        service.listReplies(COMMENT_ID, { page: 1, limit: 20 })
-      ).rejects.toThrow(NotFoundError);
+      await expect(service.listReplies(COMMENT_ID, { page: 1, limit: 20 })).rejects.toThrow(
+        NotFoundError
+      );
     });
 
     it('throws ServiceError on DB error', async () => {
@@ -325,9 +323,9 @@ describe('CommentsService', () => {
         count: null,
       });
 
-      await expect(
-        service.listReplies(COMMENT_ID, { page: 1, limit: 20 })
-      ).rejects.toThrow(ServiceError);
+      await expect(service.listReplies(COMMENT_ID, { page: 1, limit: 20 })).rejects.toThrow(
+        ServiceError
+      );
     });
   });
 
@@ -373,7 +371,8 @@ describe('CommentsService', () => {
         id: 'reply-uuid-1',
       });
 
-      commentsChain.single = vi.fn()
+      commentsChain.single = vi
+        .fn()
         .mockResolvedValueOnce({ data: parentRow, error: null })
         .mockResolvedValueOnce({ data: createdRow, error: null });
 
@@ -481,6 +480,7 @@ describe('CommentsService', () => {
 
       // Verify insert was called with sanitized text (no control chars)
       const insertCall = commentsChain.insert.mock.calls[0][0] as { comment_text: string };
+      // eslint-disable-next-line no-control-regex
       expect(insertCall.comment_text).not.toMatch(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/);
     });
 
@@ -525,6 +525,7 @@ describe('CommentsService', () => {
       await service.createComment(PUBKEY, CONTENT_ID, { commentText: xssPayload });
 
       const insertCall = commentsChain.insert.mock.calls[0][0] as { comment_text: string };
+      // eslint-disable-next-line no-control-regex
       expect(insertCall.comment_text).not.toMatch(/\x00/);
     });
   });
@@ -561,9 +562,7 @@ describe('CommentsService', () => {
         error: null,
       });
 
-      await expect(
-        service.deleteComment(PUBKEY, COMMENT_ID)
-      ).resolves.toBeUndefined();
+      await expect(service.deleteComment(PUBKEY, COMMENT_ID)).resolves.toBeUndefined();
     });
 
     it('moderates comment as content creator (status → moderated)', async () => {
@@ -597,9 +596,7 @@ describe('CommentsService', () => {
     it('throws NotFoundError when comment does not exist', async () => {
       commentsChain.single = vi.fn().mockResolvedValue({ data: null, error: null });
 
-      await expect(
-        service.deleteComment(PUBKEY, 'nonexistent-id')
-      ).rejects.toThrow(NotFoundError);
+      await expect(service.deleteComment(PUBKEY, 'nonexistent-id')).rejects.toThrow(NotFoundError);
     });
 
     it('throws ConflictError when comment is already deleted (status guard)', async () => {
@@ -614,9 +611,7 @@ describe('CommentsService', () => {
         error: null,
       });
 
-      await expect(
-        service.deleteComment(PUBKEY, COMMENT_ID)
-      ).rejects.toThrow(ConflictError);
+      await expect(service.deleteComment(PUBKEY, COMMENT_ID)).rejects.toThrow(ConflictError);
     });
 
     it('throws ConflictError when comment is moderated (status guard)', async () => {
@@ -631,9 +626,7 @@ describe('CommentsService', () => {
         error: null,
       });
 
-      await expect(
-        service.deleteComment(PUBKEY, COMMENT_ID)
-      ).rejects.toThrow(ConflictError);
+      await expect(service.deleteComment(PUBKEY, COMMENT_ID)).rejects.toThrow(ConflictError);
     });
 
     it('throws AuthorizationError (403 not 400) for non-owner, non-creator', async () => {
@@ -677,9 +670,7 @@ describe('CommentsService', () => {
         error: null,
       });
 
-      await expect(
-        service.deleteComment(PUBKEY, COMMENT_ID)
-      ).rejects.toThrow(ConflictError);
+      await expect(service.deleteComment(PUBKEY, COMMENT_ID)).rejects.toThrow(ConflictError);
     });
 
     it('throws ServiceError when update DB call fails', async () => {
@@ -698,9 +689,7 @@ describe('CommentsService', () => {
         error: new Error('DB write error'),
       });
 
-      await expect(
-        service.deleteComment(PUBKEY, COMMENT_ID)
-      ).rejects.toThrow(ServiceError);
+      await expect(service.deleteComment(PUBKEY, COMMENT_ID)).rejects.toThrow(ServiceError);
     });
   });
 });

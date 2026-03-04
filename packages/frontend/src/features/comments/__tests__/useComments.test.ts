@@ -76,12 +76,14 @@ function makePaginatedResponse(items: CommentWithAuthor[]): CommentsPaginatedRes
 // ============================================================================
 
 function makeWrapper(qc?: QueryClient) {
-  const client = qc ?? new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, staleTime: 0 },
-      mutations: { retry: false },
-    },
-  });
+  const client =
+    qc ??
+    new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, staleTime: 0 },
+        mutations: { retry: false },
+      },
+    });
   function Wrapper({ children }: { children: React.ReactNode }) {
     return React.createElement(QueryClientProvider, { client }, children);
   }
@@ -182,7 +184,7 @@ describe('useCreateComment', () => {
     mockCreateComment.mockResolvedValue(created);
 
     const { wrapper, queryClient } = makeWrapper();
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const _invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
     const { result } = renderHook(() => useCreateComment(CONTENT_ID), { wrapper });
 
@@ -215,7 +217,9 @@ describe('useCreateComment', () => {
   it('exposes isPending true during mutation', async () => {
     let resolveCreate!: (c: CommentWithAuthor) => void;
     mockCreateComment.mockReturnValue(
-      new Promise<CommentWithAuthor>((res) => { resolveCreate = res; })
+      new Promise<CommentWithAuthor>((res) => {
+        resolveCreate = res;
+      })
     );
 
     const { wrapper } = makeWrapper();
@@ -260,7 +264,11 @@ describe('useDeleteComment', () => {
 
     // Block the delete so we can inspect cache mid-flight
     let resolveFn!: () => void;
-    mockDeleteComment.mockReturnValue(new Promise<void>((res) => { resolveFn = res; }));
+    mockDeleteComment.mockReturnValue(
+      new Promise<void>((res) => {
+        resolveFn = res;
+      })
+    );
 
     const { result } = renderHook(() => useDeleteComment(CONTENT_ID), { wrapper });
 

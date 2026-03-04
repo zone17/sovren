@@ -78,11 +78,12 @@ test.describe('Reply to comment', () => {
     const replyText = `Reply ${Date.now()}`;
     await commentsPage.clickReply('You'); // Replace with real author name from auth session
 
-    const replyTextarea = page
-      .getByRole('textbox', { name: /reply to/i })
-      .first();
+    const replyTextarea = page.getByRole('textbox', { name: /reply to/i }).first();
     await replyTextarea.fill(replyText);
-    await page.getByRole('button', { name: /post reply/i }).first().click();
+    await page
+      .getByRole('button', { name: /post reply/i })
+      .first()
+      .click();
 
     // Reply should appear after expanding
     await commentsPage.showRepliesFor(1);
@@ -159,7 +160,10 @@ test.describe('Two-level threading', () => {
     await commentsPage.clickReply('You');
     const replyTextarea = page.getByRole('textbox', { name: /reply to/i }).first();
     await replyTextarea.fill(`Reply ${Date.now()}`);
-    await page.getByRole('button', { name: /post reply/i }).first().click();
+    await page
+      .getByRole('button', { name: /post reply/i })
+      .first()
+      .click();
 
     // Expand replies
     await commentsPage.showRepliesFor(1);
@@ -178,7 +182,7 @@ test.describe('Two-level threading', () => {
 // ============================================================================
 
 test.describe('Pagination', () => {
-  test('Load more button appears and loads additional comments', async ({ page }) => {
+  test('Load more button appears and loads additional comments', async ({ page: _page }) => {
     // This test requires >20 existing comments on TEST_CONTENT_ID in the test DB.
     // Skip gracefully if Load more is not visible (content has <20 comments).
     const loadMore = commentsPage.loadMoreButton;
