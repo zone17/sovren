@@ -17,6 +17,8 @@ export type {
   ExpenseCategoryType,
   ExpenseCategory,
   Expense,
+  QuarterlyTaxSummary,
+  PaginatedData,
 } from '@shared/types/finance';
 
 // --- Frontend-only types ---
@@ -25,15 +27,6 @@ export interface ApiResponse<T> {
   success: boolean;
   data: T;
   message?: string;
-}
-
-export interface BusinessPagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
 }
 
 // Revenue breakdown with computed percentage
@@ -47,17 +40,6 @@ export interface RevenueRisk {
   concentration: number;
   dominantSource: string;
   warning: boolean;
-}
-
-export interface QuarterlyTaxSummary {
-  quarter: string;
-  year: number;
-  totalIncomeSats: number;
-  totalIncomeUsd: number;
-  totalExpensesSats: number;
-  totalExpensesUsd: number;
-  netSats: number;
-  netUsd: number;
 }
 
 export interface CreateContractPayload {

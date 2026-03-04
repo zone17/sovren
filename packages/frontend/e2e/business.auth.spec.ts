@@ -1,0 +1,51 @@
+import { expect, test } from '@playwright/test';
+import { BusinessPage } from './pages/business.page';
+
+test.describe('Business Manager Dashboard', () => {
+  let businessPage: BusinessPage;
+
+  test.beforeEach(async ({ page }) => {
+    businessPage = new BusinessPage(page);
+    await businessPage.goto();
+  });
+
+  test('loads dashboard with heading visible', async () => {
+    await expect(businessPage.heading).toBeVisible();
+  });
+
+  test('defaults to revenue tab', async () => {
+    await expect(businessPage.revenueTab).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('all four tabs are visible and clickable', async () => {
+    await expect(businessPage.contractsTab).toBeVisible();
+    await expect(businessPage.invoicesTab).toBeVisible();
+    await expect(businessPage.revenueTab).toBeVisible();
+    await expect(businessPage.taxTab).toBeVisible();
+
+    await businessPage.switchTab('contracts');
+    await expect(businessPage.contractsTab).toHaveAttribute('aria-selected', 'true');
+
+    await businessPage.switchTab('invoices');
+    await expect(businessPage.invoicesTab).toHaveAttribute('aria-selected', 'true');
+
+    await businessPage.switchTab('tax');
+    await expect(businessPage.taxTab).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('navigates to /business route', async ({ page }) => {
+    await expect(page).toHaveURL(/\/business/);
+  });
+
+  test('invoices tab shows create invoice button', async () => {
+    await businessPage.switchTab('invoices');
+    await expect(businessPage.createInvoiceButton).toBeVisible();
+  });
+
+  test('tax tab shows year selector and export buttons', async () => {
+    await businessPage.switchTab('tax');
+    await expect(businessPage.yearSelector).toBeVisible();
+    await expect(businessPage.exportCsvButton).toBeVisible();
+    await expect(businessPage.exportJsonButton).toBeVisible();
+  });
+});

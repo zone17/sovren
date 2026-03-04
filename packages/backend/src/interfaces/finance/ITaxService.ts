@@ -3,7 +3,7 @@
  * EPIC-011: Business Manager — Tax preparation and expense categorization
  */
 
-import type { Expense, ExpenseCategory } from '@shared/types/finance';
+import type { Expense, ExpenseCategory, QuarterlyTaxSummary } from '@shared/types/finance';
 
 export interface ITaxService {
   getQuarterlySummary(
@@ -18,6 +18,7 @@ export interface ITaxService {
     usdExpenses: number;
     usdNet: number;
   }>;
+  getAnnualSummary(creatorId: string, year: number): Promise<QuarterlyTaxSummary[]>;
   getExpenses(
     creatorId: string,
     filters?: { categoryId?: string; startDate?: string; endDate?: string }

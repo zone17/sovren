@@ -1,45 +1,49 @@
-import React, { useState } from 'react';
-import { useTaxSummary, useExportTax } from '../hooks/useTax';
-import type { QuarterlyTaxSummary } from '../types';
+import React, { useRef, useState } from 'react';
+import { useTaxSummary } from '../hooks/useTax';
+import { taxApi } from '../services/taxApi';
+import type { QuarterlyTaxSummary } from '@shared/types/finance';
 import { formatSats } from '../../../shared/utils/formatSats';
 
+const usdFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 function formatUsd(usd: number): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(usd);
+  return usdFormatter.format(usd);
 }
 
 const TaxSummary: React.FC = () => {
-  const { data: summaries, isLoading } = useTaxSummary();
-  const exportMutation = useExportTax();
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const years = [currentYear, currentYear - 1, currentYear - 2];
 
-  const years = Array.from(
-    new Set(summaries?.map((s) => s.year) ?? [new Date().getFullYear()])
-  ).sort((a, b) => b - a);
+  const { data: summaries, isLoading } = useTaxSummary(selectedYear);
 
-  const filtered = summaries?.filter((s) => s.year === selectedYear) ?? [];
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const exportingRef = useRef(false);
 
-  const handleExport = (format: 'csv' | 'json') => {
-    exportMutation.mutate(
-      { format, year: selectedYear },
-      {
-        onSuccess: (res) => {
-          window.open(res.data.downloadUrl, '_blank');
-        },
-      }
-    );
+  const handleExport = async (format: 'csv' | 'json') => {
+    if (exportingRef.current) return;
+    exportingRef.current = true;
+    setExportError(null);
+    setExporting(true);
+    try {
+      const blob = await taxApi.exportTaxBlob(format, selectedYear);
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `tax-report-${selectedYear}.${format}`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      setExportError('Export failed. Please try again.');
+    } finally {
+      setExporting(false);
+      exportingRef.current = false;
+    }
   };
-
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 w-40 rounded bg-gray-200" />
-        <div className="h-48 rounded bg-gray-100" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-5">
+      {/* Controls — always visible so users can interact during loading */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h4 className="text-sm font-semibold text-gray-900">Quarterly Tax Summary</h4>
         <div className="flex items-center gap-3">
@@ -58,8 +62,8 @@ const TaxSummary: React.FC = () => {
           <button
             type="button"
             className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 transition-colors"
-            onClick={() => handleExport('csv')}
-            disabled={exportMutation.isPending}
+            onClick={() => void handleExport('csv')}
+            disabled={exporting || isLoading}
             aria-label="Export tax data as CSV"
           >
             Export CSV
@@ -67,8 +71,8 @@ const TaxSummary: React.FC = () => {
           <button
             type="button"
             className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 transition-colors"
-            onClick={() => handleExport('json')}
-            disabled={exportMutation.isPending}
+            onClick={() => void handleExport('json')}
+            disabled={exporting || isLoading}
             aria-label="Export tax data as JSON"
           >
             Export JSON
@@ -76,7 +80,11 @@ const TaxSummary: React.FC = () => {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div className="animate-pulse space-y-4">
+          <div className="h-48 rounded bg-gray-100" />
+        </div>
+      ) : !summaries || summaries.length === 0 ? (
         <p className="text-sm text-gray-500">No tax data available for {selectedYear}.</p>
       ) : (
         <div className="overflow-x-auto">
@@ -125,7 +133,7 @@ const TaxSummary: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
-              {filtered.map((summary: QuarterlyTaxSummary) => (
+              {summaries.map((summary: QuarterlyTaxSummary) => (
                 <tr key={`${summary.year}-${summary.quarter}`} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">{summary.quarter}</td>
                   <td className="px-4 py-3 text-right text-sm text-gray-700">
@@ -154,9 +162,9 @@ const TaxSummary: React.FC = () => {
         </div>
       )}
 
-      {exportMutation.isError && (
+      {exportError && (
         <p className="text-sm text-red-600" role="alert">
-          Export failed. Please try again.
+          {exportError}
         </p>
       )}
     </div>

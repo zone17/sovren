@@ -3,10 +3,10 @@ import { taxApi } from '../services/taxApi';
 
 const QUERY_KEY = ['business', 'tax'];
 
-export function useTaxSummary() {
+export function useTaxSummary(year: number) {
   return useQuery({
-    queryKey: [...QUERY_KEY, 'summary'],
-    queryFn: () => taxApi.getSummary(),
+    queryKey: [...QUERY_KEY, 'summary', year],
+    queryFn: () => taxApi.getSummary(year),
     select: (res) => res.data,
     staleTime: 5 * 60 * 1000,
   });
@@ -16,7 +16,7 @@ export function useTaxCategories() {
   return useQuery({
     queryKey: [...QUERY_KEY, 'categories'],
     queryFn: () => taxApi.getCategories(),
-    select: (res) => res.data,
+    select: (res) => res.data.items,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -31,16 +31,6 @@ export function useCreateTaxCategory() {
     },
     onError: (error) => {
       console.error('Create tax category failed:', error);
-    },
-  });
-}
-
-export function useExportTax() {
-  return useMutation({
-    mutationFn: ({ format, year }: { format: 'csv' | 'json'; year?: number }) =>
-      taxApi.exportTax(format, year),
-    onError: (error) => {
-      console.error('Export tax data failed:', error);
     },
   });
 }

@@ -12,7 +12,7 @@ import type { ITaxService } from '../../interfaces/finance/ITaxService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
-import type { Expense, ExpenseCategory } from '@shared/types/finance';
+import type { Expense, ExpenseCategory, QuarterlyTaxSummary } from '@shared/types/finance';
 import { getBtcUsdRate, RATE_SOURCE } from '../../utils/btc-rate';
 
 // L-5: Characters that trigger formula execution in spreadsheet apps
@@ -333,6 +333,25 @@ export class TaxService implements ITaxService {
     ];
 
     return lines.join('\n');
+  }
+
+  async getAnnualSummary(creatorId: string, year: number): Promise<QuarterlyTaxSummary[]> {
+    this.logger.info('TaxService.getAnnualSummary', { creatorId, year });
+
+    const quarters = [1, 2, 3, 4] as const;
+    const results = await Promise.all(
+      quarters.map((q) => this.getQuarterlySummary(creatorId, year, q))
+    );
+    return results.map((r, i) => ({
+      year,
+      quarter: `Q${quarters[i]}`,
+      totalIncomeSats: r.revenue,
+      totalIncomeUsd: r.usdRevenue,
+      totalExpensesSats: r.expenses,
+      totalExpensesUsd: r.usdExpenses,
+      netSats: r.net,
+      netUsd: r.usdNet,
+    }));
   }
 
   // ============================================================================

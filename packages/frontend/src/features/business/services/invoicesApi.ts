@@ -1,11 +1,11 @@
 import apiClient from '@/services/api/apiClient';
 import type { ApiResponse, CreateInvoicePayload } from '../types';
-import type { BusinessInvoice } from '@shared/types/finance';
+import type { BusinessInvoice, PaginatedData } from '@shared/types/finance';
 
 const BASE = '/api/v2/business/invoices';
 
 export const invoicesApi = {
-  getInvoices(): Promise<ApiResponse<BusinessInvoice[]>> {
+  getInvoices(): Promise<ApiResponse<PaginatedData<BusinessInvoice>>> {
     return apiClient.get(BASE);
   },
 
@@ -21,7 +21,7 @@ export const invoicesApi = {
     return apiClient.put(`${BASE}/${id}/status`, { status });
   },
 
-  generatePaymentLink(id: string): Promise<ApiResponse<{ lnurlPay: string; qrCode: string }>> {
+  generatePaymentLink(id: string): Promise<ApiResponse<{ lnurlPay: string }>> {
     return apiClient.post(`${BASE}/${id}/payment-link`);
   },
 };

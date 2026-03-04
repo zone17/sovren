@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import { useCreateBusinessInvoice, useGeneratePaymentLink } from '../hooks/useBusinessInvoices';
 import type { LineItem, RecurringInterval } from '@shared/types/finance';
 
@@ -18,7 +19,8 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
   const [dueDate, setDueDate] = useState('');
   const [recurringInterval, setRecurringInterval] = useState<RecurringInterval | ''>('');
   const [savedId, setSavedId] = useState<string | null>(null);
-  const [paymentLink, setPaymentLink] = useState<{ lnurlPay: string; qrCode: string } | null>(null);
+  const [lnurlPay, setLnurlPay] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   const totalSats = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceSats, 0);
 
@@ -56,9 +58,28 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
   const handleGeneratePaymentLink = () => {
     if (!savedId) return;
     paymentLinkMutation.mutate(savedId, {
-      onSuccess: (res) => setPaymentLink(res.data),
+      onSuccess: (res) => setLnurlPay(res.data.lnurlPay),
     });
   };
+
+  // Derive QR from lnurlPay — safe on unmount (Kieran EDGE-1 fix)
+  useEffect(() => {
+    if (!lnurlPay) {
+      setQrDataUrl(null);
+      return;
+    }
+    let cancelled = false;
+    QRCode.toDataURL(lnurlPay, { width: 200 })
+      .then((url: string) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lnurlPay]);
 
   return (
     <div className="space-y-5">
@@ -209,31 +230,31 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
       </div>
 
       {/* Payment link display */}
-      {paymentLink && (
+      {lnurlPay && (
         <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-2">
           <p className="text-sm font-medium text-green-800">Payment Link Generated</p>
           <div className="flex items-center gap-2">
             <input
               type="text"
               readOnly
-              value={paymentLink.lnurlPay}
+              value={lnurlPay}
               className="flex-1 rounded-md border border-green-300 bg-white px-3 py-1.5 text-xs font-mono text-gray-700 focus:outline-none"
               aria-label="LNURL payment link"
             />
             <button
               type="button"
               className="rounded-md border border-green-300 px-3 py-1.5 text-xs text-green-700 hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 transition-colors"
-              onClick={() => navigator.clipboard.writeText(paymentLink.lnurlPay)}
+              onClick={() => navigator.clipboard.writeText(lnurlPay)}
               aria-label="Copy payment link"
             >
               Copy
             </button>
           </div>
-          {paymentLink.qrCode && (
+          {qrDataUrl && (
             <img
-              src={paymentLink.qrCode}
+              src={qrDataUrl}
               alt="QR code for Lightning payment"
-              className="w-40 h-40 rounded-md border border-green-200"
+              className="w-48 h-48 rounded-md border border-green-200"
             />
           )}
         </div>

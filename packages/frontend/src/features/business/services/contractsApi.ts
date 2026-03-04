@@ -1,11 +1,11 @@
 import apiClient from '@/services/api/apiClient';
 import type { ApiResponse, CreateContractPayload, UpdateContractPayload } from '../types';
-import type { Contract, ContractTemplate, RedFlag } from '@shared/types/finance';
+import type { Contract, ContractTemplate, PaginatedData, RedFlag } from '@shared/types/finance';
 
 const BASE = '/api/v2/business/contracts';
 
 export const contractsApi = {
-  getTemplates(): Promise<ApiResponse<ContractTemplate[]>> {
+  getTemplates(): Promise<ApiResponse<PaginatedData<ContractTemplate>>> {
     return apiClient.get(`${BASE}/templates`);
   },
 
@@ -13,7 +13,7 @@ export const contractsApi = {
     return apiClient.get(`${BASE}/templates/${id}`);
   },
 
-  getContracts(): Promise<ApiResponse<Contract[]>> {
+  getContracts(): Promise<ApiResponse<PaginatedData<Contract>>> {
     return apiClient.get(BASE);
   },
 

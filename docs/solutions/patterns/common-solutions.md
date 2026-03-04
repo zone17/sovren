@@ -2957,6 +2957,144 @@ Reading files FIRST locks your mental model onto the old task. Switching branch 
 
 ---
 
+## 79. Post-Rebase Import Verification
+
+**Recurrence:** 2 instances in Content Shield and Business Manager PRs. Rebase conflict resolution picks the wrong branch's import path.
+
+### Pattern
+
+After any rebase or merge that touches imports, run the affected test files:
+
+```bash
+# Find files with import changes
+git diff HEAD~1 --name-only | xargs grep -l 'import ' | head -20
+# Run affected tests
+npx vitest run <affected-test-files>
+```
+
+### Red Flags
+
+- Rebase required manual conflict resolution in files with `import` statements
+- `server.test.ts` fails with "Cannot find module" (cascade failure from bad import)
+
+---
+
+## 80. Deterministic Mock Prefix for Validation-Sensitive Values
+
+**Recurrence:** Flaky tests where `Math.random()` generates IDs that fail format validation.
+
+### Pattern
+
+```typescript
+// BAD: Random prefix may not satisfy validation regex
+const id = `${Math.random().toString(36).slice(2)}`;
+
+// GOOD: Deterministic prefix satisfying known validation
+const id = `test_${index}_${Date.now()}`;
+```
+
+---
+
+## 81. Blob Download via apiClient (Never Relative fetch)
+
+**Recurrence:** 1 P1 in Business Manager. `fetch('/api/path')` resolves against frontend origin, not API server.
+
+### Pattern
+
+```typescript
+// API service — handles base URL + auth
+async exportBlob(params: Record<string, string>): Promise<Blob> {
+  const qs = new URLSearchParams(params);
+  const token = apiClient.getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${apiClient.getBaseUrl()}${BASE}/export?${qs}`, { headers });
+  if (!res.ok) throw new Error('Export failed');
+  return res.blob();
+}
+
+// Component — uses blob URL with cleanup
+const blob = await api.exportBlob(params);
+const blobUrl = URL.createObjectURL(blob);
+const link = document.createElement('a');
+link.href = blobUrl;
+link.download = filename;
+link.click();
+setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+```
+
+### When to Use
+
+- Downloading CSV, PDF, ZIP, or any non-JSON response
+- Any endpoint where `response.blob()` is needed instead of `response.json()`
+
+### Detection
+
+- `fetch('/api/` in any component file (relative URL without base)
+- `fetch(` without `apiClient.getBaseUrl()` prefix
+
+---
+
+## 82. Loading State Must Not Hide Structural UI
+
+**Recurrence:** 2 E2E failures in Business Manager. Buttons/selectors behind `if (isLoading) return <skeleton/>` invisible to E2E tests without backend.
+
+### Pattern
+
+```tsx
+// BAD: early return hides toolbar
+if (isLoading) return <Skeleton />;
+return (
+  <div>
+    <Toolbar />
+    <DataTable data={data} />
+  </div>
+);
+
+// GOOD: toolbar always visible
+return (
+  <div>
+    <Toolbar />
+    {isLoading ? <Skeleton /> : <DataTable data={data} />}
+  </div>
+);
+```
+
+### Why
+
+- E2E tests (no backend) can interact with controls
+- Users see page structure immediately (better perceived performance)
+- Screen readers announce layout before data loads
+
+### When to Apply
+
+Any component with both interactive controls (buttons, selectors, filters) AND async data. The controls are structural UI — they don't depend on the data.
+
+---
+
+## 83. Promise.then Callback Order Is Non-Deterministic
+
+**Recurrence:** 1 flaky CI failure in RateLimiter test. Test passed locally but failed in CI because `.then()` callbacks fired in different order.
+
+### Pattern
+
+```typescript
+// BAD: assumes resolution order
+await Promise.all([lowPromise, highPromise]);
+expect(results[0].priority).toBe(HIGH); // Flaky!
+
+// GOOD: order-independent assertion
+await Promise.all([lowPromise, highPromise]);
+expect(results.map((r) => r.priority)).toContain(HIGH);
+expect(results.map((r) => r.priority)).toContain(LOW);
+```
+
+### When to Apply
+
+Any test that races two or more promises and asserts on the order of side effects (push to array, log calls, event emissions).
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -3067,3 +3205,8 @@ CONTEXT TO LOAD:
 | Check name mismatch blocks auto-merge           | 74        | common-solutions.md  |
 | Vercel pending status blocks non-frontend PRs   | 75        | common-solutions.md  |
 | CI threshold has no comment, ships wrong value  | 76        | common-solutions.md  |
+| Rebase picked wrong import path                 | 79        | common-solutions.md  |
+| Flaky mock ID fails format validation           | 80        | common-solutions.md  |
+| `fetch('/api/...')` in component hits frontend  | 81        | common-solutions.md  |
+| E2E can't find buttons (behind loading state)   | 82        | common-solutions.md  |
+| Test asserts on Promise.then callback order     | 83        | common-solutions.md  |

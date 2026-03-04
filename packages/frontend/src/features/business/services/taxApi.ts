@@ -1,19 +1,32 @@
 import apiClient from '@/services/api/apiClient';
-import type { ApiResponse, QuarterlyTaxSummary, CreateExpensePayload } from '../types';
-import type { Expense, ExpenseCategory } from '@shared/types/finance';
+import type { ApiResponse } from '../types';
+import type {
+  Expense,
+  ExpenseCategory,
+  PaginatedData,
+  QuarterlyTaxSummary,
+} from '@shared/types/finance';
+
+interface CreateExpensePayload {
+  categoryId?: string;
+  description: string;
+  amountSats: number;
+  usdAtTime?: number;
+  expenseDate: string;
+}
 
 const BASE = '/api/v2/business/tax';
 
 export const taxApi = {
-  getSummary(): Promise<ApiResponse<QuarterlyTaxSummary[]>> {
-    return apiClient.get(`${BASE}/summary`);
+  getSummary(year: number): Promise<ApiResponse<QuarterlyTaxSummary[]>> {
+    return apiClient.get(`${BASE}/summary`, { year });
   },
 
   getExpenses(params?: {
     categoryId?: string;
-    from?: string;
-    to?: string;
-  }): Promise<ApiResponse<Expense[]>> {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<ApiResponse<PaginatedData<Expense>>> {
     return apiClient.get(`${BASE}/expenses`, params);
   },
 
@@ -21,7 +34,7 @@ export const taxApi = {
     return apiClient.post(`${BASE}/expenses`, data);
   },
 
-  getCategories(): Promise<ApiResponse<ExpenseCategory[]>> {
+  getCategories(): Promise<ApiResponse<PaginatedData<ExpenseCategory>>> {
     return apiClient.get(`${BASE}/categories`);
   },
 
@@ -29,10 +42,13 @@ export const taxApi = {
     return apiClient.post(`${BASE}/categories`, { name, type });
   },
 
-  exportTax(format: 'csv' | 'json', year?: number): Promise<ApiResponse<{ downloadUrl: string }>> {
-    return apiClient.get(`${BASE}/export`, {
-      format,
-      ...(year !== undefined ? { year } : {}),
-    });
+  async exportTaxBlob(format: 'csv' | 'json', year: number): Promise<Blob> {
+    const params = new URLSearchParams({ format, year: String(year) });
+    const token = apiClient.getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const response = await fetch(`${apiClient.getBaseUrl()}${BASE}/export?${params}`, { headers });
+    if (!response.ok) throw new Error('Export failed');
+    return response.blob();
   },
 };

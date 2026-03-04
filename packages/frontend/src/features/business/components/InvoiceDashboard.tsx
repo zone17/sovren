@@ -5,7 +5,7 @@ import { formatSats } from '../../../shared/utils/formatSats';
 
 interface InvoiceDashboardProps {
   onCreateNew: () => void;
-  onViewInvoice: (id: string) => void;
+  onViewInvoice?: (id: string) => void;
 }
 
 const STATUS_STYLES: Record<InvoiceStatus, string> = {
@@ -52,38 +52,9 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
       ?.filter((inv) => inv.status === 'sent' || inv.status === 'viewed')
       .reduce((sum, inv) => sum + inv.totalSats, 0) ?? 0;
 
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="h-20 rounded-lg bg-gray-100" />
-          <div className="h-20 rounded-lg bg-gray-100" />
-          <div className="h-20 rounded-lg bg-gray-100" />
-        </div>
-        <div className="h-48 rounded-lg bg-gray-100" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500">Total Invoices</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{invoices?.length ?? 0}</p>
-        </div>
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-          <p className="text-xs text-green-600">Paid</p>
-          <p className="mt-1 text-lg font-bold text-green-700">{formatSats(totalPaid)}</p>
-        </div>
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <p className="text-xs text-blue-600">Pending</p>
-          <p className="mt-1 text-lg font-bold text-blue-700">{formatSats(totalPending)}</p>
-        </div>
-      </div>
-
-      {/* Toolbar */}
+      {/* Toolbar — always visible so E2E & users can interact during loading */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1" role="group" aria-label="Filter invoices by status">
           {STATUS_FILTERS.map((s) => (
@@ -111,8 +82,30 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
         </button>
       </div>
 
+      {/* Summary cards */}
+      {!isLoading && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Total Invoices</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">{invoices?.length ?? 0}</p>
+          </div>
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+            <p className="text-xs text-green-600">Paid</p>
+            <p className="mt-1 text-lg font-bold text-green-700">{formatSats(totalPaid)}</p>
+          </div>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <p className="text-xs text-blue-600">Pending</p>
+            <p className="mt-1 text-lg font-bold text-blue-700">{formatSats(totalPending)}</p>
+          </div>
+        </div>
+      )}
+
       {/* Invoice list */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div className="animate-pulse space-y-4">
+          <div className="h-48 rounded-lg bg-gray-100" />
+        </div>
+      ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-500">No invoices found.</p>
       ) : (
         <ul
@@ -124,7 +117,7 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
             <li key={invoice.id} className="flex items-center justify-between px-4 py-3 gap-3">
               <button
                 className="flex-1 min-w-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
-                onClick={() => onViewInvoice(invoice.id)}
+                onClick={() => onViewInvoice?.(invoice.id)}
                 aria-label={`View invoice for ${invoice.clientName}`}
               >
                 <p className="text-sm font-medium text-gray-900 truncate">{invoice.clientName}</p>

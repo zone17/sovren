@@ -4,6 +4,7 @@
 export { BusinessErrorBoundary } from './ErrorBoundary';
 
 // Components
+export { BusinessManagerDashboard } from './components/BusinessManagerDashboard';
 export { default as BusinessNav } from './components/BusinessNav';
 export { default as ContractLibrary } from './components/ContractLibrary';
 export { default as ContractEditor } from './components/ContractEditor';
@@ -41,12 +42,7 @@ export {
   useAddRevenueEntry,
 } from './hooks/useRevenue';
 
-export {
-  useTaxSummary,
-  useTaxCategories,
-  useCreateTaxCategory,
-  useExportTax,
-} from './hooks/useTax';
+export { useTaxSummary, useTaxCategories, useCreateTaxCategory } from './hooks/useTax';
 
 export { useExpenses, useAddExpense } from './hooks/useExpenses';
 
@@ -59,7 +55,7 @@ export { taxApi } from './services/taxApi';
 // Types
 export type {
   ApiResponse as BusinessApiResponse,
-  BusinessPagination,
+  PaginatedData,
   RevenueBreakdownEntry,
   RevenueRisk,
   QuarterlyTaxSummary,
