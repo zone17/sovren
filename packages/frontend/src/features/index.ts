@@ -23,9 +23,6 @@ export * from './dashboard';
 // 🔍 **DISCOVERY FEATURE**
 export * from './discovery';
 
-// ⚡ **PAYMENTS FEATURE**
-export * from './payments';
-
 // BUSINESS MANAGER FEATURE
 export * from './business';
 
