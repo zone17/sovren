@@ -3095,6 +3095,44 @@ Any test that races two or more promises and asserts on the order of side effect
 
 ---
 
+## 84. Persistent Worktrees for Parallel Squad Work
+
+**Recurrence:** Concurrent Claude Code sessions sharing one working directory caused branch race condition — one session's `git checkout` moved HEAD for all sessions.
+
+### Symptom
+
+After committing on `feat/squad-b/...`, `git branch --show-current` shows `feat/squad-a/...`. Reflog reveals another session did `git checkout` in the same repo directory.
+
+### Root Cause
+
+Git has ONE HEAD per working directory. Two Claude Code sessions (Squad A + Squad B) sharing `/Users/fp/Desktop/Sovren` means any `git checkout` in one session moves HEAD for the other.
+
+### Fix: Persistent Worktrees
+
+```bash
+# Create a persistent worktree for Squad B (from any branch)
+git worktree add ../Sovren-squad-b feat/squad-b/S2-comments-crud
+
+# Each worktree has its own HEAD — no conflicts
+git worktree list
+# /Users/fp/Desktop/Sovren          [feat/squad-a/...]
+# /Users/fp/Desktop/Sovren-squad-b  [feat/squad-b/...]
+```
+
+### Key Distinction from #77
+
+Pattern #77 warns against agent-temporary worktrees (`isolation: "worktree"`) which are auto-cleaned on context expiry. Persistent worktrees are human-managed, survive across sessions, and are the canonical solution for parallel squad work.
+
+### Checklist
+
+- [ ] One worktree per active squad
+- [ ] Update MEMORY.md worktree table with paths
+- [ ] Each Claude Code session `cd`s to its squad's worktree FIRST
+- [ ] `npm install` in new worktree if tests need to run locally (worktrees share `.git` but not `node_modules`)
+- [ ] Clean up with `git worktree remove ../Sovren-squad-b` when squad work merges
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -3210,3 +3248,4 @@ CONTEXT TO LOAD:
 | `fetch('/api/...')` in component hits frontend  | 81        | common-solutions.md  |
 | E2E can't find buttons (behind loading state)   | 82        | common-solutions.md  |
 | Test asserts on Promise.then callback order     | 83        | common-solutions.md  |
+| Concurrent sessions cause branch race condition | 84        | common-solutions.md  |
