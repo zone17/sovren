@@ -3,8 +3,8 @@ import { useAuth } from '@/features/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentShieldErrorBoundary } from '../ErrorBoundary';
-import AlertsFeed from './AlertsFeed';
-import FingerprintCoverage from './FingerprintCoverage';
+import { AlertsFeed } from './AlertsFeed';
+import { FingerprintCoverage } from './FingerprintCoverage';
 
 export const ShieldDashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -53,5 +53,3 @@ export const ShieldDashboard: React.FC = () => {
     </ContentShieldErrorBoundary>
   );
 };
-
-export default ShieldDashboard;

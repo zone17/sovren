@@ -1,9 +1,15 @@
+import crypto from 'crypto';
 import { existsSync, rmSync } from 'fs';
 import path from 'path';
 import { LightningConfig, LightningService } from '../lightning-service';
 
 // Mock fetch for LNbits API calls
 global.fetch = vi.fn();
+
+/** Generate a valid HMAC signature for webhook payloads */
+function signPayload(payload: object, secret: string): string {
+  return crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
+}
 
 const TEST_DATA_DIR = path.join('/tmp', 'sovren-lightning-p1-test');
 
@@ -164,12 +170,16 @@ describe('Lightning Service P1 Fixes', () => {
       service['paymentHashIndex'].delete('hash_113_webhook');
 
       // Webhook should still find it via persistence
-      const webhookResult = await service.processWebhook({
+      const webhookPayload = {
         type: 'payment',
         payment_hash: 'hash_113_webhook',
         fee: 1,
         preimage: 'pre_113',
-      });
+      };
+      const webhookResult = await service.processWebhook(
+        webhookPayload,
+        signPayload(webhookPayload, mockConfig.webhookSecret)
+      );
 
       expect(webhookResult.success).toBe(true);
       expect(webhookResult.payment).toBeDefined();
@@ -224,16 +234,20 @@ describe('Lightning Service P1 Fixes', () => {
       });
 
       // Make persistence fail
-      jest
-        .spyOn(service['persistence'], 'savePayment')
-        .mockRejectedValueOnce(new Error('Write error'));
+      vi.spyOn(service['persistence'], 'savePayment').mockRejectedValueOnce(
+        new Error('Write error')
+      );
 
-      const webhookResult = await service.processWebhook({
+      const webhookPayload115 = {
         type: 'payment',
         payment_hash: 'hash_115_webhook',
         fee: 0,
         preimage: 'pre_wh',
-      });
+      };
+      const webhookResult = await service.processWebhook(
+        webhookPayload115,
+        signPayload(webhookPayload115, mockConfig.webhookSecret)
+      );
 
       // Webhook should return error
       expect(webhookResult.success).toBe(false);
@@ -313,12 +327,16 @@ describe('Lightning Service P1 Fixes', () => {
       // Spy on invoiceCache.values to ensure it's NOT called (no linear scan)
       const valuesSpy = vi.spyOn(service['invoiceCache'], 'values');
 
-      const webhookResult = await service.processWebhook({
+      const webhookPayload118 = {
         type: 'payment',
         payment_hash: 'hash_118_3',
         fee: 0,
         preimage: 'pre_idx',
-      });
+      };
+      const webhookResult = await service.processWebhook(
+        webhookPayload118,
+        signPayload(webhookPayload118, mockConfig.webhookSecret)
+      );
 
       expect(webhookResult.success).toBe(true);
       expect(webhookResult.payment).toBeDefined();
@@ -394,12 +412,16 @@ describe('Lightning Service P1 Fixes', () => {
       service['invoiceCache'].clear();
 
       // Should fall through to persistence
-      const webhookResult = await service.processWebhook({
+      const webhookPayloadFallback = {
         type: 'payment',
         payment_hash: 'hash_118_fallback',
         fee: 0,
         preimage: 'pre_fb',
-      });
+      };
+      const webhookResult = await service.processWebhook(
+        webhookPayloadFallback,
+        signPayload(webhookPayloadFallback, mockConfig.webhookSecret)
+      );
 
       expect(webhookResult.success).toBe(true);
       expect(webhookResult.payment).toBeDefined();

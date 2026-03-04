@@ -26,5 +26,3 @@ export const DMCAReportButton: React.FC<DMCAReportButtonProps> = ({ alertId }) =
     </div>
   );
 };
-
-export default DMCAReportButton;

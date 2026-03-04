@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import ShieldDashboard from '../ShieldDashboard';
+import { ShieldDashboard } from '../ShieldDashboard';
 
 vi.mock('@/features/auth', () => ({
   useAuth: () => ({
@@ -20,15 +20,13 @@ vi.mock('@/features/auth', () => ({
 }));
 
 vi.mock('../FingerprintCoverage', () => ({
-  __esModule: true,
-  default: ({ creatorId }: { creatorId: string }) => (
+  FingerprintCoverage: ({ creatorId }: { creatorId: string }) => (
     <div data-testid="fingerprint-coverage">FingerprintCoverage: {creatorId}</div>
   ),
 }));
 
 vi.mock('../AlertsFeed', () => ({
-  __esModule: true,
-  default: () => <div data-testid="alerts-feed">AlertsFeed</div>,
+  AlertsFeed: () => <div data-testid="alerts-feed">AlertsFeed</div>,
 }));
 
 vi.mock('../../ErrorBoundary', () => ({

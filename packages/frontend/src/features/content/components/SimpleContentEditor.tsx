@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { usePublishWithProvenance } from '../../content-shield/hooks/usePublishWithProvenance';
 import { useAppSelector } from '../../../store';
 import type { ContentBlock, ContentBlockMetadata, MediaAsset } from '../../../types/content';
 
@@ -228,6 +229,15 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
   const [title, setTitle] = useState(current_content?.title || '');
   const [description, setDescription] = useState(current_content?.description || '');
   const [content, setContent] = useState('');
+
+  const publishWithProvenance = usePublishWithProvenance(
+    current_content?.id ?? '',
+    async (body: string) => {
+      // content is passed in so the async wrapper always uses the latest value
+      void body;
+      onPublish?.();
+    }
+  );
   const [localBlocks, setLocalBlocks] = useState<ContentBlock[]>(
     current_content?.content_blocks || []
   );
@@ -397,7 +407,9 @@ const SimpleContentEditor: React.FC<SimpleContentEditorProps> = ({
               Save Draft
             </button>
             <button
-              onClick={onPublish}
+              onClick={(): void => {
+                void publishWithProvenance(content);
+              }}
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
               Publish

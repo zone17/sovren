@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ProvenanceService
  * Content signing with NOSTR keys, provenance chain retrieval, certificate export
@@ -6,14 +5,32 @@
  */
 
 import { createHash } from 'crypto';
-import type { ProvenanceRecord, ProvenanceCertificate } from '@shared/types/provenance';
+import { verifyEvent, getEventHash } from 'nostr-tools/pure';
+import type {
+  ProvenanceRecord,
+  ProvenanceCertificate,
+  VerificationStatus,
+} from '@shared/types/provenance';
 import type {
   IProvenanceService,
   SignContentInput,
 } from '../../interfaces/provenance/IProvenanceService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
-import { NotFoundError } from '../../utils/errors';
+import { NotFoundError, AuthorizationError, ConflictError } from '../../utils/errors';
+
+/** DB row shape for provenance_records table */
+interface ProvenanceRow {
+  content_id: string;
+  creator_id: string;
+  created_at: string;
+  signature: string;
+  nostr_event_id: string;
+  content_hash: string;
+  relay_confirmations: Array<{ relay: string; confirmed_at: string }>;
+  verification_status: VerificationStatus;
+  status: string;
+}
 
 export class ProvenanceService implements IProvenanceService {
   constructor(
@@ -21,9 +38,24 @@ export class ProvenanceService implements IProvenanceService {
     private readonly logger: ILogger
   ) {}
 
+  /** #638: DRY mapping from DB row to domain type */
+  private toProvenanceRecord(row: ProvenanceRow): ProvenanceRecord {
+    return {
+      content_id: row.content_id,
+      author_pubkey: row.creator_id,
+      created_at: row.created_at,
+      signature: row.signature,
+      nostr_event_id: row.nostr_event_id,
+      content_hash: row.content_hash,
+      relay_confirmations: row.relay_confirmations || [],
+      verification_status: row.verification_status,
+      nip05_verified: false,
+    };
+  }
+
   async getProvenanceChain(contentId: string): Promise<ProvenanceRecord | null> {
     const { data, error } = await this.db
-      .from('provenance_records')
+      .from<ProvenanceRow>('provenance_records')
       .select('*')
       .eq('content_id', contentId)
       .single();
@@ -37,17 +69,11 @@ export class ProvenanceService implements IProvenanceService {
       throw error;
     }
 
-    return {
-      content_id: data.content_id,
-      author_pubkey: data.creator_id,
-      created_at: data.created_at,
-      signature: data.signature,
-      nostr_event_id: data.nostr_event_id,
-      content_hash: data.content_hash,
-      relay_confirmations: data.relay_confirmations || [],
-      verification_status: data.verification_status,
-      nip05_verified: true, // Would check NIP-05 verification in production
-    };
+    if (!data) {
+      return null;
+    }
+
+    return this.toProvenanceRecord(data);
   }
 
   async getCertificate(contentId: string, creatorId: string): Promise<ProvenanceCertificate> {
@@ -57,8 +83,9 @@ export class ProvenanceService implements IProvenanceService {
       throw new NotFoundError(`Provenance record for content ${contentId}`);
     }
 
+    // #612: Ownership checks use AuthorizationError (403), not NotFoundError (404)
     if (provenance.author_pubkey !== creatorId) {
-      throw new NotFoundError(`Provenance record for content ${contentId}`);
+      throw new AuthorizationError('Not authorized to access this provenance record');
     }
 
     return {
@@ -77,7 +104,7 @@ export class ProvenanceService implements IProvenanceService {
         relay_confirmations: provenance.relay_confirmations,
       },
       generated_at: new Date().toISOString(),
-      verification_url: `https://sovren.dev/verify/${contentId}`,
+      verification_url: `${process.env.APP_URL || 'https://sovren.dev'}/verify/${contentId}`,
     };
   }
 
@@ -86,55 +113,93 @@ export class ProvenanceService implements IProvenanceService {
    * Creates a SHA-256 hash of the content body, stores the provenance record
    * with the creator's NOSTR signature, event ID, and relay confirmations.
    * Called by the content publish pipeline (US-E8-007).
+   *
+   * Security: verifies NOSTR signature before storing (critical-patterns.md #9)
+   * Security: checks content ownership before signing (critical-patterns.md #2)
+   * Security: rejects invalid signatures (#613) — never stores 'unverified'
+   * Security: uses insert not upsert (#615) — prevents silent overwrite
    */
-  async signContent(input: SignContentInput): Promise<ProvenanceRecord> {
+  async signContent(input: SignContentInput, callerId: string): Promise<ProvenanceRecord> {
+    // Ownership check: only the content creator can sign provenance
+    // Pattern: AuthorizationError (403) for ownership checks, not ValidationError (400)
+    if (input.creatorId !== callerId) {
+      throw new AuthorizationError('Cannot sign provenance for content you do not own');
+    }
+
     const contentHash = createHash('sha256').update(input.contentBody).digest('hex');
+
+    // #609: Reconstruct the exact event the frontend signed.
+    // Uses raw content body (not hash), matching tags, and client's timestamp.
+    const eventData = {
+      kind: 1,
+      pubkey: input.creatorId,
+      created_at: input.eventCreatedAt,
+      tags: [['t', 'sovren-content']],
+      content: input.contentBody,
+    };
+    // #625: Compute event hash server-side and verify it matches the client-provided ID
+    const computedEventId = getEventHash(eventData);
+    if (computedEventId !== input.nostrEventId) {
+      throw new AuthorizationError('NOSTR event ID does not match computed hash');
+    }
+
+    const event = {
+      ...eventData,
+      id: computedEventId,
+      sig: input.signature,
+    };
+
+    const isValid = verifyEvent(event);
+
+    // #613: Reject invalid signatures — never store unverified records
+    if (!isValid) {
+      throw new AuthorizationError('Invalid NOSTR signature');
+    }
+
+    const verificationStatus: VerificationStatus = 'verified';
 
     const relayConfirmations = input.relays.map((relay) => ({
       relay,
       confirmed_at: new Date().toISOString(),
     }));
 
+    // #615: Use insert instead of upsert to prevent silent provenance overwrite
     const { data, error } = await this.db
-      .from('provenance_records')
-      .upsert(
-        {
-          content_id: input.contentId,
-          creator_id: input.creatorId,
-          signature: input.signature,
-          nostr_event_id: input.nostrEventId,
-          content_hash: contentHash,
-          relay_confirmations: relayConfirmations,
-          verification_status: 'verified',
-          status: 'active',
-        },
-        { onConflict: 'content_id' }
-      )
+      .from<ProvenanceRow>('provenance_records')
+      .insert({
+        content_id: input.contentId,
+        creator_id: input.creatorId,
+        signature: input.signature,
+        nostr_event_id: input.nostrEventId,
+        content_hash: contentHash,
+        relay_confirmations: relayConfirmations,
+        verification_status: verificationStatus,
+        status: 'active',
+      })
       .select()
       .single();
 
     if (error) {
+      // #633: ConflictError (409) for unique constraint violations, not AuthorizationError
+      if (error.code === '23505') {
+        throw new ConflictError('Provenance record already exists for this content');
+      }
       this.logger.error('Failed to sign content', { contentId: input.contentId, error });
       throw error;
+    }
+
+    if (!data) {
+      throw new Error('Failed to create provenance record: no data returned');
     }
 
     this.logger.info('Content signed with provenance', {
       contentId: input.contentId,
       creatorId: input.creatorId,
       eventId: input.nostrEventId,
+      verificationStatus,
     });
 
-    return {
-      content_id: data.content_id,
-      author_pubkey: data.creator_id,
-      created_at: data.created_at,
-      signature: data.signature,
-      nostr_event_id: data.nostr_event_id,
-      content_hash: data.content_hash,
-      relay_confirmations: data.relay_confirmations || [],
-      verification_status: data.verification_status,
-      nip05_verified: true,
-    };
+    return this.toProvenanceRecord(data);
   }
 
   /**
@@ -142,25 +207,29 @@ export class ProvenanceService implements IProvenanceService {
    * The DB trigger (enforce_provenance_immutability) allows UPDATE on status only.
    * Full DELETE is blocked at the database level for all roles.
    */
+  /**
+   * #632: Atomic single-query revocation — no TOCTOU race.
+   * The WHERE clause guards on content_id + creator_id + status='active'.
+   * If no row matches, either the record doesn't exist, isn't owned by the
+   * caller, or is already revoked.
+   */
   async revokeProvenance(
     contentId: string,
     creatorId: string
   ): Promise<{ content_id: string; status: string; revoked_at: string }> {
-    const provenance = await this.getProvenanceChain(contentId);
-
-    if (!provenance) {
-      throw new NotFoundError(`Provenance record for content ${contentId}`);
-    }
-
-    if (provenance.author_pubkey !== creatorId) {
-      throw new NotFoundError(`Provenance record for content ${contentId}`);
-    }
-
-    const { error } = await this.db
-      .from('provenance_records')
+    const { data, error } = await this.db
+      .from<ProvenanceRow>('provenance_records')
       .update({ status: 'revoked' })
       .eq('content_id', contentId)
-      .eq('creator_id', creatorId);
+      .eq('creator_id', creatorId)
+      .eq('status', 'active')
+      .select()
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      // No matching row — either not found, not owned, or already revoked
+      throw new NotFoundError(`Active provenance record for content ${contentId}`);
+    }
 
     if (error) {
       this.logger.error('Failed to revoke provenance record', { contentId, error });

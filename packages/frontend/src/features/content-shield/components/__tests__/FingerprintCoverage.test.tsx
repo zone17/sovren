@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import FingerprintCoverage from '../FingerprintCoverage';
+import { FingerprintCoverage } from '../FingerprintCoverage';
 
 vi.mock('../../hooks/useFingerprintCoverage', () => ({
   useFingerprintCoverage: vi.fn(),

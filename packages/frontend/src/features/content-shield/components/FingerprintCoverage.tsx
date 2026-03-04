@@ -14,7 +14,7 @@ export const FingerprintCoverage: React.FC<FingerprintCoverageProps> = ({ creato
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-5 w-44" />
+          <CardTitle className="text-base font-semibold">Fingerprint Coverage</CardTitle>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-40 w-full" />
@@ -26,6 +26,9 @@ export const FingerprintCoverage: React.FC<FingerprintCoverageProps> = ({ creato
   if (error || !response) {
     return (
       <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Fingerprint Coverage</CardTitle>
+        </CardHeader>
         <CardContent className="py-6 text-center text-sm text-gray-500">
           Failed to load fingerprint coverage.
         </CardContent>
@@ -103,5 +106,3 @@ export const FingerprintCoverage: React.FC<FingerprintCoverageProps> = ({ creato
     </Card>
   );
 };
-
-export default FingerprintCoverage;

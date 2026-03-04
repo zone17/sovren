@@ -183,3 +183,17 @@ export interface Pagination {
   hasNext: boolean;
   hasPrev: boolean;
 }
+
+// ============================================================================
+// Provenance Sign Request (shared between frontend and backend)
+// ============================================================================
+
+/** Request body for POST /api/v2/shield/provenance/sign */
+export interface SignProvenanceBody {
+  content_id: string;
+  content_body: string;
+  nostr_event_id: string;
+  signature: string;
+  relays?: string[];
+  event_created_at: number;
+}

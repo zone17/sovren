@@ -1,17 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { SignProvenanceBody } from '../types';
 import { shieldApi } from '../services/shieldApi';
-import type { ReportFormat } from '../types';
 import { shieldKeys } from './shieldKeys';
 
-export function useDmcaReport() {
+export function useSignProvenance() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ alertId, format = 'json' }: { alertId: string; format?: ReportFormat }) =>
-      shieldApi.generateDmcaReport(alertId, format),
+    mutationFn: (data: SignProvenanceBody) => shieldApi.signProvenance(data),
     onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: shieldKeys.provenance() });
       queryClient.invalidateQueries({
-        queryKey: shieldKeys.alertDetail(variables.alertId),
+        queryKey: shieldKeys.provenanceDetail(variables.content_id),
       });
     },
   });

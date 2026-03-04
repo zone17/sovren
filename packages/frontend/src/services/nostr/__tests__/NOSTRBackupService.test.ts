@@ -59,10 +59,14 @@ vi.mock('../BackupEncryptionService', () => {
         };
       }),
       generateSecurePassword: vi.fn().mockImplementation((length = 32) => {
+        // Guarantee at least one of each required category
+        const prefix = 'Aa1!';
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join(
-          ''
-        );
+        const rest = Array.from(
+          { length: length - prefix.length },
+          () => chars[Math.floor(Math.random() * chars.length)]
+        ).join('');
+        return prefix + rest;
       }),
     })),
   };

@@ -13,6 +13,8 @@
  */
 
 import { generateSecretKey, getPublicKey, finalizeEvent, verifyEvent, nip19 } from 'nostr-tools';
+import type { EventTemplate, VerifiedEvent } from 'nostr-tools/pure';
+import type { WindowNostr } from 'nostr-tools/nip07';
 import type {
   NostrEnhancedKeyPair,
   NostrBrowserExtension,
@@ -76,10 +78,9 @@ export interface NostrKeyManagementResult {
   error?: Error;
 }
 
-// NIP-07 Browser Extension Interface
-interface NostrExtension {
-  getPublicKey(): Promise<string>;
-  signEvent(event: any): Promise<any>;
+// NIP-07 Browser Extension Interface — extends nostr-tools WindowNostr with
+// legacy top-level encrypt/decrypt (used by existing code) and extension metadata
+interface SovrenWindowNostr extends WindowNostr {
   encrypt?(pubkey: string, plaintext: string): Promise<string>;
   decrypt?(pubkey: string, ciphertext: string): Promise<string>;
   getRelays?(): Promise<{ [url: string]: { read: boolean; write: boolean } }>;
@@ -88,7 +89,7 @@ interface NostrExtension {
 
 declare global {
   interface Window {
-    nostr?: NostrExtension;
+    nostr?: SovrenWindowNostr;
   }
 }
 
@@ -465,9 +466,9 @@ export class KeyManagementService {
   }
 
   /**
-   * Sign event with browser extension
+   * Sign event with browser extension (NIP-07)
    */
-  private async signWithExtension(event: any): Promise<any> {
+  async signWithExtension(event: EventTemplate): Promise<VerifiedEvent> {
     if (!window.nostr) {
       throw new Error('No browser extension available');
     }
