@@ -174,20 +174,27 @@ describe('Lightning API Routes', () => {
   });
 
   describe('POST /api/lightning/subscription', () => {
-    it('validates required fields', async () => {
+    it('validates required fields with Zod', async () => {
       const res = await request(app)
         .post('/api/lightning/subscription')
-        .send({ creatorId: 'c1' })
+        .send({ creatorId: 'not-a-uuid' })
         .expect(400);
 
-      expect(res.body.error).toBe('Missing required fields');
+      expect(res.body.error).toBeDefined();
     });
 
-    it('validates interval', async () => {
-      await request(app)
+    it('validates interval with Zod enum', async () => {
+      const res = await request(app)
         .post('/api/lightning/subscription')
-        .send({ creatorId: 'c1', tier: 'basic', amount: 1000, interval: 'biweekly' })
+        .send({
+          creatorId: '00000000-0000-0000-0000-000000000001',
+          tier: 'basic',
+          amount: 1000,
+          interval: 'biweekly',
+        })
         .expect(400);
+
+      expect(res.body.error).toBeDefined();
     });
   });
 

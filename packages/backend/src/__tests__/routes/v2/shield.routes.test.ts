@@ -422,7 +422,9 @@ describe('Shield Validators', () => {
 
   describe('ContentIdParamSchema', () => {
     it('accepts valid content ID', () => {
-      const result = validators.ContentIdParamSchema.safeParse({ contentId: 'content-uuid-123' });
+      const result = validators.ContentIdParamSchema.safeParse({
+        contentId: '550e8400-e29b-41d4-a716-446655440000',
+      });
       expect(result.success).toBe(true);
     });
 
