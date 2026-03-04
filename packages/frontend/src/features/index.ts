@@ -35,6 +35,20 @@ export * from './multi-platform';
 // WELLNESS FEATURE
 export * from './wellness';
 
+// COMMENTS FEATURE
+// Note: Comment, CommentAuthor, etc. are aliased to avoid collision with content/Comment
+export { CommentList, CommentForm, CommentItem } from './comments';
+export { useComments, useReplies, useCreateComment, useDeleteComment } from './comments';
+export { commentsApi } from './comments';
+export type {
+  CommentAuthor,
+  CommentStatus,
+  CommentWithAuthor,
+  CommentsPaginatedResponse,
+  CreateCommentBody,
+} from './comments';
+export type { Comment as ContentComment } from './comments';
+
 // CONTENT SHIELD FEATURE
 // Note: AlertStatus is aliased to avoid collision with dashboard/AlertStatus
 export {

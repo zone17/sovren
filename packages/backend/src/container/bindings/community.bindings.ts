@@ -8,6 +8,7 @@ import type { IServiceRegistry, IServiceModule } from '../../interfaces/shared/I
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import { TYPES } from '../types';
 
+import { CommentsService } from '../../services/community/CommentsService';
 import { CreatorCircleService } from '../../services/community/CreatorCircleService';
 import { MentorshipService } from '../../services/community/MentorshipService';
 import { CollaborativeContentService } from '../../services/community/CollaborativeContentService';
@@ -26,6 +27,16 @@ export class CommunityServicesModule implements IServiceModule {
   name = 'CommunityServicesModule';
 
   register(registry: IServiceRegistry): void {
+    // ===========================
+    // Comments (Slice 6)
+    // ===========================
+
+    registry.registerSingletonFactory(TYPES.CommentsService, (container) => {
+      const db = container.resolve(TYPES.Database);
+      const logger = container.resolve(TYPES.Logger);
+      return new CommentsService(asDb(db), logger);
+    });
+
     // ===========================
     // Community Services (EPIC-010)
     // ===========================

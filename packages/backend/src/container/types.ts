@@ -79,6 +79,9 @@ import type { IMentorshipService } from '../interfaces/community/IMentorshipServ
 import type { ICollaborativeContentService } from '../interfaces/community/ICollaborativeContentService';
 import type { IMarketplaceService } from '../interfaces/community/IMarketplaceService';
 
+// Slice 6: Comments CRUD
+import type { ICommentsService } from '../interfaces/community/ICommentsService';
+
 // EPIC-011: Business Manager (Finance)
 import type { IContractService } from '../interfaces/finance/IContractService';
 import type { IBusinessInvoiceService } from '../interfaces/finance/IBusinessInvoiceService';
@@ -409,6 +412,14 @@ export const TYPES = {
   ),
 
   // ======================
+  // Slice 6: Comments CRUD
+  // ======================
+  CommentsService: new ServiceToken<ICommentsService>(
+    'CommentsService',
+    'Comments CRUD with threading and moderation'
+  ),
+
+  // ======================
   // WAVE 2: EPIC-010 (Creator Network)
   // ======================
   CreatorCircleService: new ServiceToken<ICreatorCircleService>(
@@ -509,6 +520,8 @@ export const SERVICE_LIFETIMES = {
     // Wave 2: EPIC-009B
     'InboxPollingService',
     'NostrReplyAdapter',
+    // Slice 6: Comments
+    'CommentsService',
     // Wave 2: EPIC-010
     'CreatorCircleService',
     'MentorshipService',
@@ -615,6 +628,9 @@ export const SERVICE_DEPENDENCIES = {
   InboxPollingService: ['PlatformConnectionService', 'QueueService', 'Database', 'Logger'],
   NostrReplyAdapter: ['Database', 'Logger'],
 
+  // Slice 6: Comments
+  CommentsService: ['Database', 'Logger'],
+
   // Wave 2: EPIC-010
   CreatorCircleService: ['Database', 'Logger'],
   MentorshipService: ['Database', 'Logger'],
@@ -687,6 +703,7 @@ export const SERVICE_TAGS = {
     'NostrReplyAdapter',
   ],
   community: [
+    'CommentsService',
     'CreatorCircleService',
     'MentorshipService',
     'CollaborativeContentService',
