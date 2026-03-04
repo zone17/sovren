@@ -76,6 +76,39 @@ BEGIN
 END $$;
 
 -- ============================================================================
+-- #614: Authenticated user policies for provenance_records
+-- (Created here AFTER #624 changes creator_id from UUID to TEXT)
+-- ============================================================================
+
+DROP POLICY IF EXISTS provenance_records_creator_read ON provenance_records;
+DROP POLICY IF EXISTS provenance_records_creator_insert ON provenance_records;
+DROP POLICY IF EXISTS provenance_records_creator_update ON provenance_records;
+
+CREATE POLICY provenance_records_creator_read
+  ON provenance_records
+  FOR SELECT
+  TO authenticated
+  USING (
+    creator_id = (SELECT nostr_pubkey FROM users WHERE id = auth.uid())
+  );
+
+CREATE POLICY provenance_records_creator_insert
+  ON provenance_records
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    creator_id = (SELECT nostr_pubkey FROM users WHERE id = auth.uid())
+  );
+
+CREATE POLICY provenance_records_creator_update
+  ON provenance_records
+  FOR UPDATE
+  TO authenticated
+  USING (
+    creator_id = (SELECT nostr_pubkey FROM users WHERE id = auth.uid())
+  );
+
+-- ============================================================================
 -- #626: Immutability trigger — only status column can be updated
 -- ============================================================================
 
