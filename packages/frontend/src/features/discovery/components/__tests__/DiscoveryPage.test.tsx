@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { DiscoveryPage } from '../DiscoveryPage';
 import type { CreatorSearchResult } from '../../types';
 
@@ -73,18 +74,30 @@ describe('DiscoveryPage', () => {
 
   describe('Rendering', () => {
     it('renders page title and description', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByText('Discover Creators')).toBeInTheDocument();
       expect(screen.getByText(/Find and support creators building on NOSTR/)).toBeInTheDocument();
     });
 
     it('renders search input', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByPlaceholderText(/Search creators/i)).toBeInTheDocument();
     });
 
     it('renders category filter buttons', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       const nav = screen.getByRole('navigation', { name: /Creator categories/i });
       expect(nav).toBeInTheDocument();
       expect(screen.getByText('All')).toBeInTheDocument();
@@ -92,12 +105,20 @@ describe('DiscoveryPage', () => {
     });
 
     it('renders sort select', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByLabelText('Sort by:')).toBeInTheDocument();
     });
 
     it('renders creator cards', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByText('Sophia')).toBeInTheDocument();
       expect(screen.getByText('Alex')).toBeInTheDocument();
     });
@@ -110,7 +131,11 @@ describe('DiscoveryPage', () => {
         isLoading: true,
         creators: [],
       });
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByRole('status')).toBeInTheDocument();
     });
 
@@ -120,7 +145,11 @@ describe('DiscoveryPage', () => {
         error: new Error('Network error'),
         creators: [],
       });
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
       fireEvent.click(screen.getByText('Try Again'));
       expect(mockRefetch).toHaveBeenCalled();
@@ -128,21 +157,33 @@ describe('DiscoveryPage', () => {
 
     it('shows empty state when no creators found', () => {
       mockUseDiscovery.mockReturnValue({ ...defaultHookReturn, creators: [] });
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByText('No creators found')).toBeInTheDocument();
     });
   });
 
   describe('Interactions', () => {
     it('calls updateFilters on search input change', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       const search = screen.getByPlaceholderText(/Search creators/i);
       fireEvent.change(search, { target: { value: 'test' } });
       expect(mockUpdateFilters).toHaveBeenCalledWith({ query: 'test' });
     });
 
     it('calls updateFilters on category click', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       fireEvent.click(screen.getByText('Music'));
       expect(mockUpdateFilters).toHaveBeenCalledWith({ category: 'Music' });
     });
@@ -152,13 +193,21 @@ describe('DiscoveryPage', () => {
         ...defaultHookReturn,
         filters: { sortBy: 'relevance', category: 'Music' },
       });
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       fireEvent.click(screen.getByText('All'));
       expect(mockUpdateFilters).toHaveBeenCalledWith({ category: undefined });
     });
 
     it('calls updateFilters on sort change', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       fireEvent.change(screen.getByLabelText('Sort by:'), {
         target: { value: 'followers' },
       });
@@ -177,7 +226,11 @@ describe('DiscoveryPage', () => {
           hasPrev: false,
         },
       });
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
 
       const nextButton = screen.getByText('Next Page');
       const prevButton = screen.getByText('Previous Page');
@@ -202,31 +255,51 @@ describe('DiscoveryPage', () => {
           hasPrev: true,
         },
       });
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
 
       expect(screen.getByText('Next Page')).toBeDisabled();
       expect(screen.getByText('Previous Page')).not.toBeDisabled();
     });
 
     it('does not show pagination for single page', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.queryByText('Next Page')).not.toBeInTheDocument();
     });
   });
 
   describe('Accessibility', () => {
     it('has a labeled search input', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByLabelText('Search creators')).toBeInTheDocument();
     });
 
     it('has a labeled category nav', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByRole('navigation', { name: /Creator categories/i })).toBeInTheDocument();
     });
 
     it('marks active category with aria-pressed', () => {
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       expect(screen.getByText('All')).toHaveAttribute('aria-pressed', 'true');
       expect(screen.getByText('Music')).toHaveAttribute('aria-pressed', 'false');
     });
@@ -236,7 +309,11 @@ describe('DiscoveryPage', () => {
         ...defaultHookReturn,
         isFetching: true,
       });
-      render(<DiscoveryPage />);
+      render(
+        <MemoryRouter>
+          <DiscoveryPage />
+        </MemoryRouter>
+      );
       const statusElements = screen.getAllByRole('status');
       expect(statusElements.length).toBeGreaterThanOrEqual(1);
     });
