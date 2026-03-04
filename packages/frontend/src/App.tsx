@@ -326,11 +326,7 @@ function App(): React.ReactElement {
                 <Layout>
                   <ProtectedRoute requireRole="creator" showAccessDenied={true}>
                     <BusinessErrorBoundary>
-                      <Suspense
-                        fallback={<div className="animate-pulse h-48 rounded bg-gray-100" />}
-                      >
-                        <BusinessManagerDashboard />
-                      </Suspense>
+                      <BusinessManagerDashboard />
                     </BusinessErrorBoundary>
                   </ProtectedRoute>
                 </Layout>

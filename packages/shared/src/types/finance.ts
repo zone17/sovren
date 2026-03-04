@@ -122,3 +122,23 @@ export interface Expense {
   expenseDate: string;
   createdAt: string;
 }
+
+// Tax summary types
+export interface QuarterlyTaxSummary {
+  quarter: string;
+  year: number;
+  totalIncomeSats: number;
+  totalIncomeUsd: number;
+  totalExpensesSats: number;
+  totalExpensesUsd: number;
+  netSats: number;
+  netUsd: number;
+}
+
+// Paginated response wrapper for list endpoints
+export interface PaginatedData<T> {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}

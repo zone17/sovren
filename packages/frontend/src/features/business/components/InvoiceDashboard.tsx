@@ -5,7 +5,7 @@ import { formatSats } from '../../../shared/utils/formatSats';
 
 interface InvoiceDashboardProps {
   onCreateNew: () => void;
-  onViewInvoice: (id: string) => void;
+  onViewInvoice?: (id: string) => void;
 }
 
 const STATUS_STYLES: Record<InvoiceStatus, string> = {
@@ -124,7 +124,7 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
             <li key={invoice.id} className="flex items-center justify-between px-4 py-3 gap-3">
               <button
                 className="flex-1 min-w-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
-                onClick={() => onViewInvoice(invoice.id)}
+                onClick={() => onViewInvoice?.(invoice.id)}
                 aria-label={`View invoice for ${invoice.clientName}`}
               >
                 <p className="text-sm font-medium text-gray-900 truncate">{invoice.clientName}</p>

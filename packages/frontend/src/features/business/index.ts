@@ -55,7 +55,7 @@ export { taxApi } from './services/taxApi';
 // Types
 export type {
   ApiResponse as BusinessApiResponse,
-  BusinessPagination,
+  PaginatedData,
   RevenueBreakdownEntry,
   RevenueRisk,
   QuarterlyTaxSummary,

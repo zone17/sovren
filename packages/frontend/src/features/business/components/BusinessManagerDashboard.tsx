@@ -43,14 +43,7 @@ export const BusinessManagerDashboard: React.FC = () => {
             />
           );
         }
-        return (
-          <InvoiceDashboard
-            onCreateNew={() => setEditingInvoice(true)}
-            onViewInvoice={() => {
-              /* MVP: no detail view */
-            }}
-          />
-        );
+        return <InvoiceDashboard onCreateNew={() => setEditingInvoice(true)} />;
       case 'revenue':
         return (
           <>

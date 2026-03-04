@@ -1,13 +1,11 @@
 import apiClient from '@/services/api/apiClient';
 import type { ApiResponse, CreateInvoicePayload } from '../types';
-import type { BusinessInvoice } from '@shared/types/finance';
+import type { BusinessInvoice, PaginatedData } from '@shared/types/finance';
 
 const BASE = '/api/v2/business/invoices';
 
 export const invoicesApi = {
-  getInvoices(): Promise<
-    ApiResponse<{ items: BusinessInvoice[]; total: number; limit: number; offset: number }>
-  > {
+  getInvoices(): Promise<ApiResponse<PaginatedData<BusinessInvoice>>> {
     return apiClient.get(BASE);
   },
 

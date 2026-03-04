@@ -71,6 +71,10 @@ class ApiClient {
     return this.getEffectiveToken();
   }
 
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
   private async request<T>(
     method: HttpMethod,
     path: string,

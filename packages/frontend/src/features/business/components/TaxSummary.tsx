@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTaxSummary } from '../hooks/useTax';
 import { taxApi } from '../services/taxApi';
-import type { QuarterlyTaxSummary } from '../types';
+import type { QuarterlyTaxSummary } from '@shared/types/finance';
 import { formatSats } from '../../../shared/utils/formatSats';
-import apiClient from '@/services/api/apiClient';
 
+const usdFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 function formatUsd(usd: number): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(usd);
+  return usdFormatter.format(usd);
 }
 
 const TaxSummary: React.FC = () => {
@@ -18,28 +18,26 @@ const TaxSummary: React.FC = () => {
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const exportingRef = useRef(false);
 
   const handleExport = async (format: 'csv' | 'json') => {
+    if (exportingRef.current) return;
+    exportingRef.current = true;
     setExportError(null);
     setExporting(true);
     try {
-      const url = taxApi.getExportUrl(format, selectedYear);
-      const token = apiClient.getToken();
-      const response = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!response.ok) throw new Error('Export failed');
-      const blob = await response.blob();
+      const blob = await taxApi.exportTaxBlob(format, selectedYear);
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = `tax-report-${selectedYear}.${format}`;
       link.click();
-      URL.revokeObjectURL(blobUrl);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch {
       setExportError('Export failed. Please try again.');
     } finally {
       setExporting(false);
+      exportingRef.current = false;
     }
   };
 
