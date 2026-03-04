@@ -36,7 +36,8 @@ function getTaxService(): ITaxService {
 
 /**
  * GET /business/tax/summary
- * Quarterly summary — ?year=2026&quarter=1
+ * If ?quarter= is provided, returns single quarterly summary (backward compat).
+ * If no quarter param, returns all 4 quarters for the year.
  */
 router.get(
   '/summary',
@@ -45,14 +46,19 @@ router.get(
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
     const year = parseInt(req.query.year as string) || new Date().getFullYear();
-    const rawQuarter = parseInt(req.query.quarter as string) || 1;
 
-    if (rawQuarter < 1 || rawQuarter > 4 || !Number.isInteger(rawQuarter)) {
-      throw new ValidationError('quarter must be 1, 2, 3, or 4');
+    if (req.query.quarter) {
+      const rawQuarter = parseInt(req.query.quarter as string);
+      if (rawQuarter < 1 || rawQuarter > 4 || !Number.isInteger(rawQuarter)) {
+        throw new ValidationError('quarter must be 1, 2, 3, or 4');
+      }
+      const quarter = rawQuarter as 1 | 2 | 3 | 4;
+      const data = await getTaxService().getQuarterlySummary(creatorId, year, quarter);
+      res.json(createApiResponse(req, data));
+      return;
     }
-    const quarter = rawQuarter as 1 | 2 | 3 | 4;
 
-    const data = await getTaxService().getQuarterlySummary(creatorId, year, quarter);
+    const data = await getTaxService().getAnnualSummary(creatorId, year);
     res.json(createApiResponse(req, data));
   })
 );

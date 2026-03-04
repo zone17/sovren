@@ -71,6 +71,12 @@ const Layout: React.FC<LayoutProps> = ({ children }): JSX.Element => {
                         >
                           Shield
                         </Link>
+                        <Link
+                          to="/business"
+                          className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                          Business
+                        </Link>
                       </>
                     )}
 

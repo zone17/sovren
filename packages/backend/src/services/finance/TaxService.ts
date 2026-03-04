@@ -335,6 +335,39 @@ export class TaxService implements ITaxService {
     return lines.join('\n');
   }
 
+  async getAnnualSummary(
+    creatorId: string,
+    year: number
+  ): Promise<
+    Array<{
+      quarter: string;
+      year: number;
+      totalIncomeSats: number;
+      totalIncomeUsd: number;
+      totalExpensesSats: number;
+      totalExpensesUsd: number;
+      netSats: number;
+      netUsd: number;
+    }>
+  > {
+    this.logger.info('TaxService.getAnnualSummary', { creatorId, year });
+
+    const quarters = [1, 2, 3, 4] as const;
+    const results = await Promise.all(
+      quarters.map((q) => this.getQuarterlySummary(creatorId, year, q))
+    );
+    return results.map((r, i) => ({
+      year,
+      quarter: `Q${quarters[i]}`,
+      totalIncomeSats: r.revenue,
+      totalIncomeUsd: r.usdRevenue,
+      totalExpensesSats: r.expenses,
+      totalExpensesUsd: r.usdExpenses,
+      netSats: r.net,
+      netUsd: r.usdNet,
+    }));
+  }
+
   // ============================================================================
   // Private helpers
   // ============================================================================

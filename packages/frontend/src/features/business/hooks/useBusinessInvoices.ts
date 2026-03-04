@@ -8,7 +8,7 @@ export function useBusinessInvoices() {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: () => invoicesApi.getInvoices(),
-    select: (res) => res.data,
+    select: (res) => res.data.items,
     staleTime: 30 * 1000,
   });
 }

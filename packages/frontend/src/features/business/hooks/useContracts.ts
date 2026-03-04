@@ -8,7 +8,7 @@ export function useContractTemplates() {
   return useQuery({
     queryKey: [...QUERY_KEY, 'templates'],
     queryFn: () => contractsApi.getTemplates(),
-    select: (res) => res.data,
+    select: (res) => res.data.items,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -26,7 +26,7 @@ export function useContracts() {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: () => contractsApi.getContracts(),
-    select: (res) => res.data,
+    select: (res) => res.data.items,
     staleTime: 30 * 1000,
   });
 }

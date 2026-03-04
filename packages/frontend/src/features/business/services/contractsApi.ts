@@ -5,7 +5,9 @@ import type { Contract, ContractTemplate, RedFlag } from '@shared/types/finance'
 const BASE = '/api/v2/business/contracts';
 
 export const contractsApi = {
-  getTemplates(): Promise<ApiResponse<ContractTemplate[]>> {
+  getTemplates(): Promise<
+    ApiResponse<{ items: ContractTemplate[]; total: number; limit: number; offset: number }>
+  > {
     return apiClient.get(`${BASE}/templates`);
   },
 
@@ -13,7 +15,9 @@ export const contractsApi = {
     return apiClient.get(`${BASE}/templates/${id}`);
   },
 
-  getContracts(): Promise<ApiResponse<Contract[]>> {
+  getContracts(): Promise<
+    ApiResponse<{ items: Contract[]; total: number; limit: number; offset: number }>
+  > {
     return apiClient.get(BASE);
   },
 

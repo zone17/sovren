@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import { useCreateBusinessInvoice, useGeneratePaymentLink } from '../hooks/useBusinessInvoices';
 import type { LineItem, RecurringInterval } from '@shared/types/finance';
 
@@ -18,7 +19,8 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
   const [dueDate, setDueDate] = useState('');
   const [recurringInterval, setRecurringInterval] = useState<RecurringInterval | ''>('');
   const [savedId, setSavedId] = useState<string | null>(null);
-  const [paymentLink, setPaymentLink] = useState<{ lnurlPay: string; qrCode: string } | null>(null);
+  const [paymentLink, setPaymentLink] = useState<{ lnurlPay: string } | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   const totalSats = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceSats, 0);
 
@@ -56,9 +58,28 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
   const handleGeneratePaymentLink = () => {
     if (!savedId) return;
     paymentLinkMutation.mutate(savedId, {
-      onSuccess: (res) => setPaymentLink(res.data),
+      onSuccess: (res) => setPaymentLink({ lnurlPay: res.data.lnurlPay }),
     });
   };
+
+  // Derive QR from paymentLink — safe on unmount (Kieran EDGE-1 fix)
+  useEffect(() => {
+    if (!paymentLink) {
+      setQrDataUrl(null);
+      return;
+    }
+    let cancelled = false;
+    QRCode.toDataURL(paymentLink.lnurlPay, { width: 200 })
+      .then((url: string) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [paymentLink]);
 
   return (
     <div className="space-y-5">
@@ -229,11 +250,11 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
               Copy
             </button>
           </div>
-          {paymentLink.qrCode && (
+          {qrDataUrl && (
             <img
-              src={paymentLink.qrCode}
+              src={qrDataUrl}
               alt="QR code for Lightning payment"
-              className="w-40 h-40 rounded-md border border-green-200"
+              className="w-48 h-48 rounded-md border border-green-200"
             />
           )}
         </div>

@@ -5,7 +5,9 @@ import type { BusinessInvoice } from '@shared/types/finance';
 const BASE = '/api/v2/business/invoices';
 
 export const invoicesApi = {
-  getInvoices(): Promise<ApiResponse<BusinessInvoice[]>> {
+  getInvoices(): Promise<
+    ApiResponse<{ items: BusinessInvoice[]; total: number; limit: number; offset: number }>
+  > {
     return apiClient.get(BASE);
   },
 
@@ -21,7 +23,7 @@ export const invoicesApi = {
     return apiClient.put(`${BASE}/${id}/status`, { status });
   },
 
-  generatePaymentLink(id: string): Promise<ApiResponse<{ lnurlPay: string; qrCode: string }>> {
+  generatePaymentLink(id: string): Promise<ApiResponse<{ lnurlPay: string }>> {
     return apiClient.post(`${BASE}/${id}/payment-link`);
   },
 };

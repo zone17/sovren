@@ -4,11 +4,15 @@ import type { CreateExpensePayload } from '../types';
 
 const QUERY_KEY = ['business', 'expenses'];
 
-export function useExpenses(params?: { categoryId?: string; from?: string; to?: string }) {
+export function useExpenses(params?: {
+  categoryId?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
   return useQuery({
     queryKey: [...QUERY_KEY, params],
     queryFn: () => taxApi.getExpenses(params),
-    select: (res) => res.data,
+    select: (res) => res.data.items,
     staleTime: 30 * 1000,
   });
 }

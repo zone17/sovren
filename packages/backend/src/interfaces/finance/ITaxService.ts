@@ -18,6 +18,21 @@ export interface ITaxService {
     usdExpenses: number;
     usdNet: number;
   }>;
+  getAnnualSummary(
+    creatorId: string,
+    year: number
+  ): Promise<
+    Array<{
+      quarter: string;
+      year: number;
+      totalIncomeSats: number;
+      totalIncomeUsd: number;
+      totalExpensesSats: number;
+      totalExpensesUsd: number;
+      netSats: number;
+      netUsd: number;
+    }>
+  >;
   getExpenses(
     creatorId: string,
     filters?: { categoryId?: string; startDate?: string; endDate?: string }

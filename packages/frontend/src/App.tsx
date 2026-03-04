@@ -11,6 +11,7 @@ import { SubscriptionsErrorBoundary } from './features/subscriptions/ErrorBounda
 import { NostrErrorBoundary } from './features/nostr/ErrorBoundary';
 import { WellnessErrorBoundary } from './features/wellness/ErrorBoundary';
 import { ContentShieldErrorBoundary } from './features/content-shield/ErrorBoundary';
+import { BusinessErrorBoundary } from './features/business/ErrorBoundary';
 
 // 🎯 **LAZY LOADING**
 const Home = React.lazy(() =>
@@ -85,6 +86,13 @@ const CreatorProfilePage = React.lazy(() =>
 const RevenueAnalytics = React.lazy(() =>
   import('./features/analytics/components/RevenueAnalytics').then((module) => ({
     default: module.RevenueAnalytics,
+  }))
+);
+
+// Business Manager
+const BusinessManagerDashboard = React.lazy(() =>
+  import('./features/business/components/BusinessManagerDashboard').then((module) => ({
+    default: module.BusinessManagerDashboard,
   }))
 );
 
@@ -306,6 +314,24 @@ function App(): React.ReactElement {
                     <ContentShieldErrorBoundary>
                       <ShieldDashboard />
                     </ContentShieldErrorBoundary>
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+
+            {/* Business Manager — creators only */}
+            <Route
+              path="/business"
+              element={
+                <Layout>
+                  <ProtectedRoute requireRole="creator" showAccessDenied={true}>
+                    <BusinessErrorBoundary>
+                      <Suspense
+                        fallback={<div className="animate-pulse h-48 rounded bg-gray-100" />}
+                      >
+                        <BusinessManagerDashboard />
+                      </Suspense>
+                    </BusinessErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
