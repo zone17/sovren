@@ -1,8 +1,19 @@
 # Sovren Pre-Commit Quality Gates
-# Fast checks: anti-patterns, lint-staged, security tests, related unit tests
+# Fast checks: branch validation, anti-patterns, lint-staged, security tests, related unit tests
 # Target: <90s. Build and Vercel validation moved to CI.
 
 echo "Running pre-commit quality gates..."
+
+# 0. Branch name validation (prevents cross-squad commits)
+current_branch=$(git branch --show-current)
+if [ -n "$current_branch" ] && [ "$current_branch" != "main" ]; then
+  if ! echo "$current_branch" | grep -qE '^(feat|fix|docs|refactor|test|chore|perf|ci|build|hotfix)/'; then
+    echo ""
+    echo "WARNING: Branch '$current_branch' doesn't follow naming convention"
+    echo "Expected: {type}/{squad}/{ticket}-{slug}  (e.g., feat/squad-a/SOV-123-description)"
+    echo ""
+  fi
+fi
 
 # 1. Anti-pattern scanner (fast, runs first for quick feedback)
 bash scripts/check-antipatterns.sh

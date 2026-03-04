@@ -2891,6 +2891,72 @@ if [ "$EMPTY" -gt 0 ]; then
 
 ---
 
+## 77. Never Use Worktree Isolation for Team Builds
+
+**Recurrence:** 1 P1 — Slice 4 session (03-03). 4 agents completed work in isolated worktrees. Context window expired before lead merged worktree branches. Worktrees cleaned up → ALL changes lost (unrecoverable).
+
+### Root Cause
+
+`isolation: "worktree"` creates local-only branches. Context expiry + automatic worktree cleanup = total loss with no recovery path.
+
+### The Rule
+
+Never use `isolation: "worktree"` for team builds. Use domain-scoped briefs (backend-agent owns `packages/backend/`, frontend-agent owns `packages/frontend/`) to prevent file conflicts instead.
+
+### If Worktrees Are Ever Used
+
+Merge + push IMMEDIATELY after each agent completes:
+
+```bash
+# Agent completes work in worktree
+git checkout main
+git merge worktree-branch
+git push origin main
+# THEN clean up worktree
+```
+
+### When Worktrees ARE Safe
+
+- Solo spike work (1 agent, merge immediately)
+- Never for: multi-squad work, shared package changes, team builds
+
+---
+
+## 78. Branch Verification at Session Start and Every Commit
+
+**Recurrence:** 3 violations in one session — committed squad-b work to squad-a's branch. Required cherry-picks and branch resets each time.
+
+### The Protocol
+
+1. **Session start**: `git branch --show-current` as FIRST action. Check MEMORY.md Active Squad Assignments table.
+2. **Before every commit**: Verify branch contains correct squad identifier and slug.
+3. **Before every push**: Same verification + `git log --oneline -3`.
+4. **Task switch**: `git checkout {correct-branch}` BEFORE reading ANY files.
+
+### Git Hook (pre-commit step 0)
+
+```bash
+current_branch=$(git branch --show-current)
+if [ -n "$current_branch" ] && [ "$current_branch" != "main" ]; then
+  if ! echo "$current_branch" | grep -qE '^(feat|fix|docs|refactor|test|chore|perf|ci|build|hotfix)/'; then
+    echo "WARNING: Branch '$current_branch' doesn't follow naming convention"
+    echo "Expected: {type}/{squad}/{ticket}-{slug}"
+  fi
+fi
+```
+
+### Why Order Matters
+
+Reading files FIRST locks your mental model onto the old task. Switching branch AFTER reviewing code means you've already committed to the wrong context. Branch verification FIRST prevents the mismatch.
+
+### Red Flags
+
+- Committing after reading code from multiple slices
+- No `git branch --show-current` before `git add`
+- Task mentions Squad B but branch contains `squad-a`
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -2984,6 +3050,8 @@ CONTEXT TO LOAD:
 | ServiceError cause leaks stack trace to client  | 61        | common-solutions.md  |
 | PostgREST filter injection via metacharacters   | 11        | critical-patterns.md |
 | VIEW exposes admin/inactive users               | 12        | critical-patterns.md |
+| Worktree branches lost after context expiry     | 77        | common-solutions.md  |
+| Committed to wrong squad's branch               | 78        | common-solutions.md  |
 | Root tsc generates phantom path alias errors    | 62        | common-solutions.md  |
 | ESLint has 1000+ violations, all noise          | 63        | common-solutions.md  |
 | CI job needs missing infra (secrets/Docker)     | 64        | common-solutions.md  |
