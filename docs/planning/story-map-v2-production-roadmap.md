@@ -9,18 +9,18 @@
 
 ## Vertical Slices Overview
 
-| #   | Sprint | Squad  | Slice                           | Points | Status |
-| --- | ------ | ------ | ------------------------------- | ------ | ------ |
-| 0   | S0     | Shared | Sprint 0 Prerequisites          | 4      | —      |
-| 1   | S0     | A      | Auth + Wellness MVP             | 10     | —      |
-| 2   | S0     | B      | Discovery MVP                   | 10     | —      |
-| 3   | S1     | A      | Content Shield MVP              | 10     | —      |
-| 4   | S1     | B      | Payments + Creator Profiles     | 10     | —      |
-| 5   | S2     | A      | Business Manager MVP            | 10     | —      |
-| 6   | S2     | B      | Comments                        | 10     | —      |
-| 7   | S3     | A      | Shield + Business Advanced      | 10     | —      |
-| 8   | S3     | B      | Creator Network + Notifications | 10     | —      |
-| 9   | S4     | Both   | Buffer + Hardening              | 8 each | —      |
+| #   | Sprint | Squad  | Slice                           | Points | Status            |
+| --- | ------ | ------ | ------------------------------- | ------ | ----------------- |
+| 0   | S0     | Shared | Sprint 0 Prerequisites          | 4      | —                 |
+| 1   | S0     | A      | Auth + Wellness MVP             | 10     | —                 |
+| 2   | S0     | B      | Discovery MVP                   | 10     | —                 |
+| 3   | S1     | A      | Content Shield MVP              | 10     | ✅ Done (PR #132) |
+| 4   | S1     | B      | Payments + Creator Profiles     | 10     | ✅ Done (PR #135) |
+| 5   | S2     | A      | Business Manager MVP            | 10     | ✅ Done (PR #136) |
+| 6   | S2     | B      | Comments                        | 10     | ✅ Done (PR #137) |
+| 7   | S3     | A      | Shield + Business Advanced      | 10     | —                 |
+| 8   | S3     | B      | Creator Network + Notifications | 10     | —                 |
+| 9   | S4     | Both   | Buffer + Hardening              | 8 each | —                 |
 
 ---
 
@@ -215,6 +215,22 @@ This is a NEW BUILD from scratch — no comments backend, types, API service, ho
 | Optimistic updates | `useMutation` with optimistic insert on post, rollback on error  | Frontend           |
 | Tests              | Unit + integration tests. E2E: `comments.auth.spec.ts`           | QA                 |
 
+### Deferred Backlog (from PR #137 review — 7 items)
+
+Target: Slice 9 (Buffer + Hardening) or a dedicated "Comments Hardening" slice.
+
+| #    | Sev | Description                                | Rationale for deferral                                 |
+| ---- | --- | ------------------------------------------ | ------------------------------------------------------ |
+| #627 | P2  | Reply count trigger missing DELETE handler | Requires separate AFTER UPDATE trigger                 |
+| #631 | P2  | RLS SELECT/UPDATE inconsistent             | Service-layer auth is primary; RLS is defense-in-depth |
+| #632 | P2  | `listReplies` hardcoded limit:50           | Comments with >50 replies are rare                     |
+| #633 | P3  | Offset pagination doesn't scale >10K       | Keyset pagination requires schema change               |
+| #634 | P3  | Delete dialog no focus trap                | Needs focus trap utility; `aria-modal` interim         |
+| #637 | P3  | E2E spec uses `page.route()` mocks         | Violates common-solutions.md #26                       |
+| #638 | P3  | No `isFetching` pagination indicator       | UX polish deferred                                     |
+
+Clusters into 3 themes: (1) DB trigger completeness (#627), (2) RLS hardening (#631), (3) pagination/UX scale (#632, #633, #634, #637, #638).
+
 ---
 
 ## Slice 7: Shield + Business Advanced (Squad A, Sprint 3)
@@ -262,6 +278,7 @@ This is the buffer sprint. If all prior sprints land on time, this is pure harde
 | Production monitoring dashboards per squad's endpoints                                   | Backend (both) |
 | `/workflows:review` final pass on all merged code                                        | Both squads    |
 | Overflow from any Sprint 3 work that slipped                                             | As needed      |
+| Comments hardening: 7 deferred items from Slice 6 (see Slice 6 backlog)                  | Squad B        |
 
 ---
 
