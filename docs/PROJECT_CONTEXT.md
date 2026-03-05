@@ -114,24 +114,27 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 
 **Full details**: `docs/solutions/patterns/critical-patterns.md`
 
-| #   | Pattern                       | When to Use                                            | HTTP |
-| --- | ----------------------------- | ------------------------------------------------------ | ---- |
-| 1   | TOCTOU Race Conditions        | Aggregate caps, status transitions, scarce resources   | 409  |
-| 1a  | Insert-then-verify            | Enforcing member/slot counts                           | 409  |
-| 1b  | Accept-then-verify-or-revert  | Status change + capacity check                         | 409  |
-| 1c  | Atomic claim (UPDATE WHERE)   | Tickets, slots, listings                               | 409  |
-| 2   | Service-layer authorization   | Every data access method                               | 403  |
-| 3   | Paginated accumulation        | Any unbounded SELECT (PAGE_SIZE=500)                   | —    |
-| 4   | Non-atomic multi-table writes | 2+ table writes → RPC or compensating tx               | 500  |
-| 4c  | DB + Queue compensation       | Enqueue fails mid-loop → mark failed rows              | 500  |
-| 5   | Payment persistence           | Atomic write, write mutex, persist-then-mutate         | —    |
-| 6   | SSRF validation               | User-supplied URLs → DNS resolve + IP check + pin      | 400  |
-| 7   | Status guards                 | DELETE/void/cancel → assert status first + check count | 409  |
-| 8   | Test infra integration        | New test type → CI gate + brief + CLAUDE.md            | —    |
-| 9   | NOSTR verifyEvent             | Always `getEventHash(UnsignedEvent)` first             | —    |
-| 10  | Cross-pkg string dedup        | Same string in 3+ files → extract to `@shared/`        | —    |
-| 11  | PostgREST filter escape       | User text in `.or()` → escape `\` first, then metachar | 400  |
-| 12  | VIEW security_barrier         | Public-facing PostgreSQL VIEWs                         | —    |
+| #   | Pattern                        | When to Use                                            | HTTP |
+| --- | ------------------------------ | ------------------------------------------------------ | ---- |
+| 1   | TOCTOU Race Conditions         | Aggregate caps, status transitions, scarce resources   | 409  |
+| 1a  | Insert-then-verify             | Enforcing member/slot counts                           | 409  |
+| 1b  | Accept-then-verify-or-revert   | Status change + capacity check                         | 409  |
+| 1c  | Atomic claim (UPDATE WHERE)    | Tickets, slots, listings                               | 409  |
+| 2   | Service-layer authorization    | Every data access method                               | 403  |
+| 3   | Paginated accumulation         | Any unbounded SELECT (PAGE_SIZE=500)                   | —    |
+| 4   | Non-atomic multi-table writes  | 2+ table writes → RPC or compensating tx               | 500  |
+| 4c  | DB + Queue compensation        | Enqueue fails mid-loop → mark failed rows              | 500  |
+| 5   | Payment persistence            | Atomic write, write mutex, persist-then-mutate         | —    |
+| 6   | SSRF validation                | User-supplied URLs → DNS resolve + IP check + pin      | 400  |
+| 7   | Status guards                  | DELETE/void/cancel → assert status first + check count | 409  |
+| 8   | Test infra integration         | New test type → CI gate + brief + CLAUDE.md            | —    |
+| 9   | NOSTR verifyEvent              | Always `getEventHash(UnsignedEvent)` first             | —    |
+| 10  | Cross-pkg string dedup         | Same string in 3+ files → extract to `@shared/`        | —    |
+| 11  | PostgREST filter escape        | User text in `.or()` → escape `\` first, then metachar | 400  |
+| 12  | VIEW security_barrier          | Public-facing PostgreSQL VIEWs                         | —    |
+| 13  | Route boundary UUID validation | Every `:id` route param → Zod `safeParse` first        | 400  |
+| 14  | Avatar/image URL whitelist     | User-supplied URLs in `<img src>` → `https?` only      | —    |
+| 15  | Cross-content parent guard     | Threaded data parent lookup → scope to content context | 404  |
 
 ### Top Common Solutions (by recurrence)
 
@@ -156,6 +159,10 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 | 69  | Fan-in aggregator job for branch protection        | CI/CD      |
 | 81  | Blob download via apiClient (never relative fetch) | Frontend   |
 | 82  | Loading state must not hide structural UI          | Frontend   |
+| 85  | Optimistic delete multi-page cache snapshot        | Frontend   |
+| 86  | Soft-delete enum — only written values             | Backend    |
+| 87  | DOMPurify no-op in Node.js without jsdom           | Security   |
+| 88  | Dialog aria-labelledby per-instance IDs            | A11y       |
 
 ---
 

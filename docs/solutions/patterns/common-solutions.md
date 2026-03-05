@@ -3133,6 +3133,114 @@ Pattern #77 warns against agent-temporary worktrees (`isolation: "worktree"`) wh
 
 ---
 
+## 85. Optimistic Delete with Multi-Page Cache Snapshot
+
+**Recurrence:** 1 P2 in Comments Slice 6. Single-page snapshots leave other cached pages stale after rollback.
+
+### Problem
+
+`useMutation` for delete uses `getQueryData` with a specific page key. If the user has browsed pages 1 and 2, only one page's cache is snapshotted. Error rollback restores one page but leaves the other stale.
+
+### Fix: `getQueriesData` / `setQueriesData` with prefix key
+
+```typescript
+onMutate: async (commentId: string) => {
+  await queryClient.cancelQueries({ queryKey: commentKeys.byContent(contentId) });
+
+  // Snapshot ALL cached pages (not just current)
+  const snapshots = queryClient.getQueriesData<PagedResponse>({
+    queryKey: commentKeys.byContent(contentId),
+  });
+
+  // Remove from ALL cached pages
+  queryClient.setQueriesData<PagedResponse>(
+    { queryKey: commentKeys.byContent(contentId) },
+    (old) => old ? { ...old, items: old.items.filter((c) => c.id !== commentId) } : old
+  );
+
+  return { snapshots };
+},
+
+onError: (_err, _id, context) => {
+  for (const [key, data] of context?.snapshots ?? []) {
+    queryClient.setQueryData(key, data);
+  }
+},
+```
+
+**Key insight:** `getQueriesData` (plural) matches all cache keys that start with the prefix. `getQueryData` (singular) matches only the exact key.
+
+---
+
+## 86. Soft-Delete Enum — Only Written Values
+
+**Recurrence:** 1 P1 in Comments Slice 6. Phantom `hidden` status polluted the type contract.
+
+### Problem
+
+A status enum includes values no code path writes. Developers implement handling for phantom values, wasting effort and creating dead code paths.
+
+### Fix: Enumerate only values code actually writes
+
+```typescript
+// Good — 3 states, all written by service methods:
+export type CommentStatus = 'active' | 'deleted' | 'moderated';
+
+// Bad — includes 'hidden' which no code writes:
+export type CommentStatus = 'active' | 'hidden' | 'deleted' | 'moderated';
+```
+
+### Checklist
+
+- [ ] List every service method that writes the status field
+- [ ] List every value each method writes
+- [ ] The union of step 2 is the complete enum — add nothing else
+- [ ] Verify DB enum/CHECK matches the TypeScript type exactly
+
+---
+
+## 87. DOMPurify Is a No-Op in Node.js Without jsdom
+
+**Recurrence:** 1 P2 in Comments Slice 6 (caught during architecture decision).
+
+### Problem
+
+`DOMPurify.sanitize()` in Node.js without a real DOM (jsdom) returns the input string **completely unchanged** with **no error**. `<script>alert(1)</script>` passes through as-is. This is a silent security failure.
+
+### Fix: Control-char stripping + React text escaping
+
+```typescript
+private sanitizeText(raw: string): string {
+  const trimmed = raw.trim().slice(0, 2000);
+  // Strip control chars — keep \t, \n, \r
+  // eslint-disable-next-line no-control-regex
+  return trimmed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+// Then render via React text nodes (never dangerouslySetInnerHTML)
+```
+
+**If you need HTML sanitization server-side**, you must: `import { JSDOM } from 'jsdom'; const purify = DOMPurify(new JSDOM('').window);`
+
+---
+
+## 88. Dialog `aria-labelledby` Per-Instance IDs in Lists
+
+**Recurrence:** 1 P2 in Comments Slice 6. Static dialog IDs cause duplicate `id` attributes.
+
+### Problem
+
+A delete dialog inside a list item uses `aria-labelledby="delete-dialog-title"`. Multiple list items create duplicate IDs. Screen readers resolve to the first match — always the wrong element.
+
+### Fix: Scope ID to item
+
+```tsx
+<div role="dialog" aria-labelledby={`delete-dialog-title-${item.id}`}>
+  <h3 id={`delete-dialog-title-${item.id}`}>Delete comment?</h3>
+</div>
+```
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -3249,3 +3357,10 @@ CONTEXT TO LOAD:
 | E2E can't find buttons (behind loading state)   | 82        | common-solutions.md  |
 | Test asserts on Promise.then callback order     | 83        | common-solutions.md  |
 | Concurrent sessions cause branch race condition | 84        | common-solutions.md  |
+| Route param not UUID, reaches DB query          | 13        | critical-patterns.md |
+| `<img src={userUrl}>` without protocol check    | 14        | critical-patterns.md |
+| Parent lookup missing content scope constraint  | 15        | critical-patterns.md |
+| Optimistic delete only restores one page cache  | 85        | common-solutions.md  |
+| Status enum has values no code writes           | 86        | common-solutions.md  |
+| DOMPurify returns input unchanged in Node.js    | 87        | common-solutions.md  |
+| Dialog IDs duplicated in list rendering         | 88        | common-solutions.md  |

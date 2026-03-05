@@ -726,6 +726,112 @@ GRANT SELECT ON discovery_creators TO anon, authenticated;
 
 ---
 
+## 13. Route Boundary UUID Validation (1 P1 — Comments Slice 6)
+
+**The problem:** Route params (`:contentId`, `:commentId`) passed directly to the service without format validation. Non-UUID strings like `'../admin'` or `'; DROP TABLE'` reach the DB query, produce misleading Supabase errors, and leak internal error details.
+
+**Rule:** Every route handler that receives an ID path parameter must validate UUID format with Zod `safeParse` before calling the service. Use `safeParse` (not `parse`) to avoid unhandled throw.
+
+```typescript
+import { z } from 'zod';
+
+const UuidParamSchema = z.string().uuid();
+
+// In every route handler:
+const idResult = UuidParamSchema.safeParse(req.params.contentId);
+if (!idResult.success) {
+  throw new ValidationError('Invalid content ID format');
+}
+// Only pass idResult.data (guaranteed UUID) to the service
+await service.doThing(idResult.data, ...);
+```
+
+**Checklist for every v2 route:**
+
+- [ ] Every `:id`, `:contentId`, `:commentId` param has a `safeParse` call
+- [ ] `ValidationError` thrown with descriptive message (not raw Zod error)
+- [ ] Only `result.data` (validated string) reaches the service
+- [ ] Tests include a "non-UUID param → ValidationError" assertion
+
+**Detection:** `grep -rn "req\.params\." packages/backend/src/routes/ | grep -v "safeParse\|schema"` — any match is a P1 finding.
+
+---
+
+## 14. Avatar/Image URL Protocol Whitelist (1 P1 — Comments Slice 6)
+
+**The problem:** User-supplied URLs stored as `avatar_url` rendered directly in `<img src>`. `javascript:alert(1)` and `data:text/html,...` URIs are valid URL strings that browsers execute on render.
+
+**Rule:** Any user-supplied URL rendered as an HTML `src` or `href` attribute must be validated against an `http(s)` allowlist. Fallback to a safe default.
+
+```tsx
+// Frontend render-time guard (defense in depth):
+{
+  avatarUrl && /^https?:\/\//i.test(avatarUrl) ? (
+    <img src={avatarUrl} alt={displayName} className="..." />
+  ) : (
+    <div aria-hidden="true">{/* initials fallback */}</div>
+  );
+}
+```
+
+**Backend validation (Zod schema — apply before DB write):**
+
+```typescript
+const avatarUrlSchema = z
+  .string()
+  .url()
+  .refine(
+    (url) => {
+      try {
+        return ['https:', 'http:'].includes(new URL(url).protocol);
+      } catch {
+        return false;
+      }
+    },
+    { message: 'Avatar URL must use http or https protocol' }
+  )
+  .optional();
+```
+
+**Detection:** `grep -rn "src={.*[Uu]rl\|src={.*avatar" packages/frontend/src/ | grep -v "test("` — any match without a preceding protocol check is a P1.
+
+**Distinction from #6 (SSRF):** SSRF validation (#6) is for server-side fetches. This pattern is for client-side render safety. Different attack surface, same principle: user-supplied URLs need protocol allowlisting.
+
+---
+
+## 15. Cross-Content Parent Reference Guard (1 P1 — Comments Slice 6)
+
+**The problem:** When creating a reply, the parent comment lookup used only `.eq('id', parentId)` without scoping to the current content. An attacker could supply a valid `parentCommentId` from a different content item, creating a cross-content reference and leaking that the comment exists.
+
+**Rule:** Every parent lookup in threaded data must include the content scope constraint. Never look up a parent by ID alone.
+
+```typescript
+// CORRECT — scope to the same content:
+const { data: parent } = await db
+  .from('comments')
+  .select('parent_comment_id, status, content_id')
+  .eq('id', parentCommentId)
+  .eq('content_id', contentId) // CRITICAL: scope guard
+  .single();
+
+if (!parent) throw new NotFoundError('Parent comment');
+// If parent exists but belongs to different content → null → NotFoundError
+// Attacker never learns whether the UUID is valid in another context
+
+// WRONG — allows cross-content reference:
+const { data: parent } = await db
+  .from('comments')
+  .select('id')
+  .eq('id', parentCommentId) // only checks existence, not scope
+  .single();
+```
+
+**Applies to:** Comments, nested posts, nested tasks, any self-referential table with a scope boundary (content_id, workspace_id, team_id, etc.).
+
+**Detection:** Any parent lookup in a threaded insert that uses only `.eq('id', parentId)` without a scope constraint is a P1 finding.
+
+---
+
 ## How to Use This File
 
 1. **In agent briefs:** Add `"Read docs/solutions/patterns/critical-patterns.md before writing code"` to the CONTEXT TO LOAD section.
