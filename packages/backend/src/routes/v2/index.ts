@@ -13,6 +13,9 @@ import platformsRoutes from './platforms.routes';
 import distributeRoutes from './distribute.routes';
 import inboxRoutes from './inbox.routes';
 import crossPlatformAnalyticsRoutes from './analytics-crossplatform.routes';
+// Slice 6: Comments CRUD
+import commentsRoutes from './comments.routes';
+
 // EPIC-010: Creator Network
 import circlesRoutes from './circles.routes';
 import mentorshipRoutes from './mentorship.routes';
@@ -39,6 +42,9 @@ router.use('/distribute', distributeRoutes);
 router.use('/inbox', inboxRoutes);
 router.use('/analytics/cross-platform', crossPlatformAnalyticsRoutes);
 
+// Slice 6: Comments CRUD
+router.use('/comments', commentsRoutes);
+
 // EPIC-010: Creator Network
 router.use('/circles', circlesRoutes);
 router.use('/mentorship', mentorshipRoutes);
@@ -62,6 +68,7 @@ router.get('/', (req, res) => {
       name: 'Sovren API',
       description: 'Creator Safety Net — Wellness, Content Shield, Multi-Platform Hub & Wave 2',
       endpoints: {
+        comments: '/api/v2/comments',
         wellness: '/api/v2/wellness',
         shield: '/api/v2/shield',
         discovery: '/api/v2/discovery',
