@@ -3,10 +3,10 @@
   "title": "CE Metrics Dashboard",
   "schemaVersion": 39,
   "graphTooltip": 1,
-  "refresh": "30s",
-  "version": 1,
+  "refresh": "5m",
+  "version": 3,
   "time": {
-    "from": "now-24h",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},
@@ -15,24 +15,22 @@
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
-      "id": 1,
+      "id": 100,
       "panels": [],
-      "title": "Project-Level KPIs",
+      "title": "Executive KPIs",
       "type": "row"
     },
     {
-      "id": 10,
+      "id": 101,
       "title": "Total Cost",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
         "textMode": "auto",
         "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto"
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
@@ -42,8 +40,8 @@
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "red", "value": 200 }
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
             ]
           },
           "color": { "mode": "thresholds" }
@@ -51,25 +49,58 @@
       },
       "targets": [
         {
-          "expr": "sum(last_over_time(ce_session_cost_usd{project=~\"$project\", pr_number=~\"$pr\"}[$__range]))",
+          "expr": "sum(ce_session_cost_usd{project=~\"$project\",phase=~\"$phase\"})",
           "legendFormat": "Total Cost",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 11,
-      "title": "PRs Merged",
+      "id": 102,
+      "title": "Cost Trend",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
         "textMode": "auto",
         "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto"
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 4,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "ce_session_cost_usd{project=~\"$project\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "title": "PRs Tracked",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
@@ -83,35 +114,34 @@
       },
       "targets": [
         {
-          "expr": "count(last_over_time(ce_pr_merged_total{project=~\"$project\"}[$__range]))",
-          "legendFormat": "PRs Merged",
+          "expr": "count(count by (pr_number) (ce_session_cost_usd{project=~\"$project\",pr_number!=\"0\"}))",
+          "legendFormat": "PRs",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 12,
-      "title": "Avg Time-to-Merge",
+      "id": 104,
+      "title": "Avg Turns/Session",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
+        "reduceOptions": { "calcs": ["mean"] },
         "textMode": "auto",
         "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto"
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
+          "unit": "short",
+          "decimals": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 3600 },
-              { "color": "red", "value": 14400 }
+              { "color": "yellow", "value": 30 },
+              { "color": "red", "value": 60 }
             ]
           },
           "color": { "mode": "thresholds" }
@@ -119,107 +149,129 @@
       },
       "targets": [
         {
-          "expr": "avg(last_over_time(ce_phase_duration_seconds{phase=~\"$phase\", pr_number=~\"$pr\"}[$__range]))",
-          "legendFormat": "Avg Time-to-Merge",
+          "expr": "avg(ce_session_turns_total{project=~\"$project\",phase=~\"$phase\"})",
+          "legendFormat": "Avg Turns",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 13,
-      "title": "P1 Count",
+      "id": 105,
+      "title": "P1 Findings",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
         "textMode": "auto",
         "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto"
+        "graphMode": "area"
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "red", "value": null }]
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
           },
           "color": { "mode": "thresholds" }
         }
       },
       "targets": [
         {
-          "expr": "sum(last_over_time(ce_findings_total{severity=\"P1\", pr_number=~\"$pr\"}[$__range]))",
-          "legendFormat": "P1 Findings",
+          "expr": "sum(ce_findings_total{severity=\"p1\",project=~\"$project\"})",
+          "legendFormat": "P1",
           "refId": "A"
         }
       ]
     },
     {
+      "id": 106,
+      "title": "Cache Efficiency",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.3 },
+              { "color": "green", "value": 0.6 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(ce_session_tokens_total{type=\"cache_read\",project=~\"$project\"}) / (sum(ce_session_tokens_total{type=\"input\",project=~\"$project\"}) + sum(ce_session_tokens_total{type=\"cache_read\",project=~\"$project\"}) + 1)",
+          "legendFormat": "Cache Hit %",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
-      "id": 2,
+      "id": 200,
       "panels": [],
       "title": "Cost Efficiency",
       "type": "row"
     },
     {
-      "id": 20,
-      "title": "Cost per PR",
+      "id": 201,
+      "title": "Cost per Session",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 6 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
-        "orientation": "auto",
+        "orientation": "horizontal",
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 200,
         "fillOpacity": 80,
-        "gradientMode": "none",
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
         "tooltip": { "mode": "single", "sort": "none" }
       },
       "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "color": { "mode": "palette-classic" }
-        },
-        "overrides": []
+        "defaults": { "unit": "currencyUSD", "color": { "mode": "palette-classic" } }
       },
       "targets": [
         {
-          "expr": "sum by (pr_number) (last_over_time(ce_session_cost_usd{project=~\"$project\", pr_number=~\"$pr\"}[$__range]))",
-          "legendFormat": "{{pr_number}}",
+          "expr": "sum by (session) (ce_session_cost_usd{project=~\"$project\",phase=~\"$phase\"})",
+          "legendFormat": "{{session}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 21,
-      "title": "Cost by CE Phase",
+      "id": 202,
+      "title": "Cost by Phase",
       "type": "piechart",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 6 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
         "pieType": "pie",
         "displayLabels": ["name", "percent"],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
         "tooltip": { "mode": "single", "sort": "none" }
       },
       "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "color": { "mode": "palette-classic" }
-        },
+        "defaults": { "unit": "currencyUSD", "color": { "mode": "palette-classic" } },
         "overrides": [
           {
             "matcher": { "id": "byName", "options": "plan" },
@@ -245,121 +297,136 @@
       },
       "targets": [
         {
-          "expr": "sum by (phase) (last_over_time(ce_session_cost_usd{project=~\"$project\", phase=~\"$phase\"}[$__range]))",
+          "expr": "sum by (phase) (ce_session_cost_usd{project=~\"$project\",phase=~\"$phase\"})",
           "legendFormat": "{{phase}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 22,
+      "id": 203,
       "title": "Cost by Model",
       "type": "piechart",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 6 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
         "pieType": "pie",
         "displayLabels": ["name", "percent"],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
         "tooltip": { "mode": "single", "sort": "none" }
       },
       "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "color": { "mode": "palette-classic" }
-        },
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
         "overrides": [
           {
             "matcher": { "id": "byName", "options": "opus" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#FFD700", "mode": "fixed" } }]
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
           },
           {
             "matcher": { "id": "byName", "options": "sonnet" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#C0C0C0", "mode": "fixed" } }]
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
           },
           {
             "matcher": { "id": "byName", "options": "haiku" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#CD7F32", "mode": "fixed" } }]
+            "properties": [{ "id": "color", "value": { "fixedColor": "#5794F2", "mode": "fixed" } }]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (model) (last_over_time(ce_session_cost_usd{project=~\"$project\", model=~\"$model\"}[$__range]))",
+          "expr": "sum by (model) (ce_session_tokens_by_model{project=~\"$project\"})",
           "legendFormat": "{{model}}",
           "refId": "A"
         }
       ]
     },
     {
+      "id": 204,
+      "title": "Token Composition",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "input" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "output" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "cache_read" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#5794F2", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "cache_creation" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "sum by (type) (ce_session_tokens_total{project=~\"$project\",phase=~\"$phase\"})",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
-      "id": 3,
+      "id": 300,
       "panels": [],
       "title": "Velocity",
       "type": "row"
     },
     {
-      "id": 30,
-      "title": "Time-to-Merge Trend",
-      "type": "timeseries",
+      "id": 301,
+      "title": "Turns per Session",
+      "type": "barchart",
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
+        "orientation": "horizontal",
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
         "tooltip": { "mode": "single", "sort": "none" }
       },
       "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "showPoints": "auto"
-          }
-        }
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }
       },
       "targets": [
         {
-          "expr": "last_over_time(ce_phase_duration_seconds{phase=~\"$phase\", pr_number=~\"$pr\"}[$__range])",
-          "legendFormat": "{{pr_number}} - {{phase}}",
+          "expr": "ce_session_turns_total{project=~\"$project\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}} ({{phase}})",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 31,
-      "title": "Phase Duration Breakdown",
-      "type": "barchart",
+      "id": 302,
+      "title": "Turns by Phase",
+      "type": "piechart",
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
-        "orientation": "auto",
-        "stacking": "normal",
-        "xTickLabelRotation": 0,
-        "fillOpacity": 80,
-        "gradientMode": "none",
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": { "mode": "multi", "sort": "none" }
+        "pieType": "pie",
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
       },
       "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": { "mode": "palette-classic" }
-        },
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
         "overrides": [
           {
             "matcher": { "id": "byName", "options": "plan" },
@@ -376,267 +443,179 @@
           {
             "matcher": { "id": "byName", "options": "compound" },
             "properties": [{ "id": "color", "value": { "fixedColor": "#8F3BB8", "mode": "fixed" } }]
-          },
-          {
-            "matcher": { "id": "byName", "options": "adhoc" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#808080", "mode": "fixed" } }]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (phase) (last_over_time(ce_phase_duration_seconds{pr_number=~\"$pr\"}[$__range]))",
+          "expr": "sum by (phase) (ce_session_turns_total{project=~\"$project\",phase=~\"$phase\"})",
           "legendFormat": "{{phase}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 32,
-      "title": "Review Rounds per PR",
-      "type": "barchart",
+      "id": 303,
+      "title": "Avg Agent Duration",
+      "type": "stat",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
-        "orientation": "auto",
-        "xTickLabelRotation": 0,
-        "fillOpacity": 80,
-        "gradientMode": "none",
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "reduceOptions": { "calcs": ["mean"] },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area"
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "color": { "mode": "palette-classic" }
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 120 },
+              { "color": "red", "value": 300 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
         }
       },
       "targets": [
         {
-          "expr": "last_over_time(ce_review_rounds_total{pr_number=~\"$pr\"}[$__range])",
-          "legendFormat": "PR {{pr_number}}",
+          "expr": "ce_agent_duration_seconds_avg{project=~\"$project\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}}",
           "refId": "A"
         }
       ]
     },
+
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
-      "id": 4,
+      "id": 400,
       "panels": [],
       "title": "Quality",
       "type": "row"
     },
     {
-      "id": 40,
+      "id": 401,
       "title": "Findings by Severity",
       "type": "barchart",
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
-        "orientation": "auto",
-        "stacking": "normal",
-        "xTickLabelRotation": 0,
+        "orientation": "horizontal",
         "fillOpacity": 80,
-        "gradientMode": "none",
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": { "mode": "multi", "sort": "none" }
+        "stacking": { "mode": "normal" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
       },
       "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": { "mode": "palette-classic" }
-        },
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "P1" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#E02F44", "mode": "fixed" } }]
+            "matcher": { "id": "byName", "options": "p1" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
           },
           {
-            "matcher": { "id": "byName", "options": "P2" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#FF780A", "mode": "fixed" } }]
+            "matcher": { "id": "byName", "options": "p2" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }]
           },
           {
-            "matcher": { "id": "byName", "options": "P3" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#FADE2A", "mode": "fixed" } }]
+            "matcher": { "id": "byName", "options": "p3" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#5794F2", "mode": "fixed" } }]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (severity, pr_number) (last_over_time(ce_findings_total{pr_number=~\"$pr\"}[$__range]))",
-          "legendFormat": "{{severity}} - PR {{pr_number}}",
+          "expr": "sum by (severity) (ce_findings_total{project=~\"$project\"})",
+          "legendFormat": "{{severity}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 41,
-      "title": "P1 Rate Over Time",
-      "type": "timeseries",
+      "id": 402,
+      "title": "P1 Findings per Session",
+      "type": "barchart",
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
+        "orientation": "horizontal",
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
         "tooltip": { "mode": "single", "sort": "none" }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "mode": "fixed", "fixedColor": "red" },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 20,
-            "showPoints": "auto"
-          }
+          "color": { "fixedColor": "#F2495C", "mode": "fixed" }
         }
       },
       "targets": [
         {
-          "expr": "last_over_time(ce_findings_total{severity=\"P1\", pr_number=~\"$pr\"}[$__range])",
-          "legendFormat": "PR {{pr_number}}",
+          "expr": "ce_findings_total{severity=\"p1\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 42,
-      "title": "Finding Rate per 1K LOC",
-      "type": "timeseries",
+      "id": 403,
+      "title": "Lines Changed per Session",
+      "type": "barchart",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
+        "orientation": "horizontal",
+        "fillOpacity": 80,
+        "stacking": { "mode": "normal" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
         "tooltip": { "mode": "single", "sort": "none" }
       },
       "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "showPoints": "auto"
+        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "added" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "deleted" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
           }
-        }
+        ]
       },
       "targets": [
         {
-          "expr": "sum(last_over_time(ce_findings_total{pr_number=~\"$pr\"}[$__range]))",
-          "legendFormat": "Findings (LOC metric pending)",
+          "expr": "sum by (type) (ce_lines_changed{project=~\"$project\"})",
+          "legendFormat": "{{type}}",
           "refId": "A"
         }
       ]
     },
+
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
-      "id": 5,
+      "id": 500,
       "panels": [],
-      "title": "Knowledge & Agents",
+      "title": "Knowledge Compounding",
       "type": "row"
     },
     {
-      "id": 50,
-      "title": "Stale Todo Rate",
-      "type": "gauge",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 33 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit",
-          "min": 0,
-          "max": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.3 },
-              { "color": "red", "value": 0.6 }
-            ]
-          },
-          "color": { "mode": "thresholds" }
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum(last_over_time(ce_stale_todo_total{pr_number=~\"$pr\"}[$__range])) / (sum(last_over_time(ce_findings_total{pr_number=~\"$pr\"}[$__range])) > 0 or vector(1))",
-          "legendFormat": "Stale Todo Rate",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 51,
-      "title": "Agent Respawn Rate",
-      "type": "gauge",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 33 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit",
-          "min": 0,
-          "max": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.1 },
-              { "color": "red", "value": 0.3 }
-            ]
-          },
-          "color": { "mode": "thresholds" }
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum(last_over_time(ce_agent_respawn_total{}[$__range])) / (sum(last_over_time(ce_agent_spawn_total{}[$__range])) > 0 or vector(1))",
-          "legendFormat": "Respawn Rate",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 52,
-      "title": "Merge Conflict Streak",
+      "id": 501,
+      "title": "Compound Docs",
       "type": "stat",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 33 },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 33 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
         "textMode": "auto",
         "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto"
+        "graphMode": "area"
       },
       "fieldConfig": {
         "defaults": {
@@ -645,8 +624,8 @@
             "mode": "absolute",
             "steps": [
               { "color": "red", "value": null },
-              { "color": "yellow", "value": 3 },
-              { "color": "green", "value": 5 }
+              { "color": "yellow", "value": 5 },
+              { "color": "green", "value": 20 }
             ]
           },
           "color": { "mode": "thresholds" }
@@ -654,33 +633,190 @@
       },
       "targets": [
         {
-          "expr": "max(last_over_time(ce_merge_conflict_total{}[$__range]))",
-          "legendFormat": "Conflict-Free Sprints",
+          "expr": "ce_compound_docs_total{project=~\"$project\"}",
+          "legendFormat": "Compound Docs",
           "refId": "A"
         }
       ]
     },
     {
+      "id": 502,
+      "title": "Pattern Count",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 33 },
+      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "green", "value": 500 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "ce_pattern_count{project=~\"$project\"}",
+          "legendFormat": "Lines in common-solutions.md",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 41 },
-      "id": 6,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 },
+      "id": 600,
+      "panels": [],
+      "title": "Agent Efficiency",
+      "type": "row"
+    },
+    {
+      "id": 601,
+      "title": "Agents per Session",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "options": {
+        "orientation": "horizontal",
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "#73BF69", "mode": "fixed" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "ce_session_agents_total{project=~\"$project\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}} ({{phase}})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 602,
+      "title": "Tasks per Session",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "options": {
+        "orientation": "horizontal",
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "#8F3BB8", "mode": "fixed" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "ce_session_tasks_total{project=~\"$project\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}} ({{phase}})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 603,
+      "title": "Commits per Session",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "options": {
+        "orientation": "horizontal",
+        "fillOpacity": 80,
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "#FF9830", "mode": "fixed" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "ce_session_commits_total{project=~\"$project\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}} ({{phase}})",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 48 },
+      "id": 700,
       "panels": [],
       "title": "Active Session",
       "type": "row"
     },
     {
-      "id": 60,
-      "title": "Current Session Cost",
+      "id": 701,
+      "title": "Current Phase",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 42 },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 49 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
+        "textMode": "name",
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          },
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "plan", "index": 0 } } },
+            { "type": "value", "options": { "2": { "text": "work", "index": 1 } } },
+            { "type": "value", "options": { "3": { "text": "review", "index": 2 } } },
+            { "type": "value", "options": { "4": { "text": "compound", "index": 3 } } },
+            { "type": "value", "options": { "5": { "text": "adhoc", "index": 4 } } }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "expr": "ce_session_tokens_total{type=\"input\",project=~\"$project\"} * 0 + 1",
+          "legendFormat": "{{phase}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 702,
+      "title": "Session Cost",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 49 },
+      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
         "textMode": "auto",
         "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto"
+        "graphMode": "area"
       },
       "fieldConfig": {
         "defaults": {
@@ -706,57 +842,16 @@
       ]
     },
     {
-      "id": 61,
-      "title": "Current Phase",
-      "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 42 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
-        "textMode": "name",
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [{ "color": "blue", "value": null }]
-          },
-          "color": { "mode": "thresholds" },
-          "mappings": [
-            { "type": "value", "options": { "1": { "text": "plan", "index": 0 } } },
-            { "type": "value", "options": { "2": { "text": "work", "index": 1 } } },
-            { "type": "value", "options": { "3": { "text": "review", "index": 2 } } },
-            { "type": "value", "options": { "4": { "text": "compound", "index": 3 } } },
-            { "type": "value", "options": { "5": { "text": "adhoc", "index": 4 } } }
-          ]
-        }
-      },
-      "targets": [
-        {
-          "expr": "ce_session_tokens_total{type=\"input\"} * 0 + 1",
-          "legendFormat": "{{phase}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 62,
+      "id": 703,
       "title": "Tokens This Session",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 42 },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 49 },
       "datasource": { "type": "prometheus", "uid": "-- Default --" },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "orientation": "auto",
         "textMode": "auto",
         "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto"
+        "graphMode": "area"
       },
       "fieldConfig": {
         "defaults": {
@@ -778,13 +873,6 @@
           "legendFormat": "Total Tokens",
           "refId": "A"
         }
-      ],
-      "links": [
-        {
-          "title": "Drill down by PR",
-          "url": "d/ce-metrics-main?var-pr=${__data.fields.pr_number}",
-          "targetBlank": false
-        }
       ]
     }
   ],
@@ -803,24 +891,10 @@
         "skipUrlSync": false
       },
       {
-        "name": "pr",
-        "label": "PR Number",
-        "type": "query",
-        "datasource": { "type": "prometheus", "uid": "-- Default --" },
-        "query": "label_values(ce_session_cost_usd, pr_number)",
-        "includeAll": true,
-        "allValue": ".*",
-        "multi": false,
-        "sort": 3,
-        "hide": 0,
-        "skipUrlSync": false,
-        "refresh": 2
-      },
-      {
         "name": "phase",
         "label": "Phase",
         "type": "custom",
-        "query": "plan,work,review,compound,adhoc",
+        "query": "plan,work,review,compound,brainstorm,adhoc",
         "includeAll": true,
         "multi": true,
         "hide": 0,
@@ -831,43 +905,10 @@
           { "text": "work", "value": "work" },
           { "text": "review", "value": "review" },
           { "text": "compound", "value": "compound" },
+          { "text": "brainstorm", "value": "brainstorm" },
           { "text": "adhoc", "value": "adhoc" }
         ],
         "skipUrlSync": false
-      },
-      {
-        "name": "model",
-        "label": "Model",
-        "type": "query",
-        "datasource": { "type": "prometheus", "uid": "-- Default --" },
-        "query": "label_values(ce_session_cost_usd, model)",
-        "includeAll": true,
-        "multi": true,
-        "hide": 0,
-        "skipUrlSync": false,
-        "refresh": 2
-      },
-      {
-        "name": "timeRange",
-        "label": "Time Range",
-        "type": "interval",
-        "query": "5m,15m,1h,6h,12h,1d,7d,30d,90d",
-        "auto": true,
-        "auto_count": 30,
-        "current": { "text": "1h", "value": "1h" },
-        "hide": 0,
-        "skipUrlSync": false,
-        "options": [
-          { "text": "5m", "value": "5m" },
-          { "text": "15m", "value": "15m" },
-          { "text": "1h", "value": "1h", "selected": true },
-          { "text": "6h", "value": "6h" },
-          { "text": "12h", "value": "12h" },
-          { "text": "1d", "value": "1d" },
-          { "text": "7d", "value": "7d" },
-          { "text": "30d", "value": "30d" },
-          { "text": "90d", "value": "90d" }
-        ]
       }
     ]
   },
@@ -885,31 +926,6 @@
     ]
   },
   "tags": ["ce-metrics", "compound-engineering"],
-  "description": "Compound Engineering Metrics Dashboard — tracks cost, velocity, quality, and knowledge compounding across CE sessions",
-  "links": [
-    {
-      "title": "Drill down: PR",
-      "type": "dashboards",
-      "icon": "external link",
-      "url": "d/ce-metrics-main?var-pr=${__data.fields.pr_number}",
-      "tooltip": "Filter by PR number",
-      "targetBlank": false,
-      "asDropdown": false,
-      "includeVars": true,
-      "keepTime": true,
-      "tags": ["ce-metrics"]
-    },
-    {
-      "title": "Drill down: Phase",
-      "type": "dashboards",
-      "icon": "external link",
-      "url": "d/ce-metrics-main?var-phase=${__data.fields.phase}",
-      "tooltip": "Filter by phase",
-      "targetBlank": false,
-      "asDropdown": false,
-      "includeVars": true,
-      "keepTime": true,
-      "tags": ["ce-metrics"]
-    }
-  ]
+  "description": "Compound Engineering Metrics — 5 dimensions: Cost Efficiency, Velocity, Quality, Knowledge Compounding, Agent Efficiency",
+  "links": []
 }

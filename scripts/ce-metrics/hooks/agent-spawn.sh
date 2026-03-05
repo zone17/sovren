@@ -5,13 +5,10 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-ce_check_disabled
+ce_init
 
-# Read input JSON from stdin
-input=$(cat)
-session_id=$(echo "$input" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
-agent_id=$(echo "$input" | jq -r '.agent_id // "unknown"' 2>/dev/null || echo "unknown")
-agent_type=$(echo "$input" | jq -r '.agent_type // "unknown"' 2>/dev/null || echo "unknown")
+agent_id=$(ce_get_field "$input" ".agent_id" "unknown")
+agent_type=$(ce_get_field "$input" ".agent_type" "unknown")
 
 emit_event "agent_spawn" \
   "$(jq -cn --arg aid "$agent_id" --arg atype "$agent_type" '{agent_id: $aid, agent_type: $atype}')" \

@@ -5,12 +5,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-ce_check_disabled
+ce_init
 
-# Read input JSON from stdin
-input=$(cat)
-session_id=$(echo "$input" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
-transcript_path=$(echo "$input" | jq -r '.transcript_path // ""' 2>/dev/null || echo "")
+transcript_path=$(ce_get_field "$input" ".transcript_path" "")
 
 [ -n "$transcript_path" ] || exit 0
 

@@ -1,271 +1,227 @@
 # CE Metrics Dashboard
 
-Compound Engineering (CE) metrics pipeline: session-level token/cost tracking → Pushgateway → Prometheus → Grafana.
-
----
-
-## Quick Start
-
-```bash
-# Start monitoring stack (Prometheus + Pushgateway + Grafana)
-docker compose -f docker-compose.dev.yml --profile monitoring up -d
-
-# Install CE hook scripts (one-time setup)
-bash scripts/ce-metrics/install-hooks.sh
-
-# Push synthetic data to verify dashboard renders
-bash scripts/ce-metrics/seed-test-data.sh
-
-# Open dashboard
-open http://localhost:3002
-```
-
-> Grafana runs at **port 3002** (not 3001). Anonymous access is enabled — no login required.
-
----
+Track Compound Engineering session metrics across **5 dimensions**: Cost Efficiency, Velocity, Quality, Knowledge Compounding, and Agent Efficiency.
 
 ## Architecture
 
 ```
-Claude Code session
-       │
-       ▼ (bash hooks in ~/.claude/hooks/ce-metrics/)
-~/.claude/metrics/ce-events.jsonl    ← structured event log (~140KB typical)
-       │
-       ▼ (session-end.sh aggregates, curl pushes)
-Pushgateway :9091
-       │
-       ▼ (Prometheus scrapes every 15s)
-Prometheus :9090
-       │
-       ▼
-Grafana :3002  →  CE Metrics Dashboard
+Claude Code Hooks → JSONL → session-end.sh → Pushgateway → Prometheus → Grafana
+                              ↑
+Workflow Hooks → set-phase.sh ┘ (preserves session_id/branch in ce-phase.json)
 ```
 
-**Key design principle**: session-end.sh reads from `ce-events.jsonl` (~140KB), never from the transcript (up to 723MB). All per-turn events are accumulated in the JSONL file during the session.
+Hooks fire on lifecycle events (session start/end, turns, agent spawn/complete, git commands, task completion). Events append to `~/.claude/metrics/ce-events.jsonl`. At session end, `session-end.sh` aggregates all events and pushes ~20 metrics to Pushgateway.
 
----
+Workflow commands (`/workflows:plan`, `/workflows:work`, etc.) call `set-phase.sh` to update the current CE phase without overwriting session metadata.
 
-## Hook Scripts
+## Setup
 
-All hooks live in `scripts/ce-metrics/hooks/` (canonical) and are installed to `~/.claude/hooks/ce-metrics/`.
+### Prerequisites
 
-| Script              | Trigger           | Timeout    | Purpose                                                 |
-| ------------------- | ----------------- | ---------- | ------------------------------------------------------- |
-| `session-start.sh`  | SessionStart      | 5s (sync)  | Initialize `ce-phase.json`, rotate JSONL if >10MB       |
-| `turn-complete.sh`  | Stop              | async      | Parse last-turn tokens from transcript via `tail -1`    |
-| `agent-spawn.sh`    | SubagentStart     | async      | Emit `agent_spawn` event with agent_id + agent_type     |
-| `agent-complete.sh` | SubagentStop      | 15s (sync) | Aggregate agent transcript tokens + duration            |
-| `git-event.sh`      | PostToolUse[Bash] | async      | Classify git commands by first 30 chars only (security) |
-| `task-complete.sh`  | TaskCompleted     | async      | Emit `task_complete` with sanitized subject             |
-| `session-end.sh`    | SessionEnd        | 60s (sync) | Aggregate JSONL → push Prometheus gauges to Pushgateway |
+- Docker Desktop running
+- jq installed (`brew install jq`)
+- Claude Code with hooks support
 
-### lib.sh — Shared Functions
-
-`scripts/ce-metrics/hooks/lib.sh` is sourced by all hooks. Key functions:
-
-- `ce_check_disabled()` — exits 0 if `~/.claude/metrics/.disabled` exists
-- `emit_event()` — appends JSON line to `ce-events.jsonl` atomically via `{ printf '%s\n' "$json"; }`
-- `get_phase()` — reads `ce-phase.json` via `jq` (python3 fallback)
-- `parse_last_turn_tokens()` — `tail -1 transcript | jq -c` (O(1), never reads full file)
-- `push_to_gateway()` — curl with 2s connect / 5s max; saves to `pending/` on failure
-- `replay_pending()` — called on next successful push to drain failed payloads
-- `sanitize_subject()` — strips `key=VALUE` patterns and 40+ char base64 strings
-
-### Phase Detection
-
-CE workflow phase (`plan`, `work`, `review`, `compound`, `adhoc`) is set by the workflow skill files:
-
-- `/workflows:plan` → writes `{"phase":"plan",...}` to `ce-phase.json`
-- `/workflows:work` → `{"phase":"work",...}`
-- `/workflows:review` → `{"phase":"review",...}`
-- `/workflows:compound` → `{"phase":"compound",...}`
-
-If no CE skill is invoked, all events are tagged `adhoc`. session-end.sh warns to stderr if >90% of events are `adhoc`.
-
-### Disable Toggle
+### Install
 
 ```bash
-# Disable all metrics collection
-touch ~/.claude/metrics/.disabled
+# Start monitoring stack
+docker compose -f docker-compose.dev.yml up -d prometheus pushgateway grafana
 
-# Re-enable
+# Install hooks
+bash scripts/ce-metrics/install-hooks.sh
+
+# Verify installation
+bash scripts/ce-metrics/check-health.sh
+```
+
+### Verify with Seed Data
+
+```bash
+# Push synthetic metrics for 3 PRs across all 5 dimensions
+bash scripts/ce-metrics/seed-test-data.sh
+
+# Open Grafana
+open http://localhost:3002
+```
+
+All 22 panels should render with data (no "No data" panels).
+
+### Verify with Real Session
+
+Run a Claude Code session with `/workflows:plan`. After the session ends:
+
+1. Check `~/.claude/metrics/ce-events.jsonl` — events should have correct `phase` (not all `adhoc`)
+2. Check `~/.claude/metrics/ce-phase.json` — should have `session_id`, `branch`, `pr_number`
+3. Metrics appear in Grafana within 5 minutes (dashboard refresh interval)
+
+## 5 Dimensions
+
+### 1. Cost Efficiency
+
+How much does each session/PR cost?
+
+| Metric                              | Type  | Description                                                                   |
+| ----------------------------------- | ----- | ----------------------------------------------------------------------------- |
+| `ce_session_cost_usd`               | gauge | Multi-model session cost (Opus $15/$75, Sonnet $3/$15, Haiku $0.80/$4 per 1M) |
+| `ce_session_tokens_total{type}`     | gauge | Token usage by type (input, output, cache_read, cache_creation)               |
+| `ce_session_tokens_by_model{model}` | gauge | Per-model token breakdown                                                     |
+
+### 2. Velocity
+
+How fast are sessions completing?
+
+| Metric                   | Type  | Description                    |
+| ------------------------ | ----- | ------------------------------ |
+| `ce_session_turns_total` | gauge | Number of API turns in session |
+
+### 3. Quality
+
+What is the defect density?
+
+| Metric                        | Type  | Description                              |
+| ----------------------------- | ----- | ---------------------------------------- |
+| `ce_findings_total{severity}` | gauge | Review findings by severity (p1, p2, p3) |
+| `ce_lines_changed{type}`      | gauge | Lines added/deleted vs origin/main       |
+
+### 4. Knowledge Compounding
+
+Is the team getting smarter?
+
+| Metric                   | Type  | Description                                                 |
+| ------------------------ | ----- | ----------------------------------------------------------- |
+| `ce_compound_docs_total` | gauge | Count of docs in `docs/solutions/`                          |
+| `ce_pattern_count`       | gauge | Line count of `common-solutions.md` (pattern density proxy) |
+
+### 5. Agent Efficiency
+
+Are agents productive?
+
+| Metric                          | Type  | Description                   |
+| ------------------------------- | ----- | ----------------------------- |
+| `ce_session_agents_total`       | gauge | Agents spawned per session    |
+| `ce_session_tasks_total`        | gauge | Tasks completed per session   |
+| `ce_session_commits_total`      | gauge | Git commits per session       |
+| `ce_agent_duration_seconds_avg` | gauge | Average agent completion time |
+
+**All metrics include labels:** `session`, `phase`, `project`, `pr_number`
+
+## Dashboard Panels (22 panels, 7 rows)
+
+### Row 0: Executive KPIs (6 panels)
+
+- **Total Cost** — aggregate USD
+- **Cost Trend** — sparkline per session
+- **PRs Tracked** — distinct PR count
+- **Avg Turns/Session** — velocity indicator
+- **P1 Findings** — critical defect count with sparkline
+- **Cache Efficiency** — cache_read / (input + cache_read) gauge
+
+### Row 1: Cost Efficiency (4 panels)
+
+- **Cost per Session** — bar chart
+- **Cost by Phase** — pie chart (plan/work/review/compound/adhoc)
+- **Cost by Model** — pie chart (opus/sonnet/haiku)
+- **Token Composition** — bar gauge (input/output/cache_read/cache_creation)
+
+### Row 2: Velocity (3 panels)
+
+- **Turns per Session** — bar chart
+- **Turns by Phase** — pie chart
+- **Avg Agent Duration** — stat with trend
+
+### Row 3: Quality (3 panels)
+
+- **Findings by Severity** — stacked bar (P1/P2/P3)
+- **P1 Findings per Session** — bar chart
+- **Lines Changed per Session** — stacked bar (added/deleted)
+
+### Row 4: Knowledge Compounding (2 panels)
+
+- **Compound Docs** — stat with trend
+- **Pattern Count** — stat with trend
+
+### Row 5: Agent Efficiency (3 panels)
+
+- **Agents per Session** — bar chart
+- **Tasks per Session** — bar chart
+- **Commits per Session** — bar chart
+
+### Row 6: Active Session (3 panels)
+
+- **Current Phase** — plan/work/review/compound/brainstorm/adhoc
+- **Session Cost** — USD estimate
+- **Tokens This Session** — total tokens
+
+## Configuration
+
+| Setting             | Location                      | Default                 |
+| ------------------- | ----------------------------- | ----------------------- |
+| Pushgateway URL     | `PUSHGATEWAY_URL` env var     | `http://localhost:9091` |
+| Grafana port        | `docker-compose.dev.yml`      | 3002                    |
+| Dashboard refresh   | `ce-metrics-main.json`        | 5 minutes               |
+| JSONL rotation      | lib.sh `rotate_jsonl()`       | 10MB                    |
+| Pending file expiry | lib.sh `replay_pending()`     | 24 hours                |
+| Disable metrics     | `~/.claude/metrics/.disabled` | enabled                 |
+
+## Troubleshooting
+
+**No data in Grafana**
+
+1. Run `bash scripts/ce-metrics/seed-test-data.sh` to push synthetic data
+2. Run `bash scripts/ce-metrics/check-health.sh`
+3. Check Pushgateway has data: `curl http://localhost:9091/api/v1/metrics`
+4. Check Prometheus targets: `http://localhost:9090/targets`
+5. Check `~/.claude/metrics/ce-events.jsonl` has entries
+
+**All events show phase "adhoc"**
+
+- Verify workflow hooks call `set-phase.sh` (not inline `echo`)
+- Check `~/.claude/hooks/ce-metrics/set-phase.sh` exists and is executable
+- Verify `~/.claude/metrics/ce-phase.json` has `session_id` field (set-phase.sh preserves it)
+
+**Token data is all zeros**
+
+- Check `turn-complete.sh` is registered in settings.json
+- Verify transcript path is accessible: `cat ~/.claude/metrics/ce-events.jsonl | jq 'select(.type=="turn_complete")'`
+- Transcript format may vary — check `parse_last_turn_tokens()` in lib.sh
+
+**Cost seems wrong**
+
+- `compute_cost()` uses multi-model pricing — verify model names in JSONL match patterns (opus/sonnet/haiku)
+- Unknown models default to Opus pricing
+
+**Metrics disabled**
+
+```bash
 rm ~/.claude/metrics/.disabled
 ```
 
----
-
-## Event Log Format
-
-Events are appended to `~/.claude/metrics/ce-events.jsonl` (one JSON object per line):
-
-```jsonl
-{"type":"session_start","timestamp":"2026-03-04T22:00:00Z","session_id":"abc123","phase":"adhoc","project":"Sovren"}
-{"type":"turn_complete","timestamp":"2026-03-04T22:00:05Z","session_id":"abc123","phase":"plan","project":"Sovren","input_tokens":1500,"output_tokens":300,"cache_read_tokens":200,"model":"claude-opus-4-6"}
-{"type":"agent_spawn","timestamp":"2026-03-04T22:01:00Z","session_id":"abc123","phase":"work","project":"Sovren","agent_id":"agent-xyz","agent_type":"backend"}
-{"type":"agent_complete","timestamp":"2026-03-04T22:05:00Z","session_id":"abc123","phase":"work","project":"Sovren","agent_id":"agent-xyz","agent_type":"backend","input_tokens":45000,"output_tokens":8200,"turns":18,"duration_seconds":240}
-{"type":"git_commit","timestamp":"2026-03-04T22:06:00Z","session_id":"abc123","phase":"work","project":"Sovren","pr_number":""}
-{"type":"task_complete","timestamp":"2026-03-04T22:06:30Z","session_id":"abc123","phase":"work","project":"Sovren","task_id":"7","task_subject":"Create session-start.sh","team_name":"squad-a"}
-```
-
-The file rotates to `ce-events.jsonl.1` when it exceeds 10MB.
-
----
-
-## Prometheus Metrics
-
-All metrics are pushed as **gauges** (not counters — pushgateway gauges don't support `rate()`/`increase()`).
-
-| Metric                     | Labels                                               | Description             |
-| -------------------------- | ---------------------------------------------------- | ----------------------- |
-| `ce_session_tokens_total`  | `type` (input/output), `session`, `phase`, `project` | Token count for session |
-| `ce_session_turns_total`   | `session`, `phase`, `project`                        | Turn count              |
-| `ce_session_agents_total`  | `session`, `phase`, `project`                        | Agents spawned          |
-| `ce_session_tasks_total`   | `session`, `phase`, `project`                        | Tasks completed         |
-| `ce_session_commits_total` | `session`, `phase`, `project`                        | Git commits             |
-
-Metrics are pushed per-session to `http://localhost:9091/metrics/job/ce_session/instance/{session_short}`.
-
----
-
-## Dashboard — 6 Rows, 19 Panels
-
-Access at **http://localhost:3002** → CE Metrics Dashboard.
-
-### Template Variables
-
-| Variable      | Source                          | Description                   |
-| ------------- | ------------------------------- | ----------------------------- |
-| `$project`    | `ce_session_tokens_total` label | Filter by project             |
-| `$phase`      | `ce_session_tokens_total` label | Filter by CE phase            |
-| `$session`    | `ce_session_tokens_total` label | Drill into single session     |
-| `$time_range` | Built-in                        | Grafana time range            |
-| `$interval`   | Built-in                        | Auto interval for time series |
-
-### Row 1 — Project-Level KPIs (4 stat panels)
-
-| Panel             | Query                                                                                                       |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- |
-| Total Cost        | `sum(ce_session_tokens_total{type="input"} * 0.000015 + ce_session_tokens_total{type="output"} * 0.000075)` |
-| PRs Merged        | `sum(ce_session_commits_total)`                                                                             |
-| Avg Time-to-Merge | Derived from session duration (turns × avg turn time)                                                       |
-| P1 Count          | Static annotation (from `todos/` review files)                                                              |
-
-### Row 2 — Cost Efficiency (3 panels)
-
-- **Cost per PR** (bar chart) — cost broken down by session
-- **Cost by CE Phase** (pie chart) — tokens by phase label
-- **Cost by Model** (pie chart) — tokens by model label (requires `model` label in metrics)
-
-### Row 3 — Velocity (3 panels)
-
-- **Time-to-Merge Trend** (time series) — session duration over time
-- **Phase Duration Breakdown** (bar chart) — time spent per CE phase
-- **Review Rounds per PR** (bar chart) — agent spawns per session
-
-### Row 4 — Quality (3 panels)
-
-- **Findings by Severity** (bar chart) — P1/P2/P3 counts from review events
-- **P1 Rate Over Time** (time series) — P1 findings per session over time
-- **Finding Rate per 1K LOC** (time series) — quality density trend
-
-### Row 5 — Knowledge & Agents (3 panels)
-
-- **Stale Todo Rate** (gauge) — % of todos resolved without code (triage-first metric)
-- **Agent Respawn Rate** (gauge) — agent_complete without prior agent_spawn
-- **Merge Conflict Streak** (stat) — consecutive sessions with 0 conflicts
-
-### Row 6 — Active Session (3 stat panels, auto-refresh 15s)
-
-| Panel                | Metric                                                   |
-| -------------------- | -------------------------------------------------------- |
-| Current Session Cost | `ce_session_tokens_total{session=~"$session"}` × price   |
-| Current Phase        | `ce_session_tokens_total` phase label for latest session |
-| Tokens This Session  | `sum(ce_session_tokens_total{session=~"$session"})`      |
-
----
-
-## File Layout
-
-```
-scripts/ce-metrics/
-├── hooks/                          # Canonical hook sources (version-controlled)
-│   ├── lib.sh                      # Shared functions
-│   ├── session-start.sh
-│   ├── turn-complete.sh
-│   ├── agent-spawn.sh
-│   ├── agent-complete.sh
-│   ├── git-event.sh
-│   ├── task-complete.sh
-│   └── session-end.sh
-├── install-hooks.sh                # Copy hooks to ~/.claude/hooks/ce-metrics/ + patch settings.json
-├── test-hooks.sh                   # Test harness (25 tests)
-└── seed-test-data.sh               # Push synthetic data to Pushgateway
-
-monitoring/
-├── prometheus.yml                  # Scrape config (Pushgateway + self)
-└── grafana/
-    ├── provisioning/
-    │   ├── datasources/            # Prometheus datasource auto-provisioning
-    │   └── dashboards/             # Dashboard folder auto-provisioning
-    └── dashboards/
-        └── ce-metrics-main.json    # Main dashboard (19 panels)
-
-~/.claude/
-├── hooks/ce-metrics/               # Installed hooks (copied from scripts/ce-metrics/hooks/)
-├── metrics/
-│   ├── ce-events.jsonl             # Event log (rotates at 10MB → ce-events.jsonl.1)
-│   ├── ce-phase.json               # Current session phase state
-│   ├── pending/                    # Failed Pushgateway payloads (replayed automatically)
-│   └── .disabled                  # Touch to disable all metrics collection
-└── settings.json                   # Hook registrations (7 CE hooks + 3 existing hooks)
-```
-
----
-
-## Operations
-
-### Updating Hooks
-
-After editing any file in `scripts/ce-metrics/hooks/`:
+**Stale pending files**
 
 ```bash
-bash scripts/ce-metrics/install-hooks.sh
+rm -f ~/.claude/metrics/pending/*.prom ~/.claude/metrics/pending/*.meta
 ```
 
-The install script is idempotent — safe to run multiple times.
+## Hook API Reference
 
-### Testing Hooks
+| Hook Event        | Script            | Trigger                                       |
+| ----------------- | ----------------- | --------------------------------------------- |
+| SessionStart      | session-start.sh  | Session begins (creates ce-phase.json)        |
+| Stop              | turn-complete.sh  | Each API turn completes                       |
+| SubagentStart     | agent-spawn.sh    | Agent spawned                                 |
+| SubagentStop      | agent-complete.sh | Agent completes                               |
+| PostToolUse[Bash] | git-event.sh      | After any Bash tool call                      |
+| TaskCompleted     | task-complete.sh  | Task marked complete                          |
+| SessionEnd        | session-end.sh    | Session ends (aggregates + pushes)            |
+| Workflow hooks    | set-phase.sh      | Phase transition (preserves session metadata) |
 
-```bash
-bash scripts/ce-metrics/test-hooks.sh
-# Expected: Passed: 25, Failed: 0
-```
+## Deferred Metrics (Phase 2)
 
-### Seeding Test Data
+These require infrastructure beyond session hooks:
 
-```bash
-# Requires Pushgateway running
-bash scripts/ce-metrics/seed-test-data.sh
-```
-
-Pushes 5 synthetic sessions (plan/work/review/compound/adhoc phases) to verify all dashboard panels render with data.
-
-### Troubleshooting
-
-**Hooks not firing**: Check `~/.claude/settings.json` has the 7 CE hook entries. Re-run `install-hooks.sh`.
-
-**No data in Grafana**: Verify Pushgateway is reachable: `curl http://localhost:9091/metrics`. Check `~/.claude/metrics/pending/` for failed payloads.
-
-**All events tagged `adhoc`**: The CE workflow skills (plan/work/review/compound) write `ce-phase.json` on invocation. If using `/workflows:plan` etc., verify the frontmatter hooks are present in the skill files.
-
-**Grafana shows "No data"**: Prometheus scrapes Pushgateway every 15s. After pushing, wait up to 30s before data appears. Verify datasource at http://localhost:3002/connections/datasources.
-
----
-
-## Security Notes
-
-- `git-event.sh` reads only the first 30 characters of `tool_input.command` via `case` match — the full command is never stored or logged.
-- `task-complete.sh` runs `sanitize_subject()` before emitting — strips `key=VALUE` patterns and 40+ char base64 strings from task subjects.
-- Hooks never read `tool_result`, `message` content, or any user data — only numeric metadata and command prefixes.
-- Pushgateway is bound to `127.0.0.1` (localhost only) in docker-compose.dev.yml.
+- Line survival rate (30-day git blame — needs cron)
+- Rework rate (cross-PR change detection — needs backfill script)
+- CI recovery time (GitHub Actions API — needs polling)
+- Test coverage delta (coverage report parsing)
+- PRs merged per day (GitHub API or webhook)

@@ -6,16 +6,11 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-ce_check_disabled
-
-# Read input JSON from stdin
-input=$(cat)
+ce_init
 
 # Fast-exit: only process Bash tool events
-tool_name=$(echo "$input" | jq -r '.tool_name // ""' 2>/dev/null || echo "")
+tool_name=$(ce_get_field "$input" ".tool_name" "")
 [ "$tool_name" = "Bash" ] || exit 0
-
-session_id=$(echo "$input" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
 
 # Extract ONLY the first few words of the command for classification
 # NEVER store or log the full command

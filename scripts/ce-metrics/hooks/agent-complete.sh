@@ -5,34 +5,31 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-ce_check_disabled
+ce_init
 
-# Read input JSON from stdin
-input=$(cat)
-session_id=$(echo "$input" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
-agent_id=$(echo "$input" | jq -r '.agent_id // "unknown"' 2>/dev/null || echo "unknown")
-agent_type=$(echo "$input" | jq -r '.agent_type // "unknown"' 2>/dev/null || echo "unknown")
-agent_transcript=$(echo "$input" | jq -r '.agent_transcript_path // ""' 2>/dev/null || echo "")
+agent_id=$(ce_get_field "$input" ".agent_id" "unknown")
+agent_type=$(ce_get_field "$input" ".agent_type" "unknown")
+agent_transcript=$(ce_get_field "$input" ".agent_transcript_path" "")
 
-# Parse agent transcript for token totals
+# Parse agent transcript with single-pass jq -s (fixes #682 line-by-line parsing)
 total_input=0
 total_output=0
 turns=0
 first_ts=""
 last_ts=""
 
-if [ -n "$agent_transcript" ] && [ -f "$agent_transcript" ] && command -v jq &>/dev/null; then
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    it=$(echo "$line" | jq -r '.usage.input_tokens // 0' 2>/dev/null || echo 0)
-    ot=$(echo "$line" | jq -r '.usage.output_tokens // 0' 2>/dev/null || echo 0)
-    ts=$(echo "$line" | jq -r '.timestamp // ""' 2>/dev/null || echo "")
-    total_input=$((total_input + it))
-    total_output=$((total_output + ot))
-    turns=$((turns + 1))
-    [ -z "$first_ts" ] && first_ts="$ts"
-    last_ts="$ts"
-  done < "$agent_transcript"
+if [ -n "$agent_transcript" ] && [ -f "$agent_transcript" ]; then
+  read -r total_input total_output turns first_ts last_ts < <(
+    jq -sr '
+      {
+        input: ([.[].usage.input_tokens // 0] | add // 0),
+        output: ([.[].usage.output_tokens // 0] | add // 0),
+        turns: length,
+        first_ts: (first.timestamp // ""),
+        last_ts: (last.timestamp // "")
+      } | "\(.input) \(.output) \(.turns) \(.first_ts) \(.last_ts)"
+    ' "$agent_transcript" 2>/dev/null || echo "0 0 0  "
+  )
 fi
 
 # Calculate duration in seconds (approximate from timestamps)

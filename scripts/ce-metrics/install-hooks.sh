@@ -21,127 +21,82 @@ chmod +x "$HOOKS_DEST"/*.sh
 echo "Copied hooks to $HOOKS_DEST"
 ls -la "$HOOKS_DEST/"
 
-# 3. Patch settings.json — add hook registrations if not already present
+# 3. Patch settings.json — check each hook entry individually (#688)
 if [ ! -f "$SETTINGS_FILE" ]; then
   echo "ERROR: $SETTINGS_FILE not found"
   exit 1
 fi
 
-# Check if CE metrics hooks are already registered
-if grep -q "ce-metrics" "$SETTINGS_FILE" 2>/dev/null; then
-  echo "CE metrics hooks already registered in settings.json — skipping"
-  exit 0
-fi
+# Backup settings before modification
+cp "$SETTINGS_FILE" "$SETTINGS_FILE.bak"
+echo "Backed up settings.json to $SETTINGS_FILE.bak"
 
-echo "Patching settings.json..."
+# Define hook registrations as (event|matcher|command|timeout) tuples
+declare -a HOOKS=(
+  "SessionStart||bash ~/.claude/hooks/ce-metrics/session-start.sh|5000"
+  "Stop||bash ~/.claude/hooks/ce-metrics/turn-complete.sh|"
+  "SubagentStart||bash ~/.claude/hooks/ce-metrics/agent-spawn.sh|"
+  "SubagentStop||bash ~/.claude/hooks/ce-metrics/agent-complete.sh|15000"
+  "PostToolUse|Bash|bash ~/.claude/hooks/ce-metrics/git-event.sh|"
+  "TaskCompleted||bash ~/.claude/hooks/ce-metrics/task-complete.sh|"
+  "SessionEnd||bash ~/.claude/hooks/ce-metrics/session-end.sh|60000"
+)
 
-# Use jq to add hook entries additively
 tmp_file=$(mktemp)
+cp "$SETTINGS_FILE" "$tmp_file"
 
-jq '
-  # SessionStart hook
-  .hooks.SessionStart = (.hooks.SessionStart // []) + [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash ~/.claude/hooks/ce-metrics/session-start.sh",
-          "timeout": 5000
-        }
-      ]
-    }
-  ] |
+needs_update=false
 
-  # Stop hook (async, no timeout = fire-and-forget)
-  .hooks.Stop = (.hooks.Stop // []) + [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash ~/.claude/hooks/ce-metrics/turn-complete.sh"
-        }
-      ]
-    }
-  ] |
+for hook_def in "${HOOKS[@]}"; do
+  IFS='|' read -r event matcher command timeout <<< "$hook_def"
 
-  # SubagentStart hook
-  .hooks.SubagentStart = (.hooks.SubagentStart // []) + [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash ~/.claude/hooks/ce-metrics/agent-spawn.sh"
-        }
-      ]
-    }
-  ] |
+  # Check if this specific command is already registered
+  if grep -q "$command" "$tmp_file" 2>/dev/null; then
+    echo "  Already registered: $event -> $command"
+    continue
+  fi
 
-  # SubagentStop hook
-  .hooks.SubagentStop = (.hooks.SubagentStop // []) + [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash ~/.claude/hooks/ce-metrics/agent-complete.sh",
-          "timeout": 15000
-        }
-      ]
-    }
-  ] |
+  needs_update=true
+  echo "  Adding: $event -> $command"
 
-  # PostToolUse Bash hook — add alongside existing PostToolUse entries
-  .hooks.PostToolUse = (.hooks.PostToolUse // []) + [
-    {
-      "matcher": "Bash",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash ~/.claude/hooks/ce-metrics/git-event.sh"
-        }
-      ]
-    }
-  ] |
+  # Build the hook entry JSON
+  hook_json="{\"type\":\"command\",\"command\":\"$command\""
+  [ -n "$timeout" ] && hook_json="$hook_json,\"timeout\":$timeout"
+  hook_json="$hook_json}"
 
-  # TaskCompleted hook — add alongside existing verify-task-complete.sh
-  .hooks.TaskCompleted = (.hooks.TaskCompleted // []) + [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash ~/.claude/hooks/ce-metrics/task-complete.sh"
-        }
-      ]
-    }
-  ] |
+  # Build the registration JSON
+  if [ -n "$matcher" ]; then
+    reg_json="{\"matcher\":\"$matcher\",\"hooks\":[$hook_json]}"
+  else
+    reg_json="{\"hooks\":[$hook_json]}"
+  fi
 
-  # SessionEnd hook
-  .hooks.SessionEnd = (.hooks.SessionEnd // []) + [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash ~/.claude/hooks/ce-metrics/session-end.sh",
-          "timeout": 60000
-        }
-      ]
-    }
-  ]
-' "$SETTINGS_FILE" > "$tmp_file"
+  # Add to settings using jq
+  jq --arg event "$event" --argjson reg "$reg_json" '
+    .hooks[$event] = (.hooks[$event] // []) + [$reg]
+  ' "$tmp_file" > "$tmp_file.new"
+  mv "$tmp_file.new" "$tmp_file"
+done
 
-# Validate the output is valid JSON before replacing
-if jq empty "$tmp_file" 2>/dev/null; then
-  cp "$tmp_file" "$SETTINGS_FILE"
-  echo "settings.json updated successfully"
+if [ "$needs_update" = true ]; then
+  # Validate output is valid JSON before replacing
+  if jq empty "$tmp_file" 2>/dev/null; then
+    mv "$tmp_file" "$SETTINGS_FILE"
+    echo "settings.json updated successfully"
+  else
+    echo "ERROR: Generated settings.json is invalid JSON — restoring backup"
+    cp "$SETTINGS_FILE.bak" "$SETTINGS_FILE"
+    rm -f "$tmp_file"
+    exit 1
+  fi
 else
-  echo "ERROR: Generated settings.json is invalid JSON — aborting"
+  echo "All hooks already registered — no changes needed"
   rm -f "$tmp_file"
-  exit 1
 fi
-
-rm -f "$tmp_file"
 
 echo ""
 echo "CE metrics hooks installed successfully."
 echo "  Hooks location: $HOOKS_DEST"
 echo "  To disable metrics: touch ~/.claude/metrics/.disabled"
 echo "  To re-enable: rm ~/.claude/metrics/.disabled"
+echo "  Health check: bash $SCRIPT_DIR/check-health.sh"
