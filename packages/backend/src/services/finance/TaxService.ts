@@ -289,13 +289,29 @@ export class TaxService implements ITaxService {
       }))
     );
 
-    const expenses = await this.getExpenses(creatorId, {
+    const expenses = await this.getExpensesForExport(creatorId, {
       startDate: `${year}-01-01`,
       endDate: `${year}-12-31`,
     });
 
+    // Annual totals
+    const annual = quarters.reduce(
+      (acc, { summary }) => ({
+        revenue: acc.revenue + summary.revenue,
+        expenses: acc.expenses + summary.expenses,
+        net: acc.net + summary.net,
+        usdRevenue: acc.usdRevenue + summary.usdRevenue,
+        usdExpenses: acc.usdExpenses + summary.usdExpenses,
+        usdNet: acc.usdNet + summary.usdNet,
+      }),
+      { revenue: 0, expenses: 0, net: 0, usdRevenue: 0, usdExpenses: 0, usdNet: 0 }
+    );
+    annual.usdRevenue = Math.round(annual.usdRevenue * 100) / 100;
+    annual.usdExpenses = Math.round(annual.usdExpenses * 100) / 100;
+    annual.usdNet = Math.round(annual.usdNet * 100) / 100;
+
     if (format === 'json') {
-      return JSON.stringify({ year, quarters, expenses }, null, 2);
+      return JSON.stringify({ year, quarters, annual, expenses }, null, 2);
     }
 
     // L-5: CSV injection protection — prefix formula-trigger chars with single quote
@@ -314,6 +330,8 @@ export class TaxService implements ITaxService {
           `Q${quarter},${summary.revenue},${summary.expenses},${summary.net},` +
           `${summary.usdRevenue},${summary.usdExpenses},${summary.usdNet}`
       ),
+      `Annual,${annual.revenue},${annual.expenses},${annual.net},` +
+        `${annual.usdRevenue},${annual.usdExpenses},${annual.usdNet}`,
       '',
       'Date,Description,Category,Amount (sats),Amount (USD)',
       ...expenses.map(
@@ -357,6 +375,45 @@ export class TaxService implements ITaxService {
   // ============================================================================
   // Private helpers
   // ============================================================================
+
+  /**
+   * Paginated expense fetch for export — no .limit(100) cap.
+   * Uses PAGE_SIZE=500 to prevent OOM on large datasets.
+   */
+  private async getExpensesForExport(
+    creatorId: string,
+    filters: { startDate: string; endDate: string }
+  ): Promise<any[]> {
+    const PAGE_SIZE = 500;
+    const all: any[] = [];
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await this.db
+        .from<ExpenseRow>('expenses')
+        .select(
+          'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)'
+        )
+        .eq('creator_id', creatorId)
+        .gte('expense_date', filters.startDate)
+        .lte('expense_date', filters.endDate)
+        .order('expense_date', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      if (error) {
+        this.logger.error('Failed to fetch expenses for export', { error, creatorId });
+        throw new Error('Failed to fetch expenses for export');
+      }
+
+      const rows = data ?? [];
+      all.push(...rows);
+      hasMore = rows.length === PAGE_SIZE;
+      offset += PAGE_SIZE;
+    }
+
+    return all;
+  }
 
   private quarterDateRange(
     year: number,

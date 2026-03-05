@@ -83,6 +83,7 @@ export class BoundaryService implements IBoundaryService {
     }
 
     if (input.dnd_mode) {
+      payload.dnd_active = input.dnd_mode.active;
       payload.auto_response_enabled = input.dnd_mode.auto_response_enabled;
       payload.auto_response_template = input.dnd_mode.auto_response_template;
     }

@@ -348,6 +348,39 @@ describe('BoundaryService', () => {
       );
     });
 
+    it('persists dnd_active when dnd_mode.active is provided', async () => {
+      const returnedRow = {
+        creator_id: 'creator-1',
+        dnd_active: true,
+        auto_response_enabled: false,
+        auto_response_template: '',
+      };
+
+      const chainable = {
+        upsert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: returnedRow, error: null }),
+      };
+
+      const mockDb = {
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
+      } as unknown as ISupabaseClient;
+
+      service = new BoundaryService(mockDb, mockLogger);
+      const result = await service.updateBoundaries('creator-1', {
+        dnd_mode: {
+          active: true,
+          auto_response_enabled: false,
+          auto_response_template: '',
+        },
+      });
+
+      const upsertCall = chainable.upsert.mock.calls[0][0];
+      expect(upsertCall.dnd_active).toBe(true);
+      expect(result.dnd_mode.active).toBe(true);
+    });
+
     it('always includes creator_id and updated_at in payload', async () => {
       const returnedRow = { creator_id: 'creator-1' };
 

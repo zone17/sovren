@@ -61,6 +61,7 @@ import type { IDmcaService } from '../interfaces/provenance/IDmcaService';
 
 // Queue infrastructure
 import type { IQueueService } from '../interfaces/queue/IQueueService';
+import type { IJobProcessor } from '../interfaces/queue/IJobProcessor';
 
 // Phase 8: Multi-Platform Hub interfaces (EPIC-009)
 import type { IPlatformConnectionService } from '../interfaces/distribution/IPlatformConnectionService';
@@ -256,6 +257,10 @@ export const TYPES = {
   BoundaryService: new ServiceToken<IBoundaryService>(
     'BoundaryService',
     'Focus hours, DND, auto-responses'
+  ),
+  BurnoutRefreshProcessor: new ServiceToken<IJobProcessor>(
+    'BurnoutRefreshProcessor',
+    'Weekly burnout score refresh processor'
   ),
 
   /**
@@ -507,6 +512,7 @@ export const SERVICE_LIFETIMES = {
     'BurnoutScoringService',
     'ScheduleService',
     'BoundaryService',
+    'BurnoutRefreshProcessor',
     'ProvenanceService',
     'FingerprintService',
     'AlertService',
@@ -610,6 +616,7 @@ export const SERVICE_DEPENDENCIES = {
   BurnoutScoringService: ['WellnessService', 'Logger'],
   ScheduleService: ['WellnessService', 'Logger'],
   BoundaryService: ['Database', 'Logger'],
+  BurnoutRefreshProcessor: ['BurnoutScoringService', 'Database', 'Logger'],
 
   // Phase 7: Provenance Services
   ProvenanceService: ['Database', 'NostrService', 'Logger'],
@@ -691,7 +698,13 @@ export const SERVICE_TAGS = {
   ],
   analytics: ['ContentAnalyticsService', 'UserAnalyticsService', 'PaymentAnalyticsService'],
   blockchain: ['LightningService', 'NostrService'],
-  wellness: ['WellnessService', 'BurnoutScoringService', 'ScheduleService', 'BoundaryService'],
+  wellness: [
+    'WellnessService',
+    'BurnoutScoringService',
+    'ScheduleService',
+    'BoundaryService',
+    'BurnoutRefreshProcessor',
+  ],
   provenance: ['ProvenanceService', 'FingerprintService', 'AlertService', 'DmcaService'],
   distribution: [
     'PlatformConnectionService',

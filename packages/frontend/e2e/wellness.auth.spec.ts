@@ -4,11 +4,12 @@
  * Runs in chromium-authenticated project (uses stored creator auth state).
  * File convention: *.auth.spec.ts — auto-matched by Playwright config.
  *
- * 4 tests:
+ * 5 tests:
  *   1. Dashboard loads with key components visible
  *   2. Pulse check-in opens modal
  *   3. Boundary settings section is visible
  *   4. Work activity heatmap section is visible
+ *   5. Burnout risk gauge section is visible
  */
 import { expect, test } from '@playwright/test';
 import { WellnessPage } from './pages/wellness.page';
@@ -48,5 +49,9 @@ test.describe('Wellness Dashboard', () => {
       .getByRole('heading', { name: /work activity/i })
       .first();
     await expect(heatmapHeading).toBeVisible();
+  });
+
+  test('burnout risk gauge section is visible on the dashboard', async () => {
+    await expect(wellnessPage.burnoutRiskHeading).toBeVisible();
   });
 });

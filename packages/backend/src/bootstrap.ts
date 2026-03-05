@@ -150,6 +150,17 @@ export async function bootstrapApplication(
     logger.info('Container initialized', { durationMs: initTime.toFixed(2) });
   }
 
+  // Register BullMQ workers (requires Redis)
+  if (process.env.REDIS_URL) {
+    const queueService = container.resolve(TYPES.QueueService);
+    const burnoutProcessor = container.resolve(TYPES.BurnoutRefreshProcessor);
+    queueService.registerProcessor(burnoutProcessor);
+
+    if (fullConfig.logStartup) {
+      logger.info('BullMQ workers registered', { processors: ['burnout-refresh'] });
+    }
+  }
+
   // ======================
   // PHASE 4: Health Checks
   // ======================

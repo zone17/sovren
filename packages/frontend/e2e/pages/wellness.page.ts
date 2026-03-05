@@ -11,6 +11,7 @@ export class WellnessPage {
   readonly pulseModal: Locator;
   readonly pulseSubmitButton: Locator;
   readonly boundarySaveButton: Locator;
+  readonly burnoutRiskHeading: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -27,6 +28,7 @@ export class WellnessPage {
     this.boundarySaveButton = page
       .getByRole('button', { name: /save.*boundaries|update.*boundaries|save settings/i })
       .first();
+    this.burnoutRiskHeading = page.getByRole('heading', { name: /burnout risk/i }).first();
   }
 
   async goto() {

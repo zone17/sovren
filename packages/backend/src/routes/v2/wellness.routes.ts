@@ -191,7 +191,18 @@ router.post(
   mutationRateLimiter,
   validate({ body: WellnessValidators.recordPulse }),
   asyncHandler(async (req, res) => {
-    const data = await getWellnessService().recordPulse(getAuthUser(req).nostr_pubkey, req.body);
+    const creatorId = getAuthUser(req).nostr_pubkey;
+    const eligible = await getWellnessService().checkPulseEligibility(creatorId);
+    if (!eligible) {
+      res.status(409).json(
+        createApiResponse(req, null, {
+          error: 'CONFLICT',
+          message: 'Pulse check-in already submitted today',
+        })
+      );
+      return;
+    }
+    const data = await getWellnessService().recordPulse(creatorId, req.body);
     res.status(201).json(createApiResponse(req, data));
   })
 );

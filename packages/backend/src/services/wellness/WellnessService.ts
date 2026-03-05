@@ -237,6 +237,22 @@ export class WellnessService implements IWellnessService {
     return { period, heatmap, peak_hours: peakHours, quiet_hours: quietHours };
   }
 
+  async checkPulseEligibility(creatorId: string): Promise<boolean> {
+    const today = new Date().toISOString().split('T')[0];
+    const { count, error } = await this.db
+      .from('wellness_snapshots')
+      .select('*', { count: 'exact', head: true })
+      .eq('creator_id', creatorId)
+      .gte('created_at', `${today}T00:00:00Z`);
+
+    if (error) {
+      this.logger.error('Failed to check pulse eligibility', { creatorId, error });
+      throw error;
+    }
+
+    return (count || 0) < 1;
+  }
+
   async recordPulse(creatorId: string, input: PulseInput): Promise<PulseCheckIn> {
     const compositeScore =
       Math.round(((input.energy + input.motivation + (6 - input.stress)) / 3) * 100) / 100;
