@@ -281,6 +281,91 @@ services:
       - redis-dev
     command: ['npm', 'run', 'test:watch']
 
+  # CE Metrics Monitoring Stack
+  ce-prometheus:
+    image: prom/prometheus:latest
+    container_name: sovren-ce-prometheus
+    ports:
+      - '127.0.0.1:9090:9090'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ce_prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=90d'
+      - '--storage.tsdb.retention.size=1GB'
+      - '--web.enable-lifecycle'
+    networks:
+      - ce-monitoring
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:9090/-/healthy']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - monitoring
+
+  ce-grafana:
+    image: grafana/grafana:latest
+    container_name: sovren-ce-grafana
+    ports:
+      - '127.0.0.1:3002:3000'
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ce_grafana_data:/var/lib/grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_SERVER_ROOT_URL=http://localhost:3002
+    networks:
+      - ce-monitoring
+    depends_on:
+      ce-prometheus:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - monitoring
+
+  ce-pushgateway:
+    image: prom/pushgateway:latest
+    container_name: sovren-ce-pushgateway
+    ports:
+      - '127.0.0.1:9091:9091'
+    networks:
+      - ce-monitoring
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:9091/-/healthy']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    profiles:
+      - monitoring
+
 volumes:
   # Application volumes
   backend_node_modules:
@@ -330,6 +415,12 @@ volumes:
   test_cache:
     driver: local
 
+  # CE Metrics monitoring volumes
+  ce_prometheus_data:
+    driver: local
+  ce_grafana_data:
+    driver: local
+
 networks:
   sovren-dev:
     driver: bridge
@@ -339,3 +430,6 @@ networks:
     driver_opts:
       com.docker.network.bridge.name: sovren-dev-bridge
       com.docker.network.driver.mtu: 1500
+
+  ce-monitoring:
+    driver: bridge

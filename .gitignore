@@ -142,3 +142,6 @@ data/
 public/
 supabase/.temp/
 supabase/.branches/
+
+# CE Metrics monitoring data
+monitoring/grafana/data/

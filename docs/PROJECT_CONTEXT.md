@@ -194,6 +194,15 @@ gh run list --workflow=ci.yml --limit 5   # CI status
 gh run watch <id> --exit-status           # Watch run live
 gh run view <id> --log-failed             # Failed step logs
 gh pr merge --auto --squash               # Merge via auto-merge
+
+# CE Metrics (monitoring stack — port 3002 Grafana, 9090 Prometheus, 9091 Pushgateway)
+docker compose -f docker-compose.dev.yml --profile monitoring up -d   # Start stack
+docker compose -f docker-compose.dev.yml --profile monitoring down    # Stop stack
+bash scripts/ce-metrics/install-hooks.sh   # Install/update hooks (one-time + after edits)
+bash scripts/ce-metrics/test-hooks.sh      # Verify hooks (expect: Passed: 25, Failed: 0)
+bash scripts/ce-metrics/seed-test-data.sh  # Push synthetic data for dashboard verification
+touch ~/.claude/metrics/.disabled          # Disable metrics collection
+rm ~/.claude/metrics/.disabled             # Re-enable metrics collection
 ```
 
 ---
@@ -222,13 +231,16 @@ gh pr merge --auto --squash               # Merge via auto-merge
 
 ### DevOps / Infrastructure
 
-| File                                     | What it covers                               |
-| ---------------------------------------- | -------------------------------------------- |
-| `.github/workflows/ci.yml`               | CI pipeline (lint, test, build, E2E, deploy) |
-| `docker-compose.dev.yml`                 | Local backend development                    |
-| `docs/development/BRANCHING_STRATEGY.md` | Branch naming, merge queue, squads           |
-| `docs/deployment/DEPLOYMENT_GUIDE.md`    | Full deployment procedures                   |
-| `supabase/migrations/`                   | Database schema evolution                    |
+| File                                       | What it covers                               |
+| ------------------------------------------ | -------------------------------------------- |
+| `.github/workflows/ci.yml`                 | CI pipeline (lint, test, build, E2E, deploy) |
+| `docker-compose.dev.yml`                   | Local backend + monitoring stack             |
+| `docs/development/BRANCHING_STRATEGY.md`   | Branch naming, merge queue, squads           |
+| `docs/deployment/DEPLOYMENT_GUIDE.md`      | Full deployment procedures                   |
+| `supabase/migrations/`                     | Database schema evolution                    |
+| `docs/development/CE_METRICS_DASHBOARD.md` | CE metrics pipeline (hooks → Grafana)        |
+| `scripts/ce-metrics/`                      | Hook scripts, install, test harness          |
+| `monitoring/`                              | Prometheus + Grafana provisioning configs    |
 
 ---
 
