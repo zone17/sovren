@@ -50,7 +50,7 @@ describe('BoundaryService', () => {
       expect(result.focus_hours.timezone).toBe('UTC');
       expect(result.focus_hours.days).toEqual([]);
       expect(result.weekly_engagement_budget_mins).toBe(0);
-      expect(result.engagement_used_mins).toBe(0);
+      expect(result.engagement_used_mins).toBeNull(); // #673: Not yet implemented
       expect(result.dnd_mode.active).toBe(false);
       expect(result.dnd_mode.auto_response_enabled).toBe(false);
       expect(result.dnd_mode.auto_response_template).toBe('');
@@ -66,7 +66,7 @@ describe('BoundaryService', () => {
         focus_hours_start: '09:00',
         focus_hours_end: '17:00',
         focus_hours_timezone: 'America/New_York',
-        focus_hours_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        focus_hours_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
         weekly_engagement_budget_mins: 120,
         dnd_active: true,
         auto_response_enabled: true,
@@ -95,14 +95,14 @@ describe('BoundaryService', () => {
       expect(result.focus_hours.end).toBe('17:00');
       expect(result.focus_hours.timezone).toBe('America/New_York');
       expect(result.focus_hours.days).toEqual([
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
       ]);
       expect(result.weekly_engagement_budget_mins).toBe(120);
-      expect(result.engagement_used_mins).toBe(0); // Always calculated
+      expect(result.engagement_used_mins).toBeNull(); // #673: Not yet implemented
       expect(result.dnd_mode.active).toBe(true);
       expect(result.dnd_mode.auto_response_enabled).toBe(true);
       expect(result.dnd_mode.auto_response_template).toBe('I am currently in focus mode.');
@@ -179,7 +179,7 @@ describe('BoundaryService', () => {
         focus_hours_start: '09:00',
         focus_hours_end: '12:00',
         focus_hours_timezone: 'UTC',
-        focus_hours_days: ['Monday', 'Wednesday', 'Friday'],
+        focus_hours_days: ['monday', 'wednesday', 'friday'],
         weekly_engagement_budget_mins: 60,
         dnd_active: false,
         auto_response_enabled: true,
@@ -207,7 +207,7 @@ describe('BoundaryService', () => {
           start: '09:00',
           end: '12:00',
           timezone: 'UTC',
-          days: ['Monday', 'Wednesday', 'Friday'],
+          days: ['monday', 'wednesday', 'friday'],
         },
         weekly_engagement_budget_mins: 60,
         dnd_mode: {
@@ -232,7 +232,7 @@ describe('BoundaryService', () => {
           focus_hours_start: '09:00',
           focus_hours_end: '12:00',
           focus_hours_timezone: 'UTC',
-          focus_hours_days: ['Monday', 'Wednesday', 'Friday'],
+          focus_hours_days: ['monday', 'wednesday', 'friday'],
           weekly_engagement_budget_mins: 60,
           auto_response_enabled: true,
           auto_response_template: 'Be back soon!',
@@ -253,7 +253,7 @@ describe('BoundaryService', () => {
         focus_hours_start: '10:00',
         focus_hours_end: '14:00',
         focus_hours_timezone: 'Europe/London',
-        focus_hours_days: ['Saturday'],
+        focus_hours_days: ['saturday'],
       };
 
       const chainable = {
@@ -274,7 +274,7 @@ describe('BoundaryService', () => {
           start: '10:00',
           end: '14:00',
           timezone: 'Europe/London',
-          days: ['Saturday'],
+          days: ['saturday'],
         },
       });
 
@@ -346,6 +346,39 @@ describe('BoundaryService', () => {
         'Failed to update boundaries',
         expect.objectContaining({ creatorId: 'creator-1' })
       );
+    });
+
+    it('persists dnd_active when dnd_mode.active is provided', async () => {
+      const returnedRow = {
+        creator_id: 'creator-1',
+        dnd_active: true,
+        auto_response_enabled: false,
+        auto_response_template: '',
+      };
+
+      const chainable = {
+        upsert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: returnedRow, error: null }),
+      };
+
+      const mockDb = {
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
+      } as unknown as ISupabaseClient;
+
+      service = new BoundaryService(mockDb, mockLogger);
+      const result = await service.updateBoundaries('creator-1', {
+        dnd_mode: {
+          active: true,
+          auto_response_enabled: false,
+          auto_response_template: '',
+        },
+      });
+
+      const upsertCall = chainable.upsert.mock.calls[0][0];
+      expect(upsertCall.dnd_active).toBe(true);
+      expect(result.dnd_mode.active).toBe(true);
     });
 
     it('always includes creator_id and updated_at in payload', async () => {

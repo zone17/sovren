@@ -70,6 +70,9 @@ router.get('/', (req, res) => {
       endpoints: {
         comments: '/api/v2/comments',
         wellness: '/api/v2/wellness',
+        wellness_boundaries: '/api/v2/wellness/boundaries',
+        wellness_schedule_recommendations: '/api/v2/wellness/schedule/recommendations',
+        wellness_buffer_depth: '/api/v2/wellness/buffer-depth',
         shield: '/api/v2/shield',
         discovery: '/api/v2/discovery',
         platforms: '/api/v2/platforms',

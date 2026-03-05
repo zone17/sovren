@@ -396,10 +396,30 @@ describe('Wellness Routes (v2)', () => {
       const { res, json, status } = makeResponse();
 
       const route = getRoute('POST', '/pulse')!;
-      await route.handler(req, res, nextFn);
+      route.handler(req, res, nextFn);
+      await new Promise(process.nextTick);
 
       expect(status).toHaveBeenCalledWith(201);
       expect(json).toHaveBeenCalledWith({ success: true, data: mockData });
+    });
+
+    it('calls next with ConflictError when pulse already submitted today', async () => {
+      const conflictError = new Error('Pulse check-in already submitted today');
+      conflictError.name = 'ConflictError';
+      mockRecordPulse.mockRejectedValue(conflictError);
+
+      const req = makeRequest({ body: { energy: 4, motivation: 3, stress: 2 } });
+      const { res } = makeResponse();
+
+      const route = getRoute('POST', '/pulse')!;
+      route.handler(req, res, nextFn);
+      await new Promise(process.nextTick);
+
+      expect(nextFn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'ConflictError',
+        })
+      );
     });
   });
 

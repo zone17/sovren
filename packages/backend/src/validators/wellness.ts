@@ -60,9 +60,12 @@ export const UpdateBoundariesSchema = z.object({
   focus_hours: z
     .object({
       enabled: z.boolean(),
-      start: z.string().regex(/^\d{2}:\d{2}$/),
-      end: z.string().regex(/^\d{2}:\d{2}$/),
-      timezone: z.string(),
+      start: z.string().regex(/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid HH:MM time format'),
+      end: z.string().regex(/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid HH:MM time format'),
+      timezone: z
+        .string()
+        .max(64)
+        .regex(/^[A-Za-z][A-Za-z0-9/_+-]{0,63}$/, 'Invalid IANA timezone identifier'),
       days: z.array(
         z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
       ),
@@ -71,11 +74,12 @@ export const UpdateBoundariesSchema = z.object({
   weekly_engagement_budget_mins: z.number().int().min(0).max(10080).optional(),
   dnd_mode: z
     .object({
-      auto_response_enabled: z.boolean(),
+      active: z.boolean().optional(),
+      auto_response_enabled: z.boolean().optional(),
       auto_response_template: z
         .string()
         .max(500)
-        .transform((val) => {
+        .transform((val: string) => {
           // Decode HTML entities first to prevent double-encoding bypass
           let decoded = val
             .replace(/&lt;/g, '<')
@@ -91,7 +95,9 @@ export const UpdateBoundariesSchema = z.object({
           // Remove javascript: URIs
           decoded = decoded.replace(/javascript\s*:/gi, '');
           return decoded;
-        }),
+        })
+        .pipe(z.string().max(500))
+        .optional(),
     })
     .optional(),
   availability_status: z.enum(['hidden', 'available', 'creating', 'offline']).optional(),

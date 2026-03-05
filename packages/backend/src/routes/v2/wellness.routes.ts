@@ -191,6 +191,8 @@ router.post(
   mutationRateLimiter,
   validate({ body: WellnessValidators.recordPulse }),
   asyncHandler(async (req, res) => {
+    // #655: No eligibility pre-check — let the UNIQUE constraint enforce one-per-day.
+    // recordPulse throws ConflictError on duplicate; the error handler maps it to 409.
     const data = await getWellnessService().recordPulse(getAuthUser(req).nostr_pubkey, req.body);
     res.status(201).json(createApiResponse(req, data));
   })

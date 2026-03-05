@@ -30,6 +30,7 @@ import type {
 } from '../../interfaces/wellness/IWellnessService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import { ConflictError } from '../../utils/errors';
 
 export class WellnessService implements IWellnessService {
   constructor(
@@ -80,8 +81,8 @@ export class WellnessService implements IWellnessService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Parallelize independent queries: patterns + baseline count
-    const [patternsResult, countResult] = await Promise.allSettled([
+    // #670: Supabase returns {data, error}, never rejects — Promise.all is correct here
+    const [patternsResult, countResult] = await Promise.all([
       this.db
         .from('creator_work_patterns')
         .select('*')
@@ -94,18 +95,13 @@ export class WellnessService implements IWellnessService {
         .eq('creator_id', creatorId),
     ]);
 
-    if (patternsResult.status === 'rejected') {
-      this.logger.error('Failed to get work patterns', { creatorId, error: patternsResult.reason });
-      throw patternsResult.reason;
-    }
-
-    const { data: patterns, error } = patternsResult.value;
+    const { data: patterns, error } = patternsResult;
     if (error) {
       this.logger.error('Failed to get work patterns', { creatorId, error });
       throw error;
     }
 
-    const count = countResult.status === 'fulfilled' ? countResult.value.count : 0;
+    const count = countResult.count ?? 0;
 
     const rows = patterns || [];
     const totalContentMins = rows.reduce((s: number, r: any) => s + (r.content_time_mins || 0), 0);
@@ -248,12 +244,16 @@ export class WellnessService implements IWellnessService {
         energy: input.energy,
         motivation: input.motivation,
         stress: input.stress,
+        composite_score: compositeScore,
       })
       .select()
       .single();
 
     if (error) {
       this.logger.error('Failed to record pulse', { creatorId, error });
+      if (error.code === '23505') {
+        throw new ConflictError('Pulse check-in already submitted today');
+      }
       throw error;
     }
 
@@ -300,15 +300,11 @@ export class WellnessService implements IWellnessService {
     // Apply pagination
     query = query.range(boundedOffset, boundedOffset + boundedLimit - 1);
 
-    const [dataResult, countResult] = await Promise.allSettled([query, countQuery]);
+    // #670: Supabase returns {data, error}, never rejects — Promise.all is correct here
+    const [dataResult, countResult] = await Promise.all([query, countQuery]);
 
-    if (dataResult.status === 'rejected') {
-      this.logger.error('Failed to get pulse history', { creatorId, error: dataResult.reason });
-      throw dataResult.reason;
-    }
-
-    const { data, error } = dataResult.value;
-    const total = countResult.status === 'fulfilled' ? countResult.value.count || 0 : 0;
+    const { data, error } = dataResult;
+    const total = countResult.count ?? 0;
 
     if (error) {
       this.logger.error('Failed to get pulse history', { creatorId, error });
@@ -377,10 +373,9 @@ export class WellnessService implements IWellnessService {
     });
 
     if (error) {
+      // #665: Log the raw error for debugging but don't expose it to the client
       this.logger.error('Failed to atomically delete all wellness data', { creatorId, error });
-      throw new Error(
-        `GDPR deletion failed for creator ${creatorId}: ${error.message || 'Unknown database error'}. No data was deleted.`
-      );
+      throw new Error('GDPR data deletion failed. No data was deleted. Contact support.');
     }
 
     // RPC returns JSONB with per-table counts
@@ -442,18 +437,5 @@ export class WellnessService implements IWellnessService {
       sample_size: data.sample_size,
       updated_at: new Date().toISOString(),
     };
-  }
-
-  private activityColumn(type: string): string {
-    switch (type) {
-      case 'content_creation':
-        return 'content_time_mins';
-      case 'engagement':
-        return 'engagement_time_mins';
-      case 'management':
-        return 'management_time_mins';
-      default:
-        return 'content_time_mins';
-    }
   }
 }

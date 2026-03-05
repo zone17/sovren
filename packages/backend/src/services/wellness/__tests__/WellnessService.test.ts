@@ -448,6 +448,57 @@ describe('WellnessService', () => {
         service.recordPulse('creator-1', { energy: 3, motivation: 3, stress: 3 })
       ).rejects.toEqual({ message: 'Insert failed' });
     });
+
+    it('throws ConflictError on 23505 UNIQUE constraint violation (#654 TOCTOU)', async () => {
+      const uniqueViolationError = { message: 'duplicate key', code: '23505' };
+      const chainable = {
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: uniqueViolationError }),
+      };
+
+      mockDb = {
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
+      } as unknown as ISupabaseClient;
+
+      service = new WellnessService(mockDb, mockLogger);
+
+      await expect(
+        service.recordPulse('creator-1', { energy: 3, motivation: 3, stress: 3 })
+      ).rejects.toMatchObject({ message: 'Pulse check-in already submitted today' });
+    });
+
+    it('includes composite_score in the INSERT payload (#661)', async () => {
+      const insertedData = {
+        id: 'pulse-uuid-cs',
+        energy: 4,
+        motivation: 4,
+        stress: 2,
+        composite_score: '4.00',
+        created_at: '2026-02-15T10:00:00Z',
+      };
+
+      const insertMock = vi.fn().mockReturnThis();
+      const chainable = {
+        insert: insertMock,
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: insertedData, error: null }),
+      };
+
+      mockDb = {
+        from: vi.fn(() => chainable),
+        rpc: vi.fn(),
+      } as unknown as ISupabaseClient;
+
+      service = new WellnessService(mockDb, mockLogger);
+
+      await service.recordPulse('creator-1', { energy: 4, motivation: 4, stress: 2 });
+
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({ composite_score: expect.any(Number) })
+      );
+    });
   });
 
   describe('getPulseHistory', () => {
@@ -670,7 +721,7 @@ describe('WellnessService', () => {
       service = new WellnessService(mockDb, mockLogger);
 
       await expect(service.deleteAllWellnessData('creator-1')).rejects.toThrow(
-        /GDPR deletion failed.*No data was deleted/
+        'GDPR data deletion failed. No data was deleted. Contact support.'
       );
     });
   });

@@ -99,7 +99,14 @@ export interface BurnoutHistoryEntry {
 // Schedule Types
 // ============================================================================
 
-export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export type DayOfWeek =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday';
 
 export interface ProductiveWindow {
   day: DayOfWeek;
@@ -153,7 +160,7 @@ export interface DndMode {
 export interface CreatorBoundaries {
   focus_hours: FocusHours;
   weekly_engagement_budget_mins: number;
-  engagement_used_mins: number;
+  engagement_used_mins: number | null; // null = not yet implemented
   dnd_mode: DndMode;
   availability_status: AvailabilityStatus;
   availability_public: boolean;

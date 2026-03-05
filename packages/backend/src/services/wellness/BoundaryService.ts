@@ -21,7 +21,7 @@ const DEFAULT_BOUNDARIES: CreatorBoundaries = {
     days: [],
   },
   weekly_engagement_budget_mins: 0,
-  engagement_used_mins: 0,
+  engagement_used_mins: null, // #673: Not yet implemented — null signals "not available"
   dnd_mode: {
     active: false,
     auto_response_enabled: false,
@@ -83,12 +83,24 @@ export class BoundaryService implements IBoundaryService {
     }
 
     if (input.dnd_mode) {
-      payload.auto_response_enabled = input.dnd_mode.auto_response_enabled;
-      payload.auto_response_template = input.dnd_mode.auto_response_template;
+      if (input.dnd_mode.active !== undefined) {
+        payload.dnd_active = input.dnd_mode.active;
+      }
+      if (input.dnd_mode.auto_response_enabled !== undefined) {
+        payload.auto_response_enabled = input.dnd_mode.auto_response_enabled;
+      }
+      if (input.dnd_mode.auto_response_template !== undefined) {
+        payload.auto_response_template = input.dnd_mode.auto_response_template;
+      }
     }
 
     if (input.availability_status) {
       payload.availability_status = input.availability_status;
+    }
+
+    // #666: Allow toggling availability_public
+    if (input.availability_public !== undefined) {
+      payload.availability_public = input.availability_public;
     }
 
     if (input.notification_batching !== undefined) {
@@ -113,22 +125,22 @@ export class BoundaryService implements IBoundaryService {
   private mapRowToBoundaries(row: any): CreatorBoundaries {
     return {
       focus_hours: {
-        enabled: row.focus_hours_enabled || false,
-        start: row.focus_hours_start || '22:00',
-        end: row.focus_hours_end || '08:00',
-        timezone: row.focus_hours_timezone || 'UTC',
-        days: (row.focus_hours_days || []) as DayOfWeek[],
+        enabled: row.focus_hours_enabled ?? false,
+        start: row.focus_hours_start ?? '22:00',
+        end: row.focus_hours_end ?? '08:00',
+        timezone: row.focus_hours_timezone ?? 'UTC',
+        days: (row.focus_hours_days ?? []) as DayOfWeek[],
       },
-      weekly_engagement_budget_mins: row.weekly_engagement_budget_mins || 0,
-      engagement_used_mins: 0, // Calculated at query time from activity data
+      weekly_engagement_budget_mins: row.weekly_engagement_budget_mins ?? 0,
+      engagement_used_mins: null, // #673: Not yet implemented — null signals "not available"
       dnd_mode: {
-        active: row.dnd_active || false,
-        auto_response_enabled: row.auto_response_enabled || false,
-        auto_response_template: row.auto_response_template || '',
+        active: row.dnd_active ?? false,
+        auto_response_enabled: row.auto_response_enabled ?? false,
+        auto_response_template: row.auto_response_template ?? '',
       },
-      availability_status: (row.availability_status || 'hidden') as AvailabilityStatus,
-      availability_public: row.availability_public || false,
-      notification_batching: row.notification_batching || false,
+      availability_status: (row.availability_status ?? 'hidden') as AvailabilityStatus,
+      availability_public: row.availability_public ?? false,
+      notification_batching: row.notification_batching ?? false,
     };
   }
 }

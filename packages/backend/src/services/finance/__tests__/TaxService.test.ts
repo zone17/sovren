@@ -633,24 +633,16 @@ describe('TaxService', () => {
     beforeEach(() => {
       mockDb._revenueResult = { data: [], error: null };
       mockDb._expenseResult = { data: [], error: null };
-      mockDb._orderResult = { data: [], error: null };
-
-      // The internal getExpenses call needs lte to chain to order()
-      // We handle this by using a smarter mock flag
-      mockDb._inGetExpenses = true;
     });
 
-    afterEach(() => {
-      mockDb._inGetExpenses = false;
-    });
-
-    it('returns valid JSON with year, quarters, and expenses keys', async () => {
+    it('returns valid JSON with year, quarters, annual, and expenses keys', async () => {
       const output = await service.exportTaxReport('creator-1', 2026, 'json');
       const parsed = JSON.parse(output);
 
       expect(parsed).toHaveProperty('year', 2026);
       expect(parsed).toHaveProperty('quarters');
       expect(Array.isArray(parsed.quarters)).toBe(true);
+      expect(parsed).toHaveProperty('annual');
       expect(parsed).toHaveProperty('expenses');
     });
 
@@ -681,6 +673,36 @@ describe('TaxService', () => {
       const output = await service.exportTaxReport('creator-1', 2026, 'json');
       expect(output).toContain('  "year"');
     });
+
+    it('includes annual totals summed from all quarters', async () => {
+      mockDb._revenueResult = {
+        data: [{ amount_sats: 100000, usd_at_time: 60.0 }],
+        error: null,
+      };
+      // #659: Export now pre-fetches expenses and filters by quarter in-memory.
+      // Each expense row needs expense_date so the date filter works.
+      // Spread expenses across all 4 quarters so each quarter picks up its share.
+      mockDb._expenseResult = {
+        data: [
+          { amount_sats: 25000, usd_at_time: 15.0, expense_date: '2026-02-15' },
+          { amount_sats: 25000, usd_at_time: 15.0, expense_date: '2026-05-15' },
+          { amount_sats: 25000, usd_at_time: 15.0, expense_date: '2026-08-15' },
+          { amount_sats: 25000, usd_at_time: 15.0, expense_date: '2026-11-15' },
+        ],
+        error: null,
+      };
+
+      const output = await service.exportTaxReport('creator-1', 2026, 'json');
+      const parsed = JSON.parse(output);
+
+      // Each quarter gets one expense of 25000 sats / $15, revenue 100000 sats / $60
+      expect(parsed.annual.revenue).toBe(400000);
+      expect(parsed.annual.expenses).toBe(100000);
+      expect(parsed.annual.net).toBe(300000);
+      expect(parsed.annual.usdRevenue).toBe(240.0);
+      expect(parsed.annual.usdExpenses).toBe(60.0);
+      expect(parsed.annual.usdNet).toBe(180.0);
+    });
   });
 
   // =========================================================================
@@ -691,12 +713,6 @@ describe('TaxService', () => {
     beforeEach(() => {
       mockDb._revenueResult = { data: [], error: null };
       mockDb._expenseResult = { data: [], error: null };
-      mockDb._orderResult = { data: [], error: null };
-      mockDb._inGetExpenses = true;
-    });
-
-    afterEach(() => {
-      mockDb._inGetExpenses = false;
     });
 
     it('returns a string containing the quarterly summary header', async () => {
@@ -714,13 +730,36 @@ describe('TaxService', () => {
       expect(csv).toContain('Q4,');
     });
 
+    it('includes an Annual total row after Q4', async () => {
+      mockDb._revenueResult = {
+        data: [{ amount_sats: 50000, usd_at_time: 30.0 }],
+        error: null,
+      };
+      // #659: Export now pre-fetches expenses and filters by quarter in-memory.
+      // Spread expenses across all 4 quarters.
+      mockDb._expenseResult = {
+        data: [
+          { amount_sats: 10000, usd_at_time: 6.0, expense_date: '2026-02-15' },
+          { amount_sats: 10000, usd_at_time: 6.0, expense_date: '2026-05-15' },
+          { amount_sats: 10000, usd_at_time: 6.0, expense_date: '2026-08-15' },
+          { amount_sats: 10000, usd_at_time: 6.0, expense_date: '2026-11-15' },
+        ],
+        error: null,
+      };
+
+      const csv = await service.exportTaxReport('creator-1', 2026, 'csv');
+
+      // Annual row should appear after Q4 (4x each mock row)
+      expect(csv).toContain('Annual,200000,40000,160000,120,24,96');
+    });
+
     it('includes the expense detail section header', async () => {
       const csv = await service.exportTaxReport('creator-1', 2026, 'csv');
       expect(csv).toContain('Date,Description,Category,Amount (sats),Amount (USD)');
     });
 
     it('includes expense rows with correct field values', async () => {
-      mockDb._orderResult = {
+      mockDb._expenseResult = {
         data: [
           {
             expense_date: '2026-02-15',
@@ -742,7 +781,7 @@ describe('TaxService', () => {
     });
 
     it('uses "Uncategorized" for expenses without a category', async () => {
-      mockDb._orderResult = {
+      mockDb._expenseResult = {
         data: [
           {
             expense_date: '2026-02-15',
@@ -766,7 +805,7 @@ describe('TaxService', () => {
      * so spreadsheet applications do not execute them as formulas.
      */
     it('prefixes "=" formula injection with a single quote (CSV injection prevention)', async () => {
-      mockDb._orderResult = {
+      mockDb._expenseResult = {
         data: [
           {
             expense_date: '2026-02-15',
@@ -788,7 +827,7 @@ describe('TaxService', () => {
     });
 
     it('prefixes "+" injection with a single quote', async () => {
-      mockDb._orderResult = {
+      mockDb._expenseResult = {
         data: [
           {
             expense_date: '2026-02-15',
@@ -806,7 +845,7 @@ describe('TaxService', () => {
     });
 
     it('prefixes "-" injection with a single quote', async () => {
-      mockDb._orderResult = {
+      mockDb._expenseResult = {
         data: [
           {
             expense_date: '2026-02-15',
@@ -824,7 +863,7 @@ describe('TaxService', () => {
     });
 
     it('prefixes "@" injection with a single quote', async () => {
-      mockDb._orderResult = {
+      mockDb._expenseResult = {
         data: [
           {
             expense_date: '2026-02-15',
@@ -842,7 +881,7 @@ describe('TaxService', () => {
     });
 
     it('does not prefix clean description values with a single quote', async () => {
-      mockDb._orderResult = {
+      mockDb._expenseResult = {
         data: [
           {
             expense_date: '2026-02-15',
@@ -862,7 +901,7 @@ describe('TaxService', () => {
     });
 
     it('escapes double quotes as "" per RFC 4180 (#346)', async () => {
-      mockDb._orderResult = {
+      mockDb._expenseResult = {
         data: [
           {
             expense_date: '2026-02-15',

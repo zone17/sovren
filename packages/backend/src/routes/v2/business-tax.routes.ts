@@ -14,6 +14,7 @@ import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
+import { z } from 'zod';
 import { ExpenseSchema, CreateExpenseCategorySchema } from '../../validators/finance';
 import { ValidationError } from '../../utils/errors';
 import type { ITaxService } from '../../interfaces/finance/ITaxService';
@@ -45,7 +46,14 @@ router.get(
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
-    const year = parseInt(req.query.year as string) || new Date().getFullYear();
+    const currentYear = new Date().getFullYear();
+    const rawYear = parseInt(req.query.year as string);
+    const year = isNaN(rawYear) ? currentYear : rawYear;
+
+    // #662: Validate year range — same as /export endpoint
+    if (!isNaN(rawYear) && (year < 2020 || year > currentYear + 1)) {
+      throw new ValidationError(`Year must be between 2020 and ${currentYear + 1}`);
+    }
 
     if (req.query.quarter) {
       const rawQuarter = parseInt(req.query.quarter as string);
@@ -78,16 +86,46 @@ router.get(
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
-    const { categoryId, startDate, endDate } = req.query as {
-      categoryId?: string;
-      startDate?: string;
-      endDate?: string;
-    };
+
+    // #674: Validate query params with Zod
+    const filterSchema = z.object({
+      categoryId: z.string().uuid().optional(),
+      startDate: z.string().date().optional(),
+      endDate: z.string().date().optional(),
+    });
+    const filterResult = filterSchema.safeParse({
+      categoryId: req.query.categoryId || undefined,
+      startDate: req.query.startDate || undefined,
+      endDate: req.query.endDate || undefined,
+    });
+    if (!filterResult.success) {
+      throw new ValidationError(
+        filterResult.error.issues[0]?.message ?? 'Invalid filter parameters'
+      );
+    }
+    const { categoryId, startDate, endDate } = filterResult.data;
+
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
     const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
-    const data = await getTaxService().getExpenses(creatorId, { categoryId, startDate, endDate });
-    const paginated = data.slice(offset, offset + limit);
-    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
+
+    // #660: Use server-side pagination with exact count instead of fetching all and slicing
+    const { items, count } = await getTaxService().getExpensesPaginated(creatorId, {
+      categoryId,
+      startDate,
+      endDate,
+      limit,
+      offset,
+    });
+    res.json(
+      createApiResponse(req, {
+        items,
+        total: count,
+        limit,
+        offset,
+        hasNext: offset + limit < count,
+        hasPrev: offset > 0,
+      })
+    );
   })
 );
 
@@ -170,8 +208,13 @@ router.delete(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
+    // #656: Validate UUID format before hitting DB
+    const idResult = z.string().uuid().safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid ID format');
+    }
     const creatorId = getAuthUser(req).nostr_pubkey;
-    await getTaxService().deleteExpense(req.params.id, creatorId);
+    await getTaxService().deleteExpense(idResult.data, creatorId);
     res.json(createApiResponse(req, { deleted: true }));
   })
 );
@@ -186,8 +229,13 @@ router.delete(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req: Request, res: Response) => {
+    // #656: Validate UUID format before hitting DB
+    const idResult = z.string().uuid().safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid ID format');
+    }
     const creatorId = getAuthUser(req).nostr_pubkey;
-    await getTaxService().deleteExpenseCategory(req.params.id, creatorId);
+    await getTaxService().deleteExpenseCategory(idResult.data, creatorId);
     res.json(createApiResponse(req, { deleted: true }));
   })
 );
@@ -200,6 +248,7 @@ router.delete(
  * GET /business/tax/export
  * Export tax report — ?year=2026&format=csv|json
  * L-5: CSV injection protection applied inside TaxService.exportTaxReport
+ * #668: year parameter validation — must be between 2020 and currentYear+1
  */
 router.get(
   '/export',
@@ -207,7 +256,14 @@ router.get(
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
-    const year = parseInt(req.query.year as string) || new Date().getFullYear();
+    const currentYear = new Date().getFullYear();
+    const rawYear = parseInt(req.query.year as string);
+    const year = isNaN(rawYear) ? currentYear : rawYear;
+    // #669: Use thrown ValidationError instead of manual res.json — lets error handler
+    // produce the correct error envelope (success: false, error, code)
+    if (!isNaN(rawYear) && (year < 2020 || year > currentYear + 1)) {
+      throw new ValidationError(`Year must be between 2020 and ${currentYear + 1}`);
+    }
     const format = (req.query.format as string) === 'json' ? 'json' : 'csv';
 
     const data = await getTaxService().exportTaxReport(creatorId, year, format);
