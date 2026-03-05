@@ -44,9 +44,10 @@ ALTER TABLE wellness_snapshots ALTER COLUMN stress SET NOT NULL;
 
 -- #654/#657: Deduplicate before adding UNIQUE constraint (keeps latest row per creator+day)
 -- Uses CTE + ROW_NUMBER (O(n log n)) instead of NOT IN (O(n²))
+-- Cast via AT TIME ZONE 'UTC' to get an IMMUTABLE date expression
 WITH ranked AS (
   SELECT id, ROW_NUMBER() OVER (
-    PARTITION BY creator_id, created_at::date
+    PARTITION BY creator_id, (created_at AT TIME ZONE 'UTC')::date
     ORDER BY created_at DESC
   ) AS rn
   FROM wellness_snapshots
@@ -56,6 +57,7 @@ DELETE FROM wellness_snapshots
 WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
 
 -- UNIQUE constraint for pulse frequency guard (one per creator per day) — TOCTOU-safe
+-- Expression index uses AT TIME ZONE 'UTC' to ensure IMMUTABLE (::date alone depends on session TZ)
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -63,7 +65,7 @@ BEGIN
     WHERE indexname = 'idx_wellness_snapshots_creator_day'
   ) THEN
     CREATE UNIQUE INDEX idx_wellness_snapshots_creator_day
-      ON wellness_snapshots (creator_id, (created_at::date));
+      ON wellness_snapshots (creator_id, ((created_at AT TIME ZONE 'UTC')::date));
   END IF;
 END $$;
 

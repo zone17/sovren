@@ -41,22 +41,23 @@ describe('BurnoutRiskGauge', () => {
     vi.clearAllMocks();
   });
 
-  it('shows loading skeleton', () => {
+  it('shows loading skeleton with heading', () => {
     mockUseBurnoutScore.mockReturnValue({ data: undefined, isLoading: true, error: null });
-    const { container } = render(<BurnoutRiskGauge />, { wrapper: createWrapper() });
-    // Loading state renders Skeleton elements only (no text) — verify container renders something
-    expect(container.firstChild).toBeTruthy();
+    render(<BurnoutRiskGauge />, { wrapper: createWrapper() });
+    // Heading is always visible, even in loading state
+    expect(screen.getByRole('heading', { name: /Burnout Risk/i })).toBeInTheDocument();
     // Verify we are NOT showing the error state
     expect(screen.queryByText('Failed to load burnout risk score.')).not.toBeInTheDocument();
   });
 
-  it('shows error state', () => {
+  it('shows error state with heading', () => {
     mockUseBurnoutScore.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('fail'),
     });
     render(<BurnoutRiskGauge />, { wrapper: createWrapper() });
+    expect(screen.getByRole('heading', { name: /Burnout Risk/i })).toBeInTheDocument();
     expect(screen.getByText('Failed to load burnout risk score.')).toBeInTheDocument();
   });
 

@@ -70,7 +70,7 @@ export const BurnoutRiskGauge: React.FC = () => {
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-40" />
+          <CardTitle className="text-base font-semibold">Burnout Risk</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center">
           <Skeleton className="h-32 w-32 rounded-full" />
@@ -82,6 +82,9 @@ export const BurnoutRiskGauge: React.FC = () => {
   if (error) {
     return (
       <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Burnout Risk</CardTitle>
+        </CardHeader>
         <CardContent className="py-6 text-center text-sm text-gray-500">
           Failed to load burnout risk score.
         </CardContent>

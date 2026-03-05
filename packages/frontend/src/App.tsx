@@ -89,6 +89,11 @@ const RevenueAnalytics = React.lazy(() =>
   }))
 );
 
+// Content Detail (public — comments section)
+const ContentDetail = React.lazy(() =>
+  import('./pages/ContentDetail').then((module) => ({ default: module.default }))
+);
+
 // Business Manager
 const BusinessManagerDashboard = React.lazy(() =>
   import('./features/business/components/BusinessManagerDashboard').then((module) => ({
@@ -273,6 +278,18 @@ function App(): React.ReactElement {
               element={
                 <Layout>
                   <CreatorProfilePage />
+                </Layout>
+              }
+            />
+
+            {/* Content Detail (Public — comments section) */}
+            <Route
+              path="/content/:id"
+              element={
+                <Layout>
+                  <ContentErrorBoundary>
+                    <ContentDetail />
+                  </ContentErrorBoundary>
                 </Layout>
               }
             />
