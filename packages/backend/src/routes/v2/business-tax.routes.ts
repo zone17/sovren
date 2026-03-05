@@ -200,6 +200,7 @@ router.delete(
  * GET /business/tax/export
  * Export tax report — ?year=2026&format=csv|json
  * L-5: CSV injection protection applied inside TaxService.exportTaxReport
+ * #668: year parameter validation — must be between 2020 and currentYear+1
  */
 router.get(
   '/export',
@@ -207,7 +208,17 @@ router.get(
   requireCreator,
   asyncHandler(async (req: Request, res: Response) => {
     const creatorId = getAuthUser(req).nostr_pubkey;
-    const year = parseInt(req.query.year as string) || new Date().getFullYear();
+    const currentYear = new Date().getFullYear();
+    const rawYear = parseInt(req.query.year as string);
+    const year = isNaN(rawYear) ? currentYear : rawYear;
+    if (isNaN(rawYear) || year < 2020 || year > currentYear + 1) {
+      return res.status(400).json(
+        createApiResponse(req, null, {
+          error: 'VALIDATION_ERROR',
+          message: `Year must be between 2020 and ${currentYear + 1}`,
+        })
+      );
+    }
     const format = (req.query.format as string) === 'json' ? 'json' : 'csv';
 
     const data = await getTaxService().exportTaxReport(creatorId, year, format);

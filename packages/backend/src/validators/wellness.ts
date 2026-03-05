@@ -71,6 +71,7 @@ export const UpdateBoundariesSchema = z.object({
   weekly_engagement_budget_mins: z.number().int().min(0).max(10080).optional(),
   dnd_mode: z
     .object({
+      active: z.boolean().optional(),
       auto_response_enabled: z.boolean(),
       auto_response_template: z
         .string()

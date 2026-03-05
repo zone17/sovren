@@ -51,6 +51,22 @@ interface ExpenseCategoryRow {
   type: string;
 }
 
+// #659: Typed row interface for getExpensesForExport — replaces any[]
+interface ExportExpenseRow {
+  id: string;
+  creator_id: string;
+  category_id: string | null;
+  description: string;
+  amount_sats: number;
+  usd_at_time: number | null;
+  expense_date: string;
+  created_at: string;
+  expense_categories: { name: string; type: string } | null;
+}
+
+// #667: Safety cap to prevent OOM on creators with very large expense histories
+const MAX_EXPORT_ROWS = 50_000;
+
 export class TaxService implements ITaxService {
   constructor(
     private readonly db: ISupabaseClient,
@@ -173,25 +189,9 @@ export class TaxService implements ITaxService {
   ): Promise<Expense[]> {
     this.logger.info('TaxService.getExpenses', { creatorId, filters });
 
-    let query = this.db
-      .from<ExpenseRow>('expenses')
-      .select(
-        'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)'
-      )
-      .eq('creator_id', creatorId);
-
-    if (filters?.categoryId) {
-      query = query.eq('category_id', filters.categoryId);
-    }
-    if (filters?.startDate) {
-      query = query.gte('expense_date', filters.startDate);
-    }
-    if (filters?.endDate) {
-      query = query.lte('expense_date', filters.endDate);
-    }
-
     // #322: Add limit to prevent unbounded result sets
-    const { data, error } = await query.order('expense_date', { ascending: false }).limit(100);
+    // #669: Shared query builder eliminates duplication with getExpensesForExport
+    const { data, error } = await this.buildExpenseQuery(creatorId, filters).limit(100);
     if (error) {
       this.logger.error('Failed to fetch expenses', { error, creatorId });
       throw new Error('Failed to fetch expenses');
@@ -334,20 +334,12 @@ export class TaxService implements ITaxService {
         `${annual.usdRevenue},${annual.usdExpenses},${annual.usdNet}`,
       '',
       'Date,Description,Category,Amount (sats),Amount (USD)',
-      ...expenses.map(
-        (e: {
-          expense_date?: string;
-          description?: string;
-          expense_categories?: { name: string; type: string } | null;
-          amount_sats: number;
-          usd_at_time?: number | null;
-        }) => {
-          const date = csvCell(e.expense_date ?? '');
-          const desc = csvCell(e.description ?? '');
-          const category = csvCell(e.expense_categories?.name ?? 'Uncategorized');
-          return `${date},"${desc}","${category}",${e.amount_sats},${e.usd_at_time ?? ''}`;
-        }
-      ),
+      ...expenses.map((e: ExportExpenseRow) => {
+        const date = csvCell(e.expense_date ?? '');
+        const desc = csvCell(e.description ?? '');
+        const category = csvCell(e.expense_categories?.name ?? 'Uncategorized');
+        return `${date},"${desc}","${category}",${e.amount_sats},${e.usd_at_time ?? ''}`;
+      }),
     ];
 
     return lines.join('\n');
@@ -377,29 +369,49 @@ export class TaxService implements ITaxService {
   // ============================================================================
 
   /**
+   * Shared query builder for expense queries.
+   * #669: Extracted to eliminate duplication between getExpenses and getExpensesForExport.
+   * Callers append .limit() (getExpenses) or .range() (getExpensesForExport).
+   */
+  private buildExpenseQuery(
+    creatorId: string,
+    filters?: { categoryId?: string; startDate?: string; endDate?: string }
+  ) {
+    let query = this.db
+      .from<ExpenseRow>('expenses')
+      .select(
+        'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)'
+      )
+      .eq('creator_id', creatorId);
+
+    if (filters?.categoryId) query = query.eq('category_id', filters.categoryId);
+    if (filters?.startDate) query = query.gte('expense_date', filters.startDate);
+    if (filters?.endDate) query = query.lte('expense_date', filters.endDate);
+
+    return query.order('expense_date', { ascending: false });
+  }
+
+  /**
    * Paginated expense fetch for export — no .limit(100) cap.
    * Uses PAGE_SIZE=500 to prevent OOM on large datasets.
+   * #659: Typed return (ExportExpenseRow[]) — replaces any[]
+   * #667: Hard cap at MAX_EXPORT_ROWS to prevent OOM on very large histories
+   * #669: Uses buildExpenseQuery to eliminate duplication with getExpenses
    */
   private async getExpensesForExport(
     creatorId: string,
     filters: { startDate: string; endDate: string }
-  ): Promise<any[]> {
+  ): Promise<ExportExpenseRow[]> {
     const PAGE_SIZE = 500;
-    const all: any[] = [];
+    const all: ExportExpenseRow[] = [];
     let offset = 0;
     let hasMore = true;
 
     while (hasMore) {
-      const { data, error } = await this.db
-        .from<ExpenseRow>('expenses')
-        .select(
-          'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)'
-        )
-        .eq('creator_id', creatorId)
-        .gte('expense_date', filters.startDate)
-        .lte('expense_date', filters.endDate)
-        .order('expense_date', { ascending: false })
-        .range(offset, offset + PAGE_SIZE - 1);
+      const { data, error } = await this.buildExpenseQuery(creatorId, filters).range(
+        offset,
+        offset + PAGE_SIZE - 1
+      );
 
       if (error) {
         this.logger.error('Failed to fetch expenses for export', { error, creatorId });
@@ -408,6 +420,13 @@ export class TaxService implements ITaxService {
 
       const rows = data ?? [];
       all.push(...rows);
+
+      // #667: Safety cap — warn and stop accumulation if limit is reached
+      if (all.length >= MAX_EXPORT_ROWS) {
+        this.logger.warn('Export row limit reached', { creatorId, limit: MAX_EXPORT_ROWS });
+        break;
+      }
+
       hasMore = rows.length === PAGE_SIZE;
       offset += PAGE_SIZE;
     }

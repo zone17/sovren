@@ -16,6 +16,7 @@ export interface BoundaryUpdateInput {
   };
   weekly_engagement_budget_mins?: number;
   dnd_mode?: {
+    active?: boolean;
     auto_response_enabled: boolean;
     auto_response_template: string;
   };

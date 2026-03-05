@@ -30,6 +30,7 @@ import type {
 } from '../../interfaces/wellness/IWellnessService';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
+import { ConflictError } from '../../utils/errors';
 
 export class WellnessService implements IWellnessService {
   constructor(
@@ -247,10 +248,10 @@ export class WellnessService implements IWellnessService {
 
     if (error) {
       this.logger.error('Failed to check pulse eligibility', { creatorId, error });
-      throw error;
+      throw new Error('Failed to check pulse eligibility');
     }
 
-    return (count || 0) < 1;
+    return (count ?? 0) < 1;
   }
 
   async recordPulse(creatorId: string, input: PulseInput): Promise<PulseCheckIn> {
@@ -264,12 +265,16 @@ export class WellnessService implements IWellnessService {
         energy: input.energy,
         motivation: input.motivation,
         stress: input.stress,
+        composite_score: compositeScore,
       })
       .select()
       .single();
 
     if (error) {
       this.logger.error('Failed to record pulse', { creatorId, error });
+      if (error.code === '23505') {
+        throw new ConflictError('Pulse check-in already submitted today');
+      }
       throw error;
     }
 

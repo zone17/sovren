@@ -28,7 +28,13 @@ ALTER TABLE wellness_snapshots ADD COLUMN IF NOT EXISTS energy INTEGER CHECK (en
 ALTER TABLE wellness_snapshots ADD COLUMN IF NOT EXISTS motivation INTEGER CHECK (motivation BETWEEN 1 AND 5);
 ALTER TABLE wellness_snapshots ADD COLUMN IF NOT EXISTS stress INTEGER CHECK (stress BETWEEN 1 AND 5);
 
-CREATE INDEX IF NOT EXISTS idx_wellness_snapshots_creator_id ON wellness_snapshots(creator_id);
+-- #657: Deduplicate before adding UNIQUE constraint (keeps row with latest id per creator+day)
+DELETE FROM wellness_snapshots ws
+WHERE ws.id NOT IN (
+  SELECT DISTINCT ON (creator_id, created_at::date) id
+  FROM wellness_snapshots
+  ORDER BY creator_id, created_at::date, created_at DESC
+);
 
 -- UNIQUE constraint for pulse frequency guard (one per creator per day) — TOCTOU-safe
 DO $$
@@ -50,7 +56,10 @@ ALTER TABLE burnout_risk_history ADD COLUMN IF NOT EXISTS week TEXT;
 ALTER TABLE burnout_risk_history ADD COLUMN IF NOT EXISTS score INTEGER CHECK (score BETWEEN 0 AND 100);
 ALTER TABLE burnout_risk_history ADD COLUMN IF NOT EXISTS level TEXT CHECK (level IN ('low', 'moderate', 'high', 'critical'));
 
-CREATE INDEX IF NOT EXISTS idx_burnout_risk_creator_week ON burnout_risk_history(creator_id, week);
+-- #662: Backfill week from created_at for existing rows
+UPDATE burnout_risk_history
+SET week = to_char(created_at, 'IYYY-"W"IW')
+WHERE week IS NULL AND created_at IS NOT NULL;
 
 -- UNIQUE constraint for upsert on (creator_id, week)
 DO $$
@@ -68,7 +77,24 @@ END $$;
 -- 4. Backfill existing burnout_risk_history rows
 -- ============================================================================
 
+-- #658 + #678: Normalize level to valid CHECK values with fallback; clamp score to [0, 100]
 UPDATE burnout_risk_history
-SET score = ROUND(risk_score)::integer,
-    level = risk_level
+SET score = GREATEST(0, LEAST(100, ROUND(risk_score)::integer)),
+    level = CASE
+      WHEN risk_level IN ('low', 'moderate', 'high', 'critical') THEN risk_level
+      ELSE 'moderate'
+    END
 WHERE score IS NULL AND risk_score IS NOT NULL;
+
+-- ============================================================================
+-- ROLLBACK (uncomment to revert)
+-- ============================================================================
+-- DROP INDEX IF EXISTS idx_wellness_snapshots_creator_day;
+-- ALTER TABLE wellness_snapshots DROP COLUMN IF EXISTS energy;
+-- ALTER TABLE wellness_snapshots DROP COLUMN IF EXISTS motivation;
+-- ALTER TABLE wellness_snapshots DROP COLUMN IF EXISTS stress;
+-- ALTER TABLE burnout_risk_history DROP CONSTRAINT IF EXISTS burnout_risk_history_creator_week_key;
+-- ALTER TABLE burnout_risk_history DROP COLUMN IF EXISTS week;
+-- ALTER TABLE burnout_risk_history DROP COLUMN IF EXISTS score;
+-- ALTER TABLE burnout_risk_history DROP COLUMN IF EXISTS level;
+-- (creator_boundaries columns are additive-only, rollback not recommended)

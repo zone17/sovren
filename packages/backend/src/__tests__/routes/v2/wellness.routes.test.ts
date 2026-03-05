@@ -84,6 +84,7 @@ vi.mock('../../../utils/api-response', () => ({
 const mockRecordWorkPattern = vi.fn();
 const mockGetWorkPatterns = vi.fn();
 const mockGetHeatmap = vi.fn();
+const mockCheckPulseEligibility = vi.fn();
 const mockRecordPulse = vi.fn();
 const mockGetPulseHistory = vi.fn();
 const mockGetBenchmark = vi.fn();
@@ -105,6 +106,7 @@ vi.mock('../../../container', () => ({
           recordWorkPattern: mockRecordWorkPattern,
           getWorkPatterns: mockGetWorkPatterns,
           getHeatmap: mockGetHeatmap,
+          checkPulseEligibility: mockCheckPulseEligibility,
           recordPulse: mockRecordPulse,
           getPulseHistory: mockGetPulseHistory,
           getBenchmark: mockGetBenchmark,
@@ -390,16 +392,32 @@ describe('Wellness Routes (v2)', () => {
         stress: 2,
         composite_score: 3.67,
       };
+      mockCheckPulseEligibility.mockResolvedValue(true);
       mockRecordPulse.mockResolvedValue(mockData);
 
       const req = makeRequest({ body: { energy: 4, motivation: 3, stress: 2 } });
       const { res, json, status } = makeResponse();
 
       const route = getRoute('POST', '/pulse')!;
-      await route.handler(req, res, nextFn);
+      route.handler(req, res, nextFn);
+      await new Promise(process.nextTick);
 
       expect(status).toHaveBeenCalledWith(201);
       expect(json).toHaveBeenCalledWith({ success: true, data: mockData });
+    });
+
+    it('returns 409 when pulse already submitted today', async () => {
+      mockCheckPulseEligibility.mockResolvedValue(false);
+
+      const req = makeRequest({ body: { energy: 4, motivation: 3, stress: 2 } });
+      const { res, json, status } = makeResponse();
+
+      const route = getRoute('POST', '/pulse')!;
+      route.handler(req, res, nextFn);
+      await new Promise(process.nextTick);
+
+      expect(status).toHaveBeenCalledWith(409);
+      expect(mockRecordPulse).not.toHaveBeenCalled();
     });
   });
 

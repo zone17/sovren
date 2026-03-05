@@ -13,7 +13,6 @@ import { WellnessService } from '../../services/wellness/WellnessService';
 import { BurnoutScoringService } from '../../services/wellness/BurnoutScoringService';
 import { ScheduleService } from '../../services/wellness/ScheduleService';
 import { BoundaryService } from '../../services/wellness/BoundaryService';
-import { BurnoutRefreshProcessor } from '../../services/wellness/BurnoutRefreshProcessor';
 
 // Provenance service implementations
 import { ProvenanceService } from '../../services/provenance/ProvenanceService';
@@ -61,13 +60,6 @@ export class Phase7ServicesModule implements IServiceModule {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
       return new BoundaryService(asDb(db), logger);
-    });
-
-    registry.registerSingletonFactory(TYPES.BurnoutRefreshProcessor, (container) => {
-      const db = container.resolve(TYPES.Database);
-      const burnoutService = container.resolve(TYPES.BurnoutScoringService);
-      const logger = container.resolve(TYPES.Logger);
-      return new BurnoutRefreshProcessor(asDb(db), burnoutService, logger);
     });
 
     // ===========================
