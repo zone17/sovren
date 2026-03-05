@@ -23,6 +23,17 @@ export interface ITaxService {
     creatorId: string,
     filters?: { categoryId?: string; startDate?: string; endDate?: string }
   ): Promise<Expense[]>;
+  /** #660: Server-side paginated query with exact count for pagination metadata */
+  getExpensesPaginated(
+    creatorId: string,
+    params: {
+      categoryId?: string;
+      startDate?: string;
+      endDate?: string;
+      limit: number;
+      offset: number;
+    }
+  ): Promise<{ items: Expense[]; count: number }>;
   addExpense(
     creatorId: string,
     data: { categoryId?: string; description: string; amountSats: number; expenseDate?: string }

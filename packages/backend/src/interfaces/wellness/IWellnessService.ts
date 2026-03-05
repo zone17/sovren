@@ -32,7 +32,6 @@ export interface IWellnessService {
   recordWorkPattern(creatorId: string, input: CreateWorkPatternInput): Promise<WorkPattern>;
   getWorkPatterns(creatorId: string, period: '7d' | '30d' | '90d'): Promise<WorkPatternAggregation>;
   getHeatmap(creatorId: string, period: '7d' | '30d'): Promise<HeatmapData>;
-  checkPulseEligibility(creatorId: string): Promise<boolean>;
   recordPulse(creatorId: string, input: PulseInput): Promise<PulseCheckIn>;
   getPulseHistory(creatorId: string, period: '30d' | '90d' | 'all'): Promise<PulseHistory>;
   deletePulseHistory(creatorId: string): Promise<number>;

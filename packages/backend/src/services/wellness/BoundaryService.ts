@@ -21,7 +21,7 @@ const DEFAULT_BOUNDARIES: CreatorBoundaries = {
     days: [],
   },
   weekly_engagement_budget_mins: 0,
-  engagement_used_mins: 0,
+  engagement_used_mins: null, // #673: Not yet implemented — null signals "not available"
   dnd_mode: {
     active: false,
     auto_response_enabled: false,
@@ -86,12 +86,21 @@ export class BoundaryService implements IBoundaryService {
       if (input.dnd_mode.active !== undefined) {
         payload.dnd_active = input.dnd_mode.active;
       }
-      payload.auto_response_enabled = input.dnd_mode.auto_response_enabled;
-      payload.auto_response_template = input.dnd_mode.auto_response_template;
+      if (input.dnd_mode.auto_response_enabled !== undefined) {
+        payload.auto_response_enabled = input.dnd_mode.auto_response_enabled;
+      }
+      if (input.dnd_mode.auto_response_template !== undefined) {
+        payload.auto_response_template = input.dnd_mode.auto_response_template;
+      }
     }
 
     if (input.availability_status) {
       payload.availability_status = input.availability_status;
+    }
+
+    // #666: Allow toggling availability_public
+    if (input.availability_public !== undefined) {
+      payload.availability_public = input.availability_public;
     }
 
     if (input.notification_batching !== undefined) {
@@ -123,7 +132,7 @@ export class BoundaryService implements IBoundaryService {
         days: (row.focus_hours_days ?? []) as DayOfWeek[],
       },
       weekly_engagement_budget_mins: row.weekly_engagement_budget_mins ?? 0,
-      engagement_used_mins: 0, // Calculated at query time from activity data
+      engagement_used_mins: null, // #673: Not yet implemented — null signals "not available"
       dnd_mode: {
         active: row.dnd_active ?? false,
         auto_response_enabled: row.auto_response_enabled ?? false,

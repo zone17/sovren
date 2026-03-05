@@ -34,7 +34,7 @@ const DEFAULT_BOUNDARIES: BoundaryConfig = {
     days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
   },
   weekly_engagement_budget_mins: 120,
-  engagement_used_mins: 0,
+  engagement_used_mins: null, // Not yet implemented — null signals "not available"
   dnd_mode: {
     active: false,
     auto_response_enabled: false,
@@ -227,7 +227,9 @@ export const BoundarySettings: React.FC = () => {
             />
           </div>
           <p className="text-[10px] text-gray-400">
-            {form.engagement_used_mins} / {form.weekly_engagement_budget_mins} min used
+            {form.engagement_used_mins !== null
+              ? `${form.engagement_used_mins} / ${form.weekly_engagement_budget_mins} min used`
+              : `${form.weekly_engagement_budget_mins} min budget (tracking coming soon)`}
           </p>
         </div>
 

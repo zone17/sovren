@@ -721,7 +721,7 @@ describe('WellnessService', () => {
       service = new WellnessService(mockDb, mockLogger);
 
       await expect(service.deleteAllWellnessData('creator-1')).rejects.toThrow(
-        /GDPR deletion failed.*No data was deleted/
+        'GDPR data deletion failed. No data was deleted. Contact support.'
       );
     });
   });
@@ -811,87 +811,6 @@ describe('WellnessService', () => {
 
       const result = await service.getBenchmark();
       expect(result).toBeNull();
-    });
-  });
-
-  // =========================================================================
-  // checkPulseEligibility
-  // =========================================================================
-
-  describe('checkPulseEligibility', () => {
-    it('returns true when no pulse exists today', async () => {
-      const chainable = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockResolvedValue({ count: 0, error: null }),
-      };
-      mockDb = {
-        from: vi.fn(() => chainable),
-        rpc: vi.fn(),
-      } as unknown as ISupabaseClient;
-
-      service = new WellnessService(mockDb, mockLogger);
-      const result = await service.checkPulseEligibility('creator-1');
-
-      expect(result).toBe(true);
-      expect(mockDb.from).toHaveBeenCalledWith('wellness_snapshots');
-    });
-
-    it('returns false when pulse already submitted today', async () => {
-      const chainable = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockResolvedValue({ count: 1, error: null }),
-      };
-      mockDb = {
-        from: vi.fn(() => chainable),
-        rpc: vi.fn(),
-      } as unknown as ISupabaseClient;
-
-      service = new WellnessService(mockDb, mockLogger);
-      const result = await service.checkPulseEligibility('creator-1');
-
-      expect(result).toBe(false);
-    });
-
-    it('throws and logs on database error', async () => {
-      const dbError = { message: 'DB error', code: 'PGRST500' };
-      const chainable = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockResolvedValue({ count: null, error: dbError }),
-      };
-      mockDb = {
-        from: vi.fn(() => chainable),
-        rpc: vi.fn(),
-      } as unknown as ISupabaseClient;
-
-      service = new WellnessService(mockDb, mockLogger);
-
-      await expect(service.checkPulseEligibility('creator-1')).rejects.toThrow(
-        'Failed to check pulse eligibility'
-      );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to check pulse eligibility',
-        expect.objectContaining({ creatorId: 'creator-1' })
-      );
-    });
-
-    it('uses head:true count query (not fetching rows)', async () => {
-      const chainable = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockResolvedValue({ count: 0, error: null }),
-      };
-      mockDb = {
-        from: vi.fn(() => chainable),
-        rpc: vi.fn(),
-      } as unknown as ISupabaseClient;
-
-      service = new WellnessService(mockDb, mockLogger);
-      await service.checkPulseEligibility('creator-1');
-
-      expect(chainable.select).toHaveBeenCalledWith('*', { count: 'exact', head: true });
     });
   });
 });

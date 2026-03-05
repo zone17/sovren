@@ -14,6 +14,7 @@ import type { ICacheService } from '../../interfaces/shared/ICacheService';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { Expense, ExpenseCategory, QuarterlyTaxSummary } from '@shared/types/finance';
 import { getBtcUsdRate, RATE_SOURCE } from '../../utils/btc-rate';
+import { NotFoundError } from '../../utils/errors';
 
 // L-5: Characters that trigger formula execution in spreadsheet apps
 // #271: Added \t and \r to prevent tab/CR-based injection
@@ -77,7 +78,13 @@ export class TaxService implements ITaxService {
   async getQuarterlySummary(
     creatorId: string,
     year: number,
-    quarter: 1 | 2 | 3 | 4
+    quarter: 1 | 2 | 3 | 4,
+    options?: {
+      /** #659: Pre-fetched BTC/USD rate to avoid redundant API calls in batch contexts */
+      prefetchedRate?: number;
+      /** #659: Pre-fetched expenses for this quarter (avoids redundant DB queries in export) */
+      prefetchedExpenses?: ExportExpenseRow[];
+    }
   ): Promise<{
     revenue: number;
     expenses: number;
@@ -97,7 +104,9 @@ export class TaxService implements ITaxService {
 
     // Use recorded usd_at_time (captured at receipt) where available.
     // Fall back to live rate for entries missing USD values — 5-min TTL.
-    const { rate: btcRateUsd } = await getBtcUsdRate(this.cache, this.logger);
+    // #659: Accept pre-fetched rate to avoid redundant API calls in export context
+    const btcRateUsd =
+      options?.prefetchedRate ?? (await getBtcUsdRate(this.cache, this.logger)).rate;
 
     // Accumulate revenue totals via pagination
     let totalRevenueSats = 0;
@@ -136,41 +145,56 @@ export class TaxService implements ITaxService {
       revenueOffset += PAGE_SIZE;
     }
 
-    // Accumulate expense totals via pagination
+    // Accumulate expense totals — use pre-fetched data when available (#659),
+    // otherwise paginate from DB
     let totalExpenseSats = 0;
     let usdExpenses = 0;
-    let expenseOffset = 0;
-    let hasMoreExpenses = true;
 
-    while (hasMoreExpenses) {
-      const { data: expPage, error: expenseError } = await this.db
-        .from<ExpenseRow>('expenses')
-        .select('amount_sats, usd_at_time')
-        .eq('creator_id', creatorId)
-        .gte('expense_date', startDate.split('T')[0])
-        .lte('expense_date', endDate.split('T')[0])
-        .order('expense_date', { ascending: true })
-        .range(expenseOffset, expenseOffset + PAGE_SIZE - 1);
-
-      if (expenseError) {
-        this.logger.error('Failed to fetch quarterly expenses', {
-          error: expenseError,
-          creatorId,
-          year,
-          quarter,
-        });
-        throw new Error('Failed to fetch quarterly expenses');
+    if (options?.prefetchedExpenses) {
+      // #659: Use in-memory pre-fetched expenses filtered by quarter date range
+      const startDateStr = startDate.split('T')[0];
+      const endDateStr = endDate.split('T')[0];
+      for (const e of options.prefetchedExpenses) {
+        if (e.expense_date >= startDateStr && e.expense_date <= endDateStr) {
+          totalExpenseSats += e.amount_sats;
+          usdExpenses +=
+            e.usd_at_time !== null ? e.usd_at_time : (e.amount_sats / 100_000_000) * btcRateUsd;
+        }
       }
+    } else {
+      let expenseOffset = 0;
+      let hasMoreExpenses = true;
 
-      const rows = expPage ?? [];
-      for (const e of rows) {
-        totalExpenseSats += e.amount_sats;
-        usdExpenses +=
-          e.usd_at_time !== null ? e.usd_at_time : (e.amount_sats / 100_000_000) * btcRateUsd;
+      while (hasMoreExpenses) {
+        const { data: expPage, error: expenseError } = await this.db
+          .from<ExpenseRow>('expenses')
+          .select('amount_sats, usd_at_time')
+          .eq('creator_id', creatorId)
+          .gte('expense_date', startDate.split('T')[0])
+          .lte('expense_date', endDate.split('T')[0])
+          .order('expense_date', { ascending: true })
+          .range(expenseOffset, expenseOffset + PAGE_SIZE - 1);
+
+        if (expenseError) {
+          this.logger.error('Failed to fetch quarterly expenses', {
+            error: expenseError,
+            creatorId,
+            year,
+            quarter,
+          });
+          throw new Error('Failed to fetch quarterly expenses');
+        }
+
+        const rows = expPage ?? [];
+        for (const e of rows) {
+          totalExpenseSats += e.amount_sats;
+          usdExpenses +=
+            e.usd_at_time !== null ? e.usd_at_time : (e.amount_sats / 100_000_000) * btcRateUsd;
+        }
+
+        hasMoreExpenses = rows.length === PAGE_SIZE;
+        expenseOffset += PAGE_SIZE;
       }
-
-      hasMoreExpenses = rows.length === PAGE_SIZE;
-      expenseOffset += PAGE_SIZE;
     }
 
     return {
@@ -197,6 +221,51 @@ export class TaxService implements ITaxService {
       throw new Error('Failed to fetch expenses');
     }
     return data ?? [];
+  }
+
+  /**
+   * #660: Server-side paginated expense query with exact count.
+   * Returns items for the requested page and total row count for pagination metadata.
+   */
+  async getExpensesPaginated(
+    creatorId: string,
+    params: {
+      categoryId?: string;
+      startDate?: string;
+      endDate?: string;
+      limit: number;
+      offset: number;
+    }
+  ): Promise<{ items: Expense[]; count: number }> {
+    this.logger.info('TaxService.getExpensesPaginated', {
+      creatorId,
+      limit: params.limit,
+      offset: params.offset,
+    });
+
+    const { categoryId, startDate, endDate, limit, offset } = params;
+
+    let query = this.db
+      .from<ExpenseRow>('expenses')
+      .select(
+        'id, creator_id, category_id, description, amount_sats, usd_at_time, expense_date, created_at, expense_categories(name, type)',
+        { count: 'exact' }
+      )
+      .eq('creator_id', creatorId);
+
+    if (categoryId) query = query.eq('category_id', categoryId);
+    if (startDate) query = query.gte('expense_date', startDate);
+    if (endDate) query = query.lte('expense_date', endDate);
+
+    const { data, error, count } = await query
+      .order('expense_date', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      this.logger.error('Failed to fetch paginated expenses', { error, creatorId });
+      throw new Error('Failed to fetch paginated expenses');
+    }
+    return { items: data ?? [], count: count ?? 0 };
   }
 
   async addExpense(
@@ -282,17 +351,25 @@ export class TaxService implements ITaxService {
   async exportTaxReport(creatorId: string, year: number, format: 'csv' | 'json'): Promise<string> {
     this.logger.info('TaxService.exportTaxReport', { creatorId, year, format });
 
-    const quarters = await Promise.all(
-      ([1, 2, 3, 4] as const).map(async (q) => ({
-        quarter: q,
-        summary: await this.getQuarterlySummary(creatorId, year, q),
-      }))
-    );
+    // #659: Fetch BTC/USD rate ONCE for the entire report to avoid 4 redundant API calls
+    // #679: Single rate fetch ensures consistent USD conversion across all quarters
+    const { rate: btcRateUsd } = await getBtcUsdRate(this.cache, this.logger);
 
+    // #659: Fetch all expenses ONCE, then filter by quarter in-memory
     const expenses = await this.getExpensesForExport(creatorId, {
       startDate: `${year}-01-01`,
       endDate: `${year}-12-31`,
     });
+
+    const quarters = await Promise.all(
+      ([1, 2, 3, 4] as const).map(async (q) => ({
+        quarter: q,
+        summary: await this.getQuarterlySummary(creatorId, year, q, {
+          prefetchedRate: btcRateUsd,
+          prefetchedExpenses: expenses,
+        }),
+      }))
+    );
 
     // Annual totals
     const annual = quarters.reduce(
@@ -419,13 +496,15 @@ export class TaxService implements ITaxService {
       }
 
       const rows = data ?? [];
-      all.push(...rows);
 
-      // #667: Safety cap — warn and stop accumulation if limit is reached
-      if (all.length >= MAX_EXPORT_ROWS) {
+      // #667: Check cap BEFORE pushing to prevent overshoot beyond MAX_EXPORT_ROWS
+      if (all.length + rows.length > MAX_EXPORT_ROWS) {
+        const remaining = MAX_EXPORT_ROWS - all.length;
+        all.push(...rows.slice(0, remaining));
         this.logger.warn('Export row limit reached', { creatorId, limit: MAX_EXPORT_ROWS });
         break;
       }
+      all.push(...rows);
 
       hasMore = rows.length === PAGE_SIZE;
       offset += PAGE_SIZE;
@@ -456,9 +535,10 @@ export class TaxService implements ITaxService {
   async deleteExpense(expenseId: string, creatorId: string): Promise<void> {
     this.logger.info('TaxService.deleteExpense', { expenseId, creatorId });
 
-    const { error } = await this.db
+    // #657: Use { count: 'exact' } to detect no-op deletes (nonexistent or wrong owner)
+    const { error, count } = await this.db
       .from<ExpenseRow>('expenses')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('id', expenseId)
       .eq('creator_id', creatorId);
 
@@ -466,20 +546,27 @@ export class TaxService implements ITaxService {
       this.logger.error('Failed to delete expense', { error, expenseId, creatorId });
       throw new Error('Failed to delete expense');
     }
+    if (count === 0) {
+      throw new NotFoundError('Expense');
+    }
   }
 
   async deleteExpenseCategory(categoryId: string, creatorId: string): Promise<void> {
     this.logger.info('TaxService.deleteExpenseCategory', { categoryId, creatorId });
 
-    const { error } = await this.db
+    // #657: Use { count: 'exact' } to detect no-op deletes
+    const { error, count } = await this.db
       .from<ExpenseCategoryRow>('expense_categories')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('id', categoryId)
       .eq('creator_id', creatorId);
 
     if (error) {
       this.logger.error('Failed to delete expense category', { error, categoryId, creatorId });
       throw new Error('Failed to delete expense category');
+    }
+    if (count === 0) {
+      throw new NotFoundError('Category');
     }
   }
 }

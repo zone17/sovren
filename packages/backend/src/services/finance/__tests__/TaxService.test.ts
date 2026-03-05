@@ -679,15 +679,23 @@ describe('TaxService', () => {
         data: [{ amount_sats: 100000, usd_at_time: 60.0 }],
         error: null,
       };
+      // #659: Export now pre-fetches expenses and filters by quarter in-memory.
+      // Each expense row needs expense_date so the date filter works.
+      // Spread expenses across all 4 quarters so each quarter picks up its share.
       mockDb._expenseResult = {
-        data: [{ amount_sats: 25000, usd_at_time: 15.0 }],
+        data: [
+          { amount_sats: 25000, usd_at_time: 15.0, expense_date: '2026-02-15' },
+          { amount_sats: 25000, usd_at_time: 15.0, expense_date: '2026-05-15' },
+          { amount_sats: 25000, usd_at_time: 15.0, expense_date: '2026-08-15' },
+          { amount_sats: 25000, usd_at_time: 15.0, expense_date: '2026-11-15' },
+        ],
         error: null,
       };
 
       const output = await service.exportTaxReport('creator-1', 2026, 'json');
       const parsed = JSON.parse(output);
 
-      // Each quarter gets the same mock data, so annual = 4x
+      // Each quarter gets one expense of 25000 sats / $15, revenue 100000 sats / $60
       expect(parsed.annual.revenue).toBe(400000);
       expect(parsed.annual.expenses).toBe(100000);
       expect(parsed.annual.net).toBe(300000);
@@ -727,8 +735,15 @@ describe('TaxService', () => {
         data: [{ amount_sats: 50000, usd_at_time: 30.0 }],
         error: null,
       };
+      // #659: Export now pre-fetches expenses and filters by quarter in-memory.
+      // Spread expenses across all 4 quarters.
       mockDb._expenseResult = {
-        data: [{ amount_sats: 10000, usd_at_time: 6.0 }],
+        data: [
+          { amount_sats: 10000, usd_at_time: 6.0, expense_date: '2026-02-15' },
+          { amount_sats: 10000, usd_at_time: 6.0, expense_date: '2026-05-15' },
+          { amount_sats: 10000, usd_at_time: 6.0, expense_date: '2026-08-15' },
+          { amount_sats: 10000, usd_at_time: 6.0, expense_date: '2026-11-15' },
+        ],
         error: null,
       };
 

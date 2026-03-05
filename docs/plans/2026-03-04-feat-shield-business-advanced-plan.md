@@ -3,8 +3,8 @@ title: 'feat: Shield + Business Advanced (Slice 7)'
 type: feat
 date: 2026-03-04
 squad: A
-sprint: S3
-branch: feat/squad-a/S3-shield-business-advanced
+sprint: S7
+branch: feat/squad-a/S7-shield-business-advanced
 ---
 
 # Slice 7: Shield + Business Advanced
@@ -315,7 +315,7 @@ New tests:
 
 ## Dependencies & Prerequisites
 
-- Branch: `feat/squad-a/S3-shield-business-advanced` (created from `origin/main`)
+- Branch: `feat/squad-a/S7-shield-business-advanced` (created from `origin/main`)
 - Redis must be running for BullMQ tests (Docker)
 - Supabase CLI for migration testing (`supabase db reset`)
 - No cross-squad dependencies — all work is in Squad A's domain
