@@ -1,6 +1,6 @@
 # CE Metrics Dashboard
 
-Track Compound Engineering session metrics across **5 dimensions**: Cost Efficiency, Velocity, Quality, Knowledge Compounding, and Agent Efficiency.
+Track engineering metrics across **Flow Framework** (4 DORA-aligned metrics) + **Agent Pipeline** (4 agent-specific metrics).
 
 ## Architecture
 
@@ -8,11 +8,19 @@ Track Compound Engineering session metrics across **5 dimensions**: Cost Efficie
 Claude Code Hooks → JSONL → session-end.sh → Pushgateway → Prometheus → Grafana
                               ↑
 Workflow Hooks → set-phase.sh ┘ (preserves session_id/branch in ce-phase.json)
+
+flow-metrics.sh (cron/manual):
+  lib/github-api.sh   ← gh pr list + gh api actions/runs (batched, 1-2 calls)
+  lib/pushgateway.sh  ← batch accumulator + single POST + stale cleanup
+  collectors/
+    flow-core.sh      ← velocity, time, load
+    flow-efficiency.sh ← (consolidated into agent-pipeline.sh)
+    agent-pipeline.sh  ← agent cycle times + phase counts (single-pass JSONL)
+    quality-gates.sh   ← gate first-pass rate, change failure rate
+    coverage-delta.sh  ← test coverage % + delta from baseline
+
+Enforcement Hooks → guardrail_block events → JSONL (data collection only)
 ```
-
-Hooks fire on lifecycle events (session start/end, turns, agent spawn/complete, git commands, task completion). Events append to `~/.claude/metrics/ce-events.jsonl`. At session end, `session-end.sh` aggregates all events and pushes ~20 metrics to Pushgateway.
-
-Workflow commands (`/workflows:plan`, `/workflows:work`, etc.) call `set-phase.sh` to update the current CE phase without overwriting session metadata.
 
 ## Setup
 
@@ -35,193 +43,179 @@ bash scripts/ce-metrics/install-hooks.sh
 bash scripts/ce-metrics/check-health.sh
 ```
 
-### Verify with Seed Data
+### Run Flow Metrics
 
 ```bash
-# Push synthetic metrics for 3 PRs across all 5 dimensions
-bash scripts/ce-metrics/seed-test-data.sh
+# One-time collection
+bash scripts/ce-metrics/flow-metrics.sh
 
-# Open Grafana
-open http://localhost:3002
+# Continuous (every 5 minutes)
+bash scripts/ce-metrics/flow-metrics.sh --watch
 ```
 
-All 22 panels should render with data (no "No data" panels).
+## Metrics
 
-### Verify with Real Session
+### Flow Framework (Rows 1-4)
 
-Run a Claude Code session with `/workflows:plan`. After the session ends:
+| Metric                       | Decision Rule                                     | Source                         |
+| ---------------------------- | ------------------------------------------------- | ------------------------------ |
+| `flow_velocity_prs_per_week` | If <5/week, investigate blockers                  | `gh pr list --state merged`    |
+| `flow_time_median_hours`     | If >24h, reduce WIP                               | `gh pr list --state merged`    |
+| `flow_load`                  | If >5, reduce WIP                                 | `gh pr list --state open`      |
+| `flow_efficiency_ratio`      | If <15%, simplify process; >30%, skipping reviews | `ce-events.jsonl` phase counts |
 
-1. Check `~/.claude/metrics/ce-events.jsonl` — events should have correct `phase` (not all `adhoc`)
-2. Check `~/.claude/metrics/ce-phase.json` — should have `session_id`, `branch`, `pr_number`
-3. Metrics appear in Grafana within 5 minutes (dashboard refresh interval)
+### Agent Quality Gates (Row 5 — NEW)
 
-## 5 Dimensions
+| Metric                         | Decision Rule                              | Source                                                                |
+| ------------------------------ | ------------------------------------------ | --------------------------------------------------------------------- |
+| `gate_first_pass_rate`         | If <70%, investigate CI breakage           | `gh api actions/runs` — check `run_attempt==1 && conclusion==success` |
+| `change_failure_rate`          | If >15%, stop and fix pipeline             | CI runs on main after squash-merge                                    |
+| `agent_cycle_time_avg_seconds` | If agent_type X >10min avg, optimize brief | `ce-events.jsonl` `agent_complete` events                             |
+| `ce_test_coverage_pct`         | If <60%, add tests                         | `coverage/coverage-final.json`                                        |
+| `test_coverage_delta_pct`      | If <0 on 2+ consecutive PRs, investigate   | Current vs `coverage-baseline.json`                                   |
 
-### 1. Cost Efficiency
+### Guardrail Blocks (data collection only — no panel)
 
-How much does each session/PR cost?
+| Metric                        | Source                                     |
+| ----------------------------- | ------------------------------------------ |
+| `guardrail_block_count{rule}` | `ce-events.jsonl` `guardrail_block` events |
 
-| Metric                              | Type  | Description                                                                   |
-| ----------------------------------- | ----- | ----------------------------------------------------------------------------- |
-| `ce_session_cost_usd`               | gauge | Multi-model session cost (Opus $15/$75, Sonnet $3/$15, Haiku $0.80/$4 per 1M) |
-| `ce_session_tokens_total{type}`     | gauge | Token usage by type (input, output, cache_read, cache_creation)               |
-| `ce_session_tokens_by_model{model}` | gauge | Per-model token breakdown                                                     |
+Guardrail data is emitted by enforcement hooks (`security-gate-bash.sh`, `security-gate-files.sh`, `branch-discipline.sh`) but has no dashboard panel. Data accumulates in JSONL for future analysis.
 
-### 2. Velocity
+## Module Structure
 
-How fast are sessions completing?
+```
+scripts/ce-metrics/
+  flow-metrics.sh                 # Entrypoint: source all, run_once(), --watch
+  collectors/
+    flow-core.sh                  # Velocity, time, load
+    flow-efficiency.sh            # Wrapper (consolidated into agent-pipeline.sh)
+    agent-pipeline.sh             # Single-pass JSONL: agent times + phase counts
+    quality-gates.sh              # Gate first-pass rate, change failure rate
+    coverage-delta.sh             # Coverage % + delta from baseline
+  lib/
+    github-api.sh                 # Shared PR list, batched actions/runs, rate limit
+    pushgateway.sh                # Batch accumulator, single POST, stale cleanup
+```
 
-| Metric                   | Type  | Description                    |
-| ------------------------ | ----- | ------------------------------ |
-| `ce_session_turns_total` | gauge | Number of API turns in session |
+### Performance
 
-### 3. Quality
+- **Shared PR list**: Fetched once (`gh pr list --limit 200`), passed to all collectors
+- **Batched CI runs**: Single `gh api actions/runs?per_page=100` instead of per-PR calls
+- **Single-pass JSONL**: One python3 pass extracts agent durations + phase counts + guardrail blocks
+- **Batch Pushgateway**: All metrics accumulated in `$METRICS_BUFFER`, pushed in single POST
+- **Stale cleanup**: Per-PR time series deleted if PR no longer in 200 most recent
 
-What is the defect density?
+## Dashboard Panels (25 panels, 6 rows)
 
-| Metric                        | Type  | Description                              |
-| ----------------------------- | ----- | ---------------------------------------- |
-| `ce_findings_total{severity}` | gauge | Review findings by severity (p1, p2, p3) |
-| `ce_lines_changed{type}`      | gauge | Lines added/deleted vs origin/main       |
+### Row 1: Flow KPIs (4 panels)
 
-### 4. Knowledge Compounding
+- **Flow Velocity** — PRs/week (stat, green >=10)
+- **Flow Time (Median)** — hours to merge (stat, green <8h)
+- **Flow Load (WIP)** — open PRs (stat, green <3)
+- **Flow Efficiency** — work ratio (gauge, green >30%)
 
-Is the team getting smarter?
+### Row 2: Flow Velocity — Value Delivered (3 panels, collapsed)
 
-| Metric                   | Type  | Description                                                 |
-| ------------------------ | ----- | ----------------------------------------------------------- |
-| `ce_compound_docs_total` | gauge | Count of docs in `docs/solutions/`                          |
-| `ce_pattern_count`       | gauge | Line count of `common-solutions.md` (pattern density proxy) |
+- **PRs Merged per Week** — bar chart
+- **PRs Merged (4 Weeks Total)** — stat
+- **Lines Changed per PR** — bar chart (green +, red -)
 
-### 5. Agent Efficiency
+### Row 3: Flow Time — Speed of Delivery (2 panels, collapsed)
 
-Are agents productive?
+- **Flow Time per PR** — bar chart (continuous color scale)
+- **Flow Time Distribution** — median, avg, P90
 
-| Metric                          | Type  | Description                   |
-| ------------------------------- | ----- | ----------------------------- |
-| `ce_session_agents_total`       | gauge | Agents spawned per session    |
-| `ce_session_tasks_total`        | gauge | Tasks completed per session   |
-| `ce_session_commits_total`      | gauge | Git commits per session       |
-| `ce_agent_duration_seconds_avg` | gauge | Average agent completion time |
+### Row 4: Flow Efficiency — Active Work Ratio (2 panels, collapsed)
 
-**All metrics include labels:** `session`, `phase`, `project`, `pr_number`
+- **Phase Distribution** — donut chart
+- **Flow Efficiency Note** — explainer text
 
-## Dashboard Panels (22 panels, 7 rows)
+### Row 5: Flow Load — Work in Progress (2 panels)
 
-### Row 0: Executive KPIs (6 panels)
+- **Current Open PRs** — gauge (green <3, red >5)
+- **WIP Guidance** — Little's Law explainer
 
-- **Total Cost** — aggregate USD
-- **Cost Trend** — sparkline per session
-- **PRs Tracked** — distinct PR count
-- **Avg Turns/Session** — velocity indicator
-- **P1 Findings** — critical defect count with sparkline
-- **Cache Efficiency** — cache_read / (input + cache_read) gauge
+### Row 6: Agent Quality Gates (6 panels — NEW)
 
-### Row 1: Cost Efficiency (4 panels)
+- **Gate First-Pass Rate** — gauge (green >=90%, yellow >=70%, red <70%)
+- **Change Failure Rate** — gauge (green <10%, yellow <20%, red >=20%)
+- **Test Coverage** — stat (green >=80%, yellow >=60%, red <60%)
+- **Coverage Delta** — stat (+/- %, green >0, red <0)
+- **Agent Cycle Time by Type** — bar chart (seconds, by agent_type)
+- **Agent Cycle Time P90** — stat (yellow >300s, red >600s)
 
-- **Cost per Session** — bar chart
-- **Cost by Phase** — pie chart (plan/work/review/compound/adhoc)
-- **Cost by Model** — pie chart (opus/sonnet/haiku)
-- **Token Composition** — bar gauge (input/output/cache_read/cache_creation)
+## Test Coverage Delta — How It Works
 
-### Row 2: Velocity (3 panels)
+1. **Capture**: `session-end.sh` checks if tests ran (via `detect-test-run.sh` flag). If yes and `coverage-final.json` exists, pushes `ce_test_coverage_pct` to Pushgateway.
+2. **Baseline**: `post-git-actions.sh` snapshots coverage after `gh pr merge` to `~/.claude/metrics/coverage-baseline.json`.
+3. **Delta**: `collectors/coverage-delta.sh` compares current vs baseline and pushes `test_coverage_delta_pct`.
+4. **Bootstrap**: First run shows "No baseline yet". After first merge with test coverage, baseline is established.
 
-- **Turns per Session** — bar chart
-- **Turns by Phase** — pie chart
-- **Avg Agent Duration** — stat with trend
+## Guardrail JSONL Emit
 
-### Row 3: Quality (3 panels)
+Enforcement hooks emit `guardrail_block` events using subshell isolation:
 
-- **Findings by Severity** — stacked bar (P1/P2/P3)
-- **P1 Findings per Session** — bar chart
-- **Lines Changed per Session** — stacked bar (added/deleted)
+```bash
+# Before each exit 2 in enforcement hooks:
+(umask 077; printf '{"type":"guardrail_block","timestamp":"%s","hook":"%s","rule":"%s"}\n' \
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "hook-name" "rule-name" \
+  >> "$CE_EVENTS_FILE") 2>/dev/null || true
+exit 2
+```
 
-### Row 4: Knowledge Compounding (2 panels)
+Subshell isolation ensures `set -e` cannot bypass `exit 2`. Rules tracked:
 
-- **Compound Docs** — stat with trend
-- **Pattern Count** — stat with trend
-
-### Row 5: Agent Efficiency (3 panels)
-
-- **Agents per Session** — bar chart
-- **Tasks per Session** — bar chart
-- **Commits per Session** — bar chart
-
-### Row 6: Active Session (3 panels)
-
-- **Current Phase** — plan/work/review/compound/brainstorm/adhoc
-- **Session Cost** — USD estimate
-- **Tokens This Session** — total tokens
+| Hook                  | Rules                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| `security-gate-bash`  | rm_rf, force_push_main, direct_push_main, git_reset_hard, drop_table, watch_ci_gate |
+| `security-gate-files` | env_file, credential_file, path_traversal                                           |
+| `branch-discipline`   | commit_on_main, push_on_main                                                        |
 
 ## Configuration
 
-| Setting             | Location                      | Default                 |
-| ------------------- | ----------------------------- | ----------------------- |
-| Pushgateway URL     | `PUSHGATEWAY_URL` env var     | `http://localhost:9091` |
-| Grafana port        | `docker-compose.dev.yml`      | 3002                    |
-| Dashboard refresh   | `ce-metrics-main.json`        | 5 minutes               |
-| JSONL rotation      | lib.sh `rotate_jsonl()`       | 10MB                    |
-| Pending file expiry | lib.sh `replay_pending()`     | 24 hours                |
-| Disable metrics     | `~/.claude/metrics/.disabled` | enabled                 |
+| Setting           | Location                                   | Default                 |
+| ----------------- | ------------------------------------------ | ----------------------- |
+| Pushgateway URL   | `PUSHGATEWAY_URL` env var                  | `http://localhost:9091` |
+| GitHub repo       | `GITHUB_REPO` env var                      | `zone17/sovren`         |
+| Grafana port      | `docker-compose.dev.yml`                   | 3002                    |
+| Dashboard refresh | `ce-metrics-main.json`                     | 5 minutes               |
+| JSONL rotation    | lib.sh `rotate_jsonl()`                    | 10MB                    |
+| Coverage baseline | `~/.claude/metrics/coverage-baseline.json` | auto after first merge  |
+| JSONL permissions | lib.sh `ce_ensure_dirs()`                  | 600 (umask 077)         |
 
 ## Troubleshooting
 
 **No data in Grafana**
 
-1. Run `bash scripts/ce-metrics/seed-test-data.sh` to push synthetic data
+1. Run `bash scripts/ce-metrics/flow-metrics.sh` to push flow data
 2. Run `bash scripts/ce-metrics/check-health.sh`
-3. Check Pushgateway has data: `curl http://localhost:9091/api/v1/metrics`
-4. Check Prometheus targets: `http://localhost:9090/targets`
-5. Check `~/.claude/metrics/ce-events.jsonl` has entries
+3. Check Pushgateway: `curl http://localhost:9091/api/v1/metrics`
 
-**All events show phase "adhoc"**
+**Gate/failure rate shows 0**
 
-- Verify workflow hooks call `set-phase.sh` (not inline `echo`)
-- Check `~/.claude/hooks/ce-metrics/set-phase.sh` exists and is executable
-- Verify `~/.claude/metrics/ce-phase.json` has `session_id` field (set-phase.sh preserves it)
+- Verify GitHub API access: `gh api rate_limit`
+- Check `gh pr list --state merged --limit 5` returns data
+- Ensure `gh api repos/zone17/sovren/actions/runs` succeeds
 
-**Token data is all zeros**
+**Agent cycle times empty**
 
-- Check `turn-complete.sh` is registered in settings.json
-- Verify transcript path is accessible: `cat ~/.claude/metrics/ce-events.jsonl | jq 'select(.type=="turn_complete")'`
-- Transcript format may vary — check `parse_last_turn_tokens()` in lib.sh
+- Check `~/.claude/metrics/ce-events.jsonl` for `agent_complete` events
+- Verify `agent-complete.sh` hook is registered in `~/.claude/settings.json`
 
-**Cost seems wrong**
+**Coverage delta shows "No baseline yet"**
 
-- `compute_cost()` uses multi-model pricing — verify model names in JSONL match patterns (opus/sonnet/haiku)
-- Unknown models default to Opus pricing
+- Merge a PR that ran tests with coverage (`npm run test:coverage`)
+- Baseline auto-creates via `post-git-actions.sh` after `gh pr merge`
 
-**Metrics disabled**
+## Deferred Metrics (documented, not built)
 
-```bash
-rm ~/.claude/metrics/.disabled
-```
-
-**Stale pending files**
-
-```bash
-rm -f ~/.claude/metrics/pending/*.prom ~/.claude/metrics/pending/*.meta
-```
-
-## Hook API Reference
-
-| Hook Event        | Script            | Trigger                                       |
-| ----------------- | ----------------- | --------------------------------------------- |
-| SessionStart      | session-start.sh  | Session begins (creates ce-phase.json)        |
-| Stop              | turn-complete.sh  | Each API turn completes                       |
-| SubagentStart     | agent-spawn.sh    | Agent spawned                                 |
-| SubagentStop      | agent-complete.sh | Agent completes                               |
-| PostToolUse[Bash] | git-event.sh      | After any Bash tool call                      |
-| TaskCompleted     | task-complete.sh  | Task marked complete                          |
-| SessionEnd        | session-end.sh    | Session ends (aggregates + pushes)            |
-| Workflow hooks    | set-phase.sh      | Phase transition (preserves session metadata) |
-
-## Deferred Metrics (Phase 2)
-
-These require infrastructure beyond session hooks:
-
-- Line survival rate (30-day git blame — needs cron)
-- Rework rate (cross-PR change detection — needs backfill script)
-- CI recovery time (GitHub Actions API — needs polling)
-- Test coverage delta (coverage report parsing)
-- PRs merged per day (GitHub API or webhook)
+| Metric                     | Why Deferred                                 | Prerequisite                                     |
+| -------------------------- | -------------------------------------------- | ------------------------------------------------ |
+| Agent Lead Time            | pr_create events lack PR number              | Build when data pipeline exists                  |
+| Queue Wait Time            | No TaskCreated/TaskUpdated hooks             | Claude Code feature request                      |
+| Revision Loops             | Commit count is broken proxy                 | Use `gh pr --json reviews` when data accumulates |
+| Guardrail Triggers (panel) | Near-zero for solo dev                       | Panel when data accumulates                      |
+| Standards Compliance       | Hooks already enforce — metric is a constant | Nothing to build                                 |
+| Rework Ratio               | Commit count penalizes good git practice     | Per-commit diff comparison (expensive)           |
+| Defect Origin              | Branch prefix != defect origin               | review_findings events from /workflows:review    |
