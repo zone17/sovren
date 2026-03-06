@@ -1,0 +1,924 @@
+{
+  "uid": "ce-agent-monitor",
+  "title": "Agent Monitor",
+  "schemaVersion": 39,
+  "graphTooltip": 1,
+  "refresh": "5s",
+  "version": 1,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "fiscalYearStartMonth": 0,
+  "templating": {
+    "list": [
+      {
+        "name": "project",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+        "query": "label_values(ce_session_cost_usd, project)",
+        "refresh": 2,
+        "includeAll": true,
+        "current": { "text": "All", "value": "$__all" },
+        "sort": 1
+      },
+      {
+        "name": "session",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+        "query": "label_values(ce_session_cost_usd{project=~\"$project\"}, session)",
+        "refresh": 2,
+        "includeAll": true,
+        "current": { "text": "All", "value": "$__all" },
+        "sort": 2
+      },
+      {
+        "name": "phase",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+        "query": "label_values(ce_session_cost_usd{project=~\"$project\"}, phase)",
+        "refresh": 2,
+        "includeAll": true,
+        "current": { "text": "All", "value": "$__all" },
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "panels": [],
+      "title": "Session Overview",
+      "type": "row"
+    },
+    {
+      "id": 10,
+      "title": "Session Cost",
+      "description": "Estimated cost of current/selected session in USD",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_cost_usd{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "orange", "value": 5 },
+              { "color": "red", "value": 15 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "title": "Total Turns",
+      "description": "Number of conversation turns in session",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_turns_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "purple", "value": 50 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 12,
+      "title": "Agents Spawned",
+      "description": "Total agents spawned during session",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_agents_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "semi-dark-blue", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 13,
+      "title": "Tasks Completed",
+      "description": "Tasks completed during session",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_tasks_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "semi-dark-green", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 14,
+      "title": "Context Compactions",
+      "description": "Number of context window compactions — signals context pressure",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_context_compact_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 2,
+      "panels": [],
+      "title": "Tool Activity",
+      "type": "row"
+    },
+    {
+      "id": 20,
+      "title": "Tool Calls by Category",
+      "description": "Distribution of tool calls across categories",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_tool_calls_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{category}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisLabel": "Calls"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "read" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "write" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "execute" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "search" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "agent" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "purple", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "mcp" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "orientation": "horizontal",
+        "xTickLabelRotation": 0,
+        "showValue": "always",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 21,
+      "title": "Tool Failure Rate",
+      "description": "Ratio of failed tool calls to total tool calls",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_tool_failures_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"} / (sum(ce_tool_calls_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}) or vector(1)) * 100",
+          "legendFormat": "Failure %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 15 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "id": 22,
+      "title": "Tool Failures",
+      "description": "Total tool failures in session",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_tool_failures_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 10 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 23,
+      "title": "Commits",
+      "description": "Git commits during session",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_commits_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "semi-dark-green", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 3,
+      "panels": [],
+      "title": "Agent Team",
+      "type": "row"
+    },
+    {
+      "id": 30,
+      "title": "Avg Agent Duration",
+      "description": "Average time for agent completion in seconds",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_agent_duration_seconds_avg{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 120 },
+              { "color": "red", "value": 300 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 31,
+      "title": "Teammate Idle Events",
+      "description": "Number of teammate idle transitions — high count may indicate coordination overhead",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_teammate_idle_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 25 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 32,
+      "title": "Agent Efficiency",
+      "description": "Agents spawned vs tasks completed — ratio indicates team overhead",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_tasks_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"} / (ce_session_agents_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"} > 0)",
+          "legendFormat": "Tasks/Agent",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "green", "value": 2 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+      "id": 4,
+      "panels": [],
+      "title": "Token Usage & Cost",
+      "type": "row"
+    },
+    {
+      "id": 40,
+      "title": "Input Tokens",
+      "description": "Total input tokens consumed",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_tokens_total{type=\"input\",session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 41,
+      "title": "Output Tokens",
+      "description": "Total output tokens generated",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_tokens_total{type=\"output\",session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "purple", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 42,
+      "title": "Cache Read Tokens",
+      "description": "Tokens served from cache — higher is better for cost",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_tokens_total{type=\"cache_read\",session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 43,
+      "title": "Cache Creation Tokens",
+      "description": "Tokens written to cache — investment for future reads",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_tokens_total{type=\"cache_creation\",session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "semi-dark-orange", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 44,
+      "title": "Token Breakdown by Type",
+      "description": "Visual comparison of token types per session",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_tokens_total{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{type}} ({{session}})",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "fillOpacity": 80,
+            "axisLabel": "Tokens"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "^input" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "^output" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "purple", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "^cache_read" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "^cache_creation" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 45,
+      "title": "Cost Breakdown",
+      "description": "Session cost across sessions — helps identify expensive sessions",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_cost_usd{session=~\"$session\",phase=~\"$phase\",project=~\"$project\"}",
+          "legendFormat": "{{session}} ({{phase}})",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": { "mode": "continuous-GrYlRd" },
+          "custom": {
+            "fillOpacity": 80,
+            "gradientMode": "scheme",
+            "axisLabel": "Cost (USD)"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "hidden" }
+      },
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [{ "field": "Value", "desc": true }]
+          }
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 5,
+      "panels": [],
+      "title": "Session Comparison",
+      "type": "row"
+    },
+    {
+      "id": 50,
+      "title": "Sessions Overview",
+      "description": "All sessions at a glance with key metrics",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 33 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "ce_session_cost_usd{session=~\"$session\",project=~\"$project\"}",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "ce_session_turns_total{session=~\"$session\",project=~\"$project\"}",
+          "legendFormat": "",
+          "refId": "B",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "ce_session_agents_total{session=~\"$session\",project=~\"$project\"}",
+          "legendFormat": "",
+          "refId": "C",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "ce_session_tasks_total{session=~\"$session\",project=~\"$project\"}",
+          "legendFormat": "",
+          "refId": "D",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "ce_session_commits_total{session=~\"$session\",project=~\"$project\"}",
+          "legendFormat": "",
+          "refId": "E",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value #A" },
+            "properties": [
+              { "id": "displayName", "value": "Cost (USD)" },
+              { "id": "unit", "value": "currencyUSD" },
+              { "id": "decimals", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #B" },
+            "properties": [{ "id": "displayName", "value": "Turns" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #C" },
+            "properties": [{ "id": "displayName", "value": "Agents" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #D" },
+            "properties": [{ "id": "displayName", "value": "Tasks" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #E" },
+            "properties": [{ "id": "displayName", "value": "Commits" }]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Cost (USD)", "desc": true }],
+        "footer": { "show": true, "reducer": ["sum"] }
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true },
+            "indexByName": {
+              "session": 0,
+              "phase": 1,
+              "project": 2,
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5,
+              "Value #D": 6,
+              "Value #E": 7
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "annotations": {
+    "list": []
+  }
+}
