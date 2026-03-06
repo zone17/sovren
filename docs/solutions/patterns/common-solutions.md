@@ -3241,6 +3241,75 @@ A delete dialog inside a list item uses `aria-labelledby="delete-dialog-title"`.
 
 ---
 
+## 89. PostgreSQL Expression Index Requires IMMUTABLE — Use AT TIME ZONE
+
+**Recurrence:** 1 P2 in Slice 7 migration. `::date` on `timestamptz` is STABLE, not IMMUTABLE.
+
+### Problem
+
+```sql
+-- ERROR: functions in index expression must be marked IMMUTABLE
+CREATE UNIQUE INDEX idx_snapshots_creator_day
+  ON wellness_snapshots (creator_id, (created_at::date));
+```
+
+The `::date` cast on `timestamptz` depends on the session's `timezone` setting (STABLE volatility). PostgreSQL requires IMMUTABLE for expression indexes.
+
+### Fix: Pin timezone with AT TIME ZONE
+
+```sql
+-- ✅ IMMUTABLE — timezone pinned, no session dependency
+CREATE UNIQUE INDEX idx_snapshots_creator_day
+  ON wellness_snapshots (creator_id, ((created_at AT TIME ZONE 'UTC')::date));
+```
+
+**Why it works:** `AT TIME ZONE 'UTC'` converts `timestamptz` → `timestamp` (session-independent). Then `::date` on `timestamp` is IMMUTABLE.
+
+### Applies to
+
+- `CREATE INDEX` / `CREATE UNIQUE INDEX` expression columns
+- `PARTITION BY` clauses
+- Dedup CTE `PARTITION BY` clauses that logically match the index
+
+### Detection
+
+```bash
+grep -E "::date" supabase/migrations/*.sql | grep -v "AT TIME ZONE"
+```
+
+---
+
+## 90. E2E Route Existence — Verify Before Writing Tests
+
+**Recurrence:** 1 P2 in Slice 7. 11 E2E tests navigated to `/content/:id` which had no route.
+
+### Problem
+
+Slice 6 added comments E2E tests navigating to `/content/${id}`, but no `<Route path="/content/:id">` existed in `App.tsx`. All 11 tests fail with a blank page.
+
+### Fix: Verify route exists before committing E2E tests
+
+Before committing E2E specs that navigate to a URL:
+
+```bash
+# Extract URLs from E2E tests
+grep -rn "page.goto\|\.goto(" packages/frontend/e2e/ | grep -oP "'/[^']+'"
+
+# Verify each exists in router
+grep -n "path=" packages/frontend/src/App.tsx | grep "/content"
+```
+
+### When route comes from another PR
+
+```typescript
+// If route not yet merged, skip with clear dependency comment
+test.skip('content detail page (route in PR #137)', async () => {
+  await page.goto('/content/abc-123');
+});
+```
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -3364,3 +3433,5 @@ CONTEXT TO LOAD:
 | Status enum has values no code writes           | 86        | common-solutions.md  |
 | DOMPurify returns input unchanged in Node.js    | 87        | common-solutions.md  |
 | Dialog IDs duplicated in list rendering         | 88        | common-solutions.md  |
+| `::date` on timestamptz rejected in index       | 89        | common-solutions.md  |
+| E2E navigates to route that doesn't exist       | 90        | common-solutions.md  |
