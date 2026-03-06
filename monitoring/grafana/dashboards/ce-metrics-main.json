@@ -1,0 +1,549 @@
+{
+  "uid": "ce-metrics-main",
+  "title": "Engineering Flow Metrics",
+  "schemaVersion": 39,
+  "graphTooltip": 1,
+  "refresh": "5m",
+  "version": 4,
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "fiscalYearStartMonth": 0,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "panels": [],
+      "title": "Flow KPIs",
+      "type": "row"
+    },
+    {
+      "id": 10,
+      "title": "Flow Velocity",
+      "description": "Average PRs merged per week (rolling 4 weeks)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_velocity_prs_per_week{project=\"Sovren\"}",
+          "legendFormat": "PRs/week",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "green", "value": 10 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "title": "Flow Time (Median)",
+      "description": "Median hours from PR creation to merge",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_time_median_hours{project=\"Sovren\"}",
+          "legendFormat": "Median",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 8 },
+              { "color": "red", "value": 24 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 12,
+      "title": "Flow Load (WIP)",
+      "description": "Number of open PRs right now",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_load{project=\"Sovren\"}",
+          "legendFormat": "Open PRs",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 13,
+      "title": "Flow Efficiency",
+      "description": "Ratio of active work to total activity",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_efficiency_ratio{project=\"Sovren\"}",
+          "legendFormat": "Efficiency",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.15 },
+              { "color": "green", "value": 0.3 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 2,
+      "panels": [],
+      "title": "Flow Velocity — Value Delivered",
+      "type": "row"
+    },
+    {
+      "id": 20,
+      "title": "PRs Merged per Week",
+      "description": "Weekly throughput of merged pull requests",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_velocity_weekly{project=\"Sovren\"}",
+          "legendFormat": "{{week}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "axisLabel": "PRs merged"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "xTickLabelRotation": 0,
+        "showValue": "always",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 21,
+      "title": "PRs Merged (Last 4 Weeks Total)",
+      "description": "Total PRs merged in rolling 4-week window",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_velocity_total_4w{project=\"Sovren\"}",
+          "legendFormat": "Total",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 22,
+      "title": "Lines Changed per PR",
+      "description": "Additions and deletions per merged PR",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_lines_added{project=\"Sovren\"}",
+          "legendFormat": "+{{slug}}",
+          "refId": "A",
+          "instant": true
+        },
+        {
+          "expr": "flow_lines_deleted{project=\"Sovren\"}",
+          "legendFormat": "-{{slug}}",
+          "refId": "B",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "fillOpacity": 70,
+            "axisLabel": "Lines"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "^\\+" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "^-" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "hidden" }
+      }
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 3,
+      "panels": [],
+      "title": "Flow Time — Speed of Delivery",
+      "type": "row"
+    },
+    {
+      "id": 30,
+      "title": "Flow Time per PR",
+      "description": "Hours from PR creation to merge (lower is better)",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_time_hours{project=\"Sovren\"} > 0",
+          "legendFormat": "PR #{{pr}} {{slug}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "decimals": 1,
+          "color": { "mode": "continuous-GrYlRd" },
+          "custom": {
+            "fillOpacity": 80,
+            "gradientMode": "scheme",
+            "axisLabel": "Hours to merge"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "xTickLabelRotation": 0,
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "hidden" }
+      },
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [{ "field": "Value", "desc": true }]
+          }
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "title": "Flow Time Distribution",
+      "description": "Median, average, and P90 flow times",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_time_median_hours{project=\"Sovren\"}",
+          "legendFormat": "Median",
+          "refId": "A"
+        },
+        {
+          "expr": "flow_time_avg_hours{project=\"Sovren\"}",
+          "legendFormat": "Average",
+          "refId": "B"
+        },
+        {
+          "expr": "flow_time_p90_hours{project=\"Sovren\"}",
+          "legendFormat": "P90",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 8 },
+              { "color": "red", "value": 24 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "vertical"
+      }
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 4,
+      "panels": [],
+      "title": "Flow Efficiency — Active Work Ratio",
+      "type": "row"
+    },
+    {
+      "id": 40,
+      "title": "Phase Distribution",
+      "description": "How time is spent across CE workflow phases",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_phase_events{project=\"Sovren\"}",
+          "legendFormat": "{{phase}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "work" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "plan" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "review" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "adhoc" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "dark-gray", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "right" },
+        "pieType": "donut",
+        "displayLabels": ["percent"]
+      }
+    },
+    {
+      "id": 41,
+      "title": "Flow Efficiency Note",
+      "description": "Flow Efficiency measures active work vs wait time",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 24 },
+      "options": {
+        "mode": "markdown",
+        "content": "## How Flow Efficiency Works\n\n**Flow Efficiency** = Active Work Time / Total Time\n\nIn the CE workflow:\n- **Active work** = `work` phase (writing code)\n- **Wait/overhead** = `plan`, `review`, `compound`, `adhoc`\n\nThe CE workflow intentionally invests ~80% in planning and review, so a ~20% efficiency ratio is **by design** — it means quality gates are working.\n\n### Interpreting the gauge:\n- **< 15%** = Too much overhead — simplify process\n- **15-30%** = Healthy CE workflow balance\n- **> 30%** = May be skipping quality steps\n\n### Data collection\nPhase tracking starts when you run `/workflows:plan`, `/workflows:work`, etc. Historical sessions show as `adhoc` until the phase detection hooks have been running.\n\n*Data will populate as more sessions use the workflow commands.*"
+      }
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 5,
+      "panels": [],
+      "title": "Flow Load — Work in Progress",
+      "type": "row"
+    },
+    {
+      "id": 50,
+      "title": "Current Open PRs",
+      "description": "Active work in progress — lower is better (limit WIP)",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 33 },
+      "datasource": { "type": "prometheus", "uid": "ce-prometheus" },
+      "targets": [
+        {
+          "expr": "flow_load{project=\"Sovren\"}",
+          "legendFormat": "WIP",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "max": 10,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "id": 51,
+      "title": "WIP Guidance",
+      "type": "text",
+      "gridPos": { "h": 6, "w": 16, "x": 8, "y": 33 },
+      "options": {
+        "mode": "markdown",
+        "content": "## WIP Limits\n\nLittle's Law: **Flow Time = Flow Load / Flow Velocity**\n\nTo reduce flow time, either increase velocity or reduce WIP.\n\n| WIP | Interpretation |\n|-----|----------------|\n| 1-2 | Focused. Optimal for solo developer |\n| 3-4 | Manageable. Typical for squad with parallel streams |\n| 5+  | Overloaded. PRs will age, context switching increases |\n\nCurrent squad setup uses 2 persistent worktrees (Squad A + Squad B), so **2-3 open PRs** is the healthy steady state."
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

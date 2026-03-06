@@ -1,0 +1,12 @@
+apiVersion: 1
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+datasources:
+  - name: Prometheus
+    uid: ce-prometheus
+    type: prometheus
+    access: proxy
+    url: http://ce-prometheus:9090
+    isDefault: true
+    editable: true
