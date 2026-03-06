@@ -3669,6 +3669,158 @@ fi
 
 ---
 
+## 98. Claude Code Hook Exit Codes — Only 0 (Allow) and 2 (Deny)
+
+**Recurrence:** 1 P1 discovery during enforcement hooks implementation. All 3 "ask" cases silently allowed.
+
+### Problem
+
+Claude Code PreToolUse hooks have no native "ask" decision. Writing `{"decision":"ask",...}` to stderr with `exit 0` silently allows the action with zero feedback to the LLM. The hook output is ignored.
+
+### Fix: Use hookSpecificOutput.additionalContext on stdout
+
+```bash
+# WRONG: stderr + exit 0 = silently allowed, no feedback
+echo '{"decision":"ask","reason":"Confirm this edit"}' >&2
+exit 0
+
+# RIGHT: stdout JSON + exit 0 = allowed with visible warning in LLM context
+printf '{"hookSpecificOutput":{"additionalContext":"[WARNING: Editing auth file — confirm intentional]"}}'
+exit 0
+
+# BLOCK: exit 2 = tool call prevented entirely
+echo '{"decision":"deny","reason":"BLOCKED: Cannot edit .env files"}' >&2
+exit 2
+```
+
+### Decision Framework
+
+| Scenario           | Exit Code | Output                              | Effect                          |
+| ------------------ | --------- | ----------------------------------- | ------------------------------- |
+| Allow silently     | 0         | none                                | Tool proceeds, no context       |
+| Allow with warning | 0         | `hookSpecificOutput` JSON on stdout | Tool proceeds, warning injected |
+| Hard block         | 2         | Error JSON on stderr                | Tool call prevented             |
+
+---
+
+## 99. Fast-Path Whitelist for PreToolUse Hooks
+
+**Recurrence:** Performance requirement for enforcement hooks — every Bash tool call goes through PreToolUse.
+
+### Problem
+
+PreToolUse hooks fire on every tool invocation. Without fast paths, regex evaluation on every `ls`, `npm test`, or `echo` adds 20-30ms latency.
+
+### Fix: Whitelist safe first-words, exit immediately
+
+```bash
+first_word="${command%% *}"
+case "$first_word" in
+  ls|pwd|echo|cat|head|tail|which|type|file|wc|date|whoami)
+    exit 0 ;;
+  node|npm|npx|yarn|bun|python|python3|ruby|cargo|go)
+    exit 0 ;;
+  jq|curl|wget|docker|brew)
+    exit 0 ;;
+esac
+# Only commands that pass the whitelist reach regex evaluation
+```
+
+**Result:** 90%+ of commands exit in <10ms. Full regex path is ~26ms.
+
+---
+
+## 100. Deterministic Hooks Replace LLM-Dependent Instructions
+
+**Recurrence:** Phase detection broken (274 events showed "phase":"adhoc") because LLM skipped `set-phase.sh` instruction.
+
+### Problem
+
+CLAUDE.md workflow commands instructed the LLM to run `bash set-phase.sh plan` after `/workflows:plan`. After context compaction, the LLM skipped the instruction. All CE events were tagged `adhoc`.
+
+### Fix: UserPromptSubmit hook with case match
+
+```bash
+# Hook fires BEFORE LLM sees the prompt — deterministic, survives compaction
+case "$prompt" in
+  */workflows:plan*)      new_phase="plan" ;;
+  */workflows:work*)      new_phase="work" ;;
+  */workflows:review*)    new_phase="review" ;;
+  */workflows:compound*)  new_phase="compound" ;;
+  */workflows:brainstorm*) new_phase="brainstorm" ;;
+esac
+```
+
+### When to apply
+
+If CLAUDE.md says "remember to do X after Y", ask: Can X be detected deterministically by a hook? If yes, move it to a hook. Hooks always fire; LLM instructions don't survive context compaction.
+
+---
+
+## 101. Session Flag Files for Cross-Hook Communication
+
+**Recurrence:** 1 pattern in enforcement hooks. `detect-test-run.sh` needs to tell `stop-test-reminder.sh` that tests ran.
+
+### Problem
+
+Hooks can't communicate directly — each runs in its own subprocess. The Stop hook needs to know if a PostToolUse hook detected test commands earlier in the session.
+
+### Fix: Flag files in ~/.claude/metrics/ with session_id scope
+
+```bash
+# detect-test-run.sh (PostToolUse[Bash]) — writes flag
+if $is_test; then
+  echo "$exit_code" > "$HOME/.claude/metrics/.tests-ran-${session_id}"
+fi
+
+# stop-test-reminder.sh (Stop) — reads and cleans up flag
+if [ -f "$TEST_FLAG" ]; then
+  rm -f "$TEST_FLAG"  # Clean up
+  exit 0              # Tests ran — no reminder
+fi
+# No flag → inject reminder
+```
+
+### Convention
+
+- Path: `~/.claude/metrics/.{purpose}-${session_id}`
+- Detection hook writes, decision hook reads
+- Consuming hook cleans up the flag file
+- Session ID suffix prevents cross-session pollution
+
+---
+
+## 102. Safety = Hard Block, Quality = Soft Remind
+
+**Recurrence:** Design philosophy applied across all 7 enforcement hooks.
+
+### Problem
+
+When adding enforcement hooks, the temptation is to hard-block everything. But over-blocking creates false positives that force `--no-verify` workarounds (see pattern #15).
+
+### Fix: Two-tier enforcement philosophy
+
+| Category    | Exit Code   | Use When                                      | Examples                                               |
+| ----------- | ----------- | --------------------------------------------- | ------------------------------------------------------ |
+| **Safety**  | 2 (deny)    | Irreversible harm, data loss, security breach | `rm -rf /`, force push main, `.env` edit, `DROP TABLE` |
+| **Quality** | 0 + context | Best-practice drift, recoverable              | Squad mismatch, missing tests, CI watch reminder       |
+
+**Key test:** Can the action be undone? If yes → soft remind. If no → hard block.
+
+```bash
+# Hard block: irreversible
+if echo "$cmd_lower" | grep -qE 'git\s+push\s+.*--force.*main'; then
+  echo '{"decision":"deny","reason":"BLOCKED: Force push to main"}' >&2
+  exit 2
+fi
+
+# Soft remind: recoverable (user can run tests later)
+printf '{"hookSpecificOutput":{"additionalContext":"[REMINDER: Run tests before finishing]"}}'
+exit 0
+```
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -3801,3 +3953,8 @@ CONTEXT TO LOAD:
 | Pushgateway stale data accumulation             | 95        | common-solutions.md  |
 | PromQL rate() misused on gauge metrics          | 96        | common-solutions.md  |
 | JSONL unbounded growth, needs rotation          | 97        | common-solutions.md  |
+| Hook "ask" cases silently allowed               | 98        | common-solutions.md  |
+| PreToolUse hook adds latency to every command   | 99        | common-solutions.md  |
+| LLM skips instruction after context compaction  | 100       | common-solutions.md  |
+| Two hooks need to share session state           | 101       | common-solutions.md  |
+| Hook blocks too aggressively / false positives  | 102       | common-solutions.md  |
