@@ -34,6 +34,7 @@ echo "Backed up settings.json to $SETTINGS_FILE.bak"
 # Define hook registrations as (event|matcher|command|timeout) tuples
 declare -a HOOKS=(
   "SessionStart||bash ~/.claude/hooks/ce-metrics/session-start.sh|5000"
+  "SessionStart||bash ~/.claude/hooks/ce-metrics/context-reinject.sh|3000"
   "Stop||bash ~/.claude/hooks/ce-metrics/turn-complete.sh|"
   "SubagentStart||bash ~/.claude/hooks/ce-metrics/agent-spawn.sh|"
   "SubagentStop||bash ~/.claude/hooks/ce-metrics/agent-complete.sh|15000"

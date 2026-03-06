@@ -64,6 +64,20 @@ get_branch() {
   git branch --show-current 2>/dev/null || echo "unknown"
 }
 
+# Get work slug from git branch — the meaningful part after type/squad/ prefix
+# e.g. feat/squad-a/S2-business-manager-mvp -> business-manager-mvp
+#      fix/p2-remediation-r5 -> p2-remediation-r5
+#      main -> main
+get_work_slug() {
+  local branch
+  branch=$(get_branch)
+  [ "$branch" != "unknown" ] || { echo "unknown"; return 0; }
+  # Take last path segment, strip ticket prefixes (SOV-NNN-, S2-, etc.)
+  local slug
+  slug=$(echo "$branch" | sed -E 's|.*/||; s/^(SOV-[0-9]+-|S[0-9]+-)//')
+  echo "${slug:-unknown}"
+}
+
 # Sanitize a value for use as a Prometheus label
 sanitize_label() {
   echo "$1" | tr -cd 'a-zA-Z0-9_-'
@@ -96,22 +110,113 @@ emit_event() {
   { printf '%s\n' "$json"; } >> "$CE_EVENTS_FILE"
 }
 
-# Parse last turn tokens from transcript using tail (O(1) seek, not O(n) read)
+# Parse last turn tokens from transcript
+# Token data lives at .message.usage and .message.model in assistant entries
+# Transcript may contain control chars that break jq, so use python3 fallback
 parse_last_turn_tokens() {
   local transcript_path="$1"
   [ -f "$transcript_path" ] || return 0
 
-  local last_line
-  last_line=$(tail -1 "$transcript_path" 2>/dev/null) || return 0
-  [ -n "$last_line" ] || return 0
+  # Use python3 to handle control chars and find the last assistant entry with usage
+  python3 -c "
+import json, sys
+last = None
+for line in open('$transcript_path'):
+    try:
+        obj = json.loads(line)
+        if obj.get('type') == 'assistant' and isinstance(obj.get('message'), dict):
+            msg = obj['message']
+            if msg.get('usage'):
+                last = msg
+    except: pass
+if last:
+    u = last.get('usage', {})
+    print(json.dumps({
+        'input_tokens': u.get('input_tokens', 0),
+        'output_tokens': u.get('output_tokens', 0),
+        'cache_read_tokens': u.get('cache_read_input_tokens', 0),
+        'cache_creation_tokens': u.get('cache_creation_input_tokens', 0),
+        'model': last.get('model', 'unknown')
+    }))
+" 2>/dev/null || echo ""
+}
 
-  echo "$last_line" | jq -c '{
-    input_tokens: (.usage.input_tokens // 0),
-    output_tokens: (.usage.output_tokens // 0),
-    cache_read_tokens: (.usage.cache_read_input_tokens // 0),
-    cache_creation_tokens: (.usage.cache_creation_input_tokens // 0),
-    model: (.model // "unknown")
-  }' 2>/dev/null || echo ""
+# Aggregate ALL token usage from a transcript file
+# Returns JSON: {input, output, cache_read, cache_creation, models: {model: {input, output}}, turns}
+aggregate_transcript_tokens() {
+  local transcript_path="$1"
+  [ -f "$transcript_path" ] || { echo '{}'; return 0; }
+
+  python3 -c "
+import json
+inp = out = cr = cc = turns = 0
+models = {}
+for line in open('$transcript_path'):
+    try:
+        obj = json.loads(line)
+        if obj.get('type') == 'assistant' and isinstance(obj.get('message'), dict):
+            msg = obj['message']
+            usage = msg.get('usage')
+            model = msg.get('model', 'unknown')
+            if usage:
+                turns += 1
+                i = usage.get('input_tokens', 0)
+                o = usage.get('output_tokens', 0)
+                r = usage.get('cache_read_input_tokens', 0)
+                c = usage.get('cache_creation_input_tokens', 0)
+                inp += i; out += o; cr += r; cc += c
+                if model not in models:
+                    models[model] = {'input': 0, 'output': 0}
+                models[model]['input'] += i
+                models[model]['output'] += o
+    except: pass
+print(json.dumps({
+    'input_tokens': inp, 'output_tokens': out,
+    'cache_read_tokens': cr, 'cache_creation_tokens': cc,
+    'turns': turns,
+    'models': models
+}))
+" 2>/dev/null || echo '{}'
+}
+
+# Compute cost from transcript token data (not from JSONL)
+# Opus: $15/$75, Sonnet: $3/$15, Haiku: $0.80/$4 per 1M tokens
+compute_cost_from_transcript() {
+  local transcript_path="$1"
+  [ -f "$transcript_path" ] || { echo "0"; return 0; }
+
+  python3 -c "
+import json
+RATES = {
+    'opus': (15.0, 75.0),
+    'sonnet': (3.0, 15.0),
+    'haiku': (0.8, 4.0),
+}
+def get_rate(model):
+    m = (model or '').lower()
+    for key, rates in RATES.items():
+        if key in m:
+            return rates
+    return RATES['opus']  # default
+
+cost = 0.0
+for line in open('$transcript_path'):
+    try:
+        obj = json.loads(line)
+        if obj.get('type') == 'assistant' and isinstance(obj.get('message'), dict):
+            msg = obj['message']
+            usage = msg.get('usage')
+            model = msg.get('model', 'unknown')
+            if usage:
+                inp = usage.get('input_tokens', 0) + usage.get('cache_creation_input_tokens', 0)
+                cache_read = usage.get('cache_read_input_tokens', 0)
+                out = usage.get('output_tokens', 0)
+                in_rate, out_rate = get_rate(model)
+                # Cache reads are 10% of input price
+                cost += (inp * in_rate + cache_read * in_rate * 0.1 + out * out_rate) / 1_000_000
+    except: pass
+print(round(cost, 4))
+" 2>/dev/null || echo "0"
 }
 
 # Classify git commands — reads ONLY the first 2 words, NEVER stores full command
@@ -245,14 +350,12 @@ get_knowledge_counts() {
   echo "${docs_count:-0} ${pattern_lines:-0}"
 }
 
-# Compute cost with multi-model pricing
-# Reads turn_complete events from JSONL, applies per-model rates
-# Opus: $15/$75, Sonnet: $3/$15, Haiku: $0.80/$4 per 1M tokens
+# Legacy: compute_cost from JSONL (kept for backfill script compatibility)
+# Prefer compute_cost_from_transcript() for session-end hook
 compute_cost() {
   local events_file="$1"
   local sid="$2"
   [ -f "$events_file" ] || { echo "0"; return 0; }
-
   jq -s --arg sid "$sid" '
     [.[] | select(.session_id == $sid and .type == "turn_complete")] |
     group_by(.model // "unknown") |
@@ -262,16 +365,10 @@ compute_cost() {
       output: ([.[].output_tokens // 0] | add // 0)
     }) |
     map(
-      if .model | test("opus"; "i") then
-        (.input * 0.000015) + (.output * 0.000075)
-      elif .model | test("sonnet"; "i") then
-        (.input * 0.000003) + (.output * 0.000015)
-      elif .model | test("haiku"; "i") then
-        (.input * 0.0000008) + (.output * 0.000004)
-      else
-        # Default to Opus pricing for unknown models
-        (.input * 0.000015) + (.output * 0.000075)
-      end
+      if .model | test("opus"; "i") then (.input * 0.000015) + (.output * 0.000075)
+      elif .model | test("sonnet"; "i") then (.input * 0.000003) + (.output * 0.000015)
+      elif .model | test("haiku"; "i") then (.input * 0.0000008) + (.output * 0.000004)
+      else (.input * 0.000015) + (.output * 0.000075) end
     ) | add // 0 | . * 10000 | round / 10000
   ' "$events_file" 2>/dev/null || echo "0"
 }

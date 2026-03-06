@@ -14,20 +14,39 @@
   "panels": [
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 100,
       "panels": [],
       "title": "Executive KPIs",
-      "type": "row"
+      "type": "row",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      }
     },
     {
       "id": 101,
       "title": "Total Cost",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "none"
@@ -39,17 +58,28 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 20 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "sum(ce_session_cost_usd{project=~\"$project\",phase=~\"$phase\"})",
+          "expr": "sum(ce_session_cost_usd{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"})",
           "legendFormat": "Total Cost",
           "refId": "A"
         }
@@ -59,10 +89,20 @@
       "id": 102,
       "title": "Cost Trend",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "area"
@@ -74,17 +114,28 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 5 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "ce_session_cost_usd{project=~\"$project\",phase=~\"$phase\"}",
+          "expr": "ce_session_cost_usd{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"}",
           "legendFormat": "{{session}}",
           "refId": "A"
         }
@@ -94,10 +145,20 @@
       "id": 103,
       "title": "PRs Tracked",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "none"
@@ -107,14 +168,21 @@
           "unit": "short",
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "blue", "value": null }]
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "count(count by (pr_number) (ce_session_cost_usd{project=~\"$project\",pr_number!=\"0\"}))",
+          "expr": "count(count by (pr_number) (ce_session_cost_usd{project=~\"$project\",pr_number!=\"0\",pr_number=~\"$pr_number\"}))",
           "legendFormat": "PRs",
           "refId": "A"
         }
@@ -124,10 +192,20 @@
       "id": 104,
       "title": "Avg Turns/Session",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["mean"] },
+        "reduceOptions": {
+          "calcs": ["mean"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "none"
@@ -139,17 +217,28 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 30 },
-              { "color": "red", "value": 60 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "avg(ce_session_turns_total{project=~\"$project\",phase=~\"$phase\"})",
+          "expr": "avg(ce_session_turns_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"})",
           "legendFormat": "Avg Turns",
           "refId": "A"
         }
@@ -159,10 +248,20 @@
       "id": 105,
       "title": "P1 Findings",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "area"
@@ -173,17 +272,28 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 5 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "sum(ce_findings_total{severity=\"p1\",project=~\"$project\"})",
+          "expr": "sum(ce_findings_total{severity=\"p1\",project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"})",
           "legendFormat": "P1",
           "refId": "A"
         }
@@ -193,10 +303,20 @@
       "id": 106,
       "title": "Cache Efficiency",
       "type": "gauge",
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "orientation": "auto",
         "showThresholdLabels": false,
         "showThresholdMarkers": true
@@ -209,51 +329,90 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 0.3 },
-              { "color": "green", "value": 0.6 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.3
+              },
+              {
+                "color": "green",
+                "value": 0.6
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "sum(ce_session_tokens_total{type=\"cache_read\",project=~\"$project\"}) / (sum(ce_session_tokens_total{type=\"input\",project=~\"$project\"}) + sum(ce_session_tokens_total{type=\"cache_read\",project=~\"$project\"}) + 1)",
+          "expr": "sum(ce_session_tokens_total{type=\"cache_read\",project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"}) / (sum(ce_session_tokens_total{type=\"input\",project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"}) + sum(ce_session_tokens_total{type=\"cache_read\",project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"}) + 1)",
           "legendFormat": "Cache Hit %",
           "refId": "A"
         }
       ]
     },
-
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
       "id": 200,
       "panels": [],
       "title": "Cost Efficiency",
-      "type": "row"
+      "type": "row",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      }
     },
     {
       "id": 201,
-      "title": "Cost per Session",
+      "title": "Cost per Session (PR)",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "orientation": "horizontal",
         "xTickLabelRotation": 0,
         "fillOpacity": 80,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
-        "defaults": { "unit": "currencyUSD", "color": { "mode": "palette-classic" } }
+        "defaults": {
+          "unit": "currencyUSD",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
       },
       "targets": [
         {
-          "expr": "sum by (session) (ce_session_cost_usd{project=~\"$project\",phase=~\"$phase\"})",
-          "legendFormat": "{{session}}",
+          "expr": "sum by (session, pr_number) (ce_session_cost_usd{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"})",
+          "legendFormat": "{{session}} (PR #{{pr_number}})",
           "refId": "A"
         }
       ]
@@ -262,42 +421,117 @@
       "id": 202,
       "title": "Cost by Phase",
       "type": "piechart",
-      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "pieType": "pie",
         "displayLabels": ["name", "percent"],
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
-        "defaults": { "unit": "currencyUSD", "color": { "mode": "palette-classic" } },
+        "defaults": {
+          "unit": "currencyUSD",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "plan" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#1F60C4", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "plan"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#1F60C4",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "work" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#37872D", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "work"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#37872D",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "review" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#FF780A", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "review"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#FF780A",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "compound" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#8F3BB8", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "compound"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#8F3BB8",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "adhoc" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#808080", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "adhoc"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#808080",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (phase) (ce_session_cost_usd{project=~\"$project\",phase=~\"$phase\"})",
+          "expr": "sum by (phase) (ce_session_cost_usd{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"})",
           "legendFormat": "{{phase}}",
           "refId": "A"
         }
@@ -307,34 +541,87 @@
       "id": 203,
       "title": "Cost by Model",
       "type": "piechart",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "pieType": "pie",
         "displayLabels": ["name", "percent"],
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "opus" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "opus"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#F2495C",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "sonnet" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "sonnet"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#73BF69",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "haiku" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#5794F2", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "haiku"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#5794F2",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (model) (ce_session_tokens_by_model{project=~\"$project\"})",
+          "expr": "sum by (model) (ce_session_tokens_by_model{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"})",
           "legendFormat": "{{model}}",
           "refId": "A"
         }
@@ -344,71 +631,158 @@
       "id": 204,
       "title": "Token Composition",
       "type": "bargauge",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "orientation": "horizontal",
         "displayMode": "gradient",
         "showUnfilled": true
       },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "input" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "input"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#73BF69",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "output" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "output"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#F2495C",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "cache_read" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#5794F2", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "cache_read"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#5794F2",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "cache_creation" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "cache_creation"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#FF9830",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (type) (ce_session_tokens_total{project=~\"$project\",phase=~\"$phase\"})",
+          "expr": "sum by (type) (ce_session_tokens_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"})",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
       ]
     },
-
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
       "id": 300,
       "panels": [],
       "title": "Velocity",
-      "type": "row"
+      "type": "row",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      }
     },
     {
       "id": 301,
       "title": "Turns per Session",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 15
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "orientation": "horizontal",
         "fillOpacity": 80,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
       },
       "targets": [
         {
-          "expr": "ce_session_turns_total{project=~\"$project\",phase=~\"$phase\"}",
-          "legendFormat": "{{session}} ({{phase}})",
+          "expr": "ce_session_turns_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}} (PR #{{pr_number}})",
           "refId": "A"
         }
       ]
@@ -417,38 +791,102 @@
       "id": 302,
       "title": "Turns by Phase",
       "type": "piechart",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 15
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "pieType": "pie",
         "displayLabels": ["name", "percent"],
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "plan" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#1F60C4", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "plan"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#1F60C4",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "work" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#37872D", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "work"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#37872D",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "review" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#FF780A", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "review"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#FF780A",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "compound" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#8F3BB8", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "compound"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#8F3BB8",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (phase) (ce_session_turns_total{project=~\"$project\",phase=~\"$phase\"})",
+          "expr": "sum by (phase) (ce_session_turns_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"})",
           "legendFormat": "{{phase}}",
           "refId": "A"
         }
@@ -458,10 +896,20 @@
       "id": 303,
       "title": "Avg Agent Duration",
       "type": "stat",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 15
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["mean"] },
+        "reduceOptions": {
+          "calcs": ["mean"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "area"
@@ -473,64 +921,138 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 120 },
-              { "color": "red", "value": 300 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 120
+              },
+              {
+                "color": "red",
+                "value": 300
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "ce_agent_duration_seconds_avg{project=~\"$project\",phase=~\"$phase\"}",
+          "expr": "ce_agent_duration_seconds_avg{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"}",
           "legendFormat": "{{session}}",
           "refId": "A"
         }
       ]
     },
-
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
       "id": 400,
       "panels": [],
       "title": "Quality",
-      "type": "row"
+      "type": "row",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      }
     },
     {
       "id": 401,
       "title": "Findings by Severity",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 24
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "orientation": "horizontal",
         "fillOpacity": 80,
-        "stacking": { "mode": "normal" },
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "stacking": {
+          "mode": "normal"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "p1" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "p1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#F2495C",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "p2" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "p2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#FF9830",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "p3" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#5794F2", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "p3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#5794F2",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (severity) (ce_findings_total{project=~\"$project\"})",
+          "expr": "sum by (severity) (ce_findings_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"})",
           "legendFormat": "{{severity}}",
           "refId": "A"
         }
@@ -540,24 +1062,42 @@
       "id": 402,
       "title": "P1 Findings per Session",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 24
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "orientation": "horizontal",
         "fillOpacity": 80,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "fixedColor": "#F2495C", "mode": "fixed" }
+          "color": {
+            "fixedColor": "#F2495C",
+            "mode": "fixed"
+          }
         }
       },
       "targets": [
         {
-          "expr": "ce_findings_total{severity=\"p1\",project=~\"$project\"}",
-          "legendFormat": "{{session}}",
+          "expr": "ce_findings_total{severity=\"p1\",project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"}",
+          "legendFormat": "{{session}} (PR #{{pr_number}})",
           "refId": "A"
         }
       ]
@@ -566,53 +1106,115 @@
       "id": 403,
       "title": "Lines Changed per Session",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 24
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "orientation": "horizontal",
         "fillOpacity": 80,
-        "stacking": { "mode": "normal" },
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "stacking": {
+          "mode": "normal"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "added" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "added"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#73BF69",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "deleted" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+            "matcher": {
+              "id": "byName",
+              "options": "deleted"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#F2495C",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
       "targets": [
         {
-          "expr": "sum by (type) (ce_lines_changed{project=~\"$project\"})",
+          "expr": "sum by (type) (ce_lines_changed{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"})",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
       ]
     },
-
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
       "id": 500,
       "panels": [],
       "title": "Knowledge Compounding",
-      "type": "row"
+      "type": "row",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      }
     },
     {
       "id": 501,
       "title": "Compound Docs",
       "type": "stat",
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 33 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "area"
@@ -623,17 +1225,28 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "green", "value": 20 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "green",
+                "value": 20
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "ce_compound_docs_total{project=~\"$project\"}",
+          "expr": "ce_compound_docs_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"}",
           "legendFormat": "Compound Docs",
           "refId": "A"
         }
@@ -643,10 +1256,20 @@
       "id": 502,
       "title": "Pattern Count",
       "type": "stat",
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 33 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "area"
@@ -657,53 +1280,90 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 100 },
-              { "color": "green", "value": 500 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "green",
+                "value": 500
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "ce_pattern_count{project=~\"$project\"}",
+          "expr": "ce_pattern_count{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"}",
           "legendFormat": "Lines in common-solutions.md",
           "refId": "A"
         }
       ]
     },
-
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
       "id": 600,
       "panels": [],
       "title": "Agent Efficiency",
-      "type": "row"
+      "type": "row",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      }
     },
     {
       "id": 601,
       "title": "Agents per Session",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 40 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 40
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "orientation": "horizontal",
         "fillOpacity": 80,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "fixedColor": "#73BF69", "mode": "fixed" }
+          "color": {
+            "fixedColor": "#73BF69",
+            "mode": "fixed"
+          }
         }
       },
       "targets": [
         {
-          "expr": "ce_session_agents_total{project=~\"$project\",phase=~\"$phase\"}",
-          "legendFormat": "{{session}} ({{phase}})",
+          "expr": "ce_session_agents_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}} (PR #{{pr_number}})",
           "refId": "A"
         }
       ]
@@ -712,24 +1372,42 @@
       "id": 602,
       "title": "Tasks per Session",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 40 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 40
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "orientation": "horizontal",
         "fillOpacity": 80,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "fixedColor": "#8F3BB8", "mode": "fixed" }
+          "color": {
+            "fixedColor": "#8F3BB8",
+            "mode": "fixed"
+          }
         }
       },
       "targets": [
         {
-          "expr": "ce_session_tasks_total{project=~\"$project\",phase=~\"$phase\"}",
-          "legendFormat": "{{session}} ({{phase}})",
+          "expr": "ce_session_tasks_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}} (PR #{{pr_number}})",
           "refId": "A"
         }
       ]
@@ -738,45 +1416,81 @@
       "id": 603,
       "title": "Commits per Session",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 40 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 40
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
         "orientation": "horizontal",
         "fillOpacity": 80,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "fixedColor": "#FF9830", "mode": "fixed" }
+          "color": {
+            "fixedColor": "#FF9830",
+            "mode": "fixed"
+          }
         }
       },
       "targets": [
         {
-          "expr": "ce_session_commits_total{project=~\"$project\",phase=~\"$phase\"}",
-          "legendFormat": "{{session}} ({{phase}})",
+          "expr": "ce_session_commits_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\",phase=~\"$phase\"}",
+          "legendFormat": "{{session}} (PR #{{pr_number}})",
           "refId": "A"
         }
       ]
     },
-
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 48 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
       "id": 700,
       "panels": [],
       "title": "Active Session",
-      "type": "row"
+      "type": "row",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      }
     },
     {
       "id": 701,
       "title": "Current Phase",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 49 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 49
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "name",
         "colorMode": "background",
         "graphMode": "none"
@@ -786,21 +1500,68 @@
           "unit": "short",
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "blue", "value": null }]
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
           },
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [
-            { "type": "value", "options": { "1": { "text": "plan", "index": 0 } } },
-            { "type": "value", "options": { "2": { "text": "work", "index": 1 } } },
-            { "type": "value", "options": { "3": { "text": "review", "index": 2 } } },
-            { "type": "value", "options": { "4": { "text": "compound", "index": 3 } } },
-            { "type": "value", "options": { "5": { "text": "adhoc", "index": 4 } } }
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "plan",
+                  "index": 0
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "2": {
+                  "text": "work",
+                  "index": 1
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "3": {
+                  "text": "review",
+                  "index": 2
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "4": {
+                  "text": "compound",
+                  "index": 3
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "5": {
+                  "text": "adhoc",
+                  "index": 4
+                }
+              }
+            }
           ]
         }
       },
       "targets": [
         {
-          "expr": "ce_session_tokens_total{type=\"input\",project=~\"$project\"} * 0 + 1",
+          "expr": "ce_session_tokens_total{type=\"input\",project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"} * 0 + 1",
           "legendFormat": "{{phase}}",
           "refId": "A"
         }
@@ -810,10 +1571,20 @@
       "id": 702,
       "title": "Session Cost",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 49 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 49
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "area"
@@ -825,17 +1596,28 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 5 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "sum(ce_session_cost_usd{project=~\"$project\"})",
+          "expr": "sum(ce_session_cost_usd{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"})",
           "legendFormat": "Session Cost",
           "refId": "A"
         }
@@ -845,10 +1627,20 @@
       "id": 703,
       "title": "Tokens This Session",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 49 },
-      "datasource": { "type": "prometheus", "uid": "-- Default --" },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 49
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce-prometheus"
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
         "textMode": "auto",
         "colorMode": "background",
         "graphMode": "area"
@@ -859,17 +1651,28 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 100000 },
-              { "color": "red", "value": 500000 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100000
+              },
+              {
+                "color": "red",
+                "value": 500000
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         }
       },
       "targets": [
         {
-          "expr": "sum(ce_session_tokens_total{project=~\"$project\"})",
+          "expr": "sum(ce_session_tokens_total{project=~\"$project\",pr_number=~\"$pr_number\",session=~\"$session\"})",
           "legendFormat": "Total Tokens",
           "refId": "A"
         }
@@ -883,11 +1686,40 @@
         "label": "Project",
         "type": "custom",
         "query": "Sovren",
-        "current": { "text": "Sovren", "value": "Sovren" },
-        "options": [{ "text": "Sovren", "value": "Sovren", "selected": true }],
+        "current": {
+          "text": "Sovren",
+          "value": "Sovren"
+        },
+        "options": [
+          {
+            "text": "Sovren",
+            "value": "Sovren",
+            "selected": true
+          }
+        ],
         "hide": 0,
         "includeAll": false,
         "multi": false,
+        "skipUrlSync": false
+      },
+      {
+        "name": "pr_number",
+        "label": "PR Number",
+        "type": "query",
+        "query": "label_values(ce_session_cost_usd{project=~\"$project\"}, pr_number)",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "ce-prometheus"
+        },
+        "includeAll": true,
+        "multi": true,
+        "hide": 0,
+        "refresh": 2,
+        "sort": 3,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
         "skipUrlSync": false
       },
       {
@@ -898,16 +1730,61 @@
         "includeAll": true,
         "multi": true,
         "hide": 0,
-        "current": { "text": "All", "value": "$__all" },
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
         "options": [
-          { "text": "All", "value": "$__all", "selected": true },
-          { "text": "plan", "value": "plan" },
-          { "text": "work", "value": "work" },
-          { "text": "review", "value": "review" },
-          { "text": "compound", "value": "compound" },
-          { "text": "brainstorm", "value": "brainstorm" },
-          { "text": "adhoc", "value": "adhoc" }
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": true
+          },
+          {
+            "text": "plan",
+            "value": "plan"
+          },
+          {
+            "text": "work",
+            "value": "work"
+          },
+          {
+            "text": "review",
+            "value": "review"
+          },
+          {
+            "text": "compound",
+            "value": "compound"
+          },
+          {
+            "text": "brainstorm",
+            "value": "brainstorm"
+          },
+          {
+            "text": "adhoc",
+            "value": "adhoc"
+          }
         ],
+        "skipUrlSync": false
+      },
+      {
+        "name": "session",
+        "label": "Session",
+        "type": "query",
+        "query": "label_values(ce_session_cost_usd{project=~\"$project\",pr_number=~\"$pr_number\"}, session)",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "ce-prometheus"
+        },
+        "includeAll": true,
+        "multi": true,
+        "hide": 0,
+        "refresh": 2,
+        "sort": 0,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
         "skipUrlSync": false
       }
     ]
@@ -916,7 +1793,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -926,6 +1806,6 @@
     ]
   },
   "tags": ["ce-metrics", "compound-engineering"],
-  "description": "Compound Engineering Metrics — 5 dimensions: Cost Efficiency, Velocity, Quality, Knowledge Compounding, Agent Efficiency",
+  "description": "Compound Engineering Metrics \u2014 5 dimensions: Cost Efficiency, Velocity, Quality, Knowledge Compounding, Agent Efficiency",
   "links": []
 }
