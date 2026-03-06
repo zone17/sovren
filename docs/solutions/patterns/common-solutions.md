@@ -3391,43 +3391,41 @@ Before building any dashboard, verify:
 
 ---
 
-## 92. `SessionStart` Hooks Fire Once Per Session, Not Per Workflow Invocation
+## 92. `SessionStart` Fires Multiple Times — Hooks Must Be Idempotent
 
-**Recurrence:** 1 P1 in CE Metrics Dashboard. Tried to detect CE phase (plan/work/review/compound) via SessionStart hook — only fired once at session init, missing phase transitions.
+**Recurrence:** 2 P1s (CE Metrics Dashboard, Agent Monitoring). SessionStart fires on resume/reconnection (observed 3-10 fires per session), not just once. Hooks that reset state on SessionStart wipe phase data mid-session.
 
 ### Problem
 
-```yaml
-# WRONG: Fires once at session start, never again
-~/.claude/hooks/session-start.sh:
-  - command: echo '{"phase":"plan"}' > ~/.claude/metrics/ce-phase.json
+```bash
+# WRONG: Resets phase every time SessionStart fires (including resume)
+echo '{"phase":"adhoc","branch":"..."}' > "$CE_PHASE_FILE"
 ```
 
-When `/workflows:plan` invoked mid-session, SessionStart doesn't fire — phase file stays stale.
+Session resume triggers SessionStart again, overwriting "work" phase back to "adhoc". One session had 10 SessionStart events.
 
-**Root cause:** `SessionStart` is a **session-lifecycle** event (fires 1x when session begins), not a **command-lifecycle** event (fires per-invocation).
+**Root cause:** `SessionStart` is a **session-lifecycle** event that fires on every resume/reconnection, not just initial session creation.
 
-### Fix: Use Skill-Scoped Hooks with `once: true`
+### Fix: Check for existing state before writing
 
-Place phase-detection hooks in **each CE workflow skill's frontmatter**, not in global `~/.claude/hooks/`:
-
-```yaml
-# skills/workflows/plan/SKILL.md
-hooks:
-  SessionStart:
-    - command: echo '{"phase":"plan","started_at":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' > ~/.claude/metrics/ce-phase.json
-      once: true # Fire only once per skill invocation per session
+```bash
+# CORRECT: Preserve phase on resume, only init on new session
+if [ -f "$CE_PHASE_FILE" ]; then
+  # Resume — update branch only, preserve phase
+  jq --arg branch "$branch" '.branch = $branch' "$CE_PHASE_FILE" > tmp && mv tmp "$CE_PHASE_FILE"
+else
+  # New session — create with default phase
+  echo "{\"phase\":\"adhoc\",\"branch\":\"$branch\"}" > "$CE_PHASE_FILE"
+fi
 ```
 
-Repeat in `work/SKILL.md`, `review/SKILL.md`, `compound/SKILL.md`.
-
-**Why `once: true`?** Fires when the skill runs, then blocks re-firing within that session. Perfect for phase transitions.
+Phase transitions use `UserPromptSubmit` hook (`phase-detect-context.sh`) which pattern-matches workflow commands, not SessionStart.
 
 ### Checklist
 
-- [ ] SessionStart hooks in `~/.claude/hooks/` are **session-lifecycle only** (init dirs, rotate logs)
-- [ ] Workflow phase detection goes in **skill frontmatter**, not global hooks
-- [ ] Use `once: true` to prevent re-firing within the session
+- [ ] SessionStart hooks check for existing state before resetting (idempotent)
+- [ ] Phase detection uses `UserPromptSubmit` event, not `SessionStart`
+- [ ] Test with session resume (close/reopen) to verify phase preservation
 
 ---
 
@@ -3821,6 +3819,237 @@ exit 0
 
 ---
 
+## 103. Pushgateway Batch POST — Deduplicate HELP/TYPE Declarations
+
+**Recurrence:** 1 P2 during agent metrics implementation. Pushgateway rejects duplicate `# HELP`/`# TYPE` for same metric name.
+
+### Problem
+
+When buffering per-PR metrics (e.g., `flow_time_hours` for 53 PRs), each call to `buffer_metric()` emitted HELP/TYPE headers, causing Pushgateway to reject the batch POST.
+
+### Fix: Pipe-delimited string as a set
+
+```bash
+_METRICS_DECLARED=""
+
+buffer_metric() {
+  local metric="$1" labels="$2" value="$3" help="${4:-}"
+  if [ -n "$help" ] && [[ "$_METRICS_DECLARED" != *"|${metric}|"* ]]; then
+    METRICS_BUFFER="${METRICS_BUFFER}# HELP ${metric} ${help}
+# TYPE ${metric} gauge
+"
+    _METRICS_DECLARED="${_METRICS_DECLARED}|${metric}|"
+  fi
+  METRICS_BUFFER="${METRICS_BUFFER}${metric}{$labels} ${value}
+"
+}
+```
+
+**Why not associative arrays?** `declare -A` + `set -u` = "unbound variable" error when testing key existence. Pipe-delimited strings are simpler and portable.
+
+---
+
+## 104. Shell ARG_MAX — Write Large Data to Temp Files
+
+**Recurrence:** 1 P2 during agent metrics. `python3: Argument list too long` when passing 54-PR JSON blob.
+
+### Problem
+
+Passing `$PR_DATA` (>100KB JSON) as a shell argument or heredoc variable hits macOS `ARG_MAX` (~262KB). The error is `/opt/homebrew/bin/python3: Argument list too long`.
+
+### Fix: mktemp + file I/O
+
+```bash
+local tmp=$(mktemp)
+echo "$large_json" > "$tmp"
+python3 << PYEOF
+with open("$tmp") as f:
+    data = json.load(f)
+PYEOF
+rm -f "$tmp"
+```
+
+**Checklist:**
+
+- [ ] Use `mktemp` (not hardcoded paths)
+- [ ] `rm -f` in the same function (not a trap — traps don't fire in sourced functions)
+- [ ] Apply when data >100KB or >50 records
+
+---
+
+## 105. Never Use `set -u` in Claude Code Hooks
+
+**Recurrence:** 1 P1 during agent metrics. UserPromptSubmit hook errored on every prompt.
+
+### Problem
+
+`set -uo pipefail` in `phase-detect-context.sh` caused "unbound variable" errors on array slicing (`${arr[@]:1}`) and associative array lookups. The `trap 'exit 0' ERR` doesn't reliably catch nounset errors across bash versions.
+
+### Fix: Remove `-u`, use explicit guards
+
+```bash
+# Before (broken — intermittent hook errors):
+set -uo pipefail
+trap 'exit 0' ERR
+input=$(cat)
+
+# After (reliable):
+set -o pipefail
+trap 'exit 0' ERR
+input=$(cat 2>/dev/null) || exit 0
+[ -n "$input" ] || exit 0
+```
+
+**Rule:** In hooks, use `${var:-default}` fallbacks and `[ -n "$var" ] || exit 0` guards instead of `set -u`. The cost of a missed unset variable is a no-op; the cost of a hook error is blocking every prompt.
+
+---
+
+## 106. `[ cond ] && cmd` Under `set -e` Needs `|| true`
+
+**Recurrence:** 1 P2 during agent metrics. Script exited 1 despite successful metrics push.
+
+### Problem
+
+`[ "$count" -gt 0 ] && echo "Cleaned up"` returns exit code 1 when count=0 (the test fails). Under `set -e`, this terminates the script.
+
+### Fix: Append `|| true`
+
+```bash
+# Broken under set -e when count=0:
+[ "$count" -gt 0 ] && echo "  Cleaned up $count stale series"
+
+# Fixed:
+[ "$count" -gt 0 ] && echo "  Cleaned up $count stale series" || true
+```
+
+**Alternative:** Use `if/then/fi` instead of `&&` chains in `set -e` scripts.
+
+---
+
+## 107. Session-Scoped State Files for Concurrent Hook Isolation
+
+**Recurrence:** 1 P1 in Agent Monitoring. All concurrent Claude Code sessions shared one `ce-phase.json` — session B's SessionStart overwrote session A's "work" phase back to "adhoc". 91% of events tagged "adhoc" despite phase detection working.
+
+### Problem
+
+```bash
+# WRONG: Global shared file — last writer wins
+CE_PHASE_FILE="$HOME/.claude/metrics/ce-phase.json"
+```
+
+With squad worktrees or team agents, multiple sessions run concurrently. Each session's hooks write to the same file, causing data loss.
+
+### Fix: Per-session state files
+
+```bash
+# CORRECT: Session-scoped — no clobbering
+CE_PHASE_DIR="$HOME/.claude/metrics/phases"
+CE_PHASE_FILE="$CE_PHASE_DIR/${session_id}.json"
+
+# All state readers accept session_id parameter
+get_phase() {
+  local sid="${1:-}"
+  if [ -n "$sid" ] && [ -f "$CE_PHASE_DIR/${sid}.json" ]; then
+    jq -r '.phase // "adhoc"' "$CE_PHASE_DIR/${sid}.json"
+  else
+    echo "adhoc"
+  fi
+}
+
+# Cleanup: session-end deletes own file, stale files expire after 48h
+rm -f "$CE_PHASE_FILE" 2>/dev/null || true
+find "$CE_PHASE_DIR" -name "*.json" -mmin +2880 -delete 2>/dev/null || true
+```
+
+### Checklist
+
+- [ ] Hook state files include `${session_id}` in the path
+- [ ] All state readers accept session_id parameter (no implicit globals)
+- [ ] Session-end hook cleans up its own state file
+- [ ] Stale file expiry (48h) prevents unbounded growth
+
+---
+
+## 108. Phase Detection Patterns Must Match Full Skill Namespace
+
+**Recurrence:** 1 P2 in Agent Monitoring. `phase-detect-context.sh` matched `/workflows:plan` but skills arrive as `/compound-engineering:workflows:plan`, causing missed phase transitions.
+
+### Problem
+
+```bash
+# WRONG: Exact prefix match misses plugin-namespaced invocations
+case "$prompt" in
+  /workflows:plan)   new_phase="plan" ;;
+  /workflows:work)   new_phase="work" ;;
+esac
+```
+
+### Fix: Substring glob matching
+
+```bash
+# CORRECT: Catches both /workflows:plan and /compound-engineering:workflows:plan
+case "$prompt" in
+  *workflows:plan*|*deepen-plan*|*plan_review*)  new_phase="plan" ;;
+  *workflows:work*|*/team-builder*|*/slfg*|*/lfg*) new_phase="work" ;;
+  *workflows:review*|*/triage*|*/resolve_parallel*) new_phase="review" ;;
+  *workflows:compound*|*/compound-docs*)  new_phase="compound" ;;
+  *workflows:brainstorm*|*/brainstorming*) new_phase="brainstorm" ;;
+esac
+```
+
+### Checklist
+
+- [ ] Use `*pattern*` glob (substring) not exact prefix match
+- [ ] Include all skill aliases (e.g., `/lfg` and `/slfg` both map to "work")
+- [ ] Test with both `/workflows:X` and `/compound-engineering:workflows:X` forms
+
+---
+
+## 109. Lightweight Hooks Need Explicit Session ID Threading
+
+**Recurrence:** 1 P2 in Agent Monitoring. Tool hooks (`tool-call-start.sh`, etc.) bypass `ce_init()` for performance but then called `get_phase()` without session_id, reading stale global state instead of session-scoped files.
+
+### Problem
+
+```bash
+# WRONG: Lightweight hook reads stdin manually but doesn't pass session_id
+input=$(cat)
+tool_name=$(echo "$input" | jq -r '.tool_name')
+emit_event "tool_start" "{\"tool\":\"$tool_name\"}" "$session_id"
+# emit_event calls get_phase() which checks CE_PHASE_FILE (global default)
+```
+
+### Fix: Pass session_id through emit_event to get_phase
+
+```bash
+# In emit_event():
+emit_event() {
+  local event_type="$1" extra_json="$2" session_id="${3:-unknown}"
+  # Pass session_id to state readers
+  phase=$(get_phase "$session_id")
+  project=$(get_project "$session_id")
+  # ... build and emit JSON
+}
+
+# In get_phase():
+get_phase() {
+  local sid="${1:-}"
+  # Check session-scoped file first
+  if [ -n "$sid" ] && [ -f "$CE_PHASE_DIR/${sid}.json" ]; then
+    jq -r '.phase // "adhoc"' "$CE_PHASE_DIR/${sid}.json"
+  fi
+}
+```
+
+### Checklist
+
+- [ ] All hooks extract session_id from stdin JSON payload
+- [ ] session_id passed to `emit_event()` as 3rd argument
+- [ ] `get_phase()` and `get_project()` accept session_id parameter
+- [ ] No implicit reliance on global `CE_PHASE_FILE` variable
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -3836,125 +4065,132 @@ CONTEXT TO LOAD:
 
 ## Index: Which Pattern Solves Which Issue
 
-| Issue You're Seeing                             | Pattern # | File                 |
-| ----------------------------------------------- | --------- | -------------------- |
-| Race condition on capacity/count                | 1a-1c     | critical-patterns.md |
-| User can access others' data                    | 2         | critical-patterns.md |
-| Query loads too much into memory                | 3         | critical-patterns.md |
-| Two inserts, second might fail                  | 4         | critical-patterns.md |
-| Payment data could be lost                      | 5         | critical-patterns.md |
-| URL from user input fetched server-side         | 6a-6c     | critical-patterns.md |
-| DNS TOCTOU between validate and fetch           | 6b        | critical-patterns.md |
-| IPv6 encoding bypasses SSRF check               | 6c        | critical-patterns.md |
-| Can delete a paid/active entity                 | 7         | critical-patterns.md |
-| Button fires duplicate mutations                | 1         | common-solutions.md  |
-| Map grows without bound                         | 2         | common-solutions.md  |
-| New env var not validated                       | 3         | common-solutions.md  |
-| Inconsistent error responses                    | 4         | common-solutions.md  |
-| snake_case in API response                      | 5         | common-solutions.md  |
-| Worker running for stub function                | 6         | common-solutions.md  |
-| Tests break after service change                | 7         | common-solutions.md  |
-| New routes missing rate limit                   | 8         | common-solutions.md  |
-| Named route not matching                        | 9         | common-solutions.md  |
-| `db: any` in constructor                        | 10        | common-solutions.md  |
-| Vitest OOM / worker crashes                     | 11        | common-solutions.md  |
-| `git diff --cached` empty at push               | 12        | common-solutions.md  |
-| Batch op fails on single rejection              | 13        | common-solutions.md  |
-| Same utility in 3+ files                        | 14        | common-solutions.md  |
-| Hook loops agents on pre-existing issues        | 15        | common-solutions.md  |
-| Security file changed, no tests ran             | 16        | common-solutions.md  |
-| Test framework migrated, hooks broken           | 17        | common-solutions.md  |
-| Hook error suppressed, failures hidden          | 18        | common-solutions.md  |
-| grep breaks on macOS / portability issue        | 19        | common-solutions.md  |
-| `forEach(async` does nothing / returns early    | 20        | common-solutions.md  |
-| Need to cancel BullMQ job without DB lookup     | 21        | common-solutions.md  |
-| Promise.race leaks setTimeout handle            | 22        | common-solutions.md  |
-| Duplicate items cause redundant I/O             | 23        | common-solutions.md  |
-| Bare `Error` in service method → 500            | 24        | common-solutions.md  |
-| DB insert + queue enqueue partial failure       | 4c        | critical-patterns.md |
-| Todos from prior sprint, many may be stale      | 25        | common-solutions.md  |
-| E2E tests mock API via `page.route()`           | 26        | common-solutions.md  |
-| New test type exists locally but not in CI      | 8a-8c     | critical-patterns.md |
-| NOSTR verifyEvent with `id: ''`                 | 9a-9b     | critical-patterns.md |
-| Fixed method but standalone utility broken      | 28        | common-solutions.md  |
-| Silent fallback with no logging                 | 29        | common-solutions.md  |
-| String duplicated across packages               | 10a       | critical-patterns.md |
-| Lazy init with no logging                       | 10b       | critical-patterns.md |
-| New spec silently excluded from test run        | 30        | common-solutions.md  |
-| Type guard uses `any` instead of `unknown`      | 31        | common-solutions.md  |
-| Agent can't create new artifact from CLAUDE.md  | 32        | common-solutions.md  |
-| WebSocket mock silently ignored by MSW v2       | 33        | common-solutions.md  |
-| React effects don't fire with fake timers       | 34        | common-solutions.md  |
-| Error-state test times out (React Query)        | 35        | common-solutions.md  |
-| vi.mock factory: variable before init           | 36        | common-solutions.md  |
-| React 19 hoisted after npm update               | 37        | common-solutions.md  |
-| Action bumped, notifications silently fail      | 38        | common-solutions.md  |
-| Lockfile keeps stale workspace resolutions      | 39        | common-solutions.md  |
-| Migrated dead code nobody imports               | 40        | common-solutions.md  |
-| `resetAllMocks` wipes mock implementations      | 41        | common-solutions.md  |
-| Nested test data leaks between tests            | 42        | common-solutions.md  |
-| ESM default export mock returns undefined       | 43        | common-solutions.md  |
-| Fire-and-forget assertion fails intermittently  | 44        | common-solutions.md  |
-| Class mock methods undefined after reset        | 45        | common-solutions.md  |
-| Service constructor captures undefined fetch    | 46        | common-solutions.md  |
-| Stale branches, stashes, orphaned PRs pile up   | 47        | common-solutions.md  |
-| Branch not deleted after squash-merge to main   | 48        | common-solutions.md  |
-| New tool added, untracked artifacts in tree     | 49        | common-solutions.md  |
-| >10 vi.fn() stubs for one service interface     | 50        | common-solutions.md  |
-| `as any` for private field in test helper       | 51        | common-solutions.md  |
-| Timer handles leaked after test run             | 52        | common-solutions.md  |
-| >5 `as any` casts in test factory consumers     | 53        | common-solutions.md  |
-| Re-export used locally but not in scope         | 54        | common-solutions.md  |
-| Stub file name-collides on case-insensitive FS  | 55        | common-solutions.md  |
-| Spread in logger metadata shadows built-ins     | 56        | common-solutions.md  |
-| Monitoring endpoint missing from `/api` root    | 57        | common-solutions.md  |
-| keepPreviousData shows stale filter results     | 58        | common-solutions.md  |
-| Nullable DB col crashes TS at runtime           | 59        | common-solutions.md  |
-| ILIKE `%query%` causes sequential scan          | 60        | common-solutions.md  |
-| ServiceError cause leaks stack trace to client  | 61        | common-solutions.md  |
-| PostgREST filter injection via metacharacters   | 11        | critical-patterns.md |
-| VIEW exposes admin/inactive users               | 12        | critical-patterns.md |
-| Worktree branches lost after context expiry     | 77        | common-solutions.md  |
-| Committed to wrong squad's branch               | 78        | common-solutions.md  |
-| Root tsc generates phantom path alias errors    | 62        | common-solutions.md  |
-| ESLint has 1000+ violations, all noise          | 63        | common-solutions.md  |
-| CI job needs missing infra (secrets/Docker)     | 64        | common-solutions.md  |
-| Redundant workflows accumulating                | 65        | common-solutions.md  |
-| Production build JS chunks are empty (1 byte)   | 66        | common-solutions.md  |
-| VITE\_\* env var undefined in production bundle | 67        | common-solutions.md  |
-| `${{ }}` in run: block — shell injection risk   | 68        | common-solutions.md  |
-| Path-filtered job skips block merge             | 69        | common-solutions.md  |
-| `cancel-in-progress` kills deploy on main       | 70        | common-solutions.md  |
-| Local main stale after squash-merge             | 71        | common-solutions.md  |
-| `merge_group` trigger but no merge queue        | 72        | common-solutions.md  |
-| Branch protection PUT zeroed other settings     | 73        | common-solutions.md  |
-| Check name mismatch blocks auto-merge           | 74        | common-solutions.md  |
-| Vercel pending status blocks non-frontend PRs   | 75        | common-solutions.md  |
-| CI threshold has no comment, ships wrong value  | 76        | common-solutions.md  |
-| Rebase picked wrong import path                 | 79        | common-solutions.md  |
-| Flaky mock ID fails format validation           | 80        | common-solutions.md  |
-| `fetch('/api/...')` in component hits frontend  | 81        | common-solutions.md  |
-| E2E can't find buttons (behind loading state)   | 82        | common-solutions.md  |
-| Test asserts on Promise.then callback order     | 83        | common-solutions.md  |
-| Concurrent sessions cause branch race condition | 84        | common-solutions.md  |
-| Route param not UUID, reaches DB query          | 13        | critical-patterns.md |
-| `<img src={userUrl}>` without protocol check    | 14        | critical-patterns.md |
-| Parent lookup missing content scope constraint  | 15        | critical-patterns.md |
-| Optimistic delete only restores one page cache  | 85        | common-solutions.md  |
-| Status enum has values no code writes           | 86        | common-solutions.md  |
-| DOMPurify returns input unchanged in Node.js    | 87        | common-solutions.md  |
-| Dialog IDs duplicated in list rendering         | 88        | common-solutions.md  |
-| `::date` on timestamptz rejected in index       | 89        | common-solutions.md  |
-| E2E navigates to route that doesn't exist       | 90        | common-solutions.md  |
-| Metrics measure activity, not outcomes          | 91        | common-solutions.md  |
-| SessionStart hooks fire once per session        | 92        | common-solutions.md  |
-| Transcript parsing O(n), tail should be O(1)    | 93        | common-solutions.md  |
-| Hooks not version-controlled outside VCS        | 94        | common-solutions.md  |
-| Pushgateway stale data accumulation             | 95        | common-solutions.md  |
-| PromQL rate() misused on gauge metrics          | 96        | common-solutions.md  |
-| JSONL unbounded growth, needs rotation          | 97        | common-solutions.md  |
-| Hook "ask" cases silently allowed               | 98        | common-solutions.md  |
-| PreToolUse hook adds latency to every command   | 99        | common-solutions.md  |
-| LLM skips instruction after context compaction  | 100       | common-solutions.md  |
-| Two hooks need to share session state           | 101       | common-solutions.md  |
-| Hook blocks too aggressively / false positives  | 102       | common-solutions.md  |
+| Issue You're Seeing                              | Pattern # | File                 |
+| ------------------------------------------------ | --------- | -------------------- |
+| Race condition on capacity/count                 | 1a-1c     | critical-patterns.md |
+| User can access others' data                     | 2         | critical-patterns.md |
+| Query loads too much into memory                 | 3         | critical-patterns.md |
+| Two inserts, second might fail                   | 4         | critical-patterns.md |
+| Payment data could be lost                       | 5         | critical-patterns.md |
+| URL from user input fetched server-side          | 6a-6c     | critical-patterns.md |
+| DNS TOCTOU between validate and fetch            | 6b        | critical-patterns.md |
+| IPv6 encoding bypasses SSRF check                | 6c        | critical-patterns.md |
+| Can delete a paid/active entity                  | 7         | critical-patterns.md |
+| Button fires duplicate mutations                 | 1         | common-solutions.md  |
+| Map grows without bound                          | 2         | common-solutions.md  |
+| New env var not validated                        | 3         | common-solutions.md  |
+| Inconsistent error responses                     | 4         | common-solutions.md  |
+| snake_case in API response                       | 5         | common-solutions.md  |
+| Worker running for stub function                 | 6         | common-solutions.md  |
+| Tests break after service change                 | 7         | common-solutions.md  |
+| New routes missing rate limit                    | 8         | common-solutions.md  |
+| Named route not matching                         | 9         | common-solutions.md  |
+| `db: any` in constructor                         | 10        | common-solutions.md  |
+| Vitest OOM / worker crashes                      | 11        | common-solutions.md  |
+| `git diff --cached` empty at push                | 12        | common-solutions.md  |
+| Batch op fails on single rejection               | 13        | common-solutions.md  |
+| Same utility in 3+ files                         | 14        | common-solutions.md  |
+| Hook loops agents on pre-existing issues         | 15        | common-solutions.md  |
+| Security file changed, no tests ran              | 16        | common-solutions.md  |
+| Test framework migrated, hooks broken            | 17        | common-solutions.md  |
+| Hook error suppressed, failures hidden           | 18        | common-solutions.md  |
+| grep breaks on macOS / portability issue         | 19        | common-solutions.md  |
+| `forEach(async` does nothing / returns early     | 20        | common-solutions.md  |
+| Need to cancel BullMQ job without DB lookup      | 21        | common-solutions.md  |
+| Promise.race leaks setTimeout handle             | 22        | common-solutions.md  |
+| Duplicate items cause redundant I/O              | 23        | common-solutions.md  |
+| Bare `Error` in service method → 500             | 24        | common-solutions.md  |
+| DB insert + queue enqueue partial failure        | 4c        | critical-patterns.md |
+| Todos from prior sprint, many may be stale       | 25        | common-solutions.md  |
+| E2E tests mock API via `page.route()`            | 26        | common-solutions.md  |
+| New test type exists locally but not in CI       | 8a-8c     | critical-patterns.md |
+| NOSTR verifyEvent with `id: ''`                  | 9a-9b     | critical-patterns.md |
+| Fixed method but standalone utility broken       | 28        | common-solutions.md  |
+| Silent fallback with no logging                  | 29        | common-solutions.md  |
+| String duplicated across packages                | 10a       | critical-patterns.md |
+| Lazy init with no logging                        | 10b       | critical-patterns.md |
+| New spec silently excluded from test run         | 30        | common-solutions.md  |
+| Type guard uses `any` instead of `unknown`       | 31        | common-solutions.md  |
+| Agent can't create new artifact from CLAUDE.md   | 32        | common-solutions.md  |
+| WebSocket mock silently ignored by MSW v2        | 33        | common-solutions.md  |
+| React effects don't fire with fake timers        | 34        | common-solutions.md  |
+| Error-state test times out (React Query)         | 35        | common-solutions.md  |
+| vi.mock factory: variable before init            | 36        | common-solutions.md  |
+| React 19 hoisted after npm update                | 37        | common-solutions.md  |
+| Action bumped, notifications silently fail       | 38        | common-solutions.md  |
+| Lockfile keeps stale workspace resolutions       | 39        | common-solutions.md  |
+| Migrated dead code nobody imports                | 40        | common-solutions.md  |
+| `resetAllMocks` wipes mock implementations       | 41        | common-solutions.md  |
+| Nested test data leaks between tests             | 42        | common-solutions.md  |
+| ESM default export mock returns undefined        | 43        | common-solutions.md  |
+| Fire-and-forget assertion fails intermittently   | 44        | common-solutions.md  |
+| Class mock methods undefined after reset         | 45        | common-solutions.md  |
+| Service constructor captures undefined fetch     | 46        | common-solutions.md  |
+| Stale branches, stashes, orphaned PRs pile up    | 47        | common-solutions.md  |
+| Branch not deleted after squash-merge to main    | 48        | common-solutions.md  |
+| New tool added, untracked artifacts in tree      | 49        | common-solutions.md  |
+| >10 vi.fn() stubs for one service interface      | 50        | common-solutions.md  |
+| `as any` for private field in test helper        | 51        | common-solutions.md  |
+| Timer handles leaked after test run              | 52        | common-solutions.md  |
+| >5 `as any` casts in test factory consumers      | 53        | common-solutions.md  |
+| Re-export used locally but not in scope          | 54        | common-solutions.md  |
+| Stub file name-collides on case-insensitive FS   | 55        | common-solutions.md  |
+| Spread in logger metadata shadows built-ins      | 56        | common-solutions.md  |
+| Monitoring endpoint missing from `/api` root     | 57        | common-solutions.md  |
+| keepPreviousData shows stale filter results      | 58        | common-solutions.md  |
+| Nullable DB col crashes TS at runtime            | 59        | common-solutions.md  |
+| ILIKE `%query%` causes sequential scan           | 60        | common-solutions.md  |
+| ServiceError cause leaks stack trace to client   | 61        | common-solutions.md  |
+| PostgREST filter injection via metacharacters    | 11        | critical-patterns.md |
+| VIEW exposes admin/inactive users                | 12        | critical-patterns.md |
+| Worktree branches lost after context expiry      | 77        | common-solutions.md  |
+| Committed to wrong squad's branch                | 78        | common-solutions.md  |
+| Root tsc generates phantom path alias errors     | 62        | common-solutions.md  |
+| ESLint has 1000+ violations, all noise           | 63        | common-solutions.md  |
+| CI job needs missing infra (secrets/Docker)      | 64        | common-solutions.md  |
+| Redundant workflows accumulating                 | 65        | common-solutions.md  |
+| Production build JS chunks are empty (1 byte)    | 66        | common-solutions.md  |
+| VITE\_\* env var undefined in production bundle  | 67        | common-solutions.md  |
+| `${{ }}` in run: block — shell injection risk    | 68        | common-solutions.md  |
+| Path-filtered job skips block merge              | 69        | common-solutions.md  |
+| `cancel-in-progress` kills deploy on main        | 70        | common-solutions.md  |
+| Local main stale after squash-merge              | 71        | common-solutions.md  |
+| `merge_group` trigger but no merge queue         | 72        | common-solutions.md  |
+| Branch protection PUT zeroed other settings      | 73        | common-solutions.md  |
+| Check name mismatch blocks auto-merge            | 74        | common-solutions.md  |
+| Vercel pending status blocks non-frontend PRs    | 75        | common-solutions.md  |
+| CI threshold has no comment, ships wrong value   | 76        | common-solutions.md  |
+| Rebase picked wrong import path                  | 79        | common-solutions.md  |
+| Flaky mock ID fails format validation            | 80        | common-solutions.md  |
+| `fetch('/api/...')` in component hits frontend   | 81        | common-solutions.md  |
+| E2E can't find buttons (behind loading state)    | 82        | common-solutions.md  |
+| Test asserts on Promise.then callback order      | 83        | common-solutions.md  |
+| Concurrent sessions cause branch race condition  | 84        | common-solutions.md  |
+| Route param not UUID, reaches DB query           | 13        | critical-patterns.md |
+| `<img src={userUrl}>` without protocol check     | 14        | critical-patterns.md |
+| Parent lookup missing content scope constraint   | 15        | critical-patterns.md |
+| Optimistic delete only restores one page cache   | 85        | common-solutions.md  |
+| Status enum has values no code writes            | 86        | common-solutions.md  |
+| DOMPurify returns input unchanged in Node.js     | 87        | common-solutions.md  |
+| Dialog IDs duplicated in list rendering          | 88        | common-solutions.md  |
+| `::date` on timestamptz rejected in index        | 89        | common-solutions.md  |
+| E2E navigates to route that doesn't exist        | 90        | common-solutions.md  |
+| Metrics measure activity, not outcomes           | 91        | common-solutions.md  |
+| SessionStart fires on resume, wipes hook state   | 92        | common-solutions.md  |
+| Transcript parsing O(n), tail should be O(1)     | 93        | common-solutions.md  |
+| Hooks not version-controlled outside VCS         | 94        | common-solutions.md  |
+| Pushgateway stale data accumulation              | 95        | common-solutions.md  |
+| PromQL rate() misused on gauge metrics           | 96        | common-solutions.md  |
+| JSONL unbounded growth, needs rotation           | 97        | common-solutions.md  |
+| Hook "ask" cases silently allowed                | 98        | common-solutions.md  |
+| PreToolUse hook adds latency to every command    | 99        | common-solutions.md  |
+| LLM skips instruction after context compaction   | 100       | common-solutions.md  |
+| Two hooks need to share session state            | 101       | common-solutions.md  |
+| Hook blocks too aggressively / false positives   | 102       | common-solutions.md  |
+| Pushgateway rejects batch with duplicate HELP    | 103       | common-solutions.md  |
+| `python3: Argument list too long` for large JSON | 104       | common-solutions.md  |
+| `set -u` in hook causes intermittent errors      | 105       | common-solutions.md  |
+| `[ cond ] && cmd` exits 1 under `set -e`         | 106       | common-solutions.md  |
+| Concurrent sessions clobber shared state file    | 107       | common-solutions.md  |
+| Phase detection misses plugin-namespaced skills  | 108       | common-solutions.md  |
+| Lightweight hooks read stale global phase        | 109       | common-solutions.md  |
