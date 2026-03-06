@@ -3308,6 +3308,365 @@ test.skip('content detail page (route in PR #137)', async () => {
 });
 ```
 
+## 91. Metrics Dashboards Measure Activity, Not Outcomes
+
+**Recurrence:** 1 P1 in CE Metrics Dashboard effort. 22-panel dashboard redesigned to 4 metrics after discovering panels were vanity metrics.
+
+### Problem
+
+Built a comprehensive 22-panel dashboard across 5 dimensions (Cost, Velocity, Quality, Knowledge, Agents). After implementation, realized:
+
+- Token counts per phase tell you **cost**, not whether the loop got **faster**
+- Cache hit ratio can improve while code quality degrades
+- Pattern file growth shows **documentation**, not **bug prevention**
+- Agent respawn rate tells you agents failed, not if team was right-sized
+- No actionable decision rules — metrics were pure decoration
+
+Root cause: Started by instrumenting everything available, not by asking "what business question do we need to answer?"
+
+### Fix: The Flow Framework (4 Metrics)
+
+Replace activity metrics with outcome metrics tied to business decisions:
+
+| Metric         | Definition              | Decision Rule                    |
+| -------------- | ----------------------- | -------------------------------- |
+| **Velocity**   | PRs merged per week     | If < 0.5: investigate bottleneck |
+| **Time**       | Median days in progress | If > 7: escalate or reduce scope |
+| **Efficiency** | LOC per token spent     | If < 10: investigate overhead    |
+| **Load**       | Concurrent open PRs     | If > 3: unsustainable capacity   |
+
+**Implementation:**
+
+```bash
+#!/bin/bash
+# scripts/metrics/compute-flow-metrics.sh
+
+# 1. Velocity: PRs merged this week (source: GitHub API)
+velocity=$(gh api repos/:owner/:repo/pulls \
+  --state merged \
+  --jq "
+    now as \$now |
+    [ .[] | select(.merged_at | fromdate > (\$now - 604800)) ] | length
+  ")
+
+# 2. Time: Median age of open PRs (source: GitHub API)
+time=$(gh api repos/:owner/:repo/pulls --state open \
+  --jq "
+    now as \$now |
+    [ .[] | (\$now - (.created_at | fromdate)) / 86400 ] |
+    sort | .[length / 2] | floor
+  ")
+
+# 3. Efficiency: Lines of code per token (sources: git + hooks)
+total_loc=$(git log --stat --since="1 week ago" | grep "files changed" | awk '{sum+=$4} END {print sum}')
+total_tokens=$(jq '[.[] | select(.timestamp > now - 604800)] | map(.estimated_cost_usd * 1000000) | add' ce-events.jsonl)
+efficiency=$((total_loc / (total_tokens || 1)))
+
+# 4. Load: Open PRs (source: GitHub API)
+load=$(gh api repos/:owner/:repo/pulls --state open --jq 'length')
+
+# Push all 4 to Prometheus
+cat <<EOF | curl -X POST --data-binary @- http://localhost:9091/metrics/job/flow/instance/sovren
+# TYPE flow_velocity_prs_per_week gauge
+flow_velocity_prs_per_week $velocity
+# TYPE flow_time_median_days_in_progress gauge
+flow_time_median_days_in_progress $time
+# TYPE flow_efficiency_loc_per_token gauge
+flow_efficiency_loc_per_token $efficiency
+# TYPE flow_load_concurrent_prs gauge
+flow_load_concurrent_prs $load
+EOF
+```
+
+### Checklist: Actionability Test
+
+Before building any dashboard, verify:
+
+- [ ] For each panel, define the decision: "If metric > X, we do Y"
+- [ ] If there's no decision rule, delete the panel
+- [ ] Test the decision: Would this finding change your actions?
+- [ ] Tie every metric to external ground truth (GitHub API, git, Claude Code session cost)
+
+**See also:** `/Users/fp/Desktop/Sovren/docs/solutions/process-issues/prevention-metrics-dashboard-design-20260305.md`
+
+---
+
+## 92. `SessionStart` Hooks Fire Once Per Session, Not Per Workflow Invocation
+
+**Recurrence:** 1 P1 in CE Metrics Dashboard. Tried to detect CE phase (plan/work/review/compound) via SessionStart hook — only fired once at session init, missing phase transitions.
+
+### Problem
+
+```yaml
+# WRONG: Fires once at session start, never again
+~/.claude/hooks/session-start.sh:
+  - command: echo '{"phase":"plan"}' > ~/.claude/metrics/ce-phase.json
+```
+
+When `/workflows:plan` invoked mid-session, SessionStart doesn't fire — phase file stays stale.
+
+**Root cause:** `SessionStart` is a **session-lifecycle** event (fires 1x when session begins), not a **command-lifecycle** event (fires per-invocation).
+
+### Fix: Use Skill-Scoped Hooks with `once: true`
+
+Place phase-detection hooks in **each CE workflow skill's frontmatter**, not in global `~/.claude/hooks/`:
+
+```yaml
+# skills/workflows/plan/SKILL.md
+hooks:
+  SessionStart:
+    - command: echo '{"phase":"plan","started_at":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' > ~/.claude/metrics/ce-phase.json
+      once: true # Fire only once per skill invocation per session
+```
+
+Repeat in `work/SKILL.md`, `review/SKILL.md`, `compound/SKILL.md`.
+
+**Why `once: true`?** Fires when the skill runs, then blocks re-firing within that session. Perfect for phase transitions.
+
+### Checklist
+
+- [ ] SessionStart hooks in `~/.claude/hooks/` are **session-lifecycle only** (init dirs, rotate logs)
+- [ ] Workflow phase detection goes in **skill frontmatter**, not global hooks
+- [ ] Use `once: true` to prevent re-firing within the session
+
+---
+
+## 93. Transcript Parsing O(n) Reads Entire File — Use `tail -1 | jq` for O(1)
+
+**Recurrence:** 1 P1 in CE Metrics Dashboard. `session-end.sh` was going to re-parse entire 50-700MB transcript.
+
+### Problem
+
+```bash
+# SLOW: O(n) file read, reads ENTIRE file to get last line
+python3 -c "
+transcript = open('$transcript_path', 'r')
+for line in transcript: pass
+last_line = line
+# Extract tokens...
+"
+# Large transcript (700MB): ~800ms overhead per session end
+```
+
+### Fix: Use `tail -1 | jq` for O(1) Seek
+
+```bash
+# FAST: O(1) seek to end, O(1) read
+last_turn=$(tail -1 "$transcript_path" | jq -c)
+input_tokens=$(echo "$last_turn" | jq '.input_tokens')
+output_tokens=$(echo "$last_turn" | jq '.output_tokens')
+
+# Benchmark: 700MB transcript = 50ms (16x improvement)
+```
+
+**For session-end aggregation**, don't re-parse transcript at all — read from `ce-events.jsonl` (~140KB):
+
+```bash
+# Aggregate from events, not transcript
+session_cost=$(jq -c "select(.session_id == \"$SESSION_ID\")" ce-events.jsonl | \
+               jq -s '[.[] | .estimated_cost_usd] | add')
+```
+
+### Checklist
+
+- [ ] Per-turn token extraction: `tail -1 | jq` only
+- [ ] Session aggregation: read from JSONL, not transcript
+- [ ] Benchmark: verify <100ms overhead on 500MB transcript
+
+---
+
+## 94. Hook Scripts Must Be Version-Controlled in Repo
+
+**Recurrence:** 1 P1 in CE Metrics Dashboard. Hooks in `~/.claude/hooks/` can't be reviewed in PRs, rolled back, or shared.
+
+### Problem
+
+Hooks outside version control:
+
+- Can't be reviewed in PRs
+- Can't be rolled back on failure
+- Can't be shared across machines
+- Can't be tested before deployment
+
+### Fix: Store Canonical Copies in `scripts/ce-metrics/hooks/`
+
+```bash
+# Repository structure (VERSION-CONTROLLED)
+scripts/ce-metrics/
+├── hooks/
+│   ├── lib.sh
+│   ├── session-start.sh
+│   ├── turn-complete.sh
+│   ├── agent-spawn.sh
+│   ├── agent-complete.sh
+│   ├── git-event.sh
+│   ├── task-complete.sh
+│   └── session-end.sh
+├── install-hooks.sh         # Bootstrap script
+├── test-hooks.sh           # Test harness
+└── seed-test-data.sh       # Synthetic data
+
+# User-local (NOT version-controlled)
+~/.claude/hooks/ce-metrics/  # Copies deployed via install-hooks.sh
+```
+
+**install-hooks.sh**:
+
+```bash
+#!/bin/bash
+mkdir -p ~/.claude/hooks/ce-metrics
+cp scripts/ce-metrics/hooks/*.sh ~/.claude/hooks/ce-metrics/
+chmod +x ~/.claude/hooks/ce-metrics/*.sh
+
+# Additive registration (use +=, not =)
+jq '.hooks.SessionStart += [{"path": "~/.claude/hooks/ce-metrics/session-start.sh"}]' \
+  ~/.claude/settings.json > /tmp/settings.json.tmp
+mv /tmp/settings.json.tmp ~/.claude/settings.json
+```
+
+### Checklist
+
+- [ ] Hooks exist in `scripts/{tool}/hooks/` with peer `install-hooks.sh`
+- [ ] Install script uses `+=` (append), not `=` (replace)
+- [ ] test-hooks.sh simulates hook invocations with synthetic input
+- [ ] Hooks reviewed in PR before deployment
+
+---
+
+## 95. Pushgateway Stale Data Accumulation — Implement Cleanup + Replay
+
+**Recurrence:** 1 P1 in CE Metrics Dashboard. Prometheus scrapes Pushgateway every 15s; old session metrics accumulated indefinitely.
+
+### Problem
+
+```
+Session A (Jan 1): ce_session_cost_usd{session="a1b2c3"} 45.23
+Session B (Jan 2): ce_session_cost_usd{session="d4e5f6"} 67.89
+
+Month later: Both metrics still scraped every 15s
+Cardinality grows, queries slow, Prometheus memory bloats
+```
+
+### Fix: Cleanup After Each Push + Replay on Failure
+
+```bash
+# scripts/ce-metrics/hooks/session-end.sh
+
+# Push current session metrics
+curl --connect-timeout 2 --max-time 5 --fail --silent --data-binary @- \
+  http://localhost:9091/metrics/job/ce_session <<< "$METRICS"
+
+if [ $? -ne 0 ]; then
+  # Failed push — save for replay
+  mkdir -p ~/.claude/metrics/pending
+  cat > ~/.claude/metrics/pending/session-$SESSION_ID.prom <<< "$METRICS"
+  exit 1
+fi
+
+# Successful push — delete previous session's metrics
+curl -s -X DELETE "http://localhost:9091/metrics/job/ce_session/session/$PREV_SESSION_ID"
+
+# Replay any pending payloads from prior failures
+for f in ~/.claude/metrics/pending/*.prom; do
+  [ -f "$f" ] || continue
+  if curl --fail --silent --data-binary @- http://localhost:9091/metrics/job/ce_session < "$f"; then
+    rm "$f"
+  fi
+done
+```
+
+### Checklist
+
+- [ ] After successful push, delete previous session metrics
+- [ ] Failed push saved to `~/.claude/metrics/pending/` for replay
+- [ ] Retry loop re-attempts pending payloads at next session-end
+- [ ] Add curl timeouts: `--connect-timeout 2 --max-time 5`
+
+---
+
+## 96. PromQL Antipattern: `rate()` on Pushgateway Gauges Produces Nonsense
+
+**Recurrence:** 1 P1 in CE Metrics Dashboard. Dashboard queries used `rate()` on pushgateway gauges, producing "1,000 USD per second" results.
+
+### Problem
+
+```promql
+# WRONG: rate() on pushgateway gauge
+rate(ce_session_cost_usd[1h])
+
+# Pushgateway re-scrapes cached values every 15s
+# Each rescrape looks like a "change" to Prometheus
+# Results in nonsense like "45.23 USD/second"
+```
+
+### Fix: Use Correct PromQL for Gauge Metrics
+
+```promql
+# CORRECT aggregations for pushgateway gauges:
+
+# Sum all sessions
+sum(ce_session_cost_usd)
+
+# Last recorded value (for sparse data)
+last_over_time(ce_session_cost_usd[24h])
+
+# Change in gauge value
+delta(ce_session_cost_usd[1h])
+
+# NEVER use these on pushgateway:
+# ❌ rate()
+# ❌ increase()
+# ❌ sum_over_time()
+```
+
+### Checklist: Grafana Dashboard Queries
+
+- [ ] All pushgateway gauge queries use only: `sum()`, `sum by()`, `last_over_time()`, `delta()`
+- [ ] Add comment in dashboard JSON explaining gauge semantics
+- [ ] Test: Run a query, verify results make sense (USD amounts, not rates per second)
+
+---
+
+## 97. JSONL Unbounded Growth — Implement Daily Rotation
+
+**Recurrence:** 1 P1 in CE Metrics Dashboard. `ce-events.jsonl` grows 6-72MB per year without rotation.
+
+### Problem
+
+```
+Day 1: 100 events, 20KB
+Day 10: 1,000 events, 200KB
+Month 1: ~30,000 events, 6MB
+Year 1: ~360,000 events, 72MB  ← Parsing 72MB at session-end = seconds latency
+```
+
+### Fix: Daily Rotation in `session-start.sh`
+
+```bash
+# ~/.claude/hooks/ce-metrics/session-start.sh
+
+EVENTS_FILE="$HOME/.claude/metrics/ce-events.jsonl"
+
+# Rotate when file > 10MB
+if [ -f "$EVENTS_FILE" ]; then
+  size=$(stat -f%z "$EVENTS_FILE" 2>/dev/null || stat -c%s "$EVENTS_FILE" 2>/dev/null)
+  if [ "$size" -gt 10485760 ]; then
+    # Archive current file
+    mv "$EVENTS_FILE" "$EVENTS_FILE".$(date +%Y%m%d)
+    # Create fresh file
+    touch "$EVENTS_FILE"
+  fi
+fi
+```
+
+### Checklist
+
+- [ ] Rotation threshold: 10MB (adjust per retention needs)
+- [ ] Archive files: `ce-events.jsonl.20260101`
+- [ ] Compress archives: `gzip ce-events.jsonl.20260101`
+- [ ] Session-end only reads current file (max 10MB)
+- [ ] Historical analysis script iterates over all archives
+
 ---
 
 ## Agent Brief Template Addition
@@ -3435,3 +3794,10 @@ CONTEXT TO LOAD:
 | Dialog IDs duplicated in list rendering         | 88        | common-solutions.md  |
 | `::date` on timestamptz rejected in index       | 89        | common-solutions.md  |
 | E2E navigates to route that doesn't exist       | 90        | common-solutions.md  |
+| Metrics measure activity, not outcomes          | 91        | common-solutions.md  |
+| SessionStart hooks fire once per session        | 92        | common-solutions.md  |
+| Transcript parsing O(n), tail should be O(1)    | 93        | common-solutions.md  |
+| Hooks not version-controlled outside VCS        | 94        | common-solutions.md  |
+| Pushgateway stale data accumulation             | 95        | common-solutions.md  |
+| PromQL rate() misused on gauge metrics          | 96        | common-solutions.md  |
+| JSONL unbounded growth, needs rotation          | 97        | common-solutions.md  |
