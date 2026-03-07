@@ -4050,6 +4050,60 @@ get_phase() {
 
 ---
 
+## 110. Hook Output JSON Must Use Top-Level Keys (Not Nested Wrappers)
+
+**Recurrence:** 8 hooks affected simultaneously. All enforcement hooks built in the same sprint used the same wrong pattern.
+
+### Problem
+
+Claude Code hooks using `{"hookSpecificOutput":{"additionalContext":"..."}}` cause "UserPromptSubmit hook error" or silent failures for other hook events. The nested wrapper is not a valid output schema.
+
+### Fix
+
+```bash
+# WRONG — nested wrapper causes hook error
+printf '{"hookSpecificOutput":{"additionalContext":"[%s]"}}' "$context"
+
+# CORRECT — top-level key
+echo "{\"additionalContext\":\"[$context]\"}"
+```
+
+Also: never write hook JSON output to stderr (`>&2`). Only stdout is parsed for JSON responses.
+
+### Detection
+
+- "hook error" message on prompt submission
+- Silent failure of soft-remind hooks (warnings not displayed despite hook being registered)
+- Hard blocks (exit 2 + `decision: deny`) are unaffected — they use a different output format
+
+### Debugging Method
+
+Binary search isolation for hook errors:
+
+```bash
+# Step 1: Empty the hook list in settings.json → error stops?
+"UserPromptSubmit": []
+
+# Step 2: Minimal 3-line hook → error stops?
+#!/usr/bin/env bash
+cat > /dev/null
+exit 0
+
+# Step 3: Add just JSON output → error?
+echo '{"additionalContext":"[test]"}'
+
+# Step 4: Add features one at a time until error reappears
+```
+
+### Checklist
+
+- [ ] Hook JSON output uses top-level keys (no `hookSpecificOutput` wrapper)
+- [ ] Output goes to stdout (not stderr)
+- [ ] Test with minimal 3-line hook before adding logic
+- [ ] Binary search isolation if errors persist
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -4194,3 +4248,4 @@ CONTEXT TO LOAD:
 | Concurrent sessions clobber shared state file    | 107       | common-solutions.md  |
 | Phase detection misses plugin-namespaced skills  | 108       | common-solutions.md  |
 | Lightweight hooks read stale global phase        | 109       | common-solutions.md  |
+| Hook output JSON nested wrapper causes error     | 110       | common-solutions.md  |
