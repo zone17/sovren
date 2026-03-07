@@ -63,7 +63,7 @@ packages/
 ```
 routes/       → API endpoints (Express routers)
   auth.ts, users.ts, content-discovery.ts, lightning.ts, webhooks.ts,
-  subscription-tiers.ts, nip05.ts, health.ts, sessions.ts, admin/
+  subscription-tiers.ts, nip05.ts, health.ts, sessions.ts, notifications.ts, admin/
 services/     → Business logic
   finance/, payment/, lightning/, community/, content/, distribution/,
   nostr-auth.ts, CacheService.ts, EventBusService.ts, AuditLogService.ts
@@ -100,7 +100,7 @@ Import as: `import { Type } from '@shared/types/module'`
 
 ### Database (Supabase)
 
-**Core tables**: users, content, payments, followers, comments, content_analytics
+**Core tables**: users, content, payments, followers, comments, content_analytics, notifications
 **Financial**: payment_events, payment_retry_attempts, payment_lock_events, webhook_events
 **Creator**: creator_circles, circle_members, mentor_profiles, service_listings, service_orders
 **Business**: business_invoices, expenses, revenue_entries, contracts, diversification_goals
@@ -142,36 +142,36 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 
 **Full details**: `docs/solutions/patterns/common-solutions.md` — reference by number.
 
-| #   | Pattern                                            | Category   |
-| --- | -------------------------------------------------- | ---------- |
-| 1   | Double-submit prevention (useRef + disabled)       | Frontend   |
-| 2   | TTLCache for in-memory Maps                        | Backend    |
-| 3   | Environment variable validation (Zod)              | Infra      |
-| 4   | Error response format (createApiResponse)          | Backend    |
-| 7   | Supabase mock chain pattern                        | Testing    |
-| 13  | Promise.allSettled for batch operations            | Backend    |
-| 15  | Task hooks must NOT run full quality gates         | DevOps     |
-| 16  | Security-critical file mapping                     | Testing    |
-| 17  | Hook migration checklist                           | DevOps     |
-| 25  | Stale todo detection — triage before implementing  | Process    |
-| 26  | E2E tests must not mock API calls                  | Testing    |
-| 50  | Real services > vi.fn() for integration tests      | Testing    |
-| 62  | Per-package tsc in monorepos                       | TypeScript |
-| 68  | env: indirection for ${{ }} injection prevention   | CI/CD      |
-| 69  | Fan-in aggregator job for branch protection        | CI/CD      |
-| 81  | Blob download via apiClient (never relative fetch) | Frontend   |
-| 82  | Loading state must not hide structural UI          | Frontend   |
-| 85  | Optimistic delete multi-page cache snapshot        | Frontend   |
-| 86  | Soft-delete enum — only written values             | Backend    |
-| 87  | DOMPurify no-op in Node.js without jsdom           | Security   |
-| 88  | Dialog aria-labelledby per-instance IDs            | A11y       |
-| 111 | Extend target enum before migration (no `as any`)  | TypeScript |
-| 113 | POM locators — only what specs use today           | Testing    |
-| 114 | Auth E2E specs must assert content, not just URL   | Testing    |
-| 116 | Response key alignment (backend ↔ frontend)        | Full-stack |
-| 117 | DI lazy singleton eager init for side-effects      | Backend    |
-| 118 | Remediation team sizing (2 agents for <20 findings)| Process    |
-| 119 | Utility extraction threshold (LOC x copies > 40)   | Backend    |
+| #   | Pattern                                             | Category   |
+| --- | --------------------------------------------------- | ---------- |
+| 1   | Double-submit prevention (useRef + disabled)        | Frontend   |
+| 2   | TTLCache for in-memory Maps                         | Backend    |
+| 3   | Environment variable validation (Zod)               | Infra      |
+| 4   | Error response format (createApiResponse)           | Backend    |
+| 7   | Supabase mock chain pattern                         | Testing    |
+| 13  | Promise.allSettled for batch operations             | Backend    |
+| 15  | Task hooks must NOT run full quality gates          | DevOps     |
+| 16  | Security-critical file mapping                      | Testing    |
+| 17  | Hook migration checklist                            | DevOps     |
+| 25  | Stale todo detection — triage before implementing   | Process    |
+| 26  | E2E tests must not mock API calls                   | Testing    |
+| 50  | Real services > vi.fn() for integration tests       | Testing    |
+| 62  | Per-package tsc in monorepos                        | TypeScript |
+| 68  | env: indirection for ${{ }} injection prevention    | CI/CD      |
+| 69  | Fan-in aggregator job for branch protection         | CI/CD      |
+| 81  | Blob download via apiClient (never relative fetch)  | Frontend   |
+| 82  | Loading state must not hide structural UI           | Frontend   |
+| 85  | Optimistic delete multi-page cache snapshot         | Frontend   |
+| 86  | Soft-delete enum — only written values              | Backend    |
+| 87  | DOMPurify no-op in Node.js without jsdom            | Security   |
+| 88  | Dialog aria-labelledby per-instance IDs             | A11y       |
+| 111 | Extend target enum before migration (no `as any`)   | TypeScript |
+| 113 | POM locators — only what specs use today            | Testing    |
+| 114 | Auth E2E specs must assert content, not just URL    | Testing    |
+| 116 | Response key alignment (backend ↔ frontend)         | Full-stack |
+| 117 | DI lazy singleton eager init for side-effects       | Backend    |
+| 118 | Remediation team sizing (2 agents for <20 findings) | Process    |
+| 119 | Utility extraction threshold (LOC x copies > 40)    | Backend    |
 
 ---
 
