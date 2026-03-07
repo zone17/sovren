@@ -13,12 +13,12 @@
 
 **Business Impact Priority Order** (fix in this sequence):
 
-| Order | Finding | Business Impact | Blast Radius |
-|-------|---------|----------------|--------------|
-| 1 | 088 - Privilege Escalation | **CRITICAL** - Any user can become admin | All users, all data |
-| 2 | 091 - Broken Redis Import | **HIGH** - 7 services silently degraded | Caching, rate-limiting, sessions |
-| 3 | 089 - Random JWT Secret | **HIGH** - Sessions lost on restart | All authenticated users |
-| 4 | 090 - Volatile Payment Storage | **CRITICAL** - Payment data lost on restart | All financial transactions |
+| Order | Finding                        | Business Impact                             | Blast Radius                     |
+| ----- | ------------------------------ | ------------------------------------------- | -------------------------------- |
+| 1     | 088 - Privilege Escalation     | **CRITICAL** - Any user can become admin    | All users, all data              |
+| 2     | 091 - Broken Redis Import      | **HIGH** - 7 services silently degraded     | Caching, rate-limiting, sessions |
+| 3     | 089 - Random JWT Secret        | **HIGH** - Sessions lost on restart         | All authenticated users          |
+| 4     | 090 - Volatile Payment Storage | **CRITICAL** - Payment data lost on restart | All financial transactions       |
 
 **Rationale**: 088 first because it is actively exploitable by any unauthenticated user. 091 second because it is a quick fix (import paths) that unblocks Redis for all 7 services. 089 third because it prevents session loss. 090 last because it is the largest change (new DB table, write-through logic) and benefits from having Redis working (091) first.
 
@@ -29,6 +29,7 @@
 ### Source Code Verification
 
 **CONFIRMED**. Cross-referenced against `packages/backend/src/routes/auth.ts`:
+
 - Line 31: `role: z.enum(['creator', 'supporter', 'admin']).optional().default('supporter')` -- accepts `admin` from client
 - Line 81: `nostrAuth.generateJWT(verification.pubkey, validatedData.role)` -- passes client role directly to JWT
 - `packages/backend/src/services/nostr-auth.ts` line 172-175: `generateJWT()` accepts role parameter with no server-side validation
@@ -37,13 +38,13 @@
 
 ### Acceptance Criteria Validation
 
-| # | Criterion | Verdict | Notes |
-|---|-----------|---------|-------|
-| 1 | Client cannot set `role: 'admin'` in auth request | **PASS** | Clear, testable. Verify Zod schema rejects admin. |
-| 2 | Admin role assignment requires server-side authorization | **PASS** | Needs spec: what IS the admin assignment mechanism? Allowlist? DB lookup? |
-| 3 | All existing admin tokens are invalidated | **PARTIAL** | Not testable without defining HOW tokens are invalidated. Since JWT is stateless, this requires either: (a) secret rotation (couples to 089), or (b) a token blocklist. Needs clarification. |
-| 4 | Role claims in JWT derived from server-side source | **PASS** | Clear outcome. Requires DB or env-based role lookup. |
-| 5 | Security test verifying escalation is blocked | **PASS** | Standard test: POST /auth/authenticate with `role: 'admin'` should either reject or ignore the role. |
+| #   | Criterion                                                | Verdict     | Notes                                                                                                                                                                                        |
+| --- | -------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Client cannot set `role: 'admin'` in auth request        | **PASS**    | Clear, testable. Verify Zod schema rejects admin.                                                                                                                                            |
+| 2   | Admin role assignment requires server-side authorization | **PASS**    | Needs spec: what IS the admin assignment mechanism? Allowlist? DB lookup?                                                                                                                    |
+| 3   | All existing admin tokens are invalidated                | **PARTIAL** | Not testable without defining HOW tokens are invalidated. Since JWT is stateless, this requires either: (a) secret rotation (couples to 089), or (b) a token blocklist. Needs clarification. |
+| 4   | Role claims in JWT derived from server-side source       | **PASS**    | Clear outcome. Requires DB or env-based role lookup.                                                                                                                                         |
+| 5   | Security test verifying escalation is blocked            | **PASS**    | Standard test: POST /auth/authenticate with `role: 'admin'` should either reject or ignore the role.                                                                                         |
 
 ### Additional Edge Cases Identified
 
@@ -65,6 +66,7 @@
 ### Source Code Verification
 
 **CONFIRMED** with nuance. Cross-referenced against `packages/backend/src/services/nostr-auth.ts`:
+
 - Line 45: `this.JWT_SECRET = jwtSecret || this.generateSecureSecret();`
 - Line 304-307: `generateSecureSecret()` generates random bytes and logs a warning
 - Line 374: `export const nostrAuth = new NostrAuthService();` -- instantiated with NO arguments
@@ -73,14 +75,14 @@ The constructor accepts an optional `jwtSecret` parameter, but the singleton at 
 
 ### Acceptance Criteria Validation
 
-| # | Criterion | Verdict | Notes |
-|---|-----------|---------|-------|
-| 1 | JWT_SECRET read from environment variable | **PASS** | Clear, testable. |
-| 2 | Server fails to start if JWT_SECRET is missing or weak | **PASS** | Clear. Define "weak" threshold (todo says < 32 chars, which is good). |
-| 3 | Existing JWTs remain valid across server restarts | **PASS** | Testable: sign token, restart, verify same token. |
-| 4 | Multi-instance deployments share same JWT_SECRET | **PASS** | Operational criterion -- testable in integration/staging. |
-| 5 | Documentation includes JWT_SECRET setup instructions | **PASS** | Verifiable artifact. |
-| 6 | .env.example includes JWT_SECRET | **PASS** | Verifiable artifact. |
+| #   | Criterion                                              | Verdict  | Notes                                                                 |
+| --- | ------------------------------------------------------ | -------- | --------------------------------------------------------------------- |
+| 1   | JWT_SECRET read from environment variable              | **PASS** | Clear, testable.                                                      |
+| 2   | Server fails to start if JWT_SECRET is missing or weak | **PASS** | Clear. Define "weak" threshold (todo says < 32 chars, which is good). |
+| 3   | Existing JWTs remain valid across server restarts      | **PASS** | Testable: sign token, restart, verify same token.                     |
+| 4   | Multi-instance deployments share same JWT_SECRET       | **PASS** | Operational criterion -- testable in integration/staging.             |
+| 5   | Documentation includes JWT_SECRET setup instructions   | **PASS** | Verifiable artifact.                                                  |
+| 6   | .env.example includes JWT_SECRET                       | **PASS** | Verifiable artifact.                                                  |
 
 ### Additional Edge Cases Identified
 
@@ -101,6 +103,7 @@ The constructor accepts an optional `jwtSecret` parameter, but the singleton at 
 ### Source Code Verification
 
 **CONFIRMED**. Cross-referenced against `packages/backend/src/services/lightning-service.ts`:
+
 - Lines 156-163: `invoiceCache` (TTL 1hr, max 10K) and `paymentCache` (TTL 24hr, max 50K) are the ONLY storage
 - Line 291: `this.invoiceCache.set(invoiceId, invoice)` -- cache-only write on invoice creation
 - Line 361: `this.paymentCache.set(payment.id, payment)` -- cache-only write on payment completion
@@ -113,16 +116,16 @@ The constructor accepts an optional `jwtSecret` parameter, but the singleton at 
 
 ### Acceptance Criteria Validation
 
-| # | Criterion | Verdict | Notes |
-|---|-----------|---------|-------|
-| 1 | All payment records persisted to DB on creation | **PASS** | Clear, testable. |
-| 2 | Server restart does not lose payment history | **PASS** | Integration test: create payment, restart, query. |
-| 3 | Payments older than 24h remain queryable | **PASS** | Testable with time manipulation or direct DB query. |
-| 4 | Webhook processing idempotent via payment_hash | **PASS** | Send same webhook twice, verify single payment record. |
-| 5 | getCreatorPayments() returns complete history from DB | **PASS** | Verify returns DB records, not just cache. |
-| 6 | Cache continues to optimize hot-path reads | **PASS** | Verify cache is populated on read-through. |
-| 7 | Migration script handles existing cache data | **PARTIAL** | In-memory cache is ephemeral -- there is nothing to migrate. If the server hasn't restarted, there may be live cache data, but a migration script cannot access in-process memory. This criterion should be reworded to: "No data loss during deployment of this fix." |
-| 8 | Payment statistics remain accurate beyond 24h | **PASS** | Verify getStats() queries DB, not just cache. |
+| #   | Criterion                                             | Verdict     | Notes                                                                                                                                                                                                                                                                  |
+| --- | ----------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | All payment records persisted to DB on creation       | **PASS**    | Clear, testable.                                                                                                                                                                                                                                                       |
+| 2   | Server restart does not lose payment history          | **PASS**    | Integration test: create payment, restart, query.                                                                                                                                                                                                                      |
+| 3   | Payments older than 24h remain queryable              | **PASS**    | Testable with time manipulation or direct DB query.                                                                                                                                                                                                                    |
+| 4   | Webhook processing idempotent via payment_hash        | **PASS**    | Send same webhook twice, verify single payment record.                                                                                                                                                                                                                 |
+| 5   | getCreatorPayments() returns complete history from DB | **PASS**    | Verify returns DB records, not just cache.                                                                                                                                                                                                                             |
+| 6   | Cache continues to optimize hot-path reads            | **PASS**    | Verify cache is populated on read-through.                                                                                                                                                                                                                             |
+| 7   | Migration script handles existing cache data          | **PARTIAL** | In-memory cache is ephemeral -- there is nothing to migrate. If the server hasn't restarted, there may be live cache data, but a migration script cannot access in-process memory. This criterion should be reworded to: "No data loss during deployment of this fix." |
+| 8   | Payment statistics remain accurate beyond 24h         | **PASS**    | Verify getStats() queries DB, not just cache.                                                                                                                                                                                                                          |
 
 ### Additional Edge Cases Identified
 
@@ -151,6 +154,7 @@ The constructor accepts an optional `jwtSecret` parameter, but the singleton at 
 The actual Redis module is at `packages/backend/src/lib/redis.ts` and exports `getRedisClient()` and `disconnectRedis()`.
 
 **DISCREPANCY in affected file list**: The todo lists these 7 files:
+
 1. lightning-payment-service.ts
 2. nostr-relay-service.ts
 3. content-moderation-service.ts
@@ -160,6 +164,7 @@ The actual Redis module is at `packages/backend/src/lib/redis.ts` and exports `g
 7. session-service.ts
 
 **Actual files with broken import** (from Grep search):
+
 1. lightning-payment-service.ts -- MATCH
 2. transaction-history-service.ts -- **MISSING from todo**
 3. recommendation-service.ts -- **MISSING from todo**
@@ -174,16 +179,16 @@ This is a significant requirements defect. The implementation team needs the cor
 
 ### Acceptance Criteria Validation
 
-| # | Criterion | Verdict | Notes |
-|---|-----------|---------|-------|
-| 1 | All imports reference correct module: `../lib/redis` | **PASS** | Clear, testable via grep. |
-| 2 | All Redis operations use `getRedisClient()` function | **PASS** | Code-level verification. |
-| 3 | Invoice caching works in LightningPaymentService | **PASS** | Integration test. |
-| 4 | Payment verification caching works | **PASS** | Integration test. |
-| 5 | Rate limiting functions correctly | **PARTIAL** | rate-limiter-service.ts is NOT in the actual broken import list. May already be working or may not exist. Needs verification. |
-| 6 | Session management persists to Redis | **PARTIAL** | session-service.ts is NOT in the actual broken import list. Same concern as above. |
-| 7 | No runtime import errors in any service | **PASS** | Global criterion, testable. |
-| 8 | Integration test verifies Redis connectivity | **PASS** | Clear deliverable. |
+| #   | Criterion                                            | Verdict     | Notes                                                                                                                         |
+| --- | ---------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1   | All imports reference correct module: `../lib/redis` | **PASS**    | Clear, testable via grep.                                                                                                     |
+| 2   | All Redis operations use `getRedisClient()` function | **PASS**    | Code-level verification.                                                                                                      |
+| 3   | Invoice caching works in LightningPaymentService     | **PASS**    | Integration test.                                                                                                             |
+| 4   | Payment verification caching works                   | **PASS**    | Integration test.                                                                                                             |
+| 5   | Rate limiting functions correctly                    | **PARTIAL** | rate-limiter-service.ts is NOT in the actual broken import list. May already be working or may not exist. Needs verification. |
+| 6   | Session management persists to Redis                 | **PARTIAL** | session-service.ts is NOT in the actual broken import list. Same concern as above.                                            |
+| 7   | No runtime import errors in any service              | **PASS**    | Global criterion, testable.                                                                                                   |
+| 8   | Integration test verifies Redis connectivity         | **PASS**    | Clear deliverable.                                                                                                            |
 
 ### Additional Edge Cases Identified
 
@@ -237,12 +242,12 @@ This is a significant requirements defect. The implementation team needs the cor
 
 ## Summary Scorecard
 
-| Finding | ACs Total | PASS | PARTIAL | FAIL | Missing Reqs |
-|---------|-----------|------|---------|------|--------------|
-| 088 | 5 | 4 | 1 | 0 | 3 |
-| 089 | 6 | 6 | 0 | 0 | 2 |
-| 090 | 8 | 7 | 1 | 0 | 4 |
-| 091 | 8 | 6 | 2 | 0 | 3 |
-| **Total** | **27** | **23** | **4** | **0** | **12** |
+| Finding   | ACs Total | PASS   | PARTIAL | FAIL  | Missing Reqs |
+| --------- | --------- | ------ | ------- | ----- | ------------ |
+| 088       | 5         | 4      | 1       | 0     | 3            |
+| 089       | 6         | 6      | 0       | 0     | 2            |
+| 090       | 8         | 7      | 1       | 0     | 4            |
+| 091       | 8         | 6      | 2       | 0     | 3            |
+| **Total** | **27**    | **23** | **4**   | **0** | **12**       |
 
 **Overall Assessment**: The findings are all legitimate and well-documented. 23 of 27 acceptance criteria are clear and testable. The 4 PARTIAL criteria need minor rewording or clarification. 12 missing requirements identified -- most are edge case definitions that the implementation team needs before coding. The most critical defect is **MR-091-1** (wrong file list), which would cause the fix to miss 6 of 7 affected files.

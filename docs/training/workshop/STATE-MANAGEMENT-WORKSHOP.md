@@ -7,24 +7,28 @@
 ## Workshop Agenda
 
 ### Hour 1: Foundation & Theory (9:00-10:00)
+
 - Welcome & Introductions (10 min)
 - State Management Evolution at Sovren (20 min)
 - React Query vs Redux: When to Use What (20 min)
 - Live Demo: Before vs After (10 min)
 
 ### Hour 2: Hands-On React Query (10:15-11:15)
+
 - Setup & Configuration (10 min)
 - Basic Queries Exercise (20 min)
 - Mutations & Optimistic Updates Exercise (20 min)
 - Break & Q&A (10 min)
 
 ### Hour 3: Redux for UI State (11:30-12:30)
+
 - Redux Toolkit Patterns (15 min)
 - Creating UI Slices Exercise (20 min)
 - Selectors & Memoization Exercise (20 min)
 - Integration Patterns (5 min)
 
 ### Hour 4: Advanced Patterns & Best Practices (1:30-2:30)
+
 - Real-world Scenarios (20 min)
 - Performance Optimization (15 min)
 - Testing Strategies (15 min)
@@ -52,10 +56,11 @@ graph LR
 ### The Problem We Solved
 
 #### Slide: The Old World (Pre-Epic 004)
+
 ```typescript
 // 😱 THE HORROR: Everything in Redux
 function oldPostsReducer(state, action) {
-  switch(action.type) {
+  switch (action.type) {
     case 'FETCH_START':
       return { ...state, loading: true };
     case 'FETCH_SUCCESS':
@@ -70,19 +75,22 @@ function oldPostsReducer(state, action) {
 ```
 
 **Problems**:
+
 - 200+ re-renders per interaction
 - 2,341 lines of boilerplate
 - Cache invalidation nightmares
 - Confused developers
 
 #### Slide: The New World (Post-Epic 004)
+
 ```typescript
 // 😍 THE BEAUTY: Clear separation
-const { data: posts } = useQuery(['posts'], fetchPosts);  // Server state
-const theme = useSelector(selectTheme);                    // UI state
+const { data: posts } = useQuery(['posts'], fetchPosts); // Server state
+const theme = useSelector(selectTheme); // UI state
 ```
 
 **Benefits**:
+
 - 60% fewer re-renders
 - 94% cache hit rate
 - 50% faster development
@@ -153,6 +161,7 @@ function UserList() {
 ```
 
 **Solution**:
+
 ```typescript
 // ✅ SOLUTION: Clean React Query implementation
 import { useQuery } from '@tanstack/react-query';
@@ -204,6 +213,7 @@ function TodoItem({ todo }) {
 ```
 
 **Solution**:
+
 ```typescript
 // ✅ SOLUTION: Optimistic updates for instant feedback
 function TodoItem({ todo }) {
@@ -268,6 +278,7 @@ function UserDashboard({ userId }) {
 ```
 
 **Solution**:
+
 ```typescript
 // ✅ SOLUTION: Elegant dependent queries
 function UserDashboard({ userId }) {
@@ -336,6 +347,7 @@ function UserDashboard({ userId }) {
 ```
 
 **Solution**:
+
 ```typescript
 // ✅ SOLUTION: Clean UI slice
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
@@ -381,15 +393,12 @@ const layoutSlice = createSlice({
 
 // Selectors
 export const selectTheme = (state: RootState) => state.layout.theme;
-export const selectIsDarkMode = createSelector(
-  [selectTheme],
-  (theme) => {
-    if (theme === 'auto') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return theme === 'dark';
+export const selectIsDarkMode = createSelector([selectTheme], (theme) => {
+  if (theme === 'auto') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-);
+  return theme === 'dark';
+});
 
 export const { setTheme, toggleSidebar, setSidebarWidth } = layoutSlice.actions;
 export default layoutSlice.reducer;
@@ -409,6 +418,7 @@ export default layoutSlice.reducer;
 ```
 
 **Solution**:
+
 ```typescript
 // ✅ SOLUTION: Form draft + server submission
 // Redux Slice
@@ -722,30 +732,36 @@ describe('UI Slice', () => {
 ## Workshop Exercises
 
 ### 🎯 Challenge 1: Build a Social Media Feed
+
 **Time**: 30 minutes
 **Difficulty**: ⭐⭐⭐
 
 Requirements:
+
 - Infinite scroll with React Query
 - Like/unlike with optimistic updates
 - Filter state in Redux
 - Real-time updates via WebSocket
 
 ### 🎯 Challenge 2: Multi-step Form Wizard
+
 **Time**: 25 minutes
 **Difficulty**: ⭐⭐⭐⭐
 
 Requirements:
+
 - Form progress in Redux
 - Validation via API (React Query)
 - Auto-save drafts
 - Step navigation
 
 ### 🎯 Challenge 3: Dashboard with Widgets
+
 **Time**: 20 minutes
 **Difficulty**: ⭐⭐
 
 Requirements:
+
 - Widget layout in Redux
 - Widget data from React Query
 - Drag-and-drop reordering
@@ -756,7 +772,9 @@ Requirements:
 ## Assessment Quiz
 
 ### Question 1: State Placement
+
 Where should you store the following?
+
 1. User authentication token
 2. Modal open/closed state
 3. Search results from API
@@ -764,14 +782,18 @@ Where should you store the following?
 5. WebSocket connection status
 
 ### Question 2: Cache Strategy
+
 Design a caching strategy for:
+
 - User profiles (rarely change)
 - Social media feed (frequent updates)
 - Configuration (changes monthly)
 - Search suggestions (real-time)
 
 ### Question 3: Code Review
+
 Find and fix the issues:
+
 ```typescript
 function BadComponent() {
   const [users, setUsers] = useState([]);
@@ -781,9 +803,9 @@ function BadComponent() {
     setUsers(data || []);
   }, [data]);
 
-  const selected = useSelector(state => state.selectedUsers);
+  const selected = useSelector((state) => state.selectedUsers);
 
-  return users.filter(u => selected.includes(u.id));
+  return users.filter((u) => selected.includes(u.id));
 }
 ```
 
@@ -794,6 +816,7 @@ function BadComponent() {
 ### Cheat Sheets
 
 #### React Query Cheat Sheet
+
 ```typescript
 // Basic Query
 useQuery({ queryKey, queryFn, staleTime, cacheTime })
@@ -815,34 +838,38 @@ queryClient.invalidateQueries({ queryKey })
 ```
 
 #### Redux Cheat Sheet
+
 ```typescript
 // Create Slice
-createSlice({ name, initialState, reducers })
+createSlice({ name, initialState, reducers });
 
 // Selectors
-useSelector((state: RootState) => state.slice.field)
+useSelector((state: RootState) => state.slice.field);
 
 // Dispatch
-const dispatch = useDispatch()
-dispatch(actionCreator(payload))
+const dispatch = useDispatch();
+dispatch(actionCreator(payload));
 
 // Memoized Selector
-createSelector([inputSelectors], outputSelector)
+createSelector([inputSelectors], outputSelector);
 ```
 
 ### Recommended Reading
+
 1. [TanStack Query Documentation](https://tanstack.com/query)
 2. [Redux Toolkit Documentation](https://redux-toolkit.js.org)
 3. [Our State Management Guidelines](../guidelines/STATE-MANAGEMENT-GUIDELINES.md)
 4. [ADR-004: State Management Decision](../decisions/ADR-004.md)
 
 ### Practice Projects
+
 1. **Todo App Plus**: Todos with React Query + categories in Redux
 2. **Weather Dashboard**: API data + user preferences
 3. **Chat App**: WebSocket messages + UI state
 4. **E-commerce**: Products API + cart in Redux
 
 ### Getting Help
+
 - **Slack**: #state-management
 - **Office Hours**: Tuesdays 2-3pm
 - **Pair Programming**: Book via Calendar
@@ -855,13 +882,15 @@ createSelector([inputSelectors], outputSelector)
 Please complete the workshop feedback form:
 
 **Workshop Evaluation**
-1. Content clarity (1-10): ___
-2. Hands-on exercises (1-10): ___
-3. Pace (Too slow / Just right / Too fast): ___
-4. Most valuable section: ___________
-5. Suggestions for improvement: ___________
+
+1. Content clarity (1-10): \_\_\_
+2. Hands-on exercises (1-10): \_\_\_
+3. Pace (Too slow / Just right / Too fast): \_\_\_
+4. Most valuable section: \***\*\_\_\_\*\***
+5. Suggestions for improvement: \***\*\_\_\_\*\***
 
 **Self-Assessment**
+
 - [ ] I understand when to use React Query vs Redux
 - [ ] I can implement basic queries and mutations
 - [ ] I can create Redux slices for UI state
@@ -873,6 +902,7 @@ Please complete the workshop feedback form:
 ## Appendix: Setup Instructions
 
 ### Prerequisites Installation
+
 ```bash
 # Clone workshop repository
 git clone https://github.com/sovren/state-workshop
@@ -888,6 +918,7 @@ npm run dev
 ```
 
 ### VS Code Extensions
+
 - React Query DevTools
 - Redux DevTools
 - TypeScript Error Lens
@@ -895,6 +926,7 @@ npm run dev
 - ESLint
 
 ### Environment Setup
+
 ```typescript
 // workshop/setup.ts
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -930,4 +962,4 @@ export function WorkshopProvider({ children }) {
 
 **Thank you for participating! 🎉**
 
-*Remember: Clear boundaries lead to clean code.*
+_Remember: Clear boundaries lead to clean code._

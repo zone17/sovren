@@ -8,6 +8,7 @@
 ## Context
 
 We needed a web framework for our Node.js backend API server with:
+
 - RESTful API routing
 - Middleware support (auth, logging, validation)
 - TypeScript compatibility
@@ -19,6 +20,7 @@ We needed a web framework for our Node.js backend API server with:
 We will use **Express.js 4.x** as our web application framework.
 
 **Implementation**:
+
 ```typescript
 import express from 'express';
 import cors from 'cors';

@@ -32,25 +32,25 @@ const responseTimeDrift = new Trend('response_time_drift');
 // Test Options - Endurance Testing
 export const options = {
   stages: [
-    { duration: '5m', target: 500 },    // Ramp-up to sustained load
+    { duration: '5m', target: 500 }, // Ramp-up to sustained load
     { duration: TEST_DURATION, target: 500 }, // Hold sustained load (1 hour default)
-    { duration: '5m', target: 0 },      // Graceful ramp-down
+    { duration: '5m', target: 0 }, // Graceful ramp-down
   ],
   thresholds: {
     // Stability thresholds
-    'http_req_duration': ['p(95)<800', 'p(99)<1500'],
-    'api_response_time': ['p(95)<800'],
-    'errors': ['rate<0.001'], // Very low error rate for stable system
-    'http_req_failed': ['rate<0.001'],
+    http_req_duration: ['p(95)<800', 'p(99)<1500'],
+    api_response_time: ['p(95)<800'],
+    errors: ['rate<0.001'], // Very low error rate for stable system
+    http_req_failed: ['rate<0.001'],
 
     // Memory leak detection
-    'memory_leak_indicator': ['p(99)<2000'], // Response time shouldn't degrade
+    memory_leak_indicator: ['p(99)<2000'], // Response time shouldn't degrade
 
     // Connection stability
-    'connection_errors': ['count<100'], // Should be minimal
+    connection_errors: ['count<100'], // Should be minimal
 
     // Success rate
-    'checks': ['rate>0.999'], // 99.9% success
+    checks: ['rate>0.999'], // 99.9% success
   },
   noConnectionReuse: false,
   userAgent: 'K6EnduranceTest/1.0',
@@ -73,7 +73,7 @@ const responseTimeWindow = 100; // Track last 100 requests
 function getHeaders(token = null) {
   const headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   };
 
   if (token) {
@@ -170,10 +170,9 @@ function realisticUserFlow(token) {
 function browseContent(token) {
   group('Browse Content Flow', () => {
     // List content (should be cached)
-    const listResponse = http.get(
-      `${BASE_URL}${API_VERSION}/content?limit=20`,
-      { headers: getHeaders(token) }
-    );
+    const listResponse = http.get(`${BASE_URL}${API_VERSION}/content?limit=20`, {
+      headers: getHeaders(token),
+    });
 
     const listSuccess = check(listResponse, {
       'content list: status is 200': (r) => r.status === 200,
@@ -200,14 +199,12 @@ function browseContent(token) {
     // Get specific content item
     if (listSuccess) {
       const contentId = 'content-' + randomIntBetween(1, 1000);
-      const getResponse = http.get(
-        `${BASE_URL}${API_VERSION}/content/${contentId}`,
-        { headers: getHeaders(token) }
-      );
+      const getResponse = http.get(`${BASE_URL}${API_VERSION}/content/${contentId}`, {
+        headers: getHeaders(token),
+      });
 
       const getSuccess = check(getResponse, {
-        'content get: status is 200 or 404': (r) =>
-          r.status === 200 || r.status === 404,
+        'content get: status is 200 or 404': (r) => r.status === 200 || r.status === 404,
       });
 
       if (getResponse.error) {
@@ -224,10 +221,9 @@ function browseContent(token) {
 function checkProfileAndAnalytics(token) {
   group('Profile and Analytics Flow', () => {
     // Get user profile (should be heavily cached)
-    const profileResponse = http.get(
-      `${BASE_URL}${API_VERSION}/users/me`,
-      { headers: getHeaders(token) }
-    );
+    const profileResponse = http.get(`${BASE_URL}${API_VERSION}/users/me`, {
+      headers: getHeaders(token),
+    });
 
     const profileSuccess = check(profileResponse, {
       'profile: status is 200': (r) => r.status === 200,
@@ -251,10 +247,9 @@ function checkProfileAndAnalytics(token) {
     sleep(0.5);
 
     // Get analytics summary
-    const analyticsResponse = http.get(
-      `${BASE_URL}${API_VERSION}/analytics/summary`,
-      { headers: getHeaders(token) }
-    );
+    const analyticsResponse = http.get(`${BASE_URL}${API_VERSION}/analytics/summary`, {
+      headers: getHeaders(token),
+    });
 
     const analyticsSuccess = check(analyticsResponse, {
       'analytics: status is 200': (r) => r.status === 200,
@@ -273,10 +268,9 @@ function checkProfileAndAnalytics(token) {
 function paymentOperations(token) {
   group('Payment Operations Flow', () => {
     // List invoices
-    const invoicesResponse = http.get(
-      `${BASE_URL}${API_VERSION}/payments/invoices?limit=10`,
-      { headers: getHeaders(token) }
-    );
+    const invoicesResponse = http.get(`${BASE_URL}${API_VERSION}/payments/invoices?limit=10`, {
+      headers: getHeaders(token),
+    });
 
     const invoicesSuccess = check(invoicesResponse, {
       'invoices: status is 200': (r) => r.status === 200,
@@ -313,14 +307,12 @@ function paymentOperations(token) {
     sleep(0.5);
 
     // Check subscription
-    const subscriptionResponse = http.get(
-      `${BASE_URL}${API_VERSION}/payments/subscriptions/me`,
-      { headers: getHeaders(token) }
-    );
+    const subscriptionResponse = http.get(`${BASE_URL}${API_VERSION}/payments/subscriptions/me`, {
+      headers: getHeaders(token),
+    });
 
     const subscriptionSuccess = check(subscriptionResponse, {
-      'subscription: status is 200 or 404': (r) =>
-        r.status === 200 || r.status === 404,
+      'subscription: status is 200 or 404': (r) => r.status === 200 || r.status === 404,
     });
 
     if (subscriptionResponse.error) {
@@ -351,8 +343,7 @@ export function setup() {
     baselineRequests.push(response.timings.duration);
   }
 
-  baselineResponseTime =
-    baselineRequests.reduce((a, b) => a + b, 0) / baselineRequests.length;
+  baselineResponseTime = baselineRequests.reduce((a, b) => a + b, 0) / baselineRequests.length;
 
   return {
     startTime: new Date().toISOString(),
@@ -371,9 +362,11 @@ export function handleSummary(data) {
   const summary = generateEnduranceSummary(data);
 
   return {
-    'stdout': summary.text,
-    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/endurance-test-results.json': JSON.stringify(data, null, 2),
-    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/endurance-analysis.json': JSON.stringify(summary.analysis, null, 2),
+    stdout: summary.text,
+    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/endurance-test-results.json':
+      JSON.stringify(data, null, 2),
+    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/endurance-analysis.json':
+      JSON.stringify(summary.analysis, null, 2),
   };
 }
 

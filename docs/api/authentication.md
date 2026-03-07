@@ -23,6 +23,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -51,6 +52,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -91,6 +93,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -107,6 +110,7 @@ Content-Type: application/json
 The JWT token contains three parts: Header, Payload, and Signature.
 
 ### Header
+
 ```json
 {
   "alg": "HS256",
@@ -115,6 +119,7 @@ The JWT token contains three parts: Header, Payload, and Signature.
 ```
 
 ### Payload (Claims)
+
 ```json
 {
   "userId": "550e8400-e29b-41d4-a716-446655440000",
@@ -127,7 +132,9 @@ The JWT token contains three parts: Header, Payload, and Signature.
 ```
 
 ### Signature
+
 The signature is generated using:
+
 ```
 HMACSHA256(
   base64UrlEncode(header) + "." + base64UrlEncode(payload),
@@ -142,6 +149,7 @@ For NOSTR-native authentication, users can authenticate using their NOSTR keys:
 ### NOSTR Login Flow
 
 1. **Request Challenge**
+
 ```bash
 POST /api/v1/auth/nostr/challenge
 Content-Type: application/json
@@ -152,9 +160,10 @@ Content-Type: application/json
 ```
 
 2. **Sign Challenge**
-The client signs the challenge with their NOSTR private key (nsec).
+   The client signs the challenge with their NOSTR private key (nsec).
 
 3. **Verify Signature**
+
 ```bash
 POST /api/v1/auth/nostr/verify
 Content-Type: application/json
@@ -167,6 +176,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -188,6 +198,7 @@ Content-Type: application/json
 Sovren has three user roles with different permissions:
 
 ### Supporter (Default)
+
 - View public content
 - Search and discover creators
 - Follow users
@@ -195,7 +206,9 @@ Sovren has three user roles with different permissions:
 - Tip creators
 
 ### Creator
+
 All Supporter permissions plus:
+
 - Publish content
 - Set content pricing
 - Access analytics
@@ -204,7 +217,9 @@ All Supporter permissions plus:
 - Moderate their own content
 
 ### Admin
+
 All Creator permissions plus:
+
 - Platform-wide content moderation
 - User management
 - System analytics
@@ -217,60 +232,62 @@ Authorization is role-based and enforced at the API level.
 
 ### Permission Matrix
 
-| Endpoint | Supporter | Creator | Admin |
-|----------|-----------|---------|-------|
-| **Content** |
-| GET /content/search | ✓ | ✓ | ✓ |
-| GET /content/recommendations | ✓ | ✓ | ✓ |
-| POST /content/publish | ✗ | ✓ | ✓ |
-| POST /content/moderate | ✗ | Own content | ✓ |
-| GET /content/analytics/:id | ✗ | Own content | ✓ |
-| GET /content/versions/:id | ✗ | Own content | ✓ |
-| POST /content/versions/:id/revert | ✗ | Own content | ✓ |
-| **Users** |
-| GET /users/profile/:id | ✓ | ✓ | ✓ |
-| PUT /users/profile/:id | Own profile | Own profile | ✓ |
-| GET /users/preferences/:id | Own | Own | ✓ |
-| PUT /users/preferences/:id | Own | Own | ✓ |
-| GET /users/activity/:id | Own | Own | ✓ |
-| POST /users/relationships/follow | ✓ | ✓ | ✓ |
-| DELETE /users/relationships/unfollow | ✓ | ✓ | ✓ |
-| GET /users/analytics/:id | ✗ | Own | ✓ |
-| **Payments** |
-| POST /payments/invoices | ✓ | ✓ | ✓ |
-| GET /payments/invoices/:id | Own | Own | ✓ |
-| POST /payments/invoices/:id/pay | ✓ | ✓ | ✓ |
-| GET /payments/currency/convert | ✓ | ✓ | ✓ |
-| POST /payments/subscriptions | ✓ | ✓ | ✓ |
-| PUT /payments/subscriptions/:id | Own | Own | ✓ |
-| DELETE /payments/subscriptions/:id | Own | Own | ✓ |
-| POST /payments/refunds | ✗ | Own payments | ✓ |
-| GET /payments/analytics | ✗ | Own | ✓ |
-| POST /payments/webhooks | ✗ | ✓ | ✓ |
+| Endpoint                             | Supporter   | Creator      | Admin |
+| ------------------------------------ | ----------- | ------------ | ----- |
+| **Content**                          |
+| GET /content/search                  | ✓           | ✓            | ✓     |
+| GET /content/recommendations         | ✓           | ✓            | ✓     |
+| POST /content/publish                | ✗           | ✓            | ✓     |
+| POST /content/moderate               | ✗           | Own content  | ✓     |
+| GET /content/analytics/:id           | ✗           | Own content  | ✓     |
+| GET /content/versions/:id            | ✗           | Own content  | ✓     |
+| POST /content/versions/:id/revert    | ✗           | Own content  | ✓     |
+| **Users**                            |
+| GET /users/profile/:id               | ✓           | ✓            | ✓     |
+| PUT /users/profile/:id               | Own profile | Own profile  | ✓     |
+| GET /users/preferences/:id           | Own         | Own          | ✓     |
+| PUT /users/preferences/:id           | Own         | Own          | ✓     |
+| GET /users/activity/:id              | Own         | Own          | ✓     |
+| POST /users/relationships/follow     | ✓           | ✓            | ✓     |
+| DELETE /users/relationships/unfollow | ✓           | ✓            | ✓     |
+| GET /users/analytics/:id             | ✗           | Own          | ✓     |
+| **Payments**                         |
+| POST /payments/invoices              | ✓           | ✓            | ✓     |
+| GET /payments/invoices/:id           | Own         | Own          | ✓     |
+| POST /payments/invoices/:id/pay      | ✓           | ✓            | ✓     |
+| GET /payments/currency/convert       | ✓           | ✓            | ✓     |
+| POST /payments/subscriptions         | ✓           | ✓            | ✓     |
+| PUT /payments/subscriptions/:id      | Own         | Own          | ✓     |
+| DELETE /payments/subscriptions/:id   | Own         | Own          | ✓     |
+| POST /payments/refunds               | ✗           | Own payments | ✓     |
+| GET /payments/analytics              | ✗           | Own          | ✓     |
+| POST /payments/webhooks              | ✗           | ✓            | ✓     |
 
 ## Error Codes
 
 ### Authentication Errors
 
-| Code | HTTP Status | Description | Resolution |
-|------|-------------|-------------|------------|
-| E401 | 401 | No authentication token provided | Include `Authorization` header |
-| E402 | 401 | Invalid or expired token | Re-authenticate to get new token |
-| E403 | 403 | Insufficient permissions | User role doesn't allow this action |
-| E404 | 401 | Invalid credentials | Check email/password or NOSTR signature |
-| E405 | 401 | NOSTR signature verification failed | Re-sign challenge with correct key |
+| Code | HTTP Status | Description                         | Resolution                              |
+| ---- | ----------- | ----------------------------------- | --------------------------------------- |
+| E401 | 401         | No authentication token provided    | Include `Authorization` header          |
+| E402 | 401         | Invalid or expired token            | Re-authenticate to get new token        |
+| E403 | 403         | Insufficient permissions            | User role doesn't allow this action     |
+| E404 | 401         | Invalid credentials                 | Check email/password or NOSTR signature |
+| E405 | 401         | NOSTR signature verification failed | Re-sign challenge with correct key      |
 
 ## Security Best Practices
 
 ### Token Storage
 
 **DO:**
+
 - Store tokens in secure, HTTP-only cookies (server-side)
 - Use environment variables for server tokens
 - Implement token rotation
 - Clear tokens on logout
 
 **DON'T:**
+
 - Store tokens in localStorage (XSS vulnerable)
 - Include tokens in URLs
 - Commit tokens to version control
@@ -290,7 +307,7 @@ class TokenManager {
   async setToken(token, refreshToken, expiresIn) {
     this.token = token;
     this.refreshToken = refreshToken;
-    this.tokenExpiry = Date.now() + (expiresIn * 1000);
+    this.tokenExpiry = Date.now() + expiresIn * 1000;
 
     // Store refresh token in secure HTTP-only cookie
     await this.storeRefreshToken(refreshToken);
@@ -308,7 +325,7 @@ class TokenManager {
     const response = await fetch('/api/v1/auth/refresh', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: this.refreshToken })
+      body: JSON.stringify({ refreshToken: this.refreshToken }),
     });
 
     const data = await response.json();
@@ -327,6 +344,7 @@ class TokenManager {
 ### Password Requirements
 
 Passwords must meet these requirements:
+
 - Minimum 12 characters
 - At least one uppercase letter
 - At least one lowercase letter
@@ -337,11 +355,13 @@ Passwords must meet these requirements:
 ### NOSTR Key Security
 
 **DO:**
+
 - Use NOSTR browser extensions (Alby, nos2x) for key management
 - Implement NIP-07 for secure key access
 - Never prompt users to paste private keys (nsec) directly
 
 **DON'T:**
+
 - Store NOSTR private keys (nsec) in application
 - Transmit private keys over network
 - Prompt users for nsec in forms
@@ -380,6 +400,7 @@ X-API-Key: your_api_key_here
 ```
 
 API keys:
+
 - Never expire (until revoked)
 - Have specific permission scopes
 - Can be restricted by IP address
@@ -411,6 +432,7 @@ Authorization: Bearer token_here
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -468,28 +490,32 @@ For local development, you can use test credentials:
    - Token: `{{auth_token}}`
 
 2. Add pre-request script to auto-refresh:
+
 ```javascript
 const tokenExpiry = pm.environment.get('token_expiry');
 const now = Date.now();
 
 if (!tokenExpiry || now >= tokenExpiry - 300000) {
   // Refresh token
-  pm.sendRequest({
-    url: pm.environment.get('base_url') + '/auth/refresh',
-    method: 'POST',
-    header: { 'Content-Type': 'application/json' },
-    body: {
-      mode: 'raw',
-      raw: JSON.stringify({
-        refreshToken: pm.environment.get('refresh_token')
-      })
+  pm.sendRequest(
+    {
+      url: pm.environment.get('base_url') + '/auth/refresh',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      body: {
+        mode: 'raw',
+        raw: JSON.stringify({
+          refreshToken: pm.environment.get('refresh_token'),
+        }),
+      },
+    },
+    (err, response) => {
+      const data = response.json();
+      pm.environment.set('auth_token', data.data.token);
+      pm.environment.set('refresh_token', data.data.refreshToken);
+      pm.environment.set('token_expiry', now + data.data.expiresIn * 1000);
     }
-  }, (err, response) => {
-    const data = response.json();
-    pm.environment.set('auth_token', data.data.token);
-    pm.environment.set('refresh_token', data.data.refreshToken);
-    pm.environment.set('token_expiry', now + (data.data.expiresIn * 1000));
-  });
+  );
 }
 ```
 
@@ -498,21 +524,25 @@ if (!tokenExpiry || now >= tokenExpiry - 300000) {
 ### Common Authentication Issues
 
 **"Token expired" errors**
+
 - Token lifetime is 24 hours
 - Implement automatic token refresh
 - Check token expiry before requests
 
 **"Invalid signature" errors**
+
 - Verify NOSTR key format (npub1... for public keys)
 - Ensure challenge is signed correctly
 - Check that public key matches the signing private key
 
 **"Insufficient permissions" errors**
+
 - Verify user role has required permissions
 - Check resource ownership (e.g., can only edit own content)
 - Contact admin if role upgrade needed
 
 **CORS errors in browser**
+
 - API includes proper CORS headers
 - Ensure credentials are included in requests
 - Check browser console for specific CORS error
@@ -520,12 +550,14 @@ if (!tokenExpiry || now >= tokenExpiry - 300000) {
 ## Support
 
 For authentication-related issues:
+
 - Email: security@sovren.app
 - Emergency: Report token leaks immediately to security@sovren.app
 
 ---
 
 **Next Steps:**
+
 - [Quick Start Guide](/docs/api/quick-start.md): Make your first authenticated request
 - [API Reference](/docs/api/reference/): Explore all endpoints
 - [Error Codes](/docs/api/errors.md): Complete error code reference

@@ -135,6 +135,7 @@ CREATE INDEX idx_payment_events_timestamp ON payment_events(timestamp DESC);
 #### Testing Requirements
 
 **Unit Tests**: `packages/shared/src/types/__tests__/payment-state.test.ts`
+
 - Validate PaymentState enum has exactly 6 values
 - Validate PaymentTransition interface structure
 - Test Zod schema validation for PaymentEvent
@@ -317,18 +318,21 @@ $$ LANGUAGE plpgsql;
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/PaymentStateMachine.test.ts`
+
 - Test all 15 valid state transitions
 - Test 20+ invalid transitions throw errors
 - Test transition validation logic
 - Test error handling for missing payments
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/payment-state-machine.test.ts`
+
 - Test atomic transaction behavior
 - Test concurrent transitions (race condition prevention)
 - Test audit trail creation
 - Test database function rollback on error
 
 **Load Tests**:
+
 - 100 concurrent transitions should not cause race conditions
 - p95 latency < 100ms for single transition
 
@@ -390,17 +394,13 @@ export class InvoiceExpirationService {
     for (const payment of expiredPayments || []) {
       try {
         // Transition to EXPIRED state
-        await this.stateMachine.transition(
-          payment.id,
-          PaymentState.EXPIRED,
-          { reason: 'invoice_expired', expired_at: now }
-        );
+        await this.stateMachine.transition(payment.id, PaymentState.EXPIRED, {
+          reason: 'invoice_expired',
+          expired_at: now,
+        });
 
         // Notify user
-        await this.emailService.sendInvoiceExpiredEmail(
-          payment.user_id,
-          payment.id
-        );
+        await this.emailService.sendInvoiceExpiredEmail(payment.user_id, payment.id);
 
         // Log expiration
         console.log(`Invoice ${payment.id} expired and user notified`);
@@ -456,12 +456,14 @@ export class InvoiceExpirationService {
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/InvoiceExpirationService.test.ts`
+
 - Test expiration detection with mock timestamps
 - Test state machine transition call
 - Test email notification triggering
 - Test error handling for failed transitions
 
 **Integration Tests**:
+
 - Create invoice with short expiry, wait, verify expiration
 - Test concurrent expiration checks don't duplicate
 - Test email delivery
@@ -518,10 +520,9 @@ export class PaymentVerificationService {
 
   async verifyPayment(paymentHash: string): Promise<PaymentVerificationResult> {
     // Use SELECT FOR UPDATE to acquire row lock
-    const { data: payment, error } = await this.supabase.rpc(
-      'acquire_payment_lock',
-      { p_payment_hash: paymentHash }
-    );
+    const { data: payment, error } = await this.supabase.rpc('acquire_payment_lock', {
+      p_payment_hash: paymentHash,
+    });
 
     if (error) {
       throw new PaymentLockError(error.message);
@@ -537,45 +538,33 @@ export class PaymentVerificationService {
 
     try {
       // Transition to PROCESSING (validates not already processing)
-      await this.stateMachine.transition(
-        payment.id,
-        PaymentState.PROCESSING,
-        { verification_started_at: Date.now() }
-      );
+      await this.stateMachine.transition(payment.id, PaymentState.PROCESSING, {
+        verification_started_at: Date.now(),
+      });
 
       // Check with Lightning node
       const invoice = await this.lndClient.checkInvoiceStatus(paymentHash);
 
       if (invoice.settled) {
         // Payment confirmed - transition to COMPLETED
-        await this.stateMachine.transition(
-          payment.id,
-          PaymentState.COMPLETED,
-          {
-            settled_at: invoice.settledAt,
-            preimage: invoice.preimage,
-            amount_received: invoice.amount,
-          }
-        );
+        await this.stateMachine.transition(payment.id, PaymentState.COMPLETED, {
+          settled_at: invoice.settledAt,
+          preimage: invoice.preimage,
+          amount_received: invoice.amount,
+        });
 
         return { success: true, payment };
       } else {
         // Not yet settled - transition back to PENDING
-        await this.stateMachine.transition(
-          payment.id,
-          PaymentState.PENDING,
-          { verification_failed: true }
-        );
+        await this.stateMachine.transition(payment.id, PaymentState.PENDING, {
+          verification_failed: true,
+        });
 
         return { success: false, reason: 'not_settled' };
       }
     } catch (error) {
       // On any error, transition to FAILED
-      await this.stateMachine.transition(
-        payment.id,
-        PaymentState.FAILED,
-        { error: error.message }
-      );
+      await this.stateMachine.transition(payment.id, PaymentState.FAILED, { error: error.message });
 
       throw error;
     }
@@ -643,12 +632,14 @@ $$ LANGUAGE plpgsql;
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/PaymentVerificationService.test.ts`
+
 - Test successful verification flow
 - Test lock acquisition
 - Test concurrent verification rejection
 - Test error handling
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/payment-verification-race-condition.test.ts`
+
 - Create payment
 - Send 100 concurrent verification requests
 - Verify only 1 succeeds, others get "already processing" error
@@ -656,6 +647,7 @@ $$ LANGUAGE plpgsql;
 - Verify no duplicate payment_events
 
 **Load Tests**:
+
 - 1000 payments verified concurrently
 - 0 duplicate completions
 - p95 latency < 200ms
@@ -710,11 +702,7 @@ export class WebhookSignatureValidator {
     this.webhookSecret = webhookSecret;
   }
 
-  validateSignature(
-    payload: string,
-    signature: string,
-    timestamp: number
-  ): boolean {
+  validateSignature(payload: string, signature: string, timestamp: number): boolean {
     // Verify timestamp is recent (replay attack prevention)
     const now = Math.floor(Date.now() / 1000);
     if (now - timestamp > this.maxTimestampAge) {
@@ -729,10 +717,7 @@ export class WebhookSignatureValidator {
       .digest('hex');
 
     // Constant-time comparison to prevent timing attacks
-    const isValid = crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
+    const isValid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
 
     if (!isValid) {
       throw new InvalidWebhookSignatureError();
@@ -765,9 +750,7 @@ export const validateWebhookMiddleware = async (
   next: NextFunction
 ) => {
   try {
-    const validator = new WebhookSignatureValidator(
-      process.env.LIGHTNING_WEBHOOK_SECRET!
-    );
+    const validator = new WebhookSignatureValidator(process.env.LIGHTNING_WEBHOOK_SECRET!);
 
     await validator.verifyWebhookRequest(req);
     next();
@@ -786,15 +769,11 @@ export const validateWebhookMiddleware = async (
 **Route**: `packages/backend/src/routes/webhooks.ts`
 
 ```typescript
-router.post(
-  '/webhooks/lightning',
-  validateWebhookMiddleware,
-  async (req, res) => {
-    // Webhook is verified, process payment update
-    const { payment_hash, settled, amount } = req.body;
-    // ... process payment
-  }
-);
+router.post('/webhooks/lightning', validateWebhookMiddleware, async (req, res) => {
+  // Webhook is verified, process payment update
+  const { payment_hash, settled, amount } = req.body;
+  // ... process payment
+});
 ```
 
 #### Dependencies
@@ -838,6 +817,7 @@ router.post(
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/WebhookSignatureValidator.test.ts`
+
 - Test valid signature passes
 - Test invalid signature rejected
 - Test expired timestamp rejected
@@ -846,12 +826,14 @@ router.post(
 - Test various payload sizes
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/webhook-validation.test.ts`
+
 - Send webhook with valid signature → 200 OK
 - Send webhook with invalid signature → 401 Unauthorized
 - Send webhook with old timestamp → 401 Unauthorized
 - Send webhook with missing headers → 400 Bad Request
 
 **Security Tests**:
+
 - Penetration test with forged signatures
 - Timing attack test (signature comparison timing must be constant)
 
@@ -898,10 +880,7 @@ export class IdempotencyService {
   private supabase: SupabaseClient;
   private redis: RedisClient;
 
-  async executeIdempotent<T>(
-    idempotencyKey: string,
-    operation: () => Promise<T>
-  ): Promise<T> {
+  async executeIdempotent<T>(idempotencyKey: string, operation: () => Promise<T>): Promise<T> {
     // Check if operation already executed
     const cached = await this.redis.get(`idempotency:${idempotencyKey}`);
     if (cached) {
@@ -952,11 +931,7 @@ export class IdempotencyService {
         .eq('key', idempotencyKey);
 
       // Cache in Redis
-      await this.redis.setex(
-        `idempotency:${idempotencyKey}`,
-        86400,
-        JSON.stringify(result)
-      );
+      await this.redis.setex(`idempotency:${idempotencyKey}`, 86400, JSON.stringify(result));
 
       return result;
     } catch (error) {
@@ -1004,11 +979,7 @@ $$ LANGUAGE plpgsql;
 **Middleware**: `packages/backend/src/middleware/requireIdempotency.ts`
 
 ```typescript
-export const requireIdempotencyKey = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const requireIdempotencyKey = (req: Request, res: Response, next: NextFunction) => {
   const idempotencyKey = req.headers['idempotency-key'] as string;
 
   if (!idempotencyKey) {
@@ -1068,12 +1039,14 @@ export const requireIdempotencyKey = (
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/IdempotencyService.test.ts`
+
 - Test first execution succeeds and result cached
 - Test second execution returns cached result
 - Test failed operation allows retry
 - Test concurrent requests with same key
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/idempotency.test.ts`
+
 - Create payment with idempotency key
 - Send duplicate request → same payment returned
 - Verify only 1 database record created
@@ -1139,12 +1112,7 @@ export class PaymentRetryService {
     baseDelay: 1000,
     maxDelay: 32000,
     backoffMultiplier: 2,
-    retryableErrors: [
-      'network_error',
-      'timeout',
-      'temporary_failure',
-      'routing_failure',
-    ],
+    retryableErrors: ['network_error', 'timeout', 'temporary_failure', 'routing_failure'],
   };
 
   private stateMachine: PaymentStateMachine;
@@ -1173,11 +1141,10 @@ export class PaymentRetryService {
     const attemptCount = payment.payment_retry_attempts.length;
     if (attemptCount >= this.config.maxAttempts) {
       // Max retries reached - permanently fail
-      await this.stateMachine.transition(
-        paymentId,
-        PaymentState.FAILED,
-        { reason: 'max_retries_exceeded', attempts: attemptCount }
-      );
+      await this.stateMachine.transition(paymentId, PaymentState.FAILED, {
+        reason: 'max_retries_exceeded',
+        attempts: attemptCount,
+      });
 
       throw new MaxRetriesExceededError(paymentId);
     }
@@ -1199,15 +1166,11 @@ export class PaymentRetryService {
     // Schedule retry (use job queue in production)
     setTimeout(async () => {
       try {
-        await this.stateMachine.transition(
-          paymentId,
-          PaymentState.PENDING,
-          { retry_attempt: attemptCount + 1 }
-        );
+        await this.stateMachine.transition(paymentId, PaymentState.PENDING, {
+          retry_attempt: attemptCount + 1,
+        });
 
-        const result = await this.verificationService.verifyPayment(
-          payment.payment_hash
-        );
+        const result = await this.verificationService.verifyPayment(payment.payment_hash);
 
         if (result.success) {
           // Success - update retry attempt
@@ -1217,12 +1180,7 @@ export class PaymentRetryService {
           await this.updateRetryAttempt(paymentId, attemptCount + 1, 'failed');
         }
       } catch (error) {
-        await this.updateRetryAttempt(
-          paymentId,
-          attemptCount + 1,
-          'failed',
-          error.message
-        );
+        await this.updateRetryAttempt(paymentId, attemptCount + 1, 'failed', error.message);
       }
     }, delay);
 
@@ -1292,6 +1250,7 @@ CREATE INDEX idx_payment_retry_attempts_scheduled_at ON payment_retry_attempts(s
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/PaymentRetryService.test.ts`
+
 - Test exponential backoff calculation (1s, 2s, 4s, 8s, 16s)
 - Test max delay cap (32s)
 - Test retryable error detection
@@ -1299,6 +1258,7 @@ CREATE INDEX idx_payment_retry_attempts_scheduled_at ON payment_retry_attempts(s
 - Test max retry limit
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/payment-retry.test.ts`
+
 - Create failed payment
 - Trigger retry → verify backoff timing
 - Test successful retry updates payment state
@@ -1363,19 +1323,13 @@ export class SubscriptionRetryService {
       .from('subscriptions')
       .update({
         status: 'grace_period',
-        grace_period_ends_at: new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString(),
+        grace_period_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       })
       .eq('id', subscriptionId);
 
     // Schedule retry attempts
     for (const retry of this.retrySchedule) {
-      await this.scheduleSubscriptionRetry(
-        subscriptionId,
-        retry.attempt,
-        retry.delayDays
-      );
+      await this.scheduleSubscriptionRetry(subscriptionId, retry.attempt, retry.delayDays);
     }
 
     // Notify user of payment failure
@@ -1401,9 +1355,7 @@ export class SubscriptionRetryService {
       });
 
       // Attempt payment
-      const result = await this.lightningService.makePayment(
-        invoice.paymentRequest
-      );
+      const result = await this.lightningService.makePayment(invoice.paymentRequest);
 
       if (result.success) {
         // Payment succeeded - reactivate subscription
@@ -1412,9 +1364,7 @@ export class SubscriptionRetryService {
           .update({
             status: 'active',
             grace_period_ends_at: null,
-            next_payment_date: this.calculateNextPayment(
-              retry.subscriptions.interval
-            ),
+            next_payment_date: this.calculateNextPayment(retry.subscriptions.interval),
           })
           .eq('id', retry.subscription_id);
 
@@ -1457,10 +1407,7 @@ export class SubscriptionRetryService {
       .eq('id', subscriptionId)
       .single();
 
-    await this.emailService.sendSubscriptionCanceledEmail(
-      subscription.user_id,
-      subscriptionId
-    );
+    await this.emailService.sendSubscriptionCanceledEmail(subscription.user_id, subscriptionId);
   }
 }
 ```
@@ -1524,18 +1471,21 @@ CREATE INDEX idx_subscription_retry_attempts_scheduled_at ON subscription_retry_
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/SubscriptionRetryService.test.ts`
+
 - Test grace period calculation
 - Test retry schedule generation
 - Test successful retry reactivation
 - Test failed retry cancellation
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/subscription-retry.test.ts`
+
 - Create subscription with failed payment
 - Verify grace period set
 - Simulate retry success → verify reactivation
 - Simulate retry failures → verify cancellation
 
 **E2E Tests**:
+
 - Full user journey: subscribe → payment fails → grace period → retry → success
 
 #### Performance Requirements
@@ -1582,11 +1532,7 @@ export class RefundService {
   private lightningService: LightningService;
   private supabase: SupabaseClient;
 
-  async requestRefund(
-    paymentId: string,
-    reason: string,
-    requestedBy: string
-  ): Promise<Refund> {
+  async requestRefund(paymentId: string, reason: string, requestedBy: string): Promise<Refund> {
     // Verify payment is in COMPLETED state
     const { data: payment } = await this.supabase
       .from('payments')
@@ -1682,14 +1628,10 @@ export class RefundService {
       );
 
       // Transition payment to REFUNDED state
-      await this.stateMachine.transition(
-        refund.payment_id,
-        PaymentState.REFUNDED,
-        {
-          refund_id: refundId,
-          payout_hash: payout.paymentHash,
-        }
-      );
+      await this.stateMachine.transition(refund.payment_id, PaymentState.REFUNDED, {
+        refund_id: refundId,
+        payout_hash: payout.paymentHash,
+      });
 
       // Update refund as completed
       await this.supabase
@@ -1702,10 +1644,7 @@ export class RefundService {
         .eq('id', refundId);
 
       // Notify user
-      await this.emailService.sendRefundCompletedEmail(
-        refund.payments.user_id,
-        refundId
-      );
+      await this.emailService.sendRefundCompletedEmail(refund.payments.user_id, refundId);
 
       return refund;
     } catch (error) {
@@ -1746,11 +1685,7 @@ export class RefundService {
       .eq('id', refundId)
       .single();
 
-    await this.emailService.sendRefundRejectedEmail(
-      refund.payments.user_id,
-      refundId,
-      reason
-    );
+    await this.emailService.sendRefundRejectedEmail(refund.payments.user_id, refundId, reason);
   }
 }
 ```
@@ -1820,6 +1755,7 @@ CREATE INDEX idx_refunds_created_at ON refunds(created_at DESC);
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/RefundService.test.ts`
+
 - Test refund request creation
 - Test approval process
 - Test rejection process
@@ -1827,6 +1763,7 @@ CREATE INDEX idx_refunds_created_at ON refunds(created_at DESC);
 - Test invalid payment state rejection
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/refund-processing.test.ts`
+
 - Create completed payment
 - Request refund → verify pending status
 - Approve refund → verify payout and state transition
@@ -1920,9 +1857,7 @@ export class SubscriptionUpgradeService {
       });
 
       // Process payment
-      const payment = await this.lightningService.makePayment(
-        invoice.paymentRequest
-      );
+      const payment = await this.lightningService.makePayment(invoice.paymentRequest);
 
       if (!payment.success) {
         throw new ProrationPaymentFailedError(payment.error);
@@ -2048,6 +1983,7 @@ CREATE INDEX idx_subscription_changes_effective_date ON subscription_changes(eff
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/SubscriptionUpgradeService.test.ts`
+
 - Test upgrade proration (10 scenarios with different days remaining)
 - Test downgrade proration
 - Test same-day tier change
@@ -2055,6 +1991,7 @@ CREATE INDEX idx_subscription_changes_effective_date ON subscription_changes(eff
 - Test different intervals (daily, weekly, monthly, yearly)
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/subscription-upgrade.test.ts`
+
 - Create monthly $10 subscription
 - Upgrade to $20 mid-cycle
 - Verify prorated charge
@@ -2134,16 +2071,12 @@ export class CurrencyConversionService {
   private async updateExchangeRates(): Promise<void> {
     try {
       // Fetch from multiple sources for redundancy
-      const sources = [
-        this.fetchFromCoinGecko(),
-        this.fetchFromKraken(),
-        this.fetchFromBinance(),
-      ];
+      const sources = [this.fetchFromCoinGecko(), this.fetchFromKraken(), this.fetchFromBinance()];
 
       const results = await Promise.allSettled(sources);
 
       // Use first successful result
-      const successful = results.find(r => r.status === 'fulfilled');
+      const successful = results.find((r) => r.status === 'fulfilled');
       if (!successful || successful.status !== 'fulfilled') {
         throw new ExchangeRateFetchError('All sources failed');
       }
@@ -2259,12 +2192,14 @@ export const PriceDisplay: React.FC<{ sats: number; currency?: string }> = ({
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/CurrencyConversionService.test.ts`
+
 - Test sats to currency conversion
 - Test currency to sats conversion
 - Test exchange rate caching
 - Test fallback to cached rates on API failure
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/currency-conversion.test.ts`
+
 - Test real API calls (or mocked)
 - Test Redis caching
 - Test multiple currency conversions
@@ -2357,7 +2292,7 @@ export class PaymentAnalyticsService {
 
     // Group by error reason
     const reasonCounts = new Map<string, number>();
-    events?.forEach(event => {
+    events?.forEach((event) => {
       const reason = event.metadata?.error || 'unknown';
       reasonCounts.set(reason, (reasonCounts.get(reason) || 0) + 1);
     });
@@ -2376,7 +2311,7 @@ export class PaymentAnalyticsService {
       .lt('start_date', this.getNextMonth(cohortMonth));
 
     const totalSubscribers = cohort?.length || 0;
-    const churned = cohort?.filter(s => s.status === 'canceled').length || 0;
+    const churned = cohort?.filter((s) => s.status === 'canceled').length || 0;
 
     return totalSubscribers > 0 ? (churned / totalSubscribers) * 100 : 0;
   }
@@ -2389,11 +2324,11 @@ export class PaymentAnalyticsService {
     // Group by tier and calculate average LTV
     const tierGroups = new Map<string, number[]>();
 
-    subscriptions?.forEach(sub => {
+    subscriptions?.forEach((sub) => {
       const lifetimeMonths = sub.canceled_at
         ? Math.ceil(
             (new Date(sub.canceled_at).getTime() - new Date(sub.start_date).getTime()) /
-            (30 * 24 * 60 * 60 * 1000)
+              (30 * 24 * 60 * 60 * 1000)
           )
         : 12; // Assume 12 months for active subscriptions
 
@@ -2531,6 +2466,7 @@ export const PaymentAnalyticsDashboard: React.FC = () => {
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/PaymentAnalyticsService.test.ts`
+
 - Test revenue calculation with sample payments
 - Test success rate calculation
 - Test failure reason aggregation
@@ -2538,11 +2474,13 @@ export const PaymentAnalyticsDashboard: React.FC = () => {
 - Test LTV calculation
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/payment-analytics.test.ts`
+
 - Create 100 sample payments (mix of completed/failed)
 - Fetch analytics → verify metrics
 - Test date range filtering
 
 **Performance Tests**:
+
 - Test with 100,000 payments → metrics < 5 seconds
 - Test with 10,000 subscriptions → churn analysis < 3 seconds
 
@@ -2626,7 +2564,7 @@ export class BatchPaymentService {
       }
     );
 
-    const successCount = results.filter(r => r.success).length;
+    const successCount = results.filter((r) => r.success).length;
     const failedCount = results.length - successCount;
 
     // Update batch record
@@ -2730,12 +2668,14 @@ CREATE INDEX idx_payment_batch_items_batch_id ON payment_batch_items(batch_id);
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/BatchPaymentService.test.ts`
+
 - Test batch processing with 100 items
 - Test concurrent processing limit
 - Test partial failure handling
 - Test summary report generation
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/batch-payment.test.ts`
+
 - Create batch with 50 payouts
 - Process batch → verify all complete
 - Test mixed success/failure scenario
@@ -2895,11 +2835,13 @@ export class PaymentMethodFallbackService {
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/PaymentMethodFallbackService.test.ts`
+
 - Test Lightning success (no fallback)
 - Test Lightning failure → On-chain success
 - Test all methods fail → error thrown
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/payment-fallback.test.ts`
+
 - Simulate Lightning failure
 - Verify on-chain method attempted
 - Test user notification
@@ -2947,7 +2889,7 @@ export class TaxCalculationService {
     ['US-CA', 0.0725], // California
     ['US-NY', 0.08], // New York
     ['EU-DE', 0.19], // Germany VAT
-    ['EU-FR', 0.20], // France VAT
+    ['EU-FR', 0.2], // France VAT
   ]);
 
   async calculateTax(amount: number, userLocation: string): Promise<TaxCalculation> {
@@ -3006,11 +2948,13 @@ export class TaxCalculationService {
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/TaxCalculationService.test.ts`
+
 - Test tax calculation for various regions
 - Test zero-tax regions
 - Test rounding
 
 **Integration Tests**:
+
 - Create payment with tax
 - Verify tax amount in database
 
@@ -3129,10 +3073,12 @@ export class InvoicePDFService {
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/InvoicePDFService.test.ts`
+
 - Test PDF generation
 - Test PDF content accuracy
 
 **Integration Tests**:
+
 - Generate PDF for payment
 - Verify download
 
@@ -3188,10 +3134,7 @@ export class PaymentWebhookService {
     }
   }
 
-  private async deliverWebhook(
-    webhook: WebhookSubscription,
-    event: PaymentEvent
-  ): Promise<void> {
+  private async deliverWebhook(webhook: WebhookSubscription, event: PaymentEvent): Promise<void> {
     const payload = JSON.stringify(event);
     const timestamp = Math.floor(Date.now() / 1000);
     const signature = this.generateSignature(payload, timestamp, webhook.secret);
@@ -3219,11 +3162,7 @@ export class PaymentWebhookService {
     }
   }
 
-  private generateSignature(
-    payload: string,
-    timestamp: number,
-    secret: string
-  ): string {
+  private generateSignature(payload: string, timestamp: number, secret: string): string {
     const signedPayload = `${timestamp}.${payload}`;
     return crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
   }
@@ -3291,11 +3230,13 @@ CREATE INDEX idx_webhook_deliveries_webhook_id ON webhook_deliveries(webhook_id)
 #### Testing Requirements
 
 **Unit Tests**: `packages/backend/src/services/payment/__tests__/PaymentWebhookService.test.ts`
+
 - Test webhook delivery
 - Test signature generation
 - Test retry logic
 
 **Integration Tests**: `packages/backend/src/__tests__/integration/payment-webhooks.test.ts`
+
 - Create webhook subscription
 - Trigger payment event
 - Verify webhook delivered
@@ -3425,6 +3366,7 @@ sequenceDiagram
 #### Testing Requirements
 
 **Documentation Tests**:
+
 - Mermaid syntax validation
 - Diagram rendering test
 - Link validation
@@ -3447,17 +3389,20 @@ sequenceDiagram
 ### Total Stories: 18
 
 ### Sprint 0 - Foundation (CRITICAL PATH): 3 stories, 8-12 hours
+
 - Story 001: Payment State Machine Types
 - Story 002: Payment State Machine Service
 - Story 003: Invoice Expiration Handling
 
 ### Sprint 1 - Security (CRITICAL PATH): 4 stories, 12-16 hours
+
 - Story 004: Race Condition Prevention
 - Story 005: Webhook Signature Validation
 - Story 006: Idempotency Key Support
 - Story 007: Exponential Backoff Retry Logic
 
 ### Sprint 2 - Features: 5 stories, 16-24 hours
+
 - Story 008: Subscription Retry & Grace Period
 - Story 009: Refund Processing
 - Story 010: Subscription Upgrade/Downgrade
@@ -3465,6 +3410,7 @@ sequenceDiagram
 - Story 012: Payment Analytics Dashboard
 
 ### Sprint 3 - Advanced Features: 6 stories, 16-24 hours
+
 - Story 013: Batch Payment Processing
 - Story 014: Payment Method Fallback
 - Story 015: Tax Calculation
@@ -3475,11 +3421,13 @@ sequenceDiagram
 ### Dependency Chain
 
 **Critical Path (Sequential)**:
+
 1. Story 001 → Story 002 → Story 003
 2. Story 002 → Story 004, 005, 006
 3. Story 004 → Story 007, 008
 
 **Parallel Work Streams**:
+
 - **Stream A - Security**: Stories 005, 006 (parallel after #002)
 - **Stream B - Features**: Stories 009, 010, 011, 012 (parallel after #002)
 - **Stream C - Advanced**: Stories 013-018 (parallel after Sprint 1)

@@ -54,11 +54,13 @@ features/subscriptions/
 Reusable card component for displaying subscription information.
 
 **Props**:
+
 ```typescript
 interface SubscriptionCardProps {
-  subscription: Subscription;        // Subscription data
-  variant?: 'user' | 'creator';     // Display mode
-  actions?: {                        // Optional action handlers
+  subscription: Subscription; // Subscription data
+  variant?: 'user' | 'creator'; // Display mode
+  actions?: {
+    // Optional action handlers
     onView?: (subscription: Subscription) => void;
     onEdit?: (subscription: Subscription) => void;
     onPause?: (subscription: Subscription) => void;
@@ -66,13 +68,14 @@ interface SubscriptionCardProps {
     onCancel?: (subscription: Subscription) => void;
     onDelete?: (subscription: Subscription) => void;
   };
-  showStats?: boolean;               // Show subscriber count (creator only)
-  className?: string;                // Custom CSS classes
-  disabled?: boolean;                // Disable all actions
+  showStats?: boolean; // Show subscriber count (creator only)
+  className?: string; // Custom CSS classes
+  disabled?: boolean; // Disable all actions
 }
 ```
 
 **Usage Example**:
+
 ```tsx
 import { SubscriptionCard } from '@/features/subscriptions';
 
@@ -96,6 +99,7 @@ const MyComponent = () => {
 ```
 
 **Features**:
+
 - 📱 **Responsive Design**: Mobile-first, adapts to all screen sizes
 - ♿ **Accessible**: WCAG 2.1 AA compliant, keyboard navigable
 - 🎨 **Status Badges**: Visual indicators for active, paused, cancelled, expired, pending
@@ -109,6 +113,7 @@ const MyComponent = () => {
 Creator-facing subscription tier and subscriber management.
 
 **Features**:
+
 - Create, edit, delete subscription tiers
 - Set pricing in satoshis with multiple billing intervals (monthly, quarterly, yearly)
 - Manage tier features and descriptions
@@ -117,6 +122,7 @@ Creator-facing subscription tier and subscriber management.
 - Real-time revenue tracking
 
 **Usage**:
+
 ```tsx
 import { SubscriptionManager } from '@/features/subscriptions';
 
@@ -130,6 +136,7 @@ const CreatorDashboard = () => {
 User/Supporter-facing subscription management dashboard.
 
 **Features**:
+
 - View all active subscriptions across creators
 - Manage auto-renewal settings
 - Add, edit, delete payment methods (Lightning, Bitcoin, NOSTR)
@@ -138,6 +145,7 @@ User/Supporter-facing subscription management dashboard.
 - Track content access and value received
 
 **Usage**:
+
 ```tsx
 import { UserSubscriptionManager } from '@/features/subscriptions';
 
@@ -153,35 +161,38 @@ const UserDashboard = () => {
 React hook providing subscription management functionality.
 
 **API**:
+
 ```typescript
 const {
   // Data
-  subscriptions,           // UserSubscription[]
-  paymentMethods,          // PaymentMethod[]
-  subscriptionHistory,     // SubscriptionHistory[]
-  loading,                 // boolean
-  error,                   // string | null
+  subscriptions, // UserSubscription[]
+  paymentMethods, // PaymentMethod[]
+  subscriptionHistory, // SubscriptionHistory[]
+  loading, // boolean
+  error, // string | null
 
   // Actions
-  refreshSubscriptions,    // () => Promise<void>
-  toggleAutoRenew,         // (id, autoRenew) => Promise<void>
-  cancelSubscription,      // (id) => Promise<void>
-  pauseSubscription,       // (id) => Promise<void>
-  resumeSubscription,      // (id) => Promise<void>
-  addPaymentMethod,        // () => Promise<void>
-  updatePaymentMethod,     // (id, updates) => Promise<void>
-  deletePaymentMethod,     // (id) => Promise<void>
+  refreshSubscriptions, // () => Promise<void>
+  toggleAutoRenew, // (id, autoRenew) => Promise<void>
+  cancelSubscription, // (id) => Promise<void>
+  pauseSubscription, // (id) => Promise<void>
+  resumeSubscription, // (id) => Promise<void>
+  addPaymentMethod, // () => Promise<void>
+  updatePaymentMethod, // (id, updates) => Promise<void>
+  deletePaymentMethod, // (id) => Promise<void>
   setDefaultPaymentMethod, // (id) => Promise<void>
-  updateRenewalSettings,   // (id, settings) => Promise<void>
+  updateRenewalSettings, // (id, settings) => Promise<void>
   exportSubscriptionHistory, // () => Promise<string>
 } = useUserSubscriptionService();
 ```
 
 **Environment Modes**:
+
 - **Development**: Uses `MockUserSubscriptionService` with sample data
 - **Production**: Uses `ProductionUserSubscriptionService` with real API calls
 
 **Data Validation**:
+
 - All API responses validated with Zod schemas
 - Type-safe data transformation
 - Comprehensive error handling
@@ -196,7 +207,7 @@ interface Subscription {
   name: string;
   description?: string;
   tierName?: string;
-  amount: number;                // Satoshis
+  amount: number; // Satoshis
   status: SubscriptionStatus;
   billingInterval: BillingInterval;
   startDate: string;
@@ -246,7 +257,7 @@ interface PaymentMethod {
   id: string;
   type: 'lightning' | 'bitcoin' | 'nostr';
   name: string;
-  identifier: string;          // Lightning address, Bitcoin address, or NOSTR pubkey
+  identifier: string; // Lightning address, Bitcoin address, or NOSTR pubkey
   is_default: boolean;
   is_verified: boolean;
   created_at: string;
@@ -259,31 +270,31 @@ interface PaymentMethod {
 
 ### User Subscriptions
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/user/subscriptions` | Get all user subscriptions |
-| PATCH | `/api/user/subscriptions/:id/auto-renew` | Toggle auto-renewal |
-| POST | `/api/user/subscriptions/:id/cancel` | Cancel subscription |
-| POST | `/api/user/subscriptions/:id/pause` | Pause subscription |
-| POST | `/api/user/subscriptions/:id/resume` | Resume subscription |
-| PATCH | `/api/user/subscriptions/:id/renewal-settings` | Update renewal settings |
+| Method | Endpoint                                       | Description                |
+| ------ | ---------------------------------------------- | -------------------------- |
+| GET    | `/api/user/subscriptions`                      | Get all user subscriptions |
+| PATCH  | `/api/user/subscriptions/:id/auto-renew`       | Toggle auto-renewal        |
+| POST   | `/api/user/subscriptions/:id/cancel`           | Cancel subscription        |
+| POST   | `/api/user/subscriptions/:id/pause`            | Pause subscription         |
+| POST   | `/api/user/subscriptions/:id/resume`           | Resume subscription        |
+| PATCH  | `/api/user/subscriptions/:id/renewal-settings` | Update renewal settings    |
 
 ### Payment Methods
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/user/payment-methods` | Get all payment methods |
-| POST | `/api/user/payment-methods` | Add new payment method |
-| PATCH | `/api/user/payment-methods/:id` | Update payment method |
-| DELETE | `/api/user/payment-methods/:id` | Delete payment method |
-| POST | `/api/user/payment-methods/:id/set-default` | Set as default |
+| Method | Endpoint                                    | Description             |
+| ------ | ------------------------------------------- | ----------------------- |
+| GET    | `/api/user/payment-methods`                 | Get all payment methods |
+| POST   | `/api/user/payment-methods`                 | Add new payment method  |
+| PATCH  | `/api/user/payment-methods/:id`             | Update payment method   |
+| DELETE | `/api/user/payment-methods/:id`             | Delete payment method   |
+| POST   | `/api/user/payment-methods/:id/set-default` | Set as default          |
 
 ### Subscription History
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/user/subscription-history` | Get subscription history |
-| GET | `/api/user/subscription-history/export` | Export history as CSV |
+| Method | Endpoint                                | Description              |
+| ------ | --------------------------------------- | ------------------------ |
+| GET    | `/api/user/subscription-history`        | Get subscription history |
+| GET    | `/api/user/subscription-history/export` | Export history as CSV    |
 
 ## Accessibility
 
@@ -377,6 +388,7 @@ All components are mobile-first and responsive:
 ## Contributing
 
 See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines on:
+
 - Adding new subscription features
 - Writing tests
 - Creating Mermaid diagrams

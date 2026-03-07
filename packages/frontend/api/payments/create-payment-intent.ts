@@ -23,7 +23,10 @@ async function authenticateUser(req: VercelRequest): Promise<{ user: any; error?
   const token = authHeader.substring(7);
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
 
     if (error || !user) {
       return { user: null, error: 'Invalid or expired token' };
@@ -50,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({
       error: 'Method not allowed',
       message: 'Only POST requests are accepted',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -59,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(503).json({
       error: 'Service unavailable',
       message: 'Payment processing is currently disabled',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -68,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({
       error: 'Configuration error',
       message: 'Payment processing is not properly configured',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -80,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Rate limit exceeded',
         message: 'Too many payment requests. Please try again later.',
         retryAfter: rateLimitResult.retryAfter,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -90,7 +93,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({
         error: 'Authentication required',
         message: auth.error,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -108,7 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Validation failed',
         message: 'Invalid payment data',
         details: validation.errors,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -139,20 +142,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     // 🗄️ Store payment record in database
-    const { error: dbError } = await supabase
-      .from('payments')
-      .insert({
-        id: paymentIntent.id,
-        user_id: currentUser.id,
-        amount: amount,
-        currency: currency.toLowerCase(),
-        status: paymentIntent.status,
-        product_id: productId || null,
-        stripe_payment_intent_id: paymentIntent.id,
-        metadata: paymentMetadata,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+    const { error: dbError } = await supabase.from('payments').insert({
+      id: paymentIntent.id,
+      user_id: currentUser.id,
+      amount: amount,
+      currency: currency.toLowerCase(),
+      status: paymentIntent.status,
+      product_id: productId || null,
+      stripe_payment_intent_id: paymentIntent.id,
+      metadata: paymentMetadata,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
     if (dbError) {
       console.error('Payment record creation error:', dbError);
@@ -173,15 +174,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         metadata: {
           productId,
           description,
-        }
+        },
       },
       timestamp: new Date().toISOString(),
       metadata: {
         ipAddress: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
         userAgent: req.headers['user-agent'],
-      }
+      },
     });
-
   } catch (error) {
     console.error('Payment intent creation error:', error);
 
@@ -191,7 +191,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Payment processing error',
         message: error.message,
         code: error.code,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -199,7 +199,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       message: 'An unexpected error occurred during payment processing',
       timestamp: new Date().toISOString(),
-      requestId: req.headers['x-vercel-id'] || 'unknown'
+      requestId: req.headers['x-vercel-id'] || 'unknown',
     });
   }
 }

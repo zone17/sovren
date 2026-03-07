@@ -29,12 +29,14 @@ The Sovren Production Launch GitHub Project has been comprehensively enhanced wi
 
 **Total Stories**: 67 user stories
 **Epic Distribution**:
+
 - EPIC 1 (Immediate Blockers): 7 stories - Week 1
 - EPIC 2 (Frontend): 41 stories - Weeks 2-4
 - EPIC 3 (Integration): 10 stories - Week 5
 - EPIC 4 (Production): 9 stories - Week 6
 
 **Story Granularity**: ✅ EXCELLENT
+
 - Average story size: 0.5-1 day (1-point stories)
 - Already well-decomposed by design-first approach
 - Each story is atomic and independently testable
@@ -50,17 +52,18 @@ The Sovren Production Launch GitHub Project has been comprehensively enhanced wi
 
 Added 5 new custom fields to GitHub Project #1 for comprehensive tracking:
 
-| Field Name | Type | Field ID | Purpose |
-|-----------|------|----------|---------|
-| **Story Points** | Number | `PVTF_lAHOADc3Q84BHW4szg4N3wg` | Complexity estimate (1-5) |
-| **Agent** | Text | `PVTF_lAHOADc3Q84BHW4szg4N3wk` | Assigned agent name |
-| **Completion %** | Number | `PVTF_lAHOADc3Q84BHW4szg4N33Q` | Progress percentage (0-100) |
-| **Priority** | Single Select | `PVTSSF_lAHOADc3Q84BHW4szg4N38c` | Critical, High, Medium, Low |
-| **Phase** | Single Select | `PVTSSF_lAHOADc3Q84BHW4szg4N38g` | Design, Implementation, Testing, Review |
+| Field Name       | Type          | Field ID                         | Purpose                                 |
+| ---------------- | ------------- | -------------------------------- | --------------------------------------- |
+| **Story Points** | Number        | `PVTF_lAHOADc3Q84BHW4szg4N3wg`   | Complexity estimate (1-5)               |
+| **Agent**        | Text          | `PVTF_lAHOADc3Q84BHW4szg4N3wk`   | Assigned agent name                     |
+| **Completion %** | Number        | `PVTF_lAHOADc3Q84BHW4szg4N33Q`   | Progress percentage (0-100)             |
+| **Priority**     | Single Select | `PVTSSF_lAHOADc3Q84BHW4szg4N38c` | Critical, High, Medium, Low             |
+| **Phase**        | Single Select | `PVTSSF_lAHOADc3Q84BHW4szg4N38g` | Design, Implementation, Testing, Review |
 
 **Existing Fields Utilized**:
+
 - Status (Todo, In Progress, Done)
-- Labels (epic:*, user-story, frontend, backend, etc.)
+- Labels (epic:\*, user-story, frontend, backend, etc.)
 - Assignees
 - Linked pull requests
 - Milestone
@@ -72,9 +75,11 @@ Added 5 new custom fields to GitHub Project #1 for comprehensive tracking:
 Created comprehensive documentation in `docs/project-management/`:
 
 #### A. STORY_WORKFLOW.md (5,000+ words)
+
 **Purpose**: Complete guide for agents on how to work with stories
 
 **Contents**:
+
 - Project structure overview
 - Story lifecycle (Backlog → Design → Implementation → Testing → Review → Done)
 - How to update story status (GitHub CLI, UI, GraphQL API)
@@ -85,15 +90,18 @@ Created comprehensive documentation in `docs/project-management/`:
 - Quick reference commands
 
 **Key Features**:
+
 - Step-by-step agent workflow examples
 - Update script usage: `./scripts/update-story-status.sh <ISSUE> <STATUS> <COMPLETION> <AGENT>`
 - GitHub Project field IDs for automation
 - Handoff protocol between agents
 
 #### B. DEPENDENCY_MAP.md (7,000+ words)
+
 **Purpose**: Complete dependency mapping and critical path analysis
 
 **Contents**:
+
 - Visual dependency maps (3 Mermaid diagrams)
 - Epic-level dependencies with blocking chains
 - Story-level dependency matrix
@@ -104,15 +112,18 @@ Created comprehensive documentation in `docs/project-management/`:
 - Success metrics and velocity tracking
 
 **Key Insights**:
+
 - **Critical Path**: Test Fix → NOSTR Auth → Content Creation → Lightning Pay → E2E Testing → Production
 - **High-Risk Dependencies**: Test infrastructure (#5-11), NOSTR Auth (#12-26), Lightning integration (#42-52)
 - **Parallelization Opportunities**: 30% of stories can run in parallel
 - **Maximum Parallelization**: Weeks 3-4 with 3 concurrent streams
 
 #### C. PARALLEL_STREAMS.md (8,000+ words)
+
 **Purpose**: Detailed parallel execution strategy
 
 **Contents**:
+
 - Stream organization (sequential foundation, parallel features, parallel quality)
 - Week-by-week execution plan with resource allocation
 - Conflict avoidance strategy (file system isolation)
@@ -122,6 +133,7 @@ Created comprehensive documentation in `docs/project-management/`:
 - Success metrics and parallelization efficiency
 
 **Key Strategy**:
+
 - **Week 1**: 2 parallel threads (foundation)
 - **Week 2**: 1 thread (sequential NOSTR auth)
 - **Weeks 3-4**: 3 parallel threads (content + payments + subscriptions) - **MAXIMUM**
@@ -136,15 +148,18 @@ Created comprehensive documentation in `docs/project-management/`:
 Created 3 Mermaid diagrams in `docs/architecture/diagrams/project-management/`:
 
 #### A. epic-dependencies.mmd
+
 **Diagram**: Epic-level dependency flow with parallel opportunities
 
 **Shows**:
+
 - All 4 epics with story groupings
 - Sequential dependencies (solid arrows)
 - Parallel work opportunities (dashed arrows)
 - Color-coded by priority and phase
 
 **Key Visualization**:
+
 ```
 EPIC 1 (Foundation) → EPIC 2 (Frontend) → EPIC 3 (Integration) → EPIC 4 (Production)
                            ↓ (3 parallel streams)
@@ -154,9 +169,11 @@ EPIC 1 (Foundation) → EPIC 2 (Frontend) → EPIC 3 (Integration) → EPIC 4 (P
 ```
 
 #### B. critical-path.mmd
+
 **Diagram**: Critical path from start to production launch
 
 **Shows**:
+
 - 6-week timeline with milestones
 - Critical path stories (highlighted)
 - Parallel paths not on critical path
@@ -166,9 +183,11 @@ EPIC 1 (Foundation) → EPIC 2 (Frontend) → EPIC 3 (Integration) → EPIC 4 (P
 **Critical Path**: Test Fix → Auth → Content → Payment → E2E → Production
 
 #### C. parallel-streams.mmd
+
 **Diagram**: Parallel work stream organization by week
 
 **Shows**:
+
 - 7 parallel streams (A1, B1-B3, D1-D2, P1-P2)
 - Stream dependencies and handoffs
 - Color-coded by stream type
@@ -181,6 +200,7 @@ EPIC 1 (Foundation) → EPIC 2 (Frontend) → EPIC 3 (Integration) → EPIC 4 (P
 Updated `scripts/update-story-status.sh` with GitHub Project integration:
 
 **New Features**:
+
 - Automatically updates GitHub Project custom fields
 - Sets Status (Todo, In Progress, Done) via GraphQL API
 - Sets Agent field with agent name
@@ -189,6 +209,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 - Auto-closes issues at 100% completion
 
 **Usage**:
+
 ```bash
 ./scripts/update-story-status.sh <ISSUE_NUMBER> <STATUS> <COMPLETION_%> <AGENT_NAME> [MESSAGE]
 
@@ -197,6 +218,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 ```
 
 **GraphQL Integration**:
+
 - Gets project item ID from issue number
 - Updates 3 custom fields (Status, Agent, Completion %)
 - Handles errors gracefully with fallback messages
@@ -210,6 +232,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 ✅ **EXCELLENT DECOMPOSITION** - Stories are already properly sized
 
 **Characteristics**:
+
 - **Atomic**: Each story does exactly one thing
 - **Time-Boxed**: 0.5-1 day per story (1-point target achieved)
 - **Independently Testable**: Each has clear acceptance criteria
@@ -219,6 +242,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 **Sample Story Analysis**:
 
 **Story #12 (FE-001): Design NOSTR Auth User Flows**
+
 - **Size**: 4 hours (0.5 days) ✅
 - **Atomic**: Creates user flow diagrams only
 - **Deliverables**: 4 diagrams in Mermaid format
@@ -226,6 +250,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 - **DoD**: 4 flows complete, exported as .mmd and .png, committed to repo
 
 **Story #17 (FE-006): Implement NOSTRAuthButton Component**
+
 - **Size**: 4 hours (0.5 days) ✅
 - **Atomic**: Single component implementation
 - **Deliverables**: NOSTRAuthButton.tsx with extension detection
@@ -233,6 +258,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 - **DoD**: Component working, Storybook story created, tests placeholder
 
 **Story #22 (FE-011): Write NOSTR Auth Integration Tests**
+
 - **Size**: 8 hours (1 day) ✅
 - **Atomic**: Integration tests for auth feature
 - **Deliverables**: Test suite with 95%+ coverage
@@ -244,12 +270,14 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 **NO CHANGES NEEDED** - Story decomposition is already at optimal granularity
 
 **Why**:
+
 1. **Design-First Approach**: Breaks work into clear phases (Design → Implement → Test → Review)
 2. **Feature-Based Modules**: Each story targets a specific component or service
 3. **Consistent Sizing**: 4-8 hours per story (1-point standard)
 4. **Clear Handoffs**: Each phase ends with deliverables that enable next phase
 
 **Validation**:
+
 - EPIC 1: 7 stories, avg 1.9 hours each ✅
 - EPIC 2: 41 stories, avg 0.6 days each ✅
 - EPIC 3: 10 stories, avg 0.5 days each ✅
@@ -282,6 +310,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 | #63-71 (Production) | #53-58 (Integration) | Need stable integration first |
 
 **Soft Blockers** (can work around):
+
 - #17-21 can use mocked backend API during development
 - #32-36 can use MSW for API mocking
 - #47-51 can use Lightning testnet
@@ -289,22 +318,26 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 ### Parallel Work Opportunities
 
 **Week 1**: 2 parallel threads
+
 - Thread 1: #5 → #6 → #11 (test infrastructure)
 - Thread 2: #7, #8 (cleanup tasks)
 - **Developers**: 2
 
 **Weeks 3-4**: 3 parallel threads (MAXIMUM PARALLELIZATION)
+
 - Thread 1: #27 → #32 → #37 (Content Creation)
 - Thread 2: #42 → #47 → #52 (Lightning Payments)
 - Thread 3: #48 → #50 → #51 (Subscription Tiers)
 - **Developers**: 7-8 (peak capacity)
 
 **Week 5**: 2 parallel threads
+
 - Thread 1: #53 → #58 (E2E Testing)
 - Thread 2: #59 → #62 (Accessibility)
 - **Developers**: 3
 
 **Week 6**: 2 parallel threads
+
 - Thread 1: #63 → #66 (Security/Performance)
 - Thread 2: #69, #70 (Infrastructure)
 - **Developers**: 5
@@ -319,27 +352,27 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 
 **Total Developers**: 6-9 (varies by week)
 
-| Role | Weeks Active | Stories | Utilization |
-|------|-------------|---------|-------------|
-| **UX Designers** | Weeks 2-4 | 28 stories | 100% during Weeks 2-4 |
-| **Frontend Developers** | Weeks 2-4 | 25 stories | 90%+ during Weeks 3-4 |
-| **Test Engineers** | Weeks 2-5 | 20 stories | 85% during Weeks 2-5 |
-| **Security Engineers** | Weeks 1, 6 | 4 stories | 50% during Weeks 1, 6 |
-| **DevOps Engineers** | Weeks 1, 6 | 4 stories | 75% during Weeks 1, 6 |
-| **Specialists** | Weeks 4-5 | 3 stories | 25% during Weeks 4-5 |
+| Role                    | Weeks Active | Stories    | Utilization           |
+| ----------------------- | ------------ | ---------- | --------------------- |
+| **UX Designers**        | Weeks 2-4    | 28 stories | 100% during Weeks 2-4 |
+| **Frontend Developers** | Weeks 2-4    | 25 stories | 90%+ during Weeks 3-4 |
+| **Test Engineers**      | Weeks 2-5    | 20 stories | 85% during Weeks 2-5  |
+| **Security Engineers**  | Weeks 1, 6   | 4 stories  | 50% during Weeks 1, 6 |
+| **DevOps Engineers**    | Weeks 1, 6   | 4 stories  | 75% during Weeks 1, 6 |
+| **Specialists**         | Weeks 4-5    | 3 stories  | 25% during Weeks 4-5  |
 
 **Peak Capacity**: Weeks 3-4 (7-8 developers)
 **Average Capacity**: 4-5 developers
 
 ### Weekly Developer Allocation
 
-| Week | Phase | Developers | Workload |
-|------|-------|-----------|----------|
-| Week 1 | Foundation (Sequential) | 2 | 100% (critical path) |
-| Week 2 | NOSTR Auth (Sequential) | 3 | 100% (handoff workflow) |
-| Weeks 3-4 | Frontend Features (Parallel) | 7-8 | 90%+ (max parallelization) |
-| Week 5 | Integration (Parallel) | 3 | 85% (testing streams) |
-| Week 6 | Production (Parallel) | 5 | 90% (final push) |
+| Week      | Phase                        | Developers | Workload                   |
+| --------- | ---------------------------- | ---------- | -------------------------- |
+| Week 1    | Foundation (Sequential)      | 2          | 100% (critical path)       |
+| Week 2    | NOSTR Auth (Sequential)      | 3          | 100% (handoff workflow)    |
+| Weeks 3-4 | Frontend Features (Parallel) | 7-8        | 90%+ (max parallelization) |
+| Week 5    | Integration (Parallel)       | 3          | 85% (testing streams)      |
+| Week 6    | Production (Parallel)        | 5          | 90% (final push)           |
 
 ---
 
@@ -348,40 +381,48 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 ### High-Risk Dependencies
 
 #### Risk 1: Test Infrastructure Blocking (#5-11)
+
 **Risk Level**: CRITICAL
 **Impact**: Blocks all EPIC 2-4 development
 **Probability**: Medium (30%)
 **Mitigation**:
+
 - Allocate senior developer
 - Complete in Week 1 with no parallel work distractions
 - Daily progress checks
 - 3-day buffer in timeline
 
 #### Risk 2: Lightning Integration Complexity (#42-52)
+
 **Risk Level**: HIGH
 **Impact**: Blocks monetization (critical for MVP)
 **Probability**: High (60%)
 **Mitigation**:
+
 - Early validation with lightning-network-specialist
 - Use testnet for development
 - Mock payment flows for frontend development
 - Fallback: Launch without payments if blocked (defer to post-MVP)
 
 #### Risk 3: Merge Conflicts from Parallel Streams
+
 **Risk Level**: MEDIUM
 **Impact**: Delays integration, potential rework
 **Probability**: Medium (30%)
 **Mitigation**:
+
 - File system isolation (different feature directories)
 - No shared code modifications during Weeks 3-4
 - Merge in dependency order (content → payments → subscriptions)
 - Code review before merge
 
 #### Risk 4: Agent Handoff Delays
+
 **Risk Level**: MEDIUM
 **Impact**: Stalled progress, reduced parallelization
 **Probability**: Medium (40%)
 **Mitigation**:
+
 - Clear handoff protocol documented
 - Async communication (GitHub comments)
 - Buffer time in estimates (3 days total)
@@ -401,6 +442,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 ### Story Completion Velocity
 
 **Target Weekly Velocity**:
+
 - Week 1: 7 stories (sequential)
 - Week 2: 15 stories (sequential with handoffs)
 - Weeks 3-4: 41 stories (parallel streams)
@@ -408,6 +450,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 - Week 6: 9 stories (parallel production)
 
 **Tracking**:
+
 - Update Completion % daily via update script
 - Calculate actual velocity weekly
 - Adjust resource allocation if velocity < 90% of target
@@ -417,6 +460,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 **Formula**: `Actual Duration / Sequential Duration`
 
 **Targets**:
+
 - **Excellent**: 0.60-0.65 (35-40% time savings)
 - **Good**: 0.70-0.75 (25-30% time savings)
 - **Acceptable**: 0.75-0.80 (20-25% time savings)
@@ -425,6 +469,7 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 **Current Projection**: 0.67 (33% time savings) ✅
 
 **Calculation**:
+
 - Sequential Execution: 42 working days
 - Parallel Execution: 27 working days (6 weeks)
 - Efficiency: 27 / 42 = 0.64 (36% time savings)
@@ -432,16 +477,19 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
 ### Quality Metrics
 
 **Test Coverage**:
+
 - Backend: 95%+ (already achieved)
 - Frontend: 85%+ global, 95%+ for auth/content/payments
 - E2E: 100% of critical user flows
 
 **Code Quality**:
+
 - Zero ESLint/Prettier violations
 - TypeScript strict mode compliance
 - All code reviews approved
 
 **Security**:
+
 - Security audit score: 95/100
 - Zero critical vulnerabilities
 - All OWASP Top 10 checks passing
@@ -470,16 +518,19 @@ Updated `scripts/update-story-status.sh` with GitHub Project integration:
    - Check dependencies are met
 
 2. **Start Work**:
+
    ```bash
    ./scripts/update-story-status.sh <ISSUE> "In Progress" 0 "<agent-name>"
    ```
 
 3. **Provide Progress Updates**:
+
    ```bash
    ./scripts/update-story-status.sh <ISSUE> "In Progress" 50 "<agent-name>" "Completed component implementation"
    ```
 
 4. **Complete and Handoff**:
+
    ```bash
    ./scripts/update-story-status.sh <ISSUE> "Done" 100 "<agent-name>" "All deliverables complete. See commit [hash]"
    ```
@@ -570,14 +621,17 @@ All project management documentation is in `docs/project-management/`:
 ## Visual Diagram Links
 
 **Epic Dependencies**:
+
 - Source: [epic-dependencies.mmd](../architecture/diagrams/project-management/epic-dependencies.mmd)
 - Preview: ![Epic Dependencies](https://github.com/zone17/Sovren/blob/main/docs/architecture/diagrams/project-management/epic-dependencies.mmd)
 
 **Critical Path**:
+
 - Source: [critical-path.mmd](../architecture/diagrams/project-management/critical-path.mmd)
 - Preview: ![Critical Path](https://github.com/zone17/Sovren/blob/main/docs/architecture/diagrams/project-management/critical-path.mmd)
 
 **Parallel Streams**:
+
 - Source: [parallel-streams.mmd](../architecture/diagrams/project-management/parallel-streams.mmd)
 - Preview: ![Parallel Streams](https://github.com/zone17/Sovren/blob/main/docs/architecture/diagrams/project-management/parallel-streams.mmd)
 

@@ -60,13 +60,14 @@ The NOSTR Feed/Timeline is a comprehensive, production-ready component for displ
 Main container component with filtering, sorting, and infinite scroll.
 
 **Props**:
+
 ```typescript
 interface FeedTimelineProps {
-  filters?: FeedFilters;          // Initial filter configuration
-  initialSort?: FeedSort;         // 'latest' | 'popular' | 'trending'
-  autoUpdate?: boolean;           // Enable real-time updates
-  pageSize?: number;              // Events per page (default: 20)
-  emptyMessage?: string;          // Custom empty state message
+  filters?: FeedFilters; // Initial filter configuration
+  initialSort?: FeedSort; // 'latest' | 'popular' | 'trending'
+  autoUpdate?: boolean; // Enable real-time updates
+  pageSize?: number; // Events per page (default: 20)
+  emptyMessage?: string; // Custom empty state message
   onEventClick?: (event: FeedEvent) => void;
   onProfileClick?: (pubkey: string) => void;
   className?: string;
@@ -74,6 +75,7 @@ interface FeedTimelineProps {
 ```
 
 **Usage**:
+
 ```tsx
 import { FeedTimeline } from '@/features/nostr/feed';
 
@@ -83,10 +85,11 @@ import { FeedTimeline } from '@/features/nostr/feed';
   pageSize={20}
   onEventClick={(event) => navigateToThread(event)}
   onProfileClick={(pubkey) => navigateToProfile(pubkey)}
-/>
+/>;
 ```
 
 **Features**:
+
 - ✅ Real-time NOSTR event subscriptions
 - ✅ Infinite scroll with Intersection Observer
 - ✅ Comprehensive filtering (author, hashtag, date, search)
@@ -101,11 +104,12 @@ import { FeedTimeline } from '@/features/nostr/feed';
 Individual event display with engagement features.
 
 **Props**:
+
 ```typescript
 interface FeedItemProps {
-  feedEvent: FeedEvent;           // Event data with metadata
-  currentUserPubkey?: string;     // For highlighting own posts
-  condensed?: boolean;            // Compact view for threads
+  feedEvent: FeedEvent; // Event data with metadata
+  currentUserPubkey?: string; // For highlighting own posts
+  condensed?: boolean; // Compact view for threads
   onClick?: (event: FeedEvent) => void;
   onProfileClick?: (pubkey: string) => void;
   onLike?: (event: NostrEvent) => void;
@@ -116,6 +120,7 @@ interface FeedItemProps {
 ```
 
 **Usage**:
+
 ```tsx
 import { FeedItem } from '@/features/nostr/feed';
 
@@ -125,10 +130,11 @@ import { FeedItem } from '@/features/nostr/feed';
   onLike={handleLike}
   onRepost={handleRepost}
   onReply={handleReply}
-/>
+/>;
 ```
 
 **Features**:
+
 - ✅ Author avatar with NIP-05 verification badge
 - ✅ Parsed content (text, images, videos, links)
 - ✅ Image grid (up to 4 images)
@@ -144,6 +150,7 @@ import { FeedItem } from '@/features/nostr/feed';
 Expandable filter panel with search, hashtags, authors, date range.
 
 **Props**:
+
 ```typescript
 interface FeedFiltersProps {
   filters: FeedFilters;
@@ -153,6 +160,7 @@ interface FeedFiltersProps {
 ```
 
 **Features**:
+
 - ✅ Full-text search
 - ✅ Hashtag filtering (add/remove)
 - ✅ Author filtering (public keys)
@@ -165,6 +173,7 @@ interface FeedFiltersProps {
 Sort control tabs (latest, popular, trending).
 
 **Props**:
+
 ```typescript
 interface FeedSortProps {
   currentSort: FeedSort;
@@ -174,6 +183,7 @@ interface FeedSortProps {
 ```
 
 **Sort Algorithms**:
+
 - **Latest**: `timestamp DESC`
 - **Popular**: `reactions DESC`
 - **Trending**: `(reactions + reposts + replies) * ageWeight DESC`
@@ -187,6 +197,7 @@ interface FeedSortProps {
 Real-time NOSTR event subscription with caching.
 
 **Returns**:
+
 ```typescript
 interface UseFeedSubscriptionReturn {
   events: FeedEvent[];
@@ -203,15 +214,9 @@ interface UseFeedSubscriptionReturn {
 ```
 
 **Usage**:
+
 ```tsx
-const {
-  events,
-  isLoading,
-  error,
-  subscribe,
-  refresh,
-  addOptimisticUpdate
-} = useFeedSubscription();
+const { events, isLoading, error, subscribe, refresh, addOptimisticUpdate } = useFeedSubscription();
 
 useEffect(() => {
   subscribe({ kinds: [1, 6, 7], authors: ['pubkey...'] });
@@ -223,6 +228,7 @@ useEffect(() => {
 Filter state management with helpers.
 
 **Returns**:
+
 ```typescript
 interface UseFeedFiltersReturn {
   filters: FeedFilters;
@@ -241,6 +247,7 @@ interface UseFeedFiltersReturn {
 Pagination state for infinite scroll.
 
 **Returns**:
+
 ```typescript
 interface UseFeedPaginationReturn {
   page: number;
@@ -263,17 +270,18 @@ Enhanced NOSTR event with metadata and engagement.
 
 ```typescript
 interface FeedEvent {
-  event: NostrEvent;              // Original NOSTR event
+  event: NostrEvent; // Original NOSTR event
   engagement: FeedEventEngagement;
-  authorProfile?: {               // Author metadata
+  authorProfile?: {
+    // Author metadata
     name?: string;
     picture?: string;
     nip05?: string;
     display_name?: string;
   };
-  repostedEvent?: NostrEvent;     // For kind 6 reposts
-  parsedContent?: ParsedContent;  // Extracted media/links
-  timestamp: number;              // For sorting
+  repostedEvent?: NostrEvent; // For kind 6 reposts
+  parsedContent?: ParsedContent; // Extracted media/links
+  timestamp: number; // For sorting
 }
 ```
 
@@ -281,9 +289,9 @@ interface FeedEvent {
 
 ```typescript
 interface FeedEventEngagement {
-  reactions: number;    // Kind 7 reactions (likes)
-  reposts: number;      // Kind 6 reposts
-  replies: number;      // Kind 1 replies
+  reactions: number; // Kind 7 reactions (likes)
+  reposts: number; // Kind 6 reposts
+  replies: number; // Kind 1 replies
   isLikedByUser: boolean;
   isRepostedByUser: boolean;
 }
@@ -293,13 +301,13 @@ interface FeedEventEngagement {
 
 ```typescript
 interface FeedFilters {
-  authors?: string[];   // Filter by public keys
-  hashtags?: string[];  // Filter by hashtags
-  mentions?: string[];  // Filter by mentions
-  since?: number;       // Unix timestamp
-  until?: number;       // Unix timestamp
-  kinds?: number[];     // Event kinds (default: [1, 6, 7])
-  search?: string;      // Full-text search
+  authors?: string[]; // Filter by public keys
+  hashtags?: string[]; // Filter by hashtags
+  mentions?: string[]; // Filter by mentions
+  since?: number; // Unix timestamp
+  until?: number; // Unix timestamp
+  kinds?: number[]; // Event kinds (default: [1, 6, 7])
+  search?: string; // Full-text search
 }
 ```
 
@@ -326,6 +334,7 @@ const parsed = parseContent(event.content);
 ```
 
 **Utilities**:
+
 - `parseContent(content: string): ParsedContent`
 - `formatRelativeTime(timestamp: number): string`
 - `formatCount(count: number): string`
@@ -342,17 +351,20 @@ const parsed = parseContent(event.content);
 **Overall**: 93% (54/58 tests passing)
 
 **Component Tests**:
+
 ```bash
 npm test features/nostr/feed
 ```
 
 **Coverage Breakdown**:
+
 - `FeedTimeline`: 90% (18/20 tests)
 - `FeedItem`: 100% (23/23 tests)
 - `useFeedFilters`: 100% (20/20 tests)
 - `useFeedSubscription`: 85% (mock-based)
 
 **Test Categories**:
+
 1. ✅ Rendering (all states)
 2. ✅ Interactions (clicks, scrolls)
 3. ✅ Accessibility (ARIA, keyboard)
@@ -369,6 +381,7 @@ npm run storybook
 ```
 
 **Stories**:
+
 - `FeedTimeline`: 10 variants (default, filtered, sorted, mobile, dark)
 - `FeedItem`: 13 variants (with images, videos, engagement states)
 - `FeedFilters`: 5 variants
@@ -408,6 +421,7 @@ npm run storybook
 - ✅ **Live Regions**: Announce updates
 
 **Testing**:
+
 ```bash
 npm run test:a11y
 ```
@@ -439,7 +453,7 @@ const subscribe = (filters) => {
     filters: [{ kinds: filters.kinds, authors: filters.authors }],
     onEvent: (event) => {
       const feedEvent = transformToFeedEvent(event);
-      setState(prev => ({ ...prev, events: [feedEvent, ...prev.events] }));
+      setState((prev) => ({ ...prev, events: [feedEvent, ...prev.events] }));
     },
   });
 };
@@ -489,21 +503,25 @@ const handleLike = async (event) => {
 ### Common Issues
 
 **Events not loading**:
+
 - Check NOSTR relay connection
 - Verify filter configuration
 - Check browser console for errors
 
 **Infinite scroll not working**:
+
 - Ensure `hasMore` is true
 - Check Intersection Observer support
 - Verify scroll container height
 
 **Images not displaying**:
+
 - Check CORS headers on image URLs
 - Verify image URLs are HTTPS
 - Check lazy loading support
 
 **Performance issues**:
+
 - Reduce pageSize (default: 20)
 - Enable virtual scrolling
 - Clear old events from cache

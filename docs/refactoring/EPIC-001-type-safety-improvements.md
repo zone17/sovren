@@ -37,11 +37,13 @@ Eliminate all remaining `any` types and enable stricter TypeScript configuration
 ## Technical Scope
 
 ### Packages Affected
+
 - `packages/frontend/src/` - Primary focus (20+ any types)
 - `packages/backend/src/` - Secondary (8+ any types)
 - `packages/shared/src/` - Tertiary (5+ any types)
 
 ### Key Areas
+
 1. **Event Handlers** - React event types often typed as `any`
 2. **API Responses** - External API responses need proper typing
 3. **NOSTR Events** - Custom event types need proper definitions
@@ -51,21 +53,25 @@ Eliminate all remaining `any` types and enable stricter TypeScript configuration
 ## Technical Approach
 
 ### Phase 1: Type Inventory (1-2 hours)
+
 - Scan codebase for all `any` types
 - Categorize by package and reason for `any`
 - Prioritize by impact and difficulty
 
 ### Phase 2: Replace Explicit `any` (2-3 hours)
+
 - Replace known types (event handlers, API responses)
 - Add proper generic constraints
 - Create missing type definitions
 
 ### Phase 3: Enable Strict Mode (1-2 hours)
+
 - Enable `strict: true` in tsconfig.json
 - Fix new errors revealed by strict mode
 - Update tests for new type requirements
 
 ### Phase 4: Validation (1 hour)
+
 - Run full type check
 - Run all tests
 - Generate type coverage report
@@ -74,20 +80,22 @@ Eliminate all remaining `any` types and enable stricter TypeScript configuration
 ## Dependencies
 
 ### Blockers
+
 - None (can start immediately)
 
 ### Related Work
+
 - May reveal issues in NOSTR service consolidation (Epic 003)
 - Will improve backend service refactoring (Epic 005)
 
 ## Risks & Mitigation
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Breaking changes to existing code | High | Medium | Comprehensive test suite will catch issues |
-| Build time increase | Low | Low | Monitor build performance, adjust as needed |
-| Third-party library type issues | Medium | Medium | Create custom type definitions as needed |
-| Team resistance to stricter types | Low | Low | Document benefits, provide examples |
+| Risk                              | Impact | Likelihood | Mitigation                                  |
+| --------------------------------- | ------ | ---------- | ------------------------------------------- |
+| Breaking changes to existing code | High   | Medium     | Comprehensive test suite will catch issues  |
+| Build time increase               | Low    | Low        | Monitor build performance, adjust as needed |
+| Third-party library type issues   | Medium | Medium     | Create custom type definitions as needed    |
+| Team resistance to stricter types | Low    | Low        | Document benefits, provide examples         |
 
 ## Estimated Effort
 

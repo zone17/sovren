@@ -152,10 +152,7 @@ export class RelayDiscoveryService {
    * @param pubkey - User's public key
    * @param relays - User's preferred relays
    */
-  public async storeUserPreferences(
-    pubkey: string,
-    relays: DiscoveredRelay[]
-  ): Promise<void> {
+  public async storeUserPreferences(pubkey: string, relays: DiscoveredRelay[]): Promise<void> {
     const preferences: UserRelayPreferences = {
       pubkey,
       relays,
@@ -171,7 +168,7 @@ export class RelayDiscoveryService {
    */
   public getBestRelays(count: number = 5): DiscoveredRelay[] {
     const relays = Array.from(this.discoveredRelays.values())
-      .filter(relay => relay.healthScore >= this.config.minHealthScore)
+      .filter((relay) => relay.healthScore >= this.config.minHealthScore)
       .sort((a, b) => b.healthScore - a.healthScore)
       .slice(0, count);
 

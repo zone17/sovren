@@ -31,37 +31,37 @@ const recoveryTime = new Gauge('recovery_time_seconds');
 export const options = {
   stages: [
     // Baseline load
-    { duration: '2m', target: 100 },   // Normal operation
+    { duration: '2m', target: 100 }, // Normal operation
 
     // First spike
     { duration: '30s', target: 1000 }, // Rapid spike to 1000
-    { duration: '1m', target: 1000 },  // Hold spike
-    { duration: '30s', target: 100 },  // Drop back to normal
+    { duration: '1m', target: 1000 }, // Hold spike
+    { duration: '30s', target: 100 }, // Drop back to normal
 
     // Recovery period
-    { duration: '2m', target: 100 },   // Monitor recovery
+    { duration: '2m', target: 100 }, // Monitor recovery
 
     // Second spike (larger)
     { duration: '30s', target: 1500 }, // Even larger spike
-    { duration: '1m', target: 1500 },  // Hold spike
-    { duration: '30s', target: 100 },  // Drop back to normal
+    { duration: '1m', target: 1500 }, // Hold spike
+    { duration: '30s', target: 100 }, // Drop back to normal
 
     // Final recovery
-    { duration: '2m', target: 100 },   // Monitor recovery
-    { duration: '30s', target: 0 },    // Ramp down
+    { duration: '2m', target: 100 }, // Monitor recovery
+    { duration: '30s', target: 0 }, // Ramp down
   ],
   thresholds: {
     // Spike-specific thresholds
-    'http_req_duration': ['p(95)<1000', 'p(99)<2000'],
-    'errors': ['rate<0.02'], // Allow 2% error rate during spikes
-    'http_req_failed': ['rate<0.02'],
-    'api_response_time': ['p(95)<1000'],
+    http_req_duration: ['p(95)<1000', 'p(99)<2000'],
+    errors: ['rate<0.02'], // Allow 2% error rate during spikes
+    http_req_failed: ['rate<0.02'],
+    api_response_time: ['p(95)<1000'],
 
     // Rate limiting should activate
-    'rate_limit_hits': ['count>0'],
+    rate_limit_hits: ['count>0'],
 
     // Most requests should still succeed
-    'successful_requests': ['count>0'],
+    successful_requests: ['count>0'],
   },
   noConnectionReuse: false,
   userAgent: 'K6SpikeTest/1.0',
@@ -80,7 +80,7 @@ let normalResponseTime = 0;
 function getHeaders(token = null) {
   const headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   };
 
   if (token) {
@@ -159,10 +159,9 @@ function spikeWorkload(token) {
     apiResponseTime.add(healthResponse.timings.duration);
 
     // User profile (cached, should be fast)
-    const profileResponse = http.get(
-      `${BASE_URL}${API_VERSION}/users/me`,
-      { headers: getHeaders(token) }
-    );
+    const profileResponse = http.get(`${BASE_URL}${API_VERSION}/users/me`, {
+      headers: getHeaders(token),
+    });
 
     const profileSuccess = check(profileResponse, {
       'profile: status is 200 or 429': (r) => r.status === 200 || r.status === 429,
@@ -181,10 +180,9 @@ function spikeWorkload(token) {
     profileSuccess ? successfulRequests.add(1) : failedRequests.add(1);
 
     // Content list (should handle load gracefully)
-    const contentResponse = http.get(
-      `${BASE_URL}${API_VERSION}/content?limit=10`,
-      { headers: getHeaders(token) }
-    );
+    const contentResponse = http.get(`${BASE_URL}${API_VERSION}/content?limit=10`, {
+      headers: getHeaders(token),
+    });
 
     const contentSuccess = check(contentResponse, {
       'content: status is 200, 429, or 503': (r) =>
@@ -210,10 +208,9 @@ function spikeWorkload(token) {
 
     if (scenario === 1) {
       // Analytics (can be slow/cached)
-      const analyticsResponse = http.get(
-        `${BASE_URL}${API_VERSION}/analytics/summary`,
-        { headers: getHeaders(token) }
-      );
+      const analyticsResponse = http.get(`${BASE_URL}${API_VERSION}/analytics/summary`, {
+        headers: getHeaders(token),
+      });
 
       check(analyticsResponse, {
         'analytics: completed or rate limited': (r) =>
@@ -227,10 +224,9 @@ function spikeWorkload(token) {
       apiResponseTime.add(analyticsResponse.timings.duration);
     } else if (scenario === 2) {
       // Search (can be throttled)
-      const searchResponse = http.get(
-        `${BASE_URL}${API_VERSION}/content/search?q=test`,
-        { headers: getHeaders(token) }
-      );
+      const searchResponse = http.get(`${BASE_URL}${API_VERSION}/content/search?q=test`, {
+        headers: getHeaders(token),
+      });
 
       check(searchResponse, {
         'search: completed or rate limited': (r) =>
@@ -280,8 +276,7 @@ export function setup() {
     baselineRequests.push(response.timings.duration);
   }
 
-  normalResponseTime =
-    baselineRequests.reduce((a, b) => a + b, 0) / baselineRequests.length;
+  normalResponseTime = baselineRequests.reduce((a, b) => a + b, 0) / baselineRequests.length;
 
   return {
     startTime: new Date().toISOString(),
@@ -300,9 +295,11 @@ export function handleSummary(data) {
   const summary = generateSpikeSummary(data);
 
   return {
-    'stdout': summary.text,
-    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/spike-test-results.json': JSON.stringify(data, null, 2),
-    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/spike-test-analysis.json': JSON.stringify(summary.analysis, null, 2),
+    stdout: summary.text,
+    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/spike-test-results.json':
+      JSON.stringify(data, null, 2),
+    '/Users/fp/Desktop/Sovren/packages/backend/performance/reports/spike-test-analysis.json':
+      JSON.stringify(summary.analysis, null, 2),
   };
 }
 

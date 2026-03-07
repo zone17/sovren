@@ -131,11 +131,11 @@ export const healthCheck = async (req: Request, res: Response) => {
     services: {
       database: await checkDatabase(),
       redis: await checkRedis(),
-      lightning: await checkLightning()
-    }
+      lightning: await checkLightning(),
+    },
   };
 
-  const isHealthy = Object.values(health.services).every(s => s === 'connected');
+  const isHealthy = Object.values(health.services).every((s) => s === 'connected');
 
   res.status(isHealthy ? 200 : 503).json(health);
 };
@@ -156,13 +156,13 @@ export const httpRequestDuration = new Histogram({
   name: 'http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
   labelNames: ['method', 'route', 'status_code'],
-  registers: [register]
+  registers: [register],
 });
 
 export const paymentCreated = new Counter({
   name: 'payments_created_total',
   help: 'Total number of payments created',
-  registers: [register]
+  registers: [register],
 });
 ```
 

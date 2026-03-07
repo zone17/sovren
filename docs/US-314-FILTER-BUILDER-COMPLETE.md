@@ -56,40 +56,46 @@ Successfully implemented a comprehensive, production-ready **NOSTR Filter Builde
 ### User Experience Features
 
 ✅ **Quick Presets**: 4 common filter patterns integrated
-   - User Notes (text notes from current user)
-   - Mentions (posts mentioning current user)
-   - Global Feed (recent posts from all users)
-   - Long Form (articles and long-form content)
+
+- User Notes (text notes from current user)
+- Mentions (posts mentioning current user)
+- Global Feed (recent posts from all users)
+- Long Form (articles and long-form content)
 
 ✅ **Template Management**:
-   - Save custom filters as named templates
-   - Load saved templates
-   - Delete templates
-   - LocalStorage persistence
+
+- Save custom filters as named templates
+- Load saved templates
+- Delete templates
+- LocalStorage persistence
 
 ✅ **Import/Export**:
-   - JSON import with validation
-   - JSON export with clipboard copy
-   - Live preview of filter JSON
+
+- JSON import with validation
+- JSON export with clipboard copy
+- Live preview of filter JSON
 
 ✅ **Real-time Validation**:
-   - Format validation (hex strings, timestamps, ranges)
-   - Business logic validation (time range consistency, limit bounds)
-   - Performance warnings (expensive queries, large limits)
-   - Optimization suggestions
+
+- Format validation (hex strings, timestamps, ranges)
+- Business logic validation (time range consistency, limit bounds)
+- Performance warnings (expensive queries, large limits)
+- Optimization suggestions
 
 ✅ **Accessibility (WCAG AA)**:
-   - Full keyboard navigation
-   - ARIA labels and roles
-   - Screen reader announcements
-   - Focus indicators
-   - Zero axe violations
+
+- Full keyboard navigation
+- ARIA labels and roles
+- Screen reader announcements
+- Focus indicators
+- Zero axe violations
 
 ✅ **Responsive Design**:
-   - Mobile-first approach (320px+)
-   - Tablet optimization (768px+)
-   - Desktop layout (1920px+)
-   - Touch-optimized controls
+
+- Mobile-first approach (320px+)
+- Tablet optimization (768px+)
+- Desktop layout (1920px+)
+- Touch-optimized controls
 
 ---
 
@@ -115,6 +121,7 @@ All imports use the consolidated `@shared/types/nostr` path.
 ![Component Interaction](https://github.com/sovren-project/sovren/blob/main/docs/architecture/diagrams/filter-builder/component-interaction.mmd)
 
 **Key Components**:
+
 - FilterBuilder (main component)
 - FilterField components (IDs, Authors, Kinds, Tags, TimeRange, Limit)
 - PresetSelector (CommonFilters integration)
@@ -127,6 +134,7 @@ All imports use the consolidated `@shared/types/nostr` path.
 ![Data Flow](https://github.com/sovren-project/sovren/blob/main/docs/architecture/diagrams/filter-builder/data-flow.mmd)
 
 **Flow Sequence**:
+
 1. User selects preset or modifies field
 2. FilterBuilder updates internal state
 3. NostrFilterBuilder constructs filter object
@@ -139,6 +147,7 @@ All imports use the consolidated `@shared/types/nostr` path.
 ![State Management](https://github.com/sovren-project/sovren/blob/main/docs/architecture/diagrams/filter-builder/state-management.mmd)
 
 **States**:
+
 - Empty: Initial state
 - BuildingFilter: User is constructing filter
 - Validating: Real-time validation in progress
@@ -153,6 +162,7 @@ All imports use the consolidated `@shared/types/nostr` path.
 ![UI Structure](https://github.com/sovren-project/sovren/blob/main/docs/architecture/diagrams/filter-builder/ui-structure.mmd)
 
 **Sections**:
+
 - Header (title, summary, reset button)
 - Validation Feedback (errors, warnings, suggestions)
 - Quick Presets (4 preset buttons)
@@ -240,17 +250,20 @@ All imports use the consolidated `@shared/types/nostr` path.
 ### 20+ Stories Created
 
 **Basic States**:
+
 - Default (empty)
 - With current user
 - With initial filter
 
 **Presets**:
+
 - User notes preset
 - Mentions preset
 - Global feed preset
 - Long-form content
 
 **Complex Filters**:
+
 - Multiple constraints
 - Event references
 - Pubkey references
@@ -260,20 +273,24 @@ All imports use the consolidated `@shared/types/nostr` path.
 - Multiple kinds
 
 **Special States**:
+
 - Empty filter (warnings)
 - Validation errors
 - Interactive example
 
 **Responsive**:
+
 - Mobile viewport
 - Tablet viewport
 - Desktop viewport
 
 **Theming**:
+
 - Dark mode
 - Custom styling
 
 Each story includes:
+
 - Description of use case
 - Code example
 - Visual rendering
@@ -402,6 +419,7 @@ export type { NostrFilter, NostrFilterBuilder, CommonFilters } from '@shared/typ
 ```
 
 **Total Lines of Code**:
+
 - Component: 1000+
 - Tests: 600+
 - Stories: 300+
@@ -414,12 +432,14 @@ export type { NostrFilter, NostrFilterBuilder, CommonFilters } from '@shared/typ
 ### State Management
 
 **React Hooks Used**:
+
 - `useState`: 15+ state variables
 - `useCallback`: 20+ memoized functions
 - `useEffect`: 3 side effects (templates, validation, parent callback)
 - `useMemo`: 3 computed values (filterJson, filterSummary, presets)
 
 **State Variables**:
+
 - `filter`: Current filter object (Partial<NostrFilter>)
 - `validation`: Real-time validation feedback
 - `idInput`, `authorInput`, etc.: Field input states
@@ -454,9 +474,9 @@ export type { NostrFilter, NostrFilterBuilder, CommonFilters } from '@shared/typ
 
 ```typescript
 interface FilterTemplate {
-  name: string;           // User-friendly name
-  filter: NostrFilter;    // Optimized filter object
-  created: number;        // Unix timestamp
+  name: string; // User-friendly name
+  filter: NostrFilter; // Optimized filter object
+  created: number; // Unix timestamp
 }
 
 // Stored as JSON array
@@ -464,6 +484,7 @@ localStorage.setItem('nostr-filter-templates', JSON.stringify(templates));
 ```
 
 **Error Handling**:
+
 - QuotaExceededError: Graceful degradation
 - Parse errors: Clear user feedback
 - Missing storage: Continue without templates
@@ -471,12 +492,14 @@ localStorage.setItem('nostr-filter-templates', JSON.stringify(templates));
 ### UI Components Used
 
 From `@/components/ui`:
+
 - **Button**: Actions, presets, add/remove
 - **Card**: Section containers
 - **Alert**: Validation feedback (errors, warnings, suggestions)
 - **Badge**: Chips for IDs, authors, tags
 
 All components support:
+
 - Theming via CSS variables
 - Dark mode
 - Responsive sizing
@@ -485,6 +508,7 @@ All components support:
 ### Icon Library
 
 **Lucide React Icons**:
+
 - `Plus`: Add items
 - `X`: Remove items
 - `Copy`: Clipboard copy
@@ -661,6 +685,7 @@ function AdvancedExample() {
 4. **Template Sync**: Templates only stored locally (no cloud sync)
 
 **Mitigations**:
+
 - Npub decoding: Planned for future update when nostr-tools is integrated
 - Search field: Marked for US-316 (future enhancement)
 - Custom kinds: Users can still type any kind number

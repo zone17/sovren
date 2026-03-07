@@ -4240,6 +4240,78 @@ grep -n 'ProtectedRoute' packages/frontend/src/App.tsx
 
 ---
 
+## 116. Response Key Alignment Between Backend and Frontend
+
+**Recurrence:** 1 P1 in Slice 8. Backend returned `{ isFollowing }`, frontend read `res.following`. Follow button always showed "Follow" even when following.
+
+### Fix
+
+Define response types in `@shared/types/` as single source of truth. Both backend route and frontend API function import the same type.
+
+### Checklist
+
+- [ ] API response shape defined in `@shared/types/`
+- [ ] Backend route handler returns the shared type
+- [ ] Frontend API function types the response with the shared type
+- [ ] At least one E2E test exercises the full round-trip
+
+---
+
+## 117. DI Lazy Singleton Eager Init for Side-Effect Services
+
+**Recurrence:** 1 P1 in Slice 8. NotificationPersistenceService subscribed to events in its factory, but nothing resolved it at startup — notifications silently never worked.
+
+### Fix
+
+```typescript
+// In server startup, AFTER DI container configured:
+container.resolve(TYPES.NotificationPersistenceService); // force eager init
+```
+
+### Detection
+
+Search for `subscribeToEvents`, `setInterval`, `connect()`, or `startListening()` in DI singleton factories. Any side-effect-producing factory needs explicit resolution at startup.
+
+---
+
+## 118. Token Efficiency for Review Remediation Teams
+
+**Recurrence:** Slice 8 scored 6.2/10 on token efficiency. ~25-30% waste from over-sized team and unnecessary planning artifacts.
+
+### Optimal Team Size
+
+| Findings | Agents                     | Why                               |
+| -------- | -------------------------- | --------------------------------- |
+| <8       | 1 (solo)                   | Agent briefing overhead > savings |
+| 8-20     | 2 (backend + frontend)     | Sweet spot: zero conflicts        |
+| 20+      | 3+ (add domain specialist) | Only when 3+ distinct domains     |
+
+### Efficiency Rules
+
+- Skip remediation plan file — todos already contain all needed info
+- Add `npm run lint` to agent briefs (saves follow-up commit)
+- Require agents test their own code before declaring complete
+- 9 review agents but only 2 fix agents (review = embarrassingly parallel; fixing has dependencies)
+
+---
+
+## 119. Utility Extraction Threshold (Refined)
+
+**Recurrence:** 3 utilities duplicated in Slice 8 (getUserIdByPubkey x3, stripControlChars x2, emitEvent x4). Refines pattern #14.
+
+### Decision Matrix
+
+| Copies | LOC per Copy | Total Duplicated LOC | Action                        |
+| ------ | ------------ | -------------------- | ----------------------------- |
+| 2      | <10          | <20                  | Leave inline                  |
+| 2      | >10          | >20                  | Extract to `src/utils/`       |
+| 3+     | any          | any                  | Always extract                |
+| 4+     | >15          | >60                  | Extract + add to DI container |
+
+**Key signal:** If `LOC x copies > 40`, always extract.
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -4390,3 +4462,9 @@ CONTEXT TO LOAD:
 | POM has 10+ locators, spec uses 1                | 113       | common-solutions.md  |
 | Auth E2E spec only checks URL, not content       | 114       | common-solutions.md  |
 | New ProtectedRoute missing requireRole           | 115       | common-solutions.md  |
+| Backend/frontend response key mismatch           | 116       | common-solutions.md  |
+| DI lazy singleton side-effects never fire        | 117       | common-solutions.md  |
+| Token waste from over-sized remediation team     | 118       | common-solutions.md  |
+| Same utility in 2+ files (refined threshold)     | 119       | common-solutions.md  |
+| RLS INSERT WITH CHECK (TRUE) too permissive      | 16        | critical-patterns.md |
+| Trigger COALESCE race + missing SECURITY DEFINER | 17        | critical-patterns.md |

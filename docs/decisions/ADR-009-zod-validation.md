@@ -8,6 +8,7 @@
 ## Context
 
 Input validation was inconsistent across the codebase:
+
 - Manual validation logic scattered throughout controllers
 - No runtime type checking for API requests
 - Duplicate validation code across frontend and backend
@@ -19,6 +20,7 @@ Input validation was inconsistent across the codebase:
 We will use **Zod** for all runtime schema validation and type inference.
 
 **Implementation**:
+
 ```typescript
 import { z } from 'zod';
 
@@ -46,6 +48,7 @@ if (!result.success) {
 ```
 
 **Key Benefits**:
+
 1. **Type Inference**: Schemas generate TypeScript types automatically
 2. **Runtime Safety**: Validates data at runtime, not just compile time
 3. **Schema Reuse**: Same schema for frontend and backend
@@ -98,14 +101,11 @@ const UserSchema = z.object({
 const UserListSchema = z.array(UserSchema);
 
 // Union types
-const PaymentMethodSchema = z.union([
-  z.literal('lightning'),
-  z.literal('onchain'),
-]);
+const PaymentMethodSchema = z.union([z.literal('lightning'), z.literal('onchain')]);
 
 // Transform and refine
-const DateSchema = z.string().transform(str => new Date(str));
-const PositiveSchema = z.number().refine(n => n > 0, {
+const DateSchema = z.string().transform((str) => new Date(str));
+const PositiveSchema = z.number().refine((n) => n > 0, {
   message: 'Must be positive',
 });
 ```

@@ -3,6 +3,7 @@ import {
   useCircles,
   useSuggestedCircles,
   useJoinCircle,
+  useLeaveCircle,
   useCreateCircle,
 } from '../hooks/useCircles';
 import type { CircleWithMemberCount } from '../types/community';
@@ -19,7 +20,22 @@ const CirclesBrowser: React.FC = () => {
   const { data: myCircles = [], isLoading: loadingMine } = useCircles();
   const { data: suggested = [], isLoading: loadingSuggested } = useSuggestedCircles();
   const joinMutation = useJoinCircle();
+  const leaveMutation = useLeaveCircle();
   const createMutation = useCreateCircle();
+  const [leavingId, setLeavingId] = useState<string | null>(null);
+  const leaveInFlightRef = useRef(false);
+
+  const handleLeave = (circleId: string) => {
+    if (leaveInFlightRef.current) return;
+    leaveInFlightRef.current = true;
+    setLeavingId(circleId);
+    leaveMutation.mutate(circleId, {
+      onSettled: () => {
+        leaveInFlightRef.current = false;
+        setLeavingId(null);
+      },
+    });
+  };
 
   const handleJoin = (circleId: string) => {
     if (joinInFlightRef.current) return;
@@ -150,7 +166,12 @@ const CirclesBrowser: React.FC = () => {
       {myCircles.length > 0 && (
         <section aria-label="My circles">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">My Circles</h3>
-          <CircleList circles={myCircles} onJoin={null} />
+          <CircleList
+            circles={myCircles}
+            onJoin={null}
+            onLeave={handleLeave}
+            leavingId={leavingId ?? undefined}
+          />
         </section>
       )}
 
@@ -166,7 +187,7 @@ const CirclesBrowser: React.FC = () => {
         </section>
       )}
 
-      {myCircles.length === 0 && suggested.length === 0 && (
+      {myCircles.length === 0 && suggested.length === 0 && !isLoading && (
         <p className="text-sm text-gray-500 text-center py-8">
           No circles yet. Create one to get started!
         </p>
@@ -179,9 +200,17 @@ interface CircleListProps {
   circles: CircleWithMemberCount[];
   onJoin: ((id: string) => void) | null;
   joiningId?: string;
+  onLeave?: (id: string) => void;
+  leavingId?: string;
 }
 
-const CircleList: React.FC<CircleListProps> = ({ circles, onJoin, joiningId }) => (
+const CircleList: React.FC<CircleListProps> = ({
+  circles,
+  onJoin,
+  joiningId,
+  onLeave,
+  leavingId,
+}) => (
   <ul className="space-y-3" role="list">
     {circles.map((circle) => (
       <li
@@ -217,6 +246,17 @@ const CircleList: React.FC<CircleListProps> = ({ circles, onJoin, joiningId }) =
               : joiningId === circle.id
                 ? 'Joining...'
                 : 'Join'}
+          </button>
+        )}
+        {onLeave && (
+          <button
+            onClick={() => onLeave(circle.id)}
+            disabled={leavingId != null}
+            aria-busy={leavingId === circle.id}
+            className="shrink-0 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label={`Leave ${circle.name}`}
+          >
+            {leavingId === circle.id ? 'Leaving...' : 'Leave'}
           </button>
         )}
       </li>

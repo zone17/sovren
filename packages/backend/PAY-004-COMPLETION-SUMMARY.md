@@ -23,12 +23,14 @@ Implemented comprehensive invoice expiration cleanup mechanism with automatic ba
 **Core Features Implemented**:
 
 #### Background Job Scheduling
+
 - ✅ Periodic checks every 5 minutes (configurable)
 - ✅ Automatic startup on service initialization
 - ✅ Safe start/stop mechanisms (prevents duplicate schedulers)
 - ✅ Graceful shutdown cleanup
 
 #### Invoice Expiration Logic
+
 - ✅ Queries database for invoices past expiration time
 - ✅ Batch processing (100 invoices per run, configurable)
 - ✅ Concurrent check prevention (mutex pattern)
@@ -36,18 +38,21 @@ Implemented comprehensive invoice expiration cleanup mechanism with automatic ba
 - ✅ Email notifications to users
 
 #### Lightning Node Resource Cleanup
+
 - ✅ **NEW**: Cancels/deletes expired invoices from Lightning node
 - ✅ Best-effort cleanup (doesn't fail if Lightning node unavailable)
 - ✅ Tracks cleanup metrics separately
 - ✅ Optional dependency (service works without it)
 
 #### Analytics Integration
+
 - ✅ **NEW**: Emits analytics events when invoices expire
 - ✅ Tracks: payment_id, user_id, amount, currency, expiration duration
 - ✅ Optional dependency (gracefully degrades if unavailable)
 - ✅ Comprehensive event metadata for analysis
 
 #### Configuration
+
 - ✅ **NEW**: Expiration window (default: 24 hours)
 - ✅ Check interval (default: 5 minutes)
 - ✅ Batch size (default: 100)
@@ -55,6 +60,7 @@ Implemented comprehensive invoice expiration cleanup mechanism with automatic ba
 - ✅ All services are optional dependencies
 
 #### Monitoring & Metrics
+
 - ✅ Total checks performed
 - ✅ Total invoices expired
 - ✅ Total failures
@@ -74,11 +80,13 @@ Implemented comprehensive invoice expiration cleanup mechanism with automatic ba
 **Test Categories** (28 total tests):
 
 #### Initialization Tests (3 tests)
+
 - ✅ Default configuration
 - ✅ Custom configuration
 - ✅ Auto-start scheduler
 
 #### Expiration Logic Tests (8 tests)
+
 - ✅ Find and expire expired invoices
 - ✅ Handle multiple expired invoices
 - ✅ Handle no expired invoices
@@ -89,31 +97,38 @@ Implemented comprehensive invoice expiration cleanup mechanism with automatic ba
 - ✅ Batch size limit compliance
 
 #### Scheduler Tests (3 tests)
+
 - ✅ Start automatic checks
 - ✅ Prevent duplicate schedulers
 - ✅ Stop scheduler
 
 #### Manual Expiration Tests (3 tests)
+
 - ✅ Manually expire specific payment
 - ✅ Error for non-existent payment
 - ✅ Error for non-PENDING payment
 
 #### Metrics Tests (1 test)
+
 - ✅ Accurate metrics reporting
 
 #### Shutdown Tests (1 test)
+
 - ✅ Graceful shutdown with cleanup
 
 #### Analytics Integration Tests (3 tests)
+
 - ✅ Emit analytics event when invoice expires
 - ✅ Work without analytics service (optional)
 - ✅ Continue processing if analytics fails
 
 #### Configuration Tests (2 tests)
+
 - ✅ Custom expiration window
 - ✅ Default 24-hour expiration window
 
 #### Lightning Node Cleanup Tests (4 tests)
+
 - ✅ Cancel invoice on Lightning node when expiring
 - ✅ Continue processing if Lightning cleanup fails
 - ✅ Work without Lightning node service (optional)
@@ -123,16 +138,16 @@ Implemented comprehensive invoice expiration cleanup mechanism with automatic ba
 
 ## 🏆 QUALITY GATES ACHIEVED
 
-| Quality Gate | Requirement | Achieved | Evidence |
-|--------------|-------------|----------|----------|
-| Test Coverage | ≥95% | **95.91%** | InvoiceExpirationService.ts coverage report |
-| All Tests Passing | 100% | **100%** (28/28) | Jest test results |
-| No Memory Leaks | Clean | ✅ PASS | Service cleanup in afterEach, no open handles |
-| Proper Cleanup Verified | Clean | ✅ PASS | Shutdown method clears intervals |
-| Job Runs Reliably | Stable | ✅ PASS | Tested with auto-schedule |
-| Analytics Events | Emit on expiration | ✅ PASS | 3 analytics tests passing |
-| Lightning Cleanup | Cancel expired invoices | ✅ PASS | 4 Lightning cleanup tests passing |
-| Configuration | 24h default | ✅ PASS | Configuration tests passing |
+| Quality Gate            | Requirement             | Achieved         | Evidence                                      |
+| ----------------------- | ----------------------- | ---------------- | --------------------------------------------- |
+| Test Coverage           | ≥95%                    | **95.91%**       | InvoiceExpirationService.ts coverage report   |
+| All Tests Passing       | 100%                    | **100%** (28/28) | Jest test results                             |
+| No Memory Leaks         | Clean                   | ✅ PASS          | Service cleanup in afterEach, no open handles |
+| Proper Cleanup Verified | Clean                   | ✅ PASS          | Shutdown method clears intervals              |
+| Job Runs Reliably       | Stable                  | ✅ PASS          | Tested with auto-schedule                     |
+| Analytics Events        | Emit on expiration      | ✅ PASS          | 3 analytics tests passing                     |
+| Lightning Cleanup       | Cancel expired invoices | ✅ PASS          | 4 Lightning cleanup tests passing             |
+| Configuration           | 24h default             | ✅ PASS          | Configuration tests passing                   |
 
 ---
 
@@ -159,13 +174,13 @@ interface InvoiceExpirationConfig {
   supabase: SupabaseClient;
   stateMachine: PaymentStateMachine;
   emailService: EmailService;
-  analyticsService?: AnalyticsService;           // NEW: Optional
-  lightningNodeService?: LightningNodeService;   // NEW: Optional
+  analyticsService?: AnalyticsService; // NEW: Optional
+  lightningNodeService?: LightningNodeService; // NEW: Optional
   logger?: Logger;
-  checkIntervalMs?: number;                       // Default: 5 minutes
-  batchSize?: number;                             // Default: 100
-  autoSchedule?: boolean;                         // Default: true
-  expirationWindowSeconds?: number;               // NEW: Default: 24 hours
+  checkIntervalMs?: number; // Default: 5 minutes
+  batchSize?: number; // Default: 100
+  autoSchedule?: boolean; // Default: true
+  expirationWindowSeconds?: number; // NEW: Default: 24 hours
 }
 ```
 
@@ -182,24 +197,26 @@ interface InvoiceExpirationConfig {
 
 ## 📈 PERFORMANCE CHARACTERISTICS
 
-| Metric | Target | Achieved |
-|--------|--------|----------|
-| Check interval | 5 minutes | Configurable, default 5 min |
-| Batch size | 100 invoices | Configurable, default 100 |
-| Concurrent checks | Prevented | Mutex pattern implemented |
-| Memory leaks | None | Proper cleanup verified |
-| Test execution time | <5 seconds | ~2 seconds |
+| Metric              | Target       | Achieved                    |
+| ------------------- | ------------ | --------------------------- |
+| Check interval      | 5 minutes    | Configurable, default 5 min |
+| Batch size          | 100 invoices | Configurable, default 100   |
+| Concurrent checks   | Prevented    | Mutex pattern implemented   |
+| Memory leaks        | None         | Proper cleanup verified     |
+| Test execution time | <5 seconds   | ~2 seconds                  |
 
 ---
 
 ## 🔄 INTEGRATION POINTS
 
 ### Existing Services
+
 - **PaymentStateMachine**: State transitions for expiration
 - **EmailService**: User notifications
 - **SupabaseClient**: Database queries
 
 ### New Services (Optional)
+
 - **AnalyticsService**: Event tracking for business intelligence
 - **LightningNodeService**: Resource cleanup on Lightning Network node
 
@@ -208,6 +225,7 @@ interface InvoiceExpirationConfig {
 ## 📁 FILES CREATED/MODIFIED
 
 ### Modified
+
 1. `/packages/backend/src/services/payment/InvoiceExpirationService.ts`
    - Added `AnalyticsService` interface
    - Added `LightningNodeService` interface
@@ -285,13 +303,14 @@ Time:        ~2 seconds
 ## 🚀 USAGE EXAMPLE
 
 ### Basic Usage (Existing Functionality)
+
 ```typescript
 const expirationService = new InvoiceExpirationService({
   supabase,
   stateMachine,
   emailService,
   logger,
-  checkIntervalMs: 5 * 60 * 1000,  // 5 minutes
+  checkIntervalMs: 5 * 60 * 1000, // 5 minutes
   batchSize: 100,
   autoSchedule: true,
 });
@@ -301,18 +320,19 @@ const expirationService = new InvoiceExpirationService({
 ```
 
 ### Advanced Usage (With All Features)
+
 ```typescript
 const expirationService = new InvoiceExpirationService({
   supabase,
   stateMachine,
   emailService,
-  analyticsService,          // NEW: Track expiration events
-  lightningNodeService,      // NEW: Clean up Lightning resources
+  analyticsService, // NEW: Track expiration events
+  lightningNodeService, // NEW: Clean up Lightning resources
   logger,
   checkIntervalMs: 5 * 60 * 1000,
   batchSize: 100,
   autoSchedule: true,
-  expirationWindowSeconds: 24 * 60 * 60,  // NEW: 24 hours
+  expirationWindowSeconds: 24 * 60 * 60, // NEW: 24 hours
 });
 
 // Monitor performance
@@ -333,18 +353,21 @@ await expirationService.shutdown();
 ## 📊 MONITORING RECOMMENDATIONS
 
 ### Key Metrics to Track
+
 1. **Expiration Rate**: `metrics.totalExpired / metrics.totalChecks`
 2. **Failure Rate**: `metrics.totalFailed / (metrics.totalExpired + metrics.totalFailed)`
 3. **Cleanup Rate**: `metrics.totalCleanedUp / metrics.totalExpired`
 4. **Check Duration**: `metrics.lastCheckDuration` (should be < 1000ms)
 
 ### Alerts to Configure
+
 - Failure rate > 5% → Investigate state machine or email service
 - Cleanup rate < 95% → Lightning node connectivity issues
 - Check duration > 5000ms → Database performance degradation
 - No checks in 10 minutes → Scheduler crashed (restart service)
 
 ### Dashboard Queries
+
 ```typescript
 // Get service health
 const metrics = expirationService.getMetrics();
@@ -363,26 +386,31 @@ const health = {
 ### Design Decisions
 
 **Why Analytics Events?**
+
 - Business intelligence requires tracking invoice expiration patterns
 - Helps identify optimal expiration window for different use cases
 - Enables revenue loss analysis from expired invoices
 
 **Why Lightning Node Cleanup?**
+
 - Prevents resource leaks on Lightning node
 - Expired invoices consume memory and may affect performance
 - Some Lightning implementations require manual cleanup
 
 **Why Configurable Expiration Window?**
+
 - Different invoice types may have different expiration requirements
 - Allows A/B testing of expiration times
 - Compliance requirements may vary by jurisdiction
 
 **Why Optional Dependencies?**
+
 - Service should work without analytics (analytics is bonus, not critical)
 - Lightning cleanup is best-effort (invoice already expired in DB)
 - Email is required (users must be notified)
 
 ### Edge Cases Handled
+
 1. **Concurrent checks**: Mutex pattern prevents duplicate processing
 2. **Analytics failure**: Logged but doesn't fail invoice expiration
 3. **Lightning node unavailable**: Warning logged, expiration continues
@@ -393,24 +421,25 @@ const health = {
 
 ## ✅ ACCEPTANCE CRITERIA VERIFICATION
 
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| Create background job/cron service | ✅ COMPLETE | `start()` method with setInterval |
-| Query database for expired invoices | ✅ COMPLETE | `findExpiredPayments()` method |
-| Update invoice status to 'expired' | ✅ COMPLETE | PaymentStateMachine integration |
-| Clean up Lightning node resources | ✅ COMPLETE | `lightningNodeService.cancelInvoice()` |
-| Emit analytics events | ✅ COMPLETE | `analyticsService.track()` |
-| Configurable expiration window (24h default) | ✅ COMPLETE | `expirationWindowSeconds` config |
-| Job scheduling (every 5 minutes) | ✅ COMPLETE | `checkIntervalMs` config |
-| Batching (100 invoices per run) | ✅ COMPLETE | `batchSize` config |
-| Job monitoring/logging | ✅ COMPLETE | Comprehensive logging + metrics |
-| Tests ≥95% coverage | ✅ COMPLETE | 95.91% coverage |
+| Requirement                                  | Status      | Evidence                               |
+| -------------------------------------------- | ----------- | -------------------------------------- |
+| Create background job/cron service           | ✅ COMPLETE | `start()` method with setInterval      |
+| Query database for expired invoices          | ✅ COMPLETE | `findExpiredPayments()` method         |
+| Update invoice status to 'expired'           | ✅ COMPLETE | PaymentStateMachine integration        |
+| Clean up Lightning node resources            | ✅ COMPLETE | `lightningNodeService.cancelInvoice()` |
+| Emit analytics events                        | ✅ COMPLETE | `analyticsService.track()`             |
+| Configurable expiration window (24h default) | ✅ COMPLETE | `expirationWindowSeconds` config       |
+| Job scheduling (every 5 minutes)             | ✅ COMPLETE | `checkIntervalMs` config               |
+| Batching (100 invoices per run)              | ✅ COMPLETE | `batchSize` config                     |
+| Job monitoring/logging                       | ✅ COMPLETE | Comprehensive logging + metrics        |
+| Tests ≥95% coverage                          | ✅ COMPLETE | 95.91% coverage                        |
 
 ---
 
 ## 🔄 NEXT STEPS
 
 ### Integration Tasks
+
 1. Create `AnalyticsService` implementation (or integrate with existing)
 2. Create `LightningNodeService` implementation (LND/CLN/Eclair)
 3. Deploy to staging environment
@@ -418,6 +447,7 @@ const health = {
 5. Deploy to production
 
 ### Future Enhancements (Not in Scope)
+
 - Webhook notifications on expiration
 - Configurable expiration window per invoice type
 - Retry logic for failed cleanups
@@ -435,6 +465,7 @@ const health = {
 **Ready for Production**: ✅ **YES**
 
 **Dependencies**:
+
 - PAY-001: Payment Verification ✅ Complete
 - PAY-002: Race Condition Handling ✅ Complete
 - PAY-003: Webhook Signature Verification ✅ Complete

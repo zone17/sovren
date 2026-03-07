@@ -49,46 +49,46 @@ export type NostrKeyPair = z.infer<typeof NostrKeyPairSchema>;
  * Entropy Sources for Key Generation
  */
 export enum NostrEntropySource {
-  WEB_CRYPTO_API = 'web_crypto_api',      // window.crypto.getRandomValues
-  SECURE_RANDOM = 'secure_random',        // Node crypto.randomBytes
-  HARDWARE_RNG = 'hardware_rng',          // Hardware random number generator
-  USER_INPUT = 'user_input',              // User-provided entropy
-  COMBINED = 'combined',                  // Multiple sources combined
+  WEB_CRYPTO_API = 'web_crypto_api', // window.crypto.getRandomValues
+  SECURE_RANDOM = 'secure_random', // Node crypto.randomBytes
+  HARDWARE_RNG = 'hardware_rng', // Hardware random number generator
+  USER_INPUT = 'user_input', // User-provided entropy
+  COMBINED = 'combined', // Multiple sources combined
 }
 
 /**
  * Key Storage Types
  */
 export enum NostrKeyStorageType {
-  INDEXED_DB = 'indexed_db',              // Browser IndexedDB
-  LOCAL_STORAGE = 'local_storage',        // Browser localStorage (not recommended)
-  SESSION_STORAGE = 'session_storage',    // Browser sessionStorage
-  MEMORY_ONLY = 'memory_only',            // RAM only (no persistence)
-  HARDWARE_WALLET = 'hardware_wallet',    // Hardware wallet device
+  INDEXED_DB = 'indexed_db', // Browser IndexedDB
+  LOCAL_STORAGE = 'local_storage', // Browser localStorage (not recommended)
+  SESSION_STORAGE = 'session_storage', // Browser sessionStorage
+  MEMORY_ONLY = 'memory_only', // RAM only (no persistence)
+  HARDWARE_WALLET = 'hardware_wallet', // Hardware wallet device
   BROWSER_EXTENSION = 'browser_extension', // Browser extension (Alby, nos2x)
-  SECURE_ENCLAVE = 'secure_enclave',      // OS-level secure storage
+  SECURE_ENCLAVE = 'secure_enclave', // OS-level secure storage
 }
 
 /**
  * Key Backup Methods
  */
 export enum NostrKeyBackupMethod {
-  MNEMONIC_PHRASE = 'mnemonic_phrase',    // BIP-39 mnemonic
-  SEED_PHRASE = 'seed_phrase',            // Seed phrase
-  ENCRYPTED_FILE = 'encrypted_file',      // Encrypted JSON/text file
-  QR_CODE = 'qr_code',                    // QR code encoding
-  HARDWARE_BACKUP = 'hardware_backup',    // Hardware device backup
-  PAPER_WALLET = 'paper_wallet',          // Printed backup
-  CLOUD_ENCRYPTED = 'cloud_encrypted',    // Encrypted cloud storage
+  MNEMONIC_PHRASE = 'mnemonic_phrase', // BIP-39 mnemonic
+  SEED_PHRASE = 'seed_phrase', // Seed phrase
+  ENCRYPTED_FILE = 'encrypted_file', // Encrypted JSON/text file
+  QR_CODE = 'qr_code', // QR code encoding
+  HARDWARE_BACKUP = 'hardware_backup', // Hardware device backup
+  PAPER_WALLET = 'paper_wallet', // Printed backup
+  CLOUD_ENCRYPTED = 'cloud_encrypted', // Encrypted cloud storage
 }
 
 /**
  * Key Security Levels
  */
 export enum NostrKeySecurityLevel {
-  BASIC = 'basic',                        // Standard encryption
-  ENHANCED = 'enhanced',                  // Hardware-backed encryption
-  MAXIMUM = 'maximum',                    // Multi-factor + hardware
+  BASIC = 'basic', // Standard encryption
+  ENHANCED = 'enhanced', // Hardware-backed encryption
+  MAXIMUM = 'maximum', // Multi-factor + hardware
 }
 
 /**
@@ -298,7 +298,9 @@ export const NostrKeySecurityMonitoringSchema = z.object({
   ]),
   severity: z.enum(['low', 'medium', 'high', 'critical']),
   description: z.string().min(1),
-  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+  metadata: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+    .optional(),
   resolved: z.boolean().default(false),
   resolvedAt: z.number().optional(),
   resolvedBy: z.string().optional(),

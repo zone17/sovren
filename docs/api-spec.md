@@ -41,6 +41,7 @@ All responses follow a consistent envelope:
 ### Authentication
 
 All authenticated endpoints require:
+
 ```
 Authorization: Bearer <JWT_TOKEN>
 ```
@@ -50,21 +51,22 @@ JWT tokens are obtained via the NOSTR challenge-response flow and expire after 2
 ### Rate Limiting
 
 Rate limit headers are returned on all responses:
+
 - `X-RateLimit-Limit`
 - `X-RateLimit-Remaining`
 - `X-RateLimit-Reset`
 
 ### Error Codes
 
-| HTTP Status | Code | Description |
-|------------|------|-------------|
-| 400 | `VALIDATION_ERROR` | Request body/params failed Zod validation |
-| 401 | `AUTHENTICATION_ERROR` | Missing or invalid JWT token |
-| 401 | `TOKEN_EXPIRED` | JWT token has expired |
-| 403 | `FORBIDDEN` | Insufficient role/permissions |
-| 404 | `NOT_FOUND` | Resource not found |
-| 429 | `RATE_LIMIT_EXCEEDED` | Too many requests |
-| 500 | `INTERNAL_ERROR` | Server error (details hidden in production) |
+| HTTP Status | Code                   | Description                                 |
+| ----------- | ---------------------- | ------------------------------------------- |
+| 400         | `VALIDATION_ERROR`     | Request body/params failed Zod validation   |
+| 401         | `AUTHENTICATION_ERROR` | Missing or invalid JWT token                |
+| 401         | `TOKEN_EXPIRED`        | JWT token has expired                       |
+| 403         | `FORBIDDEN`            | Insufficient role/permissions               |
+| 404         | `NOT_FOUND`            | Resource not found                          |
+| 429         | `RATE_LIMIT_EXCEEDED`  | Too many requests                           |
+| 500         | `INTERNAL_ERROR`       | Server error (details hidden in production) |
 
 ---
 
@@ -79,6 +81,7 @@ Rate limit: 10 requests / 15 minutes per IP
 **Request:** No body required.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -98,6 +101,7 @@ Rate limit: 10 requests / 15 minutes per IP
 Rate limit: 10 requests / 15 minutes per IP
 
 **Request:**
+
 ```json
 {
   "nostr_pubkey": "hex-64-char-public-key",
@@ -109,6 +113,7 @@ Rate limit: 10 requests / 15 minutes per IP
 ```
 
 **Validation:**
+
 - `nostr_pubkey`: Hex string, exactly 64 characters (`/^[0-9a-fA-F]{64}$/`)
 - `challenge`: Non-empty string
 - `timestamp`: Number
@@ -116,6 +121,7 @@ Rate limit: 10 requests / 15 minutes per IP
 - `role`: Optional, defaults to `"supporter"`
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -132,6 +138,7 @@ Rate limit: 10 requests / 15 minutes per IP
 ```
 
 **Error Responses:**
+
 - `400 VALIDATION_ERROR`: Invalid pubkey format, missing fields
 - `401 AUTHENTICATION_ERROR`: Invalid or expired challenge/signature
 
@@ -142,6 +149,7 @@ Rate limit: 10 requests / 15 minutes per IP
 **Request:** No body. JWT token in Authorization header.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -157,6 +165,7 @@ Rate limit: 10 requests / 15 minutes per IP
 **`GET /api/auth/verify`** (Authenticated)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -178,6 +187,7 @@ Rate limit: 10 requests / 15 minutes per IP
 **`POST /api/auth/logout`** (Optional auth)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -193,6 +203,7 @@ Rate limit: 10 requests / 15 minutes per IP
 **`GET /api/auth/stats`** (Authenticated, role=admin)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -210,6 +221,7 @@ Rate limit: 10 requests / 15 minutes per IP
 **`GET /api/auth/health`**
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -233,6 +245,7 @@ Rate limit: 10 requests / 15 minutes per IP
 Rate limit: Content publish rate
 
 **Request:**
+
 ```json
 {
   "title": "My Premium Article",
@@ -251,6 +264,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -275,6 +289,7 @@ Rate limit: Content publish rate
 **`POST /api/v1/content/moderate`** (Authenticated, Creator only)
 
 **Request:**
+
 ```json
 {
   "content_id": "uuid",
@@ -284,6 +299,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -312,6 +328,7 @@ Rate limit: Content publish rate
 | `sort` | string | No | "relevance" | Sort field |
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -328,7 +345,14 @@ Rate limit: Content publish rate
       "published_at": "2026-02-10T00:00:00Z"
     }
   ],
-  "pagination": { "page": 1, "limit": 20, "total": 50, "totalPages": 3, "hasNext": true, "hasPrev": false }
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 50,
+    "totalPages": 3,
+    "hasNext": true,
+    "hasPrev": false
+  }
 }
 ```
 
@@ -343,6 +367,7 @@ Rate limit: Content publish rate
 | `category` | string | No | - | Category filter |
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -362,6 +387,7 @@ Rate limit: Content publish rate
 **`GET /api/v1/content/analytics/:id`** (Authenticated)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -387,6 +413,7 @@ Rate limit: Content publish rate
 **`GET /api/v1/content/versions/:id`** (Authenticated)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -406,6 +433,7 @@ Rate limit: Content publish rate
 **`POST /api/v1/content/versions/:id/revert`** (Authenticated, Creator only)
 
 **Request:**
+
 ```json
 {
   "target_version": 2
@@ -413,6 +441,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -433,6 +462,7 @@ Rate limit: Content publish rate
 **`GET /api/v1/users/profile/:id`** (Optional auth)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -465,6 +495,7 @@ Rate limit: Content publish rate
 **`PUT /api/v1/users/profile/:id`** (Authenticated, own profile only)
 
 **Request:**
+
 ```json
 {
   "display_name": "Sophia Creates",
@@ -475,6 +506,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -492,6 +524,7 @@ Rate limit: Content publish rate
 **`GET /api/v1/users/preferences/:id`** (Authenticated)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -527,12 +560,21 @@ Rate limit: Content publish rate
 **`GET /api/v1/users/activity/:id`** (Authenticated)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
   "data": [
-    { "type": "new_post", "metadata": { "content_id": "uuid" }, "created_at": "2026-02-11T00:00:00Z" },
-    { "type": "support_received", "metadata": { "amount_sats": 5000 }, "created_at": "2026-02-10T00:00:00Z" }
+    {
+      "type": "new_post",
+      "metadata": { "content_id": "uuid" },
+      "created_at": "2026-02-11T00:00:00Z"
+    },
+    {
+      "type": "support_received",
+      "metadata": { "amount_sats": 5000 },
+      "created_at": "2026-02-10T00:00:00Z"
+    }
   ]
 }
 ```
@@ -542,6 +584,7 @@ Rate limit: Content publish rate
 **`POST /api/v1/users/relationships/follow`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "target_user_id": "uuid"
@@ -549,6 +592,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -565,6 +609,7 @@ Rate limit: Content publish rate
 **`DELETE /api/v1/users/relationships/unfollow`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "target_user_id": "uuid"
@@ -576,6 +621,7 @@ Rate limit: Content publish rate
 **`GET /api/v1/users/analytics/:id`** (Authenticated)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -602,6 +648,7 @@ Rate limit: Content publish rate
 **`POST /api/v1/payments/invoices`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "amount_sats": 5000,
@@ -614,6 +661,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -634,6 +682,7 @@ Rate limit: Content publish rate
 **`GET /api/v1/payments/invoices/:id`** (Authenticated)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -654,6 +703,7 @@ Rate limit: Content publish rate
 **`POST /api/v1/payments/invoices/:id/pay`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "payment_request": "lnbc50u1p3..."
@@ -661,6 +711,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -686,13 +737,14 @@ Rate limit: Content publish rate
 | `to` | string | Yes | Target currency |
 
 **Response (200):**
+
 ```json
 {
   "success": true,
   "data": {
     "from": "USD",
     "to": "BTC",
-    "amount": 10.00,
+    "amount": 10.0,
     "converted": 0.00015,
     "sats": 15000,
     "rate": 66666.67,
@@ -706,6 +758,7 @@ Rate limit: Content publish rate
 **`POST /api/v1/payments/subscriptions`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "creator_id": "uuid",
@@ -715,6 +768,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -739,6 +793,7 @@ Rate limit: Content publish rate
 **`PUT /api/v1/payments/subscriptions/:id`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "tier_id": "new-tier-uuid"
@@ -750,6 +805,7 @@ Rate limit: Content publish rate
 **`DELETE /api/v1/payments/subscriptions/:id`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "reason": "No longer needed",
@@ -758,6 +814,7 @@ Rate limit: Content publish rate
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -775,6 +832,7 @@ Rate limit: Content publish rate
 **`POST /api/v1/payments/refunds`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "payment_id": "uuid",
@@ -794,6 +852,7 @@ Rate limit: Content publish rate
 | `type` | string | No | - | Filter by payment type |
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -803,9 +862,7 @@ Rate limit: Content publish rate
     "average_payment_sats": 3333,
     "mrr_sats": 250000,
     "subscriber_count": 50,
-    "revenue_by_day": [
-      { "date": "2026-02-10", "revenue_sats": 25000, "count": 8 }
-    ]
+    "revenue_by_day": [{ "date": "2026-02-10", "revenue_sats": 25000, "count": 8 }]
   }
 }
 ```
@@ -815,6 +872,7 @@ Rate limit: Content publish rate
 **`POST /api/v1/payments/webhooks`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "url": "https://example.com/webhook",
@@ -832,6 +890,7 @@ Rate limit: Content publish rate
 **`GET /api/lightning/node-info`** (Authenticated)
 
 **Response (200):**
+
 ```json
 {
   "alias": "sovren-ln",
@@ -847,6 +906,7 @@ Rate limit: Content publish rate
 **`POST /api/lightning/invoice`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "amount_msats": 5000000,
@@ -864,6 +924,7 @@ Rate limit: Content publish rate
 **`POST /api/lightning/payment`** (Authenticated)
 
 **Request:**
+
 ```json
 {
   "paymentRequest": "lnbc50u1p3..."
@@ -879,6 +940,7 @@ Rate limit: Content publish rate
 **`GET /health`**
 
 **Response (200):**
+
 ```json
 {
   "status": "healthy",

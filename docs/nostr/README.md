@@ -96,7 +96,10 @@ await publisher.initialize();
 const result = await publisher.createAndPublish({
   kind: 1,
   content: 'Hello NOSTR from Sovren!',
-  tags: [['t', 'nostr'], ['t', 'sovren']],
+  tags: [
+    ['t', 'nostr'],
+    ['t', 'sovren'],
+  ],
 });
 
 console.log('Published to', result.successfulRelays.length, 'relays');
@@ -109,9 +112,8 @@ import { SubscriptionManagerService } from '@/services/nostr/SubscriptionManager
 
 const subManager = SubscriptionManagerService.getInstance();
 
-const subId = subManager.subscribe(
-  [{ kinds: [1], limit: 50 }],
-  (event) => console.log('New event:', event.content)
+const subId = subManager.subscribe([{ kinds: [1], limit: 50 }], (event) =>
+  console.log('New event:', event.content)
 );
 ```
 
@@ -233,40 +235,31 @@ await publisher.publishEventToFastest(event, 3);
 ### Basic Subscription
 
 ```typescript
-const subId = subManager.subscribe(
-  [{ kinds: [1], limit: 50 }],
-  (event) => console.log(event)
-);
+const subId = subManager.subscribe([{ kinds: [1], limit: 50 }], (event) => console.log(event));
 ```
 
 ### Filter by Author
 
 ```typescript
-const subId = subManager.subscribe(
-  [{ authors: [pubkey], kinds: [1] }],
-  (event) => console.log(event)
+const subId = subManager.subscribe([{ authors: [pubkey], kinds: [1] }], (event) =>
+  console.log(event)
 );
 ```
 
 ### Filter by Hashtag
 
 ```typescript
-const subId = subManager.subscribe(
-  [{ kinds: [1], '#t': ['nostr'] }],
-  (event) => console.log(event)
+const subId = subManager.subscribe([{ kinds: [1], '#t': ['nostr'] }], (event) =>
+  console.log(event)
 );
 ```
 
 ### With EOSE Handler
 
 ```typescript
-const subId = subManager.subscribe(
-  filters,
-  (event) => console.log(event),
-  {
-    onEOSE: (relay) => console.log('Loaded from', relay),
-  }
-);
+const subId = subManager.subscribe(filters, (event) => console.log(event), {
+  onEOSE: (relay) => console.log('Loaded from', relay),
+});
 ```
 
 ### Cleanup
@@ -298,13 +291,10 @@ await publisher.createAndPublish({
 ### Receive and Decrypt
 
 ```typescript
-const subId = subManager.subscribe(
-  [{ kinds: [4], '#p': [myPubkey] }],
-  async (event) => {
-    const decrypted = await nip04.decryptMessage(event.pubkey, event.content);
-    console.log('DM from', event.pubkey, ':', decrypted);
-  }
-);
+const subId = subManager.subscribe([{ kinds: [4], '#p': [myPubkey] }], async (event) => {
+  const decrypted = await nip04.decryptMessage(event.pubkey, event.content);
+  console.log('DM from', event.pubkey, ':', decrypted);
+});
 ```
 
 ---
@@ -371,11 +361,7 @@ const relays = RelayConfig.getRelayUrls();
 
 ```typescript
 await relayPool.initialize({
-  relays: [
-    'wss://relay.damus.io',
-    'wss://nos.lol',
-    'wss://relay.current.fyi',
-  ],
+  relays: ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.current.fyi'],
   maxRelays: 5,
   connectionTimeout: 5000,
   healthCheckInterval: 30000,
@@ -470,15 +456,15 @@ We welcome contributions! To contribute:
 
 ## 🎯 Documentation Status
 
-| Section | Status | Coverage |
-|---------|--------|----------|
-| Architecture Overview | ✅ Complete | 100% |
-| API Reference | ✅ Complete | 95% |
-| Getting Started | ✅ Complete | 100% |
-| NIPs Documentation | ✅ Complete | 100% |
-| Code Examples | ✅ Complete | 100% |
-| Troubleshooting | ✅ Complete | 100% |
-| Integration Guide | ✅ Complete | 100% |
+| Section               | Status      | Coverage |
+| --------------------- | ----------- | -------- |
+| Architecture Overview | ✅ Complete | 100%     |
+| API Reference         | ✅ Complete | 95%      |
+| Getting Started       | ✅ Complete | 100%     |
+| NIPs Documentation    | ✅ Complete | 100%     |
+| Code Examples         | ✅ Complete | 100%     |
+| Troubleshooting       | ✅ Complete | 100%     |
+| Integration Guide     | ✅ Complete | 100%     |
 
 ---
 

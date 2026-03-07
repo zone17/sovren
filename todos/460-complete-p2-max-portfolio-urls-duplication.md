@@ -23,7 +23,9 @@ Source: Pattern recognition, Architecture strategist, Performance oracle (PR #93
 ## Proposed Solutions
 
 ### Option A: Hoist to module-level constant (Recommended)
+
 Move `MAX_PORTFOLIO_URLS` to the top of the file alongside `VALID_SERVICE_TYPES`, `ESCROW_EXPIRE_DAYS`, etc.
+
 - Pros: Single source of truth, follows existing pattern
 - Cons: None
 - Effort: Small (1 line change)
@@ -45,8 +47,8 @@ Option A
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                     | Learnings                              |
+| ---------- | -------------------------- | -------------------------------------- |
 | 2026-02-21 | Created from PR #93 review | 3 reviewers independently flagged this |
 
 ## Resources

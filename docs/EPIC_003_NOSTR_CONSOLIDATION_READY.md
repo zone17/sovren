@@ -32,6 +32,7 @@ Epic 003 is fully planned and ready for immediate execution. This epic will cons
 ## Solution Architecture ✅ DESIGNED
 
 ### New Unified Structure
+
 ```
 packages/shared/src/nostr/
 ├── core/               # Core services (singleton pattern)
@@ -48,6 +49,7 @@ packages/shared/src/nostr/
 ## Epic 003 Breakdown ✅ PLANNED
 
 ### 📊 Epic Statistics
+
 - **Total Stories**: 26
 - **Total Points**: 110
 - **Timeline**: 5 days (Days 6-10)
@@ -57,6 +59,7 @@ packages/shared/src/nostr/
 ### 🎯 Work Streams
 
 #### Stream A: Backend NOSTR Services (24 points)
+
 - US-301: Key Management Consolidation (8pts) 🔴 CRITICAL
 - US-305: Authentication Unification (5pts) 🔴 CRITICAL
 - US-304: NIP-05 Consolidation (5pts)
@@ -64,6 +67,7 @@ packages/shared/src/nostr/
 - US-321: Rate Limiting (3pts)
 
 #### Stream B: Frontend Components (24 points)
+
 - US-302: Relay Pool Management (8pts) 🔴 CRITICAL
 - US-306: Browser Extension Support (5pts)
 - US-314: Profile Management (3pts)
@@ -71,6 +75,7 @@ packages/shared/src/nostr/
 - US-319: Error Handling UI (3pts)
 
 #### Stream C: Shared Types & Utilities (23 points)
+
 - US-308: Comprehensive Types (5pts) 🔴 CRITICAL - MUST START FIRST
 - US-310: NIP-19 Encoding (3pts)
 - US-312: Cryptography Operations (5pts) 🔴 CRITICAL
@@ -79,12 +84,14 @@ packages/shared/src/nostr/
 - US-309: Remove Hardcoded URLs (2pts)
 
 #### Stream D: Testing & Documentation (21 points)
+
 - US-318: Integration Tests (8pts)
 - US-323: Architecture Diagrams (3pts)
 - US-324: Developer Documentation (5pts)
 - US-326: E2E Test Suite (5pts)
 
 #### Stream E: Monitoring & Migration (18 points)
+
 - US-316: Monitoring Service (5pts)
 - US-320: WebSocket Manager (5pts)
 - US-322: Backup System (5pts)
@@ -93,31 +100,36 @@ packages/shared/src/nostr/
 ## Execution Plan ✅ READY
 
 ### Day 1 (Monday) - Critical Foundation
+
 **Morning**:
+
 - 🔴 START US-308 (Types) with backend-api-builder [BLOCKER FOR ALL]
 - 🔴 START US-302 (Relay Pool) with elite-frontend-dev
 - 🟢 START US-323 (Diagrams) with technical-docs-writer
 - 🟢 START US-309 (Remove Hardcoded) with backend-api-builder
 
 **Afternoon**:
+
 - 🔴 START US-301 (Key Management) after US-308
 - 🟢 START US-304 (NIP-05) independently
 
 ### Day 2-5 - Parallel Execution
+
 Full timeline with dependencies mapped in execution plan document.
 
 ## Agent Assignments ✅ CONFIRMED
 
-| Agent | Primary Stream | Stories | Points |
-|-------|---------------|---------|--------|
-| backend-api-builder | A, C, E | 13 | 55 |
-| elite-frontend-dev | B | 5 | 24 |
-| test-automation-engineer | D | 2 | 13 |
-| technical-docs-writer | D | 2 | 8 |
+| Agent                    | Primary Stream | Stories | Points |
+| ------------------------ | -------------- | ------- | ------ |
+| backend-api-builder      | A, C, E        | 13      | 55     |
+| elite-frontend-dev       | B              | 5       | 24     |
+| test-automation-engineer | D              | 2       | 13     |
+| technical-docs-writer    | D              | 2       | 8      |
 
 ## Expected Outcomes ✅ DEFINED
 
 ### Technical Improvements
+
 - **60% code reduction** (from 177 files to ~70)
 - **95%+ test coverage** for NOSTR services
 - **Single source of truth** for all NOSTR operations
@@ -125,12 +137,14 @@ Full timeline with dependencies mapped in execution plan document.
 - **Full NIP compliance** (01, 04, 05, 19, 26)
 
 ### Performance Targets
+
 - Event publishing: **<100ms**
 - Signature verification: **<50ms**
 - Relay connection: **<2s**
 - 99.9% relay uptime
 
 ### Quality Gates
+
 - ✅ All duplicate code eliminated
 - ✅ Comprehensive test suite (95%+ coverage)
 - ✅ Full documentation with Mermaid diagrams
@@ -139,12 +153,12 @@ Full timeline with dependencies mapped in execution plan document.
 
 ## Risk Assessment ✅ MITIGATED
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| US-308 delays | Blocks everything | 2x resources, highest priority |
-| Integration failures | Rework required | Feature flags, backward compatibility |
-| Agent unavailability | Story delays | Cross-training, clear handoffs |
-| Breaking changes | User impact | Gradual rollout, extensive testing |
+| Risk                 | Impact            | Mitigation                            |
+| -------------------- | ----------------- | ------------------------------------- |
+| US-308 delays        | Blocks everything | 2x resources, highest priority        |
+| Integration failures | Rework required   | Feature flags, backward compatibility |
+| Agent unavailability | Story delays      | Cross-training, clear handoffs        |
+| Breaking changes     | User impact       | Gradual rollout, extensive testing    |
 
 ## Artifacts Created ✅ COMPLETE
 
@@ -166,6 +180,7 @@ Full timeline with dependencies mapped in execution plan document.
 ## Success Criteria
 
 Epic 003 will be considered COMPLETE when:
+
 - ✅ All 26 stories delivered and tested
 - ✅ 60% code reduction achieved
 - ✅ Zero duplicate NOSTR implementations remain

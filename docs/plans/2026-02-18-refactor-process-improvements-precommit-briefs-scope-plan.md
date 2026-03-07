@@ -198,14 +198,12 @@ Add to `/Users/fp/Desktop/Sovren/CLAUDE.md` under Git Workflow:
 ### Implementation
 
 1. Create `packages/backend/src/utils/case-transform.ts`:
-
    - `snakeToCamel(obj)` — deep recursive transform for reads (DB → API)
    - `camelToSnake(obj)` — deep recursive transform for writes (API → DB)
    - Handle arrays, nulls, nested objects, Date objects
    - Preserve non-object primitives
 
 2. Update `createApiResponse()` in `packages/backend/src/utils/api-response.ts`:
-
    - Apply `snakeToCamel()` to the `data` parameter by default
    - Add optional `{ raw: true }` flag for endpoints that already return camelCase
 

@@ -27,7 +27,7 @@ describe('Successful Deployment Flow', () => {
     it('should deploy all 29 services to staging', async () => {
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment.status).toBe('success');
@@ -42,7 +42,7 @@ describe('Successful Deployment Flow', () => {
       const services = ['email', 'notification', 'cache'];
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services
+        services,
       });
 
       expect(deployment.status).toBe('success');
@@ -53,7 +53,7 @@ describe('Successful Deployment Flow', () => {
     it('should maintain zero downtime during deployment', async () => {
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment.downtime).toBe(0);
@@ -64,7 +64,7 @@ describe('Successful Deployment Flow', () => {
     it('should perform blue-green deployment', async () => {
       const deployment = await simulator.deployWithBlueGreen({
         environment: 'production',
-        version: '1.2.3'
+        version: '1.2.3',
       });
 
       expect(deployment.status).toBe('success');
@@ -77,7 +77,7 @@ describe('Successful Deployment Flow', () => {
     it('should shift traffic gradually', async () => {
       const deployment = await simulator.deployWithBlueGreen({
         environment: 'production',
-        version: '1.2.3'
+        version: '1.2.3',
       });
 
       expect(deployment.trafficShift).toBeDefined();
@@ -89,7 +89,7 @@ describe('Successful Deployment Flow', () => {
     it('should keep old version available for rollback', async () => {
       const deployment = await simulator.deployWithBlueGreen({
         environment: 'production',
-        version: '1.2.3'
+        version: '1.2.3',
       });
 
       expect(deployment.rollbackAvailable).toBe(true);
@@ -126,7 +126,7 @@ describe('Successful Deployment Flow', () => {
     it('should complete deployment within SLA (< 10 minutes)', async () => {
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment.deploymentTime).toBeLessThan(600000); // 10 minutes
@@ -138,7 +138,7 @@ describe('Successful Deployment Flow', () => {
       await Promise.all([
         simulator.deployToStaging({ version: '1.2.3', services: ['email'] }),
         simulator.deployToStaging({ version: '1.2.3', services: ['notification'] }),
-        simulator.deployToStaging({ version: '1.2.3', services: ['cache'] })
+        simulator.deployToStaging({ version: '1.2.3', services: ['cache'] }),
       ]);
 
       const totalTime = Date.now() - startTime;
@@ -150,7 +150,7 @@ describe('Successful Deployment Flow', () => {
     it('should have low error rate during deployment', async () => {
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment.errorRate).toBeLessThan(0.01); // < 1% error rate
@@ -161,7 +161,7 @@ describe('Successful Deployment Flow', () => {
     it('should support staging environment', async () => {
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment.status).toBe('success');
@@ -171,7 +171,7 @@ describe('Successful Deployment Flow', () => {
     it('should support production environment', async () => {
       const deployment = await simulator.deployWithBlueGreen({
         environment: 'production',
-        version: '1.2.3'
+        version: '1.2.3',
       });
 
       expect(deployment.status).toBe('success');
@@ -181,12 +181,12 @@ describe('Successful Deployment Flow', () => {
     it('should use different strategies per environment', async () => {
       const stagingDeployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       const productionDeployment = await simulator.deployWithBlueGreen({
         environment: 'production',
-        version: '1.2.3'
+        version: '1.2.3',
       });
 
       expect(stagingDeployment.status).toBe('success');
@@ -198,7 +198,7 @@ describe('Successful Deployment Flow', () => {
     it('should track deployment version', async () => {
       const deployment = await simulator.deployToStaging({
         version: '2.0.0',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment.version).toBe('2.0.0');
@@ -211,7 +211,7 @@ describe('Successful Deployment Flow', () => {
       for (const version of versions) {
         const deployment = await simulator.deployToStaging({
           version,
-          services: 'all'
+          services: 'all',
         });
 
         expect(deployment.version).toBe(version);
@@ -224,7 +224,7 @@ describe('Successful Deployment Flow', () => {
     it('should track deployment metrics', async () => {
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment).toHaveProperty('deploymentTime');
@@ -236,7 +236,7 @@ describe('Successful Deployment Flow', () => {
     it('should provide accurate service count', async () => {
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment.servicesDeployed).toBe(29);
@@ -245,7 +245,7 @@ describe('Successful Deployment Flow', () => {
     it('should track error rates', async () => {
       const deployment = await simulator.deployToStaging({
         version: '1.2.3',
-        services: 'all'
+        services: 'all',
       });
 
       expect(deployment.errorRate).toBeDefined();

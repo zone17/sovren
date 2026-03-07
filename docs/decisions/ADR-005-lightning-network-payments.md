@@ -17,6 +17,7 @@ Sovren is a creator monetization platform requiring fast, low-cost payments. Tra
 - **KYC/AML Overhead**: Complex compliance requirements
 
 **Use Case Requirements**:
+
 - Support payments from $0.01 to $10,000
 - Instant settlement to creators (seconds, not days)
 - Global accessibility without geographic restrictions
@@ -29,6 +30,7 @@ Sovren is a creator monetization platform requiring fast, low-cost payments. Tra
 We will use **Bitcoin Lightning Network** as the primary payment rail for all creator monetization.
 
 **Key Specifications**:
+
 - **BOLT11 Invoices**: Standard invoice format for payments
 - **WebLN Integration**: Browser extension support for seamless UX
 - **Multi-Node Support**: Connect to multiple Lightning nodes for redundancy
@@ -36,6 +38,7 @@ We will use **Bitcoin Lightning Network** as the primary payment rail for all cr
 - **Instant Settlement**: Creators receive funds within seconds
 
 **Implementation**:
+
 ```typescript
 @injectable()
 class LightningService implements ILightningService {
@@ -91,10 +94,14 @@ class LightningService implements ILightningService {
 
   private async handlePaymentReceived(invoice: LndInvoice) {
     // Update cache
-    await this.cache.set(`invoice:${invoice.r_hash}`, {
-      status: 'paid',
-      paidAt: new Date(),
-    }, CACHE_TTL.lightning_invoice);
+    await this.cache.set(
+      `invoice:${invoice.r_hash}`,
+      {
+        status: 'paid',
+        paidAt: new Date(),
+      },
+      CACHE_TTL.lightning_invoice
+    );
 
     // Emit event for other services
     await this.eventBus.publish({
@@ -121,6 +128,7 @@ class LightningService implements ILightningService {
 ```
 
 **Payment Flow**:
+
 ```
 1. User purchases content → createInvoice(100 sats)
 2. Display BOLT11 invoice + QR code
@@ -195,12 +203,15 @@ class LightningService implements ILightningService {
 ## Alternatives Considered
 
 ### 1. Traditional Credit Card Processing (Stripe)
+
 **Pros**:
+
 - Familiar to users
 - Wide acceptance
 - Fiat currency (no volatility)
 
 **Cons**:
+
 - 2.9% + $0.30 fees
 - 7-day payouts to creators
 - Chargebacks (6-month window)
@@ -210,12 +221,15 @@ class LightningService implements ILightningService {
 **Why Rejected**: Fees too high for creator economy. Slow settlements hurt creators.
 
 ### 2. On-Chain Bitcoin
+
 **Pros**:
+
 - More mature than Lightning
 - Higher transaction limits
 - No channel management
 
 **Cons**:
+
 - High fees ($2-10 per transaction)
 - Slow confirmations (10-60 minutes)
 - Not suitable for micro-payments
@@ -224,12 +238,15 @@ class LightningService implements ILightningService {
 **Why Rejected**: Too slow and expensive for daily creator payments. Lightning solves these issues.
 
 ### 3. Ethereum/Stablecoins (USDC on Polygon)
+
 **Pros**:
+
 - Stablecoin (no volatility)
 - Programmable payments (smart contracts)
 - Fast transactions
 
 **Cons**:
+
 - Still requires gas fees
 - More complex setup
 - Ethereum wallet needed
@@ -238,12 +255,15 @@ class LightningService implements ILightningService {
 **Why Rejected**: Lightning provides better UX and lower fees. Bitcoin aligns with NOSTR community values.
 
 ### 4. PayPal / Venmo
+
 **Pros**:
+
 - Very familiar to users
 - Easy integration
 - Fiat currency
 
 **Cons**:
+
 - High fees (similar to credit cards)
 - Account freezes common for crypto-related business
 - Limited international support
@@ -254,15 +274,17 @@ class LightningService implements ILightningService {
 ## Implementation Notes
 
 **Invoice Expiry Strategy**:
+
 ```typescript
 const INVOICE_EXPIRY = {
-  content_purchase: 1 * 60 * 60,      // 1 hour
+  content_purchase: 1 * 60 * 60, // 1 hour
   subscription_monthly: 24 * 60 * 60, // 24 hours
-  tip_creator: 30 * 60,               // 30 minutes
+  tip_creator: 30 * 60, // 30 minutes
 };
 ```
 
 **Multi-Node Redundancy**:
+
 ```typescript
 class LightningService {
   private nodes = [
@@ -284,6 +306,7 @@ class LightningService {
 ```
 
 **Webhook Verification**:
+
 ```typescript
 // Verify LND webhook authenticity
 function verifyWebhookSignature(payload: string, signature: string): boolean {

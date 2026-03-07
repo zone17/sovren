@@ -84,14 +84,14 @@ Developer Push → Quality Gates → Build → Security Scan → Deploy
 
 ## Health Endpoints
 
-| Endpoint | Purpose | Response Time |
-|----------|---------|---------------|
-| `/health` | Basic health (load balancer) | < 200ms |
-| `/health/ready` | Readiness probe (DB+Redis) | < 500ms |
-| `/health/live` | Liveness probe (process) | < 100ms |
-| `/health/detailed` | Full diagnostics | < 1000ms |
-| `/api/deployment/health` | Deployment metrics | < 500ms |
-| `/api/metrics` | Prometheus format | < 500ms |
+| Endpoint                 | Purpose                      | Response Time |
+| ------------------------ | ---------------------------- | ------------- |
+| `/health`                | Basic health (load balancer) | < 200ms       |
+| `/health/ready`          | Readiness probe (DB+Redis)   | < 500ms       |
+| `/health/live`           | Liveness probe (process)     | < 100ms       |
+| `/health/detailed`       | Full diagnostics             | < 1000ms      |
+| `/api/deployment/health` | Deployment metrics           | < 500ms       |
+| `/api/metrics`           | Prometheus format            | < 500ms       |
 
 ## Rollback Triggers
 
@@ -104,16 +104,17 @@ Developer Push → Quality Gates → Build → Security Scan → Deploy
 
 ## Time Guarantees
 
-| Operation | Guaranteed Time |
-|-----------|----------------|
-| Full Deployment | < 10 minutes |
-| Rollback | < 2 minutes |
-| Health Check Validation | < 5 minutes |
-| Traffic Switch (per stage) | 60 seconds |
+| Operation                  | Guaranteed Time |
+| -------------------------- | --------------- |
+| Full Deployment            | < 10 minutes    |
+| Rollback                   | < 2 minutes     |
+| Health Check Validation    | < 5 minutes     |
+| Traffic Switch (per stage) | 60 seconds      |
 
 ## Required Secrets
 
 ### Production
+
 - `DATABASE_URL`
 - `REDIS_URL`
 - `DEPLOYMENT_TOKEN`
@@ -127,17 +128,20 @@ Developer Push → Quality Gates → Build → Security Scan → Deploy
 - `JWT_SECRET`
 
 ### Staging
+
 Same secrets with `STAGING_` prefix
 
 ## Troubleshooting
 
 ### Deployment Stuck
+
 ```bash
 gh run cancel <run-id>
 gh workflow run backend-deployment.yml -f environment=staging
 ```
 
 ### Health Checks Failing
+
 ```bash
 # Check logs
 gh run view --log | grep "health"
@@ -147,6 +151,7 @@ curl https://blue.api.sovren.app/health
 ```
 
 ### Rollback Failed
+
 ```bash
 # Manual traffic switch
 # (Infrastructure-specific - see deployment guide)
@@ -172,12 +177,14 @@ curl https://api.sovren.app/health
 ## Success Criteria Checklist
 
 Pre-Deployment:
+
 - [ ] All tests passing
 - [ ] Code reviewed
 - [ ] Secrets configured
 - [ ] Deployment window checked
 
 Post-Deployment:
+
 - [ ] Health checks passing
 - [ ] Error rate < 5%
 - [ ] Response times normal

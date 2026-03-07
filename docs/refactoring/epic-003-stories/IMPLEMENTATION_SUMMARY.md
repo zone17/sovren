@@ -19,31 +19,33 @@ All required documentation has been created in `/docs/refactoring/epic-003-stori
 ## Story Breakdown Summary
 
 ### Total Stories: 26
+
 All stories are **1-point stories** (2-4 hours each), designed for maximum granularity and parallel work.
 
 ### Phase Distribution
 
-| Phase | Stories | Duration | Focus |
-|-------|---------|----------|-------|
-| Phase 1: Core Service | NS-001 to NS-008 (8 stories) | 2-3 days | Extract common NOSTR logic |
-| Phase 2: Adapters | NS-009 to NS-014 (6 stories) | 2 days | Platform-specific implementations |
-| Phase 3: Frontend Migration | NS-015 to NS-018 (4 stories) | 1-2 days | Migrate React components |
-| Phase 4: Backend Migration | NS-019 to NS-022 (4 stories) | 1-2 days | Migrate API endpoints |
-| Phase 5: Cleanup | NS-023 to NS-026 (4 stories) | 1-2 days | Remove old code, validate |
+| Phase                       | Stories                      | Duration | Focus                             |
+| --------------------------- | ---------------------------- | -------- | --------------------------------- |
+| Phase 1: Core Service       | NS-001 to NS-008 (8 stories) | 2-3 days | Extract common NOSTR logic        |
+| Phase 2: Adapters           | NS-009 to NS-014 (6 stories) | 2 days   | Platform-specific implementations |
+| Phase 3: Frontend Migration | NS-015 to NS-018 (4 stories) | 1-2 days | Migrate React components          |
+| Phase 4: Backend Migration  | NS-019 to NS-022 (4 stories) | 1-2 days | Migrate API endpoints             |
+| Phase 5: Cleanup            | NS-023 to NS-026 (4 stories) | 1-2 days | Remove old code, validate         |
 
 ### Work Stream Distribution
 
-| Stream | Stories | Can Parallelize |
-|--------|---------|-----------------|
-| Stream A: Core Service | 8 stories | After NS-001 |
-| Stream B: Browser Adapter | 3 stories | ✅ With Stream C |
-| Stream C: Node.js Adapter | 2 stories | ✅ With Stream B |
+| Stream                       | Stories   | Can Parallelize  |
+| ---------------------------- | --------- | ---------------- |
+| Stream A: Core Service       | 8 stories | After NS-001     |
+| Stream B: Browser Adapter    | 3 stories | ✅ With Stream C |
+| Stream C: Node.js Adapter    | 2 stories | ✅ With Stream B |
 | Stream D: Frontend Migration | 4 stories | ✅ With Stream E |
-| Stream E: Backend Migration | 4 stories | ✅ With Stream D |
+| Stream E: Backend Migration  | 4 stories | ✅ With Stream D |
 
 ## Architecture Overview
 
 ### Current State (Before)
+
 ```
 packages/frontend/src/services/nostr/     (~800 lines)
 packages/backend/src/services/nostr/      (~650 lines)
@@ -52,6 +54,7 @@ Total: ~1,750 lines with 60-90% duplication
 ```
 
 ### Desired State (After)
+
 ```
 packages/shared/src/services/nostr/
 ├── core/                    # Platform-agnostic logic
@@ -70,21 +73,25 @@ Total: ~1,000 lines (30% reduction in code)
 ## Implementation Strategy
 
 ### 1. Foundation First (Sprint 0)
+
 - Build solid core service with 95%+ test coverage
 - Ensure all NOSTR protocol compliance (NIPs)
 - Platform-agnostic design
 
 ### 2. Adapters for Platform-Specific Needs (Sprint 1)
+
 - Browser adapter: React hooks, NIP-07 extension support
 - Node.js adapter: EventEmitter pattern, server storage
 - Both implement same interface
 
 ### 3. Safe Migration with Feature Flags (Sprint 2)
+
 - Frontend and backend migrate independently
 - Old and new implementations coexist
 - Gradual rollout with instant rollback capability
 
 ### 4. Cleanup and Validation (Sprint 3)
+
 - Remove old implementations
 - Comprehensive documentation
 - Performance benchmarking
@@ -92,6 +99,7 @@ Total: ~1,000 lines (30% reduction in code)
 ## Critical Success Factors
 
 ### Technical Requirements
+
 - ✅ 95%+ test coverage on core service
 - ✅ Zero regression in NOSTR functionality
 - ✅ All NIPs remain compliant
@@ -99,6 +107,7 @@ Total: ~1,000 lines (30% reduction in code)
 - ✅ Bundle size < 10KB increase
 
 ### Process Requirements
+
 - ✅ Feature flags for safe rollout
 - ✅ Comprehensive testing at each phase
 - ✅ Parallel work streams to maximize velocity
@@ -109,12 +118,12 @@ Total: ~1,000 lines (30% reduction in code)
 
 ### Maximum Parallelization: 60% of Stories
 
-| Sprint | Parallel Potential | Strategy |
-|--------|-------------------|----------|
-| Sprint 0 | 75% (after NS-001) | Split event/relay work |
-| Sprint 1 | 83% (after NS-009) | Streams B & C fully parallel |
-| Sprint 2 | 100% (from start) | Streams D & E fully parallel |
-| Sprint 3 | 50% | Cleanup parallel, validation sequential |
+| Sprint   | Parallel Potential | Strategy                                |
+| -------- | ------------------ | --------------------------------------- |
+| Sprint 0 | 75% (after NS-001) | Split event/relay work                  |
+| Sprint 1 | 83% (after NS-009) | Streams B & C fully parallel            |
+| Sprint 2 | 100% (from start)  | Streams D & E fully parallel            |
+| Sprint 3 | 50%                | Cleanup parallel, validation sequential |
 
 ### Timeline Optimization
 
@@ -126,13 +135,13 @@ Total: ~1,000 lines (30% reduction in code)
 ### High-Risk Areas
 
 1. **Relay Connection Management** (NS-004, NS-005)
-   - *Mitigation*: Extensive relay testing, auto-reconnection logic
+   - _Mitigation_: Extensive relay testing, auto-reconnection logic
 
 2. **Migration Safety** (NS-015, NS-019)
-   - *Mitigation*: Feature flags, parallel running, gradual rollout
+   - _Mitigation_: Feature flags, parallel running, gradual rollout
 
 3. **Performance Regression** (NS-026)
-   - *Mitigation*: Benchmark before starting, continuous monitoring
+   - _Mitigation_: Benchmark before starting, continuous monitoring
 
 ### Rollback Strategy
 
@@ -144,15 +153,15 @@ Total: ~1,000 lines (30% reduction in code)
 
 ### Quantitative Targets
 
-| Metric | Target | Measurement Method |
-|--------|--------|-------------------|
-| Code Reduction | 15% (~750 lines) | `cloc` line count analysis |
-| Test Coverage | 95%+ | Jest/Vitest coverage reports |
-| Performance | No regression | Benchmark suite comparison |
-| Bundle Size | < 10KB increase | Webpack bundle analyzer |
-| Memory Usage | Equal or lower | Heap snapshots |
-| Production Errors | Zero new errors | Error monitoring (Sentry) |
-| Downtime | Zero | Uptime monitoring |
+| Metric            | Target           | Measurement Method           |
+| ----------------- | ---------------- | ---------------------------- |
+| Code Reduction    | 15% (~750 lines) | `cloc` line count analysis   |
+| Test Coverage     | 95%+             | Jest/Vitest coverage reports |
+| Performance       | No regression    | Benchmark suite comparison   |
+| Bundle Size       | < 10KB increase  | Webpack bundle analyzer      |
+| Memory Usage      | Equal or lower   | Heap snapshots               |
+| Production Errors | Zero new errors  | Error monitoring (Sentry)    |
+| Downtime          | Zero             | Uptime monitoring            |
 
 ### Qualitative Goals
 
@@ -166,13 +175,13 @@ Total: ~1,000 lines (30% reduction in code)
 
 ### Test Coverage by Phase
 
-| Phase | Unit Tests | Integration Tests | E2E Tests |
-|-------|-----------|-------------------|-----------|
-| Phase 1: Core | ✅✅✅ Required | ✅ Required | - |
-| Phase 2: Adapters | ✅✅ Required | ✅✅ Required | - |
-| Phase 3: Frontend | ✅ Required | ✅✅ Required | ✅ Required |
-| Phase 4: Backend | ✅ Required | ✅✅ Required | ✅ Required |
-| Phase 5: Cleanup | - | ✅ Required | ✅✅ Required |
+| Phase             | Unit Tests      | Integration Tests | E2E Tests     |
+| ----------------- | --------------- | ----------------- | ------------- |
+| Phase 1: Core     | ✅✅✅ Required | ✅ Required       | -             |
+| Phase 2: Adapters | ✅✅ Required   | ✅✅ Required     | -             |
+| Phase 3: Frontend | ✅ Required     | ✅✅ Required     | ✅ Required   |
+| Phase 4: Backend  | ✅ Required     | ✅✅ Required     | ✅ Required   |
+| Phase 5: Cleanup  | -               | ✅ Required       | ✅✅ Required |
 
 ### NIP Compliance Testing
 
@@ -189,18 +198,21 @@ All NOSTR Improvement Proposals (NIPs) must pass:
 ### Optimal: 2 Developers (Full-stack)
 
 **Developer 1** (Frontend focus):
+
 - Sprint 0: Event management, cryptography (NS-002, NS-003, NS-007, NS-008)
 - Sprint 1: Browser adapter (NS-010, NS-011, NS-012)
 - Sprint 2: Frontend migration (NS-015 to NS-018)
 - Sprint 3: Frontend cleanup, documentation (NS-023, NS-025)
 
 **Developer 2** (Backend focus):
+
 - Sprint 0: Relay management, subscriptions (NS-004, NS-005, NS-006)
 - Sprint 1: Node.js adapter (NS-013, NS-014)
 - Sprint 2: Backend migration (NS-019 to NS-022)
 - Sprint 3: Backend cleanup, performance (NS-024, NS-026)
 
 **Shared Work**:
+
 - NS-001: Core structure (pair programming)
 - NS-009: Adapter interfaces (pair programming)
 
@@ -233,16 +245,19 @@ With parallel work, achievable in **9 days**.
 ## Code Impact Analysis
 
 ### Lines of Code
+
 - **Before**: ~1,750 lines (with duplication)
 - **After**: ~1,000 lines (single implementation)
 - **Reduction**: ~750 lines (43% reduction)
 
 ### File Count
+
 - **Before**: ~30 files across 3 packages
 - **After**: ~15 files in shared package + 2 adapters
 - **Reduction**: ~50% fewer files
 
 ### Maintenance Burden
+
 - **Before**: 3 places to fix bugs
 - **After**: 1 place to fix bugs
 - **Impact**: 67% reduction in maintenance effort
@@ -250,24 +265,28 @@ With parallel work, achievable in **9 days**.
 ## Dependencies
 
 ### Blockers
+
 - **Epic 001: Type Safety Improvements** (recommended)
   - Provides better TypeScript types
   - Cleaner interfaces for NOSTR service
   - Not critical, but helpful
 
 ### Enables
+
 - **Epic 004: State Management Consolidation**
   - NOSTR service consolidation simplifies state management
 - **Epic 005: Backend Service Refactoring**
   - Provides pattern for other service consolidations
 
 ### Parallel Work
+
 - **Epic 002: Component Library**
   - No dependencies, can work in parallel
 
 ## Migration Safety Measures
 
 ### Feature Flags
+
 ```typescript
 // Frontend
 const useNewNostr = getFeatureFlag('use_new_nostr_service');
@@ -277,6 +296,7 @@ const useNewNostr = process.env.USE_NEW_NOSTR === 'true';
 ```
 
 ### Gradual Rollout Plan
+
 1. **0%**: Initial deployment (disabled)
 2. **10%**: Internal team testing
 3. **25%**: Early adopters
@@ -285,6 +305,7 @@ const useNewNostr = process.env.USE_NEW_NOSTR === 'true';
 6. **Remove flag**: After 2 weeks stable
 
 ### Monitoring
+
 - Error rate tracking per implementation
 - Performance metrics comparison
 - User satisfaction metrics
@@ -293,17 +314,20 @@ const useNewNostr = process.env.USE_NEW_NOSTR === 'true';
 ## Post-Implementation Plans
 
 ### Immediate (After Epic Complete)
+
 - Performance report with metrics
 - Lessons learned documentation
 - Team retrospective
 - Stakeholder presentation
 
 ### Short-term (Next Sprint)
+
 - Monitor for 2 weeks
 - Collect developer feedback
 - Identify optimization opportunities
 
 ### Long-term (Future Epics)
+
 - Extract to separate npm package
 - Add NIP-42 (relay authentication)
 - Implement NIP-65 (relay list metadata)
@@ -312,6 +336,7 @@ const useNewNostr = process.env.USE_NEW_NOSTR === 'true';
 ## Documentation Artifacts
 
 ### Created During Epic
+
 1. Architecture diagrams (Mermaid)
 2. API documentation (JSDoc)
 3. Migration guide
@@ -319,6 +344,7 @@ const useNewNostr = process.env.USE_NEW_NOSTR === 'true';
 5. Performance benchmark suite
 
 ### To Be Created (NS-025)
+
 - `docs/architecture/nostr-service.md`
 - API reference documentation
 - Developer usage guide
@@ -327,16 +353,19 @@ const useNewNostr = process.env.USE_NEW_NOSTR === 'true';
 ## Communication Plan
 
 ### Daily
+
 - Standup updates in #engineering
 - Blocker escalation
 - Progress tracking
 
 ### Weekly
+
 - Sprint review/demo
 - Stakeholder updates
 - Risk assessment
 
 ### Milestones
+
 - Core service complete (after Sprint 0)
 - Adapters ready (after Sprint 1)
 - Migration complete (after Sprint 2)
@@ -360,6 +389,7 @@ const useNewNostr = process.env.USE_NEW_NOSTR === 'true';
 ## Next Steps
 
 ### To Start Epic
+
 1. Create GitHub issues for all 26 stories
 2. Set up project board with 5 columns (phases)
 3. Assign stories to developers
@@ -367,6 +397,7 @@ const useNewNostr = process.env.USE_NEW_NOSTR === 'true';
 5. Set up monitoring and metrics
 
 ### Story Creation Template
+
 ```markdown
 Title: [NS-XXX] [Story Title]
 Labels: epic-003, nostr, refactoring, [phase], [stream]
@@ -378,6 +409,7 @@ Estimate: 1 point (2-4 hours)
 ```
 
 ### Tracking Progress
+
 - Daily standup updates
 - Project board movement
 - Test coverage tracking
@@ -387,6 +419,7 @@ Estimate: 1 point (2-4 hours)
 ## Resources
 
 ### Documentation
+
 - [Story Breakdown](./STORY_BREAKDOWN.md)
 - [Story Map](./STORY_MAP.md)
 - [Quick Reference](./QUICK_REFERENCE.md)
@@ -394,11 +427,13 @@ Estimate: 1 point (2-4 hours)
 - [README](./README.md)
 
 ### External References
+
 - [NOSTR Protocol](https://github.com/nostr-protocol/nostr)
 - [NIPs Repository](https://github.com/nostr-protocol/nips)
 - [NOSTR Best Practices](https://github.com/nostr-protocol/nostr#implementations)
 
 ### Tools
+
 - Jest/Vitest for testing
 - Mermaid for diagrams
 - Webpack Bundle Analyzer

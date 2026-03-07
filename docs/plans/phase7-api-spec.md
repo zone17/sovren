@@ -3,6 +3,7 @@
 All endpoints require authentication via Bearer token (existing `authenticate` middleware) unless noted otherwise. Creator-only endpoints additionally require `requireCreator` middleware.
 
 Base URLs:
+
 - Wellness: `/api/v2/wellness`
 - Content Shield: `/api/v2/shield`
 
@@ -13,11 +14,13 @@ Base URLs:
 ### Work Patterns
 
 #### `POST /api/v2/wellness/patterns`
+
 Record a work activity event (manual logging).
 
 **Auth**: Creator required
 
 **Request Body**:
+
 ```json
 {
   "type": "content_creation" | "engagement" | "management",
@@ -31,6 +34,7 @@ Record a work activity event (manual logging).
 ```
 
 **Response** `201`:
+
 ```json
 {
   "success": true,
@@ -52,6 +56,7 @@ Record a work activity event (manual logging).
 ---
 
 #### `GET /api/v2/wellness/patterns`
+
 Retrieve aggregated work patterns for a time period.
 
 **Auth**: Creator required
@@ -62,6 +67,7 @@ Retrieve aggregated work patterns for a time period.
 | `period` | `7d` \| `30d` \| `90d` | `7d` | Aggregation window |
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -92,6 +98,7 @@ Retrieve aggregated work patterns for a time period.
 ---
 
 #### `GET /api/v2/wellness/patterns/heatmap`
+
 Return hourly heatmap data showing work activity density.
 
 **Auth**: Creator required
@@ -102,6 +109,7 @@ Return hourly heatmap data showing work activity density.
 | `period` | `7d` \| `30d` | `7d` | Heatmap window |
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -128,11 +136,13 @@ Return hourly heatmap data showing work activity density.
 ### Burnout Risk Score
 
 #### `GET /api/v2/wellness/risk-score`
+
 Return the current burnout risk assessment.
 
 **Auth**: Creator required
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -141,10 +151,14 @@ Return the current burnout risk assessment.
     "level": "moderate",
     "factors": {
       "work_hours_trend": { "value": 0.35, "weight": 0.25, "detail": "Working 115% of baseline" },
-      "posting_frequency": { "value": 0.50, "weight": 0.20, "detail": "Posting 140% of 4-week avg" },
-      "engagement_drop": { "value": 0.20, "weight": 0.20, "detail": "Engagement at 85% of avg" },
-      "hour_regularity": { "value": 0.60, "weight": 0.15, "detail": "High schedule variance" },
-      "rest_day_deficit": { "value": 0.45, "weight": 0.20, "detail": "1 rest day this week (target: 2)" }
+      "posting_frequency": { "value": 0.5, "weight": 0.2, "detail": "Posting 140% of 4-week avg" },
+      "engagement_drop": { "value": 0.2, "weight": 0.2, "detail": "Engagement at 85% of avg" },
+      "hour_regularity": { "value": 0.6, "weight": 0.15, "detail": "High schedule variance" },
+      "rest_day_deficit": {
+        "value": 0.45,
+        "weight": 0.2,
+        "detail": "1 rest day this week (target: 2)"
+      }
     },
     "baseline_ready": true,
     "baseline_days_remaining": 0,
@@ -168,11 +182,13 @@ If baseline not yet established (<14 days of data), `baseline_ready` is `false`,
 ---
 
 #### `PUT /api/v2/wellness/risk-score/sensitivity`
+
 Adjust burnout score sensitivity thresholds.
 
 **Auth**: Creator required
 
 **Request Body**:
+
 ```json
 {
   "sensitivity": "relaxed" | "normal" | "sensitive"
@@ -184,6 +200,7 @@ Adjust burnout score sensitivity thresholds.
 - `sensitive` — Factor trigger thresholds decrease by 25% (easier to trigger alerts)
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -201,11 +218,13 @@ Historical scores remain unchanged; only future score computations use the new s
 ### Sustainable Scheduling
 
 #### `GET /api/v2/wellness/schedule/recommendations`
+
 Return optimal posting frequency and best times.
 
 **Auth**: Creator required
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -227,11 +246,13 @@ Return optimal posting frequency and best times.
 ---
 
 #### `GET /api/v2/wellness/buffer-depth`
+
 Return content buffer depth (scheduled future content).
 
 **Auth**: Creator required
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -251,11 +272,13 @@ Return content buffer depth (scheduled future content).
 ### Creator Boundaries
 
 #### `GET /api/v2/wellness/boundaries`
+
 Retrieve current boundary configuration.
 
 **Auth**: Creator required
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -286,11 +309,13 @@ Retrieve current boundary configuration.
 ---
 
 #### `PUT /api/v2/wellness/boundaries`
+
 Save boundary configuration.
 
 **Auth**: Creator required
 
 **Request Body**:
+
 ```json
 {
   "focus_hours": {
@@ -317,11 +342,13 @@ Save boundary configuration.
 ### Wellness Pulse Check-Ins
 
 #### `POST /api/v2/wellness/pulse`
+
 Record a wellness pulse check-in.
 
 **Auth**: Creator required
 
 **Request Body**:
+
 ```json
 {
   "energy": 4,
@@ -333,6 +360,7 @@ Record a wellness pulse check-in.
 All values 1-5 integer scale (1=lowest, 5=highest; for stress 1=low stress, 5=high stress).
 
 **Response** `201`:
+
 ```json
 {
   "success": true,
@@ -352,6 +380,7 @@ All values 1-5 integer scale (1=lowest, 5=highest; for stress 1=low stress, 5=hi
 ---
 
 #### `GET /api/v2/wellness/pulse/history`
+
 Retrieve pulse check-in history.
 
 **Auth**: Creator required
@@ -362,6 +391,7 @@ Retrieve pulse check-in history.
 | `period` | `30d` \| `90d` \| `all` | `90d` | History window |
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -388,11 +418,13 @@ Retrieve pulse check-in history.
 ---
 
 #### `GET /api/v2/wellness/benchmark`
+
 Anonymous aggregate benchmark stats. No auth required (returns only aggregated, anonymized data).
 
 **Auth**: Optional (no individual data regardless)
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -424,11 +456,13 @@ Returns the full response above only when `sample_size >= 10`.
 ---
 
 #### `DELETE /api/v2/wellness/pulse`
+
 Delete all pulse check-in history for the authenticated creator.
 
 **Auth**: Creator required
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -441,11 +475,13 @@ Delete all pulse check-in history for the authenticated creator.
 ---
 
 #### `DELETE /api/v2/wellness/data`
+
 Delete all wellness data for the authenticated creator.
 
 **Auth**: Creator required
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -467,11 +503,13 @@ Delete all wellness data for the authenticated creator.
 ### Provenance
 
 #### `GET /api/v2/shield/provenance/:contentId`
+
 Return the provenance chain for a content piece.
 
 **Auth**: Optional (provenance is public by design)
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -495,6 +533,7 @@ Return the provenance chain for a content piece.
 ---
 
 #### `GET /api/v2/shield/provenance/:contentId/certificate`
+
 Export provenance certificate for legal/DMCA use.
 
 **Auth**: Creator required (only content owner can export certificate)
@@ -505,6 +544,7 @@ Export provenance certificate for legal/DMCA use.
 | `format` | `json` \| `pdf` | `json` | Export format |
 
 **Response** `200` (JSON) or `200` (PDF binary with `Content-Type: application/pdf`):
+
 ```json
 {
   "success": true,
@@ -536,11 +576,13 @@ Export provenance certificate for legal/DMCA use.
 ### Fingerprinting
 
 #### `POST /api/v2/shield/fingerprint`
+
 Manually register a fingerprint for existing content.
 
 **Auth**: Creator required
 
 **Request Body**:
+
 ```json
 {
   "content_id": "content-uuid",
@@ -552,14 +594,13 @@ Manually register a fingerprint for existing content.
 For text: content is the raw text. For images: content is base64-encoded image data.
 
 **Response** `201`:
+
 ```json
 {
   "success": true,
   "data": {
     "content_id": "content-uuid",
-    "fingerprints": [
-      { "hash_type": "simhash", "hash_value": "hex-hash-string" }
-    ],
+    "fingerprints": [{ "hash_type": "simhash", "hash_value": "hex-hash-string" }],
     "created_at": "2026-02-15T10:00:00Z"
   }
 }
@@ -570,6 +611,7 @@ For text: content is the raw text. For images: content is base64-encoded image d
 ---
 
 #### `GET /api/v2/shield/fingerprints/:creatorId`
+
 Get a creator's fingerprint registry summary.
 
 **Auth**: Creator required (can only view own registry)
@@ -581,6 +623,7 @@ Get a creator's fingerprint registry summary.
 | `limit` | number | 20 | Items per page |
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -612,11 +655,13 @@ Get a creator's fingerprint registry summary.
 ---
 
 #### `POST /api/v2/shield/compare`
+
 Compare a hash against a creator's fingerprint registry.
 
 **Auth**: Creator required
 
 **Request Body**:
+
 ```json
 {
   "hash_type": "simhash" | "phash",
@@ -626,6 +671,7 @@ Compare a hash against a creator's fingerprint registry.
 ```
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -651,6 +697,7 @@ Compare a hash against a creator's fingerprint registry.
 ### Alerts
 
 #### `GET /api/v2/shield/alerts`
+
 Get creator's copy detection alerts.
 
 **Auth**: Creator required
@@ -663,6 +710,7 @@ Get creator's copy detection alerts.
 | `limit` | number | 20 | Items per page |
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -681,18 +729,27 @@ Get creator's copy detection alerts.
       "relay": "wss://relay.damus.io"
     }
   ],
-  "pagination": { "page": 1, "limit": 20, "total": 5, "totalPages": 1, "hasNext": false, "hasPrev": false }
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 5,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrev": false
+  }
 }
 ```
 
 ---
 
 #### `GET /api/v2/shield/alerts/:id`
+
 Get alert detail with side-by-side comparison data.
 
 **Auth**: Creator required
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -726,11 +783,13 @@ Get alert detail with side-by-side comparison data.
 ---
 
 #### `PUT /api/v2/shield/alerts/:id`
+
 Update alert status.
 
 **Auth**: Creator required
 
 **Request Body**:
+
 ```json
 {
   "status": "reviewed" | "resolved" | "false_positive" | "reported"
@@ -738,11 +797,13 @@ Update alert status.
 ```
 
 **Validation**: Status transitions allowed:
+
 - `new` -> `reviewed`, `false_positive`
 - `reviewed` -> `resolved`, `false_positive`, `reported`
 - `reported` -> `resolved`
 
 **Response** `200`:
+
 ```json
 {
   "success": true,
@@ -759,6 +820,7 @@ Update alert status.
 ### DMCA Reports
 
 #### `POST /api/v2/shield/alerts/:id/dmca-report`
+
 Generate a DMCA report for an alert.
 
 **Auth**: Creator required
@@ -769,6 +831,7 @@ Generate a DMCA report for an alert.
 | `format` | `json` \| `pdf` | `json` | Export format |
 
 **Response** `201`:
+
 ```json
 {
   "success": true,
@@ -815,9 +878,7 @@ All endpoints return errors in consistent format:
   "success": false,
   "error": "VALIDATION_ERROR",
   "message": "Human-readable error description",
-  "details": [
-    { "field": "energy", "message": "Must be between 1 and 5" }
-  ],
+  "details": [{ "field": "energy", "message": "Must be between 1 and 5" }],
   "timestamp": "2026-02-15T10:00:00Z"
 }
 ```

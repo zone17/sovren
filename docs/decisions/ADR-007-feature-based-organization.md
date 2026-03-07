@@ -20,6 +20,7 @@ src/
 ```
 
 **Problems**:
+
 - **Feature Sprawl**: Changing one feature requires editing 5+ directories
 - **Cognitive Load**: Hard to understand feature boundaries
 - **Merge Conflicts**: Multiple developers editing same directories
@@ -58,6 +59,7 @@ packages/backend/src/
 ```
 
 **Principles**:
+
 1. **Feature Modules**: Self-contained features with all related code
 2. **Barrel Exports**: Clean imports via `index.ts`
 3. **Shared Code**: Common utilities in `shared/`

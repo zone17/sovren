@@ -8,14 +8,14 @@
 
 ## Quick Command Index
 
-| Category | Command | Purpose |
-|----------|---------|---------|
-| **Payment Status** | `payment-status <hash>` | Get full payment details |
-| **Lightning Node** | `lnd-info` | Check node health |
-| **Database** | `db-health` | Check database performance |
-| **Webhooks** | `webhook-logs <hash>` | View webhook delivery |
-| **Performance** | `payment-metrics` | Real-time metrics |
-| **Recovery** | `recover-stuck-payments` | Auto-recover stuck payments |
+| Category           | Command                  | Purpose                     |
+| ------------------ | ------------------------ | --------------------------- |
+| **Payment Status** | `payment-status <hash>`  | Get full payment details    |
+| **Lightning Node** | `lnd-info`               | Check node health           |
+| **Database**       | `db-health`              | Check database performance  |
+| **Webhooks**       | `webhook-logs <hash>`    | View webhook delivery       |
+| **Performance**    | `payment-metrics`        | Real-time metrics           |
+| **Recovery**       | `recover-stuck-payments` | Auto-recover stuck payments |
 
 ---
 
@@ -61,6 +61,7 @@ WHERE payment_hash = '$PAYMENT_HASH';
 ```
 
 **Output Example:**
+
 ```
  id  | payment_hash | user_id | creator_id | amount_sats | status  | created_at | updated_at | settled_at | failed_at | error_message | retry_count | version
 -----+--------------+---------+------------+-------------+---------+------------+------------+------------+-----------+---------------+-------------+---------
@@ -88,6 +89,7 @@ ORDER BY transitioned_at;
 ```
 
 **Output Example:**
+
 ```
  from_state | to_state   | transitioned_at     | triggered_by | notes
 ------------+------------+---------------------+--------------+-------
@@ -215,6 +217,7 @@ docker exec sovren-lnd lncli --network=mainnet getinfo | jq '{
 ```
 
 **Expected Output (Healthy):**
+
 ```json
 {
   "synced": true,
@@ -246,6 +249,7 @@ docker exec sovren-lnd lncli --network=mainnet lookupinvoice $PAYMENT_HASH | jq 
 ```
 
 **States:**
+
 - `OPEN` - Invoice created, awaiting payment
 - `SETTLED` - Payment received and confirmed
 - `CANCELED` - Invoice manually canceled

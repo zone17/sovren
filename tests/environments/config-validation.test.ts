@@ -33,7 +33,9 @@ describe('Multi-Environment Configuration Validation', () => {
     it('should have same security settings', () => {
       expect(stagingConfig.security.secureCookies).toBe(productionConfig.security.secureCookies);
       expect(stagingConfig.security.helmetEnabled).toBe(productionConfig.security.helmetEnabled);
-      expect(stagingConfig.security.rateLimitEnabled).toBe(productionConfig.security.rateLimitEnabled);
+      expect(stagingConfig.security.rateLimitEnabled).toBe(
+        productionConfig.security.rateLimitEnabled
+      );
       expect(stagingConfig.database.ssl).toBe(productionConfig.database.ssl);
     });
 
@@ -113,10 +115,15 @@ describe('Multi-Environment Configuration Validation', () => {
     });
 
     it('should have localhost only in development', () => {
-      const devHasLocalhost = developmentConfig.security.corsOrigins.includes('*') ||
-        developmentConfig.security.corsOrigins.some(o => o.includes('localhost'));
-      const stagingHasLocalhost = stagingConfig.security.corsOrigins.some(o => o.includes('localhost'));
-      const prodHasLocalhost = productionConfig.security.corsOrigins.some(o => o.includes('localhost'));
+      const devHasLocalhost =
+        developmentConfig.security.corsOrigins.includes('*') ||
+        developmentConfig.security.corsOrigins.some((o) => o.includes('localhost'));
+      const stagingHasLocalhost = stagingConfig.security.corsOrigins.some((o) =>
+        o.includes('localhost')
+      );
+      const prodHasLocalhost = productionConfig.security.corsOrigins.some((o) =>
+        o.includes('localhost')
+      );
 
       expect(devHasLocalhost).toBe(true);
       expect(stagingHasLocalhost).toBe(true); // Allowed in staging for testing
@@ -124,7 +131,7 @@ describe('Multi-Environment Configuration Validation', () => {
     });
 
     it('should use HTTPS in production CORS origins', () => {
-      productionConfig.security.corsOrigins.forEach(origin => {
+      productionConfig.security.corsOrigins.forEach((origin) => {
         if (origin !== '*') {
           expect(origin).toContain('https://');
         }
@@ -168,14 +175,14 @@ describe('Environment Configuration Validation', () => {
         cdnEnabled: productionConfig.cdn.enabled,
       };
 
-      Object.values(validation).forEach(check => {
+      Object.values(validation).forEach((check) => {
         expect(check).toBe(true);
       });
     });
 
     it('should have no localhost references', () => {
       expect(productionConfig.api.url).not.toContain('localhost');
-      productionConfig.security.corsOrigins.forEach(origin => {
+      productionConfig.security.corsOrigins.forEach((origin) => {
         expect(origin).not.toContain('localhost');
       });
     });

@@ -111,7 +111,6 @@ The system supports three verification methods:
 ### HTTP Verification Process
 
 1. **Initiate Verification**:
-
    - Click "Add Verification"
    - Enter your desired identifier (e.g., `yourname@yourdomain.com`)
    - Select "HTTP (/.well-known/nostr.json)" as the method
@@ -131,7 +130,6 @@ The system supports three verification methods:
    - Ensure the file is accessible at `https://yourdomain.com/.well-known/nostr.json`
 
 3. **Verify the Setup**:
-
    - Test the URL in your browser
    - Ensure it returns the JSON with your public key
    - No trailing slashes or redirects
@@ -143,12 +141,10 @@ The system supports three verification methods:
 ### DNS TXT Record Verification
 
 1. **Initiate Verification**:
-
    - Select "DNS (TXT record)" as the method
    - Enter your identifier
 
 2. **Create TXT Record**:
-
    - Add a TXT record to your domain:
 
    ```
@@ -157,7 +153,6 @@ The system supports three verification methods:
    ```
 
 3. **Wait for DNS Propagation**:
-
    - DNS changes can take 1-48 hours to propagate
    - Use online DNS checkers to verify propagation
 
@@ -167,13 +162,11 @@ The system supports three verification methods:
 ### Manual Verification Process
 
 1. **Submit Request**:
-
    - Select "Manual Verification"
    - Provide documentation of domain ownership
    - Include explanation of why other methods aren't available
 
 2. **Admin Review**:
-
    - Our team will review your submission
    - May request additional documentation
 

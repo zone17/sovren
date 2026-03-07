@@ -131,6 +131,7 @@ GITHUB_REPOSITORY: # Automatically provided (owner/repo)
 #### Staging Environment
 
 Same secrets with `_STAGING` suffix:
+
 - `STAGING_DEPLOYMENT_TOKEN`
 - `STAGING_DATABASE_URL`
 - `STAGING_REDIS_URL`
@@ -141,10 +142,12 @@ Same secrets with `_STAGING` suffix:
 Configure these in Settings → Environments:
 
 **Staging Environment:**
+
 - No protection rules (auto-deploy)
 - Secrets configured for staging
 
 **Production Environment:**
+
 - Required reviewers: 1
 - Deployment branches: `main` only
 - Wait timer: 0 minutes (approval required)
@@ -186,7 +189,7 @@ git push origin main
 ```yaml
 paths:
   - 'packages/backend/**'
-  - '!packages/backend/**/*.md'      # Ignore docs
+  - '!packages/backend/**/*.md' # Ignore docs
   - '!packages/backend/**/*.test.ts' # Ignore tests
 ```
 
@@ -282,6 +285,7 @@ ALTER TABLE users ALTER COLUMN new_feature SET NOT NULL;
 ### Health Check Endpoints
 
 **Basic Health**: `/health`
+
 ```json
 {
   "success": true,
@@ -295,6 +299,7 @@ ALTER TABLE users ALTER COLUMN new_feature SET NOT NULL;
 ```
 
 **Readiness**: `/health/ready`
+
 ```json
 {
   "status": "ready",
@@ -303,6 +308,7 @@ ALTER TABLE users ALTER COLUMN new_feature SET NOT NULL;
 ```
 
 **Liveness**: `/health/live`
+
 ```json
 {
   "status": "alive",
@@ -312,6 +318,7 @@ ALTER TABLE users ALTER COLUMN new_feature SET NOT NULL;
 ```
 
 **Detailed**: `/health/detailed`
+
 ```json
 {
   "status": "healthy",
@@ -383,6 +390,7 @@ The deployment monitoring middleware tracks:
 ### Metrics Endpoints
 
 **Deployment Health**: `/api/deployment/health`
+
 ```json
 {
   "status": "healthy",
@@ -399,6 +407,7 @@ The deployment monitoring middleware tracks:
 ```
 
 **Prometheus Metrics**: `/api/metrics`
+
 ```
 # HELP http_requests_total Total number of HTTP requests
 # TYPE http_requests_total counter
@@ -481,6 +490,7 @@ The CI pipeline validates secrets before deployment:
 **Symptom**: Deployment workflow shows "in progress" for > 20 minutes
 
 **Solution**:
+
 ```bash
 # 1. Check workflow logs
 gh run view --log
@@ -497,6 +507,7 @@ gh workflow run backend-deployment.yml -f environment=staging
 **Symptom**: Blue environment health checks timeout
 
 **Investigation**:
+
 ```bash
 # 1. Check deployment logs
 kubectl logs deployment/blue-backend
@@ -512,6 +523,7 @@ redis-cli -u $REDIS_URL ping
 ```
 
 **Common Causes**:
+
 - Database migrations failed
 - Environment variables missing
 - Service startup timeout
@@ -522,6 +534,7 @@ redis-cli -u $REDIS_URL ping
 **Symptom**: Rollback workflow failed, production still broken
 
 **Emergency Procedure**:
+
 ```bash
 # 1. Manual traffic switch via load balancer
 # (Infrastructure-specific, example for Railway)
@@ -546,6 +559,7 @@ gh issue create --title "Manual rollback executed" \
 **Symptom**: Error rate > 5% after deployment
 
 **Investigation**:
+
 ```bash
 # 1. Check error distribution
 curl https://api.sovren.app/api/deployment/health
@@ -665,12 +679,14 @@ git push origin main
 ### Deployment Schedule
 
 **Recommended Times**:
+
 - Monday-Thursday: 10am-4pm EST
 - Avoid Friday deployments
 - Avoid deployments before holidays
 - Emergency hotfixes: anytime with approval
 
 **Deployment Frequency**:
+
 - Staging: Multiple times per day
 - Production: 1-3 times per day
 - Hotfixes: As needed

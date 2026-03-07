@@ -62,36 +62,52 @@ export const RelayInformationDocumentSchema = z.object({
   supported_nips: z.array(z.number()).optional(),
   software: z.string().optional(),
   version: z.string().optional(),
-  limitation: z.object({
-    max_message_length: z.number().optional(),
-    max_subscriptions: z.number().optional(),
-    max_filters: z.number().optional(),
-    max_limit: z.number().optional(),
-    max_subid_length: z.number().optional(),
-    min_prefix: z.number().optional(),
-    max_event_tags: z.number().optional(),
-    max_content_length: z.number().optional(),
-    min_pow_difficulty: z.number().optional(),
-    auth_required: z.boolean().optional(),
-    payment_required: z.boolean().optional(),
-  }).optional(),
+  limitation: z
+    .object({
+      max_message_length: z.number().optional(),
+      max_subscriptions: z.number().optional(),
+      max_filters: z.number().optional(),
+      max_limit: z.number().optional(),
+      max_subid_length: z.number().optional(),
+      min_prefix: z.number().optional(),
+      max_event_tags: z.number().optional(),
+      max_content_length: z.number().optional(),
+      min_pow_difficulty: z.number().optional(),
+      auth_required: z.boolean().optional(),
+      payment_required: z.boolean().optional(),
+    })
+    .optional(),
   payments_url: z.string().url().optional(),
-  fees: z.object({
-    admission: z.array(z.object({
-      amount: z.number(),
-      unit: z.string(),
-    })).optional(),
-    subscription: z.array(z.object({
-      amount: z.number(),
-      unit: z.string(),
-      period: z.number(),
-    })).optional(),
-    publication: z.array(z.object({
-      kinds: z.array(z.number()),
-      amount: z.number(),
-      unit: z.string(),
-    })).optional(),
-  }).optional(),
+  fees: z
+    .object({
+      admission: z
+        .array(
+          z.object({
+            amount: z.number(),
+            unit: z.string(),
+          })
+        )
+        .optional(),
+      subscription: z
+        .array(
+          z.object({
+            amount: z.number(),
+            unit: z.string(),
+            period: z.number(),
+          })
+        )
+        .optional(),
+      publication: z
+        .array(
+          z.object({
+            kinds: z.array(z.number()),
+            amount: z.number(),
+            unit: z.string(),
+          })
+        )
+        .optional(),
+    })
+    .optional(),
   relay_countries: z.array(z.string()).optional(),
 });
 
@@ -105,13 +121,13 @@ export type RelayInformationDocument = z.infer<typeof RelayInformationDocumentSc
  * Relay Connection Options
  */
 export interface RelayConnectionOptions {
-  read?: boolean;              // Allow reading events
-  write?: boolean;             // Allow writing events
-  autoReconnect?: boolean;     // Auto-reconnect on disconnect
-  reconnectDelay?: number;     // Delay between reconnect attempts (ms)
+  read?: boolean; // Allow reading events
+  write?: boolean; // Allow writing events
+  autoReconnect?: boolean; // Auto-reconnect on disconnect
+  reconnectDelay?: number; // Delay between reconnect attempts (ms)
   maxReconnectAttempts?: number; // Max reconnection attempts
-  connectionTimeout?: number;   // Connection timeout (ms)
-  auth?: boolean;              // Enable NIP-42 authentication
+  connectionTimeout?: number; // Connection timeout (ms)
+  auth?: boolean; // Enable NIP-42 authentication
   authHandler?: () => Promise<NostrEvent>; // Custom auth handler
 }
 
@@ -174,12 +190,12 @@ export interface RelayStatistics {
   eventsReceived: number;
   subscriptions: number;
   activeSubscriptions: number;
-  uptime: number;              // Milliseconds
-  uptimePercentage: number;    // 0-100
-  averageLatency: number;      // Milliseconds
+  uptime: number; // Milliseconds
+  uptimePercentage: number; // 0-100
+  averageLatency: number; // Milliseconds
   minLatency: number;
   maxLatency: number;
-  errorRate: number;           // 0-1
+  errorRate: number; // 0-1
   totalErrors: number;
   lastErrorTime?: number;
   bytesReceived: number;
@@ -199,23 +215,23 @@ export interface RelayStatistics {
  * As defined in NIP-01
  */
 export type NostrRelayMessage =
-  | ['EVENT', string, NostrEvent]           // Server sends event
-  | ['OK', string, boolean, string]         // Server response to event
-  | ['EOSE', string]                        // End of stored events
-  | ['CLOSED', string, string]              // Subscription closed
-  | ['NOTICE', string]                      // Human-readable message
-  | ['AUTH', string]                        // Authentication challenge (NIP-42)
-  | ['COUNT', string, { count: number }];   // Event count (NIP-45)
+  | ['EVENT', string, NostrEvent] // Server sends event
+  | ['OK', string, boolean, string] // Server response to event
+  | ['EOSE', string] // End of stored events
+  | ['CLOSED', string, string] // Subscription closed
+  | ['NOTICE', string] // Human-readable message
+  | ['AUTH', string] // Authentication challenge (NIP-42)
+  | ['COUNT', string, { count: number }]; // Event count (NIP-45)
 
 /**
  * Client-to-Relay Messages
  */
 export type NostrClientMessage =
-  | ['EVENT', NostrEvent]                   // Publish event
-  | ['REQ', string, ...object[]]            // Request subscription
-  | ['CLOSE', string]                       // Close subscription
-  | ['AUTH', NostrEvent]                    // Auth response (NIP-42)
-  | ['COUNT', string, ...object[]];         // Count request (NIP-45)
+  | ['EVENT', NostrEvent] // Publish event
+  | ['REQ', string, ...object[]] // Request subscription
+  | ['CLOSE', string] // Close subscription
+  | ['AUTH', NostrEvent] // Auth response (NIP-42)
+  | ['COUNT', string, ...object[]]; // Count request (NIP-45)
 
 // ========================================
 // Relay Callbacks
@@ -249,13 +265,13 @@ export interface RelayEventHandlers {
  * Relay Selection Strategy
  */
 export enum RelaySelectionStrategy {
-  ALL = 'all',                    // Use all available relays
-  FASTEST = 'fastest',            // Use fastest responding relays
-  RELIABLE = 'reliable',          // Use most reliable relays
-  GEOGRAPHIC = 'geographic',      // Use geographically closest relays
-  PRIORITY = 'priority',          // Use relays by priority
-  RANDOM = 'random',              // Random selection
-  ROUND_ROBIN = 'round_robin',    // Round-robin selection
+  ALL = 'all', // Use all available relays
+  FASTEST = 'fastest', // Use fastest responding relays
+  RELIABLE = 'reliable', // Use most reliable relays
+  GEOGRAPHIC = 'geographic', // Use geographically closest relays
+  PRIORITY = 'priority', // Use relays by priority
+  RANDOM = 'random', // Random selection
+  ROUND_ROBIN = 'round_robin', // Round-robin selection
 }
 
 /**
@@ -264,12 +280,12 @@ export enum RelaySelectionStrategy {
 export interface RelayPoolConfig {
   relays: RelayConfig[];
   selectionStrategy: RelaySelectionStrategy;
-  minRelays: number;              // Minimum relays to use
-  maxRelays: number;              // Maximum relays to use
-  defaultTimeout: number;         // Default operation timeout (ms)
-  connectionPoolSize: number;     // Max concurrent connections
-  enableFallback: boolean;        // Enable fallback relays
-  fallbackRelays: string[];       // Fallback relay URLs
+  minRelays: number; // Minimum relays to use
+  maxRelays: number; // Maximum relays to use
+  defaultTimeout: number; // Default operation timeout (ms)
+  connectionPoolSize: number; // Max concurrent connections
+  enableFallback: boolean; // Enable fallback relays
+  fallbackRelays: string[]; // Fallback relay URLs
 }
 
 // ========================================
@@ -298,9 +314,9 @@ export interface RelayHealthCheck {
   warnings: string[];
   metrics: {
     responseTime: number;
-    availability: number;      // 0-1
-    successRate: number;       // 0-1
-    errorRate: number;         // 0-1
+    availability: number; // 0-1
+    successRate: number; // 0-1
+    errorRate: number; // 0-1
   };
 }
 
@@ -309,10 +325,10 @@ export interface RelayHealthCheck {
  */
 export interface RelayHealthMonitoringConfig {
   enabled: boolean;
-  checkInterval: number;       // ms
-  timeout: number;             // ms
-  failureThreshold: number;    // Number of failures before marking unhealthy
-  recoveryThreshold: number;   // Number of successes before marking healthy
+  checkInterval: number; // ms
+  timeout: number; // ms
+  failureThreshold: number; // Number of failures before marking unhealthy
+  recoveryThreshold: number; // Number of successes before marking healthy
   alertOnFailure: boolean;
 }
 
@@ -325,7 +341,7 @@ export interface RelayHealthMonitoringConfig {
  */
 export interface RelayRecommendation {
   url: string;
-  score: number;              // 0-1 recommendation score
+  score: number; // 0-1 recommendation score
   reasons: string[];
   source: 'user' | 'network' | 'ai' | 'default';
   verified: boolean;
@@ -336,10 +352,10 @@ export interface RelayRecommendation {
  * Relay Discovery Options
  */
 export interface RelayDiscoveryOptions {
-  fromContacts?: boolean;      // Discover from contact list
-  fromEvents?: boolean;        // Discover from event tags
-  fromNIP05?: boolean;         // Discover from NIP-05 profiles
-  fromDirectory?: boolean;     // Discover from relay directory
+  fromContacts?: boolean; // Discover from contact list
+  fromEvents?: boolean; // Discover from event tags
+  fromNIP05?: boolean; // Discover from NIP-05 profiles
+  fromDirectory?: boolean; // Discover from relay directory
   minRecommendations?: number; // Min recommendations to trust relay
 }
 
@@ -362,13 +378,13 @@ export interface RelayPerformanceMetrics {
     p50ResponseTime: number;
     p95ResponseTime: number;
     p99ResponseTime: number;
-    throughput: number;          // Events per second
-    successRate: number;         // 0-1
-    errorRate: number;           // 0-1
-    availability: number;        // 0-1
+    throughput: number; // Events per second
+    successRate: number; // 0-1
+    errorRate: number; // 0-1
+    availability: number; // 0-1
     bandwidth: {
-      sent: number;              // Bytes
-      received: number;          // Bytes
+      sent: number; // Bytes
+      received: number; // Bytes
     };
   };
 }

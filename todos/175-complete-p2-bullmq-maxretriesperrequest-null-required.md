@@ -3,6 +3,7 @@
 ## Priority: P2 (Important)
 
 ## Source
+
 PR #83 — Review Agent: security-sentinel, performance-oracle
 
 ## Description
@@ -42,4 +43,5 @@ function createBullMQConnection(): Redis {
 Or pass the connection config object rather than duplicating the client.
 
 ## Impact
+
 Reliability — workers will fail with `MaxRetriesPerRequestError` under load.

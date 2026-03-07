@@ -24,18 +24,21 @@ Source: TypeScript quality reviewer, Architecture reviewer (PR #93)
 ## Proposed Solutions
 
 ### Option A: Type the chain with Record (Recommended)
+
 ```typescript
 export function createMockChain(terminalData: unknown = []) {
   const chain: Record<string, ReturnType<typeof vi.fn>> = {};
   // ...
 }
 ```
+
 - Pros: Type-safe, follows project standard
 - Cons: Slightly more verbose
 - Effort: Small
 - Risk: Low
 
 ### Option B: Leave as-is (test code exception)
+
 - Pros: No changes needed, scanner already excludes test-utils
 - Cons: Sets bad precedent for new test utility code
 - Effort: None
@@ -57,8 +60,8 @@ Option A — type properly since this is new code.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                     | Learnings                              |
+| ---------- | -------------------------- | -------------------------------------- |
 | 2026-02-21 | Created from PR #93 review | TypeScript reviewer flagged as blocker |
 
 ## Resources

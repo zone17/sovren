@@ -134,14 +134,12 @@ networks:
 The security scanning pipeline includes:
 
 1. **Trivy Vulnerability Scanner**
-
    - Image vulnerability scanning
    - SARIF format for GitHub Security tab
    - Critical vulnerability blocking
    - Daily automated scans
 
 2. **Hadolint Dockerfile Linting**
-
    - Dockerfile best practices validation
    - Security rule enforcement
    - CI/CD integration

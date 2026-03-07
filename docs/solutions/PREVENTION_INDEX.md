@@ -133,25 +133,21 @@
 If time is limited, focus on highest-impact findings in order:
 
 1. **P1-039 Redis Factory** (P0 - most violations)
-
    - Read: QUICK_START Week 2 Day 1
    - Code: [PREVENTION_CODE_PATTERNS.md](PREVENTION_CODE_PATTERNS.md#p1-039-redis-client-sprawl)
    - Guide: [P1-037-043 §Redis Factory](security-issues/P1-037-043-prevention-strategies.md#p1-039-redis-client-sprawl--no-shared-factory-pattern)
 
 2. **P1-043 Type Safety** (P0 - prevents class of errors)
-
    - Read: QUICK_START Week 1 Day 1
    - Code: [PREVENTION_CODE_PATTERNS.md](PREVENTION_CODE_PATTERNS.md#p1-043-unsafe-type-casts)
    - Guide: [P1-037-043 §Type Safety](security-issues/P1-037-043-prevention-strategies.md#p1-043-unsafe-type-casts--bypassing-validation)
 
 3. **P1-042 Encryption** (P0 - security critical)
-
    - Read: QUICK_START Week 2 Day 3
    - Code: [PREVENTION_CODE_PATTERNS.md](PREVENTION_CODE_PATTERNS.md#p1-042-fake-encryption)
    - Guide: [P1-037-043 §Encryption](security-issues/P1-037-043-prevention-strategies.md#p1-042-fake-encryption--base64-labeled-as-encryption)
 
 4. **P1-040 Rotation** (P1 - atomic updates)
-
    - Read: QUICK_START Week 2 Day 4
    - Code: [PREVENTION_CODE_PATTERNS.md](PREVENTION_CODE_PATTERNS.md#p1-040-credential-rotation-race-condition)
    - Guide: [P1-037-043 §Rotation](security-issues/P1-037-043-prevention-strategies.md#p1-040-credential-rotation-race-condition)

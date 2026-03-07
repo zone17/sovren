@@ -26,6 +26,14 @@ export const circlesApi = {
     return apiClient.post(`${BASE}/${circleId}/join`);
   },
 
+  getCircleById(circleId: string): Promise<ApiResponse<CircleWithMemberCount>> {
+    return apiClient.get(`${BASE}/${circleId}`);
+  },
+
+  leaveCircle(circleId: string): Promise<ApiResponse<void>> {
+    return apiClient.delete(`${BASE}/${circleId}/leave`);
+  },
+
   removeMember(circleId: string, memberId: string): Promise<ApiResponse<void>> {
     return apiClient.delete(`${BASE}/${circleId}/members/${memberId}`);
   },

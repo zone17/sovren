@@ -16,6 +16,7 @@ The Sovren backend services were growing in complexity with increasing dependenc
 - **Circular Dependencies**: Risk of circular dependencies with no framework protection
 
 We needed a robust dependency injection (DI) framework to:
+
 - Enforce loose coupling through interfaces
 - Simplify testing with automatic mock injection
 - Centralize configuration and bootstrapping
@@ -27,6 +28,7 @@ We needed a robust dependency injection (DI) framework to:
 We will use **Inversify** as our dependency injection container for all backend services.
 
 **Implementation Approach**:
+
 ```typescript
 // services/container.ts - IoC Container setup
 import { Container } from 'inversify';
@@ -55,6 +57,7 @@ class PaymentService implements IPaymentService {
 ```
 
 **Key Features Adopted**:
+
 1. **Decorator-Based Injection**: `@injectable()` and `@inject()` for clean syntax
 2. **Interface Binding**: Services bound to interfaces, not concrete implementations
 3. **Lifecycle Scopes**:
@@ -69,6 +72,7 @@ class PaymentService implements IPaymentService {
 ### Positive
 
 1. **Testability**: Easy to inject mocks in tests
+
    ```typescript
    // Test setup
    container.rebind(TYPES.LightningService).toConstantValue(mockLightningService);
@@ -116,12 +120,15 @@ class PaymentService implements IPaymentService {
 ## Alternatives Considered
 
 ### 1. NestJS Framework
+
 **Pros**:
+
 - Full-featured framework with built-in DI
 - Excellent TypeScript support
 - Large ecosystem and community
 
 **Cons**:
+
 - Too opinionated for our existing Express setup
 - Would require complete rewrite of existing code
 - Heavier framework than needed
@@ -130,12 +137,15 @@ class PaymentService implements IPaymentService {
 **Why Rejected**: Too much migration effort for existing Express codebase. Inversify provides DI without requiring framework migration.
 
 ### 2. Awilix
+
 **Pros**:
+
 - Simpler API than Inversify
 - Good TypeScript support
 - Smaller bundle size
 
 **Cons**:
+
 - Less mature ecosystem
 - Fewer features (no request scoping)
 - String-based identifiers less type-safe
@@ -144,12 +154,15 @@ class PaymentService implements IPaymentService {
 **Why Rejected**: Inversify's symbol-based identifiers and mature feature set provide better long-term stability and type safety.
 
 ### 3. Manual Dependency Injection
+
 **Pros**:
+
 - No framework dependency
 - Full control over injection
 - Zero learning curve
 
 **Cons**:
+
 - Requires manual wiring in every service
 - No standardized lifecycle management
 - Testing requires manual mock setup
@@ -158,12 +171,15 @@ class PaymentService implements IPaymentService {
 **Why Rejected**: Doesn't scale well as codebase grows. Manual DI becomes maintenance burden and source of bugs.
 
 ### 4. TSyringe (Microsoft)
+
 **Pros**:
+
 - Lightweight and simple
 - Microsoft backing
 - Good TypeScript integration
 
 **Cons**:
+
 - Less feature-rich than Inversify
 - Smaller community
 - Limited lifecycle management options
@@ -174,6 +190,7 @@ class PaymentService implements IPaymentService {
 ## Implementation Notes
 
 **Container Organization**:
+
 ```
 services/
 ├── container.ts           # Main container setup
@@ -185,6 +202,7 @@ services/
 ```
 
 **Testing Pattern**:
+
 ```typescript
 describe('PaymentService', () => {
   let container: Container;

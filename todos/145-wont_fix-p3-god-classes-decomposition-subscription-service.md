@@ -15,6 +15,7 @@ dependencies: []
 ## Problem Statement
 
 5 backend services exceed 500 lines and have too many responsibilities:
+
 - `subscription-management-service.ts` — 1,114 lines (billing, lifecycle, invoicing, analytics, notifications)
 - `lightning-service.ts` — ~900 lines (invoices, payments, webhooks, cache management)
 - `content-management.ts` routes — 850 lines (CRUD, media, collections, series, premium)
@@ -31,9 +32,11 @@ dependencies: []
 ## Proposed Solutions
 
 ### Option A: Extract Focused Services (Recommended)
+
 **Effort**: Large | **Risk**: Medium
 
 Split subscription-management-service into:
+
 - `SubscriptionBillingService` — payment processing, invoicing
 - `SubscriptionLifecycleService` — create, pause, resume, cancel
 - `SubscriptionAnalyticsService` — metrics, reporting
@@ -49,6 +52,6 @@ Split subscription-management-service into:
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                            | Learnings                                 |
+| ---------- | ------------------------------------------------- | ----------------------------------------- |
 | 2026-02-15 | Created from Round 7 pattern + simplicity reviews | God classes compound complexity over time |

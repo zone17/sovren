@@ -111,25 +111,21 @@ graph TD
 **MANDATORY REQUIREMENT**: Every user story implementation MUST include the following Mermaid diagrams:
 
 1. **Architecture Overview Diagram**:
-
    - Shows the components involved in the implementation
    - Illustrates the relationship between components
    - Places the changes within the broader system context
 
 2. **Component Interaction Diagram**:
-
    - Details how components interact with each other
    - Shows the sequence of operations
    - Illustrates API calls and data exchange patterns
 
 3. **Data Flow Diagram**:
-
    - Visualizes how data moves through the system
    - Shows data transformation steps
    - Illustrates storage points and persistence mechanisms
 
 4. **Process Flow Diagram**:
-
    - Provides step-by-step visualization of user interactions
    - Shows system processes and decision points
    - Illustrates error handling paths

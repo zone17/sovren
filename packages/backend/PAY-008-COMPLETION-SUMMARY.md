@@ -18,12 +18,14 @@ Validate and comprehensively test the existing PaymentStateMachine to ensure all
 ### 1. State Machine Validation
 
 **Existing Implementation Reviewed**:
+
 - PaymentStateMachine service at `packages/backend/src/services/payment/PaymentStateMachine.ts`
 - Complete state transition logic with atomic database operations
 - Event sourcing with comprehensive audit trail
 - Type-safe state definitions in `packages/shared/src/types/payment-state.ts`
 
 **State Transition Rules Verified**:
+
 ```
 PENDING → PROCESSING | EXPIRED | FAILED
 PROCESSING → COMPLETED | FAILED
@@ -38,6 +40,7 @@ REFUNDED → [TERMINAL]
 Added **36 total tests** covering all critical scenarios:
 
 #### A. Valid State Transitions (10 tests)
+
 - ✅ PENDING → PROCESSING
 - ✅ PENDING → EXPIRED
 - ✅ PENDING → FAILED
@@ -47,38 +50,45 @@ Added **36 total tests** covering all critical scenarios:
 - ✅ FAILED → PENDING (retry)
 
 #### B. Invalid Transition Protection (4 tests)
+
 - ✅ Rejects PROCESSING → PENDING
 - ✅ Rejects COMPLETED → FAILED
 - ✅ Rejects all transitions from EXPIRED (terminal)
 - ✅ Rejects all transitions from REFUNDED (terminal)
 
 #### C. Concurrent State Updates / Race Conditions (2 tests)
+
 - ✅ Handles concurrent transitions gracefully
 - ✅ Prevents state corruption via atomic database operations
 - ✅ Tests PostgreSQL stored procedure atomicity
 
 #### D. State History Tracking (3 tests)
+
 - ✅ Retrieves complete event history
 - ✅ Handles empty event history
 - ✅ Throws error when history retrieval fails
 
 #### E. Terminal State Protection (3 tests)
+
 - ✅ Prevents ALL transitions from EXPIRED state
 - ✅ Prevents ALL transitions from REFUNDED state
 - ✅ Returns empty allowed transitions for terminal states
 
 #### F. Batch Transition Operations (3 tests)
+
 - ✅ Returns proper structure (successful/failed arrays)
 - ✅ Tracks individual transition failures
 - ✅ Handles complete batch failure
 
 #### G. Helper Methods (6 tests)
+
 - ✅ `getCurrentState()` returns correct state
 - ✅ `canTransition()` validates transitions
 - ✅ `getAllowedTransitions()` returns valid target states
 - ✅ Error handling for missing payments
 
 #### H. Edge Cases & Error Recovery (5 tests)
+
 - ✅ Handles metadata in state transitions
 - ✅ Handles userId in state transitions
 - ✅ Handles event retrieval failures
@@ -129,26 +139,31 @@ Time:        0.317s
 ## Key Features Validated
 
 ### 1. Atomic State Transitions
+
 - ✅ Uses PostgreSQL stored procedure `transition_payment_state()`
 - ✅ Atomic updates prevent race conditions
 - ✅ Transaction rollback on failure
 
 ### 2. Event Sourcing
+
 - ✅ Every state transition creates an event record
 - ✅ Complete audit trail maintained
 - ✅ Event history retrieval supported
 
 ### 3. Terminal State Protection
+
 - ✅ EXPIRED and REFUNDED states are truly terminal
 - ✅ No transitions allowed from terminal states
 - ✅ Validation prevents invalid transitions
 
 ### 4. Batch Operations
+
 - ✅ `batchTransition()` supports bulk updates
 - ✅ Returns success/failure breakdown
 - ✅ Useful for expiring multiple pending payments
 
 ### 5. Error Handling
+
 - ✅ Custom error classes:
   - `InvalidTransitionError` - Transition not allowed
   - `StateTransitionError` - Database operation failed
@@ -156,6 +171,7 @@ Time:        0.317s
 - ✅ Comprehensive logging at all stages
 
 ### 6. Concurrency Protection
+
 - ✅ Database-level atomicity prevents corruption
 - ✅ Optimistic locking via state validation
 - ✅ Handles concurrent transition attempts safely
@@ -164,27 +180,29 @@ Time:        0.317s
 
 ## Code Quality Metrics
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| Test Coverage | 100% | ✅ |
-| Tests Passing | 36/36 | ✅ |
-| TypeScript Strict Mode | Enabled | ✅ |
-| Mermaid Diagrams | 4 diagrams | ✅ |
-| Terminal State Protection | Verified | ✅ |
-| Race Condition Handling | Tested | ✅ |
-| Event History | Complete | ✅ |
+| Metric                    | Value      | Status |
+| ------------------------- | ---------- | ------ |
+| Test Coverage             | 100%       | ✅     |
+| Tests Passing             | 36/36      | ✅     |
+| TypeScript Strict Mode    | Enabled    | ✅     |
+| Mermaid Diagrams          | 4 diagrams | ✅     |
+| Terminal State Protection | Verified   | ✅     |
+| Race Condition Handling   | Tested     | ✅     |
+| Event History             | Complete   | ✅     |
 
 ---
 
 ## Integration Points
 
 ### Used By:
+
 - `PaymentRetryService` - For retry logic
 - `InvoiceExpirationService` - For expiring payments
 - Webhook handlers - For payment confirmations
 - Admin tools - For manual state management
 
 ### Dependencies:
+
 - Supabase PostgreSQL database
 - Shared types (`@sovren/shared/types`)
 - Payment event logging
@@ -194,6 +212,7 @@ Time:        0.317s
 ## Security Considerations
 
 ### Validated Security Features:
+
 - ✅ **Atomic Operations**: Prevents race conditions and state corruption
 - ✅ **Input Validation**: All transitions validated before execution
 - ✅ **Audit Trail**: Complete event history for forensics

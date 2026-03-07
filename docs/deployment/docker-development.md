@@ -128,7 +128,6 @@ Once started, services are available at:
 ### Code Changes
 
 1. **Frontend Changes**: Edit files in `packages/frontend/src/`
-
    - Changes are automatically reflected via Vite HMR
    - TypeScript compilation happens in real-time
    - Browser automatically refreshes on save

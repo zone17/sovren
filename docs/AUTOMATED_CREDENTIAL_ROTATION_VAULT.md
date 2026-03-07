@@ -9,14 +9,16 @@ This system provides fully automated credential rotation using **HashiCorp Vault
 ## 🏆 Why HashiCorp Vault?
 
 ### Cost Comparison
-| Solution | Monthly Cost | Annual Cost | License |
-|----------|-------------|-------------|---------|
-| **HashiCorp Vault** | **$0** | **$0** | Apache 2.0 (Free Forever) |
-| AWS Secrets Manager | $0.40/secret + API calls | ~$50-100 | Proprietary |
-| Azure Key Vault | $0.03/10k operations | ~$30-60 | Proprietary |
-| Google Secret Manager | $0.06/active secret | ~$40-80 | Proprietary |
+
+| Solution              | Monthly Cost             | Annual Cost | License                   |
+| --------------------- | ------------------------ | ----------- | ------------------------- |
+| **HashiCorp Vault**   | **$0**                   | **$0**      | Apache 2.0 (Free Forever) |
+| AWS Secrets Manager   | $0.40/secret + API calls | ~$50-100    | Proprietary               |
+| Azure Key Vault       | $0.03/10k operations     | ~$30-60     | Proprietary               |
+| Google Secret Manager | $0.06/active secret      | ~$40-80     | Proprietary               |
 
 ### Enterprise Features (All Free)
+
 - ✅ **Secret Versioning**: Full history and rollback
 - ✅ **Encryption**: AES-256-GCM at rest, TLS in transit
 - ✅ **Audit Logging**: Complete compliance trail
@@ -27,6 +29,7 @@ This system provides fully automated credential rotation using **HashiCorp Vault
 - ✅ **Self-Hosted**: Complete data sovereignty
 
 ### Who Uses Vault?
+
 - Netflix, Adobe, Citadel, Barclays
 - 70% of Fortune 500 companies
 - Standard in Kubernetes environments
@@ -50,6 +53,7 @@ This system provides fully automated credential rotation using **HashiCorp Vault
 ```
 
 **Output:**
+
 ```
 🔐 HashiCorp Vault Setup Complete 🎉
 🔗 Web UI: http://localhost:8200
@@ -417,12 +421,13 @@ done
 ## 💰 Cost Savings Analysis
 
 ### 3-Year Comparison
-| Provider | Year 1 | Year 2 | Year 3 | Total | Savings vs Vault |
-|----------|--------|--------|--------|-------|------------------|
-| **HashiCorp Vault** | $0 | $0 | $0 | **$0** | - |
-| AWS Secrets Manager | $100 | $100 | $100 | $300 | $300 |
-| Azure Key Vault | $60 | $60 | $60 | $180 | $180 |
-| Google Secret Manager | $80 | $80 | $80 | $240 | $240 |
+
+| Provider              | Year 1 | Year 2 | Year 3 | Total  | Savings vs Vault |
+| --------------------- | ------ | ------ | ------ | ------ | ---------------- |
+| **HashiCorp Vault**   | $0     | $0     | $0     | **$0** | -                |
+| AWS Secrets Manager   | $100   | $100   | $100   | $300   | $300             |
+| Azure Key Vault       | $60    | $60    | $60    | $180   | $180             |
+| Google Secret Manager | $80    | $80    | $80    | $240   | $240             |
 
 **Using Vault saves $180-300 over 3 years** while providing superior features.
 
@@ -431,6 +436,7 @@ done
 ## 🏆 Summary
 
 With HashiCorp Vault, you get:
+
 - ✅ **$0 cost forever** (Apache 2.0 license)
 - ✅ **Enterprise-grade security** (used by Fortune 500)
 - ✅ **No vendor lock-in** (self-hosted)

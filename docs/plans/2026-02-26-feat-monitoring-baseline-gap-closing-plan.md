@@ -1,5 +1,5 @@
 ---
-title: "feat: Monitoring baseline gap closing"
+title: 'feat: Monitoring baseline gap closing'
 type: feat
 date: 2026-02-26
 priority: P3
@@ -15,17 +15,17 @@ The monitoring baseline (health endpoints, structured logging, Sentry error trac
 
 ## What Already Exists
 
-| Component | Status | Files |
-|---|---|---|
-| Health endpoints (`/health`, `/ready`, `/live`, `/health/detailed`) | Implemented | `packages/backend/src/routes/health.ts` |
-| Winston structured logging + correlation IDs | Implemented | `packages/backend/src/lib/logger.ts`, `packages/backend/src/middleware/correlation-id.ts` |
-| Sentry backend (`@sentry/node@10.38.0`) | Implemented | `packages/backend/src/lib/sentry.ts` |
-| Sentry frontend (`@sentry/react@10.38.0`) | Implemented | `packages/frontend/src/monitoring/sentry.ts` |
-| Prometheus metrics (`prom-client@15.1.3`) | Implemented | `packages/backend/src/middleware/deployment-monitoring.ts` |
-| Docker health checks | Configured | All Dockerfiles + compose files |
-| Web Vitals collection | Implemented | `packages/frontend/src/monitoring/web-vitals.ts` |
-| Sensitive field sanitization | Implemented | `packages/backend/src/lib/sensitive-fields.ts` |
-| ADR-017 (Observability Stack) | Written | `docs/decisions/ADR-017-observability-stack.md` |
+| Component                                                           | Status      | Files                                                                                     |
+| ------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| Health endpoints (`/health`, `/ready`, `/live`, `/health/detailed`) | Implemented | `packages/backend/src/routes/health.ts`                                                   |
+| Winston structured logging + correlation IDs                        | Implemented | `packages/backend/src/lib/logger.ts`, `packages/backend/src/middleware/correlation-id.ts` |
+| Sentry backend (`@sentry/node@10.38.0`)                             | Implemented | `packages/backend/src/lib/sentry.ts`                                                      |
+| Sentry frontend (`@sentry/react@10.38.0`)                           | Implemented | `packages/frontend/src/monitoring/sentry.ts`                                              |
+| Prometheus metrics (`prom-client@15.1.3`)                           | Implemented | `packages/backend/src/middleware/deployment-monitoring.ts`                                |
+| Docker health checks                                                | Configured  | All Dockerfiles + compose files                                                           |
+| Web Vitals collection                                               | Implemented | `packages/frontend/src/monitoring/web-vitals.ts`                                          |
+| Sensitive field sanitization                                        | Implemented | `packages/backend/src/lib/sensitive-fields.ts`                                            |
+| ADR-017 (Observability Stack)                                       | Written     | `docs/decisions/ADR-017-observability-stack.md`                                           |
 
 ## Gaps to Close
 
@@ -59,6 +59,7 @@ The Prometheus config scrapes MCP gateway services but **not the backend API**. 
 ```
 
 Note: The `/metrics` endpoint requires `METRICS_AUTH_TOKEN` in production. For the dev Prometheus scrape, either:
+
 - Set `METRICS_AUTH_TOKEN` in the backend's docker-compose env and pass as `bearer_token` in prometheus.yml
 - Or skip auth in non-production (already the default behavior — if no token configured, metrics are open)
 
@@ -73,6 +74,7 @@ cd packages/frontend && npm uninstall @sentry/tracing
 ```
 
 Verify no imports reference it:
+
 ```bash
 grep -r "@sentry/tracing" packages/frontend/src/
 ```
@@ -81,13 +83,14 @@ grep -r "@sentry/tracing" packages/frontend/src/
 
 32 `console.log/error/warn` calls in 3 key files bypass structured logging:
 
-| File | Count | Impact |
-|---|---|---|
-| `packages/backend/src/shutdown.ts` | 17 | Shutdown events invisible to log aggregation |
-| `packages/backend/src/cache/RedisAdapter.ts` | 14 | Cache failures invisible to log aggregation |
-| `packages/backend/src/server.ts` | 1 | Startup event invisible |
+| File                                         | Count | Impact                                       |
+| -------------------------------------------- | ----- | -------------------------------------------- |
+| `packages/backend/src/shutdown.ts`           | 17    | Shutdown events invisible to log aggregation |
+| `packages/backend/src/cache/RedisAdapter.ts` | 14    | Cache failures invisible to log aggregation  |
+| `packages/backend/src/server.ts`             | 1     | Startup event invisible                      |
 
 Replace with the existing Winston logger:
+
 ```typescript
 import { logger } from '../lib/logger';
 
@@ -114,7 +117,7 @@ logger.info('Server started', { port: 3001 });
 - [x] `docker/prometheus/prometheus.yml` includes `sovren-api` scrape target
 - [x] `@sentry/tracing` removed from `packages/frontend/package.json`
 - [x] No imports reference `@sentry/tracing`
-- [x] `shutdown.ts`, `RedisAdapter.ts`, `server.ts` use Winston logger instead of console.*
+- [x] `shutdown.ts`, `RedisAdapter.ts`, `server.ts` use Winston logger instead of console.\*
 - [x] Unused metric exports have TODO comments
 - [x] All existing tests pass (3043 pass, 241 pre-existing failures unchanged)
 - [x] `docker compose -f docker-compose.dev.yml config` validates (warning: missing .env.development is pre-existing)

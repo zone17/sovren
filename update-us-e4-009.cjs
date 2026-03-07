@@ -4,7 +4,7 @@ const data = JSON.parse(fs.readFileSync(filePath));
 
 // Find US-E4-009 in the phases.active-development.tasks array
 const tasks = data.phases['active-development'].tasks;
-const storyIndex = tasks.findIndex(t => t.story_id === 'US-E4-009');
+const storyIndex = tasks.findIndex((t) => t.story_id === 'US-E4-009');
 
 if (storyIndex !== -1) {
   const story = tasks[storyIndex];
@@ -16,16 +16,18 @@ if (storyIndex !== -1) {
   story.agent = 'project-orchestrator';
 
   // Update all subtasks
-  story.subtasks.forEach(task => {
+  story.subtasks.forEach((task) => {
     task.status = 'completed';
   });
 
   // Find and update the parent epic task
-  const epicTask = tasks.find(t => t.id === 'epic-004-parent');
+  const epicTask = tasks.find((t) => t.id === 'epic-004-parent');
   if (epicTask) {
     // Count completed stories for Epic 004
-    const epic004Stories = tasks.filter(t => t.epic_label === 'Epic 004: State Management' && t.type === 'story');
-    const completedStories = epic004Stories.filter(s => s.status === 'completed').length;
+    const epic004Stories = tasks.filter(
+      (t) => t.epic_label === 'Epic 004: State Management' && t.type === 'story'
+    );
+    const completedStories = epic004Stories.filter((s) => s.status === 'completed').length;
     const totalStories = epic004Stories.length;
 
     epicTask.name = `Epic 004: State Management - ${completedStories}/${totalStories} complete`;
@@ -50,12 +52,14 @@ if (storyIndex !== -1) {
 
   // Count Wave 2b stories
   const wave2bStories = ['US-E4-009', 'US-E4-010', 'US-E4-011', 'US-E4-012'];
-  const wave2bCompleted = wave2bStories.filter(id => {
-    const s = tasks.find(t => t.story_id === id);
+  const wave2bCompleted = wave2bStories.filter((id) => {
+    const s = tasks.find((t) => t.story_id === id);
     return s && s.status === 'completed';
   }).length;
 
-  console.log(`📈 Wave 2b Progress: ${wave2bCompleted}/4 stories complete (${Math.round(wave2bCompleted/4*100)}%)`);
+  console.log(
+    `📈 Wave 2b Progress: ${wave2bCompleted}/4 stories complete (${Math.round((wave2bCompleted / 4) * 100)}%)`
+  );
 } else {
   console.error('Could not find US-E4-009 in tasks');
 }

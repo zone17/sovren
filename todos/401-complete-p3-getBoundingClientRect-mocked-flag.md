@@ -1,12 +1,12 @@
 ---
 status: pending
 priority: p3
-issue_id: "418"
+issue_id: '418'
 tags: [code-review, testing, quality, pr-87]
 dependencies: []
 ---
 
-# Frontend test setup uses undeclared __mocked property on getBoundingClientRect
+# Frontend test setup uses undeclared \_\_mocked property on getBoundingClientRect
 
 ## Problem Statement
 
@@ -44,6 +44,7 @@ Low priority. Accept as-is since it's test infrastructure.
 ## Technical Details
 
 **Affected files:**
+
 - `test-utils/vitest-frontend-setup.ts:89-100`
 
 ## Acceptance Criteria

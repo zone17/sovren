@@ -24,9 +24,10 @@ const PHASE_5_COMPLETIONS = {
     test_coverage: 100,
     files_created: [
       'docs/development/guidelines/STATE-MANAGEMENT-GUIDELINES.md',
-      'docs/development/guidelines/STATE-MANAGEMENT-QUICK-REFERENCE.md'
+      'docs/development/guidelines/STATE-MANAGEMENT-QUICK-REFERENCE.md',
     ],
-    notes: 'Comprehensive developer guidelines (5,500+ words) with patterns, anti-patterns, debugging guide, and quick reference card'
+    notes:
+      'Comprehensive developer guidelines (5,500+ words) with patterns, anti-patterns, debugging guide, and quick reference card',
   },
   'US-E4-024': {
     name: 'Create Training Workshop Materials',
@@ -37,9 +38,10 @@ const PHASE_5_COMPLETIONS = {
     files_created: [
       'docs/training/workshop/STATE-MANAGEMENT-WORKSHOP.md',
       'docs/training/workshop/exercises/README.md',
-      'docs/training/workshop/slides/workshop-presentation.md'
+      'docs/training/workshop/slides/workshop-presentation.md',
     ],
-    notes: '4-hour workshop curriculum with hands-on exercises, presentation slides (23 slides), facilitator guide, and participant materials'
+    notes:
+      '4-hour workshop curriculum with hands-on exercises, presentation slides (23 slides), facilitator guide, and participant materials',
   },
   'US-E4-025': {
     name: 'Create Architecture Decision Record (ADR)',
@@ -47,11 +49,10 @@ const PHASE_5_COMPLETIONS = {
     progress_percent: 100,
     agent: 'technical-docs-writer',
     test_coverage: 100,
-    files_created: [
-      'docs/architecture/decisions/ADR-004-state-management-boundaries.md'
-    ],
-    notes: 'ADR-004 documenting state management architecture decision - context, alternatives, decision rationale, consequences, validation metrics'
-  }
+    files_created: ['docs/architecture/decisions/ADR-004-state-management-boundaries.md'],
+    notes:
+      'ADR-004 documenting state management architecture decision - context, alternatives, decision rationale, consequences, validation metrics',
+  },
 };
 
 async function completePhase5Final() {
@@ -69,7 +70,7 @@ async function completePhase5Final() {
   let updatedCount = 0;
 
   for (const [storyId, completion] of Object.entries(PHASE_5_COMPLETIONS)) {
-    const story = activeDev.tasks.find(t => t.story_id === storyId);
+    const story = activeDev.tasks.find((t) => t.story_id === storyId);
 
     if (!story) {
       console.log(`⚠️  Story ${storyId} not found in tasks.json - skipping`);
@@ -91,11 +92,11 @@ async function completePhase5Final() {
     story.notes = completion.notes;
 
     // Mark all subtasks as completed
-    story.subtasks.forEach(subtask => {
+    story.subtasks.forEach((subtask) => {
       subtask.status = 'completed';
     });
 
-    const completedSubtasks = story.subtasks.filter(st => st.status === 'completed').length;
+    const completedSubtasks = story.subtasks.filter((st) => st.status === 'completed').length;
     console.log(`✅ Updated ${storyId}: ${completion.name}`);
     console.log(`   📋 ${completedSubtasks}/${story.subtasks.length} subtasks complete`);
     if (completion.files_created) {
@@ -107,7 +108,7 @@ async function completePhase5Final() {
   }
 
   // Update Epic 004 parent task
-  const epic004Parent = activeDev.tasks.find(t => t.id === 'epic-004-parent');
+  const epic004Parent = activeDev.tasks.find((t) => t.id === 'epic-004-parent');
   if (epic004Parent) {
     epic004Parent.status = 'completed';
     epic004Parent.progress_percent = 100;
@@ -121,8 +122,10 @@ async function completePhase5Final() {
   await fs.writeFile(TASKS_FILE, JSON.stringify(tasksData, null, 2));
 
   // Calculate final summary
-  const epic004Stories = activeDev.tasks.filter(t => t.story_id && t.story_id.startsWith('US-E4-'));
-  const totalComplete = epic004Stories.filter(s => s.status === 'completed').length;
+  const epic004Stories = activeDev.tasks.filter(
+    (t) => t.story_id && t.story_id.startsWith('US-E4-')
+  );
+  const totalComplete = epic004Stories.filter((s) => s.status === 'completed').length;
 
   console.log('🎉 EPIC 004 COMPLETE! 🎉\n');
   console.log('═'.repeat(60));
@@ -155,7 +158,7 @@ async function completePhase5Final() {
   console.log('\n✨ Elite Engineering Excellence Achieved! ✨\n');
 }
 
-completePhase5Final().catch(err => {
+completePhase5Final().catch((err) => {
   console.error('❌ Error:', err);
   process.exit(1);
 });

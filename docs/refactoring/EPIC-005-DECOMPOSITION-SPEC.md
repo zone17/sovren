@@ -11,6 +11,7 @@
 This document provides the complete specification for decomposing Epic 005 (Backend Service Refactoring) into granular 1-point user stories following the same pattern established in Epic 001 and Epic 002.
 
 **Epic Overview**:
+
 - **Objective**: Refactor large, monolithic backend service classes into smaller, focused services following SOLID principles
 - **Estimated Stories**: 36-45 stories (1 point each)
 - **Estimated Effort**: 36-45 story points (4-6 weeks with 2-3 backend developers)
@@ -26,11 +27,13 @@ This document provides the complete specification for decomposing Epic 005 (Back
 Based on the Epic 005 technical scope, the decomposition should create **7 parallel work streams**:
 
 #### Stream A: Foundation & Design (5-6 stories)
+
 **Focus**: Service architecture design and dependency injection setup
 **Developer Profile**: Senior backend architect
 **Estimated Time**: 10-12 hours
 
 **Suggested Stories**:
+
 1. **Story 1**: Define service interfaces and contracts
    - Create interface definitions for all services
    - Define service boundaries
@@ -63,17 +66,18 @@ Based on the Epic 005 technical scope, the decomposition should create **7 paral
    - 2-3 hours
 
 #### Stream B: Content Service Decomposition (7-9 stories)
+
 **Focus**: Break ContentService (680 lines) into 7 focused services
 **Developer Profile**: Backend developer with content domain knowledge
 **Estimated Time**: 14-18 hours
 
-**Suggested Stories**:
-6. **Story 6**: Create ContentCreationService
-   - Extract content creation logic
-   - Implement draft management
-   - Content validation
-   - Unit tests (95%+ coverage)
-   - 2-3 hours
+**Suggested Stories**: 6. **Story 6**: Create ContentCreationService
+
+- Extract content creation logic
+- Implement draft management
+- Content validation
+- Unit tests (95%+ coverage)
+- 2-3 hours
 
 7. **Story 7**: Create ContentPublishingService
    - Extract publishing logic
@@ -130,17 +134,12 @@ Based on the Epic 005 technical scope, the decomposition should create **7 paral
     - 2 hours
 
 #### Stream C: User Service Decomposition (6-8 stories)
+
 **Focus**: Break UserService (650 lines) into 6 focused services
 **Developer Profile**: Backend developer with auth/user domain knowledge
 **Estimated Time**: 12-16 hours
 
-**Suggested Stories**:
-15. **Story 15**: Create UserAuthenticationService
-    - Extract authentication logic
-    - Login/logout/session management
-    - Token handling
-    - Unit tests (95%+ coverage)
-    - 2-3 hours
+**Suggested Stories**: 15. **Story 15**: Create UserAuthenticationService - Extract authentication logic - Login/logout/session management - Token handling - Unit tests (95%+ coverage) - 2-3 hours
 
 16. **Story 16**: Create UserProfileService
     - Extract profile CRUD logic
@@ -191,17 +190,12 @@ Based on the Epic 005 technical scope, the decomposition should create **7 paral
     - 2 hours
 
 #### Stream D: Payment Service Decomposition (8-10 stories) ⚠️ CRITICAL
+
 **Focus**: Break PaymentService (720 lines) into 7 focused services
 **Developer Profile**: Senior backend developer with payment system experience
 **Estimated Time**: 16-20 hours
 
-**Suggested Stories**:
-23. **Story 23**: Create InvoiceService
-    - Extract invoice generation logic
-    - Invoice management
-    - Invoice sending
-    - Unit tests (95%+ coverage)
-    - 2-3 hours
+**Suggested Stories**: 23. **Story 23**: Create InvoiceService - Extract invoice generation logic - Invoice management - Invoice sending - Unit tests (95%+ coverage) - 2-3 hours
 
 24. **Story 24**: Create PaymentProcessingService (CRITICAL)
     - Extract payment processing logic
@@ -263,16 +257,12 @@ Based on the Epic 005 technical scope, the decomposition should create **7 paral
     - 2-3 hours
 
 #### Stream E: Integration & Testing (4-5 stories)
+
 **Focus**: Comprehensive testing and validation
 **Developer Profile**: QA or senior backend developer
 **Estimated Time**: 8-10 hours
 
-**Suggested Stories**:
-32. **Story 32**: Create comprehensive service integration test suite
-    - Test service interactions
-    - Test database transactions
-    - Test external API calls
-    - 2-3 hours
+**Suggested Stories**: 32. **Story 32**: Create comprehensive service integration test suite - Test service interactions - Test database transactions - Test external API calls - 2-3 hours
 
 33. **Story 33**: Add performance testing and benchmarking
     - Benchmark service response times
@@ -294,16 +284,12 @@ Based on the Epic 005 technical scope, the decomposition should create **7 paral
     - 2 hours
 
 #### Stream F: Documentation & Cleanup (3-4 stories)
+
 **Focus**: Documentation and final cleanup
 **Developer Profile**: Technical writer or senior developer
 **Estimated Time**: 6-8 hours
 
-**Suggested Stories**:
-36. **Story 36**: Create service API documentation
-    - Document all service interfaces
-    - Create JSDoc/TSDoc comments
-    - Generate API reference
-    - 2-3 hours
+**Suggested Stories**: 36. **Story 36**: Create service API documentation - Document all service interfaces - Create JSDoc/TSDoc comments - Generate API reference - 2-3 hours
 
 37. **Story 37**: Create dependency injection guide and examples
     - DI container usage guide
@@ -323,13 +309,7 @@ Based on the Epic 005 technical scope, the decomposition should create **7 paral
     - Create ADR for SOLID principles
     - 2 hours
 
-**Optional Stories** (if needed):
-40. **Story 40**: Extract to microservices (future consideration)
-41. **Story 41**: Add service-to-service authentication
-42. **Story 42**: Implement event-driven architecture between services
-43. **Story 43**: Add service health checks
-44. **Story 44**: Create service-level SLAs
-45. **Story 45**: Add distributed tracing (OpenTelemetry)
+**Optional Stories** (if needed): 40. **Story 40**: Extract to microservices (future consideration) 41. **Story 41**: Add service-to-service authentication 42. **Story 42**: Implement event-driven architecture between services 43. **Story 43**: Add service health checks 44. **Story 44**: Create service-level SLAs 45. **Story 45**: Add distributed tracing (OpenTelemetry)
 
 ---
 
@@ -352,19 +332,23 @@ Stream F: Documentation (Stories 36-39)
 ### Parallel Work Opportunities
 
 **Phase 1: Foundation** (Week 1)
+
 - Stories 1-5 (Foundation) - Sequential, 1 senior developer
 - Must complete before service decomposition
 
 **Phase 2: Service Decomposition** (Weeks 2-4)
+
 - Stream B (Content, Stories 6-14) - 1 developer
 - Stream C (User, Stories 15-22) - 1 developer
 - Stream D (Payment, Stories 23-31) - 1 senior developer (CRITICAL PATH)
 - All three streams are 100% parallel
 
 **Phase 3: Integration** (Week 5)
+
 - Stories 32-35 (Testing) - Can run in parallel
 
 **Phase 4: Documentation** (Week 6)
+
 - Stories 36-39 (Documentation) - Can run in parallel
 
 ---
@@ -372,6 +356,7 @@ Stream F: Documentation (Stories 36-39)
 ## Story Sizing Guidelines
 
 Each story MUST be:
+
 - **1 point**: 2-4 hours of work (except critical payment stories: 3-4 hours acceptable)
 - **Testable**: Has clear acceptance criteria
 - **Atomic**: Can be completed independently
@@ -380,6 +365,7 @@ Each story MUST be:
 ### Size Validation Checklist
 
 For each story, verify:
+
 - [ ] Can be completed in 2-4 hours by an experienced developer?
 - [ ] Has 3-5 clear acceptance criteria in Given-When-Then format?
 - [ ] Has specific file paths and code examples?
@@ -394,19 +380,24 @@ For each story, verify:
 Each Epic must include these 5 diagram types:
 
 ### 1. Sequence Diagram
+
 **Purpose**: Show payment processing flow across multiple services
 **Actors**: API → InvoiceService → PaymentProcessingService → SubscriptionService → Database
 
 ### 2. Flowchart
+
 **Purpose**: Show service decomposition decision tree (which service handles which responsibility)
 
 ### 3. State Diagram
+
 **Purpose**: Show subscription lifecycle states (trial, active, past_due, canceled)
 
 ### 4. Class Diagram (or Architecture Diagram)
+
 **Purpose**: Show service architecture with all services, interfaces, and dependencies
 
 ### 5. Gantt Chart
+
 **Purpose**: Show sprint timeline and story dependencies
 
 ---
@@ -414,24 +405,28 @@ Each Epic must include these 5 diagram types:
 ## Testing Requirements
 
 ### Unit Tests (95%+ Coverage)
+
 - All service classes
 - All repository classes
 - All utility services
 - 100% coverage for payment services (critical)
 
 ### Integration Tests
+
 - Service interactions
 - Database transactions (especially payment transactions)
 - External API calls
 - Event publishing
 
 ### E2E Tests
+
 - User signup and profile management
 - Content creation and publishing
 - Payment flow (invoice → payment → subscription)
 - Refund flow
 
 ### Performance Tests
+
 - Service response times (< 100ms for simple operations)
 - Database query performance
 - Load testing for payment services
@@ -444,21 +439,25 @@ Each Epic must include these 5 diagram types:
 ### Security-Critical Stories
 
 **Story 15** (UserAuthenticationService):
+
 - **Risk**: Authentication vulnerabilities
 - **Required Review**: 1 senior security specialist
 - **Tests**: Token validation, session hijacking prevention, brute force protection
 
 **Story 24** (PaymentProcessingService):
+
 - **Risk**: Payment processing vulnerabilities
 - **Required Review**: 1 payment security specialist + 1 senior backend engineer
 - **Tests**: Payment state race conditions, double-charging prevention, fraud detection
 
 **Story 28** (WebhookService):
+
 - **Risk**: Webhook security vulnerabilities
 - **Required Review**: 1 security specialist
 - **Tests**: HMAC signature validation, replay attack prevention, rate limiting
 
 **Story 30** (Payment API Migration):
+
 - **Risk**: Breaking payment flows
 - **Required Review**: 1 senior backend engineer + full security audit
 - **Tests**: Full payment flow E2E, penetration testing
@@ -557,6 +556,7 @@ Each Epic must include these 5 diagram types:
 ## Success Metrics
 
 ### Technical Metrics
+
 - All services < 300 lines of code: ✅
 - Each service has single responsibility: ✅
 - All services have interface definitions: ✅
@@ -566,6 +566,7 @@ Each Epic must include these 5 diagram types:
 - Performance maintained or improved: ✅
 
 ### Business Metrics
+
 - 40% reduction in time to modify backend services
 - Team can work on multiple services in parallel (team scalability)
 - Easier unit testing (95%+ coverage achieved)

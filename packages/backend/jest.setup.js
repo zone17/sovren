@@ -39,13 +39,13 @@ const mockSupabaseClient = {
         }
 
         // Handle users stats query
-        if (table === 'users' && mockTable.select.mock.calls.some(call => call[0] === 'role')) {
-          const users = Array.from(testDatabase.values()).filter(user => user.is_active);
+        if (table === 'users' && mockTable.select.mock.calls.some((call) => call[0] === 'role')) {
+          const users = Array.from(testDatabase.values()).filter((user) => user.is_active);
           return { data: users, error: null };
         }
 
         // Handle different query patterns - check ALL eq calls for nostr_pubkey
-        const nostrPubkeyCall = mockTable.eq.mock.calls.find(call => call[0] === 'nostr_pubkey');
+        const nostrPubkeyCall = mockTable.eq.mock.calls.find((call) => call[0] === 'nostr_pubkey');
         if (nostrPubkeyCall) {
           const nostrPubkey = nostrPubkeyCall[1];
           const user = testDatabase.get(nostrPubkey);
@@ -59,7 +59,7 @@ const mockSupabaseClient = {
 
         // Handle username lookup with ilike
         if (table === 'users') {
-          const usernameCall = mockTable.ilike.mock.calls.find(call => call[0] === 'username');
+          const usernameCall = mockTable.ilike.mock.calls.find((call) => call[0] === 'username');
           if (usernameCall) {
             const username = usernameCall[1];
             for (const user of testDatabase.values()) {
@@ -71,7 +71,7 @@ const mockSupabaseClient = {
         }
 
         // Handle ID-based lookups
-        const idCall = mockTable.eq.mock.calls.find(call => call[0] === 'id');
+        const idCall = mockTable.eq.mock.calls.find((call) => call[0] === 'id');
         if (idCall) {
           const userId = idCall[1];
           for (const user of testDatabase.values()) {
@@ -88,7 +88,7 @@ const mockSupabaseClient = {
 
       maybeSingle: jest.fn().mockResolvedValue({
         data: null,
-        error: null
+        error: null,
       }),
     };
 
@@ -102,8 +102,8 @@ const mockSupabaseClient = {
             ...mockTable,
             single: jest.fn().mockResolvedValue({
               data: null,
-              error: { code: '23505', message: 'duplicate key value violates unique constraint' }
-            })
+              error: { code: '23505', message: 'duplicate key value violates unique constraint' },
+            }),
           };
         }
 
@@ -124,7 +124,7 @@ const mockSupabaseClient = {
           role: userData.role || 'supporter',
           created_at: now,
           updated_at: now,
-          last_login_at: null
+          last_login_at: null,
         };
 
         // Store in test database
@@ -132,7 +132,7 @@ const mockSupabaseClient = {
 
         return {
           ...mockTable,
-          single: jest.fn().mockResolvedValue({ data: user, error: null })
+          single: jest.fn().mockResolvedValue({ data: user, error: null }),
         };
       });
 
@@ -142,7 +142,7 @@ const mockSupabaseClient = {
           ...mockTable,
           single: jest.fn().mockImplementation(async () => {
             // Find the user ID from eq calls
-            const idCall = mockTable.eq.mock.calls.find(call => call[0] === 'id');
+            const idCall = mockTable.eq.mock.calls.find((call) => call[0] === 'id');
             if (idCall) {
               const userId = idCall[1];
 
@@ -152,7 +152,7 @@ const mockSupabaseClient = {
                   const updatedUser = {
                     ...user,
                     ...updateData,
-                    updated_at: new Date().toISOString()
+                    updated_at: new Date().toISOString(),
                   };
                   testDatabase.set(nostrPubkey, updatedUser);
                   return { data: updatedUser, error: null };
@@ -160,7 +160,7 @@ const mockSupabaseClient = {
               }
             }
             return { data: null, error: { code: 'PGRST116', message: 'No rows found' } };
-          })
+          }),
         };
       });
 
@@ -187,9 +187,9 @@ jest.mock('./src/config/database', () => ({
     getConnectionInfo: jest.fn().mockResolvedValue({
       connected: true,
       latency: 10,
-      activeConnections: 1
+      activeConnections: 1,
     }),
-    disconnect: jest.fn().mockResolvedValue(undefined)
+    disconnect: jest.fn().mockResolvedValue(undefined),
   }),
   createTestDatabase: jest.fn().mockReturnValue({
     client: mockSupabaseClient,
@@ -197,9 +197,9 @@ jest.mock('./src/config/database', () => ({
     getConnectionInfo: jest.fn().mockResolvedValue({
       connected: true,
       latency: 10,
-      activeConnections: 1
+      activeConnections: 1,
     }),
-    disconnect: jest.fn().mockResolvedValue(undefined)
+    disconnect: jest.fn().mockResolvedValue(undefined),
   }),
   SupabaseDatabase: jest.fn().mockImplementation(() => ({
     client: mockSupabaseClient,
@@ -207,18 +207,20 @@ jest.mock('./src/config/database', () => ({
     getConnectionInfo: jest.fn().mockResolvedValue({
       connected: true,
       latency: 10,
-      activeConnections: 1
+      activeConnections: 1,
     }),
-    disconnect: jest.fn().mockResolvedValue(undefined)
+    disconnect: jest.fn().mockResolvedValue(undefined),
   })),
   resetDatabase: jest.fn().mockImplementation(() => {
     testDatabase.clear();
     userIdCounter = 1;
-  })
+  }),
 }));
 
 // Surgical fix: Mock only the repository's getStats method
-const originalUserRepository = jest.requireActual('./src/repositories/user-repository').UserRepository;
+const originalUserRepository = jest.requireActual(
+  './src/repositories/user-repository'
+).UserRepository;
 jest.mock('./src/repositories/user-repository', () => {
   return {
     ...jest.requireActual('./src/repositories/user-repository'),
@@ -226,20 +228,20 @@ jest.mock('./src/repositories/user-repository', () => {
       const instance = new originalUserRepository(database);
       // Override only getStats method
       instance.getStats = jest.fn().mockImplementation(async () => {
-        const users = Array.from(testDatabase.values()).filter(user => user.is_active);
+        const users = Array.from(testDatabase.values()).filter((user) => user.is_active);
         const roleDistribution = {};
-        users.forEach(user => {
+        users.forEach((user) => {
           const role = user.role || 'supporter';
           roleDistribution[role] = (roleDistribution[role] || 0) + 1;
         });
 
         return {
           totalUsers: users.length,
-          roleDistribution
+          roleDistribution,
         };
       });
       return instance;
-    })
+    }),
   };
 });
 
@@ -262,7 +264,7 @@ const nostrServiceInstances = new Set();
 const originalNostrAuthService = require('./src/services/nostr-auth').NostrAuthService;
 if (originalNostrAuthService) {
   const originalConstructor = originalNostrAuthService.prototype.constructor;
-  originalNostrAuthService.prototype.constructor = function(...args) {
+  originalNostrAuthService.prototype.constructor = function (...args) {
     originalConstructor.apply(this, args);
     nostrServiceInstances.add(this);
   };
@@ -271,7 +273,7 @@ if (originalNostrAuthService) {
 // Restore original console methods after tests
 afterAll(() => {
   // Clean up all NOSTR service instances
-  nostrServiceInstances.forEach(instance => {
+  nostrServiceInstances.forEach((instance) => {
     if (instance && typeof instance.destroy === 'function') {
       instance.destroy();
     }

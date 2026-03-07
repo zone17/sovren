@@ -111,11 +111,11 @@ docker stats sovren-backend-dev
 
 ## Health Check Endpoints
 
-| Endpoint | Purpose | Status Codes |
-|----------|---------|--------------|
-| `/health` | General health | 200: Healthy |
-| `/ready` | Ready for traffic | 200: Ready, 503: Not ready |
-| `/live` | Process alive | 200: Alive |
+| Endpoint  | Purpose           | Status Codes               |
+| --------- | ----------------- | -------------------------- |
+| `/health` | General health    | 200: Healthy               |
+| `/ready`  | Ready for traffic | 200: Ready, 503: Not ready |
+| `/live`   | Process alive     | 200: Alive                 |
 
 ### Testing Health Checks
 
@@ -296,17 +296,17 @@ SMTP_PASSWORD=***
 
 ## Service Ports
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| Backend API | 3001 | HTTP API |
-| Frontend Dev | 5173 | Vite dev server |
-| PostgreSQL | 5432 | Database |
-| Redis | 6379 | Cache |
-| Mailhog UI | 8025 | Email testing |
-| Mailhog SMTP | 1025 | Email receiving |
-| Nginx | 80/443 | Load balancer |
-| Prometheus | 9090 | Metrics |
-| Grafana | 3000 | Dashboards |
+| Service      | Port   | Purpose         |
+| ------------ | ------ | --------------- |
+| Backend API  | 3001   | HTTP API        |
+| Frontend Dev | 5173   | Vite dev server |
+| PostgreSQL   | 5432   | Database        |
+| Redis        | 6379   | Cache           |
+| Mailhog UI   | 8025   | Email testing   |
+| Mailhog SMTP | 1025   | Email receiving |
+| Nginx        | 80/443 | Load balancer   |
+| Prometheus   | 9090   | Metrics         |
+| Grafana      | 3000   | Dashboards      |
 
 ---
 
@@ -404,6 +404,7 @@ alias sovren-dev='dcdev up -d && dcdev logs -f backend-dev'
 ---
 
 **Need Help?**
+
 - Check logs: `docker logs -f <container-name>`
 - Inspect container: `docker inspect <container-name> | jq`
 - Full guide: [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)

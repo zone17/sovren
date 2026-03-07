@@ -8,6 +8,7 @@
 ## Executive Summary
 
 This document decomposes Epic 001 into 12 granular, 1-point user stories organized into 3 parallel work streams:
+
 - **Stream A: Frontend Types** (5 stories) - Can work in parallel
 - **Stream B: Shared Package Types** (3 stories) - Can work in parallel
 - **Stream C: API & Integration Types** (2 stories) - Can work in parallel
@@ -23,6 +24,7 @@ This document decomposes Epic 001 into 12 granular, 1-point user stories organiz
 ### Sprint 0: Type Foundation (Stories 1-10, ~6-8 hours, Parallel)
 
 #### Stream A: Frontend Types (5 stories, 1 developer)
+
 - Story 1: Replace `any` in event handlers and form components
 - Story 2: Type API response handlers with proper interfaces
 - Story 3: Replace `any` in validation middleware
@@ -30,17 +32,20 @@ This document decomposes Epic 001 into 12 granular, 1-point user stories organiz
 - Story 5: Type test utilities and mock providers
 
 #### Stream B: Shared Package Types (3 stories, 1 developer)
+
 - Story 6: Replace `any` in quality-metrics types with proper Zod schemas
 - Story 7: Type NOSTR key management interfaces
 - Story 8: Type environment validator with proper type guards
 
 #### Stream C: API & Integration Types (2 stories, 1 developer)
+
 - Story 9: Type API route handlers with proper request/response types
 - Story 10: Type NOSTR service event validation
 
 ### Sprint 1: Strict Mode Enforcement (Stories 11-12, ~2-3 hours, Sequential)
 
 #### Stream D: Strict Mode (2 stories, 1 developer)
+
 - Story 11: Enable stricter TypeScript compiler options incrementally
 - Story 12: Fix strict mode violations and validate type coverage
 
@@ -81,12 +86,14 @@ This document decomposes Epic 001 into 12 granular, 1-point user stories organiz
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/frontend/src/pages/Login.tsx` - Login form event handlers
 - `packages/frontend/src/pages/Signup.tsx` - Signup form event handlers
 - `packages/frontend/src/pages/Profile.tsx` - Profile form event handlers
 - `packages/frontend/src/pages/Post.tsx` - Post creation form handlers
 
 **Approach**:
+
 ```typescript
 // BEFORE (incorrect)
 const handleSubmit = (e: any) => {
@@ -112,6 +119,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 ```
 
 **Type Patterns**:
+
 - `React.FormEvent<HTMLFormElement>` for form submissions
 - `React.ChangeEvent<HTMLInputElement>` for input changes
 - `React.MouseEvent<HTMLButtonElement>` for button clicks
@@ -150,11 +158,13 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test that form submission handlers receive correct event types
 - Test that input change handlers receive correct target types
 - Test that existing component tests still pass with new types
 
 **Manual Testing**:
+
 - Verify IDE autocomplete works for event.currentTarget
 - Verify no runtime errors when interacting with forms
 - Test all form submission flows (login, signup, profile update, post creation)
@@ -168,6 +178,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 **Size**: 1 point (2-3 hours)
 **Breakdown**:
+
 - 1 hour: Update all event handler types
 - 0.5 hour: Fix any type errors revealed
 - 0.5 hour: Run tests and verify
@@ -209,15 +220,18 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/frontend/src/pages/Home.tsx` - Feed data fetching
 - `packages/frontend/src/pages/Profile.tsx` - User profile data
 - `packages/frontend/src/pages/Post.tsx` - Post data fetching
 - `packages/frontend/src/services/api.ts` (if exists) - API client types
 
 **Create New Types**:
+
 - `packages/frontend/src/types/api-responses.ts`
 
 **Approach**:
+
 ```typescript
 // Create proper API response types
 // packages/frontend/src/types/api-responses.ts
@@ -274,6 +288,7 @@ const fetchProfile = async (userId: string): Promise<ApiResponse<UserProfileResp
 ```
 
 **Error Handling Types**:
+
 ```typescript
 export type ApiError =
   | { type: 'network'; message: string; status?: never }
@@ -315,12 +330,14 @@ export type ApiError =
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test that API response handlers parse successful responses correctly
 - Test that error responses are properly typed and discriminated
 - Test pagination metadata extraction with proper types
 - Mock API responses conform to defined types
 
 **Integration Tests**:
+
 - Test actual API calls return data matching TypeScript types
 - Test error scenarios return properly typed errors
 
@@ -334,6 +351,7 @@ export type ApiError =
 
 **Size**: 1 point (2-3 hours)
 **Breakdown**:
+
 - 1 hour: Define all API response interfaces
 - 1 hour: Update all fetch calls with proper types
 - 0.5 hour: Add error handling types
@@ -375,9 +393,11 @@ export type ApiError =
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/frontend/lib/middleware/validation.ts`
 
 **Current Issues**:
+
 ```typescript
 // BEFORE (security risk - using any)
 const sanitizeInput = (obj: any): any => {
@@ -396,6 +416,7 @@ function filterAllowedFields(data: any, allowedFields: string[]): any {
 ```
 
 **Approach**:
+
 ```typescript
 // AFTER (type-safe validation)
 type Sanitizable = string | number | boolean | null | undefined;
@@ -436,7 +457,7 @@ function checkFieldLengths<T extends Record<string, string>>(
   return {
     valid: Object.keys(errors).length === 0,
     data: Object.keys(errors).length === 0 ? data : undefined,
-    errors: Object.keys(errors).length > 0 ? errors as Record<keyof T, string[]> : undefined,
+    errors: Object.keys(errors).length > 0 ? (errors as Record<keyof T, string[]>) : undefined,
   };
 }
 
@@ -455,6 +476,7 @@ function filterAllowedFields<T extends Record<string, unknown>, K extends keyof 
 ```
 
 **Type Guards for Validation**:
+
 ```typescript
 function isValidEmail(value: unknown): value is string {
   return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -500,6 +522,7 @@ function isValidUsername(value: unknown): value is string {
 - All validation rules must be compile-time enforced
 
 **Security Testing Required**:
+
 - Test with malicious payloads (script tags, SQL fragments)
 - Verify type system prevents bypassing validation
 - Test edge cases (null, undefined, empty strings)
@@ -507,6 +530,7 @@ function isValidUsername(value: unknown): value is string {
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test `sanitizeInput` with valid data → returns properly typed sanitized data
 - Test `sanitizeInput` with XSS payload → returns sanitized string
 - Test `checkFieldLengths` with valid data → returns ValidationResult with valid: true
@@ -515,6 +539,7 @@ function isValidUsername(value: unknown): value is string {
 - Test type guards correctly identify valid/invalid inputs
 
 **Security Tests**:
+
 - Test XSS payload sanitization: `<script>alert('xss')</script>` → sanitized
 - Test SQL injection patterns: `'; DROP TABLE users--` → sanitized
 - Test null byte injection: `user\0admin` → sanitized
@@ -530,6 +555,7 @@ function isValidUsername(value: unknown): value is string {
 
 **Size**: 1 point (2-3 hours)
 **Breakdown**:
+
 - 1 hour: Implement generic types for validation functions
 - 0.5 hour: Create type guards for common patterns
 - 0.5 hour: Security testing with malicious payloads
@@ -571,9 +597,11 @@ function isValidUsername(value: unknown): value is string {
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/frontend/lib/services/emailService.ts`
 
 **Current Issues**:
+
 ```typescript
 // BEFORE (weak typing)
 templateData?: Record<string, any>;
@@ -584,6 +612,7 @@ private replaceTemplateVars(template: string, data: Record<string, any>): string
 ```
 
 **Approach**:
+
 ```typescript
 // Define specific template data types
 interface WelcomeEmailData {
@@ -625,10 +654,7 @@ enum EmailErrorCode {
 
 // Type-safe email methods
 class EmailService {
-  async sendWelcomeEmail(
-    to: string,
-    data: WelcomeEmailData
-  ): Promise<EmailResult> {
+  async sendWelcomeEmail(to: string, data: WelcomeEmailData): Promise<EmailResult> {
     return this.sendEmail({
       to,
       subject: 'Welcome to Sovren!',
@@ -637,10 +663,7 @@ class EmailService {
     });
   }
 
-  async sendPaymentConfirmation(
-    to: string,
-    data: PaymentConfirmationData
-  ): Promise<EmailResult> {
+  async sendPaymentConfirmation(to: string, data: PaymentConfirmationData): Promise<EmailResult> {
     return this.sendEmail({
       to,
       subject: 'Payment Confirmation',
@@ -693,6 +716,7 @@ class EmailService {
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test sendWelcomeEmail with valid data → success result
 - Test sendPaymentConfirmation with valid data → success result
 - Test replaceTemplateVars correctly substitutes typed variables
@@ -700,6 +724,7 @@ class EmailService {
 - Test email result types are properly discriminated
 
 **Integration Tests**:
+
 - Test actual email sending with typed data
 - Test error cases return properly typed EmailResult
 
@@ -712,6 +737,7 @@ class EmailService {
 
 **Size**: 1 point (2 hours)
 **Breakdown**:
+
 - 0.5 hour: Define template data interfaces
 - 0.5 hour: Update email methods with proper types
 - 0.5 hour: Update template variable replacement
@@ -753,10 +779,12 @@ class EmailService {
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/frontend/src/test-utils/test-providers.tsx`
 - `packages/frontend/src/test-utils/react-query-test-utils.tsx`
 
 **Current Issues**:
+
 ```typescript
 // BEFORE (weak typing in test-utils/test-providers.tsx)
 currentUser: any;
@@ -769,6 +797,7 @@ export const expectQueryToBeLoading = (queryClient: QueryClient, queryKey: any[]
 ```
 
 **Approach**:
+
 ```typescript
 // packages/frontend/src/test-utils/test-providers.tsx
 
@@ -796,11 +825,7 @@ export function AllTheProviders({ children, options = {} }: AllTheProvidersProps
 // Use proper imports instead
 import { jest, expect } from '@jest/globals';
 
-export function createMockResponse<T>(
-  data: T,
-  status = 200,
-  ok = true
-): Response {
+export function createMockResponse<T>(data: T, status = 200, ok = true): Response {
   return {
     json: async () => data,
     status,
@@ -864,12 +889,14 @@ export function expectQueryToBeSuccess<T>(
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test test providers with different user authentication states
 - Test createMockResponse returns properly typed Response
 - Test query expectation utilities work with typed query keys
 - Verify existing tests still pass with new types
 
 **Meta-Testing** (tests for test utilities):
+
 - Verify test providers correctly wrap components
 - Verify mock responses conform to type constraints
 
@@ -882,6 +909,7 @@ export function expectQueryToBeSuccess<T>(
 
 **Size**: 1 point (2 hours)
 **Breakdown**:
+
 - 0.5 hour: Type test provider options and props
 - 0.5 hour: Fix react-query test utilities
 - 0.5 hour: Remove unsafe global declarations
@@ -923,10 +951,12 @@ export function expectQueryToBeSuccess<T>(
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/shared/src/types/quality-metrics.ts`
 - `packages/shared/src/types/quality-metrics.d.ts` (regenerate after TS changes)
 
 **Current Issues**:
+
 ```typescript
 // BEFORE (weak typing with z.any())
 visualizations: z.array(
@@ -945,6 +975,7 @@ classifyBug(bug: any): Promise<any>; // ❌
 ```
 
 **Approach**:
+
 ```typescript
 // Define specific visualization data types
 const LineChartDataSchema = z.object({
@@ -993,10 +1024,12 @@ const VisualizationDataSchema = z.discriminatedUnion('type', [
 const LineChartConfigSchema = z.object({
   responsive: z.boolean().optional(),
   maintainAspectRatio: z.boolean().optional(),
-  legend: z.object({
-    display: z.boolean(),
-    position: z.enum(['top', 'bottom', 'left', 'right']).optional(),
-  }).optional(),
+  legend: z
+    .object({
+      display: z.boolean(),
+      position: z.enum(['top', 'bottom', 'left', 'right']).optional(),
+    })
+    .optional(),
 });
 
 const VisualizationConfigSchema = z.discriminatedUnion('type', [
@@ -1077,7 +1110,11 @@ export interface PerformanceOptimization {
 export interface QualityMetricsAIService {
   updateThresholds(projectId: string, thresholds: QualityThresholds): Promise<void>;
   getRefactoringSuggestions(projectId: string): Promise<RefactoringSuggestion[]>;
-  classifyBug(bug: { title: string; description: string; stackTrace?: string }): Promise<BugClassification>;
+  classifyBug(bug: {
+    title: string;
+    description: string;
+    stackTrace?: string;
+  }): Promise<BugClassification>;
   detectAnomalies(projectId: string): Promise<Anomaly[]>;
   optimizePerformance(projectId: string): Promise<PerformanceOptimization[]>;
 }
@@ -1120,6 +1157,7 @@ export interface QualityMetricsAIService {
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test Zod schemas validate correct visualization data
 - Test Zod schemas reject invalid visualization data
 - Test discriminated unions correctly narrow types
@@ -1127,6 +1165,7 @@ export interface QualityMetricsAIService {
 - Test key metrics schema rejects invalid metric types
 
 **Integration Tests**:
+
 - Test frontend components using quality metrics types compile correctly
 - Test API routes using quality metrics types compile correctly
 
@@ -1140,6 +1179,7 @@ export interface QualityMetricsAIService {
 
 **Size**: 1 point (2-3 hours)
 **Breakdown**:
+
 - 1 hour: Define visualization data and config schemas
 - 0.5 hour: Define AI service interfaces
 - 0.5 hour: Update Zod schemas for key metrics
@@ -1181,9 +1221,11 @@ export interface QualityMetricsAIService {
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/shared/src/types/nostr-key-management.ts`
 
 **Current Issues**:
+
 ```typescript
 // BEFORE (weak typing)
 metadata: z.record(z.any()).optional(),
@@ -1196,6 +1238,7 @@ metadata?: Record<string, any>;
 ```
 
 **Approach**:
+
 ```typescript
 // Define specific metadata types
 export const NostrKeyMetadataSchema = z.object({
@@ -1206,10 +1249,12 @@ export const NostrKeyMetadataSchema = z.object({
   tags: z.array(z.string()).optional(),
   permissions: z.array(z.enum(['read', 'write', 'delete', 'sign'])).optional(),
   expiresAt: z.string().datetime().optional(),
-  rotationPolicy: z.object({
-    enabled: z.boolean(),
-    intervalDays: z.number().positive(),
-  }).optional(),
+  rotationPolicy: z
+    .object({
+      enabled: z.boolean(),
+      intervalDays: z.number().positive(),
+    })
+    .optional(),
 });
 
 export type NostrKeyMetadata = z.infer<typeof NostrKeyMetadataSchema>;
@@ -1217,7 +1262,10 @@ export type NostrKeyMetadata = z.infer<typeof NostrKeyMetadataSchema>;
 // Update schema to use specific metadata type
 export const NostrKeySchema = z.object({
   publicKey: z.string().regex(/^[0-9a-f]{64}$/),
-  privateKey: z.string().regex(/^[0-9a-f]{64}$/).optional(),
+  privateKey: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .optional(),
   metadata: NostrKeyMetadataSchema.optional(),
 });
 
@@ -1243,7 +1291,9 @@ export enum NostrErrorCode {
 
 // Type-safe key management operations
 export interface NostrKeyManager {
-  generateKeyPair(metadata?: NostrKeyMetadata): Promise<NostrKeyManagementResult<typeof NostrKeySchema>>;
+  generateKeyPair(
+    metadata?: NostrKeyMetadata
+  ): Promise<NostrKeyManagementResult<typeof NostrKeySchema>>;
 
   derivePublicKey(privateKey: string): Promise<NostrKeyManagementResult<z.ZodString>>;
 
@@ -1305,12 +1355,14 @@ export interface NostrKeyManager {
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test NostrKeyMetadataSchema validates correct metadata
 - Test NostrKeyMetadataSchema rejects invalid metadata
 - Test NostrKeyManagementResult properly types success and error cases
 - Test key format validation with valid/invalid hex strings
 
 **Security Tests**:
+
 - Test private keys are not accidentally exposed in error messages
 - Test metadata validation prevents injection attacks
 - Test key expiration is properly enforced
@@ -1325,6 +1377,7 @@ export interface NostrKeyManager {
 
 **Size**: 1 point (1.5-2 hours)
 **Breakdown**:
+
 - 0.5 hour: Define NostrKeyMetadataSchema
 - 0.5 hour: Constrain NostrKeyManagementResult generic
 - 0.5 hour: Define NostrKeyManager interface
@@ -1366,28 +1419,37 @@ export interface NostrKeyManager {
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/shared/src/config/environment-validator.ts`
 
 **Current Issues**:
+
 ```typescript
 // BEFORE (weak typing)
 defaultValue?: any;
 ```
 
 **Approach**:
+
 ```typescript
 // Type-safe environment variable types
 type EnvVarType = 'string' | 'number' | 'boolean' | 'url' | 'email' | 'port' | 'json';
 
-type EnvVarValue<T extends EnvVarType> =
-  T extends 'string' ? string :
-  T extends 'number' ? number :
-  T extends 'boolean' ? boolean :
-  T extends 'url' ? URL :
-  T extends 'email' ? string :
-  T extends 'port' ? number :
-  T extends 'json' ? Record<string, unknown> :
-  never;
+type EnvVarValue<T extends EnvVarType> = T extends 'string'
+  ? string
+  : T extends 'number'
+    ? number
+    : T extends 'boolean'
+      ? boolean
+      : T extends 'url'
+        ? URL
+        : T extends 'email'
+          ? string
+          : T extends 'port'
+            ? number
+            : T extends 'json'
+              ? Record<string, unknown>
+              : never;
 
 interface EnvVarConfig<T extends EnvVarType> {
   name: string;
@@ -1427,9 +1489,7 @@ function isValidJson(value: string): boolean {
 
 // Type-safe environment validator
 class EnvironmentValidator {
-  validateVar<T extends EnvVarType>(
-    config: EnvVarConfig<T>
-  ): ValidationResult<EnvVarValue<T>> {
+  validateVar<T extends EnvVarType>(config: EnvVarConfig<T>): ValidationResult<EnvVarValue<T>> {
     const rawValue = process.env[config.name];
 
     // Handle required variables
@@ -1471,10 +1531,7 @@ class EnvironmentValidator {
     };
   }
 
-  private parseValue<T extends EnvVarType>(
-    value: string,
-    type: T
-  ): EnvVarValue<T> | null {
+  private parseValue<T extends EnvVarType>(value: string, type: T): EnvVarValue<T> | null {
     switch (type) {
       case 'string':
         return value as EnvVarValue<T>;
@@ -1500,7 +1557,7 @@ class EnvironmentValidator {
 
       case 'json':
         try {
-          return (JSON.parse(value) as EnvVarValue<T>);
+          return JSON.parse(value) as EnvVarValue<T>;
         } catch {
           return null;
         }
@@ -1563,6 +1620,7 @@ const config: EnvVarConfig<'port'> = {
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test validateVar with valid values for each type → success
 - Test validateVar with invalid values → proper error messages
 - Test default values are correctly applied
@@ -1570,6 +1628,7 @@ const config: EnvVarConfig<'port'> = {
 - Test type guards correctly identify valid/invalid values
 
 **Security Tests**:
+
 - Test URL validation rejects `javascript:` and `file:` URLs
 - Test JSON parsing rejects prototype pollution attempts
 - Test port validation rejects privileged ports (if required)
@@ -1584,6 +1643,7 @@ const config: EnvVarConfig<'port'> = {
 
 **Size**: 1 point (1.5 hours)
 **Breakdown**:
+
 - 0.5 hour: Define type-safe EnvVarConfig interface
 - 0.5 hour: Implement type guards and parsing
 - 0.5 hour: Test and verify
@@ -1624,6 +1684,7 @@ const config: EnvVarConfig<'port'> = {
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/frontend/api/payments/create-payment-intent.ts`
 - `packages/frontend/api/payments/webhook.ts`
 - `packages/frontend/api/posts/index.ts`
@@ -1631,6 +1692,7 @@ const config: EnvVarConfig<'port'> = {
 - `packages/frontend/api/users/[id].ts`
 
 **Current Issues**:
+
 ```typescript
 // BEFORE (weak typing)
 async function authenticateUser(req: VercelRequest): Promise<{ user: any; error?: string }> { ... }
@@ -1646,6 +1708,7 @@ catch (err: any) { ... }
 ```
 
 **Approach**:
+
 ```typescript
 // Create shared API types
 // packages/frontend/api/types/api-types.ts
@@ -1807,6 +1870,7 @@ const response: ApiSuccessResponse<User> = {
 - Authorization checks must use properly typed user objects
 
 **Security Testing Required**:
+
 - Test authentication with invalid tokens → proper error type
 - Test query parameter injection attempts → sanitized
 - Test privilege escalation attempts → blocked by type system
@@ -1815,6 +1879,7 @@ const response: ApiSuccessResponse<User> = {
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test authenticateUser with valid token → returns User object
 - Test authenticateUser with invalid token → returns null user
 - Test parseQueryParams with valid params → returns typed object
@@ -1822,11 +1887,13 @@ const response: ApiSuccessResponse<User> = {
 - Test handler functions with proper User type
 
 **Integration Tests**:
+
 - Test full API request flow with authentication
 - Test API responses conform to ApiResponse type
 - Test error handling returns properly typed errors
 
 **Security Tests**:
+
 - Test SQL injection in query params → blocked
 - Test XSS in query params → sanitized
 - Test privilege escalation → denied
@@ -1841,6 +1908,7 @@ const response: ApiSuccessResponse<User> = {
 
 **Size**: 1 point (2-3 hours)
 **Breakdown**:
+
 - 1 hour: Create API types and update authentication
 - 1 hour: Update all route handlers
 - 0.5 hour: Update error handling
@@ -1882,9 +1950,11 @@ const response: ApiSuccessResponse<User> = {
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `packages/frontend/lib/services/nostrService.ts`
 
 **Current Issues**:
+
 ```typescript
 // BEFORE (weak typing)
 private featureFlags: any;
@@ -1895,6 +1965,7 @@ private validateAndNormalizeEvent(event: any): NostrEvent { ... }
 ```
 
 **Approach**:
+
 ```typescript
 // Import proper feature flag types
 import { FeatureFlags } from '@sovren/shared/types';
@@ -2033,6 +2104,7 @@ const event = new NostrEventBuilder()
 #### Testing Requirements
 
 **Unit Tests**:
+
 - Test validateAndNormalizeEvent with valid event → returns NostrEvent
 - Test validateAndNormalizeEvent with missing fields → throws error
 - Test validateAndNormalizeEvent with invalid types → throws error
@@ -2040,6 +2112,7 @@ const event = new NostrEventBuilder()
 - Test NostrEventBuilder throws error for incomplete events
 
 **Integration Tests**:
+
 - Test full NOSTR event creation and signing flow
 - Test event validation before publishing
 
@@ -2053,6 +2126,7 @@ const event = new NostrEventBuilder()
 
 **Size**: 1 point (2 hours)
 **Breakdown**:
+
 - 0.5 hour: Type feature flags properly
 - 0.5 hour: Update event validation
 - 0.5 hour: Create NostrEventBuilder
@@ -2094,6 +2168,7 @@ const event = new NostrEventBuilder()
 #### Technical Implementation
 
 **Files to Modify**:
+
 - `tsconfig.json` (root)
 - `packages/frontend/tsconfig.json`
 - `packages/shared/tsconfig.json`
@@ -2208,6 +2283,7 @@ class Derived extends Base {
 #### Testing Requirements
 
 **Validation Tests**:
+
 - Run full TypeScript compiler on all packages → no errors
 - Run all unit tests → all pass
 - Run all integration tests → all pass
@@ -2215,6 +2291,7 @@ class Derived extends Base {
 - Measure build time before and after → < 5% increase
 
 **Regression Tests**:
+
 - Test all critical user flows (login, signup, posting, payments)
 - Verify no runtime errors introduced by type fixes
 - Test array/object access with edge cases (empty arrays, missing keys)
@@ -2229,6 +2306,7 @@ class Derived extends Base {
 
 **Size**: 1 point (1.5-2 hours)
 **Breakdown**:
+
 - 0.5 hour: Enable stricter options in all tsconfig.json files
 - 0.5 hour: Fix new type errors revealed (array access, overrides)
 - 0.5 hour: Run full test suite and verify
@@ -2270,6 +2348,7 @@ class Derived extends Base {
 #### Technical Implementation
 
 **Tools to Use**:
+
 - `tsc --noEmit` - TypeScript compiler check
 - `type-coverage` - Type coverage measurement tool
 - `eslint` - Linting with explicit-any rules
@@ -2277,11 +2356,13 @@ class Derived extends Base {
 **Tasks**:
 
 1. **Install type-coverage tool**:
+
 ```bash
 npm install --save-dev type-coverage
 ```
 
 2. **Add type-coverage scripts to package.json**:
+
 ```json
 {
   "scripts": {
@@ -2294,6 +2375,7 @@ npm install --save-dev type-coverage
 ```
 
 3. **Run comprehensive type checking**:
+
 ```bash
 # Check each package
 cd packages/frontend && npm run type-check
@@ -2305,16 +2387,19 @@ tsc --noEmit
 ```
 
 4. **Measure type coverage**:
+
 ```bash
 npx type-coverage --detail
 ```
 
 5. **Fix any remaining issues**:
+
 - Address any type errors revealed by strict mode
 - Replace any remaining `any` types discovered by tools
 - Add proper type annotations where inferred types are weak
 
 6. **Update ESLint configuration**:
+
 ```json
 {
   "rules": {
@@ -2328,12 +2413,15 @@ npx type-coverage --detail
 ```
 
 7. **Create type coverage badge**:
+
 ```markdown
 <!-- Add to README.md -->
+
 ![Type Coverage](https://img.shields.io/badge/type--coverage-100%25-brightgreen)
 ```
 
 8. **Document any legitimate exceptions**:
+
 ```typescript
 // Legitimate use of 'any' for external library integration
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2376,6 +2464,7 @@ const externalLibResult: any = externalLib.getData();
 #### Testing Requirements
 
 **Validation Tests**:
+
 - Run `tsc --noEmit` on all packages → 0 errors
 - Run `type-coverage` → ≥ 99% coverage
 - Run ESLint with strict rules → 0 explicit-any warnings
@@ -2383,6 +2472,7 @@ const externalLibResult: any = externalLib.getData();
 - Verify CI/CD pipeline passes with new checks
 
 **Documentation**:
+
 - Document any remaining `any` types with justification
 - Document type coverage measurement process
 - Update contributing guide with type safety requirements
@@ -2397,6 +2487,7 @@ const externalLibResult: any = externalLib.getData();
 
 **Size**: 1 point (1.5-2 hours)
 **Breakdown**:
+
 - 0.5 hour: Install and configure type-coverage tool
 - 0.5 hour: Run checks and fix any remaining issues
 - 0.5 hour: Update ESLint configuration and verify
@@ -2439,37 +2530,42 @@ Sprint 1: Strict Mode (Sequential, 2-3 hours)
 ### Maximum Parallelization (3 Developers)
 
 **Developer 1 (Frontend Specialist) - Stream A**:
+
 - Story 1: Event Handlers (2-3 hours)
 - Story 2: API Responses (2-3 hours)
 - Story 3: Validation (2-3 hours)
 - Story 4: Email Service (2 hours)
 - Story 5: Test Utilities (2 hours)
-**Total**: ~12 hours (1.5 days)
+  **Total**: ~12 hours (1.5 days)
 
 **Developer 2 (Shared/Backend Specialist) - Stream B**:
+
 - Story 6: Quality Metrics (2-3 hours)
 - Story 7: NOSTR Keys (1.5-2 hours)
 - Story 8: Environment (1.5 hours)
-**Total**: ~6 hours (0.75 days)
+  **Total**: ~6 hours (0.75 days)
 
 **Developer 3 (API Specialist) - Stream C**:
+
 - Story 9: API Routes (2-3 hours)
 - Story 10: NOSTR Service (2 hours)
-**Total**: ~5 hours (0.6 days)
+  **Total**: ~5 hours (0.6 days)
 
 **After Streams A+B+C Complete (Any Developer) - Stream D**:
+
 - Story 11: Enable Strict Mode (1.5-2 hours)
 - Story 12: Validate Coverage (1.5-2 hours)
-**Total**: ~3.5 hours (0.4 days)
+  **Total**: ~3.5 hours (0.4 days)
 
 **Total Calendar Time**: 2 days with 3 developers working in parallel
 
 ### Minimum Parallelization (1 Developer)
 
 **Sequential Execution**:
+
 - Sprint 0: Stories 1-10 (~24 hours = 3 days)
 - Sprint 1: Stories 11-12 (~3.5 hours = 0.5 days)
-**Total Calendar Time**: 3.5 days with 1 developer
+  **Total Calendar Time**: 3.5 days with 1 developer
 
 ---
 
@@ -2478,20 +2574,24 @@ Sprint 1: Strict Mode (Sequential, 2-3 hours)
 ### High-Risk Stories (require extra attention)
 
 **Story 3: Validation Middleware** (Medium Risk)
+
 - Security-critical component handling user input
 - Mitigation: Comprehensive security testing, multiple code reviews
 
 **Story 9: API Route Handlers** (Medium Risk)
+
 - Security boundary of the application
 - Mitigation: Security review, penetration testing, type-safe request validation
 
 **Story 11: Enable Strict Mode** (Medium Risk)
+
 - May reveal hidden bugs in existing code
 - Mitigation: Incremental enablement, comprehensive regression testing
 
 ### Low-Risk Stories
 
 All other stories (1, 2, 4, 5, 6, 7, 8, 10, 12) are low risk:
+
 - Well-understood typing patterns
 - Comprehensive test coverage
 - No security-critical functionality
@@ -2504,6 +2604,7 @@ All other stories (1, 2, 4, 5, 6, 7, 8, 10, 12) are low risk:
 ### Epic Success Criteria Validation
 
 **At completion of Story 12, verify**:
+
 - ✅ All `any` types replaced with proper types (run grep check)
 - ✅ TypeScript strict mode enabled in all tsconfig.json files
 - ✅ Type coverage reports show 100% (or 99%+ with documented exceptions)
@@ -2538,27 +2639,32 @@ All other stories (1, 2, 4, 5, 6, 7, 8, 10, 12) are low risk:
 Apply these labels to each story issue:
 
 **Work Stream Labels**:
+
 - `stream-a-frontend` (Stories 1-5)
 - `stream-b-shared` (Stories 6-8)
 - `stream-c-api` (Stories 9-10)
 - `stream-d-strict` (Stories 11-12)
 
 **Priority Labels**:
+
 - `priority-critical` (Stories 11, 12)
 - `priority-high` (Stories 1, 2, 3, 6, 9)
 - `priority-medium` (Stories 4, 5, 7, 10)
 - `priority-low` (Story 8)
 
 **Risk Labels**:
+
 - `risk-medium` (Stories 3, 9, 11)
 - `risk-low` (All others)
 
 **Type Labels**:
+
 - `type-refactoring`
 - `epic-001-type-safety`
 - `1-point-story`
 
 **Sprint Labels**:
+
 - `sprint-0-foundation` (Stories 1-10)
 - `sprint-1-strict-mode` (Stories 11-12)
 

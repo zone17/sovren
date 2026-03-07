@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "410"
+issue_id: '410'
 tags: [code-review, quality, infra, pr-87]
 dependencies: []
 ---
@@ -36,6 +36,7 @@ Accept as-is. This is a legitimate use of console.warn in a bootstrap module.
 ## Technical Details
 
 **Affected files:**
+
 - `packages/backend/src/utils/env-validation.ts:248`
 
 ## Acceptance Criteria

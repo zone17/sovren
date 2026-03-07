@@ -6,7 +6,7 @@ Use this template when creating GitHub issues for each story.
 
 ## Story Template
 
-```markdown
+````markdown
 ## Story [STORY-ID]: [Story Title]
 
 **Epic**: #[epic-issue-number] - Type Safety Improvements
@@ -44,15 +44,19 @@ Use this template when creating GitHub issues for each story.
 ### Technical Implementation
 
 **Files to Modify**:
+
 - `path/to/file1.ts`
 - `path/to/file2.tsx`
 
 **Approach**:
+
 ```typescript
 // Code examples showing before/after
 ```
+````
 
 **Type Patterns**:
+
 - [List key type patterns to use]
 
 ---
@@ -91,10 +95,12 @@ Use this template when creating GitHub issues for each story.
 ### Security Considerations
 
 [If security-sensitive story:]
+
 - [List security requirements]
 - [List security tests needed]
 
 [If not security-sensitive:]
+
 - No security vulnerabilities introduced by type changes
 
 ---
@@ -102,13 +108,16 @@ Use this template when creating GitHub issues for each story.
 ### Testing Requirements
 
 **Unit Tests**:
+
 - [Test description]
 - [Test description]
 
 **Integration Tests** (if applicable):
+
 - [Test description]
 
 **Security Tests** (if required):
+
 - [Test description]
 
 ---
@@ -124,9 +133,10 @@ Use this template when creating GitHub issues for each story.
 
 **Size**: 1 point ([X] hours)
 **Breakdown**:
-- [X] hour: [Task description]
-- [X] hour: [Task description]
-- [X] hour: [Task description]
+
+- [x] hour: [Task description]
+- [x] hour: [Task description]
+- [x] hour: [Task description]
 
 **Priority**: [High/Medium/Low/Critical]
 **Risk**: [Low/Medium/High] - [Risk explanation]
@@ -136,6 +146,7 @@ Use this template when creating GitHub issues for each story.
 ### Labels
 
 Apply these labels to this issue:
+
 - `epic-001-type-safety`
 - `type-refactoring`
 - `1-point-story`
@@ -159,7 +170,8 @@ Apply these labels to this issue:
 - Blocked by: #[issue-number]
 - Blocks: #[issue-number]
 - Related: #[issue-number]
-```
+
+````
 
 ---
 
@@ -233,9 +245,10 @@ const handleChange = (e: any) => {
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   setValue(e.currentTarget.value);
 };
-```
+````
 
 **Type Patterns**:
+
 - `React.FormEvent<HTMLFormElement>` for form submissions
 - `React.ChangeEvent<HTMLInputElement>` for input changes
 - `React.MouseEvent<HTMLButtonElement>` for button clicks
@@ -284,11 +297,13 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 ### Testing Requirements
 
 **Unit Tests**:
+
 - Test that form submission handlers receive correct event types
 - Test that input change handlers receive correct target types
 - Test that existing component tests still pass with new types
 
 **Manual Testing**:
+
 - Verify IDE autocomplete works for event.currentTarget
 - Verify no runtime errors when interacting with forms
 - Test all form submission flows (login, signup, profile update, post creation)
@@ -306,6 +321,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 **Size**: 1 point (2-3 hours)
 **Breakdown**:
+
 - 1 hour: Update all event handler types
 - 0.5 hour: Fix any type errors revealed
 - 0.5 hour: Run tests and verify
@@ -339,7 +355,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 - Epic: #XXX
 - Blocks: #XXX (Story 11)
 - Related: #XXX (Story 2), #XXX (Story 5)
-```
+
+````
 
 ---
 
@@ -440,7 +457,7 @@ gh issue create \
   --assignee "@me"
 
 echo "All 12 issues created successfully!"
-```
+````
 
 ---
 

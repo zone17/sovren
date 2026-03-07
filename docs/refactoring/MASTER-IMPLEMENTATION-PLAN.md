@@ -12,14 +12,14 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 
 ### At a Glance
 
-| Metric | Value |
-|--------|-------|
-| **Total Epics** | 5 Epics |
-| **Total Stories** | 90-110 stories (estimated) |
-| **Total Effort** | 90-110 story points |
-| **Timeline (3 devs)** | 6-8 weeks |
-| **Timeline (2 devs)** | 10-12 weeks |
-| **Expected ROI** | 30% maintenance cost reduction, 20% velocity increase |
+| Metric                | Value                                                 |
+| --------------------- | ----------------------------------------------------- |
+| **Total Epics**       | 5 Epics                                               |
+| **Total Stories**     | 90-110 stories (estimated)                            |
+| **Total Effort**      | 90-110 story points                                   |
+| **Timeline (3 devs)** | 6-8 weeks                                             |
+| **Timeline (2 devs)** | 10-12 weeks                                           |
+| **Expected ROI**      | 30% maintenance cost reduction, 20% velocity increase |
 
 ### Epic Completion Status
 
@@ -49,6 +49,7 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 ## Epic Overview
 
 ### Epic 001: Type Safety Improvements
+
 **Status**: ✅ Ready for Development
 **Stories**: 12 stories
 **Effort**: 12 points (24 hours)
@@ -57,15 +58,18 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 **Risk**: LOW
 
 **Business Value**:
+
 - 15-20% reduction in type-related bugs
 - Better IDE autocomplete
 - Improved code quality
 - Foundation for other Epics
 
 **Dependencies**:
+
 - None (can start immediately)
 
 **Documentation**:
+
 - ✅ EPIC-001-story-breakdown.md
 - ✅ EPIC-001-story-map.md
 - ✅ EPIC-001-quick-reference.md
@@ -76,6 +80,7 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 ---
 
 ### Epic 002: Payment Processing TODO Resolution
+
 **Status**: ✅ Ready for Development
 **Stories**: 18 stories
 **Effort**: 18 points (36-72 hours)
@@ -84,15 +89,18 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 **Risk**: MEDIUM-HIGH
 
 **Business Value**:
+
 - Production-ready payment flows
 - 40% reduction in payment support tickets
 - Comprehensive audit trail
 - Compliance readiness
 
 **Dependencies**:
+
 - Soft dependency on Epic 001 (types help payment code)
 
 **Documentation**:
+
 - ✅ EPIC-002-USER-STORIES.md
 - ✅ EPIC-002-STORY-MAP.md
 - ✅ EPIC-002-QUICK-REFERENCE.md
@@ -102,6 +110,7 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 ---
 
 ### Epic 003: NOSTR Service Consolidation
+
 **Status**: 📋 Decomposition Spec Ready
 **Stories**: 22-28 stories (estimated)
 **Effort**: 22-28 points (44-56 hours)
@@ -110,15 +119,18 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 **Risk**: MEDIUM
 
 **Business Value**:
+
 - 15% code reduction (~1,000 lines)
 - 30% reduction in NOSTR maintenance
 - Single source of truth
 - Faster NOSTR feature development
 
 **Dependencies**:
+
 - Epic 001 (type safety) should be done first
 
 **Documentation** (To Be Created):
+
 - 📋 EPIC-003-story-breakdown.md
 - 📋 EPIC-003-story-map.md
 - 📋 EPIC-003-quick-reference.md
@@ -130,6 +142,7 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 ---
 
 ### Epic 004: State Management Boundaries
+
 **Status**: 📋 Decomposition Spec Ready
 **Stories**: 24-30 stories (estimated)
 **Effort**: 24-30 points (48-60 hours)
@@ -138,15 +151,18 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 **Risk**: MEDIUM
 
 **Business Value**:
+
 - 20% faster feature development
 - < 1 day onboarding for state management
 - Fewer state-related bugs
 - Clear architectural patterns
 
 **Dependencies**:
+
 - Epic 001 (types) and Epic 003 (NOSTR) help clarify state patterns
 
 **Documentation** (To Be Created):
+
 - 📋 EPIC-004-story-breakdown.md
 - 📋 EPIC-004-story-map.md
 - 📋 EPIC-004-quick-reference.md
@@ -158,6 +174,7 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 ---
 
 ### Epic 005: Backend Service Refactoring
+
 **Status**: 📋 Decomposition Spec Ready
 **Stories**: 36-45 stories (estimated)
 **Effort**: 36-45 points (72-90 hours)
@@ -166,15 +183,18 @@ This document provides the comprehensive implementation plan for all 5 Epics in 
 **Risk**: MEDIUM-HIGH (payment services)
 
 **Business Value**:
+
 - 40% faster backend changes
 - Team scalability (parallel work)
 - Easier unit testing
 - 25% reduction in backend bugs
 
 **Dependencies**:
+
 - Epic 001 (types) and Epic 002 (payment TODOs) should be integrated
 
 **Documentation** (To Be Created):
+
 - 📋 EPIC-005-story-breakdown.md
 - 📋 EPIC-005-story-map.md
 - 📋 EPIC-005-quick-reference.md
@@ -207,12 +227,14 @@ Phase 3: Backend Scalability (Weeks 5-8)
 ### Sequencing Rationale
 
 **Phase 1: Quick Wins** (Week 1)
+
 - **Why**: Immediate value, low risk, foundation for other work
 - **Epic 001 First**: 2-3 days, establishes type safety for all other Epics
 - **Epic 002 Second**: 4-5 days, critical revenue protection
 - **Blocker**: None
 
 **Phase 2: Strategic Architecture** (Weeks 2-4)
+
 - **Why**: Medium risk, high strategic value, improves development velocity
 - **Epic 003**: NOSTR consolidation reduces tech debt, enables easier NOSTR features
 - **Epic 004**: State management clarity improves frontend development
@@ -220,6 +242,7 @@ Phase 3: Backend Scalability (Weeks 5-8)
 - **Blocker**: Epic 001 (types) recommended
 
 **Phase 3: Backend Scalability** (Weeks 5-8)
+
 - **Why**: Largest Epic, medium-high risk (payment services), foundational for team scalability
 - **Epic 005**: Backend service refactoring
 - **Blocker**: Epic 001 (types), Epic 002 (payment TODOs should be integrated)
@@ -251,6 +274,7 @@ Weeks 4-7:
 ### Optimal Team: 3 Developers
 
 **Developer Profiles**:
+
 1. **Frontend Specialist** (Senior)
    - Epic 001: Stream A (Frontend Types)
    - Epic 004: Streams B & C (State Management)
@@ -269,6 +293,7 @@ Weeks 4-7:
 ### 3-Developer Allocation by Phase
 
 **Phase 1: Quick Wins (Week 1)**
+
 - **Day 1-2**: All 3 on Epic 001 (parallel streams)
   - Dev 1: Stories 1-5 (Stream A)
   - Dev 2: Stories 6-8 (Stream B)
@@ -279,6 +304,7 @@ Weeks 4-7:
   - Dev 3: Stories 13-18
 
 **Phase 2: Strategic Architecture (Weeks 2-4)**
+
 - **Epic 003** (2 devs):
   - Dev 2 (Backend): Core services + Backend migration
   - Dev 3 (Generalist): Adapters + Testing
@@ -287,6 +313,7 @@ Weeks 4-7:
   - Dev 3 (Generalist): Redux consolidation (after Epic 003)
 
 **Phase 3: Backend Scalability (Weeks 5-8)**
+
 - **Epic 005** (All 3 devs):
   - Dev 1: Content services + Integration
   - Dev 2: Payment services (CRITICAL)
@@ -297,10 +324,12 @@ Weeks 4-7:
 **Timeline**: 10-12 weeks (vs 6-8 weeks with 3 devs)
 
 **Developer Profiles**:
+
 1. **Full-Stack Senior** (Frontend leaning)
 2. **Full-Stack Senior** (Backend leaning, Payment experience)
 
 **Allocation**:
+
 - Week 1: Both on Epic 001 (2 days) + Epic 002 start
 - Weeks 2-3: Epic 002 completion + Epic 003 start
 - Weeks 4-5: Epic 003 completion + Epic 004 start
@@ -312,6 +341,7 @@ Weeks 4-7:
 **Timeline**: 16-20 weeks
 
 **Not Recommended**: Very slow, blocks other work. Only viable if:
+
 - No time pressure
 - Learning opportunity for developer
 - Other features on hold
@@ -342,20 +372,24 @@ gantt
 ### Milestones
 
 **Week 1: Foundation Complete**
+
 - ✅ Epic 001 complete (all types safe)
 - ✅ Epic 002 complete (payment flows production-ready)
 - 🎯 **Gate**: All tests passing, type coverage 99%+, payment E2E tests pass
 
 **Week 3: NOSTR & State Management Complete**
+
 - ✅ Epic 003 complete (single NOSTR service)
 - ✅ Epic 004 complete (clear state boundaries)
 - 🎯 **Gate**: NOSTR tests pass, state management tests pass, documentation complete
 
 **Week 6-8: Backend Services Complete**
+
 - ✅ Epic 005 complete (all services < 300 lines)
 - 🎯 **Gate**: All backend tests pass, payment services 100% tested, performance benchmarks met
 
 **Week 8: Refactoring Complete**
+
 - 🎉 All 5 Epics complete
 - 🎯 **Final Gate**: Full regression testing, production deployment, monitoring, retrospective
 
@@ -378,24 +412,29 @@ Epic 005 (Backend Services)
 ### Dependency Details
 
 **Epic 001 → All Others**
+
 - Type safety improves code quality for all subsequent Epics
 - Not a hard blocker, but recommended to complete first
 - Provides better IDE support during refactoring
 
 **Epic 002 ← Epic 001**
+
 - Soft dependency: Types help payment code quality
 - Epic 002 can start without Epic 001 if needed
 
 **Epic 003 ← Epic 001**
+
 - Soft dependency: Type safety helps NOSTR service consolidation
 - Recommended but not required
 
 **Epic 004 ← Epic 001, Epic 003**
+
 - Epic 001 types help state management clarity
 - Epic 003 NOSTR consolidation clarifies NOSTR state patterns
 - Can start after Epic 001 if Epic 003 in progress
 
 **Epic 005 ← Epic 001, Epic 002**
+
 - Epic 001 types essential for service interfaces
 - Epic 002 payment TODOs should be resolved before refactoring payment services
 - Hard dependency on Epic 001, soft dependency on Epic 002
@@ -412,21 +451,27 @@ Epic 005 (Backend Services)
 ### Epic-Level Risks
 
 #### Epic 001: Type Safety (LOW RISK)
+
 **Risks**:
+
 - Build time increase
 - Hidden bugs revealed by strict mode
 
 **Mitigation**:
+
 - Monitor build performance
 - Incremental strict mode enablement
 - Comprehensive test suite
 
 #### Epic 002: Payment Processing (HIGH RISK)
+
 **Risks**:
+
 - Breaking payment flows (CRITICAL)
 - Revenue impact
 
 **Mitigation**:
+
 - Feature flags for all payment changes
 - Canary deployment
 - Extensive E2E testing
@@ -434,34 +479,43 @@ Epic 005 (Backend Services)
 - Payment specialist review
 
 #### Epic 003: NOSTR Consolidation (MEDIUM RISK)
+
 **Risks**:
+
 - Breaking NOSTR functionality
 - Performance degradation
 
 **Mitigation**:
+
 - Parallel running (old + new implementations)
 - Feature flags
 - Comprehensive relay testing
 - NIP compliance test suite
 
 #### Epic 004: State Management (MEDIUM RISK)
+
 **Risks**:
+
 - Cache invalidation bugs
 - Breaking existing features
 
 **Mitigation**:
+
 - Incremental migration
 - Feature flags
 - Comprehensive integration tests
 - React Query DevTools
 
 #### Epic 005: Backend Services (MEDIUM-HIGH RISK)
+
 **Risks**:
+
 - Breaking payment services (CRITICAL)
 - Database transaction issues
 - Performance degradation
 
 **Mitigation**:
+
 - Payment services last (after Content/User)
 - Extensive testing (95%+ coverage, 100% for payments)
 - Transaction boundary design
@@ -487,29 +541,34 @@ Epic 005 (Backend Services)
 Each Epic must pass these gates before considered "complete":
 
 #### Gate 1: Code Quality
+
 - [ ] All stories merged to main branch
 - [ ] Zero TypeScript errors (`tsc --noEmit`)
 - [ ] Zero ESLint errors
 - [ ] All code reviewed and approved
 
 #### Gate 2: Testing
+
 - [ ] Unit test coverage ≥ 95% (100% for payment code)
 - [ ] All integration tests passing
 - [ ] E2E tests passing for affected features
 - [ ] Performance tests meet benchmarks
 
 #### Gate 3: Documentation
+
 - [ ] All required Mermaid diagrams created
 - [ ] API documentation updated
 - [ ] Migration guide created
 - [ ] ADRs written for major decisions
 
 #### Gate 4: Security (if applicable)
+
 - [ ] Security reviews completed for critical stories
 - [ ] Penetration testing completed (payment, auth)
 - [ ] No security vulnerabilities introduced
 
 #### Gate 5: Deployment
+
 - [ ] Deployed to staging environment
 - [ ] Full regression testing on staging
 - [ ] Deployed to production (canary or incremental)
@@ -535,6 +594,7 @@ Before declaring refactoring initiative "complete":
 ### Daily
 
 **Standup** (15 minutes):
+
 - What was completed yesterday?
 - What's planned for today?
 - Any blockers or dependencies?
@@ -543,12 +603,14 @@ Before declaring refactoring initiative "complete":
 ### Weekly
 
 **Epic Review** (30 minutes, Fridays):
+
 - Review progress on current Epic
 - Adjust priorities if needed
 - Review risks and blockers
 - Plan next week's work
 
 **Demo** (30 minutes, Fridays):
+
 - Demo completed stories to stakeholders
 - Get feedback
 - Celebrate wins
@@ -556,12 +618,14 @@ Before declaring refactoring initiative "complete":
 ### Per Epic
 
 **Kickoff** (1 hour, start of each Epic):
+
 - Review Epic goals and business value
 - Review story breakdown
 - Assign stories to developers
 - Identify risks and mitigation strategies
 
 **Retrospective** (1 hour, end of each Epic):
+
 - What went well?
 - What could be improved?
 - Action items for next Epic
@@ -570,6 +634,7 @@ Before declaring refactoring initiative "complete":
 ### Monthly
 
 **Executive Update** (30 minutes):
+
 - Progress summary
 - Metrics (velocity, quality, risks)
 - Timeline updates
@@ -582,6 +647,7 @@ Before declaring refactoring initiative "complete":
 ### Per-Story Rollback
 
 **Git-Based Rollback**:
+
 - Each story is a separate PR
 - Can revert individual PRs if issues found
 - Max 24 hours to identify and revert
@@ -589,6 +655,7 @@ Before declaring refactoring initiative "complete":
 ### Per-Epic Rollback
 
 **Feature Flag Rollback**:
+
 - All major Epic changes behind feature flags
 - Can disable Epic changes in production instantly
 - Keep old implementation for 1-2 sprints
@@ -596,6 +663,7 @@ Before declaring refactoring initiative "complete":
 ### Full Refactoring Rollback
 
 **Extreme Scenario** (only if multiple Epics fail):
+
 - Maintain `main` branch with pre-refactoring state
 - All refactoring work in `refactoring/*` branches
 - Can revert to pre-refactoring `main` if catastrophic issues
@@ -618,16 +686,19 @@ Issue Detected
 ### Technical Metrics
 
 **Type Safety**:
+
 - Type coverage: 94% → 99%+
 - TypeScript errors: Current → 0
 - ESLint explicit-any warnings: Current → 0
 
 **Code Quality**:
+
 - Code duplication: Current → < 3%
 - Service size: 600+ lines → < 300 lines
 - Test coverage: 85-95% → 95%+ (100% for payments)
 
 **Performance**:
+
 - Build time: Baseline → < 5% increase
 - API response time: Baseline → No regression
 - Bundle size: Baseline → < 5% increase
@@ -635,17 +706,20 @@ Issue Detected
 ### Business Metrics
 
 **Developer Velocity**:
+
 - Story points per sprint: Baseline → +15-20% (after refactoring)
 - Time to implement new features: Baseline → -20%
 - Time to onboard new developers: 3 days → < 1 day (state management)
 
 **Quality & Stability**:
+
 - Production bugs: Baseline → -25%
 - Payment support tickets: Baseline → -40%
 - NOSTR-related bugs: Baseline → -30%
 - Type-related bugs: Baseline → -15-20%
 
 **Maintenance**:
+
 - Time spent on bug fixes: Baseline → -30%
 - Time to modify backend services: Baseline → -40%
 - NOSTR maintenance effort: Baseline → -30%
@@ -653,10 +727,12 @@ Issue Detected
 ### ROI Calculation
 
 **Investment**:
+
 - 90-110 story points × $X per point = Total cost
 - 6-8 weeks of developer time (3 devs)
 
 **Return** (Annual):
+
 - Developer velocity: +15-20% → More features shipped
 - Maintenance reduction: -30% → Developers freed for features
 - Bug reduction: -25% → Less support burden, better UX
@@ -691,14 +767,17 @@ Issue Detected
 ### Week 1: Epic 001 & 002
 
 **Monday**:
+
 - Morning: Team kickoff (1 hour)
 - Afternoon: Begin Epic 001 (all 3 developers, parallel work)
 
 **Tuesday-Wednesday**:
+
 - Complete Epic 001
 - Begin Epic 002 planning
 
 **Thursday-Friday**:
+
 - Epic 002 critical path
 - Security review for payment stories
 
@@ -727,18 +806,20 @@ Issue Detected
 ### Document Inventory
 
 **Completed Documents**:
+
 - ✅ REFACTORING-ROADMAP.md
 - ✅ MASTER-IMPLEMENTATION-PLAN.md (this document)
-- ✅ EPIC-001-* (9 documents)
-- ✅ EPIC-002-* (7 documents)
+- ✅ EPIC-001-\* (9 documents)
+- ✅ EPIC-002-\* (7 documents)
 - ✅ EPIC-003-DECOMPOSITION-SPEC.md
 - ✅ EPIC-004-DECOMPOSITION-SPEC.md
 - ✅ EPIC-005-DECOMPOSITION-SPEC.md
 
 **To Be Created** (via story-decomposer agent):
-- 📋 EPIC-003-* (7 documents)
-- 📋 EPIC-004-* (7 documents)
-- 📋 EPIC-005-* (7 documents)
+
+- 📋 EPIC-003-\* (7 documents)
+- 📋 EPIC-004-\* (7 documents)
+- 📋 EPIC-005-\* (7 documents)
 
 ### Related Documents
 
@@ -748,10 +829,10 @@ Issue Detected
 
 ### Change Log
 
-| Date | Change | Author |
-|------|--------|--------|
+| Date       | Change           | Author               |
+| ---------- | ---------------- | -------------------- |
 | 2025-10-23 | Initial creation | Project Orchestrator |
-| | | |
+|            |                  |                      |
 
 ---
 

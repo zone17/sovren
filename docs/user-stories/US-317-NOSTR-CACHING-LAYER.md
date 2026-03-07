@@ -18,11 +18,13 @@ Implemented a production-ready, high-performance caching layer for NOSTR events 
 #### Features Implemented
 
 **Cache Warming & Preloading**:
+
 - `warmCache(filters: NostrFilter[])`: Preload events matching filters from IndexedDB
 - `preload(eventIds: string[])`: Preload specific events by ID
 - Automatic warmup on initialization with configurable filters
 
 **Pattern-Based Invalidation**:
+
 - `invalidate(pattern: string)`: Pattern-based cache invalidation
   - `pubkey:*` - Invalidate all events
   - `pubkey:{pubkey}` - Invalidate events from specific author
@@ -32,6 +34,7 @@ Implemented a production-ready, high-performance caching layer for NOSTR events 
 - `invalidateOnPublish(event: NostrEvent)`: Auto-invalidate on replaceable events
 
 **Memory Management**:
+
 - Memory usage tracking in bytes
 - Configurable memory limit (default: 50MB)
 - Automatic LRU eviction when limit exceeded
@@ -39,6 +42,7 @@ Implemented a production-ready, high-performance caching layer for NOSTR events 
 - TTL-based expiration
 
 **Analytics & Performance Metrics**:
+
 - `getHitRate()`: Get cache hit rate percentage
 - `getPerformanceMetrics()`: Comprehensive performance metrics
   - Operation latencies (get, set, query, delete)
@@ -46,6 +50,7 @@ Implemented a production-ready, high-performance caching layer for NOSTR events 
   - Storage utilization
 
 **Offline Support**:
+
 - Sync queue in IndexedDB for pending publishes
 - Automatic sync when connection restored
 - Conflict resolution for queued events
@@ -57,23 +62,27 @@ Implemented a production-ready, high-performance caching layer for NOSTR events 
 #### Features
 
 **Connection Management**:
+
 - Single node and Redis Cluster support
 - Connection pooling (10-50 connections)
 - Automatic reconnection with exponential backoff
 - Health monitoring and status tracking
 
 **Failover & Reliability**:
+
 - Automatic fallback to memory cache on Redis failure
 - Graceful degradation
 - Error tracking and metrics
 
 **Performance**:
+
 - All cache operations < 5ms target
 - Pattern-based key deletion with SCAN
 - Compression support (optional)
 - Configurable TTL per key
 
 **Operations**:
+
 ```typescript
 get(key: string): Promise<NostrEvent | null>
 set(key: string, value: NostrEvent, ttl?: number): Promise<void>
@@ -87,6 +96,7 @@ getStats(): Promise<CacheAdapterStats>
 ### 3. Configuration
 
 **Frontend Cache Config**:
+
 ```typescript
 {
   maxMemoryEvents: 1000,        // Max events in memory
@@ -100,6 +110,7 @@ getStats(): Promise<CacheAdapterStats>
 ```
 
 **Redis Config**:
+
 ```typescript
 {
   host: 'localhost',
@@ -116,21 +127,25 @@ getStats(): Promise<CacheAdapterStats>
 ## Architecture Diagrams
 
 ### Caching Architecture Overview
+
 ![Architecture](https://github.com/OpenAgentsInc/Sovren/blob/main/docs/architecture/diagrams/US-317-caching-architecture.mmd)
 
 [View Interactive Diagram](https://mermaid.live/view#base64:...)
 
 ### Cache Data Flow
+
 ![Data Flow](https://github.com/OpenAgentsInc/Sovren/blob/main/docs/architecture/diagrams/US-317-cache-data-flow.mmd)
 
 [View Interactive Diagram](https://mermaid.live/view#base64:...)
 
 ### Cache Invalidation Strategy
+
 ![Invalidation](https://github.com/OpenAgentsInc/Sovren/blob/main/docs/architecture/diagrams/US-317-cache-invalidation.mmd)
 
 [View Interactive Diagram](https://mermaid.live/view#base64:...)
 
 ### Memory Management
+
 ![Memory](https://github.com/OpenAgentsInc/Sovren/blob/main/docs/architecture/diagrams/US-317-memory-management.mmd)
 
 [View Interactive Diagram](https://mermaid.live/view#base64:...)
@@ -138,6 +153,7 @@ getStats(): Promise<CacheAdapterStats>
 ## Performance Benchmarks
 
 ### Cache Operation Latency
+
 - **Get (Memory Hit)**: < 1ms
 - **Get (IndexedDB Hit)**: < 5ms
 - **Get (Cache Miss)**: 50-200ms (network dependent)
@@ -147,12 +163,14 @@ getStats(): Promise<CacheAdapterStats>
 - **Pattern Invalidation**: < 20ms
 
 ### Redis Adapter Performance
+
 - **Redis Get**: < 2ms
 - **Redis Set**: < 3ms
 - **Pattern Delete (1000 keys)**: < 100ms
 - **Failover Time**: < 50ms
 
 ### Throughput
+
 - **Concurrent Reads**: 10,000+ ops/sec
 - **Concurrent Writes**: 5,000+ ops/sec
 - **Query Throughput**: 1,000+ queries/sec
@@ -234,8 +252,8 @@ console.log(`Hit rate: ${cache.getHitRate()}%`);
 ```typescript
 // Warm cache on app start
 await cache.warmCache([
-  { kinds: [0, 3] },              // Metadata and contacts
-  { authors: [userPubkey] },      // User's events
+  { kinds: [0, 3] }, // Metadata and contacts
+  { authors: [userPubkey] }, // User's events
   { '#p': [userPubkey], kinds: [1] }, // Mentions
 ]);
 ```
@@ -286,34 +304,34 @@ console.log(`Hit rate: ${stats.hitRate}%`);
 
 ```typescript
 interface CacheStats {
-  memoryCount: number;         // Events in memory
-  indexedDBCount: number;      // Events in IndexedDB
-  totalCount: number;          // Total cached events
-  hits: number;                // Cache hits
-  misses: number;              // Cache misses
-  hitRate: number;             // Hit rate (0-1)
-  evictions: number;           // LRU evictions
-  expirations: number;         // TTL expirations
-  memoryBytes: number;         // Memory usage
-  averageLatency: number;      // Avg operation latency (ms)
-  lastCleanup: number;         // Last cleanup timestamp
+  memoryCount: number; // Events in memory
+  indexedDBCount: number; // Events in IndexedDB
+  totalCount: number; // Total cached events
+  hits: number; // Cache hits
+  misses: number; // Cache misses
+  hitRate: number; // Hit rate (0-1)
+  evictions: number; // LRU evictions
+  expirations: number; // TTL expirations
+  memoryBytes: number; // Memory usage
+  averageLatency: number; // Avg operation latency (ms)
+  lastCleanup: number; // Last cleanup timestamp
 }
 
 interface CachePerformanceMetrics {
   operations: {
-    get: { count, totalTime, avgTime };
-    set: { count, totalTime, avgTime };
-    query: { count, totalTime, avgTime };
-    delete: { count, totalTime, avgTime };
+    get: { count; totalTime; avgTime };
+    set: { count; totalTime; avgTime };
+    query: { count; totalTime; avgTime };
+    delete: { count; totalTime; avgTime };
   };
   cacheEfficiency: {
-    hitRate: number;           // % of successful cache hits
-    missRate: number;          // % of cache misses
-    evictionRate: number;      // % of events evicted
+    hitRate: number; // % of successful cache hits
+    missRate: number; // % of cache misses
+    evictionRate: number; // % of events evicted
   };
   storage: {
-    memoryUsage: number;       // Current memory usage
-    memoryLimit: number;       // Configured limit
+    memoryUsage: number; // Current memory usage
+    memoryLimit: number; // Configured limit
     utilizationPercent: number; // % of limit used
   };
 }
@@ -334,6 +352,7 @@ prometheusClient.gauge('cache_avg_latency_ms', stats.averageLatency);
 ## Configuration Best Practices
 
 ### Development
+
 ```typescript
 {
   maxMemoryEvents: 500,
@@ -345,6 +364,7 @@ prometheusClient.gauge('cache_avg_latency_ms', stats.averageLatency);
 ```
 
 ### Production (Frontend)
+
 ```typescript
 {
   maxMemoryEvents: 2000,
@@ -361,6 +381,7 @@ prometheusClient.gauge('cache_avg_latency_ms', stats.averageLatency);
 ```
 
 ### Production (Backend with Redis)
+
 ```typescript
 {
   host: process.env.REDIS_HOST,

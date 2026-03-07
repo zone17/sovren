@@ -2,7 +2,7 @@
 id: 449
 severity: P2
 status: complete
-title: "CrossPostService: ValidationError used instead of AuthorizationError for ownership check"
+title: 'CrossPostService: ValidationError used instead of AuthorizationError for ownership check'
 file: packages/backend/src/services/distribution/CrossPostService.ts
 found_in: PR #92
 reviewer: review-security, review-architecture

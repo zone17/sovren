@@ -12,6 +12,7 @@ The Payment History component provides users with a comprehensive view of all th
 ## Purpose
 
 Enable users to:
+
 - View complete payment transaction history
 - Filter payments by status (All, Paid, Pending, Failed)
 - Sort payments by date or amount
@@ -59,6 +60,7 @@ Enable users to:
 ### 1. Payment List Display
 
 Display all payment transactions with:
+
 - Payment description
 - Amount in satoshis (formatted with thousands separator)
 - Payment status badge (Paid, Pending, Failed, Expired)
@@ -69,6 +71,7 @@ Display all payment transactions with:
 ### 2. Status Filtering
 
 Filter payments by status:
+
 - **All**: Show all payments (default)
 - **Paid**: Show only settled/successful payments
 - **Pending**: Show payments awaiting confirmation
@@ -79,6 +82,7 @@ Each filter button displays the count of payments in that category.
 ### 3. Sorting
 
 Sort payments by:
+
 - **Date** (newest first - default)
 - **Amount** (highest first)
 
@@ -95,11 +99,13 @@ Toggle between date and amount sorting via sort button.
 ### 5. Payment Actions
 
 #### Copy Payment Hash
+
 - One-click copy to clipboard
 - Toast notification on success
 - Full payment hash copied (not truncated version)
 
 #### Download Receipt
+
 - Generate JSON receipt with payment details
 - Automatic file download
 - Includes: ID, hash, amount, description, status, timestamps
@@ -147,7 +153,7 @@ The component integrates with the Lightning API:
 
 ```typescript
 // API endpoint used
-GET /api/lightning/user/payments
+GET / api / lightning / user / payments;
 
 // Response type
 interface LightningPayment {
@@ -269,6 +275,7 @@ npm test PaymentHistory -- --watch
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: [sovren-media/sovren](https://github.com/sovren-media/sovren/issues)
 - Documentation: [docs/README.md](../README.md)
 - User Stories: [PAY-007](../user-stories/PAY-007.md)

@@ -832,6 +832,47 @@ const { data: parent } = await db
 
 ---
 
+## 16. RLS INSERT Policies Must Restrict to Service Role (1 P1 — Slice 8)
+
+**Recurrence:** 1 P1. `WITH CHECK (TRUE)` on INSERT allows any authenticated user to create rows that should only be created by the backend service.
+
+```sql
+-- WRONG: Any authenticated user can insert
+CREATE POLICY insert_policy ON notifications
+  FOR INSERT WITH CHECK (TRUE);
+
+-- CORRECT: Only backend service role
+CREATE POLICY insert_policy ON notifications
+  FOR INSERT WITH CHECK (auth.role() = 'service_role');
+```
+
+**When to use:** Every table where rows are created by backend services on behalf of users (notifications, audit logs, system events). User-created rows (posts, comments) use `auth.uid()` check instead.
+
+**Detection:** `grep -rn "WITH CHECK (TRUE)" supabase/migrations/` — any hit without an explicit exemption comment is a P1.
+
+---
+
+## 17. PostgreSQL Trigger Atomic Increments (1 P1 — Slice 8)
+
+**Recurrence:** 1 P1. `COALESCE(count, 0) + 1` is a read-modify-write pattern that loses increments under concurrent load.
+
+```sql
+-- WRONG: Read-modify-write race under concurrency
+UPDATE creators SET follower_count = COALESCE(follower_count, 0) + 1;
+
+-- CORRECT: Atomic (PostgreSQL handles row-level locking)
+UPDATE creators SET follower_count = follower_count + 1;
+
+-- For decrements, floor at 0:
+UPDATE creators SET follower_count = GREATEST(follower_count - 1, 0);
+```
+
+**Also required:** `SECURITY DEFINER SET search_path = public` on trigger functions that UPDATE tables the invoking user may not have direct permission on.
+
+**Detection:** `grep -rn "COALESCE.*+ 1\|COALESCE.*- 1" supabase/migrations/` in trigger functions.
+
+---
+
 ## How to Use This File
 
 1. **In agent briefs:** Add `"Read docs/solutions/patterns/critical-patterns.md before writing code"` to the CONTEXT TO LOAD section.

@@ -31,6 +31,7 @@ merge_conflicts: 0
 This sprint validated domain-grouped agents as the standard team shape for remediation (zero conflicts across 4+ sprints now). It also exposed a critical process failure: the `verify-task-complete` hook ran full monorepo quality gates on every `TaskUpdate` call, which — combined with 2,957+ pre-existing type errors, 121 failing test suites, and 6,443 ESLint issues — caused agents to loop indefinitely, burning tokens with no path to success. The fix was replacing the hook with a log-only version and enforcing quality gates at CI/PR level instead.
 
 **Key Deliverables:**
+
 - 18 P2 findings resolved (16 implemented, 2 detected as already-fixed)
 - `formatSats` shared utility extracted (replaced 8 inline copies)
 - `Promise.allSettled` pattern adopted for batch operations
@@ -43,12 +44,12 @@ This sprint validated domain-grouped agents as the standard team shape for remed
 
 ### Evidence
 
-| Sprint | Agents | Files | Conflicts |
-|--------|--------|-------|-----------|
-| P2 Final Remediation (02-18) | 6 | 22 todos | 0 |
-| Wave 2 P2/P3 (02-19) | 6 | 104 files | 0 |
-| PR #86 P1 R4 (02-19) | 4 | 17 files | 0 |
-| **P2 R5 (02-20)** | **5** | **54 files** | **0** |
+| Sprint                       | Agents | Files        | Conflicts |
+| ---------------------------- | ------ | ------------ | --------- |
+| P2 Final Remediation (02-18) | 6      | 22 todos     | 0         |
+| Wave 2 P2/P3 (02-19)         | 6      | 104 files    | 0         |
+| PR #86 P1 R4 (02-19)         | 4      | 17 files     | 0         |
+| **P2 R5 (02-20)**            | **5**  | **54 files** | **0**     |
 
 ### Rule
 
@@ -117,6 +118,7 @@ The `verify-task-complete` hook was configured to run on every `TaskUpdate` even
 3. Full test suite (`npm test`)
 
 With the codebase in its current state:
+
 - **2,957+ pre-existing type errors** (from rapid development)
 - **121 failing test suites** (documented in `docs/remaining-test-failures-2026-02-20.md`)
 - **6,443 ESLint issues** (mostly pre-existing)
@@ -139,13 +141,14 @@ echo "[$(date)] Task completed: $1" >> /tmp/task-completions.log
 ```
 
 Quality enforcement moved to:
+
 - **Pre-commit hooks**: Scoped to changed files only
 - **CI pipeline**: Full quality gates on PR
 - **PR review**: `/workflows:review` with 13+ parallel agents
 
 ### Rule
 
-**Never run full monorepo quality gates in task-completion hooks.** The hook fires on every agent status change — with N agents and M status changes each, that's N*M executions of the full suite. Instead:
+**Never run full monorepo quality gates in task-completion hooks.** The hook fires on every agent status change — with N agents and M status changes each, that's N\*M executions of the full suite. Instead:
 
 1. Task hooks: Log-only or scoped to the specific files the agent changed
 2. Pre-commit hooks: Scoped to staged files (`git diff --cached --name-only`)
@@ -168,6 +171,7 @@ Quality enforcement moved to:
 Pre-commit hooks that run `npm run lint` or `npm run type-check` on the full codebase fail when there are pre-existing issues. This blocks agents from committing valid changes.
 
 Common pre-existing issues that block commits:
+
 - `any` types in legacy code
 - Test fake secrets (hardcoded test API keys)
 - Health routes without auth (intentional for monitoring)
@@ -233,11 +237,12 @@ Without respawn, 4 frontend P2s would have been unresolved. The 10-minute detect
 
 ```typescript
 // Repeated in 8 files with slight variations
-const formatted = amount >= 1000000
-  ? `${(amount / 1000000).toFixed(1)}M`
-  : amount >= 1000
-    ? `${(amount / 1000).toFixed(1)}K`
-    : `${amount}`;
+const formatted =
+  amount >= 1000000
+    ? `${(amount / 1000000).toFixed(1)}M`
+    : amount >= 1000
+      ? `${(amount / 1000).toFixed(1)}K`
+      : `${amount}`;
 ```
 
 ### Solution
@@ -247,8 +252,8 @@ Extracted to a single parameterized utility:
 ```typescript
 // packages/shared/src/utils/format-sats.ts
 interface FormatSatsOptions {
-  abbreviate?: boolean;  // true: 1.5M, false: 1,500,000
-  suffix?: string;       // e.g., ' sats', ' BTC'
+  abbreviate?: boolean; // true: 1.5M, false: 1,500,000
+  suffix?: string; // e.g., ' sats', ' BTC'
 }
 
 export function formatSats(amount: number, options: FormatSatsOptions = {}): string {
@@ -285,24 +290,20 @@ When a utility function appears in 3+ files with slight variations, extract to `
 ### Solution
 
 ```typescript
-const results = await Promise.allSettled(
-  items.map(item => processItem(item))
-);
+const results = await Promise.allSettled(items.map((item) => processItem(item)));
 
 const succeeded = results.filter(
   (r): r is PromiseFulfilledResult<ProcessResult> => r.status === 'fulfilled'
 );
-const failed = results.filter(
-  (r): r is PromiseRejectedResult => r.status === 'rejected'
-);
+const failed = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
 
 if (failed.length > 0) {
   logger.warn(`${failed.length}/${results.length} items failed`, {
-    errors: failed.map(f => f.reason?.message),
+    errors: failed.map((f) => f.reason?.message),
   });
 }
 
-return { succeeded: succeeded.map(s => s.value), failedCount: failed.length };
+return { succeeded: succeeded.map((s) => s.value), failedCount: failed.length };
 ```
 
 ### When to Use
@@ -351,18 +352,18 @@ find . -name "* 2.*" -o -name "* 3.*" -delete
 
 ## Sprint Metrics
 
-| Metric | Value |
-|--------|-------|
-| Findings fixed | 18 (16 implemented, 2 stale) |
-| Agents spawned | 6 (5 productive, 1 unresponsive) |
-| Files changed | 54 |
-| Lines added | 804 |
-| Lines removed | 747 |
-| Net lines | +57 |
-| Merge conflicts | 0 |
-| Agent respawns | 1 (frontend-agent -> frontend-agent-2) |
-| Stale todos caught | 2 (371, 380) |
-| Time lost to hook disaster | ~20 minutes of agent looping |
+| Metric                     | Value                                  |
+| -------------------------- | -------------------------------------- |
+| Findings fixed             | 18 (16 implemented, 2 stale)           |
+| Agents spawned             | 6 (5 productive, 1 unresponsive)       |
+| Files changed              | 54                                     |
+| Lines added                | 804                                    |
+| Lines removed              | 747                                    |
+| Net lines                  | +57                                    |
+| Merge conflicts            | 0                                      |
+| Agent respawns             | 1 (frontend-agent -> frontend-agent-2) |
+| Stale todos caught         | 2 (371, 380)                           |
+| Time lost to hook disaster | ~20 minutes of agent looping           |
 
 ---
 

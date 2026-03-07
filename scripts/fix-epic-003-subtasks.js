@@ -30,14 +30,16 @@ async function fixSubtasks() {
 
     // Find the story in tasks
     for (const phase of Object.values(tasksData.phases)) {
-      const story = phase.tasks.find(t => t.story_id === storyId);
+      const story = phase.tasks.find((t) => t.story_id === storyId);
 
       if (story && story.subtasks) {
         let fixedCount = 0;
 
         story.subtasks.forEach((subtask, index) => {
           if (subtask.status !== 'completed') {
-            console.log(`   ✓ Subtask ${index + 1}: "${subtask.description.substring(0, 60)}..." → completed`);
+            console.log(
+              `   ✓ Subtask ${index + 1}: "${subtask.description.substring(0, 60)}..." → completed`
+            );
             subtask.status = 'completed';
             fixedCount++;
           }
@@ -56,7 +58,7 @@ async function fixSubtasks() {
   console.log(`\n📊 Dashboard at http://localhost:3001 now shows accurate completion`);
 }
 
-fixSubtasks().catch(error => {
+fixSubtasks().catch((error) => {
   console.error('❌ Error:', error.message);
   process.exit(1);
 });

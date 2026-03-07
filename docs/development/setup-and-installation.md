@@ -23,23 +23,23 @@
 
 ### Required Software
 
-| Software | Version | Purpose | Installation |
-|----------|---------|---------|--------------|
-| **Node.js** | 18+ | JavaScript runtime | [nodejs.org](https://nodejs.org/) |
-| **npm** | 8+ | Package manager | Included with Node.js |
-| **PostgreSQL** | 14+ | Primary database | [postgresql.org](https://www.postgresql.org/) |
-| **Redis** | 6+ | Caching layer | [redis.io](https://redis.io/) |
-| **Docker** | 20+ | Containerization | [docker.com](https://www.docker.com/) |
-| **Git** | 2.30+ | Version control | [git-scm.com](https://git-scm.com/) |
+| Software       | Version | Purpose            | Installation                                  |
+| -------------- | ------- | ------------------ | --------------------------------------------- |
+| **Node.js**    | 18+     | JavaScript runtime | [nodejs.org](https://nodejs.org/)             |
+| **npm**        | 8+      | Package manager    | Included with Node.js                         |
+| **PostgreSQL** | 14+     | Primary database   | [postgresql.org](https://www.postgresql.org/) |
+| **Redis**      | 6+      | Caching layer      | [redis.io](https://redis.io/)                 |
+| **Docker**     | 20+     | Containerization   | [docker.com](https://www.docker.com/)         |
+| **Git**        | 2.30+   | Version control    | [git-scm.com](https://git-scm.com/)           |
 
 ### Optional Software
 
-| Software | Version | Purpose | Installation |
-|----------|---------|---------|--------------|
-| **LND** | 0.15+ | Lightning Network node | [lightning.engineering](https://lightning.engineering/) |
-| **Visual Studio Code** | Latest | Recommended IDE | [code.visualstudio.com](https://code.visualstudio.com/) |
-| **TablePlus/DBeaver** | Latest | Database GUI | [tableplus.com](https://tableplus.com/) |
-| **Redis Desktop Manager** | Latest | Redis GUI | [redisdesktop.com](https://redisdesktop.com/) |
+| Software                  | Version | Purpose                | Installation                                            |
+| ------------------------- | ------- | ---------------------- | ------------------------------------------------------- |
+| **LND**                   | 0.15+   | Lightning Network node | [lightning.engineering](https://lightning.engineering/) |
+| **Visual Studio Code**    | Latest  | Recommended IDE        | [code.visualstudio.com](https://code.visualstudio.com/) |
+| **TablePlus/DBeaver**     | Latest  | Database GUI           | [tableplus.com](https://tableplus.com/)                 |
+| **Redis Desktop Manager** | Latest  | Redis GUI              | [redisdesktop.com](https://redisdesktop.com/)           |
 
 ### System Requirements
 
@@ -453,7 +453,7 @@ const DEFAULT_RELAYS = [
   'wss://nostr.wine',
   'wss://relay.nostr.band',
   'wss://nos.lol',
-  'wss://relay.snort.social'
+  'wss://relay.snort.social',
 ];
 ```
 
@@ -465,11 +465,11 @@ Update `packages/shared/src/config/relay-config.ts`:
 export const RELAY_CONFIG = {
   relays: [
     'wss://your-relay.com',
-    'wss://relay.damus.io',  // Fallback
+    'wss://relay.damus.io', // Fallback
   ],
   connectionTimeout: 5000,
   reconnectInterval: 3000,
-  maxReconnectAttempts: 5
+  maxReconnectAttempts: 5,
 };
 ```
 

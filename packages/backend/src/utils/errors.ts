@@ -93,3 +93,15 @@ export class AuthorizationError extends AppError {
     this.name = 'AuthorizationError';
   }
 }
+
+/**
+ * #733: DatabaseError — for 500-class DB failures.
+ * Use instead of ValidationError when a Supabase `if (error)` check fires after a DB operation.
+ * Ensures the correct HTTP 500 status code and prevents DB internals from leaking to clients.
+ */
+export class DatabaseError extends AppError {
+  constructor(message: string = 'Database operation failed', options?: ServiceErrorOptions) {
+    super(500, 'DATABASE_ERROR', message, options?.details, true, options?.context, options?.cause);
+    this.name = 'DatabaseError';
+  }
+}

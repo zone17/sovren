@@ -3,6 +3,7 @@
 ## Story: US-E5-011
 
 ### Service Interface
+
 ```typescript
 interface IContentCreationService {
   create(content: ContentDraft): Promise<Content>;
@@ -48,12 +49,14 @@ interface IContentCreationService {
    - Auto-save reliability tests
 
 ### Dependencies
+
 - multer for file uploads
 - sharp for image optimization
 - slugify for URL generation
 - joi for validation
 
 ### Quality Gates
+
 ✓ 95%+ test coverage
 ✓ TypeScript strict mode
 ✓ Full error handling

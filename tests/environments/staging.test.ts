@@ -105,15 +105,15 @@ describe('Staging Environment Configuration', () => {
     });
 
     it('should include staging domain in CORS origins', () => {
-      const hasStaging = stagingConfig.security.corsOrigins.some(
-        origin => origin.includes('staging')
+      const hasStaging = stagingConfig.security.corsOrigins.some((origin) =>
+        origin.includes('staging')
       );
       expect(hasStaging).toBe(true);
     });
 
     it('should allow localhost for testing', () => {
-      const hasLocalhost = stagingConfig.security.corsOrigins.some(
-        origin => origin.includes('localhost')
+      const hasLocalhost = stagingConfig.security.corsOrigins.some((origin) =>
+        origin.includes('localhost')
       );
       expect(hasLocalhost).toBe(true);
     });
@@ -173,7 +173,7 @@ describe('Staging Environment Health Checks', () => {
       'monitoring',
     ];
 
-    requiredKeys.forEach(key => {
+    requiredKeys.forEach((key) => {
       expect(stagingConfig).toHaveProperty(key);
     });
   });

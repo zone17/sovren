@@ -1,12 +1,15 @@
 # Phase 4: User Services Implementation Guide
 
 ## Overview
+
 6 User Services to be implemented in parallel by specialized agents.
 
 ## Service Specifications
 
 ### 1. UserAuthenticationService (US-E5-018)
+
 **File**: `UserAuthenticationService.ts`
+
 ```typescript
 interface IUserAuthenticationService {
   login(credentials: LoginCredentials): Promise<AuthSession>;
@@ -20,6 +23,7 @@ interface IUserAuthenticationService {
 ```
 
 **Requirements**:
+
 - Multi-factor authentication (TOTP, WebAuthn, backup codes)
 - Rate limiting (5 attempts per 15 minutes)
 - Session management with Redis
@@ -29,7 +33,9 @@ interface IUserAuthenticationService {
 - Integration: Redis, EventBus, AuditLog, Notification
 
 ### 2. UserProfileService (US-E5-019)
+
 **File**: `UserProfileService.ts`
+
 ```typescript
 interface IUserProfileService {
   getProfile(userId: string): Promise<UserProfile>;
@@ -43,6 +49,7 @@ interface IUserProfileService {
 ```
 
 **Requirements**:
+
 - CRUD operations with validation
 - Avatar upload with CDN integration
 - Privacy controls (public/private/friends)
@@ -51,7 +58,9 @@ interface IUserProfileService {
 - Integration: Storage, Cache, EventBus, AuditLog
 
 ### 3. UserPreferencesService (US-E5-020)
+
 **File**: `UserPreferencesService.ts`
+
 ```typescript
 interface IUserPreferencesService {
   getPreferences(userId: string): Promise<UserPreferences>;
@@ -63,6 +72,7 @@ interface IUserPreferencesService {
 ```
 
 **Requirements**:
+
 - Notification preferences (email, push, SMS, in-app)
 - Theme preferences (light/dark/auto)
 - Language and locale settings
@@ -72,7 +82,9 @@ interface IUserPreferencesService {
 - Integration: Cache, EventBus
 
 ### 4. UserActivityService (US-E5-021)
+
 **File**: `UserActivityService.ts`
+
 ```typescript
 interface IUserActivityService {
   trackActivity(userId: string, activity: ActivityEvent): Promise<void>;
@@ -85,6 +97,7 @@ interface IUserActivityService {
 ```
 
 **Requirements**:
+
 - Real-time activity tracking
 - Session history with device info
 - Last seen updates
@@ -94,7 +107,9 @@ interface IUserActivityService {
 - Integration: TimescaleDB, Redis, EventBus
 
 ### 5. UserRelationshipService (US-E5-022)
+
 **File**: `UserRelationshipService.ts`
+
 ```typescript
 interface IUserRelationshipService {
   follow(followerId: string, followeeId: string): Promise<void>;
@@ -109,6 +124,7 @@ interface IUserRelationshipService {
 ```
 
 **Requirements**:
+
 - Bidirectional relationship tracking
 - Privacy setting enforcement
 - Efficient graph queries
@@ -118,7 +134,9 @@ interface IUserRelationshipService {
 - Integration: Graph database, Cache, EventBus
 
 ### 6. UserAnalyticsService (US-E5-023)
+
 **File**: `UserAnalyticsService.ts`
+
 ```typescript
 interface IUserAnalyticsService {
   getUserMetrics(userId: string): Promise<UserMetrics>;
@@ -131,6 +149,7 @@ interface IUserAnalyticsService {
 ```
 
 **Requirements**:
+
 - User-level metrics (posts, engagement, revenue)
 - Cohort analysis (acquisition, behavior)
 - Retention tracking (daily, weekly, monthly)
@@ -142,6 +161,7 @@ interface IUserAnalyticsService {
 ## Implementation Standards
 
 ### Service Structure
+
 ```typescript
 @injectable()
 export class UserServiceName implements IUserServiceName {
@@ -151,7 +171,7 @@ export class UserServiceName implements IUserServiceName {
     @inject(TYPES.Database) private db: IDatabase,
     @inject(TYPES.Cache) private cache: ICacheService,
     @inject(TYPES.EventBus) private eventBus: IEventBusService,
-    @inject(TYPES.AuditLog) private auditLog: IAuditLogService,
+    @inject(TYPES.AuditLog) private auditLog: IAuditLogService
   ) {
     this.logger = new Logger(UserServiceName.name);
   }
@@ -263,6 +283,7 @@ Each service requires:
    - Input validation
 
 Example test structure:
+
 ```typescript
 describe('UserAuthenticationService', () => {
   describe('login', () => {
@@ -300,17 +321,20 @@ describe('UserAuthenticationService', () => {
 ## Parallel Execution Plan
 
 ### Agent Assignments:
+
 - **Agent 1**: UserAuthenticationService (complex, security-critical)
 - **Agent 2**: UserProfileService + UserPreferencesService
 - **Agent 3**: UserActivityService + UserRelationshipService
 - **Agent 4**: UserAnalyticsService
 
 ### Dependencies:
+
 - All services depend on shared interfaces
 - UserAnalyticsService depends on activity data
 - Coordinate on shared database schema
 
 ### Timeline:
+
 - Start: All agents simultaneously
 - Duration: 2-3 hours per service
 - Total: 3-4 hours with parallelization

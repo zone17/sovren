@@ -164,7 +164,7 @@ export class NostrFilterBuilder {
     }
     return {
       valid: false,
-      errors: result.error.issues.map(issue => issue.message),
+      errors: result.error.issues.map((issue) => issue.message),
     };
   }
 }
@@ -200,7 +200,7 @@ export interface SubscriptionOptions {
   autoUnsubscribe?: boolean;
   maxEvents?: number;
   timeout?: number;
-  id?: string;  // Custom subscription ID
+  id?: string; // Custom subscription ID
 }
 
 /**
@@ -425,7 +425,7 @@ export function validateFilter(filter: NostrFilter): FilterValidationResult {
   // Validate with Zod schema
   const result = NostrFilterSchema.safeParse(filter);
   if (!result.success) {
-    errors.push(...result.error.issues.map(issue => issue.message));
+    errors.push(...result.error.issues.map((issue) => issue.message));
   }
 
   // Check for potentially expensive queries
@@ -460,7 +460,7 @@ export function optimizeFilter(filter: NostrFilter): NostrFilter {
   const optimized = { ...filter };
 
   // Remove empty arrays
-  Object.keys(optimized).forEach(key => {
+  Object.keys(optimized).forEach((key) => {
     const value = optimized[key as keyof NostrFilter];
     if (Array.isArray(value) && value.length === 0) {
       delete optimized[key as keyof NostrFilter];
@@ -514,17 +514,15 @@ export function eventMatchesFilter(event: NostrEvent, filter: NostrFilter): bool
   }
 
   // Check tag filters
-  const tagFilters = Object.keys(filter).filter(key => key.startsWith('#'));
+  const tagFilters = Object.keys(filter).filter((key) => key.startsWith('#'));
   for (const tagFilter of tagFilters) {
     const tagName = tagFilter.substring(1);
     const filterValues = filter[tagFilter as keyof NostrFilter] as string[] | undefined;
 
     if (filterValues && filterValues.length > 0) {
-      const eventTags = event.tags
-        .filter(tag => tag[0] === tagName)
-        .map(tag => tag[1]);
+      const eventTags = event.tags.filter((tag) => tag[0] === tagName).map((tag) => tag[1]);
 
-      const hasMatch = filterValues.some(value => eventTags.includes(value));
+      const hasMatch = filterValues.some((value) => eventTags.includes(value));
       if (!hasMatch) {
         return false;
       }

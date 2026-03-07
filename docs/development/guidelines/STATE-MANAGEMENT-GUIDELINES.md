@@ -54,16 +54,18 @@ import { RootState, AppDispatch } from '@/store';
 ## Core Principles
 
 ### 1. Single Source of Truth
+
 - **Server State**: React Query owns all server data
 - **Client State**: Redux owns all UI state
 - **Component State**: useState for truly local state
 
 ### 2. Clear Boundaries
+
 ```typescript
 // ✅ CORRECT: Server state in React Query
 const { data: userProfile } = useQuery({
   queryKey: ['user', userId],
-  queryFn: () => fetchUser(userId)
+  queryFn: () => fetchUser(userId),
 });
 
 // ✅ CORRECT: UI state in Redux
@@ -71,6 +73,7 @@ const theme = useSelector((state: RootState) => state.ui.theme);
 ```
 
 ### 3. Immutability
+
 - Never mutate state directly
 - Use Redux Toolkit's Immer for Redux
 - React Query handles server state immutability
@@ -79,23 +82,23 @@ const theme = useSelector((state: RootState) => state.ui.theme);
 
 ### What Goes in React Query
 
-| Category | Examples | Implementation |
-|----------|----------|---------------|
-| API Responses | User data, posts, comments | `useQuery`, `useMutation` |
-| External Data | NOSTR events, blockchain data | `useQuery` with WebSocket |
-| Server Config | Feature flags, settings | `useQuery` with long cache |
-| File Uploads | Images, documents | `useMutation` with progress |
-| Search Results | Filtered/paginated data | `useInfiniteQuery` |
+| Category       | Examples                      | Implementation              |
+| -------------- | ----------------------------- | --------------------------- |
+| API Responses  | User data, posts, comments    | `useQuery`, `useMutation`   |
+| External Data  | NOSTR events, blockchain data | `useQuery` with WebSocket   |
+| Server Config  | Feature flags, settings       | `useQuery` with long cache  |
+| File Uploads   | Images, documents             | `useMutation` with progress |
+| Search Results | Filtered/paginated data       | `useInfiniteQuery`          |
 
 ### What Goes in Redux
 
-| Category | Examples | Implementation |
-|----------|----------|---------------|
-| UI State | Theme, sidebar, modals | UI slice |
-| Form Drafts | Unsaved user input | Form slice |
-| Selection | Multi-select, active items | Selection slice |
-| Navigation | Breadcrumbs, tab state | Navigation slice |
-| Notifications | Toasts, alerts | Notification slice |
+| Category      | Examples                   | Implementation     |
+| ------------- | -------------------------- | ------------------ |
+| UI State      | Theme, sidebar, modals     | UI slice           |
+| Form Drafts   | Unsaved user input         | Form slice         |
+| Selection     | Multi-select, active items | Selection slice    |
+| Navigation    | Breadcrumbs, tab state     | Navigation slice   |
+| Notifications | Toasts, alerts             | Notification slice |
 
 ### What Stays in Component State
 
@@ -158,10 +161,7 @@ export const useUpdateProfile = () => {
     onError: (err, newProfile, context) => {
       // Rollback on error
       if (context?.previousProfile) {
-        queryClient.setQueryData(
-          ['user', newProfile.id],
-          context.previousProfile
-        );
+        queryClient.setQueryData(['user', newProfile.id], context.previousProfile);
       }
     },
     onSettled: (data, error, variables) => {
@@ -311,10 +311,7 @@ export const useRealtimePosts = () => {
       const update = JSON.parse(event.data);
 
       // Update React Query cache with WebSocket data
-      queryClient.setQueryData(
-        ['posts', update.id],
-        (old) => ({ ...old, ...update })
-      );
+      queryClient.setQueryData(['posts', update.id], (old) => ({ ...old, ...update }));
     };
 
     return () => ws.close();
@@ -342,7 +339,7 @@ export const useLikePost = () => {
 
       const previousPost = queryClient.getQueryData(['posts', postId]);
 
-      queryClient.setQueryData(['posts', postId], old => ({
+      queryClient.setQueryData(['posts', postId], (old) => ({
         ...old,
         likes: old.likes + 1,
         isLiked: true,
@@ -372,14 +369,14 @@ const postsSlice = createSlice({
   reducers: {
     setPosts: (state, action) => {
       state.data = action.payload;
-    }
-  }
+    },
+  },
 });
 
 // ✅ GOOD: Use React Query instead
 const { data: posts } = useQuery({
   queryKey: ['posts'],
-  queryFn: api.posts.getAll
+  queryFn: api.posts.getAll,
 });
 ```
 
@@ -422,15 +419,16 @@ const mutation = useMutation({
     // Targeted invalidation
     queryClient.invalidateQueries({
       queryKey: ['user'],
-      exact: false // Invalidate all user-related queries
+      exact: false, // Invalidate all user-related queries
     });
-  }
+  },
 });
 ```
 
 ## Code Review Checklist
 
 ### React Query Checklist
+
 - [ ] Query keys are consistent and descriptive
 - [ ] Stale time and cache time are appropriate
 - [ ] Error handling is implemented
@@ -441,6 +439,7 @@ const mutation = useMutation({
 - [ ] Dependent queries use `enabled` flag
 
 ### Redux Checklist
+
 - [ ] Only UI state in Redux (no server data)
 - [ ] Slices are focused and cohesive
 - [ ] Actions are descriptive and typed
@@ -449,6 +448,7 @@ const mutation = useMutation({
 - [ ] Proper TypeScript types for all state
 
 ### General Checklist
+
 - [ ] Clear separation between server and client state
 - [ ] No state duplication
 - [ ] Proper error boundaries
@@ -460,18 +460,22 @@ const mutation = useMutation({
 ### Common Issues and Solutions
 
 #### Issue 1: Stale Data After Mutation
+
 **Symptom**: UI doesn't update after successful mutation
 **Solution**:
+
 ```typescript
 // Ensure proper invalidation
 onSuccess: () => {
   queryClient.invalidateQueries({ queryKey: ['affected', 'queries'] });
-}
+};
 ```
 
 #### Issue 2: Infinite Render Loop
+
 **Symptom**: Component keeps re-rendering
 **Solution**:
+
 ```typescript
 // Check dependencies
 const { data } = useQuery({
@@ -482,14 +486,16 @@ const { data } = useQuery({
 ```
 
 #### Issue 3: Race Conditions
+
 **Symptom**: Old data overwrites new data
 **Solution**:
+
 ```typescript
 // Cancel in-flight queries
 onMutate: async (newData) => {
   await queryClient.cancelQueries({ queryKey: ['data'] });
   // ... rest of optimistic update
-}
+};
 ```
 
 ### Debugging Tools
@@ -536,10 +542,7 @@ const { data: username } = useQuery({
 });
 
 // 3. Batch cache updates
-queryClient.setQueriesData(
-  { queryKey: ['posts'], exact: false },
-  (old) => updateAllPosts(old)
-);
+queryClient.setQueriesData({ queryKey: ['posts'], exact: false }, (old) => updateAllPosts(old));
 ```
 
 ### Redux Optimizations
@@ -556,9 +559,8 @@ const postsSlice = createSlice({
 });
 
 // 2. Memoize expensive selectors
-export const selectExpensiveData = createSelector(
-  [selectPosts, selectFilters],
-  (posts, filters) => expensiveComputation(posts, filters)
+export const selectExpensiveData = createSelector([selectPosts, selectFilters], (posts, filters) =>
+  expensiveComputation(posts, filters)
 );
 
 // 3. Use React.memo for pure components
@@ -569,27 +571,22 @@ export const PureComponent = React.memo(Component);
 
 ### Decision Matrix
 
-| Need | Solution | Example |
-|------|----------|---------|
-| Fetch data from API | React Query | `useQuery(['users'], fetchUsers)` |
-| Update server data | React Query | `useMutation(updateUser)` |
-| Toggle modal | Redux | `dispatch(openModal('edit'))` |
-| Theme preference | Redux | `dispatch(setTheme('dark'))` |
-| Form input | Component State | `useState(initialValue)` |
-| Computed values | Selector/Memo | `useMemo(() => compute(data))` |
-| WebSocket data | React Query + WS | Update query cache on message |
-| Temp validation | Component State | `useState(errors)` |
+| Need                | Solution         | Example                           |
+| ------------------- | ---------------- | --------------------------------- |
+| Fetch data from API | React Query      | `useQuery(['users'], fetchUsers)` |
+| Update server data  | React Query      | `useMutation(updateUser)`         |
+| Toggle modal        | Redux            | `dispatch(openModal('edit'))`     |
+| Theme preference    | Redux            | `dispatch(setTheme('dark'))`      |
+| Form input          | Component State  | `useState(initialValue)`          |
+| Computed values     | Selector/Memo    | `useMemo(() => compute(data))`    |
+| WebSocket data      | React Query + WS | Update query cache on message     |
+| Temp validation     | Component State  | `useState(errors)`                |
 
 ### Import Cheatsheet
 
 ```typescript
 // React Query
-import {
-  useQuery,
-  useMutation,
-  useInfiniteQuery,
-  useQueryClient
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 
 // Redux
 import { useSelector, useDispatch } from 'react-redux';
@@ -604,11 +601,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 
 ```typescript
 // Consistent query key structure
-['resource'] // All resources
-['resource', id] // Specific resource
-['resource', 'list', { filters }] // Filtered list
-['resource', id, 'relation'] // Related data
-['resource', 'search', query] // Search results
+['resource'][('resource', id)][('resource', 'list', { filters })][('resource', id, 'relation')][ // All resources // Specific resource // Filtered list // Related data
+  ('resource', 'search', query)
+]; // Search results
 ```
 
 ---
@@ -630,4 +625,4 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 
 ---
 
-*Last reviewed: 2024-12-26 | Next review: 2025-01-26*
+_Last reviewed: 2024-12-26 | Next review: 2025-01-26_

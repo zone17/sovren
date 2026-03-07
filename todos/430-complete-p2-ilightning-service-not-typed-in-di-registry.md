@@ -2,7 +2,7 @@
 id: 430
 severity: P2
 status: complete
-title: "ILightningService interface exists but DI token still uses Record<string, unknown>"
+title: 'ILightningService interface exists but DI token still uses Record<string, unknown>'
 file: packages/backend/src/container/types.ts
 found_in: PR #89
 reviewer: review-backend
@@ -23,6 +23,7 @@ LightningService: new ServiceToken<Record<string, unknown>>(
 ```
 
 This means:
+
 1. Any service resolving `TYPES.LightningService` from the container gets an untyped `Record<string, unknown>` instead of `ILightningService`
 2. The type safety gained by extracting the interface is lost at the DI boundary
 3. Consumers must cast the resolved service, defeating the purpose of the interface extraction

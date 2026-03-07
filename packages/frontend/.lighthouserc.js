@@ -21,7 +21,7 @@ module.exports = {
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
         'total-blocking-time': ['error', { maxNumericValue: 200 }],
         'speed-index': ['error', { maxNumericValue: 2000 }],
-        'interactive': ['error', { maxNumericValue: 3000 }],
+        interactive: ['error', { maxNumericValue: 3000 }],
 
         // Resource optimizations
         'unused-javascript': ['warn', { maxNumericValue: 30000 }],

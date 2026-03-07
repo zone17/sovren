@@ -21,41 +21,41 @@
 
 These fixes are self-contained, touch isolated files, and have no inter-dependencies. They can all be implemented in parallel. Fixes 111 and 125 unblock dev workflow and security respectively.
 
-| Todo | Title | Files Affected | Risk |
-|------|-------|----------------|------|
-| 111 | Frontend test suite 158 failures (pre-commit fix) | `.husky/pre-commit`, `package.json` | Medium |
-| 125 | Hardcoded receipt signing secret | `services/lightning/receipt-service.ts` | Low |
-| 126 | Duplicate shutdown handlers | `bootstrap.ts`, `server.ts` | Low |
-| 128 | Dead code in error-handler-middleware | `middleware/error-handler-middleware.ts` | Very Low |
-| 129 | ServiceError invalid options | `services/content/ContentCreationService.ts` | Very Low |
+| Todo | Title                                             | Files Affected                               | Risk     |
+| ---- | ------------------------------------------------- | -------------------------------------------- | -------- |
+| 111  | Frontend test suite 158 failures (pre-commit fix) | `.husky/pre-commit`, `package.json`          | Medium   |
+| 125  | Hardcoded receipt signing secret                  | `services/lightning/receipt-service.ts`      | Low      |
+| 126  | Duplicate shutdown handlers                       | `bootstrap.ts`, `server.ts`                  | Low      |
+| 128  | Dead code in error-handler-middleware             | `middleware/error-handler-middleware.ts`     | Very Low |
+| 129  | ServiceError invalid options                      | `services/content/ContentCreationService.ts` | Very Low |
 
 ### Wave 2: API Consistency (Sequential: 121 then 122)
 
 Todo 121 (auth middleware) and 122 (response envelope) are coupled: fixing auth middleware to use `next(error)` depends on understanding the error handler's response shape, and the response envelope helper (122) provides the standardized shape. Fix 121 first, then 122. **122 must be done before Wave 3** so new endpoints use `createApiResponse()` from day one.
 
-| Todo | Title | Files Affected | Risk |
-|------|-------|----------------|------|
-| 121 | Auth middleware bypasses error handler | `middleware/auth.ts`, `utils/errors.ts` | Low |
-| 122 | Response envelope inconsistency | `utils/api-response.ts` (NEW), `controllers/payment/PaymentController.ts`, `controllers/user/UserController.ts`, `controllers/content/ContentController.ts` | Low-Medium |
+| Todo | Title                                  | Files Affected                                                                                                                                              | Risk       |
+| ---- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 121  | Auth middleware bypasses error handler | `middleware/auth.ts`, `utils/errors.ts`                                                                                                                     | Low        |
+| 122  | Response envelope inconsistency        | `utils/api-response.ts` (NEW), `controllers/payment/PaymentController.ts`, `controllers/user/UserController.ts`, `controllers/content/ContentController.ts` | Low-Medium |
 
 ### Wave 3: API Expansion (Depends on Wave 2 -- uses createApiResponse)
 
 New endpoints from 119 and 120 should use the `createApiResponse()` helper established in Wave 2. This prevents introducing new envelope inconsistency.
 
-| Todo | Title | Files Affected | Risk |
-|------|-------|----------------|------|
-| 119 | User relationship API 87% missing | `routes/v1/user.routes.ts`, `controllers/user/UserController.ts`, `validators/user/index.ts` | Medium |
-| 120 | Payment API gaps | `routes/v1/payment.routes.ts`, `controllers/payment/PaymentController.ts`, `validators/payment/index.ts` | Medium |
+| Todo | Title                             | Files Affected                                                                                           | Risk   |
+| ---- | --------------------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
+| 119  | User relationship API 87% missing | `routes/v1/user.routes.ts`, `controllers/user/UserController.ts`, `validators/user/index.ts`             | Medium |
+| 120  | Payment API gaps                  | `routes/v1/payment.routes.ts`, `controllers/payment/PaymentController.ts`, `validators/payment/index.ts` | Medium |
 
 ### Wave 4: Performance / Architecture (Independent, Do Last)
 
 These can be done in parallel. 127 (DI cleanup) touches controller files also modified in Wave 2/3, so do it last to avoid merge conflicts.
 
-| Todo | Title | Files Affected | Risk |
-|------|-------|----------------|------|
-| 123 | Payment file corruption silent loss | `services/payment-persistence.ts` | Low-Medium |
-| 124 | Unbounded subscription/transaction caches | `services/subscription-management-service.ts`, `services/transaction-history-service.ts` | Low |
-| 127 | Dual DI system (inversify + custom) | `controllers/**/*.ts`, `services/content/ContentCreationService.ts` | Medium |
+| Todo | Title                                     | Files Affected                                                                           | Risk       |
+| ---- | ----------------------------------------- | ---------------------------------------------------------------------------------------- | ---------- |
+| 123  | Payment file corruption silent loss       | `services/payment-persistence.ts`                                                        | Low-Medium |
+| 124  | Unbounded subscription/transaction caches | `services/subscription-management-service.ts`, `services/transaction-history-service.ts` | Low        |
+| 127  | Dual DI system (inversify + custom)       | `controllers/**/*.ts`, `services/content/ContentCreationService.ts`                      | Medium     |
 
 ---
 
@@ -92,6 +92,7 @@ These can be done in parallel. 127 (DI cleanup) touches controller files also mo
 **Problem**: `receipt-service.ts` line 679 uses `process.env.RECEIPT_SIGNATURE_SECRET || 'sovren-receipt-secret'`. The fallback allows receipt forgery in dev/misconfigured environments.
 
 **Approach**: Follow the same pattern as `AppConfig.jwtSecret` in `app.ts` (lines 283-291): throw in production if not set, log a warning in development with a clearly-marked dev-only value. Specifically:
+
 1. Replace the inline fallback with a function that throws in production
 2. In dev/test, use a constant like `'DEV-ONLY-receipt-secret-DO-NOT-USE-IN-PRODUCTION'`
 3. Log a warning when using the dev fallback
@@ -121,6 +122,7 @@ These can be done in parallel. 127 (DI cleanup) touches controller files also mo
 **Problem**: `authorize()`, `requireNostrSignature()`, and `requireOwnership()` in `auth.ts` write responses directly via `res.status().json()` instead of calling `next(error)`. This means auth errors lack `metadata.requestId`, `metadata.timestamp`, and have inconsistent error shapes.
 
 **Approach**: Replace all `res.status(N).json({...})` calls with `next(new AppError(...))` or the appropriate error class from `utils/errors.ts`:
+
 - `res.status(401)` calls -> `next(new UnauthorizedError('message'))`
 - `res.status(403)` calls -> `next(new AppError(403, 'AUTHORIZATION_ERROR', 'message'))`
 - `res.status(400)` calls -> `next(new ValidationError('message'))`
@@ -142,6 +144,7 @@ The error handler middleware already formats these consistently with requestId a
 **Problem**: `ContentController` returns `{ success, data, metadata: { requestId, timestamp, processingTime } }`. `PaymentController` and `UserController` return only `{ success: true, data: {...} }`. Machine clients can't rely on consistent shape.
 
 **Approach**: Create a shared `createApiResponse(req, data, startTime?)` helper that builds the consistent envelope:
+
 ```typescript
 function createApiResponse<T>(req: Request, data: T, startTime?: number) {
   return {
@@ -172,6 +175,7 @@ Place this in a new `utils/api-response.ts` file or in the existing `error-handl
 **Problem**: `payment-persistence.ts` `loadFromDisk` already has corruption recovery (backs up corrupted files to `.corrupted.{timestamp}` and recovers from `.tmp`). However, the `console.error` logging doesn't integrate with the structured logger, and there's no health check failure or operator alerting.
 
 **Approach**: Looking at the actual code (lines 89-120), the corruption recovery is already partially implemented from a previous P1 fix. What's missing:
+
 1. Replace `console.error` with `logger.error` (structured logging)
 2. Add a `corrupted` flag on the service that health checks can query
 3. Emit an event when corruption is detected (for operator alerting)
@@ -188,6 +192,7 @@ Place this in a new `utils/api-response.ts` file or in the existing `error-handl
 **Problem**: `subscriptionCache` (subscription-management-service.ts:130) and `transactionCache` (transaction-history-service.ts:134) are plain `Map<string, T>` with no eviction. Memory grows linearly.
 
 **Approach**: Replace both Maps with `TTLCache` from `utils/ttl-cache.ts` (already exists in the codebase). Use reasonable defaults:
+
 - `subscriptionCache`: `maxSize: 10_000, ttlMs: 5 * 60 * 1000` (5 min TTL, 10K cap)
 - `transactionCache`: `maxSize: 50_000, ttlMs: 10 * 60 * 1000` (10 min TTL, 50K cap — transactions are read-heavy)
 
@@ -205,6 +210,7 @@ The `TTLCache` API matches `Map` for `get`/`set`/`has`/`delete`, so the change i
 **Problem**: Controllers use `@injectable()` and `@inject(TYPES.X)` from inversify, but the actual container is a custom `ServiceContainer` (see `container/ServiceContainer.ts`). The inversify decorators are metadata-only — the custom container ignores them. Constructor injection works by coincidence via lazy `getController()` in route files.
 
 **Approach**: Option A — Remove inversify decorators. The custom container works correctly and is simpler. Inversify adds ~100KB to the bundle for zero functional benefit. Steps:
+
 1. Remove `@injectable()` decorator from all 3 controllers + ContentCreationService
 2. Remove all `@inject(TYPES.X)` decorators from constructor parameters
 3. Remove `inversify` imports from controller files
@@ -228,6 +234,7 @@ The `TTLCache` API matches `Map` for `get`/`set`/`has`/`delete`, so the change i
 **Approach**: Expose all 13 missing operations per PO DoD. Route naming follows RESTful conventions with `:id` for the target user. All new endpoints require `authenticate` middleware. Use `createApiResponse()` from todo 122 for all responses.
 
 Routes to add to `user.routes.ts`:
+
 1. `POST /users/:id/block` — block user (safety-critical)
 2. `DELETE /users/:id/block` — unblock user
 3. `POST /users/:id/mute` — mute user (safety-critical)
@@ -246,6 +253,7 @@ Routes to add to `user.routes.ts`:
 Wire the existing `GetRelationshipsSchema` validator to followers/following routes. Add corresponding methods to `UserController` that delegate to `UserRelationshipService`. May need new validators for block, mute, friend-request, import, and privacy-settings bodies.
 
 **Edge cases from PO DoD**:
+
 - User tries to block themselves -> 400
 - User follows someone who blocked them -> 403
 - Pagination with zero results -> empty array, not error
@@ -263,6 +271,7 @@ Wire the existing `GetRelationshipsSchema` validator to followers/following rout
 **Approach**: Wire the existing validators to new routes in `payment.routes.ts`. All new endpoints require `authenticate` middleware. Use `createApiResponse()` from todo 122 for all responses.
 
 Routes to add:
+
 1. `GET /payments/transactions` — transaction history with `GetTransactionHistorySchema`
 2. `GET /payments/balance` — user balance with `GetBalanceSchema`
 3. `PUT /payments/webhooks/:id` — update webhook with `UpdateWebhookSchema` + `requireNostrSignature`
@@ -275,6 +284,7 @@ Routes to add:
 Add corresponding controller methods to `PaymentController`. The service methods already exist in `PaymentRetryService` and other services.
 
 **Edge cases from PO DoD**:
+
 - Transaction history for user with zero transactions -> empty array
 - Balance query for non-existent user -> 404
 - Webhook update with invalid URL format -> 400
@@ -293,6 +303,7 @@ Add corresponding controller methods to `PaymentController`. The service methods
 **Approach**: Option C (quick fix) as recommended by the todo: exclude frontend tests from pre-commit hook, keep them in CI only. This is the right call for a P2 remediation sprint — fixing 158 test suites is a separate project.
 
 Steps:
+
 1. Modify `.husky/pre-commit` to run backend tests only: change `npm test:ci` to `npm run test:unit -- --selectProjects backend shared`
 2. Or create a `test:pre-commit` script in package.json that runs only backend + shared tests
 3. Keep `npm test:ci` in CI pipeline for full coverage
@@ -328,6 +339,7 @@ Wave 4 (independent, do last):
 ```
 
 **Cross-wave dependencies**:
+
 - 119 and 120 depend on 122 so new endpoints use `createApiResponse()` from the start (per PO DoD dependency matrix)
 - 121 must precede 122 so auth errors flow through centralized handler before envelope standardization
 - 127 (removing inversify decorators) touches the same controller files as 122 and 119/120. Do 127 last to avoid merge conflicts.
@@ -336,40 +348,40 @@ Wave 4 (independent, do last):
 
 ## Risk Assessment
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| 121: Auth errors break existing clients | Medium | Auth error shape changes from `{ error, code }` to `{ success: false, error, code, metadata }`. Clients may depend on old shape. | Test with existing integration tests. Announce breaking change in CHANGELOG. |
-| 122: Response envelope change breaks clients | Medium | Adding `metadata` field is additive, not breaking. Clients ignoring extra fields are unaffected. |
-| 127: Removing decorators breaks DI | Low | Custom container doesn't use decorators. Verified by reading ServiceContainer.ts — it uses factory functions, not inversify reflection. |
-| 119/120: New routes don't match service methods | Medium | Verify each controller method delegates to existing service. Use grep to confirm service method signatures. |
-| 111: Pre-commit change misses regressions | Low | CI still runs full suite. Pre-commit runs backend + shared tests. |
+| Risk                                            | Impact | Mitigation                                                                                                                              |
+| ----------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 121: Auth errors break existing clients         | Medium | Auth error shape changes from `{ error, code }` to `{ success: false, error, code, metadata }`. Clients may depend on old shape.        | Test with existing integration tests. Announce breaking change in CHANGELOG. |
+| 122: Response envelope change breaks clients    | Medium | Adding `metadata` field is additive, not breaking. Clients ignoring extra fields are unaffected.                                        |
+| 127: Removing decorators breaks DI              | Low    | Custom container doesn't use decorators. Verified by reading ServiceContainer.ts — it uses factory functions, not inversify reflection. |
+| 119/120: New routes don't match service methods | Medium | Verify each controller method delegates to existing service. Use grep to confirm service method signatures.                             |
+| 111: Pre-commit change misses regressions       | Low    | CI still runs full suite. Pre-commit runs backend + shared tests.                                                                       |
 
 ---
 
 ## Files Affected Summary
 
-| File | Todos |
-|------|-------|
-| `middleware/error-handler-middleware.ts` | 128 |
-| `middleware/auth.ts` | 121 |
-| `utils/errors.ts` | 121 (add AuthorizationError) |
-| `utils/api-response.ts` (NEW) | 122 |
-| `controllers/payment/PaymentController.ts` | 122, 127 |
-| `controllers/user/UserController.ts` | 122, 127 |
-| `controllers/content/ContentController.ts` | 122, 127 |
-| `services/content/ContentCreationService.ts` | 129, 127 |
-| `services/lightning/receipt-service.ts` | 125 |
-| `services/payment-persistence.ts` | 123 |
-| `services/subscription-management-service.ts` | 124 |
-| `services/transaction-history-service.ts` | 124 |
-| `bootstrap.ts` | 126 |
-| `server.ts` | 126 |
-| `routes/v1/user.routes.ts` | 119 |
-| `routes/v1/payment.routes.ts` | 120 |
-| `validators/user/index.ts` | 119 |
-| `validators/payment/index.ts` | 120 |
-| `.husky/pre-commit` | 111 |
-| `package.json` | 111 |
+| File                                          | Todos                        |
+| --------------------------------------------- | ---------------------------- |
+| `middleware/error-handler-middleware.ts`      | 128                          |
+| `middleware/auth.ts`                          | 121                          |
+| `utils/errors.ts`                             | 121 (add AuthorizationError) |
+| `utils/api-response.ts` (NEW)                 | 122                          |
+| `controllers/payment/PaymentController.ts`    | 122, 127                     |
+| `controllers/user/UserController.ts`          | 122, 127                     |
+| `controllers/content/ContentController.ts`    | 122, 127                     |
+| `services/content/ContentCreationService.ts`  | 129, 127                     |
+| `services/lightning/receipt-service.ts`       | 125                          |
+| `services/payment-persistence.ts`             | 123                          |
+| `services/subscription-management-service.ts` | 124                          |
+| `services/transaction-history-service.ts`     | 124                          |
+| `bootstrap.ts`                                | 126                          |
+| `server.ts`                                   | 126                          |
+| `routes/v1/user.routes.ts`                    | 119                          |
+| `routes/v1/payment.routes.ts`                 | 120                          |
+| `validators/user/index.ts`                    | 119                          |
+| `validators/payment/index.ts`                 | 120                          |
+| `.husky/pre-commit`                           | 111                          |
+| `package.json`                                | 111                          |
 
 ---
 

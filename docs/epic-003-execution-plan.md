@@ -9,6 +9,7 @@ Epic 003 will consolidate 177+ files containing NOSTR code into unified services
 ### 🔴 IMMEDIATE START (Day 1, Morning)
 
 #### Stream A: Backend NOSTR Services
+
 **Agent**: `backend-api-builder`
 **Stories**: US-301, US-305, US-304, US-311, US-321
 **Start**: IMMEDIATE
@@ -22,6 +23,7 @@ Epic 003 will consolidate 177+ files containing NOSTR code into unified services
 ```
 
 #### Stream B: Frontend NOSTR Components
+
 **Agent**: `elite-frontend-dev`
 **Stories**: US-302, US-306, US-314, US-317, US-319
 **Start**: IMMEDIATE
@@ -35,6 +37,7 @@ Epic 003 will consolidate 177+ files containing NOSTR code into unified services
 ```
 
 #### Stream C: Shared Types & Utilities
+
 **Agent**: `backend-api-builder` (same agent, parallel work)
 **Stories**: US-308, US-310, US-312, US-313, US-315, US-309
 **Start**: IMMEDIATE (US-308 first!)
@@ -49,6 +52,7 @@ Then parallel:
 ```
 
 #### Stream D: Documentation
+
 **Agent**: `technical-docs-writer`
 **Stories**: US-323, US-324
 **Start**: IMMEDIATE (diagrams can start now)
@@ -63,6 +67,7 @@ Then parallel:
 ### 🟡 START AFTER DEPENDENCIES (Day 2-3)
 
 #### Stream D: Testing
+
 **Agent**: `test-automation-engineer`
 **Stories**: US-318, US-326
 **Start**: After US-301, US-302, US-305 complete
@@ -75,6 +80,7 @@ Then parallel:
 ```
 
 #### Stream E: Monitoring & Migration
+
 **Agent**: `backend-api-builder`
 **Stories**: US-316, US-320, US-322, US-325
 **Start**: After core services complete
@@ -154,30 +160,38 @@ graph TD
 ## Parallel Execution Timeline
 
 ### Day 1 (Monday)
+
 **Morning (4 stories start)**
+
 - 🔴 US-308: Types (backend-api-builder) - CRITICAL START
 - 🔴 US-302: Relay Pool (elite-frontend-dev) - CRITICAL START
 - 🟢 US-323: Diagrams (technical-docs-writer)
 - 🟢 US-309: Remove Hardcoded (backend-api-builder)
 
 **Afternoon (2 stories start)**
+
 - 🔴 US-301: Key Management (backend-api-builder) - After US-308
 - 🟢 US-304: NIP-05 (backend-api-builder) - Independent
 
 ### Day 2 (Tuesday)
+
 **Morning (4 stories start)**
+
 - 🔴 US-312: Crypto (backend-api-builder) - After US-308
 - 🟡 US-305: Auth (backend-api-builder) - After US-301
 - 🟡 US-306: Extensions (elite-frontend-dev) - After US-301
 - 🟢 US-310: NIP-19 (backend-api-builder) - After US-308
 
 **Afternoon (3 stories start)**
+
 - 🟡 US-314: Profiles (elite-frontend-dev) - After US-302
 - 🟢 US-319: Error UI (elite-frontend-dev) - Independent
 - 🟢 US-324: Documentation (technical-docs-writer) - Ongoing
 
 ### Day 3 (Wednesday)
+
 **Morning (5 stories start)**
+
 - 🟡 US-311: Sessions (backend-api-builder) - After US-305
 - 🟡 US-313: NIP-04 (backend-api-builder) - After US-312
 - 🟡 US-317: Caching (elite-frontend-dev) - After US-302, US-314
@@ -185,27 +199,34 @@ graph TD
 - 🔴 US-318: Integration Tests (test-automation-engineer) - Critical
 
 **Afternoon (3 stories start)**
+
 - 🟢 US-316: Monitoring (backend-api-builder) - After US-302
 - 🟢 US-321: Rate Limiting (backend-api-builder) - After US-305
 - 🟢 US-322: Backup (backend-api-builder) - After US-301
 
 ### Day 4 (Thursday)
+
 **Morning (2 stories start)**
+
 - 🟡 US-326: E2E Tests (test-automation-engineer) - After US-318
 - 🟢 US-315: NIP-26 (backend-api-builder) - After US-312
 
 **Afternoon**
+
 - Complete remaining stories
 - Begin integration testing
 - Start migration script development
 
 ### Day 5 (Friday)
+
 **Morning**
+
 - 🔴 US-325: Migration Scripts (backend-api-builder) - FINAL
 - Complete all testing
 - Final documentation updates
 
 **Afternoon**
+
 - Epic validation
 - Quality gate verification
 - Deployment preparation
@@ -213,11 +234,13 @@ graph TD
 ## Communication Protocol
 
 ### Daily Sync Points
+
 - **09:00**: Morning standup - blockers & priorities
 - **13:00**: Midday check - dependency updates
 - **17:00**: EOD sync - completions & handoffs
 
 ### Agent Communication Format
+
 ```json
 {
   "from": "orchestrator",
@@ -237,6 +260,7 @@ graph TD
 ```
 
 ### Progress Reporting
+
 ```json
 {
   "from": "backend-api-builder",
@@ -246,19 +270,15 @@ graph TD
   "percent_complete": 75,
   "blockers": [],
   "eta": "2 hours",
-  "completed_tasks": [
-    "Base type definitions",
-    "Zod schemas"
-  ],
-  "remaining_tasks": [
-    "Migration guide"
-  ]
+  "completed_tasks": ["Base type definitions", "Zod schemas"],
+  "remaining_tasks": ["Migration guide"]
 }
 ```
 
 ## Quality Gates
 
 ### Story Completion Criteria
+
 - ✅ Code implementation complete
 - ✅ Unit tests written (95%+ coverage)
 - ✅ Integration tests passing
@@ -269,6 +289,7 @@ graph TD
 - ✅ No ESLint/TypeScript errors
 
 ### Epic Completion Criteria
+
 - ✅ All 26 stories complete
 - ✅ 60%+ code reduction achieved
 - ✅ Zero duplicate implementations
@@ -281,22 +302,28 @@ graph TD
 ## Risk Mitigation
 
 ### Risk 1: Dependency Delays
+
 **Impact**: Critical path blocked
 **Mitigation**:
+
 - US-308 gets 2x resources if needed
 - Parallel work on independent stories
 - Daily dependency review at 13:00
 
 ### Risk 2: Integration Failures
+
 **Impact**: Rework required
 **Mitigation**:
+
 - Continuous integration testing
 - Feature flags for gradual rollout
 - Backward compatibility layer
 
 ### Risk 3: Agent Availability
+
 **Impact**: Story delays
 **Mitigation**:
+
 - Cross-training on critical components
 - Clear handoff documentation
 - Backup agent assignments ready
@@ -304,6 +331,7 @@ graph TD
 ## Success Metrics
 
 ### Daily Metrics
+
 - Stories started/completed
 - Story points burned
 - Blockers identified/resolved
@@ -311,6 +339,7 @@ graph TD
 - Code reduction percentage
 
 ### Epic Metrics
+
 - Total cycle time: 5 days target
 - Code reduction: 60% target
 - Test coverage: 95% target

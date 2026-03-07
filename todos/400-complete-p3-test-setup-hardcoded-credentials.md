@@ -1,7 +1,7 @@
 ---
 status: complete
 priority: p3
-issue_id: "417"
+issue_id: '417'
 tags: [code-review, testing, quality, pr-87]
 dependencies: []
 ---
@@ -37,6 +37,7 @@ Add `test-utils/` exclusion to scanner check 1d. These are intentional test fixt
 ## Technical Details
 
 **Affected files:**
+
 - `test-utils/vitest-backend-setup.ts`
 - `scripts/check-antipatterns.sh` (check 1d)
 

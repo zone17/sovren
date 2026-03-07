@@ -36,13 +36,15 @@ export {
   useRegisterMentor,
   useRequestMentorship,
   useRespondToMentorship,
+  useUpdateMentorProfile,
 } from './hooks/useMentorship';
+
+export type { UpdateMentorProfileData } from './services/mentorshipApi';
 
 export {
   useCollaborators,
   useInviteCollaborators,
   useUpdateRevenueSplit,
-  useRespondToCollaboration,
 } from './hooks/useCollaboration';
 
 export {

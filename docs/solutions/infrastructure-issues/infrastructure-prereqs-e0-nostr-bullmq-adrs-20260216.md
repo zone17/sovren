@@ -4,13 +4,14 @@ date: 2026-02-16
 problem_type: infrastructure
 component: monorepo_dependencies
 symptoms:
-  - "3 different nostr-tools versions across monorepo (2.1.4, 2.13.1, 2.13.2)"
-  - "No persistent job queue — NotificationService uses in-memory array"
-  - "Missing ADRs for custodial design and job queue selection"
+  - '3 different nostr-tools versions across monorepo (2.1.4, 2.13.1, 2.13.2)'
+  - 'No persistent job queue — NotificationService uses in-memory array'
+  - 'Missing ADRs for custodial design and job queue selection'
 resolution_type: infrastructure_setup
 root_cause: missing_infrastructure
 severity: high
-tags: [infrastructure, nostr-tools, bullmq, adr, epic-009, epic-010, epic-012, e0-001, e0-006, e0-007]
+tags:
+  [infrastructure, nostr-tools, bullmq, adr, epic-009, epic-010, epic-012, e0-001, e0-006, e0-007]
 ---
 
 # Infrastructure Prerequisites Sprint: nostr-tools Unification, BullMQ, and ADRs
@@ -51,17 +52,18 @@ Migrated 19 files (2 backend, 14 frontend, 3 package.json) to nostr-tools v2.23.
 
 **Breaking API changes applied:**
 
-| Old (v2.1.x / v2.13.x) | New (v2.23.0) | Reason |
-|---|---|---|
-| `generatePrivateKey()` | `generateSecretKey()` from `nostr-tools/pure` | Returns `Uint8Array` instead of hex string |
-| `signEvent(event, key)` | `finalizeEvent(event, key)` from `nostr-tools/pure` | Computes id + sig + returns `VerifiedEvent` in one call |
-| `getEventHash(event)` | Removed (built into `finalizeEvent`) | No longer needed as separate step |
-| `import { SimplePool } from 'nostr-tools'` | `import { SimplePool } from 'nostr-tools/pool'` | Modular subpath exports |
-| `import { nip04 } from 'nostr-tools'` | `import * as nip04 from 'nostr-tools/nip04'` | NIP modules are separate entry points |
+| Old (v2.1.x / v2.13.x)                     | New (v2.23.0)                                       | Reason                                                  |
+| ------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------- |
+| `generatePrivateKey()`                     | `generateSecretKey()` from `nostr-tools/pure`       | Returns `Uint8Array` instead of hex string              |
+| `signEvent(event, key)`                    | `finalizeEvent(event, key)` from `nostr-tools/pure` | Computes id + sig + returns `VerifiedEvent` in one call |
+| `getEventHash(event)`                      | Removed (built into `finalizeEvent`)                | No longer needed as separate step                       |
+| `import { SimplePool } from 'nostr-tools'` | `import { SimplePool } from 'nostr-tools/pool'`     | Modular subpath exports                                 |
+| `import { nip04 } from 'nostr-tools'`      | `import * as nip04 from 'nostr-tools/nip04'`        | NIP modules are separate entry points                   |
 
 **Backend: ContentPublishingService.ts signNostrEvent() rewrite**
 
 Before (v2.1.4):
+
 ```typescript
 import { getEventHash, signEvent } from 'nostr-tools';
 
@@ -73,6 +75,7 @@ private async signNostrEvent(event, privateKey: string) {
 ```
 
 After (v2.23.0):
+
 ```typescript
 import { finalizeEvent, type VerifiedEvent } from 'nostr-tools/pure';
 import { SimplePool } from 'nostr-tools/pool';
@@ -99,7 +102,7 @@ private async signNostrEvent(
 // After:
 export async function generateNostrKeys() {
   const { generateSecretKey, getPublicKey } = await import('nostr-tools/pure');
-  const privateKey = generateSecretKey();  // Returns Uint8Array
+  const privateKey = generateSecretKey(); // Returns Uint8Array
   const publicKey = getPublicKey(privateKey);
   return { publicKey, privateKey: bytesToHex(privateKey) };
 }
@@ -108,11 +111,13 @@ export async function generateNostrKeys() {
 ### E0-007: Two P0-CRITICAL ADRs
 
 **ADR-021: Custodial Design for Creator Payments** (`docs/adr/ADR-021-custodial-design.md`)
+
 - Decision: HODL invoices for revenue splitting + escrow (non-custodial)
 - Rationale: Avoids Money Transmitter License requirements, preserves decentralized philosophy
 - Trade-off: Requires both parties online during payment window
 
 **ADR-022: Job Queue Selection** (`docs/adr/ADR-022-job-queue-selection.md`)
+
 - Decision: BullMQ (reuses existing Redis/ioredis infrastructure)
 - Evaluated: BullMQ vs Agenda.js vs custom PostgreSQL queue
 - Rationale: Zero new infrastructure (Redis already deployed), rich feature set (retries, DLQ, priorities, scheduling, admin UI via Bull Board)
@@ -124,6 +129,7 @@ export async function generateNostrKeys() {
 **Interface-first design** — two interfaces define the contract:
 
 `IQueueService` (`packages/backend/src/interfaces/queue/IQueueService.ts`):
+
 ```typescript
 export interface IQueueService {
   createQueue(name: string, options?: Partial<QueueOptions>): void;
@@ -136,6 +142,7 @@ export interface IQueueService {
 ```
 
 `IJobProcessor` (`packages/backend/src/interfaces/queue/IJobProcessor.ts`):
+
 ```typescript
 export interface IJobProcessor<T = unknown> {
   readonly name: string;
@@ -148,6 +155,7 @@ export interface IJobProcessor<T = unknown> {
 ```
 
 **DI registration** (`packages/backend/src/container/bindings/queue.bindings.ts`):
+
 ```typescript
 export class QueueServicesModule implements IServiceModule {
   register(registry: IServiceRegistry): void {
@@ -160,6 +168,7 @@ export class QueueServicesModule implements IServiceModule {
 ```
 
 **Bull Board admin UI** at `/admin/queues` (`packages/backend/src/routes/admin/bull-board.ts`):
+
 ```typescript
 export function createBullBoardRouter(queueService: IQueueService): Router {
   const serverAdapter = new ExpressAdapter();
@@ -173,6 +182,7 @@ export function createBullBoardRouter(queueService: IQueueService): Router {
 ```
 
 **Queue health check** added to `/health/detailed` endpoint:
+
 ```typescript
 async function checkQueues(): Promise<ServiceHealth> {
   const { getQueueServiceInstance } = await import('../services/queue/QueueService');
@@ -189,19 +199,19 @@ async function checkQueues(): Promise<ServiceHealth> {
 
 ## Changes Summary
 
-| Category | Files Changed | Key Changes |
-|---|---|---|
-| nostr-tools migration (backend) | 2 | `ContentPublishingService.ts`, `ContentModerationService.ts` |
-| nostr-tools migration (frontend) | 14 | `auth.ts`, `KeyManagementService.ts`, `NIP19Service.ts`, `NIP26Service.ts`, `NIP65Service.ts`, `NOSTRKeyManagementService.ts`, `NOSTRSigningService.ts`, `NOSTRSessionService.ts`, `NOSTRAccountProtectionService.ts`, `nostrService.ts`, `useFeedSubscription.ts`, `NotificationService.ts` (frontend), test mocks, e2e fixtures |
-| nostr-tools package.json | 3 | Root, backend, frontend — all pinned to `2.23.0` |
-| ADRs | 2 | `ADR-021-custodial-design.md`, `ADR-022-job-queue-selection.md` |
-| BullMQ interfaces | 3 | `IQueueService.ts`, `IJobProcessor.ts`, `index.ts` |
-| BullMQ implementation | 2 | `QueueService.ts`, `queue/index.ts` |
-| DI bindings | 2 | `queue.bindings.ts`, `shared.bindings.ts` |
-| Admin UI | 1 | `routes/admin/bull-board.ts` |
-| Health check | 1 | `routes/health.ts` (added `checkQueues()`) |
-| NotificationService | 1 | Refactored from in-memory to BullMQ |
-| **Total** | **~31 files** | |
+| Category                         | Files Changed | Key Changes                                                                                                                                                                                                                                                                                                                       |
+| -------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| nostr-tools migration (backend)  | 2             | `ContentPublishingService.ts`, `ContentModerationService.ts`                                                                                                                                                                                                                                                                      |
+| nostr-tools migration (frontend) | 14            | `auth.ts`, `KeyManagementService.ts`, `NIP19Service.ts`, `NIP26Service.ts`, `NIP65Service.ts`, `NOSTRKeyManagementService.ts`, `NOSTRSigningService.ts`, `NOSTRSessionService.ts`, `NOSTRAccountProtectionService.ts`, `nostrService.ts`, `useFeedSubscription.ts`, `NotificationService.ts` (frontend), test mocks, e2e fixtures |
+| nostr-tools package.json         | 3             | Root, backend, frontend — all pinned to `2.23.0`                                                                                                                                                                                                                                                                                  |
+| ADRs                             | 2             | `ADR-021-custodial-design.md`, `ADR-022-job-queue-selection.md`                                                                                                                                                                                                                                                                   |
+| BullMQ interfaces                | 3             | `IQueueService.ts`, `IJobProcessor.ts`, `index.ts`                                                                                                                                                                                                                                                                                |
+| BullMQ implementation            | 2             | `QueueService.ts`, `queue/index.ts`                                                                                                                                                                                                                                                                                               |
+| DI bindings                      | 2             | `queue.bindings.ts`, `shared.bindings.ts`                                                                                                                                                                                                                                                                                         |
+| Admin UI                         | 1             | `routes/admin/bull-board.ts`                                                                                                                                                                                                                                                                                                      |
+| Health check                     | 1             | `routes/health.ts` (added `checkQueues()`)                                                                                                                                                                                                                                                                                        |
+| NotificationService              | 1             | Refactored from in-memory to BullMQ                                                                                                                                                                                                                                                                                               |
+| **Total**                        | **~31 files** |                                                                                                                                                                                                                                                                                                                                   |
 
 ## Why This Works
 

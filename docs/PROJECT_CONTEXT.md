@@ -114,27 +114,29 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 
 **Full details**: `docs/solutions/patterns/critical-patterns.md`
 
-| #   | Pattern                        | When to Use                                            | HTTP |
-| --- | ------------------------------ | ------------------------------------------------------ | ---- |
-| 1   | TOCTOU Race Conditions         | Aggregate caps, status transitions, scarce resources   | 409  |
-| 1a  | Insert-then-verify             | Enforcing member/slot counts                           | 409  |
-| 1b  | Accept-then-verify-or-revert   | Status change + capacity check                         | 409  |
-| 1c  | Atomic claim (UPDATE WHERE)    | Tickets, slots, listings                               | 409  |
-| 2   | Service-layer authorization    | Every data access method                               | 403  |
-| 3   | Paginated accumulation         | Any unbounded SELECT (PAGE_SIZE=500)                   | —    |
-| 4   | Non-atomic multi-table writes  | 2+ table writes → RPC or compensating tx               | 500  |
-| 4c  | DB + Queue compensation        | Enqueue fails mid-loop → mark failed rows              | 500  |
-| 5   | Payment persistence            | Atomic write, write mutex, persist-then-mutate         | —    |
-| 6   | SSRF validation                | User-supplied URLs → DNS resolve + IP check + pin      | 400  |
-| 7   | Status guards                  | DELETE/void/cancel → assert status first + check count | 409  |
-| 8   | Test infra integration         | New test type → CI gate + brief + CLAUDE.md            | —    |
-| 9   | NOSTR verifyEvent              | Always `getEventHash(UnsignedEvent)` first             | —    |
-| 10  | Cross-pkg string dedup         | Same string in 3+ files → extract to `@shared/`        | —    |
-| 11  | PostgREST filter escape        | User text in `.or()` → escape `\` first, then metachar | 400  |
-| 12  | VIEW security_barrier          | Public-facing PostgreSQL VIEWs                         | —    |
-| 13  | Route boundary UUID validation | Every `:id` route param → Zod `safeParse` first        | 400  |
-| 14  | Avatar/image URL whitelist     | User-supplied URLs in `<img src>` → `https?` only      | —    |
-| 15  | Cross-content parent guard     | Threaded data parent lookup → scope to content context | 404  |
+| #   | Pattern                        | When to Use                                                             | HTTP |
+| --- | ------------------------------ | ----------------------------------------------------------------------- | ---- |
+| 1   | TOCTOU Race Conditions         | Aggregate caps, status transitions, scarce resources                    | 409  |
+| 1a  | Insert-then-verify             | Enforcing member/slot counts                                            | 409  |
+| 1b  | Accept-then-verify-or-revert   | Status change + capacity check                                          | 409  |
+| 1c  | Atomic claim (UPDATE WHERE)    | Tickets, slots, listings                                                | 409  |
+| 2   | Service-layer authorization    | Every data access method                                                | 403  |
+| 3   | Paginated accumulation         | Any unbounded SELECT (PAGE_SIZE=500)                                    | —    |
+| 4   | Non-atomic multi-table writes  | 2+ table writes → RPC or compensating tx                                | 500  |
+| 4c  | DB + Queue compensation        | Enqueue fails mid-loop → mark failed rows                               | 500  |
+| 5   | Payment persistence            | Atomic write, write mutex, persist-then-mutate                          | —    |
+| 6   | SSRF validation                | User-supplied URLs → DNS resolve + IP check + pin                       | 400  |
+| 7   | Status guards                  | DELETE/void/cancel → assert status first + check count                  | 409  |
+| 8   | Test infra integration         | New test type → CI gate + brief + CLAUDE.md                             | —    |
+| 9   | NOSTR verifyEvent              | Always `getEventHash(UnsignedEvent)` first                              | —    |
+| 10  | Cross-pkg string dedup         | Same string in 3+ files → extract to `@shared/`                         | —    |
+| 11  | PostgREST filter escape        | User text in `.or()` → escape `\` first, then metachar                  | 400  |
+| 12  | VIEW security_barrier          | Public-facing PostgreSQL VIEWs                                          | —    |
+| 13  | Route boundary UUID validation | Every `:id` route param → Zod `safeParse` first                         | 400  |
+| 14  | Avatar/image URL whitelist     | User-supplied URLs in `<img src>` → `https?` only                       | —    |
+| 15  | Cross-content parent guard     | Threaded data parent lookup → scope to content context                  | 404  |
+| 16  | RLS INSERT service_role        | Service-inserted tables → `WITH CHECK (auth.role() = 'service_role')`   | —    |
+| 17  | Trigger atomic increments      | Counter triggers → `count + 1` not `COALESCE + 1`; add SECURITY DEFINER | —    |
 
 ### Top Common Solutions (by recurrence)
 
@@ -166,6 +168,10 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 | 111 | Extend target enum before migration (no `as any`)  | TypeScript |
 | 113 | POM locators — only what specs use today           | Testing    |
 | 114 | Auth E2E specs must assert content, not just URL   | Testing    |
+| 116 | Response key alignment (backend ↔ frontend)        | Full-stack |
+| 117 | DI lazy singleton eager init for side-effects      | Backend    |
+| 118 | Remediation team sizing (2 agents for <20 findings)| Process    |
+| 119 | Utility extraction threshold (LOC x copies > 40)   | Backend    |
 
 ---
 

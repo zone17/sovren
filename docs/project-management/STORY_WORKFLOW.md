@@ -124,16 +124,16 @@ gh api graphql -f query='
 
 ## Custom Fields Reference
 
-| Field Name | Type | Purpose | Values |
-|-----------|------|---------|--------|
-| **Status** | Single Select | Current workflow state | Todo, In Progress, Done |
-| **Phase** | Single Select | Development phase | Design, Implementation, Testing, Review |
-| **Agent** | Text | Assigned agent name | Any agent name (e.g., "design-ux-specialist") |
-| **Completion %** | Number | Progress percentage | 0-100 |
-| **Story Points** | Number | Complexity estimate | 1-5 (target: 1-2 for atomic stories) |
-| **Priority** | Single Select | Urgency level | Critical, High, Medium, Low |
-| **Labels** | Tags | Issue labels | epic:*, user-story, frontend, backend, etc. |
-| **Assignees** | People | GitHub assignees | GitHub usernames |
+| Field Name       | Type          | Purpose                | Values                                        |
+| ---------------- | ------------- | ---------------------- | --------------------------------------------- |
+| **Status**       | Single Select | Current workflow state | Todo, In Progress, Done                       |
+| **Phase**        | Single Select | Development phase      | Design, Implementation, Testing, Review       |
+| **Agent**        | Text          | Assigned agent name    | Any agent name (e.g., "design-ux-specialist") |
+| **Completion %** | Number        | Progress percentage    | 0-100                                         |
+| **Story Points** | Number        | Complexity estimate    | 1-5 (target: 1-2 for atomic stories)          |
+| **Priority**     | Single Select | Urgency level          | Critical, High, Medium, Low                   |
+| **Labels**       | Tags          | Issue labels           | epic:\*, user-story, frontend, backend, etc.  |
+| **Assignees**    | People        | GitHub assignees       | GitHub usernames                              |
 
 ### Field IDs (for GraphQL)
 
@@ -410,12 +410,14 @@ gh issue edit 25 --repo zone17/Sovren --add-label "blocked"
 ### 1. Frequent Updates
 
 Update status at least twice per day:
+
 - Morning: Start of work
 - Evening: Progress update or completion
 
 ### 2. Clear Communication
 
 Always add a comment when updating status to explain:
+
 - What was done
 - What's next
 - Any blockers or issues
@@ -423,6 +425,7 @@ Always add a comment when updating status to explain:
 ### 3. Link Everything
 
 Link related artifacts to the issue:
+
 - Commits: Use "Fixes #123" or "Relates to #123" in commit messages
 - PRs: Auto-link by mentioning issue number in PR description
 - Documentation: Link to design files, diagrams, test reports
@@ -430,6 +433,7 @@ Link related artifacts to the issue:
 ### 4. Definition of Done
 
 Before marking story as "Done", verify:
+
 - All subtasks completed
 - Code committed and pushed
 - Tests passing (95%+ coverage)
@@ -440,6 +444,7 @@ Before marking story as "Done", verify:
 ### 5. Handoff Protocol
 
 When passing work to next agent:
+
 - Tag them in comment: @next-agent
 - Provide clear handoff notes
 - List deliverables and their locations
@@ -462,6 +467,7 @@ When passing work to next agent:
 ### Issue: Story is blocked
 
 **Solution**:
+
 1. Add comment explaining blocker
 2. Add "blocked" label
 3. Update dependency information
@@ -471,6 +477,7 @@ When passing work to next agent:
 ### Issue: Multiple agents working on same story
 
 **Solution**:
+
 - Break story into smaller substories (one per agent)
 - Use clear handoff protocol
 - Update Agent field when taking over
@@ -505,6 +512,7 @@ gh issue view <ISSUE_NUMBER> --repo zone17/Sovren --web
 ## Support
 
 For questions or issues with the workflow:
+
 - Check this guide first
 - Review example workflows above
 - Check GitHub Projects documentation: https://docs.github.com/en/issues/planning-and-tracking-with-projects

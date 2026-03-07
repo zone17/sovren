@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p1
-issue_id: "480"
+issue_id: '480'
 tags:
   - code-review
   - msw
@@ -59,14 +59,17 @@ Option A. Remove fake auth endpoints. No consumers exist.
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/test-utils/msw/handlers/auth.ts`
 
 **Endpoints to remove:**
+
 - `POST /api/auth/login`
 - `POST /api/auth/signup`
 - `POST /api/auth/register`
 
 **Endpoints to keep (and fix response shapes):**
+
 - `GET /api/auth/user`
 - `POST /api/auth/challenge` — response: `{ success: true, data: { challenge, expiry } }`
 - `POST /api/auth/authenticate` — response: `{ success: true, data: { token, user: { npub, pubkey, displayName } } }`
@@ -82,8 +85,8 @@ Option A. Remove fake auth endpoints. No consumers exist.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                                | Learnings                                                      |
+| ---------- | ----------------------------------------------------- | -------------------------------------------------------------- |
 | 2026-02-24 | Created from Phase 9 MSW review (5/7 agent consensus) | MSW handlers must mirror real API — phantom endpoints compound |
 
 ## Resources

@@ -712,14 +712,12 @@ describe('Authentication API', () => {
 ### **Zero-Trust Security Model**
 
 1. **Private Key Protection**:
-
    - Keys generated locally using `nostr-tools/pure`
    - Never transmitted over network
    - Secure local storage with encryption
    - Memory clearing after use
 
 2. **Challenge-Response Security**:
-
    - Cryptographically secure random challenges
    - Time-limited validity (5 minutes)
    - Single-use challenges with automatic cleanup
@@ -754,7 +752,6 @@ const SECURITY_CONFIG = {
 ### **Audit and Compliance**
 
 1. **Comprehensive Logging**:
-
    - All authentication attempts (success/failure)
    - Challenge generation and expiry
    - JWT token creation and validation
@@ -806,7 +803,6 @@ app.get('/health/auth', async (req, res) => {
 ### **Monitoring and Alerting**
 
 1. **Key Metrics Monitoring**:
-
    - Authentication success/failure rates
    - Challenge generation and verification latency
    - Memory usage for challenge storage
@@ -821,7 +817,6 @@ app.get('/health/auth', async (req, res) => {
 ### **Disaster Recovery**
 
 1. **Challenge State Recovery**:
-
    - Challenges stored in Redis with persistence
    - Automatic failover to backup instances
    - Challenge cleanup on service restart
@@ -865,7 +860,6 @@ app.get('/health/auth', async (req, res) => {
 ### **Immediate Optimizations (Next 30 Days)**
 
 1. **Performance Enhancements**:
-
    - Implement Redis clustering for challenge storage
    - Add signature verification caching
    - Optimize JWT generation pipeline
@@ -878,7 +872,6 @@ app.get('/health/auth', async (req, res) => {
 ### **Medium-term Enhancements (Next 90 Days)**
 
 1. **Advanced Features**:
-
    - Multi-signature authentication support
    - Biometric integration for mobile apps
    - Advanced session management with refresh tokens
@@ -891,7 +884,6 @@ app.get('/health/auth', async (req, res) => {
 ### **Long-term Strategic Initiatives (Next 180 Days)**
 
 1. **Protocol Enhancements**:
-
    - NIP-26 delegation support
    - Lightning Network integration for paid authentication
    - Cross-relay authentication synchronization

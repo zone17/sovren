@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { collaborationApi } from '../services/collaborationApi';
 import type { ApiResponse } from '../types/community';
 import type { ContentCollaborator } from '@shared/types/community';
@@ -52,7 +53,7 @@ export function useInviteCollaborators(contentId: string) {
       });
     },
     onError: (error) => {
-      console.error('Invite collaborators failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }
@@ -72,24 +73,7 @@ export function useUpdateRevenueSplit(contentId: string) {
       });
     },
     onError: (error) => {
-      console.error('Update revenue split failed:', error);
-    },
-  });
-}
-
-/** #313: Hook for responding to collaboration invitations */
-export function useRespondToCollaboration() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ invitationId, accept }: { invitationId: string; accept: boolean }) =>
-      collaborationApi.respondToInvitation(invitationId, accept),
-    onSuccess: () => {
-      // Invalidates all collaborator queries — contentId unknown from invitation response
-      queryClient.invalidateQueries({ queryKey: [...collaboratorKeys.all] });
-    },
-    onError: (error) => {
-      console.error('Respond to collaboration failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }

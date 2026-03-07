@@ -17,6 +17,7 @@ Sovren's data access layer was tightly coupled to Supabase client throughout the
 - **Missing Business Logic**: Data access mixed with business logic
 
 We needed a data access pattern that:
+
 - Abstracts database implementation from business logic
 - Provides clean interfaces for testing
 - Centralizes query logic for optimization
@@ -28,6 +29,7 @@ We needed a data access pattern that:
 We will implement the **Repository Pattern** with interface-based abstractions for all data access.
 
 **Implementation**:
+
 ```typescript
 // Domain entity
 interface User {
@@ -62,11 +64,7 @@ class SupabaseUserRepository implements IUserRepository {
     if (cached) return cached;
 
     // Query database
-    const { data, error } = await this.db
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await this.db.from('users').select('*').eq('id', id).single();
 
     if (error || !data) return null;
 
@@ -83,7 +81,7 @@ class SupabaseUserRepository implements IUserRepository {
       id: row.id,
       email: row.email,
       publicKey: row.public_key,
-      createdAt: new Date(row.created_at)
+      createdAt: new Date(row.created_at),
     };
   }
 }
@@ -91,9 +89,7 @@ class SupabaseUserRepository implements IUserRepository {
 // Service uses interface, not concrete implementation
 @injectable()
 class UserService {
-  constructor(
-    @inject(TYPES.UserRepository) private userRepo: IUserRepository
-  ) {}
+  constructor(@inject(TYPES.UserRepository) private userRepo: IUserRepository) {}
 
   async getUserProfile(id: string): Promise<UserProfile> {
     const user = await this.userRepo.findById(id);
@@ -105,6 +101,7 @@ class UserService {
 ```
 
 **Key Patterns**:
+
 1. **Interface-Based**: All repositories define interface contracts
 2. **Dependency Injection**: Repositories injected into services
 3. **Entity Mapping**: Database rows mapped to domain entities
@@ -116,6 +113,7 @@ class UserService {
 ### Positive
 
 1. **Testability**: Easy to mock repositories
+
    ```typescript
    const mockRepo: IUserRepository = {
      findById: jest.fn().mockResolvedValue(testUser),
@@ -168,11 +166,14 @@ class UserService {
 ## Alternatives Considered
 
 ### 1. Active Record Pattern (like TypeORM entities)
+
 **Pros**:
+
 - Less boilerplate
 - Entity methods feel natural
 
 **Cons**:
+
 - Couples domain model to database
 - Hard to test (entities have DB dependencies)
 - Limited flexibility for complex queries
@@ -180,11 +181,14 @@ class UserService {
 **Why Rejected**: Tight coupling between domain and persistence violates clean architecture.
 
 ### 2. Direct Database Access
+
 **Pros**:
+
 - Simplest approach
 - No abstraction overhead
 
 **Cons**:
+
 - Tight coupling to database technology
 - Scattered queries across codebase
 - Testing requires actual database
@@ -193,12 +197,15 @@ class UserService {
 **Why Rejected**: Doesn't scale as application grows. Makes testing and maintenance difficult.
 
 ### 3. ORMs (TypeORM, Prisma, Sequelize)
+
 **Pros**:
+
 - Automatic migrations
 - Type-safe queries
 - Active communities
 
 **Cons**:
+
 - Heavy dependencies
 - Learning curve for ORM-specific APIs
 - Performance overhead
@@ -209,6 +216,7 @@ class UserService {
 ## Implementation Notes
 
 **Repository Base Class**:
+
 ```typescript
 abstract class BaseRepository<T, ID> {
   abstract findById(id: ID): Promise<T | null>;
@@ -216,15 +224,14 @@ abstract class BaseRepository<T, ID> {
   abstract update(id: ID, data: Partial<T>): Promise<T>;
   abstract delete(id: ID): Promise<void>;
 
-  protected async withTransaction<R>(
-    callback: (tx: Transaction) => Promise<R>
-  ): Promise<R> {
+  protected async withTransaction<R>(callback: (tx: Transaction) => Promise<R>): Promise<R> {
     // Transaction handling
   }
 }
 ```
 
 **Pagination Support**:
+
 ```typescript
 interface PaginationOptions {
   page: number;
@@ -241,14 +248,12 @@ interface PaginatedResult<T> {
 }
 
 interface IUserRepository {
-  list(
-    filters: UserFilters,
-    pagination: PaginationOptions
-  ): Promise<PaginatedResult<User>>;
+  list(filters: UserFilters, pagination: PaginationOptions): Promise<PaginatedResult<User>>;
 }
 ```
 
 **Transaction Example**:
+
 ```typescript
 class PaymentService {
   async processPayment(invoice: Invoice) {

@@ -120,3 +120,16 @@ export interface OrderReview {
   reviewText?: string;
   createdAt: string;
 }
+
+// Follow types
+export interface FollowRelationship {
+  id: string;
+  followerId: string;
+  followingId: string;
+  createdAt: string;
+}
+
+export interface FollowCounts {
+  followers: number;
+  following: number;
+}

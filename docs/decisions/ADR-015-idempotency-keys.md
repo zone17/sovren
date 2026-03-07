@@ -10,12 +10,14 @@
 Financial operations must be idempotent to prevent duplicate charges:
 
 **Problem Scenarios**:
+
 1. **Network Retry**: User's request times out, browser retries automatically
 2. **Impatient User**: User clicks "Pay" button multiple times
 3. **Webhook Replay**: Payment processor sends duplicate webhook
 4. **Race Conditions**: Concurrent requests for same operation
 
 **Without Idempotency**:
+
 ```typescript
 // User clicks "Subscribe" twice in quick succession
 POST /api/payments/subscribe { userId: '123', amount: 1000 }
@@ -31,6 +33,7 @@ POST /api/payments/subscribe { userId: '123', amount: 1000 }
 We will implement **idempotency keys** for all payment and financial operations using Stripe's idempotency pattern.
 
 **How It Works**:
+
 1. Client generates unique idempotency key (UUID)
 2. Client includes key in API request header
 3. Server stores key + response for 24 hours
@@ -38,6 +41,7 @@ We will implement **idempotency keys** for all payment and financial operations 
 5. Keys expire after 24 hours (cleanup)
 
 **Implementation**:
+
 ```typescript
 // Client-side: Generate and send idempotency key
 async function createPayment(amount: number): Promise<Invoice> {
@@ -75,10 +79,7 @@ class IdempotencyService {
     if (cached) return cached;
 
     // Check database (persistent storage)
-    const record = await this.db.query(
-      'SELECT * FROM idempotency_keys WHERE key = $1',
-      [key]
-    );
+    const record = await this.db.query('SELECT * FROM idempotency_keys WHERE key = $1', [key]);
 
     if (record) {
       // Warm cache
@@ -89,11 +90,7 @@ class IdempotencyService {
     return null;
   }
 
-  async storeIdempotency(
-    key: string,
-    response: any,
-    statusCode: number
-  ): Promise<void> {
+  async storeIdempotency(key: string, response: any, statusCode: number): Promise<void> {
     const record = {
       key,
       response,
@@ -135,20 +132,14 @@ function idempotencyMiddleware(req: Request, res: Response, next: NextFunction) 
 
     if (existing) {
       // Return cached response
-      return res
-        .status(existing.statusCode)
-        .json(existing.response);
+      return res.status(existing.statusCode).json(existing.response);
     }
 
     // Store original res.json to intercept response
     const originalJson = res.json.bind(res);
     res.json = (body: any) => {
       // Save response for future duplicate requests
-      idempotencyService.storeIdempotency(
-        idempotencyKey,
-        body,
-        res.statusCode
-      );
+      idempotencyService.storeIdempotency(idempotencyKey, body, res.statusCode);
 
       return originalJson(body);
     };
@@ -162,6 +153,7 @@ app.use('/api/payments', idempotencyMiddleware);
 ```
 
 **Database Schema**:
+
 ```sql
 CREATE TABLE idempotency_keys (
   key TEXT PRIMARY KEY,
@@ -223,9 +215,11 @@ WHERE created_at < NOW() - INTERVAL '24 hours';
 ## Alternatives Considered
 
 ### 1. Database Unique Constraints
+
 **Pros**: Simpler, no extra table
 
 **Cons**:
+
 - Only prevents duplicates, doesn't return cached response
 - User gets error instead of success
 - Can't handle retries gracefully
@@ -233,9 +227,11 @@ WHERE created_at < NOW() - INTERVAL '24 hours';
 **Why Rejected**: Doesn't provide retry safety, poor UX.
 
 ### 2. Request Deduplication Based on Content
+
 **Pros**: No client-side key generation needed
 
 **Cons**:
+
 - Hash collisions possible
 - Can't distinguish legitimate duplicate requests
 - Race condition if requests arrive simultaneously
@@ -243,9 +239,11 @@ WHERE created_at < NOW() - INTERVAL '24 hours';
 **Why Rejected**: Not safe enough for financial operations.
 
 ### 3. Distributed Lock
+
 **Pros**: Prevents concurrent execution
 
 **Cons**:
+
 - Doesn't help with retries hours later
 - Requires distributed lock service
 - Lock timeout complexity
@@ -253,9 +251,11 @@ WHERE created_at < NOW() - INTERVAL '24 hours';
 **Why Rejected**: Complementary but not sufficient alone.
 
 ### 4. No Idempotency (Hope for the Best)
+
 **Pros**: Simplest
 
 **Cons**:
+
 - Users get charged multiple times
 - Trust issues
 - Support burden for refunds
@@ -265,13 +265,12 @@ WHERE created_at < NOW() - INTERVAL '24 hours';
 ## Implementation Notes
 
 **Idempotency Key Generation**:
+
 ```typescript
 // Client-side (React)
 import { v4 as uuidv4 } from 'uuid';
 
-function useIdempotentMutation<T>(
-  mutationFn: (data: any) => Promise<T>
-) {
+function useIdempotentMutation<T>(mutationFn: (data: any) => Promise<T>) {
   const [idempotencyKey] = useState(() => uuidv4());
 
   return async (data: any) => {
@@ -285,12 +284,11 @@ function useIdempotentMutation<T>(
 }
 
 // Usage
-const createPayment = useIdempotentMutation(
-  (data) => api.post('/payments/invoice', data)
-);
+const createPayment = useIdempotentMutation((data) => api.post('/payments/invoice', data));
 ```
 
 **Webhook Idempotency**:
+
 ```typescript
 // Webhooks use their own ID as idempotency key
 app.post('/webhooks/lightning', async (req, res) => {
@@ -313,6 +311,7 @@ app.post('/webhooks/lightning', async (req, res) => {
 ```
 
 **Testing Idempotency**:
+
 ```typescript
 describe('Payment Idempotency', () => {
   it('should prevent duplicate payment processing', async () => {

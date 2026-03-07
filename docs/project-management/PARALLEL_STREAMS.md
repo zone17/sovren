@@ -33,6 +33,7 @@ This document outlines the parallel work stream strategy for the Sovren Producti
 **Parallel streams work on INDEPENDENT feature modules with NO SHARED CODE**
 
 This ensures:
+
 - Zero merge conflicts
 - Independent testing
 - Autonomous agent execution
@@ -45,7 +46,9 @@ This ensures:
 ### Stream Types
 
 #### Type A: Sequential Foundation Streams
+
 **Characteristics**:
+
 - Must complete before any parallel work
 - Critical path components
 - Cannot be parallelized
@@ -53,7 +56,9 @@ This ensures:
 **Examples**: Test infrastructure, security remediation
 
 #### Type B: Parallel Feature Streams
+
 **Characteristics**:
+
 - Independent feature modules (different directories)
 - No shared components
 - Can work simultaneously
@@ -61,7 +66,9 @@ This ensures:
 **Examples**: Content Creation + Lightning Payments
 
 #### Type C: Parallel Quality Streams
+
 **Characteristics**:
+
 - Cross-cutting concerns
 - Read-only analysis
 - No code conflicts
@@ -84,6 +91,7 @@ This ensures:
 **Duration**: 9 hours
 **Agent**: direct-fix
 **Deliverables**:
+
 - Jest configuration fixed
 - All tests passing
 - Security vulnerabilities remediated
@@ -97,6 +105,7 @@ This ensures:
 **Duration**: 7 hours
 **Agent**: direct-fix
 **Deliverables**:
+
 - US-007 work committed
 - npm dependencies updated
 - Monitoring dashboard fixes
@@ -106,10 +115,10 @@ This ensures:
 
 #### Resource Allocation
 
-| Role | Stream | Time Commitment |
-|------|--------|-----------------|
-| Senior Developer | F1 (Test Infrastructure) | 100% (9 hours) |
-| Junior Developer | F2 (Cleanup) | 100% (7 hours) |
+| Role             | Stream                   | Time Commitment |
+| ---------------- | ------------------------ | --------------- |
+| Senior Developer | F1 (Test Infrastructure) | 100% (9 hours)  |
+| Junior Developer | F2 (Cleanup)             | 100% (7 hours)  |
 
 **Total**: 2 developers
 
@@ -128,19 +137,22 @@ This ensures:
 **Pattern**: Design → Implementation → Testing → Review
 
 **Phase 1: Design** (2 days, #12-16)
+
 - Agent: design-ux-specialist
 - Output: Mockups, wireframes, component specs
 - Location: docs/design/us-001-nostr-auth/
 
 **Phase 2: Implementation** (2 days, #17-21)
+
 - Agent: elite-frontend-dev
 - Output: React components, services, hooks
 - Location: packages/frontend/src/features/auth/
 
 **Phase 3: Testing** (1 day, #22-26)
+
 - Agent: test-automation-engineer
 - Output: Unit tests, integration tests, 95%+ coverage
-- Location: packages/frontend/src/features/auth/__tests__/
+- Location: packages/frontend/src/features/auth/**tests**/
 
 #### Why Sequential?
 
@@ -150,11 +162,11 @@ This ensures:
 
 #### Resource Allocation
 
-| Role | Time Commitment |
-|------|-----------------|
-| UX Designer | 100% (2 days design) |
+| Role               | Time Commitment              |
+| ------------------ | ---------------------------- |
+| UX Designer        | 100% (2 days design)         |
 | Frontend Developer | 100% (2 days implementation) |
-| Test Engineer | 100% (1 day testing) |
+| Test Engineer      | 100% (1 day testing)         |
 
 **Total**: 3 developers (sequential handoff)
 
@@ -176,6 +188,7 @@ This ensures:
 **No Overlap With**: Stream B2 (payments), Stream B3 (subscriptions)
 
 **Phase Breakdown**:
+
 ```
 Design (2 days, #27-31)
   └─> docs/design/us-002-content-creation/
@@ -192,6 +205,7 @@ Testing (1 day, #37-41)
 ```
 
 **Dependencies**:
+
 - Requires: NOSTR Auth complete (#22-26)
 - Blocks: E2E Content Flow (#55)
 
@@ -205,6 +219,7 @@ Testing (1 day, #37-41)
 **No Overlap With**: Stream B1 (content), Stream B3 (subscriptions)
 
 **Phase Breakdown**:
+
 ```
 Design (2 days, #42-46)
   └─> docs/design/us-007-lightning-payments/
@@ -221,6 +236,7 @@ Validation (0.5 days, #52)
 ```
 
 **Dependencies**:
+
 - Requires: NOSTR Auth complete (#22-26)
 - Blocks: E2E Payment Flow (#56)
 
@@ -234,6 +250,7 @@ Validation (0.5 days, #52)
 **Overlap**: Shares payment integration with Stream B2
 
 **Phase Breakdown**:
+
 ```
 Design (1 day, #48-49)
   └─> Tier management UI design
@@ -246,6 +263,7 @@ Testing (0.5 days, #51-52)
 ```
 
 **Dependencies**:
+
 - Requires: Payment UI complete (#47-51)
 - Can start design in parallel with B2 design
 
@@ -276,16 +294,16 @@ Week 4, Day 4: Final Testing
 
 #### Resource Allocation
 
-| Role | Stream | Time Commitment |
-|------|--------|-----------------|
-| UX Designer 1 | B1 (Content Design) | 100% (2 days) |
-| UX Designer 2 | B2 (Payment Design) | 100% (2 days) |
-| Frontend Dev 1 | B1 (Content Implementation) | 100% (3 days) |
-| Frontend Dev 2 | B2 (Payment Implementation) | 100% (3 days) |
-| Frontend Dev 3 | B3 (Subscription Implementation) | 50% (1 day), starts Week 4 |
-| Test Engineer 1 | B1 (Content Testing) | 100% (1 day) |
-| Test Engineer 2 | B2 (Payment Testing) | 100% (1 day) |
-| Lightning Specialist | B2 (Protocol Validation) | 50% (0.5 days) |
+| Role                 | Stream                           | Time Commitment            |
+| -------------------- | -------------------------------- | -------------------------- |
+| UX Designer 1        | B1 (Content Design)              | 100% (2 days)              |
+| UX Designer 2        | B2 (Payment Design)              | 100% (2 days)              |
+| Frontend Dev 1       | B1 (Content Implementation)      | 100% (3 days)              |
+| Frontend Dev 2       | B2 (Payment Implementation)      | 100% (3 days)              |
+| Frontend Dev 3       | B3 (Subscription Implementation) | 50% (1 day), starts Week 4 |
+| Test Engineer 1      | B1 (Content Testing)             | 100% (1 day)               |
+| Test Engineer 2      | B2 (Payment Testing)             | 100% (1 day)               |
+| Lightning Specialist | B2 (Protocol Validation)         | 50% (0.5 days)             |
 
 **Total**: 7-8 developers
 
@@ -304,6 +322,7 @@ Week 4, Day 4: Final Testing
 **Agent Sequence**: e2e-testing-specialist → nostr-protocol-specialist
 
 **Test Coverage**:
+
 ```
 Day 1-2: Critical User Flows (#53-56)
   ├─> Creator Onboarding E2E
@@ -328,6 +347,7 @@ Day 4: Protocol Validation (#58)
 **Agent**: accessibility-specialist
 
 **Audit Coverage**:
+
 ```
 Day 1: Component Accessibility (#59-60)
   ├─> Keyboard navigation testing
@@ -359,11 +379,11 @@ Day 3-4: BOTH STREAMS PARALLEL
 
 #### Resource Allocation
 
-| Role | Stream | Time Commitment |
-|------|--------|-----------------|
-| E2E Test Engineer | D1 (E2E Testing) | 100% (3 days) |
-| NOSTR Specialist | D1 (Protocol Validation) | 100% (1 day) |
-| Accessibility Specialist | D2 (A11y Audit) | 100% (2 days) |
+| Role                     | Stream                   | Time Commitment |
+| ------------------------ | ------------------------ | --------------- |
+| E2E Test Engineer        | D1 (E2E Testing)         | 100% (3 days)   |
+| NOSTR Specialist         | D1 (Protocol Validation) | 100% (1 day)    |
+| Accessibility Specialist | D2 (A11y Audit)          | 100% (2 days)   |
 
 **Total**: 3 developers (2 parallel + 1 sequential)
 
@@ -382,6 +402,7 @@ Day 3-4: BOTH STREAMS PARALLEL
 **Agent Sequence**: security-engineer → performance-optimization-engineer
 
 **Phase 1: Security Audit** (2 days, #63-65)
+
 ```
 Frontend Security (#63)
   ├─> XSS prevention validation
@@ -402,6 +423,7 @@ NOSTR & Lightning Security (#65)
 ```
 
 **Phase 2: Performance Optimization** (2 days, #66-68)
+
 ```
 Core Web Vitals (#66)
   ├─> LCP < 2.5s
@@ -429,6 +451,7 @@ React Performance (#68)
 **Agents**: monitoring-observability-architect, api-documentation-engineer
 
 **Monitoring & Observability** (#69, 2 days)
+
 ```
 Frontend Monitoring:
   ├─> Sentry error tracking
@@ -447,6 +470,7 @@ Dashboards & Alerts:
 ```
 
 **API Documentation** (#70, 1 day)
+
 ```
 OpenAPI Specification:
   ├─> All endpoints documented
@@ -485,13 +509,13 @@ Day 5: Final Review (SEQUENTIAL, BLOCKS LAUNCH)
 
 #### Resource Allocation
 
-| Role | Stream | Time Commitment |
-|------|--------|-----------------|
-| Security Engineer | P1 (Security Audit) | 100% (2 days) |
-| Performance Engineer | P1 (Performance Optimization) | 100% (2 days) |
-| DevOps Engineer | P2 (Monitoring) | 100% (2 days) |
-| Technical Writer | P2 (API Docs) | 100% (1 day) |
-| Senior Code Reviewer | Final Review | 100% (1 day) |
+| Role                 | Stream                        | Time Commitment |
+| -------------------- | ----------------------------- | --------------- |
+| Security Engineer    | P1 (Security Audit)           | 100% (2 days)   |
+| Performance Engineer | P1 (Performance Optimization) | 100% (2 days)   |
+| DevOps Engineer      | P2 (Monitoring)               | 100% (2 days)   |
+| Technical Writer     | P2 (API Docs)                 | 100% (1 day)    |
+| Senior Code Reviewer | Final Review                  | 100% (1 day)    |
 
 **Total**: 5 developers
 
@@ -501,27 +525,27 @@ Day 5: Final Review (SEQUENTIAL, BLOCKS LAUNCH)
 
 ### Weekly Developer Count
 
-| Week | Streams | Developers | Utilization |
-|------|---------|-----------|-------------|
-| Week 1 | 2 | 2 | 100% (foundation critical) |
-| Week 2 | 1 | 3 | 100% (sequential handoff) |
-| Weeks 3-4 | 3 | 7-8 | 90%+ (maximum parallelization) |
-| Week 5 | 2 | 3 | 85% (testing streams) |
-| Week 6 | 2 | 5 | 90% (production streams) |
+| Week      | Streams | Developers | Utilization                    |
+| --------- | ------- | ---------- | ------------------------------ |
+| Week 1    | 2       | 2          | 100% (foundation critical)     |
+| Week 2    | 1       | 3          | 100% (sequential handoff)      |
+| Weeks 3-4 | 3       | 7-8        | 90%+ (maximum parallelization) |
+| Week 5    | 2       | 3          | 85% (testing streams)          |
+| Week 6    | 2       | 5          | 90% (production streams)       |
 
 **Average Team Size**: 4-5 developers
 **Peak Team Size**: 7-8 developers (Weeks 3-4)
 
 ### Role Distribution
 
-| Role | Weeks Active | Stories |
-|------|-------------|---------|
-| UX Designers | Weeks 2-4 | 28 stories |
-| Frontend Developers | Weeks 2-4 | 25 stories |
-| Test Engineers | Weeks 2-5 | 20 stories |
-| Security Engineers | Weeks 1, 6 | 4 stories |
-| DevOps Engineers | Weeks 1, 6 | 4 stories |
-| Specialists (Lightning, NOSTR, A11y) | Weeks 4-5 | 3 stories |
+| Role                                 | Weeks Active | Stories    |
+| ------------------------------------ | ------------ | ---------- |
+| UX Designers                         | Weeks 2-4    | 28 stories |
+| Frontend Developers                  | Weeks 2-4    | 25 stories |
+| Test Engineers                       | Weeks 2-5    | 20 stories |
+| Security Engineers                   | Weeks 1, 6   | 4 stories  |
+| DevOps Engineers                     | Weeks 1, 6   | 4 stories  |
+| Specialists (Lightning, NOSTR, A11y) | Weeks 4-5    | 3 stories  |
 
 ---
 
@@ -546,11 +570,13 @@ packages/frontend/src/features/
 ### Shared Code Management
 
 **Shared Components** (`packages/frontend/src/components/ui/`):
+
 - Read-only during parallel streams
 - No modifications allowed during Weeks 3-4
 - Changes must go through design-ux-specialist approval
 
 **Shared Services** (`packages/frontend/src/services/`):
+
 - API client: Frozen during parallel streams
 - Utils: Read-only
 - New services only in feature directories
@@ -584,11 +610,13 @@ Merge Order:
 ### Daily Standups
 
 **Format**:
+
 - Each stream reports separately
 - 15 minutes max per stream
 - Focus on blockers and handoffs
 
 **Example** (Week 3, Day 2):
+
 ```
 Stream B1 (Content):
   - Yesterday: Completed ContentEditor component (#32)
@@ -679,27 +707,30 @@ Day 7:
 
 ### Parallel Stream Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| Merge conflicts | Medium (30%) | Medium | File system isolation, merge order |
-| Integration bugs | High (60%) | High | Week 5 E2E testing phase |
-| Resource contention | Low (15%) | Low | Clear stream ownership |
-| Dependency delays | Medium (40%) | High | Buffer time, async handoffs |
-| Stream blocking | Medium (35%) | High | Parallel design phases, clear dependencies |
+| Risk                | Probability  | Impact | Mitigation                                 |
+| ------------------- | ------------ | ------ | ------------------------------------------ |
+| Merge conflicts     | Medium (30%) | Medium | File system isolation, merge order         |
+| Integration bugs    | High (60%)   | High   | Week 5 E2E testing phase                   |
+| Resource contention | Low (15%)    | Low    | Clear stream ownership                     |
+| Dependency delays   | Medium (40%) | High   | Buffer time, async handoffs                |
+| Stream blocking     | Medium (35%) | High   | Parallel design phases, clear dependencies |
 
 ### Mitigation Strategies
 
 **For Merge Conflicts**:
+
 - Use feature-based directory structure
 - No shared code modifications during parallel work
 - Merge in dependency order (content → payments → subscriptions)
 
 **For Integration Bugs**:
+
 - Dedicated Week 5 for E2E testing
 - Integration tests after each merge
 - Rollback plan if critical bugs found
 
 **For Dependency Delays**:
+
 - 3-day buffer built into 6-week timeline
 - Parallel design phases reduce waiting
 - Mock/stub dependencies when possible
@@ -711,6 +742,7 @@ Day 7:
 ### Velocity Metrics
 
 **Target Story Velocity**:
+
 - Week 1: 7 stories (sequential)
 - Week 2: 15 stories (sequential with handoffs)
 - Weeks 3-4: 41 stories (parallel streams)
@@ -718,6 +750,7 @@ Day 7:
 - Week 6: 9 stories (parallel production)
 
 **Actual vs Target Tracking**:
+
 - Daily: Update GitHub Project completion %
 - Weekly: Calculate velocity (stories completed / week)
 - Adjust: Re-plan if velocity < 90% of target
@@ -731,6 +764,7 @@ Day 7:
 **Poor**: > 0.80 (< 20% savings)
 
 **Week 3-4 Example**:
+
 - Sequential: 41 stories × 0.5 days avg = 20.5 days
 - Parallel (3 streams): 6 days actual
 - Efficiency: 6 / 20.5 = 0.29 (71% time savings) ✅
@@ -765,21 +799,25 @@ Day 7:
 **Code Location**: packages/frontend/src/features/[feature-name]/
 
 **Agents**:
+
 - Design: [agent-name]
 - Implementation: [agent-name]
 - Testing: [agent-name]
 
 **Dependencies**:
+
 - Blocked By: [Story IDs]
 - Blocks: [Story IDs]
 - Parallel With: [Stream IDs]
 
 **Integration**:
+
 - Merge Target: main
 - Merge Order: [1st, 2nd, 3rd]
 - Integration Tests: [Yes/No]
 
 **Communication**:
+
 - Daily Standup: [Time]
 - Slack Channel: #[channel]
 - Issue Tracker: [GitHub Project URL]

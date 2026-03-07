@@ -21,37 +21,37 @@ import type { Event as NostrToolsEvent } from 'nostr-tools';
  */
 export enum NostrEventKind {
   // Core Protocol Events (NIP-01)
-  SET_METADATA = 0,              // User profile metadata
-  TEXT_NOTE = 1,                 // Short text note
-  RECOMMEND_RELAY = 2,           // Recommend relay
-  CONTACTS = 3,                  // Contact list (NIP-02)
-  ENCRYPTED_DIRECT_MESSAGE = 4,  // Encrypted DM (NIP-04)
-  DELETE = 5,                    // Event deletion
-  REPOST = 6,                    // Repost/boost
-  REACTION = 7,                  // Like/reaction
+  SET_METADATA = 0, // User profile metadata
+  TEXT_NOTE = 1, // Short text note
+  RECOMMEND_RELAY = 2, // Recommend relay
+  CONTACTS = 3, // Contact list (NIP-02)
+  ENCRYPTED_DIRECT_MESSAGE = 4, // Encrypted DM (NIP-04)
+  DELETE = 5, // Event deletion
+  REPOST = 6, // Repost/boost
+  REACTION = 7, // Like/reaction
 
   // Channel Events (NIP-28)
-  CHANNEL_CREATE = 40,           // Channel creation
-  CHANNEL_METADATA = 41,         // Channel metadata
-  CHANNEL_MESSAGE = 42,          // Channel message
-  CHANNEL_HIDE_MESSAGE = 43,     // Hide channel message
-  CHANNEL_MUTE_USER = 44,        // Mute user in channel
+  CHANNEL_CREATE = 40, // Channel creation
+  CHANNEL_METADATA = 41, // Channel metadata
+  CHANNEL_MESSAGE = 42, // Channel message
+  CHANNEL_HIDE_MESSAGE = 43, // Hide channel message
+  CHANNEL_MUTE_USER = 44, // Mute user in channel
 
   // Replaceable Events (NIP-16)
   CHANNEL_CREATE_REPLACEABLE = 40,
   CHANNEL_METADATA_REPLACEABLE = 41,
 
   // Parameterized Replaceable Events (NIP-33)
-  LONG_FORM_CONTENT = 30023,     // Long-form article (NIP-23)
+  LONG_FORM_CONTENT = 30023, // Long-form article (NIP-23)
 
   // Sovren-specific Events (30024-30030 range reserved)
-  CREATOR_PROFILE = 30024,       // Enhanced creator profile
-  MONETIZATION_EVENT = 30025,    // Payment/subscription event
-  CREATOR_CONTENT = 30026,       // Gated creator content
-  SUBSCRIPTION_TIER = 30027,     // Subscription tier definition
-  PAYMENT_REQUEST = 30028,       // Payment request/invoice
-  PAYMENT_RECEIPT = 30029,       // Payment confirmation
-  CONTENT_UNLOCK = 30030,        // Content access grant
+  CREATOR_PROFILE = 30024, // Enhanced creator profile
+  MONETIZATION_EVENT = 30025, // Payment/subscription event
+  CREATOR_CONTENT = 30026, // Gated creator content
+  SUBSCRIPTION_TIER = 30027, // Subscription tier definition
+  PAYMENT_REQUEST = 30028, // Payment request/invoice
+  PAYMENT_RECEIPT = 30029, // Payment confirmation
+  CONTENT_UNLOCK = 30030, // Content access grant
 }
 
 // ========================================
@@ -112,10 +112,10 @@ export interface EventTemplate {
 export interface TextNoteOptions {
   content: string;
   tags?: string[][];
-  replyTo?: string;        // Event ID being replied to
-  mentions?: string[];     // Pubkeys being mentioned
-  hashtags?: string[];     // Hashtags
-  relays?: string[];       // Relay hints
+  replyTo?: string; // Event ID being replied to
+  mentions?: string[]; // Pubkeys being mentioned
+  hashtags?: string[]; // Hashtags
+  relays?: string[]; // Relay hints
 }
 
 /**
@@ -127,9 +127,9 @@ export interface MetadataEventOptions {
   picture?: string;
   banner?: string;
   website?: string;
-  nip05?: string;         // NIP-05 verification identifier
-  lud16?: string;         // Lightning address (user@domain.com)
-  lud06?: string;         // LNURL-pay
+  nip05?: string; // NIP-05 verification identifier
+  lud16?: string; // Lightning address (user@domain.com)
+  lud06?: string; // LNURL-pay
   [key: string]: unknown; // Allow additional metadata fields
 }
 
@@ -148,8 +148,8 @@ export interface ContactListOptions {
  * Direct Message Options (Kind 4)
  */
 export interface DirectMessageOptions {
-  recipient: string;      // Recipient pubkey
-  content: string;        // Plain text (will be encrypted)
+  recipient: string; // Recipient pubkey
+  content: string; // Plain text (will be encrypted)
   tags?: string[][];
 }
 
@@ -157,25 +157,25 @@ export interface DirectMessageOptions {
  * Deletion Event Options (Kind 5)
  */
 export interface DeletionEventOptions {
-  eventIds: string[];     // Event IDs to delete
-  reason?: string;        // Optional deletion reason
+  eventIds: string[]; // Event IDs to delete
+  reason?: string; // Optional deletion reason
 }
 
 /**
  * Reaction Event Options (Kind 7)
  */
 export interface ReactionEventOptions {
-  eventId: string;        // Event being reacted to
-  content: string;        // Reaction (e.g., "+", "❤️")
-  eventAuthor?: string;   // Author of event being reacted to
+  eventId: string; // Event being reacted to
+  content: string; // Reaction (e.g., "+", "❤️")
+  eventAuthor?: string; // Author of event being reacted to
 }
 
 /**
  * Repost Event Options (Kind 6)
  */
 export interface RepostEventOptions {
-  event: NostrEvent;      // Event being reposted
-  comment?: string;       // Optional comment on repost
+  event: NostrEvent; // Event being reposted
+  comment?: string; // Optional comment on repost
 }
 
 // ========================================
@@ -207,8 +207,8 @@ export interface EventValidationOptions {
   checkId?: boolean;
   checkTimestamp?: boolean;
   allowFutureTimestamps?: boolean;
-  maxFutureOffset?: number;  // Max seconds in future
-  maxPastOffset?: number;    // Max seconds in past
+  maxFutureOffset?: number; // Max seconds in future
+  maxPastOffset?: number; // Max seconds in past
 }
 
 // ========================================
@@ -220,11 +220,11 @@ export interface EventValidationOptions {
  * Used for storing events with relay/cache information
  */
 export interface EventWithMetadata extends NostrEvent {
-  relay?: string;          // Relay where event was received
-  received?: number;       // Unix timestamp when received
-  verified?: boolean;      // Signature verified flag
-  cached?: boolean;        // Whether event is from cache
-  seenOn?: string[];       // List of relays event was seen on
+  relay?: string; // Relay where event was received
+  received?: number; // Unix timestamp when received
+  verified?: boolean; // Signature verified flag
+  cached?: boolean; // Whether event is from cache
+  seenOn?: string[]; // List of relays event was seen on
 }
 
 /**
@@ -249,11 +249,11 @@ export type EventCacheEntry = z.infer<typeof EventCacheEntrySchema>;
  * Event Publishing Options
  */
 export interface PublishOptions {
-  relays?: string[];           // Specific relays to publish to
-  timeout?: number;            // Publish timeout in ms
-  skipValidation?: boolean;    // Skip event validation
-  requireMinRelays?: number;   // Minimum successful relays required
-  requireAll?: boolean;        // Require all relays to succeed
+  relays?: string[]; // Specific relays to publish to
+  timeout?: number; // Publish timeout in ms
+  skipValidation?: boolean; // Skip event validation
+  requireMinRelays?: number; // Minimum successful relays required
+  requireAll?: boolean; // Require all relays to succeed
 }
 
 /**
@@ -305,12 +305,18 @@ export type EventCallback = (event: NostrEvent, relay?: string) => void | Promis
 /**
  * Event Error Handler
  */
-export type EventErrorHandler = (error: Error, event?: NostrEvent, relay?: string) => void | Promise<void>;
+export type EventErrorHandler = (
+  error: Error,
+  event?: NostrEvent,
+  relay?: string
+) => void | Promise<void>;
 
 /**
  * Event Validator Function
  */
-export type EventValidator = (event: NostrEvent) => EventValidationResult | Promise<EventValidationResult>;
+export type EventValidator = (
+  event: NostrEvent
+) => EventValidationResult | Promise<EventValidationResult>;
 
 // ========================================
 // Utility Functions
@@ -320,7 +326,7 @@ export type EventValidator = (event: NostrEvent) => EventValidationResult | Prom
  * Check if event is replaceable (NIP-16)
  */
 export function isReplaceableEvent(kind: number): boolean {
-  return (kind === 0 || kind === 3 || (kind >= 10000 && kind < 20000));
+  return kind === 0 || kind === 3 || (kind >= 10000 && kind < 20000);
 }
 
 /**
@@ -345,7 +351,7 @@ export function getEventCoordinate(event: NostrEvent): string | null {
     return null;
   }
 
-  const dTag = event.tags.find(tag => tag[0] === 'd');
+  const dTag = event.tags.find((tag) => tag[0] === 'd');
   const identifier = dTag?.[1] || '';
 
   return `${event.kind}:${event.pubkey}:${identifier}`;
@@ -355,27 +361,21 @@ export function getEventCoordinate(event: NostrEvent): string | null {
  * Extract mentions (p tags) from event
  */
 export function extractMentions(event: NostrEvent): string[] {
-  return event.tags
-    .filter(tag => tag[0] === 'p' && tag[1])
-    .map(tag => tag[1]);
+  return event.tags.filter((tag) => tag[0] === 'p' && tag[1]).map((tag) => tag[1]);
 }
 
 /**
  * Extract event references (e tags) from event
  */
 export function extractEventRefs(event: NostrEvent): string[] {
-  return event.tags
-    .filter(tag => tag[0] === 'e' && tag[1])
-    .map(tag => tag[1]);
+  return event.tags.filter((tag) => tag[0] === 'e' && tag[1]).map((tag) => tag[1]);
 }
 
 /**
  * Extract hashtags (t tags) from event
  */
 export function extractHashtags(event: NostrEvent): string[] {
-  return event.tags
-    .filter(tag => tag[0] === 't' && tag[1])
-    .map(tag => tag[1]);
+  return event.tags.filter((tag) => tag[0] === 't' && tag[1]).map((tag) => tag[1]);
 }
 
 // ========================================

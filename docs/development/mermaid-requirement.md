@@ -269,12 +269,10 @@ graph TD
 All Mermaid diagrams must be included in the following locations:
 
 1. **User Story Documentation**:
-
    - Located in `docs/user-stories/US-XXX-title.md`
    - Each diagram in its own section with appropriate heading
 
 2. **Technical Documentation**:
-
    - Located in `docs/development/` or appropriate subdirectory
    - Referenced from the user story documentation
 
@@ -320,19 +318,15 @@ graph TD
 ```
 
 1. **Too Complex**: Diagrams with too many elements become difficult to understand
-
    - **Solution**: Break into multiple focused diagrams
 
 2. **Too Simplified**: Diagrams that omit important details lose their value
-
    - **Solution**: Ensure all relevant components and interactions are included
 
 3. **Poor Layout**: Disorganized diagrams with crossing lines reduce clarity
-
    - **Solution**: Reorganize elements for logical flow and readability
 
 4. **Inconsistent Styling**: Varying styles across diagrams create confusion
-
    - **Solution**: Follow project styling standards consistently
 
 5. **Missing Elements**: Incomplete diagrams that don't show all components
@@ -402,7 +396,6 @@ Quality gates will:
 ### Recommended Tools
 
 - **VS Code Extensions**:
-
   - [Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
   - [Mermaid Diagram Editor](https://marketplace.visualstudio.com/items?itemName=tomoyukim.vscode-mermaid-editor)
 

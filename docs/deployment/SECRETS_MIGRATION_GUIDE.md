@@ -245,18 +245,13 @@ async function bootstrap() {
     const secretsService = await getSecretsService();
 
     // Verify critical secrets are available
-    const criticalSecrets = [
-      'JWT_SECRET',
-      'SUPABASE_URL',
-      'SUPABASE_ANON_KEY',
-      'LNBITS_API_KEY',
-    ];
+    const criticalSecrets = ['JWT_SECRET', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'LNBITS_API_KEY'];
 
     console.log('[Bootstrap] Loading critical secrets...');
     const secrets = await secretsService.getSecrets(criticalSecrets);
 
     // Validate all required secrets are present
-    const missing = criticalSecrets.filter(key => !secrets[key]);
+    const missing = criticalSecrets.filter((key) => !secrets[key]);
     if (missing.length > 0) {
       throw new Error(`Missing required secrets: ${missing.join(', ')}`);
     }
@@ -266,7 +261,6 @@ async function bootstrap() {
     // Continue with app initialization
     const app = await createApp();
     await app.listen(process.env.PORT || 3001);
-
   } catch (error) {
     console.error('[Bootstrap] Failed to initialize:', error);
     process.exit(1);
@@ -587,7 +581,7 @@ async function validate() {
   }
 }
 
-validate().catch(error => {
+validate().catch((error) => {
   console.error('❌ Validation failed:', error);
   process.exit(1);
 });
@@ -595,13 +589,13 @@ validate().catch(error => {
 
 ## Timeline Summary
 
-| Phase | Duration | Description |
-|-------|----------|-------------|
-| AWS Setup | 30 min | Create IAM policies, migrate secrets |
-| Code Integration | 1 hour | Update application code |
-| Staging Deploy | 2 hours | Test in staging environment |
-| Production Migration | 1 hour | Blue-green deployment to production |
-| **Total** | **4.5 hours** | Complete migration |
+| Phase                | Duration      | Description                          |
+| -------------------- | ------------- | ------------------------------------ |
+| AWS Setup            | 30 min        | Create IAM policies, migrate secrets |
+| Code Integration     | 1 hour        | Update application code              |
+| Staging Deploy       | 2 hours       | Test in staging environment          |
+| Production Migration | 1 hour        | Blue-green deployment to production  |
+| **Total**            | **4.5 hours** | Complete migration                   |
 
 ## Success Criteria
 
@@ -617,6 +611,7 @@ validate().catch(error => {
 ## Support
 
 For migration issues:
+
 - **Slack**: #platform-engineering
 - **On-Call**: PagerDuty - Platform Team
 - **Email**: platform@sovren.com

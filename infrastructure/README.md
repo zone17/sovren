@@ -98,13 +98,13 @@ infrastructure/
 **Infrastructure**: Docker Compose
 **Cost**: $0 (runs on developer machine)
 
-| Resource | Configuration |
-|----------|--------------|
-| **Frontend** | Vite dev server (localhost:3000) |
-| **Backend** | Docker Compose (localhost:4000) |
-| **Database** | Local PostgreSQL (localhost:5432) |
-| **Redis** | Local Redis (localhost:6379) |
-| **Logging** | Debug level, pretty print |
+| Resource     | Configuration                             |
+| ------------ | ----------------------------------------- |
+| **Frontend** | Vite dev server (localhost:3000)          |
+| **Backend**  | Docker Compose (localhost:4000)           |
+| **Database** | Local PostgreSQL (localhost:5432)         |
+| **Redis**    | Local Redis (localhost:6379)              |
+| **Logging**  | Debug level, pretty print                 |
 | **Features** | All features enabled (beta + debug tools) |
 
 ### Staging
@@ -113,16 +113,16 @@ infrastructure/
 **Infrastructure**: Cloud services (FREE tier)
 **Cost**: $0/month
 
-| Resource | Configuration | Free Tier Details |
-|----------|--------------|-------------------|
-| **Frontend** | Vercel Preview | Unlimited deployments |
-| **Backend** | Railway.app | $5/month credit |
-| **Database** | Supabase | 500MB storage, unlimited API requests |
-| **Redis** | Upstash | 10,000 commands/day, 256MB memory |
-| **Logging** | Debug level | For testing visibility |
-| **Features** | Beta enabled, debug tools enabled | Testing environment |
-| **Replicas** | 1 per service | Sufficient for testing |
-| **SSL/TLS** | Enforced | Production parity |
+| Resource     | Configuration                     | Free Tier Details                     |
+| ------------ | --------------------------------- | ------------------------------------- |
+| **Frontend** | Vercel Preview                    | Unlimited deployments                 |
+| **Backend**  | Railway.app                       | $5/month credit                       |
+| **Database** | Supabase                          | 500MB storage, unlimited API requests |
+| **Redis**    | Upstash                           | 10,000 commands/day, 256MB memory     |
+| **Logging**  | Debug level                       | For testing visibility                |
+| **Features** | Beta enabled, debug tools enabled | Testing environment                   |
+| **Replicas** | 1 per service                     | Sufficient for testing                |
+| **SSL/TLS**  | Enforced                          | Production parity                     |
 
 ### Production
 
@@ -130,17 +130,17 @@ infrastructure/
 **Infrastructure**: Cloud services (FREE tier) with high availability
 **Cost**: $0/month
 
-| Resource | Configuration | Free Tier Details |
-|----------|--------------|-------------------|
-| **Frontend** | Vercel Production | Unlimited deployments |
-| **Backend** | Railway.app | $5/month credit |
-| **Database** | Supabase | 500MB storage, unlimited API requests |
-| **Redis** | Upstash | 10,000 commands/day, 256MB memory |
-| **Logging** | Error level only | Reduced noise |
-| **Features** | Beta DISABLED, debug DISABLED | Security + performance |
-| **Replicas** | 2 per service | High availability |
-| **SSL/TLS** | Enforced | Security requirement |
-| **CDN** | Vercel CDN | Global edge network |
+| Resource     | Configuration                 | Free Tier Details                     |
+| ------------ | ----------------------------- | ------------------------------------- |
+| **Frontend** | Vercel Production             | Unlimited deployments                 |
+| **Backend**  | Railway.app                   | $5/month credit                       |
+| **Database** | Supabase                      | 500MB storage, unlimited API requests |
+| **Redis**    | Upstash                       | 10,000 commands/day, 256MB memory     |
+| **Logging**  | Error level only              | Reduced noise                         |
+| **Features** | Beta DISABLED, debug DISABLED | Security + performance                |
+| **Replicas** | 2 per service                 | High availability                     |
+| **SSL/TLS**  | Enforced                      | Security requirement                  |
+| **CDN**      | Vercel CDN                    | Global edge network                   |
 
 ## Getting Started
 
@@ -242,6 +242,7 @@ cd ../../scripts
 **Provider**: Supabase (FREE tier: 500MB storage, unlimited API requests)
 
 **Features**:
+
 - Automatic schema creation (app, auth, storage)
 - PostgreSQL extensions (uuid-ossp, pgcrypto, pg_stat_statements)
 - SSL/TLS enforced
@@ -249,6 +250,7 @@ cd ../../scripts
 - Connection pooling
 
 **Usage**:
+
 ```hcl
 module "database" {
   source = "../../modules/database"
@@ -269,6 +271,7 @@ module "database" {
 **Provider**: Upstash (FREE tier: 10,000 commands/day, 256MB memory)
 
 **Features**:
+
 - Environment-specific cache profiles
 - Automatic eviction policies (LRU/LFU)
 - Connection pooling
@@ -276,6 +279,7 @@ module "database" {
 - TTL configuration
 
 **Usage**:
+
 ```hcl
 module "redis" {
   source = "../../modules/redis"
@@ -298,6 +302,7 @@ module "redis" {
 **Provider**: Railway.app (FREE: $5/month credit)
 
 **Features**:
+
 - Environment-specific resource limits
 - Health check configuration
 - GHCR integration
@@ -305,6 +310,7 @@ module "redis" {
 - Auto-scaling configuration (paid tier)
 
 **Usage**:
+
 ```hcl
 module "backend_services" {
   source = "../../modules/backend-services"
@@ -338,10 +344,11 @@ Application-level environment configurations are in `/config/environments/`:
 - `index.ts` - Configuration selector and validation
 
 **Usage in Application**:
+
 ```typescript
 import config from '@/config/environments';
 
-console.log(config.api.url);        // Auto-selects based on NODE_ENV
+console.log(config.api.url); // Auto-selects based on NODE_ENV
 console.log(config.database.poolSize);
 console.log(config.redis.ttl);
 ```
@@ -363,6 +370,7 @@ Promote validated changes from staging to production using GitHub Actions:
 ### Automated Checks
 
 The promotion workflow includes:
+
 1. ✅ Validate staging environment health
 2. ✅ Run staging tests
 3. ✅ Check metrics (error rate, response time, uptime)
@@ -383,6 +391,7 @@ export DATABASE_URL_STAGING="postgresql://..."
 ```
 
 **What it does**:
+
 - Creates database and schemas
 - Installs PostgreSQL extensions
 - Runs migrations
@@ -398,6 +407,7 @@ export DATABASE_URL="postgresql://..."
 ```
 
 **What it does**:
+
 - Creates database and schemas
 - Installs PostgreSQL extensions
 - Runs migrations (NO TEST DATA)
@@ -422,6 +432,7 @@ npm run test:environments
 ```
 
 **Test Coverage**:
+
 - ✅ Environment identity and isolation
 - ✅ API configuration (endpoints, timeouts, retries)
 - ✅ Database configuration (pool size, SSL, timeouts)
@@ -436,19 +447,20 @@ npm run test:environments
 
 ### Monthly Infrastructure Cost: $0
 
-| Service | Usage | Cost |
-|---------|-------|------|
-| **Supabase** | 500MB database, unlimited API | $0 |
-| **Upstash** | 10,000 Redis commands/day | $0 |
-| **Railway.app** | $5 monthly credit | $0 |
-| **Vercel** | Unlimited deployments | $0 |
-| **GitHub** | Actions (2,000 minutes/month) | $0 |
-| **GHCR** | 500MB storage | $0 |
-| **Total** | | **$0/month** |
+| Service         | Usage                         | Cost         |
+| --------------- | ----------------------------- | ------------ |
+| **Supabase**    | 500MB database, unlimited API | $0           |
+| **Upstash**     | 10,000 Redis commands/day     | $0           |
+| **Railway.app** | $5 monthly credit             | $0           |
+| **Vercel**      | Unlimited deployments         | $0           |
+| **GitHub**      | Actions (2,000 minutes/month) | $0           |
+| **GHCR**        | 500MB storage                 | $0           |
+| **Total**       |                               | **$0/month** |
 
 ### Free Tier Limits
 
 **Supabase**:
+
 - 500MB database storage
 - Unlimited API requests
 - 50,000 monthly active users
@@ -456,18 +468,21 @@ npm run test:environments
 - 7 days backup retention
 
 **Upstash**:
+
 - 10,000 commands/day
 - 256MB memory
 - 20 connections max
 - Regional deployment
 
 **Railway**:
+
 - $5/month credit (renewable)
 - 512MB memory per service
 - Shared CPU
 - Community support
 
 **Vercel**:
+
 - Unlimited deployments
 - 100GB bandwidth
 - Global CDN
@@ -478,12 +493,14 @@ npm run test:environments
 ### 1. Secrets Management
 
 **DO**:
+
 - Store secrets in GitHub Secrets
 - Use environment-specific secrets (e.g., `DATABASE_URL_STAGING`)
 - Rotate secrets regularly
 - Use `.tfvars` files (never commit them!)
 
 **DON'T**:
+
 - Commit `.tfvars` files to git
 - Hardcode secrets in code
 - Share secrets in Slack/email
@@ -518,6 +535,7 @@ npm run test:environments
 ### Health Checks
 
 All services expose health check endpoints:
+
 - `/health` - Overall service health
 - `/ready` - Ready to receive traffic
 - `/live` - Process is alive
@@ -525,12 +543,14 @@ All services expose health check endpoints:
 ### Monitoring Configuration
 
 **Staging**:
+
 - Sentry error tracking (100% sample rate)
 - Performance monitoring enabled
 - Debug logging enabled
 - Verbose error messages
 
 **Production**:
+
 - Sentry error tracking (10% sample rate for cost optimization)
 - Performance monitoring enabled
 - Error-only logging
@@ -593,17 +613,20 @@ All services expose health check endpoints:
 ## Maintenance
 
 ### Weekly Tasks
+
 - [ ] Review Sentry errors
 - [ ] Check free tier usage (database storage, Redis commands)
 - [ ] Review performance metrics
 
 ### Monthly Tasks
+
 - [ ] Rotate database passwords
 - [ ] Review and clean up old Docker images
 - [ ] Update dependencies
 - [ ] Review GitHub Actions usage
 
 ### Quarterly Tasks
+
 - [ ] Full security audit
 - [ ] Load testing
 - [ ] Disaster recovery drill
@@ -612,6 +635,7 @@ All services expose health check endpoints:
 ## Support and Resources
 
 ### Documentation
+
 - [Terraform Documentation](https://www.terraform.io/docs)
 - [Supabase Documentation](https://supabase.com/docs)
 - [Upstash Documentation](https://docs.upstash.com)
@@ -619,11 +643,13 @@ All services expose health check endpoints:
 - [Vercel Documentation](https://vercel.com/docs)
 
 ### Internal Resources
+
 - `docs/deployment/` - Deployment guides
 - `docs/architecture/` - Architecture diagrams
 - `docs/troubleshooting/` - Common issues and solutions
 
 ### Getting Help
+
 - Open an issue on GitHub
 - Contact DevOps team
 - Check internal wiki

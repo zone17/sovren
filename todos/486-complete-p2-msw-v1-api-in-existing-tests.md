@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p2
-issue_id: "486"
+issue_id: '486'
 tags:
   - code-review
   - msw
@@ -21,6 +21,7 @@ Two existing integration test files import `rest` from `msw` (v1 API) while the 
 ## Findings
 
 Files using v1 API:
+
 - `__tests__/integration/engagement-analytics-integration.test.tsx`
 - One other integration test file (need to grep to confirm)
 
@@ -39,6 +40,6 @@ Replace `import { rest } from 'msw'` with `import { http, HttpResponse } from 'm
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                          | Learnings                                                                  |
+| ---------- | ------------------------------- | -------------------------------------------------------------------------- |
 | 2026-02-24 | Created from Phase 9 MSW review | MSW v1->v2 migration: `rest` -> `http`, response helpers -> `HttpResponse` |

@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "419"
+issue_id: '419'
 tags: [code-review, security, routes, pr-87]
 dependencies: []
 ---
@@ -42,6 +42,7 @@ Accept as-is. The middleware ordering is correct for user-based rate limiting wi
 ## Technical Details
 
 **Affected files:**
+
 - All v2 route files with mutation endpoints
 - `packages/backend/src/middleware/rate-limit-middleware.ts` (verify key strategy)
 

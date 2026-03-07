@@ -414,9 +414,9 @@ This training guide is updated quarterly to reflect:
 
 **Training Completion**: Sign and date upon completion
 
-**Engineer Name**: ********\_\_\_******** **Date**: ****\_\_\_****
+**Engineer Name**: **\*\*\*\***\_\_\_**\*\*\*\*** **Date**: \***\*\_\_\_\*\***
 
-**Trainer/Mentor**: ********\_\_\_******** **Date**: ****\_\_\_****
+**Trainer/Mentor**: **\*\*\*\***\_\_\_**\*\*\*\*** **Date**: \***\*\_\_\_\*\***
 
 **Certification Level**: ☐ Basic ☐ Intermediate ☐ Advanced ☐ Expert
 

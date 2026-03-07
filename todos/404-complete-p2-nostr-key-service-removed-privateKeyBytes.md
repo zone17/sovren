@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p2
-issue_id: "421"
+issue_id: '421'
 tags: [code-review, security, correctness, pr-87]
 dependencies: []
 ---
@@ -15,6 +15,7 @@ The PR removes `const privateKeyBytes = new Uint8Array(Buffer.from(keyPair.priva
 However, the next line `const mnemonic = generateMnemonic(256)` generates a RANDOM mnemonic, not one derived from the private key bytes. This means the original code had an unused variable (the private key bytes were computed but never used), and the mnemonic backup is NOT actually derived from the private key.
 
 This is either:
+
 1. A bug in the original implementation (mnemonic should be derived from private key, but isn't)
 2. Intentional design (mnemonic is a separate random recovery method, not derived from the key)
 
@@ -54,6 +55,7 @@ Investigate the intended relationship between mnemonic and private key. If mnemo
 ## Technical Details
 
 **Affected files:**
+
 - `packages/shared/src/services/NostrKeyManagementService.ts:741-748`
 
 ## Acceptance Criteria
@@ -69,6 +71,7 @@ Investigate the intended relationship between mnemonic and private key. If mnemo
 **By:** Claude Code (PR #87 review)
 
 **Actions:**
+
 - Found removed unused variable was masking a potential design issue
 - The mnemonic backup may not actually enable key recovery
 

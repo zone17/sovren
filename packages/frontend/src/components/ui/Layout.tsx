@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth, useAuthStatus } from '../../features/auth';
 import { FeatureFlagToggle } from '../DevTools/FeatureFlagToggle';
+import UnifiedNotificationCenter from '../../features/notifications/components/UnifiedNotificationCenter';
 
 interface LayoutProps {
   children: ReactNode;
@@ -107,6 +108,8 @@ const Layout: React.FC<LayoutProps> = ({ children }): JSX.Element => {
                         )}
                       </div>
                     </div>
+
+                    <UnifiedNotificationCenter />
 
                     <button
                       onClick={() => void handleLogout()}

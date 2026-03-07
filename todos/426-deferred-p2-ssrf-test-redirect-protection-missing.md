@@ -2,7 +2,7 @@
 id: 426
 severity: P2
 status: deferred
-title: "SSRF test suite: redirect chain protection only documented, not tested"
+title: 'SSRF test suite: redirect chain protection only documented, not tested'
 file: packages/backend/src/utils/__tests__/ssrf.test.ts
 found_in: PR #89
 reviewer: review-security
@@ -31,6 +31,7 @@ packages/backend/src/utils/__tests__/ssrf.test.ts  lines 443-454
 3. Add a test that verifies `validateSsrfUrl` is called on redirect URLs in the HTTP client wrapper
 
 At minimum, create a wrapper around `fetch` or `axios` that:
+
 - Disables auto-redirect
 - Manually follows redirects up to 5 hops
 - Calls `validateSsrfUrl()` on each redirect target

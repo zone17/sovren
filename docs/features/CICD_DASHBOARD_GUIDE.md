@@ -43,6 +43,7 @@ The CI/CD Dashboard is a cutting-edge real-time monitoring and management interf
 ### 1. Deployment Status Panel
 
 **Real-time deployment tracking with**:
+
 - Current deployment status (queued, in_progress, success, failed, rolled_back)
 - Progress percentage and ETA
 - Deployment stages visualization
@@ -53,12 +54,14 @@ The CI/CD Dashboard is a cutting-edge real-time monitoring and management interf
 ### 2. Health Check Monitor
 
 **Continuous health monitoring across**:
+
 - `/health` - General health status
 - `/ready` - Readiness probe (DB, cache connectivity)
 - `/live` - Liveness probe (process alive)
 - `/detailed` - Detailed health report (admin only)
 
 **Features**:
+
 - Real-time status updates every 30 seconds
 - Response time tracking
 - Overall health status (healthy, degraded, unhealthy)
@@ -68,6 +71,7 @@ The CI/CD Dashboard is a cutting-edge real-time monitoring and management interf
 ### 3. Real-time Updates
 
 **Live monitoring with**:
+
 - WebSocket connection for instant updates
 - Server-Sent Events (SSE) fallback
 - Automatic reconnection with exponential backoff
@@ -77,6 +81,7 @@ The CI/CD Dashboard is a cutting-edge real-time monitoring and management interf
 ### 4. Deployment Actions
 
 **One-click controls**:
+
 - **Emergency Rollback**: < 2 minutes to previous version
 - **Retry Deployment**: Rerun failed deployments
 - **Cancel Deployment**: Stop in-progress deployments
@@ -85,6 +90,7 @@ The CI/CD Dashboard is a cutting-edge real-time monitoring and management interf
 ### 5. Deployment History
 
 **Historical tracking**:
+
 - Last 50 deployments
 - Filter by environment, status, author
 - Date range filtering
@@ -94,6 +100,7 @@ The CI/CD Dashboard is a cutting-edge real-time monitoring and management interf
 ### 6. Analytics & Metrics
 
 **Comprehensive insights**:
+
 - Deployment frequency (daily, weekly, monthly)
 - Average deployment duration
 - Success rate trends
@@ -163,6 +170,7 @@ DeploymentDashboard (Main Page)
 ### Installation Steps
 
 1. **Install Dependencies**
+
    ```bash
    cd packages/frontend
    npm install
@@ -224,6 +232,7 @@ DeploymentDashboard (Main Page)
    ```
 
 4. **Start Development Server**
+
    ```bash
    npm run dev
    ```
@@ -263,6 +272,7 @@ DeploymentDashboard (Main Page)
 **When to use**: Critical production issues, deployment failures, performance degradation
 
 **Steps**:
+
 1. Click "🚨 Emergency Rollback" button
 2. Confirm the action in the dialog
 3. Rollback workflow triggers automatically
@@ -270,6 +280,7 @@ DeploymentDashboard (Main Page)
 5. Verify production health after rollback
 
 **What happens**:
+
 - Previous version is re-deployed
 - Traffic is shifted back (100% → 0% on new version)
 - Health checks validate rollback success
@@ -280,6 +291,7 @@ DeploymentDashboard (Main Page)
 **When to use**: Transient failures, flaky tests, network issues
 
 **Steps**:
+
 1. Identify failed deployment in status panel
 2. Click "🔄 Retry Deployment" button
 3. GitHub Actions re-runs the workflow
@@ -290,6 +302,7 @@ DeploymentDashboard (Main Page)
 **When to use**: Wrong commit deployed, critical bug detected
 
 **Steps**:
+
 1. Click "⏸️ Cancel Deployment" button (only visible for in-progress deployments)
 2. Confirm cancellation
 3. Workflow stops immediately
@@ -309,11 +322,13 @@ DeploymentDashboard (Main Page)
 ### Analyzing Metrics
 
 **Quick Stats Panel**:
+
 - Total Deployments: Count in selected environment
 - Success Rate: Percentage of successful deployments
 - Health Status: Overall system health
 
 **Detailed Analytics** (coming soon):
+
 - Deployment frequency trends
 - Average deployment duration over time
 - Change failure rate
@@ -347,12 +362,14 @@ const {
 ```
 
 **Options**:
+
 - `environment` (optional): 'staging' | 'production'
 - `refreshInterval` (optional): Polling interval in ms (default: 10000)
 - `enableRealtime` (optional): Enable WebSocket updates (default: true)
 - `deploymentId` (optional): Monitor specific deployment
 
 **Returns**:
+
 - `currentDeployment`: Current deployment object or null
 - `recentDeployments`: Array of recent deployments
 - `isLoading`: Loading state boolean
@@ -367,27 +384,22 @@ const {
 Monitors health check endpoints.
 
 ```typescript
-const {
-  healthChecks,
-  isHealthy,
-  isDegraded,
-  isUnhealthy,
-  isLoading,
-  error,
-  refresh,
-} = useHealthChecks({
-  environment: 'staging',
-  pollingInterval: 30000,
-  enabled: true,
-});
+const { healthChecks, isHealthy, isDegraded, isUnhealthy, isLoading, error, refresh } =
+  useHealthChecks({
+    environment: 'staging',
+    pollingInterval: 30000,
+    enabled: true,
+  });
 ```
 
 **Options**:
+
 - `environment` (optional): 'staging' | 'production' | 'all'
 - `pollingInterval` (optional): Polling interval in ms (default: 30000)
 - `enabled` (optional): Enable polling (default: true)
 
 **Returns**:
+
 - `healthChecks`: Array of health check results
 - `isHealthy`: All checks healthy boolean
 - `isDegraded`: Any check degraded boolean
@@ -401,13 +413,7 @@ const {
 Manages WebSocket/SSE real-time connection.
 
 ```typescript
-const {
-  connectionState,
-  isConnected,
-  lastMessage,
-  connect,
-  disconnect,
-} = useRealtimeUpdates({
+const { connectionState, isConnected, lastMessage, connect, disconnect } = useRealtimeUpdates({
   enabled: true,
   deploymentId: '12345',
   environment: 'staging',
@@ -416,12 +422,14 @@ const {
 ```
 
 **Options**:
+
 - `enabled` (optional): Enable connection (default: true)
 - `deploymentId` (optional): Subscribe to specific deployment
 - `environment` (optional): Subscribe to environment updates
 - `onMessage` (optional): Message handler callback
 
 **Returns**:
+
 - `connectionState`: Connection state object
 - `isConnected`: Connection status boolean
 - `lastMessage`: Last received message or null
@@ -520,6 +528,7 @@ import { DeploymentDashboard } from '@/features/cicd-dashboard';
 ```
 
 **Features**:
+
 - Environment selector
 - Real-time connection indicator
 - Deployment status panel
@@ -542,6 +551,7 @@ import { DeploymentStatusPanel } from '@/features/cicd-dashboard';
 ```
 
 **Props**:
+
 - `deployment`: Deployment object or null
 - `isLoading`: Loading state boolean
 
@@ -559,6 +569,7 @@ import { HealthCheckMonitor } from '@/features/cicd-dashboard';
 ```
 
 **Props**:
+
 - `healthChecks`: Array of health check results
 - `isLoading`: Loading state boolean
 
@@ -571,6 +582,7 @@ import { HealthCheckMonitor } from '@/features/cicd-dashboard';
 The dashboard establishes a WebSocket connection for real-time updates.
 
 **Connection Flow**:
+
 1. Dashboard mounts → Connect to WebSocket URL
 2. Authentication via token in query parameter
 3. Subscribe to deployment/environment updates
@@ -578,6 +590,7 @@ The dashboard establishes a WebSocket connection for real-time updates.
 5. Auto-reconnect on disconnect
 
 **Message Types**:
+
 - `deployment_started`: New deployment initiated
 - `deployment_updated`: Deployment status changed
 - `deployment_completed`: Deployment finished
@@ -589,6 +602,7 @@ The dashboard establishes a WebSocket connection for real-time updates.
 - `ping`/`pong`: Heartbeat messages
 
 **Reconnection Strategy**:
+
 - Exponential backoff: 3s, 4.5s, 6.75s, 10s, ...
 - Max attempts: 10
 - Automatic fallback to SSE if WebSocket fails
@@ -598,12 +612,14 @@ The dashboard establishes a WebSocket connection for real-time updates.
 If WebSocket is unavailable, the dashboard falls back to SSE.
 
 **SSE Advantages**:
+
 - Simpler than WebSocket
 - Works through proxies
 - Automatic reconnection
 - Same message format
 
 **Limitations**:
+
 - One-way communication (server → client only)
 - Higher latency than WebSocket
 
@@ -618,11 +634,13 @@ If WebSocket is unavailable, the dashboard falls back to SSE.
 **Symptoms**: Red dot next to connection status, no real-time updates
 
 **Causes**:
+
 - WebSocket server not running
 - Network firewall blocking WebSocket
 - Invalid authentication token
 
 **Solutions**:
+
 1. Check WebSocket URL in environment variables
 2. Verify authentication token is valid
 3. Test WebSocket connection: `wscat -c wss://api.sovren.dev/ws/deployments`
@@ -634,11 +652,13 @@ If WebSocket is unavailable, the dashboard falls back to SSE.
 **Symptoms**: Red status indicators, error messages in health panel
 
 **Causes**:
+
 - API server down
 - Database connection issues
 - High server load
 
 **Solutions**:
+
 1. Check API server status: `curl https://api-staging.sovren.dev/health`
 2. Review server logs for errors
 3. Verify database connectivity
@@ -649,11 +669,13 @@ If WebSocket is unavailable, the dashboard falls back to SSE.
 **Symptoms**: Empty deployment list, "No Active Deployment" message
 
 **Causes**:
+
 - GitHub token invalid or expired
 - Workflow not triggered
 - API rate limiting
 
 **Solutions**:
+
 1. Verify GitHub token has correct scopes (`repo`, `workflow`)
 2. Check GitHub Actions workflows: https://github.com/zone17/sovren/actions
 3. Review GitHub API rate limits
@@ -664,11 +686,13 @@ If WebSocket is unavailable, the dashboard falls back to SSE.
 **Symptoms**: Error message after clicking rollback
 
 **Causes**:
+
 - Insufficient GitHub permissions
 - Workflow dispatch not configured
 - No previous deployment to rollback to
 
 **Solutions**:
+
 1. Verify GitHub token has `workflow` scope
 2. Check `automated-rollback.yml` workflow exists
 3. Ensure there's a previous successful deployment
@@ -690,12 +714,14 @@ localStorage.setItem('cicd-dashboard:debug', 'true');
 If dashboard is slow:
 
 1. **Reduce polling frequency**:
+
    ```typescript
    useDeploymentStatus({ refreshInterval: 30000 }); // 30s instead of 10s
    useHealthChecks({ pollingInterval: 60000 }); // 60s instead of 30s
    ```
 
 2. **Disable real-time updates** (if not needed):
+
    ```typescript
    useDeploymentStatus({ enableRealtime: false });
    useRealtimeUpdates({ enabled: false });
@@ -765,6 +791,7 @@ If dashboard is slow:
 ## Support
 
 For issues or questions:
+
 - **GitHub Issues**: https://github.com/zone17/sovren/issues
 - **Documentation**: This guide
 - **Architecture Review**: Consult team lead

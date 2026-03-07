@@ -7,11 +7,13 @@ updates:
       day: monday
     groups:
       dev-dependencies:
-        patterns: ['@types/*', 'eslint*', 'prettier*', 'vitest*', '@playwright/*', '@testing-library/*']
+        patterns:
+          ['@types/*', 'eslint*', 'prettier*', 'vitest*', '@playwright/*', '@testing-library/*']
         update-types: ['minor', 'patch']
       production-dependencies:
         patterns: ['*']
-        exclude-patterns: ['@types/*', 'eslint*', 'prettier*', 'vitest*', '@playwright/*', '@testing-library/*']
+        exclude-patterns:
+          ['@types/*', 'eslint*', 'prettier*', 'vitest*', '@playwright/*', '@testing-library/*']
         update-types: ['minor', 'patch']
     ignore:
       - dependency-name: '*'

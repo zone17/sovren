@@ -9,18 +9,21 @@ Epic 003 focuses on consolidating all NOSTR protocol implementations into unifie
 ### 🔴 Critical Issues Identified
 
 #### 1. **Duplicated Key Management Services**
+
 - **Frontend**: `NOSTRKeyManagementService.ts`, `NOSTRSigningService.ts`, `NOSTRSessionService.ts`, `NOSTRAccountProtectionService.ts`
 - **Shared**: `NostrKeyManagementService.ts`, `NostrSecureKeyStorage.ts`
 - **Components**: Multiple key management components (`NOSTRKeyManager.tsx`, `NostrKeyManagement.tsx`)
 - **Impact**: 6+ duplicate implementations, inconsistent security practices
 
 #### 2. **Multiple NOSTR Service Implementations**
+
 - `packages/frontend/lib/services/nostrService.ts` - 600+ lines
 - `packages/backend/src/services/nostr-auth.ts` - Auth-specific
 - `packages/backend/src/services/enhanced-nostr-auth.ts` - Enhanced version
 - **Impact**: 3+ different NOSTR service patterns
 
 #### 3. **Hardcoded Relay URLs**
+
 ```typescript
 // Found in multiple locations:
 - backend/src/utils/env-validation.ts: 'wss://relay.damus.io,wss://nos.lol,wss://relay.snort.social'
@@ -29,12 +32,14 @@ Epic 003 focuses on consolidating all NOSTR protocol implementations into unifie
 ```
 
 #### 4. **Inconsistent NIP Implementations**
+
 - NIP-05 verification in backend only
 - NIP-04 encryption partially implemented
 - NIP-19 encoding scattered across services
 - NIP-26 delegated events not implemented
 
 #### 5. **No Unified Relay Management**
+
 - Each service manages its own SimplePool
 - No connection state synchronization
 - No failover or retry logic
@@ -44,6 +49,7 @@ Epic 003 focuses on consolidating all NOSTR protocol implementations into unifie
 ### Phase 1: Create Shared NOSTR Core (Days 1-2)
 
 #### US-301-308: Core Infrastructure
+
 ```
 packages/shared/src/nostr/
 ├── core/
@@ -72,6 +78,7 @@ packages/shared/src/nostr/
 ### Phase 2: Backend Consolidation (Days 2-3)
 
 #### US-309-315: Backend Services
+
 ```typescript
 // packages/backend/src/services/nostr/
 export class UnifiedNostrService {
@@ -90,6 +97,7 @@ export class UnifiedNostrService {
 ### Phase 3: Frontend Consolidation (Days 3-4)
 
 #### US-316-322: Frontend Unification
+
 ```typescript
 // packages/frontend/src/hooks/useNostr.ts
 export const useNostr = () => {
@@ -111,6 +119,7 @@ export const useNostr = () => {
 ### Phase 4: Testing & Migration (Days 4-5)
 
 #### US-323-326: Quality Assurance
+
 - Comprehensive integration tests
 - E2E tests for all NOSTR flows
 - Migration scripts for existing data
@@ -119,6 +128,7 @@ export const useNostr = () => {
 ## Implementation Streams
 
 ### Stream A: Backend NOSTR Services (backend-api-builder)
+
 - **US-301**: Core NOSTR service architecture
 - **US-305**: Unified authentication service
 - **US-304**: NIP-05 verification consolidation
@@ -126,6 +136,7 @@ export const useNostr = () => {
 - **US-321**: Rate limiting implementation
 
 ### Stream B: Frontend NOSTR Components (elite-frontend-dev)
+
 - **US-302**: Relay pool UI components
 - **US-306**: Browser extension integration
 - **US-314**: Profile management UI
@@ -133,6 +144,7 @@ export const useNostr = () => {
 - **US-319**: Error handling UI
 
 ### Stream C: Shared Types & Utilities (backend-api-builder)
+
 - **US-308**: Comprehensive type definitions
 - **US-310**: NIP-19 encoding utilities
 - **US-312**: Cryptography operations
@@ -140,12 +152,14 @@ export const useNostr = () => {
 - **US-315**: NIP-26 delegation
 
 ### Stream D: Testing & Documentation (test-automation-engineer + technical-docs-writer)
+
 - **US-318**: Integration test suite
 - **US-323**: Mermaid architecture diagrams
 - **US-324**: Developer documentation
 - **US-326**: E2E test suite
 
 ### Stream E: Monitoring & Migration (backend-api-builder)
+
 - **US-316**: Monitoring service
 - **US-320**: WebSocket manager
 - **US-322**: Backup system
@@ -154,12 +168,14 @@ export const useNostr = () => {
 ## Success Metrics
 
 ### Technical Metrics
+
 - **Code Reduction**: 60%+ reduction in NOSTR-related code
 - **Test Coverage**: 95%+ for all NOSTR services
 - **Performance**: <100ms event publishing, <50ms signature verification
 - **Reliability**: 99.9% relay connection uptime
 
 ### Quality Gates
+
 - ✅ Zero duplicate NOSTR implementations
 - ✅ All hardcoded values removed
 - ✅ Full NIP compliance (01, 04, 05, 19, 26)
@@ -170,22 +186,27 @@ export const useNostr = () => {
 ## Risk Mitigation
 
 ### Risk 1: Breaking Changes
+
 **Mitigation**: Feature flags for gradual rollout, maintain backward compatibility layer
 
 ### Risk 2: Performance Degradation
+
 **Mitigation**: Benchmark before/after, implement caching, optimize WebSocket handling
 
 ### Risk 3: Security Vulnerabilities
+
 **Mitigation**: Security audit all crypto operations, use proven libraries, implement rate limiting
 
 ## Dependencies
 
 ### External Libraries
+
 - `nostr-tools`: Core NOSTR protocol implementation
 - `@noble/curves`: Cryptographic operations
 - `@scure/base`: Encoding utilities
 
 ### Internal Dependencies
+
 - Shared types package must be updated first
 - Database schema for NOSTR data
 - Environment configuration updates
@@ -193,21 +214,25 @@ export const useNostr = () => {
 ## Rollout Strategy
 
 ### Day 1-2: Core Infrastructure
+
 - Create shared NOSTR services
 - Implement comprehensive types
 - Set up relay configuration
 
 ### Day 2-3: Backend Integration
+
 - Replace scattered implementations
 - Unify authentication flow
 - Consolidate NIP-05 verification
 
 ### Day 3-4: Frontend Migration
+
 - Update all components to use hooks
 - Remove duplicate services
 - Implement unified state management
 
 ### Day 4-5: Testing & Documentation
+
 - Run comprehensive test suite
 - Generate architecture diagrams
 - Complete developer documentation

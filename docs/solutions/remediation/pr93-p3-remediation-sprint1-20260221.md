@@ -29,30 +29,30 @@ Remediated 20 P3 findings (todos 435–458) from the PR #92 review using 5 paral
 
 ## Findings Fixed
 
-| Todo | Description | Agent | Domain |
-| ---- | ----------- | ----- | ------ |
-| 435 | Anti-pattern scanner BRE grep bug (`^\+\+\+`) | backend-infra | tooling |
-| 436 | Scanner `any` regex too narrow | backend-infra | tooling |
-| 437 | Scanner no test-utils exclusion | backend-infra | tooling |
-| 438 | Scanner auth check single-line grep missing multiline routes | backend-infra | tooling |
-| 439 | MarketplaceService SSRF validation sequential (should be parallel) | backend-services | services |
-| 440 | Missing `MAX_PORTFOLIO_URLS` cap in MarketplaceService | backend-services | services |
-| 441 | Non-deterministic BullMQ job IDs | backend-services | queues |
-| 442 | Missing `removeJob()` interface method | backend-services | queues |
-| 443 | Missing FK violation handling for job ID collisions | backend-services | queues |
-| 444 | Env-validation fire-and-forget (no timeout) | backend-services | startup |
-| 445 | `process.exit(1)` in library code kills test runners | backend-services | startup |
-| 446 | NostrKeyManagementService interval not cleaned up on destroy | backend-services | memory |
-| 447 | `console.error` in useCircles (should be `toast.error`) | frontend-components | UX |
-| 448 | Double Redux store in test-providers | frontend-tests | testing |
-| 449* | Wrong error class (`ValidationError` instead of `AuthorizationError`) | backend-services | errors |
-| 450* | `any` types in supabase-mock test utility | frontend-tests | testing |
-| 451* | `MAX_PORTFOLIO_URLS` duplicated across service and its own const | backend-services | services |
-| 452 | `waitForQueriesToSettle` was a no-op (forEach does not await) | frontend-tests | testing |
-| 453 | `createMockChain()` missing from shared test utilities | frontend-tests | testing |
-| 454–458 | Various type safety: `any` → `unknown` in NostrKeyManagementService | backend-services | types |
+| Todo    | Description                                                           | Agent               | Domain   |
+| ------- | --------------------------------------------------------------------- | ------------------- | -------- |
+| 435     | Anti-pattern scanner BRE grep bug (`^\+\+\+`)                         | backend-infra       | tooling  |
+| 436     | Scanner `any` regex too narrow                                        | backend-infra       | tooling  |
+| 437     | Scanner no test-utils exclusion                                       | backend-infra       | tooling  |
+| 438     | Scanner auth check single-line grep missing multiline routes          | backend-infra       | tooling  |
+| 439     | MarketplaceService SSRF validation sequential (should be parallel)    | backend-services    | services |
+| 440     | Missing `MAX_PORTFOLIO_URLS` cap in MarketplaceService                | backend-services    | services |
+| 441     | Non-deterministic BullMQ job IDs                                      | backend-services    | queues   |
+| 442     | Missing `removeJob()` interface method                                | backend-services    | queues   |
+| 443     | Missing FK violation handling for job ID collisions                   | backend-services    | queues   |
+| 444     | Env-validation fire-and-forget (no timeout)                           | backend-services    | startup  |
+| 445     | `process.exit(1)` in library code kills test runners                  | backend-services    | startup  |
+| 446     | NostrKeyManagementService interval not cleaned up on destroy          | backend-services    | memory   |
+| 447     | `console.error` in useCircles (should be `toast.error`)               | frontend-components | UX       |
+| 448     | Double Redux store in test-providers                                  | frontend-tests      | testing  |
+| 449\*   | Wrong error class (`ValidationError` instead of `AuthorizationError`) | backend-services    | errors   |
+| 450\*   | `any` types in supabase-mock test utility                             | frontend-tests      | testing  |
+| 451\*   | `MAX_PORTFOLIO_URLS` duplicated across service and its own const      | backend-services    | services |
+| 452     | `waitForQueriesToSettle` was a no-op (forEach does not await)         | frontend-tests      | testing  |
+| 453     | `createMockChain()` missing from shared test utilities                | frontend-tests      | testing  |
+| 454–458 | Various type safety: `any` → `unknown` in NostrKeyManagementService   | backend-services    | types    |
 
-*Todos 449, 450, 451 were review findings from PR #93 itself, fixed in-sprint before merge.
+\*Todos 449, 450, 451 were review findings from PR #93 itself, fixed in-sprint before merge.
 
 ---
 
@@ -162,11 +162,7 @@ await Promise.all(portfolioUrls.map((url) => validateSsrfUrl(url)));
 await queue.add('cross-post', { content_id, platform });
 
 // AFTER — deterministic ID, cancel is a pure computation
-await queue.add(
-  'cross-post',
-  { content_id, platform },
-  { jobId: `crosspost-${row.id}` }
-);
+await queue.add('cross-post', { content_id, platform }, { jobId: `crosspost-${row.id}` });
 
 // Cancel without DB lookup:
 await queue.remove(`crosspost-${row.id}`);
@@ -192,6 +188,7 @@ try {
 ### 4. Promise.race Timeout for Env Validation
 
 **Problem:** Env validation fire-and-forget pattern had two issues:
+
 1. No timeout — could block startup indefinitely if the validation endpoint was slow
 2. Used `process.exit(1)` which kills the entire process (and test runners)
 
@@ -210,7 +207,10 @@ try {
   await Promise.race([
     validateEnv(),
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Env validation timed out after 5s')), VALIDATION_TIMEOUT_MS)
+      setTimeout(
+        () => reject(new Error('Env validation timed out after 5s')),
+        VALIDATION_TIMEOUT_MS
+      )
     ),
   ]);
 } catch (err) {
@@ -295,11 +295,14 @@ function renderWithProviders(
 ```typescript
 // BEFORE — no-op: forEach ignores return values
 async function waitForQueriesToSettle(queryClient: QueryClient): Promise<void> {
-  return queryClient.getQueryCache().getAll().forEach(async (query) => {
-    if (query.state.fetchStatus === 'fetching') {
-      await query.fetch(); // This await is in callback scope, not outer scope
-    }
-  });
+  return queryClient
+    .getQueryCache()
+    .getAll()
+    .forEach(async (query) => {
+      if (query.state.fetchStatus === 'fetching') {
+        await query.fetch(); // This await is in callback scope, not outer scope
+      }
+    });
 }
 ```
 
@@ -335,23 +338,23 @@ Interfaces in `NostrKeyManagementService` used `any` for key metadata and event 
 
 ## Review Results (7 Agents)
 
-| Category | Count | Disposition |
-| -------- | ----- | ----------- |
-| P1 findings | 0 | — |
-| P2 findings | 2 | Fixed in-sprint (todos 449, 451) |
-| P3 findings | 6 | Deferred (todos 461–466) |
-| Informational | 3 | Noted, no action |
+| Category      | Count | Disposition                      |
+| ------------- | ----- | -------------------------------- |
+| P1 findings   | 0     | —                                |
+| P2 findings   | 2     | Fixed in-sprint (todos 449, 451) |
+| P3 findings   | 6     | Deferred (todos 461–466)         |
+| Informational | 3     | Noted, no action                 |
 
 ### Deferred (todos 461–466)
 
-| Todo | Description | Severity |
-| ---- | ----------- | -------- |
-| 461 | Add row count assertion after cancel operation | P3 |
-| 462 | Mock chain terminal methods missing in some tests | P3 |
-| 463 | Promise.race timer should be cleaned up if validate resolves first | P3 |
-| 464 | Queue mock factory should be extracted to shared test utils | P3 |
-| 465 | Deduplicate URLs before `Promise.all` validation loop | P3 |
-| 466 | `grep -vF` portability: document why `-F` not `-E` | P3 |
+| Todo | Description                                                        | Severity |
+| ---- | ------------------------------------------------------------------ | -------- |
+| 461  | Add row count assertion after cancel operation                     | P3       |
+| 462  | Mock chain terminal methods missing in some tests                  | P3       |
+| 463  | Promise.race timer should be cleaned up if validate resolves first | P3       |
+| 464  | Queue mock factory should be extracted to shared test utils        | P3       |
+| 465  | Deduplicate URLs before `Promise.all` validation loop              | P3       |
+| 466  | `grep -vF` portability: document why `-F` not `-E`                 | P3       |
 
 ---
 
@@ -412,11 +415,11 @@ async function waitForAllParallel(items: Item[]): Promise<void> {
 
 **When to use which Promise combinator:**
 
-| Use Case | Combinator | Why |
-| -------- | ---------- | --- |
-| Fail-fast validation (SSRF, input checks) | `Promise.all` | First failure should reject immediately |
-| Wait for all, partial success acceptable | `Promise.allSettled` | All items run to completion regardless |
-| Sequential dependency chain | `for...of` with `await` | Each step depends on the previous |
+| Use Case                                  | Combinator              | Why                                     |
+| ----------------------------------------- | ----------------------- | --------------------------------------- |
+| Fail-fast validation (SSRF, input checks) | `Promise.all`           | First failure should reject immediately |
+| Wait for all, partial success acceptable  | `Promise.allSettled`    | All items run to completion regardless  |
+| Sequential dependency chain               | `for...of` with `await` | Each step depends on the previous       |
 
 ---
 
@@ -470,10 +473,7 @@ validateEnv().catch(() => process.exit(1));
 
 // RIGHT — throw and let caller decide
 try {
-  await Promise.race([
-    validateEnv(),
-    timeoutAfter(5000, 'Env validation timed out'),
-  ]);
+  await Promise.race([validateEnv(), timeoutAfter(5000, 'Env validation timed out')]);
 } catch (err) {
   logger.error('Environment validation failed', { error: err });
   throw err; // Caller (server.ts) does: process.exit(1)
@@ -494,9 +494,9 @@ startServer().catch((err) => {
 
 This sprint produced two adjacent usages that clarify the distinction:
 
-| Code | Combinator | Rationale |
-| ---- | ---------- | --------- |
-| SSRF URL validation | `Promise.all` | Fail-fast: any bad URL rejects the entire batch |
+| Code                     | Combinator           | Rationale                                               |
+| ------------------------ | -------------------- | ------------------------------------------------------- |
+| SSRF URL validation      | `Promise.all`        | Fail-fast: any bad URL rejects the entire batch         |
 | `waitForQueriesToSettle` | `Promise.allSettled` | Wait-for-all: settle all queries regardless of outcomes |
 
 The key question: **Is partial failure acceptable?**
@@ -537,15 +537,15 @@ class SomeService {
 
 Five agents with non-overlapping file ownership produced zero merge conflicts. The pattern continues to scale:
 
-| Sprint | Agents | Conflicts |
-| ------ | ------ | --------- |
-| P2 Final (02-18) | 6 | 0 |
-| Wave 2 P1 R2 (02-19) | 4 | 0 |
-| Wave 2 P2/P3 (02-19) | 6 | 0 |
-| PR #86 P1 R4 (02-19) | 4 | 0 |
-| P2/P3 R6 (02-21) | 4 | 0 |
-| PR #92 R7 (02-21) | 3 | 0 |
-| **PR #93 P3 Sprint 1 (02-21)** | **5** | **0** |
+| Sprint                         | Agents | Conflicts |
+| ------------------------------ | ------ | --------- |
+| P2 Final (02-18)               | 6      | 0         |
+| Wave 2 P1 R2 (02-19)           | 4      | 0         |
+| Wave 2 P2/P3 (02-19)           | 6      | 0         |
+| PR #86 P1 R4 (02-19)           | 4      | 0         |
+| P2/P3 R6 (02-21)               | 4      | 0         |
+| PR #92 R7 (02-21)              | 3      | 0         |
+| **PR #93 P3 Sprint 1 (02-21)** | **5**  | **0**     |
 
 **Scaling rule refined:** ~4 items per agent. 5 agents handled 20 items cleanly. Pattern holds at this scale.
 
@@ -570,6 +570,7 @@ The `waitForQueriesToSettle` no-op was present in the codebase and passed multip
 ### 6. Pre-Commit Hooks: BRE vs ERE Portability Is a Recurring Risk
 
 macOS developer environments (BSD grep) vs Linux CI (GNU grep) creates a silent divergence. Scripts that test fine on CI but silently misbehave on developer machines are particularly dangerous because:
+
 - Developers lose trust in local tooling
 - They may not notice when a check silently passes that should fail
 - The bug is not obvious from reading the script
@@ -580,18 +581,18 @@ macOS developer environments (BSD grep) vs Linux CI (GNU grep) creates a silent 
 
 ## Sprint Metrics
 
-| Metric | Value |
-| ------ | ----- |
-| Findings fixed | 20 (todos 435–458) |
+| Metric          | Value                                              |
+| --------------- | -------------------------------------------------- |
+| Findings fixed  | 20 (todos 435–458)                                 |
 | Review findings | 8 (2 P2 fixed in-sprint, 6 P3 deferred as 461–466) |
-| Domain agents | 5 |
-| Review agents | 7 |
-| Merge conflicts | 0 |
-| Files changed | 41 |
-| Lines added | +1430 |
-| Lines removed | -352 |
-| P1s from review | 0 |
-| Scanner status | Exit 0 (3 bugs fixed) |
+| Domain agents   | 5                                                  |
+| Review agents   | 7                                                  |
+| Merge conflicts | 0                                                  |
+| Files changed   | 41                                                 |
+| Lines added     | +1430                                              |
+| Lines removed   | -352                                               |
+| P1s from review | 0                                                  |
+| Scanner status  | Exit 0 (3 bugs fixed)                              |
 
 ---
 
@@ -630,11 +631,11 @@ macOS developer environments (BSD grep) vs Linux CI (GNU grep) creates a silent 
 
 ## Cross-Reference: Pattern File Updates Needed
 
-| Pattern | Action | Target File |
-| ------- | ------ | ----------- |
-| grep BRE/ERE portability (macOS vs Linux) | NEW #19 | common-solutions.md |
-| `Array.forEach` async no-op | NEW #20 | common-solutions.md |
-| Deterministic BullMQ job IDs | NEW #21 | common-solutions.md |
-| `process.exit` → `throw` in library code | REFINE existing note | common-solutions.md |
-| `destroy()` interval cleanup | REFINE #2 note | common-solutions.md |
-| `Promise.all` vs `Promise.allSettled` semantics | ADD note to #13 | common-solutions.md |
+| Pattern                                         | Action               | Target File         |
+| ----------------------------------------------- | -------------------- | ------------------- |
+| grep BRE/ERE portability (macOS vs Linux)       | NEW #19              | common-solutions.md |
+| `Array.forEach` async no-op                     | NEW #20              | common-solutions.md |
+| Deterministic BullMQ job IDs                    | NEW #21              | common-solutions.md |
+| `process.exit` → `throw` in library code        | REFINE existing note | common-solutions.md |
+| `destroy()` interval cleanup                    | REFINE #2 note       | common-solutions.md |
+| `Promise.all` vs `Promise.allSettled` semantics | ADD note to #13      | common-solutions.md |

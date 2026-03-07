@@ -9,23 +9,23 @@ import { z } from 'zod';
  */
 export enum NostrEventKind {
   // Core Protocol Events
-  SET_METADATA = 0,           // User profile metadata
-  TEXT_NOTE = 1,              // Short text note
-  RECOMMEND_RELAY = 2,        // Recommend relay
-  CONTACTS = 3,               // Contact list (NIP-02)
+  SET_METADATA = 0, // User profile metadata
+  TEXT_NOTE = 1, // Short text note
+  RECOMMEND_RELAY = 2, // Recommend relay
+  CONTACTS = 3, // Contact list (NIP-02)
   ENCRYPTED_DIRECT_MESSAGE = 4, // Encrypted DM (NIP-04)
-  DELETE = 5,                 // Event deletion
-  REPOST = 6,                 // Repost/boost
-  REACTION = 7,               // Like/reaction
+  DELETE = 5, // Event deletion
+  REPOST = 6, // Repost/boost
+  REACTION = 7, // Like/reaction
 
   // Extended Protocol Events
-  CHANNEL_CREATE = 40,        // Channel creation
-  CHANNEL_METADATA = 41,      // Channel metadata
-  CHANNEL_MESSAGE = 42,       // Channel message
+  CHANNEL_CREATE = 40, // Channel creation
+  CHANNEL_METADATA = 41, // Channel metadata
+  CHANNEL_MESSAGE = 42, // Channel message
 
   // Sovren-specific Events
-  CREATOR_CONTENT = 30023,    // Long-form content
-  CREATOR_PROFILE = 30024,    // Creator profile
+  CREATOR_CONTENT = 30023, // Long-form content
+  CREATOR_PROFILE = 30024, // Creator profile
   MONETIZATION_EVENT = 30025, // Payment/monetization
 }
 
@@ -114,8 +114,8 @@ export const NostrUserProfileSchema = z.object({
   banner: z.string().url().optional(),
   website: z.string().url().optional(),
   nip05: z.string().email().optional(), // NIP-05 verification
-  lud16: z.string().optional(),         // Lightning address
-  lud06: z.string().optional(),         // LNURL-pay
+  lud16: z.string().optional(), // Lightning address
+  lud06: z.string().optional(), // LNURL-pay
 });
 
 export type NostrUserProfile = z.infer<typeof NostrUserProfileSchema>;

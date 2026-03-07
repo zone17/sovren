@@ -5,6 +5,7 @@
 This guide walks you through migrating from Supabase client usage to the new PostgreSQL connection pool implementation.
 
 **Why migrate?**
+
 - ✅ Scale to 1,000+ concurrent users
 - ✅ Prevent connection exhaustion
 - ✅ Better performance monitoring
@@ -18,6 +19,7 @@ This guide walks you through migrating from Supabase client usage to the new Pos
 ### Step 1: Update Environment Variables
 
 **Add to `.env`**:
+
 ```bash
 # Database Connection Pool Settings
 DB_HOST=localhost                    # Or your Supabase host
@@ -35,6 +37,7 @@ DB_CONNECTION_TIMEOUT=2000
 ```
 
 **For Supabase users**:
+
 ```bash
 # Get these from Supabase dashboard → Settings → Database
 DB_HOST=db.your-project-ref.supabase.co
@@ -48,6 +51,7 @@ DB_SSL=true
 ### Step 2: Update Repository Pattern
 
 **Before (Supabase Client)**:
+
 ```typescript
 import { SupabaseDatabase } from '../config/database';
 
@@ -59,11 +63,7 @@ export class UserRepository {
   }
 
   async findById(id: string) {
-    const { data, error } = await this.db.client
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await this.db.client.from('users').select('*').eq('id', id).single();
 
     if (error) throw error;
     return data;
@@ -72,6 +72,7 @@ export class UserRepository {
 ```
 
 **After (Connection Pool)**:
+
 ```typescript
 import { getPool } from '../config/database.config';
 import { Pool } from 'pg';
@@ -84,10 +85,7 @@ export class UserRepository {
   }
 
   async findById(id: string) {
-    const result = await this.pool.query(
-      'SELECT * FROM users WHERE id = $1',
-      [id]
-    );
+    const result = await this.pool.query('SELECT * FROM users WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
       throw new Error('User not found');
@@ -103,6 +101,7 @@ export class UserRepository {
 #### SELECT Queries
 
 **Before**:
+
 ```typescript
 const { data, error } = await supabase
   .from('users')
@@ -114,15 +113,19 @@ const { data, error } = await supabase
 ```
 
 **After**:
+
 ```typescript
-const result = await pool.query(`
+const result = await pool.query(
+  `
   SELECT *
   FROM users
   WHERE role = $1
     AND created_at >= $2
   ORDER BY created_at DESC
   LIMIT 10
-`, ['creator', '2025-01-01']);
+`,
+  ['creator', '2025-01-01']
+);
 
 const data = result.rows;
 ```
@@ -130,6 +133,7 @@ const data = result.rows;
 #### INSERT Queries
 
 **Before**:
+
 ```typescript
 const { data, error } = await supabase
   .from('users')
@@ -142,12 +146,16 @@ const { data, error } = await supabase
 ```
 
 **After**:
+
 ```typescript
-const result = await pool.query(`
+const result = await pool.query(
+  `
   INSERT INTO users (email, username)
   VALUES ($1, $2)
   RETURNING *
-`, ['user@example.com', 'newuser']);
+`,
+  ['user@example.com', 'newuser']
+);
 
 const data = result.rows[0];
 ```
@@ -155,6 +163,7 @@ const data = result.rows[0];
 #### UPDATE Queries
 
 **Before**:
+
 ```typescript
 const { data, error } = await supabase
   .from('users')
@@ -165,13 +174,17 @@ const { data, error } = await supabase
 ```
 
 **After**:
+
 ```typescript
-const result = await pool.query(`
+const result = await pool.query(
+  `
   UPDATE users
   SET last_login_at = $1, updated_at = NOW()
   WHERE id = $2
   RETURNING *
-`, [new Date(), userId]);
+`,
+  [new Date(), userId]
+);
 
 const data = result.rows[0];
 ```
@@ -179,28 +192,23 @@ const data = result.rows[0];
 #### DELETE Queries
 
 **Before**:
+
 ```typescript
-const { error } = await supabase
-  .from('users')
-  .delete()
-  .eq('id', userId);
+const { error } = await supabase.from('users').delete().eq('id', userId);
 ```
 
 **After**:
+
 ```typescript
-await pool.query(
-  'DELETE FROM users WHERE id = $1',
-  [userId]
-);
+await pool.query('DELETE FROM users WHERE id = $1', [userId]);
 ```
 
 ### Step 4: Update Error Handling
 
 **Before**:
+
 ```typescript
-const { data, error } = await supabase
-  .from('users')
-  .select('*');
+const { data, error } = await supabase.from('users').select('*');
 
 if (error) {
   console.error('Supabase error:', error.message);
@@ -209,6 +217,7 @@ if (error) {
 ```
 
 **After**:
+
 ```typescript
 try {
   const result = await pool.query('SELECT * FROM users');
@@ -222,6 +231,7 @@ try {
 ### Step 5: Update Tests
 
 **Before**:
+
 ```typescript
 import { createTestDatabase } from '../config/database';
 
@@ -240,6 +250,7 @@ describe('UserRepository', () => {
 ```
 
 **After**:
+
 ```typescript
 import { getPool, shutdownPool } from '../config/database.config';
 import { Pool } from 'pg';
@@ -269,44 +280,37 @@ describe('UserRepository', () => {
 ### Pattern 1: Single Query
 
 **Before**:
+
 ```typescript
-const { data, error } = await supabase
-  .from('users')
-  .select('count')
-  .single();
+const { data, error } = await supabase.from('users').select('count').single();
 ```
 
 **After**:
+
 ```typescript
-const result = await pool.query(
-  'SELECT COUNT(*) as count FROM users'
-);
+const result = await pool.query('SELECT COUNT(*) as count FROM users');
 const count = parseInt(result.rows[0].count, 10);
 ```
 
 ### Pattern 2: Multiple Queries (Transaction)
 
 **Before**:
+
 ```typescript
 // Supabase doesn't support transactions easily
 ```
 
 **After**:
+
 ```typescript
 const client = await pool.connect();
 
 try {
   await client.query('BEGIN');
 
-  await client.query(
-    'INSERT INTO users (email) VALUES ($1)',
-    ['user@example.com']
-  );
+  await client.query('INSERT INTO users (email) VALUES ($1)', ['user@example.com']);
 
-  await client.query(
-    'INSERT INTO profiles (user_id, bio) VALUES ($1, $2)',
-    [userId, 'My bio']
-  );
+  await client.query('INSERT INTO profiles (user_id, bio) VALUES ($1, $2)', [userId, 'My bio']);
 
   await client.query('COMMIT');
 } catch (error) {
@@ -320,6 +324,7 @@ try {
 ### Pattern 3: Conditional Queries
 
 **Before**:
+
 ```typescript
 let query = supabase.from('users').select('*');
 
@@ -335,6 +340,7 @@ const { data, error } = await query;
 ```
 
 **After**:
+
 ```typescript
 const conditions: string[] = [];
 const values: any[] = [];
@@ -352,14 +358,9 @@ if (search) {
   values.push(`%${search}%`);
 }
 
-const whereClause = conditions.length > 0
-  ? `WHERE ${conditions.join(' AND ')}`
-  : '';
+const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-const result = await pool.query(
-  `SELECT * FROM users ${whereClause}`,
-  values
-);
+const result = await pool.query(`SELECT * FROM users ${whereClause}`, values);
 
 const data = result.rows;
 ```
@@ -371,10 +372,7 @@ const data = result.rows;
 ```typescript
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 // Use Supabase for realtime
 supabase
@@ -414,15 +412,11 @@ export class UserRepository {
   async findById(id: string) {
     if (this.pool) {
       // New: Use connection pool
-      const result = await this.pool.query(
-        'SELECT * FROM users WHERE id = $1',
-        [id]
-      );
+      const result = await this.pool.query('SELECT * FROM users WHERE id = $1', [id]);
       return result.rows[0] || null;
     } else {
       // Legacy: Use Supabase
-      const { data, error } = await this.supabase!.client
-        .from('users')
+      const { data, error } = await this.supabase!.client.from('users')
         .select('*')
         .eq('id', id)
         .single();
@@ -456,11 +450,13 @@ After migration, verify:
 If you need to rollback:
 
 1. **Keep Supabase client imports**:
+
    ```typescript
    import { SupabaseDatabase } from '../config/database';
    ```
 
 2. **Switch back in repositories**:
+
    ```typescript
    // Change this
    private pool = getPool();
@@ -478,12 +474,14 @@ If you need to rollback:
 ## Performance Comparison
 
 ### Before (Supabase Client)
+
 - Connection limit: ~100 concurrent
 - Each request creates new connection
 - No connection reuse
 - Limited monitoring
 
 ### After (Connection Pool)
+
 - Connection limit: 1,000+ concurrent
 - Connections reused from pool
 - Automatic connection management

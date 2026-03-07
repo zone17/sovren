@@ -7,7 +7,7 @@
  * Tests for all consolidated NOSTR types and schemas
  */
 
-import {describe, it, expect} from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import {
   // Events
   NostrEvent,
@@ -129,8 +129,8 @@ describe('NOSTR Event Types', () => {
 
   describe('Event Kind Detection', () => {
     it('should identify replaceable events', () => {
-      expect(isReplaceableEvent(0)).toBe(true);  // Metadata
-      expect(isReplaceableEvent(3)).toBe(true);  // Contacts
+      expect(isReplaceableEvent(0)).toBe(true); // Metadata
+      expect(isReplaceableEvent(3)).toBe(true); // Contacts
       expect(isReplaceableEvent(10000)).toBe(true);
       expect(isReplaceableEvent(1)).toBe(false); // Text note
     });
@@ -488,10 +488,7 @@ describe('NOSTR Filter Types', () => {
 
   describe('NostrFilterBuilder', () => {
     it('should build simple filter', () => {
-      const filter = new NostrFilterBuilder()
-        .kinds([1])
-        .limit(50)
-        .build();
+      const filter = new NostrFilterBuilder().kinds([1]).limit(50).build();
 
       expect(filter.kinds).toEqual([1]);
       expect(filter.limit).toBe(50);
@@ -589,7 +586,10 @@ describe('NOSTR Filter Types', () => {
       pubkey: 'b'.repeat(64),
       created_at: 1500000,
       kind: 1,
-      tags: [['p', 'c'.repeat(64)], ['t', 'nostr']],
+      tags: [
+        ['p', 'c'.repeat(64)],
+        ['t', 'nostr'],
+      ],
       content: 'Test',
       sig: 'd'.repeat(128),
     };

@@ -28,13 +28,13 @@ This guide provides comprehensive documentation for managing all deployment secr
 
 ### Secrets Storage Locations
 
-| Location | Purpose | Access Control | Encryption |
-|----------|---------|---------------|------------|
-| GitHub Secrets | CI/CD workflows | Repository admins | AES-256 at rest |
-| Vercel Environment Variables | Frontend deployment | Project admins | AES-256 at rest |
-| Environment Files (`.env`) | Local development | Developer workstations | Not stored in git |
-| Docker Secrets | Container runtime | Docker Swarm/K8s RBAC | Encrypted in transit |
-| HashiCorp Vault (Future) | Centralized secrets | Policy-based | End-to-end encryption |
+| Location                     | Purpose             | Access Control         | Encryption            |
+| ---------------------------- | ------------------- | ---------------------- | --------------------- |
+| GitHub Secrets               | CI/CD workflows     | Repository admins      | AES-256 at rest       |
+| Vercel Environment Variables | Frontend deployment | Project admins         | AES-256 at rest       |
+| Environment Files (`.env`)   | Local development   | Developer workstations | Not stored in git     |
+| Docker Secrets               | Container runtime   | Docker Swarm/K8s RBAC  | Encrypted in transit  |
+| HashiCorp Vault (Future)     | Centralized secrets | Policy-based           | End-to-end encryption |
 
 ## Secrets Architecture
 
@@ -79,12 +79,12 @@ Development Secrets (Local .env only)
 
 ### Secret Classification
 
-| Classification | Examples | Rotation Frequency | Access Level |
-|----------------|----------|-------------------|--------------|
-| **Critical** | Database credentials, JWT secrets | Every 30 days | Admin only |
-| **High** | API keys, service tokens | Every 90 days | DevOps + Admin |
-| **Medium** | Webhook URLs, integration keys | Every 180 days | Developers + DevOps |
-| **Low** | Public relay URLs, feature flags | Annually | All team members |
+| Classification | Examples                          | Rotation Frequency | Access Level        |
+| -------------- | --------------------------------- | ------------------ | ------------------- |
+| **Critical**   | Database credentials, JWT secrets | Every 30 days      | Admin only          |
+| **High**       | API keys, service tokens          | Every 90 days      | DevOps + Admin      |
+| **Medium**     | Webhook URLs, integration keys    | Every 180 days     | Developers + DevOps |
+| **Low**        | Public relay URLs, feature flags  | Annually           | All team members    |
 
 ## Complete Secrets Inventory
 
@@ -93,6 +93,7 @@ Development Secrets (Local .env only)
 #### 1. Infrastructure & Deployment
 
 ##### VERCEL_TOKEN
+
 - **Purpose**: Authenticates GitHub Actions to deploy frontend to Vercel
 - **Format**: Vercel API token (32-character alphanumeric)
 - **Scope**: Full account access
@@ -102,6 +103,7 @@ Development Secrets (Local .env only)
 - **Fallback**: Manual deployment via Vercel CLI
 
 ##### VERCEL_ORG_ID
+
 - **Purpose**: Identifies Vercel organization for deployments
 - **Format**: Organization ID (e.g., `team_abc123`)
 - **Scope**: Read-only organization metadata
@@ -110,6 +112,7 @@ Development Secrets (Local .env only)
 - **Classification**: Low
 
 ##### VERCEL_PROJECT_ID
+
 - **Purpose**: Identifies specific Vercel project
 - **Format**: Project ID (e.g., `prj_abc123`)
 - **Scope**: Project-specific deployments
@@ -118,6 +121,7 @@ Development Secrets (Local .env only)
 - **Classification**: Low
 
 ##### GHCR_TOKEN
+
 - **Purpose**: Authenticates Docker image push to GitHub Container Registry
 - **Format**: GitHub Personal Access Token or use `GITHUB_TOKEN`
 - **Scope**: `write:packages`, `read:packages`, `delete:packages`
@@ -127,6 +131,7 @@ Development Secrets (Local .env only)
 - **Best Practice**: Use `GITHUB_TOKEN` instead for automatic rotation
 
 ##### DOCKER_USERNAME (Backup)
+
 - **Purpose**: Docker Hub username for backup image registry
 - **Format**: Docker Hub username
 - **Scope**: Public profile
@@ -134,6 +139,7 @@ Development Secrets (Local .env only)
 - **Classification**: Low
 
 ##### DOCKER_PASSWORD (Backup)
+
 - **Purpose**: Docker Hub access token for backup registry
 - **Format**: Docker Hub access token
 - **Scope**: Repository read/write
@@ -144,6 +150,7 @@ Development Secrets (Local .env only)
 #### 2. Database & Caching
 
 ##### DATABASE_URL
+
 - **Purpose**: PostgreSQL connection string for backend services
 - **Format**: `postgresql://user:password@host:port/database`
 - **Scope**: Full database access
@@ -156,6 +163,7 @@ Development Secrets (Local .env only)
   - Restrict IP whitelist
 
 ##### SUPABASE_URL
+
 - **Purpose**: Supabase project URL for authentication and database
 - **Format**: `https://your-project.supabase.co`
 - **Scope**: Public project URL
@@ -164,6 +172,7 @@ Development Secrets (Local .env only)
 - **Classification**: Low
 
 ##### SUPABASE_ANON_KEY
+
 - **Purpose**: Public anonymous key for client-side Supabase operations
 - **Format**: JWT token (long base64 string)
 - **Scope**: Row-level security enforced operations
@@ -173,6 +182,7 @@ Development Secrets (Local .env only)
 - **Note**: Safe to expose in frontend (RLS protects data)
 
 ##### SUPABASE_SERVICE_ROLE_KEY
+
 - **Purpose**: Admin key for server-side Supabase operations (bypasses RLS)
 - **Format**: JWT token (long base64 string)
 - **Scope**: Full database access, bypasses row-level security
@@ -185,6 +195,7 @@ Development Secrets (Local .env only)
   - Use only in trusted backend services
 
 ##### REDIS_URL
+
 - **Purpose**: Redis connection string for caching and sessions
 - **Format**: `redis://user:password@host:port` or `rediss://` for TLS
 - **Scope**: Full cache access
@@ -196,6 +207,7 @@ Development Secrets (Local .env only)
 #### 3. Authentication & Security
 
 ##### JWT_SECRET
+
 - **Purpose**: Signs and verifies JWT tokens for user authentication
 - **Format**: Random string (minimum 64 characters for production)
 - **Scope**: Authentication token validation
@@ -209,6 +221,7 @@ Development Secrets (Local .env only)
   - Store separately per environment
 
 ##### SESSION_SECRET
+
 - **Purpose**: Signs session cookies
 - **Format**: Random string (minimum 64 characters for production)
 - **Scope**: Session validation
@@ -218,6 +231,7 @@ Development Secrets (Local .env only)
 - **Generation**: `openssl rand -hex 64`
 
 ##### ENCRYPTION_KEY
+
 - **Purpose**: Encrypts sensitive data at rest (e.g., private NOSTR keys)
 - **Format**: 32-byte hex string (64 characters)
 - **Scope**: Data encryption/decryption
@@ -228,6 +242,7 @@ Development Secrets (Local .env only)
 - **Note**: Rotation requires re-encrypting all encrypted data
 
 ##### COSIGN_PASSWORD
+
 - **Purpose**: Password for Cosign private key to sign Docker images
 - **Format**: Strong password (minimum 32 characters)
 - **Scope**: Image signing
@@ -239,6 +254,7 @@ Development Secrets (Local .env only)
 #### 4. External Services
 
 ##### SLACK_WEBHOOK_URL
+
 - **Purpose**: Sends deployment and alert notifications to Slack
 - **Format**: `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX`
 - **Scope**: Post messages to specific channel
@@ -248,6 +264,7 @@ Development Secrets (Local .env only)
 - **Security**: Channel-specific, limited to posting messages
 
 ##### SENTRY_DSN
+
 - **Purpose**: Data Source Name for Sentry error tracking
 - **Format**: `https://public_key@sentry.io/project_id`
 - **Scope**: Error reporting to specific project
@@ -257,6 +274,7 @@ Development Secrets (Local .env only)
 - **Note**: Contains public key, but should not be exposed unnecessarily
 
 ##### OPENAI_API_KEY (Optional)
+
 - **Purpose**: Access OpenAI API for AI-powered features
 - **Format**: `sk-proj-...` (OpenAI API key format)
 - **Scope**: API usage within quota limits
@@ -266,6 +284,7 @@ Development Secrets (Local .env only)
 - **Cost**: Monitor usage to prevent bill shock
 
 ##### ANTHROPIC_API_KEY (Optional)
+
 - **Purpose**: Access Claude API for AI-powered features
 - **Format**: `sk-ant-api03-...` (Anthropic API key format)
 - **Scope**: API usage within quota limits
@@ -277,6 +296,7 @@ Development Secrets (Local .env only)
 #### 5. NOSTR & Lightning Network
 
 ##### NOSTR_RELAY_SECRET
+
 - **Purpose**: Authenticates to private NOSTR relays (if used)
 - **Format**: Relay-specific secret
 - **Scope**: Access to private relay
@@ -286,6 +306,7 @@ Development Secrets (Local .env only)
 - **Note**: Only needed if using private relays with authentication
 
 ##### LIGHTNING_NODE_MACAROON
+
 - **Purpose**: Authenticates to Lightning Network daemon (LND)
 - **Format**: Hex-encoded macaroon (admin.macaroon)
 - **Scope**: Full LND access (invoice creation, payment)
@@ -298,6 +319,7 @@ Development Secrets (Local .env only)
   - NEVER expose in frontend
 
 ##### LIGHTNING_NODE_TLS_CERT
+
 - **Purpose**: TLS certificate for secure LND connection
 - **Format**: Base64-encoded TLS certificate
 - **Scope**: Encrypted communication
@@ -306,6 +328,7 @@ Development Secrets (Local .env only)
 - **Classification**: High
 
 ##### LIGHTNING_NODE_URL
+
 - **Purpose**: Lightning node gRPC endpoint
 - **Format**: `https://your-node.example.com:10009`
 - **Scope**: Node address
@@ -335,6 +358,7 @@ LIGHTNING_NODE_URL_STAGING
 ```
 
 **Important**: Staging secrets should:
+
 - Point to separate staging infrastructure
 - Use different credentials than production
 - Use testnet for Lightning Network
@@ -380,12 +404,14 @@ uuidgen
 ### 2. Secret Storage
 
 #### GitHub Secrets
+
 - Stored encrypted at rest (AES-256)
 - Encrypted in transit (TLS)
 - Never logged or exposed in workflow output
 - Redacted in logs automatically
 
 #### Environment Variables
+
 ```bash
 # ✅ GOOD: Using environment variables
 const dbUrl = process.env.DATABASE_URL;
@@ -398,6 +424,7 @@ const dbUrl = 'postgresql://user:pass@host/db';
 ```
 
 #### Code References
+
 ```typescript
 // ✅ GOOD: Reference via environment
 import { env } from '@/config';
@@ -423,8 +450,8 @@ if (!process.env.JWT_SECRET) {
 // ✅ GOOD: Secret in header
 fetch(url, {
   headers: {
-    'Authorization': `Bearer ${apiKey}`
-  }
+    Authorization: `Bearer ${apiKey}`,
+  },
 });
 
 // ❌ BAD: Secret in URL
@@ -441,7 +468,7 @@ const safeLog = {
   ...data,
   password: '[REDACTED]',
   apiKey: '[REDACTED]',
-  token: '[REDACTED]'
+  token: '[REDACTED]',
 };
 logger.info(safeLog);
 
@@ -481,11 +508,7 @@ Validate secrets on application startup:
 
 ```typescript
 // Startup validation
-const requiredSecrets = [
-  'DATABASE_URL',
-  'JWT_SECRET',
-  'SUPABASE_SERVICE_ROLE_KEY',
-];
+const requiredSecrets = ['DATABASE_URL', 'JWT_SECRET', 'SUPABASE_SERVICE_ROLE_KEY'];
 
 for (const secret of requiredSecrets) {
   if (!process.env[secret]) {
@@ -514,6 +537,7 @@ if (process.env.JWT_SECRET.length < 64) {
 See [Secrets Rotation Guide](./secrets-rotation.md) for detailed procedures.
 
 **Summary**:
+
 - **Critical secrets**: Every 30 days
 - **High secrets**: Every 90 days
 - **Medium secrets**: Every 180 days
@@ -522,6 +546,7 @@ See [Secrets Rotation Guide](./secrets-rotation.md) for detailed procedures.
 ### Revocation
 
 **Immediate revocation required if**:
+
 - Secret exposed in code commit
 - Secret exposed in logs
 - Compromised team member access
@@ -529,6 +554,7 @@ See [Secrets Rotation Guide](./secrets-rotation.md) for detailed procedures.
 - Third-party breach affecting secret
 
 **Revocation Procedure**:
+
 1. Generate new secret immediately
 2. Update in all environments
 3. Rotate dependent secrets
@@ -539,6 +565,7 @@ See [Secrets Rotation Guide](./secrets-rotation.md) for detailed procedures.
 ### Deletion
 
 When removing unused secrets:
+
 1. Verify no code references
 2. Remove from GitHub Secrets
 3. Remove from Vercel environment
@@ -547,23 +574,25 @@ When removing unused secrets:
 
 ## Access Control Matrix
 
-| Secret | GitHub Admin | DevOps Engineer | Developer | CI/CD | Justification |
-|--------|--------------|-----------------|-----------|-------|---------------|
-| VERCEL_TOKEN | ✅ Read/Write | ✅ Read/Write | ❌ No Access | ✅ Read | Deployment automation |
-| DATABASE_URL | ✅ Read/Write | ✅ Read/Write | ❌ No Access | ✅ Read | Production data access |
-| SUPABASE_SERVICE_ROLE_KEY | ✅ Read/Write | ✅ Read/Write | ❌ No Access | ✅ Read | Admin database operations |
-| JWT_SECRET | ✅ Read/Write | ✅ Read/Write | ❌ No Access | ✅ Read | Authentication |
-| SLACK_WEBHOOK_URL | ✅ Read/Write | ✅ Read/Write | ✅ Read | ✅ Read | Notifications |
-| GHCR_TOKEN | ✅ Read/Write | ✅ Read/Write | ❌ No Access | ✅ Read | Container registry |
-| LIGHTNING_NODE_MACAROON | ✅ Read/Write | ✅ Read/Write | ❌ No Access | ✅ Read | Payment processing |
-| SENTRY_DSN | ✅ Read/Write | ✅ Read/Write | ✅ Read | ✅ Read | Error tracking (public key) |
+| Secret                    | GitHub Admin  | DevOps Engineer | Developer    | CI/CD   | Justification               |
+| ------------------------- | ------------- | --------------- | ------------ | ------- | --------------------------- |
+| VERCEL_TOKEN              | ✅ Read/Write | ✅ Read/Write   | ❌ No Access | ✅ Read | Deployment automation       |
+| DATABASE_URL              | ✅ Read/Write | ✅ Read/Write   | ❌ No Access | ✅ Read | Production data access      |
+| SUPABASE_SERVICE_ROLE_KEY | ✅ Read/Write | ✅ Read/Write   | ❌ No Access | ✅ Read | Admin database operations   |
+| JWT_SECRET                | ✅ Read/Write | ✅ Read/Write   | ❌ No Access | ✅ Read | Authentication              |
+| SLACK_WEBHOOK_URL         | ✅ Read/Write | ✅ Read/Write   | ✅ Read      | ✅ Read | Notifications               |
+| GHCR_TOKEN                | ✅ Read/Write | ✅ Read/Write   | ❌ No Access | ✅ Read | Container registry          |
+| LIGHTNING_NODE_MACAROON   | ✅ Read/Write | ✅ Read/Write   | ❌ No Access | ✅ Read | Payment processing          |
+| SENTRY_DSN                | ✅ Read/Write | ✅ Read/Write   | ✅ Read      | ✅ Read | Error tracking (public key) |
 
 **Access Levels**:
+
 - **Read/Write**: Can view and modify secret
 - **Read**: Can view secret value
 - **No Access**: Cannot view secret (GitHub automatically restricts)
 
 **Role Definitions**:
+
 - **GitHub Admin**: Repository administrators, full access
 - **DevOps Engineer**: Manages deployments and infrastructure
 - **Developer**: Writes code, uses development secrets only
@@ -616,6 +645,7 @@ gh workflow run release.yml
 6. Document revocation
 
 **Secrets to Rotate** (based on role):
+
 - Developer leaving: Development secrets only
 - DevOps leaving: All production secrets
 - Admin leaving: All secrets + access keys
@@ -648,11 +678,13 @@ If audit logs show unauthorized access:
 All secret access is automatically logged:
 
 **GitHub Secrets**:
+
 - View audit log: Settings → Security → Audit log
 - Filter by secret access events
 - Retention: 180 days (private repos)
 
 **Vercel Environment Variables**:
+
 - View audit log: Project Settings → Audit Log
 - Filter by environment variable changes
 - Retention: 90 days
@@ -660,6 +692,7 @@ All secret access is automatically logged:
 ### Compliance Requirements
 
 #### SOC 2 Compliance
+
 - ✅ Secrets encrypted at rest and in transit
 - ✅ Access controls documented
 - ✅ Regular rotation procedures
@@ -667,6 +700,7 @@ All secret access is automatically logged:
 - ✅ Incident response procedures
 
 #### GDPR Compliance
+
 - ✅ Data encryption keys managed securely
 - ✅ Access logging for personal data keys
 - ✅ Right to erasure supported via key rotation

@@ -1,18 +1,19 @@
 ---
-title: "Phase 9: Frontend MSW Migration — Final 10 Test File Fixes"
+title: 'Phase 9: Frontend MSW Migration — Final 10 Test File Fixes'
 category: test-failures
-tags: [msw, vitest, websocket, vi-mock, vi-hoisted, jsdom, react-testing-library, fake-timers, DI, uuid]
+tags:
+  [msw, vitest, websocket, vi-mock, vi-hoisted, jsdom, react-testing-library, fake-timers, DI, uuid]
 module: packages/frontend
 severity: P1
 symptoms:
-  - "vi.mock factory references variable before initialization"
-  - "Response.clone: Body has already been consumed"
-  - "config.factory is not a function"
-  - "getByText found multiple elements"
-  - "WebSocket constructor not called (0 calls)"
-  - "timer spy called 66 times vs expected"
-  - "No test suite found in file"
-  - "Vite transform error on fake-indexeddb/auto"
+  - 'vi.mock factory references variable before initialization'
+  - 'Response.clone: Body has already been consumed'
+  - 'config.factory is not a function'
+  - 'getByText found multiple elements'
+  - 'WebSocket constructor not called (0 calls)'
+  - 'timer spy called 66 times vs expected'
+  - 'No test suite found in file'
+  - 'Vite transform error on fake-indexeddb/auto'
 date_resolved: 2026-02-25
 sprint: phase-9-msw-migration
 ---
@@ -35,7 +36,9 @@ After migrating 69 of 79 failing frontend test files to MSW v2, 10 files remaine
 
 ```typescript
 const { StubCollaborativeFeatures } = vi.hoisted(() => {
-  const StubCollaborativeFeatures: React.FC<Props> = (props) => { /* ... */ };
+  const StubCollaborativeFeatures: React.FC<Props> = (props) => {
+    /* ... */
+  };
   return { StubCollaborativeFeatures };
 });
 
@@ -53,7 +56,15 @@ vi.mock('../components/CollaborativeFeatures', () => ({
 **Fix**: Use `Object.defineProperty` in `beforeEach` to override the configurable property:
 
 ```typescript
-const mockWsInstance = { close: vi.fn(), send: vi.fn(), readyState: 1, onopen: null, onclose: null, onmessage: null, onerror: null };
+const mockWsInstance = {
+  close: vi.fn(),
+  send: vi.fn(),
+  readyState: 1,
+  onopen: null,
+  onclose: null,
+  onmessage: null,
+  onerror: null,
+};
 const MockWebSocket = vi.fn(() => mockWsInstance) as any;
 MockWebSocket.CONNECTING = 0;
 MockWebSocket.OPEN = 1;
@@ -62,7 +73,9 @@ MockWebSocket.CLOSED = 3;
 
 beforeEach(() => {
   Object.defineProperty(globalThis, 'WebSocket', {
-    value: MockWebSocket, configurable: true, writable: true,
+    value: MockWebSocket,
+    configurable: true,
+    writable: true,
   });
 });
 ```
@@ -91,13 +104,13 @@ await act(async () => {}); // flushes React's MessageChannel-based scheduler
 
 ```typescript
 // Before (fails with multiple matches):
-screen.getByText('Cache Effectiveness Score')
+screen.getByText('Cache Effectiveness Score');
 
 // After:
-screen.getAllByText('Cache Effectiveness Score')[0]
+screen.getAllByText('Cache Effectiveness Score')[0];
 // Or use within():
 const section = screen.getByTestId('cache-stats');
-within(section).getByText('Cache Effectiveness Score')
+within(section).getByText('Cache Effectiveness Score');
 ```
 
 ### 5. Test Assertions vs Actual Component (FilterBuilder — 28 failures, FeedTimeline — 4 failures)
@@ -105,6 +118,7 @@ within(section).getByText('Cache Effectiveness Score')
 **Symptom**: Tests expect labels, buttons, CSS classes, and text that don't exist in the actual component.
 
 **Root cause**: Tests were written against a spec/design that diverged from implementation. Common mismatches:
+
 - `getByLabelText(/event kinds/i)` — component uses toggle buttons, not a labeled select
 - `getByText(/no posts yet/i)` — component renders different empty state text
 - `toHaveClass('bg-blue-500', 'text-white')` — component uses `aria-selected` not CSS classes for sort state
@@ -159,23 +173,23 @@ const queryClient = new QueryClient({
 
 ## Results
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Failed files | 10 | 0 |
-| Failed tests | 86 | 0 |
-| Passed tests | 2,553 | 2,703 |
-| Files deleted | 0 | 3 (empty + broken + synthetic) |
+| Metric        | Before | After                          |
+| ------------- | ------ | ------------------------------ |
+| Failed files  | 10     | 0                              |
+| Failed tests  | 86     | 0                              |
+| Passed tests  | 2,553  | 2,703                          |
+| Files deleted | 0      | 3 (empty + broken + synthetic) |
 
 ## Team Execution
 
 4 parallel agents, domain-grouped, zero merge conflicts:
 
-| Agent | Model | Files | Tests Fixed |
-|-------|-------|-------|-------------|
-| component-test-fixer | sonnet | FilterBuilder, FeedTimeline, IntelligentContentCache | 87/87 |
-| websocket-test-fixer | sonnet | CollaborativeFeatures, NostrMonitoringDashboard, RelayPoolManager | 118/118 |
-| service-test-fixer | sonnet | ContentServiceLayer, PaymentHistory | 82/82 |
-| cleanup-fixer | haiku | Button.stories, button.performance | 19/19 + deletions |
+| Agent                | Model  | Files                                                             | Tests Fixed       |
+| -------------------- | ------ | ----------------------------------------------------------------- | ----------------- |
+| component-test-fixer | sonnet | FilterBuilder, FeedTimeline, IntelligentContentCache              | 87/87             |
+| websocket-test-fixer | sonnet | CollaborativeFeatures, NostrMonitoringDashboard, RelayPoolManager | 118/118           |
+| service-test-fixer   | sonnet | ContentServiceLayer, PaymentHistory                               | 82/82             |
+| cleanup-fixer        | haiku  | Button.stories, button.performance                                | 19/19 + deletions |
 
 **Note**: cleanup-fixer (haiku) violated scope — claimed Tasks #1 and #2 in addition to #4. Partially fixed files that other agents then had to re-read. Brief needed stronger "You OWN only Task #4" language. Haiku model may be too eager to expand scope.
 
@@ -194,12 +208,14 @@ const queryClient = new QueryClient({
 ## Patterns for Pattern Files
 
 ### New pattern candidates:
+
 1. **MSW v2 WebSocket override** — `Object.defineProperty` required when MSW locks `globalThis.WebSocket` as non-writable
 2. **React effect flushing** — `await act(async () => {})` flushes MessageChannel-based scheduler (unaffected by fake timers)
 3. **DI registration shape** — always verify container.register() signature against source, not assumptions
 4. **Test QueryClient config** — `retryDelay: 0` prevents timeout flakiness in error-state tests
 
 ### Reinforced existing patterns:
+
 - vi.hoisted() for mock factories (common-solutions.md already covers this)
 - WebSocket static constants (critical-patterns.md #9 area)
 - Read component before fixing test (common-solutions.md #25 — verify before implementing)

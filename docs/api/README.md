@@ -121,43 +121,43 @@ Detailed documentation for all 25 endpoints organized by domain:
 
 ### Content API (7 endpoints)
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/content/publish` | Publish new content to platform and NOSTR | Required |
-| POST | `/content/moderate` | Perform moderation actions on content | Required |
-| GET | `/content/search` | Full-text search with filters and sorting | Optional |
-| GET | `/content/recommendations` | AI-powered personalized recommendations | Optional |
-| GET | `/content/analytics/{id}` | Get comprehensive content analytics | Required |
-| GET | `/content/versions/{id}` | Get complete version history | Required |
-| POST | `/content/versions/{id}/revert` | Revert to previous version | Required |
+| Method | Endpoint                        | Description                               | Auth     |
+| ------ | ------------------------------- | ----------------------------------------- | -------- |
+| POST   | `/content/publish`              | Publish new content to platform and NOSTR | Required |
+| POST   | `/content/moderate`             | Perform moderation actions on content     | Required |
+| GET    | `/content/search`               | Full-text search with filters and sorting | Optional |
+| GET    | `/content/recommendations`      | AI-powered personalized recommendations   | Optional |
+| GET    | `/content/analytics/{id}`       | Get comprehensive content analytics       | Required |
+| GET    | `/content/versions/{id}`        | Get complete version history              | Required |
+| POST   | `/content/versions/{id}/revert` | Revert to previous version                | Required |
 
 ### User API (8 endpoints)
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/users/profile/{id}` | Retrieve public user profile | Optional |
-| PUT | `/users/profile/{id}` | Update user profile | Required |
-| GET | `/users/preferences/{id}` | Get user preferences and settings | Required |
-| PUT | `/users/preferences/{id}` | Update user preferences | Required |
-| GET | `/users/activity/{id}` | Get recent user activity feed | Required |
-| POST | `/users/relationships/follow` | Follow a user | Required |
-| DELETE | `/users/relationships/unfollow` | Unfollow a user | Required |
-| GET | `/users/analytics/{id}` | Get user analytics and metrics | Required |
+| Method | Endpoint                        | Description                       | Auth     |
+| ------ | ------------------------------- | --------------------------------- | -------- |
+| GET    | `/users/profile/{id}`           | Retrieve public user profile      | Optional |
+| PUT    | `/users/profile/{id}`           | Update user profile               | Required |
+| GET    | `/users/preferences/{id}`       | Get user preferences and settings | Required |
+| PUT    | `/users/preferences/{id}`       | Update user preferences           | Required |
+| GET    | `/users/activity/{id}`          | Get recent user activity feed     | Required |
+| POST   | `/users/relationships/follow`   | Follow a user                     | Required |
+| DELETE | `/users/relationships/unfollow` | Unfollow a user                   | Required |
+| GET    | `/users/analytics/{id}`         | Get user analytics and metrics    | Required |
 
 ### Payment API (10 endpoints)
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/payments/invoices` | Create Lightning Network BOLT11 invoice | Required |
-| GET | `/payments/invoices/{id}` | Get invoice details and status | Required |
-| POST | `/payments/invoices/{id}/pay` | Process Lightning payment | Required |
-| GET | `/payments/currency/convert` | Convert between currencies (SAT/BTC/USD/EUR/GBP) | Required |
-| POST | `/payments/subscriptions` | Create recurring subscription | Required |
-| PUT | `/payments/subscriptions/{id}` | Update existing subscription | Required |
-| DELETE | `/payments/subscriptions/{id}` | Cancel subscription | Required |
-| POST | `/payments/refunds` | Initiate payment refund | Required |
-| GET | `/payments/analytics` | Get comprehensive payment analytics | Required |
-| POST | `/payments/webhooks` | Register webhook endpoint | Required |
+| Method | Endpoint                       | Description                                      | Auth     |
+| ------ | ------------------------------ | ------------------------------------------------ | -------- |
+| POST   | `/payments/invoices`           | Create Lightning Network BOLT11 invoice          | Required |
+| GET    | `/payments/invoices/{id}`      | Get invoice details and status                   | Required |
+| POST   | `/payments/invoices/{id}/pay`  | Process Lightning payment                        | Required |
+| GET    | `/payments/currency/convert`   | Convert between currencies (SAT/BTC/USD/EUR/GBP) | Required |
+| POST   | `/payments/subscriptions`      | Create recurring subscription                    | Required |
+| PUT    | `/payments/subscriptions/{id}` | Update existing subscription                     | Required |
+| DELETE | `/payments/subscriptions/{id}` | Cancel subscription                              | Required |
+| POST   | `/payments/refunds`            | Initiate payment refund                          | Required |
+| GET    | `/payments/analytics`          | Get comprehensive payment analytics              | Required |
+| POST   | `/payments/webhooks`           | Register webhook endpoint                        | Required |
 
 ## Response Format
 
@@ -246,10 +246,12 @@ GET /api/v1/content/search?query=bitcoin&page=2&limit=20
 ```
 
 **Parameters:**
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20, max: 100)
 
 **Response includes:**
+
 ```json
 {
   "results": [...],
@@ -283,18 +285,18 @@ All payments are processed via Bitcoin Lightning Network:
 
 ## Status Codes
 
-| Code | Meaning |
-|------|---------|
-| 200 | OK - Request successful |
-| 201 | Created - Resource created |
-| 204 | No Content - Resource deleted |
-| 400 | Bad Request - Validation error |
-| 401 | Unauthorized - Auth required |
-| 403 | Forbidden - Insufficient permissions |
-| 404 | Not Found - Resource doesn't exist |
-| 429 | Too Many Requests - Rate limited |
-| 500 | Internal Server Error |
-| 503 | Service Unavailable |
+| Code | Meaning                              |
+| ---- | ------------------------------------ |
+| 200  | OK - Request successful              |
+| 201  | Created - Resource created           |
+| 204  | No Content - Resource deleted        |
+| 400  | Bad Request - Validation error       |
+| 401  | Unauthorized - Auth required         |
+| 403  | Forbidden - Insufficient permissions |
+| 404  | Not Found - Resource doesn't exist   |
+| 429  | Too Many Requests - Rate limited     |
+| 500  | Internal Server Error                |
+| 503  | Service Unavailable                  |
 
 See [Error Code Reference](./errors.md) for complete catalog.
 
@@ -325,6 +327,7 @@ Explore the API interactively using Swagger UI:
 ## Changelog
 
 API changes are documented in:
+
 - **[Project CHANGELOG](/CHANGELOG.md)**: All changes
 - **[API-specific changes](/docs/api/changelog.md)**: API updates only
 
@@ -333,6 +336,7 @@ API changes are documented in:
 Current version: **v1.0.0**
 
 Version is included in URL path:
+
 ```
 https://api.sovren.app/v1/...
 ```
@@ -342,18 +346,21 @@ Breaking changes will result in new major version (v2, v3, etc.). Non-breaking c
 ## Support
 
 ### Documentation
+
 - **Quick Start**: Get started in 5 minutes
 - **API Reference**: Complete endpoint documentation
 - **Examples**: Copy-paste code examples
 - **Error Reference**: Troubleshoot errors
 
 ### Contact
+
 - **Email**: api@sovren.app
 - **Support Portal**: support.sovren.app
 - **Status Page**: status.sovren.app
 - **GitHub Issues**: github.com/sovren/api/issues
 
 ### Response Times
+
 - **Critical Issues**: <1 hour (security, payments, data loss)
 - **High Priority**: <4 hours (API downtime, major bugs)
 - **Normal**: <24 hours (questions, minor bugs)

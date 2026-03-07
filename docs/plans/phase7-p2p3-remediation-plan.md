@@ -11,25 +11,25 @@
 
 ## Summary of All 17 Findings
 
-| # | ID | Priority | Category | Title | Domain | Effort | Risk |
-|---|-----|----------|----------|-------|--------|--------|------|
-| 1 | 152 | P2 | Security | No rate limiting on v2 endpoints | Backend | 1-2h | Low |
-| 2 | 153 | P2 | Data Loss | In-memory Map for sensitivity settings | Backend | 2-3h | Low |
-| 3 | 154 | P2 | Security+Perf | getBenchmark() full table scan + data leak | Backend | 1-2h | Low |
-| 4 | 155 | P2 | Performance | FingerprintService.compare() O(n) scan | Backend | 1-2h | Med |
-| 5 | 156 | P2 | Security | RLS policy exposes creator boundaries | Backend | 30min | Low |
-| 6 | 157 | P2 | Duplication | 8x duplicated SupabaseClient interface | Backend | 30min | Low |
-| 7 | 158 | P2 | Duplication | Frontend type duplication ~339 lines | Frontend | 1h | Low |
-| 8 | 159 | P2 | Coverage | Missing 5 frontend API methods | Frontend | 1-2h | Low |
-| 9 | 160 | P2 | Auth Bug | Hardcoded PLACEHOLDER_CREATOR_ID | Frontend | 30min | Low |
-| 10 | 161 | P2 | Type Safety | Logger typed as Function (8 services) | Backend | 30min | Low |
-| 11 | 162 | P2 | Data Integrity | Provenance records lack immutability | Backend | 1h | Low |
-| 12 | 163 | P3 | Performance | Sequential DB queries in wellness dashboard | Backend | 30min | Low |
-| 13 | 164 | P3 | Performance | Missing useMemo in WellnessTrend | Frontend | 15min | Low |
-| 14 | 165 | P3 | Performance | Unbounded pulse history query | Backend | 30min | Low |
-| 15 | 166 | P3 | Dead Code | Unreachable at_threshold branch | Backend | 5min | Low |
-| 16 | 167 | P3 | Edge Case | Division by zero in BoundarySettings | Frontend | 5min | Low |
-| 17 | 168 | P3 | Security | XSS in auto_response_template | Backend+FE | 30min | Low |
+| #   | ID  | Priority | Category       | Title                                       | Domain     | Effort | Risk |
+| --- | --- | -------- | -------------- | ------------------------------------------- | ---------- | ------ | ---- |
+| 1   | 152 | P2       | Security       | No rate limiting on v2 endpoints            | Backend    | 1-2h   | Low  |
+| 2   | 153 | P2       | Data Loss      | In-memory Map for sensitivity settings      | Backend    | 2-3h   | Low  |
+| 3   | 154 | P2       | Security+Perf  | getBenchmark() full table scan + data leak  | Backend    | 1-2h   | Low  |
+| 4   | 155 | P2       | Performance    | FingerprintService.compare() O(n) scan      | Backend    | 1-2h   | Med  |
+| 5   | 156 | P2       | Security       | RLS policy exposes creator boundaries       | Backend    | 30min  | Low  |
+| 6   | 157 | P2       | Duplication    | 8x duplicated SupabaseClient interface      | Backend    | 30min  | Low  |
+| 7   | 158 | P2       | Duplication    | Frontend type duplication ~339 lines        | Frontend   | 1h     | Low  |
+| 8   | 159 | P2       | Coverage       | Missing 5 frontend API methods              | Frontend   | 1-2h   | Low  |
+| 9   | 160 | P2       | Auth Bug       | Hardcoded PLACEHOLDER_CREATOR_ID            | Frontend   | 30min  | Low  |
+| 10  | 161 | P2       | Type Safety    | Logger typed as Function (8 services)       | Backend    | 30min  | Low  |
+| 11  | 162 | P2       | Data Integrity | Provenance records lack immutability        | Backend    | 1h     | Low  |
+| 12  | 163 | P3       | Performance    | Sequential DB queries in wellness dashboard | Backend    | 30min  | Low  |
+| 13  | 164 | P3       | Performance    | Missing useMemo in WellnessTrend            | Frontend   | 15min  | Low  |
+| 14  | 165 | P3       | Performance    | Unbounded pulse history query               | Backend    | 30min  | Low  |
+| 15  | 166 | P3       | Dead Code      | Unreachable at_threshold branch             | Backend    | 5min   | Low  |
+| 16  | 167 | P3       | Edge Case      | Division by zero in BoundarySettings        | Frontend   | 5min   | Low  |
+| 17  | 168 | P3       | Security       | XSS in auto_response_template               | Backend+FE | 30min  | Low  |
 
 **Total estimated effort:** ~12-16 hours of implementation
 **Backend items:** 11 (152, 153, 154, 155, 156, 157, 161, 162, 163, 165, 166)
@@ -81,6 +81,7 @@
 These fix shared infrastructure that other fixes depend on.
 
 #### 157 - Consolidate 8x SupabaseClient Interface
+
 - **Priority:** P2 | **Effort:** 30 min | **Risk:** Low
 - **Files to modify:**
   - CREATE: `packages/backend/src/interfaces/shared/ISupabaseClient.ts`
@@ -102,6 +103,7 @@ These fix shared infrastructure that other fixes depend on.
 - **Risks:** None. Pure refactor, no behavior change.
 
 #### 161 - Fix Logger Typing (Function -> ILogger)
+
 - **Priority:** P2 | **Effort:** 30 min | **Risk:** Low
 - **Depends on:** 157 (same files being edited)
 - **Files to modify:** Same 8 services as 157
@@ -113,6 +115,7 @@ These fix shared infrastructure that other fixes depend on.
 - **Risks:** None. ILogger is compatible superset. Existing callers pass Winston logger which implements ILogger.
 
 #### 158 - Frontend Type Deduplication
+
 - **Priority:** P2 | **Effort:** 1h | **Risk:** Low
 - **Files to modify:**
   - `packages/frontend/src/features/wellness/types/index.ts` (replace ~189 lines with re-exports)
@@ -133,6 +136,7 @@ These fix shared infrastructure that other fixes depend on.
 All independent of each other. Can run in parallel after Batch 0.
 
 #### 152 - Rate Limiting on V2 Endpoints
+
 - **Priority:** P2 | **Effort:** 1-2h | **Risk:** Low
 - **Files to modify:**
   - `packages/backend/src/routes/v2/wellness.routes.ts`
@@ -150,6 +154,7 @@ All independent of each other. Can run in parallel after Batch 0.
 - **Risks:** May need to tune limits for pulse check-in frequency (could be high for real-time wellness monitoring). In-memory rate limit store is acceptable for MVP single-instance; note Redis needed for multi-instance in production.
 
 #### 154 - Fix getBenchmark() Full Table Scan + Data Leak
+
 - **Priority:** P2 | **Effort:** 1-2h | **Risk:** Low
 - **Files to modify:**
   - `packages/backend/src/services/wellness/WellnessService.ts` (lines 357-361)
@@ -177,6 +182,7 @@ All independent of each other. Can run in parallel after Batch 0.
 - **Risks:** Needs Supabase migration. Aggregate function runs in DB, not app -- much better but still scans all rows at DB level. Acceptable for P2.
 
 #### 156 - Fix RLS Policy on creator_boundaries
+
 - **Priority:** P2 | **Effort:** 30 min | **Risk:** Low
 - **Files to modify:**
   - Supabase migration (new migration file)
@@ -187,12 +193,14 @@ All independent of each other. Can run in parallel after Batch 0.
 - **Risks:** If any feature intentionally reads other creators' boundaries (e.g., "public boundary status"), this would break it. Verify no cross-creator boundary reads exist.
 
 #### 162 - Provenance Record Immutability
+
 - **Priority:** P2 | **Effort:** 1h | **Risk:** Low
 - **Files to modify:**
   - `packages/backend/src/services/provenance/ProvenanceService.ts` (remove update/delete methods if present)
   - Supabase migration (create immutability triggers)
 - **Approach:** Trigger blocks everything + SECURITY DEFINER function for revocation (PO-approved pattern):
   1. Create Postgres trigger that blocks ALL modifications unconditionally (PO concern #2):
+
      ```sql
      -- Trigger fires for ALL roles including service-role, since triggers
      -- execute regardless of RLS bypass. This is database-level enforcement.
@@ -207,7 +215,9 @@ All independent of each other. Can run in parallel after Batch 0.
      BEFORE UPDATE OR DELETE ON provenance_records
      FOR EACH ROW EXECUTE FUNCTION prevent_provenance_modification();
      ```
+
   2. Create a separate SECURITY DEFINER function as the **only** revocation path (PO note #3 -- cleaner than column-level trigger exception):
+
      ```sql
      -- This function bypasses the trigger because SECURITY DEFINER runs as the
      -- function owner, and we temporarily disable the trigger within the function.
@@ -226,9 +236,11 @@ All independent of each other. Can run in parallel after Batch 0.
      REVOKE ALL ON FUNCTION revoke_provenance_record FROM PUBLIC;
      GRANT EXECUTE ON FUNCTION revoke_provenance_record TO service_role;
      ```
+
   3. **Key: triggers fire regardless of RLS bypass**, so even service-role Supabase clients cannot modify or delete provenance records via normal queries. Revocation is only possible via the dedicated function.
   4. Add `status` column (enum: 'active', 'revoked') and `revoked_at` timestamp if not present.
   5. In ProvenanceService: remove any `update()` or `delete()` methods. Add `revokeProvenance(id)` that calls `supabase.rpc('revoke_provenance_record', { record_id: id })`.
+
 - **Risks:** The SECURITY DEFINER function with trigger disable/enable must run within a transaction. Test: verify that if the function errors mid-way, the trigger is re-enabled (Postgres handles this via transaction rollback). Test with both service-role and anon-role clients. Verify bulk UPDATE/DELETE is also blocked.
 
 ---
@@ -238,6 +250,7 @@ All independent of each other. Can run in parallel after Batch 0.
 Can run in parallel after Batch 0. Independent of Batch 1.
 
 #### 153 - Persist Sensitivity Settings
+
 - **Priority:** P2 | **Effort:** 2-3h | **Risk:** Low
 - **Files to modify:**
   - `packages/backend/src/services/wellness/BurnoutScoringService.ts` (line 51, replace Map with DB-backed store)
@@ -255,6 +268,7 @@ Can run in parallel after Batch 0. Independent of Batch 1.
 - **Risks:** Migration required. Cache invalidation on multi-instance deploys (acceptable for P2 -- sensitivity changes are rare).
 
 #### 155 - Optimize Fingerprint Compare
+
 - **Priority:** P2 | **Effort:** 1-2h | **Risk:** Medium
 - **Files to modify:**
   - `packages/backend/src/services/provenance/FingerprintService.ts` (lines 147-158)
@@ -269,6 +283,7 @@ Can run in parallel after Batch 0. Independent of Batch 1.
 - **Risks:** May miss duplicates older than the window. Configurable window and fullScan fallback mitigate this. The 1000-row cap is a reasonable bound for the time window.
 
 #### 163 - Parallelize Sequential DB Queries
+
 - **Priority:** P3 | **Effort:** 30 min | **Risk:** Low
 - **Files to modify:**
   - `packages/backend/src/services/wellness/WellnessService.ts`
@@ -287,6 +302,7 @@ Can run in parallel after Batch 0. Independent of Batch 1.
 - **Risks:** Partial dashboard rendering requires UI to handle missing sections gracefully. Frontend must show per-section error states.
 
 #### 165 - Bound Pulse History Query
+
 - **Priority:** P3 | **Effort:** 30 min | **Risk:** Low
 - **Files to modify:**
   - `packages/backend/src/services/wellness/WellnessService.ts` (pulse history method)
@@ -299,6 +315,7 @@ Can run in parallel after Batch 0. Independent of Batch 1.
 - **Risks:** None. Additive change.
 
 #### 166 - Remove Unreachable at_threshold Branch
+
 - **Priority:** P3 | **Effort:** 5 min | **Risk:** Low
 - **Files to modify:**
   - `packages/backend/src/services/wellness/ScheduleService.ts` (lines 142-147)
@@ -315,6 +332,7 @@ Can run in parallel after Batch 0. Independent of Batch 1.
 Can run in parallel after Batch 0 (specifically after 158 completes). Independent of Batches 1-2.
 
 #### 159 - Add Missing Frontend API Methods
+
 - **Priority:** P2 | **Effort:** 1-2h | **Risk:** Low
 - **Depends on:** 158 (needs correct shared types)
 - **Files to modify:**
@@ -333,6 +351,7 @@ Can run in parallel after Batch 0 (specifically after 158 completes). Independen
 - **Risks:** Need to verify exact backend endpoint paths and response shapes.
 
 #### 160 - Replace Hardcoded PLACEHOLDER_CREATOR_ID
+
 - **Priority:** P2 | **Effort:** 30 min | **Risk:** Low
 - **Files to modify:**
   - `packages/frontend/src/features/content-shield/components/ShieldDashboard.tsx` (line 7)
@@ -354,6 +373,7 @@ Can run in parallel after Batch 0 (specifically after 158 completes). Independen
 - **Risks:** Need to verify the auth hook export path. Pattern already used in other dashboards (e.g., `CreatorDashboard.tsx` uses `useAuth()`).
 
 #### 164 - Add useMemo to WellnessTrend
+
 - **Priority:** P3 | **Effort:** 15 min | **Risk:** Low
 - **Files to modify:**
   - `packages/frontend/src/features/wellness/components/WellnessTrend.tsx` (lines 59-68)
@@ -368,6 +388,7 @@ Can run in parallel after Batch 0 (specifically after 158 completes). Independen
 - **Risks:** None.
 
 #### 167 - Fix Division by Zero in BoundarySettings
+
 - **Priority:** P3 | **Effort:** 5 min | **Risk:** Low
 - **Files to modify:**
   - `packages/frontend/src/features/wellness/components/BoundarySettings.tsx` (lines 76-79)
@@ -376,14 +397,13 @@ Can run in parallel after Batch 0 (specifically after 158 completes). Independen
      ```typescript
      const safeMax = Number(max) || 0;
      const safeCurrent = Number(current) || 0;
-     const percentage = safeMax > 0
-       ? Math.min(Math.max((safeCurrent / safeMax) * 100, 0), 100)
-       : 0;
+     const percentage = safeMax > 0 ? Math.min(Math.max((safeCurrent / safeMax) * 100, 0), 100) : 0;
      ```
   2. This handles: zero, undefined, null, NaN. Clamps result to 0-100 range (no >100% display).
 - **Risks:** None.
 
 #### 168 - XSS Sanitization for auto_response_template
+
 - **Priority:** P3 | **Effort:** 30 min | **Risk:** Low
 - **Files to modify:**
   - `packages/backend/src/validators/wellness.ts` (input sanitization)
@@ -434,26 +454,31 @@ T+1     --- BATCH 0 DONE ---                             166: Dead code         
 ## Parallel Execution Groups for `/resolve_todo_parallel`
 
 ### Group A: Backend Foundation (Sequential)
+
 ```
 157 → 161
 ```
 
 ### Group B: Backend Security (Parallel, after Group A)
+
 ```
 152, 154, 156, 162
 ```
 
 ### Group C: Backend Performance (Parallel, after Group A)
+
 ```
 153, 155, 163, 165, 166
 ```
 
 ### Group D: Frontend Foundation (Sequential)
+
 ```
 158 → 159
 ```
 
 ### Group E: Frontend Quick Fixes (Parallel, after Group D)
+
 ```
 160, 164, 167, 168
 ```
@@ -462,17 +487,17 @@ T+1     --- BATCH 0 DONE ---                             166: Dead code         
 
 ## Risk Assessment
 
-| Risk | Mitigation |
-|------|------------|
-| Migration conflicts between 153, 154, 156, 162 | Number migrations sequentially: 156 -> 162 -> 154 -> 153 |
-| Rate limit values too strict for wellness check-ins | Start with generous limits (100/min reads), monitor and tighten |
-| Frontend type dedup breaks components | Run `tsc --noEmit` after changes to catch compile errors |
-| Fingerprint optimization misses older duplicates | Configurable time window (90d default) + fullScan fallback for admin |
-| Provenance immutability blocks legitimate revocation | Status-column-only UPDATE exception in trigger |
-| Provenance trigger bypassed by service-role | Triggers fire regardless of RLS bypass -- verified |
-| Benchmark leaks individual scores with small N | Anonymity threshold: benchmarks only returned when N >= 5 creators |
-| Rate limiting fails for unauthenticated users | Existing middleware defaults to IP-based keying |
-| Hardcoded creator ID swap breaks unauthenticated flow | Full auth state handling: loading, redirect, empty state |
+| Risk                                                  | Mitigation                                                           |
+| ----------------------------------------------------- | -------------------------------------------------------------------- |
+| Migration conflicts between 153, 154, 156, 162        | Number migrations sequentially: 156 -> 162 -> 154 -> 153             |
+| Rate limit values too strict for wellness check-ins   | Start with generous limits (100/min reads), monitor and tighten      |
+| Frontend type dedup breaks components                 | Run `tsc --noEmit` after changes to catch compile errors             |
+| Fingerprint optimization misses older duplicates      | Configurable time window (90d default) + fullScan fallback for admin |
+| Provenance immutability blocks legitimate revocation  | Status-column-only UPDATE exception in trigger                       |
+| Provenance trigger bypassed by service-role           | Triggers fire regardless of RLS bypass -- verified                   |
+| Benchmark leaks individual scores with small N        | Anonymity threshold: benchmarks only returned when N >= 5 creators   |
+| Rate limiting fails for unauthenticated users         | Existing middleware defaults to IP-based keying                      |
+| Hardcoded creator ID swap breaks unauthenticated flow | Full auth state handling: loading, redirect, empty state             |
 
 ---
 
@@ -480,25 +505,25 @@ T+1     --- BATCH 0 DONE ---                             166: Dead code         
 
 ### Initial 7 Concerns (v2)
 
-| # | PO Concern | Resolution | Plan Section |
-|---|-----------|------------|--------------|
-| 1 | Security fixes need DB migrations early | 156, 162 in Batch 1 (first parallel batch). Migrations numbered sequentially. | Dependency Rules #5 |
-| 2 | Provenance trigger must block service-role | Postgres triggers fire regardless of RLS bypass. Trigger explicitly blocks all roles. | Fix 162 approach |
-| 3 | Benchmark anonymity threshold (N < 5) | SQL function returns NULL when fewer than 5 distinct creators. Service returns `sufficient_data: false`. | Fix 154 approach |
-| 4 | Rate limiting for unauthenticated requests | Existing `createUserRateLimiter` falls back to `req.ip` when no auth token. Used for mutation routes. | Fix 152 approach |
-| 5 | Type dedup order (157 before 158) | 157 (backend) and 158 (frontend) can run in parallel -- different packages, no cross-dep. Clarified in dependency rules. | Dependency Rules #4 |
-| 6 | Fingerprint accuracy preservation | No false negatives within time window. Configurable window + `fullScan` parameter for admin use. Test required. | Fix 155 approach |
-| 7 | Frontend auth handling -- graceful unauth state | Loading spinner, login redirect, disabled queries when `!creatorId`. Grep for other hardcoded IDs. | Fix 160 approach |
+| #   | PO Concern                                      | Resolution                                                                                                               | Plan Section        |
+| --- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| 1   | Security fixes need DB migrations early         | 156, 162 in Batch 1 (first parallel batch). Migrations numbered sequentially.                                            | Dependency Rules #5 |
+| 2   | Provenance trigger must block service-role      | Postgres triggers fire regardless of RLS bypass. Trigger explicitly blocks all roles.                                    | Fix 162 approach    |
+| 3   | Benchmark anonymity threshold (N < 5)           | SQL function returns NULL when fewer than 5 distinct creators. Service returns `sufficient_data: false`.                 | Fix 154 approach    |
+| 4   | Rate limiting for unauthenticated requests      | Existing `createUserRateLimiter` falls back to `req.ip` when no auth token. Used for mutation routes.                    | Fix 152 approach    |
+| 5   | Type dedup order (157 before 158)               | 157 (backend) and 158 (frontend) can run in parallel -- different packages, no cross-dep. Clarified in dependency rules. | Dependency Rules #4 |
+| 6   | Fingerprint accuracy preservation               | No false negatives within time window. Configurable window + `fullScan` parameter for admin use. Test required.          | Fix 155 approach    |
+| 7   | Frontend auth handling -- graceful unauth state | Loading spinner, login redirect, disabled queries when `!creatorId`. Grep for other hardcoded IDs.                       | Fix 160 approach    |
 
 ### PO Approval Notes (v3 -- plan APPROVED)
 
-| # | PO Note | Resolution | Plan Section |
-|---|---------|------------|--------------|
-| 1 | 152: Verify rate limiter keys on user ID vs IP | Already addressed: `createUserRateLimiter` uses `user?.nostr_pubkey \|\| req.ip`. Implementer should verify. | Fix 152 approach step 2 |
-| 2 | 154: Anonymity threshold missing from SQL | Already addressed in v2: SQL function checks `COUNT(DISTINCT creator_id) < 5`. | Fix 154 approach step 2 |
-| 3 | 162: Column-level trigger exception is fragile | Updated to PO's cleaner pattern: trigger blocks everything, separate `SECURITY DEFINER` function with trigger disable/enable for revocation. Only service_role can call it. | Fix 162 approach (v3) |
-| 4 | 168: Regex too simplistic for XSS | Updated: recommend `sanitize-html` library (empty allowlist). Regex is fallback only. | Fix 168 approach step 1 |
-| 5 | 152/165: Same route file conflict | Updated: assign both to same backend agent. If different agents, sequence 152 before 165. | Cross-Domain Coordination #4 |
+| #   | PO Note                                        | Resolution                                                                                                                                                                  | Plan Section                 |
+| --- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| 1   | 152: Verify rate limiter keys on user ID vs IP | Already addressed: `createUserRateLimiter` uses `user?.nostr_pubkey \|\| req.ip`. Implementer should verify.                                                                | Fix 152 approach step 2      |
+| 2   | 154: Anonymity threshold missing from SQL      | Already addressed in v2: SQL function checks `COUNT(DISTINCT creator_id) < 5`.                                                                                              | Fix 154 approach step 2      |
+| 3   | 162: Column-level trigger exception is fragile | Updated to PO's cleaner pattern: trigger blocks everything, separate `SECURITY DEFINER` function with trigger disable/enable for revocation. Only service_role can call it. | Fix 162 approach (v3)        |
+| 4   | 168: Regex too simplistic for XSS              | Updated: recommend `sanitize-html` library (empty allowlist). Regex is fallback only.                                                                                       | Fix 168 approach step 1      |
+| 5   | 152/165: Same route file conflict              | Updated: assign both to same backend agent. If different agents, sequence 152 before 165.                                                                                   | Cross-Domain Coordination #4 |
 
 ---
 

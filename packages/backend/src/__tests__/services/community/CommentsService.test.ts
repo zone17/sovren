@@ -25,6 +25,12 @@ import {
   ServiceError,
 } from '../../../utils/errors';
 
+// Mock the shared getUserIdByPubkey utility so we control pubkey→UUID resolution
+const mockGetUserIdByPubkey = vi.fn();
+vi.mock('../../../utils/getUserIdByPubkey', () => ({
+  getUserIdByPubkey: (...args: unknown[]) => mockGetUserIdByPubkey(...args),
+}));
+
 // ============================================================================
 // Table-aware Supabase mock (common-solutions.md #7)
 // ============================================================================
@@ -139,9 +145,13 @@ describe('CommentsService', () => {
   let service: CommentsService;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     db = makeMockDb();
     logger = { error: vi.fn(), info: vi.fn() };
     service = new CommentsService(db as never, logger as never);
+
+    // Default: pubkey resolves to USER_ID
+    mockGetUserIdByPubkey.mockResolvedValue(USER_ID);
   });
 
   // ==========================================================================
@@ -335,11 +345,6 @@ describe('CommentsService', () => {
 
   describe('createComment', () => {
     beforeEach(() => {
-      // Mock pubkey→userId resolution
-      usersChain.single = vi.fn().mockResolvedValue({
-        data: { id: USER_ID },
-        error: null,
-      });
       // Mock content access check (security audit P3-2 fix)
       contentChain.single = vi.fn().mockResolvedValue({
         data: { id: CONTENT_ID, status: 'published' },
@@ -385,7 +390,7 @@ describe('CommentsService', () => {
     });
 
     it('throws UnauthorizedError when pubkey has no user profile', async () => {
-      usersChain.single = vi.fn().mockResolvedValue({ data: null, error: new Error('Not found') });
+      mockGetUserIdByPubkey.mockRejectedValue(new UnauthorizedError('User profile not found'));
 
       await expect(
         service.createComment('unknown-pubkey', CONTENT_ID, { commentText: 'Hi' })
@@ -444,24 +449,17 @@ describe('CommentsService', () => {
       ).rejects.toThrow(ServiceError);
     });
 
-    it('caches pubkey→UUID after first lookup (TTL cache)', async () => {
+    it('delegates pubkey→UUID resolution to shared getUserIdByPubkey utility', async () => {
       const insertedRow = makeCommentRow();
       commentsChain.single = vi.fn().mockResolvedValue({
         data: insertedRow,
         error: null,
       });
 
-      // First call — does a DB lookup
       await service.createComment(PUBKEY, CONTENT_ID, { commentText: 'First' });
-      // Second call — should use cache (users.from not called again)
-      commentsChain.single = vi.fn().mockResolvedValue({
-        data: insertedRow,
-        error: null,
-      });
-      await service.createComment(PUBKEY, CONTENT_ID, { commentText: 'Second' });
 
-      // usersChain.single should only have been called once total
-      expect(usersChain.single).toHaveBeenCalledTimes(1);
+      // Verify shared utility was called with db and pubkey
+      expect(mockGetUserIdByPubkey).toHaveBeenCalledWith(expect.anything(), PUBKEY);
     });
 
     // -----------------------------------------------------------------------
@@ -535,13 +533,6 @@ describe('CommentsService', () => {
   // ==========================================================================
 
   describe('deleteComment', () => {
-    beforeEach(() => {
-      usersChain.single = vi.fn().mockResolvedValue({
-        data: { id: USER_ID },
-        error: null,
-      });
-    });
-
     it('soft-deletes comment as owner (status → deleted)', async () => {
       const CREATOR_ID = 'other-creator-uuid';
       const commentWithContent = {
@@ -569,12 +560,10 @@ describe('CommentsService', () => {
       const CREATOR_PUBKEY = 'creator-pubkey';
       const CREATOR_UUID = 'creator-uuid';
 
-      const db2 = makeMockDb();
-      const u2 = db2.from('users') as ReturnType<typeof makeChain>;
-      u2.single = vi.fn().mockResolvedValue({ data: { id: CREATOR_UUID }, error: null });
+      // Override pubkey resolution for this test
+      mockGetUserIdByPubkey.mockResolvedValue(CREATOR_UUID);
 
-      const c2 = db2.from('comments') as ReturnType<typeof makeChain>;
-      c2.single = vi.fn().mockResolvedValue({
+      commentsChain.single = vi.fn().mockResolvedValue({
         data: {
           id: COMMENT_ID,
           user_id: 'original-commenter-uuid',
@@ -584,13 +573,12 @@ describe('CommentsService', () => {
         },
         error: null,
       });
-      (c2._terminalSelect as ReturnType<typeof vi.fn>).mockResolvedValue({
+      (commentsChain._terminalSelect as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: [{ id: COMMENT_ID }],
         error: null,
       });
 
-      const svc2 = new CommentsService(db2 as never, logger as never);
-      await expect(svc2.deleteComment(CREATOR_PUBKEY, COMMENT_ID)).resolves.toBeUndefined();
+      await expect(service.deleteComment(CREATOR_PUBKEY, COMMENT_ID)).resolves.toBeUndefined();
     });
 
     it('throws NotFoundError when comment does not exist', async () => {
@@ -631,10 +619,7 @@ describe('CommentsService', () => {
 
     it('throws AuthorizationError (403 not 400) for non-owner, non-creator', async () => {
       const STRANGER_UUID = 'stranger-uuid';
-      usersChain.single = vi.fn().mockResolvedValue({
-        data: { id: STRANGER_UUID },
-        error: null,
-      });
+      mockGetUserIdByPubkey.mockResolvedValue(STRANGER_UUID);
 
       commentsChain.single = vi.fn().mockResolvedValue({
         data: {

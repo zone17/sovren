@@ -11,47 +11,47 @@ Sprint 2 of the P3 cleanup addresses 20 remaining findings from PR #73 code revi
 
 Per Sprint 1 lesson: "Always verify against source before implementing."
 
-| Todo | Verification Result |
-|------|-------------------|
-| 035 | **PARTIALLY STALE**: `setup-vault.sh` no longer exists (deleted in prior sprint). Docker ports already bound to `127.0.0.1`. Redis health check and ICC issues remain valid. |
-| 059 | **MOSTLY STALE**: `console.log` in `deployment-monitoring.ts` already cleaned (0 hits). `_next` already fixed (line 56). No emojis remain. **Only Docker ICC + Redis health check remain** (overlap with 035). |
-| 085 | **VALID BUT SCOPE LARGE**: `Math.random()` used in ~90+ locations. Most are in test files (acceptable). ~15 production usages for ID generation exist across services. |
-| 109 | **STALE/RESOLVED**: Zero " 2" directories found in `packages/backend/src/`. Sprint 1 (todo 014) already cleaned these. Only `node_modules` has them (irrelevant). |
-| 130 | **VALID**: N+1 patterns confirmed in recommendation-service.ts and lightning-service.ts. But these are placeholder implementations. |
-| 132 | **VALID**: Mock database at bootstrap.ts:231-237 confirmed — returns `{ rows: [], rowCount: 0 }`. |
-| 106 | **VALID BUT DIFFERENT**: Error boundaries import from `../../monitoring/ErrorBoundary`, NOT `@/components/ErrorBoundary` as todo states. Pattern matches (identical wrappers, only featureName differs). 7 files total (including analytics). |
+| Todo | Verification Result                                                                                                                                                                                                                           |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 035  | **PARTIALLY STALE**: `setup-vault.sh` no longer exists (deleted in prior sprint). Docker ports already bound to `127.0.0.1`. Redis health check and ICC issues remain valid.                                                                  |
+| 059  | **MOSTLY STALE**: `console.log` in `deployment-monitoring.ts` already cleaned (0 hits). `_next` already fixed (line 56). No emojis remain. **Only Docker ICC + Redis health check remain** (overlap with 035).                                |
+| 085  | **VALID BUT SCOPE LARGE**: `Math.random()` used in ~90+ locations. Most are in test files (acceptable). ~15 production usages for ID generation exist across services.                                                                        |
+| 109  | **STALE/RESOLVED**: Zero " 2" directories found in `packages/backend/src/`. Sprint 1 (todo 014) already cleaned these. Only `node_modules` has them (irrelevant).                                                                             |
+| 130  | **VALID**: N+1 patterns confirmed in recommendation-service.ts and lightning-service.ts. But these are placeholder implementations.                                                                                                           |
+| 132  | **VALID**: Mock database at bootstrap.ts:231-237 confirmed — returns `{ rows: [], rowCount: 0 }`.                                                                                                                                             |
+| 106  | **VALID BUT DIFFERENT**: Error boundaries import from `../../monitoring/ErrorBoundary`, NOT `@/components/ErrorBoundary` as todo states. Pattern matches (identical wrappers, only featureName differs). 7 files total (including analytics). |
 
 ## Decision Matrix: IMPLEMENT vs DEFER
 
 ### IMPLEMENT (14 items)
 
-| Todo | Title | Size | Batch | Rationale |
-|------|-------|------|-------|-----------|
-| 109 | macOS artifact directories | Trivial | 0 (pre-work) | Already resolved — mark as complete, no code changes needed |
-| 083 | Zod error drops metadata | Small | 1 | Quick win — add `expected`/`received` to validation error details |
-| 084 | Health endpoints 307 redirects | Small | 1 | Quick win — replace redirects with direct responses in health.ts |
-| 085 | Weak UUID generation | Small | 1 | Replace `Math.random()` UUID patterns with `crypto.randomUUID()` in production code only (skip tests) |
-| 105 | Sensitive fields over-matching | Small | 1 | Replace broad `'key'`/`'auth'` with specific patterns in sensitive-fields.ts |
-| 132 | Mock database in DI | Small | 1 | Change mock to throw NotImplementedError instead of silent empty results |
-| 104 | TTLCache implementation issues | Medium | 2 | Fix stale size, add LRU eviction, fix mutation in values() |
-| 131 | Unbounded polling timers | Small | 2 | Clear intervals on terminal state in lightning-payment-service.ts |
-| 133 | Scheduled publish in-memory | Small | 2 | Add startup recovery for scheduled jobs in ContentPublishingService.ts |
-| 134 | Unhandled async constructor | Small | 2 | Add explicit `initialize()` method to LightningPaymentService |
-| 106 | Identical error boundaries | Small | 3 (frontend) | Create factory function, refactor 6 identical files (ai, dashboard, nostr, content, subscriptions, analytics) |
-| 035+059 | Docker security hardening | Small | 4 (docker) | Merged: Fix Redis health check (use REDISCLI_AUTH env var), fix ICC setting. Skip deleted vault items. |
-| 130 | N+1 recommendation service | Small | 5 | Add WHERE clauses to placeholder queries (prepares for real DB) |
-| 018 | OpenAPI docs payment/user routes | Medium | 6 | Add OpenAPI JSDoc annotations to payment.routes.ts and user.routes.ts matching content.routes.ts pattern |
+| Todo    | Title                            | Size    | Batch        | Rationale                                                                                                     |
+| ------- | -------------------------------- | ------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| 109     | macOS artifact directories       | Trivial | 0 (pre-work) | Already resolved — mark as complete, no code changes needed                                                   |
+| 083     | Zod error drops metadata         | Small   | 1            | Quick win — add `expected`/`received` to validation error details                                             |
+| 084     | Health endpoints 307 redirects   | Small   | 1            | Quick win — replace redirects with direct responses in health.ts                                              |
+| 085     | Weak UUID generation             | Small   | 1            | Replace `Math.random()` UUID patterns with `crypto.randomUUID()` in production code only (skip tests)         |
+| 105     | Sensitive fields over-matching   | Small   | 1            | Replace broad `'key'`/`'auth'` with specific patterns in sensitive-fields.ts                                  |
+| 132     | Mock database in DI              | Small   | 1            | Change mock to throw NotImplementedError instead of silent empty results                                      |
+| 104     | TTLCache implementation issues   | Medium  | 2            | Fix stale size, add LRU eviction, fix mutation in values()                                                    |
+| 131     | Unbounded polling timers         | Small   | 2            | Clear intervals on terminal state in lightning-payment-service.ts                                             |
+| 133     | Scheduled publish in-memory      | Small   | 2            | Add startup recovery for scheduled jobs in ContentPublishingService.ts                                        |
+| 134     | Unhandled async constructor      | Small   | 2            | Add explicit `initialize()` method to LightningPaymentService                                                 |
+| 106     | Identical error boundaries       | Small   | 3 (frontend) | Create factory function, refactor 6 identical files (ai, dashboard, nostr, content, subscriptions, analytics) |
+| 035+059 | Docker security hardening        | Small   | 4 (docker)   | Merged: Fix Redis health check (use REDISCLI_AUTH env var), fix ICC setting. Skip deleted vault items.        |
+| 130     | N+1 recommendation service       | Small   | 5            | Add WHERE clauses to placeholder queries (prepares for real DB)                                               |
+| 018     | OpenAPI docs payment/user routes | Medium  | 6            | Add OpenAPI JSDoc annotations to payment.routes.ts and user.routes.ts matching content.routes.ts pattern      |
 
 ### DEFER (6 items)
 
-| Todo | Title | Size | Deferral Reason |
-|------|-------|------|----------------|
-| 086 | Agent API key auth | Large | New feature, not cleanup. Requires API key table design, CRUD endpoints, rate-limit integration. Needs dedicated feature sprint. |
-| 087 | Missing content CRUD v1 | Medium | Overlaps with todo 146. Content listing/CRUD endpoints should be part of the v1 API migration effort, not piecemeal. |
-| 146 | v1 API route fragmentation | Large | 24 missing endpoints across content/payments/users. Multi-week phased migration. Needs its own sprint with API design review. |
-| 145 | God classes decomposition | Large | 5 classes >500 lines (4,800+ lines total). High-risk refactor touching core services. Needs dedicated refactoring sprint with extensive test coverage. Sprint 1 also deferred this. |
-| 060 | Agent-native metrics/error APIs | Medium | New feature requiring 3 new endpoints, agent authentication, rate-limit normalization. Should follow after 086 (agent auth). |
-| 059 | Docker hardening (remaining unique items) | N/A | **Merged into 035** — the only remaining valid items (ICC + Redis health) are shared with 035. Console logging and emoji issues already resolved. |
+| Todo | Title                                     | Size   | Deferral Reason                                                                                                                                                                     |
+| ---- | ----------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 086  | Agent API key auth                        | Large  | New feature, not cleanup. Requires API key table design, CRUD endpoints, rate-limit integration. Needs dedicated feature sprint.                                                    |
+| 087  | Missing content CRUD v1                   | Medium | Overlaps with todo 146. Content listing/CRUD endpoints should be part of the v1 API migration effort, not piecemeal.                                                                |
+| 146  | v1 API route fragmentation                | Large  | 24 missing endpoints across content/payments/users. Multi-week phased migration. Needs its own sprint with API design review.                                                       |
+| 145  | God classes decomposition                 | Large  | 5 classes >500 lines (4,800+ lines total). High-risk refactor touching core services. Needs dedicated refactoring sprint with extensive test coverage. Sprint 1 also deferred this. |
+| 060  | Agent-native metrics/error APIs           | Medium | New feature requiring 3 new endpoints, agent authentication, rate-limit normalization. Should follow after 086 (agent auth).                                                        |
+| 059  | Docker hardening (remaining unique items) | N/A    | **Merged into 035** — the only remaining valid items (ICC + Redis health) are shared with 035. Console logging and emoji issues already resolved.                                   |
 
 ## Batch Implementation Order
 
@@ -67,18 +67,21 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 **Purpose**: Low-risk, high-value fixes that can be done in parallel.
 
 #### 1a. Todo 083 — Zod Error Metadata
+
 - **File**: `packages/backend/src/middleware/error-handler-middleware.ts`
 - **Change**: Add `expected` and `received` fields from Zod error issues to validation error response (lines 119-123)
 - **Approach**: Map `err.expected` and `err.received` (available on ZodInvalidTypeIssue) into the validation error details
 - **Complexity**: Trivial
 
 #### 1b. Todo 084 — Health Endpoint Redirects
+
 - **File**: `packages/backend/src/routes/health.ts` (lines 82-86)
 - **Change**: Replace `res.redirect(307, '/health/ready')` and `res.redirect(307, '/health/live')` with direct health check responses
 - **Approach**: Import the health check logic and return response directly from `/ready` and `/live`
 - **Complexity**: Trivial
 
 #### 1c. Todo 085 — Weak UUID Generation
+
 - **Files**: Production files only (not tests):
   - `packages/backend/src/interfaces/shared/IEventBus.ts:142` — `evt_` ID generation
   - `packages/backend/src/services/EventBusService.ts:575` — `sub_` ID generation
@@ -104,12 +107,14 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 - **Complexity**: Small (mechanical replacement, ~15 files)
 
 #### 1d. Todo 105 — Sensitive Fields Over-Matching
+
 - **File**: `packages/backend/src/lib/sensitive-fields.ts`
 - **Change**: Remove `'key'` (line 22) and `'auth'` (line 21) from SENSITIVE_FIELDS array. These are already covered by specific patterns: `apiKey`, `api_key`, `privateKey`, `private_key`, `authorization`
 - **Add**: `'authToken'`, `'authSecret'`, `'accessToken'`, `'refreshToken'`, `'sessionToken'`, `'encryptionKey'`, `'signingKey'`, `'secretKey'`, `'secret_key'`
 - **Complexity**: Trivial (array modification)
 
 #### 1e. Todo 132 — Mock Database Throws
+
 - **File**: `packages/backend/src/bootstrap.ts` (lines 231-237)
 - **Change**: Replace silent mock `{ rows: [], rowCount: 0 }` with throw that says `Database not configured — resolve TYPES.Database with a real implementation`
 - **Complexity**: Trivial
@@ -121,6 +126,7 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 **Dependencies**: Batch 1c (UUID utility) should be done first since Batch 2 services may use IDs.
 
 #### 2a. Todo 104 — TTLCache Refactor
+
 - **File**: `packages/backend/src/utils/ttl-cache.ts`
 - **Changes**:
   1. Add `lastAccessed: number` to cache entries
@@ -133,16 +139,19 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 - **Complexity**: Medium
 
 #### 2b. Todo 131 — Unbounded Polling Timers
+
 - **File**: `packages/backend/src/services/lightning-payment-service.ts` (lines 649-689)
 - **Change**: Store interval IDs in a Map keyed by invoice ID. Clear interval when invoice transitions to paid/expired/cancelled. Add a `maxPollingDuration` timeout (e.g., 1 hour) after which polling auto-stops.
 - **Complexity**: Small
 
 #### 2c. Todo 133 — Scheduled Publish Recovery
+
 - **File**: `packages/backend/src/services/content/ContentPublishingService.ts`
 - **Change**: Add `recoverScheduledJobs()` method that queries for content with status='scheduled' and publishAt > now, then re-registers timers. Call this from service initialization.
 - **Complexity**: Small
 
 #### 2d. Todo 134 — Async Constructor Fix
+
 - **File**: `packages/backend/src/services/lightning-payment-service.ts` (lines 134, 141-151)
 - **Change**: Option B — Add explicit `async initialize()` method. Remove `this.initializeService()` from constructor. Add initialization guard pattern (throw if methods called before initialize()). Update bootstrap/DI to call `await service.initialize()` after construction.
 - **Complexity**: Small
@@ -152,6 +161,7 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 **Purpose**: Frontend-only change, completely independent of backend batches. Could be done in parallel with Batch 2.
 
 #### 3a. Todo 106 — Error Boundary Factory
+
 - **Files**:
   - Create: `packages/frontend/src/monitoring/createFeatureErrorBoundary.tsx`
   - Modify: 6 feature ErrorBoundary files (ai, dashboard, nostr, content, subscriptions, analytics)
@@ -165,6 +175,7 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 **Purpose**: Infrastructure-only changes, no application code.
 
 #### 4a. Todo 035+059 (Merged) — Docker Fixes
+
 - **File**: `docker/security/docker-compose.secure.yml`
 - **Changes**:
   1. Line 248: Change Redis health check from `['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']` to `['CMD-SHELL', 'REDISCLI_AUTH=$REDIS_PASSWORD redis-cli ping']`
@@ -178,6 +189,7 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 **Purpose**: Lowest priority, prepares for future real DB integration.
 
 #### 5a. Todo 130 — N+1 Query Patterns
+
 - **Files**:
   - `packages/backend/src/services/recommendation-service.ts` — `getCreatorRecommendations()`
   - `packages/backend/src/services/lightning-service.ts` — `getCreatorPayments()`
@@ -190,6 +202,7 @@ Per Sprint 1 lesson: "Always verify against source before implementing."
 **Purpose**: Documentation-only, no behavior changes.
 
 #### 6a. Todo 018 — OpenAPI Annotations
+
 - **Files**:
   - `packages/backend/src/routes/v1/payment.routes.ts` (211 lines, 0 OpenAPI annotations)
   - `packages/backend/src/routes/v1/user.routes.ts` (223 lines, 0 OpenAPI annotations)
@@ -222,23 +235,23 @@ Batch 6 (docs: 018)
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| TTLCache LRU change breaks cache consumers | Low | Medium | Existing tests + new LRU tests. Interface unchanged. |
-| Polling timer cleanup misses edge cases | Low | Low | Add maxPollingDuration failsafe |
-| Sensitive field changes miss a real sensitive field | Low | Medium | Keep broad terms `password`, `token`, `secret`, `credential`. Only remove `key` and `auth`. |
-| Error boundary factory breaks React rendering | Low | Low | Pure refactor, no behavior change. Visual testing confirms. |
-| Docker ICC=false breaks service communication | Medium | Medium | Test backend→redis and backend→postgres connectivity after change. Docker uses network aliases. |
+| Risk                                                | Likelihood | Impact | Mitigation                                                                                      |
+| --------------------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------------- |
+| TTLCache LRU change breaks cache consumers          | Low        | Medium | Existing tests + new LRU tests. Interface unchanged.                                            |
+| Polling timer cleanup misses edge cases             | Low        | Low    | Add maxPollingDuration failsafe                                                                 |
+| Sensitive field changes miss a real sensitive field | Low        | Medium | Keep broad terms `password`, `token`, `secret`, `credential`. Only remove `key` and `auth`.     |
+| Error boundary factory breaks React rendering       | Low        | Low    | Pure refactor, no behavior change. Visual testing confirms.                                     |
+| Docker ICC=false breaks service communication       | Medium     | Medium | Test backend→redis and backend→postgres connectivity after change. Docker uses network aliases. |
 
 ## Estimated Complexity Summary
 
-| Batch | Items | Estimated Effort |
-|-------|-------|-----------------|
-| 0 | 2 (mark resolved) | Trivial |
-| 1 | 5 items | Small (most are 1-file changes) |
-| 2 | 4 items | Medium (TTLCache is the heaviest) |
-| 3 | 1 item | Small |
-| 4 | 1 merged item | Small |
-| 5 | 1 item | Small |
-| 6 | 1 item | Medium |
-| **Total** | **14 implement + 6 defer** | **~3-4 hours implementation** |
+| Batch     | Items                      | Estimated Effort                  |
+| --------- | -------------------------- | --------------------------------- |
+| 0         | 2 (mark resolved)          | Trivial                           |
+| 1         | 5 items                    | Small (most are 1-file changes)   |
+| 2         | 4 items                    | Medium (TTLCache is the heaviest) |
+| 3         | 1 item                     | Small                             |
+| 4         | 1 merged item              | Small                             |
+| 5         | 1 item                     | Small                             |
+| 6         | 1 item                     | Medium                            |
+| **Total** | **14 implement + 6 defer** | **~3-4 hours implementation**     |

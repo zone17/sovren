@@ -8,6 +8,7 @@
 ## Context
 
 We needed a high-performance caching and rate limiting solution for:
+
 - **Caching**: L2 cache for frequently accessed data (L1 is in-memory)
 - **Rate Limiting**: Prevent API abuse and DoS attacks
 - **Session Storage**: User sessions and temporary data
@@ -15,6 +16,7 @@ We needed a high-performance caching and rate limiting solution for:
 - **Pub/Sub**: Real-time messaging between services (future)
 
 **Requirements**:
+
 - Sub-millisecond read/write latency
 - Persistence across server restarts
 - TTL (time-to-live) support
@@ -26,6 +28,7 @@ We needed a high-performance caching and rate limiting solution for:
 We will use **Redis 7.x** for caching, rate limiting, and session management.
 
 **Implementation**:
+
 ```typescript
 import { createClient } from 'redis';
 
@@ -66,6 +69,7 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 ```
 
 **Use Cases**:
+
 1. **L2 Cache**: Persistent cache layer (L1 is in-memory)
 2. **Rate Limiting**: API request throttling
 3. **Session Storage**: User authentication sessions
@@ -124,12 +128,15 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 ## Alternatives Considered
 
 ### 1. Memcached
+
 **Pros**:
+
 - Simpler than Redis
 - Multi-threaded (uses multiple cores)
 - Slightly faster for simple key-value
 
 **Cons**:
+
 - Only supports strings (no data structures)
 - No persistence (data lost on restart)
 - Limited features (no pub/sub, no Lua scripts)
@@ -137,12 +144,15 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 **Why Rejected**: Need data structures for rate limiting, sorted sets for leaderboards. Persistence important for sessions.
 
 ### 2. In-Memory Only (No L2 Cache)
+
 **Pros**:
+
 - Simplest solution
 - No additional infrastructure
 - Zero latency
 
 **Cons**:
+
 - Lost on server restart
 - Not shared across instances
 - Limited by process memory
@@ -150,11 +160,14 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 **Why Rejected**: Need persistent cache across deployments and shared cache for multiple server instances.
 
 ### 3. Database for Caching
+
 **Pros**:
+
 - One less service to manage
 - Persistent by default
 
 **Cons**:
+
 - Too slow (20-100ms vs <1ms)
 - Wastes database resources
 - Defeats purpose of caching
@@ -162,12 +175,15 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 **Why Rejected**: Performance not acceptable. Cache should be faster than source.
 
 ### 4. DynamoDB (AWS)
+
 **Pros**:
+
 - Serverless, auto-scaling
 - Good for AWS deployments
 - Strong consistency option
 
 **Cons**:
+
 - Higher latency (5-20ms)
 - Vendor lock-in to AWS
 - More expensive than Redis
@@ -178,6 +194,7 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 ## Implementation Notes
 
 **Connection Management**:
+
 ```typescript
 class RedisService {
   private client: RedisClient;
@@ -214,6 +231,7 @@ class RedisService {
 ```
 
 **Rate Limiting Middleware**:
+
 ```typescript
 function rateLimitMiddleware(options: RateLimitOptions) {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -231,13 +249,17 @@ function rateLimitMiddleware(options: RateLimitOptions) {
   };
 }
 
-app.use('/api', rateLimitMiddleware({
-  windowMs: 60000,
-  maxRequests: 100,
-}));
+app.use(
+  '/api',
+  rateLimitMiddleware({
+    windowMs: 60000,
+    maxRequests: 100,
+  })
+);
 ```
 
 **Cache Invalidation Patterns**:
+
 ```typescript
 // Tag-based invalidation
 class CacheService {
@@ -272,6 +294,7 @@ await cache.invalidateByTag('user');
 ```
 
 **Monitoring**:
+
 ```typescript
 // Monitor Redis health
 setInterval(async () => {
@@ -290,6 +313,7 @@ setInterval(async () => {
 ## Configuration
 
 **Production Configuration**:
+
 ```bash
 # redis.conf
 maxmemory 2gb

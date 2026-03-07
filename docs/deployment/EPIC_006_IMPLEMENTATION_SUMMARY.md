@@ -142,12 +142,14 @@ Successfully implemented production-grade automated deployment pipeline for the 
    - Manual override via workflow_dispatch
 
 2. **Path-Based Triggers** (Monorepo Optimization)
+
    ```yaml
    paths:
      - 'packages/backend/**'
-     - '!packages/backend/**/*.md'      # Skip docs
+     - '!packages/backend/**/*.md' # Skip docs
      - '!packages/backend/**/*.test.ts' # Skip tests
    ```
+
    - Only deploys when backend code changes
    - Ignores documentation and test updates
    - Prevents unnecessary deployments
@@ -172,6 +174,7 @@ Successfully implemented production-grade automated deployment pipeline for the 
    - Deployment window: Mon-Fri 9am-5pm EST
 
 5. **Deployment Window Logic**
+
    ```bash
    current_hour=$(TZ=America/New_York date +%H)
    current_day=$(TZ=America/New_York date +%u)
@@ -226,8 +229,8 @@ on:
 1. **Health Check Endpoints** (`packages/backend/src/routes/health.ts`)
 
    Existing comprehensive health check system enhanced for deployment:
-
    - **`/health`**: Basic health status (200ms response)
+
      ```json
      {
        "success": true,
@@ -241,6 +244,7 @@ on:
      ```
 
    - **`/health/ready`**: Readiness probe (DB + Redis)
+
      ```json
      {
        "status": "ready",
@@ -249,6 +253,7 @@ on:
      ```
 
    - **`/health/live`**: Liveness probe (process alive)
+
      ```json
      {
        "status": "alive",
@@ -277,7 +282,6 @@ on:
 2. **Deployment Monitoring Middleware** (`packages/backend/src/middleware/deployment-monitoring.ts`)
 
    Real-time metrics tracking during deployments:
-
    - **Error Rate Monitoring**: Tracks 4xx and 5xx responses
    - **Response Time Tracking**: P50, P95, P99 percentiles
    - **Request Throughput**: Requests per second
@@ -285,6 +289,7 @@ on:
    - **SLO Validation**: Automatic health checks against thresholds
 
    **Deployment Health Endpoint** (`/api/deployment/health`):
+
    ```json
    {
      "status": "healthy",
@@ -310,6 +315,7 @@ on:
    ```
 
    **Prometheus Metrics Endpoint** (`/api/metrics`):
+
    ```
    # HELP http_requests_total Total number of HTTP requests
    # TYPE http_requests_total counter
@@ -327,7 +333,6 @@ on:
 3. **Smoke Test Suite** (`packages/backend/src/__tests__/smoke-tests.test.ts`)
 
    Post-deployment validation with 15+ test scenarios:
-
    - **Health & Readiness** (4 tests)
      - Basic health endpoint
      - Liveness probe
@@ -376,6 +381,7 @@ on:
    - `post-rollback`: Collect metrics and generate report
 
    **Rollback Process**:
+
    ```
    1. Validate Request (< 30 seconds)
       ├── Check previous version exists
@@ -404,7 +410,6 @@ on:
 5. **Rollback Triggers**
 
    Automatic rollback triggered when:
-
    - **Error Rate > 5%**: Too many 4xx/5xx responses
    - **P95 Response Time > 1000ms**: Performance degradation
    - **P99 Response Time > 2000ms**: Severe performance issues
@@ -413,6 +418,7 @@ on:
    - **Manual Trigger**: Via workflow_dispatch
 
    **SLO-Based Monitoring**:
+
    ```typescript
    isHealthy(): { healthy: boolean; reasons: string[] } {
      const reasons: string[] = [];
@@ -435,7 +441,6 @@ on:
 6. **Alert Notifications**
 
    Comprehensive alerting via Slack:
-
    - **Deployment Started**: Environment, version, committer
    - **Deployment Success**: Metrics summary, deployment URL
    - **Deployment Failed**: Error details, rollback status
@@ -608,40 +613,40 @@ graph TD
 
 ### Automation Progress
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Overall CI/CD Automation | 75% | **100%** | +25% ✅ |
-| Frontend Automation | 95% | 95% | Maintained ✅ |
-| Backend Automation | 40% | **100%** | +60% ✅ |
-| Manual Deployment Steps | 8 | **0** | -100% ✅ |
+| Metric                   | Before | After    | Improvement   |
+| ------------------------ | ------ | -------- | ------------- |
+| Overall CI/CD Automation | 75%    | **100%** | +25% ✅       |
+| Frontend Automation      | 95%    | 95%      | Maintained ✅ |
+| Backend Automation       | 40%    | **100%** | +60% ✅       |
+| Manual Deployment Steps  | 8      | **0**    | -100% ✅      |
 
 ### Performance Metrics
 
-| Metric | Target | Achieved | Status |
-|--------|--------|----------|--------|
-| Deployment Time | < 15 min | **< 10 min** | ✅ Exceeded |
-| Rollback Time | < 5 min | **< 2 min** | ✅ Exceeded |
-| Health Check Retries | 30 | 30 | ✅ Met |
-| Traffic Switch Stages | 3 | 3 (10%, 50%, 100%) | ✅ Met |
+| Metric                | Target   | Achieved           | Status      |
+| --------------------- | -------- | ------------------ | ----------- |
+| Deployment Time       | < 15 min | **< 10 min**       | ✅ Exceeded |
+| Rollback Time         | < 5 min  | **< 2 min**        | ✅ Exceeded |
+| Health Check Retries  | 30       | 30                 | ✅ Met      |
+| Traffic Switch Stages | 3        | 3 (10%, 50%, 100%) | ✅ Met      |
 
 ### Reliability Metrics
 
-| Metric | Target | Achieved | Status |
-|--------|--------|----------|--------|
-| Zero-Downtime Deployments | 100% | **100%** | ✅ Met |
-| Automatic Rollback Coverage | 100% | **100%** | ✅ Met |
-| Health Endpoint Coverage | 4 | 4 | ✅ Met |
-| Smoke Test Scenarios | 10+ | **15+** | ✅ Exceeded |
+| Metric                      | Target | Achieved | Status      |
+| --------------------------- | ------ | -------- | ----------- |
+| Zero-Downtime Deployments   | 100%   | **100%** | ✅ Met      |
+| Automatic Rollback Coverage | 100%   | **100%** | ✅ Met      |
+| Health Endpoint Coverage    | 4      | 4        | ✅ Met      |
+| Smoke Test Scenarios        | 10+    | **15+**  | ✅ Exceeded |
 
 ### Security Metrics
 
-| Feature | Implemented | Status |
-|---------|-------------|--------|
-| Image Signing (Cosign) | ✅ | Implemented |
-| Vulnerability Scanning (Trivy) | ✅ | Implemented |
-| SARIF Upload to GitHub Security | ✅ | Implemented |
-| Secrets Validation in CI | ✅ | Implemented |
-| Manual Approval for Production | ✅ | Configured |
+| Feature                         | Implemented | Status      |
+| ------------------------------- | ----------- | ----------- |
+| Image Signing (Cosign)          | ✅          | Implemented |
+| Vulnerability Scanning (Trivy)  | ✅          | Implemented |
+| SARIF Upload to GitHub Security | ✅          | Implemented |
+| Secrets Validation in CI        | ✅          | Implemented |
+| Manual Approval for Production  | ✅          | Configured  |
 
 ---
 
@@ -774,6 +779,7 @@ graph TD
 The implementation of US-E6-003, US-E6-004, and US-E6-005 successfully achieves **100% CI/CD automation** for the Sovren backend with production-ready blue-green deployments and automatic rollback capabilities.
 
 **Key Highlights**:
+
 - ✅ Zero-downtime deployments with < 10 minute deployment time
 - ✅ Automatic rollback with < 2 minute guarantee
 - ✅ Comprehensive health monitoring and smoke tests

@@ -135,20 +135,17 @@ CMD ["dist/server.js"]
 ### Security Hardening Features
 
 1. **Distroless Images**
-
    - No shell access
    - Minimal attack surface
    - Only runtime dependencies included
    - Regularly updated and scanned
 
 2. **Non-Root Execution**
-
    - All containers run as non-privileged users
    - File permissions properly configured
    - No capability escalation
 
 3. **Resource Constraints**
-
    - CPU and memory limits enforced
    - Disk I/O limitations
    - Network bandwidth controls
@@ -367,13 +364,11 @@ backend:
 ### Build Performance
 
 1. **Layer Caching**
-
    - Dependency installation before source copy
    - Minimal layer invalidation
    - Optimized Dockerfile order
 
 2. **Multi-Stage Efficiency**
-
    - Separate build and runtime stages
    - Minimal final image size
    - Build artifact exclusion
@@ -386,13 +381,11 @@ backend:
 ### Runtime Performance
 
 1. **Resource Allocation**
-
    - Appropriate CPU/memory limits
    - Resource reservations for guaranteed performance
    - Horizontal scaling capabilities
 
 2. **Network Optimization**
-
    - Efficient service discovery
    - Load balancing configuration
    - Connection pooling
@@ -480,13 +473,11 @@ backend:
 ### Incident Response
 
 1. **Container Failures**
-
    - Automatic restart policies configured
    - Health check-based recovery
    - Alerting and notification system
 
 2. **Security Incidents**
-
    - Immediate container isolation
    - Forensic log preservation
    - Security scan re-validation

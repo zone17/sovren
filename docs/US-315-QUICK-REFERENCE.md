@@ -37,11 +37,13 @@ const signed = await keyManagementService.signEvent(keyPair.keyId, event);
 ## Core Methods
 
 ### Initialization
+
 ```typescript
 await keyManagementService.initialize(config?: Partial<NostrKeyManagementConfig>);
 ```
 
 ### Key Generation
+
 ```typescript
 const keyPair = await keyManagementService.generateKeyPair(metadata?: {
   name?: string;
@@ -51,13 +53,10 @@ const keyPair = await keyManagementService.generateKeyPair(metadata?: {
 ```
 
 ### Key Import
+
 ```typescript
 // Import from nsec
-const imported = await keyManagementService.importKey(
-  'nsec1...',
-  'nsec',
-  { name: 'Imported Key' }
-);
+const imported = await keyManagementService.importKey('nsec1...', 'nsec', { name: 'Imported Key' });
 
 // Import from hex
 const imported = await keyManagementService.importKey(
@@ -67,6 +66,7 @@ const imported = await keyManagementService.importKey(
 ```
 
 ### Key Export
+
 ```typescript
 // Export as nsec (private key - WARNING logged)
 const nsec = await keyManagementService.exportKey(keyId, 'nsec');
@@ -79,6 +79,7 @@ const npub = await keyManagementService.exportKey(keyId, 'npub');
 ```
 
 ### Event Signing
+
 ```typescript
 // Sign with local key
 const signed = await keyManagementService.signEvent(keyId, event);
@@ -91,6 +92,7 @@ const isValid = await keyManagementService.verifyEventSignature(signed);
 ```
 
 ### Browser Extension
+
 ```typescript
 // Detect extension
 const detected = await keyManagementService.detectBrowserExtension();
@@ -105,6 +107,7 @@ if (extension.enabled) {
 ```
 
 ### Key Management
+
 ```typescript
 // List all keys
 const keys = await keyManagementService.listKeys();
@@ -126,6 +129,7 @@ await keyManagementService.clearSession();
 ```
 
 ### Key Validation
+
 ```typescript
 // Validate key integrity
 const validation = await keyManagementService.validateKey(keyId);
@@ -141,6 +145,7 @@ const isValidHex = keyManagementService.validateKeyFormat('67dea2...', 'hex');
 ```
 
 ### Security Features
+
 ```typescript
 // Set encryption password
 await keyManagementService.setEncryptionPassword('secure-password');
@@ -197,22 +202,22 @@ const config: NostrKeyManagementConfig = {
 ```typescript
 interface NostrEnhancedKeyPair {
   // Core Keys
-  privateKey: string;        // 64-char hex
-  publicKey: string;         // 64-char hex
-  npub: string;              // bech32 encoded public key
-  nsec: string;              // bech32 encoded private key
+  privateKey: string; // 64-char hex
+  publicKey: string; // 64-char hex
+  npub: string; // bech32 encoded public key
+  nsec: string; // bech32 encoded private key
 
   // Metadata
-  keyId: string;             // UUID
-  created: number;           // Timestamp
-  lastUsed?: number;         // Timestamp
+  keyId: string; // UUID
+  created: number; // Timestamp
+  lastUsed?: number; // Timestamp
   name?: string;
   description?: string;
   tags: string[];
 
   // Security
   entropySource: NostrEntropySource;
-  entropyBits: number;       // ≥128
+  entropyBits: number; // ≥128
   encrypted: boolean;
   securityLevel: 'basic' | 'enhanced' | 'maximum';
   compromised: boolean;
@@ -234,6 +239,7 @@ interface NostrEnhancedKeyPair {
 ## Security Best Practices
 
 ### ✅ DO:
+
 - ✅ Initialize service once at app startup
 - ✅ Use browser extensions when available
 - ✅ Enable encryption for all keys
@@ -244,6 +250,7 @@ interface NostrEnhancedKeyPair {
 - ✅ Mark compromised keys immediately
 
 ### ❌ DON'T:
+
 - ❌ Store private keys in localStorage
 - ❌ Log private keys (nsec/hex)
 - ❌ Share private keys over insecure channels
@@ -301,7 +308,9 @@ describe('My Feature', () => {
 
   it('should sign events', async () => {
     const keyPair = await service.generateKeyPair();
-    const event = { /* ... */ };
+    const event = {
+      /* ... */
+    };
     const signed = await service.signEvent(keyPair.keyId, event);
 
     expect(signed.sig).toHaveLength(128);
@@ -314,26 +323,31 @@ describe('My Feature', () => {
 ## Troubleshooting
 
 ### "Key not found"
+
 - Ensure key was generated/imported successfully
 - Check keyId is correct
 - Verify service is initialized
 
 ### "Insufficient entropy"
+
 - Browser crypto API not available
 - Try again (entropy collection is random)
 - Check browser compatibility
 
 ### "Storage quota exceeded"
+
 - Clear old keys with `deleteKey()`
 - Reduce cache size in config
 - Check browser storage settings
 
 ### "Key marked as compromised"
+
 - Cannot use compromised keys
 - Generate new key
 - Migrate to new key
 
 ### Extension not detected
+
 - Ensure browser extension is installed
 - Check window.nostr is available
 - Try connecting manually

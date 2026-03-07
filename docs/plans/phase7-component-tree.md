@@ -27,26 +27,26 @@ WellnessDashboard                      [Main container — tab in CreatorDashboa
 
 ### Component Responsibilities
 
-| Component | Data Source (TanStack Query) | Props | Key Behavior |
-|-----------|---------------------------|-------|-------------|
-| `WellnessDashboard` | Orchestrator — no direct data | None (fetches via children) | Lazy-loaded tab. Renders all wellness panels. |
-| `WorkPatternHeatmap` | `useWellnessPatterns('heatmap')` | `period: '7d' \| '30d'` | 7 rows (Mon-Sun) x 24 cols (hours). Color intensity maps 0-1. Tooltip on hover shows minutes. |
-| `BurnoutRiskGauge` | `useBurnoutScore()` | None | Circular gauge with animated fill. Shows score number, level badge, and top recommendation. Click expands `RiskFactorBreakdown`. |
-| `RiskFactorBreakdown` | Passed from parent | `factors: Factor[]` | List of 5 factors with weight, value, and detail text. Bar chart per factor. |
-| `RestDayTracker` | `useWellnessPatterns('7d')` | None | Shows current rest day streak, work/rest ratio as a segmented bar, target indicator. |
-| `SustainablePaceIndicator` | `useScheduleRecommendations()` | None | Side-by-side: "You're posting X/week" vs "Recommended: Y/week". Color indicator (on-pace/over-pace). |
-| `SustainableScheduler` | `useScheduleRecommendations()` | None | Panel with optimal days/hours, productive windows calendar view. |
-| `CreativeBuffer` | `useScheduleRecommendations()` | None | Horizontal bar showing buffer_days vs threshold. Red if below threshold. |
-| `BatchCreationWindows` | `useScheduleRecommendations()` | None | Weekly calendar with highlighted productive windows. |
-| `BoundarySettings` | `useBoundaries()` | None | Form with all boundary controls. Saves via PUT mutation. |
-| `FocusHoursConfig` | Passed from parent | `value, onChange` | Time range pickers (start/end) + multi-select day checkboxes. |
-| `EngagementBudget` | Passed from parent | `budget, used` | Progress bar (used/budget). Number input for weekly limit. |
-| `DNDToggle` | Passed from parent | `value, onChange` | Toggle switch + textarea for auto-response template. |
-| `CreatorAvailabilityStatus` | Passed from parent | `status, onChange` | Segmented control: available / creating / offline. |
-| `WellnessPulseModal` | `useWellnessPulse()` | `isOpen, onClose` | Modal with 3 slider inputs (1-5). Submit creates POST. Dismissible, never re-appears if dismissed permanently. |
-| `WellnessTrend` | `useWellnessPulse('history')` | `period: '30d' \| '90d'` | Line chart (Recharts) with composite_score over time. Shows trend direction badge. |
-| `WellnessResources` | Static JSON import | `category?: string` | Filterable grid of resource cards. Categories: communities, articles, tools, crisis. |
-| `ResourceCard` | Passed from parent | `resource: Resource` | Card with title, description, category badge, external link button. |
+| Component                   | Data Source (TanStack Query)     | Props                       | Key Behavior                                                                                                                     |
+| --------------------------- | -------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `WellnessDashboard`         | Orchestrator — no direct data    | None (fetches via children) | Lazy-loaded tab. Renders all wellness panels.                                                                                    |
+| `WorkPatternHeatmap`        | `useWellnessPatterns('heatmap')` | `period: '7d' \| '30d'`     | 7 rows (Mon-Sun) x 24 cols (hours). Color intensity maps 0-1. Tooltip on hover shows minutes.                                    |
+| `BurnoutRiskGauge`          | `useBurnoutScore()`              | None                        | Circular gauge with animated fill. Shows score number, level badge, and top recommendation. Click expands `RiskFactorBreakdown`. |
+| `RiskFactorBreakdown`       | Passed from parent               | `factors: Factor[]`         | List of 5 factors with weight, value, and detail text. Bar chart per factor.                                                     |
+| `RestDayTracker`            | `useWellnessPatterns('7d')`      | None                        | Shows current rest day streak, work/rest ratio as a segmented bar, target indicator.                                             |
+| `SustainablePaceIndicator`  | `useScheduleRecommendations()`   | None                        | Side-by-side: "You're posting X/week" vs "Recommended: Y/week". Color indicator (on-pace/over-pace).                             |
+| `SustainableScheduler`      | `useScheduleRecommendations()`   | None                        | Panel with optimal days/hours, productive windows calendar view.                                                                 |
+| `CreativeBuffer`            | `useScheduleRecommendations()`   | None                        | Horizontal bar showing buffer_days vs threshold. Red if below threshold.                                                         |
+| `BatchCreationWindows`      | `useScheduleRecommendations()`   | None                        | Weekly calendar with highlighted productive windows.                                                                             |
+| `BoundarySettings`          | `useBoundaries()`                | None                        | Form with all boundary controls. Saves via PUT mutation.                                                                         |
+| `FocusHoursConfig`          | Passed from parent               | `value, onChange`           | Time range pickers (start/end) + multi-select day checkboxes.                                                                    |
+| `EngagementBudget`          | Passed from parent               | `budget, used`              | Progress bar (used/budget). Number input for weekly limit.                                                                       |
+| `DNDToggle`                 | Passed from parent               | `value, onChange`           | Toggle switch + textarea for auto-response template.                                                                             |
+| `CreatorAvailabilityStatus` | Passed from parent               | `status, onChange`          | Segmented control: available / creating / offline.                                                                               |
+| `WellnessPulseModal`        | `useWellnessPulse()`             | `isOpen, onClose`           | Modal with 3 slider inputs (1-5). Submit creates POST. Dismissible, never re-appears if dismissed permanently.                   |
+| `WellnessTrend`             | `useWellnessPulse('history')`    | `period: '30d' \| '90d'`    | Line chart (Recharts) with composite_score over time. Shows trend direction badge.                                               |
+| `WellnessResources`         | Static JSON import               | `category?: string`         | Filterable grid of resource cards. Categories: communities, articles, tools, crisis.                                             |
+| `ResourceCard`              | Passed from parent               | `resource: Resource`        | Card with title, description, category badge, external link button.                                                              |
 
 ---
 
@@ -76,25 +76,25 @@ AuthenticityBadge                      [Standalone — injected into FeedItem]
 
 ### Component Responsibilities
 
-| Component | Data Source (TanStack Query) | Props | Key Behavior |
-|-----------|---------------------------|-------|-------------|
-| `ShieldDashboard` | Orchestrator | None | Lazy-loaded route. Renders overview, coverage, and alerts panels. |
-| `ProvenanceOverview` | `useProvenanceChain('summary')` | None | Cards showing: total content signed, total relay confirmations, latest signed content. |
-| `FingerprintCoverage` | `useFingerprintCoverage()` | None | Donut chart: fingerprinted vs total content. List of un-fingerprinted content with "Fingerprint Now" action. |
-| `AlertsFeed` | `useAlerts(status)` | `status: AlertStatus` | Paginated list. Tab bar for status filters. Badge count for "new" alerts. |
-| `AlertCard` | Passed from parent | `alert: ContentAlert` | Compact card: original title, copy URL, similarity score bar, status badge. Click expands detail. |
-| `AlertStatusBadge` | Passed from parent | `status: AlertStatus` | Colored pill: new=blue, reviewed=yellow, resolved=green, false_positive=gray, reported=red. |
-| `AlertDetailPanel` | `useAlertDetail(id)` | `alertId: string` | Full comparison view. Side-by-side original vs copy with highlighted differences. |
-| `OriginalContentPreview` | Passed from parent | `original: OriginalContent` | Excerpt + published_at + provenance signature badge. |
-| `DetectedCopyPreview` | Passed from parent | `detected: DetectedContent` | Excerpt + published_at + author pubkey + relay. |
-| `SimilarityIndicator` | Passed from parent | `score, matchLevel` | Horizontal bar (red=exact, orange=derivative, green=coincidental) + percentage label. |
-| `DMCAReportButton` | `useDmcaReport()` | `alertId: string` | Button that triggers report generation. Shows loading state. Downloads PDF or opens JSON. |
-| `AlertResolutionActions` | `useAlerts()` mutation | `alertId, currentStatus` | Button group for valid status transitions. Disabled buttons for invalid transitions. |
-| `AuthenticityBadge` | `useProvenanceChain(contentId)` | `contentId: string` | Small badge: checkmark (verified), question mark (unverified), exclamation (disputed). Click opens `ProvenanceChainViewer` as popover. |
-| `ProvenanceChainViewer` | `useProvenanceChain(contentId)` | `contentId: string` | Detailed provenance display. Shows signature, relay confirmations, NIP-05 status. |
-| `SignatureBlock` | Passed from parent | `provenance: Provenance` | Monospace display of pubkey + signature + timestamp. Copy-to-clipboard buttons. |
-| `RelayConfirmations` | Passed from parent | `confirmations: RelayConfirmation[]` | List with relay URL + confirmation timestamp + checkmark icon. |
-| `NIP05Badge` | Passed from parent | `nip05Verified: boolean, nip05: string` | Shows NIP-05 identifier with verified/unverified state. |
+| Component                | Data Source (TanStack Query)    | Props                                   | Key Behavior                                                                                                                           |
+| ------------------------ | ------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `ShieldDashboard`        | Orchestrator                    | None                                    | Lazy-loaded route. Renders overview, coverage, and alerts panels.                                                                      |
+| `ProvenanceOverview`     | `useProvenanceChain('summary')` | None                                    | Cards showing: total content signed, total relay confirmations, latest signed content.                                                 |
+| `FingerprintCoverage`    | `useFingerprintCoverage()`      | None                                    | Donut chart: fingerprinted vs total content. List of un-fingerprinted content with "Fingerprint Now" action.                           |
+| `AlertsFeed`             | `useAlerts(status)`             | `status: AlertStatus`                   | Paginated list. Tab bar for status filters. Badge count for "new" alerts.                                                              |
+| `AlertCard`              | Passed from parent              | `alert: ContentAlert`                   | Compact card: original title, copy URL, similarity score bar, status badge. Click expands detail.                                      |
+| `AlertStatusBadge`       | Passed from parent              | `status: AlertStatus`                   | Colored pill: new=blue, reviewed=yellow, resolved=green, false_positive=gray, reported=red.                                            |
+| `AlertDetailPanel`       | `useAlertDetail(id)`            | `alertId: string`                       | Full comparison view. Side-by-side original vs copy with highlighted differences.                                                      |
+| `OriginalContentPreview` | Passed from parent              | `original: OriginalContent`             | Excerpt + published_at + provenance signature badge.                                                                                   |
+| `DetectedCopyPreview`    | Passed from parent              | `detected: DetectedContent`             | Excerpt + published_at + author pubkey + relay.                                                                                        |
+| `SimilarityIndicator`    | Passed from parent              | `score, matchLevel`                     | Horizontal bar (red=exact, orange=derivative, green=coincidental) + percentage label.                                                  |
+| `DMCAReportButton`       | `useDmcaReport()`               | `alertId: string`                       | Button that triggers report generation. Shows loading state. Downloads PDF or opens JSON.                                              |
+| `AlertResolutionActions` | `useAlerts()` mutation          | `alertId, currentStatus`                | Button group for valid status transitions. Disabled buttons for invalid transitions.                                                   |
+| `AuthenticityBadge`      | `useProvenanceChain(contentId)` | `contentId: string`                     | Small badge: checkmark (verified), question mark (unverified), exclamation (disputed). Click opens `ProvenanceChainViewer` as popover. |
+| `ProvenanceChainViewer`  | `useProvenanceChain(contentId)` | `contentId: string`                     | Detailed provenance display. Shows signature, relay confirmations, NIP-05 status.                                                      |
+| `SignatureBlock`         | Passed from parent              | `provenance: Provenance`                | Monospace display of pubkey + signature + timestamp. Copy-to-clipboard buttons.                                                        |
+| `RelayConfirmations`     | Passed from parent              | `confirmations: RelayConfirmation[]`    | List with relay URL + confirmation timestamp + checkmark icon.                                                                         |
+| `NIP05Badge`             | Passed from parent              | `nip05Verified: boolean, nip05: string` | Shows NIP-05 identifier with verified/unverified state.                                                                                |
 
 ---
 
@@ -137,11 +137,14 @@ const ShieldDashboard = React.lazy(
 );
 
 // In route config
-<Route path="/shield" element={
-  <Suspense fallback={<PageLoader />}>
-    <ShieldDashboard />
-  </Suspense>
-} />
+<Route
+  path="/shield"
+  element={
+    <Suspense fallback={<PageLoader />}>
+      <ShieldDashboard />
+    </Suspense>
+  }
+/>;
 ```
 
 ---
@@ -150,16 +153,16 @@ const ShieldDashboard = React.lazy(
 
 These existing components from `components/ui/` are reused across both new feature modules:
 
-| Component | Usage |
-|-----------|-------|
-| `Card` | Container for dashboard panels |
-| `Badge` | Status indicators, category labels |
-| `Button` | Actions, form submissions |
-| `Modal` | Pulse check-in, provenance viewer |
-| `Tabs` | Dashboard tab navigation |
-| `Tooltip` | Heatmap cell hover, badge hover |
-| `ProgressBar` | Buffer depth, engagement budget |
-| `Spinner` / `Skeleton` | Loading states for TanStack Query |
+| Component              | Usage                              |
+| ---------------------- | ---------------------------------- |
+| `Card`                 | Container for dashboard panels     |
+| `Badge`                | Status indicators, category labels |
+| `Button`               | Actions, form submissions          |
+| `Modal`                | Pulse check-in, provenance viewer  |
+| `Tabs`                 | Dashboard tab navigation           |
+| `Tooltip`              | Heatmap cell hover, badge hover    |
+| `ProgressBar`          | Buffer depth, engagement budget    |
+| `Spinner` / `Skeleton` | Loading states for TanStack Query  |
 
 ---
 
@@ -183,6 +186,7 @@ features/content-shield/hooks/
 ```
 
 Query key conventions:
+
 - `['wellness', 'patterns', period]`
 - `['wellness', 'risk-score']`
 - `['wellness', 'pulse', period]`
@@ -199,6 +203,7 @@ Stale time: 5 minutes for most queries, 1 minute for alerts (more time-sensitive
 ## Accessibility Requirements
 
 All new components must meet:
+
 - ARIA labels on interactive elements
 - Keyboard navigation (Tab, Enter, Escape for modals)
 - Screen reader support for data visualizations (heatmap, gauge, charts)

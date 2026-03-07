@@ -1,6 +1,6 @@
 # Deployment Troubleshooting Guide
 
-*Elite Engineering Documentation - Sovren Platform*
+_Elite Engineering Documentation - Sovren Platform_
 
 ## Table of Contents
 
@@ -29,16 +29,19 @@ This guide documents the comprehensive solution to deployment failures that occu
 ### 🚨 Issue #1: Function Runtimes Error
 
 **Error Message:**
+
 ```
 Function Runtimes must have a valid version
 ```
 
 **Root Cause:**
+
 - Multiple `vercel.json` configuration files
 - Frontend config attempted to use invalid runtime `"nodejs18.x"`
 - Vercel couldn't determine configuration precedence
 
 **Solution:**
+
 ```bash
 # Remove competing configuration
 rm packages/frontend/vercel.json
@@ -48,6 +51,7 @@ rm packages/frontend/vercel.json
 ```
 
 **Why This Works:**
+
 - Eliminates configuration conflicts
 - Establishes Single Source of Truth pattern
 - Vercel reads root config with clear precedence rules
@@ -55,25 +59,26 @@ rm packages/frontend/vercel.json
 ### 🚨 Issue #2: Babel Plugin Build Failure
 
 **Error Message:**
+
 ```
 Cannot find package 'babel-plugin-transform-react-remove-prop-types'
 ```
 
 **Root Cause:**
+
 - External babel plugin in devDependencies
 - Vercel production builds don't install devDependencies
 - Plugin tried to access during production optimization
 
 **Solution:**
+
 ```typescript
 // Remove external babel dependencies
 // Use native Vite optimizations instead
 
 // Before (problematic)
 babel: {
-  plugins: [
-    'babel-plugin-transform-react-remove-prop-types'
-  ]
+  plugins: ['babel-plugin-transform-react-remove-prop-types'];
 }
 
 // After (modern approach)
@@ -82,12 +87,13 @@ react({
     plugins: [
       // No external babel plugins needed
       // Vite handles optimizations natively
-    ]
-  }
-})
+    ],
+  },
+});
 ```
 
 **Why This Works:**
+
 - Modern Vite handles prop-types removal natively
 - Eliminates external dependencies
 - esbuild optimizations are faster and more reliable
@@ -95,16 +101,19 @@ react({
 ### 🚨 Issue #3: Performance Monitoring Runtime Error
 
 **Error Message:**
+
 ```
 TypeError: Cannot read properties of undefined (reading 'good')
 ```
 
 **Root Cause:**
+
 - Performance monitoring tried to access thresholds for unknown metrics
 - `PERFORMANCE_THRESHOLDS[unknownMetric]` returned `undefined`
 - Accessing `undefined.good` threw runtime error
 
 **Solution:**
+
 ```typescript
 // Add intelligent fallback system
 private getSafeRating(metricName: string, value: number): 'good' | 'needs-improvement' | 'poor' {
@@ -122,6 +131,7 @@ private getSafeRating(metricName: string, value: number): 'good' | 'needs-improv
 ```
 
 **Why This Works:**
+
 - Prevents undefined property access
 - Maintains monitoring functionality
 - Provides intelligent defaults for unknown metrics
@@ -129,16 +139,19 @@ private getSafeRating(metricName: string, value: number): 'good' | 'needs-improv
 ### 🚨 Issue #4: React Router Nested Conflicts
 
 **Error Message:**
+
 ```
 Router error in router-Doq8aAwY.js
 ```
 
 **Root Cause:**
+
 - `BrowserRouter` components in both `main.tsx` and `App.tsx`
 - Nested routers cause context conflicts
 - React Router v6 strict mode enforcement
 
 **Solution:**
+
 ```typescript
 // Remove nested router from App.tsx
 // Keep single BrowserRouter in main.tsx with future flags
@@ -161,6 +174,7 @@ Router error in router-Doq8aAwY.js
 ```
 
 **Why This Works:**
+
 - Single router architecture prevents conflicts
 - Future flags ensure React Router v7 compatibility
 - Cleaner component hierarchy
@@ -174,11 +188,13 @@ Router error in router-Doq8aAwY.js
 **Problem:** Lack of configuration governance led to competing settings.
 
 **Analysis:**
+
 1. **Multiple Sources of Truth**: Root and frontend `vercel.json` files
 2. **No Validation**: No pre-commit checks for configuration conflicts
 3. **Poor Documentation**: Configuration precedence unclear
 
 **Solution Implemented:**
+
 - Single Source of Truth pattern
 - Configuration governance with `.vercelrc.json`
 - Pre-commit hooks with validation
@@ -189,11 +205,13 @@ Router error in router-Doq8aAwY.js
 **Problem:** External dependencies not properly categorized for production builds.
 
 **Analysis:**
+
 1. **Build vs Runtime**: Babel plugins needed at build time but in devDependencies
 2. **Modern Alternatives**: Native tools (Vite/esbuild) available
 3. **Bundle Optimization**: External dependencies increased bundle size
 
 **Solution Implemented:**
+
 - Eliminate external babel dependencies
 - Use native Vite optimizations
 - Modern esbuild for faster builds
@@ -203,11 +221,13 @@ Router error in router-Doq8aAwY.js
 **Problem:** Insufficient error boundaries and null checking.
 
 **Analysis:**
+
 1. **Runtime Crashes**: Single undefined access crashed entire app
 2. **Poor Fallbacks**: No graceful degradation for unknown metrics
 3. **No Recovery**: Errors propagated to crash user experience
 
 **Solution Implemented:**
+
 - Comprehensive null checking
 - Intelligent fallback systems
 - Error boundaries with recovery mechanisms
@@ -292,18 +312,21 @@ private getSafeRating(metricName: string, value: number) {
 ### Immediate Deployment Failure Response
 
 1. **Check Build Logs**
+
    ```bash
    # Look for specific error patterns
    grep -E "(Cannot find|undefined|TypeError)" build.log
    ```
 
 2. **Verify Configuration**
+
    ```bash
    # Check for competing configurations
    find . -name "vercel.json" -type f
    ```
 
 3. **Test Local Build**
+
    ```bash
    cd packages/frontend
    npm run verify-deployment
@@ -323,6 +346,7 @@ private getSafeRating(metricName: string, value: number) {
    - Note affected functionality
 
 2. **Performance Monitoring**
+
    ```bash
    # Check if monitoring is causing issues
    grep -r "getRating\|getMetricsSummary" src/
@@ -381,26 +405,31 @@ console.log('Poor performance:', performanceReport.poorPerformance);
 ## Best Practices for Future Development
 
 ### 1. Configuration Management
+
 - **Single Source of Truth**: Only modify root `vercel.json`
 - **Validation**: Use pre-commit hooks for config validation
 - **Documentation**: Update `.vercelrc.json` for governance
 
 ### 2. Dependency Management
+
 - **Modern Tools**: Prefer native tools over external dependencies
 - **Production Dependencies**: Ensure build-time dependencies are properly categorized
 - **Regular Audits**: Run `npm audit` and `npm outdated` regularly
 
 ### 3. Error Handling
+
 - **Defensive Programming**: Add null checks and fallbacks
 - **Error Boundaries**: Implement comprehensive error boundaries
 - **Graceful Degradation**: Ensure partial functionality during errors
 
 ### 4. Testing Strategy
+
 - **Local Verification**: Always test builds locally first
 - **Comprehensive Testing**: Test both development and production builds
 - **Deployment Verification**: Use verification scripts before deployment
 
 ### 5. Monitoring & Observability
+
 - **Real-time Monitoring**: Implement performance monitoring
 - **Error Tracking**: Use Sentry for production error tracking
 - **Analytics**: Track Core Web Vitals and user experience metrics
@@ -418,4 +447,4 @@ For questions about this troubleshooting guide or deployment issues:
 
 ---
 
-*This guide represents elite engineering practices with comprehensive documentation, forensic analysis, and proactive prevention strategies. It ensures future engineers can quickly diagnose and resolve deployment issues while understanding the architectural decisions behind the solutions.*
+_This guide represents elite engineering practices with comprehensive documentation, forensic analysis, and proactive prevention strategies. It ensures future engineers can quickly diagnose and resolve deployment issues while understanding the architectural decisions behind the solutions._

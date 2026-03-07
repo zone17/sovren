@@ -105,12 +105,10 @@ const env = envSchema.parse(process.env);
 Updated `.husky/pre-commit` and scanner scripts to apply three scoping dimensions:
 
 1. **File scope** — which directories the rule applies to
-
    - Frontend excluded from `console.*` check (no logger service available)
    - Test-utils excluded from credentials check (fake credentials by design)
 
 2. **Line scope** — new lines only via `git diff --cached`
-
    - TODO check scoped to new lines only (stops flagging pre-existing TODOs)
 
 3. **Context scope** — test files, generated code excluded by default

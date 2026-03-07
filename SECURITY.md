@@ -2,10 +2,10 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 2.x     | Yes                |
-| < 2.0   | No                 |
+| Version | Supported |
+| ------- | --------- |
+| 2.x     | Yes       |
+| < 2.0   | No        |
 
 ## Reporting a Vulnerability
 
@@ -43,15 +43,16 @@ This project employs automated security scanning:
 ### Severity Levels That Block Deployment
 
 | Severity | CVSS Score | Blocks PR Merge | Blocks Production Deploy |
-|----------|-----------|-----------------|--------------------------|
-| Critical | 9.0-10.0  | Yes             | Yes                      |
-| High     | 7.0-8.9   | Yes             | Yes                      |
-| Medium   | 4.0-6.9   | No (warning)    | No (warning)             |
-| Low      | 0.1-3.9   | No              | No                       |
+| -------- | ---------- | --------------- | ------------------------ |
+| Critical | 9.0-10.0   | Yes             | Yes                      |
+| High     | 7.0-8.9    | Yes             | Yes                      |
+| Medium   | 4.0-6.9    | No (warning)    | No (warning)             |
+| Low      | 0.1-3.9    | No              | No                       |
 
 ### Exceptions
 
 Known vulnerabilities may be temporarily accepted with:
+
 1. A documented risk assessment
 2. A mitigation plan with timeline
 3. Approval from the security team lead

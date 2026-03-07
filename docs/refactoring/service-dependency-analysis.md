@@ -1,4 +1,5 @@
 # Service Dependency Analysis - Epic 005
+
 **Generated**: 2025-10-26
 **Story**: US-E5-001
 **Analyst**: Lead Engineering Manager
@@ -12,6 +13,7 @@ This document provides a comprehensive analysis of the current backend service d
 ### Core Business Services (31 Total)
 
 #### Payment & Subscription Services (7)
+
 1. **LightningPaymentService** - Bitcoin Lightning payment processing
 2. **LightningService** - Lightning Network integration
 3. **PaymentRetryService** - Payment failure handling
@@ -21,12 +23,14 @@ This document provides a comprehensive analysis of the current backend service d
 7. **UserSubscriptionService** - User subscription states
 
 #### Content Services (4)
+
 8. **ContentManagementService** - Content CRUD operations
 9. **CreatorRecommendationService** - AI-powered recommendations
 10. **AIRecommendationService** - Content recommendations
 11. **AIEnhancedFeaturesService** - AI content features
 
 #### Authentication & Session Services (5)
+
 12. **NostrAuthService** - NOSTR authentication
 13. **EnhancedNostrAuthService** - Advanced NOSTR auth
 14. **UnifiedNostrAuthService** - Consolidated auth
@@ -35,10 +39,12 @@ This document provides a comprehensive analysis of the current backend service d
 17. **DatabaseSessionManager** - Database sessions
 
 #### User Services (2)
+
 18. **UserService** - User management
 19. **NIP05VerificationService** - NOSTR identity verification
 
 #### Analytics Services (5)
+
 20. **AnalyticsIntegrationService** - Analytics hub
 21. **EngagementAnalyticsService** - User engagement
 22. **QualityMetricsService** - Platform metrics
@@ -46,12 +52,14 @@ This document provides a comprehensive analysis of the current backend service d
 24. **NIP05MonitoringService** - NOSTR monitoring
 
 #### Communication Services (4)
+
 25. **EmailIntegrationService** - Email operations
 26. **EmailIntegrationServiceExtended** - Extended email
 27. **NotificationService** - Notifications (missing, needs creation)
 28. **WebSocketService** - Real-time updates (missing, needs creation)
 
 #### Integration Services (4)
+
 29. **SocialMediaIntegrationService** - Social platforms
 30. **SupabaseRealtimeService** - Real-time data
 31. **RLSMonitoringService** - Row-level security
@@ -60,13 +68,13 @@ This document provides a comprehensive analysis of the current backend service d
 
 ### Critical Dependencies (Tight Coupling - HIGH RISK)
 
-| Service | Dependencies | Coupling Type | Risk Level |
-|---------|--------------|---------------|------------|
-| **LightningPaymentService** | AnalyticsService, NotificationService, WebSocketService, Redis, Supabase | **TIGHT** | **CRITICAL** |
-| **SubscriptionManagementService** | AnalyticsService, LightningPaymentService, NotificationService, WebSocketService | **TIGHT** | **CRITICAL** |
-| **PayoutManagementService** | AnalyticsService, LightningPaymentService, NotificationService, TransactionHistoryService | **TIGHT** | **CRITICAL** |
-| **UnifiedNostrAuthService** | SessionService, KeyManagementService (frontend!) | **TIGHT** | **HIGH** |
-| **PaymentRetryService** | EmailIntegrationService | **TIGHT** | **HIGH** |
+| Service                           | Dependencies                                                                              | Coupling Type | Risk Level   |
+| --------------------------------- | ----------------------------------------------------------------------------------------- | ------------- | ------------ |
+| **LightningPaymentService**       | AnalyticsService, NotificationService, WebSocketService, Redis, Supabase                  | **TIGHT**     | **CRITICAL** |
+| **SubscriptionManagementService** | AnalyticsService, LightningPaymentService, NotificationService, WebSocketService          | **TIGHT**     | **CRITICAL** |
+| **PayoutManagementService**       | AnalyticsService, LightningPaymentService, NotificationService, TransactionHistoryService | **TIGHT**     | **CRITICAL** |
+| **UnifiedNostrAuthService**       | SessionService, KeyManagementService (frontend!)                                          | **TIGHT**     | **HIGH**     |
+| **PaymentRetryService**           | EmailIntegrationService                                                                   | **TIGHT**     | **HIGH**     |
 
 ### Service Dependency Graph
 
@@ -143,6 +151,7 @@ graph TD
 ### 1. Tight Coupling (Needs Immediate Refactoring)
 
 **Payment Services Cluster**
+
 - All payment services directly depend on each other
 - Circular dependencies between LightningPaymentService ↔ SubscriptionManagementService
 - No abstraction layer between services
@@ -150,6 +159,7 @@ graph TD
 - Missing interface contracts
 
 **Authentication Services**
+
 - UnifiedNostrAuthService imports from FRONTEND (`KeyManagementService`)
 - Multiple overlapping auth services (NostrAuth, Enhanced, Unified)
 - Session management scattered across services
@@ -157,11 +167,13 @@ graph TD
 ### 2. Loose Coupling (Good Candidates for Extraction)
 
 **Analytics Services**
+
 - Used by many services but doesn't depend on them
 - Clear input/output boundaries
 - Good candidate for event-driven architecture
 
 **Content Services**
+
 - Relatively isolated from other services
 - Clear domain boundaries
 - Minimal cross-service dependencies
@@ -169,6 +181,7 @@ graph TD
 ### 3. Data Dependencies
 
 **Shared Data Models**
+
 - User data accessed by 15+ services
 - Payment data shared across 7 services
 - Content data accessed by 6 services
@@ -177,12 +190,14 @@ graph TD
 ## Missing Service Abstractions
 
 ### Critical Missing Services (Need Creation)
+
 1. **NotificationService** - Referenced but not implemented
 2. **WebSocketService** - Referenced but not implemented
 3. **AnalyticsService** - Referenced but not implemented
 4. **RedisService** - Referenced but not implemented
 
 ### Missing Abstraction Layers
+
 1. **Repository Layer** - Direct Supabase calls in services
 2. **Event Bus** - No service-to-service communication pattern
 3. **Service Registry** - No dependency injection container
@@ -191,6 +206,7 @@ graph TD
 ## Risk Assessment
 
 ### Critical Risks (Payment Path)
+
 1. **Payment Service Failure Cascade**
    - Risk: Single payment service failure can crash entire payment system
    - Impact: Direct revenue loss
@@ -207,6 +223,7 @@ graph TD
    - Mitigation: Extract shared code to packages/shared
 
 ### High Risks
+
 1. **No Service Interfaces**
    - Risk: Breaking changes without compile-time detection
    - Impact: Runtime failures in production
@@ -220,12 +237,14 @@ graph TD
 ## Refactoring Priority
 
 ### Phase 1: Foundation (MUST DO FIRST)
+
 1. Define service interfaces (Story #2)
 2. Create DI container (Story #3)
 3. Implement service factory (Story #4)
 4. Setup event bus (Story #5)
 
 ### Phase 2: Shared Services (Can Parallelize)
+
 1. Extract NotificationService (create new)
 2. Extract WebSocketService (create new)
 3. Extract AnalyticsService (create new)
@@ -233,6 +252,7 @@ graph TD
 5. Extract CacheService (create with Redis)
 
 ### Phase 3: Content Services (Can Parallelize)
+
 1. ContentCreationService
 2. ContentPublishingService
 3. ContentModerationService
@@ -240,12 +260,14 @@ graph TD
 5. ContentRecommendationService
 
 ### Phase 4: User Services (Can Parallelize)
+
 1. UserAuthenticationService
 2. UserProfileService
 3. UserPreferencesService
 4. UserActivityService
 
 ### Phase 5: Payment Services (CRITICAL - Sequential)
+
 1. InvoiceService (extract from Lightning)
 2. PaymentProcessingService (core payments)
 3. SubscriptionService (break circular dep)
@@ -255,17 +277,20 @@ graph TD
 ## Recommendations
 
 ### Immediate Actions
+
 1. **Create Missing Services** - NotificationService, WebSocketService, AnalyticsService
 2. **Fix Frontend Import** - Move KeyManagementService to packages/shared
 3. **Define Interfaces** - Create IService interfaces for all services
 
 ### Architecture Improvements
+
 1. **Implement Repository Pattern** - Abstract database access
 2. **Add Service Registry** - Central service management
 3. **Event-Driven Communication** - Decouple service interactions
 4. **Circuit Breakers** - Prevent cascade failures
 
 ### Testing Strategy
+
 1. **Unit Tests** - Test services in isolation with mocks
 2. **Integration Tests** - Test service interactions
 3. **Contract Tests** - Verify interface compliance
@@ -274,6 +299,7 @@ graph TD
 ## Migration Strategy
 
 ### Phase-Based Approach
+
 1. **Phase 1** (Days 1-3): Design interfaces and DI container
 2. **Phase 2** (Days 4-5): Extract shared services
 3. **Phase 3-4** (Days 6-10): Parallel extraction of content/user services
@@ -282,11 +308,13 @@ graph TD
 6. **Phase 7** (Days 18-20): Documentation and cleanup
 
 ### Feature Flags
+
 - Use feature flags for gradual rollout
 - Maintain backward compatibility during migration
 - A/B test new services against old
 
 ### Rollback Plan
+
 - Keep old services operational during migration
 - Implement service versioning
 - Database migration scripts with rollback
@@ -294,6 +322,7 @@ graph TD
 ## Metrics for Success
 
 ### Technical Metrics
+
 - ✅ 100% service interface coverage
 - ✅ Zero circular dependencies
 - ✅ 95%+ test coverage per service
@@ -301,6 +330,7 @@ graph TD
 - ✅ Zero frontend imports in backend
 
 ### Business Metrics
+
 - ✅ No increase in error rates
 - ✅ No performance degradation
 - ✅ Payment success rate maintained
@@ -310,16 +340,17 @@ graph TD
 
 ### Service Details Table
 
-| Service | Lines | Dependencies | Test Coverage | Refactor Priority |
-|---------|-------|--------------|---------------|------------------|
-| LightningPaymentService | 800+ | 5 services, 2 external | Unknown | CRITICAL |
-| SubscriptionManagementService | 600+ | 4 services | Unknown | CRITICAL |
-| ContentManagementService | 700+ | 1 external | Unknown | MEDIUM |
-| UnifiedNostrAuthService | 500+ | 2 services, 1 frontend | Unknown | HIGH |
-| EmailIntegrationService | 900+ | 1 external | Unknown | LOW |
-| AnalyticsIntegrationService | 1000+ | Multiple external | Unknown | MEDIUM |
+| Service                       | Lines | Dependencies           | Test Coverage | Refactor Priority |
+| ----------------------------- | ----- | ---------------------- | ------------- | ----------------- |
+| LightningPaymentService       | 800+  | 5 services, 2 external | Unknown       | CRITICAL          |
+| SubscriptionManagementService | 600+  | 4 services             | Unknown       | CRITICAL          |
+| ContentManagementService      | 700+  | 1 external             | Unknown       | MEDIUM            |
+| UnifiedNostrAuthService       | 500+  | 2 services, 1 frontend | Unknown       | HIGH              |
+| EmailIntegrationService       | 900+  | 1 external             | Unknown       | LOW               |
+| AnalyticsIntegrationService   | 1000+ | Multiple external      | Unknown       | MEDIUM            |
 
 ### Dependency Count Summary
+
 - **Total Services**: 31
 - **Tight Coupling**: 8 services (26%)
 - **Loose Coupling**: 15 services (48%)

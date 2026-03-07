@@ -20,6 +20,7 @@ supabase migration up
 ```
 
 **Verify Migration**:
+
 ```sql
 -- Should return webhook_events table
 SELECT table_name FROM information_schema.tables
@@ -35,6 +36,7 @@ WHERE routine_name LIKE '%webhook%';
 ### Step 2: Replace Webhook Handler
 
 **Option A: Direct Replacement** (Recommended for new deployments)
+
 ```bash
 cd packages/backend/src/routes
 
@@ -46,6 +48,7 @@ mv webhooks-race-condition-hardened.ts webhooks.ts
 ```
 
 **Option B: Gradual Migration** (Recommended for production)
+
 ```bash
 # Keep both handlers active
 # Route new webhooks to hardened handler, legacy to old handler
@@ -243,6 +246,7 @@ WHERE status = 'processing'
 ### Common Issues
 
 **Issue**: Migration fails with "relation payments does not exist"
+
 ```bash
 # Ensure payments table exists first
 # Run baseline schema migration if needed
@@ -250,6 +254,7 @@ psql $DATABASE_URL -f supabase/migrations/baseline/001_baseline_schema.sql
 ```
 
 **Issue**: "function process_webhook_atomic does not exist"
+
 ```bash
 # Verify function was created
 psql $DATABASE_URL -c "SELECT routine_name FROM information_schema.routines WHERE routine_name = 'process_webhook_atomic';"
@@ -259,6 +264,7 @@ psql $DATABASE_URL -f supabase/migrations/20251024000000_add_webhook_event_log.s
 ```
 
 **Issue**: High duplicate rate (>50%)
+
 ```sql
 -- Check if webhook provider is sending duplicates
 SELECT
@@ -303,18 +309,21 @@ ORDER BY delivery_count DESC;
 ### If You Encounter Issues
 
 1. **Check Application Logs**:
+
    ```bash
    # Look for webhook processing errors
    grep -i "webhook" /path/to/app.log | tail -50
    ```
 
 2. **Check Database Logs**:
+
    ```sql
    -- Check for constraint violations
    SELECT * FROM pg_stat_database_conflicts;
    ```
 
 3. **Query Webhook Events**:
+
    ```sql
    -- Find recent failures
    SELECT * FROM webhook_events

@@ -1,5 +1,5 @@
 ---
-title: "feat: Comments CRUD with Threading and Moderation"
+title: 'feat: Comments CRUD with Threading and Moderation'
 type: feat
 date: 2026-03-04
 squad: B
@@ -38,14 +38,14 @@ review_status: all_fixed
 
 Every Definition of Done criterion is explicitly mapped to tasks:
 
-| DoD Criterion | Tasks Covering It | Verification |
-|---|---|---|
-| Users can read comments on content | T3 (list endpoint), T9 (useComments hook), T11 (CommentList) | E2E: anonymous read, authenticated read |
-| Users can post comments on content | T4 (createComment), T9 (useCreateComment), T12 (CommentForm) | E2E: post comment, verify appears |
-| Comments stored in Supabase | T1 (migration), T4 (INSERT via service) | Backend unit test: verify insert |
-| Server-side XSS sanitization | T4 (sanitizeCommentText in service), T15 (ESLint no-danger) | Unit test: control chars stripped, HTML escaped by React |
-| Moderation (creator can delete) | T5 (deleteComment + auth check), T13 (delete button + dialog) | E2E: creator deletes comment on own content |
-| E2E spec | T17-T20 (POM + auth spec + public spec + creator moderation) | CI green, all E2E pass |
+| DoD Criterion                      | Tasks Covering It                                             | Verification                                             |
+| ---------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------- |
+| Users can read comments on content | T3 (list endpoint), T9 (useComments hook), T11 (CommentList)  | E2E: anonymous read, authenticated read                  |
+| Users can post comments on content | T4 (createComment), T9 (useCreateComment), T12 (CommentForm)  | E2E: post comment, verify appears                        |
+| Comments stored in Supabase        | T1 (migration), T4 (INSERT via service)                       | Backend unit test: verify insert                         |
+| Server-side XSS sanitization       | T4 (sanitizeCommentText in service), T15 (ESLint no-danger)   | Unit test: control chars stripped, HTML escaped by React |
+| Moderation (creator can delete)    | T5 (deleteComment + auth check), T13 (delete button + dialog) | E2E: creator deletes comment on own content              |
+| E2E spec                           | T17-T20 (POM + auth spec + public spec + creator moderation)  | CI green, all E2E pass                                   |
 
 ---
 
@@ -53,28 +53,28 @@ Every Definition of Done criterion is explicitly mapped to tasks:
 
 ### Task Summary Table
 
-| ID | Task | Points | Role | Depends On | Phase |
-|----|------|--------|------|------------|-------|
-| T1 | Write migration SQL | 1 | Architect/opus | — | 1 |
-| T2 | Create shared types (comments.ts) | 1 | Architect/opus | — | 1 |
-| T3 | Create ICommentsService interface + Zod schemas | 1 | Architect/opus | T2 | 1 |
-| T4 | Implement CommentsService (create + list + listReplies) | 1 | Backend/sonnet | T1, T2, T3 | 2 |
-| T5 | Implement CommentsService.deleteComment (soft-delete + moderation) | 1 | Backend/sonnet | T4 | 2 |
-| T6 | Create comments.routes.ts | 1 | Backend/sonnet | T3 | 2 |
-| T7 | Wire DI container (types.ts + community.bindings.ts + route registration) | 1 | Backend/sonnet | T4, T6 | 2 |
-| T8 | Create commentsApi.ts (API client) | 1 | Frontend/sonnet | T2 | 3 |
-| T9 | Create useComments hooks (useComments, useReplies, useCreateComment, useDeleteComment) | 1 | Frontend/sonnet | T8 | 3 |
-| T10 | Add commentKeys factory to query-keys.ts + barrel exports | 1 | Frontend/sonnet | — | 3 |
-| T11 | Build CommentList.tsx (list + pagination + loading/error/empty states) | 1 | Frontend/sonnet | T9 | 4 |
-| T12 | Build CommentForm.tsx (textarea + submit + double-submit prevention + anon state) | 1 | Frontend/sonnet | T9 | 4 |
-| T13 | Build CommentItem.tsx (display + reply toggle + delete button + confirmation dialog) | 1 | Frontend/sonnet | T9, T11 | 4 |
-| T14 | Backend unit tests for CommentsService | 1 | QA/sonnet | T4, T5 | 5 |
-| T15 | Frontend unit tests for hooks + CommentForm | 1 | QA/sonnet | T9, T12 | 5 |
-| T16 | Add ESLint no-danger rule for comments feature | 1 | QA/sonnet | — | 5 |
-| T17 | Create comments.page.ts (Playwright POM) | 1 | QA/sonnet | T11, T12, T13 | 5 |
-| T18 | Create comments.auth.spec.ts (post, delete own, reply, character limit) | 1 | QA/sonnet | T17 | 5 |
-| T19 | Create comments.public.spec.ts (anonymous read, sign-in prompt) | 1 | QA/sonnet | T17 | 5 |
-| T20 | Add creator moderation E2E test + TEST_CONTENT fixture | 1 | QA/sonnet | T17 | 5 |
+| ID  | Task                                                                                   | Points | Role            | Depends On    | Phase |
+| --- | -------------------------------------------------------------------------------------- | ------ | --------------- | ------------- | ----- |
+| T1  | Write migration SQL                                                                    | 1      | Architect/opus  | —             | 1     |
+| T2  | Create shared types (comments.ts)                                                      | 1      | Architect/opus  | —             | 1     |
+| T3  | Create ICommentsService interface + Zod schemas                                        | 1      | Architect/opus  | T2            | 1     |
+| T4  | Implement CommentsService (create + list + listReplies)                                | 1      | Backend/sonnet  | T1, T2, T3    | 2     |
+| T5  | Implement CommentsService.deleteComment (soft-delete + moderation)                     | 1      | Backend/sonnet  | T4            | 2     |
+| T6  | Create comments.routes.ts                                                              | 1      | Backend/sonnet  | T3            | 2     |
+| T7  | Wire DI container (types.ts + community.bindings.ts + route registration)              | 1      | Backend/sonnet  | T4, T6        | 2     |
+| T8  | Create commentsApi.ts (API client)                                                     | 1      | Frontend/sonnet | T2            | 3     |
+| T9  | Create useComments hooks (useComments, useReplies, useCreateComment, useDeleteComment) | 1      | Frontend/sonnet | T8            | 3     |
+| T10 | Add commentKeys factory to query-keys.ts + barrel exports                              | 1      | Frontend/sonnet | —             | 3     |
+| T11 | Build CommentList.tsx (list + pagination + loading/error/empty states)                 | 1      | Frontend/sonnet | T9            | 4     |
+| T12 | Build CommentForm.tsx (textarea + submit + double-submit prevention + anon state)      | 1      | Frontend/sonnet | T9            | 4     |
+| T13 | Build CommentItem.tsx (display + reply toggle + delete button + confirmation dialog)   | 1      | Frontend/sonnet | T9, T11       | 4     |
+| T14 | Backend unit tests for CommentsService                                                 | 1      | QA/sonnet       | T4, T5        | 5     |
+| T15 | Frontend unit tests for hooks + CommentForm                                            | 1      | QA/sonnet       | T9, T12       | 5     |
+| T16 | Add ESLint no-danger rule for comments feature                                         | 1      | QA/sonnet       | —             | 5     |
+| T17 | Create comments.page.ts (Playwright POM)                                               | 1      | QA/sonnet       | T11, T12, T13 | 5     |
+| T18 | Create comments.auth.spec.ts (post, delete own, reply, character limit)                | 1      | QA/sonnet       | T17           | 5     |
+| T19 | Create comments.public.spec.ts (anonymous read, sign-in prompt)                        | 1      | QA/sonnet       | T17           | 5     |
+| T20 | Add creator moderation E2E test + TEST_CONTENT fixture                                 | 1      | QA/sonnet       | T17           | 5     |
 
 **Total: 20 tasks, 20 points (10 story points with 2x granularity factor)**
 
@@ -118,20 +118,20 @@ Build the full comments system from scratch: backend CRUD routes, server-side XS
 
 These resolve the ambiguities identified during spec analysis:
 
-| # | Decision | Rationale |
-|---|----------|-----------|
-| D1 | `nostr_pubkey` → UUID resolution via `getUserIdByPubkey()` helper in CommentsService | `comments.user_id` is a UUID FK; auth JWT provides `nostr_pubkey`. Single lookup, cached in-memory (TTL 60s). Throw 401 if user not in `users` table. |
-| D2 | DELETE route is `DELETE /api/v2/comments/:commentId` (no contentId in path) | Comment IDs are globally unique UUIDs. Service fetches comment to get both `user_id` (own-comment auth) and `content_id` (creator moderation auth) in one query. |
-| D3 | Soft-delete only (`UPDATE status = 'deleted'` or `'moderated'`) — no physical DELETE | Preserves audit trail, avoids cascading reply loss. RLS `WHERE status = 'active'` already hides soft-deleted rows from GET. |
-| D4 | Two-level threading only (top-level + one level of replies) | Backend enforces: if `parentCommentId` is provided, it must itself have `parent_comment_id IS NULL`. Keeps queries simple, UI manageable. |
-| D5 | Pagination: `page` + `limit` (default 20, max 50) | Consistent with discovery routes pattern. Response: `{ items, pagination: { page, limit, total, hasNext } }`. |
-| D6 | **REVISED**: Control-character stripping + React default escaping for XSS | DOMPurify server-side WITHOUT jsdom returns input unchanged (security-critical no-op). Strip `[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]`, trim, cap 2000 chars. React's text node rendering handles HTML escaping. Add ESLint `'react/no-danger': 'error'`. |
-| D7 | Backend uses `service_role` key (bypasses RLS) — service-layer auth is primary enforcement | Consistent with all other v2 services. DELETE RLS policy kept for defense-in-depth but physical deletes never happen from service. |
-| D8 | `reply_count` maintained via PostgreSQL trigger in migration | Atomic, no TOCTOU. `like_count` is out of scope (stays 0). |
-| D9 | Optimistic insert via UI approach (`isPending` + `variables`), optimistic delete via cache approach | UI approach for insert = less code, no rollback. Cache approach for delete = instant removal from list. |
-| D10 | Anonymous users see comments on public content; private/paid content comments require access check | GET handler verifies content visibility before returning comments. |
-| D11 | Rate limit: 10 comments/minute per user via `createUserRateLimiter` | Lower than circles (20/min) due to higher spam risk. Must use `createUserRateLimiter` (user-keyed), NOT `createRateLimiter` (IP-keyed). |
-| D12 | GET returns comments with nested `author` object (displayName, avatarUrl) via JOIN | Avoids N+1 client-side user lookups. |
+| #   | Decision                                                                                            | Rationale                                                                                                                                                                                                                                          |
+| --- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | `nostr_pubkey` → UUID resolution via `getUserIdByPubkey()` helper in CommentsService                | `comments.user_id` is a UUID FK; auth JWT provides `nostr_pubkey`. Single lookup, cached in-memory (TTL 60s). Throw 401 if user not in `users` table.                                                                                              |
+| D2  | DELETE route is `DELETE /api/v2/comments/:commentId` (no contentId in path)                         | Comment IDs are globally unique UUIDs. Service fetches comment to get both `user_id` (own-comment auth) and `content_id` (creator moderation auth) in one query.                                                                                   |
+| D3  | Soft-delete only (`UPDATE status = 'deleted'` or `'moderated'`) — no physical DELETE                | Preserves audit trail, avoids cascading reply loss. RLS `WHERE status = 'active'` already hides soft-deleted rows from GET.                                                                                                                        |
+| D4  | Two-level threading only (top-level + one level of replies)                                         | Backend enforces: if `parentCommentId` is provided, it must itself have `parent_comment_id IS NULL`. Keeps queries simple, UI manageable.                                                                                                          |
+| D5  | Pagination: `page` + `limit` (default 20, max 50)                                                   | Consistent with discovery routes pattern. Response: `{ items, pagination: { page, limit, total, hasNext } }`.                                                                                                                                      |
+| D6  | **REVISED**: Control-character stripping + React default escaping for XSS                           | DOMPurify server-side WITHOUT jsdom returns input unchanged (security-critical no-op). Strip `[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]`, trim, cap 2000 chars. React's text node rendering handles HTML escaping. Add ESLint `'react/no-danger': 'error'`. |
+| D7  | Backend uses `service_role` key (bypasses RLS) — service-layer auth is primary enforcement          | Consistent with all other v2 services. DELETE RLS policy kept for defense-in-depth but physical deletes never happen from service.                                                                                                                 |
+| D8  | `reply_count` maintained via PostgreSQL trigger in migration                                        | Atomic, no TOCTOU. `like_count` is out of scope (stays 0).                                                                                                                                                                                         |
+| D9  | Optimistic insert via UI approach (`isPending` + `variables`), optimistic delete via cache approach | UI approach for insert = less code, no rollback. Cache approach for delete = instant removal from list.                                                                                                                                            |
+| D10 | Anonymous users see comments on public content; private/paid content comments require access check  | GET handler verifies content visibility before returning comments.                                                                                                                                                                                 |
+| D11 | Rate limit: 10 comments/minute per user via `createUserRateLimiter`                                 | Lower than circles (20/min) due to higher spam risk. Must use `createUserRateLimiter` (user-keyed), NOT `createRateLimiter` (IP-keyed).                                                                                                            |
+| D12 | GET returns comments with nested `author` object (displayName, avatarUrl) via JOIN                  | Avoids N+1 client-side user lookups.                                                                                                                                                                                                               |
 
 ## Architecture
 
@@ -217,36 +217,36 @@ Client → GET /api/v2/comments/:commentId/replies?page=1&limit=20
 
 ### New Files (16)
 
-| File | Purpose | Task |
-|------|---------|------|
-| `supabase/migrations/20260304000001_comments_delete_rls_and_triggers.sql` | DELETE RLS policy, reply_count trigger, two-level threading constraint, composite index | T1 |
-| `packages/shared/src/types/comments.ts` | Comment, CreateCommentBody, CommentWithAuthor, CommentsPaginatedResponse | T2 |
-| `packages/backend/src/interfaces/community/ICommentsService.ts` | Service interface | T3 |
-| `packages/backend/src/services/community/CommentsService.ts` | Service implementation | T4, T5 |
-| `packages/backend/src/routes/v2/comments.routes.ts` | Express router | T6 |
-| `packages/frontend/src/features/comments/services/commentsApi.ts` | API client | T8 |
-| `packages/frontend/src/features/comments/hooks/useComments.ts` | React Query hooks | T9 |
-| `packages/frontend/src/features/comments/components/CommentList.tsx` | Top-level comment list with pagination | T11 |
-| `packages/frontend/src/features/comments/components/CommentItem.tsx` | Single comment with reply toggle, delete button | T13 |
-| `packages/frontend/src/features/comments/components/CommentForm.tsx` | Textarea + submit with double-submit prevention | T12 |
-| `packages/frontend/src/features/comments/types/index.ts` | Re-exports from @shared/types/comments | T10 |
-| `packages/frontend/src/features/comments/index.ts` | Barrel export | T10 |
-| `packages/backend/src/services/community/__tests__/CommentsService.test.ts` | Backend unit tests | T14 |
-| `packages/frontend/e2e/pages/comments.page.ts` | Playwright POM | T17 |
-| `packages/frontend/e2e/comments.auth.spec.ts` | Authenticated E2E spec | T18, T20 |
-| `packages/frontend/e2e/comments.public.spec.ts` | Anonymous E2E spec | T19 |
+| File                                                                        | Purpose                                                                                 | Task     |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | -------- |
+| `supabase/migrations/20260304000001_comments_delete_rls_and_triggers.sql`   | DELETE RLS policy, reply_count trigger, two-level threading constraint, composite index | T1       |
+| `packages/shared/src/types/comments.ts`                                     | Comment, CreateCommentBody, CommentWithAuthor, CommentsPaginatedResponse                | T2       |
+| `packages/backend/src/interfaces/community/ICommentsService.ts`             | Service interface                                                                       | T3       |
+| `packages/backend/src/services/community/CommentsService.ts`                | Service implementation                                                                  | T4, T5   |
+| `packages/backend/src/routes/v2/comments.routes.ts`                         | Express router                                                                          | T6       |
+| `packages/frontend/src/features/comments/services/commentsApi.ts`           | API client                                                                              | T8       |
+| `packages/frontend/src/features/comments/hooks/useComments.ts`              | React Query hooks                                                                       | T9       |
+| `packages/frontend/src/features/comments/components/CommentList.tsx`        | Top-level comment list with pagination                                                  | T11      |
+| `packages/frontend/src/features/comments/components/CommentItem.tsx`        | Single comment with reply toggle, delete button                                         | T13      |
+| `packages/frontend/src/features/comments/components/CommentForm.tsx`        | Textarea + submit with double-submit prevention                                         | T12      |
+| `packages/frontend/src/features/comments/types/index.ts`                    | Re-exports from @shared/types/comments                                                  | T10      |
+| `packages/frontend/src/features/comments/index.ts`                          | Barrel export                                                                           | T10      |
+| `packages/backend/src/services/community/__tests__/CommentsService.test.ts` | Backend unit tests                                                                      | T14      |
+| `packages/frontend/e2e/pages/comments.page.ts`                              | Playwright POM                                                                          | T17      |
+| `packages/frontend/e2e/comments.auth.spec.ts`                               | Authenticated E2E spec                                                                  | T18, T20 |
+| `packages/frontend/e2e/comments.public.spec.ts`                             | Anonymous E2E spec                                                                      | T19      |
 
 ### Modified Files (7)
 
-| File | Change | Task |
-|------|--------|------|
-| `packages/backend/src/routes/v2/index.ts` | Add `import commentsRoutes` + `router.use('/comments', commentsRoutes)` + info endpoint | T7 |
-| `packages/backend/src/container/types.ts` | Add `CommentsService` token, singleton lifetime, dependencies | T7 |
-| `packages/backend/src/container/bindings/community.bindings.ts` | Register CommentsService factory | T7 |
-| `packages/backend/src/validators/community.ts` | Add CreateCommentSchema, pagination schemas | T3 |
-| `packages/shared/src/types/index.ts` | Add `export * from './comments'` | T2 |
-| `packages/frontend/src/hooks/query-keys.ts` | Add `commentKeys` factory | T10 |
-| `packages/frontend/e2e/fixtures/test-credentials.ts` | Add `TEST_CONTENT` fixture | T20 |
+| File                                                            | Change                                                                                  | Task |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---- |
+| `packages/backend/src/routes/v2/index.ts`                       | Add `import commentsRoutes` + `router.use('/comments', commentsRoutes)` + info endpoint | T7   |
+| `packages/backend/src/container/types.ts`                       | Add `CommentsService` token, singleton lifetime, dependencies                           | T7   |
+| `packages/backend/src/container/bindings/community.bindings.ts` | Register CommentsService factory                                                        | T7   |
+| `packages/backend/src/validators/community.ts`                  | Add CreateCommentSchema, pagination schemas                                             | T3   |
+| `packages/shared/src/types/index.ts`                            | Add `export * from './comments'`                                                        | T2   |
+| `packages/frontend/src/hooks/query-keys.ts`                     | Add `commentKeys` factory                                                               | T10  |
+| `packages/frontend/e2e/fixtures/test-credentials.ts`            | Add `TEST_CONTENT` fixture                                                              | T20  |
 
 ### Files NOT Touched (Squad A boundary)
 
@@ -322,6 +322,7 @@ CREATE INDEX idx_comments_content_status_top_level
 ```
 
 **Migration review notes:**
+
 - **No CHECK constraint**: PostgreSQL CHECK constraints cannot contain subqueries (`SELECT` from other rows). Using a BEFORE INSERT trigger instead for defense-in-depth. Primary enforcement is in CommentsService (T4).
 - **Regular CREATE INDEX** (not CONCURRENTLY): Table has zero rows at migration time — lock duration is negligible. `CONCURRENTLY` cannot run inside a transaction block (Supabase migrations run inside transactions by default).
 - **Rollback plan**:
@@ -336,6 +337,7 @@ CREATE INDEX idx_comments_content_status_top_level
   ```
 
 **Acceptance criteria (T1):**
+
 - [ ] Migration runs without error on empty and seeded databases
 - [ ] `trg_enforce_two_level_threading` rejects reply-to-reply INSERT with `check_violation`
 - [ ] `trg_reply_count` increments on INSERT, decrements on status change from 'active'
@@ -388,6 +390,7 @@ export interface CommentsPaginatedResponse {
 ```
 
 **Acceptance criteria (T2):**
+
 - [ ] Types compile with `tsc --noEmit` in shared package
 - [ ] `CommentStatus` is a union type (not enum) for tree-shaking
 - [ ] Exported from `packages/shared/src/types/index.ts`
@@ -397,9 +400,20 @@ export interface CommentsPaginatedResponse {
 ```typescript
 // ICommentsService.ts
 export interface ICommentsService {
-  listComments(contentId: string, callerPubkey: string | null, pagination: { page: number; limit: number }): Promise<CommentsPaginatedResponse>;
-  listReplies(commentId: string, pagination: { page: number; limit: number }): Promise<CommentsPaginatedResponse>;
-  createComment(callerPubkey: string, contentId: string, payload: { parentCommentId?: string; commentText: string }): Promise<CommentWithAuthor>;
+  listComments(
+    contentId: string,
+    callerPubkey: string | null,
+    pagination: { page: number; limit: number }
+  ): Promise<CommentsPaginatedResponse>;
+  listReplies(
+    commentId: string,
+    pagination: { page: number; limit: number }
+  ): Promise<CommentsPaginatedResponse>;
+  createComment(
+    callerPubkey: string,
+    contentId: string,
+    payload: { parentCommentId?: string; commentText: string }
+  ): Promise<CommentWithAuthor>;
   deleteComment(callerPubkey: string, commentId: string): Promise<void>;
 }
 ```
@@ -418,6 +432,7 @@ export const CommentsPaginationSchema = z.object({
 ```
 
 **Acceptance criteria (T3):**
+
 - [ ] Interface extends no other interface (standalone)
 - [ ] Zod schemas validate edge cases: empty string rejected, 2001 chars rejected, non-UUID parentId rejected
 
@@ -531,6 +546,7 @@ export class CommentsService implements ICommentsService {
 ```
 
 **Acceptance criteria (T4):**
+
 - [ ] `sanitizeCommentText` strips `\x00`-`\x08`, `\x0B`, `\x0C`, `\x0E`-`\x1F`, `\x7F` but preserves `\n` and `\r`
 - [ ] `getUserIdByPubkey` caches with 60s TTL (use TTLCache pattern from common-solutions.md #2)
 - [ ] `createComment` rejects reply-to-reply with `ValidationError`
@@ -577,6 +593,7 @@ async deleteComment(callerPubkey: string, commentId: string): Promise<void> {
 ```
 
 **Acceptance criteria (T5):**
+
 - [ ] Own-comment delete sets status to `'deleted'`
 - [ ] Creator moderation sets status to `'moderated'`
 - [ ] Uses `AuthorizationError` (403) not `ValidationError` (400) for unauthorized
@@ -604,6 +621,7 @@ export default router;
 ```
 
 **Acceptance criteria (T6):**
+
 - [ ] Uses `createUserRateLimiter` (user-keyed), NOT `createRateLimiter`
 - [ ] POST returns 201, GET returns 200, DELETE returns 200
 - [ ] Lazy service resolution from DI container (match circles.routes.ts pattern)
@@ -612,6 +630,7 @@ export default router;
 **T7 — DI Wiring:**
 
 **Acceptance criteria (T7):**
+
 - [ ] `CommentsService` token added to `types.ts`
 - [ ] Factory registered in `community.bindings.ts` with db + logger dependencies
 - [ ] Route registered in `routes/v2/index.ts` — verify ordering (named routes before `/:id` params)
@@ -636,12 +655,14 @@ export const commentKeys = {
 ```
 
 **Acceptance criteria (T10):**
+
 - [ ] Key factory follows existing pattern in query-keys.ts
 - [ ] Barrel exports in `features/comments/index.ts` and `features/comments/types/index.ts`
 
 **T8 — API client (`commentsApi.ts`):**
 
 **Acceptance criteria (T8):**
+
 - [ ] Follows `wellnessApi.ts` pattern (domain-scoped, not in shared apiClient)
 - [ ] Methods: `listComments(contentId, params)`, `listReplies(commentId, params)`, `createComment(contentId, payload)`, `deleteComment(commentId)`
 - [ ] Uses typed responses from `@shared/types/comments`
@@ -654,6 +675,7 @@ export const commentKeys = {
 - `useDeleteComment(contentId)` — useMutation, cache-based optimistic delete with snapshot rollback
 
 **Acceptance criteria (T9):**
+
 - [ ] `useComments` uses `placeholderData: keepPreviousData` only for page changes (not filter/sort)
 - [ ] `useCreateComment` uses UI approach: render optimistic item from `variables` when `isPending`
 - [ ] `useDeleteComment` uses cache approach: `onMutate` saves snapshot, removes item from cache; `onError` restores snapshot
@@ -675,6 +697,7 @@ export const commentKeys = {
 - "Load more" button for pagination
 
 **Accessibility requirements (from review):**
+
 - [ ] Wrap in `<section aria-labelledby="comments-heading">` with `<h2 id="comments-heading">Comments</h2>` for heading-based navigation
 - [ ] Use `<ul role="list">` for comment list (screen reader count announcement)
 - [ ] `aria-live="polite"` region for new comment announcements (inside list, not wrapping it)
@@ -690,6 +713,7 @@ export const commentKeys = {
 - Anonymous users see "Sign in to comment" instead of form
 
 **Accessibility requirements:**
+
 - [ ] `<label htmlFor="comment-input">` explicitly associated with textarea
 - [ ] Character counter has stable `id` with `aria-describedby` on the textarea
 - [ ] Submit button: `disabled={isPending}` AND `aria-busy={isPending}` AND `aria-label` includes context (e.g., "Post comment" or "Post reply to [author]")
@@ -706,6 +730,7 @@ export const commentKeys = {
 - Nested `<CommentItem>` for replies (no further nesting)
 
 **Accessibility requirements:**
+
 - [ ] Delete button: contextual `aria-label` (e.g., `aria-label="Delete comment by {author}"`)
 - [ ] Reply button: contextual `aria-label` (e.g., `aria-label="Reply to {author}"`)
 - [ ] Replies rendered as nested `<ul>` inside parent `<li>` (semantic nesting)
@@ -727,6 +752,7 @@ export const commentKeys = {
 - `QueryClient` with `retry: false, retryDelay: 0` (common-solutions.md #35)
 
 **Acceptance criteria (T14):**
+
 - [ ] Table-aware mock routes `from('comments')`, `from('users')`, `from('content')` to separate chains
 - [ ] Tests cover: happy path create, XSS stripping, reply-to-reply 400, parent deleted 409, pubkey 401, delete own, delete moderation, delete unauthorized 403, delete already-deleted 409, TOCTOU count=0 409, list pagination, list empty, list content access
 - [ ] Zero `any` types in test file
@@ -740,6 +766,7 @@ export const commentKeys = {
 - CommentForm: render, submit, disabled state, character counter, anonymous state
 
 **Acceptance criteria (T15):**
+
 - [ ] Uses MSW v2 pattern (`setupServer`, `http.get`, `HttpResponse.json`)
 - [ ] Verifies optimistic item visible during `isPending`
 - [ ] Verifies rollback restores previous cache state on delete error
@@ -747,6 +774,7 @@ export const commentKeys = {
 **T16 — ESLint no-danger rule:**
 
 **Acceptance criteria (T16):**
+
 - [ ] Add `'react/no-danger': 'error'` scoped to `packages/frontend/src/features/comments/`
 - [ ] Verify no existing violations in comments feature directory
 
@@ -793,6 +821,7 @@ export class CommentsPage {
 ```
 
 **Acceptance criteria (T17):**
+
 - [ ] All locators use role-based selectors, never CSS selectors
 - [ ] All locators have `.first()` for strict mode safety
 - [ ] Scoped locators (e.g., `firstDeleteButton` scoped to `firstComment`)
@@ -800,6 +829,7 @@ export class CommentsPage {
 **T18 — `comments.auth.spec.ts`:**
 
 Tests (authenticated, uses storage state):
+
 1. Post a comment → verify it appears in the list
 2. Delete own comment → verify it disappears
 3. Reply to a comment → verify nested reply appears
@@ -809,6 +839,7 @@ Tests (authenticated, uses storage state):
 **T19 — `comments.public.spec.ts`:**
 
 Tests (no auth):
+
 1. Anonymous user sees comments on public content
 2. Anonymous user sees "Sign in to comment" instead of form
 
@@ -819,6 +850,7 @@ Tests (no auth):
 - Test: Comment persists after page reload
 
 **Acceptance criteria (T18-T20):**
+
 - [ ] `comments.auth.spec.ts` has 5 tests minimum
 - [ ] `comments.public.spec.ts` has 2 tests minimum
 - [ ] Creator moderation test uses separate credentials (creator of `TEST_CONTENT`)
@@ -870,34 +902,34 @@ Tests (no auth):
 
 ## Critical Patterns Applied
 
-| Pattern | Where Applied | Task |
-|---------|---------------|------|
-| #1c Atomic claim (UPDATE WHERE status=active) | CommentsService.deleteComment | T5 |
-| #2 Service-layer authorization | deleteComment checks owner OR content creator | T5 |
-| #3 Paginated accumulation | listComments uses page/limit, never unbounded SELECT | T4 |
-| #7 Status guards | deleteComment asserts status='active' before UPDATE | T5 |
-| #11 PostgREST filter escape | If search added later — not in Slice 6 scope | — |
-| common #1 Double-submit prevention | CommentForm useRef + disabled | T12 |
-| common #2 TTLCache | getUserIdByPubkey cache with 60s TTL | T4 |
-| common #7 Table-aware mock | CommentsService.test.ts from() routing | T14 |
-| common #18 Query key factory | commentKeys in query-keys.ts | T10 |
-| common #24 Error class selection | AuthorizationError for ownership, NotFoundError for missing | T5 |
-| common #35 retryDelay: 0 | All test QueryClient instances | T14, T15 |
-| common #58 keepPreviousData gate | useComments pagination only, not sort changes | T9 |
-| common #61 Error cause sanitization | Service catch blocks: no cause in thrown errors | T4, T5 |
+| Pattern                                       | Where Applied                                               | Task     |
+| --------------------------------------------- | ----------------------------------------------------------- | -------- |
+| #1c Atomic claim (UPDATE WHERE status=active) | CommentsService.deleteComment                               | T5       |
+| #2 Service-layer authorization                | deleteComment checks owner OR content creator               | T5       |
+| #3 Paginated accumulation                     | listComments uses page/limit, never unbounded SELECT        | T4       |
+| #7 Status guards                              | deleteComment asserts status='active' before UPDATE         | T5       |
+| #11 PostgREST filter escape                   | If search added later — not in Slice 6 scope                | —        |
+| common #1 Double-submit prevention            | CommentForm useRef + disabled                               | T12      |
+| common #2 TTLCache                            | getUserIdByPubkey cache with 60s TTL                        | T4       |
+| common #7 Table-aware mock                    | CommentsService.test.ts from() routing                      | T14      |
+| common #18 Query key factory                  | commentKeys in query-keys.ts                                | T10      |
+| common #24 Error class selection              | AuthorizationError for ownership, NotFoundError for missing | T5       |
+| common #35 retryDelay: 0                      | All test QueryClient instances                              | T14, T15 |
+| common #58 keepPreviousData gate              | useComments pagination only, not sort changes               | T9       |
+| common #61 Error cause sanitization           | Service catch blocks: no cause in thrown errors             | T4, T5   |
 
 ## Risk Mitigation
 
-| Risk | Mitigation |
-|------|------------|
-| `nostr_pubkey` → UUID lookup fails for new users | Throw clear 401 with message "Complete registration first". Cache successful lookups with TTL. |
-| Two-level threading enforcement | CHECK constraints cannot contain subqueries in PG. Using BEFORE INSERT trigger for defense-in-depth + service-layer validation as primary guard. |
-| DOMPurify server-side is a no-op (SECURITY) | **REMOVED**. Using control-char stripping + React default escaping instead. |
-| Branch collision with Squad A | Squad A owns business/wellness/shield. We only touch community/comments files. Zero overlap. |
-| Optimistic delete rollback complexity | Using cache snapshot pattern — restore exact previous state on error. |
-| Supabase `.update()` count is null | All mutations use `.select('id', { count: 'exact', head: true })`. |
-| RLS DELETE policy allows physical row deletion | Service uses soft-delete only (UPDATE). DELETE policy kept for defense-in-depth but physical DELETE never called. |
-| `createRateLimiter` keys on IP not user | Use `createUserRateLimiter` explicitly for all mutation endpoints. |
+| Risk                                             | Mitigation                                                                                                                                       |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `nostr_pubkey` → UUID lookup fails for new users | Throw clear 401 with message "Complete registration first". Cache successful lookups with TTL.                                                   |
+| Two-level threading enforcement                  | CHECK constraints cannot contain subqueries in PG. Using BEFORE INSERT trigger for defense-in-depth + service-layer validation as primary guard. |
+| DOMPurify server-side is a no-op (SECURITY)      | **REMOVED**. Using control-char stripping + React default escaping instead.                                                                      |
+| Branch collision with Squad A                    | Squad A owns business/wellness/shield. We only touch community/comments files. Zero overlap.                                                     |
+| Optimistic delete rollback complexity            | Using cache snapshot pattern — restore exact previous state on error.                                                                            |
+| Supabase `.update()` count is null               | All mutations use `.select('id', { count: 'exact', head: true })`.                                                                               |
+| RLS DELETE policy allows physical row deletion   | Service uses soft-delete only (UPDATE). DELETE policy kept for defense-in-depth but physical DELETE never called.                                |
+| `createRateLimiter` keys on IP not user          | Use `createUserRateLimiter` explicitly for all mutation endpoints.                                                                               |
 
 ## References
 

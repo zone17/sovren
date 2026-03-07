@@ -15,6 +15,7 @@ Consolidate duplicated NOSTR protocol services across frontend, backend, and sha
 ## Current State
 
 ### Duplication Analysis
+
 1. **Frontend NOSTR Service** (`packages/frontend/src/services/nostr/`)
    - ~800 lines of code
    - Event publishing, relay management, subscription handling
@@ -33,6 +34,7 @@ Consolidate duplicated NOSTR protocol services across frontend, backend, and sha
    - Partial implementation only
 
 ### Overlap Analysis
+
 - **Event Creation**: 90% duplicated (all 3 packages)
 - **Relay Connection**: 85% duplicated (frontend/backend)
 - **Event Validation**: 70% duplicated (all 3 packages)
@@ -81,12 +83,14 @@ Frontend/Backend consume shared service via adapters
 ### Core Shared Service
 
 #### 1. Event Management (`core/events.ts`)
+
 - Event creation (kinds 0, 1, 3, 4, 30023, custom)
 - Event validation (signature, hash, timestamp)
 - Event serialization/deserialization
 - NIP compliance checking
 
 #### 2. Relay Management (`core/relays.ts`)
+
 - Relay connection pooling
 - Automatic reconnection with exponential backoff
 - Relay health monitoring
@@ -94,12 +98,14 @@ Frontend/Backend consume shared service via adapters
 - Read/write relay separation
 
 #### 3. Subscription Handling (`core/subscriptions.ts`)
+
 - Filter creation and validation
 - Subscription lifecycle management
 - Event stream processing
 - Subscription deduplication
 
 #### 4. Cryptography (`core/crypto.ts`)
+
 - Key pair generation (NIP-06)
 - Event signing
 - Encrypted DM support (NIP-04)
@@ -108,23 +114,39 @@ Frontend/Backend consume shared service via adapters
 ### Platform Adapters
 
 #### Frontend Adapter (`adapters/browser.ts`)
+
 ```typescript
 // React hooks for NOSTR
-export const useNostrEvents = (filters: Filter[]) => { /* ... */ }
-export const useNostrPublish = () => { /* ... */ }
-export const useNostrSubscription = (filters: Filter[]) => { /* ... */ }
+export const useNostrEvents = (filters: Filter[]) => {
+  /* ... */
+};
+export const useNostrPublish = () => {
+  /* ... */
+};
+export const useNostrSubscription = (filters: Filter[]) => {
+  /* ... */
+};
 
 // Browser-specific features
-export const connectBrowserExtension = () => { /* ... */ }
-export const getStoredRelays = () => { /* ... */ }
+export const connectBrowserExtension = () => {
+  /* ... */
+};
+export const getStoredRelays = () => {
+  /* ... */
+};
 ```
 
 #### Backend Adapter (`adapters/node.ts`)
+
 ```typescript
 // Server-side NOSTR client
 export class NostrServerClient {
-  async publish(event: Event): Promise<void> { /* ... */ }
-  subscribe(filters: Filter[]): EventEmitter { /* ... */ }
+  async publish(event: Event): Promise<void> {
+    /* ... */
+  }
+  subscribe(filters: Filter[]): EventEmitter {
+    /* ... */
+  }
   // ... server-specific methods
 }
 ```
@@ -132,30 +154,35 @@ export class NostrServerClient {
 ## Technical Approach
 
 ### Phase 1: Core Service Extraction (2-3 days)
+
 1. Identify common code patterns across all three implementations
 2. Extract to `packages/shared/src/services/nostr/core/`
 3. Create comprehensive unit tests (95%+ coverage)
 4. Document core API with JSDoc
 
 ### Phase 2: Adapter Pattern Implementation (2 days)
+
 1. Design adapter interfaces for platform-specific behavior
 2. Implement browser adapter for frontend React hooks
 3. Implement Node.js adapter for backend server
 4. Test adapters in isolation
 
 ### Phase 3: Frontend Migration (1-2 days)
+
 1. Replace frontend NOSTR service with shared service + browser adapter
 2. Update React components to use new hooks
 3. Run integration tests
 4. Fix any regressions
 
 ### Phase 4: Backend Migration (1-2 days)
+
 1. Replace backend NOSTR service with shared service + node adapter
 2. Update API endpoints using NOSTR
 3. Run integration tests
 4. Fix any regressions
 
 ### Phase 5: Cleanup & Documentation (1 day)
+
 1. Remove old NOSTR service implementations
 2. Update all documentation
 3. Create migration guide
@@ -164,21 +191,23 @@ export class NostrServerClient {
 ## Dependencies
 
 ### Blockers
+
 - Type Safety Improvements (Epic 001) should be completed first for cleaner types
 
 ### Related Work
+
 - Will improve state management clarity (Epic 004)
 - Simplifies backend service refactoring (Epic 005)
 
 ## Risks & Mitigation
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Breaking NOSTR functionality | Critical | Medium | Comprehensive integration tests, feature flags |
-| Performance degradation | High | Low | Benchmark before/after, optimize adapters |
-| Incompatibility with NIPs | High | Low | NIP compliance test suite |
-| Relay connection issues | High | Medium | Extensive relay testing on testnet/mainnet |
-| Migration complexity | Medium | Medium | Incremental migration with parallel running |
+| Risk                         | Impact   | Likelihood | Mitigation                                     |
+| ---------------------------- | -------- | ---------- | ---------------------------------------------- |
+| Breaking NOSTR functionality | Critical | Medium     | Comprehensive integration tests, feature flags |
+| Performance degradation      | High     | Low        | Benchmark before/after, optimize adapters      |
+| Incompatibility with NIPs    | High     | Low        | NIP compliance test suite                      |
+| Relay connection issues      | High     | Medium     | Extensive relay testing on testnet/mainnet     |
+| Migration complexity         | Medium   | Medium     | Incremental migration with parallel running    |
 
 ## Estimated Effort
 
@@ -196,22 +225,26 @@ export class NostrServerClient {
 ## Testing Strategy
 
 ### Unit Tests
+
 - 95%+ coverage for core service
 - Test all NIPs compliance
 - Test error handling and edge cases
 
 ### Integration Tests
+
 - Relay connection and reconnection
 - Multi-relay publishing
 - Subscription filtering
 - Event verification
 
 ### E2E Tests
+
 - Frontend: User publishing and viewing content
 - Backend: API endpoints using NOSTR
 - Cross-platform: Verify frontend/backend can communicate via NOSTR
 
 ### Performance Tests
+
 - Benchmark relay connection pooling
 - Measure event publishing latency
 - Test subscription throughput
@@ -219,6 +252,7 @@ export class NostrServerClient {
 ## Migration Strategy
 
 ### Gradual Migration Approach
+
 1. Deploy shared service alongside existing implementations
 2. Feature flag to toggle between old/new implementation
 3. Migrate one package at a time (shared → frontend → backend)
@@ -226,6 +260,7 @@ export class NostrServerClient {
 5. Remove old implementations only after 100% confidence
 
 ### Rollback Plan
+
 - Keep old implementations for 1-2 sprints after migration
 - Feature flags allow instant rollback
 - Monitoring alerts for NOSTR-related errors

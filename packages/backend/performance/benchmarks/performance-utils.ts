@@ -101,7 +101,7 @@ export function calculateMetrics(
   const median = sorted[Math.floor(iterations * 0.5)];
   const p50 = median;
   const p75 = sorted[Math.floor(iterations * 0.75)];
-  const p90 = sorted[Math.floor(iterations * 0.90)];
+  const p90 = sorted[Math.floor(iterations * 0.9)];
   const p95 = sorted[Math.floor(iterations * 0.95)];
   const p99 = sorted[Math.floor(iterations * 0.99)];
 
@@ -141,10 +141,7 @@ export function percentile(values: number[], p: number): number {
  * Check if metrics meet targets
  */
 export function meetsTargets(metrics: PerformanceMetrics, targets: PerformanceTarget): boolean {
-  const checks = [
-    metrics.p95 < targets.p95,
-    metrics.p99 < targets.p99,
-  ];
+  const checks = [metrics.p95 < targets.p95, metrics.p99 < targets.p99];
 
   if (targets.p50 !== undefined) {
     checks.push(metrics.p50 < targets.p50);
@@ -246,7 +243,8 @@ export function compareWithBaseline(
 
   // Compare throughput
   const throughputChange =
-    ((current.metrics.throughput - baseline.metrics.throughput) / baseline.metrics.throughput) * 100;
+    ((current.metrics.throughput - baseline.metrics.throughput) / baseline.metrics.throughput) *
+    100;
   if (throughputChange < -10) {
     regressions.push(`throughput: ${Math.abs(throughputChange).toFixed(1)}% lower`);
   } else if (throughputChange > 10) {
@@ -273,7 +271,11 @@ export interface ComparisonResult {
 /**
  * Format metrics for console output
  */
-export function formatMetrics(name: string, metrics: PerformanceMetrics, targets?: PerformanceTarget): string {
+export function formatMetrics(
+  name: string,
+  metrics: PerformanceMetrics,
+  targets?: PerformanceTarget
+): string {
   const lines = [`\n${name}:`];
 
   lines.push(`  Average: ${metrics.average.toFixed(2)}ms`);
@@ -283,11 +285,21 @@ export function formatMetrics(name: string, metrics: PerformanceMetrics, targets
   lines.push(`  Std Dev: ${metrics.stdDev.toFixed(2)}ms`);
 
   if (targets) {
-    lines.push(`  p50: ${metrics.p50.toFixed(2)}ms${targets.p50 ? ` (target: <${targets.p50}ms)` : ''}`);
-    lines.push(`  p75: ${metrics.p75.toFixed(2)}ms${targets.p75 ? ` (target: <${targets.p75}ms)` : ''}`);
-    lines.push(`  p90: ${metrics.p90.toFixed(2)}ms${targets.p90 ? ` (target: <${targets.p90}ms)` : ''}`);
-    lines.push(`  p95: ${metrics.p95.toFixed(2)}ms (target: <${targets.p95}ms) ${metrics.p95 < targets.p95 ? '✓' : '✗'}`);
-    lines.push(`  p99: ${metrics.p99.toFixed(2)}ms (target: <${targets.p99}ms) ${metrics.p99 < targets.p99 ? '✓' : '✗'}`);
+    lines.push(
+      `  p50: ${metrics.p50.toFixed(2)}ms${targets.p50 ? ` (target: <${targets.p50}ms)` : ''}`
+    );
+    lines.push(
+      `  p75: ${metrics.p75.toFixed(2)}ms${targets.p75 ? ` (target: <${targets.p75}ms)` : ''}`
+    );
+    lines.push(
+      `  p90: ${metrics.p90.toFixed(2)}ms${targets.p90 ? ` (target: <${targets.p90}ms)` : ''}`
+    );
+    lines.push(
+      `  p95: ${metrics.p95.toFixed(2)}ms (target: <${targets.p95}ms) ${metrics.p95 < targets.p95 ? '✓' : '✗'}`
+    );
+    lines.push(
+      `  p99: ${metrics.p99.toFixed(2)}ms (target: <${targets.p99}ms) ${metrics.p99 < targets.p99 ? '✓' : '✗'}`
+    );
 
     if (targets.throughput) {
       lines.push(

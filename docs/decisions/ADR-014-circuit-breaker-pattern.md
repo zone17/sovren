@@ -8,12 +8,14 @@
 ## Context
 
 Sovren depends on external services that can fail or become slow:
+
 - **Lightning Network Nodes**: Can be temporarily unavailable
 - **NOSTR Relays**: Public relays often have downtime
 - **Webhook Deliveries**: Third-party endpoints may be down
 - **Email Service**: SendGrid/Mailgun can have outages
 
 **Problem**: When external services fail, our application:
+
 - Times out on every request (30+ seconds)
 - Exhausts connection pools
 - Cascading failures affect entire system
@@ -21,6 +23,7 @@ Sovren depends on external services that can fail or become slow:
 - Waste resources on doomed requests
 
 We needed a resilience pattern to:
+
 - Fail fast when external service is down
 - Prevent cascading failures
 - Automatically recover when service returns
@@ -31,11 +34,13 @@ We needed a resilience pattern to:
 We will implement the **Circuit Breaker Pattern** for all external service calls using the `opossum` library.
 
 **Circuit States**:
+
 1. **Closed** (Normal): Requests flow through normally
 2. **Open** (Failed): Fast-fail without calling service (return error immediately)
 3. **Half-Open** (Testing): Try one request to test if service recovered
 
 **Implementation**:
+
 ```typescript
 import CircuitBreaker from 'opossum';
 
@@ -45,11 +50,11 @@ const lightningCircuitBreaker = new CircuitBreaker(
     return await lndClient.addInvoice(params);
   },
   {
-    timeout: 3000,           // Fail after 3 seconds
+    timeout: 3000, // Fail after 3 seconds
     errorThresholdPercentage: 50, // Open after 50% failures
-    resetTimeout: 30000,     // Try again after 30 seconds
-    rollingCountTimeout: 10000,   // Track last 10 seconds
-    volumeThreshold: 5,      // Need 5 requests before opening
+    resetTimeout: 30000, // Try again after 30 seconds
+    rollingCountTimeout: 10000, // Track last 10 seconds
+    volumeThreshold: 5, // Need 5 requests before opening
     name: 'lightning-node',
   }
 );
@@ -92,6 +97,7 @@ lightningCircuitBreaker.on('close', () => {
 ```
 
 **Webhook Circuit Breaker**:
+
 ```typescript
 // Webhook delivery with circuit breaker per domain
 class WebhookService {
@@ -186,9 +192,11 @@ class WebhookService {
 ## Alternatives Considered
 
 ### 1. Simple Timeout + Retry
+
 **Pros**: Simpler implementation
 
 **Cons**:
+
 - Still wastes time on retries
 - No learning from failures
 - Can make problem worse (retry storm)
@@ -196,9 +204,11 @@ class WebhookService {
 **Why Rejected**: Doesn't prevent cascading failures or provide fast failure.
 
 ### 2. Manual Service Disable
+
 **Pros**: Full control
 
 **Cons**:
+
 - Requires human intervention
 - Slow response to incidents
 - Risk of forgetting to re-enable
@@ -206,9 +216,11 @@ class WebhookService {
 **Why Rejected**: Circuit breaker automates this with faster response.
 
 ### 3. Load Balancer Health Checks
+
 **Pros**: Infrastructure-level solution
 
 **Cons**:
+
 - Only works for our own services
 - Can't help with external APIs
 - Removes server entirely (too aggressive)
@@ -218,6 +230,7 @@ class WebhookService {
 ## Implementation Notes
 
 **Configuration by Service Type**:
+
 ```typescript
 const CIRCUIT_BREAKER_CONFIG = {
   lightning: {
@@ -227,12 +240,12 @@ const CIRCUIT_BREAKER_CONFIG = {
   },
   nostr_relay: {
     timeout: 5000,
-    errorThresholdPercentage: 75,  // More tolerant
+    errorThresholdPercentage: 75, // More tolerant
     resetTimeout: 60000,
   },
   webhook: {
     timeout: 5000,
-    errorThresholdPercentage: 80,  // Very tolerant
+    errorThresholdPercentage: 80, // Very tolerant
     resetTimeout: 120000,
   },
   email: {
@@ -244,6 +257,7 @@ const CIRCUIT_BREAKER_CONFIG = {
 ```
 
 **Fallback Strategies**:
+
 ```typescript
 class ResilientService {
   async getData(id: string): Promise<Data> {
@@ -253,9 +267,9 @@ class ResilientService {
       if (this.circuitBreaker.opened) {
         // Try fallback strategies in order
         return await this.withFallback(id, [
-          () => this.cache.get(id),           // 1. Try cache
-          () => this.backupService.get(id),   // 2. Try backup service
-          () => this.defaultValue(id),        // 3. Return safe default
+          () => this.cache.get(id), // 1. Try cache
+          () => this.backupService.get(id), // 2. Try backup service
+          () => this.defaultValue(id), // 3. Return safe default
         ]);
       }
       throw error;
@@ -280,6 +294,7 @@ class ResilientService {
 ```
 
 **Monitoring Dashboard**:
+
 ```typescript
 // Expose circuit breaker metrics
 app.get('/health/circuit-breakers', (req, res) => {

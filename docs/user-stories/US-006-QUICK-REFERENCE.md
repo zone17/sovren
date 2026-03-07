@@ -39,14 +39,14 @@ DB_SSL=true               # Production
 
 ## Key Features
 
-| Feature | Description |
-|---------|-------------|
-| Auto Pool Sizing | Defaults: dev(10/2), test(5/1), prod(20/5) |
-| Health Checks | `/health/db` endpoint ready |
-| Metrics | Real-time pool status tracking |
-| Leak Detection | 30s threshold, auto-alert |
-| Graceful Shutdown | 30s timeout, zero data loss |
-| SSL Support | Production-ready security |
+| Feature           | Description                                |
+| ----------------- | ------------------------------------------ |
+| Auto Pool Sizing  | Defaults: dev(10/2), test(5/1), prod(20/5) |
+| Health Checks     | `/health/db` endpoint ready                |
+| Metrics           | Real-time pool status tracking             |
+| Leak Detection    | 30s threshold, auto-alert                  |
+| Graceful Shutdown | 30s timeout, zero data loss                |
+| SSL Support       | Production-ready security                  |
 
 ## Common Operations
 
@@ -81,12 +81,12 @@ pool.on('potentialLeak', ({ message }) => alert(message));
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `src/database/pool.ts` | Core implementation |
-| `src/config/database-pool.config.ts` | Configuration |
-| `src/database/__tests__/pool.test.ts` | Unit tests |
-| `docs/deployment/DATABASE_POOLING.md` | Full documentation |
+| File                                  | Purpose             |
+| ------------------------------------- | ------------------- |
+| `src/database/pool.ts`                | Core implementation |
+| `src/config/database-pool.config.ts`  | Configuration       |
+| `src/database/__tests__/pool.test.ts` | Unit tests          |
+| `docs/deployment/DATABASE_POOLING.md` | Full documentation  |
 
 ## Monitoring Queries
 
@@ -118,12 +118,12 @@ WHERE state = 'idle in transaction';
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Pool saturated | Increase `DB_POOL_MAX` |
-| Too many idle | Decrease `DB_POOL_MIN` |
+| Issue            | Solution                             |
+| ---------------- | ------------------------------------ |
+| Pool saturated   | Increase `DB_POOL_MAX`               |
+| Too many idle    | Decrease `DB_POOL_MIN`               |
 | Connection leaks | Check for missing `client.release()` |
-| Slow queries | Add indexes, optimize SQL |
+| Slow queries     | Add indexes, optimize SQL            |
 
 ## Architecture
 
@@ -134,6 +134,7 @@ Application → Pool (max: 20) → PostgreSQL
 ```
 
 **Dual Client Strategy**:
+
 - Supabase: Auth, RLS, Realtime
 - Pool: Direct SQL, Transactions, Bulk ops
 

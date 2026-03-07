@@ -111,11 +111,11 @@ describe('Production Environment Configuration', () => {
     });
 
     it('should NOT include staging or localhost in CORS', () => {
-      const hasStaging = productionConfig.security.corsOrigins.some(
-        origin => origin.includes('staging')
+      const hasStaging = productionConfig.security.corsOrigins.some((origin) =>
+        origin.includes('staging')
       );
-      const hasLocalhost = productionConfig.security.corsOrigins.some(
-        origin => origin.includes('localhost')
+      const hasLocalhost = productionConfig.security.corsOrigins.some((origin) =>
+        origin.includes('localhost')
       );
 
       expect(hasStaging).toBe(false);
@@ -123,7 +123,7 @@ describe('Production Environment Configuration', () => {
     });
 
     it('should only include production domains', () => {
-      productionConfig.security.corsOrigins.forEach(origin => {
+      productionConfig.security.corsOrigins.forEach((origin) => {
         expect(origin).toContain('https://');
         expect(origin).not.toContain('localhost');
         expect(origin).not.toContain('staging');
@@ -219,7 +219,7 @@ describe('Production Environment Health Checks', () => {
       'monitoring',
     ];
 
-    requiredKeys.forEach(key => {
+    requiredKeys.forEach((key) => {
       expect(productionConfig).toHaveProperty(key);
     });
   });
