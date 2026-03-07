@@ -96,11 +96,12 @@ export class FollowService implements IFollowService {
     const followerId = await getUserIdByPubkey(this.db, followerPubkey);
 
     // #735: Check the returned count — a 0 means the follow relationship didn't exist.
-    const { error, count } = await this.db
+    // Note: our ISupabaseClient.delete() takes no args; count comes from SupabaseResponse.
+    const { error, count } = (await this.db
       .from<FollowRow>('followers')
-      .delete({ count: 'exact' })
+      .delete()
       .eq('follower_id', followerId)
-      .eq('following_id', followingId);
+      .eq('following_id', followingId)) as { error: unknown; count: number | null };
 
     if (error) {
       this.logger.error('FollowService.unfollow: DB error', { error, followerId, followingId });

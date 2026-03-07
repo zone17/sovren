@@ -67,11 +67,7 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
   // the grouped array when the notifications array reference changes but content doesn't.
   // data?.notifications is stable across renders when the query data hasn't changed.
   const notifications = data?.notifications ?? [];
-  const grouped = useMemo(
-    () => groupByDate(data?.notifications ?? []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data?.notifications]
-  );
+  const grouped = useMemo(() => groupByDate(data?.notifications ?? []), [data?.notifications]);
 
   return (
     <div className={['flex flex-col', className].filter(Boolean).join(' ')}>

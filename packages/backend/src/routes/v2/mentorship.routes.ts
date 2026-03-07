@@ -35,6 +35,11 @@ function getMentorshipService(): IMentorshipService {
   return _mentorshipService;
 }
 
+/** Resolve supabase DB client from DI container (safe cast — DI guarantees ISupabaseClient) */
+function resolveDb(): Parameters<typeof getUserIdByPubkey>[0] {
+  return container.resolve(TYPES.Database) as unknown as Parameters<typeof getUserIdByPubkey>[0];
+}
+
 // ============================================================================
 // Mentor Profile
 // ============================================================================
@@ -54,7 +59,7 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const data = await getMentorshipService().registerMentor(creatorId, result.data);
     res.status(201).json(createApiResponse(req, data));
@@ -101,7 +106,7 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
@@ -129,7 +134,7 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const menteeId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const data = await getMentorshipService().requestMentorship(menteeId, result.data.mentorId, {
       niche: result.data.niche,
@@ -160,7 +165,7 @@ router.put(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     await getMentorshipService().respondToRequest(idResult.data, creatorId, result.data.accept);
     res.json(createApiResponse(req, { accepted: result.data.accept }));
@@ -187,7 +192,7 @@ router.put(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     await getMentorshipService().updateMentorProfile(idResult.data, creatorId, result.data);
     res.json(createApiResponse(req, { updated: true }));

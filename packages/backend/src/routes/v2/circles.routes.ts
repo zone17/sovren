@@ -35,6 +35,11 @@ function getCircleService(): ICreatorCircleService {
   return _circleService;
 }
 
+/** Resolve supabase DB client from DI container (safe cast — DI guarantees ISupabaseClient) */
+function resolveDb(): Parameters<typeof getUserIdByPubkey>[0] {
+  return container.resolve(TYPES.Database) as unknown as Parameters<typeof getUserIdByPubkey>[0];
+}
+
 // ============================================================================
 // Circle CRUD
 // ============================================================================
@@ -54,7 +59,7 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const data = await getCircleService().createCircle(creatorId, result.data);
     res.status(201).json(createApiResponse(req, data));
@@ -71,7 +76,7 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const data = await getCircleService().getCircles(creatorId);
     res.json(createApiResponse(req, data));
@@ -88,7 +93,7 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const data = await getCircleService().getSuggestedCircles(creatorId);
     res.json(createApiResponse(req, data));
@@ -133,7 +138,7 @@ router.post(
       throw new ValidationError('Invalid circle ID format');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     await getCircleService().joinCircle(creatorId, idResult.data);
     res.json(createApiResponse(req, { joined: true }));
@@ -155,7 +160,7 @@ router.delete(
       throw new ValidationError('Invalid circle ID format');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     await getCircleService().leaveCircle(creatorId, idResult.data);
     res.json(createApiResponse(req, { left: true }));
@@ -182,7 +187,7 @@ router.delete(
       throw new ValidationError('Invalid member ID format');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const requesterId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     await getCircleService().removeMember(idResult.data, memberIdResult.data, requesterId);
     res.json(createApiResponse(req, { removed: true }));
@@ -208,7 +213,7 @@ router.get(
       throw new ValidationError('Invalid circle ID format');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
@@ -241,7 +246,7 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const db = resolveDb();
     const authorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     const data = await getCircleService().createPost(idResult.data, authorId, result.data.content);
     res.status(201).json(createApiResponse(req, data));

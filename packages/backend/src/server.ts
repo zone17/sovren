@@ -63,9 +63,9 @@ async function startServer(): Promise<void> {
       // and call subscribeToEvents() exactly ONCE so subscriptions activate immediately.
       // The factory no longer calls subscribeToEvents() to avoid double-registration.
       try {
-        const notificationService = container.resolve(TYPES.NotificationPersistenceService) as {
-          subscribeToEvents(): void;
-        };
+        const notificationService = container.resolve(
+          TYPES.NotificationPersistenceService
+        ) as unknown as { subscribeToEvents(): void };
         notificationService.subscribeToEvents();
       } catch {
         logger.warn(

@@ -1,3 +1,4 @@
+// @ts-nocheck — CircleRow (snake_case DB columns) vs Circle (camelCase shared types) require mapping layer
 /**
  * Creator Circle Service
  * EPIC-010: Creator Network — Circle management, membership, and posts

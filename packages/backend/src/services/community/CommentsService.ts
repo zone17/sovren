@@ -249,11 +249,8 @@ export class CommentsService implements ICommentsService {
 
     // Fetch content creator to determine notification recipient
     // Fire-and-forget — notification failure must NOT block comment creation
-    void this.db
-      .from('content')
-      .select('creator_id')
-      .eq('id', contentId)
-      .single()
+    // Wrap in Promise.resolve() because SupabaseFilterBuilder extends PromiseLike (no .catch)
+    void Promise.resolve(this.db.from('content').select('creator_id').eq('id', contentId).single())
       .then(({ data: contentRow }) => {
         if (!contentRow) return;
         const contentAuthorId = (contentRow as { creator_id: string }).creator_id;
@@ -276,7 +273,7 @@ export class CommentsService implements ICommentsService {
           },
         });
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         this.logger.error('[CommentsService] event emission failed (non-blocking)', {
           err,
           commentId: comment.id,
