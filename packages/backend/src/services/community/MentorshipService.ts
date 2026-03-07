@@ -15,13 +15,8 @@ import {
   ValidationError,
 } from '../../utils/errors';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
-import crypto from 'crypto';
-
-/** Strip ASCII control characters (U+0000–U+001F) from user-supplied strings */
-function stripControlChars(input: string): string {
-  // eslint-disable-next-line no-control-regex
-  return input.replace(/[\x00-\x1F]/g, '');
-}
+import { stripControlChars } from '../../utils/stripControlChars';
+import { emitDomainEvent } from '../../utils/emitDomainEvent';
 
 interface MentorProfileRow {
   id: string;
@@ -62,27 +57,15 @@ export class MentorshipService implements IMentorshipService {
     aggregateId: string,
     payload: Record<string, unknown>
   ): void {
-    // Fire-and-forget — notification failures must NOT block the main operation
-    void this.eventBus
-      .publish({
-        id: `evt_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
-        type,
-        aggregateId,
-        aggregateType: 'mentorship',
-        payload,
-        metadata: {
-          timestamp: new Date(),
-          version: '1.0.0',
-          source: 'MentorshipService',
-        },
-      })
-      .catch((err) => {
-        this.logger.error('MentorshipService: event emission failed (non-blocking)', {
-          err,
-          type,
-          aggregateId,
-        });
-      });
+    emitDomainEvent(
+      this.eventBus,
+      this.logger,
+      type,
+      aggregateId,
+      'mentorship',
+      payload,
+      'MentorshipService'
+    );
   }
 
   async registerMentor(
@@ -215,13 +198,36 @@ export class MentorshipService implements IMentorshipService {
 
     if (countError) {
       // Cleanup the just-inserted row on count failure
-      await this.db.from<MentorshipRow>('mentorships').delete().eq('id', rows.id);
+      const { error: compensationError } = await this.db
+        .from<MentorshipRow>('mentorships')
+        .delete()
+        .eq('id', rows.id);
+      if (compensationError) {
+        this.logger.error('requestMentorship: compensation DELETE failed', {
+          compensationError,
+          mentorshipId: rows.id,
+          menteeId,
+          mentorId,
+          originalError: countError,
+        });
+      }
       throw new ValidationError(`Failed to count active mentorships: ${countError.message}`);
     }
 
     if ((activeCount ?? 0) > mentorProfile.max_mentees) {
       // Over capacity — remove the just-inserted request and return 409
-      await this.db.from<MentorshipRow>('mentorships').delete().eq('id', rows.id);
+      const { error: compensationError } = await this.db
+        .from<MentorshipRow>('mentorships')
+        .delete()
+        .eq('id', rows.id);
+      if (compensationError) {
+        this.logger.error('requestMentorship: compensation DELETE failed (over capacity)', {
+          compensationError,
+          mentorshipId: rows.id,
+          menteeId,
+          mentorId,
+        });
+      }
       throw new ConflictError('Mentor has reached their maximum mentee capacity');
     }
 

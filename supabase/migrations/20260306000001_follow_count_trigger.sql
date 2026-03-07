@@ -5,18 +5,21 @@ ALTER TABLE creators ADD COLUMN IF NOT EXISTS following_count INTEGER DEFAULT 0;
 
 -- Follow count trigger on creators table
 CREATE OR REPLACE FUNCTION update_follow_counts()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
-        UPDATE creators SET follower_count = COALESCE(follower_count, 0) + 1
+        UPDATE creators SET follower_count = follower_count + 1
         WHERE user_id = NEW.following_id;
-        UPDATE creators SET following_count = COALESCE(following_count, 0) + 1
+        UPDATE creators SET following_count = following_count + 1
         WHERE user_id = NEW.follower_id;
         RETURN NEW;
     ELSIF TG_OP = 'DELETE' THEN
-        UPDATE creators SET follower_count = GREATEST(COALESCE(follower_count, 0) - 1, 0)
+        UPDATE creators SET follower_count = GREATEST(follower_count - 1, 0)
         WHERE user_id = OLD.following_id;
-        UPDATE creators SET following_count = GREATEST(COALESCE(following_count, 0) - 1, 0)
+        UPDATE creators SET following_count = GREATEST(following_count - 1, 0)
         WHERE user_id = OLD.follower_id;
         RETURN OLD;
     END IF;

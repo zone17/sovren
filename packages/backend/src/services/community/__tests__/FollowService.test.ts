@@ -8,14 +8,26 @@
  * - isFollowing: returns true/false, DB error
  * - getFollowers: success with pagination, DB error
  * - getFollowing: success with pagination, DB error
- * - getFollowCounts: success, error propagation
+ * - getFollowCounts: success via creators table, fallback to COUNT, error propagation
  *
- * Table-aware Supabase mock routing via switch statement (common-solutions #7).
- * Methods accepting a pubkey first call from('users') for pubkey→UUID resolution.
+ * getUserIdByPubkey is mocked at module level (shared utility #703).
+ * emitDomainEvent is mocked at module level (shared utility #708).
  */
 
 import { FollowService } from '../FollowService';
 import { ConflictError, ValidationError } from '../../../utils/errors';
+
+// Mock the shared getUserIdByPubkey utility so we control pubkey→UUID resolution
+const mockGetUserIdByPubkey = vi.fn();
+vi.mock('../../../utils/getUserIdByPubkey', () => ({
+  getUserIdByPubkey: (...args: unknown[]) => mockGetUserIdByPubkey(...args),
+}));
+
+// Mock the shared emitDomainEvent utility
+const mockEmitDomainEvent = vi.fn();
+vi.mock('../../../utils/emitDomainEvent', () => ({
+  emitDomainEvent: (...args: unknown[]) => mockEmitDomainEvent(...args),
+}));
 
 // ---------------------------------------------------------------------------
 // Mock chain factory
@@ -36,19 +48,12 @@ function makeChain(resolvedValue: unknown) {
   };
   // Thenable for chains that terminate without single/maybeSingle
   chain.then = (res: unknown, rej: unknown) =>
-    Promise.resolve(resolvedValue).then(res as Parameters<Promise<unknown>['then']>[0], rej as Parameters<Promise<unknown>['then']>[1]);
+    Promise.resolve(resolvedValue).then(
+      res as Parameters<Promise<unknown>['then']>[0],
+      rej as Parameters<Promise<unknown>['then']>[1]
+    );
   chain.catch = (fn: unknown) =>
     Promise.resolve(resolvedValue).catch(fn as Parameters<Promise<unknown>['catch']>[0]);
-  return chain;
-}
-
-/** Make a users-table chain that resolves the given UUID. */
-function makeUsersChain(resolvedUserId: string) {
-  const chain = makeChain(null);
-  (chain.single as ReturnType<typeof vi.fn>).mockResolvedValue({
-    data: { id: resolvedUserId },
-    error: null,
-  });
   return chain;
 }
 
@@ -60,8 +65,16 @@ describe('FollowService', () => {
 
   let service: FollowService;
   let mockDb: { from: ReturnType<typeof vi.fn> };
-  let mockLogger: { info: ReturnType<typeof vi.fn>; warn: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn>; debug: ReturnType<typeof vi.fn> };
-  let mockEventBus: { publish: ReturnType<typeof vi.fn>; subscribeToMany: ReturnType<typeof vi.fn> };
+  let mockLogger: {
+    info: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    debug: ReturnType<typeof vi.fn>;
+  };
+  let mockEventBus: {
+    publish: ReturnType<typeof vi.fn>;
+    subscribeToMany: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -79,6 +92,9 @@ describe('FollowService', () => {
     };
 
     mockDb = { from: vi.fn() };
+
+    // Default: pubkey resolves to FOLLOWER_ID
+    mockGetUserIdByPubkey.mockResolvedValue(FOLLOWER_ID);
   });
 
   function buildService() {
@@ -87,7 +103,6 @@ describe('FollowService', () => {
 
   // -------------------------------------------------------------------------
   // follow
-  // Table-aware routing: from('users') pubkey lookup → from('followers') insert
   // -------------------------------------------------------------------------
   describe('follow', () => {
     it('inserts a follow record and returns its id', async () => {
@@ -97,22 +112,18 @@ describe('FollowService', () => {
         data: { id: FOLLOW_ID },
         error: null,
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(insertChain);
+      mockDb.from.mockReturnValueOnce(insertChain);
 
       const result = await service.follow(FOLLOWER_PUBKEY, FOLLOWING_ID);
       expect(result).toEqual({ id: FOLLOW_ID });
-      expect(mockEventBus.publish).toHaveBeenCalledOnce();
+      expect(mockEmitDomainEvent).toHaveBeenCalledOnce();
     });
 
     it('throws ValidationError when attempting to follow yourself', async () => {
       buildService();
-      // pubkey resolves to FOLLOWER_ID, followingId is also FOLLOWER_ID
-      mockDb.from.mockReturnValueOnce(makeUsersChain(FOLLOWER_ID));
 
       await expect(service.follow(FOLLOWER_PUBKEY, FOLLOWER_ID)).rejects.toThrow(ValidationError);
-      expect(mockDb.from).toHaveBeenCalledOnce(); // only the users lookup
+      expect(mockDb.from).not.toHaveBeenCalled(); // no DB call needed
     });
 
     it('throws ConflictError on unique constraint violation (already following)', async () => {
@@ -122,9 +133,7 @@ describe('FollowService', () => {
         data: null,
         error: { code: '23505', message: 'duplicate key' },
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(insertChain);
+      mockDb.from.mockReturnValueOnce(insertChain);
 
       await expect(service.follow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(ConflictError);
     });
@@ -136,67 +145,57 @@ describe('FollowService', () => {
         data: null,
         error: { code: '42P01', message: 'relation does not exist' },
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(insertChain);
+      mockDb.from.mockReturnValueOnce(insertChain);
 
       await expect(service.follow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(ValidationError);
     });
 
-    it('does not throw when event emission fails (fire-and-forget)', async () => {
+    it('does not throw when emitDomainEvent is called (fire-and-forget)', async () => {
       buildService();
       const insertChain = makeChain(null);
       (insertChain.single as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { id: FOLLOW_ID },
         error: null,
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(insertChain);
-      mockEventBus.publish.mockRejectedValueOnce(new Error('event bus down'));
+      mockDb.from.mockReturnValueOnce(insertChain);
 
-      // Should not throw — event failure is non-blocking
-      await expect(service.follow(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toEqual({ id: FOLLOW_ID });
+      await expect(service.follow(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toEqual({
+        id: FOLLOW_ID,
+      });
+      expect(mockEmitDomainEvent).toHaveBeenCalledOnce();
     });
   });
 
   // -------------------------------------------------------------------------
   // unfollow
-  // Table-aware routing: from('users') pubkey lookup → from('followers') delete
   // -------------------------------------------------------------------------
   describe('unfollow', () => {
     it('deletes the follow record without error', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(makeChain({ error: null }));
+      mockDb.from.mockReturnValueOnce(makeChain({ error: null }));
 
       await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toBeUndefined();
     });
 
     it('is idempotent — no error if relationship does not exist', async () => {
       buildService();
-      // Supabase DELETE with no matching rows returns count:0, error:null
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(makeChain({ error: null, count: 0 }));
+      mockDb.from.mockReturnValueOnce(makeChain({ error: null, count: 0 }));
 
       await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toBeUndefined();
     });
 
     it('throws ValidationError on DB error', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(makeChain({ error: { message: 'connection error' } }));
+      mockDb.from.mockReturnValueOnce(makeChain({ error: { message: 'connection error' } }));
 
-      await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(ValidationError);
+      await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 
   // -------------------------------------------------------------------------
   // isFollowing
-  // Table-aware routing: from('users') pubkey lookup → from('followers') maybeSingle
   // -------------------------------------------------------------------------
   describe('isFollowing', () => {
     it('returns true when follow record exists', async () => {
@@ -206,9 +205,7 @@ describe('FollowService', () => {
         data: { id: FOLLOW_ID },
         error: null,
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(chain);
+      mockDb.from.mockReturnValueOnce(chain);
 
       await expect(service.isFollowing(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toBe(true);
     });
@@ -220,9 +217,7 @@ describe('FollowService', () => {
         data: null,
         error: null,
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(chain);
+      mockDb.from.mockReturnValueOnce(chain);
 
       await expect(service.isFollowing(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toBe(false);
     });
@@ -234,34 +229,37 @@ describe('FollowService', () => {
         data: null,
         error: { message: 'DB error' },
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(chain);
+      mockDb.from.mockReturnValueOnce(chain);
 
-      await expect(service.isFollowing(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(ValidationError);
+      await expect(service.isFollowing(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 
   // -------------------------------------------------------------------------
   // getFollowers
-  // Table-aware routing: from('users') optional pubkey lookup (falls back to raw ID) → from('followers')
+  // getUserIdByPubkey falls back to raw ID on error (catch in service)
   // -------------------------------------------------------------------------
   describe('getFollowers', () => {
     it('returns paginated follower list', async () => {
       buildService();
-      // getFollowers uses getUserIdByPubkey().catch(() => userIdOrPubkey)
-      // so we can pass a UUID directly — users lookup fails silently, falls back to raw ID
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWING_ID))
-        .mockReturnValueOnce(
-          makeChain({
-            data: [
-              { id: 'r1', follower_id: FOLLOWER_ID, following_id: FOLLOWING_ID, created_at: '2024-01-01T00:00:00Z' },
-            ],
-            error: null,
-            count: 1,
-          })
-        );
+      // getFollowers passes raw ID — getUserIdByPubkey resolves it
+      mockGetUserIdByPubkey.mockResolvedValue(FOLLOWING_ID);
+      mockDb.from.mockReturnValueOnce(
+        makeChain({
+          data: [
+            {
+              id: 'r1',
+              follower_id: FOLLOWER_ID,
+              following_id: FOLLOWING_ID,
+              created_at: '2024-01-01T00:00:00Z',
+            },
+          ],
+          error: null,
+          count: 1,
+        })
+      );
 
       const result = await service.getFollowers(FOLLOWING_ID, { page: 1, limit: 20 });
       expect(result.items).toHaveLength(1);
@@ -272,15 +270,14 @@ describe('FollowService', () => {
 
     it('calculates hasNext correctly when more results exist', async () => {
       buildService();
+      mockGetUserIdByPubkey.mockResolvedValue(FOLLOWING_ID);
       const items = Array.from({ length: 20 }, (_, i) => ({
         id: `r${i}`,
         follower_id: `follower-${i}`,
         following_id: FOLLOWING_ID,
         created_at: '2024-01-01T00:00:00Z',
       }));
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWING_ID))
-        .mockReturnValueOnce(makeChain({ data: items, error: null, count: 50 }));
+      mockDb.from.mockReturnValueOnce(makeChain({ data: items, error: null, count: 50 }));
 
       const result = await service.getFollowers(FOLLOWING_ID, { page: 1, limit: 20 });
       expect(result.hasNext).toBe(true);
@@ -289,9 +286,10 @@ describe('FollowService', () => {
 
     it('throws ValidationError on DB error', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWING_ID))
-        .mockReturnValueOnce(makeChain({ data: null, error: { message: 'DB error' }, count: 0 }));
+      mockGetUserIdByPubkey.mockResolvedValue(FOLLOWING_ID);
+      mockDb.from.mockReturnValueOnce(
+        makeChain({ data: null, error: { message: 'DB error' }, count: 0 })
+      );
 
       await expect(service.getFollowers(FOLLOWING_ID, { page: 1, limit: 20 })).rejects.toThrow(
         ValidationError
@@ -305,17 +303,20 @@ describe('FollowService', () => {
   describe('getFollowing', () => {
     it('returns paginated following list', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(
-          makeChain({
-            data: [
-              { id: 'r1', follower_id: FOLLOWER_ID, following_id: FOLLOWING_ID, created_at: '2024-01-01T00:00:00Z' },
-            ],
-            error: null,
-            count: 1,
-          })
-        );
+      mockDb.from.mockReturnValueOnce(
+        makeChain({
+          data: [
+            {
+              id: 'r1',
+              follower_id: FOLLOWER_ID,
+              following_id: FOLLOWING_ID,
+              created_at: '2024-01-01T00:00:00Z',
+            },
+          ],
+          error: null,
+          count: 1,
+        })
+      );
 
       const result = await service.getFollowing(FOLLOWER_ID, { page: 1, limit: 20 });
       expect(result.items).toHaveLength(1);
@@ -325,25 +326,54 @@ describe('FollowService', () => {
 
   // -------------------------------------------------------------------------
   // getFollowCounts
-  // Table-aware routing: from('users') lookup → two parallel from('followers') count queries
+  // Now reads from creators table first, then falls back to COUNT queries
   // -------------------------------------------------------------------------
   describe('getFollowCounts', () => {
-    it('returns follower and following counts', async () => {
+    it('returns counts from creators table when available', async () => {
       buildService();
-      // Call order: users lookup, then two parallel followers count queries
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
-        .mockReturnValueOnce(makeChain({ count: 42, error: null }))
-        .mockReturnValueOnce(makeChain({ count: 17, error: null }));
+      // getUserIdByPubkey fallback — returns raw ID
+      mockGetUserIdByPubkey.mockResolvedValue(FOLLOWER_ID);
+      // creators table query with follower_count/following_count
+      const creatorsChain = makeChain(null);
+      (creatorsChain.maybeSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: { follower_count: 42, following_count: 17 },
+        error: null,
+      });
+      mockDb.from.mockReturnValueOnce(creatorsChain);
 
       const result = await service.getFollowCounts(FOLLOWER_PUBKEY);
       expect(result).toEqual({ followers: 42, following: 17 });
     });
 
+    it('falls back to COUNT queries when creators columns are null', async () => {
+      buildService();
+      mockGetUserIdByPubkey.mockResolvedValue(FOLLOWER_ID);
+      // creators table returns null counts
+      const creatorsChain = makeChain(null);
+      (creatorsChain.maybeSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: { follower_count: null, following_count: null },
+        error: null,
+      });
+      mockDb.from
+        .mockReturnValueOnce(creatorsChain)
+        .mockReturnValueOnce(makeChain({ count: 10, error: null }))
+        .mockReturnValueOnce(makeChain({ count: 5, error: null }));
+
+      const result = await service.getFollowCounts(FOLLOWER_PUBKEY);
+      expect(result).toEqual({ followers: 10, following: 5 });
+    });
+
     it('throws ValidationError if followers count query fails', async () => {
       buildService();
+      mockGetUserIdByPubkey.mockResolvedValue(FOLLOWER_ID);
+      // creators table fails — triggers fallback
+      const creatorsChain = makeChain(null);
+      (creatorsChain.maybeSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: null,
+        error: { message: 'not found' },
+      });
       mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
+        .mockReturnValueOnce(creatorsChain)
         .mockReturnValueOnce(makeChain({ count: null, error: { message: 'DB error' } }))
         .mockReturnValueOnce(makeChain({ count: 0, error: null }));
 
@@ -352,8 +382,14 @@ describe('FollowService', () => {
 
     it('throws ValidationError if following count query fails', async () => {
       buildService();
+      mockGetUserIdByPubkey.mockResolvedValue(FOLLOWER_ID);
+      const creatorsChain = makeChain(null);
+      (creatorsChain.maybeSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: null,
+        error: null,
+      });
       mockDb.from
-        .mockReturnValueOnce(makeUsersChain(FOLLOWER_ID))
+        .mockReturnValueOnce(creatorsChain)
         .mockReturnValueOnce(makeChain({ count: 5, error: null }))
         .mockReturnValueOnce(makeChain({ count: null, error: { message: 'DB error' } }));
 

@@ -15,13 +15,8 @@ import {
   ValidationError,
 } from '../../utils/errors';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
-import crypto from 'crypto';
-
-/** Strip ASCII control characters (U+0000–U+001F) from user-supplied strings */
-function stripControlChars(input: string): string {
-  // eslint-disable-next-line no-control-regex
-  return input.replace(/[\x00-\x1F]/g, '');
-}
+import { stripControlChars } from '../../utils/stripControlChars';
+import { emitDomainEvent } from '../../utils/emitDomainEvent';
 
 interface CircleRow {
   id: string;
@@ -66,27 +61,15 @@ export class CreatorCircleService implements ICreatorCircleService {
     aggregateId: string,
     payload: Record<string, unknown>
   ): void {
-    // Fire-and-forget — notification failures must NOT block the main operation
-    void this.eventBus
-      .publish({
-        id: `evt_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
-        type,
-        aggregateId,
-        aggregateType: 'circle',
-        payload,
-        metadata: {
-          timestamp: new Date(),
-          version: '1.0.0',
-          source: 'CreatorCircleService',
-        },
-      })
-      .catch((err) => {
-        this.logger.error('CreatorCircleService: event emission failed (non-blocking)', {
-          err,
-          type,
-          aggregateId,
-        });
-      });
+    emitDomainEvent(
+      this.eventBus,
+      this.logger,
+      type,
+      aggregateId,
+      'circle',
+      payload,
+      'CreatorCircleService'
+    );
   }
 
   async createCircle(
@@ -118,7 +101,7 @@ export class CreatorCircleService implements ICreatorCircleService {
   }
 
   async getCircles(creatorId: string): Promise<CircleRow[]> {
-    // Get circle IDs where creatorId is a member
+    // Step 1: Get circle IDs where creatorId is a member
     const { data: memberships } = await this.db
       .from<CircleMemberRow>('circle_members')
       .select('circle_id')
@@ -126,95 +109,57 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     const memberCircleIds = (memberships ?? []).map((m) => m.circle_id);
 
-    // Return circles the creator has created OR joined (deduped by DB IN clause + OR)
-    // Two-part query approach: created circles union joined circles
-    const createdQuery = this.db
+    // Step 2: Single query — circles created by OR joined by this creator
+    let query = this.db
       .from<CircleRow>('creator_circles')
       .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
-      .eq('created_by', creatorId)
       .order('created_at', { ascending: false })
       .limit(100);
 
-    const { data: createdCircles, error: createdError } = await createdQuery;
-
-    if (createdError) {
-      this.logger.error('Failed to get created circles', { error: createdError, creatorId });
-      throw new ValidationError(`Failed to get circles: ${createdError.message}`);
+    if (memberCircleIds.length > 0) {
+      query = query.or(`created_by.eq.${creatorId},id.in.(${memberCircleIds.join(',')})`);
+    } else {
+      query = query.eq('created_by', creatorId);
     }
 
-    if (memberCircleIds.length === 0) {
-      return createdCircles ?? [];
+    const { data, error } = await query;
+
+    if (error) {
+      this.logger.error('Failed to get circles', { error, creatorId });
+      throw new ValidationError(`Failed to get circles: ${error.message}`);
     }
 
-    // Fetch joined circles (excluding ones they created, to avoid duplicates)
-    const createdIds = (createdCircles ?? []).map((c) => c.id);
-    const joinedOnlyIds = memberCircleIds.filter((id) => !createdIds.includes(id));
-
-    if (joinedOnlyIds.length === 0) {
-      return createdCircles ?? [];
-    }
-
-    const { data: joinedCircles, error: joinedError } = await this.db
-      .from<CircleRow>('creator_circles')
-      .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
-      .in('id', joinedOnlyIds)
-      .order('created_at', { ascending: false });
-
-    if (joinedError) {
-      this.logger.error('Failed to get joined circles', { error: joinedError, creatorId });
-      throw new ValidationError(`Failed to get circles: ${joinedError.message}`);
-    }
-
-    return [...(createdCircles ?? []), ...(joinedCircles ?? [])];
+    return data ?? [];
   }
 
   async getSuggestedCircles(creatorId: string): Promise<CircleRow[]> {
-    // Fetch circle IDs that the creator has already joined (exclude from suggestions)
-    const { data: memberships } = await this.db
-      .from<CircleMemberRow>('circle_members')
-      .select('circle_id')
-      .eq('creator_id', creatorId);
-
-    const joinedIds = (memberships ?? []).map((m) => m.circle_id);
-
-    // Get creator's niche from their existing circles
-    const { data: myCircles } = await this.db
-      .from<CircleRow>('creator_circles')
-      .select('niche')
-      .eq('created_by', creatorId)
-      .limit(1)
-      .maybeSingle();
-
-    const niche = myCircles?.niche;
-
-    // Suggest circles matching same niche that user hasn't created or joined
-    if (niche) {
-      let query = this.db
+    // Parallel: fetch memberships + creator's niche in one round-trip
+    const [membershipsResult, nicheResult] = await Promise.all([
+      this.db
+        .from<CircleMemberRow>('circle_members')
+        .select('circle_id')
+        .eq('creator_id', creatorId),
+      this.db
         .from<CircleRow>('creator_circles')
-        .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
-        .eq('niche', niche)
-        .neq('created_by', creatorId);
+        .select('niche')
+        .eq('created_by', creatorId)
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
-      if (joinedIds.length > 0) {
-        query = query.not('id', 'in', `(${joinedIds.join(',')})`);
-      }
+    const joinedIds = (membershipsResult.data ?? []).map((m) => m.circle_id);
+    const niche = nicheResult.data?.niche;
 
-      const { data, error } = await query.limit(10);
-
-      if (error) {
-        this.logger.error('Failed to get suggested circles', { error, creatorId });
-        throw new ValidationError(`Failed to get suggested circles: ${error.message}`);
-      }
-
-      return data ?? [];
-    }
-
-    // Fallback: return most recently created circles not already joined
+    // Build suggestion query
     let query = this.db
       .from<CircleRow>('creator_circles')
       .select('id, name, description, niche, max_members, created_by, created_at, updated_at')
       .neq('created_by', creatorId)
       .order('created_at', { ascending: false });
+
+    if (niche) {
+      query = query.eq('niche', niche);
+    }
 
     if (joinedIds.length > 0) {
       query = query.not('id', 'in', `(${joinedIds.join(',')})`);
@@ -223,7 +168,7 @@ export class CreatorCircleService implements ICreatorCircleService {
     const { data, error } = await query.limit(10);
 
     if (error) {
-      this.logger.error('Failed to get suggested circles (fallback)', { error, creatorId });
+      this.logger.error('Failed to get suggested circles', { error, creatorId });
       throw new ValidationError(`Failed to get suggested circles: ${error.message}`);
     }
 
@@ -330,21 +275,36 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (countError) {
       // Cleanup the just-inserted row on count failure
-      await this.db
+      const { error: compensationError } = await this.db
         .from<CircleMemberRow>('circle_members')
         .delete()
         .eq('circle_id', circleId)
         .eq('creator_id', creatorId);
+      if (compensationError) {
+        this.logger.error('joinCircle: compensation DELETE failed', {
+          compensationError,
+          circleId,
+          creatorId,
+          originalError: countError,
+        });
+      }
       throw new ValidationError(`Failed to count circle members: ${countError.message}`);
     }
 
     if ((currentCount ?? 0) > circle.max_members) {
       // Over capacity — remove the just-inserted member and return 409
-      await this.db
+      const { error: compensationError } = await this.db
         .from<CircleMemberRow>('circle_members')
         .delete()
         .eq('circle_id', circleId)
         .eq('creator_id', creatorId);
+      if (compensationError) {
+        this.logger.error('joinCircle: compensation DELETE failed (over capacity)', {
+          compensationError,
+          circleId,
+          creatorId,
+        });
+      }
       throw new ConflictError(`Circle is full (max ${circle.max_members} members)`);
     }
 

@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { mentorshipKeys } from '@/hooks/query-keys';
@@ -38,14 +37,10 @@ export function useRegisterMentor() {
 
 export function useRequestMentorship() {
   const queryClient = useQueryClient();
-  const inFlightRef = useRef(false);
 
-  const mutation = useMutation({
-    mutationFn: (data: Parameters<typeof mentorshipApi.requestMentorship>[0]) => {
-      if (inFlightRef.current) return Promise.reject(new Error('Request already in progress'));
-      inFlightRef.current = true;
-      return mentorshipApi.requestMentorship(data);
-    },
+  return useMutation({
+    mutationFn: (data: Parameters<typeof mentorshipApi.requestMentorship>[0]) =>
+      mentorshipApi.requestMentorship(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: mentorshipKeys.myMentorships() });
       toast.success('Mentorship request sent!');
@@ -53,12 +48,7 @@ export function useRequestMentorship() {
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to request mentorship. Please try again.');
     },
-    onSettled: () => {
-      inFlightRef.current = false;
-    },
   });
-
-  return mutation;
 }
 
 export function useRespondToMentorship() {

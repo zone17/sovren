@@ -3,7 +3,6 @@
  * Slice 8: Creator Network + Notifications
  */
 
-import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { followApi } from '../services/followApi';
@@ -48,14 +47,9 @@ export function useFollowing(userId: string, page = 1) {
 
 export function useFollowMutation(userId: string) {
   const queryClient = useQueryClient();
-  const inFlightRef = useRef(false);
 
   return useMutation({
-    mutationFn: () => {
-      if (inFlightRef.current) return Promise.reject(new Error('Already in progress'));
-      inFlightRef.current = true;
-      return followApi.follow(userId);
-    },
+    mutationFn: () => followApi.follow(userId),
     onMutate: async () => {
       // Optimistic update: set isFollowing to true
       await queryClient.cancelQueries({ queryKey: followKeys.isFollowing(userId) });
@@ -90,9 +84,6 @@ export function useFollowMutation(userId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: followKeys.followers(userId) });
       queryClient.invalidateQueries({ queryKey: followKeys.counts(userId) });
-    },
-    onSettled: () => {
-      inFlightRef.current = false;
     },
   });
 }

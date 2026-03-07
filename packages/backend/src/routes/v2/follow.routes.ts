@@ -109,7 +109,7 @@ router.get(
       targetIdResult.data
     );
 
-    res.json(createApiResponse(req, { isFollowing }));
+    res.json(createApiResponse(req, { following: isFollowing }));
   })
 );
 
@@ -120,15 +120,19 @@ router.get(
 
 /**
  * GET /api/v2/network/users/:userId/follow-counts
- * Get follower and following counts for the authenticated user.
- * Uses nostr_pubkey from auth token; :userId param is not used (auth user's own counts).
+ * Get follower and following counts for the specified user.
  */
 router.get(
   '/follow-counts',
   authenticate,
   requireAuth,
   asyncHandler(async (req, res) => {
-    const data = await getFollowService().getFollowCounts(getAuthUser(req).nostr_pubkey);
+    const targetIdResult = UuidParamSchema.safeParse(req.params.userId);
+    if (!targetIdResult.success) {
+      throw new ValidationError('Invalid user ID format');
+    }
+
+    const data = await getFollowService().getFollowCounts(targetIdResult.data);
     res.json(createApiResponse(req, data));
   })
 );

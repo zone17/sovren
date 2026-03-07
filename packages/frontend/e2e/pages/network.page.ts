@@ -27,8 +27,6 @@ export class NetworkPage {
   readonly myCirclesSection: Locator;
   readonly suggestedCirclesSection: Locator;
   readonly createCircleButton: Locator;
-  readonly circleNameInput: Locator;
-  readonly circleNicheInput: Locator;
   readonly circleDescriptionInput: Locator;
   readonly circleCreateConfirmButton: Locator;
   readonly circlesEmptyState: Locator;
@@ -56,33 +54,24 @@ export class NetworkPage {
     // Circles section
     this.circlesHeading = page.getByRole('heading', { name: /creator circles/i }).first();
     this.myCirclesSection = page.getByRole('region', { name: /my circles/i }).first();
-    this.suggestedCirclesSection = page
-      .getByRole('region', { name: /suggested/i })
-      .first();
+    this.suggestedCirclesSection = page.getByRole('region', { name: /suggested/i }).first();
     this.createCircleButton = page.getByRole('button', { name: /create circle/i }).first();
-    this.circleNameInput = page.getByRole('textbox', { name: /circle name/i }).first();
-    this.circleNicheInput = page.getByRole('textbox', { name: /circle niche/i }).first();
     this.circleDescriptionInput = page
       .getByRole('textbox', { name: /circle description/i })
       .first();
-    this.circleCreateConfirmButton = page
-      .getByRole('button', { name: /^create$/i })
-      .first();
+    this.circleCreateConfirmButton = page.getByRole('button', { name: /^create$/i }).first();
     this.circlesEmptyState = page.getByText(/no circles yet/i).first();
 
     // Mentor directory
-    this.mentorDirectoryHeading = page
-      .getByRole('heading', { name: /mentor directory/i })
-      .first();
+    this.mentorDirectoryHeading = page.getByRole('heading', { name: /mentor directory/i }).first();
     this.mentorNicheFilter = page.getByRole('textbox', { name: /filter by niche/i }).first();
     this.mentorAudienceFilter = page.getByRole('combobox', { name: /filter by audience/i }).first();
-    this.mentorList = page.getByRole('list').filter({ has: page.locator('li') }).first();
-    this.mentorGoalsTextarea = page
-      .getByRole('textbox', { name: /mentorship goals/i })
+    this.mentorList = page
+      .getByRole('list')
+      .filter({ has: page.locator('li') })
       .first();
-    this.mentorRequestSendButton = page
-      .getByRole('button', { name: /send request/i })
-      .first();
+    this.mentorGoalsTextarea = page.getByRole('textbox', { name: /mentorship goals/i }).first();
+    this.mentorRequestSendButton = page.getByRole('button', { name: /send request/i }).first();
     this.mentorEmptyState = page.getByText(/no mentors match/i).first();
   }
 
@@ -106,30 +95,14 @@ export class NetworkPage {
    * The button has aria-label "Join <name>" rendered by CircleList.
    */
   joinButtonFor(circleName: string): Locator {
-    return this.page
-      .getByRole('button', { name: new RegExp(`join ${circleName}`, 'i') })
-      .first();
+    return this.page.getByRole('button', { name: new RegExp(`join ${circleName}`, 'i') }).first();
   }
 
   /**
    * Returns the leave button for a specific circle by name.
    */
   leaveButtonFor(circleName: string): Locator {
-    return this.page
-      .getByRole('button', { name: new RegExp(`leave ${circleName}`, 'i') })
-      .first();
-  }
-
-  /**
-   * Returns the member count text element for a specific circle by name.
-   * Looks for the count near the circle's list item.
-   */
-  memberCountFor(circleName: string): Locator {
-    return this.page
-      .getByRole('listitem')
-      .filter({ hasText: circleName })
-      .getByText(/member/i)
-      .first();
+    return this.page.getByRole('button', { name: new RegExp(`leave ${circleName}`, 'i') }).first();
   }
 
   /**
@@ -140,17 +113,6 @@ export class NetworkPage {
       .getByRole('listitem')
       .filter({ hasText: mentorNiche })
       .getByRole('button', { name: /request/i })
-      .first();
-  }
-
-  /**
-   * Returns the pending/accepted status badge for a mentor by niche.
-   */
-  mentorshipStatusFor(mentorNiche: string): Locator {
-    return this.page
-      .getByRole('listitem')
-      .filter({ hasText: mentorNiche })
-      .getByText(/pending|accepted|declined/i)
       .first();
   }
 }

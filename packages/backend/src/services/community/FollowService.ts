@@ -19,10 +19,10 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import type { FollowRelationship, FollowCounts } from '@shared/types/community';
-import { ConflictError, UnauthorizedError, ValidationError } from '../../utils/errors';
+import { ConflictError, ValidationError } from '../../utils/errors';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
-import { TTLCache } from '../../utils/ttl-cache';
-import crypto from 'crypto';
+import { getUserIdByPubkey } from '../../utils/getUserIdByPubkey';
+import { emitDomainEvent } from '../../utils/emitDomainEvent';
 
 interface FollowRow {
   id: string;
@@ -36,12 +36,6 @@ export class FollowService implements IFollowService {
   private readonly logger: ILogger;
   private readonly eventBus: IEventBus;
 
-  // TTLCache pattern (common-solutions.md #2) — auto-evicts stale entries, bounded size
-  private readonly userIdCache = new TTLCache<string, string>({
-    ttlMs: 60_000,
-    maxSize: 1000,
-  });
-
   constructor(db: ISupabaseClient, logger: ILogger, eventBus: IEventBus) {
     this.db = db;
     this.logger = logger;
@@ -49,35 +43,11 @@ export class FollowService implements IFollowService {
   }
 
   // ============================================================================
-  // Private Helpers
-  // ============================================================================
-
-  /** Resolve a NOSTR pubkey to the internal UUID. Cached for 60s. */
-  private async getUserIdByPubkey(pubkey: string): Promise<string> {
-    const cached = this.userIdCache.get(pubkey);
-    if (cached) return cached;
-
-    const { data, error } = await this.db
-      .from('users')
-      .select('id')
-      .eq('nostr_pubkey', pubkey)
-      .single();
-
-    if (error || !data) {
-      throw new UnauthorizedError('User profile not found');
-    }
-
-    const userId = (data as { id: string }).id;
-    this.userIdCache.set(pubkey, userId);
-    return userId;
-  }
-
-  // ============================================================================
   // Public Methods — pubkey parameters are resolved to UUIDs before DB ops
   // ============================================================================
 
   async follow(followerPubkey: string, followingId: string): Promise<{ id: string }> {
-    const followerId = await this.getUserIdByPubkey(followerPubkey);
+    const followerId = await getUserIdByPubkey(this.db, followerPubkey);
 
     if (followerId === followingId) {
       throw new ValidationError('Cannot follow yourself');
@@ -105,33 +75,21 @@ export class FollowService implements IFollowService {
     this.logger.info('FollowService.follow: followed', { followerId, followingId });
 
     // Fire-and-forget — notification failure must NOT block follow operation
-    void this.eventBus
-      .publish({
-        id: `evt_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
-        type: DomainEventType.COMMUNITY_USER_FOLLOWED,
-        aggregateId: data.id,
-        aggregateType: 'follow',
-        payload: { followerId, followingId },
-        metadata: {
-          timestamp: new Date(),
-          version: '1.0.0',
-          source: 'FollowService',
-          userId: followerId,
-        },
-      })
-      .catch((err) => {
-        this.logger.error('FollowService.follow: event emission failed (non-blocking)', {
-          err,
-          followerId,
-          followingId,
-        });
-      });
+    emitDomainEvent(
+      this.eventBus,
+      this.logger,
+      DomainEventType.COMMUNITY_USER_FOLLOWED,
+      data.id,
+      'follow',
+      { followerId, followingId },
+      'FollowService'
+    );
 
     return { id: data.id };
   }
 
   async unfollow(followerPubkey: string, followingId: string): Promise<void> {
-    const followerId = await this.getUserIdByPubkey(followerPubkey);
+    const followerId = await getUserIdByPubkey(this.db, followerPubkey);
 
     const { error } = await this.db
       .from<FollowRow>('followers')
@@ -148,7 +106,7 @@ export class FollowService implements IFollowService {
   }
 
   async isFollowing(followerPubkey: string, followingId: string): Promise<boolean> {
-    const followerId = await this.getUserIdByPubkey(followerPubkey);
+    const followerId = await getUserIdByPubkey(this.db, followerPubkey);
 
     const { data, error } = await this.db
       .from<FollowRow>('followers')
@@ -169,7 +127,13 @@ export class FollowService implements IFollowService {
     userIdOrPubkey: string,
     opts: PaginationParams
   ): Promise<PaginatedResult<FollowRelationship>> {
-    const userId = await this.getUserIdByPubkey(userIdOrPubkey).catch(() => userIdOrPubkey);
+    const userId = await getUserIdByPubkey(this.db, userIdOrPubkey).catch((err) => {
+      this.logger.warn('getFollowers: getUserIdByPubkey fallback to raw ID', {
+        err,
+        userIdOrPubkey,
+      });
+      return userIdOrPubkey;
+    });
     const { page, limit } = opts;
     const offset = (page - 1) * limit;
 
@@ -182,7 +146,7 @@ export class FollowService implements IFollowService {
 
     if (error) {
       this.logger.error('FollowService.getFollowers: DB error', { error, userId });
-      throw new ValidationError(`Failed to get followers: ${error.message}`);
+      throw new ValidationError('Failed to get followers');
     }
 
     const items = (data ?? []).map((row) => ({
@@ -200,7 +164,13 @@ export class FollowService implements IFollowService {
     userIdOrPubkey: string,
     opts: PaginationParams
   ): Promise<PaginatedResult<FollowRelationship>> {
-    const userId = await this.getUserIdByPubkey(userIdOrPubkey).catch(() => userIdOrPubkey);
+    const userId = await getUserIdByPubkey(this.db, userIdOrPubkey).catch((err) => {
+      this.logger.warn('getFollowing: getUserIdByPubkey fallback to raw ID', {
+        err,
+        userIdOrPubkey,
+      });
+      return userIdOrPubkey;
+    });
     const { page, limit } = opts;
     const offset = (page - 1) * limit;
 
@@ -213,7 +183,7 @@ export class FollowService implements IFollowService {
 
     if (error) {
       this.logger.error('FollowService.getFollowing: DB error', { error, userId });
-      throw new ValidationError(`Failed to get following: ${error.message}`);
+      throw new ValidationError('Failed to get following');
     }
 
     const items = (data ?? []).map((row) => ({
@@ -227,9 +197,36 @@ export class FollowService implements IFollowService {
     return { items, total, page, limit, hasNext: offset + items.length < total };
   }
 
-  async getFollowCounts(pubkey: string): Promise<FollowCounts> {
-    const userId = await this.getUserIdByPubkey(pubkey);
+  async getFollowCounts(userIdOrPubkey: string): Promise<FollowCounts> {
+    // Accept either a UUID or pubkey — allows route to pass :userId param directly
+    const userId = await getUserIdByPubkey(this.db, userIdOrPubkey).catch((err) => {
+      this.logger.warn('getFollowCounts: getUserIdByPubkey fallback to raw ID', {
+        err,
+        userIdOrPubkey,
+      });
+      return userIdOrPubkey;
+    });
 
+    // Prefer trigger-maintained columns on the creators table (single row read vs 2 COUNT scans)
+    const { data: creator, error: creatorError } = await this.db
+      .from('creators')
+      .select('follower_count, following_count')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (
+      !creatorError &&
+      creator &&
+      creator.follower_count != null &&
+      creator.following_count != null
+    ) {
+      return {
+        followers: creator.follower_count as number,
+        following: creator.following_count as number,
+      };
+    }
+
+    // Fallback: COUNT queries if trigger columns are null or creator row missing
     const [followersResult, followingResult] = await Promise.all([
       this.db
         .from<FollowRow>('followers')
@@ -246,7 +243,7 @@ export class FollowService implements IFollowService {
         error: followersResult.error,
         userId,
       });
-      throw new ValidationError(`Failed to get follow counts: ${followersResult.error.message}`);
+      throw new ValidationError('Failed to get follow counts');
     }
 
     if (followingResult.error) {
@@ -254,7 +251,7 @@ export class FollowService implements IFollowService {
         error: followingResult.error,
         userId,
       });
-      throw new ValidationError(`Failed to get follow counts: ${followingResult.error.message}`);
+      throw new ValidationError('Failed to get follow counts');
     }
 
     return {

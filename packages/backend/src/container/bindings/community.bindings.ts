@@ -60,6 +60,8 @@ export class CommunityServicesModule implements IServiceModule {
       service.subscribeToEvents();
       return service;
     });
+    // NOTE (#702): subscribeToEvents() only activates on first resolution (lazy singleton).
+    // Eager initialization is done in server.ts after DI container init to avoid temporal coupling.
 
     // ===========================
     // Community Services (EPIC-010)

@@ -5,7 +5,7 @@
  * Optimistic toggle with double-submit prevention and error rollback.
  */
 
-import { useRef, type FC } from 'react';
+import type { FC } from 'react';
 import { useIsFollowing, useFollowMutation, useUnfollowMutation } from '../hooks/useFollow';
 
 interface FollowButtonProps {
@@ -17,21 +17,15 @@ const FollowButton: FC<FollowButtonProps> = ({ userId, className = '' }) => {
   const { data: isFollowing, isLoading: isCheckingFollow } = useIsFollowing(userId);
   const followMutation = useFollowMutation(userId);
   const unfollowMutation = useUnfollowMutation(userId);
-  const inFlightRef = useRef(false);
 
   const isMutating = followMutation.isPending || unfollowMutation.isPending;
   const isDisabled = isCheckingFollow || isMutating;
 
   const handleClick = () => {
-    if (inFlightRef.current || isMutating) return;
-    inFlightRef.current = true;
+    if (isMutating) return;
 
     if (isFollowing) {
-      unfollowMutation.mutate(undefined, {
-        onSettled: () => {
-          inFlightRef.current = false;
-        },
-      });
+      unfollowMutation.mutate();
     } else {
       followMutation.mutate(undefined, {
         onError: (err: Error) => {
@@ -39,9 +33,6 @@ const FollowButton: FC<FollowButtonProps> = ({ userId, className = '' }) => {
           if ('status' in err && (err as { status: number }).status === 409) {
             return;
           }
-        },
-        onSettled: () => {
-          inFlightRef.current = false;
         },
       });
     }

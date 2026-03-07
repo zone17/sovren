@@ -19,9 +19,9 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IEventBus, DomainEvent } from '../../interfaces/shared/IEventBus';
 import type { ServerNotification, NotificationListResponse } from '@shared/types/notifications';
-import { AuthorizationError, NotFoundError, UnauthorizedError, ValidationError } from '../../utils/errors';
+import { AuthorizationError, NotFoundError, ValidationError } from '../../utils/errors';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
-import { TTLCache } from '../../utils/ttl-cache';
+import { getUserIdByPubkey } from '../../utils/getUserIdByPubkey';
 
 interface NotificationRow {
   id: string;
@@ -63,40 +63,10 @@ export class NotificationPersistenceService implements INotificationPersistenceS
   private readonly logger: ILogger;
   private readonly eventBus: IEventBus;
 
-  // TTLCache pattern (common-solutions.md #2) — auto-evicts stale entries, bounded size
-  private readonly userIdCache = new TTLCache<string, string>({
-    ttlMs: 60_000,
-    maxSize: 1000,
-  });
-
   constructor(db: ISupabaseClient, logger: ILogger, eventBus: IEventBus) {
     this.db = db;
     this.logger = logger;
     this.eventBus = eventBus;
-  }
-
-  // ============================================================================
-  // Private Helpers
-  // ============================================================================
-
-  /** Resolve a NOSTR pubkey to the internal UUID. Cached for 60s. */
-  private async getUserIdByPubkey(pubkey: string): Promise<string> {
-    const cached = this.userIdCache.get(pubkey);
-    if (cached) return cached;
-
-    const { data, error } = await this.db
-      .from('users')
-      .select('id')
-      .eq('nostr_pubkey', pubkey)
-      .single();
-
-    if (error || !data) {
-      throw new UnauthorizedError('User profile not found');
-    }
-
-    const userId = (data as { id: string }).id;
-    this.userIdCache.set(pubkey, userId);
-    return userId;
   }
 
   /**
@@ -299,7 +269,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
 
     if (error || !data) {
       this.logger.error('NotificationPersistenceService.create: DB error', { error, payload });
-      throw new ValidationError(`Failed to create notification: ${error?.message}`);
+      throw new ValidationError('Failed to create notification');
     }
 
     return rowToServerNotification(data);
@@ -332,13 +302,13 @@ export class NotificationPersistenceService implements INotificationPersistenceS
           chunkIndex: i / CHUNK_SIZE,
           count: chunk.length,
         });
-        throw new ValidationError(`Failed to create notifications batch: ${error.message}`);
+        throw new ValidationError('Failed to create notifications batch');
       }
     }
   }
 
   async list(pubkey: string, opts: NotificationListOptions): Promise<NotificationListResponse> {
-    const userId = await this.getUserIdByPubkey(pubkey);
+    const userId = await getUserIdByPubkey(this.db, pubkey);
     const { page, limit, unreadOnly = false } = opts;
     const offset = (page - 1) * limit;
 
@@ -361,7 +331,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
 
     if (error) {
       this.logger.error('NotificationPersistenceService.list: DB error', { error, userId });
-      throw new ValidationError(`Failed to list notifications: ${error.message}`);
+      throw new ValidationError('Failed to list notifications');
     }
 
     const notifications = (data ?? []).map(rowToServerNotification);
@@ -379,7 +349,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
   }
 
   async getUnreadCount(pubkey: string): Promise<number> {
-    const userId = await this.getUserIdByPubkey(pubkey);
+    const userId = await getUserIdByPubkey(this.db, pubkey);
 
     const { count, error } = await this.db
       .from<NotificationRow>('notifications')
@@ -392,14 +362,14 @@ export class NotificationPersistenceService implements INotificationPersistenceS
         error,
         userId,
       });
-      throw new ValidationError(`Failed to get unread count: ${error.message}`);
+      throw new ValidationError('Failed to get unread count');
     }
 
     return count ?? 0;
   }
 
   async markRead(notificationId: string, pubkey: string): Promise<void> {
-    const userId = await this.getUserIdByPubkey(pubkey);
+    const userId = await getUserIdByPubkey(this.db, pubkey);
 
     // Fetch first to check ownership (service-layer auth per critical-patterns #2)
     const { data: notification, error: fetchError } = await this.db
@@ -413,7 +383,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
     }
 
     if (notification.user_id !== userId) {
-      throw new AuthorizationError('Cannot mark another user\'s notification as read');
+      throw new AuthorizationError("Cannot mark another user's notification as read");
     }
 
     const { error } = await this.db
@@ -427,12 +397,12 @@ export class NotificationPersistenceService implements INotificationPersistenceS
         error,
         notificationId,
       });
-      throw new ValidationError(`Failed to mark notification as read: ${error.message}`);
+      throw new ValidationError('Failed to mark notification as read');
     }
   }
 
   async markAllRead(pubkey: string, before: Date): Promise<void> {
-    const userId = await this.getUserIdByPubkey(pubkey);
+    const userId = await getUserIdByPubkey(this.db, pubkey);
 
     const { error } = await this.db
       .from<NotificationRow>('notifications')
@@ -447,12 +417,12 @@ export class NotificationPersistenceService implements INotificationPersistenceS
         userId,
         before,
       });
-      throw new ValidationError(`Failed to mark all notifications as read: ${error.message}`);
+      throw new ValidationError('Failed to mark all notifications as read');
     }
   }
 
   async delete(notificationId: string, pubkey: string): Promise<void> {
-    const userId = await this.getUserIdByPubkey(pubkey);
+    const userId = await getUserIdByPubkey(this.db, pubkey);
 
     // Fetch first to check ownership (service-layer auth per critical-patterns #2)
     const { data: notification, error: fetchError } = await this.db
@@ -466,7 +436,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
     }
 
     if (notification.user_id !== userId) {
-      throw new AuthorizationError('Cannot delete another user\'s notification');
+      throw new AuthorizationError("Cannot delete another user's notification");
     }
 
     const { error } = await this.db
@@ -480,7 +450,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
         error,
         notificationId,
       });
-      throw new ValidationError(`Failed to delete notification: ${error.message}`);
+      throw new ValidationError('Failed to delete notification');
     }
   }
 }

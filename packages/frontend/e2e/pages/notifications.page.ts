@@ -43,9 +43,7 @@ export class NotificationsPage {
     this.page = page;
 
     // Bell icon button in header — aria-label "Notifications" or "Open notifications"
-    this.bellButton = page
-      .getByRole('button', { name: /notifications/i })
-      .first();
+    this.bellButton = page.getByRole('button', { name: /notifications/i }).first();
 
     // Unread badge — numeric badge element near the bell
     this.unreadBadge = page.getByRole('status', { name: /unread notifications/i }).first();
@@ -61,9 +59,7 @@ export class NotificationsPage {
     this.notificationList = page.getByRole('list', { name: /notifications/i }).first();
 
     // Mark all read
-    this.markAllReadButton = page
-      .getByRole('button', { name: /mark all (as )?read/i })
-      .first();
+    this.markAllReadButton = page.getByRole('button', { name: /mark all (as )?read/i }).first();
 
     // Empty state message
     this.emptyState = page.getByText(/no notifications yet/i).first();
@@ -94,29 +90,12 @@ export class NotificationsPage {
   }
 
   /**
-   * Switch to the Nostr tab.
-   */
-  async switchToNostr() {
-    await this.nostrTab.click();
-  }
-
-  /**
    * Get all notification list items currently visible.
    */
   async getNotificationItems(): Promise<Locator[]> {
     const items = this.notificationList.getByRole('listitem');
     const count = await items.count();
     return Array.from({ length: count }, (_, i) => items.nth(i));
-  }
-
-  /**
-   * Returns the notification row that contains the given text snippet.
-   */
-  notificationContaining(text: string): Locator {
-    return this.notificationList
-      .getByRole('listitem')
-      .filter({ hasText: text })
-      .first();
   }
 
   /**

@@ -16,7 +16,7 @@ import {
   CreateCirclePostSchema,
   UuidParamSchema,
 } from '../../validators/community';
-import { NotFoundError, ValidationError } from '../../utils/errors';
+import { ValidationError } from '../../utils/errors';
 import type { ICreatorCircleService } from '../../interfaces/community/ICreatorCircleService';
 
 const router = Router();
@@ -61,18 +61,15 @@ router.post(
 /**
  * GET /api/v2/circles
  * List circles (my circles + discoverable)
- * #382: Pagination support
+ * #382/#713: DB-level pagination via service
  */
 router.get(
   '/',
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
-    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getCircleService().getCircles(getAuthUser(req).nostr_pubkey);
-    const paginated = data.slice(offset, offset + limit);
-    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
+    res.json(createApiResponse(req, data));
   })
 );
 
@@ -190,7 +187,7 @@ router.delete(
 /**
  * GET /api/v2/circles/:id/posts
  * Get posts in a circle feed
- * #382: Pagination support
+ * #382/#713: DB-level pagination via service (limit 50 in service)
  */
 router.get(
   '/:id/posts',
@@ -202,14 +199,11 @@ router.get(
       throw new ValidationError('Invalid circle ID format');
     }
 
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
-    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getCircleService().getCirclePosts(
       idResult.data,
       getAuthUser(req).nostr_pubkey
     );
-    const paginated = data.slice(offset, offset + limit);
-    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
+    res.json(createApiResponse(req, data));
   })
 );
 

@@ -65,7 +65,7 @@ router.post(
  * GET /api/v2/mentorship/mentors
  * Browse mentors with optional niche/audience filters
  * NOTE: Must come before /:id routes to avoid collision
- * #382: Pagination support
+ * #382/#713: DB-level pagination via service (limit 50 in service)
  */
 router.get(
   '/mentors',
@@ -82,15 +82,11 @@ router.get(
       filters.audienceSizeRange = req.query.audienceSizeRange;
     }
 
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
-    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
-
     const data = await getMentorshipService().getMentors(
       Object.keys(filters).length > 0 ? filters : undefined
     );
 
-    const paginated = data.slice(offset, offset + limit);
-    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
+    res.json(createApiResponse(req, data));
   })
 );
 
@@ -98,18 +94,15 @@ router.get(
  * GET /api/v2/mentorship/my-mentorships
  * Get all mentorships for the authenticated user (as mentor or mentee)
  * NOTE: Must come before /:id routes to avoid collision
- * #382: Pagination support
+ * #382/#713: DB-level pagination via service (limit 100 in service)
  */
 router.get(
   '/my-mentorships',
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
-    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getMentorshipService().getMyMentorships(getAuthUser(req).nostr_pubkey);
-    const paginated = data.slice(offset, offset + limit);
-    res.json(createApiResponse(req, { items: paginated, total: data.length, limit, offset }));
+    res.json(createApiResponse(req, data));
   })
 );
 

@@ -15,9 +15,7 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICommentsService } from '../../interfaces/community/ICommentsService';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import type { CommentWithAuthor, CommentsPaginatedResponse } from '@shared/types/comments';
-import { TTLCache } from '../../utils/ttl-cache';
 import {
-  UnauthorizedError,
   NotFoundError,
   ConflictError,
   ValidationError,
@@ -25,6 +23,7 @@ import {
   ServiceError,
 } from '../../utils/errors';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
+import { getUserIdByPubkey } from '../../utils/getUserIdByPubkey';
 import crypto from 'crypto';
 
 // Raw DB row shape returned by the comments + users JOIN
@@ -60,40 +59,10 @@ export class CommentsService implements ICommentsService {
   private readonly logger: ILogger;
   private readonly eventBus: IEventBus;
 
-  // TTLCache pattern (common-solutions.md #2) — auto-evicts stale entries, bounded size
-  private readonly userIdCache = new TTLCache<string, string>({
-    ttlMs: 60_000,
-    maxSize: 1000,
-  });
-
   constructor(db: ISupabaseClient, logger: ILogger, eventBus: IEventBus) {
     this.db = db;
     this.logger = logger;
     this.eventBus = eventBus;
-  }
-
-  // ============================================================================
-  // Private Helpers
-  // ============================================================================
-
-  /** Resolve a NOSTR pubkey to the internal UUID. Cached for 60s. */
-  private async getUserIdByPubkey(pubkey: string): Promise<string> {
-    const cached = this.userIdCache.get(pubkey);
-    if (cached) return cached;
-
-    const { data, error } = await this.db
-      .from('users')
-      .select('id')
-      .eq('nostr_pubkey', pubkey)
-      .single();
-
-    if (error || !data) {
-      throw new UnauthorizedError('User profile not found');
-    }
-
-    const userId = (data as { id: string }).id;
-    this.userIdCache.set(pubkey, userId);
-    return userId;
   }
 
   /**
@@ -226,7 +195,7 @@ export class CommentsService implements ICommentsService {
     contentId: string,
     payload: { parentCommentId?: string; commentText: string }
   ): Promise<CommentWithAuthor> {
-    const userId = await this.getUserIdByPubkey(callerPubkey);
+    const userId = await getUserIdByPubkey(this.db, callerPubkey);
 
     // Content access check — prevent commenting on non-published content (security audit P3-2)
     const { data: content } = await this.db
@@ -319,7 +288,7 @@ export class CommentsService implements ICommentsService {
   }
 
   async deleteComment(callerPubkey: string, commentId: string): Promise<void> {
-    const userId = await this.getUserIdByPubkey(callerPubkey);
+    const userId = await getUserIdByPubkey(this.db, callerPubkey);
 
     // Fetch comment + content creator in one query (service-layer auth, critical-patterns.md #2)
     const { data: comment } = await this.db

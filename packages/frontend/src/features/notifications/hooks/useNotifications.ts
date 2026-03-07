@@ -113,5 +113,5 @@ export function useNotificationRealtime(userId: string | null | undefined) {
         supabase.removeChannel(channel);
       }
     };
-  }, [userId]);
+  }, [userId, queryClient]);
 }

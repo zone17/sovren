@@ -18,6 +18,12 @@
 import { NotificationPersistenceService } from '../NotificationPersistenceService';
 import { AuthorizationError, NotFoundError, ValidationError } from '../../../utils/errors';
 
+// Mock the shared getUserIdByPubkey utility (#703)
+const mockGetUserIdByPubkey = vi.fn();
+vi.mock('../../../utils/getUserIdByPubkey', () => ({
+  getUserIdByPubkey: (...args: unknown[]) => mockGetUserIdByPubkey(...args),
+}));
+
 // ---------------------------------------------------------------------------
 // Mock chain factory
 // ---------------------------------------------------------------------------
@@ -79,8 +85,16 @@ describe('NotificationPersistenceService', () => {
 
   let service: NotificationPersistenceService;
   let mockDb: { from: ReturnType<typeof vi.fn> };
-  let mockLogger: { info: ReturnType<typeof vi.fn>; warn: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn>; debug: ReturnType<typeof vi.fn> };
-  let mockEventBus: { subscribeToMany: ReturnType<typeof vi.fn>; publish: ReturnType<typeof vi.fn> };
+  let mockLogger: {
+    info: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    debug: ReturnType<typeof vi.fn>;
+  };
+  let mockEventBus: {
+    subscribeToMany: ReturnType<typeof vi.fn>;
+    publish: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -98,6 +112,9 @@ describe('NotificationPersistenceService', () => {
     };
 
     mockDb = { from: vi.fn() };
+
+    // Default: pubkey resolves to USER_ID
+    mockGetUserIdByPubkey.mockResolvedValue(USER_ID);
   });
 
   function buildService() {
@@ -115,7 +132,10 @@ describe('NotificationPersistenceService', () => {
     it('inserts a notification and returns the mapped result', async () => {
       buildService();
       const chain = makeChain(null);
-      (chain.single as ReturnType<typeof vi.fn>).mockResolvedValue({ data: BASE_NOTIF, error: null });
+      (chain.single as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: BASE_NOTIF,
+        error: null,
+      });
       mockDb.from.mockReturnValue(chain);
 
       const result = await service.create({
@@ -191,9 +211,7 @@ describe('NotificationPersistenceService', () => {
     it('returns paginated notification list', async () => {
       buildService();
       // Table-aware routing: users lookup first, then notifications query
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(makeChain({ data: [BASE_NOTIF], error: null, count: 1 }));
+      mockDb.from.mockReturnValueOnce(makeChain({ data: [BASE_NOTIF], error: null, count: 1 }));
 
       const result = await service.list(USER_PUBKEY, { page: 1, limit: 20 });
       expect(result.notifications).toHaveLength(1);
@@ -204,9 +222,7 @@ describe('NotificationPersistenceService', () => {
     it('calculates hasNext=true when more pages exist', async () => {
       buildService();
       const items = Array.from({ length: 20 }, (_, i) => ({ ...BASE_NOTIF, id: `notif-${i}` }));
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(makeChain({ data: items, error: null, count: 50 }));
+      mockDb.from.mockReturnValueOnce(makeChain({ data: items, error: null, count: 50 }));
 
       const result = await service.list(USER_PUBKEY, { page: 1, limit: 20 });
       expect(result.pagination.hasNext).toBe(true);
@@ -215,11 +231,13 @@ describe('NotificationPersistenceService', () => {
 
     it('throws ValidationError on DB error', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(makeChain({ data: null, error: { message: 'error' }, count: 0 }));
+      mockDb.from.mockReturnValueOnce(
+        makeChain({ data: null, error: { message: 'error' }, count: 0 })
+      );
 
-      await expect(service.list(USER_PUBKEY, { page: 1, limit: 20 })).rejects.toThrow(ValidationError);
+      await expect(service.list(USER_PUBKEY, { page: 1, limit: 20 })).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 
@@ -230,9 +248,7 @@ describe('NotificationPersistenceService', () => {
   describe('getUnreadCount', () => {
     it('returns the count from the DB', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(makeChain({ count: 7, error: null }));
+      mockDb.from.mockReturnValueOnce(makeChain({ count: 7, error: null }));
 
       const count = await service.getUnreadCount(USER_PUBKEY);
       expect(count).toBe(7);
@@ -240,9 +256,7 @@ describe('NotificationPersistenceService', () => {
 
     it('returns 0 when count is null', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(makeChain({ count: null, error: null }));
+      mockDb.from.mockReturnValueOnce(makeChain({ count: null, error: null }));
 
       const count = await service.getUnreadCount(USER_PUBKEY);
       expect(count).toBe(0);
@@ -250,9 +264,7 @@ describe('NotificationPersistenceService', () => {
 
     it('throws ValidationError on DB error', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(makeChain({ count: null, error: { message: 'DB error' } }));
+      mockDb.from.mockReturnValueOnce(makeChain({ count: null, error: { message: 'DB error' } }));
 
       await expect(service.getUnreadCount(USER_PUBKEY)).rejects.toThrow(ValidationError);
     });
@@ -267,7 +279,6 @@ describe('NotificationPersistenceService', () => {
       buildService();
       // Call order: from('users'), from('notifications') ownership fetch, from('notifications') update
       mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
         .mockReturnValueOnce(
           (() => {
             const c = makeChain(null);
@@ -286,10 +297,11 @@ describe('NotificationPersistenceService', () => {
     it('throws NotFoundError when notification does not exist', async () => {
       buildService();
       const c = makeChain(null);
-      (c.single as ReturnType<typeof vi.fn>).mockResolvedValue({ data: null, error: { message: 'not found' } });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(c);
+      (c.single as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: null,
+        error: { message: 'not found' },
+      });
+      mockDb.from.mockReturnValueOnce(c);
 
       await expect(service.markRead(NOTIF_ID, USER_PUBKEY)).rejects.toThrow(NotFoundError);
     });
@@ -301,9 +313,7 @@ describe('NotificationPersistenceService', () => {
         data: { id: NOTIF_ID, user_id: 'other-user' },
         error: null,
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(c);
+      mockDb.from.mockReturnValueOnce(c);
 
       await expect(service.markRead(NOTIF_ID, USER_PUBKEY)).rejects.toThrow(AuthorizationError);
     });
@@ -317,9 +327,7 @@ describe('NotificationPersistenceService', () => {
     it('calls update with correct timestamp cutoff', async () => {
       buildService();
       const notifChain = makeChain({ error: null });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(notifChain);
+      mockDb.from.mockReturnValueOnce(notifChain);
 
       const cutoff = new Date('2024-06-01T12:00:00Z');
       await expect(service.markAllRead(USER_PUBKEY, cutoff)).resolves.toBeUndefined();
@@ -330,9 +338,7 @@ describe('NotificationPersistenceService', () => {
 
     it('throws ValidationError on DB error', async () => {
       buildService();
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(makeChain({ error: { message: 'DB error' } }));
+      mockDb.from.mockReturnValueOnce(makeChain({ error: { message: 'DB error' } }));
 
       await expect(service.markAllRead(USER_PUBKEY, new Date())).rejects.toThrow(ValidationError);
     });
@@ -346,7 +352,6 @@ describe('NotificationPersistenceService', () => {
     it('deletes a notification when caller is the owner', async () => {
       buildService();
       mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
         .mockReturnValueOnce(
           (() => {
             const c = makeChain(null);
@@ -365,10 +370,11 @@ describe('NotificationPersistenceService', () => {
     it('throws NotFoundError when notification does not exist', async () => {
       buildService();
       const c = makeChain(null);
-      (c.single as ReturnType<typeof vi.fn>).mockResolvedValue({ data: null, error: { message: 'not found' } });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(c);
+      (c.single as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: null,
+        error: { message: 'not found' },
+      });
+      mockDb.from.mockReturnValueOnce(c);
 
       await expect(service.delete(NOTIF_ID, USER_PUBKEY)).rejects.toThrow(NotFoundError);
     });
@@ -380,9 +386,7 @@ describe('NotificationPersistenceService', () => {
         data: { id: NOTIF_ID, user_id: 'other-user' },
         error: null,
       });
-      mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
-        .mockReturnValueOnce(c);
+      mockDb.from.mockReturnValueOnce(c);
 
       await expect(service.delete(NOTIF_ID, USER_PUBKEY)).rejects.toThrow(AuthorizationError);
     });
@@ -390,7 +394,6 @@ describe('NotificationPersistenceService', () => {
     it('throws ValidationError on DB error during delete', async () => {
       buildService();
       mockDb.from
-        .mockReturnValueOnce(makeUsersChain(USER_ID))
         .mockReturnValueOnce(
           (() => {
             const c = makeChain(null);

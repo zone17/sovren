@@ -11,13 +11,16 @@
 import React, { useMemo } from 'react';
 import {
   useServerNotifications,
+  useUnreadNotificationCount,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from '../hooks/useNotifications';
 import NotificationItem from './NotificationItem';
 import type { ServerNotification } from '@shared/types/notifications';
 
-function groupByDate(notifications: ServerNotification[]): { label: string; items: ServerNotification[] }[] {
+function groupByDate(
+  notifications: ServerNotification[]
+): { label: string; items: ServerNotification[] }[] {
   const DAY = 86_400_000;
   const todayStartDate = new Date();
   todayStartDate.setHours(0, 0, 0, 0);
@@ -54,11 +57,11 @@ interface ServerNotificationCenterProps {
 
 const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ className = '' }) => {
   const { data, isLoading, isError } = useServerNotifications();
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
 
   const notifications = data?.notifications ?? [];
-  const unreadCount = notifications.filter((n) => !n.read).length;
   const grouped = useMemo(() => groupByDate(notifications), [notifications]);
 
   return (
@@ -107,7 +110,12 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-              <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

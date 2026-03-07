@@ -39,7 +39,7 @@ CREATE POLICY notifications_update_own ON notifications
 CREATE POLICY notifications_delete_own ON notifications
     FOR DELETE USING (auth.uid() = user_id);
 CREATE POLICY notifications_insert_service ON notifications
-    FOR INSERT WITH CHECK (TRUE);  -- Service role inserts
+    FOR INSERT WITH CHECK (auth.role() = 'service_role');  -- Only backend service role can insert
 
 -- Idempotent publication for Realtime
 DO $$
