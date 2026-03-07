@@ -7,12 +7,14 @@ import CirclesBrowser from '../CirclesBrowser';
 const mockUseCircles = vi.fn();
 const mockUseSuggestedCircles = vi.fn();
 const mockUseJoinCircle = vi.fn();
+const mockUseLeaveCircle = vi.fn();
 const mockUseCreateCircle = vi.fn();
 
 vi.mock('../../hooks/useCircles', () => ({
   useCircles: () => mockUseCircles(),
   useSuggestedCircles: () => mockUseSuggestedCircles(),
   useJoinCircle: () => mockUseJoinCircle(),
+  useLeaveCircle: () => mockUseLeaveCircle(),
   useCreateCircle: () => mockUseCreateCircle(),
 }));
 
@@ -65,6 +67,11 @@ describe('CirclesBrowser', () => {
     mockUseCircles.mockReturnValue({ data: [], isLoading: false });
     mockUseSuggestedCircles.mockReturnValue({ data: [], isLoading: false });
     mockUseJoinCircle.mockReturnValue(idleJoinMutation);
+    mockUseLeaveCircle.mockReturnValue({
+      mutate: defaultMutateFn,
+      isPending: false,
+      variables: undefined,
+    });
     mockUseCreateCircle.mockReturnValue(idleCreateMutation);
   });
 

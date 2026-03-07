@@ -8,12 +8,18 @@ import type { ICreatorCircleService } from '../../interfaces/community/ICreatorC
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
-import { AuthorizationError, ConflictError, NotFoundError, ValidationError } from '../../utils/errors';
+import {
+  AuthorizationError,
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from '../../utils/errors';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
 import crypto from 'crypto';
 
 /** Strip ASCII control characters (U+0000–U+001F) from user-supplied strings */
 function stripControlChars(input: string): string {
+  // eslint-disable-next-line no-control-regex
   return input.replace(/[\x00-\x1F]/g, '');
 }
 
@@ -55,7 +61,11 @@ export class CreatorCircleService implements ICreatorCircleService {
     this.eventBus = eventBus;
   }
 
-  private emitEvent(type: DomainEventType, aggregateId: string, payload: Record<string, unknown>): void {
+  private emitEvent(
+    type: DomainEventType,
+    aggregateId: string,
+    payload: Record<string, unknown>
+  ): void {
     // Fire-and-forget — notification failures must NOT block the main operation
     void this.eventBus
       .publish({
@@ -71,7 +81,11 @@ export class CreatorCircleService implements ICreatorCircleService {
         },
       })
       .catch((err) => {
-        this.logger.error('CreatorCircleService: event emission failed (non-blocking)', { err, type, aggregateId });
+        this.logger.error('CreatorCircleService: event emission failed (non-blocking)', {
+          err,
+          type,
+          aggregateId,
+        });
       });
   }
 
@@ -455,11 +469,14 @@ export class CreatorCircleService implements ICreatorCircleService {
         });
       })
       .catch((err) => {
-        this.logger.error('CreatorCircleService: failed to fetch members for event (non-blocking)', {
-          err,
-          circleId,
-          postId: rows.id,
-        });
+        this.logger.error(
+          'CreatorCircleService: failed to fetch members for event (non-blocking)',
+          {
+            err,
+            circleId,
+            postId: rows.id,
+          }
+        );
       });
 
     return { id: rows.id };

@@ -123,7 +123,7 @@ test.describe('Mark all read', () => {
     }
   });
 
-  test('mark all read clears the unread badge', async ({ page }) => {
+  test('mark all read clears the unread badge', async ({ page: _page }) => {
     // Switch to Activity tab
     await notificationsPage.switchToActivity();
 

@@ -230,7 +230,10 @@ test.describe('Leave a circle', () => {
     await page.reload();
     await networkPage.circlesHeading.waitFor({ state: 'visible' });
     const myCircles = page.getByRole('region', { name: /my circles/i });
-    const stillPresent = await myCircles.getByText(TEST_CIRCLE_NAME).isVisible().catch(() => false);
+    const stillPresent = await myCircles
+      .getByText(TEST_CIRCLE_NAME)
+      .isVisible()
+      .catch(() => false);
     expect(stillPresent).toBe(false);
   });
 });
@@ -300,7 +303,7 @@ test.describe('Request mentorship', () => {
     }
   });
 
-  test('request mentorship shows pending status after submission', async ({ page }) => {
+  test('request mentorship shows pending status after submission', async ({ page: _page }) => {
     await networkPage.requestButtonFor(TEST_MENTOR_NICHE).click();
 
     // Goals textarea should appear
