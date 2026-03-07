@@ -1,0 +1,25 @@
+---
+status: pending
+priority: p2
+issue_id: "691"
+tags: [code-review, backend, rate-limiting, slice-8]
+dependencies: []
+---
+
+# router.use(readOnlyRateLimiter) double-counts mutations
+
+## Problem Statement
+
+`follow.routes.ts:24` and `notifications.routes.ts:25` apply `readOnlyRateLimiter` globally via `router.use()`, then also apply `mutationRateLimiter` to POST/DELETE. Mutations consume two rate limit slots. Canonical `comments.routes.ts` applies rate limiters per-route only.
+
+**Agent consensus: 1/8** (Pattern)
+
+## Fix
+
+Remove `router.use(readOnlyRateLimiter)` from both files. Add `readOnlyRateLimiter` explicitly to each GET handler.
+
+## Acceptance Criteria
+
+- [ ] No global `router.use(readOnlyRateLimiter)` in new route files
+- [ ] Each GET handler has its own `readOnlyRateLimiter` middleware
+- [ ] Mutations only consume one rate limit slot

@@ -5,7 +5,7 @@
  * User Story: US-E5-032 - Wire Services Through DI Container
  * Part of Epic 005 - Backend Service Refactoring - Phase 6
  *
- * Total Services: 39 (Phases 1-5 complete + SecretsService + Phase 7)
+ * Total Services: 75 (Phases 1-5, Phase 7 wellness/provenance, Phase 8 distribution, Slices 6+8, EPIC-009B/010/011)
  */
 
 import { ServiceToken } from '../interfaces/shared/IServiceRegistry';
@@ -81,6 +81,10 @@ import type { IMarketplaceService } from '../interfaces/community/IMarketplaceSe
 
 // Slice 6: Comments CRUD
 import type { ICommentsService } from '../interfaces/community/ICommentsService';
+
+// Slice 8: Creator Network + Notifications
+import type { IFollowService } from '../interfaces/community/IFollowService';
+import type { INotificationPersistenceService } from '../interfaces/community/INotificationPersistenceService';
 
 // EPIC-011: Business Manager (Finance)
 import type { IContractService } from '../interfaces/finance/IContractService';
@@ -420,6 +424,18 @@ export const TYPES = {
   ),
 
   // ======================
+  // Slice 8: Creator Network + Notifications
+  // ======================
+  FollowService: new ServiceToken<IFollowService>(
+    'FollowService',
+    'Follow relationship management — focused 6-method interface'
+  ),
+  NotificationPersistenceService: new ServiceToken<INotificationPersistenceService>(
+    'NotificationPersistenceService',
+    'DB notification CRUD and event-driven persistence'
+  ),
+
+  // ======================
   // WAVE 2: EPIC-010 (Creator Network)
   // ======================
   CreatorCircleService: new ServiceToken<ICreatorCircleService>(
@@ -522,6 +538,9 @@ export const SERVICE_LIFETIMES = {
     'NostrReplyAdapter',
     // Slice 6: Comments
     'CommentsService',
+    // Slice 8: Follow + Notifications
+    'FollowService',
+    'NotificationPersistenceService',
     // Wave 2: EPIC-010
     'CreatorCircleService',
     'MentorshipService',
@@ -629,11 +648,15 @@ export const SERVICE_DEPENDENCIES = {
   NostrReplyAdapter: ['Database', 'Logger'],
 
   // Slice 6: Comments
-  CommentsService: ['Database', 'Logger'],
+  CommentsService: ['Database', 'EventBusService', 'Logger'],
+
+  // Slice 8: Follow + Notifications
+  FollowService: ['Database', 'EventBusService', 'Logger'],
+  NotificationPersistenceService: ['Database', 'EventBusService', 'Logger'],
 
   // Wave 2: EPIC-010
-  CreatorCircleService: ['Database', 'Logger'],
-  MentorshipService: ['Database', 'Logger'],
+  CreatorCircleService: ['Database', 'EventBusService', 'Logger'],
+  MentorshipService: ['Database', 'EventBusService', 'Logger'],
   CollaborativeContentService: ['Database', 'Logger'],
   MarketplaceService: ['Database', 'LightningService', 'QueueService', 'Logger'],
 
@@ -704,6 +727,8 @@ export const SERVICE_TAGS = {
   ],
   community: [
     'CommentsService',
+    'FollowService',
+    'NotificationPersistenceService',
     'CreatorCircleService',
     'MentorshipService',
     'CollaborativeContentService',

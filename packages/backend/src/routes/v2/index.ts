@@ -16,6 +16,10 @@ import crossPlatformAnalyticsRoutes from './analytics-crossplatform.routes';
 // Slice 6: Comments CRUD
 import commentsRoutes from './comments.routes';
 
+// Slice 8: Creator Network + Notifications
+import followRoutes from './follow.routes';
+import notificationsRoutes from './notifications.routes';
+
 // EPIC-010: Creator Network
 import circlesRoutes from './circles.routes';
 import mentorshipRoutes from './mentorship.routes';
@@ -45,6 +49,10 @@ router.use('/analytics/cross-platform', crossPlatformAnalyticsRoutes);
 // Slice 6: Comments CRUD
 router.use('/comments', commentsRoutes);
 
+// Slice 8: Creator Network + Notifications
+router.use('/network/users/:userId', followRoutes);
+router.use('/notifications', notificationsRoutes);
+
 // EPIC-010: Creator Network
 router.use('/circles', circlesRoutes);
 router.use('/mentorship', mentorshipRoutes);
@@ -69,6 +77,8 @@ router.get('/', (req, res) => {
       description: 'Creator Safety Net — Wellness, Content Shield, Multi-Platform Hub & Wave 2',
       endpoints: {
         comments: '/api/v2/comments',
+        network_follow: '/api/v2/network/users/:userId/follow',
+        notifications: '/api/v2/notifications',
         wellness: '/api/v2/wellness',
         wellness_boundaries: '/api/v2/wellness/boundaries',
         wellness_schedule_recommendations: '/api/v2/wellness/schedule/recommendations',

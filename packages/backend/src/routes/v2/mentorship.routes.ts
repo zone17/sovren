@@ -16,6 +16,7 @@ import {
   RequestMentorshipSchema,
   RespondMentorshipSchema,
   UpdateMentorProfileSchema,
+  UuidParamSchema,
 } from '../../validators/community';
 import { ValidationError } from '../../utils/errors';
 import type { IMentorshipService } from '../../interfaces/community/IMentorshipService';
@@ -151,13 +152,18 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid mentorship ID format');
+    }
+
     const result = RespondMentorshipSchema.safeParse(req.body);
     if (!result.success) {
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     await getMentorshipService().respondToRequest(
-      req.params.id,
+      idResult.data,
       getAuthUser(req).nostr_pubkey,
       result.data.accept
     );
@@ -175,13 +181,18 @@ router.put(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid profile ID format');
+    }
+
     const result = UpdateMentorProfileSchema.safeParse(req.body);
     if (!result.success) {
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     await getMentorshipService().updateMentorProfile(
-      req.params.id,
+      idResult.data,
       getAuthUser(req).nostr_pubkey,
       result.data
     );

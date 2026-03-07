@@ -1,15 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
+import { circleKeys } from '@/hooks/query-keys';
 import { circlesApi } from '../services/circlesApi';
 
-export const circleKeys = {
-  all: ['creator-network', 'circles'] as const,
-  lists: () => [...circleKeys.all, 'list'] as const,
-  suggested: () => [...circleKeys.all, 'suggested'] as const,
-  details: () => [...circleKeys.all, 'detail'] as const,
-  detail: (id: string) => [...circleKeys.details(), id] as const,
-  posts: (circleId: string) => [...circleKeys.detail(circleId), 'posts'] as const,
-};
+export { circleKeys };
 
 export function useCircles() {
   return useQuery({
@@ -68,6 +62,21 @@ export function useRemoveMember() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to remove member. Please try again.');
+    },
+  });
+}
+
+export function useLeaveCircle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (circleId: string) => circlesApi.leaveCircle(circleId),
+    onSuccess: (_data, circleId) => {
+      queryClient.invalidateQueries({ queryKey: circleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: circleKeys.detail(circleId) });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to leave circle. Please try again.');
     },
   });
 }

@@ -59,7 +59,10 @@ describe('MentorshipService', () => {
     };
 
     mockDb = { from: vi.fn() };
-    service = new MentorshipService(mockDb, mockLogger);
+    const mockEventBus = {
+      publish: vi.fn().mockResolvedValue(undefined),
+    };
+    service = new MentorshipService(mockDb, mockLogger, mockEventBus);
   });
 
   // -------------------------------------------------------------------------
@@ -262,20 +265,28 @@ describe('MentorshipService', () => {
   // requestMentorship
   // -------------------------------------------------------------------------
   describe('requestMentorship', () => {
+    // New call order (TOCTOU-safe insert-first pattern):
+    //   1. from('mentor_profiles') — profile lookup (maybySingle)
+    //   2. from('mentorships') — existing request check (maybySingle)
+    //   3. from('mentorships') — insert new request (single)
+    //   4. from('mentorships') — count active mentorships after insert (head count)
+    //   5. (if over capacity) from('mentorships') — delete rollback
+
     it('creates a pending mentorship request', async () => {
       const mentorProfileChain = makeChain({
         data: { id: 'mp-1', max_mentees: 3, active: true },
         error: null,
       });
-      const activeMentorshipsChain = makeChain({ data: [], error: null }); // 0 active
       const existingRequestChain = makeChain({ data: null, error: null }); // no duplicate
       const insertChain = makeChain({ data: { id: MENTORSHIP_ID }, error: null });
+      // After insert: count active mentorships — 1 active (under max_mentees=3)
+      const activeCountChain = makeChain({ count: 1, error: null } as any);
 
       mockDb.from
         .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(activeMentorshipsChain)
         .mockReturnValueOnce(existingRequestChain)
-        .mockReturnValueOnce(insertChain);
+        .mockReturnValueOnce(insertChain)
+        .mockReturnValueOnce(activeCountChain);
 
       const result = await service.requestMentorship(MENTEE_ID, MENTOR_ID, {
         niche: 'tech',
@@ -322,20 +333,23 @@ describe('MentorshipService', () => {
       );
     });
 
-    it('throws when mentor is at maximum mentee capacity', async () => {
+    it('throws when mentor is at maximum mentee capacity (insert-then-revert pattern)', async () => {
       const mentorProfileChain = makeChain({
         data: { id: 'mp-1', max_mentees: 2, active: true },
         error: null,
       });
-      // #354: count query with head:true — 2 active mentorships === max_mentees
-      const activeMentorshipsChain = makeChain({
-        count: 2,
-        error: null,
-      } as any);
+      const existingRequestChain = makeChain({ data: null, error: null });
+      const insertChain = makeChain({ data: { id: 'ms-over-cap' }, error: null });
+      // After insert: activeCount > max_mentees — triggers rollback delete
+      const activeCountChain = makeChain({ count: 3, error: null } as any); // 3 > 2
+      const deleteChain = makeChain({ error: null });
 
       mockDb.from
         .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(activeMentorshipsChain);
+        .mockReturnValueOnce(existingRequestChain)
+        .mockReturnValueOnce(insertChain)
+        .mockReturnValueOnce(activeCountChain)
+        .mockReturnValueOnce(deleteChain); // rollback delete
 
       await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
         'Mentor has reached their maximum mentee capacity'
@@ -347,7 +361,6 @@ describe('MentorshipService', () => {
         data: { id: 'mp-1', max_mentees: 5, active: true },
         error: null,
       });
-      const activeMentorshipsChain = makeChain({ data: [], error: null });
       const existingRequestChain = makeChain({
         data: { id: 'existing-ms', status: 'pending' },
         error: null,
@@ -355,7 +368,6 @@ describe('MentorshipService', () => {
 
       mockDb.from
         .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(activeMentorshipsChain)
         .mockReturnValueOnce(existingRequestChain);
 
       await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
@@ -368,7 +380,6 @@ describe('MentorshipService', () => {
         data: { id: 'mp-1', max_mentees: 5, active: true },
         error: null,
       });
-      const activeMentorshipsChain = makeChain({ data: [], error: null });
       const existingRequestChain = makeChain({
         data: { id: 'active-ms', status: 'active' },
         error: null,
@@ -376,7 +387,6 @@ describe('MentorshipService', () => {
 
       mockDb.from
         .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(activeMentorshipsChain)
         .mockReturnValueOnce(existingRequestChain);
 
       await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
@@ -389,14 +399,12 @@ describe('MentorshipService', () => {
         data: { id: 'mp-1', max_mentees: 5, active: true },
         error: null,
       });
-      const activeMentorshipsChain = makeChain({ data: [], error: null });
       const existingRequestChain = makeChain({ data: null, error: null });
       const dbError = { message: 'insert failed' };
       const insertChain = makeChain({ data: null, error: dbError });
 
       mockDb.from
         .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(activeMentorshipsChain)
         .mockReturnValueOnce(existingRequestChain)
         .mockReturnValueOnce(insertChain);
 
@@ -410,22 +418,22 @@ describe('MentorshipService', () => {
       );
     });
 
-    it('treats null activeMentorships as zero (no active mentorships yet)', async () => {
-      // Covers the (activeMentorships ?? []).length null-coalescing branch
+    it('treats null activeCount as zero (no active mentorships yet)', async () => {
+      // Covers the (activeCount ?? 0) null-coalescing branch for the post-insert count
       const mentorProfileChain = makeChain({
         data: { id: 'mp-1', max_mentees: 1, active: true },
         error: null,
       });
-      // activeMentorships is null — should be treated as zero, so capacity is NOT exceeded
-      const activeMentorshipsChain = makeChain({ data: null, error: null });
       const existingRequestChain = makeChain({ data: null, error: null });
       const insertChain = makeChain({ data: { id: 'ms-null-active' }, error: null });
+      // count is null — treated as 0, so 0 <= max_mentees=1 → NOT over capacity
+      const activeCountChain = makeChain({ count: null, error: null } as any);
 
       mockDb.from
         .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(activeMentorshipsChain)
         .mockReturnValueOnce(existingRequestChain)
-        .mockReturnValueOnce(insertChain);
+        .mockReturnValueOnce(insertChain)
+        .mockReturnValueOnce(activeCountChain);
 
       const result = await service.requestMentorship(MENTEE_ID, MENTOR_ID, {});
       expect(result).toEqual({ id: 'ms-null-active' });
@@ -436,15 +444,15 @@ describe('MentorshipService', () => {
         data: { id: 'mp-1', max_mentees: 5, active: true },
         error: null,
       });
-      const activeMentorshipsChain = makeChain({ data: [], error: null });
       const existingRequestChain = makeChain({ data: null, error: null });
       const insertChain = makeChain({ data: { id: 'ms-no-goals' }, error: null });
+      const activeCountChain = makeChain({ count: 1, error: null } as any);
 
       mockDb.from
         .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(activeMentorshipsChain)
         .mockReturnValueOnce(existingRequestChain)
-        .mockReturnValueOnce(insertChain);
+        .mockReturnValueOnce(insertChain)
+        .mockReturnValueOnce(activeCountChain);
 
       await service.requestMentorship(MENTEE_ID, MENTOR_ID, {});
 

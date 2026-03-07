@@ -11,7 +11,11 @@ import { authenticate, requireCreator, getAuthUser } from '../../middleware/auth
 import { asyncHandler } from '../../utils/asyncHandler';
 import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
-import { CreateCircleSchema, CreateCirclePostSchema } from '../../validators/community';
+import {
+  CreateCircleSchema,
+  CreateCirclePostSchema,
+  UuidParamSchema,
+} from '../../validators/community';
 import { NotFoundError, ValidationError } from '../../utils/errors';
 import type { ICreatorCircleService } from '../../interfaces/community/ICreatorCircleService';
 
@@ -19,7 +23,9 @@ const router = Router();
 
 // Rate limiters
 router.use(readOnlyRateLimiter);
-const mutationRateLimiter = createUserRateLimiter({ windowMs: 60000, max: 20 });
+const mutationRateLimiter = createUserRateLimiter({ windowMs: 60_000, max: 20 });
+// Circle posts are higher flood risk — 10/min per user (D5)
+const postRateLimiter = createUserRateLimiter({ windowMs: 60_000, max: 10 });
 
 // Lazy service resolution
 let _circleService: ICreatorCircleService | null = null;
@@ -94,11 +100,12 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const circles = await getCircleService().getCircles(getAuthUser(req).nostr_pubkey);
-    const circle = circles.find((c) => c.id === req.params.id);
-    if (!circle) {
-      throw new NotFoundError('Circle');
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
     }
+
+    const circle = await getCircleService().getCircleById(idResult.data);
     res.json(createApiResponse(req, circle));
   })
 );
@@ -117,8 +124,33 @@ router.post(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
-    await getCircleService().joinCircle(getAuthUser(req).nostr_pubkey, req.params.id);
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
+    }
+
+    await getCircleService().joinCircle(getAuthUser(req).nostr_pubkey, idResult.data);
     res.json(createApiResponse(req, { joined: true }));
+  })
+);
+
+/**
+ * DELETE /api/v2/circles/:id/leave
+ * Leave a circle (member only — admin cannot leave their own circle)
+ */
+router.delete(
+  '/:id/leave',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
+    }
+
+    await getCircleService().leaveCircle(getAuthUser(req).nostr_pubkey, idResult.data);
+    res.json(createApiResponse(req, { left: true }));
   })
 );
 
@@ -132,9 +164,19 @@ router.delete(
   requireCreator,
   mutationRateLimiter,
   asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    const memberIdResult = UuidParamSchema.safeParse(req.params.memberId);
+
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
+    }
+    if (!memberIdResult.success) {
+      throw new ValidationError('Invalid member ID format');
+    }
+
     await getCircleService().removeMember(
-      req.params.id,
-      req.params.memberId,
+      idResult.data,
+      memberIdResult.data,
       getAuthUser(req).nostr_pubkey
     );
     res.json(createApiResponse(req, { removed: true }));
@@ -155,10 +197,15 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
+    }
+
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
     const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const data = await getCircleService().getCirclePosts(
-      req.params.id,
+      idResult.data,
       getAuthUser(req).nostr_pubkey
     );
     const paginated = data.slice(offset, offset + limit);
@@ -169,20 +216,26 @@ router.get(
 /**
  * POST /api/v2/circles/:id/posts
  * Create a post in a circle
+ * Rate limited: 10/min per user (D5 — higher flood risk)
  */
 router.post(
   '/:id/posts',
   authenticate,
   requireCreator,
-  mutationRateLimiter,
+  postRateLimiter,
   asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
+    }
+
     const result = CreateCirclePostSchema.safeParse(req.body);
     if (!result.success) {
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const data = await getCircleService().createPost(
-      req.params.id,
+      idResult.data,
       getAuthUser(req).nostr_pubkey,
       result.data.content
     );

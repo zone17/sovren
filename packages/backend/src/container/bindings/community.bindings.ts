@@ -13,6 +13,8 @@ import { CreatorCircleService } from '../../services/community/CreatorCircleServ
 import { MentorshipService } from '../../services/community/MentorshipService';
 import { CollaborativeContentService } from '../../services/community/CollaborativeContentService';
 import { MarketplaceService } from '../../services/community/MarketplaceService';
+import { FollowService } from '../../services/community/FollowService';
+import { NotificationPersistenceService } from '../../services/community/NotificationPersistenceService';
 
 /** Cast container-resolved DB to ISupabaseClient via unknown (safe DI pattern) */
 function asDb(resolved: unknown): ISupabaseClient {
@@ -34,7 +36,29 @@ export class CommunityServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.CommentsService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new CommentsService(asDb(db), logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new CommentsService(asDb(db), logger, eventBus);
+    });
+
+    // ===========================
+    // Slice 8: Follow + Notifications
+    // ===========================
+
+    registry.registerSingletonFactory(TYPES.FollowService, (container) => {
+      const db = container.resolve(TYPES.Database);
+      const logger = container.resolve(TYPES.Logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new FollowService(asDb(db), logger, eventBus);
+    });
+
+    registry.registerSingletonFactory(TYPES.NotificationPersistenceService, (container) => {
+      const db = container.resolve(TYPES.Database);
+      const logger = container.resolve(TYPES.Logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      const service = new NotificationPersistenceService(asDb(db), logger, eventBus);
+      // Subscribe to community events during initialization
+      service.subscribeToEvents();
+      return service;
     });
 
     // ===========================
@@ -44,13 +68,15 @@ export class CommunityServicesModule implements IServiceModule {
     registry.registerSingletonFactory(TYPES.CreatorCircleService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new CreatorCircleService(asDb(db), logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new CreatorCircleService(asDb(db), logger, eventBus);
     });
 
     registry.registerSingletonFactory(TYPES.MentorshipService, (container) => {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
-      return new MentorshipService(asDb(db), logger);
+      const eventBus = container.resolve(TYPES.EventBusService);
+      return new MentorshipService(asDb(db), logger, eventBus);
     });
 
     registry.registerSingletonFactory(TYPES.CollaborativeContentService, (container) => {

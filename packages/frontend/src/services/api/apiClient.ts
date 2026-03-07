@@ -31,7 +31,7 @@ import type {
 
 const DEFAULT_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 type QueryParams = Record<string, string | number | boolean | undefined>;
 
 class ApiClient {
@@ -139,6 +139,10 @@ class ApiClient {
 
   put<T>(path: string, body?: unknown, params?: QueryParams): Promise<T> {
     return this.request<T>('PUT', path, body, params);
+  }
+
+  patch<T>(path: string, body?: unknown, params?: QueryParams): Promise<T> {
+    return this.request<T>('PATCH', path, body, params);
   }
 
   delete<T>(path: string, body?: unknown, params?: QueryParams): Promise<T> {

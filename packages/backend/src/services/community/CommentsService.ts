@@ -13,6 +13,7 @@
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ICommentsService } from '../../interfaces/community/ICommentsService';
+import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import type { CommentWithAuthor, CommentsPaginatedResponse } from '@shared/types/comments';
 import { TTLCache } from '../../utils/ttl-cache';
 import {
@@ -23,6 +24,8 @@ import {
   AuthorizationError,
   ServiceError,
 } from '../../utils/errors';
+import { DomainEventType } from '../../interfaces/shared/IEventBus';
+import crypto from 'crypto';
 
 // Raw DB row shape returned by the comments + users JOIN
 interface CommentRow {
@@ -55,6 +58,7 @@ interface CommentWithContent {
 export class CommentsService implements ICommentsService {
   private readonly db: ISupabaseClient;
   private readonly logger: ILogger;
+  private readonly eventBus: IEventBus;
 
   // TTLCache pattern (common-solutions.md #2) — auto-evicts stale entries, bounded size
   private readonly userIdCache = new TTLCache<string, string>({
@@ -62,9 +66,10 @@ export class CommentsService implements ICommentsService {
     maxSize: 1000,
   });
 
-  constructor(db: ISupabaseClient, logger: ILogger) {
+  constructor(db: ISupabaseClient, logger: ILogger, eventBus: IEventBus) {
     this.db = db;
     this.logger = logger;
+    this.eventBus = eventBus;
   }
 
   // ============================================================================
@@ -271,7 +276,46 @@ export class CommentsService implements ICommentsService {
       throw new ServiceError('Failed to create comment');
     }
 
-    return this.mapToCommentWithAuthor(data as unknown as CommentRow);
+    const comment = this.mapToCommentWithAuthor(data as unknown as CommentRow);
+
+    // Fetch content creator to determine notification recipient
+    // Fire-and-forget — notification failure must NOT block comment creation
+    void this.db
+      .from('content')
+      .select('creator_id')
+      .eq('id', contentId)
+      .single()
+      .then(({ data: contentRow }) => {
+        if (!contentRow) return;
+        const contentAuthorId = (contentRow as { creator_id: string }).creator_id;
+        return this.eventBus.publish({
+          id: `evt_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`,
+          type: DomainEventType.COMMUNITY_COMMENT_CREATED,
+          aggregateId: comment.id,
+          aggregateType: 'comment',
+          payload: {
+            contentAuthorId,
+            commentAuthorId: userId,
+            contentId,
+            commentId: comment.id,
+          },
+          metadata: {
+            timestamp: new Date(),
+            version: '1.0.0',
+            source: 'CommentsService',
+            userId,
+          },
+        });
+      })
+      .catch((err) => {
+        this.logger.error('[CommentsService] event emission failed (non-blocking)', {
+          err,
+          commentId: comment.id,
+          contentId,
+        });
+      });
+
+    return comment;
   }
 
   async deleteComment(callerPubkey: string, commentId: string): Promise<void> {

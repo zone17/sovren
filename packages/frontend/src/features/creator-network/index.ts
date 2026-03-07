@@ -42,7 +42,6 @@ export {
   useCollaborators,
   useInviteCollaborators,
   useUpdateRevenueSplit,
-  useRespondToCollaboration,
 } from './hooks/useCollaboration';
 
 export {

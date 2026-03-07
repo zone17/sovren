@@ -69,6 +69,15 @@ export enum DomainEventType {
   SERVICE_ERROR = 'service.error',
   SERVICE_HEALTHY = 'service.healthy',
   SERVICE_UNHEALTHY = 'service.unhealthy',
+
+  // Community / Creator Network Events (Slice 8)
+  COMMUNITY_USER_FOLLOWED = 'community.user.followed',
+  COMMUNITY_COMMENT_CREATED = 'community.comment.created',
+  COMMUNITY_MENTORSHIP_REQUESTED = 'community.mentorship.requested',
+  COMMUNITY_MENTORSHIP_ACCEPTED = 'community.mentorship.accepted',
+  COMMUNITY_MENTORSHIP_DECLINED = 'community.mentorship.declined',
+  COMMUNITY_CIRCLE_JOINED = 'community.circle.joined',
+  COMMUNITY_CIRCLE_POST_CREATED = 'community.circle.post.created',
 }
 
 export interface EventMetadata {

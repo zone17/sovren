@@ -1,9 +1,12 @@
+import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+import { mentorshipKeys } from '@/hooks/query-keys';
 import { mentorshipApi } from '../services/mentorshipApi';
 
 export function useMentors(params?: { niche?: string; audienceSizeRange?: string }) {
   return useQuery({
-    queryKey: ['creator-network', 'mentors', params],
+    queryKey: mentorshipKeys.list(params as Record<string, string> | undefined),
     queryFn: () => mentorshipApi.getMentors(params),
     select: (res) => res.data?.mentors ?? [],
     staleTime: 5 * 60 * 1000,
@@ -12,7 +15,7 @@ export function useMentors(params?: { niche?: string; audienceSizeRange?: string
 
 export function useMyMentorships() {
   return useQuery({
-    queryKey: ['creator-network', 'my-mentorships'],
+    queryKey: mentorshipKeys.myMentorships(),
     queryFn: () => mentorshipApi.getMyMentorships(),
     select: (res) => res.data?.mentorships ?? [],
     staleTime: 60 * 1000,
@@ -25,26 +28,37 @@ export function useRegisterMentor() {
   return useMutation({
     mutationFn: mentorshipApi.registerMentor,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['creator-network', 'mentors'] });
+      queryClient.invalidateQueries({ queryKey: mentorshipKeys.all });
     },
     onError: (error) => {
-      console.error('Register mentor failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }
 
 export function useRequestMentorship() {
   const queryClient = useQueryClient();
+  const inFlightRef = useRef(false);
 
-  return useMutation({
-    mutationFn: mentorshipApi.requestMentorship,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['creator-network', 'my-mentorships'] });
+  const mutation = useMutation({
+    mutationFn: (data: Parameters<typeof mentorshipApi.requestMentorship>[0]) => {
+      if (inFlightRef.current) return Promise.reject(new Error('Request already in progress'));
+      inFlightRef.current = true;
+      return mentorshipApi.requestMentorship(data);
     },
-    onError: (error) => {
-      console.error('Request mentorship failed:', error);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mentorshipKeys.myMentorships() });
+      toast.success('Mentorship request sent!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to request mentorship. Please try again.');
+    },
+    onSettled: () => {
+      inFlightRef.current = false;
     },
   });
+
+  return mutation;
 }
 
 export function useRespondToMentorship() {
@@ -54,10 +68,10 @@ export function useRespondToMentorship() {
     mutationFn: ({ id, accept }: { id: string; accept: boolean }) =>
       mentorshipApi.respondToMentorship(id, { accept }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['creator-network', 'my-mentorships'] });
+      queryClient.invalidateQueries({ queryKey: mentorshipKeys.myMentorships() });
     },
     onError: (error) => {
-      console.error('Respond to mentorship failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
     },
   });
 }
