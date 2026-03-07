@@ -349,7 +349,7 @@ function App(): React.ReactElement {
               path="/community"
               element={
                 <Layout>
-                  <ProtectedRoute>
+                  <ProtectedRoute requireRole="creator" showAccessDenied={true}>
                     <CreatorNetworkErrorBoundary>
                       <CreatorNetworkDashboard />
                     </CreatorNetworkErrorBoundary>

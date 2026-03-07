@@ -9,7 +9,8 @@ test.describe('Profile Dashboard — Sovereign Profile', () => {
     await profile.goto();
   });
 
-  test('profile dashboard page loads without error', async ({ page }) => {
+  test('profile dashboard page loads with heading or profile content', async ({ page }) => {
     await expect(page).toHaveURL(/\/profile-dashboard/);
+    await expect(profile.heading).toBeVisible();
   });
 });

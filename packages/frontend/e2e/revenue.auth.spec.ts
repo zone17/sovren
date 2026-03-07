@@ -12,6 +12,10 @@ test.describe('Revenue — Revenue Analytics', () => {
   test('revenue route loads or redirects to login', async ({ page }) => {
     await page.waitForURL(/\/(dashboard\/revenue|login)/);
     const url = page.url();
-    expect(/\/(dashboard\/revenue|login)/.test(url)).toBe(true);
+    if (/\/dashboard\/revenue/.test(url)) {
+      await expect(revenue.heading).toBeVisible();
+    } else {
+      expect(/\/login/.test(url)).toBe(true);
+    }
   });
 });

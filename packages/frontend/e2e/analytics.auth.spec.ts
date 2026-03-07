@@ -12,6 +12,10 @@ test.describe('Analytics — Creator Dashboard', () => {
   test('analytics route loads or redirects to login', async ({ page }) => {
     await page.waitForURL(/\/(dashboard\/analytics|login)/);
     const url = page.url();
-    expect(/\/(dashboard\/analytics|login)/.test(url)).toBe(true);
+    if (/\/dashboard\/analytics/.test(url)) {
+      await expect(analytics.heading).toBeVisible();
+    } else {
+      expect(/\/login/.test(url)).toBe(true);
+    }
   });
 });

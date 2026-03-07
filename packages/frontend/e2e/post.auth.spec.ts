@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { PostPage } from './pages/post.page';
 
+const NONEXISTENT_POST_ID = 'test-post-id';
+
 test.describe('Post — Single Post View', () => {
   let post: PostPage;
 
@@ -9,10 +11,13 @@ test.describe('Post — Single Post View', () => {
   });
 
   test('post route loads or redirects to login', async ({ page }) => {
-    await post.goto('test-post-id');
+    await post.goto(NONEXISTENT_POST_ID);
+    await page.waitForURL(/\/(post\/|login)/);
     const url = page.url();
-    const onRoute = /\/post\//.test(url);
-    const redirectedToLogin = /\/login/.test(url);
-    expect(onRoute || redirectedToLogin).toBe(true);
+    if (/\/post\//.test(url)) {
+      await expect(post.heading).toBeVisible();
+    } else {
+      expect(/\/login/.test(url)).toBe(true);
+    }
   });
 });

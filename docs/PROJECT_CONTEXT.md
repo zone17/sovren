@@ -163,6 +163,9 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 | 86  | Soft-delete enum — only written values             | Backend    |
 | 87  | DOMPurify no-op in Node.js without jsdom           | Security   |
 | 88  | Dialog aria-labelledby per-instance IDs            | A11y       |
+| 111 | Extend target enum before migration (no `as any`)  | TypeScript |
+| 113 | POM locators — only what specs use today           | Testing    |
+| 114 | Auth E2E specs must assert content, not just URL   | Testing    |
 
 ---
 

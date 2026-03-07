@@ -48,29 +48,22 @@ import { Currency } from '../types/currency';
  *
  * SubscriptionService was aligned to use publish() in S9.
  *
- * **WARNING**: emit() captures events WITHOUT processing — subscribers will NOT fire.
- * publish() captures AND processes events via super.publish(), so subscribers WILL fire.
- * If your test needs to verify events without side effects, check capturedEmits/capturedPublishes
- * after the fact rather than relying on subscriber isolation.
+ * Both emit() and publish() capture events WITHOUT processing — subscribers will NOT fire.
+ * This ensures test isolation. Check capturedEmits after the fact for assertions.
  */
 export class TestableEventBus extends EventBusService {
   capturedEmits: Array<{ type: string; data: unknown }> = [];
-  capturedPublishes: Array<DomainEvent> = [];
 
   async emit(type: string, data: unknown): Promise<void> {
     this.capturedEmits.push({ type, data });
   }
 
   async publish<T = any>(event: DomainEvent<T>): Promise<void> {
-    this.capturedPublishes.push(event as DomainEvent);
-    // Also populate capturedEmits for backward compatibility with existing tests
     this.capturedEmits.push({ type: event.type, data: event.payload });
-    await super.publish(event);
   }
 
   clearCapturedEmits(): void {
     this.capturedEmits = [];
-    this.capturedPublishes = [];
   }
 }
 

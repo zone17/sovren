@@ -12,6 +12,10 @@ test.describe('Subscriptions — Subscription Management', () => {
   test('subscriptions route loads or redirects to login', async ({ page }) => {
     await page.waitForURL(/\/(dashboard\/subscriptions|login)/);
     const url = page.url();
-    expect(/\/(dashboard\/subscriptions|login)/.test(url)).toBe(true);
+    if (/\/dashboard\/subscriptions/.test(url)) {
+      await expect(subscriptions.heading).toBeVisible();
+    } else {
+      expect(/\/login/.test(url)).toBe(true);
+    }
   });
 });
