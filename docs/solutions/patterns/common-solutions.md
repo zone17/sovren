@@ -4104,6 +4104,142 @@ echo '{"additionalContext":"[test]"}'
 
 ---
 
+## 111. Extend Target Enum Before Migration — Never `as any` for Enum Bridges
+
+**Recurrence:** 1 P1 in PR #146. `SubscriptionEventType` (18 values) passed to `DomainEventBuilder.withType()` via `as any`. 15 event types silently bypassed the type system.
+
+### Pattern
+
+When migrating from untyped API (`emit(type, data)`) to typed API (`publish(DomainEvent)`), extend the target type to cover ALL source values BEFORE the migration:
+
+```typescript
+// WRONG: Bridge with as any
+.withType(eventType as any)  // 15 of 18 values not in DomainEventType
+
+// RIGHT: Extend target enum first, then migrate
+export enum DomainEventType {
+  SUBSCRIPTION_CREATED = 'subscription.created',
+  SUBSCRIPTION_TRIAL_STARTED = 'subscription.trial_started',
+  // ... all 18 values
+}
+.withType(eventType as DomainEventType)  // All values now valid
+```
+
+### Checklist
+
+- [ ] Target enum covers ALL source enum values
+- [ ] No `as any` in enum assignments — use `as TargetEnum` only when values genuinely overlap
+- [ ] Search for other callsites of the old API that need the same migration
+
+---
+
+## 112. Test Harness Event Buses Must Be Capture-Only
+
+**Recurrence:** 1 P2 in PR #146. `TestableEventBus.publish()` called `super.publish()`, triggering real subscribers during tests.
+
+### Pattern
+
+Test event bus overrides should ONLY capture events for assertion. Never call `super.publish()` — it fires subscribers unexpectedly.
+
+```typescript
+// WRONG: Capture AND process
+async publish<T>(event: DomainEvent<T>): Promise<void> {
+  this.capturedEmits.push({ type: event.type, data: event.payload });
+  await super.publish(event);  // Subscribers fire unexpectedly!
+}
+
+// RIGHT: Capture only
+async publish<T>(event: DomainEvent<T>): Promise<void> {
+  this.capturedEmits.push({ type: event.type, data: event.payload });
+}
+```
+
+If tests need real subscriber execution, use the actual `EventBusService` directly.
+
+---
+
+## 113. POM Locators — Only What Specs Use Today
+
+**Recurrence:** 3 P2s across 3 sprints (02-24, 02-24, 03-07). Each time, 30-50+ unused POM locators found.
+
+### Pattern
+
+POMs should start minimal. Add locators when specs need them, not speculatively.
+
+```typescript
+// WRONG: Speculative locators (YAGNI)
+export class AnalyticsPage {
+  readonly heading: Locator; // Used by spec
+  readonly overviewTab: Locator; // Never referenced
+  readonly geographyTab: Locator; // Never referenced
+  readonly periodSelector: Locator; // Never referenced
+  readonly refreshButton: Locator; // Never referenced
+  // ... 5 more unused locators
+}
+
+// RIGHT: Only what specs assert on
+export class AnalyticsPage {
+  readonly heading: Locator; // Used in spec
+}
+```
+
+### Checklist
+
+- [ ] Every POM locator is referenced by at least one spec assertion or action
+- [ ] No CSS selectors (`.class`, `#id`, `tag`) — use `getByRole`/`getByLabel`
+- [ ] Add locators when expanding test coverage, not when creating the POM
+
+---
+
+## 114. Auth E2E Specs Must Assert Content, Not Just URL
+
+**Recurrence:** 1 P2 in PR #146. 5 auth specs only checked URL patterns, accepting `/login` as valid in `chromium-authenticated` project.
+
+### Pattern
+
+URL-only assertions pass even when the page crashes during render. Always assert at least one visible element.
+
+```typescript
+// WRONG: URL-only (zero regression value)
+test('route loads', async ({ page }) => {
+  await page.waitForURL(/\/(dashboard\/analytics|login)/);
+  expect(/\/(dashboard\/analytics|login)/.test(page.url())).toBe(true);
+});
+
+// RIGHT: Conditional content assertion
+test('route loads or redirects to login', async ({ page }) => {
+  await page.waitForURL(/\/(dashboard\/analytics|login)/);
+  if (/\/dashboard\/analytics/.test(page.url())) {
+    await expect(analytics.heading).toBeVisible();
+  } else {
+    expect(/\/login/.test(page.url())).toBe(true);
+  }
+});
+```
+
+---
+
+## 115. ProtectedRoute requireRole Consistency
+
+**Recurrence:** 1 P2 in PR #146. `/community` route missed `requireRole="creator"` while siblings had it.
+
+### Pattern
+
+When adding a new `<ProtectedRoute>`, grep for adjacent routes and match `requireRole`:
+
+```bash
+grep -n 'ProtectedRoute' packages/frontend/src/App.tsx
+# Verify all creator-facing routes have requireRole="creator"
+```
+
+### Checklist
+
+- [ ] New ProtectedRoute has `requireRole` matching sibling routes
+- [ ] `showAccessDenied={true}` set for role-gated routes
+- [ ] Nav link added in Layout.tsx for discoverable routes
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -4249,3 +4385,8 @@ CONTEXT TO LOAD:
 | Phase detection misses plugin-namespaced skills  | 108       | common-solutions.md  |
 | Lightweight hooks read stale global phase        | 109       | common-solutions.md  |
 | Hook output JSON nested wrapper causes error     | 110       | common-solutions.md  |
+| `as any` bridging two enums with partial overlap | 111       | common-solutions.md  |
+| Test event bus triggers real subscribers         | 112       | common-solutions.md  |
+| POM has 10+ locators, spec uses 1                | 113       | common-solutions.md  |
+| Auth E2E spec only checks URL, not content       | 114       | common-solutions.md  |
+| New ProtectedRoute missing requireRole           | 115       | common-solutions.md  |
