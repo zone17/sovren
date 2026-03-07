@@ -153,6 +153,20 @@ jobs:
           fi
           echo "No type errors in changed files"
 
+      - name: E2E type check
+        run: npx tsc -p packages/frontend/tsconfig.e2e.json --noEmit
+
+      # Ratchet: @ts-nocheck count must only decrease. Baseline set in PR #143 (S9 buffer hardening).
+      # To lower the threshold: grep -rn '@ts-nocheck' packages/ --include='*.ts' --include='*.tsx' | wc -l
+      - name: '@ts-nocheck ratchet (max 169)'
+        run: |
+          COUNT=$(grep -rn '@ts-nocheck' packages/ --include='*.ts' --include='*.tsx' | wc -l | tr -d ' ')
+          echo "@ts-nocheck count: $COUNT (threshold: 169)"
+          if [ "$COUNT" -gt 169 ]; then
+            echo "::error::@ts-nocheck count ($COUNT) exceeds ratchet threshold (169). Remove @ts-nocheck from files before adding new ones."
+            exit 1
+          fi
+
       - name: No files changed
         if: steps.changed.outputs.count == '0'
         run: echo "No TS files changed — type check skipped"

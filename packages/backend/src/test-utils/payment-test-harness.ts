@@ -14,6 +14,10 @@
  * params ({userId, amount, currency}) that the real PaymentProcessingService doesn't accept.
  * TODO(payment-api-alignment): Remove shim when SubscriptionService uses ProcessPaymentParams.
  *
+ * NOTE (S9): SubscriptionService.emitWebhookEvent() was aligned to use publish() with
+ * DomainEvent instead of emit(type, data). The emit() shim on TestableEventBus remains
+ * for AuditLogService which still uses the old pattern.
+ *
  * **PaymentAnalyticsService tests**: Use seedRawTransaction() to inject arbitrary transaction
  * states (failed, refunded) that the simplified payment flow can't produce. Use
  * makeDomainEvent() for event-driven analytics tests.
@@ -38,26 +42,35 @@ import { Currency } from '../types/currency';
 
 /**
  * EventBus subclass that adds an emit() shim.
- * SubscriptionService calls this.eventBus.emit(type, data) — a pre-existing
- * interface mismatch (IEventBus only has publish()). This class bridges the gap
- * and captures emitted events for test assertions.
+ * AuditLogService and some other services call this.eventBus.emit(type, data) —
+ * a pre-existing interface mismatch (IEventBus only has publish()). This class
+ * bridges the gap and captures emitted events for test assertions.
  *
- * **WARNING**: Events are captured but NOT processed — subscribers registered via
- * subscribe() will NOT fire. If your test depends on event-driven side effects,
- * use publish() directly with a DomainEvent instead.
+ * SubscriptionService was aligned to use publish() in S9.
  *
- * TODO(eventbus-emit-publish): SubscriptionService should use publish() instead of
- * emit(). When fixed, this shim and the capturedEmits array become unnecessary.
+ * **WARNING**: emit() captures events WITHOUT processing — subscribers will NOT fire.
+ * publish() captures AND processes events via super.publish(), so subscribers WILL fire.
+ * If your test needs to verify events without side effects, check capturedEmits/capturedPublishes
+ * after the fact rather than relying on subscriber isolation.
  */
 export class TestableEventBus extends EventBusService {
   capturedEmits: Array<{ type: string; data: unknown }> = [];
+  capturedPublishes: Array<DomainEvent> = [];
 
   async emit(type: string, data: unknown): Promise<void> {
     this.capturedEmits.push({ type, data });
   }
 
+  async publish<T = any>(event: DomainEvent<T>): Promise<void> {
+    this.capturedPublishes.push(event as DomainEvent);
+    // Also populate capturedEmits for backward compatibility with existing tests
+    this.capturedEmits.push({ type: event.type, data: event.payload });
+    await super.publish(event);
+  }
+
   clearCapturedEmits(): void {
     this.capturedEmits = [];
+    this.capturedPublishes = [];
   }
 }
 

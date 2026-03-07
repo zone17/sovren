@@ -12,6 +12,7 @@ import { NostrErrorBoundary } from './features/nostr/ErrorBoundary';
 import { WellnessErrorBoundary } from './features/wellness/ErrorBoundary';
 import { ContentShieldErrorBoundary } from './features/content-shield/ErrorBoundary';
 import { BusinessErrorBoundary } from './features/business/ErrorBoundary';
+import { CreatorNetworkErrorBoundary } from './features/creator-network/ErrorBoundary';
 
 // 🎯 **LAZY LOADING**
 const Home = React.lazy(() =>
@@ -98,6 +99,13 @@ const ContentDetail = React.lazy(() =>
 const BusinessManagerDashboard = React.lazy(() =>
   import('./features/business/components/BusinessManagerDashboard').then((module) => ({
     default: module.BusinessManagerDashboard,
+  }))
+);
+
+// Creator Network (Community Hub)
+const CreatorNetworkDashboard = React.lazy(() =>
+  import('./features/creator-network/components/CreatorNetworkDashboard').then((module) => ({
+    default: module.default,
   }))
 );
 
@@ -331,6 +339,20 @@ function App(): React.ReactElement {
                     <ContentShieldErrorBoundary>
                       <ShieldDashboard />
                     </ContentShieldErrorBoundary>
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+
+            {/* Community Hub (Creator Network) */}
+            <Route
+              path="/community"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <CreatorNetworkErrorBoundary>
+                      <CreatorNetworkDashboard />
+                    </CreatorNetworkErrorBoundary>
                   </ProtectedRoute>
                 </Layout>
               }
