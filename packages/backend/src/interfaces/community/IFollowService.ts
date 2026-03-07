@@ -3,7 +3,7 @@
  * Slice 8: Creator Network + Notifications
  *
  * Intentionally narrow (6 methods) — does NOT extend IUserRelationshipService
- * which is a 314-line God Interface with @ts-nocheck.
+ * which is a 314-line God Interface with type suppression.
  */
 
 import type { FollowRelationship, FollowCounts } from '@shared/types/community';
