@@ -19,6 +19,7 @@ import {
   UuidParamSchema,
 } from '../../validators/community';
 import { ValidationError } from '../../utils/errors';
+import { getUserIdByPubkey } from '../../utils/getUserIdByPubkey';
 import type { IMentorshipService } from '../../interfaces/community/IMentorshipService';
 
 const router = Router();
@@ -53,10 +54,9 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const data = await getMentorshipService().registerMentor(
-      getAuthUser(req).nostr_pubkey,
-      result.data
-    );
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const data = await getMentorshipService().registerMentor(creatorId, result.data);
     res.status(201).json(createApiResponse(req, data));
   })
 );
@@ -101,7 +101,11 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const data = await getMentorshipService().getMyMentorships(getAuthUser(req).nostr_pubkey);
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const data = await getMentorshipService().getMyMentorships(creatorId, { offset, limit });
     res.json(createApiResponse(req, data));
   })
 );
@@ -125,11 +129,12 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const data = await getMentorshipService().requestMentorship(
-      getAuthUser(req).nostr_pubkey,
-      result.data.mentorId,
-      { niche: result.data.niche, goals: result.data.goals }
-    );
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const menteeId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const data = await getMentorshipService().requestMentorship(menteeId, result.data.mentorId, {
+      niche: result.data.niche,
+      goals: result.data.goals,
+    });
 
     res.status(201).json(createApiResponse(req, data));
   })
@@ -155,11 +160,9 @@ router.put(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    await getMentorshipService().respondToRequest(
-      idResult.data,
-      getAuthUser(req).nostr_pubkey,
-      result.data.accept
-    );
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getMentorshipService().respondToRequest(idResult.data, creatorId, result.data.accept);
     res.json(createApiResponse(req, { accepted: result.data.accept }));
   })
 );
@@ -184,11 +187,9 @@ router.put(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    await getMentorshipService().updateMentorProfile(
-      idResult.data,
-      getAuthUser(req).nostr_pubkey,
-      result.data
-    );
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getMentorshipService().updateMentorProfile(idResult.data, creatorId, result.data);
     res.json(createApiResponse(req, { updated: true }));
   })
 );

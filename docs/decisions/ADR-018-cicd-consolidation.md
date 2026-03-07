@@ -12,7 +12,6 @@ Sovren's GitHub Actions CI/CD system had grown organically to **22 workflow file
 1. **Overlapping triggers**: Several workflows triggered on the same events (`push to main`, `pull_request`), causing redundant test/build runs. Some PRs triggered 4-5 parallel workflows doing similar work, consuming GitHub Actions minutes.
 
 2. **Missing security hardening**:
-
    - Workflows lacked explicit `permissions:` blocks, defaulting to overly broad `write-all` permissions
    - No concurrency controls, allowing duplicate runs to pile up
    - Some workflows used `soft_fail: true` or `continue-on-error: true` on security scan steps, masking vulnerabilities

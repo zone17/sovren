@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p1
-issue_id: "685"
+issue_id: '685'
 tags: [code-review, backend, data-integrity, slice-8]
 dependencies: []
 ---
@@ -24,12 +24,14 @@ In `NotificationPersistenceService.handleCommunityEvent`, the `COMMUNITY_USER_FO
 ## Proposed Solutions
 
 ### Solution A: Use event.aggregateId (Recommended)
+
 - Expand private method signature to include `aggregateId`
 - Set `entityId: event.aggregateId` in the handler
 - **Effort:** Small
 - **Risk:** None
 
 ### Solution B: Add followId to event payload
+
 - `FollowService.ts` adds `followId: data.id` to payload
 - Handler destructures `followId` from payload
 - **Effort:** Small

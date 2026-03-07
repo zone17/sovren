@@ -276,13 +276,11 @@ See: [CLAUDE.md § /workflows:review](../../../CLAUDE.md)
   ```
 
 - [ ] New PR arrives: lint + CI catches R7 patterns BEFORE code review
-
   - Git hook prevents commit if patterns detected ✅
   - CI workflow blocks merge if patterns detected ✅
   - Tests fail if implementation missing patterns ✅
 
 - [ ] Code review (single pass, 13 agents): zero P1 findings expected
-
   - If P1 found, update pattern templates
   - If pattern replicated, add more tests/lints
 

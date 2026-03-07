@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "696"
+issue_id: '696'
 tags: [code-review, frontend, cleanup, slice-8]
 dependencies: []
 ---

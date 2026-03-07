@@ -21,14 +21,18 @@ This directory contains comprehensive prevention strategies developed after the 
 ## Quick Navigation
 
 ### 🎯 For a Quick Start
+
 → **[prevention-quick-reference.md](./prevention-quick-reference.md)**
+
 - 1-page summary of each anti-pattern
 - Why it recurs + how to prevent it
 - One-line fixes you can run immediately
 - Metrics to track
 
 ### 📚 For Complete Details
+
 → **[prevention-strategies.md](./prevention-strategies.md)** (2500+ lines)
+
 - Detailed root cause analysis for all 7 anti-patterns
 - Comprehensive code examples (Before/After)
 - Full test case implementations
@@ -36,7 +40,9 @@ This directory contains comprehensive prevention strategies developed after the 
 - Implementation roadmap
 
 ### 🤖 For CI/CD & Automation
+
 → **[prevention-ci-cd-automation.md](./prevention-ci-cd-automation.md)** (1500+ lines)
+
 - 5 complete GitHub Actions workflows
 - Pre-commit hook implementation
 - Post-merge cleanup automation
@@ -47,21 +53,22 @@ This directory contains comprehensive prevention strategies developed after the 
 
 ## The 7 Critical Anti-Patterns
 
-| # | Anti-Pattern | Impact | Prevention Effort | Automated Detection |
-|---|---|---|---|---|
-| 1 | **Duplicate Implementations** | Architecture degradation | Medium | ESLint + CI gate |
-| 2 | **Missing Recursive Sanitization** | Security (stack overflow risk) | Medium | Unit tests |
-| 3 | **Error Detail Leakage** | Security (info disclosure) | Low | Integration tests |
-| 4 | **Shell Injection via execSync** | Security (RCE vulnerability) | Low | ESLint rule |
-| 5 | **Dead Code Accumulation** | Maintenance burden | Medium | ts-prune + ESLint |
-| 6 | **Type Safety Erosion** | Quality degradation | High | TypeScript strict mode |
-| 7 | **CSP Bypass** | Security (XSS vulnerability) | Low | Unit test |
+| #   | Anti-Pattern                       | Impact                         | Prevention Effort | Automated Detection    |
+| --- | ---------------------------------- | ------------------------------ | ----------------- | ---------------------- |
+| 1   | **Duplicate Implementations**      | Architecture degradation       | Medium            | ESLint + CI gate       |
+| 2   | **Missing Recursive Sanitization** | Security (stack overflow risk) | Medium            | Unit tests             |
+| 3   | **Error Detail Leakage**           | Security (info disclosure)     | Low               | Integration tests      |
+| 4   | **Shell Injection via execSync**   | Security (RCE vulnerability)   | Low               | ESLint rule            |
+| 5   | **Dead Code Accumulation**         | Maintenance burden             | Medium            | ts-prune + ESLint      |
+| 6   | **Type Safety Erosion**            | Quality degradation            | High              | TypeScript strict mode |
+| 7   | **CSP Bypass**                     | Security (XSS vulnerability)   | Low               | Unit test              |
 
 ---
 
 ## Implementation Priority
 
 ### Week 1: Foundations (8 hours)
+
 ```
 □ Create docs/architecture/canonical-patterns.md
 □ Enable TypeScript strict mode in tsconfig.json
@@ -70,6 +77,7 @@ This directory contains comprehensive prevention strategies developed after the 
 ```
 
 ### Week 2: Automated Enforcement (12 hours)
+
 ```
 □ Configure ESLint no-restricted-imports rules
 □ Deploy .husky/pre-commit hook
@@ -78,6 +86,7 @@ This directory contains comprehensive prevention strategies developed after the 
 ```
 
 ### Week 3: Codebase Cleanup (16 hours)
+
 ```
 □ Consolidate rate limiters → canonical
 □ Consolidate loggers → canonical
@@ -87,6 +96,7 @@ This directory contains comprehensive prevention strategies developed after the 
 ```
 
 ### Week 4: Type Safety (12 hours)
+
 ```
 □ Add Express module augmentation (types/express.d.ts)
 □ Remove all 'as any' casts (15+ instances)
@@ -95,6 +105,7 @@ This directory contains comprehensive prevention strategies developed after the 
 ```
 
 ### Week 5: Verification & Monitoring (8 hours)
+
 ```
 □ Write comprehensive test suites
 □ Deploy 5 GitHub Actions workflows
@@ -110,6 +121,7 @@ This directory contains comprehensive prevention strategies developed after the 
 ## Key Files to Create/Modify
 
 ### Configuration Files
+
 ```
 .eslintrc.cjs                          # Add no-restricted-imports rules
 .husky/pre-commit                      # Add canonical pattern checks
@@ -119,6 +131,7 @@ packages/frontend/nginx.conf           # Fix CSP policy
 ```
 
 ### New Files
+
 ```
 docs/architecture/canonical-patterns.md
 packages/backend/src/types/express.d.ts
@@ -131,6 +144,7 @@ scripts/pre-commit-check.sh
 ```
 
 ### Code Changes (Consolidation)
+
 ```
 packages/backend/src/lib/logger.ts                    # Canonical logger
 packages/backend/src/lib/sensitive-fields.ts          # Enhanced sanitization
@@ -145,39 +159,43 @@ scripts/automated-supabase-rotation.ts                # execFileSync instead of 
 
 After implementing all prevention strategies:
 
-| Metric | Target | How to Measure |
-|--------|--------|---|
-| Duplicate implementations | 0 | Manual audit of src/ directory |
-| Dead code (unused exports) | 0 lines | `npx ts-prune` |
-| Type safety coverage | 95%+ | `npx type-coverage` |
-| CSP policy violations | 0 | Unit test in prevention-strategies.md |
-| Shell injection vectors | 0 | ESLint rule `no-restricted-imports` |
-| Error detail leakage | 0 | Integration test suite |
-| Sanitization depth test | ✅ | Jest test with 15-level nesting |
-| Pre-commit hook pass rate | 100% | CI gate reporting |
+| Metric                     | Target  | How to Measure                        |
+| -------------------------- | ------- | ------------------------------------- |
+| Duplicate implementations  | 0       | Manual audit of src/ directory        |
+| Dead code (unused exports) | 0 lines | `npx ts-prune`                        |
+| Type safety coverage       | 95%+    | `npx type-coverage`                   |
+| CSP policy violations      | 0       | Unit test in prevention-strategies.md |
+| Shell injection vectors    | 0       | ESLint rule `no-restricted-imports`   |
+| Error detail leakage       | 0       | Integration test suite                |
+| Sanitization depth test    | ✅      | Jest test with 15-level nesting       |
+| Pre-commit hook pass rate  | 100%    | CI gate reporting                     |
 
 ---
 
 ## Using These Documents
 
 ### For Architects & Tech Leads
+
 1. Read **prevention-strategies.md** - Section "Root Causes" for each anti-pattern
 2. Review the "Implementation Roadmap" (Week 1-5 plan)
 3. Use "Success Metrics" to track progress in team metrics
 
 ### For Backend Engineers
+
 1. Start with **prevention-quick-reference.md** for your anti-pattern
 2. Copy code examples from **prevention-strategies.md** into your implementation
 3. Run test cases from the "Test Cases" section
 4. Use pre-commit hook from `.husky/pre-commit`
 
 ### For DevOps/CI Engineers
+
 1. Review **prevention-ci-cd-automation.md** for workflow structure
 2. Deploy the 5 GitHub Actions workflows to `.github/workflows/`
 3. Configure branch protection rules to enforce all checks
 4. Setup notifications for gate failures
 
 ### For Code Reviewers
+
 1. Use the **prevention-quick-reference.md** checklist during reviews
 2. Reference specific "Test Cases" when requesting test coverage
 3. Point to "How to prevent" section when requesting changes
@@ -199,6 +217,7 @@ These prevention strategies build on:
 ## Implementation Examples
 
 ### Example 1: Fixing Duplicate Rate Limiters
+
 ```bash
 # 1. Identify duplicates
 find packages/backend/src -name '*rate*limit*.ts' -not -path '*/__tests__/*'
@@ -211,6 +230,7 @@ find packages/backend/src -name '*rate*limit*.ts' -not -path '*/__tests__/*'
 ```
 
 ### Example 2: Adding Express Module Augmentation
+
 ```typescript
 // Create: packages/backend/src/types/express.d.ts
 declare global {
@@ -226,6 +246,7 @@ declare global {
 ```
 
 ### Example 3: Deploying CSP Validation
+
 ```bash
 # 1. Update vercel.json to remove unsafe-inline
 # 2. Add test: packages/backend/src/__tests__/security/csp-policy.test.ts
@@ -238,36 +259,46 @@ declare global {
 ## FAQ
 
 ### Q: Should we fix all anti-patterns at once?
+
 **A**: No. Implement in phases (Week 1-5 plan). Start with detection (weeks 1-2), then cleanup (weeks 3-5). This minimizes risk and allows team learning.
 
 ### Q: Which anti-pattern is most urgent?
+
 **A**: Security vulnerabilities first:
+
 1. **Shell injection** (execSync) - RCE risk
 2. **CSP bypass** (unsafe-inline) - XSS risk
 3. **Error leakage** - Info disclosure
 4. Then code quality (duplicates, dead code, type safety)
 
 ### Q: Can we automate the fixes?
+
 **A**: Partially:
+
 - ✅ ESLint can auto-fix imports: `npx eslint --fix`
 - ✅ TypeScript can report unused: `npx tsc --noUnusedLocals`
 - ✅ ts-prune identifies dead code
 - ❌ Manual review needed for consolidations and refactoring
 
 ### Q: What if code is currently passing tests but violates these rules?
+
 **A**: The new tests catch violations. Gradual enforcement:
+
 1. Weeks 1-2: Warnings only (don't fail CI)
 2. Weeks 3-4: Errors on new code
 3. Week 5+: Errors on all code
 
 ### Q: How do we handle legacy code that violates these rules?
+
 **A**: Create a deprecation plan:
+
 1. Mark files/functions as deprecated in comments
 2. Add TODO with deadline: `// TODO: Remove after 2026-03-01`
 3. Migrate imports one module at a time
 4. Delete after deadline
 
 ### Q: Who enforces the pre-commit hook?
+
 **A**: The hook runs automatically for all developers. Force-push with `git commit --no-verify` only in emergencies (and document why).
 
 ---
@@ -275,6 +306,7 @@ declare global {
 ## Monitoring & Maintenance
 
 ### Weekly Check (10 minutes)
+
 ```bash
 # Run these every Monday morning
 npm run lint
@@ -284,12 +316,14 @@ npx type-coverage --project tsconfig.json
 ```
 
 ### Monthly Review (1 hour)
+
 - Review metrics from GitHub Actions runs
 - Check if any new duplicates introduced
 - Audit dead code cleanup progress
 - Update canonical patterns doc if needed
 
 ### Quarterly Audit (4 hours)
+
 - Full code review for anti-pattern violations
 - Update prevention strategies based on new findings
 - Refresh team training on patterns
@@ -318,12 +352,12 @@ npx type-coverage --project tsconfig.json
 
 ## Document Statistics
 
-| Document | Lines | Sections | Code Examples | Test Cases | Workflows |
-|----------|-------|----------|---------------|-----------|-----------|
-| prevention-strategies.md | 2500+ | 7 anti-patterns × 5 sections | 40+ | 20+ | - |
-| prevention-ci-cd-automation.md | 1500+ | 5 workflows | 200+ lines | - | 5 |
-| prevention-quick-reference.md | 500+ | 7 tables + roadmap | 15+ | - | - |
-| **Total** | **4500+** | **35+ comprehensive** | **60+** | **20+** | **5 ready-to-deploy** |
+| Document                       | Lines     | Sections                     | Code Examples | Test Cases | Workflows             |
+| ------------------------------ | --------- | ---------------------------- | ------------- | ---------- | --------------------- |
+| prevention-strategies.md       | 2500+     | 7 anti-patterns × 5 sections | 40+           | 20+        | -                     |
+| prevention-ci-cd-automation.md | 1500+     | 5 workflows                  | 200+ lines    | -          | 5                     |
+| prevention-quick-reference.md  | 500+      | 7 tables + roadmap           | 15+           | -          | -                     |
+| **Total**                      | **4500+** | **35+ comprehensive**        | **60+**       | **20+**    | **5 ready-to-deploy** |
 
 ---
 

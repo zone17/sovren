@@ -40,6 +40,7 @@ export function getCachePersistence(): CachePersistenceService {
 ## Proposed Solutions
 
 ### Option A: Clear module-level var in cleanup (Recommended)
+
 - Add `_cachePersistence = null` in cleanup
 - Pros: Minimal change, fixes the bug
 - Cons: None
@@ -47,6 +48,7 @@ export function getCachePersistence(): CachePersistenceService {
 - Risk: Low
 
 ### Option B: Remove dual singleton, use only getInstance()
+
 - Remove `getCachePersistence()` function, update all callers
 - Pros: Eliminates the root cause (dual paths)
 - Cons: Larger change, touches multiple files
@@ -69,8 +71,8 @@ Option A — single-line fix.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                 | Learnings                                         |
+| ---------- | -------------------------------------- | ------------------------------------------------- |
 | 2026-02-25 | Identified during manual PR #98 review | Dual singleton paths are a recurring anti-pattern |
 
 ## Resources

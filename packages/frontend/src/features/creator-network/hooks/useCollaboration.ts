@@ -77,4 +77,3 @@ export function useUpdateRevenueSplit(contentId: string) {
     },
   });
 }
-

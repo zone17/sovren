@@ -9,6 +9,7 @@ This phase involves financial transactions and MUST be implemented with extreme 
 ### STEP 1: InvoiceService (BLOCKING - Must Complete First)
 
 #### US-E5-024: InvoiceService
+
 **File**: `InvoiceService.ts`
 **Coverage Required**: 100% (NOT 95%)
 **Security**: MANDATORY audit before next service
@@ -49,6 +50,7 @@ interface IInvoiceService {
 ```
 
 **Requirements**:
+
 - Immutable invoice records after finalization
 - Accurate tax calculation with jurisdiction support
 - Proration to the second for subscriptions
@@ -58,6 +60,7 @@ interface IInvoiceService {
 - Compliance with accounting standards
 
 **Critical Tests**:
+
 - Tax calculation accuracy
 - Proration calculations
 - Currency conversion
@@ -71,6 +74,7 @@ interface IInvoiceService {
 ### STEP 2: Core Payment Services (Parallel After InvoiceService)
 
 #### US-E5-025: PaymentProcessingService
+
 **File**: `PaymentProcessingService.ts`
 **Coverage Required**: 100%
 
@@ -102,6 +106,7 @@ interface IPaymentProcessingService {
 ```
 
 **Requirements**:
+
 - PCI DSS compliance
 - Idempotent payment processing
 - Multi-provider support (Stripe, Lightning)
@@ -111,6 +116,7 @@ interface IPaymentProcessingService {
 - Fraud detection integration
 
 #### US-E5-030: CurrencyService
+
 **File**: `CurrencyService.ts`
 **Coverage Required**: 95%
 
@@ -137,6 +143,7 @@ interface ICurrencyService {
 ### STEP 3: SubscriptionService (After Payment Processing)
 
 #### US-E5-026: SubscriptionService
+
 **File**: `SubscriptionService.ts`
 **Coverage Required**: 100%
 
@@ -172,6 +179,7 @@ interface ISubscriptionService {
 ```
 
 **Requirements**:
+
 - Accurate billing cycles
 - Proration on plan changes
 - Dunning management (retry failed payments)
@@ -185,6 +193,7 @@ interface ISubscriptionService {
 ### STEP 4: RefundService (After SubscriptionService)
 
 #### US-E5-027: RefundService
+
 **File**: `RefundService.ts`
 **Coverage Required**: 100%
 
@@ -212,6 +221,7 @@ interface IRefundService {
 ```
 
 **Requirements**:
+
 - Approval workflow for large refunds (>$500)
 - Partial refund support
 - Provider-specific refund logic
@@ -225,6 +235,7 @@ interface IRefundService {
 ### STEP 5: Supporting Services (Parallel)
 
 #### US-E5-028: PaymentAnalyticsService
+
 **File**: `PaymentAnalyticsService.ts`
 **Coverage Required**: 95%
 
@@ -252,6 +263,7 @@ interface IPaymentAnalyticsService {
 ```
 
 #### US-E5-029: WebhookService
+
 **File**: `WebhookService.ts`
 **Coverage Required**: 100%
 
@@ -281,10 +293,12 @@ interface IWebhookService {
 ### STEP 6: Integration Testing (Final)
 
 #### US-E5-031: Payment Integration Testing
+
 **File**: `PaymentIntegrationTests.ts`
 **Coverage Required**: 100%
 
 **Test Scenarios**:
+
 1. Complete payment flow (invoice → payment → receipt)
 2. Subscription lifecycle (create → renew → cancel)
 3. Refund processing (full and partial)
@@ -405,6 +419,7 @@ CREATE TABLE refunds (
 ### Testing Strategy
 
 #### Unit Tests (100% Required)
+
 ```typescript
 describe('InvoiceService', () => {
   describe('Financial Calculations', () => {
@@ -430,6 +445,7 @@ describe('InvoiceService', () => {
 ```
 
 #### Integration Tests
+
 - Test with real Stripe test mode
 - Test Lightning Network on testnet
 - Verify webhook processing
@@ -437,6 +453,7 @@ describe('InvoiceService', () => {
 - Load test payment processing
 
 #### Security Tests
+
 - SQL injection attempts
 - XSS in invoice descriptions
 - Rate limiting enforcement
@@ -463,6 +480,7 @@ const FEATURE_FLAGS = {
 Each service must have documented rollback:
 
 1. **Database Rollback**
+
    ```sql
    -- Down migration for each service
    DROP TABLE IF EXISTS table_name CASCADE;
@@ -481,6 +499,7 @@ Each service must have documented rollback:
 ## Quality Gates (MANDATORY)
 
 ### Per-Service Requirements
+
 - ✅ 100% test coverage (payment services)
 - ✅ Security audit passed
 - ✅ PCI DSS compliance verified
@@ -491,6 +510,7 @@ Each service must have documented rollback:
 - ✅ Documentation complete
 
 ### Phase Completion Criteria
+
 - All 8 services implemented
 - 100% test coverage average
 - Zero security vulnerabilities
@@ -504,6 +524,7 @@ Each service must have documented rollback:
 ## Execution Timeline
 
 ### Critical Path Schedule
+
 1. **Hour 1-2**: InvoiceService (BLOCKING)
 2. **Hour 3-4**: PaymentProcessingService + CurrencyService
 3. **Hour 5**: SubscriptionService
@@ -516,6 +537,7 @@ Each service must have documented rollback:
 ## Risk Mitigation
 
 ### High-Risk Areas
+
 1. **Payment Processing**: Double-charge prevention
 2. **Refunds**: Approval workflow critical
 3. **Subscriptions**: Billing cycle accuracy
@@ -523,6 +545,7 @@ Each service must have documented rollback:
 5. **Webhooks**: Replay attack prevention
 
 ### Mitigation Strategies
+
 - Mandatory code review by 2 engineers
 - Staging environment testing
 - Progressive rollout (1% → 10% → 50% → 100%)

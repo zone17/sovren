@@ -11,7 +11,9 @@
 **Estimated Completion**: 3-4 days with proper orchestration
 
 ### Critical Finding
+
 While Epic 003 completion reports claim 26/26 stories complete, actual code inspection reveals significant gaps:
+
 - Many claimed UI components don't exist
 - Several services are partially implemented
 - Some stories have been renumbered or merged without documentation
@@ -21,36 +23,37 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 
 ## Truth Table: Actual Status of All Epic 003 Stories
 
-| Story ID | Title | PRD Exists | Code Exists | Tests Exist | Actually Complete | Notes |
-|----------|-------|------------|-------------|-------------|-------------------|-------|
-| **US-301** | Consolidate NOSTR Key Management | ✅ | ✅ Partial | ✅ Basic | **⚠️ 70%** | KeyManagementService exists but missing rotation, backup, hardware wallet support |
-| **US-302** | Unify Relay Pool Management | ✅ | ✅ | ✅ | **✅ 95%** | RelayPoolManager.ts fully implemented, minor health monitoring improvements needed |
-| **US-303** | Event Publisher Service | ✅ | ✅ | ✅ | **✅ 90%** | EventPublisherService.ts exists, missing some error recovery |
-| **US-304** | NIP-05 Verification Services | ✅ | ✅ | ✅ | **✅ 95%** | NIP05Service.ts complete with caching |
-| **US-305** | Unify NOSTR Authentication | ✅ | ❌ | ❌ | **❌ 0%** | No unified auth service found, critical gap |
-| **US-306** | Browser Extension Integration | ✅ | ⚠️ | ❌ | **❌ 20%** | Partial in KeyManagementService, no dedicated integration |
-| **US-307** | Event Deduplication | ✅ | ✅ | ✅ | **✅ 100%** | EventDeduplicationService.ts complete with Bloom filters |
-| **US-308** | Comprehensive NOSTR Types | ✅ | ✅ | ✅ | **✅ 100%** | All types in /packages/shared/src/types/nostr/ |
-| **US-309** | Remove Hardcoded Relay URLs | ✅ | ❓ | ❌ | **❌ Unknown** | Need to audit codebase for hardcoded URLs |
-| **US-310** | NIP-19 Encoding Utilities | ✅ | ✅ | ✅ | **✅ 100%** | NIP19Service.ts complete with all entity types |
-| **US-311** | Unified Session Management | ✅ | ❌ | ❌ | **❌ 0%** | No session management service found |
-| **US-312** | Consolidate Cryptography | ✅ | ✅ | ✅ | **✅ 90%** | Crypto in KeyManagementService, missing Schnorr optimization |
-| **US-313** | NIP-04 Encrypted DMs | ✅ | ✅ | ✅ | **✅ 100%** | NIP04Service.ts fully implemented |
-| **US-314** | Unified Profile Management | ✅ | ❌ | ❌ | **❌ 0%** | No profile service/component found in claimed location |
-| **US-315** | NIP-26 Delegated Events | ✅ | ✅ | ✅ | **✅ 100%** | NIP26Service.ts complete with delegation tokens |
-| **US-316** | NOSTR Monitoring Service | ✅ | ❌ | ❌ | **❌ 0%** | No monitoring service found |
-| **US-317** | NOSTR Caching Layer | ✅ | ✅ | ✅ | **✅ 90%** | EventCacheService.ts exists, missing offline mode |
-| **US-318** | Integration Tests | ✅ | ✅ | ✅ | **✅ 100%** | Comprehensive tests in __tests__/integration/ |
-| **US-319** | Error Handling UI | ✅ | ❌ | ❌ | **❌ 0%** | No error boundary components found |
-| **US-320** | WebSocket Connection Manager | ✅ | ⚠️ | ⚠️ | **⚠️ 50%** | Basic in RelayPoolManager, missing advanced features |
-| **US-321** | NOSTR Rate Limiting | ✅ | ❌ | ❌ | **❌ 0%** | No rate limiting implementation found |
-| **US-322** | Backup and Recovery System | ✅ | ❌ | ❌ | **❌ 0%** | No backup/recovery in KeyManagementService |
-| **US-323** | Architecture Diagrams | ✅ | ✅ | N/A | **✅ 100%** | Diagrams exist in docs/architecture/diagrams/ |
-| **US-324** | Developer Documentation | ✅ | ⚠️ | N/A | **⚠️ 60%** | Some docs exist but incomplete |
-| **US-325** | Migration Scripts | ✅ | ❌ | ❌ | **❌ 0%** | No migration scripts found in claimed location |
-| **US-326** | E2E Test Suite | ✅ | ❌ | N/A | **❌ 0%** | No Playwright E2E tests for NOSTR flows |
+| Story ID   | Title                            | PRD Exists | Code Exists | Tests Exist | Actually Complete | Notes                                                                              |
+| ---------- | -------------------------------- | ---------- | ----------- | ----------- | ----------------- | ---------------------------------------------------------------------------------- |
+| **US-301** | Consolidate NOSTR Key Management | ✅         | ✅ Partial  | ✅ Basic    | **⚠️ 70%**        | KeyManagementService exists but missing rotation, backup, hardware wallet support  |
+| **US-302** | Unify Relay Pool Management      | ✅         | ✅          | ✅          | **✅ 95%**        | RelayPoolManager.ts fully implemented, minor health monitoring improvements needed |
+| **US-303** | Event Publisher Service          | ✅         | ✅          | ✅          | **✅ 90%**        | EventPublisherService.ts exists, missing some error recovery                       |
+| **US-304** | NIP-05 Verification Services     | ✅         | ✅          | ✅          | **✅ 95%**        | NIP05Service.ts complete with caching                                              |
+| **US-305** | Unify NOSTR Authentication       | ✅         | ❌          | ❌          | **❌ 0%**         | No unified auth service found, critical gap                                        |
+| **US-306** | Browser Extension Integration    | ✅         | ⚠️          | ❌          | **❌ 20%**        | Partial in KeyManagementService, no dedicated integration                          |
+| **US-307** | Event Deduplication              | ✅         | ✅          | ✅          | **✅ 100%**       | EventDeduplicationService.ts complete with Bloom filters                           |
+| **US-308** | Comprehensive NOSTR Types        | ✅         | ✅          | ✅          | **✅ 100%**       | All types in /packages/shared/src/types/nostr/                                     |
+| **US-309** | Remove Hardcoded Relay URLs      | ✅         | ❓          | ❌          | **❌ Unknown**    | Need to audit codebase for hardcoded URLs                                          |
+| **US-310** | NIP-19 Encoding Utilities        | ✅         | ✅          | ✅          | **✅ 100%**       | NIP19Service.ts complete with all entity types                                     |
+| **US-311** | Unified Session Management       | ✅         | ❌          | ❌          | **❌ 0%**         | No session management service found                                                |
+| **US-312** | Consolidate Cryptography         | ✅         | ✅          | ✅          | **✅ 90%**        | Crypto in KeyManagementService, missing Schnorr optimization                       |
+| **US-313** | NIP-04 Encrypted DMs             | ✅         | ✅          | ✅          | **✅ 100%**       | NIP04Service.ts fully implemented                                                  |
+| **US-314** | Unified Profile Management       | ✅         | ❌          | ❌          | **❌ 0%**         | No profile service/component found in claimed location                             |
+| **US-315** | NIP-26 Delegated Events          | ✅         | ✅          | ✅          | **✅ 100%**       | NIP26Service.ts complete with delegation tokens                                    |
+| **US-316** | NOSTR Monitoring Service         | ✅         | ❌          | ❌          | **❌ 0%**         | No monitoring service found                                                        |
+| **US-317** | NOSTR Caching Layer              | ✅         | ✅          | ✅          | **✅ 90%**        | EventCacheService.ts exists, missing offline mode                                  |
+| **US-318** | Integration Tests                | ✅         | ✅          | ✅          | **✅ 100%**       | Comprehensive tests in **tests**/integration/                                      |
+| **US-319** | Error Handling UI                | ✅         | ❌          | ❌          | **❌ 0%**         | No error boundary components found                                                 |
+| **US-320** | WebSocket Connection Manager     | ✅         | ⚠️          | ⚠️          | **⚠️ 50%**        | Basic in RelayPoolManager, missing advanced features                               |
+| **US-321** | NOSTR Rate Limiting              | ✅         | ❌          | ❌          | **❌ 0%**         | No rate limiting implementation found                                              |
+| **US-322** | Backup and Recovery System       | ✅         | ❌          | ❌          | **❌ 0%**         | No backup/recovery in KeyManagementService                                         |
+| **US-323** | Architecture Diagrams            | ✅         | ✅          | N/A         | **✅ 100%**       | Diagrams exist in docs/architecture/diagrams/                                      |
+| **US-324** | Developer Documentation          | ✅         | ⚠️          | N/A         | **⚠️ 60%**        | Some docs exist but incomplete                                                     |
+| **US-325** | Migration Scripts                | ✅         | ❌          | ❌          | **❌ 0%**         | No migration scripts found in claimed location                                     |
+| **US-326** | E2E Test Suite                   | ✅         | ❌          | N/A         | **❌ 0%**         | No Playwright E2E tests for NOSTR flows                                            |
 
 ### Summary Statistics
+
 - **Fully Complete (90-100%)**: 10 stories
 - **Partially Complete (50-89%)**: 4 stories
 - **Minimal/Not Started (0-49%)**: 12 stories
@@ -66,6 +69,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Consolidate nostr-auth.ts and enhanced-nostr-auth.ts into a single authentication service.
 
 **Acceptance Criteria**: [From PRD]
+
 - Single authentication service for frontend and backend
 - Challenge-response authentication flow
 - JWT token generation with NOSTR pubkey
@@ -75,12 +79,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 - 95%+ test coverage
 
 **Current State**:
+
 - [ ] Code exists: No - No unified auth service found
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: US-301 (KeyManagementService - partially complete)
 - Blocks: US-311 (Session Management), US-321 (Rate Limiting)
 
@@ -93,6 +99,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 ### Detailed Subtasks:
 
 #### Phase 1: Analysis & Design (45 min)
+
 1. [ ] Read acceptance criteria from PRD
 2. [ ] Review NOSTR authentication specification (NIP-42)
 3. [ ] Identify existing code to integrate with:
@@ -101,11 +108,11 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
    - Component: Need to create authentication context
 4. [ ] Design service interface:
    - Methods needed:
-     * `authenticate(pubkey: string): Promise<AuthChallenge>`
-     * `verifyChallenge(signature: string): Promise<JWT>`
-     * `validateToken(token: string): Promise<NostrUser>`
-     * `logout(token: string): Promise<void>`
-     * `refreshToken(token: string): Promise<JWT>`
+     - `authenticate(pubkey: string): Promise<AuthChallenge>`
+     - `verifyChallenge(signature: string): Promise<JWT>`
+     - `validateToken(token: string): Promise<NostrUser>`
+     - `logout(token: string): Promise<void>`
+     - `refreshToken(token: string): Promise<JWT>`
    - Types needed: AuthChallenge, JWT, NostrUser, AuthConfig
    - Integration points: KeyManagementService, Session storage
 5. [ ] Create Mermaid architecture diagram:
@@ -114,8 +121,10 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
    - Challenge-response protocol diagram
 
 #### Phase 2: Type Definitions (20 min)
+
 1. [ ] Create types in `/packages/shared/src/types/nostr/auth.ts`
 2. [ ] Define interfaces:
+
    ```typescript
    interface AuthChallenge {
      challenge: string;
@@ -138,10 +147,12 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
      authenticated: boolean;
    }
    ```
+
 3. [ ] Add Zod schemas for validation
 4. [ ] Export types in barrel file
 
 #### Phase 3: Test-Driven Development (2 hrs)
+
 1. [ ] Create test file: `/packages/frontend/src/services/nostr/__tests__/NostrAuthService.test.ts`
 2. [ ] Write failing tests for core functionality:
    - Test 1: Should generate valid authentication challenge
@@ -162,8 +173,10 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 6. [ ] Run tests - verify they fail (red phase)
 
 #### Phase 4: Implementation (3 hrs)
+
 1. [ ] Create main file: `/packages/frontend/src/services/nostr/NostrAuthService.ts`
 2. [ ] Implement singleton pattern:
+
    ```typescript
    class NostrAuthService {
      private static instance: NostrAuthService;
@@ -183,6 +196,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
      }
    }
    ```
+
 3. [ ] Implement challenge generation:
    - Generate cryptographically secure challenge
    - Store with expiration
@@ -205,6 +219,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
    - Monitor for suspicious patterns
 
 #### Phase 5: Integration (1 hr)
+
 1. [ ] Integrate with KeyManagementService:
    - Use for signature verification
    - Coordinate key validation
@@ -218,6 +233,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 5. [ ] Configure environment variables for JWT secret
 
 #### Phase 6: Testing & Quality (30 min)
+
 1. [ ] Run all tests: `npm test`
 2. [ ] Check coverage: ≥95%
 3. [ ] Run TypeScript compiler: Zero errors
@@ -227,6 +243,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
    - Concurrent auth test
 
 #### Phase 7: Documentation (45 min)
+
 1. [ ] Add JSDoc comments to all methods
 2. [ ] Create usage examples
 3. [ ] Create Mermaid diagrams:
@@ -237,6 +254,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 5. [ ] Create integration guide
 
 #### Phase 8: Code Review Checklist (15 min)
+
 1. [ ] Security review:
    - No private keys logged
    - Challenges expire properly
@@ -249,6 +267,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
    - Integration tests pass
 
 ### Definition of Done:
+
 - [ ] All subtasks completed
 - [ ] 95%+ test coverage
 - [ ] Zero TypeScript errors
@@ -265,12 +284,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Implement centralized session management for NOSTR authenticated users.
 
 **Current State**:
+
 - [ ] Code exists: No
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: US-305 (Authentication Service - to be implemented)
 - Blocks: None
 
@@ -283,23 +304,27 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 ### Detailed Subtasks:
 
 #### Phase 1: Analysis & Design (30 min)
+
 1. [ ] Review session management requirements
 2. [ ] Design session storage strategy (Redis/Memory)
 3. [ ] Define session lifecycle
 4. [ ] Create architecture diagrams
 
 #### Phase 2: Type Definitions (15 min)
+
 1. [ ] Create session types
 2. [ ] Define session states
 3. [ ] Add validation schemas
 
 #### Phase 3: Test-Driven Development (1 hr)
+
 1. [ ] Write tests for session CRUD
 2. [ ] Test multi-device sessions
 3. [ ] Test session expiration
 4. [ ] Test activity tracking
 
 #### Phase 4: Implementation (2 hrs)
+
 1. [ ] Create SessionManager class
 2. [ ] Implement session storage
 3. [ ] Add activity tracking
@@ -307,11 +332,13 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 5. [ ] Add session revocation
 
 #### Phase 5: Integration (30 min)
+
 1. [ ] Integrate with NostrAuthService
 2. [ ] Add middleware for session validation
 3. [ ] Update authentication flow
 
 #### Phase 6: Testing & Documentation (30 min)
+
 1. [ ] Run tests (95%+ coverage)
 2. [ ] Add documentation
 3. [ ] Update CHANGELOG
@@ -323,12 +350,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Create unified interface for all NOSTR browser extensions.
 
 **Current State**:
+
 - [ ] Code exists: Partial (20% in KeyManagementService)
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 20%
 
 **Dependencies**:
+
 - Requires: US-301 (KeyManagementService)
 - Blocks: None
 
@@ -341,12 +370,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 ### Detailed Subtasks:
 
 #### Phase 1: Analysis & Design (30 min)
+
 1. [ ] Review NIP-07 specification
 2. [ ] Test Alby, nos2x, Flamingo extensions
 3. [ ] Design unified interface
 4. [ ] Create compatibility matrix
 
 #### Phase 2: Implementation (3 hrs)
+
 1. [ ] Create BrowserExtensionService
 2. [ ] Implement extension detection
 3. [ ] Add capability checking
@@ -354,11 +385,13 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 5. [ ] Add permission handling
 
 #### Phase 3: React Integration (1 hr)
+
 1. [ ] Create useNostrExtension hook
 2. [ ] Add extension context
 3. [ ] Create UI components for extension selection
 
 #### Phase 4: Testing (1 hr)
+
 1. [ ] Mock window.nostr
 2. [ ] Test each extension type
 3. [ ] Test fallback scenarios
@@ -371,12 +404,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Consolidate profile fetching and caching logic.
 
 **Current State**:
+
 - [ ] Code exists: No (claimed UI doesn't exist)
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: US-302 (RelayPoolManager)
 - Blocks: None
 
@@ -389,6 +424,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 ### Detailed Subtasks:
 
 #### Phase 1: Service Implementation (2 hrs)
+
 1. [ ] Create ProfileService
 2. [ ] Implement multi-relay fetching
 3. [ ] Add caching with TTL
@@ -396,12 +432,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 5. [ ] Add avatar optimization
 
 #### Phase 2: React Components (2 hrs)
+
 1. [ ] Create ProfileView component
 2. [ ] Create ProfileEdit component
 3. [ ] Add useNostrProfile hook
 4. [ ] Implement profile context
 
 #### Phase 3: Testing & Documentation (1 hr)
+
 1. [ ] Write component tests
 2. [ ] Test caching behavior
 3. [ ] Document API
@@ -413,12 +451,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Implement comprehensive monitoring for NOSTR operations.
 
 **Current State**:
+
 - [ ] Code exists: No
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: US-302 (RelayPoolManager)
 - Blocks: None
 
@@ -431,11 +471,13 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 ### Detailed Subtasks:
 
 #### Phase 1: Metrics Definition (30 min)
+
 1. [ ] Define metrics to track
 2. [ ] Design metric collection strategy
 3. [ ] Create monitoring architecture
 
 #### Phase 2: Implementation (3 hrs)
+
 1. [ ] Create MonitoringService
 2. [ ] Implement metric collectors
 3. [ ] Add Prometheus export
@@ -443,6 +485,7 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 5. [ ] Add performance tracking
 
 #### Phase 3: Dashboard Creation (2 hrs)
+
 1. [ ] Create Grafana dashboard config
 2. [ ] Add alert rules
 3. [ ] Create runbooks
@@ -454,12 +497,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Create user-friendly error handling for NOSTR operations.
 
 **Current State**:
+
 - [ ] Code exists: No
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: US-302 (RelayPoolManager)
 - Blocks: None
 
@@ -485,12 +530,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Add rate limiting to prevent abuse of NOSTR services.
 
 **Current State**:
+
 - [ ] Code exists: No
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: US-305 (Authentication)
 - Blocks: None
 
@@ -516,12 +563,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Implement key backup and recovery mechanisms.
 
 **Current State**:
+
 - [ ] Code exists: No
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: US-301 (KeyManagementService)
 - Blocks: None
 
@@ -547,12 +596,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Scripts to migrate from old NOSTR implementations.
 
 **Current State**:
+
 - [ ] Code exists: No (scripts not found)
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: All other implementations complete
 - Blocks: None
 
@@ -578,12 +629,14 @@ While Epic 003 completion reports claim 26/26 stories complete, actual code insp
 **Story Description**: Playwright E2E tests for all NOSTR user flows.
 
 **Current State**:
+
 - [ ] Code exists: No
 - [ ] Tests exist: No
 - [ ] Documentation exists: No
 - [ ] Completion status: 0%
 
 **Dependencies**:
+
 - Requires: All UI components complete
 - Blocks: None
 
@@ -658,6 +711,7 @@ graph TD
 ## Execution Waves
 
 ### Wave 1: Critical Authentication Path (Sequential - 1 Agent)
+
 **Duration**: 12-14 hours
 **Agent**: backend-api-builder
 
@@ -668,6 +722,7 @@ graph TD
 **Rationale**: These must be done sequentially as each depends on the previous. US-305 is the most critical gap blocking other features.
 
 ### Wave 2: Parallel Frontend Components (3 Agents in Parallel)
+
 **Duration**: 5-6 hours (parallel)
 **Agents**: 3x elite-frontend-dev
 
@@ -678,6 +733,7 @@ graph TD
 **Rationale**: These can run in parallel as they don't depend on each other. All require frontend expertise.
 
 ### Wave 3: Backend Services (2 Agents in Parallel)
+
 **Duration**: 5-6 hours (parallel)
 **Agents**: 2x backend-api-builder
 
@@ -687,6 +743,7 @@ graph TD
 **Rationale**: Both are independent backend services that can be developed simultaneously.
 
 ### Wave 4: Final Integration & Testing (Sequential - 2 Agents)
+
 **Duration**: 8-10 hours
 **Agents**: backend-api-builder + test-automation-engineer
 
@@ -699,32 +756,32 @@ graph TD
 
 ## Agent Assignment Matrix
 
-| Story | Agent Type | Priority | Wave | Estimated Hours | Dependencies |
-|-------|------------|----------|------|-----------------|--------------|
-| US-305 | backend-api-builder | P0-CRITICAL | 1 | 6-8 | US-301 |
-| US-311 | backend-api-builder | P0 | 1 | 3-5 | US-305 |
-| US-321 | backend-api-builder | P1 | 1 | 3-4 | US-305 |
-| US-306 | elite-frontend-dev | P1 | 2 | 5-6 | US-301 |
-| US-314 | elite-frontend-dev | P1 | 2 | 3-5 | US-302 |
-| US-319 | elite-frontend-dev | P2 | 2 | 3-4 | US-302 |
-| US-316 | backend-api-builder | P2 | 3 | 5-6 | US-302 |
-| US-322 | backend-api-builder | P2 | 3 | 5-6 | US-301 |
-| US-325 | backend-api-builder | P3 | 4 | 3-4 | All |
-| US-326 | test-automation-engineer | P3 | 4 | 5-6 | All UI |
+| Story  | Agent Type               | Priority    | Wave | Estimated Hours | Dependencies |
+| ------ | ------------------------ | ----------- | ---- | --------------- | ------------ |
+| US-305 | backend-api-builder      | P0-CRITICAL | 1    | 6-8             | US-301       |
+| US-311 | backend-api-builder      | P0          | 1    | 3-5             | US-305       |
+| US-321 | backend-api-builder      | P1          | 1    | 3-4             | US-305       |
+| US-306 | elite-frontend-dev       | P1          | 2    | 5-6             | US-301       |
+| US-314 | elite-frontend-dev       | P1          | 2    | 3-5             | US-302       |
+| US-319 | elite-frontend-dev       | P2          | 2    | 3-4             | US-302       |
+| US-316 | backend-api-builder      | P2          | 3    | 5-6             | US-302       |
+| US-322 | backend-api-builder      | P2          | 3    | 5-6             | US-301       |
+| US-325 | backend-api-builder      | P3          | 4    | 3-4             | All          |
+| US-326 | test-automation-engineer | P3          | 4    | 5-6             | All UI       |
 
 ---
 
 ## Risk Assessment
 
-| Story | Complexity | Risk | Mitigation Strategy |
-|-------|------------|------|-------------------|
-| **US-305** | High | **CRITICAL** - Blocks multiple stories, security-sensitive | Assign most experienced agent, extra security review, implement in phases |
-| US-311 | Medium | Session storage choice affects scalability | Start with in-memory, design for Redis migration |
-| US-306 | Medium | Browser extension APIs vary | Test with all major extensions, graceful fallbacks |
-| US-314 | Medium | Profile data consistency across relays | Implement conflict resolution, use latest timestamp |
-| US-316 | Medium | Performance overhead of monitoring | Use sampling, async metric collection |
-| US-322 | High | Key recovery security | Multiple review cycles, security audit required |
-| US-326 | Medium | E2E tests may be flaky | Use proper waits, mock relay server for stability |
+| Story      | Complexity | Risk                                                       | Mitigation Strategy                                                       |
+| ---------- | ---------- | ---------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **US-305** | High       | **CRITICAL** - Blocks multiple stories, security-sensitive | Assign most experienced agent, extra security review, implement in phases |
+| US-311     | Medium     | Session storage choice affects scalability                 | Start with in-memory, design for Redis migration                          |
+| US-306     | Medium     | Browser extension APIs vary                                | Test with all major extensions, graceful fallbacks                        |
+| US-314     | Medium     | Profile data consistency across relays                     | Implement conflict resolution, use latest timestamp                       |
+| US-316     | Medium     | Performance overhead of monitoring                         | Use sampling, async metric collection                                     |
+| US-322     | High       | Key recovery security                                      | Multiple review cycles, security audit required                           |
+| US-326     | Medium     | E2E tests may be flaky                                     | Use proper waits, mock relay server for stability                         |
 
 ---
 
@@ -753,6 +810,7 @@ graph TD
 ## Quality Gate Checklist
 
 ### Per-Story Quality Gates
+
 - [ ] All acceptance criteria met
 - [ ] Test coverage ≥95% (services), ≥90% (UI)
 - [ ] Zero TypeScript errors (strict mode)
@@ -762,40 +820,44 @@ graph TD
 - [ ] Documentation complete
 
 ### Epic-Wide Quality Gates
+
 - [ ] All 26 stories truly complete
 - [ ] Integration tests passing
 - [ ] E2E test suite passing
 - [ ] No regression in existing tests
 - [ ] Performance benchmarks met:
-  * Auth flow <100ms
-  * Event operations <50ms
-  * Profile fetch <200ms
+  - Auth flow <100ms
+  - Event operations <50ms
+  - Profile fetch <200ms
 - [ ] Security audit passed:
-  * No private keys in logs
-  * Proper encryption used
-  * Rate limiting active
+  - No private keys in logs
+  - Proper encryption used
+  - Rate limiting active
 - [ ] Architecture review passed:
-  * No code duplication
-  * Consistent patterns
-  * Proper dependency injection
+  - No code duplication
+  - Consistent patterns
+  - Proper dependency injection
 
 ---
 
 ## Next Actions
 
 ### Immediate Actions (Do Now)
+
 1. **CRITICAL**: Assign backend-api-builder to US-305 (Authentication) immediately
 2. Verify US-301 (KeyManagementService) has required methods for US-305
 3. Set up monitoring dashboard to track progress
 4. Create dedicated Slack channel for Epic 003 completion
 
 ### Planning Actions
+
 1. Review this plan with technical lead
 2. Confirm agent availability for parallel execution
 3. Set up daily standups for Wave coordination
 4. Prepare rollback plan if issues arise
 
 ### Quality Actions
+
 1. Schedule security review for US-305 and US-322
 2. Prepare performance testing environment
 3. Set up E2E test infrastructure
@@ -808,6 +870,7 @@ graph TD
 Epic 003 is **significantly incomplete** despite claims of 100% completion. The most critical gap is **US-305 (Authentication)** which blocks several other stories and represents a fundamental security requirement.
 
 ### Key Findings:
+
 - **14-16 stories** show evidence of completion (50-60%)
 - **10-12 stories** require implementation (40-50%)
 - **Critical authentication infrastructure is missing**
@@ -815,6 +878,7 @@ Epic 003 is **significantly incomplete** despite claims of 100% completion. The 
 - Documentation and migration tooling is incomplete
 
 ### Recommendations:
+
 1. **Immediately prioritize US-305** - This is blocking critical functionality
 2. **Use parallel agents** to recover timeline (3-4 days vs 10-12 days)
 3. **Implement proper verification** before marking stories complete
@@ -822,6 +886,7 @@ Epic 003 is **significantly incomplete** despite claims of 100% completion. The 
 5. **Update project board** to reflect actual status
 
 ### Success Metrics:
+
 - All 26 stories genuinely complete with code verification
 - 95%+ test coverage on all services
 - Zero security vulnerabilities
@@ -833,7 +898,7 @@ This plan provides a clear path to **genuine Epic 003 completion** within 3-4 da
 
 ---
 
-*Document Version: 1.0*
-*Created: October 26, 2025*
-*Epic: 003 - NOSTR Consolidation*
-*Project: Sovren Platform*
+_Document Version: 1.0_
+_Created: October 26, 2025_
+_Epic: 003 - NOSTR Consolidation_
+_Project: Sovren Platform_

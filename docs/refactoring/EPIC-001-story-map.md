@@ -12,6 +12,7 @@
 **Goal**: Eliminate all `any` types and enable full TypeScript strict mode to achieve 100% type coverage
 
 **Business Value**:
+
 - 15-20% reduction in type-related bugs
 - Better IDE autocomplete and developer experience
 - Improved compile-time error detection
@@ -46,6 +47,7 @@
 **Stories**:
 
 #### Story 1: Replace `any` in Event Handlers and Form Components
+
 - **Size**: 1 point (2-3 hours)
 - **Priority**: High
 - **Risk**: Low
@@ -55,6 +57,7 @@
 - **Parallel**: Can work with all other stories 2-10
 
 #### Story 2: Type API Response Handlers with Proper Interfaces
+
 - **Size**: 1 point (2-3 hours)
 - **Priority**: High
 - **Risk**: Low
@@ -67,6 +70,7 @@
 - **Parallel**: Can work with all other stories 1, 3-10
 
 #### Story 3: Replace `any` in Validation Middleware
+
 - **Size**: 1 point (2-3 hours)
 - **Priority**: High
 - **Risk**: Medium (security-critical)
@@ -80,6 +84,7 @@
 - **Security Review Required**: Yes
 
 #### Story 4: Type Email Service Templates and Methods
+
 - **Size**: 1 point (2 hours)
 - **Priority**: Medium
 - **Risk**: Low
@@ -92,6 +97,7 @@
 - **Parallel**: Can work with all other stories 1-3, 5-10
 
 #### Story 5: Type Test Utilities and Mock Providers
+
 - **Size**: 1 point (2 hours)
 - **Priority**: Medium
 - **Risk**: Low
@@ -114,6 +120,7 @@
 **Stories**:
 
 #### Story 6: Replace `any` in Quality Metrics Types with Proper Zod Schemas
+
 - **Size**: 1 point (2-3 hours)
 - **Priority**: High
 - **Risk**: Low
@@ -128,6 +135,7 @@
 - **Parallel**: Can work with all other stories 1-5, 7-10
 
 #### Story 7: Type NOSTR Key Management Interfaces
+
 - **Size**: 1 point (1.5-2 hours)
 - **Priority**: Medium
 - **Risk**: Low
@@ -142,6 +150,7 @@
 - **Security Review Required**: Yes (cryptographic operations)
 
 #### Story 8: Type Environment Validator with Proper Type Guards
+
 - **Size**: 1 point (1.5 hours)
 - **Priority**: Low
 - **Risk**: Low
@@ -164,6 +173,7 @@
 **Stories**:
 
 #### Story 9: Type API Route Handlers with Proper Request/Response Types
+
 - **Size**: 1 point (2-3 hours)
 - **Priority**: High
 - **Risk**: Medium (security-critical)
@@ -184,6 +194,7 @@
 - **Security Review Required**: Yes (authentication boundary)
 
 #### Story 10: Type NOSTR Service Event Validation
+
 - **Size**: 1 point (2 hours)
 - **Priority**: Medium
 - **Risk**: Low
@@ -217,6 +228,7 @@
 **Stories**:
 
 #### Story 11: Enable Stricter TypeScript Compiler Options Incrementally
+
 - **Size**: 1 point (1.5-2 hours)
 - **Priority**: Critical
 - **Risk**: Medium (may reveal hidden issues)
@@ -230,6 +242,7 @@
 - **Parallel**: None (must wait for Sprint 0)
 
 #### Story 12: Fix Strict Mode Violations and Validate Type Coverage
+
 - **Size**: 1 point (1.5-2 hours)
 - **Priority**: Critical
 - **Risk**: Low
@@ -272,6 +285,7 @@ These are **not blocking dependencies**, just logical relationships:
 - Story 4 (Email Service) is called from Story 9 (API Routes)
 
 These relationships don't block parallel work because:
+
 1. Shared types can be imported as they're completed
 2. Mock/placeholder types can be used initially
 3. Type updates are backward-compatible
@@ -285,15 +299,18 @@ These relationships don't block parallel work because:
 **Day 1: Sprint 0 (Parallel Work)**
 
 **Developer 1 (Frontend Specialist)**:
+
 - Morning: Stories 1 + 2 (4-6 hours)
 - Afternoon: Story 3 (2-3 hours)
 
 **Developer 2 (Shared/Backend Specialist)**:
+
 - Morning: Story 6 (2-3 hours)
 - Midday: Story 7 (1.5-2 hours)
 - Afternoon: Story 8 (1.5 hours)
 
 **Developer 3 (API Specialist)**:
+
 - Morning: Story 9 (2-3 hours)
 - Midday: Story 10 (2 hours)
 - Afternoon: Assist with testing/review
@@ -301,28 +318,34 @@ These relationships don't block parallel work because:
 **Day 2: Sprint 0 Completion + Sprint 1**
 
 **Developer 1**:
+
 - Morning: Stories 4 + 5 (4 hours)
 - Afternoon: Story 11 (strict mode)
 
 **Developer 2**:
+
 - Morning: Code review and testing
 - Afternoon: Assist with Story 11
 
 **Developer 3**:
+
 - Morning: Code review and testing
 - Afternoon: Story 12 (validation)
 
 ### Budget: 2 Developers (3 days calendar time)
 
 **Day 1**:
+
 - Dev 1: Stories 1, 2, 3 (Stream A)
 - Dev 2: Stories 6, 7, 8 (Stream B)
 
 **Day 2**:
+
 - Dev 1: Stories 4, 5 (Stream A completion)
 - Dev 2: Stories 9, 10 (Stream C)
 
 **Day 3**:
+
 - Dev 1: Story 11 (strict mode)
 - Dev 2: Code review and testing
 - Both: Story 12 (validation)
@@ -341,24 +364,30 @@ These relationships don't block parallel work because:
 ### Medium-Risk Stories (Extra Attention Required)
 
 #### Story 3: Validation Middleware
+
 **Risk**: Security-critical user input handling
 **Mitigation**:
+
 - Mandatory security review by 2 team members
 - XSS and SQL injection testing with known exploit payloads
 - Fuzz testing with random inputs
 - Separate PR review focusing only on security
 
 #### Story 9: API Route Handlers
+
 **Risk**: Authentication/authorization boundary
 **Mitigation**:
+
 - Security review by senior backend developer
 - Penetration testing of authentication flows
 - Verify no privilege escalation possible
 - Test with malformed tokens and missing credentials
 
 #### Story 11: Enable Strict Mode
+
 **Risk**: May reveal hidden bugs in existing code
 **Mitigation**:
+
 - Incremental enablement (one option at a time)
 - Full regression test suite after each option
 - Monitor production error logs after deployment
@@ -367,6 +396,7 @@ These relationships don't block parallel work because:
 ### Low-Risk Stories (Standard Review Process)
 
 All other stories follow standard code review process:
+
 - 1 team member review
 - Automated tests must pass
 - TypeScript compiler must pass
@@ -379,6 +409,7 @@ All other stories follow standard code review process:
 ### Per-Story Testing (During Development)
 
 Each story must include:
+
 1. **Unit Tests**: Test type-safe functions work correctly
 2. **Type Tests**: Verify TypeScript correctly types the code
 3. **Regression Tests**: Existing tests still pass
@@ -387,6 +418,7 @@ Each story must include:
 ### Sprint 0 Integration Testing (After Stories 1-10)
 
 Before starting Sprint 1:
+
 1. Run full test suite across all packages
 2. Manual QA of critical user flows:
    - User registration and login
@@ -399,6 +431,7 @@ Before starting Sprint 1:
 ### Sprint 1 Validation (Story 12)
 
 Final comprehensive validation:
+
 1. Type coverage ≥ 99%
 2. Zero TypeScript errors
 3. Zero ESLint explicit-any warnings
@@ -437,6 +470,7 @@ Final comprehensive validation:
 ### Story-Level Metrics
 
 Track for each story:
+
 - Time to complete (compare to estimate)
 - Number of type errors fixed
 - Number of `any` types replaced
@@ -455,6 +489,7 @@ Track for each story:
 ### Business Impact Metrics (Post-Deployment)
 
 Track for 2 weeks after deployment:
+
 - Type-related bugs reported: Expect 15-20% reduction
 - Developer productivity: Measure time to implement new features
 - IDE performance: Survey developers on autocomplete speed
@@ -467,11 +502,13 @@ Track for 2 weeks after deployment:
 ### Daily Standup (During Sprint 0)
 
 Each developer reports:
+
 - Stories completed yesterday
 - Stories working on today
 - Any blockers or issues
 
 Cross-stream coordination:
+
 - Developer 1 (Frontend): "Story 2 complete, API types ready for Story 9"
 - Developer 2 (Shared): "Story 6 complete, quality metrics types available"
 - Developer 3 (API): "Story 9 in progress, using types from Story 2"
@@ -479,6 +516,7 @@ Cross-stream coordination:
 ### Sprint 0 → Sprint 1 Transition
 
 **Meeting**: All developers sync before starting Sprint 1
+
 - Verify ALL stories 1-10 are merged
 - Review any issues discovered during Sprint 0
 - Assign Story 11 to most experienced developer
@@ -487,6 +525,7 @@ Cross-stream coordination:
 ### Epic Completion
 
 **Retrospective**: 1-hour meeting after Story 12 completion
+
 - What went well?
 - What could be improved?
 - Lessons learned for future type safety work
@@ -499,11 +538,13 @@ Cross-stream coordination:
 If critical issues are discovered:
 
 ### During Sprint 0 (Stories 1-10)
+
 - Rollback individual story PR
 - Fix issues and re-submit
 - No impact on other parallel stories
 
 ### During Sprint 1 (Story 11: Strict Mode)
+
 - If strict mode causes major issues:
   1. Revert tsconfig changes
   2. Fix issues in separate branch
@@ -511,6 +552,7 @@ If critical issues are discovered:
   4. May extend Epic timeline by 1 day
 
 ### After Epic Completion
+
 - If production issues arise:
   1. Revert entire Epic (all 12 stories)
   2. Investigate root cause
@@ -524,6 +566,7 @@ If critical issues are discovered:
 ### During Epic Execution
 
 Update as you go:
+
 - `CHANGELOG.md`: Document type safety improvements
 - `CONTRIBUTING.md`: Add type safety guidelines
 - `README.md`: Update with type coverage badge
@@ -531,6 +574,7 @@ Update as you go:
 ### After Epic Completion
 
 Create comprehensive documentation:
+
 - `docs/TYPE_SAFETY_STANDARDS.md`: Team standards for TypeScript usage
 - `docs/MIGRATION_GUIDE_STRICT_MODE.md`: How we migrated to strict mode
 - `.github/PULL_REQUEST_TEMPLATE.md`: Add type safety checklist

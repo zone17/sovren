@@ -14,13 +14,13 @@ export class LightningService {
     const response = await this.lnd.addInvoice({
       value: amount,
       memo: description,
-      expiry: 3600  // 1 hour
+      expiry: 3600, // 1 hour
     });
 
     return {
       paymentRequest: response.payment_request,
       paymentHash: response.payment_hash,
-      expiresAt: new Date(Date.now() + 3600 * 1000)
+      expiresAt: new Date(Date.now() + 3600 * 1000),
     };
   }
 }
@@ -47,10 +47,7 @@ export class PaymentService {
 export class SubscriptionService {
   async createSubscription(data: CreateSubscriptionData): Promise<Subscription> {
     // 1. Create Lightning invoice
-    const invoice = await this.lightning.createInvoice(
-      data.amount,
-      `Subscription: ${data.tier}`
-    );
+    const invoice = await this.lightning.createInvoice(data.amount, `Subscription: ${data.tier}`);
 
     // 2. Create subscription record
     const subscription = await this.repository.create({
@@ -58,7 +55,7 @@ export class SubscriptionService {
       invoice: invoice.paymentRequest,
       paymentHash: invoice.paymentHash,
       status: 'pending',
-      expiresAt: invoice.expiresAt
+      expiresAt: invoice.expiresAt,
     });
 
     // 3. Emit event
@@ -75,7 +72,7 @@ export class SubscriptionService {
 export class SubscriptionRenewalService {
   async processRenewals(): Promise<void> {
     const expiringSubscriptions = await this.repository.findExpiring(
-      new Date(Date.now() + 24 * 60 * 60 * 1000)  // Next 24 hours
+      new Date(Date.now() + 24 * 60 * 60 * 1000) // Next 24 hours
     );
 
     for (const subscription of expiringSubscriptions) {
@@ -96,13 +93,13 @@ export class SubscriptionRenewalService {
     await this.repository.update(id, {
       invoice: invoice.paymentRequest,
       paymentHash: invoice.paymentHash,
-      status: 'pending_renewal'
+      status: 'pending_renewal',
     });
 
     // Notify user
     await this.eventBus.emit('subscription.renewal_required', {
       subscriptionId: id,
-      invoice: invoice.paymentRequest
+      invoice: invoice.paymentRequest,
     });
   }
 }
@@ -120,7 +117,7 @@ export class CurrencyService {
     if (currency === 'BTC') return amount;
 
     const rate = await this.getExchangeRate(currency);
-    return Math.round(amount / rate * 100_000_000);  // Convert to satoshis
+    return Math.round((amount / rate) * 100_000_000); // Convert to satoshis
   }
 
   async convertFromSats(sats: number, currency: string): Promise<number> {
@@ -135,7 +132,7 @@ export class CurrencyService {
     if (cached) return cached;
 
     const rate = await this.fetchExchangeRate(currency);
-    await this.cache.set(`rate:BTC:${currency}`, rate, 300);  // 5 min TTL
+    await this.cache.set(`rate:BTC:${currency}`, rate, 300); // 5 min TTL
 
     return rate;
   }
@@ -156,10 +153,7 @@ export class WebhookService {
       .update(payload)
       .digest('hex');
 
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected)
-    );
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
   }
 }
 ```

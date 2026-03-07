@@ -5,6 +5,7 @@
 ## Overview
 
 AWS Secrets Manager provides secure, centralized secrets management for the Sovren platform with:
+
 - **Automatic encryption** at rest (AES-256)
 - **Automatic rotation** support
 - **Fine-grained access control** via IAM
@@ -89,6 +90,7 @@ npm run start:prod
 ## Secrets Structure
 
 ### Supabase Keys
+
 ```json
 {
   "url": "https://your-project.supabase.co",
@@ -100,6 +102,7 @@ npm run start:prod
 **AWS Secret Name**: `sovren/production/supabase-keys`
 
 ### Database Configuration
+
 ```json
 {
   "url": "postgresql://user:password@host:5432/database",
@@ -114,6 +117,7 @@ npm run start:prod
 **AWS Secret Name**: `sovren/production/database-url`
 
 ### JWT Configuration
+
 ```json
 {
   "secret": "your-256-bit-secret-key",
@@ -124,6 +128,7 @@ npm run start:prod
 **AWS Secret Name**: `sovren/production/jwt-secret`
 
 ### Lightning Network Keys
+
 ```json
 {
   "lnbits_url": "https://legend.lnbits.com",
@@ -136,6 +141,7 @@ npm run start:prod
 **AWS Secret Name**: `sovren/production/lightning-keys`
 
 ### GitHub Configuration
+
 ```json
 {
   "token": "ghp_your_personal_access_token",
@@ -228,7 +234,7 @@ const hitRatio = (cacheHits / totalRequests) * 100; // 99%
 
 // API call reduction
 const withoutCache = 1000; // API calls
-const withCache = 10;      // Only on cache misses
+const withCache = 10; // Only on cache misses
 const savings = withoutCache - withCache; // 990 API calls saved
 ```
 
@@ -300,6 +306,7 @@ resource "aws_secretsmanager_secret_rotation" "jwt_secret" {
 ```
 
 **Rotation Schedule**:
+
 - **JWT secrets**: 90 days
 - **API keys**: 90 days
 - **Database passwords**: 180 days
@@ -354,10 +361,7 @@ Only grant `GetSecretValue` permission, not `PutSecretValue`:
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:DescribeSecret"
-      ],
+      "Action": ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
       "Resource": "arn:aws:secretsmanager:*:*:secret:sovren/production/*"
     }
   ]
@@ -389,7 +393,7 @@ app.get('/health/secrets', async (req, res) => {
   res.status(healthy ? 200 : 503).json({
     status: healthy ? 'healthy' : 'degraded',
     service: 'AWS Secrets Manager',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 ```
@@ -405,12 +409,14 @@ app.get('/health/secrets', async (req, res) => {
 ### Cost Calculation
 
 **Without Caching** (1 req/sec):
+
 ```
 60 sec/min × 60 min/hr × 24 hr/day × 30 days = 2,592,000 requests/month
 Cost: $12.96/month (API calls) + $2.00/month (5 secrets) = $14.96/month
 ```
 
 **With 5-Minute Caching** (99% reduction):
+
 ```
 2,592,000 × 0.01 = 25,920 requests/month
 Cost: $0.13/month (API calls) + $2.00/month (5 secrets) = $2.13/month
@@ -433,6 +439,7 @@ Cost: $0.13/month (API calls) + $2.00/month (5 secrets) = $2.13/month
 **Cause**: Secret doesn't exist in AWS
 
 **Solution**:
+
 ```bash
 # Verify secret exists
 aws secretsmanager list-secrets --query 'SecretList[?starts_with(Name, `sovren/production`)].Name'
@@ -446,6 +453,7 @@ terraform apply
 **Cause**: IAM permissions missing
 
 **Solution**:
+
 ```bash
 # Check current identity
 aws sts get-caller-identity
@@ -465,6 +473,7 @@ aws iam attach-role-policy \
 **Cause**: Secrets service not initialized
 
 **Solution**:
+
 ```typescript
 // Ensure initializeSecrets() is called at startup
 await initializeSecrets();
@@ -480,6 +489,7 @@ console.log('Secrets healthy:', healthy);
 **Cause**: Cache TTL too long or cache not expiring
 
 **Solution**:
+
 ```typescript
 // Clear cache manually
 const secrets = getSecrets();

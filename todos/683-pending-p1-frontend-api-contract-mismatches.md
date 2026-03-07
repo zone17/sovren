@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p1
-issue_id: "683"
+issue_id: '683'
 tags: [code-review, frontend, backend, api, slice-8]
 dependencies: []
 ---
@@ -17,33 +17,40 @@ Multiple frontend API methods call wrong URLs, use wrong HTTP methods, or call n
 ## Findings
 
 ### 1. `followApi.isFollowing()` calls wrong URL (4/8 agents)
+
 - **File:** `followApi.ts:23`
 - Calls `GET /${userId}/follow` — no GET handler exists
 - Should call `GET /${userId}/follow-status`
 
 ### 2. Missing `GET /follow-counts` route (6/8 agents)
+
 - **File:** `follow.routes.ts` — no route defined
 - `followApi.getFollowCounts()` at line 41 calls non-existent endpoint
 - `IFollowService.getFollowCounts()` is implemented but never wired to HTTP
 
 ### 3. `notificationsApi.markRead()` wrong method + URL (5/8 agents)
+
 - **File:** `notificationsApi.ts:19`
 - Calls `apiClient.put(${BASE}/${id}/read)` — PUT to wrong path
 - Backend expects `PATCH /${id}` with body `{ read: true }`
 - `apiClient` may not have a `patch` method
 
 ### 4. Missing `notificationsApi.getUnreadCount()` (3/8 agents)
+
 - Backend `GET /unread-count` exists but frontend never calls it
 
 ### 5. Missing `notificationsApi.delete()` (3/8 agents)
+
 - Backend `DELETE /:id` exists but frontend has no method
 
 ### 6. Response field mismatch on follow-status (1/8 agents)
+
 - Backend returns `{ isFollowing: boolean }`, frontend expects `{ following: boolean }`
 
 ## Proposed Solutions
 
 ### Fix all 6 issues in a single pass
+
 1. Fix `followApi.isFollowing()` URL → `/follow-status`
 2. Add `GET /follow-counts` route to `follow.routes.ts`
 3. Fix `notificationsApi.markRead()` → use correct method + URL
@@ -57,6 +64,7 @@ Multiple frontend API methods call wrong URLs, use wrong HTTP methods, or call n
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/features/creator-network/services/followApi.ts`
 - `packages/frontend/src/features/notifications/services/notificationsApi.ts`
 - `packages/backend/src/routes/v2/follow.routes.ts` (add follow-counts route)

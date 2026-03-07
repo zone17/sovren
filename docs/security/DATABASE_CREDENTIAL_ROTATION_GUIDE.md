@@ -24,11 +24,13 @@ This guide provides step-by-step instructions for rotating Supabase database cre
 ## Getting Supabase Credentials
 
 ### Step 1: Get Project Reference
+
 1. Go to your Supabase dashboard: https://app.supabase.com
 2. Open your project
 3. The project reference is in the URL: `https://app.supabase.com/project/{PROJECT_REF}`
 
 ### Step 2: Create Access Token
+
 1. Navigate to: https://app.supabase.com/account/tokens
 2. Click "Generate new token"
 3. Name it: "Credential Rotation"
@@ -62,6 +64,7 @@ python supabase-credential-rotation.py
 ### Option 2: Manual Rotation via Dashboard
 
 1. **Backup Current Credentials**:
+
    ```bash
    # Backup .env file
    cp packages/backend/.env packages/backend/.env.backup-$(date +%Y%m%d)
@@ -77,12 +80,14 @@ python supabase-credential-rotation.py
    - **IMPORTANT**: Copy the new password immediately
 
 3. **Update Connection Strings**:
+
    ```bash
    # Update DATABASE_URL with new password
    # Format: postgresql://postgres:[NEW_PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres
    ```
 
 4. **Update AWS Secrets Manager** (if applicable):
+
    ```bash
    # Create secret JSON
    cat > /tmp/supabase-secret.json <<EOF
@@ -106,12 +111,14 @@ python supabase-credential-rotation.py
    ```
 
 5. **Update Local Environment**:
+
    ```bash
    # Edit packages/backend/.env
    # Update DB_PASSWORD and DATABASE_URL with new values
    ```
 
 6. **Restart Application**:
+
    ```bash
    # Development
    npm run dev
@@ -126,6 +133,7 @@ python supabase-credential-rotation.py
 ## Verification Steps
 
 ### 1. Test Database Connection
+
 ```bash
 # Using psql
 psql "postgresql://postgres:[NEW_PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres" -c "SELECT NOW()"
@@ -139,6 +147,7 @@ pool.query('SELECT NOW()').then(r => console.log('✅ Connected:', r.rows[0])).c
 ```
 
 ### 2. Check Application Health
+
 ```bash
 # Health endpoint
 curl http://localhost:3001/health
@@ -148,6 +157,7 @@ curl http://localhost:3001/health/database
 ```
 
 ### 3. Monitor Logs
+
 ```bash
 # Application logs
 tail -f logs/application.log | grep -E "database|connection|pool"
@@ -161,6 +171,7 @@ docker logs -f sovren-backend | grep -E "database|connection"
 If issues occur during rotation:
 
 ### Immediate Rollback
+
 ```bash
 # Restore from backup
 cp packages/backend/.env.backup-$(date +%Y%m%d) packages/backend/.env
@@ -170,6 +181,7 @@ npm run dev  # or your production restart command
 ```
 
 ### AWS Secrets Rollback
+
 ```bash
 # Restore previous secret version
 aws secretsmanager update-secret \
@@ -261,7 +273,7 @@ name: Rotate Database Credentials
 
 on:
   schedule:
-    - cron: '0 0 1 */3 *'  # Every 3 months
+    - cron: '0 0 1 */3 *' # Every 3 months
   workflow_dispatch:
 
 jobs:
@@ -312,6 +324,7 @@ After rotation, update `docs/security/audit-log.md`:
 ### Notification
 
 Notify team after successful rotation:
+
 - Slack: #security channel
 - Email: security@sovren.dev
 - Ticket: Update and close issue #8
@@ -319,6 +332,7 @@ Notify team after successful rotation:
 ## Summary
 
 This rotation process ensures:
+
 - ✅ Zero downtime during rotation
 - ✅ Automatic rollback on failure
 - ✅ Complete audit trail

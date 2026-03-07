@@ -1,9 +1,9 @@
 ---
 status: pending
 priority: p2
-issue_id: "687"
+issue_id: '687'
 tags: [code-review, frontend, slice-8]
-dependencies: ["683"]
+dependencies: ['683']
 ---
 
 # useUnreadNotificationCount fetches 1 item — always returns 0 or 1
@@ -17,6 +17,7 @@ The hook fetches `list({ page: 1, limit: 1 })` and filters for `!n.read`. With a
 ## Fix
 
 Replace client-side filtering with dedicated endpoint call:
+
 ```typescript
 export function useUnreadNotificationCount() {
   return useQuery({

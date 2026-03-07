@@ -6,34 +6,34 @@ This document contains the complete decomposition of Epic 003 into 26 granular 1
 
 ## Story Index
 
-| ID | Story Title | Phase | Stream | Points |
-|----|-------------|-------|--------|--------|
-| NS-001 | Create Core NOSTR Service Structure | 1 | A | 1 |
-| NS-002 | Implement Event Creation Logic | 1 | A | 1 |
-| NS-003 | Add Event Validation and Verification | 1 | A | 1 |
-| NS-004 | Build Relay Connection Pool | 1 | A | 1 |
-| NS-005 | Implement Relay Auto-Reconnection | 1 | A | 1 |
-| NS-006 | Create Subscription Management System | 1 | A | 1 |
-| NS-007 | Add Cryptographic Operations | 1 | A | 1 |
-| NS-008 | Implement NIP-07 Browser Extension Support | 1 | A | 1 |
-| NS-009 | Define Adapter Interfaces | 2 | B/C | 1 |
-| NS-010 | Create Browser Adapter Base | 2 | B | 1 |
-| NS-011 | Implement React Hooks for NOSTR | 2 | B | 1 |
-| NS-012 | Add Browser Storage Integration | 2 | B | 1 |
-| NS-013 | Create Node.js Adapter Base | 2 | C | 1 |
-| NS-014 | Implement Server-Side Event Emitter | 2 | C | 1 |
-| NS-015 | Add Feature Flag for Frontend Migration | 3 | D | 1 |
-| NS-016 | Migrate Frontend Event Publishing | 3 | D | 1 |
-| NS-017 | Update Frontend Subscription Handling | 3 | D | 1 |
-| NS-018 | Integrate Frontend Components with New Service | 3 | D | 1 |
-| NS-019 | Add Feature Flag for Backend Migration | 4 | E | 1 |
-| NS-020 | Migrate Backend Event Publishing | 4 | E | 1 |
-| NS-021 | Update Backend API Endpoints | 4 | E | 1 |
-| NS-022 | Migrate Backend Webhook Integration | 4 | E | 1 |
-| NS-023 | Remove Old Frontend Implementation | 5 | D | 1 |
-| NS-024 | Remove Old Backend Implementation | 5 | E | 1 |
-| NS-025 | Create Architecture Documentation | 5 | A | 1 |
-| NS-026 | Performance Validation and Benchmarking | 5 | A | 1 |
+| ID     | Story Title                                    | Phase | Stream | Points |
+| ------ | ---------------------------------------------- | ----- | ------ | ------ |
+| NS-001 | Create Core NOSTR Service Structure            | 1     | A      | 1      |
+| NS-002 | Implement Event Creation Logic                 | 1     | A      | 1      |
+| NS-003 | Add Event Validation and Verification          | 1     | A      | 1      |
+| NS-004 | Build Relay Connection Pool                    | 1     | A      | 1      |
+| NS-005 | Implement Relay Auto-Reconnection              | 1     | A      | 1      |
+| NS-006 | Create Subscription Management System          | 1     | A      | 1      |
+| NS-007 | Add Cryptographic Operations                   | 1     | A      | 1      |
+| NS-008 | Implement NIP-07 Browser Extension Support     | 1     | A      | 1      |
+| NS-009 | Define Adapter Interfaces                      | 2     | B/C    | 1      |
+| NS-010 | Create Browser Adapter Base                    | 2     | B      | 1      |
+| NS-011 | Implement React Hooks for NOSTR                | 2     | B      | 1      |
+| NS-012 | Add Browser Storage Integration                | 2     | B      | 1      |
+| NS-013 | Create Node.js Adapter Base                    | 2     | C      | 1      |
+| NS-014 | Implement Server-Side Event Emitter            | 2     | C      | 1      |
+| NS-015 | Add Feature Flag for Frontend Migration        | 3     | D      | 1      |
+| NS-016 | Migrate Frontend Event Publishing              | 3     | D      | 1      |
+| NS-017 | Update Frontend Subscription Handling          | 3     | D      | 1      |
+| NS-018 | Integrate Frontend Components with New Service | 3     | D      | 1      |
+| NS-019 | Add Feature Flag for Backend Migration         | 4     | E      | 1      |
+| NS-020 | Migrate Backend Event Publishing               | 4     | E      | 1      |
+| NS-021 | Update Backend API Endpoints                   | 4     | E      | 1      |
+| NS-022 | Migrate Backend Webhook Integration            | 4     | E      | 1      |
+| NS-023 | Remove Old Frontend Implementation             | 5     | D      | 1      |
+| NS-024 | Remove Old Backend Implementation              | 5     | E      | 1      |
+| NS-025 | Create Architecture Documentation              | 5     | A      | 1      |
+| NS-026 | Performance Validation and Benchmarking        | 5     | A      | 1      |
 
 ---
 
@@ -49,11 +49,7 @@ This document contains the complete decomposition of Epic 003 into 26 granular 1
 
 - [ ] **Given** the shared package exists
       **When** I create the NOSTR service structure
-      **Then** the following directories and files should exist:
-      - `packages/shared/src/services/nostr/core/`
-      - `packages/shared/src/services/nostr/adapters/`
-      - `packages/shared/src/services/nostr/types/`
-      - `packages/shared/src/services/nostr/index.ts`
+      **Then** the following directories and files should exist: - `packages/shared/src/services/nostr/core/` - `packages/shared/src/services/nostr/adapters/` - `packages/shared/src/services/nostr/types/` - `packages/shared/src/services/nostr/index.ts`
 
 - [ ] **Given** the core service structure is created
       **When** I add base interfaces
@@ -66,6 +62,7 @@ This document contains the complete decomposition of Epic 003 into 26 granular 1
 #### Technical Implementation
 
 **Files to Create**:
+
 ```typescript
 // packages/shared/src/services/nostr/types/base.ts
 export interface INostrService {
@@ -77,7 +74,7 @@ export interface INostrService {
 
 // packages/shared/src/services/nostr/core/index.ts
 export class NostrService implements INostrService {
-  constructor(config: NostrConfig) { }
+  constructor(config: NostrConfig) {}
 }
 
 // packages/shared/src/services/nostr/index.ts
@@ -87,10 +84,12 @@ export * from './adapters';
 ```
 
 #### Dependencies
+
 - **Blocked by**: None (can start immediately)
 - **Blocks**: NS-002, NS-003, NS-004, NS-005, NS-006, NS-007
 
 #### Testing Requirements
+
 - Unit tests for service initialization
 - Type checking for all interfaces
 - Export validation tests
@@ -107,10 +106,7 @@ export * from './adapters';
 
 - [ ] **Given** event parameters (kind, content, tags)
       **When** I call createEvent()
-      **Then** a properly formatted unsigned event is returned with:
-      - Correct timestamp
-      - Proper tag structure
-      - Valid kind number
+      **Then** a properly formatted unsigned event is returned with: - Correct timestamp - Proper tag structure - Valid kind number
 
 - [ ] **Given** different event kinds (0, 1, 3, 4, 30023)
       **When** I create events of each kind
@@ -148,17 +144,19 @@ export class EventManager implements IEventManager {
       event.created_at,
       event.kind,
       event.tags,
-      event.content
+      event.content,
     ]);
   }
 }
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-001
 - **Blocks**: NS-003, NS-007
 
 #### Testing Requirements
+
 - Unit tests for each event kind
 - Validation error tests
 - Serialization tests
@@ -210,7 +208,7 @@ export class EventManager {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -222,10 +220,12 @@ export class EventManager {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-002
 - **Blocks**: NS-016, NS-020
 
 #### Testing Requirements
+
 - Valid event verification tests
 - Invalid event detection tests
 - Tampered event detection tests
@@ -279,9 +279,7 @@ export class RelayManager implements IRelayManager {
       ? this.getRelaysByUrls(relayUrls)
       : Array.from(this.relays.values());
 
-    const results = await Promise.allSettled(
-      targetRelays.map(relay => relay.publish(event))
-    );
+    const results = await Promise.allSettled(targetRelays.map((relay) => relay.publish(event)));
 
     return this.processPublishResults(results);
   }
@@ -289,10 +287,12 @@ export class RelayManager implements IRelayManager {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-001
 - **Blocks**: NS-005, NS-016, NS-020
 
 #### Testing Requirements
+
 - Connection establishment tests
 - Multi-relay publishing tests
 - Connection limit tests
@@ -359,10 +359,12 @@ export class RelayConnection {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-004
 - **Blocks**: NS-018, NS-022
 
 #### Testing Requirements
+
 - Disconnection detection tests
 - Exponential backoff timing tests
 - Subscription restoration tests
@@ -398,18 +400,14 @@ export class RelayConnection {
 export class SubscriptionManager implements ISubscriptionManager {
   private subscriptions: Map<string, Subscription> = new Map();
 
-  subscribe(
-    filters: Filter[],
-    onEvent: EventHandler,
-    relays?: string[]
-  ): string {
+  subscribe(filters: Filter[], onEvent: EventHandler, relays?: string[]): string {
     const subId = this.generateSubscriptionId();
 
     const subscription = new Subscription({
       id: subId,
       filters,
       onEvent,
-      relays: relays || this.getDefaultRelays()
+      relays: relays || this.getDefaultRelays(),
     });
 
     this.subscriptions.set(subId, subscription);
@@ -433,10 +431,12 @@ export class SubscriptionManager implements ISubscriptionManager {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-001
 - **Blocks**: NS-011, NS-017, NS-021
 
 #### Testing Requirements
+
 - Subscription creation tests
 - Filter matching tests
 - Event delivery tests
@@ -476,7 +476,7 @@ export class CryptoManager implements ICryptoManager {
   async signEvent(event: UnsignedEvent, privateKey: string): Promise<Event> {
     const eventWithPubkey = {
       ...event,
-      pubkey: this.getPublicKey(privateKey)
+      pubkey: this.getPublicKey(privateKey),
     };
 
     const id = await this.calculateEventId(eventWithPubkey);
@@ -485,7 +485,7 @@ export class CryptoManager implements ICryptoManager {
     return {
       ...eventWithPubkey,
       id,
-      sig: this.bytesToHex(sig)
+      sig: this.bytesToHex(sig),
     };
   }
 
@@ -495,11 +495,15 @@ export class CryptoManager implements ICryptoManager {
 
     return {
       privateKey: this.bytesToHex(privateKey),
-      publicKey: this.bytesToHex(publicKey)
+      publicKey: this.bytesToHex(publicKey),
     };
   }
 
-  async encryptDM(content: string, recipientPubkey: string, senderPrivkey: string): Promise<string> {
+  async encryptDM(
+    content: string,
+    recipientPubkey: string,
+    senderPrivkey: string
+  ): Promise<string> {
     // NIP-04 encryption implementation
     const sharedSecret = secp.getSharedSecret(senderPrivkey, recipientPubkey);
     // ... encryption logic
@@ -509,10 +513,12 @@ export class CryptoManager implements ICryptoManager {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-002
 - **Blocks**: NS-008, NS-016, NS-020
 
 #### Testing Requirements
+
 - Signature generation tests
 - Signature verification tests
 - Key generation tests
@@ -592,10 +598,12 @@ export class NIP07Manager {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-007
 - **Blocks**: NS-010, NS-011
 
 #### Testing Requirements
+
 - Extension detection tests
 - Signing flow tests
 - Fallback behavior tests
@@ -662,10 +670,12 @@ export interface IStorageAdapter {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-001
 - **Blocks**: NS-010, NS-013
 
 #### Testing Requirements
+
 - Interface completeness tests
 - Type checking tests
 - Mock implementation tests
@@ -712,7 +722,7 @@ export class BrowserNostrAdapter implements INostrAdapter {
     this.service = new NostrService({
       ...config,
       storage: this.storageAdapter,
-      websocket: window.WebSocket
+      websocket: window.WebSocket,
     });
 
     // Detect browser extension
@@ -729,18 +739,28 @@ export class BrowserNostrAdapter implements INostrAdapter {
   }
 
   // Expose core functionality
-  get events() { return this.service.events; }
-  get relays() { return this.service.relays; }
-  get subscriptions() { return this.service.subscriptions; }
-  get crypto() { return this.service.crypto; }
+  get events() {
+    return this.service.events;
+  }
+  get relays() {
+    return this.service.relays;
+  }
+  get subscriptions() {
+    return this.service.subscriptions;
+  }
+  get crypto() {
+    return this.service.crypto;
+  }
 }
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-008, NS-009
 - **Blocks**: NS-011, NS-012
 
 #### Testing Requirements
+
 - Browser environment detection tests
 - localStorage integration tests
 - WebSocket usage tests
@@ -787,9 +807,8 @@ export function useNostrEvents(filters: Filter[]) {
     const subscribe = async () => {
       try {
         setLoading(true);
-        subscriptionId = adapter.subscriptions.subscribe(
-          filters,
-          (event) => setEvents(prev => [...prev, event])
+        subscriptionId = adapter.subscriptions.subscribe(filters, (event) =>
+          setEvents((prev) => [...prev, event])
         );
       } catch (err) {
         setError(err as Error);
@@ -837,10 +856,12 @@ export function useNostrPublish() {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-010
 - **Blocks**: NS-016, NS-017, NS-018
 
 #### Testing Requirements
+
 - Hook lifecycle tests
 - State management tests
 - Re-render optimization tests
@@ -923,10 +944,12 @@ export class BrowserStorageAdapter implements IStorageAdapter {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-010
 - **Blocks**: NS-015, NS-016
 
 #### Testing Requirements
+
 - localStorage read/write tests
 - Storage quota handling tests
 - Data pruning tests
@@ -977,7 +1000,7 @@ export class NodeNostrAdapter implements INostrAdapter {
     this.service = new NostrService({
       ...config,
       storage: this.storageAdapter,
-      websocket: WebSocket as any
+      websocket: WebSocket as any,
     });
 
     // Load saved configuration
@@ -998,9 +1021,8 @@ export class NodeNostrAdapter implements INostrAdapter {
 
   // Event emitter for server-side subscriptions
   subscribeToEvents(filters: Filter[]): EventEmitter {
-    const subscription = this.service.subscriptions.subscribe(
-      filters,
-      (event) => this.eventEmitter.emit('event', event)
+    const subscription = this.service.subscriptions.subscribe(filters, (event) =>
+      this.eventEmitter.emit('event', event)
     );
 
     this.eventEmitter.once('removeAllListeners', () => {
@@ -1013,10 +1035,12 @@ export class NodeNostrAdapter implements INostrAdapter {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-009
 - **Blocks**: NS-014, NS-019, NS-020
 
 #### Testing Requirements
+
 - Node environment detection tests
 - File system storage tests
 - WebSocket (ws) integration tests
@@ -1059,16 +1083,11 @@ export class NostrEventEmitter extends EventEmitter {
     this.setMaxListeners(100);
   }
 
-  subscribeToFilters(
-    eventType: string,
-    filters: Filter[],
-    handler: (event: Event) => void
-  ): void {
+  subscribeToFilters(eventType: string, filters: Filter[], handler: (event: Event) => void): void {
     // Create subscription if not exists
     if (!this.subscriptions.has(eventType)) {
-      const subId = this.adapter.subscriptions.subscribe(
-        filters,
-        (event) => this.emit(eventType, event)
+      const subId = this.adapter.subscriptions.subscribe(filters, (event) =>
+        this.emit(eventType, event)
       );
       this.subscriptions.set(eventType, subId);
     }
@@ -1107,10 +1126,12 @@ export class NostrEventEmitter extends EventEmitter {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-013
 - **Blocks**: NS-020, NS-021, NS-022
 
 #### Testing Requirements
+
 - Event emission tests
 - Multiple listener tests
 - Cleanup tests
@@ -1166,7 +1187,7 @@ export class NostrServiceMigration {
     if (this.useNewImplementation) {
       await this.newAdapter.initialize({
         platform: 'browser',
-        relays: getDefaultRelays()
+        relays: getDefaultRelays(),
       });
     } else {
       await this.oldService.initialize();
@@ -1174,9 +1195,7 @@ export class NostrServiceMigration {
   }
 
   get events() {
-    return this.useNewImplementation
-      ? this.newAdapter.events
-      : this.oldService.events;
+    return this.useNewImplementation ? this.newAdapter.events : this.oldService.events;
   }
 
   private handleMigrationToggle(): void {
@@ -1189,10 +1208,12 @@ export class NostrServiceMigration {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-012
 - **Blocks**: NS-016, NS-017, NS-018
 
 #### Testing Requirements
+
 - Feature flag toggle tests
 - Implementation switching tests
 - State preservation tests
@@ -1261,10 +1282,12 @@ export function PostComposer() {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-015
 - **Blocks**: NS-023
 
 #### Testing Requirements
+
 - Component integration tests
 - Event publishing tests
 - Error handling tests
@@ -1329,10 +1352,12 @@ export function Feed({ pubkey }: { pubkey?: string }) {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-015
 - **Blocks**: NS-023
 
 #### Testing Requirements
+
 - Subscription lifecycle tests
 - Filter update tests
 - Event delivery tests
@@ -1398,10 +1423,12 @@ export function SomeComponent() {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-016, NS-017
 - **Blocks**: NS-023
 
 #### Testing Requirements
+
 - Full app integration tests
 - E2E tests for all NOSTR features
 - Performance benchmarks
@@ -1447,8 +1474,8 @@ export class BackendNostrMigration {
     this.newAdapter = new NodeNostrAdapter({
       storage: 'redis', // or 'filesystem'
       storageConfig: {
-        redis: getRedisClient()
-      }
+        redis: getRedisClient(),
+      },
     });
   }
 
@@ -1456,7 +1483,7 @@ export class BackendNostrMigration {
     if (this.useNewImplementation) {
       await this.newAdapter.initialize({
         platform: 'node',
-        relays: getBackendRelays()
+        relays: getBackendRelays(),
       });
 
       // Setup monitoring
@@ -1476,10 +1503,12 @@ export class BackendNostrMigration {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-014
 - **Blocks**: NS-020, NS-021, NS-022
 
 #### Testing Requirements
+
 - Feature flag tests
 - Service switching tests
 - Error handling tests
@@ -1531,23 +1560,18 @@ export class NostrController {
       const event = await this.nostrService.events.createEvent({
         kind: 1,
         content,
-        tags: tags || []
+        tags: tags || [],
       });
 
-      const signedEvent = await this.nostrService.crypto.signEvent(
-        event,
-        keys.privateKey
-      );
+      const signedEvent = await this.nostrService.crypto.signEvent(event, keys.privateKey);
 
       // Publish to relays
-      const results = await this.nostrService.relays.publishToRelays(
-        signedEvent
-      );
+      const results = await this.nostrService.relays.publishToRelays(signedEvent);
 
       res.json({
         success: true,
         eventId: signedEvent.id,
-        relayResults: results
+        relayResults: results,
       });
     } catch (error) {
       logger.error('Failed to publish NOSTR event:', error);
@@ -1569,10 +1593,12 @@ export class NostrController {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-019
 - **Blocks**: NS-024
 
 #### Testing Requirements
+
 - API endpoint tests
 - Batch publishing tests
 - Error handling tests
@@ -1616,7 +1642,7 @@ export function setupNostrRoutes(app: Express) {
       const profileEvent = await nostrService.events.fetchOne({
         kinds: [0], // Profile metadata
         authors: [pubkey],
-        limit: 1
+        limit: 1,
       });
 
       if (!profileEvent) {
@@ -1635,7 +1661,7 @@ export function setupNostrRoutes(app: Express) {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive'
+      Connection: 'keep-alive',
     });
 
     const filters = JSON.parse(req.query.filters as string);
@@ -1653,10 +1679,12 @@ export function setupNostrRoutes(app: Express) {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-019
 - **Blocks**: NS-024
 
 #### Testing Requirements
+
 - Endpoint response tests
 - SSE streaming tests
 - Error response tests
@@ -1711,13 +1739,13 @@ export class WebhookHandlers {
         content: JSON.stringify({
           amount: payload.amount,
           currency: payload.currency,
-          timestamp: payload.timestamp
+          timestamp: payload.timestamp,
         }),
         tags: [
           ['p', payload.recipientPubkey],
           ['e', payload.invoiceId],
-          ['amount', payload.amount.toString()]
-        ]
+          ['amount', payload.amount.toString()],
+        ],
       });
 
       logger.info('Payment webhook processed', { eventId: event.id });
@@ -1738,7 +1766,7 @@ export class WebhookHandlers {
       JSON.stringify({
         payload,
         attempts: 0,
-        nextRetry: Date.now() + 60000 // 1 minute
+        nextRetry: Date.now() + 60000, // 1 minute
       })
     );
   }
@@ -1746,10 +1774,12 @@ export class WebhookHandlers {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-019
 - **Blocks**: NS-024
 
 #### Testing Requirements
+
 - Webhook handling tests
 - Signature verification tests
 - Retry logic tests
@@ -1782,6 +1812,7 @@ export class WebhookHandlers {
 #### Technical Implementation
 
 **Files to Remove**:
+
 ```bash
 # Remove old frontend NOSTR service
 rm -rf packages/frontend/src/services/nostr/
@@ -1795,6 +1826,7 @@ find packages/frontend -name "*.ts*" -exec grep -l "from.*services/nostr" {} \;
 ```
 
 **Update package.json**:
+
 ```json
 {
   "dependencies": {
@@ -1805,10 +1837,12 @@ find packages/frontend -name "*.ts*" -exec grep -l "from.*services/nostr" {} \;
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-016, NS-017, NS-018
 - **Blocks**: NS-025
 
 #### Testing Requirements
+
 - Build verification tests
 - Import checking tests
 - Dead code elimination tests
@@ -1839,6 +1873,7 @@ find packages/frontend -name "*.ts*" -exec grep -l "from.*services/nostr" {} \;
 #### Technical Implementation
 
 **Files to Remove**:
+
 ```bash
 # Remove old backend NOSTR service
 rm -rf packages/backend/src/services/nostr/
@@ -1852,6 +1887,7 @@ find packages/backend -name "*.ts" -exec grep -l "from.*services/nostr" {} \;
 ```
 
 **Update dependencies**:
+
 ```json
 {
   "dependencies": {
@@ -1862,10 +1898,12 @@ find packages/backend -name "*.ts" -exec grep -l "from.*services/nostr" {} \;
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-020, NS-021, NS-022
 - **Blocks**: NS-025
 
 #### Testing Requirements
+
 - Backend startup tests
 - API endpoint tests
 - Import verification tests
@@ -1901,18 +1939,19 @@ find packages/backend -name "*.ts" -exec grep -l "from.*services/nostr" {} \;
 # NOSTR Service Architecture
 
 ## Overview
+
 The NOSTR service is implemented as a shared service with platform-specific adapters.
 
 ## Architecture Diagram
 
 \`\`\`mermaid
 graph TB
-    subgraph "Shared Package"
-        Core[Core NOSTR Service]
-        Events[Event Manager]
-        Relays[Relay Manager]
-        Subs[Subscription Manager]
-        Crypto[Crypto Manager]
+subgraph "Shared Package"
+Core[Core NOSTR Service]
+Events[Event Manager]
+Relays[Relay Manager]
+Subs[Subscription Manager]
+Crypto[Crypto Manager]
 
         Core --> Events
         Core --> Relays
@@ -1943,11 +1982,13 @@ graph TB
         API --> NodeAdapter
         Webhooks --> NodeAdapter
     end
+
 \`\`\`
 
 ## Component Descriptions
 
 ### Core Service
+
 - **Location**: `packages/shared/src/services/nostr/core/`
 - **Purpose**: Platform-agnostic NOSTR protocol implementation
 - **Components**:
@@ -1957,14 +1998,17 @@ graph TB
   - Crypto Manager: Signing, key generation, encryption
 
 ### Adapters
+
 Platform-specific implementations that wrap the core service.
 
 #### Browser Adapter
+
 - React hooks for component integration
 - localStorage for persistence
 - NIP-07 browser extension support
 
 #### Node.js Adapter
+
 - EventEmitter for async handling
 - Redis/filesystem storage
 - Process lifecycle management
@@ -1972,6 +2016,7 @@ Platform-specific implementations that wrap the core service.
 ## Migration Guide
 
 ### Frontend Migration
+
 1. Install shared package
 2. Replace imports
 3. Update React components
@@ -1979,6 +2024,7 @@ Platform-specific implementations that wrap the core service.
 5. Remove old implementation
 
 ### Backend Migration
+
 1. Install shared package
 2. Update service initialization
 3. Migrate API endpoints
@@ -1986,6 +2032,7 @@ Platform-specific implementations that wrap the core service.
 5. Remove old implementation
 
 ## Best Practices
+
 - Always use adapters, never import core directly
 - Handle relay disconnections gracefully
 - Implement proper cleanup in components
@@ -1993,10 +2040,12 @@ Platform-specific implementations that wrap the core service.
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-023, NS-024
 - **Blocks**: None
 
 #### Testing Requirements
+
 - Documentation build tests
 - Diagram generation tests
 - Link validation tests
@@ -2036,10 +2085,7 @@ describe('NOSTR Service Performance', () => {
   beforeAll(async () => {
     oldService = new OldNostrService();
     newService = new NostrService(config);
-    await Promise.all([
-      oldService.initialize(),
-      newService.initialize()
-    ]);
+    await Promise.all([oldService.initialize(), newService.initialize()]);
   });
 
   describe('Event Creation', () => {
@@ -2067,14 +2113,12 @@ describe('NOSTR Service Performance', () => {
 
   describe('Relay Publishing', () => {
     it('should handle concurrent publishes efficiently', async () => {
-      const events = Array(100).fill(null).map(() =>
-        createTestEvent()
-      );
+      const events = Array(100)
+        .fill(null)
+        .map(() => createTestEvent());
 
       const start = performance.now();
-      await Promise.all(
-        events.map(event => newService.relays.publishToRelays(event))
-      );
+      await Promise.all(events.map((event) => newService.relays.publishToRelays(event)));
       const duration = performance.now() - start;
 
       expect(duration).toBeLessThan(5000); // Should complete in 5s
@@ -2088,11 +2132,8 @@ describe('NOSTR Service Performance', () => {
 
       // Create and destroy many subscriptions
       for (let i = 0; i < 1000; i++) {
-        const sub = newService.subscriptions.subscribe(
-          [{ kinds: [1] }],
-          () => {}
-        );
-        await new Promise(resolve => setTimeout(resolve, 10));
+        const sub = newService.subscriptions.subscribe([{ kinds: [1] }], () => {});
+        await new Promise((resolve) => setTimeout(resolve, 10));
         newService.subscriptions.unsubscribe(sub);
       }
 
@@ -2110,6 +2151,7 @@ describe('NOSTR Service Performance', () => {
 ```
 
 **Create benchmark report**:
+
 ```typescript
 // scripts/benchmark-nostr.ts
 async function runBenchmarks() {
@@ -2119,14 +2161,11 @@ async function runBenchmarks() {
     relayPublishing: await benchmarkRelayPublishing(),
     subscriptions: await benchmarkSubscriptions(),
     memory: await benchmarkMemory(),
-    bundleSize: await checkBundleSize()
+    bundleSize: await checkBundleSize(),
   };
 
   // Generate report
-  fs.writeFileSync(
-    'docs/nostr-consolidation-benchmark.json',
-    JSON.stringify(results, null, 2)
-  );
+  fs.writeFileSync('docs/nostr-consolidation-benchmark.json', JSON.stringify(results, null, 2));
 
   // Check for regressions
   const hasRegression =
@@ -2145,10 +2184,12 @@ async function runBenchmarks() {
 ```
 
 #### Dependencies
+
 - **Blocked by**: NS-023, NS-024
 - **Blocks**: None (Final story)
 
 #### Testing Requirements
+
 - Performance benchmark suite
 - Memory leak detection
 - Load testing

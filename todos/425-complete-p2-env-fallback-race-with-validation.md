@@ -2,7 +2,7 @@
 id: 425
 severity: P2
 status: complete
-title: "env-validation: applyEnvFallbacks mutates process.env before Zod parse but after import"
+title: 'env-validation: applyEnvFallbacks mutates process.env before Zod parse but after import'
 file: packages/backend/src/utils/env-validation.ts
 found_in: PR #89
 reviewer: review-backend
@@ -41,7 +41,7 @@ packages/backend/src/utils/env-validation.ts  lines 459-463 (initializeEnvironme
 if (process.env[newName] && process.env[oldName] && process.env[newName] !== process.env[oldName]) {
   console.warn(
     `[env-validation] WARNING: Both ${oldName} and ${newName} are set with different values. ` +
-    `Using ${newName}. Remove ${oldName} from your .env file.`
+      `Using ${newName}. Remove ${oldName} from your .env file.`
   );
 }
 ```
@@ -60,5 +60,6 @@ export async function initializeEnvironment(opts?: { force?: boolean }): Promise
 ## Verification
 
 Add unit tests for:
+
 - Both old and new env var set with different values
 - `initializeEnvironment({ force: true })` re-reads env vars

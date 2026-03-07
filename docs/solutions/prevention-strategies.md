@@ -49,24 +49,28 @@ The P2 remediation sprint fixed **25+ findings** across security, architecture, 
 # Canonical Implementation Patterns
 
 ## Rate Limiting
+
 - **Canonical**: `packages/backend/src/middleware/rate-limit-middleware.ts`
 - **API**: `rateLimit(options)` returns Express middleware
 - **Consumers**: All route files must import from this location
 - **Status**: ✅ DO NOT create new rate limiters
 
 ## Logging
+
 - **Canonical**: `packages/backend/src/lib/logger.ts`
 - **API**: `logger.info/warn/error/debug(message, metadata)`
 - **Consumers**: All services must import from this location
 - **Status**: ✅ `utils/logger.ts` deprecated (use lib/logger.ts)
 
 ## Error Classes
+
 - **Canonical**: `packages/backend/src/middleware/error-handler-middleware.ts`
 - **Base**: `AppError` with subclasses for common error types
 - **Pattern**: Extend `AppError`, not standalone class hierarchies
 - **Status**: ✅ DO NOT create `utils/errors.ts` equivalents
 
 ## Routing
+
 - **Canonical**: `packages/backend/src/app.ts` mounts all routes
 - **Route files**: `packages/backend/src/routes/*.ts`
 - **Pattern**: Each domain gets ONE route file in `routes/`
@@ -213,9 +217,7 @@ describe('Canonical Pattern Enforcement', () => {
         !f.includes('node_modules') &&
         !f.includes('__tests__')
     );
-    expect(rateLimiters).toEqual(
-      expect.arrayContaining(['middleware/rate-limit-middleware.ts'])
-    );
+    expect(rateLimiters).toEqual(expect.arrayContaining(['middleware/rate-limit-middleware.ts']));
     expect(rateLimiters.length).toBeLessThanOrEqual(2); // Allows test file
   });
 
@@ -337,9 +339,7 @@ export function sanitizeObject(
 
   // Handle arrays
   if (Array.isArray(data)) {
-    return data.slice(0, MAX_ARRAY_LENGTH).map((item) =>
-      sanitizeObject(item, depth + 1, seen)
-    );
+    return data.slice(0, MAX_ARRAY_LENGTH).map((item) => sanitizeObject(item, depth + 1, seen));
   }
 
   // Handle plain objects
@@ -562,12 +562,7 @@ describe('Sensitive Fields Sanitization', () => {
 
     it('should handle mixed arrays', () => {
       const data = {
-        mixed: [
-          'string',
-          42,
-          { password: 'secret' },
-          [1, 2, { token: 'abc' }],
-        ],
+        mixed: ['string', 42, { password: 'secret' }, [1, 2, { token: 'abc' }]],
       };
 
       const result = sanitizeObject(data) as any;
@@ -591,18 +586,22 @@ import { sanitizeObject } from './sensitive-fields';
 
 export const logger = {
   info: (message: string, metadata?: Record<string, unknown>) => {
-    console.log(JSON.stringify({
-      level: 'info',
-      message,
-      ...(metadata && { metadata: sanitizeObject(metadata) }),
-    }));
+    console.log(
+      JSON.stringify({
+        level: 'info',
+        message,
+        ...(metadata && { metadata: sanitizeObject(metadata) }),
+      })
+    );
   },
   error: (message: string, metadata?: Record<string, unknown>) => {
-    console.error(JSON.stringify({
-      level: 'error',
-      message,
-      ...(metadata && { metadata: sanitizeObject(metadata) }),
-    }));
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        message,
+        ...(metadata && { metadata: sanitizeObject(metadata) }),
+      })
+    );
   },
   // ... other methods with same pattern
 };
@@ -832,9 +831,7 @@ describe('Error Handler Middleware', () => {
     it('should expose field-level validation errors (safe details)', () => {
       const zodError = {
         name: 'ZodError',
-        errors: [
-          { path: ['email'], message: 'Invalid email', code: 'invalid_string' },
-        ],
+        errors: [{ path: ['email'], message: 'Invalid email', code: 'invalid_string' }],
       };
 
       errorHandler(zodError as any, req as Request, res as Response, next);
@@ -877,10 +874,7 @@ export function rotateSupabasePassword(newPassword: string): void {
   // CRITICAL: Use execFileSync with separate arguments array
   // Shell metacharacters are automatically escaped and not interpreted
   try {
-    execFileSync('psql', [
-      '-U', 'admin',
-      '-c', `ALTER USER postgres PASSWORD '${newPassword}'`,
-    ], {
+    execFileSync('psql', ['-U', 'admin', '-c', `ALTER USER postgres PASSWORD '${newPassword}'`], {
       stdio: 'pipe',
       maxBuffer: 10 * 1024 * 1024,
       timeout: 30000,
@@ -893,15 +887,22 @@ export function rotateSupabasePassword(newPassword: string): void {
 export function rotateGitHubToken(newToken: string, repo: string): void {
   // Use gh CLI with separate arguments (no string interpolation)
   try {
-    execFileSync('gh', [
-      'secret', 'set',
-      'GITHUB_TOKEN',
-      '--repo', repo,
-      '--body', newToken, // Passed as separate argument, not interpolated
-    ], {
-      stdio: 'pipe',
-      timeout: 30000,
-    });
+    execFileSync(
+      'gh',
+      [
+        'secret',
+        'set',
+        'GITHUB_TOKEN',
+        '--repo',
+        repo,
+        '--body',
+        newToken, // Passed as separate argument, not interpolated
+      ],
+      {
+        stdio: 'pipe',
+        timeout: 30000,
+      }
+    );
   } catch (error) {
     throw new Error(`GitHub token rotation failed: ${(error as Error).message}`);
   }
@@ -910,14 +911,21 @@ export function rotateGitHubToken(newToken: string, repo: string): void {
 export function validateAwsCredentials(accessKey: string, secretKey: string): void {
   // aws CLI also uses execFileSync with arguments
   try {
-    execFileSync('aws', [
-      'sts', 'get-caller-identity',
-      '--access-key-id', accessKey,
-      '--secret-access-key', secretKey,
-    ], {
-      stdio: 'pipe',
-      timeout: 10000,
-    });
+    execFileSync(
+      'aws',
+      [
+        'sts',
+        'get-caller-identity',
+        '--access-key-id',
+        accessKey,
+        '--secret-access-key',
+        secretKey,
+      ],
+      {
+        stdio: 'pipe',
+        timeout: 10000,
+      }
+    );
   } catch (error) {
     throw new Error(`AWS credentials invalid: ${(error as Error).message}`);
   }
@@ -977,10 +985,7 @@ module.exports = {
 
 ```typescript
 import { execFileSync } from 'child_process';
-import {
-  rotateSupabasePassword,
-  rotateGitHubToken,
-} from '../automated-supabase-rotation';
+import { rotateSupabasePassword, rotateGitHubToken } from '../automated-supabase-rotation';
 
 jest.mock('child_process');
 
@@ -1031,9 +1036,7 @@ describe('Shell Injection Prevention', () => {
       const [, args] = mockExecFileSync.mock.calls[0];
 
       // execFileSync with array args treats backticks as literal characters
-      expect(args.join('')).toBe(
-        expect.stringContaining('pass`whoami`.word')
-      );
+      expect(args.join('')).toBe(expect.stringContaining('pass`whoami`.word'));
     });
 
     it('should handle semicolons in input without allowing command injection', () => {
@@ -1527,30 +1530,35 @@ export function initializeCSPMonitoring() {
 ## Implementation Roadmap
 
 ### Phase 1: Immediate Actions (Week 1)
+
 - [ ] Create canonical patterns registry (`docs/architecture/canonical-patterns.md`)
 - [ ] Configure ESLint rules to block duplicates and unsafe patterns
 - [ ] Update `.husky/pre-commit` hook with all checks
 - [ ] Deploy TypeScript strict mode configuration
 
 ### Phase 2: Codebase Cleanup (Week 2)
+
 - [ ] Run `ts-prune` and remove all dead code
 - [ ] Consolidate rate limiters → canonical implementation
 - [ ] Consolidate loggers → canonical implementation
 - [ ] Migrate error classes to unified hierarchy
 
 ### Phase 3: Security Hardening (Week 3)
+
 - [ ] Update CSP policies in vercel.json and nginx.conf
 - [ ] Verify sanitization is recursive with depth limits
 - [ ] Replace all `execSync` with `execFileSync`
 - [ ] Deploy error detail leakage fixes
 
 ### Phase 4: Type Safety (Week 4)
+
 - [ ] Eliminate all `as any` casts
 - [ ] Implement Express module augmentation
 - [ ] Enable TypeScript strict mode compilation
 - [ ] Verify type coverage >= 95%
 
 ### Phase 5: Testing & Verification (Week 5)
+
 - [ ] Write comprehensive test suites for all patterns
 - [ ] Deploy CI/CD gates for dead code, type safety, and security
 - [ ] Run full test suite with coverage reports
@@ -1560,15 +1568,15 @@ export function initializeCSPMonitoring() {
 
 ## Success Metrics
 
-| Metric | Target | Current | Status |
-|--------|--------|---------|--------|
-| Duplicate implementations | 0 | 7 | ⚠️ In progress |
-| Dead code lines | 0 | 769 | ⚠️ In progress |
-| Type safety (% coverage) | 95% | 88% | ⚠️ In progress |
-| CSP violations | 0 | 1 (`unsafe-inline`) | ⚠️ In progress |
-| Shell injection vulnerabilities | 0 | 2 (`execSync`) | ⚠️ In progress |
-| Error detail leakage findings | 0 | 3 | ⚠️ In progress |
-| Recursive sanitization depth | 10+ | Current | ✅ Complete |
+| Metric                          | Target | Current             | Status         |
+| ------------------------------- | ------ | ------------------- | -------------- |
+| Duplicate implementations       | 0      | 7                   | ⚠️ In progress |
+| Dead code lines                 | 0      | 769                 | ⚠️ In progress |
+| Type safety (% coverage)        | 95%    | 88%                 | ⚠️ In progress |
+| CSP violations                  | 0      | 1 (`unsafe-inline`) | ⚠️ In progress |
+| Shell injection vulnerabilities | 0      | 2 (`execSync`)      | ⚠️ In progress |
+| Error detail leakage findings   | 0      | 3                   | ⚠️ In progress |
+| Recursive sanitization depth    | 10+    | Current             | ✅ Complete    |
 
 ---
 

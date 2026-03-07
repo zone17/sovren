@@ -20,9 +20,7 @@
       "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
       "sha256:52d52558ce7a4b5405fdd7a40b39907a721ba8ebe11d8cfe55d03a451752869f"
     ],
-    "RepoTags": [
-      "redis:7-alpine"
-    ],
+    "RepoTags": ["redis:7-alpine"],
     "RepoDigests": [
       "redis@sha256:ee9e8748ace004102a267f7b8265dab2c618317df22507b89d16a8add7154273"
     ],
@@ -140,12 +138,8 @@
         ]
       },
       "config": {
-        "Cmd": [
-          "redis-server"
-        ],
-        "Entrypoint": [
-          "docker-entrypoint.sh"
-        ],
+        "Cmd": ["redis-server"],
+        "Entrypoint": ["docker-entrypoint.sh"],
         "Env": [
           "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
           "GOSU_VERSION=1.17",
@@ -241,9 +235,7 @@
           "Title": "golang: html/template: backticks not treated as string delimiters",
           "Description": "Templates do not properly consider backticks (`) as Javascript string delimiters, and do not escape them as expected. Backticks are used, since ES6, for JS template literals. If a template contains a Go template action within a Javascript template literal, the contents of the action can be used to terminate the literal, injecting arbitrary Javascript code into the Go template. As ES6 template literals are rather complex, and themselves can do string interpolation, the decision was made to simply disallow Go template actions from being used inside of them (e.g. \"var a = {{.}}\"), since there is no obviously safe way to allow this behavior. This takes the same approach as github.com/google/safehtml. With fix, Template.Parse returns an Error when it encounters templates like this, with an ErrorCode of value 12. This ErrorCode is currently unexported, but will be exported in the release of Go 1.21. Users who rely on the previous behavior can re-enable it using the GODEBUG flag jstmpllitinterp=1, with the caveat that backticks will now be escaped. This should be used with caution.",
           "Severity": "CRITICAL",
-          "CweIDs": [
-            "CWE-94"
-          ],
+          "CweIDs": ["CWE-94"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -333,9 +325,7 @@
           "Title": "golang: html/template: improper handling of JavaScript whitespace",
           "Description": "Not all valid JavaScript whitespace characters are considered to be whitespace. Templates containing whitespace characters outside of the character set \"\\t\\n\\f\\r\\u0020\\u2028\\u2029\" in JavaScript contexts that also contain actions may not be properly sanitized during execution.",
           "Severity": "CRITICAL",
-          "CweIDs": [
-            "CWE-77"
-          ],
+          "CweIDs": ["CWE-77"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -622,9 +612,7 @@
           "Title": "golang: encoding/xml: stack exhaustion in Decoder.Skip",
           "Description": "Uncontrolled recursion in Decoder.Skip in encoding/xml before Go 1.17.12 and Go 1.18.4 allows an attacker to cause a panic due to stack exhaustion via a deeply nested XML document.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-674"
-          ],
+          "CweIDs": ["CWE-674"],
           "VendorSeverity": {
             "alma": 3,
             "amazon": 3,
@@ -744,9 +732,7 @@
           "Title": "golang: archive/tar: github.com/vbatts/tar-split: unbounded memory consumption when reading headers",
           "Description": "Reader.Read does not set a limit on the maximum size of file headers. A maliciously crafted archive could cause Read to allocate unbounded amounts of memory, potentially causing resource exhaustion or panics. After fix, Reader.Read limits the maximum size of header blocks to 1 MiB.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-770"
-          ],
+          "CweIDs": ["CWE-770"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -836,9 +822,7 @@
           "Title": "golang: net/http/httputil: ReverseProxy should not forward unparseable query parameters",
           "Description": "Requests forwarded by ReverseProxy include the raw query parameters from the inbound request, including unparsable parameters rejected by net/http. This could permit query parameter smuggling when a Go proxy forwards a parameter with an unparsable value. After fix, ReverseProxy sanitizes the query parameters in the forwarded query when the outbound request's Form field is set after the ReverseProxy. Director function returns, indicating that the proxy has parsed the query parameters. Proxies which do not parse query parameters continue to forward the original query parameters unchanged.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-444"
-          ],
+          "CweIDs": ["CWE-444"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -931,9 +915,7 @@
           "Title": "ELSA-2022-17957: ol8addon security update (IMPORTANT)",
           "Description": "Incorrect conversion of certain invalid paths to valid, absolute paths in Clean in path/filepath before Go 1.17.11 and Go 1.18.3 on Windows allows potential directory traversal attack.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-22"
-          ],
+          "CweIDs": ["CWE-22"],
           "VendorSeverity": {
             "bitnami": 3,
             "nvd": 3,
@@ -988,9 +970,7 @@
           "Title": "golang: os/exec: Code injection in Cmd.Start",
           "Description": "Code injection in Cmd.Start in os/exec before Go 1.17.11 and Go 1.18.3 allows execution of any binaries in the working directory named either \"..com\" or \"..exe\" by calling Cmd.Run, Cmd.Start, Cmd.Output, or Cmd.CombinedOutput when Cmd.Path is unset.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-94"
-          ],
+          "CweIDs": ["CWE-94"],
           "VendorSeverity": {
             "amazon": 3,
             "bitnami": 3,
@@ -1054,9 +1034,7 @@
           "Title": "golang: io/fs: stack exhaustion in Glob",
           "Description": "Uncontrolled recursion in Glob in io/fs before Go 1.17.12 and Go 1.18.4 allows an attacker to cause a panic due to stack exhaustion via a path which contains a large number of path separators.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-674"
-          ],
+          "CweIDs": ["CWE-674"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -1145,9 +1123,7 @@
           "Title": "golang: compress/gzip: stack exhaustion in Reader.Read",
           "Description": "Uncontrolled recursion in Reader.Read in compress/gzip before Go 1.17.12 and Go 1.18.4 allows an attacker to cause a panic due to stack exhaustion via an archive containing a large number of concatenated 0-length compressed files.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-674"
-          ],
+          "CweIDs": ["CWE-674"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -1236,9 +1212,7 @@
           "Title": "golang: path/filepath: stack exhaustion in Glob",
           "Description": "Uncontrolled recursion in Glob in path/filepath before Go 1.17.12 and Go 1.18.4 allows an attacker to cause a panic due to stack exhaustion via a path containing a large number of path separators.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-674"
-          ],
+          "CweIDs": ["CWE-674"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -1327,9 +1301,7 @@
           "Title": "golang: encoding/xml: stack exhaustion in Unmarshal",
           "Description": "Uncontrolled recursion in Unmarshal in encoding/xml before Go 1.17.12 and Go 1.18.4 allows an attacker to cause a panic due to stack exhaustion via unmarshalling an XML document into a Go struct which has a nested field that uses the 'any' field tag.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-674"
-          ],
+          "CweIDs": ["CWE-674"],
           "VendorSeverity": {
             "alma": 3,
             "amazon": 3,
@@ -1449,9 +1421,7 @@
           "Title": "ELSA-2022-17957: ol8addon security update (IMPORTANT)",
           "Description": "Infinite loop in Read in crypto/rand before Go 1.17.11 and Go 1.18.3 on Windows allows attacker to cause an indefinite hang by passing a buffer larger than 1 \u003c\u003c 32 - 1 bytes.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-835"
-          ],
+          "CweIDs": ["CWE-835"],
           "VendorSeverity": {
             "amazon": 3,
             "bitnami": 3,
@@ -1507,9 +1477,7 @@
           "Title": "golang: encoding/gob: stack exhaustion in Decoder.Decode",
           "Description": "Uncontrolled recursion in Decoder.Decode in encoding/gob before Go 1.17.12 and Go 1.18.4 allows an attacker to cause a panic due to stack exhaustion via a message which contains deeply nested structures.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-674"
-          ],
+          "CweIDs": ["CWE-674"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -1837,9 +1805,7 @@
           "Title": "golang: os, net/http: avoid escapes from os.DirFS and http.Dir on Windows",
           "Description": "On Windows, restricted files can be accessed via os.DirFS and http.Dir. The os.DirFS function and http.Dir type provide access to a tree of files rooted at a given directory. These functions permit access to Windows device files under that root. For example, os.DirFS(\"C:/tmp\").Open(\"COM1\") opens the COM1 device. Both os.DirFS and http.Dir only provide read-only filesystem access. In addition, on Windows, an os.DirFS for the directory (the root of the current drive) can permit a maliciously crafted path to escape from the drive and access any path on the system. With fix applied, the behavior of os.DirFS(\"\") has changed. Previously, an empty root was treated equivalently to \"/\", so os.DirFS(\"\").Open(\"tmp\") would open the path \"/tmp\". This now returns an error.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-22"
-          ],
+          "CweIDs": ["CWE-22"],
           "VendorSeverity": {
             "bitnami": 3,
             "nvd": 3,
@@ -1900,9 +1866,7 @@
           "Title": "golang: path/filepath: path-filepath filepath.Clean path traversal",
           "Description": "A path traversal vulnerability exists in filepath.Clean on Windows. On Windows, the filepath.Clean function could transform an invalid path such as \"a/../c:/b\" into the valid path \"c:\\b\". This transformation of a relative (if invalid) path into an absolute path could enable a directory traversal attack. After fix, the filepath.Clean function transforms this path into the relative (but still invalid) path \".\\c:\\b\".",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-22"
-          ],
+          "CweIDs": ["CWE-22"],
           "VendorSeverity": {
             "amazon": 3,
             "azure": 3,
@@ -2071,9 +2035,7 @@
           "Title": "golang: crypto/tls: large handshake records may cause panics",
           "Description": "Large handshake records may cause panics in crypto/tls. Both clients and servers may send large TLS handshake records which cause servers and clients, respectively, to panic when attempting to construct responses. This affects all TLS 1.3 clients, TLS 1.2 clients which explicitly enable session resumption (by setting Config.ClientSessionCache to a non-nil value), and TLS 1.3 servers which request client certificates (by setting Config.ClientAuth \u003e= RequestClientCert).",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-400"
-          ],
+          "CweIDs": ["CWE-400"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -2158,9 +2120,7 @@
           "Title": "golang: net/http, mime/multipart: denial of service from excessive resource consumption",
           "Description": "A denial of service is possible from excessive resource consumption in net/http and mime/multipart. Multipart form parsing with mime/multipart.Reader.ReadForm can consume largely unlimited amounts of memory and disk files. This also affects form parsing in the net/http package with the Request methods FormFile, FormValue, ParseMultipartForm, and PostFormValue. ReadForm takes a maxMemory parameter, and is documented as storing \"up to maxMemory bytes +10MB (reserved for non-file parts) in memory\". File parts which cannot be stored in memory are stored on disk in temporary files. The unconfigurable 10MB reserved for non-file parts is excessively large and can potentially open a denial of service vector on its own. However, ReadForm did not properly account for all memory consumed by a parsed form, such as map entry overhead, part names, and MIME headers, permitting a maliciously crafted form to consume well over 10MB. In addition, ReadForm contained no limit on the number of disk files created, permitting a relatively small request body to create a large number of disk temporary files. With fix, ReadForm now properly accounts for various forms of memory overhead, and should now stay within its documented limit of 10MB + maxMemory bytes of memory consumption. Users should still be aware that this limit is high and may still be hazardous. In addition, ReadForm now creates at most one on-disk temporary file, combining multiple form parts into a single temporary file. The mime/multipart.File interface type's documentation states, \"If stored on disk, the File's underlying concrete type will be an *os.File.\". This is no longer the case when a form contains more than one file part, due to this coalescing of parts into a single file. The previous behavior of using distinct files for each form part may be reenabled with the environment variable GODEBUG=multipartfiles=distinct. Users should be aware that multipart.ReadForm and the http.Request methods that call it do not limit the amount of disk consumed by temporary files. Callers can limit the size of form data with http.MaxBytesReader.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-770"
-          ],
+          "CweIDs": ["CWE-770"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -2246,9 +2206,7 @@
           "Title": "golang: net/http, net/textproto: denial of service from excessive memory allocation",
           "Description": "HTTP and MIME header parsing can allocate large amounts of memory, even when parsing small inputs, potentially leading to a denial of service. Certain unusual patterns of input data can cause the common function used to parse HTTP and MIME headers to allocate substantially more memory than required to hold the parsed headers. An attacker can exploit this behavior to cause an HTTP server to allocate large amounts of memory from a small request, potentially leading to memory exhaustion and a denial of service. With fix, header parsing now correctly allocates only the memory required to hold parsed headers.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-400"
-          ],
+          "CweIDs": ["CWE-400"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -2336,9 +2294,7 @@
           "Title": "golang: net/http, net/textproto, mime/multipart: denial of service from excessive resource consumption",
           "Description": "Multipart form parsing can consume large amounts of CPU and memory when processing form inputs containing very large numbers of parts. This stems from several causes: 1. mime/multipart.Reader.ReadForm limits the total memory a parsed multipart form can consume. ReadForm can undercount the amount of memory consumed, leading it to accept larger inputs than intended. 2. Limiting total memory does not account for increased pressure on the garbage collector from large numbers of small allocations in forms with many parts. 3. ReadForm can allocate a large number of short-lived buffers, further increasing pressure on the garbage collector. The combination of these factors can permit an attacker to cause an program that parses multipart forms to consume large amounts of CPU and memory, potentially resulting in a denial of service. This affects programs that use mime/multipart.Reader.ReadForm, as well as form parsing in the net/http package with the Request methods FormFile, FormValue, ParseMultipartForm, and PostFormValue. With fix, ReadForm now does a better job of estimating the memory consumption of parsed forms, and performs many fewer short-lived allocations. In addition, the fixed mime/multipart.Reader imposes the following limits on the size of parsed forms: 1. Forms parsed with ReadForm may contain no more than 1000 parts. This limit may be adjusted with the environment variable GODEBUG=multipartmaxparts=. 2. Form parts parsed with NextPart and NextRawPart may contain no more than 10,000 header fields. In addition, forms parsed with ReadForm may contain no more than 10,000 header fields across all parts. This limit may be adjusted with the environment variable GODEBUG=multipartmaxheaders=.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-770"
-          ],
+          "CweIDs": ["CWE-770"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -2426,9 +2382,7 @@
           "Title": "golang: go/parser: Infinite loop in parsing",
           "Description": "Calling any of the Parse functions on Go source code which contains //line directives with very large line numbers can cause an infinite loop due to integer overflow.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-190"
-          ],
+          "CweIDs": ["CWE-190"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -2517,10 +2471,7 @@
           "Title": "golang: html/template: improper sanitization of CSS values",
           "Description": "Angle brackets (\u003c\u003e) are not considered dangerous characters when inserted into CSS contexts. Templates containing multiple actions separated by a '/' character can result in unexpectedly closing the CSS context and allowing for injection of unexpected HTML, if executed with untrusted input.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-74",
-            "CWE-94"
-          ],
+          "CweIDs": ["CWE-74", "CWE-94"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -2606,10 +2557,7 @@
           "Title": "golang: html/template: improper handling of empty HTML attributes",
           "Description": "Templates containing actions in unquoted HTML attributes (e.g. \"attr={{.}}\") executed with empty input can result in output with unexpected results when parsed due to HTML normalization rules. This may allow injection of arbitrary attributes into tags.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-74",
-            "CWE-94"
-          ],
+          "CweIDs": ["CWE-74", "CWE-94"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -2695,9 +2643,7 @@
           "Title": "golang: runtime: unexpected behavior of setuid/setgid binaries",
           "Description": "On Unix platforms, the Go runtime does not behave differently when a binary is run with the setuid/setgid bits. This can be dangerous in certain cases, such as when dumping memory state, or assuming the status of standard i/o file descriptors. If a setuid/setgid binary is executed with standard I/O file descriptors closed, opening any files can result in unexpected content being read or written with elevated privileges. Similarly, if a setuid/setgid program is terminated, either via panic or signal, it may leak the contents of its registers.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-668"
-          ],
+          "CweIDs": ["CWE-668"],
           "VendorSeverity": {
             "alma": 4,
             "amazon": 3,
@@ -2789,9 +2735,7 @@
           "Title": "golang: net/http, x/net/http2: rapid stream resets can cause excessive work (CVE-2023-44487)",
           "Description": "A malicious HTTP/2 client which rapidly creates requests and immediately resets them can cause excessive server resource consumption. While the total number of requests is bounded by the http2.Server.MaxConcurrentStreams setting, resetting an in-progress request allows the attacker to create a new request while the existing one is still executing. With the fix applied, HTTP/2 servers now bound the number of simultaneously executing handler goroutines to the stream concurrency limit (MaxConcurrentStreams). New requests arriving when at the limit (which can only happen after the client has reset an existing, in-flight request) will be queued until a handler exits. If the request queue grows too large, the server will terminate the connection. This issue is also fixed in golang.org/x/net/http2 for users manually configuring HTTP/2. The default stream concurrency limit is 250 streams (requests) per HTTP/2 connection. This value may be adjusted using the golang.org/x/net/http2 package; see the Server.MaxConcurrentStreams setting and the ConfigureServer function.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-770"
-          ],
+          "CweIDs": ["CWE-770"],
           "VendorSeverity": {
             "alma": 2,
             "amazon": 3,
@@ -2956,9 +2900,7 @@
           "Title": "The filepath package does not recognize paths with a \\??\\ prefix as sp ...",
           "Description": "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-22"
-          ],
+          "CweIDs": ["CWE-22"],
           "VendorSeverity": {
             "amazon": 2,
             "bitnami": 3,
@@ -3016,9 +2958,7 @@
           "Title": "golang: crypto/tls: Timing Side Channel attack in RSA based TLS key exchanges.",
           "Description": "Before Go 1.20, the RSA based TLS key exchanges used the math/big library, which is not constant time. RSA blinding was applied to prevent timing attacks, but analysis shows this may not have been fully effective. In particular it appears as if the removal of PKCS#1 padding may leak timing information, which in turn could be used to recover session key bits. In Go 1.20, the crypto/tls library switched to a fully constant time RSA implementation, which we do not believe exhibits any timing side channels.",
           "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-203"
-          ],
+          "CweIDs": ["CWE-203"],
           "VendorSeverity": {
             "alma": 2,
             "azure": 3,

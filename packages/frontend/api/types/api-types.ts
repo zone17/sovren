@@ -301,18 +301,14 @@ export enum ApiErrorCode {
 /**
  * Type guard to check if response is successful
  */
-export function isApiSuccess<T>(
-  response: ApiResponse<T>
-): response is ApiSuccessResponse<T> {
+export function isApiSuccess<T>(response: ApiResponse<T>): response is ApiSuccessResponse<T> {
   return response.success === true;
 }
 
 /**
  * Type guard to check if response is an error
  */
-export function isApiError(
-  response: ApiResponse<unknown>
-): response is ApiErrorResponse {
+export function isApiError(response: ApiResponse<unknown>): response is ApiErrorResponse {
   return response.success === false;
 }
 
@@ -323,9 +319,8 @@ export function isApiError(
 /**
  * Extract data type from API response
  */
-export type ExtractApiData<T extends ApiResponse<any>> = T extends ApiSuccessResponse<infer D>
-  ? D
-  : never;
+export type ExtractApiData<T extends ApiResponse<any>> =
+  T extends ApiSuccessResponse<infer D> ? D : never;
 
 /**
  * Handler function signature for API routes

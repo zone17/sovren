@@ -2,7 +2,7 @@
 id: 432
 severity: P2
 status: complete
-title: "Anti-pattern scanner: xargs without -0 breaks on filenames with spaces"
+title: 'Anti-pattern scanner: xargs without -0 breaks on filenames with spaces'
 file: scripts/check-antipatterns.sh
 found_in: PR #89
 reviewer: review-infra

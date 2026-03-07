@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p2
-issue_id: "690"
+issue_id: '690'
 tags: [code-review, frontend, ux, slice-8]
 dependencies: []
 ---

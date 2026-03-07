@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADRs)
 
-*Elite Engineering Documentation - Sovren Platform*
+_Elite Engineering Documentation - Sovren Platform_
 
 This document records all major architectural decisions made during the development and optimization of the Sovren platform, particularly focusing on the critical deployment and performance improvements.
 
@@ -29,6 +29,7 @@ The Sovren platform experienced critical deployment failures due to competing Ve
 3. **Deployment Reliability**: Inconsistent deployments and build failures
 
 **Root Cause Analysis:**
+
 - Root `vercel.json`: Static build configuration (working)
 - Frontend `vercel.json`: Serverless functions with invalid runtime (failing)
 - No governance or validation to prevent conflicts
@@ -38,6 +39,7 @@ The Sovren platform experienced critical deployment failures due to competing Ve
 Implement **Single Source of Truth Pattern** for Vercel configuration with comprehensive governance:
 
 #### 1. Configuration Hierarchy
+
 ```
 Root vercel.json (AUTHORITATIVE)
 ├── Global deployment settings
@@ -51,6 +53,7 @@ Frontend vercel.json (REMOVED)
 ```
 
 #### 2. Configuration Governance
+
 ```json
 // .vercelrc.json - Governance file
 {
@@ -73,6 +76,7 @@ Frontend vercel.json (REMOVED)
 ```
 
 #### 3. Automated Validation
+
 ```bash
 # .husky/pre-commit
 validate_vercel_config() {
@@ -95,12 +99,14 @@ validate_vercel_config() {
 ### Consequences
 
 **Positive:**
+
 - ✅ Reliable deployments with zero configuration conflicts
 - ✅ Clear ownership and modification process
 - ✅ Automated conflict prevention
 - ✅ Improved developer experience
 
 **Negative:**
+
 - ⚠️ Requires discipline to maintain single source of truth
 - ⚠️ More complex initial setup
 - ⚠️ All configuration changes go through root file
@@ -146,6 +152,7 @@ TypeError: Cannot read properties of undefined (reading 'good')
 ```
 
 **Root Cause:**
+
 - Performance monitoring tried to access thresholds for unknown metrics
 - `PERFORMANCE_THRESHOLDS[unknownMetric]` returned `undefined`
 - Accessing `undefined.good` threw runtime error, crashing the app
@@ -155,6 +162,7 @@ TypeError: Cannot read properties of undefined (reading 'good')
 Implement **Intelligent Fallback System** with comprehensive error handling:
 
 #### 1. Safe Rating Method
+
 ```typescript
 // Before (problematic)
 private getRating(metricName: keyof typeof PERFORMANCE_THRESHOLDS, value: number) {
@@ -185,6 +193,7 @@ private getSafeRating(metricName: string, value: number): 'good' | 'needs-improv
 ```
 
 #### 2. Error Recovery System
+
 ```typescript
 // Comprehensive error boundaries
 public getMetricsSummary() {
@@ -217,6 +226,7 @@ public getMetricsSummary() {
 ```
 
 #### 3. Core Web Vitals v4 Integration
+
 ```typescript
 // Modern Web Vitals with attribution debugging
 onLCP((metric) => {
@@ -227,7 +237,8 @@ onLCP((metric) => {
   });
 });
 
-onINP((metric) => { // NEW: Interaction to Next Paint (replaces FID)
+onINP((metric) => {
+  // NEW: Interaction to Next Paint (replaces FID)
   this.recordMetric('INP', metric.value, this.getRating('INP', metric.value), {
     delta: metric.delta,
     entries: metric.entries,
@@ -247,6 +258,7 @@ onINP((metric) => { // NEW: Interaction to Next Paint (replaces FID)
 ### Consequences
 
 **Positive:**
+
 - ✅ Eliminated application crashes from performance monitoring
 - ✅ Robust error handling and recovery
 - ✅ Intelligent metric categorization
@@ -254,6 +266,7 @@ onINP((metric) => { // NEW: Interaction to Next Paint (replaces FID)
 - ✅ Future-proof architecture
 
 **Negative:**
+
 - ⚠️ Slightly more complex error handling logic
 - ⚠️ Additional logging for unknown metrics
 - ⚠️ Need to maintain intelligent fallback categories
@@ -275,6 +288,7 @@ Router error in router-Doq8aAwY.js
 ```
 
 **Root Cause:**
+
 - `BrowserRouter` in both `main.tsx` and `App.tsx`
 - Nested routers cause context conflicts
 - React Router v6 strict mode enforcement
@@ -284,6 +298,7 @@ Router error in router-Doq8aAwY.js
 Implement **Single Router Architecture** with React Router v7 future flags:
 
 #### 1. Router Hierarchy
+
 ```typescript
 // main.tsx (AUTHORITATIVE ROUTER)
 <BrowserRouter
@@ -304,17 +319,19 @@ Implement **Single Router Architecture** with React Router v7 future flags:
 ```
 
 #### 2. Future-Proof Configuration
+
 ```typescript
 // React Router v7 compatibility flags
 const routerConfig = {
   future: {
-    v7_startTransition: true,      // Enable concurrent features
-    v7_relativeSplatPath: true,    // Modern splat route behavior
-  }
+    v7_startTransition: true, // Enable concurrent features
+    v7_relativeSplatPath: true, // Modern splat route behavior
+  },
 };
 ```
 
 #### 3. TypeScript Compatibility
+
 ```typescript
 // Temporary compatibility for React Router v6 TypeScript issues
 {/* @ts-ignore - React Router v6 TypeScript compatibility issue */}
@@ -332,12 +349,14 @@ const routerConfig = {
 ### Consequences
 
 **Positive:**
+
 - ✅ Eliminated router conflicts and runtime errors
 - ✅ Future-proof architecture for React Router v7
 - ✅ Cleaner component structure
 - ✅ Better performance and memory usage
 
 **Negative:**
+
 - ⚠️ Temporary TypeScript compatibility comments needed
 - ⚠️ More centralized routing configuration
 
@@ -358,6 +377,7 @@ Cannot find package 'babel-plugin-transform-react-remove-prop-types'
 ```
 
 **Root Cause:**
+
 - External babel plugin in devDependencies
 - Vercel production builds don't install devDependencies
 - Plugin attempted to access during production optimization
@@ -367,12 +387,11 @@ Cannot find package 'babel-plugin-transform-react-remove-prop-types'
 Replace external dependencies with **Modern Vite-Native Optimizations**:
 
 #### 1. Remove External Babel Dependencies
+
 ```typescript
 // Before (problematic)
 babel: {
-  plugins: [
-    'babel-plugin-transform-react-remove-prop-types'
-  ]
+  plugins: ['babel-plugin-transform-react-remove-prop-types'];
 }
 
 // After (modern approach)
@@ -381,12 +400,13 @@ react({
     plugins: [
       // No external babel plugins needed
       // Vite handles optimizations natively
-    ]
-  }
-})
+    ],
+  },
+});
 ```
 
 #### 2. Elite Deployment Verification
+
 ```javascript
 // packages/frontend/scripts/verify-deployment.js
 function runPreDeploymentChecks() {
@@ -407,6 +427,7 @@ function runPreDeploymentChecks() {
 ```
 
 #### 3. Modern Build Optimizations
+
 ```typescript
 // Vite configuration with esbuild optimizations
 export default defineConfig({
@@ -417,12 +438,12 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
-          'router': ['react-router-dom'],
-          'redux': ['@reduxjs/toolkit', 'react-redux'],
-        }
-      }
-    }
-  }
+          router: ['react-router-dom'],
+          redux: ['@reduxjs/toolkit', 'react-redux'],
+        },
+      },
+    },
+  },
 });
 ```
 
@@ -437,12 +458,14 @@ export default defineConfig({
 ### Consequences
 
 **Positive:**
+
 - ✅ Eliminated build dependency failures
 - ✅ Faster build times (555ms production build)
 - ✅ Smaller bundle sizes with better optimization
 - ✅ More reliable deployment pipeline
 
 **Negative:**
+
 - ⚠️ Migration from external babel plugins
 - ⚠️ Need to validate optimization effectiveness
 
@@ -457,6 +480,7 @@ export default defineConfig({
 ### Context
 
 Need for enterprise-grade security configuration with:
+
 - Content Security Policy (CSP)
 - Security headers
 - CORS configuration
@@ -467,6 +491,7 @@ Need for enterprise-grade security configuration with:
 Implement **Elite Security Headers** with comprehensive protection:
 
 #### 1. Content Security Policy
+
 ```json
 {
   "headers": [
@@ -484,6 +509,7 @@ Implement **Elite Security Headers** with comprehensive protection:
 ```
 
 #### 2. Comprehensive Security Headers
+
 ```json
 {
   "key": "X-Frame-Options",
@@ -504,6 +530,7 @@ Implement **Elite Security Headers** with comprehensive protection:
 ```
 
 #### 3. CORS Configuration
+
 ```json
 {
   "source": "/api/(.*)",
@@ -527,12 +554,14 @@ Implement **Elite Security Headers** with comprehensive protection:
 ### Consequences
 
 **Positive:**
+
 - ✅ Enterprise-grade security protection
 - ✅ XSS and clickjacking prevention
 - ✅ Secure cross-origin resource sharing
 - ✅ HTTPS enforcement and security
 
 **Negative:**
+
 - ⚠️ Slightly more restrictive content policies
 - ⚠️ Need to maintain security header configuration
 
@@ -541,18 +570,21 @@ Implement **Elite Security Headers** with comprehensive protection:
 ## Implementation Timeline
 
 ### Phase 1: Critical Fixes (Week 1)
+
 - ✅ Fixed competing Vercel configurations
 - ✅ Resolved performance monitoring crashes
 - ✅ Fixed React Router conflicts
 - ✅ Eliminated babel plugin dependencies
 
 ### Phase 2: Architecture Improvements (Week 2)
+
 - ✅ Implemented configuration governance
 - ✅ Added pre-commit validation hooks
 - ✅ Created deployment verification scripts
 - ✅ Enhanced security headers
 
 ### Phase 3: Documentation & Quality (Week 3)
+
 - ✅ Comprehensive documentation creation
 - ✅ Troubleshooting guides
 - ✅ Architecture decision records
@@ -561,12 +593,14 @@ Implement **Elite Security Headers** with comprehensive protection:
 ## Quality Metrics
 
 ### Before Improvements
+
 - ❌ Deployment Success Rate: ~30%
 - ❌ Application Crashes: Frequent
 - ❌ Build Time: Variable (often failed)
 - ❌ Performance Monitoring: Broken
 
 ### After Improvements
+
 - ✅ Deployment Success Rate: 100%
 - ✅ Application Crashes: Zero
 - ✅ Build Time: 555ms (consistent)
@@ -575,12 +609,14 @@ Implement **Elite Security Headers** with comprehensive protection:
 ## Future Considerations
 
 ### Technical Debt Eliminated
+
 - ✅ Configuration conflicts resolved
 - ✅ External dependency issues removed
 - ✅ Error handling comprehensive
 - ✅ Security vulnerabilities addressed
 
 ### Ongoing Maintenance
+
 - 🔄 Regular security header updates
 - 🔄 Performance threshold tuning
 - 🔄 Configuration validation improvements
@@ -588,4 +624,4 @@ Implement **Elite Security Headers** with comprehensive protection:
 
 ---
 
-*These architectural decisions represent elite engineering practices with comprehensive analysis, implementation details, and clear rationale for future engineering teams. Each decision solves specific problems while maintaining system reliability, performance, and maintainability.*
+_These architectural decisions represent elite engineering practices with comprehensive analysis, implementation details, and clear rationale for future engineering teams. Each decision solves specific problems while maintaining system reliability, performance, and maintainability._

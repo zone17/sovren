@@ -185,7 +185,9 @@ export const NostrKeySecurityMonitoringSchema = z.object({
   ]),
   severity: z.enum(['low', 'medium', 'high', 'critical']),
   description: z.string().min(1),
-  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+  metadata: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+    .optional(),
   resolved: z.boolean().default(false),
   resolvedAt: z.number().optional(),
   resolvedBy: z.string().optional(),

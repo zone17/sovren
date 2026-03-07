@@ -2,7 +2,7 @@
 id: 451
 severity: P2
 status: complete
-title: "wellness.routes.ts: unused optionalAuth import after auth upgrade"
+title: 'wellness.routes.ts: unused optionalAuth import after auth upgrade'
 file: packages/backend/src/routes/v2/wellness.routes.ts
 found_in: PR #92
 reviewer: review-typescript, review-architecture

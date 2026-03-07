@@ -11,12 +11,14 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 ## Current State Analysis
 
 ### Existing Infrastructure (✅ Working)
+
 - Frontend Vercel deployment: 95% automated (`.github/workflows/release.yml`)
 - Quality gates: 100% automated (`.github/workflows/quality-gates.yml`)
 - Security scanning: 100% automated
 - 13 GitHub Actions workflows operational
 
 ### Gaps to Address (❌ Missing)
+
 1. **Backend Deployment**: No automated workflow for 29 services from Epic 005
 2. **Auto-Deploy Triggers**: Manual trigger only, not automatic on main push
 3. **Docker Automation**: No Docker build/push workflows
@@ -29,11 +31,13 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 ### Phase 1: Containerization (Stories 1-2)
 
 #### US-E6-001: Docker Multi-Stage Builds for 29 Backend Services
+
 **Priority**: P0 (Critical Path)
 **Agent**: cicd-pipeline-architect
 **Estimated Effort**: 8 story points
 
 **Acceptance Criteria**:
+
 - [ ] Multi-stage Dockerfile for Node.js TypeScript services
 - [ ] Production image size < 150MB (using Alpine base)
 - [ ] Build cache optimization (layer caching)
@@ -43,6 +47,7 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 - [ ] All 29 services containerized
 
 **Subtasks**:
+
 1. Create optimized multi-stage Dockerfile template
 2. Add health check routes to each service
 3. Configure Docker Compose for local testing
@@ -52,6 +57,7 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 7. Document Docker architecture
 
 **Cutting-Edge Practices**:
+
 - BuildKit for parallel layer builds
 - Multi-stage builds (build → deps → production)
 - Distroless or Alpine base images
@@ -61,11 +67,13 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 ---
 
 #### US-E6-002: GitHub Container Registry Setup & Image Management
+
 **Priority**: P0 (Critical Path)
 **Agent**: cicd-pipeline-architect
 **Estimated Effort**: 5 story points
 
 **Acceptance Criteria**:
+
 - [ ] GHCR repository per service configured
 - [ ] Automatic image tagging (semantic versioning + SHA)
 - [ ] Image retention policy (keep last 10 versions)
@@ -74,6 +82,7 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 - [ ] Image signing with Cosign
 
 **Subtasks**:
+
 1. Configure GHCR authentication in GitHub Actions
 2. Create image naming convention (ghcr.io/owner/sovren-{service}:version)
 3. Implement semantic versioning tagging strategy
@@ -82,6 +91,7 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 6. Document registry architecture
 
 **Cutting-Edge Practices**:
+
 - Container image signing with Sigstore/Cosign
 - SLSA provenance generation
 - Multi-architecture builds (amd64, arm64)
@@ -92,11 +102,13 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 ### Phase 2: Deployment Workflows (Stories 3-4)
 
 #### US-E6-003: Backend Deployment Workflow (Blue-Green Strategy)
+
 **Priority**: P0 (Critical Path)
 **Agent**: cicd-pipeline-architect
 **Estimated Effort**: 13 story points
 
 **Acceptance Criteria**:
+
 - [ ] Blue-green deployment implementation
 - [ ] Zero-downtime service updates
 - [ ] Automated database migrations
@@ -106,6 +118,7 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 - [ ] Rollback on failure
 
 **Subtasks**:
+
 1. Design blue-green architecture (2 environments)
 2. Create GitHub Actions workflow for backend deployment
 3. Implement pre-deployment health checks
@@ -116,6 +129,7 @@ Epic 006 closes the deployment automation gap by implementing fully automated CI
 8. Document deployment process
 
 **Workflow Structure**:
+
 ```yaml
 name: Backend Deployment (Blue-Green)
 on:
@@ -146,6 +160,7 @@ jobs:
 ```
 
 **Cutting-Edge Practices**:
+
 - Progressive delivery (canary deployments)
 - Automated rollback based on error rate SLIs
 - Deployment freeze windows
@@ -154,11 +169,13 @@ jobs:
 ---
 
 #### US-E6-004: Auto-Deploy on Main Branch Push
+
 **Priority**: P0 (Critical Path)
 **Agent**: cicd-pipeline-architect
 **Estimated Effort**: 3 story points
 
 **Acceptance Criteria**:
+
 - [ ] Automatic trigger on push to main
 - [ ] Path-based triggers (only deploy changed services)
 - [ ] Quality gate enforcement before deploy
@@ -167,6 +184,7 @@ jobs:
 - [ ] Emergency override capability
 
 **Subtasks**:
+
 1. Configure automatic workflow triggers
 2. Implement path filters for monorepo
 3. Add quality gate checks (tests, lint, security)
@@ -175,6 +193,7 @@ jobs:
 6. Test auto-deploy flow
 
 **Cutting-Edge Practices**:
+
 - Monorepo path filters (only deploy changed packages)
 - Required status checks before deploy
 - GitHub Environments with protection rules
@@ -185,11 +204,13 @@ jobs:
 ### Phase 3: Reliability & Operations (Stories 5-6)
 
 #### US-E6-005: Health Checks & Automated Rollback
+
 **Priority**: P0 (Critical Path)
 **Agent**: cicd-pipeline-architect
 **Estimated Effort**: 8 story points
 
 **Acceptance Criteria**:
+
 - [ ] Health check endpoints for all services
 - [ ] Liveness and readiness probes
 - [ ] Post-deployment smoke tests
@@ -199,6 +220,7 @@ jobs:
 - [ ] Alert notifications on rollback
 
 **Subtasks**:
+
 1. Implement `/health`, `/ready`, `/live` endpoints
 2. Create smoke test suite
 3. Configure error rate monitoring
@@ -208,17 +230,20 @@ jobs:
 7. Document health check architecture
 
 **Health Check Strategy**:
+
 - `/health` - Overall service health
 - `/ready` - Ready to receive traffic (DB connected, cache available)
 - `/live` - Process is alive (for orchestrator)
 
 **Rollback Triggers**:
+
 - HTTP 5xx error rate > 5%
 - Response time P95 > 1000ms
 - Health check failures > 3 consecutive
 - Manual trigger via ChatOps
 
 **Cutting-Edge Practices**:
+
 - Chaos engineering tests (failure injection)
 - SLO-based automated rollback
 - Distributed tracing for deployment validation
@@ -227,11 +252,13 @@ jobs:
 ---
 
 #### US-E6-006: Secrets Management & Documentation
+
 **Priority**: P1 (High)
 **Agent**: technical-docs-writer
 **Estimated Effort**: 3 story points
 
 **Acceptance Criteria**:
+
 - [ ] Complete secrets inventory documented
 - [ ] GitHub Secrets configuration guide
 - [ ] Environment-specific secrets documented
@@ -240,6 +267,7 @@ jobs:
 - [ ] Secrets validation in CI
 
 **Subtasks**:
+
 1. Audit all required secrets
 2. Document each secret with purpose
 3. Create secrets setup guide
@@ -248,6 +276,7 @@ jobs:
 6. Create secrets troubleshooting guide
 
 **Required Secrets**:
+
 ```
 Production:
 - VERCEL_TOKEN
@@ -269,6 +298,7 @@ Staging:
 ```
 
 **Cutting-Edge Practices**:
+
 - OIDC authentication (no long-lived tokens)
 - Secrets detection in commits (GitGuardian)
 - Automatic secrets rotation
@@ -279,11 +309,13 @@ Staging:
 ### Phase 4: Multi-Environment & Testing (Stories 7-8)
 
 #### US-E6-007: Multi-Environment Configuration (Staging/Production)
+
 **Priority**: P1 (High)
 **Agent**: infrastructure-provisioner
 **Estimated Effort**: 5 story points
 
 **Acceptance Criteria**:
+
 - [ ] Staging environment fully configured
 - [ ] Production environment configured
 - [ ] Environment-specific configurations
@@ -292,6 +324,7 @@ Staging:
 - [ ] Environment promotion workflow
 
 **Subtasks**:
+
 1. Design environment architecture
 2. Create environment-specific configs
 3. Set up staging database
@@ -300,6 +333,7 @@ Staging:
 6. Document environment strategy
 
 **Environment Strategy**:
+
 ```
 Development (Local):
 - Docker Compose
@@ -321,6 +355,7 @@ Production:
 ```
 
 **Cutting-Edge Practices**:
+
 - Infrastructure as Code (Terraform)
 - Ephemeral preview environments
 - Production parity (12-factor app)
@@ -329,11 +364,13 @@ Production:
 ---
 
 #### US-E6-008: Deployment Pipeline Integration Tests
+
 **Priority**: P1 (High)
 **Agent**: test-automation-engineer
 **Estimated Effort**: 8 story points
 
 **Acceptance Criteria**:
+
 - [ ] End-to-end deployment tests
 - [ ] Rollback scenario tests
 - [ ] Health check validation tests
@@ -343,6 +380,7 @@ Production:
 - [ ] CI integration for deployment tests
 
 **Subtasks**:
+
 1. Design deployment test strategy
 2. Implement deployment simulation tests
 3. Create rollback scenario tests
@@ -352,6 +390,7 @@ Production:
 7. Document testing approach
 
 **Test Scenarios**:
+
 - ✅ Successful deployment (all services healthy)
 - ✅ Partial deployment failure (rollback triggered)
 - ✅ Health check failure (rollback triggered)
@@ -362,6 +401,7 @@ Production:
 - ✅ Performance regression detection
 
 **Cutting-Edge Practices**:
+
 - Contract testing for service dependencies
 - Load testing in staging before production
 - Deployment chaos tests (failure injection)
@@ -372,22 +412,26 @@ Production:
 ## Success Metrics
 
 ### Deployment Automation
+
 - **Target**: 100% automation (from 75%)
 - **Frontend**: Maintain 95%
 - **Backend**: Increase from 40% to 100%
 
 ### Deployment Performance
+
 - **Deployment Time**: < 10 minutes (full backend deploy)
 - **Rollback Time**: < 2 minutes
 - **Zero-Downtime**: 100% of deployments
 - **Success Rate**: > 99% (with automatic rollback)
 
 ### Developer Experience
+
 - **Time to Deploy**: < 15 minutes (commit to production)
 - **Manual Steps**: 0 (except approval gates)
 - **Rollback Confidence**: 100% (tested and automated)
 
 ### Operational Excellence
+
 - **Deployment Frequency**: 10+ per day (capable)
 - **Mean Time to Recovery**: < 5 minutes
 - **Change Failure Rate**: < 5%
@@ -457,6 +501,7 @@ Deployment Flow:
 ## Dependencies
 
 ### External Services
+
 - GitHub Container Registry (GHCR)
 - Vercel (frontend hosting)
 - Cloud provider for Docker containers
@@ -465,30 +510,33 @@ Deployment Flow:
 - Slack (notifications)
 
 ### Internal Dependencies
+
 - Epic 005 backend services (29 services)
 - Existing quality gates (working)
 - Existing security scans (working)
 
 ## Risks and Mitigation
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| Database migration failure | High | Medium | Automated rollback, migration tests |
-| Traffic switch causes downtime | High | Low | Gradual shift, automatic rollback |
-| Secrets misconfiguration | High | Medium | Validation in CI, comprehensive docs |
-| Docker image size too large | Medium | Medium | Multi-stage builds, optimization |
-| Deployment too slow | Medium | Low | Parallel builds, cache optimization |
+| Risk                           | Impact | Probability | Mitigation                           |
+| ------------------------------ | ------ | ----------- | ------------------------------------ |
+| Database migration failure     | High   | Medium      | Automated rollback, migration tests  |
+| Traffic switch causes downtime | High   | Low         | Gradual shift, automatic rollback    |
+| Secrets misconfiguration       | High   | Medium      | Validation in CI, comprehensive docs |
+| Docker image size too large    | Medium | Medium      | Multi-stage builds, optimization     |
+| Deployment too slow            | Medium | Low         | Parallel builds, cache optimization  |
 
 ## Timeline
 
 **Total Duration**: 2 weeks (with parallel agent execution)
 
 ### Week 1
+
 - **Days 1-2**: Docker containerization (US-E6-001)
 - **Days 2-3**: GHCR setup (US-E6-002)
 - **Days 3-5**: Backend deployment workflow (US-E6-003)
 
 ### Week 2
+
 - **Days 6-7**: Auto-deploy triggers (US-E6-004)
 - **Days 7-9**: Health checks & rollback (US-E6-005)
 - **Days 9-10**: Secrets & environments (US-E6-006, US-E6-007)
@@ -497,6 +545,7 @@ Deployment Flow:
 ## Cutting-Edge Best Practices Checklist
 
 ### Docker Excellence
+
 - ✅ Multi-stage builds (build → deps → production)
 - ✅ BuildKit for parallel layer builds
 - ✅ Distroless or Alpine base images
@@ -507,6 +556,7 @@ Deployment Flow:
 - ✅ Layer caching optimization
 
 ### GitHub Actions Excellence
+
 - ✅ Reusable workflows
 - ✅ Composite actions for common tasks
 - ✅ Matrix builds for parallel execution
@@ -518,6 +568,7 @@ Deployment Flow:
 - ✅ ChatOps integration
 
 ### Deployment Excellence
+
 - ✅ Blue-green deployments
 - ✅ Progressive traffic shifting
 - ✅ Automated rollback on SLO breach
@@ -528,6 +579,7 @@ Deployment Flow:
 - ✅ Deployment metrics tracking
 
 ### Security Excellence
+
 - ✅ Container vulnerability scanning
 - ✅ Image signing and verification
 - ✅ Secrets rotation procedures
@@ -537,6 +589,7 @@ Deployment Flow:
 - ✅ Security gates before deploy
 
 ### Observability Excellence
+
 - ✅ Deployment metrics
 - ✅ Error rate monitoring
 - ✅ Performance regression detection
@@ -550,15 +603,18 @@ Deployment Flow:
 Execute stories in parallel for maximum velocity:
 
 **Parallel Wave 1** (Stories 1-2):
+
 - cicd-pipeline-architect: US-E6-001 (Docker builds)
 - cicd-pipeline-architect: US-E6-002 (GHCR setup)
 
 **Parallel Wave 2** (Stories 3-5):
+
 - cicd-pipeline-architect: US-E6-003 (Deployment workflow)
 - cicd-pipeline-architect: US-E6-004 (Auto-deploy)
 - cicd-pipeline-architect: US-E6-005 (Health checks)
 
 **Parallel Wave 3** (Stories 6-8):
+
 - technical-docs-writer: US-E6-006 (Secrets docs)
 - infrastructure-provisioner: US-E6-007 (Multi-environment)
 - test-automation-engineer: US-E6-008 (Integration tests)
@@ -568,6 +624,7 @@ Execute stories in parallel for maximum velocity:
 ## Completion Criteria
 
 Epic 006 is complete when:
+
 - ✅ All 29 backend services containerized with Docker
 - ✅ Automated deployment to staging and production
 - ✅ Blue-green deployment with zero downtime

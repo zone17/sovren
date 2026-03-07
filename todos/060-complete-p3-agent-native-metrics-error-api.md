@@ -15,7 +15,6 @@ The current monitoring and error handling system is not optimized for programmat
 1. **Metrics Endpoint Format**: `/metrics` endpoint exclusively serves Prometheus exposition format with no JSON alternative for agents. `getDeploymentHealth()` returns JSON but is not wired to any route.
 
 2. **No Aggregate Error-State API**: No endpoint exists for agents to query:
-
    - Error rates across services
    - Degraded service status
    - Rate-limit quota/consumption

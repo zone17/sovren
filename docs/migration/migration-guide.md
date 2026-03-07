@@ -12,21 +12,25 @@ This guide helps you migrate from legacy NOSTR implementations to the new consol
 The migration scripts handle four key areas:
 
 ### 1. Relay Configuration
+
 - **From**: Hardcoded relay URLs scattered across codebase
 - **To**: Centralized relay configuration in `/packages/shared/src/config/relays.ts`
 - **Benefits**: Easy to update, consistent across app, environment-specific configs
 
 ### 2. Key Storage
+
 - **From**: Unencrypted keys in localStorage or IndexedDB
 - **To**: AES-256-GCM encrypted keys in KeyManagementService
 - **Benefits**: Enhanced security, hardware wallet support, key rotation
 
 ### 3. Event Cache
+
 - **From**: Raw event storage with no deduplication
 - **To**: Optimized EventCache with intelligent deduplication
 - **Benefits**: Lower memory usage, faster lookups, better performance
 
 ### 4. Subscriptions
+
 - **From**: Manual subscription management per relay
 - **To**: Centralized SubscriptionManager with connection pooling
 - **Benefits**: Automatic reconnection, load balancing, health monitoring
@@ -52,6 +56,7 @@ npm run migrate
 ```
 
 This launches a step-by-step wizard that:
+
 - Detects what needs migration
 - Explains each step
 - Confirms actions before making changes
@@ -69,6 +74,7 @@ npm run migrate -- --all --dry-run
 ```
 
 This will:
+
 - Discover all legacy data
 - Show what would be migrated
 - Report potential issues
@@ -110,6 +116,7 @@ npm run migrate -- --status
 ```
 
 Output:
+
 ```
 ╔════════════════════════════════════════════════════════════╗
 ║                   Migration Status                         ║
@@ -133,6 +140,7 @@ npm run migrate -- --all --dry-run
 ```
 
 Review the output carefully:
+
 - Number of items to migrate
 - Estimated time
 - Potential issues
@@ -157,16 +165,19 @@ npm run migrate -- --all --verbose
 After migration completes:
 
 1. **Check migration status**:
+
    ```bash
    npm run migrate -- --status
    ```
 
 2. **Review migration report**:
+
    ```bash
    cat .migration-backups/migration-*/migration-report.json
    ```
 
 3. **Test your application**:
+
    ```bash
    npm run dev
    ```
@@ -191,6 +202,7 @@ This restores all data to pre-migration state.
 ### Migrating Relay Configuration
 
 **What happens**:
+
 1. Scans codebase for hardcoded relay URLs
 2. Discovers relays from config files and localStorage
 3. Deduplicates and prioritizes relays
@@ -198,17 +210,21 @@ This restores all data to pre-migration state.
 5. Updates environment variables
 
 **Command**:
+
 ```bash
 npm run migrate:relay-config
 ```
 
 **Dry run**:
+
 ```bash
 npm run migrate:relay-config -- --dry-run
 ```
 
 **After migration**:
+
 - Update relay imports:
+
   ```typescript
   // Before
   const relays = ['wss://relay.damus.io', 'wss://nos.lol'];
@@ -221,6 +237,7 @@ npm run migrate:relay-config -- --dry-run
 ### Migrating Key Storage
 
 **What happens**:
+
 1. Extracts keys from localStorage and IndexedDB
 2. Validates key formats
 3. Encrypts keys with AES-256-GCM
@@ -228,6 +245,7 @@ npm run migrate:relay-config -- --dry-run
 5. Verifies encryption integrity
 
 **Command**:
+
 ```bash
 npm run migrate:keys
 ```
@@ -235,12 +253,15 @@ npm run migrate:keys
 **Important**: You'll be prompted for an encryption password. **Remember this password** - you cannot recover keys without it!
 
 **Password requirements**:
+
 - Minimum 12 characters
 - Mix of letters, numbers, symbols recommended
 - Store securely (password manager)
 
 **After migration**:
+
 - Update key access:
+
   ```typescript
   // Before
   const privateKey = localStorage.getItem('nostr_private_key');
@@ -255,6 +276,7 @@ npm run migrate:keys
 ### Migrating Event Cache
 
 **What happens**:
+
 1. Loads cached events from old storage
 2. Deduplicates events by ID
 3. Validates event signatures
@@ -262,11 +284,13 @@ npm run migrate:keys
 5. Creates optimized indexes
 
 **Command**:
+
 ```bash
 npm run migrate:events
 ```
 
 **After migration**:
+
 - Event access is automatic
 - Cache limits apply (configurable)
 - Old events are pruned based on TTL
@@ -274,6 +298,7 @@ npm run migrate:events
 ### Migrating Subscriptions
 
 **What happens**:
+
 1. Discovers active subscriptions
 2. Updates filter formats
 3. Migrates to SubscriptionManager
@@ -281,11 +306,13 @@ npm run migrate:events
 5. Preserves subscription state
 
 **Command**:
+
 ```bash
 npm run migrate:subscriptions
 ```
 
 **After migration**:
+
 - Subscriptions auto-reconnect
 - Health monitoring enabled
 - Connection pooling active
@@ -294,13 +321,13 @@ npm run migrate:subscriptions
 
 Typical migration times:
 
-| Component | Small Dataset | Medium Dataset | Large Dataset |
-|-----------|--------------|----------------|---------------|
-| Relay Config | 30 seconds | 1 minute | 2 minutes |
-| Key Storage | 1 minute | 2 minutes | 3 minutes |
-| Event Cache | 2 minutes | 5 minutes | 10+ minutes |
-| Subscriptions | 30 seconds | 1 minute | 2 minutes |
-| **Total** | **4 minutes** | **9 minutes** | **17+ minutes** |
+| Component     | Small Dataset | Medium Dataset | Large Dataset   |
+| ------------- | ------------- | -------------- | --------------- |
+| Relay Config  | 30 seconds    | 1 minute       | 2 minutes       |
+| Key Storage   | 1 minute      | 2 minutes      | 3 minutes       |
+| Event Cache   | 2 minutes     | 5 minutes      | 10+ minutes     |
+| Subscriptions | 30 seconds    | 1 minute       | 2 minutes       |
+| **Total**     | **4 minutes** | **9 minutes**  | **17+ minutes** |
 
 **Small**: < 100 events, < 5 keys, < 10 subscriptions
 **Medium**: 100-1000 events, 5-20 keys, 10-50 subscriptions
@@ -361,6 +388,7 @@ npm run rollback:all -- --backup=.migration-backups/migration-2024-10-26T12-30-0
 ```
 
 **Important**: Rollback is only available if:
+
 1. Backup exists and is intact
 2. Migration completed successfully
 3. No new data created after migration
@@ -370,6 +398,7 @@ npm run rollback:all -- --backup=.migration-backups/migration-2024-10-26T12-30-0
 ### Automatic Validation
 
 Migration automatically validates:
+
 - Data integrity (checksums)
 - No data loss (item counts)
 - Proper encryption
@@ -384,6 +413,7 @@ npm run validate:migration
 ```
 
 This checks:
+
 - All components migrated correctly
 - No orphaned data
 - Performance benchmarks met
@@ -428,6 +458,7 @@ Overall: ✅ PASS
 **Cause**: Migration already completed or no data to migrate
 
 **Solution**:
+
 1. Check migration status: `npm run migrate -- --status`
 2. If already migrated, use `--force` to re-migrate
 3. Verify data exists in legacy storage
@@ -437,6 +468,7 @@ Overall: ✅ PASS
 **Cause**: Invalid password or crypto error
 
 **Solution**:
+
 1. Ensure password meets requirements (12+ chars)
 2. Check Node.js crypto support
 3. Try with different password
@@ -446,6 +478,7 @@ Overall: ✅ PASS
 **Cause**: Error during migration process
 
 **Solution**:
+
 1. Check error messages in console
 2. Review `.migration-backups/*/migration-report.json`
 3. Run with `--verbose` for detailed logs
@@ -456,6 +489,7 @@ Overall: ✅ PASS
 **Cause**: Invalid relay URLs or network issues
 
 **Solution**:
+
 1. Check relay config: `cat packages/shared/src/config/relays.ts`
 2. Test relay connectivity: `npm run test:relays`
 3. Verify environment variables
@@ -569,6 +603,7 @@ After migration, consider:
 ### Q: How do I migrate in stages?
 
 **A**: Use component-specific commands:
+
 ```bash
 npm run migrate -- --relays     # Day 1
 npm run migrate -- --keys       # Day 2

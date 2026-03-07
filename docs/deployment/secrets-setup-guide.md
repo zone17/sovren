@@ -61,11 +61,13 @@ GitHub Secrets are used by GitHub Actions workflows for automated deployments.
 ### Access GitHub Secrets
 
 **Via Web Interface**:
+
 1. Go to `https://github.com/YOUR_USERNAME/sovren`
 2. Click **Settings** → **Secrets and variables** → **Actions**
 3. Click **New repository secret**
 
 **Via CLI** (faster for bulk operations):
+
 ```bash
 # Set a secret
 gh secret set SECRET_NAME
@@ -86,6 +88,7 @@ gh secret set SECRET_NAME -b"secret-value"
 **Purpose**: Allows GitHub Actions to deploy to Vercel
 
 **How to Obtain**:
+
 1. Go to https://vercel.com/account/tokens
 2. Click **Create Token**
 3. **Name**: `GitHub Actions Deploy - Sovren`
@@ -95,6 +98,7 @@ gh secret set SECRET_NAME -b"secret-value"
 7. **Copy the token** (shown only once!)
 
 **Add to GitHub**:
+
 ```bash
 # Via CLI (recommended - token stays secure)
 gh secret set VERCEL_TOKEN
@@ -106,6 +110,7 @@ gh secret set VERCEL_TOKEN
 ```
 
 **Validation**:
+
 ```bash
 # Test token works
 vercel whoami --token YOUR_TOKEN
@@ -123,6 +128,7 @@ vercel whoami --token YOUR_TOKEN
 **How to Obtain**:
 
 **Method 1: Via Vercel CLI (easiest)**
+
 ```bash
 # Link project and view config
 cd packages/frontend
@@ -134,12 +140,14 @@ cat .vercel/project.json
 ```
 
 **Method 2: Via Vercel Dashboard**
+
 1. Go to https://vercel.com/[your-username]/[project-name]/settings
 2. **Settings** → **General**
 3. Scroll to **Project ID** section
 4. Copy the **Team/Org ID**
 
 **Add to GitHub**:
+
 ```bash
 gh secret set VERCEL_ORG_ID -b"team_xxxxxxxxxxxx"
 ```
@@ -155,16 +163,19 @@ gh secret set VERCEL_ORG_ID -b"team_xxxxxxxxxxxx"
 **How to Obtain**:
 
 **Method 1: Via Vercel CLI**
+
 ```bash
 cat .vercel/project.json
 # Look for "projectId": "prj_xxxxxxxxxxxx"
 ```
 
 **Method 2: Via Vercel Dashboard**
+
 1. Go to project **Settings** → **General**
 2. Copy **Project ID**
 
 **Add to GitHub**:
+
 ```bash
 gh secret set VERCEL_PROJECT_ID -b"prj_xxxxxxxxxxxx"
 ```
@@ -197,12 +208,14 @@ No setup needed! GitHub automatically provides `GITHUB_TOKEN` to workflows.
 7. **Copy the token** (shown only once!)
 
 **Add to GitHub**:
+
 ```bash
 # Only if not using GITHUB_TOKEN
 gh secret set GHCR_TOKEN -b"ghp_xxxxxxxxxxxx"
 ```
 
 **Workflow Usage**:
+
 ```yaml
 # Prefer GITHUB_TOKEN
 - name: Login to GHCR
@@ -231,6 +244,7 @@ gh secret set GHCR_TOKEN -b"ghp_xxxxxxxxxxxx"
 6. **Copy the token**
 
 **Add to GitHub**:
+
 ```bash
 # Username
 gh secret set DOCKER_USERNAME -b"your-dockerhub-username"
@@ -253,12 +267,14 @@ gh secret set DOCKER_PASSWORD
 **How to Obtain**:
 
 **Using Supabase (Recommended)**:
+
 1. Go to https://app.supabase.com/project/YOUR_PROJECT/settings/database
 2. **Database Settings** → **Connection string**
 3. Select **URI** tab
 4. Copy connection string (format: `postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT].supabase.co:5432/postgres`)
 
 **Using External PostgreSQL**:
+
 ```bash
 # Format
 postgresql://username:password@host:port/database
@@ -268,6 +284,7 @@ postgresql://sovren_prod:secure_password@postgres.example.com:5432/sovren_produc
 ```
 
 **Add to GitHub**:
+
 ```bash
 # Production
 gh secret set DATABASE_URL
@@ -279,6 +296,7 @@ gh secret set DATABASE_URL_STAGING
 ```
 
 **Security Notes**:
+
 - ⚠️ Contains password - never log or expose
 - Use SSL mode: add `?sslmode=require` to connection string
 - Restrict IP access in database firewall
@@ -292,11 +310,13 @@ gh secret set DATABASE_URL_STAGING
 **Purpose**: Supabase project URL for authentication and database
 
 **How to Obtain**:
+
 1. Go to https://app.supabase.com/project/YOUR_PROJECT/settings/api
 2. **Project URL** section
 3. Copy URL (format: `https://YOUR-PROJECT.supabase.co`)
 
 **Add to GitHub**:
+
 ```bash
 # Production
 gh secret set SUPABASE_URL -b"https://your-project.supabase.co"
@@ -314,11 +334,13 @@ gh secret set SUPABASE_URL_STAGING -b"https://your-staging-project.supabase.co"
 **Purpose**: Public anonymous key for client-side Supabase operations
 
 **How to Obtain**:
+
 1. Go to https://app.supabase.com/project/YOUR_PROJECT/settings/api
 2. **Project API keys** section
 3. Copy **anon** **public** key
 
 **Add to GitHub**:
+
 ```bash
 # Production
 gh secret set SUPABASE_ANON_KEY
@@ -329,6 +351,7 @@ gh secret set SUPABASE_ANON_KEY_STAGING
 ```
 
 **Security Notes**:
+
 - Safe to expose in frontend (Row Level Security protects data)
 - Still recommended to keep as secret in CI/CD
 
@@ -341,12 +364,14 @@ gh secret set SUPABASE_ANON_KEY_STAGING
 **Purpose**: Admin key for server-side Supabase operations (bypasses RLS)
 
 **How to Obtain**:
+
 1. Go to https://app.supabase.com/project/YOUR_PROJECT/settings/api
 2. **Project API keys** section
 3. Copy **service_role** **secret** key
 4. ⚠️ Click **Reveal** to show the key
 
 **Add to GitHub**:
+
 ```bash
 # Production
 gh secret set SUPABASE_SERVICE_ROLE_KEY
@@ -357,6 +382,7 @@ gh secret set SUPABASE_SERVICE_ROLE_KEY_STAGING
 ```
 
 **Security Notes**:
+
 - 🔴 **CRITICAL**: Never expose in frontend or logs
 - Grants full database access, bypasses Row Level Security
 - Use only in trusted backend services
@@ -372,16 +398,19 @@ gh secret set SUPABASE_SERVICE_ROLE_KEY_STAGING
 **How to Obtain**:
 
 **Option 1: Upstash (Free tier available)**
+
 1. Go to https://upstash.com/
 2. Create account and database
 3. Copy **Redis URL** (format: `rediss://default:PASSWORD@HOST:PORT`)
 
 **Option 2: Redis Cloud**
+
 1. Go to https://redis.com/try-free/
 2. Create database
 3. Copy connection string
 
 **Option 3: Self-hosted**
+
 ```bash
 # Format with authentication
 redis://username:password@host:port
@@ -391,6 +420,7 @@ redis://localhost:6379
 ```
 
 **Add to GitHub**:
+
 ```bash
 # Production (use TLS: rediss://)
 gh secret set REDIS_URL -b"rediss://default:password@redis.example.com:6379"
@@ -400,6 +430,7 @@ gh secret set REDIS_URL_STAGING -b"rediss://default:staging-password@redis-stagi
 ```
 
 **Security Notes**:
+
 - Use TLS in production (`rediss://` not `redis://`)
 - Enable authentication (not default Redis)
 
@@ -414,6 +445,7 @@ gh secret set REDIS_URL_STAGING -b"rediss://default:staging-password@redis-stagi
 **Purpose**: Signs and verifies JWT tokens for user authentication
 
 **How to Generate**:
+
 ```bash
 # Generate 64-character secure random string
 openssl rand -hex 64
@@ -423,6 +455,7 @@ openssl rand -base64 48
 ```
 
 **Add to GitHub**:
+
 ```bash
 # Production
 JWT_SECRET=$(openssl rand -hex 64)
@@ -434,6 +467,7 @@ gh secret set JWT_SECRET_STAGING -b"$JWT_SECRET_STAGING"
 ```
 
 **Security Notes**:
+
 - 🔴 **CRITICAL**: Must be cryptographically secure random
 - Minimum 64 characters for production
 - Rotation invalidates all existing user sessions
@@ -448,12 +482,14 @@ gh secret set JWT_SECRET_STAGING -b"$JWT_SECRET_STAGING"
 **Purpose**: Signs session cookies
 
 **How to Generate**:
+
 ```bash
 # Generate 64-character secure random string
 openssl rand -hex 64
 ```
 
 **Add to GitHub**:
+
 ```bash
 # Production
 SESSION_SECRET=$(openssl rand -hex 64)
@@ -465,6 +501,7 @@ gh secret set SESSION_SECRET_STAGING -b"$SESSION_SECRET_STAGING"
 ```
 
 **Security Notes**:
+
 - Must be different from JWT_SECRET
 - Rotation invalidates all active sessions
 
@@ -477,12 +514,14 @@ gh secret set SESSION_SECRET_STAGING -b"$SESSION_SECRET_STAGING"
 **Purpose**: Encrypts sensitive data at rest (e.g., private NOSTR keys)
 
 **How to Generate**:
+
 ```bash
 # Generate 32-byte (64 hex chars) encryption key
 openssl rand -hex 32
 ```
 
 **Add to GitHub**:
+
 ```bash
 # Production
 ENCRYPTION_KEY=$(openssl rand -hex 32)
@@ -494,6 +533,7 @@ gh secret set ENCRYPTION_KEY_STAGING -b"$ENCRYPTION_KEY_STAGING"
 ```
 
 **Security Notes**:
+
 - 🔴 **CRITICAL**: Rotation requires re-encrypting all encrypted data
 - Store old key temporarily during rotation for data migration
 - Exactly 32 bytes (64 hex characters) required
@@ -507,18 +547,21 @@ gh secret set ENCRYPTION_KEY_STAGING -b"$ENCRYPTION_KEY_STAGING"
 **Purpose**: Password for Cosign private key to sign Docker images
 
 **How to Generate**:
+
 ```bash
 # Generate strong password
 openssl rand -base64 32
 ```
 
 **Add to GitHub**:
+
 ```bash
 COSIGN_PASSWORD=$(openssl rand -base64 32)
 gh secret set COSIGN_PASSWORD -b"$COSIGN_PASSWORD"
 ```
 
 **Security Notes**:
+
 - Used with Cosign for container image signing
 - Required for supply chain security (SLSA)
 
@@ -533,6 +576,7 @@ gh secret set COSIGN_PASSWORD -b"$COSIGN_PASSWORD"
 **Purpose**: Sends deployment and alert notifications to Slack
 
 **How to Obtain**:
+
 1. Go to https://api.slack.com/apps
 2. Create new app or select existing
 3. **Incoming Webhooks** → **Activate Incoming Webhooks**
@@ -542,6 +586,7 @@ gh secret set COSIGN_PASSWORD -b"$COSIGN_PASSWORD"
 7. Copy **Webhook URL**
 
 **Add to GitHub**:
+
 ```bash
 gh secret set SLACK_WEBHOOK_URL -b"https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX"
 
@@ -550,6 +595,7 @@ gh secret set SLACK_WEBHOOK_URL_STAGING -b"https://hooks.slack.com/services/..."
 ```
 
 **Validation**:
+
 ```bash
 # Test webhook
 curl -X POST -H 'Content-type: application/json' \
@@ -566,6 +612,7 @@ curl -X POST -H 'Content-type: application/json' \
 **Purpose**: Data Source Name for Sentry error tracking
 
 **How to Obtain**:
+
 1. Go to https://sentry.io/
 2. Create account and organization
 3. Create new project (select **React** for frontend)
@@ -573,6 +620,7 @@ curl -X POST -H 'Content-type: application/json' \
 5. Format: `https://PUBLIC_KEY@sentry.io/PROJECT_ID`
 
 **Add to GitHub**:
+
 ```bash
 # Production
 gh secret set SENTRY_DSN -b"https://public_key@o123456.ingest.sentry.io/123456"
@@ -590,6 +638,7 @@ gh secret set SENTRY_DSN_STAGING -b"https://staging_key@o123456.ingest.sentry.io
 **Purpose**: Access OpenAI API for AI-powered features
 
 **How to Obtain**:
+
 1. Go to https://platform.openai.com/api-keys
 2. Click **Create new secret key**
 3. **Name**: `Sovren Production`
@@ -597,12 +646,14 @@ gh secret set SENTRY_DSN_STAGING -b"https://staging_key@o123456.ingest.sentry.io
 5. Copy key (starts with `sk-proj-...`)
 
 **Add to GitHub**:
+
 ```bash
 gh secret set OPENAI_API_KEY
 # Paste API key and press Enter, then Ctrl+D
 ```
 
 **Security Notes**:
+
 - Monitor usage to prevent unexpected costs
 - Set usage limits in OpenAI dashboard
 - Consider using restricted keys per environment
@@ -616,12 +667,14 @@ gh secret set OPENAI_API_KEY
 **Purpose**: Access Claude API for AI-powered features
 
 **How to Obtain**:
+
 1. Go to https://console.anthropic.com/
 2. **API Keys** → **Create Key**
 3. **Name**: `Sovren Production`
 4. Copy key (starts with `sk-ant-api03-...`)
 
 **Add to GitHub**:
+
 ```bash
 gh secret set ANTHROPIC_API_KEY
 # Paste API key and press Enter, then Ctrl+D
@@ -638,10 +691,12 @@ gh secret set ANTHROPIC_API_KEY
 **Purpose**: Authenticates to private NOSTR relays (if used)
 
 **How to Obtain**:
+
 - Provided by your private relay operator
 - Only needed if using authenticated relays
 
 **Add to GitHub** (if needed):
+
 ```bash
 gh secret set NOSTR_RELAY_SECRET -b"your-relay-secret"
 ```
@@ -657,12 +712,14 @@ gh secret set NOSTR_RELAY_SECRET -b"your-relay-secret"
 **How to Obtain**:
 
 **Option 1: LNbits (Recommended for ease)**
+
 1. Go to https://legend.lnbits.com (testnet) or your LNbits instance
 2. Create wallet
 3. **Extensions** → **LndHub**
 4. Copy **Admin Key** (acts as macaroon)
 
 **Option 2: Direct LND Access**
+
 ```bash
 # SSH to your Lightning node
 ssh lightning-node
@@ -673,6 +730,7 @@ xxd -ps -u -c 1000 ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 ```
 
 **Add to GitHub**:
+
 ```bash
 # Production (mainnet)
 gh secret set LIGHTNING_NODE_MACAROON
@@ -683,6 +741,7 @@ gh secret set LIGHTNING_NODE_MACAROON_STAGING
 ```
 
 **Security Notes**:
+
 - 🔴 **CRITICAL**: Admin macaroon grants full node access
 - Consider creating restricted macaroons (invoice-only for production)
 - Never expose in frontend or logs
@@ -700,6 +759,7 @@ gh secret set LIGHTNING_NODE_MACAROON_STAGING
 **LNbits**: Not needed (HTTPS endpoint)
 
 **Direct LND**:
+
 ```bash
 # SSH to Lightning node
 cat ~/.lnd/tls.cert | base64
@@ -707,6 +767,7 @@ cat ~/.lnd/tls.cert | base64
 ```
 
 **Add to GitHub**:
+
 ```bash
 gh secret set LIGHTNING_NODE_TLS_CERT
 # Paste base64 cert and press Enter, then Ctrl+D
@@ -723,16 +784,19 @@ gh secret set LIGHTNING_NODE_TLS_CERT
 **How to Obtain**:
 
 **LNbits**:
+
 ```
 https://legend.lnbits.com/api/v1
 ```
 
 **Direct LND**:
+
 ```
 https://your-node.example.com:10009
 ```
 
 **Add to GitHub**:
+
 ```bash
 # Production
 gh secret set LIGHTNING_NODE_URL -b"https://your-node.example.com:10009"
@@ -752,11 +816,13 @@ Vercel environment variables are used by the frontend application at build time 
 ### Access Vercel Environment Variables
 
 **Via Web Interface**:
+
 1. Go to https://vercel.com/YOUR_USERNAME/sovren
 2. **Settings** → **Environment Variables**
 3. Click **Add New**
 
 **Via CLI** (recommended):
+
 ```bash
 # Add variable
 vercel env add VARIABLE_NAME
@@ -813,6 +879,7 @@ vercel env add VITE_NODE_ENV production
 ```
 
 **Bulk Import via `.env` file**:
+
 ```bash
 # Create .env.production file
 cat > .env.production << 'EOF'
@@ -837,6 +904,7 @@ EOF
 ### Production Environment
 
 **Checklist**:
+
 - [ ] All 34 GitHub Secrets configured
 - [ ] All 18 Vercel production environment variables configured
 - [ ] JWT_SECRET minimum 64 characters
@@ -851,6 +919,7 @@ EOF
 ### Staging Environment
 
 **Checklist**:
+
 - [ ] All secrets have `_STAGING` suffix in GitHub
 - [ ] Separate Supabase project for staging
 - [ ] Separate database (staging)
@@ -861,6 +930,7 @@ EOF
 ### Development Environment (Local)
 
 **Setup**:
+
 ```bash
 # Copy template
 cp env.development .env
@@ -907,6 +977,7 @@ npm run validate:env
 ### 1. Validate GitHub Secrets
 
 **Run Validation Workflow**:
+
 ```bash
 # Trigger secrets validation workflow
 gh workflow run validate-secrets.yml
@@ -919,6 +990,7 @@ gh run view --log
 ```
 
 **Expected Output**:
+
 ```
 ✅ All required production secrets present
 ✅ All required staging secrets present
@@ -929,6 +1001,7 @@ gh run view --log
 ### 2. Validate Vercel Environment
 
 **Test Vercel Deployment**:
+
 ```bash
 # Deploy preview to test secrets
 vercel --prod
@@ -940,6 +1013,7 @@ vercel logs YOUR_DEPLOYMENT_URL
 ### 3. Test Secret Connectivity
 
 **Database Connection**:
+
 ```bash
 # Test DATABASE_URL
 psql "$DATABASE_URL" -c "SELECT 1;"
@@ -947,6 +1021,7 @@ psql "$DATABASE_URL" -c "SELECT 1;"
 ```
 
 **Redis Connection**:
+
 ```bash
 # Test REDIS_URL
 redis-cli -u "$REDIS_URL" ping
@@ -954,6 +1029,7 @@ redis-cli -u "$REDIS_URL" ping
 ```
 
 **Vercel API**:
+
 ```bash
 # Test VERCEL_TOKEN
 vercel whoami --token YOUR_TOKEN
@@ -961,6 +1037,7 @@ vercel whoami --token YOUR_TOKEN
 ```
 
 **Slack Webhook**:
+
 ```bash
 # Test SLACK_WEBHOOK_URL
 curl -X POST -H 'Content-type: application/json' \
@@ -993,6 +1070,7 @@ curl -X POST -H 'Content-type: application/json' \
 **Problem**: GitHub Actions can't access secret
 
 **Solutions**:
+
 1. Verify secret name exactly matches (case-sensitive)
 2. Check secret is set at repository level (not organization)
 3. Ensure workflow has correct permissions
@@ -1013,6 +1091,7 @@ env:
 **Problem**: Vercel build fails due to missing variable
 
 **Solutions**:
+
 1. Check variable is set for correct environment (Production/Preview/Development)
 2. Verify variable name has `VITE_` prefix for frontend
 3. Redeploy after adding variable
@@ -1023,6 +1102,7 @@ env:
 **Problem**: Secret value is incorrect or expired
 
 **Solutions**:
+
 1. Regenerate the secret at source (e.g., new Vercel token)
 2. Update in GitHub Secrets
 3. Trigger re-deployment
@@ -1033,6 +1113,7 @@ env:
 **Problem**: `.env` file not being read
 
 **Solutions**:
+
 ```bash
 # Verify .env file exists
 ls -la .env

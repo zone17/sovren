@@ -28,6 +28,7 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 **Lines**: 100+ lines
 
 **What It Shows**:
+
 - Complete payment system architecture
 - All major components and their relationships
 - Data flow across 28 numbered steps
@@ -40,6 +41,7 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
   - External Services (Email, Analytics, Monitoring)
 
 **Key Features**:
+
 - Color-coded components by type
 - Complete integration flow from user to database
 - Real-time WebSocket updates
@@ -47,6 +49,7 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 - External service dependencies
 
 **Use Cases**:
+
 - System onboarding for new developers
 - Architecture reviews and planning
 - Integration point identification
@@ -61,12 +64,14 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 **Lines**: 150+ lines
 
 **What It Shows**:
+
 - Complete BOLT11 invoice generation sequence
 - 10 participants: Creator, UI, API, Auth, LPS, PSM, LND, DB, Cache, WS
 - Step-by-step process from user request to QR code display
 - Real-time notification setup
 
 **Key Steps Documented**:
+
 1. User initiates payment request
 2. API authentication and validation
 3. Lightning Payment Service invoice generation
@@ -79,6 +84,7 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 10. Background monitoring activation
 
 **Technical Details**:
+
 - Request/response payloads shown
 - Error handling paths (invalid token, validation failures)
 - Database transaction boundaries
@@ -86,6 +92,7 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 - State machine event logging
 
 **Use Cases**:
+
 - Understanding invoice creation process
 - Debugging invoice generation issues
 - API integration reference
@@ -100,12 +107,14 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 **Lines**: 180+ lines
 
 **What It Shows**:
+
 - Complete cryptographic payment verification process
 - 10 participants: Scheduler, PRS, Cache, LND, Crypto, PSM, DB, WS
 - PAY-001 implementation details
 - Security features (preimage verification, constant-time comparison)
 
 **Key Steps Documented**:
+
 1. Retry scheduler trigger (scheduled/webhook timeout/manual)
 2. Payment record retrieval
 3. State validation (PENDING/FAILED only)
@@ -118,6 +127,7 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 10. Real-time WebSocket notification
 
 **Security Features Highlighted**:
+
 - Cryptographic proof validation (preimage verification)
 - SHA-256 hash computation: `SHA256(preimage) == payment_hash`
 - Constant-time comparison (prevents timing attacks)
@@ -125,12 +135,14 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 - State validation before processing
 
 **Error Handling Paths**:
+
 - Network errors → Safe retry
 - Invalid payment hash → Skip retry (terminal)
 - Missing preimage → Continue monitoring
 - Hash mismatch → Security alert + reject payment
 
 **Use Cases**:
+
 - Understanding PAY-001 implementation
 - Security audit reference
 - Cryptographic verification validation
@@ -145,12 +157,14 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 **Lines**: 200+ lines
 
 **What It Shows**:
+
 - Complete webhook processing with security and race condition prevention
 - 11 participants: LN, LB, Rate, WHR, WHV, Dedup, Lock, PSM, DB, Log, WS
 - PAY-002 (Race Conditions) and PAY-003 (Signature Verification) integration
 - Multi-layer security and reliability guarantees
 
 **Security Layer (PAY-003)**:
+
 1. Rate limiting (100 requests/minute per IP)
 2. Header extraction (x-webhook-signature, x-webhook-timestamp)
 3. Timestamp validation (5-minute window, replay attack prevention)
@@ -160,6 +174,7 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 7. IP logging for all failed attempts
 
 **Race Condition Prevention (PAY-002)**:
+
 1. Idempotency key generation (webhook_id or hash)
 2. Database unique constraint enforcement
 3. Duplicate detection → 200 OK response (idempotency compliance)
@@ -168,12 +183,14 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 6. Out-of-order webhook detection (timestamp + logical ordering)
 
 **Payment Processing**:
+
 1. Payment State Machine atomic transition
 2. Webhook event audit log creation
 3. Transaction commit (all-or-nothing)
 4. Real-time WebSocket broadcast
 
 **Error Scenarios Documented**:
+
 - Rate limit exceeded → 429 Too Many Requests
 - Missing headers → 401 Unauthorized
 - Timestamp expired → 401 Unauthorized (replay attack)
@@ -182,6 +199,7 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 - Concurrent processing → 200 OK (graceful)
 
 **Use Cases**:
+
 - Understanding PAY-002 and PAY-003 implementations
 - Security validation and auditing
 - Race condition testing scenarios
@@ -196,12 +214,14 @@ All payment features (PAY-001 through PAY-017) now have complete visual document
 **Lines**: 120+ lines
 
 **What It Shows**:
+
 - Enhanced exponential backoff with circuit breaker pattern
 - Complete decision tree for retry logic
 - Algorithm implementations with examples
 - Circuit breaker state transitions
 
 **Exponential Backoff Algorithm**:
+
 ```
 exponentialDelay = baseDelay * (2 ^ attemptNumber)
 cappedDelay = min(exponentialDelay, maxDelay)
@@ -209,6 +229,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 ```
 
 **Example Retry Schedule** (with full jitter):
+
 - Attempt 1: 0-1,000ms (avg 500ms)
 - Attempt 2: 0-2,000ms (avg 1,000ms)
 - Attempt 3: 0-4,000ms (avg 2,000ms)
@@ -216,11 +237,13 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 - Attempt 5: 0-16,000ms (avg 8,000ms)
 
 **Circuit Breaker States**:
+
 - **CLOSED**: Normal operation, retries allowed
 - **OPEN**: After 5 consecutive failures, all retries blocked for 60 seconds
 - **HALF-OPEN**: After timeout, single test retry allowed
 
 **Decision Points Visualized**:
+
 - Error code retryability check
 - Max attempts validation (default: 5)
 - Circuit breaker state evaluation
@@ -230,6 +253,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 - Retry success/failure recording
 
 **Benefits Documented**:
+
 - Prevents thundering herd (full jitter)
 - Protects against cascading failures (circuit breaker)
 - Faster recovery (1s base vs old 1min)
@@ -237,6 +261,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 - 50% average delay reduction with jitter
 
 **Use Cases**:
+
 - Understanding PAY-009 implementation
 - Retry behavior validation
 - Performance optimization analysis
@@ -251,6 +276,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 **Lines**: 160+ lines
 
 **What It Shows**:
+
 - Complete payment lifecycle with all valid state transitions
 - Six states with detailed sub-states
 - Transition triggers, conditions, and metadata
@@ -289,18 +315,21 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
    - Complete audit trail maintained
 
 **Transition Metadata**:
+
 - Triggers (webhook events, timeouts, manual actions)
 - Users (content creator, platform admin)
 - Conditions (attempt limits, circuit breaker state)
 - Metadata (payment proofs, error details, refund reasons)
 
 **Implementation Details**:
+
 - Atomic transitions via PostgreSQL stored procedure
 - Event sourcing with complete audit trail
 - Concurrent update handling via database locks
 - Terminal state protection (database + application)
 
 **Use Cases**:
+
 - Understanding PAY-008 implementation
 - State transition validation
 - Event sourcing verification
@@ -314,6 +343,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 **Lines**: 450+ lines
 
 **Contents**:
+
 - Overview and purpose
 - Index of all 6 diagrams with:
   - GitHub visual rendering links
@@ -331,6 +361,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 - Changelog
 
 **Navigation Features**:
+
 - Quick links to all diagrams
 - Related story cross-references
 - Code location links
@@ -340,27 +371,28 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 
 ## 🏆 QUALITY GATES ACHIEVED
 
-| Quality Gate | Status | Evidence |
-|--------------|--------|----------|
-| All 6 diagrams created | ✅ PASS | Files created in `/docs/architecture/diagrams/payment/` |
-| Diagrams render correctly | ✅ PASS | Verified in Mermaid Live Editor |
-| GitHub visual links working | ✅ PASS | Links formatted for native GitHub rendering |
-| Interactive editor links | ✅ PASS | Mermaid Live Editor URLs generated |
-| Comprehensive annotations | ✅ PASS | Notes, descriptions, examples included |
-| Color-coded styling | ✅ PASS | Component types distinguished by color |
-| Implementation-accurate | ✅ PASS | Reflects actual PAY-001 through PAY-017 code |
-| Security features documented | ✅ PASS | HMAC, preimage verification, rate limiting shown |
-| Error handling visualized | ✅ PASS | All error paths documented |
-| Related story links | ✅ PASS | Cross-referenced to completion summaries |
-| Diagram index complete | ✅ PASS | README.md with navigation and usage guides |
-| CHANGELOG updated | ✅ PASS | v2.7.10 entry with complete details |
-| @project-rules.mdc compliant | ✅ PASS | Satisfies Commandment #11 (visualization) |
+| Quality Gate                 | Status  | Evidence                                                |
+| ---------------------------- | ------- | ------------------------------------------------------- |
+| All 6 diagrams created       | ✅ PASS | Files created in `/docs/architecture/diagrams/payment/` |
+| Diagrams render correctly    | ✅ PASS | Verified in Mermaid Live Editor                         |
+| GitHub visual links working  | ✅ PASS | Links formatted for native GitHub rendering             |
+| Interactive editor links     | ✅ PASS | Mermaid Live Editor URLs generated                      |
+| Comprehensive annotations    | ✅ PASS | Notes, descriptions, examples included                  |
+| Color-coded styling          | ✅ PASS | Component types distinguished by color                  |
+| Implementation-accurate      | ✅ PASS | Reflects actual PAY-001 through PAY-017 code            |
+| Security features documented | ✅ PASS | HMAC, preimage verification, rate limiting shown        |
+| Error handling visualized    | ✅ PASS | All error paths documented                              |
+| Related story links          | ✅ PASS | Cross-referenced to completion summaries                |
+| Diagram index complete       | ✅ PASS | README.md with navigation and usage guides              |
+| CHANGELOG updated            | ✅ PASS | v2.7.10 entry with complete details                     |
+| @project-rules.mdc compliant | ✅ PASS | Satisfies Commandment #11 (visualization)               |
 
 ---
 
 ## 📊 METRICS
 
 **Documentation Coverage**:
+
 - Total diagrams: 6
 - Total lines of Mermaid code: 900+
 - Total lines of documentation: 450+ (README)
@@ -370,6 +402,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 - State transitions documented: 10+
 
 **Viewing Options**:
+
 - GitHub native rendering: ✅
 - Mermaid Live Editor: ✅
 - VS Code preview: ✅
@@ -380,6 +413,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 ## 📁 FILES CREATED
 
 ### Diagram Files
+
 1. `/docs/architecture/diagrams/payment/payment-architecture-overview.mmd` - 100+ lines
 2. `/docs/architecture/diagrams/payment/invoice-creation-flow.mmd` - 150+ lines
 3. `/docs/architecture/diagrams/payment/payment-verification-flow.mmd` - 180+ lines
@@ -388,10 +422,12 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 6. `/docs/architecture/diagrams/payment/payment-state-machine-enhanced.mmd` - 160+ lines
 
 ### Documentation Files
+
 7. `/docs/architecture/diagrams/payment/README.md` - 450+ lines (diagram index)
 8. `/docs/implementation-summaries/PAY-018-COMPLETION-SUMMARY.md` - This document
 
 ### Updated Files
+
 9. `/CHANGELOG.md` - Added v2.7.10 entry
 
 **Total Lines Created**: 1,400+ lines of documentation and diagrams
@@ -401,24 +437,28 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 ## 🎓 BENEFITS
 
 ### For Developers
+
 - **Onboarding**: Visual system overview accelerates new developer ramp-up
 - **Integration**: Clear integration points and API contracts
 - **Debugging**: Trace issues through visual flow diagrams
 - **Architecture**: Understand component relationships and data flows
 
 ### For QA/Testing
+
 - **Test Scenarios**: Visual reference for all test cases
 - **Edge Cases**: Error handling paths clearly documented
 - **State Transitions**: Validate all state machine transitions
 - **Security**: Verify security features (HMAC, preimage, rate limiting)
 
 ### For Product/Management
+
 - **System Understanding**: Non-technical overview of payment flows
 - **Feature Planning**: Visual context for new feature discussions
 - **Risk Assessment**: Security and reliability features clearly shown
 - **Documentation**: Professional diagrams for stakeholder presentations
 
 ### For Operations
+
 - **Troubleshooting**: Visual reference for production issue diagnosis
 - **Monitoring**: Understand metrics in context of flows
 - **Incident Response**: Trace failures through documented paths
@@ -429,6 +469,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 ## 🔗 INTEGRATION WITH EXISTING DOCUMENTATION
 
 **Linked to Implementation Summaries**:
+
 - PAY-001 Completion Summary: `/packages/backend/PAY-001-COMPLETION-SUMMARY.md`
 - PAY-002 Completion Summary: `/packages/backend/PAY-002-COMPLETION-SUMMARY.md`
 - PAY-003 Completion Summary: `/PAY-003-COMPLETION-SUMMARY.md`
@@ -436,12 +477,14 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 - PAY-009 Completion Summary: `/packages/backend/PAY-009-COMPLETION-SUMMARY.md`
 
 **Linked to Code Locations**:
+
 - Payment State Machine: `/packages/backend/src/services/payment/PaymentStateMachine.ts`
 - Payment Retry Service: `/packages/backend/src/services/payment/PaymentRetryService.ts`
 - Lightning Payment Service: `/packages/backend/src/services/lightning-payment-service.ts`
 - Webhook Routes: `/packages/backend/src/routes/webhooks.ts`
 
 **Linked to Architecture Docs**:
+
 - Mermaid Diagram Guide: `/docs/development/mermaid-diagram-guide.md`
 - Elite Architecture: `/ELITE_ARCHITECTURE_DOCUMENTATION.md`
 - Feature Architecture Guide: `/FEATURE_ARCHITECTURE_GUIDE.md`
@@ -451,24 +494,31 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 ## 📚 VIEWING INSTRUCTIONS
 
 ### GitHub (Recommended)
+
 GitHub natively renders Mermaid diagrams. Navigate to any `.mmd` file and view directly:
+
 ```
 https://github.com/Blankeeir/Sovren/blob/main/docs/architecture/diagrams/payment/payment-architecture-overview.mmd
 ```
 
 ### Mermaid Live Editor (Interactive)
+
 For real-time editing and exporting:
+
 1. Click any "Mermaid Live Editor" link in the README
 2. Modify diagram in browser
 3. Export to PNG, SVG, or PDF
 
 ### VS Code
+
 1. Install extension: `Markdown Preview Mermaid Support`
 2. Open any `.mmd` file
 3. Preview: `Ctrl+Shift+V` (Windows/Linux) or `Cmd+Shift+V` (Mac)
 
 ### Command Line
+
 Generate images using Mermaid CLI:
+
 ```bash
 npm install -g @mermaid-js/mermaid-cli
 cd /docs/architecture/diagrams/payment
@@ -488,6 +538,7 @@ mmdc -i payment-architecture-overview.mmd -o payment-architecture-overview.png
 5. **Retry Logic Changes**: Update Retry Logic Flow
 
 **Update Process**:
+
 1. Modify `.mmd` source file
 2. Verify rendering in Mermaid Live Editor
 3. Update README.md if new diagram added
@@ -506,6 +557,7 @@ mmdc -i payment-architecture-overview.mmd -o payment-architecture-overview.png
 **Ready for Use**: ✅ **YES**
 
 **Next Steps**:
+
 1. ✅ All diagrams created and validated
 2. ✅ Documentation index complete
 3. ✅ CHANGELOG updated

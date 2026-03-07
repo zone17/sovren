@@ -31,7 +31,10 @@ export const followApi = {
     userId: string,
     params?: { page?: number; limit?: number }
   ): Promise<{ followers: FollowRelationship[]; total: number }> {
-    return apiClient.get(`${BASE}/${userId}/followers`, params as Record<string, number | undefined>);
+    return apiClient.get(
+      `${BASE}/${userId}/followers`,
+      params as Record<string, number | undefined>
+    );
   },
 
   /** GET /api/v2/network/users/:userId/following — paginated list of creators userId follows */
@@ -39,7 +42,10 @@ export const followApi = {
     userId: string,
     params?: { page?: number; limit?: number }
   ): Promise<{ following: FollowRelationship[]; total: number }> {
-    return apiClient.get(`${BASE}/${userId}/following`, params as Record<string, number | undefined>);
+    return apiClient.get(
+      `${BASE}/${userId}/following`,
+      params as Record<string, number | undefined>
+    );
   },
 
   /** GET /api/v2/network/users/:userId/follow-counts — follower/following counts for userId */

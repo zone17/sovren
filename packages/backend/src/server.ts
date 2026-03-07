@@ -59,10 +59,14 @@ async function startServer(): Promise<void> {
     try {
       await initializeContainer();
 
-      // Eager initialization (#702): resolve NotificationPersistenceService at startup
-      // so event subscriptions activate immediately, not on first HTTP request.
+      // Eager initialization (#702/#728): resolve NotificationPersistenceService at startup
+      // and call subscribeToEvents() exactly ONCE so subscriptions activate immediately.
+      // The factory no longer calls subscribeToEvents() to avoid double-registration.
       try {
-        container.resolve(TYPES.NotificationPersistenceService);
+        const notificationService = container.resolve(TYPES.NotificationPersistenceService) as {
+          subscribeToEvents(): void;
+        };
+        notificationService.subscribeToEvents();
       } catch {
         logger.warn(
           'NotificationPersistenceService eager init failed — events will activate on first request'

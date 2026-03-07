@@ -1,16 +1,18 @@
 ---
 status: pending
 priority: p1
-issue_id: "193"
+issue_id: '193'
 tags: [code-review, pr-85, architecture]
 ---
 
 # SERVICE_DEPENDENCIES Map Contains Incorrect Entries
 
 ## Problem Statement
+
 The `SERVICE_DEPENDENCIES` map in `container/types.ts` lists wrong dependencies for `PlatformConnectionService` (claims `SecretsService` and `QueueService` but neither is actually injected via constructor). The map also uses an `as any` cast via `getServiceDependencies()`, silencing all type errors. This means the DI container may instantiate services in the wrong order, pass wrong dependencies, or fail at runtime with cryptic errors instead of clear compile-time failures.
 
 ## Findings
+
 - **File**: `packages/backend/src/container/types.ts`, approximately line 582
   - `SERVICE_DEPENDENCIES` map entry for `PlatformConnectionService` lists `SecretsService` and `QueueService` as dependencies
   - `PlatformConnectionService` constructor does NOT inject `SecretsService` or `QueueService`
@@ -21,6 +23,7 @@ The `SERVICE_DEPENDENCIES` map in `container/types.ts` lists wrong dependencies 
 ## Proposed Solutions
 
 ### Solution 1: Audit and Correct All Entries + Remove `as any` (Recommended)
+
 1. For each entry in `SERVICE_DEPENDENCIES`, check the corresponding service constructor to verify listed dependencies match actual injected parameters
 2. Fix all incorrect entries to match actual constructor signatures
 3. Remove the `as any` cast from `getServiceDependencies()`
@@ -31,12 +34,14 @@ The `SERVICE_DEPENDENCIES` map in `container/types.ts` lists wrong dependencies 
 **Cons**: Requires auditing every service constructor (one-time effort)
 
 ### Solution 2: Remove Static Map, Use Runtime Reflection
+
 Replace the static `SERVICE_DEPENDENCIES` map with runtime constructor parameter analysis using TypeScript decorators or a DI framework like `tsyringe` or `inversify`.
 
 **Pros**: Dependencies always match constructors, zero maintenance
 **Cons**: Requires DI framework migration, significant refactor
 
 ## Acceptance Criteria
+
 - [ ] Every entry in `SERVICE_DEPENDENCIES` matches the actual constructor parameters of its corresponding service
 - [ ] `PlatformConnectionService` entry lists only its actual constructor dependencies
 - [ ] The `as any` cast is removed from `getServiceDependencies()`

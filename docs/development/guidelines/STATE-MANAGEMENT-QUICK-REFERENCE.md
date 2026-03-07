@@ -2,18 +2,19 @@
 
 ## 🎯 Decision Matrix
 
-| If you need to... | Use this... | Example |
-|-------------------|-------------|---------|
-| Fetch from API | React Query | `useQuery(['users'], fetchUsers)` |
-| Update server data | React Query | `useMutation(updateUser)` |
-| Store theme preference | Redux | `dispatch(setTheme('dark'))` |
-| Toggle modal | Redux | `dispatch(openModal('edit'))` |
-| Track form input | useState | `const [value, setValue] = useState('')` |
-| Compute derived data | useMemo | `useMemo(() => items.filter(x => x.active))` |
+| If you need to...      | Use this... | Example                                      |
+| ---------------------- | ----------- | -------------------------------------------- |
+| Fetch from API         | React Query | `useQuery(['users'], fetchUsers)`            |
+| Update server data     | React Query | `useMutation(updateUser)`                    |
+| Store theme preference | Redux       | `dispatch(setTheme('dark'))`                 |
+| Toggle modal           | Redux       | `dispatch(openModal('edit'))`                |
+| Track form input       | useState    | `const [value, setValue] = useState('')`     |
+| Compute derived data   | useMemo     | `useMemo(() => items.filter(x => x.active))` |
 
 ## 📦 React Query Patterns
 
 ### Basic Query
+
 ```typescript
 const { data, isLoading, error } = useQuery({
   queryKey: ['resource', id],
@@ -23,6 +24,7 @@ const { data, isLoading, error } = useQuery({
 ```
 
 ### Mutation with Optimistic Update
+
 ```typescript
 const mutation = useMutation({
   mutationFn: updateResource,
@@ -42,6 +44,7 @@ const mutation = useMutation({
 ```
 
 ### Dependent Queries
+
 ```typescript
 const { data: user } = useQuery(['user', id], fetchUser);
 const { data: posts } = useQuery({
@@ -54,27 +57,34 @@ const { data: posts } = useQuery({
 ## 🎨 Redux Patterns
 
 ### UI Slice
+
 ```typescript
 const uiSlice = createSlice({
   name: 'ui',
   initialState: { theme: 'light', sidebarOpen: true },
   reducers: {
-    setTheme: (state, action) => { state.theme = action.payload; },
-    toggleSidebar: (state) => { state.sidebarOpen = !state.sidebarOpen; },
+    setTheme: (state, action) => {
+      state.theme = action.payload;
+    },
+    toggleSidebar: (state) => {
+      state.sidebarOpen = !state.sidebarOpen;
+    },
   },
 });
 ```
 
 ### Selectors
+
 ```typescript
 // Basic
-const theme = useSelector(state => state.ui.theme);
+const theme = useSelector((state) => state.ui.theme);
 
 // Memoized
-const filteredItems = useSelector(createSelector(
-  [state => state.items, state => state.filter],
-  (items, filter) => items.filter(item => item.type === filter)
-));
+const filteredItems = useSelector(
+  createSelector([(state) => state.items, (state) => state.filter], (items, filter) =>
+    items.filter((item) => item.type === filter)
+  )
+);
 ```
 
 ## 🚫 Anti-Patterns
@@ -97,30 +107,30 @@ const { data: user } = useQuery(['user'], fetchUser);
 useQuery(['theme'], () => localStorage.getItem('theme'));
 
 // ✅ UI state in Redux
-const theme = useSelector(state => state.ui.theme);
+const theme = useSelector((state) => state.ui.theme);
 ```
 
 ## 🔑 Query Key Conventions
 
 ```typescript
-['users']                      // All users
-['users', userId]              // Specific user
-['users', { role: 'admin' }]   // Filtered users
-['posts', 'user', userId]      // User's posts
-['posts', postId, 'comments']  // Post comments
+['users'][('users', userId)][('users', { role: 'admin' })][('posts', 'user', userId)][ // All users // Specific user // Filtered users // User's posts
+  ('posts', postId, 'comments')
+]; // Post comments
 ```
 
 ## ⚡ Performance Tips
 
 1. **Use select for granular subscriptions**
+
    ```typescript
    useQuery({
      queryKey: ['user'],
-     select: data => data.name, // Only re-render on name change
+     select: (data) => data.name, // Only re-render on name change
    });
    ```
 
 2. **Prefetch on hover**
+
    ```typescript
    onMouseEnter={() => {
      queryClient.prefetchQuery(['post', id], fetchPost);
@@ -129,10 +139,7 @@ const theme = useSelector(state => state.ui.theme);
 
 3. **Batch updates**
    ```typescript
-   queryClient.setQueriesData(
-     { queryKey: ['posts'] },
-     old => ({ ...old, liked: true })
-   );
+   queryClient.setQueriesData({ queryKey: ['posts'] }, (old) => ({ ...old, liked: true }));
    ```
 
 ## 🛠️ Debugging
@@ -142,9 +149,12 @@ const theme = useSelector(state => state.ui.theme);
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 // Log query states
-queryClient.getQueryCache().findAll().forEach(query => {
-  console.log(query.queryKey, query.state);
-});
+queryClient
+  .getQueryCache()
+  .findAll()
+  .forEach((query) => {
+    console.log(query.queryKey, query.state);
+  });
 
 // Check Redux state
 console.log(store.getState());

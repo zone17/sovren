@@ -7,16 +7,19 @@
 ## Cache Layers
 
 ### 1. Memory Cache (L1)
+
 - **Speed**: Fastest (< 1ms)
 - **Size**: Small (64-256MB)
 - **Use**: Frequently accessed hot data
 
 ### 2. Redis Cache (L2)
+
 - **Speed**: Fast (1-5ms)
 - **Size**: Large (GB scale)
 - **Use**: Shared cache across instances
 
 ### 3. Database (L3)
+
 - **Speed**: Slower (10-100ms)
 - **Size**: Unlimited
 - **Use**: Source of truth
@@ -37,7 +40,7 @@ export const CACHE_TTL = {
 
   // Long-lived (24 hours)
   CREATOR_LIST: 86400,
-  STATIC_CONFIG: 86400
+  STATIC_CONFIG: 86400,
 };
 ```
 
@@ -49,13 +52,13 @@ export const CACHE_TTL = {
 
 ```typescript
 // Pattern: entity:id:sub-resource
-'user:123:profile'
-'content:456:details'
-'payment:789:status'
+'user:123:profile';
+'content:456:details';
+'payment:789:status';
 
 // Pattern with filters: entity:filter1:filter2
-'content:trending:last24h'
-'users:search:query=john'
+'content:trending:last24h';
+'users:search:query=john';
 ```
 
 ---

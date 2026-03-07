@@ -33,12 +33,14 @@ This document provides comprehensive security guidelines for implementing and us
 See [threat-model.mmd](/docs/architecture/diagrams/nip04/threat-model.mmd) for visual representation.
 
 **Critical Threats:**
+
 - T1: Private key extraction
 - T2: Man-in-the-middle attacks
 - T6: Message tampering
 - T7: IV reuse attacks
 
 **Medium Threats:**
+
 - T3: Replay attacks
 - T4: Timing attacks
 - T5: Spam/DoS attacks
@@ -64,6 +66,7 @@ const staticIV = savedIV; // Reuse breaks security
 ```
 
 **Requirements:**
+
 - 16 bytes (128 bits) for AES-256-CBC
 - Generated using `crypto.getRandomValues()` (CSPRNG)
 - **NEVER** reuse an IV with the same key
@@ -71,6 +74,7 @@ const staticIV = savedIV; // Reuse breaks security
 
 **Why This Matters:**
 Reusing an IV with the same key allows attackers to:
+
 1. Detect identical messages (pattern analysis)
 2. Recover plaintext through XOR attacks
 3. Completely break encryption in some cases
@@ -102,6 +106,7 @@ async function deriveSharedSecret(
 ```
 
 **Security Notes:**
+
 - Always validate key lengths (64 hex characters = 32 bytes)
 - Use constant-time operations to prevent timing attacks
 - Never log or expose the shared secret
@@ -124,17 +129,20 @@ const encrypted = await crypto.subtle.encrypt(
 ```
 
 **Requirements:**
+
 - Algorithm: AES-256-CBC
 - Key size: 256 bits (32 bytes)
 - Padding: PKCS7
 - Mode: CBC (Cipher Block Chaining)
 
 **Output Format:**
+
 ```
 base64_ciphertext?iv=base64_iv
 ```
 
 Example:
+
 ```
 dGVzdCBjaXBoZXJ0ZXh0?iv=cmFuZG9tSVYxMjM0NTY=
 ```
@@ -191,6 +199,7 @@ localStorage.setItem('privateKey', key); // NEVER do this
 ```
 
 **Storage Requirements:**
+
 - Use browser extension (Alby, nos2x) when possible
 - If local storage needed:
   - Encrypt with user password (PBKDF2, Argon2)
@@ -224,11 +233,13 @@ class NIP04Service {
 ```
 
 **Why Rotate Keys:**
+
 - Limits damage from key compromise
 - Forward secrecy: old messages safe even if current key leaked
 - Backward secrecy: future messages safe if old key leaked
 
 **Rotation Triggers:**
+
 - Every 100 messages (default)
 - Every 24 hours
 - After suspected compromise
@@ -310,6 +321,7 @@ try {
 ```
 
 **Error Message Rules:**
+
 - Never include private keys
 - Never include plaintext content
 - Never include detailed crypto errors
@@ -351,11 +363,11 @@ function insecureEqual(a: Uint8Array, b: Uint8Array): boolean {
 // ✅ CORRECT: Multi-tier rate limiting
 const spamConfig: SpamProtectionConfig = {
   rateLimit: {
-    maxMessagesPerMinute: 10,  // Prevent rapid-fire spam
-    maxMessagesPerHour: 200,    // Prevent sustained attacks
+    maxMessagesPerMinute: 10, // Prevent rapid-fire spam
+    maxMessagesPerHour: 200, // Prevent sustained attacks
   },
-  requirePoW: false,            // Optional PoW for unknown senders
-  powDifficulty: 16,            // 16-bit difficulty
+  requirePoW: false, // Optional PoW for unknown senders
+  powDifficulty: 16, // 16-bit difficulty
   blockList: new Set<string>(), // Blocked pubkeys
   allowList: new Set<string>(), // Trusted contacts
 };
@@ -373,21 +385,22 @@ if (!allowed) {
 
 ### Threat Matrix
 
-| Threat | Severity | Mitigation | Status |
-|--------|----------|------------|--------|
-| T1: Key Extraction | CRITICAL | Never log/store plaintext keys | ✅ |
-| T2: MITM | HIGH | ECDH + secp256k1 | ✅ |
-| T3: Replay Attacks | MEDIUM | Message IDs + timestamps | ✅ |
-| T4: Timing Attacks | MEDIUM | Constant-time operations | ✅ |
-| T5: Spam/DoS | MEDIUM | Rate limiting + PoW | ✅ |
-| T6: Tampering | HIGH | No HMAC in NIP-04 | ⚠️ |
-| T7: IV Reuse | CRITICAL | CSPRNG per message | ✅ |
-| T8: Known Plaintext | LOW | Unique IV per message | ✅ |
-| T9: Session Rollback | MEDIUM | Session key rotation | ✅ |
-| T10: Memory Leaks | LOW | Cleanup on destroy | ✅ |
+| Threat               | Severity | Mitigation                     | Status |
+| -------------------- | -------- | ------------------------------ | ------ |
+| T1: Key Extraction   | CRITICAL | Never log/store plaintext keys | ✅     |
+| T2: MITM             | HIGH     | ECDH + secp256k1               | ✅     |
+| T3: Replay Attacks   | MEDIUM   | Message IDs + timestamps       | ✅     |
+| T4: Timing Attacks   | MEDIUM   | Constant-time operations       | ✅     |
+| T5: Spam/DoS         | MEDIUM   | Rate limiting + PoW            | ✅     |
+| T6: Tampering        | HIGH     | No HMAC in NIP-04              | ⚠️     |
+| T7: IV Reuse         | CRITICAL | CSPRNG per message             | ✅     |
+| T8: Known Plaintext  | LOW      | Unique IV per message          | ✅     |
+| T9: Session Rollback | MEDIUM   | Session key rotation           | ✅     |
+| T10: Memory Leaks    | LOW      | Cleanup on destroy             | ✅     |
 
 **Note on T6 (Message Tampering):**
 NIP-04 does **not** provide message authentication (no HMAC). Tampering may go undetected. For critical applications, consider:
+
 - Implementing application-level signatures
 - Using NIP-44 (future) with authenticated encryption
 - Adding checksums/hashes in message content
@@ -395,26 +408,31 @@ NIP-04 does **not** provide message authentication (no HMAC). Tampering may go u
 ### Defense in Depth
 
 **Layer 1: Cryptography**
+
 - AES-256-CBC encryption
 - secp256k1 ECDH key exchange
 - CSPRNG IV generation
 
 **Layer 2: Input Validation**
+
 - Key format validation
 - Message format validation
 - Content size limits
 
 **Layer 3: Rate Limiting**
+
 - Per-sender message limits
 - Proof-of-work for unknown senders
 - Block/allow lists
 
 **Layer 4: Session Security**
+
 - Session key rotation
 - Forward secrecy
 - Secure key destruction
 
 **Layer 5: Monitoring**
+
 - Read receipts (kind 1515)
 - Typing indicators (kind 20004)
 - Audit logging
@@ -486,6 +504,7 @@ if (rateLimitViolations > 100) {
 **Events to Log:**
 
 1. **Encryption/Decryption Events**
+
    ```typescript
    {
      event: 'encryption',
@@ -497,6 +516,7 @@ if (rateLimitViolations > 100) {
    ```
 
 2. **Key Rotation Events**
+
    ```typescript
    {
      event: 'key_rotation',
@@ -509,6 +529,7 @@ if (rateLimitViolations > 100) {
    ```
 
 3. **Security Violations**
+
    ```typescript
    {
      event: 'rate_limit_exceeded',
@@ -531,6 +552,7 @@ if (rateLimitViolations > 100) {
    ```
 
 **NEVER Log:**
+
 - ❌ Private keys
 - ❌ Plaintext message content
 - ❌ Shared secrets
@@ -543,6 +565,7 @@ if (rateLimitViolations > 100) {
 ### Pre-Deployment Security Checklist
 
 **Cryptography:**
+
 - [ ] All IVs generated with CSPRNG
 - [ ] No IV reuse possible
 - [ ] AES-256-CBC properly configured
@@ -550,6 +573,7 @@ if (rateLimitViolations > 100) {
 - [ ] Shared secrets ephemeral only
 
 **Key Management:**
+
 - [ ] Private keys never logged
 - [ ] KeyManagementService integrated
 - [ ] Session key rotation enabled
@@ -557,12 +581,14 @@ if (rateLimitViolations > 100) {
 - [ ] Browser extension support tested
 
 **Input Validation:**
+
 - [ ] All public key formats validated
 - [ ] Message size limits enforced
 - [ ] Encrypted content format validated
 - [ ] Malicious input handling tested
 
 **Rate Limiting:**
+
 - [ ] Per-minute limits configured
 - [ ] Per-hour limits configured
 - [ ] Block list functionality tested
@@ -570,6 +596,7 @@ if (rateLimitViolations > 100) {
 - [ ] Proof-of-work optional enabled
 
 **Testing:**
+
 - [ ] Test coverage ≥ 95%
 - [ ] Security tests passing
 - [ ] Timing attack tests passing
@@ -578,6 +605,7 @@ if (rateLimitViolations > 100) {
 - [ ] Spam protection tests passing
 
 **Documentation:**
+
 - [ ] Security architecture diagram
 - [ ] Encryption flow diagram
 - [ ] Threat model documented
@@ -585,6 +613,7 @@ if (rateLimitViolations > 100) {
 - [ ] Audit trail specification
 
 **Operational:**
+
 - [ ] Error handling doesn't leak secrets
 - [ ] Logging doesn't include sensitive data
 - [ ] Memory cleanup on destroy()
@@ -627,6 +656,6 @@ For security issues or questions:
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: 2025-10-26*
-*Author: Elite Backend Engineer (US-313)*
+_Document Version: 1.0_
+_Last Updated: 2025-10-26_
+_Author: Elite Backend Engineer (US-313)_

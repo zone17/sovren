@@ -86,8 +86,11 @@ const { count } = await this.db
   .eq('circle_id', circleId);
 
 if ((count ?? 0) > circle.max_members) {
-  await this.db.from('circle_members').delete()
-    .eq('circle_id', circleId).eq('creator_id', creatorId);
+  await this.db
+    .from('circle_members')
+    .delete()
+    .eq('circle_id', circleId)
+    .eq('creator_id', creatorId);
   throw new ConflictError(`Circle is full (max ${circle.max_members} members)`);
 }
 ```
@@ -102,18 +105,25 @@ if ((count ?? 0) > circle.max_members) {
 
 ```typescript
 // MentorshipService.ts — respondToRequest()
-const { error } = await this.db.from('mentorships')
-  .update(updates).eq('id', mentorshipId).eq('status', 'pending');
+const { error } = await this.db
+  .from('mentorships')
+  .update(updates)
+  .eq('id', mentorshipId)
+  .eq('status', 'pending');
 
 if (accept) {
-  const { count: activeCount } = await this.db.from('mentorships')
+  const { count: activeCount } = await this.db
+    .from('mentorships')
     .select('id', { count: 'exact', head: true })
-    .eq('mentor_id', creatorId).eq('status', 'active');
+    .eq('mentor_id', creatorId)
+    .eq('status', 'active');
 
   if ((activeCount ?? 0) > mentorProfile.max_mentees) {
-    await this.db.from('mentorships')
+    await this.db
+      .from('mentorships')
       .update({ status: 'pending', started_at: null })
-      .eq('id', mentorshipId).eq('status', 'active');
+      .eq('id', mentorshipId)
+      .eq('status', 'active');
     throw new ConflictError('Mentor has reached maximum mentee capacity');
   }
 }
@@ -129,8 +139,12 @@ if (accept) {
 
 ```typescript
 // MarketplaceService.ts — placeOrder()
-const { data: claimedRows } = await this.db.from('service_listings')
-  .update({ active: false }).eq('id', listingId).eq('active', true).select('id');
+const { data: claimedRows } = await this.db
+  .from('service_listings')
+  .update({ active: false })
+  .eq('id', listingId)
+  .eq('active', true)
+  .select('id');
 
 if (!claimedRows || claimedRows.length === 0) {
   throw new ConflictError('Listing is no longer available');
@@ -140,8 +154,11 @@ try {
   const invoice = await this.lightning.createInvoice(listing.price_sats, memo);
   // ... create order ...
 } catch (orderError) {
-  await this.db.from('service_listings')
-    .update({ active: true }).eq('id', listingId).eq('active', false);
+  await this.db
+    .from('service_listings')
+    .update({ active: true })
+    .eq('id', listingId)
+    .eq('active', false);
   throw orderError;
 }
 ```
@@ -175,13 +192,17 @@ if (invoice.status !== 'draft') {
 ```typescript
 // TaxService.ts
 const PAGE_SIZE = 500;
-let total = 0, offset = 0, hasMore = true;
+let total = 0,
+  offset = 0,
+  hasMore = true;
 
 while (hasMore) {
-  const { data } = await this.db.from('revenue_entries')
+  const { data } = await this.db
+    .from('revenue_entries')
     .select('amount_sats, usd_at_time')
     .eq('creator_id', creatorId)
-    .gte('recorded_at', startDate).lte('recorded_at', endDate)
+    .gte('recorded_at', startDate)
+    .lte('recorded_at', endDate)
     .order('recorded_at', { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1);
 
@@ -209,9 +230,15 @@ const handleMarkPaid = (invoiceId: string) => {
   if (inFlightRef.current) return;
   inFlightRef.current = true;
   setPendingId(invoiceId);
-  updateStatus.mutate({ id: invoiceId, status: 'paid' }, {
-    onSettled: () => { inFlightRef.current = false; setPendingId(null); },
-  });
+  updateStatus.mutate(
+    { id: invoiceId, status: 'paid' },
+    {
+      onSettled: () => {
+        inFlightRef.current = false;
+        setPendingId(null);
+      },
+    }
+  );
 };
 
 <button
@@ -219,7 +246,7 @@ const handleMarkPaid = (invoiceId: string) => {
   aria-busy={pendingId === invoice.id}
 >
   {pendingId === invoice.id ? 'Processing...' : 'Mark Paid'}
-</button>
+</button>;
 ```
 
 **When to use:** Any mutation button with financial or state consequences. `useRef` fires synchronously (before re-render); `disabled` provides visual feedback.
@@ -267,31 +294,37 @@ if (process.env.ENABLE_INBOX_POLLING !== 'true') {
 ## Prevention Strategies
 
 ### 1. TOCTOU Race Conditions
+
 - **Detection:** Code review checklist item: "Does this read-then-write have a concurrency window?"
 - **Prevention:** Default to atomic patterns (insert-then-verify, UPDATE WHERE current_state). Never check-then-act without a guard.
 - **Team brief addition:** "All capacity/quota enforcement must use insert-then-verify or atomic UPDATE WHERE patterns."
 
 ### 2. Missing Authorization
+
 - **Detection:** Grep for service methods that access data without caller verification. ESLint rule for route handlers missing auth middleware.
 - **Prevention:** Service-layer auth checks, not just route-level. Every data-access method should validate the caller has access.
 - **Team brief addition:** "Service methods must verify caller authorization independently of route middleware."
 
 ### 3. Missing Status Guards
+
 - **Detection:** Grep for `.delete()` and `.update()` calls without a preceding status check.
 - **Prevention:** Every destructive operation starts with a status assertion. Use `ConflictError` (409) for invalid state transitions.
 - **Team brief addition:** "All delete/cancel/void operations require explicit status precondition checks."
 
 ### 4. Unbounded Queries
+
 - **Detection:** Grep for `.select()` without `.limit()` or `.range()`. ESLint rule flagging unbounded selects.
 - **Prevention:** PAGE_SIZE=500 as the default. Never use `.limit(N)` for aggregation — use paginated accumulation.
 - **Team brief addition:** "All SELECT queries that could return unbounded rows must use paginated accumulation."
 
 ### 5. Frontend Double-Submit
+
 - **Detection:** Grep for `onClick` handlers on financial buttons without `disabled={...isPending}`.
 - **Prevention:** All financial mutation buttons use `useRef` + `disabled={isPending}` pattern. Add `aria-busy` for accessibility.
 - **Team brief addition:** "Financial action buttons require synchronous ref guard + disabled state + aria-busy."
 
 ### 6. Environment Validation
+
 - **Detection:** Pre-deploy checklist: every env var used in code must appear in `.env.example` and Zod schema.
 - **Prevention:** Add to env-validation.ts immediately when introducing a new env var. Cross-key checks for any key pair.
 - **Team brief addition:** "New environment variables must be added to .env.example, Zod schema, and documented in the same PR."
@@ -300,14 +333,15 @@ if (process.env.ENABLE_INBOX_POLLING !== 'true') {
 
 This sprint validated the **domain-grouped agent pattern** for the 4th consecutive time:
 
-| Sprint | Agents | Files | Conflicts | Tests |
-|--------|--------|-------|-----------|-------|
-| P3 Remediation (02-17) | 8 | 19 | 0 | Pass |
-| P2 Final (02-18) | 6 | 22 | 0 | 439 pass |
-| Wave 2 P2/P3 (02-19) | 6 | 38 | 0 | 439 pass |
-| **This sprint** | **4** | **17** | **0** | **439 pass** |
+| Sprint                 | Agents | Files  | Conflicts | Tests        |
+| ---------------------- | ------ | ------ | --------- | ------------ |
+| P3 Remediation (02-17) | 8      | 19     | 0         | Pass         |
+| P2 Final (02-18)       | 6      | 22     | 0         | 439 pass     |
+| Wave 2 P2/P3 (02-19)   | 6      | 38     | 0         | 439 pass     |
+| **This sprint**        | **4**  | **17** | **0**     | **439 pass** |
 
 **Key success factors:**
+
 1. Non-overlapping file ownership per agent (community, finance, frontend, infra)
 2. Each agent gets scoped brief with only its domain's files listed
 3. Test failures fixed in a second pass after all agents complete

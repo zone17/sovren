@@ -7,5 +7,6 @@ export {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
   useNotificationRealtime,
+  useDeleteNotification,
 } from './hooks/useNotifications';
 export { notificationsApi } from './services/notificationsApi';

@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p1
-issue_id: "479"
+issue_id: '479'
 tags:
   - code-review
   - msw
@@ -57,6 +57,7 @@ Option A. Remove the fetch mock. Audit for `fetch.mock` callers first.
 ## Technical Details
 
 **Affected files:**
+
 - `test-utils/vitest-frontend-setup.ts` (line 255)
 - All files in `packages/frontend/src/test-utils/msw/handlers/`
 
@@ -69,8 +70,8 @@ Option A. Remove the fetch mock. Audit for `fetch.mock` callers first.
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                                | Learnings                                      |
+| ---------- | ----------------------------------------------------- | ---------------------------------------------- |
 | 2026-02-24 | Created from Phase 9 MSW review (7/7 agent consensus) | MSW + globalThis.fetch mock = mutual exclusion |
 
 ## Resources

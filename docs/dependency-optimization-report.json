@@ -215,9 +215,7 @@
         },
         {
           "file": "src/App.tsx",
-          "imports": [
-            "import { Route, Routes } from 'react-router-dom';\nimport Layout from '"
-          ]
+          "imports": ["import { Route, Routes } from 'react-router-dom';\nimport Layout from '"]
         },
         {
           "file": "src/__tests__/components/analytics/OptimizationSuggestionPanel.test.tsx",
@@ -243,9 +241,7 @@
         },
         {
           "file": "src/__tests__/components/performance/IntelligentContentCache.test.tsx",
-          "imports": [
-            "import { fireEvent, render, screen, waitFor } from '@testing-librar"
-          ]
+          "imports": ["import { fireEvent, render, screen, waitFor } from '@testing-librar"]
         },
         {
           "file": "src/__tests__/components/performance/LiveContentUpdates.test.tsx",
@@ -256,9 +252,7 @@
         },
         {
           "file": "src/__tests__/components/performance/PageLoadOptimizer.test.tsx",
-          "imports": [
-            "import { fireEvent, render, screen, waitFor } from '@testing-librar"
-          ]
+          "imports": ["import { fireEvent, render, screen, waitFor } from '@testing-librar"]
         },
         {
           "file": "src/__tests__/integration/engagement-analytics-integration.test.tsx",
@@ -271,9 +265,7 @@
         },
         {
           "file": "src/components/DevTools/FeatureFlagToggle.tsx",
-          "imports": [
-            "import { featureFlags } from '."
-          ]
+          "imports": ["import { featureFlags } from '."]
         },
         {
           "file": "src/components/NIP05Manager.tsx",
@@ -295,9 +287,7 @@
         },
         {
           "file": "src/components/__tests__/AIDashboard.test.tsx",
-          "imports": [
-            "import { fireEvent, render, screen, waitFor } from '@testing-librar"
-          ]
+          "imports": ["import { fireEvent, render, screen, waitFor } from '@testing-librar"]
         },
         {
           "file": "src/components/__tests__/NIP05Manager.test.tsx",
@@ -434,9 +424,7 @@
         },
         {
           "file": "src/components/layout/MobileResponsiveLayout.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/layout/__tests__/MobileResponsiveLayout.test.tsx",
@@ -641,9 +629,7 @@
         },
         {
           "file": "src/components/ui/ContentCaching.tsx",
-          "imports": [
-            "import { z } from 'zod';\nimport { useFeatureFlags } from '."
-          ]
+          "imports": ["import { z } from 'zod';\nimport { useFeatureFlags } from '."]
         },
         {
           "file": "src/components/ui/ContentSimilarity.tsx",
@@ -674,15 +660,11 @@
         },
         {
           "file": "src/components/ui/OfflineCapabilities.tsx",
-          "imports": [
-            "import { z } from 'zod';\nimport { useFeatureFlags } from '."
-          ]
+          "imports": ["import { z } from 'zod';\nimport { useFeatureFlags } from '."]
         },
         {
           "file": "src/components/ui/OfflineReading.tsx",
-          "imports": [
-            "import { z } from 'zod';\nimport { useFeatureFlags } from '."
-          ]
+          "imports": ["import { z } from 'zod';\nimport { useFeatureFlags } from '."]
         },
         {
           "file": "src/components/ui/PersonalizedRecommendations.tsx",
@@ -761,15 +743,11 @@
         },
         {
           "file": "src/components/ui/avatar.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/badge.test.tsx",
-          "imports": [
-            "import { render, screen } from \"@testing-librar"
-          ]
+          "imports": ["import { render, screen } from \"@testing-librar"]
         },
         {
           "file": "src/components/ui/badge.tsx",
@@ -779,15 +757,11 @@
         },
         {
           "file": "src/components/ui/button.test.backup.tsx",
-          "imports": [
-            "import { fireEvent, render, screen } from '@testing-librar"
-          ]
+          "imports": ["import { fireEvent, render, screen } from '@testing-librar"]
         },
         {
           "file": "src/components/ui/button.test.tsx",
-          "imports": [
-            "import { render, screen, fireEvent } from '@testing-librar"
-          ]
+          "imports": ["import { render, screen, fireEvent } from '@testing-librar"]
         },
         {
           "file": "src/components/ui/button.tsx",
@@ -797,21 +771,15 @@
         },
         {
           "file": "src/components/ui/card.test.tsx",
-          "imports": [
-            "import { render, screen } from \"@testing-librar"
-          ]
+          "imports": ["import { render, screen } from \"@testing-librar"]
         },
         {
           "file": "src/components/ui/card.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/dialog.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/dropdown-menu.tsx",
@@ -834,15 +802,11 @@
         },
         {
           "file": "src/components/ui/input.test.tsx",
-          "imports": [
-            "import { render, screen } from \"@testing-librar"
-          ]
+          "imports": ["import { render, screen } from \"@testing-librar"]
         },
         {
           "file": "src/components/ui/input.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/label.tsx",
@@ -858,39 +822,27 @@
         },
         {
           "file": "src/components/ui/skeleton.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/spinner.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/switch.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/tabs.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/textarea.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/components/ui/tooltip.tsx",
-          "imports": [
-            "import { cn } from '."
-          ]
+          "imports": ["import { cn } from '."]
         },
         {
           "file": "src/features/ai/components/PersonalizedRecommendations.tsx",
@@ -907,9 +859,7 @@
         },
         {
           "file": "src/features/ai/types/index.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/features/analytics/components/CreatorDashboard.tsx",
@@ -994,9 +944,7 @@
         },
         {
           "file": "src/features/analytics/types/index.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/features/auth/components/ProtectedRoute.tsx",
@@ -1006,15 +954,11 @@
         },
         {
           "file": "src/features/auth/services/AuthContext.tsx",
-          "imports": [
-            "import { featureFlags } from '."
-          ]
+          "imports": ["import { featureFlags } from '."]
         },
         {
           "file": "src/features/auth/services/__tests__/realAuthService.test.ts",
-          "imports": [
-            "import { realAuthService } from '."
-          ]
+          "imports": ["import { realAuthService } from '."]
         },
         {
           "file": "src/features/content/components/ContentCollectionManager.tsx",
@@ -1091,21 +1035,15 @@
         },
         {
           "file": "src/features/content/types/contentManagement.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/features/dashboard/components/AIDashboard.tsx",
-          "imports": [
-            "import { predictiveAnalytics } from '."
-          ]
+          "imports": ["import { predictiveAnalytics } from '."]
         },
         {
           "file": "src/features/dashboard/components/MonitoringDashboard.tsx",
-          "imports": [
-            "import { getPerformanceReport } from '."
-          ]
+          "imports": ["import { getPerformanceReport } from '."]
         },
         {
           "file": "src/features/subscriptions/components/SubscriptionManager.tsx",
@@ -1147,9 +1085,7 @@
         },
         {
           "file": "src/features/subscriptions/services/useUserSubscriptionService.ts",
-          "imports": [
-            "import { useCallback, useState } from 'react';\nimport { z } from 'zod';\n"
-          ]
+          "imports": ["import { useCallback, useState } from 'react';\nimport { z } from 'zod';\n"]
         },
         {
           "file": "src/features/supporter/components/SupporterExperience.tsx",
@@ -1174,9 +1110,7 @@
         },
         {
           "file": "src/features/supporter/types/supporterExperience.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/hooks/use-toast.ts",
@@ -1186,9 +1120,7 @@
         },
         {
           "file": "src/hooks/useAnalytics.ts",
-          "imports": [
-            "import { useCallback } from 'react';\n"
-          ]
+          "imports": ["import { useCallback } from 'react';\n"]
         },
         {
           "file": "src/hooks/useAnalyticsService.ts",
@@ -1211,15 +1143,11 @@
         },
         {
           "file": "src/hooks/useFeatureFlags.test.ts",
-          "imports": [
-            "import { renderHook, waitFor } from '@testing-librar"
-          ]
+          "imports": ["import { renderHook, waitFor } from '@testing-librar"]
         },
         {
           "file": "src/hooks/useFeatureFlags.ts",
-          "imports": [
-            "import { useEffect, useState } from 'react';\n"
-          ]
+          "imports": ["import { useEffect, useState } from 'react';\n"]
         },
         {
           "file": "src/hooks/useQualityMetricsService.ts",
@@ -1236,9 +1164,7 @@
         },
         {
           "file": "src/hooks/useToast.ts",
-          "imports": [
-            "import { useCallback, useEffect, useState } from 'react';\n"
-          ]
+          "imports": ["import { useCallback, useEffect, useState } from 'react';\n"]
         },
         {
           "file": "src/lib/utils.ts",
@@ -1314,10 +1240,7 @@
         },
         {
           "file": "src/pages/Profile.tsx",
-          "imports": [
-            "import { Button } from '.",
-            "import { useAuth } from '."
-          ]
+          "imports": ["import { Button } from '.", "import { useAuth } from '."]
         },
         {
           "file": "src/pages/Signup.test.tsx",
@@ -1416,9 +1339,7 @@
         },
         {
           "file": "src/services/__tests__/automated-content-moderation.basic.test.ts",
-          "imports": [
-            "import { AutomatedContentModerationServiceImpl } from '."
-          ]
+          "imports": ["import { AutomatedContentModerationServiceImpl } from '."]
         },
         {
           "file": "src/services/automated-content-moderation-service.ts",
@@ -1434,9 +1355,7 @@
         },
         {
           "file": "src/shared/utils/auth.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/shared/utils/storage.ts",
@@ -1462,45 +1381,31 @@
         },
         {
           "file": "src/store/slices/paymentSlice.ts",
-          "imports": [
-            "import { createSlice, PayloadAction } from '@reduxj"
-          ]
+          "imports": ["import { createSlice, PayloadAction } from '@reduxj"]
         },
         {
           "file": "src/store/slices/postSlice.ts",
-          "imports": [
-            "import { createSlice, PayloadAction } from '@reduxj"
-          ]
+          "imports": ["import { createSlice, PayloadAction } from '@reduxj"]
         },
         {
           "file": "src/store/slices/userSlice.ts",
-          "imports": [
-            "import { createSlice, PayloadAction } from '@reduxj"
-          ]
+          "imports": ["import { createSlice, PayloadAction } from '@reduxj"]
         },
         {
           "file": "src/store/types.ts",
-          "imports": [
-            "import { User, Post, Payment, UserState, PostState, PaymentState } from '."
-          ]
+          "imports": ["import { User, Post, Payment, UserState, PostState, PaymentState } from '."]
         },
         {
           "file": "src/stories/Button.stories.ts",
-          "imports": [
-            "import { fn } from 'storyboo"
-          ]
+          "imports": ["import { fn } from 'storyboo"]
         },
         {
           "file": "src/stories/Header.stories.ts",
-          "imports": [
-            "import { fn } from 'storyboo"
-          ]
+          "imports": ["import { fn } from 'storyboo"]
         },
         {
           "file": "src/stories/Page.stories.ts",
-          "imports": [
-            "import { expect, userEvent, within } from 'storyboo"
-          ]
+          "imports": ["import { expect, userEvent, within } from 'storyboo"]
         },
         {
           "file": "src/test-utils/__tests__/test-reporting.demo.test.ts",
@@ -1510,9 +1415,7 @@
         },
         {
           "file": "src/test-utils/external-dependency-mocker.ts",
-          "imports": [
-            "import { jest } from '@jes"
-          ]
+          "imports": ["import { jest } from '@jes"]
         },
         {
           "file": "src/test-utils/performance-testing.tsx",
@@ -1538,39 +1441,27 @@
         },
         {
           "file": "src/test-utils/test-timeout-manager.ts",
-          "imports": [
-            "import { jest } from '@jes"
-          ]
+          "imports": ["import { jest } from '@jes"]
         },
         {
           "file": "src/types/ai-enhanced-features.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/types/automated-content-moderation.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/types/autonomous-user-management.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/types/dataProtection.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         },
         {
           "file": "src/types/engagement-analytics.ts",
-          "imports": [
-            "import { z } from 'zod';\n"
-          ]
+          "imports": ["import { z } from 'zod';\n"]
         }
       ]
     }

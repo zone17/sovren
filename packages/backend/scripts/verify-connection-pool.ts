@@ -67,7 +67,10 @@ async function verifyConnectionPool() {
       console.log('   📝 Query Result:', result.rows[0]);
       console.log('   ✅ Query execution successful\n');
     } catch (error) {
-      console.error('   ❌ Query execution failed:', error instanceof Error ? error.message : error);
+      console.error(
+        '   ❌ Query execution failed:',
+        error instanceof Error ? error.message : error
+      );
       if (String(error).includes('role') || String(error).includes('does not exist')) {
         console.log('   ℹ️  This is expected if the database is not set up yet.\n');
       }
@@ -80,13 +83,12 @@ async function verifyConnectionPool() {
 
     for (let i = 0; i < concurrentCount; i++) {
       queries.push(
-        poolManager.query('SELECT $1 as num', [i + 1])
-          .catch(() => null) // Ignore errors for this test
+        poolManager.query('SELECT $1 as num', [i + 1]).catch(() => null) // Ignore errors for this test
       );
     }
 
     const results = await Promise.all(queries);
-    const successCount = results.filter(r => r !== null).length;
+    const successCount = results.filter((r) => r !== null).length;
 
     console.log(`   📊 Concurrent Queries: ${successCount}/${concurrentCount} successful`);
     console.log('   ✅ Concurrent query handling verified\n');
@@ -119,13 +121,18 @@ async function verifyConnectionPool() {
     // Summary
     console.log('📋 Summary:');
     console.log('   - Pool initialization: ✅');
-    console.log(`   - Pool health status: ${stats.healthStatus === 'healthy' ? '✅' : '⚠️ ' + stats.healthStatus}`);
+    console.log(
+      `   - Pool health status: ${stats.healthStatus === 'healthy' ? '✅' : '⚠️ ' + stats.healthStatus}`
+    );
     console.log(`   - Health check: ${health.healthy ? '✅' : '❌'}`);
     console.log(`   - Configuration: ${allConfigured ? '✅' : '⚠️  Incomplete'}`);
 
     if (health.healthy && stats.healthStatus === 'healthy' && allConfigured) {
       console.log('\n🎉 Connection pool is fully operational and ready for production!\n');
-    } else if (!health.healthy && (health.error?.includes('role') || health.error?.includes('does not exist'))) {
+    } else if (
+      !health.healthy &&
+      (health.error?.includes('role') || health.error?.includes('does not exist'))
+    ) {
       console.log('\n⚠️  Database not configured yet. This is expected in development.\n');
       console.log('To complete setup:');
       console.log('1. Configure database credentials in .env');
@@ -134,7 +141,6 @@ async function verifyConnectionPool() {
     } else {
       console.log('\n⚠️  Some checks failed. Review the output above for details.\n');
     }
-
   } catch (error) {
     console.error('❌ Verification failed:', error);
     process.exit(1);

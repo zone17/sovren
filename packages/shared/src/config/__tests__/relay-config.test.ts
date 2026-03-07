@@ -9,7 +9,13 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { RelayConfig, getRelayUrls, getRelays, getReadRelays, getWriteRelays } from '../relay-config';
+import {
+  RelayConfig,
+  getRelayUrls,
+  getRelays,
+  getReadRelays,
+  getWriteRelays,
+} from '../relay-config';
 import type { RelayMetadata } from '@/types/nostr/nips';
 
 describe('RelayConfig', () => {
@@ -110,7 +116,8 @@ describe('RelayConfig', () => {
     });
 
     it('should filter out invalid relay URLs from environment', () => {
-      process.env.NOSTR_RELAYS = 'wss://valid.com,invalid-url,https://wrong-protocol.com,wss://valid2.com';
+      process.env.NOSTR_RELAYS =
+        'wss://valid.com,invalid-url,https://wrong-protocol.com,wss://valid2.com';
 
       const relays = RelayConfig.getRelays();
 
@@ -135,15 +142,15 @@ describe('RelayConfig', () => {
       const urls = RelayConfig.getRelayUrls();
 
       expect(urls).toBeInstanceOf(Array);
-      expect(urls.every(url => typeof url === 'string')).toBe(true);
-      expect(urls.every(url => url.startsWith('wss://'))).toBe(true);
+      expect(urls.every((url) => typeof url === 'string')).toBe(true);
+      expect(urls.every((url) => url.startsWith('wss://'))).toBe(true);
     });
 
     it('should match URLs from getRelays()', () => {
       const relays = RelayConfig.getRelays();
       const urls = RelayConfig.getRelayUrls();
 
-      expect(urls).toEqual(relays.map(r => r.url));
+      expect(urls).toEqual(relays.map((r) => r.url));
     });
   });
 
@@ -214,9 +221,9 @@ describe('RelayConfig', () => {
       expect(defaults).toHaveLength(5);
       expect(defaults[0].url).toBe('wss://relay.damus.io');
       // Check that defaults have read and write capabilities (some may be read-only or write-only)
-      expect(defaults.every(r => r.read || r.write)).toBe(true);
-      expect(defaults.filter(r => r.read).length).toBeGreaterThan(0);
-      expect(defaults.filter(r => r.write).length).toBeGreaterThan(0);
+      expect(defaults.every((r) => r.read || r.write)).toBe(true);
+      expect(defaults.filter((r) => r.read).length).toBeGreaterThan(0);
+      expect(defaults.filter((r) => r.write).length).toBeGreaterThan(0);
     });
 
     it('should return immutable copy of defaults', () => {
@@ -289,7 +296,9 @@ describe('RelayConfig', () => {
     });
 
     it('should handle complex valid URLs', () => {
-      expect(RelayConfig.normalizeRelayUrl('wss://relay.example.com:7777/path')).toBe('wss://relay.example.com:7777/path');
+      expect(RelayConfig.normalizeRelayUrl('wss://relay.example.com:7777/path')).toBe(
+        'wss://relay.example.com:7777/path'
+      );
     });
 
     it('should return null for null/undefined', () => {
@@ -348,7 +357,7 @@ describe('RelayConfig', () => {
       const relays = RelayConfig.getRelays();
 
       expect(relays).toHaveLength(2);
-      expect(relays.map(r => r.url)).toEqual(['wss://valid.com', 'wss://valid2.com']);
+      expect(relays.map((r) => r.url)).toEqual(['wss://valid.com', 'wss://valid2.com']);
     });
 
     it('should override cached relays', () => {
@@ -360,9 +369,7 @@ describe('RelayConfig', () => {
       const relays1 = RelayConfig.getRelays(); // Load defaults
       expect(relays1.length).toBeGreaterThan(0);
 
-      const customRelays: RelayMetadata[] = [
-        { url: 'wss://custom.com', read: true, write: true },
-      ];
+      const customRelays: RelayMetadata[] = [{ url: 'wss://custom.com', read: true, write: true }];
 
       RelayConfig.setRelays(customRelays);
       const relays2 = RelayConfig.getRelays();
@@ -418,7 +425,7 @@ describe('RelayConfig', () => {
       const relays = RelayConfig.getRelays();
 
       expect(relays).toHaveLength(2);
-      expect(relays.map(r => r.url)).toEqual(['wss://valid.com', 'wss://valid2.com']);
+      expect(relays.map((r) => r.url)).toEqual(['wss://valid.com', 'wss://valid2.com']);
     });
 
     it('should handle very long relay lists', () => {

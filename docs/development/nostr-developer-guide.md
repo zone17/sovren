@@ -123,9 +123,8 @@ const event = await nostr.publishNote('Hello NOSTR world!');
 console.log(`Published event: ${event.id}`);
 
 // Subscribe to events
-const subscriptionId = nostr.subscribe(
-  [{ kinds: [1], limit: 10 }],
-  (event) => console.log('Received:', event.content)
+const subscriptionId = nostr.subscribe([{ kinds: [1], limit: 10 }], (event) =>
+  console.log('Received:', event.content)
 );
 
 // Clean up
@@ -204,6 +203,7 @@ packages/frontend/src/services/nostr/
 ### Key Design Patterns
 
 **Singleton Pattern**:
+
 ```typescript
 // All major services use singleton for shared state
 const nostr = NostrService.getInstance();
@@ -211,6 +211,7 @@ const relayPool = relayPoolManager; // Already singleton instance
 ```
 
 **Event-Driven Architecture**:
+
 ```typescript
 // Services emit events for reactive updates
 relayPoolManager.on('relay:connected', (url) => {
@@ -223,15 +224,13 @@ relayPoolManager.on('relay:health:changed', (url, health) => {
 ```
 
 **Dependency Injection**:
+
 ```typescript
 // Services accept configuration and dependencies
-const keyManager = new KeyManagementService(
-  config,
-  {
-    storage: customStorageService,
-    crypto: customCryptoService,
-  }
-);
+const keyManager = new KeyManagementService(config, {
+  storage: customStorageService,
+  crypto: customCryptoService,
+});
 ```
 
 ---
@@ -326,9 +325,9 @@ nostr.on('subscription:started', (subscription) => {
 
 ```typescript
 enum NostrKeySecurityLevel {
-  BASIC = 'basic',       // 128-bit entropy, basic protection
+  BASIC = 'basic', // 128-bit entropy, basic protection
   ENHANCED = 'enhanced', // 256-bit entropy, encryption enabled
-  MAXIMUM = 'maximum',   // 256-bit entropy, hardware wallet, MFA
+  MAXIMUM = 'maximum', // 256-bit entropy, hardware wallet, MFA
 }
 ```
 
@@ -376,14 +375,10 @@ const importResult = await keyManager.importKey(
 
 ```typescript
 // Create mnemonic backup (BIP39)
-const backupResult = await keyManager.createBackup(
-  keyId,
-  NostrKeyBackupMethod.MNEMONIC_PHRASE,
-  {
-    passphrase: 'my-secure-passphrase', // Optional
-    verify: true,
-  }
-);
+const backupResult = await keyManager.createBackup(keyId, NostrKeyBackupMethod.MNEMONIC_PHRASE, {
+  passphrase: 'my-secure-passphrase', // Optional
+  verify: true,
+});
 
 if (backupResult.success && backupResult.data) {
   const backup = backupResult.data;
@@ -462,11 +457,7 @@ keyManager.on('extension:detected', (extension) => {
 import { relayPoolManager } from '@/services/nostr/RelayPoolManager';
 
 await relayPoolManager.initialize({
-  relays: [
-    'wss://relay.damus.io',
-    'wss://nos.lol',
-    'wss://relay.nostr.info',
-  ],
+  relays: ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.info'],
   maxRelays: 10,
   connectionTimeout: 5000,
   autoReconnect: true,
@@ -519,7 +510,7 @@ console.log('Metrics:', {
 
 // Get all relay health
 const allHealth = relayPoolManager.getAllRelayHealth();
-allHealth.forEach(h => {
+allHealth.forEach((h) => {
   console.log(`${h.url}: ${h.score}/100 (${h.status})`);
 });
 
@@ -536,7 +527,7 @@ relayPoolManager.on('relay:health:changed', (url, health) => {
 ```typescript
 // Publish to all connected relays
 const results = await relayPoolManager.publishEvent(event);
-console.log(`Published to ${results.filter(r => r.success).length}/${results.length} relays`);
+console.log(`Published to ${results.filter((r) => r.success).length}/${results.length} relays`);
 
 // Publish to fastest 3 relays
 const fastResults = await relayPoolManager.publishEventToFastest(event, 3);
@@ -664,13 +655,13 @@ if (!validation.valid) {
 
 ```typescript
 publisher.on('event:published', (event, results) => {
-  const successful = results.filter(r => r.success).length;
-  const failed = results.filter(r => !r.success).length;
+  const successful = results.filter((r) => r.success).length;
+  const failed = results.filter((r) => !r.success).length;
 
   console.log(`Published ${event.id}`);
   console.log(`Success: ${successful}, Failed: ${failed}`);
 
-  results.forEach(r => {
+  results.forEach((r) => {
     if (r.success) {
       console.log(`✅ ${r.relay} (${r.latency}ms)`);
     } else {
@@ -697,9 +688,7 @@ await subscriptionManager.initialize();
 
 // Subscribe to user's notes
 const myNotesSubscription = await subscriptionManager.subscribe({
-  filters: [
-    { kinds: [1], authors: [myPubkey], limit: 50 }
-  ],
+  filters: [{ kinds: [1], authors: [myPubkey], limit: 50 }],
   onEvent: (event) => console.log('My note:', event.content),
   onEose: () => console.log('Loaded all my notes'),
   name: 'My Notes Feed',
@@ -707,18 +696,14 @@ const myNotesSubscription = await subscriptionManager.subscribe({
 
 // Subscribe to global feed
 const globalSubscription = await subscriptionManager.subscribe({
-  filters: [
-    { kinds: [1], limit: 100 }
-  ],
+  filters: [{ kinds: [1], limit: 100 }],
   onEvent: (event) => console.log('Global:', event.content),
   name: 'Global Feed',
 });
 
 // Subscribe to specific hashtags
 const hashtagSubscription = await subscriptionManager.subscribe({
-  filters: [
-    { kinds: [1], '#t': ['nostr', 'bitcoin'], limit: 50 }
-  ],
+  filters: [{ kinds: [1], '#t': ['nostr', 'bitcoin'], limit: 50 }],
   onEvent: (event) => console.log('Tagged:', event.content),
   name: 'Hashtag Feed',
 });
@@ -735,9 +720,7 @@ subscriptionManager.resumeSubscription(myNotesSubscription.id);
 
 // Update subscription filters
 subscriptionManager.updateSubscription(myNotesSubscription.id, {
-  filters: [
-    { kinds: [1, 6], authors: [myPubkey], limit: 100 }
-  ],
+  filters: [{ kinds: [1, 6], authors: [myPubkey], limit: 100 }],
 });
 
 // Close subscription
@@ -753,7 +736,7 @@ subscriptionManager.unsubscribeAll();
 // Get all active subscriptions
 const activeSubscriptions = subscriptionManager.getActiveSubscriptions();
 
-activeSubscriptions.forEach(sub => {
+activeSubscriptions.forEach((sub) => {
   console.log(`${sub.name}: ${sub.id}`);
   console.log(`  Filters: ${JSON.stringify(sub.filters)}`);
   console.log(`  Active: ${sub.active}`);
@@ -870,13 +853,13 @@ Sovren implements multiple **NOSTR Implementation Possibilities (NIPs)** for pro
 
 ```typescript
 interface NostrEvent {
-  id: string;           // 32-byte lowercase hex SHA256 hash
-  pubkey: string;       // 32-byte lowercase hex public key
-  created_at: number;   // Unix timestamp in seconds
-  kind: number;         // Event kind
-  tags: string[][];     // Tags (arbitrary data)
-  content: string;      // Arbitrary event content
-  sig: string;          // 64-byte lowercase hex Schnorr signature
+  id: string; // 32-byte lowercase hex SHA256 hash
+  pubkey: string; // 32-byte lowercase hex public key
+  created_at: number; // Unix timestamp in seconds
+  kind: number; // Event kind
+  tags: string[][]; // Tags (arbitrary data)
+  content: string; // Arbitrary event content
+  sig: string; // 64-byte lowercase hex Schnorr signature
 }
 ```
 
@@ -884,18 +867,18 @@ interface NostrEvent {
 
 ```typescript
 enum NostrEventKind {
-  SET_METADATA = 0,              // User profile metadata
-  TEXT_NOTE = 1,                 // Short text note
-  RECOMMEND_RELAY = 2,           // Relay recommendation
-  CONTACTS = 3,                  // Contact list
-  ENCRYPTED_DIRECT_MESSAGE = 4,  // Encrypted DM (NIP-04)
-  DELETE = 5,                    // Event deletion request (NIP-09)
-  REPOST = 6,                    // Repost/boost
-  REACTION = 7,                  // Like/reaction (NIP-25)
-  LONG_FORM = 30023,             // Long-form content (NIP-23)
-  APP_DATA = 30078,              // Application-specific data (NIP-78)
-  ZAP_REQUEST = 9734,            // Lightning zap request (NIP-57)
-  ZAP = 9735,                    // Lightning zap (NIP-57)
+  SET_METADATA = 0, // User profile metadata
+  TEXT_NOTE = 1, // Short text note
+  RECOMMEND_RELAY = 2, // Relay recommendation
+  CONTACTS = 3, // Contact list
+  ENCRYPTED_DIRECT_MESSAGE = 4, // Encrypted DM (NIP-04)
+  DELETE = 5, // Event deletion request (NIP-09)
+  REPOST = 6, // Repost/boost
+  REACTION = 7, // Like/reaction (NIP-25)
+  LONG_FORM = 30023, // Long-form content (NIP-23)
+  APP_DATA = 30078, // Application-specific data (NIP-78)
+  ZAP_REQUEST = 9734, // Lightning zap request (NIP-57)
+  ZAP = 9735, // Lightning zap (NIP-57)
 }
 ```
 
@@ -970,10 +953,7 @@ if (result.success && result.event) {
 
 ```typescript
 // Decrypt received DM
-const decryptResult = await nip04.decryptDM(
-  encryptedEvent,
-  myPrivateKey
-);
+const decryptResult = await nip04.decryptDM(encryptedEvent, myPrivateKey);
 
 if (decryptResult.success && decryptResult.content) {
   console.log('Decrypted message:', decryptResult.content);
@@ -982,7 +962,7 @@ if (decryptResult.success && decryptResult.content) {
 // Get all DMs for a user
 const dms = await nip04.getDirectMessages(myPubkey, myPrivateKey);
 
-dms.forEach(dm => {
+dms.forEach((dm) => {
   console.log(`From ${dm.sender}: ${dm.content}`);
   console.log(`  Sent at: ${new Date(dm.timestamp * 1000)}`);
 });
@@ -1075,6 +1055,7 @@ const request = await verificationService.createVerificationRequest({
 ```
 
 2. Serve with CORS headers:
+
 ```
 Access-Control-Allow-Origin: *
 Content-Type: application/json
@@ -1083,6 +1064,7 @@ Content-Type: application/json
 **DNS Method**:
 
 1. Add TXT record for `_nostr.yourdomain.com`:
+
 ```
 nostr={"names":{"alice":"7e7e9c42a91bfef19fa929e5fda1b72e0ebc1a4c1141673e2794234d86addf4e"}}
 ```
@@ -1296,9 +1278,7 @@ await window.webln.sendPayment(zapRequest.invoice);
 // Kind 30078 for app-specific data
 const appDataEvent = {
   kind: 30078,
-  tags: [
-    ['d', 'sovren-preferences'],
-  ],
+  tags: [['d', 'sovren-preferences']],
   content: JSON.stringify({
     theme: 'dark',
     language: 'en',
@@ -1386,7 +1366,7 @@ async function publishContentWithAnalytics(content: string, tags: string[] = [])
   // Publish note
   const event = await nostr.publishNote(
     content,
-    tags.map(t => ['t', t])
+    tags.map((t) => ['t', t])
   );
 
   // Subscribe to interactions (likes, reposts)
@@ -1426,7 +1406,7 @@ async function buildPersonalizedFeed(userPubkey: string, following: string[]) {
         kinds: [1, 6], // Text notes and reposts
         authors: following,
         limit: 100,
-      }
+      },
     ],
     onEvent: (event) => {
       // Add to feed UI
@@ -1462,7 +1442,7 @@ async function setupNotifications(userPubkey: string) {
         kinds: [1],
         '#p': [userPubkey],
         since: Math.floor(Date.now() / 1000),
-      }
+      },
     ],
     (event) => {
       showNotification('Mention', `@${event.pubkey} mentioned you`);
@@ -1476,15 +1456,11 @@ async function setupNotifications(userPubkey: string) {
         kinds: [4],
         '#p': [userPubkey],
         since: Math.floor(Date.now() / 1000),
-      }
+      },
     ],
     async (event) => {
       // Decrypt and show
-      const decrypted = await nip04.decrypt(
-        privateKeyBytes,
-        event.pubkey,
-        event.content
-      );
+      const decrypted = await nip04.decrypt(privateKeyBytes, event.pubkey, event.content);
       showNotification('Direct Message', decrypted);
     }
   );
@@ -1496,7 +1472,7 @@ async function setupNotifications(userPubkey: string) {
         kinds: [9735], // Zap receipts
         '#p': [userPubkey],
         since: Math.floor(Date.now() / 1000),
-      }
+      },
     ],
     (event) => {
       const amount = getZapAmount(event);
@@ -1528,7 +1504,7 @@ async function searchContent(query: string) {
   // Search cached events
   const allEvents = cache.getAllEvents();
 
-  const results = allEvents.filter(event => {
+  const results = allEvents.filter((event) => {
     // Search in content
     if (event.content.toLowerCase().includes(query.toLowerCase())) {
       return true;
@@ -1589,7 +1565,7 @@ class NostrChat {
         {
           kinds: [4],
           '#p': [this.myPubkey],
-        }
+        },
       ],
       (event) => this.handleIncomingDM(event)
     );
@@ -1599,18 +1575,15 @@ class NostrChat {
     this.activeChatPubkey = recipientPubkey;
 
     // Load chat history
-    const history = await this.nip04.getDirectMessages(
-      this.myPubkey,
-      this.myPrivateKey
-    );
+    const history = await this.nip04.getDirectMessages(this.myPubkey, this.myPrivateKey);
 
     // Filter for this conversation
     const conversationHistory = history.filter(
-      dm => dm.sender === recipientPubkey || dm.recipient === recipientPubkey
+      (dm) => dm.sender === recipientPubkey || dm.recipient === recipientPubkey
     );
 
     // Display history
-    conversationHistory.forEach(dm => {
+    conversationHistory.forEach((dm) => {
       this.displayMessage(dm.sender, dm.content, dm.timestamp);
     });
   }
@@ -1627,29 +1600,17 @@ class NostrChat {
     );
 
     if (result.success) {
-      this.displayMessage(
-        this.myPubkey,
-        content,
-        Math.floor(Date.now() / 1000),
-        true
-      );
+      this.displayMessage(this.myPubkey, content, Math.floor(Date.now() / 1000), true);
     }
   }
 
   private async handleIncomingDM(event: NostrEvent) {
-    const decryptResult = await this.nip04.decryptDM(
-      event,
-      this.myPrivateKey
-    );
+    const decryptResult = await this.nip04.decryptDM(event, this.myPrivateKey);
 
     if (decryptResult.success && decryptResult.content) {
       // Only display if from active chat
       if (event.pubkey === this.activeChatPubkey) {
-        this.displayMessage(
-          event.pubkey,
-          decryptResult.content,
-          event.created_at
-        );
+        this.displayMessage(event.pubkey, decryptResult.content, event.created_at);
       } else {
         // Show notification for other chats
         this.showNewMessageNotification(event.pubkey, decryptResult.content);
@@ -2088,12 +2049,15 @@ class KeyManagementService {
   }): Promise<NostrKeyManagementResult<NostrEnhancedKeyPair>>;
 
   // Key Import
-  importKey(privateKey: string, options?: {
-    name?: string;
-    description?: string;
-    validate?: boolean;
-    backup?: boolean;
-  }): Promise<NostrKeyManagementResult<NostrEnhancedKeyPair>>;
+  importKey(
+    privateKey: string,
+    options?: {
+      name?: string;
+      description?: string;
+      validate?: boolean;
+      backup?: boolean;
+    }
+  ): Promise<NostrKeyManagementResult<NostrEnhancedKeyPair>>;
 
   // Backup
   createBackup(
@@ -2107,11 +2071,14 @@ class KeyManagementService {
   ): Promise<NostrKeyManagementResult<NostrMnemonicBackup>>;
 
   // Rotation
-  rotateKey(keyId: string, options?: {
-    type?: 'scheduled' | 'manual' | 'emergency' | 'compromised';
-    reason?: string;
-    migrateData?: boolean;
-  }): Promise<NostrKeyManagementResult<NostrKeyRotation>>;
+  rotateKey(
+    keyId: string,
+    options?: {
+      type?: 'scheduled' | 'manual' | 'emergency' | 'compromised';
+      reason?: string;
+      migrateData?: boolean;
+    }
+  ): Promise<NostrKeyManagementResult<NostrKeyRotation>>;
 
   // Validation
   validateKeyPair(keyPair: NostrEnhancedKeyPair): Promise<NostrKeyValidationResult>;
@@ -2137,6 +2104,7 @@ class KeyManagementService {
 ### 9.1 Security Best Practices
 
 **Never Store Private Keys on Server**:
+
 ```typescript
 // ❌ BAD: Sending private key to server
 await fetch('/api/save-key', {
@@ -2150,6 +2118,7 @@ const keyPair = await keyManager.generateKeyPair();
 ```
 
 **Use Encrypted Storage**:
+
 ```typescript
 // ✅ Enable encryption for stored keys
 const keyManager = new KeyManagementService({
@@ -2159,17 +2128,22 @@ const keyManager = new KeyManagementService({
 ```
 
 **Implement Key Rotation**:
+
 ```typescript
 // ✅ Rotate keys periodically
-setInterval(async () => {
-  await keyManager.rotateKey(currentKeyId, {
-    type: 'scheduled',
-    reason: 'Quarterly rotation policy',
-  });
-}, 90 * 24 * 60 * 60 * 1000); // Every 90 days
+setInterval(
+  async () => {
+    await keyManager.rotateKey(currentKeyId, {
+      type: 'scheduled',
+      reason: 'Quarterly rotation policy',
+    });
+  },
+  90 * 24 * 60 * 60 * 1000
+); // Every 90 days
 ```
 
 **Validate All Events**:
+
 ```typescript
 // ✅ Always verify event signatures
 import { verifyEvent } from 'nostr-tools';
@@ -2180,6 +2154,7 @@ if (!verifyEvent(event)) {
 ```
 
 **Use Browser Extensions When Available**:
+
 ```typescript
 // ✅ Prefer browser extensions for signing
 if (window.nostr) {
@@ -2193,6 +2168,7 @@ if (window.nostr) {
 ### 9.2 Performance Best Practices
 
 **Enable Event Deduplication**:
+
 ```typescript
 // ✅ Reduce bandwidth by 50-80%
 await relayPoolManager.initialize({
@@ -2201,6 +2177,7 @@ await relayPoolManager.initialize({
 ```
 
 **Cache Events Locally**:
+
 ```typescript
 // ✅ Reduce relay queries
 const cache = new EventCacheService({
@@ -2217,38 +2194,42 @@ if (cached) {
 ```
 
 **Use Intelligent Relay Selection**:
+
 ```typescript
 // ✅ Publish to fastest relays
 await relayPoolManager.publishEventToFastest(event, 3);
 ```
 
 **Limit Subscription Scope**:
+
 ```typescript
 // ❌ BAD: Too broad
 nostr.subscribe([{ kinds: [1] }], onEvent); // ALL text notes
 
 // ✅ GOOD: Specific filters
-nostr.subscribe([
-  {
-    kinds: [1],
-    authors: followedPubkeys,
-    limit: 100,
-    since: Math.floor(Date.now() / 1000) - 3600,
-  }
-], onEvent);
+nostr.subscribe(
+  [
+    {
+      kinds: [1],
+      authors: followedPubkeys,
+      limit: 100,
+      since: Math.floor(Date.now() / 1000) - 3600,
+    },
+  ],
+  onEvent
+);
 ```
 
 **Batch Operations**:
+
 ```typescript
 // ❌ BAD: Multiple separate subscriptions
-following.forEach(pubkey => {
+following.forEach((pubkey) => {
   nostr.subscribe([{ kinds: [1], authors: [pubkey] }], onEvent);
 });
 
 // ✅ GOOD: Single subscription with all authors
-nostr.subscribe([
-  { kinds: [1], authors: following, limit: 100 }
-], onEvent);
+nostr.subscribe([{ kinds: [1], authors: following, limit: 100 }], onEvent);
 ```
 
 ---
@@ -2256,6 +2237,7 @@ nostr.subscribe([
 ### 9.3 Code Quality Best Practices
 
 **Type Safety**:
+
 ```typescript
 // ✅ Use TypeScript strict mode
 import { NostrEvent, NostrFilter } from '@/services/nostr/types';
@@ -2267,6 +2249,7 @@ function processEvent(event: NostrEvent): void {
 ```
 
 **Error Handling**:
+
 ```typescript
 // ✅ Comprehensive error handling
 try {
@@ -2283,6 +2266,7 @@ try {
 ```
 
 **Resource Cleanup**:
+
 ```typescript
 // ✅ Clean up subscriptions
 useEffect(() => {
@@ -2305,6 +2289,7 @@ useEffect(() => {
 **Symptoms**: `publishNote()` succeeds but events don't appear
 
 **Solutions**:
+
 ```typescript
 // 1. Check relay connections
 const connected = relayPoolManager.getConnectedRelays();
@@ -2316,7 +2301,7 @@ if (connected.length === 0) {
 
 // 2. Check relay health
 const health = relayPoolManager.getAllRelayHealth();
-health.forEach(h => {
+health.forEach((h) => {
   if (h.status === 'unhealthy') {
     console.warn(`Unhealthy relay: ${h.url}`);
   }
@@ -2324,7 +2309,7 @@ health.forEach(h => {
 
 // 3. Publish with results
 const results = await relayPoolManager.publishEvent(event);
-results.forEach(r => {
+results.forEach((r) => {
   if (!r.success) {
     console.error(`Failed on ${r.relay}:`, r.error);
   }
@@ -2338,6 +2323,7 @@ results.forEach(r => {
 **Symptoms**: Subscription created but `onEvent` never called
 
 **Solutions**:
+
 ```typescript
 // 1. Verify filters are correct
 const filters = [{ kinds: [1], authors: [pubkey] }];
@@ -2365,6 +2351,7 @@ relayPoolManager.on('relay:error', (url, error) => {
 **Symptoms**: `nip04.decrypt()` throws error or returns garbage
 
 **Solutions**:
+
 ```typescript
 // 1. Verify you're using the correct private key
 console.log('My pubkey:', myPubkey);
@@ -2377,11 +2364,7 @@ console.log('Encrypted content:', event.content);
 // 3. Try decrypting step-by-step
 try {
   const privateKeyBytes = new Uint8Array(Buffer.from(privateKeyHex, 'hex'));
-  const decrypted = await nip04.decrypt(
-    privateKeyBytes,
-    event.pubkey,
-    event.content
-  );
+  const decrypted = await nip04.decrypt(privateKeyBytes, event.pubkey, event.content);
   console.log('Decrypted:', decrypted);
 } catch (error) {
   console.error('Decryption error:', error);
@@ -2396,16 +2379,17 @@ try {
 **Symptoms**: Browser memory grows over time
 
 **Solutions**:
+
 ```typescript
 // 1. Limit cache size
 const cache = new EventCacheService({
   maxSize: 5000, // Reduce from default 10000
-  ttl: 1800000,  // 30 minutes instead of 1 hour
+  ttl: 1800000, // 30 minutes instead of 1 hour
 });
 
 // 2. Clean up old subscriptions
 const activeSubscriptions = subscriptionManager.getActiveSubscriptions();
-activeSubscriptions.forEach(sub => {
+activeSubscriptions.forEach((sub) => {
   if (!sub.active || sub.eventCount === 0) {
     subscriptionManager.unsubscribe(sub.id);
   }
@@ -2427,6 +2411,7 @@ useEffect(() => {
 **Symptoms**: `nip05.verifyIdentifier()` returns `verified: false`
 
 **Solutions**:
+
 ```typescript
 // 1. Test .well-known endpoint manually
 const domain = 'sovren.app';
@@ -2476,14 +2461,16 @@ nostr.on('event:received', (event, relay) => {
 function logRelayHealth() {
   const health = relayPoolManager.getAllRelayHealth();
 
-  console.table(health.map(h => ({
-    Relay: h.url,
-    Status: h.status,
-    Score: h.score,
-    Latency: `${h.metrics.latency}ms`,
-    'Success Rate': `${(h.metrics.successRate * 100).toFixed(1)}%`,
-    Uptime: `${(h.metrics.uptime * 100).toFixed(1)}%`,
-  })));
+  console.table(
+    health.map((h) => ({
+      Relay: h.url,
+      Status: h.status,
+      Score: h.score,
+      Latency: `${h.metrics.latency}ms`,
+      'Success Rate': `${(h.metrics.successRate * 100).toFixed(1)}%`,
+      Uptime: `${(h.metrics.uptime * 100).toFixed(1)}%`,
+    }))
+  );
 }
 
 // Call periodically
@@ -2539,7 +2526,7 @@ describe('KeyManagementService', () => {
 
       expect(validation.valid).toBe(true);
       expect(validation.securityScore).toBeGreaterThan(80);
-      expect(validation.issues.filter(i => i.severity === 'error')).toHaveLength(0);
+      expect(validation.issues.filter((i) => i.severity === 'error')).toHaveLength(0);
     });
   });
 
@@ -2616,16 +2603,13 @@ describe('NOSTR Integration Tests', () => {
         throw new Error('Event not received within timeout');
       }, 10000);
 
-      const subId = nostr.subscribe(
-        [{ ids: [publishedEvent.id] }],
-        (receivedEvent) => {
-          clearTimeout(timeout);
-          expect(receivedEvent.id).toBe(publishedEvent.id);
-          expect(receivedEvent.content).toBe(testContent);
-          nostr.unsubscribe(subId);
-          resolve(true);
-        }
-      );
+      const subId = nostr.subscribe([{ ids: [publishedEvent.id] }], (receivedEvent) => {
+        clearTimeout(timeout);
+        expect(receivedEvent.id).toBe(publishedEvent.id);
+        expect(receivedEvent.content).toBe(testContent);
+        nostr.unsubscribe(subId);
+        resolve(true);
+      });
     });
   }, 15000);
 
@@ -2643,7 +2627,7 @@ describe('NOSTR Integration Tests', () => {
 
     // Check results
     const results = await relayPoolManager.publishEvent(event);
-    const successful = results.filter(r => r.success);
+    const successful = results.filter((r) => r.success);
 
     expect(successful.length).toBeGreaterThan(0);
   });
@@ -2742,7 +2726,7 @@ const optimizedFilters = [
     authors: followedUsers,
     since: Math.floor(Date.now() / 1000) - 3600, // Last hour only
     limit: 50,
-  }
+  },
 ];
 ```
 
@@ -2756,7 +2740,7 @@ const cache = new EventCacheService({
 });
 
 // ✅ Clean up old subscriptions
-subscriptionManager.getActiveSubscriptions().forEach(sub => {
+subscriptionManager.getActiveSubscriptions().forEach((sub) => {
   if (sub.eventCount === 0 && Date.now() - sub.createdAt > 300000) {
     subscriptionManager.unsubscribe(sub.id);
   }
@@ -2825,23 +2809,24 @@ NOSTR_PUBLIC_KEY=<hex_key>
 
 ### Event Kinds
 
-| Kind | Description | NIP |
-|------|-------------|-----|
-| 0 | Metadata (profile) | NIP-01 |
-| 1 | Short text note | NIP-01 |
-| 2 | Recommend relay | NIP-01 |
-| 3 | Contacts | NIP-02 |
-| 4 | Encrypted DM | NIP-04 |
-| 5 | Event deletion | NIP-09 |
-| 6 | Repost | NIP-18 |
-| 7 | Reaction | NIP-25 |
-| 30023 | Long-form content | NIP-23 |
-| 30078 | App data | NIP-78 |
-| 9735 | Zap | NIP-57 |
+| Kind  | Description        | NIP    |
+| ----- | ------------------ | ------ |
+| 0     | Metadata (profile) | NIP-01 |
+| 1     | Short text note    | NIP-01 |
+| 2     | Recommend relay    | NIP-01 |
+| 3     | Contacts           | NIP-02 |
+| 4     | Encrypted DM       | NIP-04 |
+| 5     | Event deletion     | NIP-09 |
+| 6     | Repost             | NIP-18 |
+| 7     | Reaction           | NIP-25 |
+| 30023 | Long-form content  | NIP-23 |
+| 30078 | App data           | NIP-78 |
+| 9735  | Zap                | NIP-57 |
 
 ### Relay URLs
 
 Default relays:
+
 - wss://relay.damus.io
 - wss://nos.lol
 - wss://relay.nostr.info

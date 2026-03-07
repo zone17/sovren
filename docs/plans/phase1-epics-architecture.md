@@ -57,27 +57,27 @@
 
 **Existing services** (already registered in `packages/backend/src/container/types.ts`):
 
-| Service | DI Token | Epic | Status |
-|---------|----------|------|--------|
-| WellnessService | `TYPES.WellnessService` | 007 | Implemented |
-| BurnoutScoringService | `TYPES.BurnoutScoringService` | 007 | Implemented |
-| ScheduleService | `TYPES.ScheduleService` | 007 | Implemented |
-| BoundaryService | `TYPES.BoundaryService` | 007 | Implemented |
-| ProvenanceService | `TYPES.ProvenanceService` | 008 | Implemented |
-| FingerprintService | `TYPES.FingerprintService` | 008 | Implemented |
-| AlertService | `TYPES.AlertService` | 008 | Implemented |
-| DmcaService | `TYPES.DmcaService` | 008 | Implemented |
-| QueueService | `TYPES.QueueService` | Infra | Implemented |
+| Service               | DI Token                      | Epic  | Status      |
+| --------------------- | ----------------------------- | ----- | ----------- |
+| WellnessService       | `TYPES.WellnessService`       | 007   | Implemented |
+| BurnoutScoringService | `TYPES.BurnoutScoringService` | 007   | Implemented |
+| ScheduleService       | `TYPES.ScheduleService`       | 007   | Implemented |
+| BoundaryService       | `TYPES.BoundaryService`       | 007   | Implemented |
+| ProvenanceService     | `TYPES.ProvenanceService`     | 008   | Implemented |
+| FingerprintService    | `TYPES.FingerprintService`    | 008   | Implemented |
+| AlertService          | `TYPES.AlertService`          | 008   | Implemented |
+| DmcaService           | `TYPES.DmcaService`           | 008   | Implemented |
+| QueueService          | `TYPES.QueueService`          | Infra | Implemented |
 
 **New services required** (EPIC-009 only):
 
-| Service | DI Token (to add) | Purpose |
-|---------|-------------------|---------|
-| PlatformConnectionService | `TYPES.PlatformConnectionService` | OAuth flows, token management |
-| CrossPostService | `TYPES.CrossPostService` | Publishing queue, platform adapters |
-| RepurposingService | `TYPES.RepurposingService` | Content format conversion |
-| UnifiedInboxService | `TYPES.UnifiedInboxService` | Multi-platform message aggregation |
-| CrossPlatformAnalyticsService | `TYPES.CrossPlatformAnalyticsService` | Aggregate metrics |
+| Service                       | DI Token (to add)                     | Purpose                             |
+| ----------------------------- | ------------------------------------- | ----------------------------------- |
+| PlatformConnectionService     | `TYPES.PlatformConnectionService`     | OAuth flows, token management       |
+| CrossPostService              | `TYPES.CrossPostService`              | Publishing queue, platform adapters |
+| RepurposingService            | `TYPES.RepurposingService`            | Content format conversion           |
+| UnifiedInboxService           | `TYPES.UnifiedInboxService`           | Multi-platform message aggregation  |
+| CrossPlatformAnalyticsService | `TYPES.CrossPlatformAnalyticsService` | Aggregate metrics                   |
 
 ### 1.3 BullMQ Queue Architecture
 
@@ -130,11 +130,11 @@ All endpoints use the prefix `/api/v2/wellness`. Authentication required (NOSTR 
 
 #### Work Patterns
 
-| Method | Path | Validators | Response | Story |
-|--------|------|-----------|----------|-------|
-| `POST` | `/patterns` | `WellnessValidators.recordWorkPattern` | `201 { success, data: WorkPattern }` | US-E7-002 |
-| `GET` | `/patterns?period=7d\|30d\|90d` | `WellnessValidators.getWorkPatterns` | `200 { success, data: WorkPatternAggregation }` | US-E7-002 |
-| `GET` | `/patterns/heatmap?period=7d\|30d` | `WellnessValidators.getHeatmap` | `200 { success, data: HeatmapData }` | US-E7-002 |
+| Method | Path                               | Validators                             | Response                                        | Story     |
+| ------ | ---------------------------------- | -------------------------------------- | ----------------------------------------------- | --------- |
+| `POST` | `/patterns`                        | `WellnessValidators.recordWorkPattern` | `201 { success, data: WorkPattern }`            | US-E7-002 |
+| `GET`  | `/patterns?period=7d\|30d\|90d`    | `WellnessValidators.getWorkPatterns`   | `200 { success, data: WorkPatternAggregation }` | US-E7-002 |
+| `GET`  | `/patterns/heatmap?period=7d\|30d` | `WellnessValidators.getHeatmap`        | `200 { success, data: HeatmapData }`            | US-E7-002 |
 
 **Zod Schemas** (in `packages/backend/src/validators/wellness.ts`):
 
@@ -145,72 +145,78 @@ z.object({
   duration_mins: z.number().int().min(1).max(1440),
   timestamp: z.string().datetime(),
   metadata: z.record(z.string()).optional(),
-})
+});
 
 // getWorkPatterns
-z.object({ period: z.enum(['7d', '30d', '90d']) })
+z.object({ period: z.enum(['7d', '30d', '90d']) });
 
 // getHeatmap
-z.object({ period: z.enum(['7d', '30d']) })
+z.object({ period: z.enum(['7d', '30d']) });
 ```
 
 #### Burnout Risk Score
 
-| Method | Path | Validators | Response | Story |
-|--------|------|-----------|----------|-------|
-| `GET` | `/risk-score` | None | `200 { success, data: BurnoutRiskScore }` | US-E7-003 |
-| `PUT` | `/risk-score/sensitivity` | `WellnessValidators.setSensitivity` | `200 { success, data: { sensitivity, updated_at } }` | US-E7-003 |
+| Method | Path                      | Validators                          | Response                                             | Story     |
+| ------ | ------------------------- | ----------------------------------- | ---------------------------------------------------- | --------- |
+| `GET`  | `/risk-score`             | None                                | `200 { success, data: BurnoutRiskScore }`            | US-E7-003 |
+| `PUT`  | `/risk-score/sensitivity` | `WellnessValidators.setSensitivity` | `200 { success, data: { sensitivity, updated_at } }` | US-E7-003 |
 
 ```typescript
 // setSensitivity
-z.object({ sensitivity: z.enum(['relaxed', 'normal', 'sensitive']) })
+z.object({ sensitivity: z.enum(['relaxed', 'normal', 'sensitive']) });
 ```
 
 #### Sustainable Scheduling
 
-| Method | Path | Response | Story |
-|--------|------|----------|-------|
-| `GET` | `/schedule/recommendations` | `200 { success, data: ScheduleRecommendation }` | US-E7-005 |
-| `GET` | `/buffer-depth` | `200 { success, data: BufferDepth }` | US-E7-005 |
+| Method | Path                        | Response                                        | Story     |
+| ------ | --------------------------- | ----------------------------------------------- | --------- |
+| `GET`  | `/schedule/recommendations` | `200 { success, data: ScheduleRecommendation }` | US-E7-005 |
+| `GET`  | `/buffer-depth`             | `200 { success, data: BufferDepth }`            | US-E7-005 |
 
 #### Creator Boundaries
 
-| Method | Path | Validators | Response | Story |
-|--------|------|-----------|----------|-------|
-| `GET` | `/boundaries` | None | `200 { success, data: CreatorBoundaries }` | US-E7-006 |
-| `PUT` | `/boundaries` | `WellnessValidators.updateBoundaries` | `200 { success, data: CreatorBoundaries }` | US-E7-006 |
+| Method | Path          | Validators                            | Response                                   | Story     |
+| ------ | ------------- | ------------------------------------- | ------------------------------------------ | --------- |
+| `GET`  | `/boundaries` | None                                  | `200 { success, data: CreatorBoundaries }` | US-E7-006 |
+| `PUT`  | `/boundaries` | `WellnessValidators.updateBoundaries` | `200 { success, data: CreatorBoundaries }` | US-E7-006 |
 
 ```typescript
 // updateBoundaries
 z.object({
-  focus_hours: z.object({
-    enabled: z.boolean(),
-    start: z.string().regex(/^\d{2}:\d{2}$/),
-    end: z.string().regex(/^\d{2}:\d{2}$/),
-    timezone: z.string(),
-    days: z.array(z.enum(['monday','tuesday','wednesday','thursday','friday','saturday','sunday'])),
-  }).optional(),
+  focus_hours: z
+    .object({
+      enabled: z.boolean(),
+      start: z.string().regex(/^\d{2}:\d{2}$/),
+      end: z.string().regex(/^\d{2}:\d{2}$/),
+      timezone: z.string(),
+      days: z.array(
+        z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
+      ),
+    })
+    .optional(),
   weekly_engagement_budget_mins: z.number().int().min(0).max(10080).optional(),
-  dnd_mode: z.object({
-    active: z.boolean(),
-    auto_response_enabled: z.boolean(),
-    auto_response_template: z.string().max(500),
-  }).optional(),
-  availability_status: z.enum(['hidden','available','creating','offline']).optional(),
+  dnd_mode: z
+    .object({
+      active: z.boolean(),
+      auto_response_enabled: z.boolean(),
+      auto_response_template: z.string().max(500),
+    })
+    .optional(),
+  availability_status: z.enum(['hidden', 'available', 'creating', 'offline']).optional(),
   availability_public: z.boolean().optional(),
   notification_batching: z.boolean().optional(),
-})
+});
 ```
 
 #### Wellness Pulse Check-Ins
 
-| Method | Path | Validators | Response | Story |
-|--------|------|-----------|----------|-------|
-| `POST` | `/pulse` | `WellnessValidators.recordPulse` | `201 { success, data: PulseCheckIn }` | US-E7-007 |
-| `GET` | `/pulse/history?period=30d\|90d\|all&limit=50&offset=0` | `WellnessValidators.getPulseHistory` | `200 { success, data: PulseHistory }` | US-E7-007 |
-| `GET` | `/benchmark` | None (optional auth) | `200 { success, data: WellnessBenchmark \| null }` | US-E7-007 |
-| `DELETE` | `/pulse` | None | `200 { success, data: { deleted_count } }` | US-E7-007 |
-| `DELETE` | `/data` | None | `200 { success, data: { deleted } }` | GDPR |
+| Method   | Path                                                    | Validators                           | Response                                           | Story     |
+| -------- | ------------------------------------------------------- | ------------------------------------ | -------------------------------------------------- | --------- |
+| `POST`   | `/pulse`                                                | `WellnessValidators.recordPulse`     | `201 { success, data: PulseCheckIn }`              | US-E7-007 |
+| `GET`    | `/pulse/history?period=30d\|90d\|all&limit=50&offset=0` | `WellnessValidators.getPulseHistory` | `200 { success, data: PulseHistory }`              | US-E7-007 |
+| `GET`    | `/benchmark`                                            | None (optional auth)                 | `200 { success, data: WellnessBenchmark \| null }` | US-E7-007 |
+| `DELETE` | `/pulse`                                                | None                                 | `200 { success, data: { deleted_count } }`         | US-E7-007 |
+| `DELETE` | `/data`                                                 | None                                 | `200 { success, data: { deleted } }`               | GDPR      |
 
 ```typescript
 // recordPulse
@@ -218,14 +224,14 @@ z.object({
   energy: z.number().int().min(1).max(5),
   motivation: z.number().int().min(1).max(5),
   stress: z.number().int().min(1).max(5),
-})
+});
 
 // getPulseHistory
 z.object({
   period: z.enum(['30d', '90d', 'all']),
   limit: z.coerce.number().int().min(1).max(200).optional(),
   offset: z.coerce.number().int().min(0).optional(),
-})
+});
 ```
 
 #### Error Responses (All EPIC-007 Endpoints)
@@ -399,6 +405,7 @@ packages/frontend/src/features/wellness/
 ```
 
 **Data Flow**:
+
 ```
 WellnessDashboard
 ├── Tab: Overview
@@ -429,71 +436,71 @@ All endpoints use the prefix `/api/v2/shield`. Mixed authentication (some public
 
 #### Provenance
 
-| Method | Path | Auth | Validators | Response | Story |
-|--------|------|------|-----------|----------|-------|
-| `GET` | `/provenance/:contentId` | Optional | `ShieldValidators.contentIdParam` | `200 { success, data: ProvenanceRecord }` | US-E8-002 |
-| `GET` | `/provenance/:contentId/certificate` | Required | `contentIdParam + certificateQuery` | `200 { success, data: { certificate: ProvenanceCertificate } }` | US-E8-002 |
+| Method | Path                                 | Auth     | Validators                          | Response                                                        | Story     |
+| ------ | ------------------------------------ | -------- | ----------------------------------- | --------------------------------------------------------------- | --------- |
+| `GET`  | `/provenance/:contentId`             | Optional | `ShieldValidators.contentIdParam`   | `200 { success, data: ProvenanceRecord }`                       | US-E8-002 |
+| `GET`  | `/provenance/:contentId/certificate` | Required | `contentIdParam + certificateQuery` | `200 { success, data: { certificate: ProvenanceCertificate } }` | US-E8-002 |
 
 #### Fingerprinting
 
-| Method | Path | Auth | Validators | Response | Story |
-|--------|------|------|-----------|----------|-------|
-| `POST` | `/fingerprint` | Required | `ShieldValidators.createFingerprint` | `201 { success, data: Fingerprint }` | US-E8-003 |
-| `GET` | `/fingerprints/:creatorId` | Required | `getFingerprintsParam + getFingerprintsQuery` | `200 { success, data, pagination }` | US-E8-003 |
-| `POST` | `/compare` | Required | `ShieldValidators.compare` | `200 { success, data: CompareResult }` | US-E8-003 |
+| Method | Path                       | Auth     | Validators                                    | Response                               | Story     |
+| ------ | -------------------------- | -------- | --------------------------------------------- | -------------------------------------- | --------- |
+| `POST` | `/fingerprint`             | Required | `ShieldValidators.createFingerprint`          | `201 { success, data: Fingerprint }`   | US-E8-003 |
+| `GET`  | `/fingerprints/:creatorId` | Required | `getFingerprintsParam + getFingerprintsQuery` | `200 { success, data, pagination }`    | US-E8-003 |
+| `POST` | `/compare`                 | Required | `ShieldValidators.compare`                    | `200 { success, data: CompareResult }` | US-E8-003 |
 
 **Zod Schemas** (in `packages/backend/src/validators/shield.ts`):
 
 ```typescript
 // contentIdParam
-z.object({ contentId: z.string().uuid() })
+z.object({ contentId: z.string().uuid() });
 
 // createFingerprint
 z.object({
   content_id: z.string().uuid(),
   content_type: z.enum(['text', 'image']),
   content: z.string().min(1).max(100000), // raw text or base64 image
-})
+});
 
 // compare
 z.object({
   hash_type: z.enum(['simhash', 'phash']),
   hash_value: z.string().regex(/^[0-9a-f]{16}$/), // 64-bit hex
-})
+});
 
 // getFingerprintsQuery
 z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
-})
+});
 ```
 
 #### Alerts
 
-| Method | Path | Auth | Validators | Response | Story |
-|--------|------|------|-----------|----------|-------|
-| `GET` | `/alerts?status=new\|reviewed\|resolved&page=1&limit=20` | Required | `ShieldValidators.getAlertsQuery` | `200 { success, data: ContentAlert[], pagination }` | US-E8-004b |
-| `GET` | `/alerts/:id` | Required | `ShieldValidators.alertIdParam` | `200 { success, data: AlertDetail }` | US-E8-004b |
-| `PUT` | `/alerts/:id` | Required | `alertIdParam + updateAlertStatus` | `200 { success, data: ContentAlert }` | US-E8-004b |
+| Method | Path                                                     | Auth     | Validators                         | Response                                            | Story      |
+| ------ | -------------------------------------------------------- | -------- | ---------------------------------- | --------------------------------------------------- | ---------- |
+| `GET`  | `/alerts?status=new\|reviewed\|resolved&page=1&limit=20` | Required | `ShieldValidators.getAlertsQuery`  | `200 { success, data: ContentAlert[], pagination }` | US-E8-004b |
+| `GET`  | `/alerts/:id`                                            | Required | `ShieldValidators.alertIdParam`    | `200 { success, data: AlertDetail }`                | US-E8-004b |
+| `PUT`  | `/alerts/:id`                                            | Required | `alertIdParam + updateAlertStatus` | `200 { success, data: ContentAlert }`               | US-E8-004b |
 
 ```typescript
 // getAlertsQuery
 z.object({
-  status: z.enum(['new','reviewed','resolved','false_positive','reported']).optional(),
+  status: z.enum(['new', 'reviewed', 'resolved', 'false_positive', 'reported']).optional(),
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
-})
+});
 
 // updateAlertStatus
 z.object({
-  status: z.enum(['reviewed','resolved','false_positive','reported']),
-})
+  status: z.enum(['reviewed', 'resolved', 'false_positive', 'reported']),
+});
 ```
 
 #### DMCA Reports
 
-| Method | Path | Auth | Validators | Response | Story |
-|--------|------|------|-----------|----------|-------|
+| Method | Path                      | Auth     | Validators                       | Response                                        | Story      |
+| ------ | ------------------------- | -------- | -------------------------------- | ----------------------------------------------- | ---------- |
 | `POST` | `/alerts/:id/dmca-report` | Required | `alertIdParam + dmcaReportQuery` | `201 { success, data: { report: DmcaReport } }` | US-E8-004c |
 
 ### 3.3 Database Schema
@@ -637,12 +644,13 @@ CREATE POLICY "Creators can only access own alerts"
 ```
 
 **Job Data Schema**:
+
 ```typescript
 interface RelayScanJobData {
   creatorId: string;
-  relays: string[];          // Array of relay URLs
-  since: number;             // Unix timestamp: scan events after this
-  fingerprintIds: string[];  // Creator's fingerprint IDs to compare against
+  relays: string[]; // Array of relay URLs
+  since: number; // Unix timestamp: scan events after this
+  fingerprintIds: string[]; // Creator's fingerprint IDs to compare against
 }
 ```
 
@@ -699,6 +707,7 @@ packages/frontend/src/features/content-shield/
 ```
 
 **Data Flow**:
+
 ```
 ShieldDashboard
 ├── FingerprintCoverage ← useFingerprints() → GET /fingerprints/:creatorId
@@ -885,23 +894,23 @@ export interface IPlatformAdapter {
 
 **Platform-specific constraints**:
 
-| Platform | Max Text | Threads | Images | Video |
-|----------|---------|---------|--------|-------|
-| Mastodon | 500 chars | No | 4 | Yes (60s) |
-| Bluesky | 300 chars | Yes (via replies) | 4 | No |
-| X/Twitter | 280 chars (free) / 25000 (premium) | Yes | 4 | Yes (140s) |
-| YouTube | N/A (description: 5000) | No | 1 (thumbnail) | Yes (unlimited) |
+| Platform  | Max Text                           | Threads           | Images        | Video           |
+| --------- | ---------------------------------- | ----------------- | ------------- | --------------- |
+| Mastodon  | 500 chars                          | No                | 4             | Yes (60s)       |
+| Bluesky   | 300 chars                          | Yes (via replies) | 4             | No              |
+| X/Twitter | 280 chars (free) / 25000 (premium) | Yes               | 4             | Yes (140s)      |
+| YouTube   | N/A (description: 5000)            | No                | 1 (thumbnail) | Yes (unlimited) |
 
 ### 4.5 API Contract
 
 #### Platform Connection Routes (`/api/v2/platforms`)
 
-| Method | Path | Auth | Description | Response | Story |
-|--------|------|------|-------------|----------|-------|
-| `POST` | `/connect/:platform` | Required | Initiate OAuth flow → returns redirect URL | `200 { success, data: { authorization_url } }` | US-E9-002 |
-| `GET` | `/callback/:platform` | Public | OAuth callback handler → redirects to frontend | `302 Redirect` | US-E9-002 |
-| `DELETE` | `/disconnect/:platform` | Required | Revoke tokens and remove connection | `200 { success, data: { disconnected: true } }` | US-E9-002 |
-| `GET` | `/status` | Required | List connected platforms with status | `200 { success, data: PlatformStatus[] }` | US-E9-002 |
+| Method   | Path                    | Auth     | Description                                    | Response                                        | Story     |
+| -------- | ----------------------- | -------- | ---------------------------------------------- | ----------------------------------------------- | --------- |
+| `POST`   | `/connect/:platform`    | Required | Initiate OAuth flow → returns redirect URL     | `200 { success, data: { authorization_url } }`  | US-E9-002 |
+| `GET`    | `/callback/:platform`   | Public   | OAuth callback handler → redirects to frontend | `302 Redirect`                                  | US-E9-002 |
+| `DELETE` | `/disconnect/:platform` | Required | Revoke tokens and remove connection            | `200 { success, data: { disconnected: true } }` | US-E9-002 |
+| `GET`    | `/status`               | Required | List connected platforms with status           | `200 { success, data: PlatformStatus[] }`       | US-E9-002 |
 
 **Zod Schemas**:
 
@@ -912,10 +921,12 @@ const platformParam = z.object({
 });
 
 // Connect body (optional: Mastodon requires instance URL)
-const connectBody = z.object({
-  instance_url: z.string().url().optional(), // Required for Mastodon
-  scopes: z.array(z.string()).optional(),
-}).optional();
+const connectBody = z
+  .object({
+    instance_url: z.string().url().optional(), // Required for Mastodon
+    scopes: z.array(z.string()).optional(),
+  })
+  .optional();
 
 // Callback query
 const callbackQuery = z.object({
@@ -944,13 +955,13 @@ export interface PlatformStatus {
 
 #### Distribution Routes (`/api/v2/distribute`)
 
-| Method | Path | Auth | Description | Response | Story |
-|--------|------|------|-------------|----------|-------|
-| `POST` | `/publish` | Required | Queue content for cross-platform publishing | `202 { success, data: { job_id, platforms: CrossPostEntry[] } }` | US-E9-003 |
-| `GET` | `/status/:contentId` | Required | Cross-post status per platform | `200 { success, data: CrossPostStatus[] }` | US-E9-003 |
-| `POST` | `/repurpose` | Required | Generate platform-optimized versions | `200 { success, data: RepurposedContent[] }` | US-E9-004 |
-| `GET` | `/repurposed/:contentId` | Required | Preview repurposed versions | `200 { success, data: RepurposedContent[] }` | US-E9-004 |
-| `PUT` | `/repurposed/:id/approve` | Required | Approve a repurposed version | `200 { success, data: RepurposedContent }` | US-E9-004 |
+| Method | Path                      | Auth     | Description                                 | Response                                                         | Story     |
+| ------ | ------------------------- | -------- | ------------------------------------------- | ---------------------------------------------------------------- | --------- |
+| `POST` | `/publish`                | Required | Queue content for cross-platform publishing | `202 { success, data: { job_id, platforms: CrossPostEntry[] } }` | US-E9-003 |
+| `GET`  | `/status/:contentId`      | Required | Cross-post status per platform              | `200 { success, data: CrossPostStatus[] }`                       | US-E9-003 |
+| `POST` | `/repurpose`              | Required | Generate platform-optimized versions        | `200 { success, data: RepurposedContent[] }`                     | US-E9-004 |
+| `GET`  | `/repurposed/:contentId`  | Required | Preview repurposed versions                 | `200 { success, data: RepurposedContent[] }`                     | US-E9-004 |
+| `PUT`  | `/repurposed/:id/approve` | Required | Approve a repurposed version                | `200 { success, data: RepurposedContent }`                       | US-E9-004 |
 
 **Zod Schemas**:
 
@@ -959,12 +970,14 @@ export interface PlatformStatus {
 const publishBody = z.object({
   content_id: z.string().uuid(),
   platforms: z.array(z.enum(['mastodon', 'bluesky', 'twitter', 'youtube'])).min(1),
-  schedule: z.object({
-    mastodon: z.string().datetime().optional(),
-    bluesky: z.string().datetime().optional(),
-    twitter: z.string().datetime().optional(),
-    youtube: z.string().datetime().optional(),
-  }).optional(),
+  schedule: z
+    .object({
+      mastodon: z.string().datetime().optional(),
+      bluesky: z.string().datetime().optional(),
+      twitter: z.string().datetime().optional(),
+      youtube: z.string().datetime().optional(),
+    })
+    .optional(),
   use_repurposed: z.boolean().default(false),
 });
 
@@ -981,7 +994,13 @@ const contentIdParam = z.object({ contentId: z.string().uuid() });
 **Response Types**:
 
 ```typescript
-export type CrossPostStatus = 'queued' | 'scheduled' | 'publishing' | 'published' | 'failed' | 'cancelled';
+export type CrossPostStatus =
+  | 'queued'
+  | 'scheduled'
+  | 'publishing'
+  | 'published'
+  | 'failed'
+  | 'cancelled';
 
 export interface CrossPostEntry {
   id: string;
@@ -1012,11 +1031,11 @@ export interface RepurposedContent {
 
 #### Unified Inbox Routes (`/api/v2/inbox`)
 
-| Method | Path | Auth | Description | Response | Story |
-|--------|------|------|-------------|----------|-------|
-| `GET` | `/messages?platform=all&status=unread&page=1&limit=20` | Required | Aggregated inbox | `200 { success, data: InboxMessage[], pagination }` | US-E9-007 |
-| `POST` | `/reply/:messageId` | Required | Reply routed to correct platform | `201 { success, data: { sent: true } }` | US-E9-007 |
-| `PUT` | `/batch` | Required | Batch actions (mark read, archive) | `200 { success, data: { updated: number } }` | US-E9-007 |
+| Method | Path                                                   | Auth     | Description                        | Response                                            | Story     |
+| ------ | ------------------------------------------------------ | -------- | ---------------------------------- | --------------------------------------------------- | --------- |
+| `GET`  | `/messages?platform=all&status=unread&page=1&limit=20` | Required | Aggregated inbox                   | `200 { success, data: InboxMessage[], pagination }` | US-E9-007 |
+| `POST` | `/reply/:messageId`                                    | Required | Reply routed to correct platform   | `201 { success, data: { sent: true } }`             | US-E9-007 |
+| `PUT`  | `/batch`                                               | Required | Batch actions (mark read, archive) | `200 { success, data: { updated: number } }`        | US-E9-007 |
 
 **Zod Schemas**:
 
@@ -1059,11 +1078,11 @@ export interface InboxMessage {
 
 #### Cross-Platform Analytics Routes (`/api/v2/analytics/cross-platform`)
 
-| Method | Path | Auth | Description | Response | Story |
-|--------|------|------|-------------|----------|-------|
-| `GET` | `/overview` | Required | Aggregate followers/engagement | `200 { success, data: PlatformOverview }` | US-E9-008 |
-| `GET` | `/comparison/:contentId` | Required | Same content, different platforms | `200 { success, data: ContentComparison[] }` | US-E9-008 |
-| `GET` | `/roi` | Required | Engagement per hour invested per platform | `200 { success, data: PlatformROI[] }` | US-E9-008 |
+| Method | Path                     | Auth     | Description                               | Response                                     | Story     |
+| ------ | ------------------------ | -------- | ----------------------------------------- | -------------------------------------------- | --------- |
+| `GET`  | `/overview`              | Required | Aggregate followers/engagement            | `200 { success, data: PlatformOverview }`    | US-E9-008 |
+| `GET`  | `/comparison/:contentId` | Required | Same content, different platforms         | `200 { success, data: ContentComparison[] }` | US-E9-008 |
+| `GET`  | `/roi`                   | Required | Engagement per hour invested per platform | `200 { success, data: PlatformROI[] }`       | US-E9-008 |
 
 **Response Types**:
 
@@ -1165,12 +1184,7 @@ export function encryptToken(
   return { encrypted, iv, authTag };
 }
 
-export function decryptToken(
-  encrypted: Buffer,
-  key: Buffer,
-  iv: Buffer,
-  authTag: Buffer
-): string {
+export function decryptToken(encrypted: Buffer, key: Buffer, iv: Buffer, authTag: Buffer): string {
   const decipher = createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);
   return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
@@ -1347,6 +1361,7 @@ CREATE POLICY "Creators can only access own metrics"
 ```
 
 **Security measures**:
+
 1. **CSRF protection**: Random `state` parameter stored server-side, validated on callback
 2. **Token encryption**: All tokens encrypted with AES-256-GCM before database storage
 3. **No token in logs**: Token values never appear in log output; only encrypted blobs stored
@@ -1478,6 +1493,7 @@ packages/frontend/src/features/multi-platform/
 ```
 
 **Data Flow**:
+
 ```
 Multi-Platform Hub (top-level nav)
 ├── Tab: Connections
@@ -1512,7 +1528,12 @@ Create `packages/shared/src/types/distribution.ts`:
 export type SupportedPlatform = 'mastodon' | 'bluesky' | 'twitter' | 'youtube';
 export type AllPlatform = SupportedPlatform | 'nostr';
 
-export type ConnectionStatus = 'connected' | 'token_expiring' | 'token_expired' | 'error' | 'disconnected';
+export type ConnectionStatus =
+  | 'connected'
+  | 'token_expiring'
+  | 'token_expired'
+  | 'error'
+  | 'disconnected';
 
 export interface PlatformStatus {
   platform: SupportedPlatform;
@@ -1528,7 +1549,13 @@ export interface PlatformStatus {
 // Cross-Post Types
 // ============================================================================
 
-export type CrossPostStatus = 'queued' | 'scheduled' | 'publishing' | 'published' | 'failed' | 'cancelled';
+export type CrossPostStatus =
+  | 'queued'
+  | 'scheduled'
+  | 'publishing'
+  | 'published'
+  | 'failed'
+  | 'cancelled';
 
 export interface CrossPostEntry {
   id: string;
@@ -1638,13 +1665,13 @@ export interface Pagination {
 
 All migrations go into `supabase/migrations/` with timestamp prefixes.
 
-| Order | Migration File | Tables/Functions | Epic |
-|-------|---------------|------------------|------|
-| 1 | `20260216200000_epic009_platform_connections.sql` | `platform_connections` | 009 |
-| 2 | `20260216200100_epic009_cross_posts.sql` | `cross_posts` | 009 |
-| 3 | `20260216200200_epic009_repurposed_content.sql` | `repurposed_content` | 009 |
-| 4 | `20260216200300_epic009_inbox_messages.sql` | `inbox_messages` | 009 |
-| 5 | `20260216200400_epic009_platform_metrics_history.sql` | `platform_metrics_history` | 009 |
+| Order | Migration File                                        | Tables/Functions           | Epic |
+| ----- | ----------------------------------------------------- | -------------------------- | ---- |
+| 1     | `20260216200000_epic009_platform_connections.sql`     | `platform_connections`     | 009  |
+| 2     | `20260216200100_epic009_cross_posts.sql`              | `cross_posts`              | 009  |
+| 3     | `20260216200200_epic009_repurposed_content.sql`       | `repurposed_content`       | 009  |
+| 4     | `20260216200300_epic009_inbox_messages.sql`           | `inbox_messages`           | 009  |
+| 5     | `20260216200400_epic009_platform_metrics_history.sql` | `platform_metrics_history` | 009  |
 
 EPIC-007 and EPIC-008 tables already exist from the infrastructure sprint. No new migrations needed for those epics.
 
@@ -1692,17 +1719,20 @@ DROP TABLE IF EXISTS platform_connections CASCADE;
 ### Phase 1: Foundation (Week 1)
 
 **EPIC-007** (already implemented — verify and fill gaps):
+
 1. Verify all wellness routes functional
 2. Fill remaining gaps: auto-tracking middleware, wellness resource library static data
 3. Frontend integration testing
 
 **EPIC-008** (already implemented — verify and fill gaps):
+
 1. Verify all shield routes functional
 2. Implement ScannerService BullMQ worker (US-E8-004a)
 3. Implement auto-signing hook in content publish pipeline (US-E8-007)
 4. Frontend integration testing
 
 **EPIC-009** (new — database + services):
+
 1. Run all 5 database migrations
 2. Implement DI tokens and interfaces
 3. Implement PlatformConnectionService + OAuth adapters (Mastodon + Bluesky first)
@@ -1710,19 +1740,11 @@ DROP TABLE IF EXISTS platform_connections CASCADE;
 
 ### Phase 2: Core Features (Week 2)
 
-**EPIC-009** continued:
-5. Implement CrossPostService + BullMQ cross-publish worker
-6. Implement RepurposingService (thread + summary converters)
-7. Implement platform routes (`platforms.routes.ts`, `distribute.routes.ts`)
-8. Frontend: PlatformConnector, DistributionPanel, CrossPostQueue, RepurposePreview
+**EPIC-009** continued: 5. Implement CrossPostService + BullMQ cross-publish worker 6. Implement RepurposingService (thread + summary converters) 7. Implement platform routes (`platforms.routes.ts`, `distribute.routes.ts`) 8. Frontend: PlatformConnector, DistributionPanel, CrossPostQueue, RepurposePreview
 
 ### Phase 3: Extended Features (Week 3)
 
-**EPIC-009 Wave B**:
-9. Implement UnifiedInboxService + BullMQ inbox-poll worker
-10. Implement CrossPlatformAnalyticsService
-11. Implement inbox + analytics routes
-12. Frontend: UnifiedInbox, CrossPlatformDashboard, PlatformROI
+**EPIC-009 Wave B**: 9. Implement UnifiedInboxService + BullMQ inbox-poll worker 10. Implement CrossPlatformAnalyticsService 11. Implement inbox + analytics routes 12. Frontend: UnifiedInbox, CrossPlatformDashboard, PlatformROI
 
 ### Phase 4: Integration & QA (Week 4)
 
@@ -1735,14 +1757,15 @@ DROP TABLE IF EXISTS platform_connections CASCADE;
 
 ## 8. ADR References
 
-| ADR | Decision | Epics |
-|-----|----------|-------|
-| ADR-019 | Weighted 5-factor burnout scoring with personal baselines | EPIC-007 |
-| ADR-020 | SimHash (text) + pHash (images) for content fingerprinting | EPIC-008 |
-| ADR-021 | Custodial design for payment flows | Future (EPIC-010) |
-| ADR-022 | BullMQ for job queues (reuse existing Redis) | EPIC-008, EPIC-009 |
+| ADR     | Decision                                                   | Epics              |
+| ------- | ---------------------------------------------------------- | ------------------ |
+| ADR-019 | Weighted 5-factor burnout scoring with personal baselines  | EPIC-007           |
+| ADR-020 | SimHash (text) + pHash (images) for content fingerprinting | EPIC-008           |
+| ADR-021 | Custodial design for payment flows                         | Future (EPIC-010)  |
+| ADR-022 | BullMQ for job queues (reuse existing Redis)               | EPIC-008, EPIC-009 |
 
 **New ADR needed for EPIC-009**:
+
 - **ADR-023: Platform Adapter Abstraction** — Document the adapter interface pattern for adding new platforms
 - **ADR-024: OAuth Token Storage Encryption** — Document AES-256-GCM approach with SecretsService key management
 
@@ -1750,16 +1773,16 @@ DROP TABLE IF EXISTS platform_connections CASCADE;
 
 ## 9. Risk Register
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| OAuth tokens leaked in logs | Critical | Explicit redaction in all log statements; code review gate |
-| Platform API breaking changes | High | Adapter pattern isolates changes to single file per platform |
-| BullMQ Redis failure loses queued jobs | High | Redis AOF persistence enabled; DLQ for failed jobs |
-| Rate limiting by external platforms | Medium | Per-adapter rate limiters with configurable RPM |
-| Token refresh race condition | Medium | BullMQ ensures single worker per token-refresh job |
-| Mastodon instance heterogeneity | Medium | Instance URL stored per connection; adapter handles API differences |
-| Fingerprint false positives | Medium | Configurable similarity threshold per creator; false_positive status |
-| Mastodon multi-instance conflict | Medium | Unique constraint updated to include instance_url (see 10.5) |
+| Risk                                   | Severity | Mitigation                                                           |
+| -------------------------------------- | -------- | -------------------------------------------------------------------- |
+| OAuth tokens leaked in logs            | Critical | Explicit redaction in all log statements; code review gate           |
+| Platform API breaking changes          | High     | Adapter pattern isolates changes to single file per platform         |
+| BullMQ Redis failure loses queued jobs | High     | Redis AOF persistence enabled; DLQ for failed jobs                   |
+| Rate limiting by external platforms    | Medium   | Per-adapter rate limiters with configurable RPM                      |
+| Token refresh race condition           | Medium   | BullMQ ensures single worker per token-refresh job                   |
+| Mastodon instance heterogeneity        | Medium   | Instance URL stored per connection; adapter handles API differences  |
+| Fingerprint false positives            | Medium   | Configurable similarity threshold per creator; false_positive status |
+| Mastodon multi-instance conflict       | Medium   | Unique constraint updated to include instance_url (see 10.5)         |
 
 ---
 
@@ -1777,7 +1800,10 @@ Product-owner validated the architecture and identified 4 gaps + 2 observations.
 
 ```typescript
 import type { Request, Response, NextFunction } from 'express';
-import type { IWellnessService, CreateWorkPatternInput } from '../interfaces/wellness/IWellnessService';
+import type {
+  IWellnessService,
+  CreateWorkPatternInput,
+} from '../interfaces/wellness/IWellnessService';
 import { container } from '../container';
 import { TYPES } from '../container/types';
 
@@ -1789,16 +1815,46 @@ const TRACKING_RULES: Array<{
   estimatedMins: number;
 }> = [
   // Content creation activities
-  { method: 'POST', pathPattern: /\/api\/v[12]\/content\/publish/, activityType: 'content_creation', estimatedMins: 30 },
-  { method: 'PUT',  pathPattern: /\/api\/v[12]\/content\//, activityType: 'content_creation', estimatedMins: 15 },
+  {
+    method: 'POST',
+    pathPattern: /\/api\/v[12]\/content\/publish/,
+    activityType: 'content_creation',
+    estimatedMins: 30,
+  },
+  {
+    method: 'PUT',
+    pathPattern: /\/api\/v[12]\/content\//,
+    activityType: 'content_creation',
+    estimatedMins: 15,
+  },
 
   // Engagement activities
-  { method: 'POST', pathPattern: /\/api\/v[12]\/messages/, activityType: 'engagement', estimatedMins: 5 },
-  { method: 'POST', pathPattern: /\/api\/v[12]\/inbox\/reply/, activityType: 'engagement', estimatedMins: 5 },
+  {
+    method: 'POST',
+    pathPattern: /\/api\/v[12]\/messages/,
+    activityType: 'engagement',
+    estimatedMins: 5,
+  },
+  {
+    method: 'POST',
+    pathPattern: /\/api\/v[12]\/inbox\/reply/,
+    activityType: 'engagement',
+    estimatedMins: 5,
+  },
 
   // Management activities
-  { method: 'GET',  pathPattern: /\/api\/v[12]\/analytics/, activityType: 'management', estimatedMins: 10 },
-  { method: 'PUT',  pathPattern: /\/api\/v[12]\/settings/, activityType: 'management', estimatedMins: 5 },
+  {
+    method: 'GET',
+    pathPattern: /\/api\/v[12]\/analytics/,
+    activityType: 'management',
+    estimatedMins: 10,
+  },
+  {
+    method: 'PUT',
+    pathPattern: /\/api\/v[12]\/settings/,
+    activityType: 'management',
+    estimatedMins: 5,
+  },
 ];
 
 /**
@@ -1813,7 +1869,7 @@ export function workTrackingMiddleware(req: Request, res: Response, next: NextFu
     if (res.statusCode >= 400 || !req.user?.nostr_pubkey) return;
 
     const rule = TRACKING_RULES.find(
-      r => r.method === req.method && r.pathPattern.test(req.originalUrl)
+      (r) => r.method === req.method && r.pathPattern.test(req.originalUrl)
     );
     if (!rule) return;
 
@@ -1836,6 +1892,7 @@ export function workTrackingMiddleware(req: Request, res: Response, next: NextFu
 ```
 
 **Registration**: Mount in `app.ts` after authentication middleware, before route handlers:
+
 ```typescript
 app.use(workTrackingMiddleware);
 ```
@@ -1858,42 +1915,182 @@ export interface WellnessResource {
 
 export const WELLNESS_RESOURCES: WellnessResource[] = [
   // Crisis Resources (always visible per AC-5)
-  { id: 'cr-1', title: 'Crisis Text Line', description: 'Free 24/7 crisis support via text', url: 'https://www.crisistextline.org/', category: 'crisis', tags: ['immediate', 'text'] },
-  { id: 'cr-2', title: '988 Suicide & Crisis Lifeline', description: 'Call or text 988 for immediate support', url: 'https://988lifeline.org/', category: 'crisis', tags: ['immediate', 'phone'] },
-  { id: 'cr-3', title: 'SAMHSA Helpline', description: 'Free referral and information service', url: 'https://www.samhsa.gov/find-help/national-helpline', category: 'crisis', tags: ['referral'] },
-  { id: 'cr-4', title: 'International Association for Suicide Prevention', description: 'Crisis centers worldwide', url: 'https://www.iasp.info/resources/Crisis_Centres/', category: 'crisis', tags: ['international'] },
-  { id: 'cr-5', title: 'BetterHelp', description: 'Online therapy and counseling', url: 'https://www.betterhelp.com/', category: 'crisis', tags: ['therapy', 'online'] },
+  {
+    id: 'cr-1',
+    title: 'Crisis Text Line',
+    description: 'Free 24/7 crisis support via text',
+    url: 'https://www.crisistextline.org/',
+    category: 'crisis',
+    tags: ['immediate', 'text'],
+  },
+  {
+    id: 'cr-2',
+    title: '988 Suicide & Crisis Lifeline',
+    description: 'Call or text 988 for immediate support',
+    url: 'https://988lifeline.org/',
+    category: 'crisis',
+    tags: ['immediate', 'phone'],
+  },
+  {
+    id: 'cr-3',
+    title: 'SAMHSA Helpline',
+    description: 'Free referral and information service',
+    url: 'https://www.samhsa.gov/find-help/national-helpline',
+    category: 'crisis',
+    tags: ['referral'],
+  },
+  {
+    id: 'cr-4',
+    title: 'International Association for Suicide Prevention',
+    description: 'Crisis centers worldwide',
+    url: 'https://www.iasp.info/resources/Crisis_Centres/',
+    category: 'crisis',
+    tags: ['international'],
+  },
+  {
+    id: 'cr-5',
+    title: 'BetterHelp',
+    description: 'Online therapy and counseling',
+    url: 'https://www.betterhelp.com/',
+    category: 'crisis',
+    tags: ['therapy', 'online'],
+  },
 
   // Communities (5+)
-  { id: 'cm-1', title: 'Creator Burnout Reddit', description: 'Community of creators discussing burnout and recovery', url: 'https://reddit.com/r/CreatorBurnout', category: 'communities', tags: ['peer-support'] },
-  { id: 'cm-2', title: 'The Creator Economy', description: 'Discord community for sustainable content creation', url: 'https://discord.gg/creator-economy', category: 'communities', tags: ['discord'] },
-  { id: 'cm-3', title: 'Indie Hackers', description: 'Community of founders building sustainable businesses', url: 'https://www.indiehackers.com/', category: 'communities', tags: ['entrepreneurship'] },
-  { id: 'cm-4', title: 'NOSTR Creator Community', description: 'NOSTR-native creator support group', url: 'https://nostr.com/communities/creators', category: 'communities', tags: ['nostr', 'decentralized'] },
-  { id: 'cm-5', title: 'The Balanced Creator', description: 'Newsletter community focused on sustainable creativity', url: 'https://balancedcreator.com/', category: 'communities', tags: ['newsletter'] },
+  {
+    id: 'cm-1',
+    title: 'Creator Burnout Reddit',
+    description: 'Community of creators discussing burnout and recovery',
+    url: 'https://reddit.com/r/CreatorBurnout',
+    category: 'communities',
+    tags: ['peer-support'],
+  },
+  {
+    id: 'cm-2',
+    title: 'The Creator Economy',
+    description: 'Discord community for sustainable content creation',
+    url: 'https://discord.gg/creator-economy',
+    category: 'communities',
+    tags: ['discord'],
+  },
+  {
+    id: 'cm-3',
+    title: 'Indie Hackers',
+    description: 'Community of founders building sustainable businesses',
+    url: 'https://www.indiehackers.com/',
+    category: 'communities',
+    tags: ['entrepreneurship'],
+  },
+  {
+    id: 'cm-4',
+    title: 'NOSTR Creator Community',
+    description: 'NOSTR-native creator support group',
+    url: 'https://nostr.com/communities/creators',
+    category: 'communities',
+    tags: ['nostr', 'decentralized'],
+  },
+  {
+    id: 'cm-5',
+    title: 'The Balanced Creator',
+    description: 'Newsletter community focused on sustainable creativity',
+    url: 'https://balancedcreator.com/',
+    category: 'communities',
+    tags: ['newsletter'],
+  },
 
   // Articles (5+)
-  { id: 'ar-1', title: 'The Science of Creator Burnout', description: 'Research-backed overview of burnout in creative professions', url: 'https://hbr.org/burnout', category: 'articles', tags: ['research'] },
-  { id: 'ar-2', title: 'Sustainable Content Creation Guide', description: 'Practical framework for long-term content production', url: 'https://creatoreconomy.so/sustainable-guide', category: 'articles', tags: ['guide'] },
-  { id: 'ar-3', title: 'Setting Boundaries as a Creator', description: 'How to protect your time and energy', url: 'https://aliabdaal.com/boundaries', category: 'articles', tags: ['boundaries'] },
-  { id: 'ar-4', title: 'The Pomodoro Technique for Creators', description: 'Time management adapted for creative work', url: 'https://todoist.com/productivity-methods/pomodoro-technique', category: 'articles', tags: ['productivity'] },
-  { id: 'ar-5', title: 'Digital Minimalism for Creators', description: 'Reducing screen time while maintaining output', url: 'https://calnewport.com/digital-minimalism/', category: 'articles', tags: ['digital-wellness'] },
+  {
+    id: 'ar-1',
+    title: 'The Science of Creator Burnout',
+    description: 'Research-backed overview of burnout in creative professions',
+    url: 'https://hbr.org/burnout',
+    category: 'articles',
+    tags: ['research'],
+  },
+  {
+    id: 'ar-2',
+    title: 'Sustainable Content Creation Guide',
+    description: 'Practical framework for long-term content production',
+    url: 'https://creatoreconomy.so/sustainable-guide',
+    category: 'articles',
+    tags: ['guide'],
+  },
+  {
+    id: 'ar-3',
+    title: 'Setting Boundaries as a Creator',
+    description: 'How to protect your time and energy',
+    url: 'https://aliabdaal.com/boundaries',
+    category: 'articles',
+    tags: ['boundaries'],
+  },
+  {
+    id: 'ar-4',
+    title: 'The Pomodoro Technique for Creators',
+    description: 'Time management adapted for creative work',
+    url: 'https://todoist.com/productivity-methods/pomodoro-technique',
+    category: 'articles',
+    tags: ['productivity'],
+  },
+  {
+    id: 'ar-5',
+    title: 'Digital Minimalism for Creators',
+    description: 'Reducing screen time while maintaining output',
+    url: 'https://calnewport.com/digital-minimalism/',
+    category: 'articles',
+    tags: ['digital-wellness'],
+  },
 
   // Tools (5+)
-  { id: 'tl-1', title: 'Notion', description: 'Content calendar and planning workspace', url: 'https://notion.so/', category: 'tools', tags: ['planning'] },
-  { id: 'tl-2', title: 'Headspace', description: 'Meditation and mindfulness app', url: 'https://www.headspace.com/', category: 'tools', tags: ['meditation'] },
-  { id: 'tl-3', title: 'RescueTime', description: 'Automatic time tracking and focus tools', url: 'https://www.rescuetime.com/', category: 'tools', tags: ['time-tracking'] },
-  { id: 'tl-4', title: 'Forest App', description: 'Focus timer that grows virtual trees', url: 'https://www.forestapp.cc/', category: 'tools', tags: ['focus'] },
-  { id: 'tl-5', title: 'Calm', description: 'Sleep stories and relaxation exercises', url: 'https://www.calm.com/', category: 'tools', tags: ['sleep', 'relaxation'] },
+  {
+    id: 'tl-1',
+    title: 'Notion',
+    description: 'Content calendar and planning workspace',
+    url: 'https://notion.so/',
+    category: 'tools',
+    tags: ['planning'],
+  },
+  {
+    id: 'tl-2',
+    title: 'Headspace',
+    description: 'Meditation and mindfulness app',
+    url: 'https://www.headspace.com/',
+    category: 'tools',
+    tags: ['meditation'],
+  },
+  {
+    id: 'tl-3',
+    title: 'RescueTime',
+    description: 'Automatic time tracking and focus tools',
+    url: 'https://www.rescuetime.com/',
+    category: 'tools',
+    tags: ['time-tracking'],
+  },
+  {
+    id: 'tl-4',
+    title: 'Forest App',
+    description: 'Focus timer that grows virtual trees',
+    url: 'https://www.forestapp.cc/',
+    category: 'tools',
+    tags: ['focus'],
+  },
+  {
+    id: 'tl-5',
+    title: 'Calm',
+    description: 'Sleep stories and relaxation exercises',
+    url: 'https://www.calm.com/',
+    category: 'tools',
+    tags: ['sleep', 'relaxation'],
+  },
 ];
 
 /** Crisis resources must always be shown first, per US-E7-008 AC-5 */
 export function getResourcesByCategory(category?: string): WellnessResource[] {
   if (!category || category === 'all') return WELLNESS_RESOURCES;
-  return WELLNESS_RESOURCES.filter(r => r.category === category);
+  return WELLNESS_RESOURCES.filter((r) => r.category === category);
 }
 
 export function getCrisisResources(): WellnessResource[] {
-  return WELLNESS_RESOURCES.filter(r => r.category === 'crisis');
+  return WELLNESS_RESOURCES.filter((r) => r.category === 'crisis');
 }
 ```
 
@@ -1959,6 +2156,7 @@ CREATE TRIGGER trg_provenance_immutability
 **API impact**: `GET /api/v2/shield/provenance/:contentId` returns the latest version by default. Add optional `?version=N` query param to retrieve a specific version. `ProvenanceService.getProvenanceChain()` updated to ORDER BY version DESC LIMIT 1.
 
 **Re-signing flow** (content edit):
+
 1. Load existing provenance for content_id (latest version)
 2. Set existing record status to `superseded`
 3. Insert new record with `version = previous + 1`, `supersedes_id = previous.id`
@@ -1994,12 +2192,7 @@ export function encryptToken(
   return { encrypted, iv, authTag, keyVersion };
 }
 
-export function decryptToken(
-  encrypted: Buffer,
-  key: Buffer,
-  iv: Buffer,
-  authTag: Buffer
-): string {
+export function decryptToken(encrypted: Buffer, key: Buffer, iv: Buffer, authTag: Buffer): string {
   const decipher = createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);
   return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
@@ -2010,9 +2203,8 @@ export function decryptToken(
 
 ```typescript
 async function getEncryptionKey(version: number): Promise<Buffer> {
-  const secretName = version === 1
-    ? 'PLATFORM_TOKEN_ENCRYPTION_KEY'
-    : `PLATFORM_TOKEN_ENCRYPTION_KEY_V${version}`;
+  const secretName =
+    version === 1 ? 'PLATFORM_TOKEN_ENCRYPTION_KEY' : `PLATFORM_TOKEN_ENCRYPTION_KEY_V${version}`;
   const keyHex = await secretsService.getSecret(secretName);
   return Buffer.from(keyHex, 'hex');
 }
@@ -2042,9 +2234,9 @@ This allows a creator to connect to `mastodon.social` and `hachyderm.io` simulta
 
 **Updated queue config for `cross-publish`**:
 
-| Queue | Concurrency | Max Retries | Backoff | Priority Levels |
-|-------|-------------|-------------|---------|-----------------|
-| `cross-publish` | 5 | 4 | Exponential (30s, 120s, 300s, 3600s) | urgent, normal |
+| Queue           | Concurrency | Max Retries | Backoff                              | Priority Levels |
+| --------------- | ----------- | ----------- | ------------------------------------ | --------------- |
+| `cross-publish` | 5           | 4           | Exponential (30s, 120s, 300s, 3600s) | urgent, normal  |
 
 ```typescript
 // In CrossPostService when adding job:

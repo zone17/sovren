@@ -69,7 +69,7 @@ describe('Performance Regression Tests', () => {
       }
 
       // Response times should remain stable or improve
-      expect(responseTimes.every(rt => rt < 600)).toBe(true);
+      expect(responseTimes.every((rt) => rt < 600)).toBe(true);
     });
 
     it('should compare response times across versions', async () => {
@@ -123,7 +123,7 @@ describe('Performance Regression Tests', () => {
       }
 
       // Error rates should be consistently low
-      expect(errorRates.every(rate => rate < 0.05)).toBe(true);
+      expect(errorRates.every((rate) => rate < 0.05)).toBe(true);
     });
 
     it('should compare error rates pre and post deployment', async () => {
@@ -155,7 +155,7 @@ describe('Performance Regression Tests', () => {
       for (let i = 0; i < 5; i++) {
         const memory = await simulator.measureMemoryUsage('1.2.3');
         measurements.push(memory);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Memory should not grow continuously
@@ -185,7 +185,7 @@ describe('Performance Regression Tests', () => {
       }
 
       // Memory usage should remain reasonable
-      expect(memoryUsages.every(mem => mem < 2000)).toBe(true);
+      expect(memoryUsages.every((mem) => mem < 2000)).toBe(true);
     });
 
     it('should compare memory footprint', async () => {
@@ -238,7 +238,7 @@ describe('Performance Regression Tests', () => {
 
       // Throughput should be consistent (within 20% variance)
       const avg = measurements.reduce((a, b) => a + b, 0) / measurements.length;
-      measurements.forEach(measurement => {
+      measurements.forEach((measurement) => {
         expect(Math.abs(measurement - avg) / avg).toBeLessThan(0.2);
       });
     });
@@ -276,7 +276,7 @@ describe('Performance Regression Tests', () => {
       await simulator.deployVersion('1.2.3');
 
       const initialMetrics = await simulator.measureMetrics('1.2.3');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const laterMetrics = await simulator.measureMetrics('1.2.3');
 
       // Memory should not grow significantly
@@ -297,7 +297,7 @@ describe('Performance Regression Tests', () => {
     it('should ensure zero-downtime deployment', async () => {
       const deployment = await simulator.deployWithBlueGreen({
         environment: 'production',
-        version: '1.2.3'
+        version: '1.2.3',
       });
 
       expect(deployment.downtime).toBe(0);
@@ -347,7 +347,7 @@ describe('Performance Regression Tests', () => {
       }
 
       // Verify all measurements are valid
-      trends.forEach(trend => {
+      trends.forEach((trend) => {
         expect(trend.p95ResponseTime).toBeGreaterThan(0);
         expect(trend.memoryUsage).toBeGreaterThan(0);
         expect(trend.throughput).toBeGreaterThan(0);

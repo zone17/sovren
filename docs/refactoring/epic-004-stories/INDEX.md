@@ -2,43 +2,47 @@
 
 ## Quick Navigation
 
-| Document | Purpose | Audience | Size |
-|----------|---------|----------|------|
-| **[README.md](./README.md)** | Central hub and overview | Everyone | 13KB |
-| **[STORY_BREAKDOWN.md](./STORY_BREAKDOWN.md)** | Complete 25-story breakdown | Developers | 58KB |
-| **[STORY_MAP.md](./STORY_MAP.md)** | Sprint organization and strategy | Tech Leads, PMs | 10KB |
-| **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** | Daily developer guide | Developers | 19KB |
-| **[EPIC_004_COMPLETION_SUMMARY.md](./EPIC_004_COMPLETION_SUMMARY.md)** | Executive summary | All stakeholders | 15KB |
+| Document                                                               | Purpose                          | Audience         | Size |
+| ---------------------------------------------------------------------- | -------------------------------- | ---------------- | ---- |
+| **[README.md](./README.md)**                                           | Central hub and overview         | Everyone         | 13KB |
+| **[STORY_BREAKDOWN.md](./STORY_BREAKDOWN.md)**                         | Complete 25-story breakdown      | Developers       | 58KB |
+| **[STORY_MAP.md](./STORY_MAP.md)**                                     | Sprint organization and strategy | Tech Leads, PMs  | 10KB |
+| **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)**                         | Daily developer guide            | Developers       | 19KB |
+| **[EPIC_004_COMPLETION_SUMMARY.md](./EPIC_004_COMPLETION_SUMMARY.md)** | Executive summary                | All stakeholders | 15KB |
 
 ## Visual Diagrams
 
-| Diagram | Format | Purpose | View Online |
-|---------|--------|---------|-------------|
-| **[dependency-graph.mmd](./dependency-graph.mmd)** | Mermaid | Story dependencies and parallel work | [Mermaid Live](https://mermaid.live/) |
-| **[decision-tree.mmd](./decision-tree.mmd)** | Mermaid | Redux vs React Query decision flow | [Mermaid Live](https://mermaid.live/) |
-| **[architecture-overview.mmd](./architecture-overview.mmd)** | Mermaid | Complete system architecture | [Mermaid Live](https://mermaid.live/) |
-| **[dependencies.txt](./dependencies.txt)** | Text | Text-based dependency chain | Any text editor |
+| Diagram                                                      | Format  | Purpose                              | View Online                           |
+| ------------------------------------------------------------ | ------- | ------------------------------------ | ------------------------------------- |
+| **[dependency-graph.mmd](./dependency-graph.mmd)**           | Mermaid | Story dependencies and parallel work | [Mermaid Live](https://mermaid.live/) |
+| **[decision-tree.mmd](./decision-tree.mmd)**                 | Mermaid | Redux vs React Query decision flow   | [Mermaid Live](https://mermaid.live/) |
+| **[architecture-overview.mmd](./architecture-overview.mmd)** | Mermaid | Complete system architecture         | [Mermaid Live](https://mermaid.live/) |
+| **[dependencies.txt](./dependencies.txt)**                   | Text    | Text-based dependency chain          | Any text editor                       |
 
 ## Start Here
 
 ### For Developers Starting Work
+
 1. Read: [README.md](./README.md) - Get the big picture
 2. Review: [decision-tree.mmd](./decision-tree.mmd) - Understand when to use Redux vs React Query
 3. Pick a story: [STORY_BREAKDOWN.md](./STORY_BREAKDOWN.md) - Find your assigned story
 4. Reference: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) - Keep this open while coding
 
 ### For Tech Leads Planning Work
+
 1. Review: [EPIC_004_COMPLETION_SUMMARY.md](./EPIC_004_COMPLETION_SUMMARY.md) - Executive overview
 2. Plan: [STORY_MAP.md](./STORY_MAP.md) - Sprint organization and team allocation
 3. Visualize: [dependency-graph.mmd](./dependency-graph.mmd) - See the critical path
 4. Assign: [STORY_BREAKDOWN.md](./STORY_BREAKDOWN.md) - Detailed story specifications
 
 ### For Product Managers
+
 1. Summary: [EPIC_004_COMPLETION_SUMMARY.md](./EPIC_004_COMPLETION_SUMMARY.md)
 2. Timeline: [STORY_MAP.md](./STORY_MAP.md) - See sprint breakdown and timelines
 3. Value: [README.md](./README.md) - Understand business impact
 
 ### For New Team Members
+
 1. Overview: [README.md](./README.md)
 2. Decision Guide: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
 3. Architecture: [architecture-overview.mmd](./architecture-overview.mmd)
@@ -46,7 +50,9 @@
 ## Document Purposes
 
 ### README.md
+
 **The Central Hub**
+
 - Quick links to all resources
 - Epic summary and metrics
 - Sprint structure overview
@@ -57,7 +63,9 @@
 - FAQ
 
 ### STORY_BREAKDOWN.md
+
 **The Implementation Bible**
+
 - All 25 user stories in full detail
 - Acceptance criteria (Given-When-Then)
 - Complete technical implementation
@@ -68,7 +76,9 @@
 - Performance targets
 
 ### STORY_MAP.md
+
 **The Strategic Plan**
+
 - Sprint organization
 - Work stream allocation
 - Timeline scenarios (2, 3, 4 developer teams)
@@ -79,7 +89,9 @@
 - Rollback strategy
 
 ### QUICK_REFERENCE.md
+
 **The Daily Developer Guide**
+
 - Story lookup table
 - Decision tree (when to use Redux vs React Query)
 - Code examples cheat sheet
@@ -90,7 +102,9 @@
 - Troubleshooting guide
 
 ### EPIC_004_COMPLETION_SUMMARY.md
+
 **The Executive Summary**
+
 - High-level overview
 - Sprint breakdown
 - Parallel work capacity
@@ -103,7 +117,9 @@
 ## Visual Diagram Guide
 
 ### dependency-graph.mmd
+
 **Story Dependencies and Work Streams**
+
 - Shows all 25 stories organized by sprint
 - Color-coded by work stream:
   - 🟢 Foundation (Sprint 0)
@@ -115,14 +131,18 @@
 - Dashed lines = parallel opportunities
 
 ### decision-tree.mmd
+
 **Redux vs React Query Decision Flow**
+
 - Interactive decision flowchart
 - 4 decision points guide you to the right tool
 - Code examples for each path
 - Covers all common scenarios
 
 ### architecture-overview.mmd
+
 **Complete System Architecture**
+
 - Data flow from APIs → React Query → Components
 - Redux store structure and organization
 - Query and mutation hooks layout
@@ -130,7 +150,9 @@
 - DevTools integration
 
 ### dependencies.txt
+
 **Text-Based Dependency Chain**
+
 - ASCII-formatted dependency tree
 - Story-by-story breakdown
 - Work stream summaries
@@ -151,18 +173,23 @@
 ## Story Breakdown by Phase
 
 ### Phase 1: Audit & Guidelines (Stories 1-5)
+
 Foundation work - 2-3 days, sequential
 
 ### Phase 2: Server Data Migration (Stories 6-12)
+
 Backend stream - 3-4 days, can parallelize
 
 ### Phase 3: Client State Consolidation (Stories 13-17)
+
 Frontend stream - 2-3 days, parallel with Phase 2
 
 ### Phase 4: Testing & Validation (Stories 18-22)
+
 Quality assurance - 2-3 days, after Phases 2 & 3
 
 ### Phase 5: Documentation & Training (Stories 23-25)
+
 Knowledge transfer - 1-2 days, final phase
 
 ## File Sizes Reference
@@ -176,16 +203,19 @@ Knowledge transfer - 1-2 days, final phase
 ## Viewing Mermaid Diagrams
 
 ### Option 1: Online Editor
+
 1. Copy content from `.mmd` file
 2. Paste into [Mermaid Live Editor](https://mermaid.live/)
 3. View and export as PNG/SVG
 
 ### Option 2: VS Code Extension
+
 1. Install "Mermaid Preview" extension
 2. Open `.mmd` file
 3. Right-click → "Preview Mermaid Diagram"
 
 ### Option 3: Command Line
+
 ```bash
 npm install -g @mermaid-js/mermaid-cli
 mmdc -i dependency-graph.mmd -o dependency-graph.png
@@ -194,6 +224,7 @@ mmdc -i architecture-overview.mmd -o architecture-overview.png
 ```
 
 ### Option 4: GitHub
+
 - GitHub automatically renders `.mmd` files in the web interface
 - Just view the file on GitHub.com
 
@@ -228,6 +259,7 @@ mmdc -i architecture-overview.mmd -o architecture-overview.png
 ## Contributing
 
 When updating documentation:
+
 1. Keep all documents in sync
 2. Update INDEX.md if adding new files
 3. Maintain consistent formatting

@@ -22,9 +22,7 @@
       "sha256:c0d30d030e55be45065066f0a1fad16aa16026284dd171b478685aa82c9197f1",
       "sha256:df56c0399d45bb0a517fd9fe8bdbcc3d615da076e98675094c5c7b4900246165"
     ],
-    "RepoTags": [
-      "grafana/grafana:latest"
-    ],
+    "RepoTags": ["grafana/grafana:latest"],
     "RepoDigests": [
       "grafana/grafana@sha256:b5b59bfc7561634c2d7b136c4543d702ebcc94a3da477f21ff26f89ffd4214fa"
     ],
@@ -166,9 +164,7 @@
         ]
       },
       "config": {
-        "Entrypoint": [
-          "/run.sh"
-        ],
+        "Entrypoint": ["/run.sh"],
         "Env": [
           "PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
           "GF_PATHS_CONFIG=/etc/grafana/grafana.ini",

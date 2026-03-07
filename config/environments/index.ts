@@ -118,7 +118,7 @@ export const logEnvironmentInfo = () => {
   const validation = validateEnvironmentConfig();
   if (!validation.valid) {
     console.error('❌ Configuration errors detected:');
-    validation.errors.forEach(error => console.error(`  - ${error}`));
+    validation.errors.forEach((error) => console.error(`  - ${error}`));
   } else {
     console.log('✅ Configuration validated successfully');
   }

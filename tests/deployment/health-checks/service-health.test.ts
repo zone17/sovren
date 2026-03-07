@@ -45,7 +45,7 @@ describe('Service Health Checks', () => {
     'monitoring',
     'logging',
     'alerting',
-    'health-check'
+    'health-check',
   ];
 
   beforeEach(() => {
@@ -57,7 +57,7 @@ describe('Service Health Checks', () => {
   });
 
   describe('Health Endpoint Validation', () => {
-    services.forEach(service => {
+    services.forEach((service) => {
       describe(`${service} service`, () => {
         it('should have /health endpoint', async () => {
           const health = await simulator.checkServiceHealth(service);
@@ -85,7 +85,7 @@ describe('Service Health Checks', () => {
   });
 
   describe('Readiness Endpoint Validation', () => {
-    services.forEach(service => {
+    services.forEach((service) => {
       it(`should check if ${service} is ready`, async () => {
         const health = await simulator.checkServiceHealth(service);
 
@@ -111,7 +111,7 @@ describe('Service Health Checks', () => {
   });
 
   describe('Liveness Endpoint Validation', () => {
-    services.forEach(service => {
+    services.forEach((service) => {
       it(`should verify ${service} is alive`, async () => {
         const health = await simulator.checkServiceHealth(service);
 
@@ -232,9 +232,7 @@ describe('Service Health Checks', () => {
       const startTime = Date.now();
 
       await Promise.all(
-        services.slice(0, 10).map(service =>
-          simulator.checkServiceHealth(service)
-        )
+        services.slice(0, 10).map((service) => simulator.checkServiceHealth(service))
       );
 
       const duration = Date.now() - startTime;
@@ -242,14 +240,12 @@ describe('Service Health Checks', () => {
     });
 
     it('should handle concurrent health check requests', async () => {
-      const healthChecks = services.map(service =>
-        simulator.checkServiceHealth(service)
-      );
+      const healthChecks = services.map((service) => simulator.checkServiceHealth(service));
 
       const results = await Promise.all(healthChecks);
 
       expect(results).toHaveLength(29);
-      results.forEach(health => {
+      results.forEach((health) => {
         expect(health.status).toBeDefined();
       });
     });
@@ -268,12 +264,10 @@ describe('Service Health Checks', () => {
   describe('Health Check Response Format', () => {
     it('should return consistent format across all services', async () => {
       const healthChecks = await Promise.all(
-        services.slice(0, 5).map(service =>
-          simulator.checkServiceHealth(service)
-        )
+        services.slice(0, 5).map((service) => simulator.checkServiceHealth(service))
       );
 
-      healthChecks.forEach(health => {
+      healthChecks.forEach((health) => {
         expect(health).toHaveProperty('status');
         expect(health).toHaveProperty('ready');
         expect(health).toHaveProperty('timestamp');
@@ -301,10 +295,10 @@ describe('Service Health Checks', () => {
       'auth-service',
       'payment-processing',
       'user-management',
-      'content-publishing'
+      'content-publishing',
     ];
 
-    criticalServices.forEach(service => {
+    criticalServices.forEach((service) => {
       it(`should ensure ${service} is healthy`, async () => {
         const health = await simulator.checkServiceHealth(service);
 
@@ -315,12 +309,10 @@ describe('Service Health Checks', () => {
 
     it('should prioritize critical service health checks', async () => {
       const criticalHealthChecks = await Promise.all(
-        criticalServices.map(service =>
-          simulator.checkServiceHealth(service)
-        )
+        criticalServices.map((service) => simulator.checkServiceHealth(service))
       );
 
-      criticalHealthChecks.forEach(health => {
+      criticalHealthChecks.forEach((health) => {
         expect(health.status).toBe('healthy');
         expect(health.ready).toBe(true);
       });

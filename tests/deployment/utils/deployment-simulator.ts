@@ -108,7 +108,7 @@ export class DeploymentSimulator {
       environment: 'staging',
       services: options.services || 'all',
       strategy: 'blue-green',
-      ...options
+      ...options,
     });
   }
 
@@ -122,7 +122,7 @@ export class DeploymentSimulator {
       services: 'all',
       strategy: 'blue-green',
       trafficShiftSteps: [10, 50, 100],
-      ...options
+      ...options,
     });
 
     result.strategy = 'blue-green';
@@ -140,7 +140,7 @@ export class DeploymentSimulator {
       version: '1.0.0',
       environment: 'production',
       services: 'all',
-      strategy: 'blue-green'
+      strategy: 'blue-green',
     });
 
     result.migrationsRun = 5;
@@ -153,7 +153,10 @@ export class DeploymentSimulator {
   /**
    * Start a deployment and return immediately
    */
-  async startDeployment(version: string, options: Partial<DeploymentOptions> = {}): Promise<DeploymentResult> {
+  async startDeployment(
+    version: string,
+    options: Partial<DeploymentOptions> = {}
+  ): Promise<DeploymentResult> {
     const deploymentId = this.generateDeploymentId();
     const result: DeploymentResult = {
       id: deploymentId,
@@ -163,7 +166,7 @@ export class DeploymentSimulator {
       downtime: 0,
       deploymentTime: 0,
       errorRate: 0,
-      activeVersion: version
+      activeVersion: version,
     };
 
     this.deployments.set(deploymentId, result);
@@ -183,7 +186,7 @@ export class DeploymentSimulator {
    */
   async deployWithRollback(options: {
     onAlert?: (alert: any) => void;
-    shouldFail?: boolean
+    shouldFail?: boolean;
   }): Promise<DeploymentResult> {
     const deploymentId = this.generateDeploymentId();
     const result: DeploymentResult = {
@@ -195,7 +198,7 @@ export class DeploymentSimulator {
       deploymentTime: 5000,
       errorRate: 0,
       activeVersion: options.shouldFail ? '1.2.2' : '1.2.3',
-      rollbackTime: options.shouldFail ? 60000 : undefined
+      rollbackTime: options.shouldFail ? 60000 : undefined,
     };
 
     if (options.shouldFail && options.onAlert) {
@@ -203,7 +206,7 @@ export class DeploymentSimulator {
         type: 'rollback',
         channel: 'slack',
         deploymentId,
-        reason: 'simulated failure'
+        reason: 'simulated failure',
       });
     }
 
@@ -226,7 +229,7 @@ export class DeploymentSimulator {
       downtime: 0,
       deploymentTime: services.length * 1000,
       errorRate: 0,
-      deploymentOrder: dependencyOrder
+      deploymentOrder: dependencyOrder,
     };
 
     return result;
@@ -252,7 +255,7 @@ export class DeploymentSimulator {
       successful: services.slice(0, failAt),
       failed: [services[failAt]],
       skipped: services.slice(failAt + 1),
-      rollbackInitiated: true
+      rollbackInitiated: true,
     };
 
     return result;
@@ -266,10 +269,10 @@ export class DeploymentSimulator {
     shiftSteps: number[];
   }): Promise<DeploymentResult> {
     const trafficShifts: TrafficShift[] = options.shiftSteps.map((greenPercent, index) => ({
-      timestamp: Date.now() + (index * 1000),
+      timestamp: Date.now() + index * 1000,
       bluePercent: 100 - greenPercent,
       greenPercent,
-      errorRate: 0.01
+      errorRate: 0.01,
     }));
 
     const result: DeploymentResult = {
@@ -281,7 +284,7 @@ export class DeploymentSimulator {
       deploymentTime: options.shiftSteps.length * 1000,
       errorRate: 0.01,
       trafficShifts,
-      allServicesInSync: true
+      allServicesInSync: true,
     };
 
     return result;
@@ -305,7 +308,7 @@ export class DeploymentSimulator {
       errorRate: 0,
       scalingEvents: 5,
       maxConcurrentReplicas: options.maxReplicas,
-      finalReplicas: options.minReplicas
+      finalReplicas: options.minReplicas,
     };
 
     return result;
@@ -392,7 +395,7 @@ export class DeploymentSimulator {
       status: isDatabaseDown ? 'unhealthy' : 'healthy',
       ready: !isDatabaseDown,
       reason: isDatabaseDown ? 'database connection unavailable' : undefined,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -438,7 +441,7 @@ export class DeploymentSimulator {
       errorRate: this.errorInjectionRate,
       p95ResponseTime: Math.random() * 500 + 100,
       memoryUsage: Math.random() * 1000 + 500,
-      throughput: Math.random() * 1000 + 500
+      throughput: Math.random() * 1000 + 500,
     };
 
     if (!this.metricsHistory.has(version)) {
@@ -489,7 +492,7 @@ export class DeploymentSimulator {
       version,
       environment: 'production',
       services: 'all',
-      strategy: 'blue-green'
+      strategy: 'blue-green',
     });
   }
 
@@ -514,7 +517,7 @@ export class DeploymentSimulator {
       downtime: 0, // Zero-downtime with blue-green
       deploymentTime: Date.now() - startTime,
       errorRate: this.errorInjectionRate,
-      activeVersion: options.version
+      activeVersion: options.version,
     };
 
     this.deployments.set(deploymentId, result);
@@ -579,7 +582,7 @@ export class DeploymentSimulator {
     if (services.includes('notification')) order.push('notification');
 
     // Priority 4: Application services
-    services.forEach(service => {
+    services.forEach((service) => {
       if (!order.includes(service)) {
         order.push(service);
       }
@@ -590,15 +593,35 @@ export class DeploymentSimulator {
 
   private getAllServices(): string[] {
     return [
-      'email', 'notification', 'audit', 'cache',
-      'content-publishing', 'content-moderation', 'content-analytics',
-      'user-management', 'auth-service', 'profile-service',
-      'payment-processing', 'subscription-management', 'invoice-generation',
-      'analytics-engine', 'reporting-service', 'metrics-collector',
-      'media-processing', 'cdn-integration', 'storage-service',
-      'search-service', 'recommendation-engine', 'ai-service',
-      'api-gateway', 'rate-limiter', 'load-balancer',
-      'monitoring', 'logging', 'alerting', 'health-check'
+      'email',
+      'notification',
+      'audit',
+      'cache',
+      'content-publishing',
+      'content-moderation',
+      'content-analytics',
+      'user-management',
+      'auth-service',
+      'profile-service',
+      'payment-processing',
+      'subscription-management',
+      'invoice-generation',
+      'analytics-engine',
+      'reporting-service',
+      'metrics-collector',
+      'media-processing',
+      'cdn-integration',
+      'storage-service',
+      'search-service',
+      'recommendation-engine',
+      'ai-service',
+      'api-gateway',
+      'rate-limiter',
+      'load-balancer',
+      'monitoring',
+      'logging',
+      'alerting',
+      'health-check',
     ];
   }
 
@@ -607,7 +630,7 @@ export class DeploymentSimulator {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
@@ -625,7 +648,7 @@ export class LoadTestGenerator {
     totalRequests: 0,
     successfulRequests: 0,
     droppedRequests: 0,
-    errorRate: 0
+    errorRate: 0,
   };
 
   async startLoadTest(options: {
@@ -637,7 +660,7 @@ export class LoadTestGenerator {
       totalRequests: 0,
       successfulRequests: 0,
       droppedRequests: 0,
-      errorRate: 0
+      errorRate: 0,
     };
 
     const totalRequests = (options.rps * options.duration) / 1000;
@@ -665,9 +688,11 @@ export class LoadTestGenerator {
   }
 
   async getMetrics(): Promise<typeof this.metrics> {
-    this.metrics.errorRate = this.metrics.totalRequests > 0
-      ? (this.metrics.totalRequests - this.metrics.successfulRequests) / this.metrics.totalRequests
-      : 0;
+    this.metrics.errorRate =
+      this.metrics.totalRequests > 0
+        ? (this.metrics.totalRequests - this.metrics.successfulRequests) /
+          this.metrics.totalRequests
+        : 0;
 
     return { ...this.metrics };
   }

@@ -105,7 +105,7 @@ export class RelayConfig {
    * ```
    */
   public static getRelayUrls(): string[] {
-    return this.getRelays().map(relay => relay.url);
+    return this.getRelays().map((relay) => relay.url);
   }
 
   /**
@@ -120,8 +120,8 @@ export class RelayConfig {
    */
   public static getReadRelays(): string[] {
     return this.getRelays()
-      .filter(relay => relay.read)
-      .map(relay => relay.url);
+      .filter((relay) => relay.read)
+      .map((relay) => relay.url);
   }
 
   /**
@@ -136,8 +136,8 @@ export class RelayConfig {
    */
   public static getWriteRelays(): string[] {
     return this.getRelays()
-      .filter(relay => relay.write)
-      .map(relay => relay.url);
+      .filter((relay) => relay.write)
+      .map((relay) => relay.url);
   }
 
   /**
@@ -239,7 +239,7 @@ export class RelayConfig {
    * ```
    */
   public static setRelays(relays: RelayMetadata[]): void {
-    const validated = relays.filter(relay => this.isValidRelayUrl(relay.url));
+    const validated = relays.filter((relay) => this.isValidRelayUrl(relay.url));
     this.cachedRelays = validated;
   }
 
@@ -298,11 +298,11 @@ export class RelayConfig {
     // Split by comma and normalize
     const urls = envValue
       .split(',')
-      .map(url => this.normalizeRelayUrl(url))
+      .map((url) => this.normalizeRelayUrl(url))
       .filter((url): url is string => url !== null);
 
     // Convert to relay metadata (default to read+write)
-    return urls.map(url => ({
+    return urls.map((url) => ({
       url,
       read: true,
       write: true,

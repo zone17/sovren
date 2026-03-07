@@ -11,17 +11,17 @@
 
 ### Summary of Risk Areas
 
-| Area | Files Changed | Risk | Reason |
-|------|--------------|------|--------|
-| CI/CD Pipelines | ~20 (5 deleted, 15 modified/added) | CRITICAL | Deleted 5 workflows; consolidated CI pipeline; broken CI = no deploys |
-| Security Middleware | ~8 | HIGH | Deleted 1082-line security-headers.ts; replaced with Helmet; new CSRF middleware; changed CORS config |
-| Health Endpoints | 1 (rewritten) | HIGH | Completely rewritten health check with Supabase/Redis/Lightning/NOSTR probes + WebSocket; Docker HEALTHCHECK depends on /health |
-| Docker | 2 | MEDIUM | Dockerfile.prod refactored to multi-stage; docker-compose.secure.yml hardened |
-| Monitoring | 4 | MEDIUM | Prometheus, alert rules, Promtail, monitoring docker-compose all changed |
-| Backend Middleware Stack | ~10 | HIGH | Rate limiting, correlation-id, error handler, deployment monitoring all new/rewritten; middleware ordering in app.ts changed |
-| Frontend Error Boundaries | ~15 | MEDIUM | New ErrorBoundary components per feature; Sentry integration; unlikely to break existing functionality |
-| Credential Rotation Scripts | ~8 | LOW | New scripts; not invoked at deploy time |
-| Dependencies | yarn.lock (+1208 lines) | MEDIUM | Significant dependency changes |
+| Area                        | Files Changed                      | Risk     | Reason                                                                                                                          |
+| --------------------------- | ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| CI/CD Pipelines             | ~20 (5 deleted, 15 modified/added) | CRITICAL | Deleted 5 workflows; consolidated CI pipeline; broken CI = no deploys                                                           |
+| Security Middleware         | ~8                                 | HIGH     | Deleted 1082-line security-headers.ts; replaced with Helmet; new CSRF middleware; changed CORS config                           |
+| Health Endpoints            | 1 (rewritten)                      | HIGH     | Completely rewritten health check with Supabase/Redis/Lightning/NOSTR probes + WebSocket; Docker HEALTHCHECK depends on /health |
+| Docker                      | 2                                  | MEDIUM   | Dockerfile.prod refactored to multi-stage; docker-compose.secure.yml hardened                                                   |
+| Monitoring                  | 4                                  | MEDIUM   | Prometheus, alert rules, Promtail, monitoring docker-compose all changed                                                        |
+| Backend Middleware Stack    | ~10                                | HIGH     | Rate limiting, correlation-id, error handler, deployment monitoring all new/rewritten; middleware ordering in app.ts changed    |
+| Frontend Error Boundaries   | ~15                                | MEDIUM   | New ErrorBoundary components per feature; Sentry integration; unlikely to break existing functionality                          |
+| Credential Rotation Scripts | ~8                                 | LOW      | New scripts; not invoked at deploy time                                                                                         |
+| Dependencies                | yarn.lock (+1208 lines)            | MEDIUM   | Significant dependency changes                                                                                                  |
 
 ### Critical Invariants That Must Remain True
 
@@ -106,6 +106,7 @@ The middleware execution order in `app.ts` is critical. Confirm this order is ma
 - [ ] Confirm `frameguard: { action: 'deny' }` is explicitly set
 
 **CSRF Verification:**
+
 - [ ] Confirm CSRF excludes these paths: `/api/security/csp-report`, `/api/v1/payments/webhooks`, `/health`, `/ready`, `/live`, `/metrics`
 - [ ] Confirm CSRF skips Bearer token requests (API clients)
 - [ ] Confirm CSRF cookie is `secure: true` only in production (not in dev)
@@ -115,14 +116,14 @@ The middleware execution order in `app.ts` is critical. Confirm this order is ma
 
 The health check was completely rewritten. Verify all endpoints:
 
-| Endpoint | Expected Status | Purpose |
-|----------|----------------|---------|
-| `GET /health` | 200 | Simple liveness for load balancers; returns memory stats |
-| `GET /health/detailed` | 200/503 | Checks DB, Redis, Lightning, NOSTR |
-| `GET /health/ready` | 200/503 | Kubernetes readiness probe (DB + Redis) |
-| `GET /health/live` | 200 | Kubernetes liveness probe (always 200 if process alive) |
-| `GET /ready` | 307 redirect | Shortcut to `/health/ready` |
-| `GET /live` | 307 redirect | Shortcut to `/health/live` |
+| Endpoint               | Expected Status | Purpose                                                  |
+| ---------------------- | --------------- | -------------------------------------------------------- |
+| `GET /health`          | 200             | Simple liveness for load balancers; returns memory stats |
+| `GET /health/detailed` | 200/503         | Checks DB, Redis, Lightning, NOSTR                       |
+| `GET /health/ready`    | 200/503         | Kubernetes readiness probe (DB + Redis)                  |
+| `GET /health/live`     | 200             | Kubernetes liveness probe (always 200 if process alive)  |
+| `GET /ready`           | 307 redirect    | Shortcut to `/health/ready`                              |
+| `GET /live`            | 307 redirect    | Shortcut to `/health/live`                               |
 
 - [ ] Confirm `/health` does NOT make external calls (DB, Redis, etc.) -- it must be fast for load balancer probes
 - [ ] Confirm `/health/detailed` uses a singleton Supabase client (not creating new connections per request)
@@ -170,10 +171,10 @@ curl -s 'http://prometheus:9090/api/v1/query?query=histogram_quantile(0.99,sum(r
 curl -s -o /dev/null -w "%{http_code}" https://sovren.dev
 ```
 
-- [ ] Save baseline error rate: ____________
-- [ ] Save baseline P99 latency: ____________
-- [ ] Save baseline active Prometheus targets count: ____________
-- [ ] Save baseline frontend HTTP status: ____________
+- [ ] Save baseline error rate: \***\*\_\_\_\_\*\***
+- [ ] Save baseline P99 latency: \***\*\_\_\_\_\*\***
+- [ ] Save baseline active Prometheus targets count: \***\*\_\_\_\_\*\***
+- [ ] Save baseline frontend HTTP status: \***\*\_\_\_\_\*\***
 
 ### 7. Pre-Deploy Staging Verification
 
@@ -207,18 +208,18 @@ curl -s -o /dev/null -w "%{http_code}" https://staging.sovren.dev
 
 ### Step 1: Merge and Deploy
 
-| Step | Command / Action | Estimated Time | Rollback |
-|------|-----------------|----------------|----------|
-| 1. Merge PR to main | `gh pr merge 73 --squash` | Instant | Revert commit |
-| 2. CI lint + security + test | Automatic | ~10 min | Fix and re-push |
-| 3. CI build frontend | Automatic | ~5 min | Fix and re-push |
-| 4. CI build Docker image + Trivy scan | Automatic | ~10 min | Fix and re-push |
-| 5. CI deploy to staging | Automatic (push to main) | ~5 min | Deploy previous image |
-| 6. CI staging health check | Automatic (5 retries) | ~1 min | Investigate logs |
-| 7. Manual approval for production | GitHub Environment approval | N/A | Do not approve |
-| 8. CI deploy to production | Automatic after approval | ~5 min | Automated rollback |
-| 9. CI production health check | Automatic (5 retries, 15s apart) | ~2 min | Automated rollback |
-| 10. Slack notification | Automatic | Instant | N/A |
+| Step                                  | Command / Action                 | Estimated Time | Rollback              |
+| ------------------------------------- | -------------------------------- | -------------- | --------------------- |
+| 1. Merge PR to main                   | `gh pr merge 73 --squash`        | Instant        | Revert commit         |
+| 2. CI lint + security + test          | Automatic                        | ~10 min        | Fix and re-push       |
+| 3. CI build frontend                  | Automatic                        | ~5 min         | Fix and re-push       |
+| 4. CI build Docker image + Trivy scan | Automatic                        | ~10 min        | Fix and re-push       |
+| 5. CI deploy to staging               | Automatic (push to main)         | ~5 min         | Deploy previous image |
+| 6. CI staging health check            | Automatic (5 retries)            | ~1 min         | Investigate logs      |
+| 7. Manual approval for production     | GitHub Environment approval      | N/A            | Do not approve        |
+| 8. CI deploy to production            | Automatic after approval         | ~5 min         | Automated rollback    |
+| 9. CI production health check         | Automatic (5 retries, 15s apart) | ~2 min         | Automated rollback    |
+| 10. Slack notification                | Automatic                        | Instant        | N/A                   |
 
 - [ ] 1. Merge PR #73 to main
 - [ ] 2. Monitor CI pipeline: `gh run watch`
@@ -335,9 +336,9 @@ curl -s -o /dev/null -w "%{http_code}" https://sovren.dev
 
 ### 5. Compare With Baseline
 
-- [ ] Error rate is not higher than baseline: ____________ vs pre-deploy ____________
-- [ ] P99 latency is not higher than baseline: ____________ vs pre-deploy ____________
-- [ ] Active Prometheus targets count unchanged: ____________ vs pre-deploy ____________
+- [ ] Error rate is not higher than baseline: \***\*\_\_\_\_\*\*** vs pre-deploy \***\*\_\_\_\_\*\***
+- [ ] P99 latency is not higher than baseline: \***\*\_\_\_\_\*\*** vs pre-deploy \***\*\_\_\_\_\*\***
+- [ ] Active Prometheus targets count unchanged: \***\*\_\_\_\_\*\*** vs pre-deploy \***\*\_\_\_\_\*\***
 - [ ] No new alert firing in AlertManager
 
 ---
@@ -346,27 +347,27 @@ curl -s -o /dev/null -w "%{http_code}" https://sovren.dev
 
 ### Alert Conditions
 
-| Metric | Alert Name | Threshold | Severity | Action |
-|--------|-----------|-----------|----------|--------|
-| API error rate | `SLOHighErrorRate` | >1% for 5min | Critical | Investigate; rollback if >5% |
-| P99 latency | `SLOHighLatencyP99` | >500ms for 5min | Critical | Check health/detailed for slow service |
-| P95 latency | `SLOHighLatencyP95` | >250ms for 5min | Warning | Monitor; may indicate degradation |
-| Payment failure rate | `HighPaymentFailureRate` | >5% for 5min | Critical | Investigate payment service |
-| Node.js heap | `NodeJSHighHeapUsage` | >90% for 5min | Warning | Check for memory leak in new middleware |
-| Event loop lag | `NodeJSHighEventLoopLag` | >500ms for 2min | Warning | Check if new CSRF/correlation middleware is blocking |
-| CPU usage | `HighCPUUsage` | >85% for 5min | Warning | Scale or investigate |
-| Prometheus target | `PrometheusTargetDown` | down for 5min | Critical | Service crashed or network issue |
+| Metric               | Alert Name               | Threshold       | Severity | Action                                               |
+| -------------------- | ------------------------ | --------------- | -------- | ---------------------------------------------------- |
+| API error rate       | `SLOHighErrorRate`       | >1% for 5min    | Critical | Investigate; rollback if >5%                         |
+| P99 latency          | `SLOHighLatencyP99`      | >500ms for 5min | Critical | Check health/detailed for slow service               |
+| P95 latency          | `SLOHighLatencyP95`      | >250ms for 5min | Warning  | Monitor; may indicate degradation                    |
+| Payment failure rate | `HighPaymentFailureRate` | >5% for 5min    | Critical | Investigate payment service                          |
+| Node.js heap         | `NodeJSHighHeapUsage`    | >90% for 5min   | Warning  | Check for memory leak in new middleware              |
+| Event loop lag       | `NodeJSHighEventLoopLag` | >500ms for 2min | Warning  | Check if new CSRF/correlation middleware is blocking |
+| CPU usage            | `HighCPUUsage`           | >85% for 5min   | Warning  | Scale or investigate                                 |
+| Prometheus target    | `PrometheusTargetDown`   | down for 5min   | Critical | Service crashed or network issue                     |
 
 ### Check Schedule
 
-| Time After Deploy | What to Check |
-|-------------------|---------------|
-| +5 minutes | All post-deploy checks above |
-| +15 minutes | Error rate trend in Grafana; check Sentry for new errors |
-| +1 hour | Full `/health/detailed` check; spot-check API endpoints; review Promtail log ingestion |
-| +4 hours | Review Grafana dashboards for latency/error trends; check memory usage trend |
-| +12 hours | Review overnight alerts; check Redis connection stability |
-| +24 hours | Full review; close deployment ticket if all green |
+| Time After Deploy | What to Check                                                                          |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| +5 minutes        | All post-deploy checks above                                                           |
+| +15 minutes       | Error rate trend in Grafana; check Sentry for new errors                               |
+| +1 hour           | Full `/health/detailed` check; spot-check API endpoints; review Promtail log ingestion |
+| +4 hours          | Review Grafana dashboards for latency/error trends; check memory usage trend           |
+| +12 hours         | Review overnight alerts; check Redis connection stability                              |
+| +24 hours         | Full review; close deployment ticket if all green                                      |
 
 ### Manual Checks at +1 Hour
 
@@ -428,12 +429,14 @@ gh run watch
 If automated rollback fails:
 
 1. **Revert the merge commit on main**:
+
 ```bash
 git revert <merge-commit-sha> --no-edit
 git push origin main
 ```
 
 2. **Force deploy previous Docker image** (if Docker deployment):
+
 ```bash
 # Find the previous working image tag
 docker image ls ghcr.io/<repo>/backend --format '{{.Tag}}' | head -5
@@ -443,6 +446,7 @@ docker image ls ghcr.io/<repo>/backend --format '{{.Tag}}' | head -5
 ```
 
 3. **Verify rollback**:
+
 ```bash
 curl -s https://api.sovren.dev/health | jq '.'
 curl -s -o /dev/null -w "%{http_code}" https://sovren.dev
@@ -452,12 +456,12 @@ curl -s -o /dev/null -w "%{http_code}" https://sovren.dev
 
 ### Rollback Risks
 
-| Concern | Risk | Mitigation |
-|---------|------|------------|
-| CSRF tokens in user cookies | LOW | Old code had no CSRF; reverting just removes the check |
-| New frontend error boundary components | LOW | Reverting removes them; old error handling resumes |
-| Prometheus metric names changed | MEDIUM | Alert rules will fire `PrometheusTargetDown` until monitoring stack is also reverted |
-| Deleted workflow files | LOW | Git revert restores them |
+| Concern                                | Risk   | Mitigation                                                                           |
+| -------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| CSRF tokens in user cookies            | LOW    | Old code had no CSRF; reverting just removes the check                               |
+| New frontend error boundary components | LOW    | Reverting removes them; old error handling resumes                                   |
+| Prometheus metric names changed        | MEDIUM | Alert rules will fire `PrometheusTargetDown` until monitoring stack is also reverted |
+| Deleted workflow files                 | LOW    | Git revert restores them                                                             |
 
 ---
 
@@ -502,6 +506,7 @@ curl -s -o /dev/null -w "%{http_code}" https://sovren.dev
 **What**: If prom-client default metrics don't use the `sovren_` prefix, alert rules like `sovren_nodejs_heap_size_used_bytes` will never match and heap/event-loop alerts become silent.
 
 **Mitigation**: After deploy, verify metric names exist:
+
 ```bash
 curl -s https://api.sovren.dev/metrics | grep 'sovren_nodejs_heap_size_used_bytes'
 # Must return at least one line. If empty, prefix configuration is wrong.
@@ -511,12 +516,12 @@ curl -s https://api.sovren.dev/metrics | grep 'sovren_nodejs_heap_size_used_byte
 
 ## SIGN-OFF
 
-| Role | Name | Approved | Date |
-|------|------|----------|------|
-| Engineer | ________________ | [ ] | __________ |
-| Reviewer | ________________ | [ ] | __________ |
-| On-Call | ________________ | [ ] | __________ |
+| Role     | Name                     | Approved | Date             |
+| -------- | ------------------------ | -------- | ---------------- |
+| Engineer | **\*\***\_\_\_\_**\*\*** | [ ]      | \***\*\_\_\*\*** |
+| Reviewer | **\*\***\_\_\_\_**\*\*** | [ ]      | \***\*\_\_\*\*** |
+| On-Call  | **\*\***\_\_\_\_**\*\*** | [ ]      | \***\*\_\_\*\*** |
 
 **Go / No-Go Decision**: [ ] GO / [ ] NO-GO
 
-**Reason for No-Go (if applicable)**: ________________________________________________
+**Reason for No-Go (if applicable)**: \***\*\*\*\*\***\*\*\***\*\*\*\*\***\_\_\_\_\***\*\*\*\*\***\*\*\***\*\*\*\*\***

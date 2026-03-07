@@ -1,7 +1,7 @@
 ---
 status: complete
 priority: p3
-issue_id: "408"
+issue_id: '408'
 tags: [code-review, quality, frontend, pr-87]
 dependencies: []
 ---
@@ -29,10 +29,12 @@ The `useCollaboration.ts` hook uses `console.error()` for logging partial invite
 **Approach:** The anti-pattern scanner targets `STAGED_TS_SRC` which includes both backend and frontend. Frontend legitimately uses console for dev-mode logging. Add an exclusion for `packages/frontend/` in check 1b.
 
 **Pros:**
+
 - Frontend doesn't have a logger service equivalent
 - Quick fix to the scanner
 
 **Cons:**
+
 - Hides legitimate issues in frontend source
 
 **Effort:** 10 minutes
@@ -46,10 +48,12 @@ The `useCollaboration.ts` hook uses `console.error()` for logging partial invite
 **Approach:** Use a toast/notification system or error boundary for user-facing errors. Keep console.error only for dev debugging behind a `process.env.NODE_ENV === 'development'` check.
 
 **Pros:**
+
 - User gets feedback on partial failures
 - Cleaner production behavior
 
 **Cons:**
+
 - Requires toast/notification infrastructure
 - Larger scope
 
@@ -64,6 +68,7 @@ Option 1 for now: exclude frontend from the console scanner check, since fronten
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/features/creator-network/hooks/useCollaboration.ts:32,47,67,83`
 - `scripts/check-antipatterns.sh` (check 1b)
 

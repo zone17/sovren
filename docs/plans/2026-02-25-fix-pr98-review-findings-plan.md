@@ -90,7 +90,6 @@ Remove the `typeRoots` override entirely. The base config's `typeRoots: ["./node
 **File:** `packages/backend/package.json`
 
 1. **Move 10 `@types/*` from `dependencies` to `devDependencies`:**
-
    - `@types/bcryptjs`, `@types/cors`, `@types/express`, `@types/jsonwebtoken`, `@types/multer`, `@types/node`, `@types/nodemailer`, `@types/puppeteer`, `@types/supertest` (^6.0.3), `@types/uuid`
 
 2. **Move `supertest` from `dependencies` to `devDependencies`**

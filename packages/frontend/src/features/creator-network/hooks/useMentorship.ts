@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { mentorshipKeys } from '@/hooks/query-keys';
-import { mentorshipApi } from '../services/mentorshipApi';
+import { mentorshipApi, type UpdateMentorProfileData } from '../services/mentorshipApi';
 
 export function useMentors(params?: { niche?: string; audienceSizeRange?: string }) {
   return useQuery({
@@ -62,6 +62,22 @@ export function useRespondToMentorship() {
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Operation failed');
+    },
+  });
+}
+
+// #751: Update current user's mentor profile
+export function useUpdateMentorProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateMentorProfileData) => mentorshipApi.updateMentorProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mentorshipKeys.all });
+      toast.success('Mentor profile updated.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update mentor profile. Please try again.');
     },
   });
 }

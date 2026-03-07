@@ -22,13 +22,13 @@ const serviceCategories = {
   auth: ['auth', 'session', 'nostr'],
   analytics: ['analytics', 'metrics', 'monitoring'],
   communication: ['email', 'notification', 'websocket'],
-  integration: ['social', 'supabase', 'realtime']
+  integration: ['social', 'supabase', 'realtime'],
 };
 
 function categorizeService(serviceName) {
   const lower = serviceName.toLowerCase();
   for (const [category, keywords] of Object.entries(serviceCategories)) {
-    if (keywords.some(keyword => lower.includes(keyword))) {
+    if (keywords.some((keyword) => lower.includes(keyword))) {
       return category;
     }
   }
@@ -43,7 +43,7 @@ function analyzeServiceFile(filePath) {
     services: [],
     external: [],
     repositories: [],
-    config: []
+    config: [],
   };
 
   // Extract imports
@@ -88,38 +88,41 @@ function analyzeServiceFile(filePath) {
       usesSupabase: hasSupabase,
       usesRedis: hasRedis,
       usesEvents: hasEventEmitter,
-      isAsync: hasAsync
-    }
+      isAsync: hasAsync,
+    },
   };
 }
 
 function generateDependencyMatrix() {
-  const files = fs.readdirSync(servicesDir)
-    .filter(file => file.endsWith('.ts') && !file.includes('.test.'))
-    .map(file => path.join(servicesDir, file));
+  const files = fs
+    .readdirSync(servicesDir)
+    .filter((file) => file.endsWith('.ts') && !file.includes('.test.'))
+    .map((file) => path.join(servicesDir, file));
 
   const services = files.map(analyzeServiceFile);
 
   // Build dependency matrix
   const matrix = {};
-  const serviceNames = services.map(s => s.name);
+  const serviceNames = services.map((s) => s.name);
 
-  serviceNames.forEach(name => {
+  serviceNames.forEach((name) => {
     matrix[name] = {};
-    serviceNames.forEach(other => {
+    serviceNames.forEach((other) => {
       matrix[name][other] = 0;
     });
   });
 
   // Populate matrix
-  services.forEach(service => {
-    service.dependencies.services.forEach(dep => {
+  services.forEach((service) => {
+    service.dependencies.services.forEach((dep) => {
       const depName = dep.replace('-service', '').replace('Service', '');
 
       // Find matching service
-      serviceNames.forEach(name => {
-        if (name.toLowerCase().includes(depName.toLowerCase()) ||
-            depName.toLowerCase().includes(name.toLowerCase())) {
+      serviceNames.forEach((name) => {
+        if (
+          name.toLowerCase().includes(depName.toLowerCase()) ||
+          depName.toLowerCase().includes(name.toLowerCase())
+        ) {
           matrix[service.name][name] = 1;
         }
       });
@@ -127,10 +130,9 @@ function generateDependencyMatrix() {
   });
 
   // Calculate coupling metrics
-  const couplingMetrics = services.map(service => {
+  const couplingMetrics = services.map((service) => {
     const outgoing = Object.values(matrix[service.name]).reduce((a, b) => a + b, 0);
-    const incoming = serviceNames.reduce((count, name) =>
-      count + matrix[name][service.name], 0);
+    const incoming = serviceNames.reduce((count, name) => count + matrix[name][service.name], 0);
 
     return {
       name: service.name,
@@ -142,7 +144,7 @@ function generateDependencyMatrix() {
       couplingScore: (outgoing + incoming) / serviceNames.length,
       serviceDependencies: service.dependencies.services,
       externalDependencies: service.dependencies.external.length,
-      patterns: service.patterns
+      patterns: service.patterns,
     };
   });
 
@@ -152,7 +154,7 @@ function generateDependencyMatrix() {
   // Identify circular dependencies
   const circularDependencies = [];
   serviceNames.forEach((service1, i) => {
-    serviceNames.slice(i + 1).forEach(service2 => {
+    serviceNames.slice(i + 1).forEach((service2) => {
       if (matrix[service1][service2] === 1 && matrix[service2][service1] === 1) {
         circularDependencies.push([service1, service2]);
       }
@@ -164,36 +166,38 @@ function generateDependencyMatrix() {
     summary: {
       totalServices: services.length,
       categories: Object.keys(serviceCategories).reduce((acc, cat) => {
-        acc[cat] = services.filter(s => s.category === cat).length;
+        acc[cat] = services.filter((s) => s.category === cat).length;
         return acc;
       }, {}),
       totalLines: services.reduce((sum, s) => sum + s.lines, 0),
-      averageLines: Math.round(services.reduce((sum, s) => sum + s.lines, 0) / services.length)
+      averageLines: Math.round(services.reduce((sum, s) => sum + s.lines, 0) / services.length),
     },
     services: couplingMetrics,
     matrix,
     circularDependencies,
     missingServices: findMissingServices(services),
-    recommendations: generateRecommendations(couplingMetrics, circularDependencies)
+    recommendations: generateRecommendations(couplingMetrics, circularDependencies),
   };
 }
 
 function findMissingServices(services) {
   const allServiceRefs = new Set();
-  services.forEach(service => {
-    service.dependencies.services.forEach(dep => {
+  services.forEach((service) => {
+    service.dependencies.services.forEach((dep) => {
       allServiceRefs.add(dep.toLowerCase());
     });
   });
 
-  const existingServices = new Set(services.map(s => s.name.toLowerCase()));
+  const existingServices = new Set(services.map((s) => s.name.toLowerCase()));
   const missing = [];
 
-  allServiceRefs.forEach(ref => {
+  allServiceRefs.forEach((ref) => {
     let found = false;
-    existingServices.forEach(existing => {
-      if (existing.includes(ref.replace('service', '').replace('-', '')) ||
-          ref.includes(existing.replace('service', '').replace('-', ''))) {
+    existingServices.forEach((existing) => {
+      if (
+        existing.includes(ref.replace('service', '').replace('-', '')) ||
+        ref.includes(existing.replace('service', '').replace('-', ''))
+      ) {
         found = true;
       }
     });
@@ -209,13 +213,13 @@ function generateRecommendations(metrics, circularDeps) {
   const recommendations = [];
 
   // High coupling services
-  const highCoupling = metrics.filter(m => m.couplingScore > 0.3);
+  const highCoupling = metrics.filter((m) => m.couplingScore > 0.3);
   if (highCoupling.length > 0) {
     recommendations.push({
       type: 'HIGH_COUPLING',
       severity: 'critical',
-      services: highCoupling.map(s => s.name),
-      recommendation: 'These services have high coupling and should be refactored first'
+      services: highCoupling.map((s) => s.name),
+      recommendation: 'These services have high coupling and should be refactored first',
     });
   }
 
@@ -225,29 +229,30 @@ function generateRecommendations(metrics, circularDeps) {
       type: 'CIRCULAR_DEPENDENCIES',
       severity: 'critical',
       pairs: circularDeps,
-      recommendation: 'Break circular dependencies by introducing interfaces or event-driven communication'
+      recommendation:
+        'Break circular dependencies by introducing interfaces or event-driven communication',
     });
   }
 
   // Large services
-  const largeServices = metrics.filter(m => m.lines > 500);
+  const largeServices = metrics.filter((m) => m.lines > 500);
   if (largeServices.length > 0) {
     recommendations.push({
       type: 'LARGE_SERVICES',
       severity: 'medium',
-      services: largeServices.map(s => ({ name: s.name, lines: s.lines })),
-      recommendation: 'Consider breaking down large services into smaller, focused services'
+      services: largeServices.map((s) => ({ name: s.name, lines: s.lines })),
+      recommendation: 'Consider breaking down large services into smaller, focused services',
     });
   }
 
   // Services with many external dependencies
-  const externalHeavy = metrics.filter(m => m.externalDependencies > 10);
+  const externalHeavy = metrics.filter((m) => m.externalDependencies > 10);
   if (externalHeavy.length > 0) {
     recommendations.push({
       type: 'EXTERNAL_DEPENDENCIES',
       severity: 'low',
-      services: externalHeavy.map(s => ({ name: s.name, count: s.externalDependencies })),
-      recommendation: 'Consider creating facade services to manage external dependencies'
+      services: externalHeavy.map((s) => ({ name: s.name, count: s.externalDependencies })),
+      recommendation: 'Consider creating facade services to manage external dependencies',
     });
   }
 
@@ -277,29 +282,38 @@ ${Object.entries(analysis.summary.categories)
   .join('\n')}
 
 ## Top 10 Most Coupled Services
-${analysis.services.slice(0, 10)
-  .map((s, i) => `${i + 1}. **${s.name}** (${s.category})
+${analysis.services
+  .slice(0, 10)
+  .map(
+    (s, i) => `${i + 1}. **${s.name}** (${s.category})
    - Outgoing: ${s.outgoingDependencies}
    - Incoming: ${s.incomingDependencies}
-   - Lines: ${s.lines}`)
+   - Lines: ${s.lines}`
+  )
   .join('\n')}
 
 ## Circular Dependencies
-${analysis.circularDependencies.length > 0
-  ? analysis.circularDependencies.map(pair => `- ${pair[0]} ↔️ ${pair[1]}`).join('\n')
-  : 'None detected'}
+${
+  analysis.circularDependencies.length > 0
+    ? analysis.circularDependencies.map((pair) => `- ${pair[0]} ↔️ ${pair[1]}`).join('\n')
+    : 'None detected'
+}
 
 ## Missing Services
-${analysis.missingServices.length > 0
-  ? analysis.missingServices.map(s => `- ${s}`).join('\n')
-  : 'None detected'}
+${
+  analysis.missingServices.length > 0
+    ? analysis.missingServices.map((s) => `- ${s}`).join('\n')
+    : 'None detected'
+}
 
 ## Recommendations
 ${analysis.recommendations
-  .map(r => `### ${r.type} (${r.severity})
+  .map(
+    (r) => `### ${r.type} (${r.severity})
 ${r.recommendation}
 ${r.services ? `Services: ${JSON.stringify(r.services)}` : ''}
-${r.pairs ? `Pairs: ${JSON.stringify(r.pairs)}` : ''}`)
+${r.pairs ? `Pairs: ${JSON.stringify(r.pairs)}` : ''}`
+  )
   .join('\n\n')}
 `;
 

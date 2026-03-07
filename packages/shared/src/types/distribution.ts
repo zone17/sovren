@@ -10,7 +10,12 @@
 export type SupportedPlatform = 'mastodon' | 'bluesky' | 'twitter' | 'youtube';
 export type AllPlatform = SupportedPlatform | 'nostr';
 
-export type ConnectionStatus = 'connected' | 'token_expiring' | 'token_expired' | 'error' | 'disconnected';
+export type ConnectionStatus =
+  | 'connected'
+  | 'token_expiring'
+  | 'token_expired'
+  | 'error'
+  | 'disconnected';
 
 export interface PlatformStatus {
   platform: SupportedPlatform;
@@ -26,7 +31,13 @@ export interface PlatformStatus {
 // Cross-Post Types
 // ============================================================================
 
-export type CrossPostStatus = 'queued' | 'scheduled' | 'publishing' | 'published' | 'failed' | 'cancelled';
+export type CrossPostStatus =
+  | 'queued'
+  | 'scheduled'
+  | 'publishing'
+  | 'published'
+  | 'failed'
+  | 'cancelled';
 
 export interface CrossPostEntry {
   id: string;

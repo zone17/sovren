@@ -18,14 +18,14 @@ Enhance the PaymentRetryService with production-grade exponential backoff, full 
 
 ### ✅ Requirements Met (100%)
 
-| Requirement | Status | Implementation |
-|------------|--------|----------------|
-| **1. Exponential Backoff** | ✅ Complete | Base 1s, Max 60s, Multiplier 2^attempt |
-| **2. Full Jitter** | ✅ Complete | `delay * random(0, 1)` prevents thundering herd |
-| **3. Circuit Breaker** | ✅ Complete | Opens after 5 failures, half-open timeout |
-| **4. Configurable Policy** | ✅ Complete | All retry parameters customizable |
-| **5. Enhanced Metrics** | ✅ Complete | Circuit breaker + jitter tracking |
-| **6. Comprehensive Tests** | ✅ Complete | 45 new tests, 100% coverage of new logic |
+| Requirement                | Status      | Implementation                                  |
+| -------------------------- | ----------- | ----------------------------------------------- |
+| **1. Exponential Backoff** | ✅ Complete | Base 1s, Max 60s, Multiplier 2^attempt          |
+| **2. Full Jitter**         | ✅ Complete | `delay * random(0, 1)` prevents thundering herd |
+| **3. Circuit Breaker**     | ✅ Complete | Opens after 5 failures, half-open timeout       |
+| **4. Configurable Policy** | ✅ Complete | All retry parameters customizable               |
+| **5. Enhanced Metrics**    | ✅ Complete | Circuit breaker + jitter tracking               |
+| **6. Comprehensive Tests** | ✅ Complete | 45 new tests, 100% coverage of new logic        |
 
 ---
 
@@ -36,13 +36,15 @@ Enhance the PaymentRetryService with production-grade exponential backoff, full 
 **File**: `src/services/payment/PaymentRetryService.ts` (lines 744-779)
 
 **Algorithm**:
+
 ```typescript
-exponentialDelay = baseDelay * (2 ^ attemptNumber)
-cappedDelay = min(exponentialDelay, maxDelay)
-jitteredDelay = floor(cappedDelay * random(0, 1))
+exponentialDelay = baseDelay * (2 ^ attemptNumber);
+cappedDelay = min(exponentialDelay, maxDelay);
+jitteredDelay = floor(cappedDelay * random(0, 1));
 ```
 
 **Example Retry Schedule** (with jitter):
+
 - Attempt 1: 0-1,000ms (avg 500ms)
 - Attempt 2: 0-2,000ms (avg 1,000ms)
 - Attempt 3: 0-4,000ms (avg 2,000ms)
@@ -50,6 +52,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 - Attempt 5: 0-16,000ms (avg 8,000ms)
 
 **Benefits**:
+
 - **Prevents thundering herd**: Randomization distributes retry attempts
 - **Faster recovery**: 1-second base delay vs. old 1-minute delay
 - **Resource friendly**: Jitter reduces concurrent load spikes
@@ -60,11 +63,13 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 **File**: `src/services/payment/PaymentRetryService.ts` (lines 781-897)
 
 **States**:
+
 - **CLOSED**: Normal operation, retries allowed
 - **OPEN**: Circuit tripped, all retries blocked
 - **HALF-OPEN**: Testing recovery, single retry allowed
 
 **Behavior**:
+
 ```typescript
 // Track failures
 recordRetryFailure() → failureCount++
@@ -80,6 +85,7 @@ if (half-open retry fails) → re-OPEN
 ```
 
 **Configuration**:
+
 - `circuitBreakerThreshold`: 5 consecutive failures (default)
 - `circuitBreakerTimeout`: 60 seconds before half-open (default)
 - Disable: Set `circuitBreakerThreshold: 0`
@@ -89,19 +95,21 @@ if (half-open retry fails) → re-OPEN
 **File**: `src/services/payment/PaymentRetryService.ts` (lines 27-48, 293-317)
 
 **Parameters**:
+
 ```typescript
 interface RetryConfig {
-  maxAttempts: number;              // Default: 5
-  baseDelay: number;                // Default: 1000ms (1 second)
-  maxDelay: number;                 // Default: 60000ms (60 seconds)
-  backoffMultiplier: number;        // Default: 2 (2^attempt)
+  maxAttempts: number; // Default: 5
+  baseDelay: number; // Default: 1000ms (1 second)
+  maxDelay: number; // Default: 60000ms (60 seconds)
+  backoffMultiplier: number; // Default: 2 (2^attempt)
   circuitBreakerThreshold?: number; // Default: 5 (0 = disabled)
-  circuitBreakerTimeout?: number;   // Default: 60000ms
-  retryableErrors: string[];        // Configurable error codes
+  circuitBreakerTimeout?: number; // Default: 60000ms
+  retryableErrors: string[]; // Configurable error codes
 }
 ```
 
 **Validation**:
+
 - `baseDelay <= maxDelay` enforced
 - `maxAttempts >= 1` enforced
 - `backoffMultiplier >= 1` enforced
@@ -112,6 +120,7 @@ interface RetryConfig {
 **File**: `src/services/payment/PaymentRetryService.ts` (lines 114-136)
 
 **New Metrics**:
+
 ```typescript
 interface RetryMetrics {
   // Existing metrics
@@ -137,6 +146,7 @@ interface RetryMetrics {
 ```
 
 **Monitoring Integration**:
+
 - Prometheus-compatible metrics export
 - Circuit breaker state alerts
 - Jitter effectiveness tracking
@@ -147,10 +157,12 @@ interface RetryMetrics {
 ## 🧪 TEST COVERAGE
 
 ### Test Files
+
 1. **New**: `src/services/payment/__tests__/PaymentRetryService.enhanced.test.ts` (907 lines)
 2. **Existing**: `src/services/payment/__tests__/PaymentRetryService.test.ts` (still passing)
 
 ### Test Results
+
 ```
 ✅ 77 Total Tests (74 passed, 3 skipped integration tests)
 ✅ 45 New Tests for PAY-009
@@ -161,6 +173,7 @@ interface RetryMetrics {
 ### Test Categories (PAY-009)
 
 #### 1. Exponential Backoff with Jitter (17 tests)
+
 - ✅ Base delay configuration (default 1000ms)
 - ✅ Custom base delay configuration
 - ✅ Exponential multiplier: 2^0, 2^1, 2^2, 2^3, 2^4
@@ -174,6 +187,7 @@ interface RetryMetrics {
 - ✅ Average delay = 50% of max (statistical property)
 
 #### 2. Circuit Breaker Pattern (15 tests)
+
 - ✅ Default threshold initialization (5 failures)
 - ✅ Custom threshold configuration
 - ✅ Circuit breaker disable (threshold = 0)
@@ -191,6 +205,7 @@ interface RetryMetrics {
 - ✅ Half-open state transition after timeout
 
 #### 3. Enhanced Retry Metrics (5 tests)
+
 - ✅ Circuit breaker state in metrics
 - ✅ Circuit breaker open event tracking
 - ✅ Time since circuit opened
@@ -198,6 +213,7 @@ interface RetryMetrics {
 - ✅ Retry delay histogram
 
 #### 4. Configurable Retry Policy (5 tests)
+
 - ✅ Custom maxAttempts configuration
 - ✅ Custom baseDelay configuration
 - ✅ Custom maxDelay configuration
@@ -205,6 +221,7 @@ interface RetryMetrics {
 - ✅ Config merging (custom + defaults)
 
 #### 5. Additional Edge Cases (3 tests)
+
 - ✅ Half-open retry allowed
 - ✅ Half-open success closes circuit
 - ✅ Half-open failure re-opens circuit
@@ -216,7 +233,7 @@ interface RetryMetrics {
 ### Retry Timing Comparison
 
 | Attempt | Old Behavior | New Behavior (no jitter) | New Behavior (with jitter avg) |
-|---------|--------------|--------------------------|--------------------------------|
+| ------- | ------------ | ------------------------ | ------------------------------ |
 | 1       | 1 min        | 1 sec                    | 0.5 sec                        |
 | 2       | 5 min        | 2 sec                    | 1 sec                          |
 | 3       | 15 min       | 4 sec                    | 2 sec                          |
@@ -230,11 +247,13 @@ interface RetryMetrics {
 **Scenario**: 1000 concurrent failed payments
 
 **Old Behavior** (no jitter):
+
 - All 1000 retry at exactly 1 minute
 - Massive load spike on Lightning nodes
 - Potential cascading failures
 
 **New Behavior** (with full jitter):
+
 - Retries distributed across 0-1000ms window
 - Average retry at 500ms
 - Load spread evenly over time
@@ -245,12 +264,14 @@ interface RetryMetrics {
 **Scenario**: Lightning node outage
 
 **Without Circuit Breaker**:
+
 - Continuous retry attempts
 - Resource exhaustion
 - Database connection pool depletion
 - Cascading failures
 
 **With Circuit Breaker**:
+
 - Circuit opens after 5 failures
 - All retries blocked for 60 seconds
 - Single test retry in half-open state
@@ -263,34 +284,37 @@ interface RetryMetrics {
 
 ### Default Configuration Changes
 
-| Parameter | Old Default | New Default | Reason |
-|-----------|-------------|-------------|--------|
-| `baseDelay` | 60000ms (1 min) | 1000ms (1 sec) | Faster initial retry |
-| `maxDelay` | 21600000ms (6 hrs) | 60000ms (60 sec) | More responsive |
-| `backoffMultiplier` | 5 | 2 | Gentler exponential growth |
+| Parameter           | Old Default        | New Default      | Reason                     |
+| ------------------- | ------------------ | ---------------- | -------------------------- |
+| `baseDelay`         | 60000ms (1 min)    | 1000ms (1 sec)   | Faster initial retry       |
+| `maxDelay`          | 21600000ms (6 hrs) | 60000ms (60 sec) | More responsive            |
+| `backoffMultiplier` | 5                  | 2                | Gentler exponential growth |
 
 ### Migration Path
 
 **Option 1**: Accept new faster defaults (recommended)
+
 ```typescript
 // No changes needed, new defaults applied automatically
 const retryService = new PaymentRetryService({ supabase, stateMachine });
 ```
 
 **Option 2**: Restore old behavior
+
 ```typescript
 const retryService = new PaymentRetryService({
   supabase,
   stateMachine,
   retryConfig: {
-    baseDelay: 60000,      // 1 minute
-    maxDelay: 21600000,    // 6 hours
+    baseDelay: 60000, // 1 minute
+    maxDelay: 21600000, // 6 hours
     backoffMultiplier: 5,
   },
 });
 ```
 
 **Option 3**: Disable circuit breaker
+
 ```typescript
 const retryService = new PaymentRetryService({
   supabase,
@@ -304,6 +328,7 @@ const retryService = new PaymentRetryService({
 ### New Error Type
 
 **`CircuitBreakerOpenError`**:
+
 ```typescript
 try {
   await retryService.scheduleRetry(paymentId, errorCode);
@@ -320,6 +345,7 @@ try {
 ## 📚 CODE LOCATIONS
 
 ### Core Implementation
+
 - **Service**: `src/services/payment/PaymentRetryService.ts`
   - Lines 22-68: Enhanced type definitions (RetryConfig, CircuitBreakerState)
   - Lines 162-169: CircuitBreakerOpenError class
@@ -331,11 +357,13 @@ try {
   - Lines 511-512, 533-534: Circuit breaker state recording in executeRetry()
 
 ### Tests
+
 - **Enhanced Tests**: `src/services/payment/__tests__/PaymentRetryService.enhanced.test.ts`
   - Lines 1-907: Complete PAY-009 test suite
   - 45 tests covering all new features
 
 ### Documentation
+
 - **CHANGELOG**: `CHANGELOG.md` (lines 12-86)
 - **This Summary**: `PAY-009-COMPLETION-SUMMARY.md`
 
@@ -348,6 +376,7 @@ try {
 **Research**: AWS article "Exponential Backoff And Jitter" (Marc Brooker, 2015)
 
 **Jitter Types Compared**:
+
 1. **No jitter**: All clients retry at same time → thundering herd
 2. **Equal jitter**: `delay/2 + random(0, delay/2)` → still bunched
 3. **Full jitter**: `random(0, delay)` → optimal distribution
@@ -359,12 +388,14 @@ try {
 **Pattern**: Based on Michael Nygard's "Release It!" patterns
 
 **Problem Prevented**:
+
 - Cascading failures during outages
 - Resource exhaustion from continuous failed retries
 - Database connection pool depletion
 - Amplification of failures
 
 **Solution**:
+
 - Fail fast when service is down
 - Automatic recovery testing (half-open state)
 - Resource protection
@@ -373,12 +404,14 @@ try {
 ### Mathematical Properties
 
 **Exponential Backoff**:
+
 ```
 T(n) = min(baseDelay * 2^n, maxDelay)
 Total time for 5 attempts = 1 + 2 + 4 + 8 + 16 = 31 seconds
 ```
 
 **With Full Jitter**:
+
 ```
 T(n) = min(baseDelay * 2^n, maxDelay) * random(0, 1)
 Expected total time = 31 * 0.5 = 15.5 seconds
@@ -440,6 +473,7 @@ Expected total time = 31 * 0.5 = 15.5 seconds
 ### Monitoring Recommendations
 
 **Key Metrics to Watch**:
+
 - `circuit_breaker_open`: Alert if true for > 5 minutes
 - `circuit_breaker_failure_count`: Alert if approaching threshold
 - `avg_retry_delay_ms`: Should be ~50% of expected exponential delay
@@ -447,6 +481,7 @@ Expected total time = 31 * 0.5 = 15.5 seconds
 - `success_rate`: Watch for degradation during circuit breaker events
 
 **Dashboards**:
+
 - Retry delay histogram (verify jitter distribution)
 - Circuit breaker state over time
 - Success rate correlation with circuit breaker
@@ -493,12 +528,12 @@ const retryService = new PaymentRetryService({
   supabase,
   stateMachine,
   retryConfig: {
-    maxAttempts: 3,                    // Only 3 retries
-    baseDelay: 2000,                   // 2 second base
-    maxDelay: 30000,                   // 30 second max
-    backoffMultiplier: 3,              // 3^attempt growth
-    circuitBreakerThreshold: 10,       // Open after 10 failures
-    circuitBreakerTimeout: 120000,     // 2 minute timeout
+    maxAttempts: 3, // Only 3 retries
+    baseDelay: 2000, // 2 second base
+    maxDelay: 30000, // 30 second max
+    backoffMultiplier: 3, // 3^attempt growth
+    circuitBreakerThreshold: 10, // Open after 10 failures
+    circuitBreakerTimeout: 120000, // 2 minute timeout
   },
   logger,
 });
@@ -518,8 +553,7 @@ console.log('Circuit Breaker State:', {
 });
 
 // Alert if circuit breaker has been open for too long
-if (metrics.circuit_breaker_open &&
-    metrics.circuit_breaker_open_duration_ms! > 300000) {
+if (metrics.circuit_breaker_open && metrics.circuit_breaker_open_duration_ms! > 300000) {
   sendAlert('Circuit breaker open for > 5 minutes');
 }
 ```

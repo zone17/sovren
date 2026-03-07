@@ -9,6 +9,7 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 **Total Effort**: 120 story points
 **Timeline**: 6-8 weeks (with 2-3 developers)
 **Expected Impact**:
+
 - 30% reduction in maintenance costs
 - 15-20% improvement in developer velocity
 - 25% reduction in bugs
@@ -17,6 +18,7 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 ## Epic Status
 
 ### ✅ Epic 001: Type Safety Improvements
+
 - **Priority**: HIGH (Quick Win)
 - **Story Points**: 12
 - **Timeline**: 2-3 days
@@ -25,6 +27,7 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 - **Documentation**: Complete (9 files, 171 KB)
 
 ### ✅ Epic 002: Payment Processing TODO Resolution
+
 - **Priority**: CRITICAL (Revenue Impact)
 - **Story Points**: 18
 - **Timeline**: 4-5 days
@@ -33,6 +36,7 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 - **Documentation**: Complete (7 files)
 
 ### ✅ Epic 003: NOSTR Service Consolidation
+
 - **Priority**: HIGH (Strategic)
 - **Story Points**: 21-34
 - **Timeline**: 1.5-2 weeks
@@ -41,6 +45,7 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 - **Documentation**: In progress
 
 ### 📝 Epic 004: State Management Boundaries
+
 - **Priority**: MEDIUM (Strategic)
 - **Story Points**: 21-34
 - **Timeline**: 1.5-2 weeks
@@ -48,6 +53,7 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 - **Documentation**: Epic document complete
 
 ### 📝 Epic 005: Backend Service Refactoring
+
 - **Priority**: MEDIUM (Strategic)
 - **Story Points**: 34-55
 - **Timeline**: 3-4 weeks
@@ -57,7 +63,9 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 ## Recommended Implementation Sequence
 
 ### Phase 1: Quick Wins (Week 1)
+
 **Parallel Work**
+
 - **Epic 001**: Type Safety Improvements (2-3 days)
   - 12 stories, 3 work streams, can run 100% parallel
   - Developer allocation: 3 developers
@@ -65,7 +73,9 @@ This document provides a high-level roadmap for the comprehensive refactoring in
   - Immediate value: Better IDE experience, fewer type bugs
 
 ### Phase 2: Critical Revenue Protection (Week 1-2)
+
 **Sequential Critical Path**
+
 - **Epic 002**: Payment Processing TODO Resolution (4-5 days)
   - 18 stories, critical path: Stories #001 → #002 → #004 → #007
   - Developer allocation: 2-3 developers (1 must have payment experience)
@@ -73,7 +83,9 @@ This document provides a high-level roadmap for the comprehensive refactoring in
   - Immediate value: Production-ready monetization, reduced support tickets
 
 ### Phase 3: Strategic Architecture (Weeks 3-4)
+
 **Parallel Strategic Work**
+
 - **Epic 003**: NOSTR Service Consolidation (1.5-2 weeks)
   - Reduces code duplication by 15%
   - Developer allocation: 2 developers (1 frontend, 1 backend)
@@ -81,7 +93,9 @@ This document provides a high-level roadmap for the comprehensive refactoring in
   - Value: Easier NOSTR feature development, reduced bugs
 
 ### Phase 4: State Management Clarity (Weeks 5-6)
+
 **Architectural Improvement**
+
 - **Epic 004**: State Management Boundaries (1.5-2 weeks)
   - Clear Redux vs React Query patterns
   - Developer allocation: 2 developers + 1 tech lead
@@ -89,7 +103,9 @@ This document provides a high-level roadmap for the comprehensive refactoring in
   - Value: Faster feature development, clearer architecture
 
 ### Phase 5: Backend Scalability (Weeks 7-10)
+
 **Long-term Foundation**
+
 - **Epic 005**: Backend Service Refactoring (3-4 weeks)
   - Breaks monolithic services into focused services
   - Developer allocation: 2-3 backend developers
@@ -99,12 +115,14 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 ## Work Allocation Scenarios
 
 ### Scenario 1: Single Developer (Sequential)
+
 - **Timeline**: 16-20 weeks
 - **Approach**: One Epic at a time, one story per day
 - **Pros**: Minimal coordination, deep context
 - **Cons**: Very slow, blocks other work
 
 ### Scenario 2: Two Developers (Optimal Balance)
+
 - **Timeline**: 8-10 weeks
 - **Approach**:
   - Week 1: Both on Epic 001 (quick completion)
@@ -116,6 +134,7 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 - **Cons**: Still 2.5 months
 
 ### Scenario 3: Three Developers (Recommended)
+
 - **Timeline**: 6-8 weeks
 - **Approach**:
   - Week 1: All 3 on Epic 001 (2 days) + Epic 002 start
@@ -127,6 +146,7 @@ This document provides a high-level roadmap for the comprehensive refactoring in
 - **Cons**: More coordination needed
 
 ### Scenario 4: Four+ Developers (Maximum Speed)
+
 - **Timeline**: 4-6 weeks
 - **Approach**: Maximum parallelization with dedicated Epic teams
 - **Pros**: Fastest completion
@@ -183,18 +203,22 @@ docs/refactoring/
 ### Week 1 Execution Plan
 
 **Monday**:
+
 - Morning: Team kickoff and Epic 001 planning
 - Afternoon: Begin Epic 001 parallel work (all 3 streams)
 
 **Tuesday**:
+
 - Continue Epic 001 parallel work
 - Begin Epic 002 planning (review critical path)
 
 **Wednesday**:
+
 - Complete Epic 001 (should be done)
 - Begin Epic 002 critical path (Stories #001-#003)
 
 **Thursday-Friday**:
+
 - Continue Epic 002 work
 - Security review for payment stories
 - Integration testing
@@ -202,6 +226,7 @@ docs/refactoring/
 ## Success Metrics
 
 ### Technical Metrics
+
 - **Type Coverage**: 99%+ (currently ~94%)
 - **Test Coverage**: Maintain 95%+ (currently 85-95%)
 - **Code Duplication**: Reduce from current to < 3%
@@ -209,6 +234,7 @@ docs/refactoring/
 - **Build Time**: < 5% increase despite stricter checks
 
 ### Business Metrics
+
 - **Developer Velocity**: 15-20% improvement (measure story points/sprint)
 - **Bug Rate**: 25% reduction in production bugs
 - **Time to Onboard**: < 1 day to understand state management (currently ~3 days)
@@ -216,6 +242,7 @@ docs/refactoring/
 - **Maintenance Cost**: 30% reduction in time spent on bug fixes
 
 ### Quality Metrics
+
 - **Code Review Time**: 20% faster reviews (clearer patterns)
 - **Payment Success Rate**: > 95% (currently unknown)
 - **NOSTR Event Publish Success**: > 98% (currently ~95%)
@@ -224,6 +251,7 @@ docs/refactoring/
 ## Risk Management
 
 ### High-Risk Epics
+
 1. **Epic 002** (Payment Processing)
    - Risk: Breaking payment flows
    - Mitigation: Extensive testing, feature flags, canary deployment, security audit
@@ -233,6 +261,7 @@ docs/refactoring/
    - Mitigation: Parallel running, gradual migration, comprehensive relay testing
 
 ### Medium-Risk Epics
+
 3. **Epic 005** (Backend Service Refactoring)
    - Risk: Database transaction issues, performance degradation
    - Mitigation: Transaction boundary design, benchmarking
@@ -242,6 +271,7 @@ docs/refactoring/
    - Mitigation: Integration tests, incremental migration
 
 ### Low-Risk Epics
+
 5. **Epic 001** (Type Safety)
    - Risk: Build time increase
    - Mitigation: Monitor build performance, comprehensive test suite
@@ -249,14 +279,17 @@ docs/refactoring/
 ## Communication Plan
 
 ### Daily
+
 - **Standup** (15 minutes): Progress, blockers, dependencies
 - **Slack Updates**: Share completed stories, blockers
 
 ### Weekly
+
 - **Epic Review** (30 minutes): Sprint retrospective, adjust priorities
 - **Demo** (30 minutes): Show completed stories to stakeholders
 
 ### Per Epic
+
 - **Kickoff** (1 hour): Review Epic, plan sprints, assign stories
 - **Retrospective** (1 hour): What went well, what to improve
 - **Documentation Review**: Update Mermaid diagrams, ADRs, CHANGELOG
@@ -274,9 +307,11 @@ Each Epic should have a rollback plan:
 ## Dependencies
 
 ### External Dependencies
+
 - None identified (all work is internal refactoring)
 
 ### Internal Dependencies
+
 ```
 Epic 001 (Type Safety)
   ↓ (helpful but not required)
@@ -296,6 +331,7 @@ A: Epic 002 (Payment) is CRITICAL and cannot be skipped. Epic 001 is a quick win
 
 **Q: Can we do these Epics in a different order?**
 A: Yes, with these recommendations:
+
 - Epic 001 first (quick win, helps all other work)
 - Epic 002 second (critical for revenue)
 - Epics 003-005 in any order (independent)
@@ -305,6 +341,7 @@ A: Focus on Epic 001 (1 week) and Epic 002 critical path only (2 weeks). Defer E
 
 **Q: How do we handle production bugs during refactoring?**
 A:
+
 - Reserve 20% capacity for bug fixes
 - Use feature flags to disable refactored code if needed
 - Prioritize production stability over refactoring velocity
@@ -323,6 +360,7 @@ To decompose Epics 004 and 005 into 1-point stories:
 ```
 
 These will generate similar comprehensive documentation with:
+
 - Granular 1-point user stories
 - Dependencies and parallel work streams
 - Sprint planning and work allocation
@@ -335,6 +373,7 @@ This refactoring roadmap provides a clear, actionable path to eliminating techni
 **Recommended Start**: Epic 001 (Type Safety) - 2 days, high value, low risk, immediate benefits.
 
 All documentation is located at:
+
 ```
 /Users/fp/Desktop/Sovren/docs/refactoring/
 ```

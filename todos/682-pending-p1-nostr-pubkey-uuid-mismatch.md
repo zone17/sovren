@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p1
-issue_id: "682"
+issue_id: '682'
 tags: [code-review, backend, security, slice-8]
 dependencies: []
 ---
@@ -24,12 +24,14 @@ Both `follow.routes.ts` and `notifications.routes.ts` pass `getAuthUser(req).nos
 ## Proposed Solutions
 
 ### Solution A: Add getUserIdByPubkey() to both services (Recommended)
+
 - Copy the TTLCache pattern from `CommentsService` (lines 64-97)
 - Resolve pubkey → UUID at start of each method
 - **Effort:** Medium
 - **Risk:** Low — proven pattern
 
 ### Solution B: Resolve at route layer
+
 - Extract a shared `resolveUserIdFromPubkey()` helper
 - Call before invoking service methods
 - **Effort:** Medium
@@ -38,6 +40,7 @@ Both `follow.routes.ts` and `notifications.routes.ts` pass `getAuthUser(req).nos
 ## Technical Details
 
 **Affected files:**
+
 - `packages/backend/src/routes/v2/follow.routes.ts` (lines 54, 81, 108)
 - `packages/backend/src/routes/v2/notifications.routes.ts` (lines 66, 91, 119, 149, 174)
 - `packages/backend/src/services/community/FollowService.ts` (add getUserIdByPubkey)

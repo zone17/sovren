@@ -263,7 +263,6 @@ Follow these patterns for all backend code:
 ````
 
 2. **Multi-table operations MUST use transactions**
-
    - Use Supabase RPC for multi-table writes
    - OR use database functions with BEGIN/COMMIT
    - Sequential awaits without transactions = partial data on error
@@ -278,7 +277,6 @@ Follow these patterns for all backend code:
    ```
 
 3. **Use domain error classes**
-
    - Import from `packages/backend/src/middleware/error-handler-middleware.ts`
    - NotFoundError (404), ConflictError (409), ValidationError (400)
    - These are automatically serialized by error middleware
@@ -327,7 +325,6 @@ Many P1 bugs come from race conditions. Follow these patterns:
 ````
 
 2. **Upsert operations MUST specify accumulation strategy**
-
    - Supabase upsert REPLACES by default
    - For counters/metrics, use SQL to ACCUMULATE
 
@@ -427,27 +424,23 @@ Your responsibilities:
 Despite the 5 P1s, many things worked correctly in the Phase 7 sprint:
 
 1. **The 8-agent review caught everything**
-
    - 100% of P1s identified and documented
    - 21 additional P2/P3 items found
    - Strong convergence across agents (most P1s flagged by 3+ agents)
 
 2. **Security audit was accurate within its scope**
-
    - 90/100 score correctly reflects OWASP compliance
    - All endpoints have auth middleware
    - No injection vectors, proper input validation
    - Scope limitation (doesn't cover data integrity) is expected
 
 3. **Architecture was sound**
-
    - Clean service boundaries (WellnessService, BurnoutScoringService, WorkPatternService)
    - Proper dependency injection into controllers
    - Clear route organization (v2/wellness, v2/provenance, v2/content-shield)
    - Type safety via Zod validators
 
 4. **Strong convergence across review agents**
-
    - In-memory Map usage flagged by 4+ agents
    - Type duplication flagged by 3+ agents
    - Unreachable branch in alert handling flagged by 3+ agents
@@ -591,13 +584,11 @@ P3 MINOR: 10 (39%)
 ### Short-term (Next 2-3 Sprints)
 
 5. **Add data integrity review agent** to standard tier Phase 3
-
    - Current Phase 3: Architecture review + Security audit
    - Proposed Phase 3: Architecture + Security + **Data Integrity**
    - Data integrity scope: Atomicity, concurrency, error propagation, business logic
 
 6. **Create "behavior verification" playbook** for QA agents
-
    - Manual smoke tests (if server available): curl endpoints, check status codes
    - Database verification: Check for transactions, optimistic locking, accumulation
    - Error handling verification: Check for throw-on-error, not catch-and-default
@@ -610,13 +601,11 @@ P3 MINOR: 10 (39%)
 ### Long-term (After 5+ Sprints)
 
 8. **Automated gate checks**: Convert bash checks to CI job
-
    - Run Gate 2.5 smoke tests automatically on PR creation
    - Block PR merge if route mounting verification fails
    - Require transaction/RPC for multi-table operations
 
 9. **Agent brief library**: Extract common patterns from compound docs
-
    - Error handling patterns (from this doc)
    - Concurrency patterns (from this doc)
    - Testing patterns (from P1 Critical Fixes doc)

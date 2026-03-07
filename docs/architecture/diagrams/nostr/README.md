@@ -19,6 +19,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 **Description**: Complete system architecture showing all NOSTR components and their interactions across frontend, service, protocol, and backend layers.
 
 **Covers**:
+
 - Frontend layer (React components)
 - Service layer (NOSTR service, key management, signing)
 - Key storage mechanisms (browser extensions, IndexedDB, memory)
@@ -27,11 +28,13 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 - Authentication flow integration
 
 **View Diagram**:
+
 - 🖼️ **GitHub Visual**: [View rendered diagram](https://github.com/YOUR_GITHUB_USERNAME/Sovren/blob/main/docs/architecture/diagrams/nostr/nostr-architecture-overview.mmd)
 - ✏️ **Interactive Editor**: [Open in Mermaid Live](https://mermaid.live/edit#pako:eNp1kMtqwzAQRX9FzKqGpIu-QEgXoVC6KaXQTRdZKPZYMdiSkOQQQvLvlR8hTdJuNMPVuUdXC2itQlKilY3lEMxLZ_0bON_AMZjX1nmwHrxr4eBd68C6Bvbe7YNpnW8d7L1t4eBd2zrX-gYO3rUOrGvg4F3rXOth7-0-mNb51sHe2yaY1vnWwd7bJpjW-dbB3tsmwHrYe7sPpnW-dbD3tgmwHvbe7oNpnW8d7L1tAqyHvbf7YFrnWwd7b5sA62Hv7T6Y1vnWwd7bJsB62Hu7D6Z1vnWw97YJsB723u6DaZ1vHey9bQKsh723-2Ba51sHe2-bAOth7-0-mNb51sHe2ybAeth7uw-mdb51sPe2CbAe9t7ug2mdtDvXutZJH_8Az1mXBA)
 - 📝 **Raw Source**: [View .mmd file](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/Sovren/main/docs/architecture/diagrams/nostr/nostr-architecture-overview.mmd)
 
 **Key Insights**:
+
 - Multi-relay redundancy architecture
 - Browser extension integration for security
 - Encrypted key storage with IndexedDB
@@ -47,6 +50,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 **Description**: Detailed sequence diagram showing the complete lifecycle of NOSTR key management from detection through deletion.
 
 **Covers**:
+
 - Browser extension detection (Alby, nos2x, Nostore)
 - Manual key generation with security levels
 - Key import (hex and nsec formats)
@@ -56,11 +60,13 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 - Secure key deletion
 
 **View Diagram**:
+
 - 🖼️ **GitHub Visual**: [View rendered diagram](https://github.com/YOUR_GITHUB_USERNAME/Sovren/blob/main/docs/architecture/diagrams/nostr/nostr-key-management-flow.mmd)
 - ✏️ **Interactive Editor**: [Open in Mermaid Live](https://mermaid.live/edit#pako:eNp1kMtqwzAQRX9FzKqGpIu-QEgXoVC6KaXQTRdZKPZYMdiSkOQQQvLvlR8hTdJuNMPVuUdXC2itQlKilY3lEMxLZ_0bON_AMZjX1nmwHrxr4eBd68C6Bvbe7YNpnW8d7L1t4eBd2zrX-gYO3rUOrGvg4F3rXOth7-0-mNb51sHe2yaY1vnWwd7bJpjW-dbB3tsmwHrYe7sPpnW-dbD3tgmwHvbe7oNpnW8d7L1tAqyHvbf7YFrnWwd7b5sA62Hv7T6Y1vnWwd7bJsB62Hu7D6Z1vnWw97YJsB723u6DaZ1vHey9bQKsh723-2Ba51sHe2-bAOth7-0-mNb51sHe2ybAeth7uw-mdb51sPe2CbAe9t7ug2mdtDvXutZJH_8Az1mXBA)
 - 📝 **Raw Source**: [View .mmd file](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/Sovren/main/docs/architecture/diagrams/nostr/nostr-key-management-flow.mmd)
 
 **Key Insights**:
+
 - Three security levels (BASIC, ENHANCED, MAXIMUM)
 - Web Crypto API for entropy generation
 - AES-256-GCM encryption for storage
@@ -77,6 +83,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 **Description**: Complete event lifecycle from creation to multi-relay broadcasting, including validation, signing, and error handling.
 
 **Covers**:
+
 - Event creation and composition
 - Content validation and sanitization
 - Event signing with Schnorr signatures
@@ -87,11 +94,13 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 - Follower notification
 
 **View Diagram**:
+
 - 🖼️ **GitHub Visual**: [View rendered diagram](https://github.com/YOUR_GITHUB_USERNAME/Sovren/blob/main/docs/architecture/diagrams/nostr/nostr-event-publishing-flow.mmd)
 - ✏️ **Interactive Editor**: [Open in Mermaid Live](https://mermaid.live/edit#pako:eNp1kMtqwzAQRX9FzKqGpIu-QEgXoVC6KaXQTRdZKPZYMdiSkOQQQvLvlR8hTdJuNMPVuUdXC2itQlKilY3lEMxLZ_0bON_AMZjX1nmwHrxr4eBd68C6Bvbe7YNpnW8d7L1t4eBd2zrX-gYO3rUOrGvg4F3rXOth7-0-mNb51sHe2yaY1vnWwd7bJpjW-dbB3tsmwHrYe7sPpnW-dbD3tgmwHvbe7oNpnW8d7L1tAqyHvbf7YFrnWwd7b5sA62Hv7T6Y1vnWwd7bJsB62Hu7D6Z1vnWw97YJsB723u6DaZ1vHey9bQKsh723-2Ba51sHe2-bAOth7-0-mNb51sHe2ybAeth7uw-mdb51sPe2CbAe9t7ug2mdtDvXutZJH_8Az1mXBA)
 - 📝 **Raw Source**: [View .mmd file](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/Sovren/main/docs/architecture/diagrams/nostr/nostr-event-publishing-flow.mmd)
 
 **Key Insights**:
+
 - Multiple event kinds supported (1, 3, 4, 30023, 30078)
 - XSS protection and content sanitization
 - SHA256 event ID calculation
@@ -109,6 +118,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 **Description**: Relay pool architecture showing initialization, health monitoring, failover, and load balancing strategies.
 
 **Covers**:
+
 - Relay pool initialization
 - Connection state management (CONNECTING → CONNECTED → DEGRADED → DISCONNECTED → FAILED)
 - Health monitoring (ping/pong, latency, uptime, throughput)
@@ -118,11 +128,13 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 - Load balancing strategies (round robin, latency-based, geo-routing)
 
 **View Diagram**:
+
 - 🖼️ **GitHub Visual**: [View rendered diagram](https://github.com/YOUR_GITHUB_USERNAME/Sovren/blob/main/docs/architecture/diagrams/nostr/nostr-relay-management-flow.mmd)
 - ✏️ **Interactive Editor**: [Open in Mermaid Live](https://mermaid.live/edit#pako:eNp1kMtqwzAQRX9FzKqGpIu-QEgXoVC6KaXQTRdZKPZYMdiSkOQQQvLvlR8hTdJuNMPVuUdXC2itQlKilY3lEMxLZ_0bON_AMZjX1nmwHrxr4eBd68C6Bvbe7YNpnW8d7L1t4eBd2zrX-gYO3rUOrGvg4F3rXOth7-0-mNb51sHe2yaY1vnWwd7bJpjW-dbB3tsmwHrYe7sPpnW-dbD3tgmwHvbe7oNpnW8d7L1tAqyHvbf7YFrnWwd7b5sA62Hv7T6Y1vnWwd7bJsB62Hu7D6Z1vnWw97YJsB723u6DaZ1vHey9bQKsh723-2Ba51sHe2-bAOth7-0-mNb51sHe2ybAeth7uw-mdb51sPe2CbAe9t7ug2mdtDvXutZJH_8Az1mXBA)
 - 📝 **Raw Source**: [View .mmd file](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/Sovren/main/docs/architecture/diagrams/nostr/nostr-relay-management-flow.mmd)
 
 **Key Insights**:
+
 - 3-tier relay priority (primary, secondary, backup)
 - Health score calculation: (Uptime × 0.4) + (Latency × 0.3) + (Success Rate × 0.3)
 - Degradation triggers: latency >2s, success <80%, 3+ errors
@@ -140,6 +152,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 **Description**: Comprehensive map of NOSTR Implementation Protocols (NIPs) showing implementation status and feature mapping.
 
 **Covers**:
+
 - ✅ Implemented NIPs (NIP-01, NIP-04, NIP-05, NIP-19, NIP-23, NIP-57, NIP-78, Browser Extensions)
 - ⚠️ Partially Implemented (NIP-06)
 - 🔄 Planned NIPs (NIP-02, NIP-09, NIP-25, NIP-26)
@@ -148,11 +161,13 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 - Compliance validation checks
 
 **View Diagram**:
+
 - 🖼️ **GitHub Visual**: [View rendered diagram](https://github.com/YOUR_GITHUB_USERNAME/Sovren/blob/main/docs/architecture/diagrams/nostr/nostr-nip-compliance.mmd)
 - ✏️ **Interactive Editor**: [Open in Mermaid Live](https://mermaid.live/edit#pako:eNp1kMtqwzAQRX9FzKqGpIu-QEgXoVC6KaXQTRdZKPZYMdiSkOQQQvLvlR8hTdJuNMPVuUdXC2itQlKilY3lEMxLZ_0bON_AMZjX1nmwHrxr4eBd68C6Bvbe7YNpnW8d7L1t4eBd2zrX-gYO3rUOrGvg4F3rXOth7-0-mNb51sHe2yaY1vnWwd7bJpjW-dbB3tsmwHrYe7sPpnW-dbD3tgmwHvbe7oNpnW8d7L1tAqyHvbf7YFrnWwd7b5sA62Hv7T6Y1vnWwd7bJsB62Hu7D6Z1vnWw97YJsB723u6DaZ1vHey9bQKsh723-2Ba51sHe2-bAOth7-0-mNb51sHe2ybAeth7uw-mdb51sPe2CbAe9t7ug2mdtDvXutZJH_8Az1mXBA)
 - 📝 **Raw Source**: [View .mmd file](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/Sovren/main/docs/architecture/diagrams/nostr/nostr-nip-compliance.mmd)
 
 **Key Insights**:
+
 - 8 NIPs fully implemented (67% of priority NIPs)
 - Schnorr signatures on secp256k1 curve
 - SHA256 event ID hashing
@@ -168,6 +183,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 ### For Developers
 
 **When to Use These Diagrams**:
+
 - Understanding NOSTR integration architecture
 - Implementing new NOSTR features
 - Debugging relay connection issues
@@ -176,6 +192,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 - Onboarding new team members
 
 **How to Update Diagrams**:
+
 1. Edit the `.mmd` file directly in your editor
 2. Test rendering at [Mermaid Live](https://mermaid.live)
 3. Commit changes with descriptive message
@@ -185,6 +202,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 ### For Technical Writers
 
 **When to Reference These Diagrams**:
+
 - Creating developer onboarding guides
 - Writing NOSTR integration tutorials
 - Documenting security best practices
@@ -194,6 +212,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 ### For Product Managers
 
 **When to Share These Diagrams**:
+
 - Architectural review meetings
 - Stakeholder presentations
 - Security audits
@@ -205,21 +224,25 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 ## 🔗 Related Documentation
 
 ### Architecture Documentation
+
 - [Elite Architecture Documentation](/ELITE_ARCHITECTURE_DOCUMENTATION.md) - Overall system architecture
 - [Feature Architecture Guide](/FEATURE_ARCHITECTURE_GUIDE.md) - Feature-based design patterns
 - [API Architecture](/docs/api-architecture.md) - Backend API design
 
 ### NOSTR-Specific Documentation
+
 - [NOSTR Integration Guide](/docs/elite-nostr-lightning-onboarding.md) - User onboarding for NOSTR
 - [NIP-05 Verification Service](/packages/backend/src/services/nip05-verification-service.ts) - Implementation details
 - [Key Management Service](/packages/shared/src/services/NostrKeyManagementService.ts) - Security implementation
 
 ### Developer Guides
+
 - [Developer Guide](/docs/DEVELOPER_GUIDE.md) - Getting started with development
 - [Project Rules](/`@project-rules.mdc`) - Elite engineering standards
 - [Ways of Working](/@ways-of-working.mdc) - Development workflow
 
 ### User Stories & Requirements
+
 - [Epic 003: NOSTR Consolidation](/docs/user-stories.md) - Related user stories
 - [Sovren PRD](/SOVREN_PRD.md) - Product requirements
 - [US-323: Create NOSTR Architecture Diagrams](/docs/user-stories.md#us-323) - This story
@@ -229,17 +252,20 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 ## 📝 Diagram Maintenance
 
 ### Update Frequency
+
 - **Major Updates**: When new NIPs are implemented or architecture changes
 - **Minor Updates**: When implementation details change
 - **Review Cycle**: Quarterly architectural review
 
 ### Version History
+
 - **v1.0** (2025-10-25): Initial creation for US-323
   - 5 comprehensive diagrams
   - Full NIP compliance mapping
   - Implementation status documentation
 
 ### Contributors
+
 - Technical Documentation Specialist (Elite Engineering Team)
 - NOSTR Integration Team
 - Security & Architecture Review Board
@@ -251,6 +277,7 @@ This directory contains 5 comprehensive Mermaid diagrams documenting the complet
 All diagrams in this directory follow Sovren's Mermaid diagram standards:
 
 ### Required Elements
+
 ✅ Clear title and purpose annotation
 ✅ Comprehensive annotations for complex flows
 ✅ Color-coded components by layer/type
@@ -259,12 +286,15 @@ All diagrams in this directory follow Sovren's Mermaid diagram standards:
 ✅ Consistent styling and naming conventions
 
 ### Linking Format (Per @project-rules.mdc)
+
 All diagrams must provide three link types:
+
 1. **GitHub Visual**: Rendered view in repository
 2. **Interactive Editor**: Mermaid Live Editor for editing
 3. **Raw Source**: Direct access to .mmd file
 
 ### Quality Gates
+
 - Diagrams must render correctly on GitHub
 - No syntax errors when loaded in Mermaid Live
 - All components labeled clearly
@@ -276,6 +306,7 @@ All diagrams must provide three link types:
 ## 🔒 Security Considerations
 
 **Sensitive Information**: These diagrams are safe for public repositories:
+
 - ✅ No private keys or secrets
 - ✅ No specific relay URLs with authentication
 - ✅ No internal IP addresses or hostnames
@@ -283,6 +314,7 @@ All diagrams must provide three link types:
 - ✅ Architectural patterns only
 
 **Internal Use**: For internal documentation with sensitive details, use:
+
 - Private documentation repository
 - Encrypted diagram storage
 - Access-controlled wiki
@@ -292,11 +324,13 @@ All diagrams must provide three link types:
 ## 📞 Support & Questions
 
 **For Diagram-Related Questions**:
+
 - Technical Documentation Team: docs@sovren.app
 - Architecture Review Board: architecture@sovren.app
 - Developer Slack: #nostr-integration
 
 **For Implementation Questions**:
+
 - NOSTR Integration Team: nostr-team@sovren.app
 - Security Team: security@sovren.app
 - Developer Slack: #help-dev

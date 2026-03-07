@@ -14,7 +14,6 @@
  * - Usability testing effectiveness monitoring
  */
 
-
 import { AIUsabilityTestingFramework } from '../AIUsabilityTestingFramework';
 import type { AIUsabilityTestingConfig, UserBehaviorPattern, UserScenario } from '../types';
 

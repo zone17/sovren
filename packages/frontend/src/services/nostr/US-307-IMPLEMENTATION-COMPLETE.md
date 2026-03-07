@@ -23,16 +23,19 @@ Build a robust event deduplication system to eliminate duplicate events from mul
 #### Core Features Implemented:
 
 ✅ **Event ID-Based Deduplication** (Primary Strategy)
+
 - SHA-256 event ID matching
 - O(1) lookup using LRU cache
 - Relay tracking for multi-relay events
 
 ✅ **Content-Based Deduplication** (Secondary Strategy)
+
 - Fast hash-based content comparison
 - Pubkey + Kind + Content fingerprinting
 - Disabled for replaceable events to prevent false positives
 
 ✅ **Replaceable Event Handling** (NIP-01, NIP-16, NIP-33)
+
 - **NIP-01**: Kind 0 (metadata), Kind 3 (contacts)
 - **NIP-16**: Kinds 10000-19999 (replaceable)
 - **NIP-33**: Kinds 30000-39999 (parameterized replaceable with d-tag)
@@ -40,17 +43,20 @@ Build a robust event deduplication system to eliminate duplicate events from mul
 - Per-pubkey + kind coordination
 
 ✅ **Bloom Filter** (Performance Optimization)
+
 - Probabilistic fast lookup (O(1))
 - Configurable size (default: 100,000 bits)
 - 3-hash implementation for accuracy
 - Memory efficient (~12.5KB for 100K bits)
 
 ✅ **LRU Cache** (Memory Management)
+
 - Configurable max size (default: 10,000 events)
 - Automatic eviction of least recently used events
 - Access tracking for smart eviction
 
 ✅ **Late Arrival Window** (Multi-Relay Handling)
+
 - 5-second window for late arrivals
 - Relay deduplication tracking
 - seenOn relay list maintenance
@@ -201,14 +207,14 @@ Return: isDuplicate = false
 
 ## 📊 QUALITY GATES - ALL PASSED ✅
 
-| Gate | Target | Actual | Status |
-|------|--------|--------|--------|
-| **Tests** | ≥90% coverage | 42/42 passing | ✅ PASS |
-| **Performance** | <5ms per event | <5ms avg | ✅ PASS |
-| **Throughput** | >1000 events/sec | >1000/sec | ✅ PASS |
-| **Memory** | Efficient | ~10KB/10K events | ✅ PASS |
-| **Duplicate Detection** | >99% | >99.9% | ✅ PASS |
-| **Code Quality** | Elite standards | Zero warnings | ✅ PASS |
+| Gate                    | Target           | Actual           | Status  |
+| ----------------------- | ---------------- | ---------------- | ------- |
+| **Tests**               | ≥90% coverage    | 42/42 passing    | ✅ PASS |
+| **Performance**         | <5ms per event   | <5ms avg         | ✅ PASS |
+| **Throughput**          | >1000 events/sec | >1000/sec        | ✅ PASS |
+| **Memory**              | Efficient        | ~10KB/10K events | ✅ PASS |
+| **Duplicate Detection** | >99%             | >99.9%           | ✅ PASS |
+| **Code Quality**        | Elite standards  | Zero warnings    | ✅ PASS |
 
 ---
 
@@ -216,11 +222,11 @@ Return: isDuplicate = false
 
 ```typescript
 interface DeduplicationConfig {
-  maxCacheSize?: number;          // Default: 10,000
-  bloomFilterSize?: number;       // Default: 100,000 bits
-  lateArrivalWindow?: number;     // Default: 5,000ms
-  enableContentDedup?: boolean;   // Default: true
-  enableBloomFilter?: boolean;    // Default: true
+  maxCacheSize?: number; // Default: 10,000
+  bloomFilterSize?: number; // Default: 100,000 bits
+  lateArrivalWindow?: number; // Default: 5,000ms
+  enableContentDedup?: boolean; // Default: true
+  enableBloomFilter?: boolean; // Default: true
 }
 ```
 
@@ -394,20 +400,20 @@ This implementation is **PRODUCTION READY** and can be integrated immediately:
 
 ## ✅ ACCEPTANCE CRITERIA - ALL MET
 
-| Criteria | Status |
-|----------|--------|
-| Event ID-based deduplication implemented | ✅ |
-| Content-based deduplication implemented | ✅ |
-| Replaceable event handling (NIP-01/16/33) | ✅ |
-| Bloom filter for O(1) lookup | ✅ |
-| LRU cache with configurable size | ✅ |
-| Late arrival window (5 seconds) | ✅ |
-| Per-relay statistics tracking | ✅ |
-| Performance <5ms per event | ✅ |
-| Memory efficient (<10KB/10K events) | ✅ |
-| Test coverage ≥90% | ✅ (42/42 tests passing) |
-| Zero duplicate events in UI | ✅ |
-| Documentation complete | ✅ |
+| Criteria                                  | Status                   |
+| ----------------------------------------- | ------------------------ |
+| Event ID-based deduplication implemented  | ✅                       |
+| Content-based deduplication implemented   | ✅                       |
+| Replaceable event handling (NIP-01/16/33) | ✅                       |
+| Bloom filter for O(1) lookup              | ✅                       |
+| LRU cache with configurable size          | ✅                       |
+| Late arrival window (5 seconds)           | ✅                       |
+| Per-relay statistics tracking             | ✅                       |
+| Performance <5ms per event                | ✅                       |
+| Memory efficient (<10KB/10K events)       | ✅                       |
+| Test coverage ≥90%                        | ✅ (42/42 tests passing) |
+| Zero duplicate events in UI               | ✅                       |
+| Documentation complete                    | ✅                       |
 
 ---
 
@@ -422,6 +428,7 @@ This implementation is **PRODUCTION READY** and can be integrated immediately:
 - **Production ready** (first-time merge eligible)
 
 This implementation represents **elite engineering** with:
+
 - Comprehensive test coverage
 - Performance optimization
 - Memory efficiency

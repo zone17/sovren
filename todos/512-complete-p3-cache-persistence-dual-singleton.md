@@ -17,12 +17,14 @@ dependencies: [507]
 **File:** `packages/frontend/src/services/nostr/CachePersistenceService.ts`
 
 Two separate singleton mechanisms coexist:
+
 1. `static getInstance()` — class-level singleton
 2. `getCachePersistence()` — module-level lazy singleton wrapping getInstance()
 
 ## Proposed Solutions
 
 ### Option A: Consolidate to one path after #507 is fixed
+
 - Remove `getCachePersistence()`, update all callers to use `getInstance()`
 - Pros: Single source of truth
 - Cons: Touches multiple import sites
@@ -30,6 +32,7 @@ Two separate singleton mechanisms coexist:
 - Risk: Low
 
 ### Option B: Keep both, ensure they stay in sync
+
 - Fix #507 first, add comment documenting the dual path
 - Pros: No caller changes
 - Cons: Design smell remains
@@ -46,8 +49,8 @@ Two separate singleton mechanisms coexist:
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                 | Learnings                                    |
+| ---------- | -------------------------------------- | -------------------------------------------- |
 | 2026-02-25 | Identified during manual PR #98 review | Dual singletons are a recurring anti-pattern |
 
 ## Resources

@@ -11,13 +11,13 @@
 
 ### Week-by-Week Summary
 
-| Week | Epic | Stories | Agents | Parallel Streams |
-|------|------|---------|--------|------------------|
-| Week 1 | EPIC-IMMEDIATE | 7 stories (#5-11) | security-engineer, code-review-specialist | 2 parallel |
-| Week 2 | NOSTR Auth | 15 stories (#12-26) | design-ux, frontend-dev, test-automation, code-review | 4-agent pipeline |
-| Week 3-4 | Content & Lightning | 30 stories (#27-52) | Multiple agents | 3 parallel streams |
-| Week 5 | Integration | 10 stories (#53-62) | test-automation, security, nostr-specialist | 2 parallel |
-| Week 6 | Production | 5 stories (#63-67) | security, performance, monitoring | Final validation |
+| Week     | Epic                | Stories             | Agents                                                | Parallel Streams   |
+| -------- | ------------------- | ------------------- | ----------------------------------------------------- | ------------------ |
+| Week 1   | EPIC-IMMEDIATE      | 7 stories (#5-11)   | security-engineer, code-review-specialist             | 2 parallel         |
+| Week 2   | NOSTR Auth          | 15 stories (#12-26) | design-ux, frontend-dev, test-automation, code-review | 4-agent pipeline   |
+| Week 3-4 | Content & Lightning | 30 stories (#27-52) | Multiple agents                                       | 3 parallel streams |
+| Week 5   | Integration         | 10 stories (#53-62) | test-automation, security, nostr-specialist           | 2 parallel         |
+| Week 6   | Production          | 5 stories (#63-67)  | security, performance, monitoring                     | Final validation   |
 
 ---
 
@@ -28,12 +28,14 @@
 **Execution Timeline**: 8 hours total (1 day)
 
 #### Parallel Stream A: Manual Fixes (User-Guided)
+
 **Time**: 0-2 hours
 
 1. **Issue #5 (IMMED-001): Fix Jest Configuration**
    - Agent: None (manual guidance)
    - Duration: 30 minutes
    - Actions:
+
      ```bash
      # Remove conflicting dashboard backup
      rm -rf monitoring/dashboard-backup
@@ -50,6 +52,7 @@
    - Duration: 30 minutes
    - Dependency: After #5
    - Actions:
+
      ```bash
      # Review and fix syntax
      code packages/backend/src/database/__tests__/pool.test.ts
@@ -71,6 +74,7 @@
      ```
 
 #### Parallel Stream B: Security Remediation
+
 **Time**: 0-4 hours (parallel with Stream A)
 
 4. **Issue #7 (IMMED-003): Rotate GitHub Token**
@@ -86,6 +90,7 @@
    - Task: Rotate database credentials in AWS Secrets Manager
 
 #### Stream C: Code Review
+
 **Time**: 2-5 hours (after manual fixes)
 
 6. **Issue #10 (IMMED-006): Review US-007**
@@ -95,6 +100,7 @@
    - Task: Review 77 staged files for error boundaries
 
 #### Stream D: Final Merge
+
 **Time**: 5-6 hours
 
 7. **Issue #11 (IMMED-007): Merge US-007**
@@ -115,16 +121,19 @@
 ### Execution Strategy
 
 #### Day 1-2: Design Phase (All Stories)
+
 - **Agent**: design-ux-specialist
 - **Parallel**: Design 3-4 stories simultaneously
 - **Deliverables**: Mockups, component specs, user flows
 
 #### Day 3-4: Implementation Phase
+
 - **Agent**: elite-frontend-dev
 - **Pattern**: Implement as designs complete
 - **Parallel**: 2-3 stories in development
 
 #### Day 5: Testing & Review
+
 - **Agents**: test-automation-engineer, code-review-specialist
 - **Pattern**: Test completed implementations
 - **Parallel**: Test and review different stories
@@ -132,6 +141,7 @@
 ### Story Breakdown
 
 **Core Authentication (#12-16)**:
+
 - FRONT-001: Extension detection
 - FRONT-002: Manual key input UI
 - FRONT-003: Role selection
@@ -139,6 +149,7 @@
 - FRONT-005: Profile display
 
 **Advanced Features (#17-21)**:
+
 - FRONT-006: Multi-account switching
 - FRONT-007: Key backup/recovery
 - FRONT-008: NIP-05 verification
@@ -146,6 +157,7 @@
 - FRONT-010: Mobile auth flow
 
 **Integration (#22-26)**:
+
 - FRONT-011: Auth context provider
 - FRONT-012: Protected routes
 - FRONT-013: Auth error handling
@@ -159,29 +171,37 @@
 ### Three Parallel Execution Streams
 
 #### Stream A: Content Creation System (#27-41)
+
 **Lead Agents**: design-ux-specialist → elite-frontend-dev → test-automation-engineer
 
 **Week 3 Focus**:
+
 - FRONT-016 to FRONT-020: Editor, markdown, media upload
 - FRONT-021 to FRONT-025: Categories, tags, drafts
 
 **Week 4 Focus**:
+
 - FRONT-026 to FRONT-030: Preview, scheduling, analytics
 
 #### Stream B: Lightning Payments (#42-52)
+
 **Lead Agents**: design-ux-specialist → elite-frontend-dev → lightning-specialist
 
 **Week 3 Focus**:
+
 - INTEG-001 to INTEG-005: Invoice generation, WebLN
 - INTEG-006 to INTEG-008: Payment verification
 
 **Week 4 Focus**:
+
 - INTEG-009 to INTEG-011: Subscription management
 
 #### Stream C: Dashboard & Analytics (Subset)
+
 **Lead Agents**: design-ux-specialist → elite-frontend-dev
 
 **Continuous**:
+
 - Creator dashboard
 - Analytics views
 - Revenue tracking
@@ -189,11 +209,13 @@
 ### Coordination Points
 
 **Daily Sync Points**:
+
 - 9 AM: Stream leads report progress
 - 2 PM: Blocker resolution
 - 5 PM: Integration testing
 
 **Merge Strategy**:
+
 - Feature branches per stream
 - Daily integration to development branch
 - Weekly merge to main
@@ -205,6 +227,7 @@
 ### Two Parallel Testing Streams
 
 #### Stream A: E2E Testing (#53-57)
+
 **Agent**: e2e-testing-specialist
 
 1. INTEG-012: Creator onboarding flow
@@ -214,6 +237,7 @@
 5. INTEG-016: Error recovery flow
 
 #### Stream B: Specialized Testing (#58-62)
+
 **Agents**: nostr-protocol-specialist, accessibility-specialist, security-engineer
 
 1. INTEG-017: NOSTR protocol compliance
@@ -261,20 +285,20 @@
 
 ### Agent Utilization Matrix
 
-| Agent | Week 1 | Week 2 | Week 3 | Week 4 | Week 5 | Week 6 |
-|-------|--------|--------|--------|--------|--------|--------|
-| security-engineer | 4h | - | - | - | 8h | 8h |
-| code-review-specialist | 3h | 8h | 8h | 8h | 4h | 4h |
-| design-ux-specialist | - | 16h | 20h | 20h | - | - |
-| elite-frontend-dev | - | 24h | 40h | 40h | - | - |
-| test-automation-engineer | - | 8h | 16h | 16h | 40h | - |
-| e2e-testing-specialist | - | - | - | - | 24h | - |
-| nostr-protocol-specialist | - | 4h | 8h | 8h | 8h | - |
-| lightning-specialist | - | - | 16h | 16h | - | - |
-| accessibility-specialist | - | - | - | - | 8h | - |
-| performance-optimization-engineer | - | - | - | - | 8h | 8h |
-| monitoring-observability-architect | - | - | - | - | - | 8h |
-| documentation-specialist | - | - | - | - | - | 8h |
+| Agent                              | Week 1 | Week 2 | Week 3 | Week 4 | Week 5 | Week 6 |
+| ---------------------------------- | ------ | ------ | ------ | ------ | ------ | ------ |
+| security-engineer                  | 4h     | -      | -      | -      | 8h     | 8h     |
+| code-review-specialist             | 3h     | 8h     | 8h     | 8h     | 4h     | 4h     |
+| design-ux-specialist               | -      | 16h    | 20h    | 20h    | -      | -      |
+| elite-frontend-dev                 | -      | 24h    | 40h    | 40h    | -      | -      |
+| test-automation-engineer           | -      | 8h     | 16h    | 16h    | 40h    | -      |
+| e2e-testing-specialist             | -      | -      | -      | -      | 24h    | -      |
+| nostr-protocol-specialist          | -      | 4h     | 8h     | 8h     | 8h     | -      |
+| lightning-specialist               | -      | -      | 16h    | 16h    | -      | -      |
+| accessibility-specialist           | -      | -      | -      | -      | 8h     | -      |
+| performance-optimization-engineer  | -      | -      | -      | -      | 8h     | 8h     |
+| monitoring-observability-architect | -      | -      | -      | -      | -      | 8h     |
+| documentation-specialist           | -      | -      | -      | -      | -      | 8h     |
 
 ### Parallel Execution Capacity
 
@@ -309,14 +333,14 @@
 
 ### Weekly Targets
 
-| Week | Completed Stories | Test Coverage | Quality Score | Deployment |
-|------|------------------|---------------|---------------|------------|
-| 1 | 7/7 | 85% → 90% | Security 90+ | Staging |
-| 2 | 15/15 | 90% → 92% | Type safety 94% | Staging |
-| 3 | 15/15 | 92% → 94% | A11y 90+ | Staging |
-| 4 | 15/15 | 94% → 95% | Performance A | Staging |
-| 5 | 10/10 | 95% → 96% | E2E 100% | Staging |
-| 6 | 5/5 | 96% → 97% | Production 95+ | Production |
+| Week | Completed Stories | Test Coverage | Quality Score   | Deployment |
+| ---- | ----------------- | ------------- | --------------- | ---------- |
+| 1    | 7/7               | 85% → 90%     | Security 90+    | Staging    |
+| 2    | 15/15             | 90% → 92%     | Type safety 94% | Staging    |
+| 3    | 15/15             | 92% → 94%     | A11y 90+        | Staging    |
+| 4    | 15/15             | 94% → 95%     | Performance A   | Staging    |
+| 5    | 10/10             | 95% → 96%     | E2E 100%        | Staging    |
+| 6    | 5/5               | 96% → 97%     | Production 95+  | Production |
 
 ### Daily KPIs
 
@@ -367,6 +391,7 @@ gh issue list --state open --json number,title,labels,assignees
 ## 🎯 LAUNCH CRITERIA
 
 **December 13, 2025 Requirements**:
+
 - ✅ All 67 stories complete
 - ✅ 95%+ test coverage
 - ✅ Security score 95/100

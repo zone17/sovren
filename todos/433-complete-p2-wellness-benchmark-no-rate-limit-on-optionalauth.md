@@ -2,7 +2,7 @@
 id: 433
 severity: P2
 status: complete
-title: "Wellness benchmark endpoint: optionalAuth + expensive query = abuse vector"
+title: 'Wellness benchmark endpoint: optionalAuth + expensive query = abuse vector'
 file: packages/backend/src/routes/v2/wellness.routes.ts
 found_in: PR #89
 reviewer: review-security
@@ -17,8 +17,8 @@ The `/benchmark` endpoint uses `optionalAuth` (not `authenticate`) combined with
 ```typescript
 router.get(
   '/benchmark',
-  optionalAuth,              // <-- allows unauthenticated requests
-  expensiveRateLimiter,      // <-- 5 req/min per user... but unauthenticated users share one bucket?
+  optionalAuth, // <-- allows unauthenticated requests
+  expensiveRateLimiter, // <-- 5 req/min per user... but unauthenticated users share one bucket?
   asyncHandler(async (req, res) => {
     const data = await getWellnessService().getBenchmark();
     // ...
@@ -42,6 +42,7 @@ packages/backend/src/routes/v2/wellness.routes.ts  lines 216-228
 ## Fix
 
 Either:
+
 1. Require authentication for the benchmark endpoint (change `optionalAuth` to `authenticate`)
 2. Or add a stricter IP-based rate limiter specifically for anonymous benchmark requests:
 

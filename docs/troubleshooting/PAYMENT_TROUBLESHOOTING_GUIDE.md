@@ -49,12 +49,14 @@ Payment Issue
 ### 1.1 Failed to Create Invoice
 
 **Symptoms:**
+
 - User receives "Failed to create Lightning invoice" error
 - API returns 500 error on invoice creation
 - No invoice record in database
 
 **Root Cause:**
 One of the following:
+
 - Lightning node is disconnected or not responding
 - Insufficient inbound liquidity on Lightning channels
 - Invalid amount (too high or below dust limit)
@@ -94,6 +96,7 @@ curl -X POST http://localhost:8080/api/lightning/create-invoice \
 **Resolution:**
 
 **Case 1: Lightning node disconnected**
+
 ```bash
 # Restart Lightning node
 docker restart sovren-lnd
@@ -106,6 +109,7 @@ curl http://localhost:8080/api/lightning/node-info
 ```
 
 **Case 2: Insufficient inbound liquidity**
+
 ```bash
 # Check channel balances
 lncli channelbalance
@@ -115,6 +119,7 @@ lncli channelbalance
 ```
 
 **Case 3: Invalid amount**
+
 ```bash
 # Check minimum/maximum invoice amounts
 # Minimum: 1 sat
@@ -124,6 +129,7 @@ lncli channelbalance
 ```
 
 **Prevention:**
+
 - Implement health checks for Lightning node (every 30 seconds)
 - Alert on channel balance below 20% capacity
 - Set up automated channel rebalancing
@@ -134,10 +140,12 @@ lncli channelbalance
 ### 1.2 Invalid Invoice Amount
 
 **Symptoms:**
+
 - API rejects invoice creation with "Invalid amount" error
 - Amount validation fails before reaching Lightning node
 
 **Root Cause:**
+
 - Amount below 1 satoshi (dust limit)
 - Amount exceeds channel capacity
 - Amount exceeds platform maximum (if configured)
@@ -174,12 +182,13 @@ const MAX_INVOICE_AMOUNT = 1_000_000; // 0.01 BTC
 if (amount < MIN_INVOICE_AMOUNT || amount > MAX_INVOICE_AMOUNT) {
   return res.status(400).json({
     success: false,
-    error: `Amount must be between ${MIN_INVOICE_AMOUNT} and ${MAX_INVOICE_AMOUNT} sats`
+    error: `Amount must be between ${MIN_INVOICE_AMOUNT} and ${MAX_INVOICE_AMOUNT} sats`,
   });
 }
 ```
 
 **Prevention:**
+
 - Implement client-side validation before API call
 - Display clear min/max limits in UI
 - Add validation to frontend forms
@@ -190,11 +199,13 @@ if (amount < MIN_INVOICE_AMOUNT || amount > MAX_INVOICE_AMOUNT) {
 ### 1.3 Lightning Node Connection Error
 
 **Symptoms:**
+
 - All invoice creation attempts fail
 - "Lightning service initialization failed" error on startup
 - Node info endpoint returns 503
 
 **Root Cause:**
+
 - LND node is down or unreachable
 - Network connectivity issues
 - TLS certificate mismatch
@@ -245,6 +256,7 @@ curl http://localhost:8080/api/lightning/node-info
 ```
 
 **Prevention:**
+
 - Implement automatic LND health checks
 - Set up monitoring alerts for node downtime
 - Use connection pooling with retry logic
@@ -257,11 +269,13 @@ curl http://localhost:8080/api/lightning/node-info
 ### 2.1 Payment Stuck in Pending State
 
 **Symptoms:**
+
 - Payment shows "pending" for > 5 minutes
 - User paid but no confirmation
 - Database shows `status = 'pending'` for extended period
 
 **Root Cause:**
+
 - Webhook not received from payment provider
 - Verification polling stopped or failed
 - Payment actually failed on Lightning Network
@@ -376,6 +390,7 @@ psql -d sovren -c "SELECT pg_terminate_backend(<blocking_pid>);"
 ```
 
 **Prevention:**
+
 - Implement payment verification timeout (5 minutes max)
 - Auto-transition to "verification_failed" after timeout
 - Set up webhook retry logic with exponential backoff
@@ -387,11 +402,13 @@ psql -d sovren -c "SELECT pg_terminate_backend(<blocking_pid>);"
 ### 2.2 False Positive Payment Confirmations
 
 **Symptoms:**
+
 - Payment marked as completed but no actual payment received
 - User gets access without paying
 - Lightning node shows invoice as unpaid
 
 **Root Cause:**
+
 - Webhook signature verification bypassed or compromised
 - Race condition in verification logic
 - Replay attack using old webhook
@@ -476,6 +493,7 @@ curl -X POST $SLACK_WEBHOOK_URL \
 ```
 
 **Prevention:**
+
 - **NEVER** skip webhook signature verification
 - Implement replay attack prevention (nonce tracking)
 - Always cross-verify with Lightning node before granting access
@@ -489,11 +507,13 @@ curl -X POST $SLACK_WEBHOOK_URL \
 ### 2.3 Webhook Verification Delays
 
 **Symptoms:**
+
 - Payment confirmed but user sees "processing" for >30 seconds
 - Webhook received but processing slow
 - Database update lag
 
 **Root Cause:**
+
 - Database connection pool exhausted
 - Slow Lightning node response
 - Heavy load on verification service
@@ -551,6 +571,7 @@ ON payments(payment_hash, status);
 ```
 
 **Prevention:**
+
 - Set SLA targets: 95% of verifications < 2 seconds
 - Implement async webhook processing with queue
 - Cache invoice status for 30 seconds
@@ -565,11 +586,13 @@ ON payments(payment_hash, status);
 ### 3.1 Webhook Signature Verification Failures
 
 **Symptoms:**
+
 - Webhook rejected with "Invalid signature" error
 - Legitimate webhooks not processing
 - 403 responses in webhook logs
 
 **Root Cause:**
+
 - Webhook secret mismatch (wrong secret configured)
 - Timestamp outside tolerance window (>5 minutes)
 - Payload modification in transit
@@ -664,6 +687,7 @@ docker-compose restart api
 ```
 
 **Prevention:**
+
 - Implement webhook secret rotation procedure
 - Monitor signature failure rate (alert if >1%)
 - Use NTP for accurate server time
@@ -676,11 +700,13 @@ docker-compose restart api
 ### 3.2 Duplicate Webhook Deliveries
 
 **Symptoms:**
+
 - Same webhook received multiple times
 - Payment processed multiple times
 - User charged twice for same transaction
 
 **Root Cause:**
+
 - Payment provider retry logic
 - No idempotency key checking
 - Webhook processing not atomic
@@ -780,6 +806,7 @@ router.post('/payment', async (req, res) => {
 ```
 
 **Prevention:**
+
 - Implement idempotency key tracking (Redis with 24-hour TTL)
 - Use database transactions for atomic payment processing
 - Log all webhook IDs and check before processing
@@ -791,11 +818,13 @@ router.post('/payment', async (req, res) => {
 ### 3.3 Out-of-Order Webhook Delivery
 
 **Symptoms:**
+
 - "completed" webhook received before "processing" webhook
 - State machine rejects valid transition
 - Payment stuck in intermediate state
 
 **Root Cause:**
+
 - Network latency variations
 - Multiple webhook processors
 - Concurrent webhook delivery
@@ -890,6 +919,7 @@ async transitionState(
 ```
 
 **Prevention:**
+
 - Implement optimistic locking with version numbers
 - Allow idempotent state transitions
 - Ignore webhooks for already-reached states
@@ -903,11 +933,13 @@ async transitionState(
 ### 4.1 Circuit Breaker Open
 
 **Symptoms:**
+
 - All payment operations failing immediately
 - "Circuit breaker open" error messages
 - Payments not even attempted
 
 **Root Cause:**
+
 - Too many consecutive failures (5+ in 60 seconds)
 - Lightning node was down and circuit opened
 - Failure threshold too sensitive
@@ -1023,6 +1055,7 @@ class CircuitBreaker {
 ```
 
 **Prevention:**
+
 - Monitor circuit breaker state and alert when opened
 - Implement health checks before opening circuit
 - Use exponential backoff for retry attempts
@@ -1035,11 +1068,13 @@ class CircuitBreaker {
 ### 4.2 Max Retries Exceeded
 
 **Symptoms:**
+
 - Payment verification fails after 5+ retry attempts
 - "Max retries exceeded" error in logs
 - Legitimate payments not completing
 
 **Root Cause:**
+
 - Lightning payment actually failed (routing failure, insufficient liquidity)
 - Temporary network issues persisting too long
 - Webhook never arriving
@@ -1127,11 +1162,11 @@ curl -X POST http://localhost:8080/api/notifications/payment-failed \
 // packages/backend/src/config/retry.ts
 
 export const RETRY_CONFIG = {
-  max_retries: 10,                    // Increase from 5
-  initial_delay_ms: 2000,             // 2 seconds
-  max_delay_ms: 60000,                // Cap at 60 seconds
-  backoff_multiplier: 2,              // Exponential: 2s, 4s, 8s, 16s, 32s, 60s
-  timeout_per_attempt_ms: 10000,      // 10 second timeout per attempt
+  max_retries: 10, // Increase from 5
+  initial_delay_ms: 2000, // 2 seconds
+  max_delay_ms: 60000, // Cap at 60 seconds
+  backoff_multiplier: 2, // Exponential: 2s, 4s, 8s, 16s, 32s, 60s
+  timeout_per_attempt_ms: 10000, // 10 second timeout per attempt
 
   // Only retry on transient errors
   retryable_errors: [
@@ -1139,12 +1174,13 @@ export const RETRY_CONFIG = {
     'ETIMEDOUT',
     'ENOTFOUND',
     'NETWORK_ERROR',
-    'LIGHTNING_NODE_UNAVAILABLE'
-  ]
+    'LIGHTNING_NODE_UNAVAILABLE',
+  ],
 };
 ```
 
 **Prevention:**
+
 - Set retry limits appropriate for Lightning Network (10-15 retries)
 - Use exponential backoff (2s, 4s, 8s, 16s, 32s, 60s)
 - Only retry on transient errors
@@ -1157,11 +1193,13 @@ export const RETRY_CONFIG = {
 ### 4.3 Exponential Backoff Too Slow
 
 **Symptoms:**
+
 - Payment takes too long to verify (>2 minutes)
 - Retry delays too long for user experience
 - Users abandoning payment flow
 
 **Root Cause:**
+
 - Backoff multiplier too aggressive (3x or higher)
 - Maximum delay too high (>60 seconds)
 - Too many retry attempts with increasing delays
@@ -1211,16 +1249,16 @@ WHERE created_at > NOW() - INTERVAL '1 day'
 
 export class RetryService {
   private config = {
-    initial_delay_ms: 1000,        // Start at 1 second (reduce from 2s)
-    max_delay_ms: 30000,           // Cap at 30 seconds (reduce from 60s)
-    backoff_multiplier: 1.5,       // Gentler: 1s, 1.5s, 2.25s, 3.38s, 5.06s, 7.59s, 11.39s, 17.08s, 25.63s, 30s
-    jitter_factor: 0.1,            // Add ±10% random jitter
+    initial_delay_ms: 1000, // Start at 1 second (reduce from 2s)
+    max_delay_ms: 30000, // Cap at 30 seconds (reduce from 60s)
+    backoff_multiplier: 1.5, // Gentler: 1s, 1.5s, 2.25s, 3.38s, 5.06s, 7.59s, 11.39s, 17.08s, 25.63s, 30s
+    jitter_factor: 0.1, // Add ±10% random jitter
   };
 
   calculateDelay(attemptNumber: number): number {
     // Exponential backoff with jitter
-    let delay = this.config.initial_delay_ms *
-                Math.pow(this.config.backoff_multiplier, attemptNumber - 1);
+    let delay =
+      this.config.initial_delay_ms * Math.pow(this.config.backoff_multiplier, attemptNumber - 1);
 
     // Cap at maximum
     delay = Math.min(delay, this.config.max_delay_ms);
@@ -1250,7 +1288,7 @@ export class RetryService {
         const delay = this.calculateDelay(attemptNumber);
         console.log(
           `[RETRY] Attempt ${attemptNumber} failed for ${context.payment_hash}, ` +
-          `retrying in ${delay}ms...`
+            `retrying in ${delay}ms...`
         );
 
         await this.sleep(delay);
@@ -1267,22 +1305,23 @@ export class RetryService {
 
 ```typescript
 // Use faster verification for recent payments
-const isRecent = (Date.now() - payment.created_at) < 60000; // Less than 1 minute old
+const isRecent = Date.now() - payment.created_at < 60000; // Less than 1 minute old
 
 const verificationConfig = isRecent
   ? {
-      initial_delay_ms: 500,    // Fast polling for recent payments
-      max_delay_ms: 5000,       // Cap at 5 seconds
-      backoff_multiplier: 1.3,  // Gentle: 500ms, 650ms, 845ms, 1099ms, 1429ms, 1858ms, 2415ms, 3140ms, 4082ms, 5000ms
+      initial_delay_ms: 500, // Fast polling for recent payments
+      max_delay_ms: 5000, // Cap at 5 seconds
+      backoff_multiplier: 1.3, // Gentle: 500ms, 650ms, 845ms, 1099ms, 1429ms, 1858ms, 2415ms, 3140ms, 4082ms, 5000ms
     }
   : {
-      initial_delay_ms: 2000,   // Slower for older payments
-      max_delay_ms: 30000,      // Cap at 30 seconds
-      backoff_multiplier: 1.8,  // Moderate
+      initial_delay_ms: 2000, // Slower for older payments
+      max_delay_ms: 30000, // Cap at 30 seconds
+      backoff_multiplier: 1.8, // Moderate
     };
 ```
 
 **Prevention:**
+
 - Use adaptive backoff based on payment age
 - Fast polling for first minute (500ms - 5s delays)
 - Slower polling for older payments (2s - 30s delays)
@@ -1297,11 +1336,13 @@ const verificationConfig = isRecent
 ### 5.1 Invalid State Transitions
 
 **Symptoms:**
+
 - "Invalid state transition" error in logs
 - Payment stuck and cannot progress
 - State machine rejects valid operations
 
 **Root Cause:**
+
 - Attempting illegal state transition (e.g., pending → refunded)
 - State machine definition too restrictive
 - Race condition causing concurrent state updates
@@ -1403,15 +1444,15 @@ VALUES ('$PAYMENT_HASH', '$CURRENT_STATE', '$TARGET_STATE', 'admin_force', 'Corr
 
 export class PaymentStateMachine {
   private readonly validTransitions: Record<PaymentState, PaymentState[]> = {
-    'pending': ['processing', 'failed', 'expired'],
-    'processing': ['verifying', 'failed'],
-    'verifying': ['completed', 'verification_failed'],
-    'verification_failed': ['verifying', 'failed'],  // Allow retry
-    'completed': ['refunded', 'disputed'],           // Allow refund/dispute
-    'failed': ['pending'],                           // Allow retry
-    'expired': [],                                   // Terminal state
-    'refunded': ['disputed'],                        // Allow dispute of refund
-    'disputed': [],                                  // Terminal state
+    pending: ['processing', 'failed', 'expired'],
+    processing: ['verifying', 'failed'],
+    verifying: ['completed', 'verification_failed'],
+    verification_failed: ['verifying', 'failed'], // Allow retry
+    completed: ['refunded', 'disputed'], // Allow refund/dispute
+    failed: ['pending'], // Allow retry
+    expired: [], // Terminal state
+    refunded: ['disputed'], // Allow dispute of refund
+    disputed: [], // Terminal state
   };
 
   isValidTransition(from: PaymentState, to: PaymentState): boolean {
@@ -1468,6 +1509,7 @@ async reconcilePaymentStates(): Promise<void> {
 ```
 
 **Prevention:**
+
 - Run state reconciliation job every 5 minutes
 - Allow idempotent transitions (same state)
 - Implement permissive transition rules with audit logging
@@ -1480,11 +1522,13 @@ async reconcilePaymentStates(): Promise<void> {
 ### 5.2 Stuck in Intermediate States
 
 **Symptoms:**
+
 - Payment in "processing" or "verifying" for >5 minutes
 - No state transitions occurring
 - User sees indefinite loading state
 
 **Root Cause:**
+
 - State transition handler crashed or threw exception
 - Webhook never arrived to trigger next state
 - Database lock preventing state update
@@ -1638,6 +1682,7 @@ async function recoverStuckPayments(): Promise<void> {
 ```
 
 **Prevention:**
+
 - Implement automatic recovery job (every minute)
 - Timeout stuck states after 5 minutes
 - Force to failed state after 30 minutes
@@ -1650,11 +1695,13 @@ async function recoverStuckPayments(): Promise<void> {
 ### 5.3 Concurrent State Update Conflicts
 
 **Symptoms:**
+
 - "Concurrent update detected" errors
 - Race condition errors in logs
 - State transitions sometimes fail
 
 **Root Cause:**
+
 - Multiple webhooks arriving simultaneously
 - Verification polling racing with webhook
 - No optimistic locking or versioning
@@ -1722,12 +1769,15 @@ export class PaymentStateMachine {
         await this.db.query('BEGIN');
 
         // Get current state with version (FOR UPDATE locks the row)
-        const result = await this.db.query(`
+        const result = await this.db.query(
+          `
           SELECT status, version
           FROM payments
           WHERE payment_hash = $1
           FOR UPDATE NOWAIT
-        `, [paymentHash]);
+        `,
+          [paymentHash]
+        );
 
         if (result.rowCount === 0) {
           throw new Error('Payment not found');
@@ -1747,7 +1797,8 @@ export class PaymentStateMachine {
         }
 
         // Update with version check (optimistic locking)
-        const updateResult = await this.db.query(`
+        const updateResult = await this.db.query(
+          `
           UPDATE payments
           SET status = $1,
               version = version + 1,
@@ -1755,27 +1806,29 @@ export class PaymentStateMachine {
           WHERE payment_hash = $2
             AND version = $3
           RETURNING id
-        `, [toState, paymentHash, version]);
+        `,
+          [toState, paymentHash, version]
+        );
 
         if (updateResult.rowCount === 0) {
           throw new Error('Concurrent update detected, version mismatch');
         }
 
         // Record state transition
-        await this.db.query(`
+        await this.db.query(
+          `
           INSERT INTO payment_state_history
           (payment_hash, from_state, to_state, triggered_by, transitioned_at)
           VALUES ($1, $2, $3, $4, NOW())
-        `, [paymentHash, currentState, toState, triggeredBy]);
+        `,
+          [paymentHash, currentState, toState, triggeredBy]
+        );
 
         await this.db.query('COMMIT');
 
-        console.log(
-          `[STATE] ${paymentHash}: ${currentState} -> ${toState} (v${version + 1})`
-        );
+        console.log(`[STATE] ${paymentHash}: ${currentState} -> ${toState} (v${version + 1})`);
 
         return;
-
       } catch (error: any) {
         await this.db.query('ROLLBACK');
 
@@ -1806,6 +1859,7 @@ export class PaymentStateMachine {
 ```
 
 **Prevention:**
+
 - Use optimistic locking with version numbers
 - Implement row-level locking with NOWAIT
 - Retry on lock conflicts with exponential backoff
@@ -1820,11 +1874,13 @@ export class PaymentStateMachine {
 ### 6.1 Slow Payment Verification
 
 **Symptoms:**
+
 - Payment verification takes >2 seconds (target: <500ms)
 - High P95/P99 latency
 - User complaints about slow confirmation
 
 **Root Cause:**
+
 - Slow Lightning node RPC calls
 - No caching of invoice status
 - Database query inefficiencies
@@ -1957,14 +2013,12 @@ import { LndClient } from './lnd-client';
 const lndPool = Pool.create({
   create: () => new LndClient(config),
   destroy: (client) => client.disconnect(),
-  max: 10,          // Maximum connections
-  min: 2,           // Minimum connections
+  max: 10, // Maximum connections
+  min: 2, // Minimum connections
   idleTimeoutMillis: 30000,
 });
 
-export async function withLndClient<T>(
-  operation: (client: LndClient) => Promise<T>
-): Promise<T> {
+export async function withLndClient<T>(operation: (client: LndClient) => Promise<T>): Promise<T> {
   const client = await lndPool.acquire();
   try {
     return await operation(client);
@@ -1992,6 +2046,7 @@ async verifyMultiplePayments(paymentHashes: string[]): Promise<Map<string, Payme
 ```
 
 **Prevention:**
+
 - Set SLA: 95% of verifications < 500ms
 - Cache invoice status for 30 seconds
 - Use connection pooling for Lightning node
@@ -2004,12 +2059,14 @@ async verifyMultiplePayments(paymentHashes: string[]): Promise<Map<string, Payme
 ### 6.2 Database Performance Bottlenecks
 
 **Symptoms:**
+
 - Database CPU at >80%
 - Slow query performance (>100ms)
 - Connection pool exhaustion
 - Timeouts on payment queries
 
 **Root Cause:**
+
 - Missing database indexes
 - Table bloat from high update volume
 - Inefficient queries (N+1, full table scans)
@@ -2125,16 +2182,16 @@ export const dbConfig = {
   password: process.env.DB_PASSWORD,
 
   // Connection pool settings
-  max: 20,                    // Increase from default 10
-  min: 5,                     // Maintain minimum connections
-  idleTimeoutMillis: 30000,   // Close idle connections after 30s
-  connectionTimeoutMillis: 10000,  // Fail fast on connection timeout
+  max: 20, // Increase from default 10
+  min: 5, // Maintain minimum connections
+  idleTimeoutMillis: 30000, // Close idle connections after 30s
+  connectionTimeoutMillis: 10000, // Fail fast on connection timeout
 
   // Statement timeout (prevent long-running queries)
-  statement_timeout: 30000,   // 30 second timeout
+  statement_timeout: 30000, // 30 second timeout
 
   // Query timeout
-  query_timeout: 10000,       // 10 second timeout for queries
+  query_timeout: 10000, // 10 second timeout for queries
 };
 ```
 
@@ -2185,6 +2242,7 @@ const paymentsWithUsers = await db.query(`
 ```
 
 **Prevention:**
+
 - Monitor slow query log daily
 - Set up automated index suggestions
 - Run VACUUM ANALYZE weekly
@@ -2198,11 +2256,13 @@ const paymentsWithUsers = await db.query(`
 ### 6.3 Memory Leaks in Payment Processing
 
 **Symptoms:**
+
 - Node.js process memory grows continuously
 - Server requires restart every few days
 - Out of memory errors in production
 
 **Root Cause:**
+
 - Event listeners not removed
 - Cached data not evicted
 - Circular references preventing garbage collection
@@ -2270,13 +2330,13 @@ import LRU from 'lru-cache';
 
 export class PaymentCache {
   private cache = new LRU<string, PaymentData>({
-    max: 10000,              // Maximum items
-    maxAge: 1000 * 60 * 5,   // 5 minute TTL
-    updateAgeOnGet: false,   // Don't reset TTL on access
+    max: 10000, // Maximum items
+    maxAge: 1000 * 60 * 5, // 5 minute TTL
+    updateAgeOnGet: false, // Don't reset TTL on access
     dispose: (key, value) => {
       // Cleanup when evicted
       console.log(`[CACHE] Evicted ${key}`);
-    }
+    },
   });
 
   set(key: string, value: PaymentData): void {
@@ -2302,7 +2362,7 @@ setInterval(() => paymentCache.prune(), 60000); // Every minute
 ```typescript
 // Before: Load all payments into memory
 const allPayments = await db.query('SELECT * FROM payments');
-processPayments(allPayments.rows);  // Could be millions of rows!
+processPayments(allPayments.rows); // Could be millions of rows!
 
 // After: Use cursor for streaming
 const cursor = db.query(new Cursor('SELECT * FROM payments'));
@@ -2347,6 +2407,7 @@ setInterval(() => {
 ```
 
 **Prevention:**
+
 - Monitor heap usage continuously
 - Set memory limits (--max-old-space-size=4096)
 - Use streaming for large datasets
@@ -2658,15 +2719,18 @@ FROM pg_stat_activity;
 ## Support Contacts
 
 **Critical Issues (P0 - Production Down):**
+
 - Slack: #sovren-payment-critical
 - PagerDuty: Lightning Payment Escalation
 - Phone: +1-XXX-XXX-XXXX (On-call engineer)
 
 **High Priority (P1 - Degraded Performance):**
+
 - Slack: #sovren-payment-support
 - Email: payments-oncall@sovren.com
 
 **Standard Support (P2 - Non-urgent):**
+
 - Slack: #sovren-engineering
 - Email: engineering@sovren.com
 - JIRA: Create ticket in PAY project

@@ -16,12 +16,14 @@ Sovren's backend was experiencing performance issues due to repeated database qu
 - **API Rate Limits**: External services (NOSTR relays, Lightning nodes) throttling requests
 
 **Performance Impact**:
+
 - Average response time: 800ms (target: <200ms)
 - Database CPU: 85% (frequent queries for same data)
 - Lightning node: 429 rate limit errors during peak usage
 - NOSTR relay roundtrips adding 400ms latency per request
 
 We needed a caching strategy that:
+
 - Reduces database load by caching frequently accessed data
 - Minimizes external API calls (NOSTR, Lightning)
 - Provides fast access to computed results
@@ -33,12 +35,14 @@ We needed a caching strategy that:
 We will implement a **multi-layer caching architecture** with in-memory L1 cache and Redis L2 cache.
 
 **Architecture**:
+
 ```
 Request → L1 (Memory) → L2 (Redis) → Database/External API
           ↑ 50-200ms      ↑ 1-5ms      ↑ 20-500ms
 ```
 
 **Implementation**:
+
 ```typescript
 @injectable()
 class CacheService implements ICacheService {
@@ -60,7 +64,7 @@ class CacheService implements ICacheService {
       // Populate L1 for next access
       this.memoryCache.set(key, {
         value,
-        expiresAt: Date.now() + 60000 // 1 min in L1
+        expiresAt: Date.now() + 60000, // 1 min in L1
       });
 
       return value;
@@ -73,7 +77,7 @@ class CacheService implements ICacheService {
     // Set in both layers
     this.memoryCache.set(key, {
       value,
-      expiresAt: Date.now() + Math.min(ttl, 60000) // Max 1 min in L1
+      expiresAt: Date.now() + Math.min(ttl, 60000), // Max 1 min in L1
     });
 
     await this.redisClient.setex(key, ttl / 1000, JSON.stringify(value));
@@ -82,31 +86,33 @@ class CacheService implements ICacheService {
 ```
 
 **TTL Strategy by Data Type**:
+
 ```typescript
 const CACHE_TTL = {
   // User data - moderate changes
-  user_profile: 5 * 60 * 1000,      // 5 minutes
-  user_settings: 10 * 60 * 1000,    // 10 minutes
+  user_profile: 5 * 60 * 1000, // 5 minutes
+  user_settings: 10 * 60 * 1000, // 10 minutes
 
   // Content - rarely changes
   content_metadata: 30 * 60 * 1000, // 30 minutes
-  creator_profile: 15 * 60 * 1000,  // 15 minutes
+  creator_profile: 15 * 60 * 1000, // 15 minutes
 
   // Payments - short-lived
   lightning_invoice: 2 * 60 * 1000, // 2 minutes (status changes)
-  payment_status: 1 * 60 * 1000,    // 1 minute
+  payment_status: 1 * 60 * 1000, // 1 minute
 
   // Analytics - expensive to compute
-  analytics_daily: 60 * 60 * 1000,  // 1 hour
-  analytics_realtime: 30 * 1000,    // 30 seconds
+  analytics_daily: 60 * 60 * 1000, // 1 hour
+  analytics_realtime: 30 * 1000, // 30 seconds
 
   // NOSTR - external API calls
-  nostr_events: 5 * 60 * 1000,      // 5 minutes
-  relay_metadata: 60 * 60 * 1000,   // 1 hour
+  nostr_events: 5 * 60 * 1000, // 5 minutes
+  relay_metadata: 60 * 60 * 1000, // 1 hour
 };
 ```
 
 **Cache Invalidation Patterns**:
+
 ```typescript
 // Event-driven invalidation
 class UserService {
@@ -119,14 +125,14 @@ class UserService {
     // Publish event for distributed invalidation
     await this.eventBus.publish({
       type: 'user.updated',
-      payload: { userId }
+      payload: { userId },
     });
   }
 }
 
 // Tag-based invalidation
 await cache.set('user:123', userData, TTL.user_profile, {
-  tags: ['user', 'user:123']
+  tags: ['user', 'user:123'],
 });
 
 // Invalidate all user caches
@@ -193,11 +199,14 @@ await cache.invalidateByTag('user');
 ## Alternatives Considered
 
 ### 1. Database-Level Caching Only (PostgreSQL Query Cache)
+
 **Pros**:
+
 - No application code changes
 - Automatic invalidation
 
 **Cons**:
+
 - Slower than in-memory cache (still hits database)
 - Limited control over TTL
 - Doesn't help with external API calls
@@ -205,11 +214,14 @@ await cache.invalidateByTag('user');
 **Why Rejected**: Doesn't address external API latency. Application-level cache provides more control.
 
 ### 2. CDN Caching (Cloudflare, Fastly)
+
 **Pros**:
+
 - Edge caching closer to users
 - Reduces server load completely
 
 **Cons**:
+
 - Only works for HTTP GET requests
 - Can't cache user-specific data
 - Cost at scale
@@ -218,12 +230,15 @@ await cache.invalidateByTag('user');
 **Why Rejected**: Complementary to our strategy (we use CDN for static assets), but doesn't solve internal service caching needs.
 
 ### 3. Single-Layer Redis Only
+
 **Pros**:
+
 - Simpler architecture
 - No memory management in app
 - Persistent cache across restarts
 
 **Cons**:
+
 - Network overhead for every cache hit (5-10ms)
 - Redis becomes bottleneck under high load
 - Higher latency than in-memory
@@ -231,11 +246,14 @@ await cache.invalidateByTag('user');
 **Why Rejected**: Two-layer provides best of both worlds - ultra-fast L1 for hot data, persistent L2 for durability.
 
 ### 4. GraphQL with DataLoader
+
 **Pros**:
+
 - Automatic request batching
 - Built-in caching per request
 
 **Cons**:
+
 - Requires GraphQL adoption
 - Only caches within single request
 - Doesn't persist between requests
@@ -245,17 +263,19 @@ await cache.invalidateByTag('user');
 ## Implementation Notes
 
 **Cache Key Conventions**:
+
 ```typescript
 // Format: <domain>:<entity>:<id>[:<sub-resource>]
-'user:123'
-'user:123:profile'
-'content:456'
-'lightning:invoice:abc123'
-'nostr:event:def456'
-'analytics:daily:2025-10-27'
+'user:123';
+'user:123:profile';
+'content:456';
+'lightning:invoice:abc123';
+'nostr:event:def456';
+'analytics:daily:2025-10-27';
 ```
 
 **Memory Limits**:
+
 ```typescript
 class MemoryCache {
   private maxSize = 100 * 1024 * 1024; // 100MB
@@ -275,25 +295,27 @@ class MemoryCache {
 ```
 
 **Cache Warming**:
+
 ```typescript
 // On application startup
 async function warmCache() {
   // Preload frequently accessed data
   await cacheService.warmup([
     { key: 'relay:metadata', fetcher: () => fetchRelayMetadata() },
-    { key: 'analytics:top_creators', fetcher: () => fetchTopCreators() }
+    { key: 'analytics:top_creators', fetcher: () => fetchTopCreators() },
   ]);
 }
 ```
 
 **Performance Monitoring**:
+
 ```typescript
 class CacheService {
   private metrics = {
     l1_hits: 0,
     l1_misses: 0,
     l2_hits: 0,
-    l2_misses: 0
+    l2_misses: 0,
   };
 
   async get(key: string) {

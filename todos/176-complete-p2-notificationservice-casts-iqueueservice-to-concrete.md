@@ -3,6 +3,7 @@
 ## Priority: P2 (Important)
 
 ## Source
+
 PR #83 — Review Agent: architecture-strategist
 
 ## Description
@@ -28,6 +29,7 @@ The `import type { QueueService }` at line 30 of NotificationService.ts imports 
 ## Fix
 
 Either:
+
 1. **Add `registerProcessor` to `IQueueService`** so the interface is complete
 2. **Move queue/worker initialization to a separate bootstrap function** that receives the concrete `QueueService` and `NotificationService`, wiring them together outside the service itself
 3. **Use a factory pattern** where the DI container registers the processor during binding
@@ -35,4 +37,5 @@ Either:
 Option 2 is cleanest — keeps `NotificationService` dependent only on the interface.
 
 ## Impact
+
 Architecture — breaks interface abstraction, creates hidden dependency on concrete class.

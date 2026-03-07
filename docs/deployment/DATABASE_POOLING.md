@@ -42,6 +42,7 @@ Sovren implements production-grade PostgreSQL connection pooling using the `pg` 
 ```
 
 **WHY**: Each client serves different purposes:
+
 - **Supabase**: Row-level security, auth, realtime subscriptions
 - **Pool**: Direct SQL, transactions, bulk operations, migrations
 
@@ -69,13 +70,13 @@ DB_SSL_REJECT_UNAUTHORIZED=true        # Verify certificates
 
 ### Environment-Specific Defaults
 
-| Setting | Development | Test | Production |
-|---------|-------------|------|------------|
-| max | 10 | 5 | 20 |
-| min | 2 | 1 | 5 |
-| idleTimeoutMillis | 10000 | 1000 | 30000 |
-| connectionTimeoutMillis | 5000 | 2000 | 2000 |
-| SSL | false | false | required |
+| Setting                 | Development | Test  | Production |
+| ----------------------- | ----------- | ----- | ---------- |
+| max                     | 10          | 5     | 20         |
+| min                     | 2           | 1     | 5          |
+| idleTimeoutMillis       | 10000       | 1000  | 30000      |
+| connectionTimeoutMillis | 5000        | 2000  | 2000       |
+| SSL                     | false       | false | required   |
 
 ## Usage
 
@@ -87,10 +88,7 @@ import { getPool } from '@/database/pool';
 const pool = getPool();
 
 // Simple query
-const users = await pool.query(
-  'SELECT * FROM users WHERE email = $1',
-  ['user@example.com']
-);
+const users = await pool.query('SELECT * FROM users WHERE email = $1', ['user@example.com']);
 ```
 
 ### Transactions
@@ -103,15 +101,15 @@ try {
   await client.query('BEGIN');
 
   // Transfer funds between accounts
-  await client.query(
-    'UPDATE accounts SET balance = balance - $1 WHERE id = $2',
-    [100, fromAccountId]
-  );
+  await client.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [
+    100,
+    fromAccountId,
+  ]);
 
-  await client.query(
-    'UPDATE accounts SET balance = balance + $1 WHERE id = $2',
-    [100, toAccountId]
-  );
+  await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [
+    100,
+    toAccountId,
+  ]);
 
   await client.query('COMMIT');
 } catch (error) {
@@ -319,6 +317,7 @@ pool.on('remove', () => console.log('Connection removed from pool'));
 **Formula**: `connections = ((core_count * 2) + effective_spindle_count)`
 
 For typical web applications:
+
 - **CPU-bound**: `core_count * 2`
 - **I/O-bound**: `core_count * 4`
 
@@ -332,13 +331,13 @@ const { max, min } = calculateOptimalPoolSize(4, 'io');
 
 ### Pool Size Recommendations
 
-| Server Size | Workload | Max | Min | Notes |
-|-------------|----------|-----|-----|-------|
-| 1 CPU | Mixed | 8 | 2 | Development/small apps |
-| 2 CPU | I/O | 12 | 3 | Small production |
-| 4 CPU | I/O | 20 | 5 | **Default** |
-| 8 CPU | I/O | 35 | 8 | High traffic |
-| 16 CPU | I/O | 65 | 16 | Enterprise scale |
+| Server Size | Workload | Max | Min | Notes                  |
+| ----------- | -------- | --- | --- | ---------------------- |
+| 1 CPU       | Mixed    | 8   | 2   | Development/small apps |
+| 2 CPU       | I/O      | 12  | 3   | Small production       |
+| 4 CPU       | I/O      | 20  | 5   | **Default**            |
+| 8 CPU       | I/O      | 35  | 8   | High traffic           |
+| 16 CPU      | I/O      | 65  | 16  | Enterprise scale       |
 
 ### Common Issues and Solutions
 
@@ -347,6 +346,7 @@ const { max, min } = calculateOptimalPoolSize(4, 'io');
 **Symptom**: High `waitingRequests` in metrics
 
 **Solutions**:
+
 - Increase `max` pool size
 - Optimize slow queries (add indexes)
 - Implement query result caching
@@ -357,6 +357,7 @@ const { max, min } = calculateOptimalPoolSize(4, 'io');
 **Symptom**: High `idleConnections`, low `activeConnections`
 
 **Solutions**:
+
 - Decrease `min` pool size
 - Decrease `idleTimeoutMillis` to recycle faster
 - Check if workload is bursty vs sustained
@@ -366,6 +367,7 @@ const { max, min } = calculateOptimalPoolSize(4, 'io');
 **Symptom**: `potentialLeak` events, increasing `totalConnections`
 
 **Solutions**:
+
 - Always use `try/finally` when acquiring clients
 - Set shorter `connectionTimeoutMillis` to detect faster
 - Review code for missing `client.release()` calls
@@ -375,6 +377,7 @@ const { max, min } = calculateOptimalPoolSize(4, 'io');
 **Symptom**: High `averageQueryDuration`
 
 **Solutions**:
+
 - Add database indexes
 - Use `EXPLAIN ANALYZE` to identify slow queries
 - Consider query result caching
@@ -409,7 +412,7 @@ process.on('SIGINT', shutdownServer);
 lifecycle:
   preStop:
     exec:
-      command: ["/bin/sh", "-c", "sleep 5"] # Allow time for graceful shutdown
+      command: ['/bin/sh', '-c', 'sleep 5'] # Allow time for graceful shutdown
 ```
 
 ## Security
@@ -458,6 +461,7 @@ npm test -- pool-load.integration.test.ts
 ```
 
 **Test Coverage**:
+
 - ✅ 100+ concurrent queries
 - ✅ Connection limits enforcement
 - ✅ Query timeout handling
@@ -524,6 +528,7 @@ const result = await pool.query('SELECT * FROM users');
 ## Support
 
 For issues or questions:
+
 - Check [Troubleshooting](#troubleshooting) section
 - Review pool metrics and monitoring queries
 - Contact DevOps team for production issues

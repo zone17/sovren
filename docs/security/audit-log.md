@@ -7,15 +7,18 @@ This document tracks all security-related incidents, remediations, and rotations
 ## 2025-11-07: GitHub Personal Access Token Rotation
 
 ### Incident Type
+
 **Critical Security Issue**: Exposed GitHub Personal Access Token
 
 ### Detection
+
 - **Date**: 2025-11-07
 - **Time**: Current session
 - **Detected By**: Security Audit (US-006)
 - **Method**: Codebase scanning during security assessment
 
 ### Details
+
 - **Exposed Token**: GitHub personal access token was found committed to repository
 - **Token Hash**: SHA256 ending in ...0VFYhw (full token redacted)
 - **Exposure Locations**:
@@ -27,6 +30,7 @@ This document tracks all security-related incidents, remediations, and rotations
 ### Remediation Actions
 
 #### Immediate Actions Taken
+
 1. **Token References Removed** (COMPLETED)
    - Removed/redacted token from 8 files:
      - `SECURITY_AUDIT_REPORT_US006.md`
@@ -55,6 +59,7 @@ This document tracks all security-related incidents, remediations, and rotations
    - Command: `gh secret set GITHUB_TOKEN`
 
 ### Verification Steps (TO BE COMPLETED)
+
 - [ ] Old token confirmed revoked (non-functional)
 - [ ] New token generated with minimal scopes
 - [ ] GitHub Actions secrets updated
@@ -62,12 +67,14 @@ This document tracks all security-related incidents, remediations, and rotations
 - [ ] No hardcoded tokens remain in codebase
 
 ### Lessons Learned
+
 1. Never commit tokens directly to repository
 2. Use GitHub Secrets for all sensitive values
 3. Implement pre-commit hooks for secret detection
 4. Regular security audits to catch exposed credentials
 
 ### Follow-Up Actions
+
 1. Enable GitHub secret scanning alerts
 2. Implement automated secret rotation policy
 3. Add secretlint to CI/CD pipeline
@@ -119,6 +126,7 @@ This document tracks all security-related incidents, remediations, and rotations
 ### User Action Required
 
 **MANUAL STEPS** (cannot be automated for security reasons):
+
 1. Navigate to https://github.com/settings/tokens
 2. Revoke old token ending in "...0VFYhw"
 3. Generate new fine-grained PAT with scopes: `repo`, `workflow`, `packages`
@@ -126,6 +134,7 @@ This document tracks all security-related incidents, remediations, and rotations
 5. Execute verification: `./scripts/verify-token-rotation.sh`
 
 ### Sign-Off
+
 - **Remediated By**: Security Engineer Agent
 - **Initial Date**: 2025-11-07
 - **Update Date**: 2025-11-08
@@ -143,15 +152,18 @@ This document tracks all security-related incidents, remediations, and rotations
 ## 2025-11-08: Database Credential Rotation Procedure (IMMED-004)
 
 ### Incident Type
+
 **Proactive Security Measure**: Database Credential Rotation Preparation
 
 ### Detection
+
 - **Date**: 2025-11-08
 - **Time**: Current session
 - **Initiated By**: Security Engineer Agent
 - **Method**: Security audit follow-up (Issue #9 - IMMED-004)
 
 ### Details
+
 - **Scope**: Supabase PostgreSQL database credentials
 - **Risk Level**: MODERATE - Proactive rotation following security best practices
 - **Exposure**: No confirmed exposure, preventive rotation
@@ -160,6 +172,7 @@ This document tracks all security-related incidents, remediations, and rotations
 ### Preparation Actions
 
 #### Documentation Created (COMPLETED)
+
 1. **Comprehensive Rotation Procedure** ✅
    - File: `/docs/security/IMMED-004-ROTATION-PROCEDURE.md`
    - Length: 800+ lines of detailed step-by-step instructions
@@ -188,6 +201,7 @@ This document tracks all security-related incidents, remediations, and rotations
 ### Rotation Execution Summary
 
 **Quick Reference** (30-45 minute procedure):
+
 1. **Pre-Rotation** (5 min): Backup current credentials
 2. **Rotation** (10 min): Generate password, update Supabase dashboard
 3. **Update Secrets** (5 min): AWS Secrets Manager update
@@ -210,6 +224,7 @@ This document tracks all security-related incidents, remediations, and rotations
 ### Rollback Plan
 
 Emergency rollback time: < 2 minutes
+
 ```bash
 cp .env.backup-YYYYMMDD-HHMMSS .env
 pm2 restart sovren-backend --update-env
@@ -224,6 +239,7 @@ pm2 restart sovren-backend --update-env
 - ✅ **NIST SP 800-53**: IA-5 Authenticator Management
 
 ### Sign-Off
+
 - **Prepared By**: Security Engineer Agent
 - **Date**: 2025-11-08
 - **Status**: Documentation Complete - Ready for Execution
@@ -235,19 +251,23 @@ pm2 restart sovren-backend --update-env
 ## Security Policies
 
 ### Token Rotation Schedule
+
 - **GitHub Tokens**: Every 90 days
 - **Database Credentials**: Every 60 days
 - **API Keys**: Every 120 days
 - **Emergency Rotation**: Immediate upon exposure
 
 ### Incident Response SLA
+
 - **Critical (Token Exposure)**: < 1 hour
 - **High (Vulnerability)**: < 24 hours
 - **Medium**: < 7 days
 - **Low**: < 30 days
 
 ### Approved Token Scopes (GitHub)
+
 Minimal privilege principle - only grant necessary scopes:
+
 - `repo` - Repository access
 - `workflow` - GitHub Actions
 - `read:packages` - Package registry read (if needed)
@@ -255,4 +275,4 @@ Minimal privilege principle - only grant necessary scopes:
 
 ---
 
-*This document is maintained as part of Sovren's security compliance program.*
+_This document is maintained as part of Sovren's security compliance program._

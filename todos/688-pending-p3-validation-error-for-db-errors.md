@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "688"
+issue_id: '688'
 tags: [code-review, backend, error-handling, slice-8]
 dependencies: []
 ---
@@ -17,6 +17,7 @@ Both services throw `ValidationError` (HTTP 400) for infrastructure/DB failures 
 ## Fix
 
 Replace `throw new ValidationError(...)` with `throw new ServiceError(...)` at all DB error catch sites:
+
 - `FollowService.ts`: 8 locations (lines 58, 62, 102, 118, 140, 170, 201, 209)
 - `NotificationPersistenceService.ts`: 7 locations (lines 271, 299, 326, 355, 388, 406, 437)
 

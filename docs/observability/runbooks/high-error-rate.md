@@ -26,7 +26,6 @@
    ```
 
 2. **Check if 5xx or 4xx**:
-
    - 5xx: Server-side issue (check logs, database, external services)
    - 4xx: Client-side issue (may be a bad deploy, changed API contract)
 
@@ -37,7 +36,6 @@
    ```
 
 4. **Correlate with recent deploys**:
-
    - Check recent GitHub Actions deployments
    - Check if error rate started after a deploy
 

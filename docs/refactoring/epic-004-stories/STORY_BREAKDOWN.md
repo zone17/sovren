@@ -13,6 +13,7 @@
 ---
 
 ## Phase 1: Audit & Guidelines (Stories 1-5)
+
 **Sprint 0 - Foundation**
 **Duration**: 2-3 days
 **Dependencies**: Sequential - Must complete before other phases
@@ -24,6 +25,7 @@
 **So that** I can identify which slices contain server vs client state
 
 #### Acceptance Criteria
+
 - [ ] **Given** the Redux store configuration exists
       **When** I run the audit script
       **Then** it generates a report listing all slices with their state types
@@ -39,23 +41,26 @@
 #### Technical Implementation
 
 **Script Location**: `scripts/audit-redux-store.js`
+
 ```javascript
 // Analyze each slice and categorize state
 const auditResults = {
   authSlice: { type: 'client', properties: ['user', 'token', 'isAuthenticated'] },
   creatorsSlice: { type: 'server', properties: ['list', 'loading', 'error'] },
-  uiSlice: { type: 'client', properties: ['theme', 'modals', 'notifications'] }
+  uiSlice: { type: 'client', properties: ['theme', 'modals', 'notifications'] },
 };
 ```
 
 **Output File**: `docs/refactoring/epic-004-stories/redux-audit-report.json`
 
 #### Dependencies
+
 **Blocked by**: None
 **Blocks**: #002, #003, #004
 **Related to**: All migration stories
 
 #### Definition of Done
+
 - [ ] Audit script created and executed
 - [ ] JSON report generated with all slices categorized
 - [ ] Markdown summary created for team review
@@ -72,6 +77,7 @@ const auditResults = {
 **So that** I can identify gaps and overlaps with Redux
 
 #### Acceptance Criteria
+
 - [ ] **Given** React Query is used in the codebase
       **When** I run the audit script
       **Then** it lists all query hooks with their cache keys and data types
@@ -87,22 +93,25 @@ const auditResults = {
 #### Technical Implementation
 
 **Script Location**: `scripts/audit-react-query.js`
+
 ```javascript
 // Find all useQuery, useMutation hooks
 const queryHooks = [
   { name: 'useCreators', cacheKey: 'creators', duplicatesRedux: true },
-  { name: 'useNostrEvents', cacheKey: 'nostr-events', duplicatesRedux: false }
+  { name: 'useNostrEvents', cacheKey: 'nostr-events', duplicatesRedux: false },
 ];
 ```
 
 **Output File**: `docs/refactoring/epic-004-stories/react-query-audit-report.json`
 
 #### Dependencies
+
 **Blocked by**: None
 **Blocks**: #003, #004
 **Related to**: #001
 
 #### Definition of Done
+
 - [ ] Audit script created and executed
 - [ ] JSON report generated with all queries documented
 - [ ] Identified all duplicate state between Redux and React Query
@@ -118,6 +127,7 @@ const queryHooks = [
 **So that** I can make consistent state management decisions
 
 #### Acceptance Criteria
+
 - [ ] **Given** a new feature requiring state
       **When** I consult the decision tree
       **Then** it clearly guides me to use Redux or React Query
@@ -133,10 +143,12 @@ const queryHooks = [
 #### Technical Implementation
 
 **File Location**: `docs/refactoring/epic-004-stories/decision-tree.md`
+
 ```markdown
 # State Management Decision Tree
 
 ## Quick Decision Flow
+
 1. Is this data from an API/server? → Use React Query
 2. Is this UI presentation state? → Use Redux
 3. Does it need to persist? → Use Redux + localStorage
@@ -147,11 +159,13 @@ const queryHooks = [
 **Visual Diagram**: `docs/refactoring/epic-004-stories/decision-tree.mmd`
 
 #### Dependencies
+
 **Blocked by**: #001, #002
 **Blocks**: #004, #005
 **Related to**: All future stories
 
 #### Definition of Done
+
 - [ ] Decision tree document created
 - [ ] Mermaid diagram generated
 - [ ] Examples provided for each decision path
@@ -168,6 +182,7 @@ const queryHooks = [
 **So that** I can understand the overall state management architecture
 
 #### Acceptance Criteria
+
 - [ ] **Given** the new architecture design
       **When** I view the diagrams
       **Then** I see clear boundaries between Redux and React Query
@@ -183,6 +198,7 @@ const queryHooks = [
 #### Technical Implementation
 
 **Mermaid Diagrams**: `docs/refactoring/epic-004-stories/architecture-diagrams.mmd`
+
 ```mermaid
 graph TB
     API[External APIs] --> RQ[React Query]
@@ -199,11 +215,13 @@ graph TB
 ```
 
 #### Dependencies
+
 **Blocked by**: #001, #002, #003
 **Blocks**: #005
 **Related to**: All implementation stories
 
 #### Definition of Done
+
 - [ ] Overall architecture diagram created
 - [ ] Data flow diagram created
 - [ ] Redux slice organization diagram created
@@ -220,6 +238,7 @@ graph TB
 **So that** we have consensus before implementation begins
 
 #### Acceptance Criteria
+
 - [ ] **Given** all audit reports and guidelines are ready
       **When** team meeting is held
       **Then** all developers attend and provide feedback
@@ -239,11 +258,13 @@ graph TB
 **Final Guidelines**: `docs/refactoring/epic-004-stories/FINAL-GUIDELINES.md`
 
 #### Dependencies
+
 **Blocked by**: #001, #002, #003, #004
 **Blocks**: All Phase 2-5 stories
 **Related to**: #023, #024, #025
 
 #### Definition of Done
+
 - [ ] Review meeting scheduled and held
 - [ ] All team members provided feedback
 - [ ] Feedback incorporated into guidelines
@@ -254,6 +275,7 @@ graph TB
 ---
 
 ## Phase 2: Server Data Migration (Stories 6-12)
+
 **Sprint 1 - Core Migration**
 **Duration**: 3-4 days
 **Dependencies**: Can parallelize after Phase 1
@@ -265,6 +287,7 @@ graph TB
 **So that** creator data is properly managed as server state
 
 #### Acceptance Criteria
+
 - [ ] **Given** creator APIs exist
       **When** I use useCreators hook
       **Then** it fetches and caches creator list data
@@ -280,13 +303,14 @@ graph TB
 #### Technical Implementation
 
 **File Location**: `packages/frontend/src/queries/creators/index.ts`
+
 ```typescript
 export const useCreators = (filters?: CreatorFilters) => {
   return useQuery({
     queryKey: ['creators', filters],
     queryFn: () => api.creators.list(filters),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000 // 10 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -294,7 +318,7 @@ export const useCreatorProfile = (creatorId: string) => {
   return useQuery({
     queryKey: ['creator', creatorId],
     queryFn: () => api.creators.get(creatorId),
-    enabled: !!creatorId
+    enabled: !!creatorId,
   });
 };
 
@@ -305,18 +329,20 @@ export const useUpdateCreator = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries(['creators']);
       queryClient.invalidateQueries(['creator', variables.id]);
-    }
+    },
   });
 };
 ```
 
 #### Dependencies
+
 **Blocked by**: #005
 **Blocks**: #009
 **Related to**: #007, #008
 **Parallel with**: #007, #008
 
 #### Definition of Done
+
 - [ ] useCreators hook created with proper caching
 - [ ] useCreatorProfile hook created
 - [ ] useUpdateCreator mutation hook created
@@ -335,6 +361,7 @@ export const useUpdateCreator = () => {
 **So that** content data is properly managed as server state
 
 #### Acceptance Criteria
+
 - [ ] **Given** content APIs exist
       **When** I use useContent hook
       **Then** it fetches and caches content list with pagination
@@ -350,20 +377,21 @@ export const useUpdateCreator = () => {
 #### Technical Implementation
 
 **File Location**: `packages/frontend/src/queries/content/index.ts`
+
 ```typescript
 export const useContent = (page: number, limit: number) => {
   return useInfiniteQuery({
     queryKey: ['content'],
     queryFn: ({ pageParam = 1 }) => api.content.list({ page: pageParam, limit }),
-    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
-    staleTime: 1 * 60 * 1000 // 1 minute
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
+    staleTime: 1 * 60 * 1000, // 1 minute
   });
 };
 
 export const useContentItem = (contentId: string) => {
   return useQuery({
     queryKey: ['content', contentId],
-    queryFn: () => api.content.get(contentId)
+    queryFn: () => api.content.get(contentId),
   });
 };
 
@@ -375,9 +403,9 @@ export const useCreateContent = () => {
       // Optimistic update
       await queryClient.cancelQueries(['content']);
       const previous = queryClient.getQueryData(['content']);
-      queryClient.setQueryData(['content'], old => ({
+      queryClient.setQueryData(['content'], (old) => ({
         ...old,
-        pages: [[newContent, ...old.pages[0]], ...old.pages.slice(1)]
+        pages: [[newContent, ...old.pages[0]], ...old.pages.slice(1)],
       }));
       return { previous };
     },
@@ -386,18 +414,20 @@ export const useCreateContent = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries(['content']);
-    }
+    },
   });
 };
 ```
 
 #### Dependencies
+
 **Blocked by**: #005
 **Blocks**: #009
 **Related to**: #006, #008
 **Parallel with**: #006, #008
 
 #### Definition of Done
+
 - [ ] useContent hook with infinite scrolling
 - [ ] useContentItem hook for single items
 - [ ] useCreateContent mutation with optimistic updates
@@ -416,6 +446,7 @@ export const useCreateContent = () => {
 **So that** payment data is properly managed as server state
 
 #### Acceptance Criteria
+
 - [ ] **Given** payment APIs exist
       **When** I use useSubscriptions hook
       **Then** it fetches and caches user subscriptions
@@ -431,12 +462,13 @@ export const useCreateContent = () => {
 #### Technical Implementation
 
 **File Location**: `packages/frontend/src/queries/payments/index.ts`
+
 ```typescript
 export const useSubscriptions = (userId: string) => {
   return useQuery({
     queryKey: ['subscriptions', userId],
     queryFn: () => api.payments.getSubscriptions(userId),
-    staleTime: 10 * 60 * 1000 // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -444,7 +476,7 @@ export const useInvoices = (userId: string, filters?: InvoiceFilters) => {
   return useQuery({
     queryKey: ['invoices', userId, filters],
     queryFn: () => api.payments.getInvoices(userId, filters),
-    staleTime: 5 * 60 * 1000
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -455,7 +487,7 @@ export const usePaymentStatus = (paymentId: string) => {
     refetchInterval: (data) => {
       if (data?.status === 'pending') return 2000; // Poll every 2s
       return false; // Stop polling when complete
-    }
+    },
   });
 };
 
@@ -466,18 +498,20 @@ export const useCreatePayment = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(['subscriptions']);
       queryClient.invalidateQueries(['invoices']);
-    }
+    },
   });
 };
 ```
 
 #### Dependencies
+
 **Blocked by**: #005
 **Blocks**: #009
 **Related to**: #006, #007
 **Parallel with**: #006, #007
 
 #### Definition of Done
+
 - [ ] useSubscriptions hook created
 - [ ] useInvoices hook with pagination
 - [ ] usePaymentStatus with polling logic
@@ -496,6 +530,7 @@ export const useCreatePayment = () => {
 **So that** Redux only contains client state
 
 #### Acceptance Criteria
+
 - [ ] **Given** server data exists in Redux
       **When** I refactor the slices
       **Then** all server data properties are removed
@@ -511,6 +546,7 @@ export const useCreatePayment = () => {
 #### Technical Implementation
 
 **Files to Modify**:
+
 ```typescript
 // packages/frontend/src/store/slices/creatorsSlice.ts
 // REMOVE ENTIRELY - all server data
@@ -524,8 +560,8 @@ export const cmsSlice = createSlice({
     loading: false, // ❌ Remove - server state
     error: null, // ❌ Remove - server state
     selectedView: 'grid', // ✅ Keep - UI state
-    filters: {} // ✅ Keep - UI state
-  }
+    filters: {}, // ✅ Keep - UI state
+  },
 });
 
 // AFTER
@@ -533,17 +569,19 @@ export const cmsSlice = createSlice({
   name: 'cms',
   initialState: {
     selectedView: 'grid', // UI state
-    filters: {} // UI state
-  }
+    filters: {}, // UI state
+  },
 });
 ```
 
 #### Dependencies
+
 **Blocked by**: #006, #007, #008
 **Blocks**: #010
 **Related to**: #010, #011
 
 #### Definition of Done
+
 - [ ] creatorsSlice.ts deleted entirely
 - [ ] Server data removed from cmsSlice.ts
 - [ ] Server data removed from analyticsSlice.ts
@@ -562,6 +600,7 @@ export const cmsSlice = createSlice({
 **So that** they consume server data from the proper source
 
 #### Acceptance Criteria
+
 - [ ] **Given** components using Redux server data
       **When** I refactor them
       **Then** they use React Query hooks instead
@@ -577,6 +616,7 @@ export const cmsSlice = createSlice({
 #### Technical Implementation
 
 **Example Component Update**:
+
 ```typescript
 // BEFORE - Using Redux
 const CreatorList = () => {
@@ -603,11 +643,13 @@ const CreatorList = () => {
 ```
 
 #### Dependencies
+
 **Blocked by**: #009
 **Blocks**: #011, #012
 **Related to**: All component updates
 
 #### Definition of Done
+
 - [ ] CreatorList component updated
 - [ ] CreatorProfile component updated
 - [ ] ContentList component updated
@@ -627,6 +669,7 @@ const CreatorList = () => {
 **So that** we optimize API calls and user experience
 
 #### Acceptance Criteria
+
 - [ ] **Given** different data types
       **When** I configure cache times
       **Then** they reflect appropriate staleness for each type
@@ -642,6 +685,7 @@ const CreatorList = () => {
 #### Technical Implementation
 
 **Cache Configuration**: `packages/frontend/src/queries/queryClient.ts`
+
 ```typescript
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -649,11 +693,11 @@ export const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes default
       cacheTime: 10 * 60 * 1000, // 10 minutes default
       retry: 3,
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: true,
-      refetchOnReconnect: true
-    }
-  }
+      refetchOnReconnect: true,
+    },
+  },
 });
 
 // Specific cache strategies
@@ -662,16 +706,18 @@ export const cacheStrategies = {
   content: { staleTime: 1 * 60 * 1000 }, // 1 min - fresher
   payments: { staleTime: 10 * 60 * 1000 }, // 10 min - less volatile
   profile: { staleTime: 15 * 60 * 1000 }, // 15 min - rarely changes
-  realtime: { staleTime: 0 } // Always fresh
+  realtime: { staleTime: 0 }, // Always fresh
 };
 ```
 
 #### Dependencies
+
 **Blocked by**: #010
 **Blocks**: #012
 **Related to**: #006, #007, #008
 
 #### Definition of Done
+
 - [ ] Global query client configuration set
 - [ ] Cache strategies defined for each data type
 - [ ] Background refetch intervals configured
@@ -690,6 +736,7 @@ export const cacheStrategies = {
 **So that** users see meaningful error messages and have retry options
 
 #### Acceptance Criteria
+
 - [ ] **Given** a query fails
       **When** error occurs
       **Then** user sees contextual error message with retry option
@@ -705,6 +752,7 @@ export const cacheStrategies = {
 #### Technical Implementation
 
 **Error Handling**: `packages/frontend/src/queries/errorHandling.ts`
+
 ```typescript
 export const queryErrorHandler = (error: Error) => {
   if (error.message.includes('Network')) {
@@ -744,11 +792,13 @@ export const QueryErrorBoundary: React.FC = ({ children }) => {
 ```
 
 #### Dependencies
+
 **Blocked by**: #010, #011
 **Blocks**: Phase 3 stories
 **Related to**: All query hooks
 
 #### Definition of Done
+
 - [ ] Global error handler implemented
 - [ ] Query-specific error handlers added
 - [ ] Mutation rollback logic implemented
@@ -761,6 +811,7 @@ export const QueryErrorBoundary: React.FC = ({ children }) => {
 ---
 
 ## Phase 3: Client State Consolidation (Stories 13-17)
+
 **Sprint 2 - Redux Cleanup**
 **Duration**: 2-3 days
 **Dependencies**: Can parallelize with Phase 2
@@ -772,6 +823,7 @@ export const QueryErrorBoundary: React.FC = ({ children }) => {
 **So that** UI state management is consistent across the app
 
 #### Acceptance Criteria
+
 - [ ] **Given** UI state scattered across components
       **When** I consolidate it
       **Then** all UI state lives in the uiSlice
@@ -787,6 +839,7 @@ export const QueryErrorBoundary: React.FC = ({ children }) => {
 #### Technical Implementation
 
 **Enhanced UI Slice**: `packages/frontend/src/store/slices/uiSlice.ts`
+
 ```typescript
 interface UIState {
   theme: 'light' | 'dark';
@@ -823,22 +876,24 @@ export const uiSlice = createSlice({
       state.notifications.push({
         id: nanoid(),
         ...action.payload,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     },
     removeNotification: (state, action) => {
-      state.notifications = state.notifications.filter(n => n.id !== action.payload);
-    }
-  }
+      state.notifications = state.notifications.filter((n) => n.id !== action.payload);
+    },
+  },
 });
 ```
 
 #### Dependencies
+
 **Blocked by**: #005
 **Blocks**: #014, #015
 **Parallel with**: Phase 2 stories
 
 #### Definition of Done
+
 - [ ] UI slice expanded with all UI state
 - [ ] Actions created for all UI operations
 - [ ] Selectors created for UI state access
@@ -857,6 +912,7 @@ export const uiSlice = createSlice({
 **So that** React Query only manages server state
 
 #### Acceptance Criteria
+
 - [ ] **Given** UI state in React Query cache
       **When** I audit the cache
       **Then** I identify and remove all UI state
@@ -872,6 +928,7 @@ export const uiSlice = createSlice({
 #### Technical Implementation
 
 **Cleanup Tasks**:
+
 ```typescript
 // REMOVE these patterns:
 // ❌ Using React Query for UI state
@@ -882,17 +939,19 @@ queryClient.setQueryData(['ui-preferences'], preferences);
 
 // REPLACE with Redux:
 // ✅ Using Redux for UI state
-const modalState = useSelector(state => state.ui.activeModal);
+const modalState = useSelector((state) => state.ui.activeModal);
 const dispatch = useDispatch();
 dispatch(uiActions.openModal({ type: 'edit', data: item }));
 ```
 
 #### Dependencies
+
 **Blocked by**: #013
 **Blocks**: #015
 **Related to**: #013
 
 #### Definition of Done
+
 - [ ] All UI state removed from React Query
 - [ ] Components updated to use Redux for UI
 - [ ] React Query cache keys audited
@@ -909,6 +968,7 @@ dispatch(uiActions.openModal({ type: 'edit', data: item }));
 **So that** these critical UI features work consistently
 
 #### Acceptance Criteria
+
 - [ ] **Given** theme switching functionality
       **When** user changes theme
       **Then** it updates Redux and persists to localStorage
@@ -924,6 +984,7 @@ dispatch(uiActions.openModal({ type: 'edit', data: item }));
 #### Technical Implementation
 
 **Theme Manager**: `packages/frontend/src/components/ThemeProvider.tsx`
+
 ```typescript
 export const ThemeProvider: React.FC = ({ children }) => {
   const theme = useSelector(state => state.ui.theme);
@@ -947,6 +1008,7 @@ export const ThemeProvider: React.FC = ({ children }) => {
 ```
 
 **Modal Manager**: `packages/frontend/src/components/ModalManager.tsx`
+
 ```typescript
 export const ModalManager: React.FC = () => {
   const { activeModal, modalData } = useSelector(state => state.ui);
@@ -975,11 +1037,13 @@ export const ModalManager: React.FC = () => {
 ```
 
 #### Dependencies
+
 **Blocked by**: #013, #014
 **Blocks**: #016
 **Related to**: #013
 
 #### Definition of Done
+
 - [ ] ThemeProvider using Redux created
 - [ ] ModalManager using Redux created
 - [ ] Theme persistence to localStorage
@@ -998,6 +1062,7 @@ export const ModalManager: React.FC = () => {
 **So that** notifications work consistently across the app
 
 #### Acceptance Criteria
+
 - [ ] **Given** notifications need to be shown
       **When** triggered from any component
       **Then** they appear via Redux actions
@@ -1013,6 +1078,7 @@ export const ModalManager: React.FC = () => {
 #### Technical Implementation
 
 **Notification System**: `packages/frontend/src/components/NotificationCenter.tsx`
+
 ```typescript
 export const NotificationCenter: React.FC = () => {
   const notifications = useSelector(state => state.ui.notifications);
@@ -1060,11 +1126,13 @@ export const useNotification = () => {
 ```
 
 #### Dependencies
+
 **Blocked by**: #015
 **Blocks**: #017
 **Related to**: #013
 
 #### Definition of Done
+
 - [ ] NotificationCenter component created
 - [ ] Redux actions for notifications
 - [ ] Auto-dismiss timer logic
@@ -1083,6 +1151,7 @@ export const useNotification = () => {
 **So that** forms work efficiently without unnecessary Redux usage
 
 #### Acceptance Criteria
+
 - [ ] **Given** simple forms
       **When** implemented
       **Then** they use local React state (useState/useReducer)
@@ -1098,6 +1167,7 @@ export const useNotification = () => {
 #### Technical Implementation
 
 **Form State Slice** (for complex forms only): `packages/frontend/src/store/slices/formSlice.ts`
+
 ```typescript
 interface FormState {
   multiStepForms: {
@@ -1157,11 +1227,13 @@ export const SimpleContactForm: React.FC = () => {
 ```
 
 #### Dependencies
+
 **Blocked by**: #016
 **Blocks**: Phase 4 stories
 **Related to**: #013
 
 #### Definition of Done
+
 - [ ] Form state guidelines documented
 - [ ] Complex form slice created (if needed)
 - [ ] Simple forms using local state
@@ -1174,6 +1246,7 @@ export const SimpleContactForm: React.FC = () => {
 ---
 
 ## Phase 4: Testing & Validation (Stories 18-22)
+
 **Sprint 2 - Quality Assurance**
 **Duration**: 2-3 days
 **Dependencies**: After Phase 2 & 3
@@ -1185,6 +1258,7 @@ export const SimpleContactForm: React.FC = () => {
 **So that** we verify data flows correctly through the system
 
 #### Acceptance Criteria
+
 - [ ] **Given** API to React Query flow
       **When** tested end-to-end
       **Then** data flows correctly and caches properly
@@ -1200,12 +1274,13 @@ export const SimpleContactForm: React.FC = () => {
 #### Technical Implementation
 
 **Test File**: `packages/frontend/src/__tests__/integration/stateManagement.test.tsx`
+
 ```typescript
 describe('State Management Integration', () => {
   describe('React Query - Server State', () => {
     it('fetches and caches creator data', async () => {
       const { result, waitFor } = renderHook(() => useCreators(), {
-        wrapper: createWrapper()
+        wrapper: createWrapper(),
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -1213,7 +1288,7 @@ describe('State Management Integration', () => {
 
       // Verify cache hit on second call
       const { result: result2 } = renderHook(() => useCreators(), {
-        wrapper: createWrapper()
+        wrapper: createWrapper(),
       });
       expect(result2.current.isSuccess).toBe(true); // Immediate success from cache
     });
@@ -1257,11 +1332,13 @@ describe('State Management Integration', () => {
 ```
 
 #### Dependencies
+
 **Blocked by**: #012, #017
 **Blocks**: #019
 **Related to**: All implementation stories
 
 #### Definition of Done
+
 - [ ] React Query data flow tests
 - [ ] Redux state flow tests
 - [ ] Cache invalidation tests
@@ -1280,6 +1357,7 @@ describe('State Management Integration', () => {
 **So that** we ensure no performance regression
 
 #### Acceptance Criteria
+
 - [ ] **Given** performance metrics
       **When** measured before refactoring
       **Then** baseline is established
@@ -1295,6 +1373,7 @@ describe('State Management Integration', () => {
 #### Technical Implementation
 
 **Benchmark Script**: `scripts/benchmark-state-management.js`
+
 ```javascript
 const benchmarks = {
   // Measure React Query cache performance
@@ -1318,7 +1397,7 @@ const benchmarks = {
 
     return {
       cacheHitRate: (cacheHits / totalQueries) * 100,
-      duration: performance.now() - start
+      duration: performance.now() - start,
     };
   },
 
@@ -1335,7 +1414,7 @@ const benchmarks = {
     return {
       avgUpdateTime: updates.reduce((a, b) => a + b) / updates.length,
       maxUpdateTime: Math.max(...updates),
-      under16ms: updates.filter(t => t < 16).length / updates.length * 100
+      under16ms: (updates.filter((t) => t < 16).length / updates.length) * 100,
     };
   },
 
@@ -1344,28 +1423,30 @@ const benchmarks = {
     const stats = await import('./webpack-stats.json');
     return {
       totalSize: stats.assets.reduce((sum, asset) => sum + asset.size, 0),
-      reactQuerySize: stats.modules.find(m => m.name.includes('react-query')).size,
-      reduxSize: stats.modules.find(m => m.name.includes('redux')).size
+      reactQuerySize: stats.modules.find((m) => m.name.includes('react-query')).size,
+      reduxSize: stats.modules.find((m) => m.name.includes('redux')).size,
     };
-  }
+  },
 };
 
 // Generate report
 const report = {
   timestamp: new Date().toISOString(),
   benchmarks: await runBenchmarks(),
-  comparison: compareWithBaseline()
+  comparison: compareWithBaseline(),
 };
 
 fs.writeFileSync('performance-report.json', JSON.stringify(report, null, 2));
 ```
 
 #### Dependencies
+
 **Blocked by**: #018
 **Blocks**: #020
 **Related to**: #020, #021
 
 #### Definition of Done
+
 - [ ] Benchmark script created
 - [ ] Baseline metrics captured
 - [ ] Post-refactoring metrics captured
@@ -1384,6 +1465,7 @@ fs.writeFileSync('performance-report.json', JSON.stringify(report, null, 2));
 **So that** we minimize unnecessary API calls
 
 #### Acceptance Criteria
+
 - [ ] **Given** React Query caching
       **When** users navigate the app
       **Then** cache hit rate exceeds 80%
@@ -1399,13 +1481,14 @@ fs.writeFileSync('performance-report.json', JSON.stringify(report, null, 2));
 #### Technical Implementation
 
 **Cache Monitoring**: `packages/frontend/src/monitoring/cacheMetrics.ts`
+
 ```typescript
 export class CacheMetrics {
   private metrics = {
     queries: new Map<string, QueryMetrics>(),
     globalHitRate: 0,
     totalQueries: 0,
-    totalHits: 0
+    totalHits: 0,
   };
 
   constructor(queryClient: QueryClient) {
@@ -1425,7 +1508,7 @@ export class CacheMetrics {
           hits: 0,
           misses: 0,
           staleFetches: 0,
-          backgroundFetches: 0
+          backgroundFetches: 0,
         });
       }
 
@@ -1439,8 +1522,7 @@ export class CacheMetrics {
       }
 
       this.metrics.totalQueries++;
-      this.metrics.globalHitRate =
-        (this.metrics.totalHits / this.metrics.totalQueries) * 100;
+      this.metrics.globalHitRate = (this.metrics.totalHits / this.metrics.totalQueries) * 100;
     }
   };
 
@@ -1450,8 +1532,8 @@ export class CacheMetrics {
       totalQueries: this.metrics.totalQueries,
       queryBreakdown: Array.from(this.metrics.queries.entries()).map(([key, metrics]) => ({
         query: key,
-        hitRate: (metrics.hits / (metrics.hits + metrics.misses)) * 100
-      }))
+        hitRate: (metrics.hits / (metrics.hits + metrics.misses)) * 100,
+      })),
     });
 
     // Send to monitoring service
@@ -1470,11 +1552,13 @@ export const cacheMetrics = new CacheMetrics(queryClient);
 ```
 
 #### Dependencies
+
 **Blocked by**: #019
 **Blocks**: #021
 **Related to**: #011
 
 #### Definition of Done
+
 - [ ] Cache metrics class implemented
 - [ ] Monitoring integrated with app
 - [ ] Dashboard showing cache metrics
@@ -1493,6 +1577,7 @@ export const cacheMetrics = new CacheMetrics(queryClient);
 **So that** we ensure acceptable performance for users
 
 #### Acceptance Criteria
+
 - [ ] **Given** bundle analysis
       **When** comparing before/after
       **Then** increase is less than 5KB
@@ -1508,6 +1593,7 @@ export const cacheMetrics = new CacheMetrics(queryClient);
 #### Technical Implementation
 
 **Bundle Analysis Script**: `scripts/analyze-bundle.js`
+
 ```javascript
 const webpack = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -1521,9 +1607,9 @@ async function analyzeBundleSize() {
       ...webpackConfig.plugins,
       new BundleAnalyzerPlugin({
         analyzerMode: 'json',
-        reportFilename: 'bundle-stats.json'
-      })
-    ]
+        reportFilename: 'bundle-stats.json',
+      }),
+    ],
   };
 
   const compiler = webpack(config);
@@ -1540,12 +1626,12 @@ async function analyzeBundleSize() {
     libraries: {
       'react-query': 0,
       'redux-toolkit': 0,
-      'react-redux': 0
+      'react-redux': 0,
     },
-    chunks: []
+    chunks: [],
   };
 
-  stats.toJson().assets.forEach(asset => {
+  stats.toJson().assets.forEach((asset) => {
     const size = asset.size;
     const gzipped = gzipSize.sync(fs.readFileSync(asset.name));
 
@@ -1554,11 +1640,11 @@ async function analyzeBundleSize() {
       name: asset.name,
       size: size,
       gzipped: gzipped,
-      parsed: size
+      parsed: size,
     });
 
     // Check library sizes
-    Object.keys(analysis.libraries).forEach(lib => {
+    Object.keys(analysis.libraries).forEach((lib) => {
       if (asset.name.includes(lib)) {
         analysis.libraries[lib] += size;
       }
@@ -1591,17 +1677,19 @@ Status: ${difference < 5120 ? '✅ PASS' : '❌ FAIL'} (Limit: 5KB increase)
   return difference < 5120; // Return true if under 5KB increase
 }
 
-analyzeBundleSize().then(passed => {
+analyzeBundleSize().then((passed) => {
   process.exit(passed ? 0 : 1);
 });
 ```
 
 #### Dependencies
+
 **Blocked by**: #020
 **Blocks**: #022
 **Related to**: Build optimization
 
 #### Definition of Done
+
 - [ ] Bundle analysis script created
 - [ ] Baseline bundle size captured
 - [ ] Post-refactor size measured
@@ -1620,6 +1708,7 @@ analyzeBundleSize().then(passed => {
 **So that** we ensure the refactoring doesn't break user experience
 
 #### Acceptance Criteria
+
 - [ ] **Given** critical user flows
       **When** tested end-to-end
       **Then** all flows work correctly
@@ -1635,6 +1724,7 @@ analyzeBundleSize().then(passed => {
 #### Technical Implementation
 
 **E2E Tests**: `packages/frontend/tests/e2e/stateManagement.spec.ts`
+
 ```typescript
 import { test, expect } from '@playwright/test';
 
@@ -1731,11 +1821,13 @@ test.describe('State Management E2E', () => {
 ```
 
 #### Dependencies
+
 **Blocked by**: #021
 **Blocks**: Phase 5 stories
 **Related to**: All implementation stories
 
 #### Definition of Done
+
 - [ ] E2E test suite created
 - [ ] Creator flow tests
 - [ ] Content flow tests
@@ -1749,6 +1841,7 @@ test.describe('State Management E2E', () => {
 ---
 
 ## Phase 5: Documentation & Training (Stories 23-25)
+
 **Sprint 3 - Knowledge Transfer**
 **Duration**: 1-2 days
 **Dependencies**: After all implementation
@@ -1760,6 +1853,7 @@ test.describe('State Management E2E', () => {
 **So that** I can make correct decisions for future features
 
 #### Acceptance Criteria
+
 - [ ] **Given** the guidelines document
       **When** I read it
       **Then** I understand when to use Redux vs React Query
@@ -1775,12 +1869,14 @@ test.describe('State Management E2E', () => {
 #### Technical Implementation
 
 **Document Structure**: `docs/refactoring/epic-004-stories/DEVELOPER_GUIDELINES.md`
+
 ```markdown
 # State Management Guidelines
 
 ## Quick Decision Guide
 
 ### Use React Query When:
+
 - Fetching data from an API
 - Managing server state
 - Caching API responses
@@ -1788,6 +1884,7 @@ test.describe('State Management E2E', () => {
 - Background data synchronization
 
 ### Use Redux When:
+
 - Managing UI state (theme, modals, notifications)
 - Storing user authentication/session
 - Managing client-side preferences
@@ -1795,6 +1892,7 @@ test.describe('State Management E2E', () => {
 - Derived/computed client state
 
 ### Use Local State When:
+
 - Simple form inputs
 - Component-specific UI state
 - Temporary interaction state
@@ -1803,27 +1901,34 @@ test.describe('State Management E2E', () => {
 ## Detailed Patterns
 
 ### Pattern 1: Server Data with React Query
+
 [Code examples...]
 
 ### Pattern 2: UI State with Redux
+
 [Code examples...]
 
 ### Pattern 3: Form State Guidelines
+
 [Code examples...]
 
 ## Anti-Patterns to Avoid
+
 [Examples of what NOT to do...]
 
 ## Migration Guide
+
 [How to refactor existing code...]
 ```
 
 #### Dependencies
+
 **Blocked by**: #022
 **Blocks**: #024
 **Related to**: #003
 
 #### Definition of Done
+
 - [ ] Guidelines document created
 - [ ] Decision matrix included
 - [ ] Code examples for each pattern
@@ -1842,6 +1947,7 @@ test.describe('State Management E2E', () => {
 **So that** everyone understands the new state architecture
 
 #### Acceptance Criteria
+
 - [ ] **Given** training materials
       **When** prepared
       **Then** they cover all aspects of state management
@@ -1857,6 +1963,7 @@ test.describe('State Management E2E', () => {
 #### Technical Implementation
 
 **Training Materials**: `docs/refactoring/epic-004-stories/training/`
+
 ```
 training/
 ├── slides/
@@ -1876,6 +1983,7 @@ training/
 ```
 
 **Workshop Agenda**:
+
 1. Introduction (15 min)
 2. Redux vs React Query Theory (30 min)
 3. Live Coding Demo (45 min)
@@ -1883,11 +1991,13 @@ training/
 5. Q&A and Discussion (30 min)
 
 #### Dependencies
+
 **Blocked by**: #023
 **Blocks**: #025
 **Related to**: Team training
 
 #### Definition of Done
+
 - [ ] Slide deck created
 - [ ] Exercise repository prepared
 - [ ] Solutions documented
@@ -1906,6 +2016,7 @@ training/
 **So that** future developers understand why these choices were made
 
 #### Acceptance Criteria
+
 - [ ] **Given** the ADR
       **When** written
       **Then** it explains the context, decision, and consequences
@@ -1921,21 +2032,27 @@ training/
 #### Technical Implementation
 
 **ADR Document**: `docs/architecture/decisions/004-state-management-boundaries.md`
+
 ```markdown
 # ADR-004: State Management Boundaries
 
 ## Status
+
 Accepted
 
 ## Context
+
 We had mixed patterns for state management with both Redux and React Query being used inconsistently, causing:
+
 - Developer confusion about which tool to use
 - Duplicate data storage
 - Performance issues
 - Maintenance difficulties
 
 ## Decision
+
 We will establish clear boundaries:
+
 - **React Query**: All server state and API data
 - **Redux**: Client-side application state only
 - **Local State**: Component-specific UI state
@@ -1943,12 +2060,14 @@ We will establish clear boundaries:
 ## Consequences
 
 ### Positive
+
 - Clear mental model for developers
 - Better performance (cache optimization)
 - Reduced bundle size (removed redundant code)
 - Easier onboarding
 
 ### Negative
+
 - Migration effort required
 - Team training needed
 - Some refactoring of existing features
@@ -1956,29 +2075,36 @@ We will establish clear boundaries:
 ## Alternatives Considered
 
 ### Option 1: Redux for Everything
+
 - Rejected: Poor fit for server state, manual cache management
 
 ### Option 2: React Query for Everything
+
 - Rejected: Not suitable for client state, no persistence
 
 ### Option 3: Context API Instead of Redux
+
 - Rejected: Performance issues at scale, no DevTools
 
 ## Implementation
+
 See Epic-004 implementation guide and developer guidelines.
 
 ## References
+
 - [React Query Documentation](https://react-query.tanstack.com/)
 - [Redux Toolkit Documentation](https://redux-toolkit.js.org/)
 - [When to Use React Query vs Redux](https://tkdodo.eu/blog/react-query-vs-redux)
 ```
 
 #### Dependencies
+
 **Blocked by**: #024
 **Blocks**: None (final story)
 **Related to**: All Epic stories
 
 #### Definition of Done
+
 - [ ] ADR document written
 - [ ] Context section complete
 - [ ] Decision clearly stated
@@ -1993,24 +2119,28 @@ See Epic-004 implementation guide and developer guidelines.
 ## Parallel Work Streams
 
 ### Stream A: Guidelines and Audit (Sequential)
+
 **Stories**: #001, #002, #003, #004, #005
 **Duration**: 2-3 days
 **Team**: 1 Technical Architect
 **Critical Path**: Yes - blocks all other work
 
 ### Stream B: Server Data Migration (Parallel)
+
 **Stories**: #006, #007, #008, #009, #010, #011, #012
 **Duration**: 3-4 days
 **Team**: 2 Backend/Full-stack Developers
 **Can Start**: After Story #005
 
 ### Stream C: Client State Consolidation (Parallel)
+
 **Stories**: #013, #014, #015, #016, #017
 **Duration**: 2-3 days
 **Team**: 1-2 Frontend Developers
 **Can Start**: After Story #005 (parallel with Stream B)
 
 ### Stream D: Testing and Documentation
+
 **Stories**: #018, #019, #020, #021, #022, #023, #024, #025
 **Duration**: 3-4 days
 **Team**: 1 QA Engineer + 1 Technical Writer
@@ -2019,19 +2149,25 @@ See Epic-004 implementation guide and developer guidelines.
 ## Risk Mitigation
 
 ### Risk 1: Breaking Existing Features
+
 **Mitigation**:
+
 - Feature flags for gradual rollout
 - Comprehensive test coverage before refactoring
 - Keep old code parallel during migration
 
 ### Risk 2: Performance Regression
+
 **Mitigation**:
+
 - Benchmark before starting
 - Monitor cache hit rates
 - Performance budget enforcement
 
 ### Risk 3: Developer Resistance
+
 **Mitigation**:
+
 - Clear documentation and examples
 - Hands-on training workshop
 - Pair programming during initial implementation

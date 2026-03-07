@@ -228,6 +228,7 @@ gantt
 ```
 
 **Parallel Opportunities**:
+
 - After NS-001 (2h), both developers can work simultaneously
 - Dev 1: Event-related stories (NS-002, NS-003, NS-007, NS-008)
 - Dev 2: Network-related stories (NS-004, NS-005, NS-006)
@@ -257,6 +258,7 @@ gantt
 ```
 
 **Parallel Opportunities**:
+
 - After NS-009 (2h), Streams B and C are **fully independent**
 - Dev 1: Browser adapter (10h total)
 - Dev 2: Node adapter (6h total, can help with testing)
@@ -283,6 +285,7 @@ gantt
 ```
 
 **Parallel Opportunities**:
+
 - Streams D and E are **completely independent**
 - Dev 1: Frontend migration (12h)
 - Dev 2: Backend migration (12h)
@@ -306,6 +309,7 @@ gantt
 ```
 
 **Parallel Opportunities**:
+
 - NS-023 and NS-024 can be done simultaneously
 - Documentation can start alongside cleanup
 - Performance validation is final step
@@ -313,21 +317,25 @@ gantt
 ## Dependency Chains
 
 ### Event Management Chain
+
 ```
 NS-001 → NS-002 → NS-003 → NS-007 → NS-008 → NS-010 → NS-011 → NS-015 → NS-016
 ```
 
 ### Relay Management Chain
+
 ```
 NS-001 → NS-004 → NS-005 → NS-010 → NS-015 → NS-016
 ```
 
 ### Subscription Chain
+
 ```
 NS-001 → NS-006 → NS-010 → NS-011 → NS-015 → NS-017 → NS-018
 ```
 
 ### Backend Chain
+
 ```
 NS-001 → NS-009 → NS-013 → NS-014 → NS-019 → NS-020/NS-021/NS-022 → NS-024
 ```
@@ -335,22 +343,26 @@ NS-001 → NS-009 → NS-013 → NS-014 → NS-019 → NS-020/NS-021/NS-022 → 
 ## Blocking Relationships
 
 ### NS-001 Blocks (Foundation)
+
 - NS-002, NS-004, NS-006, NS-009
 - **Impact**: Blocks everything
 - **Priority**: CRITICAL - must complete first
 
 ### NS-009 Blocks (Interfaces)
+
 - NS-010, NS-013
 - **Impact**: Blocks all adapter work
 - **Priority**: HIGH - complete early in Sprint 1
 
 ### NS-015 & NS-019 Block (Feature Flags)
+
 - NS-015 blocks: NS-016, NS-017, NS-018
 - NS-019 blocks: NS-020, NS-021, NS-022
 - **Impact**: Blocks migration phases
 - **Priority**: HIGH - complete early in Sprint 2
 
 ### NS-018 & NS-022 Block (Migration Complete)
+
 - NS-018 blocks: NS-023
 - NS-020, NS-021, NS-022 block: NS-024
 - **Impact**: Blocks cleanup phase
@@ -387,26 +399,29 @@ gantt
 
 ## Resource Allocation
 
-| Sprint | Dev 1 Focus | Dev 2 Focus | Parallel? |
-|--------|-------------|-------------|-----------|
-| Sprint 0 | Events, Crypto | Relays, Subscriptions | ✅ Yes (after NS-001) |
-| Sprint 1 | Browser Adapter | Node.js Adapter | ✅ Yes (after NS-009) |
-| Sprint 2 | Frontend Migration | Backend Migration | ✅ Yes (fully parallel) |
-| Sprint 3 | Frontend Cleanup, Docs | Backend Cleanup, Perf | ✅ Yes (parallel) |
+| Sprint   | Dev 1 Focus            | Dev 2 Focus           | Parallel?               |
+| -------- | ---------------------- | --------------------- | ----------------------- |
+| Sprint 0 | Events, Crypto         | Relays, Subscriptions | ✅ Yes (after NS-001)   |
+| Sprint 1 | Browser Adapter        | Node.js Adapter       | ✅ Yes (after NS-009)   |
+| Sprint 2 | Frontend Migration     | Backend Migration     | ✅ Yes (fully parallel) |
+| Sprint 3 | Frontend Cleanup, Docs | Backend Cleanup, Perf | ✅ Yes (parallel)       |
 
 ## Risk Assessment by Dependency
 
 ### High Risk (Blocks Many Stories)
+
 - **NS-001**: Blocks 4 immediate stories, entire epic depends on it
 - **NS-009**: Blocks both adapter streams
 - **NS-004**: Relay management is critical functionality
 
 ### Medium Risk (Blocks Phase)
+
 - **NS-015**: Blocks frontend migration
 - **NS-019**: Blocks backend migration
 - **NS-010**: Blocks React hooks implementation
 
 ### Low Risk (Few Dependencies)
+
 - **NS-005**: Only blocks itself from completion
 - **NS-011**: Only blocks frontend migration stories
 - **NS-025, NS-026**: Final stories, don't block anything

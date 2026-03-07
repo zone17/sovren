@@ -58,6 +58,7 @@ Sprint 1 of the P3 cleanup resolved 14 findings from PR #73 code review spanning
 ## Problem
 
 After 8 rounds of code review on PR #73, all P1 and P2 findings had been resolved (125 complete). 34 P3 findings remained, spanning:
+
 - Code quality (014, 015, 036, 058, 107, 108, 110)
 - Dead code removal (056, 057, 148)
 - Architecture cleanup (016, 017, 034, 145, 147)
@@ -86,6 +87,7 @@ The codebase had accumulated significant technical debt: 223K lines of dead moni
 **Todo 056 — Rotation scripts**: Consolidated 9 rotation scripts (6 Supabase + 3 GitHub) down to 2 canonical scripts. 4 scripts were already deleted in prior sprints.
 
 **Todo 148 — Dead backend code**: Removed ~1,900 lines across multiple service files:
+
 - `rls-monitoring-service.ts` (615 lines)
 - `subscription-management-service-extensions.ts` (359 lines)
 - Engagement analytics types (356 lines)
@@ -128,6 +130,7 @@ new AppError({ statusCode: 500, code: 'SERVICE_ERROR', message: 'msg', details, 
 **Todo 015 — ESLint rules**: Added `@typescript-eslint/no-explicit-any` and `no-console` rules to prevent new violations. Full remediation of 779 existing `any` types deferred.
 
 **Todo 110 — Utility consolidation**: Consolidated 5 duplicate utility patterns into single canonical implementations:
+
 - `asyncHandler` (2 → 1)
 - `getClientIP` (4 → 1)
 - `RateLimitConfig` (3 → 1)
@@ -142,7 +145,9 @@ new AppError({ statusCode: 500, code: 'SERVICE_ERROR', message: 'msg', details, 
 ## Key Patterns
 
 ### Pattern: Architect plan verification catches todo inaccuracies
+
 The architect verified actual source files before implementing and found:
+
 - AppError is at `lib/app-error.ts`, NOT error-handler-middleware.ts as todo stated
 - Only 18 ServiceToken<any> remained, not 32 (prior sprints had typed 14)
 - 4 of 9 rotation scripts were already deleted in prior sprints
@@ -151,12 +156,15 @@ The architect verified actual source files before implementing and found:
 **Lesson**: Always verify against source before implementing. Todo file descriptions can become stale.
 
 ### Pattern: PO scope violation (recurring)
+
 The product-owner agent implemented code fixes despite brief saying "DO NOT write code." This same pattern occurred in the R6 sprint. The `product-strategy-prd` subagent type has coding capabilities that override brief scope boundaries. Quality of work was fine each time — the PO correctly identified and executed straightforward deletions and renames.
 
 **Lesson**: Accept PO coding for deletion/rename-heavy sprints. For implementation-heavy sprints, consider stronger brief enforcement or use a different subagent type.
 
 ### Pattern: Massive net code reduction as quality signal
+
 -141,316 lines net indicates successful consolidation. The largest contributors:
+
 - monitoring/ deletion: ~223K lines
 - Root markdown deletion: ~5K lines
 - Dead code removal: ~1,900 lines
@@ -170,17 +178,17 @@ The product-owner agent implemented code fixes despite brief saying "DO NOT writ
 
 ## Files Modified Summary
 
-| Category | Files Changed | Lines Removed |
-|----------|---------------|---------------|
-| monitoring/ directory | 11,398 deleted | ~223,000 |
-| Root markdown files | 142 deleted | ~5,000 |
-| Finder duplicate files | 64 deleted | ~2,000 |
-| Rotation scripts | 5 deleted | ~2,000 |
-| Backend services (dead code) | 8 modified/deleted | ~1,900 |
-| Container/DI | 4 modified | ~200 |
-| Middleware | 3 modified | ~100 |
-| Routes | 3 modified | ~50 |
-| Todo renames | 14 renamed | 0 |
+| Category                     | Files Changed      | Lines Removed |
+| ---------------------------- | ------------------ | ------------- |
+| monitoring/ directory        | 11,398 deleted     | ~223,000      |
+| Root markdown files          | 142 deleted        | ~5,000        |
+| Finder duplicate files       | 64 deleted         | ~2,000        |
+| Rotation scripts             | 5 deleted          | ~2,000        |
+| Backend services (dead code) | 8 modified/deleted | ~1,900        |
+| Container/DI                 | 4 modified         | ~200          |
+| Middleware                   | 3 modified         | ~100          |
+| Routes                       | 3 modified         | ~50           |
+| Todo renames                 | 14 renamed         | 0             |
 
 ## Related Documentation
 
@@ -194,13 +202,13 @@ The product-owner agent implemented code fixes despite brief saying "DO NOT writ
 
 ## Sprint Statistics
 
-| Metric | Value |
-|--------|-------|
-| Findings resolved | 14 of 15 (1 deferred: 145) |
-| Files changed | 690 |
-| Lines added | 37,645 |
-| Lines removed | 178,961 |
-| Net reduction | -141,316 |
-| Team size | 5 agents |
-| Phases | 3 (arch+PO → backend → QA+security) |
-| Commit | 9007ede |
+| Metric            | Value                               |
+| ----------------- | ----------------------------------- |
+| Findings resolved | 14 of 15 (1 deferred: 145)          |
+| Files changed     | 690                                 |
+| Lines added       | 37,645                              |
+| Lines removed     | 178,961                             |
+| Net reduction     | -141,316                            |
+| Team size         | 5 agents                            |
+| Phases            | 3 (arch+PO → backend → QA+security) |
+| Commit            | 9007ede                             |

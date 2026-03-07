@@ -71,7 +71,14 @@ export interface SessionActivity {
   id: string;
   session_id: string;
   pubkey: string;
-  activity_type: 'login' | 'api_call' | 'page_view' | 'logout' | 'token_refresh' | 'timeout' | 'invalidation';
+  activity_type:
+    | 'login'
+    | 'api_call'
+    | 'page_view'
+    | 'logout'
+    | 'token_refresh'
+    | 'timeout'
+    | 'invalidation';
   timestamp: number;
   details?: Record<string, any>;
   nostr_event_id?: string;
@@ -130,11 +137,13 @@ const SessionMetadataSchema = z.object({
   device_info: DeviceInfoSchema,
   lightning_enabled: z.boolean().optional(),
   lightning_permissions: z.record(z.any()).optional(),
-  location: z.object({
-    country: z.string().optional(),
-    region: z.string().optional(),
-    city: z.string().optional(),
-  }).optional(),
+  location: z
+    .object({
+      country: z.string().optional(),
+      region: z.string().optional(),
+      city: z.string().optional(),
+    })
+    .optional(),
 });
 
 const SessionSchema = z.object({
@@ -154,11 +163,13 @@ const SessionSchema = z.object({
   last_activity_at: z.number(),
   idle_timeout_at: z.number(),
   active: z.boolean(),
-  location: z.object({
-    country: z.string().optional(),
-    region: z.string().optional(),
-    city: z.string().optional(),
-  }).optional(),
+  location: z
+    .object({
+      country: z.string().optional(),
+      region: z.string().optional(),
+      city: z.string().optional(),
+    })
+    .optional(),
   nostr_event_id: z.string().optional(),
   session_signature: z.string().optional(),
   permissions: z.array(z.string()),
@@ -229,7 +240,10 @@ export abstract class UnifiedSessionManager {
   /**
    * Retrieve activity logs
    */
-  protected abstract retrieveActivities(sessionId: string, limit: number): Promise<SessionActivity[]>;
+  protected abstract retrieveActivities(
+    sessionId: string,
+    limit: number
+  ): Promise<SessionActivity[]>;
 
   // =====================================================
   // CORE SESSION METHODS
@@ -530,10 +544,7 @@ export abstract class UnifiedSessionManager {
   /**
    * Get session activity logs
    */
-  async getSessionActivity(
-    sessionId: string,
-    limit: number = 100
-  ): Promise<SessionActivity[]> {
+  async getSessionActivity(sessionId: string, limit: number = 100): Promise<SessionActivity[]> {
     try {
       return await this.retrieveActivities(sessionId, limit);
     } catch (error) {
@@ -569,13 +580,10 @@ export abstract class UnifiedSessionManager {
         { low: 0, medium: 0, high: 0 }
       );
 
-      const recentActivity = sessions.filter(
-        (s) => s.last_activity_at > oneDayAgo
-      ).length;
+      const recentActivity = sessions.filter((s) => s.last_activity_at > oneDayAgo).length;
 
       const oldestSession = sessions.reduce(
-        (oldest, session) =>
-          session.created_at < oldest.created_at ? session : oldest,
+        (oldest, session) => (session.created_at < oldest.created_at ? session : oldest),
         sessions[0]
       );
 

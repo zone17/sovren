@@ -25,15 +25,16 @@ Four P1 critical issues were identified in the PR #73 code review. This plan pro
 
 ### Files to Modify
 
-| File | Change |
-|------|--------|
-| `packages/backend/src/routes/auth.ts` | Line 31: Change `z.enum(['creator', 'supporter', 'admin'])` to `z.enum(['creator', 'supporter'])` |
-| `packages/backend/src/services/nostr-auth.ts` | Line 25: Keep `'admin'` in `JWTPayloadSchema` (admin JWTs still valid for verification). Line 173: Change `generateJWT` param type from `'creator' \| 'supporter' \| 'admin'` to `'creator' \| 'supporter'` |
+| File                                                 | Change                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/backend/src/routes/auth.ts`                | Line 31: Change `z.enum(['creator', 'supporter', 'admin'])` to `z.enum(['creator', 'supporter'])`                                                                                                                                                                           |
+| `packages/backend/src/services/nostr-auth.ts`        | Line 25: Keep `'admin'` in `JWTPayloadSchema` (admin JWTs still valid for verification). Line 173: Change `generateJWT` param type from `'creator' \| 'supporter' \| 'admin'` to `'creator' \| 'supporter'`                                                                 |
 | `packages/backend/src/routes/__tests__/auth.test.ts` | Add test: sending `role: 'admin'` in auth request returns 400. Update stats test (lines 295-304) to use a different mechanism — mock the JWT verification to return admin role rather than sending `role: 'admin'` in the request body (which will now be rejected by Zod). |
 
 ### Detailed Changes
 
 **`routes/auth.ts` line 31:**
+
 ```typescript
 // BEFORE
 role: z.enum(['creator', 'supporter', 'admin']).optional().default('supporter'),
@@ -43,6 +44,7 @@ role: z.enum(['creator', 'supporter']).optional().default('supporter'),
 ```
 
 **`services/nostr-auth.ts` line 172-175:**
+
 ```typescript
 // BEFORE
 async generateJWT(
@@ -58,9 +60,10 @@ async generateJWT(
 ```
 
 **`services/nostr-auth.ts` line 25 — Keep as-is:**
-The `JWTPayloadSchema` must still accept `'admin'` so that existing admin JWTs can be verified and the `/stats` endpoint continues to work. The `role` in the JWT payload schema is for *reading* tokens, not for *creating* them from client input.
+The `JWTPayloadSchema` must still accept `'admin'` so that existing admin JWTs can be verified and the `/stats` endpoint continues to work. The `role` in the JWT payload schema is for _reading_ tokens, not for _creating_ them from client input.
 
 **`routes/__tests__/auth.test.ts` — Add new test:**
+
 ```typescript
 it('should reject admin role in authentication request', async () => {
   const response = await request(app)
@@ -113,14 +116,15 @@ The constructor already accepts an optional `jwtSecret` parameter (line 41). The
 
 ### Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                          | Change                                                                                                                                             |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/backend/src/services/nostr-auth.ts` | Line 374: Pass `process.env.JWT_SECRET` to constructor. Lines 44-45: Add fail-fast validation when not in test environment and no secret provided. |
-| `packages/backend/.env.example` | Already has `JWT_SECRET` documented (line 10) — no change needed |
+| `packages/backend/.env.example`               | Already has `JWT_SECRET` documented (line 10) — no change needed                                                                                   |
 
 ### Detailed Changes
 
 **`services/nostr-auth.ts` line 40-53 (constructor):**
+
 ```typescript
 // BEFORE
 constructor(
@@ -153,6 +157,7 @@ constructor(
 ```
 
 **`services/nostr-auth.ts` line 374 (singleton):**
+
 ```typescript
 // BEFORE
 export const nostrAuth = new NostrAuthService();
@@ -221,6 +226,7 @@ constructor(
 ### Fix Approach
 
 **Add a JSON file persistence layer as a write-through store behind the existing cache.** This is the minimum viable fix that:
+
 1. Prevents data loss on restart
 2. Keeps the cache for read performance
 3. Introduces a `PaymentPersistence` interface that can be swapped for Supabase later
@@ -229,10 +235,10 @@ A full Supabase migration is out of scope for this sprint but the interface desi
 
 ### Files to Create/Modify
 
-| File | Change |
-|------|--------|
-| `packages/backend/src/services/payment-persistence.ts` | **NEW** — `PaymentPersistence` interface + `JsonFilePaymentStore` implementation |
-| `packages/backend/src/services/lightning-service.ts` | Add persistence layer: write-through on payment/invoice creation, read-through on cache miss |
+| File                                                   | Change                                                                                       |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `packages/backend/src/services/payment-persistence.ts` | **NEW** — `PaymentPersistence` interface + `JsonFilePaymentStore` implementation             |
+| `packages/backend/src/services/lightning-service.ts`   | Add persistence layer: write-through on payment/invoice creation, read-through on cache miss |
 
 ### Detailed Design: `payment-persistence.ts`
 
@@ -282,11 +288,13 @@ export class JsonFilePaymentStore implements PaymentPersistence {
 ### Detailed Changes to `lightning-service.ts`
 
 1. **Add persistence property to `LightningService`:**
+
    ```typescript
    private persistence: PaymentPersistence;
    ```
 
 2. **Initialize in `initialize()` method (line 183):**
+
    ```typescript
    this.persistence = new JsonFilePaymentStore();
    // Load persisted data into caches on startup
@@ -299,12 +307,14 @@ export class JsonFilePaymentStore implements PaymentPersistence {
    ```
 
 3. **Write-through on invoice creation (after line 291):**
+
    ```typescript
    this.invoiceCache.set(invoiceId, invoice);
    await this.persistence.saveInvoice(invoice);
    ```
 
 4. **Write-through on payment creation (lines 347-361 and 571-585):**
+
    ```typescript
    this.paymentCache.set(payment.id, payment);
    await this.persistence.savePayment(payment);
@@ -312,13 +322,16 @@ export class JsonFilePaymentStore implements PaymentPersistence {
    ```
 
 5. **Read-through on `processWebhook` cache miss (line 562-564):**
+
    ```typescript
    // BEFORE: O(n) cache scan, silent failure on miss
-   const invoice = this.invoiceCache.values()
+   const invoice = this.invoiceCache
+     .values()
      .find((inv) => inv.payment_hash === payload.payment_hash);
 
    // AFTER: Cache scan first, then persistence fallback
-   let invoice = this.invoiceCache.values()
+   let invoice = this.invoiceCache
+     .values()
      .find((inv) => inv.payment_hash === payload.payment_hash);
    if (!invoice) {
      invoice = await this.persistence.getInvoiceByPaymentHash(payload.payment_hash);
@@ -326,10 +339,10 @@ export class JsonFilePaymentStore implements PaymentPersistence {
    ```
 
 6. **Read-through on `getCreatorPayments` (line 632):**
+
    ```typescript
    // BEFORE: Cache-only read
-   let payments = this.paymentCache.values()
-     .filter((payment) => payment.creator_id === creatorId);
+   let payments = this.paymentCache.values().filter((payment) => payment.creator_id === creatorId);
 
    // AFTER: Persistence fallback
    let payments = await this.persistence.getPaymentsByCreator(creatorId);
@@ -371,15 +384,15 @@ Seven service files import `{ RedisClient } from '../config/redis'` but this mod
 
 The todo listed 7 files but the **actual** 7 files with the broken import (verified by grep) are different:
 
-| # | File | Listed in Todo? |
-|---|------|-----------------|
-| 1 | `services/lightning-payment-service.ts` | Yes |
-| 2 | `services/subscription-management-service.ts` | No (todo listed nostr-relay-service.ts) |
-| 3 | `services/subscription-management-service-extensions.ts` | No (todo listed content-moderation-service.ts) |
-| 4 | `services/recommendation-service.ts` | No (todo listed analytics-service.ts) |
-| 5 | `services/content-discovery-service.ts` | No (todo listed cache-service.ts) |
-| 6 | `services/transaction-history-service.ts` | No (todo listed rate-limiter-service.ts) |
-| 7 | `services/payout-management-service.ts` | No (todo listed session-service.ts) |
+| #   | File                                                     | Listed in Todo?                                |
+| --- | -------------------------------------------------------- | ---------------------------------------------- |
+| 1   | `services/lightning-payment-service.ts`                  | Yes                                            |
+| 2   | `services/subscription-management-service.ts`            | No (todo listed nostr-relay-service.ts)        |
+| 3   | `services/subscription-management-service-extensions.ts` | No (todo listed content-moderation-service.ts) |
+| 4   | `services/recommendation-service.ts`                     | No (todo listed analytics-service.ts)          |
+| 5   | `services/content-discovery-service.ts`                  | No (todo listed cache-service.ts)              |
+| 6   | `services/transaction-history-service.ts`                | No (todo listed rate-limiter-service.ts)       |
+| 7   | `services/payout-management-service.ts`                  | No (todo listed session-service.ts)            |
 
 The files listed in the todo (`nostr-relay-service.ts`, `content-moderation-service.ts`, `analytics-service.ts`, `cache-service.ts`, `rate-limiter-service.ts`, `session-service.ts`) **do not exist** in the repository.
 
@@ -389,15 +402,15 @@ The files listed in the todo (`nostr-relay-service.ts`, `content-moderation-serv
 
 ### Files to Modify
 
-| File | Changes |
-|------|---------|
-| `services/lightning-payment-service.ts` | Import fix + refactor `this.redis = new RedisClient()` to `this.redis = getRedisClient()`, change type from `RedisClient` to `Redis` (from ioredis) |
-| `services/subscription-management-service.ts` | Import fix + refactor Redis usage |
-| `services/subscription-management-service-extensions.ts` | Import fix + refactor Redis usage |
-| `services/recommendation-service.ts` | Import fix + refactor Redis usage |
-| `services/content-discovery-service.ts` | Import fix + refactor Redis usage |
-| `services/transaction-history-service.ts` | Import fix + refactor Redis usage |
-| `services/payout-management-service.ts` | Import fix + refactor Redis usage |
+| File                                                     | Changes                                                                                                                                             |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `services/lightning-payment-service.ts`                  | Import fix + refactor `this.redis = new RedisClient()` to `this.redis = getRedisClient()`, change type from `RedisClient` to `Redis` (from ioredis) |
+| `services/subscription-management-service.ts`            | Import fix + refactor Redis usage                                                                                                                   |
+| `services/subscription-management-service-extensions.ts` | Import fix + refactor Redis usage                                                                                                                   |
+| `services/recommendation-service.ts`                     | Import fix + refactor Redis usage                                                                                                                   |
+| `services/content-discovery-service.ts`                  | Import fix + refactor Redis usage                                                                                                                   |
+| `services/transaction-history-service.ts`                | Import fix + refactor Redis usage                                                                                                                   |
+| `services/payout-management-service.ts`                  | Import fix + refactor Redis usage                                                                                                                   |
 
 ### Detailed Changes (Pattern for Each File)
 
@@ -423,6 +436,7 @@ await this.redis.del(key);
 ```
 
 **For the type declaration in each file:**
+
 ```typescript
 // BEFORE
 private redis: RedisClient;
@@ -436,6 +450,7 @@ private redis: Redis;
 ### Special Case: `lightning-payment-service.ts`
 
 This file uses `new RedisClient()` in the constructor (line 125). After the fix:
+
 ```typescript
 // BEFORE
 this.redis = new RedisClient();
@@ -491,16 +506,17 @@ Note: P1-091 fixes imports in `lightning-payment-service.ts`, and P1-090 fixes s
 
 ### Per-Fix Unit Tests
 
-| Fix | Test Approach |
-|-----|---------------|
-| P1-088 | Existing `auth.test.ts` + new test for admin role rejection. Update admin stats test. |
+| Fix    | Test Approach                                                                                                                                      |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1-088 | Existing `auth.test.ts` + new test for admin role rejection. Update admin stats test.                                                              |
 | P1-089 | Unit test `NostrAuthService` constructor with: (a) valid secret, (b) missing secret in non-test env, (c) short secret, (d) test env without secret |
-| P1-090 | Unit test `JsonFilePaymentStore`: save/load/query operations. Integration test: restart simulation (write, clear cache, read from persistence) |
-| P1-091 | TypeScript compilation is the primary test. Existing service tests (if any) will validate Redis operations work. |
+| P1-090 | Unit test `JsonFilePaymentStore`: save/load/query operations. Integration test: restart simulation (write, clear cache, read from persistence)     |
+| P1-091 | TypeScript compilation is the primary test. Existing service tests (if any) will validate Redis operations work.                                   |
 
 ### Regression Testing
 
 After all 4 fixes:
+
 ```bash
 npm run test:unit          # All unit tests pass
 npm run type-check         # No TypeScript errors
@@ -520,9 +536,9 @@ npm run lint               # No lint errors
 
 ## Summary Table
 
-| ID | Issue | Severity | Effort | Files | Risk |
-|----|-------|----------|--------|-------|------|
-| P1-088 | Client-controlled admin role | Critical | Small | 3 | Low |
-| P1-089 | Random JWT secret per restart | Critical | Small | 1 | Low |
+| ID     | Issue                         | Severity | Effort | Files     | Risk   |
+| ------ | ----------------------------- | -------- | ------ | --------- | ------ |
+| P1-088 | Client-controlled admin role  | Critical | Small  | 3         | Low    |
+| P1-089 | Random JWT secret per restart | Critical | Small  | 1         | Low    |
 | P1-090 | Payment volatile-only storage | Critical | Medium | 2 (1 new) | Medium |
-| P1-091 | Broken config/redis imports | Critical | Small | 7 | Low |
+| P1-091 | Broken config/redis imports   | Critical | Small  | 7         | Low    |

@@ -7,11 +7,13 @@ We have successfully completed Phase 1 (Foundation) and Phase 2 (Shared Services
 ## Completed Services (Phase 1-2)
 
 ### ✅ Foundation Layer
+
 1. **ServiceContainer** - Full DI implementation with lifecycle management
 2. **EventBusService** - Async event handling with typed events
 3. **Service Interfaces** - Complete contract definitions
 
 ### ✅ Shared Services Layer
+
 1. **EmailService** (US-E5-007)
    - Retry logic with exponential backoff
    - Template support with Handlebars
@@ -50,6 +52,7 @@ We have successfully completed Phase 1 (Foundation) and Phase 2 (Shared Services
 ### Phase 3: Content Services (7 services)
 
 #### ContentCreationService (US-E5-011)
+
 ```typescript
 interface IContentCreationService {
   create(content: ContentDraft): Promise<Content>;
@@ -60,6 +63,7 @@ interface IContentCreationService {
 ```
 
 #### ContentPublishingService (US-E5-012)
+
 ```typescript
 interface IContentPublishingService {
   publish(contentId: string, options?: PublishOptions): Promise<PublishedContent>;
@@ -70,6 +74,7 @@ interface IContentPublishingService {
 ```
 
 #### ContentModerationService (US-E5-013)
+
 ```typescript
 interface IContentModerationService {
   moderate(content: Content): Promise<ModerationResult>;
@@ -80,6 +85,7 @@ interface IContentModerationService {
 ```
 
 #### ContentSearchService (US-E5-014)
+
 ```typescript
 interface IContentSearchService {
   search(query: string, filters?: SearchFilters): Promise<SearchResult>;
@@ -90,6 +96,7 @@ interface IContentSearchService {
 ```
 
 #### ContentRecommendationService (US-E5-015)
+
 ```typescript
 interface IContentRecommendationService {
   getRecommendations(userId: string, limit?: number): Promise<Content[]>;
@@ -100,6 +107,7 @@ interface IContentRecommendationService {
 ```
 
 #### ContentAnalyticsService (US-E5-016)
+
 ```typescript
 interface IContentAnalyticsService {
   trackView(contentId: string, userId?: string): Promise<void>;
@@ -110,6 +118,7 @@ interface IContentAnalyticsService {
 ```
 
 #### ContentVersioningService (US-E5-017)
+
 ```typescript
 interface IContentVersioningService {
   createVersion(content: Content): Promise<ContentVersion>;
@@ -122,6 +131,7 @@ interface IContentVersioningService {
 ### Phase 4: User Services (6 services)
 
 #### UserAuthenticationService (US-E5-018)
+
 - Multi-factor authentication (TOTP, WebAuthn)
 - Rate limiting per IP/user
 - Session management
@@ -129,6 +139,7 @@ interface IContentVersioningService {
 - Account lockout
 
 #### UserProfileService (US-E5-019)
+
 - CRUD operations
 - Privacy settings
 - Avatar management
@@ -136,6 +147,7 @@ interface IContentVersioningService {
 - GDPR compliance
 
 #### UserPreferencesService (US-E5-020)
+
 - Settings management
 - Default values
 - Theme preferences
@@ -143,18 +155,21 @@ interface IContentVersioningService {
 - Language preferences
 
 #### UserActivityService (US-E5-021)
+
 - Activity tracking
 - Last seen updates
 - Session history
 - Device management
 
 #### UserRelationshipService (US-E5-022)
+
 - Follow/unfollow
 - Block/unblock
 - Mutual connections
 - Recommendation engine
 
 #### UserAnalyticsService (US-E5-023)
+
 - User metrics
 - Cohort analysis
 - Retention tracking
@@ -163,6 +178,7 @@ interface IContentVersioningService {
 ### Phase 5: Payment Services (8 services) - CRITICAL
 
 #### InvoiceService (US-E5-024) - **100% COVERAGE REQUIRED**
+
 ```typescript
 interface IInvoiceService {
   create(invoice: InvoiceDraft): Promise<Invoice>;
@@ -175,6 +191,7 @@ interface IInvoiceService {
 ```
 
 #### PaymentProcessingService (US-E5-025)
+
 - Idempotent payment processing
 - Multi-provider support (Stripe, PayPal, Lightning)
 - Webhook handling
@@ -182,6 +199,7 @@ interface IInvoiceService {
 - PCI compliance
 
 #### SubscriptionService (US-E5-026)
+
 - Subscription lifecycle
 - Trial management
 - Renewal processing
@@ -189,6 +207,7 @@ interface IInvoiceService {
 - Plan changes
 
 #### RefundService (US-E5-027)
+
 - Refund workflow
 - Approval process
 - Partial refunds
@@ -196,6 +215,7 @@ interface IInvoiceService {
 - Provider integration
 
 #### PaymentAnalyticsService (US-E5-028)
+
 - MRR calculation
 - Churn analysis
 - LTV computation
@@ -203,6 +223,7 @@ interface IInvoiceService {
 - Payment failure analysis
 
 #### WebhookService (US-E5-029)
+
 - Signature verification
 - Retry queue
 - Event routing
@@ -210,6 +231,7 @@ interface IInvoiceService {
 - Audit logging
 
 #### CurrencyService (US-E5-030)
+
 - Exchange rates
 - Currency formatting
 - Conversion calculations
@@ -217,6 +239,7 @@ interface IInvoiceService {
 - Multi-currency support
 
 #### Payment Integration Testing (US-E5-031)
+
 - End-to-end payment flows
 - Provider integration tests
 - Webhook testing
@@ -228,10 +251,12 @@ interface IInvoiceService {
 ### Parallel Execution Groups
 
 **Group A (Can run simultaneously):**
+
 - Content Services (7 services)
 - User Services (6 services)
 
 **Group B (Sequential - Critical Path):**
+
 1. InvoiceService (blocks all payment services)
 2. PaymentProcessingService + CurrencyService (parallel)
 3. SubscriptionService
@@ -242,6 +267,7 @@ interface IInvoiceService {
 ### Agent Assignment
 
 **Recommended Agent Allocation:**
+
 - 4 agents for Content Services
 - 3 agents for User Services
 - 2-3 agents for Payment Services (controlled, sequential)
@@ -249,12 +275,14 @@ interface IInvoiceService {
 ### Timeline Estimate
 
 **Optimistic (Perfect Execution):**
+
 - Phase 3: 3-4 hours
 - Phase 4: 2-3 hours
 - Phase 5: 4-5 hours
 - Total: 9-12 hours
 
 **Realistic (With Dependencies):**
+
 - Phase 3: 4-6 hours
 - Phase 4: 3-4 hours
 - Phase 5: 6-8 hours
@@ -263,6 +291,7 @@ interface IInvoiceService {
 ## Quality Gates
 
 ### Per Service Requirements
+
 - ✅ 95%+ test coverage (100% for payment services)
 - ✅ Full TypeScript typing (no `any`)
 - ✅ Comprehensive error handling
@@ -273,6 +302,7 @@ interface IInvoiceService {
 - ✅ Performance benchmarked
 
 ### Phase Completion Criteria
+
 - All services implemented
 - All tests passing
 - Quality gates met
@@ -283,12 +313,14 @@ interface IInvoiceService {
 ## Risk Mitigation
 
 ### Technical Risks
+
 1. **Payment Service Complexity**: Require 100% test coverage, sequential implementation
 2. **Nostr Integration**: Ensure protocol compliance in content publishing
 3. **Performance**: Benchmark search and recommendation services
 4. **Data Consistency**: Implement proper transaction handling
 
 ### Mitigation Strategies
+
 - Sequential implementation for critical services
 - Comprehensive testing at each step
 - Regular checkpoint reviews
@@ -305,4 +337,4 @@ interface IInvoiceService {
 
 ---
 
-*This plan ensures systematic completion of Epic 005 with quality gates enforced at every step.*
+_This plan ensures systematic completion of Epic 005 with quality gates enforced at every step._

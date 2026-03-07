@@ -21,12 +21,14 @@ This document provides a step-by-step procedure for rotating Supabase database c
 ## Current State Analysis
 
 ### ✅ Infrastructure Ready
+
 - AWS Secrets Manager integration implemented (`SecretsService.ts`)
 - Database connection pooling configured (`DatabasePool`)
 - Zero-downtime deployment pipeline operational
 - Health check endpoints available
 
 ### ⚠️ Action Required
+
 - Database pool currently reads from `process.env.DATABASE_URL` (not SecretsService)
 - Manual rotation required (automated script needs Supabase API token)
 - Post-rotation integration of SecretsService recommended
@@ -36,6 +38,7 @@ This document provides a step-by-step procedure for rotating Supabase database c
 ### Phase 1: Pre-Rotation (5 minutes)
 
 #### Step 1.1: Backup Current Credentials
+
 ```bash
 # Navigate to backend directory
 cd /Users/fp/Desktop/Sovren/packages/backend
@@ -54,6 +57,7 @@ ls -la .env.backup-* .credentials-backup/
 ```
 
 #### Step 1.2: Record Current Metrics (Baseline)
+
 ```bash
 # Check current pool health
 curl http://localhost:3001/health | jq '.'
@@ -67,6 +71,7 @@ echo "Pre-rotation timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" > .credentials-bac
 #### Step 2.1: Generate New Secure Password
 
 **Option A: Using OpenSSL (Recommended)**
+
 ```bash
 # Generate 32-character alphanumeric + symbols password
 NEW_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
@@ -74,6 +79,7 @@ echo "Generated secure password (32 chars)"
 ```
 
 **Option B: Using Python**
+
 ```python
 import secrets
 import string
@@ -83,6 +89,7 @@ print(password)
 ```
 
 **Save securely:**
+
 ```bash
 echo "$NEW_PASSWORD" > .credentials-backup/new-password.txt
 chmod 600 .credentials-backup/new-password.txt
@@ -107,6 +114,7 @@ chmod 600 .credentials-backup/new-password.txt
 #### Step 2.3: Get Connection Details
 
 From Supabase Dashboard → Settings → Database:
+
 ```bash
 # Record these values:
 PROJECT_REF="your-project-ref"              # From URL or dashboard
@@ -117,6 +125,7 @@ DB_USER="postgres"
 ```
 
 #### Step 2.4: Build New Connection String
+
 ```bash
 # Format: postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres
 NEW_DATABASE_URL="postgresql://postgres:${NEW_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
@@ -130,6 +139,7 @@ echo "${NEW_DATABASE_URL}" | sed 's/:[^@]*@/:***@/'
 #### Step 3.1: Update AWS Secrets Manager
 
 **Option A: Using AWS CLI**
+
 ```bash
 # Set AWS region
 export AWS_REGION="us-east-1"
@@ -161,6 +171,7 @@ rm /tmp/supabase-secret.json
 ```
 
 **Option B: AWS Console**
+
 1. Navigate to: https://console.aws.amazon.com/secretsmanager
 2. Select region: `us-east-1`
 3. Find secret: `sovren/production/supabase`
@@ -169,6 +180,7 @@ rm /tmp/supabase-secret.json
 6. Click **"Save"**
 
 #### Step 3.2: Update Local Environment (Development Only)
+
 ```bash
 # Update .env file with new credentials
 # IMPORTANT: Only update local development .env, NOT committed files!
@@ -191,6 +203,7 @@ grep -E "DATABASE_URL|DB_PASSWORD" .env
 #### Step 4.1: Test Database Connection
 
 **Using psql (if installed)**:
+
 ```bash
 # Test connection with new credentials
 psql "${NEW_DATABASE_URL}" -c "SELECT NOW() AS current_time, version() AS postgres_version;"
@@ -202,6 +215,7 @@ psql "${NEW_DATABASE_URL}" -c "SELECT NOW() AS current_time, version() AS postgr
 ```
 
 **Using Node.js**:
+
 ```bash
 # Create test script
 cat > /tmp/test-db-connection.js <<'EOF'
@@ -236,6 +250,7 @@ NEW_DATABASE_URL="${NEW_DATABASE_URL}" node /tmp/test-db-connection.js
 #### Step 4.2: Restart Application (Zero-Downtime)
 
 **Development (local)**:
+
 ```bash
 # Stop current dev server
 # Ctrl+C or kill the process
@@ -250,6 +265,7 @@ npm run dev
 **Production (Docker/PM2)**:
 
 **Option A: PM2 (Rolling Restart)**
+
 ```bash
 # Update environment variables
 pm2 restart sovren-backend --update-env
@@ -262,6 +278,7 @@ pm2 status
 ```
 
 **Option B: Docker (Rolling Update)**
+
 ```bash
 # Update docker-compose environment
 # Edit docker-compose.prod.yml with new DATABASE_URL
@@ -274,6 +291,7 @@ docker-compose -f docker-compose.prod.yml logs -f backend | grep -E "database|po
 ```
 
 **Option C: Kubernetes (if applicable)**
+
 ```bash
 # Update secret
 kubectl create secret generic sovren-db-credentials \
@@ -353,6 +371,7 @@ grep -i "connection.*failed\|authentication.*failed" logs/application.log
 #### Step 5.2: Verify Old Credentials Disabled
 
 **Test old connection string fails**:
+
 ```bash
 # Read old credentials from backup
 OLD_DATABASE_URL=$(cat .credentials-backup/current-db-url.txt | cut -d'=' -f2)
@@ -364,6 +383,7 @@ psql "${OLD_DATABASE_URL}" -c "SELECT 1" 2>&1 | grep -i "password\|authenticatio
 ```
 
 If old credentials still work:
+
 - ⚠️ **WARNING**: Password rotation may not have taken effect
 - Verify you're testing the correct environment
 - Check Supabase dashboard for confirmation
@@ -539,12 +559,14 @@ The rotation is considered successful when:
 ## Post-Rotation Recommendations
 
 ### Immediate (Next 24 Hours)
+
 1. ✅ Monitor error rates for spikes
 2. ✅ Verify all production services functioning
 3. ✅ Test disaster recovery procedures
 4. ✅ Confirm backups accessible
 
 ### Short-Term (Next Week)
+
 1. **Integrate SecretsService with DatabasePool**:
    - Modify `src/database/pool.ts` to use `SecretsService.getSecret('DATABASE_URL')`
    - Update health checks to verify secrets retrieval
@@ -556,6 +578,7 @@ The rotation is considered successful when:
    - Schedule quarterly rotations via GitHub Actions
 
 ### Long-Term (Next Month)
+
 1. **Implement Secret Rotation Monitoring**:
    - Alert on rotation failures
    - Dashboard for credential age
@@ -583,6 +606,7 @@ If issues occur:
 ## Compliance & Audit
 
 This rotation procedure satisfies:
+
 - ✅ **OWASP Top 10 (A07)**: Identification and Authentication Failures
 - ✅ **CWE-798**: Use of Hard-coded Credentials (prevention)
 - ✅ **PCI-DSS 8.2.4**: Change credentials every 90 days
@@ -593,14 +617,17 @@ This rotation procedure satisfies:
 ### A. Troubleshooting Common Issues
 
 **Issue: "password authentication failed"**
+
 - Cause: Password not rotated correctly or connection string malformed
 - Solution: Verify password in Supabase dashboard, check connection string format
 
 **Issue: "connection refused"**
+
 - Cause: Firewall or network issue
 - Solution: Verify DB_HOST, check security groups/firewall rules
 
 **Issue: "too many connections"**
+
 - Cause: Old connections not drained
 - Solution: Wait 30 seconds, verify pool configuration
 

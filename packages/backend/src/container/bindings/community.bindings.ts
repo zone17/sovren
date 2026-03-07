@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Community Services Binding Module
  * EPIC-010: Creator Network — Circles, Mentorship, Collaboration, Marketplace
@@ -55,13 +54,11 @@ export class CommunityServicesModule implements IServiceModule {
       const db = container.resolve(TYPES.Database);
       const logger = container.resolve(TYPES.Logger);
       const eventBus = container.resolve(TYPES.EventBusService);
-      const service = new NotificationPersistenceService(asDb(db), logger, eventBus);
-      // Subscribe to community events during initialization
-      service.subscribeToEvents();
-      return service;
+      return new NotificationPersistenceService(asDb(db), logger, eventBus);
     });
-    // NOTE (#702): subscribeToEvents() only activates on first resolution (lazy singleton).
-    // Eager initialization is done in server.ts after DI container init to avoid temporal coupling.
+    // NOTE (#702/#728): subscribeToEvents() is called exactly ONCE by server.ts eager init
+    // (container.resolve(TYPES.NotificationPersistenceService) → service.subscribeToEvents()).
+    // Calling it in the factory would cause a double-subscription on every hot-reload or test.
 
     // ===========================
     // Community Services (EPIC-010)

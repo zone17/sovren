@@ -1,9 +1,9 @@
 ---
 status: pending
 priority: p2
-issue_id: "684"
+issue_id: '684'
 tags: [code-review, backend, typescript, slice-8]
-dependencies: ["681", "682"]
+dependencies: ['681', '682']
 ---
 
 # Remove @ts-nocheck from new FollowService + NotificationPersistenceService
@@ -24,6 +24,7 @@ Both new service files start with `// @ts-nocheck`, suppressing ALL type checkin
 ## Proposed Solutions
 
 ### Remove @ts-nocheck and fix resulting type errors
+
 - Remove the directive from both files
 - Fix any resulting compiler errors (likely minimal after #681 and #682 fixes)
 - **Effort:** Small (after #681 and #682 are fixed)

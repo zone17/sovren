@@ -13,7 +13,8 @@ const schnorr = {
   async sign(hash, privateKey) {
     // Create a simple deterministic signature based on hash and private key
     const hashStr = Buffer.from(hash).toString('hex');
-    const privKeyStr = typeof privateKey === 'string' ? privateKey : Buffer.from(privateKey).toString('hex');
+    const privKeyStr =
+      typeof privateKey === 'string' ? privateKey : Buffer.from(privateKey).toString('hex');
 
     const combined = hashStr + privKeyStr;
     const signature = crypto.createHash('sha256').update(combined).digest();
@@ -56,7 +57,8 @@ module.exports = {
   // Add other exports if needed
   getPublicKey: (privateKey) => {
     // Simple mock - hash the private key to get a "public key"
-    const privKeyStr = typeof privateKey === 'string' ? privateKey : Buffer.from(privateKey).toString('hex');
+    const privKeyStr =
+      typeof privateKey === 'string' ? privateKey : Buffer.from(privateKey).toString('hex');
     return Buffer.from(crypto.createHash('sha256').update(privKeyStr).digest()).toString('hex');
   },
 };

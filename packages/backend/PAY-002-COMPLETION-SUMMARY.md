@@ -21,6 +21,7 @@ Implemented bulletproof race condition handling for webhook processing with **ZE
 **File**: `/supabase/migrations/20251024000000_add_webhook_event_log.sql`
 
 **Features**:
+
 - `webhook_events` table with complete audit trail
 - Unique idempotency_key constraint (prevents duplicates at database level)
 - Comprehensive indexes for performance (payment_hash, payment_id, status, timestamps)
@@ -28,6 +29,7 @@ Implemented bulletproof race condition handling for webhook processing with **ZE
 - Processing metrics tracking (duration, success rate)
 
 **Database Functions** (All with `SECURITY DEFINER`):
+
 - `process_webhook_atomic()` - Atomic duplicate check + payment row locking (SELECT FOR UPDATE)
 - `check_webhook_duplicate()` - Idempotency key validation
 - `mark_webhook_processed()` - Record successful processing with metrics
@@ -71,6 +73,7 @@ Implemented bulletproof race condition handling for webhook processing with **ZE
    - Skips processing but maintains audit trail
 
 **New API Endpoints**:
+
 - `GET /api/webhooks/metrics` - Webhook processing metrics
 - `GET /api/webhooks/payment/:id/history` - Complete webhook timeline
 
@@ -85,6 +88,7 @@ Implemented bulletproof race condition handling for webhook processing with **ZE
 **Test Coverage**:
 
 #### Concurrent Processing Tests
+
 - ✅ 10 simultaneous identical webhooks → 1 processed, 9 marked duplicate
 - ✅ Concurrent different events → All processed, no duplicates
 - ✅ Database locking prevents duplicate state transitions
@@ -92,12 +96,14 @@ Implemented bulletproof race condition handling for webhook processing with **ZE
 - ✅ Race condition stress test passes
 
 #### Out-of-Order Tests
+
 - ✅ Completed webhook before processing → Detected and flagged
 - ✅ Logical ordering validation (pending after completed) → Detected
 - ✅ Timestamp-based ordering → Correctly identifies out-of-order
 - ✅ Out-of-order webhooks processed but flagged for monitoring
 
 #### Duplicate Detection Tests
+
 - ✅ Same idempotency key → Second marked duplicate
 - ✅ Payload-based key generation → Consistent deduplication
 - ✅ Different events same timestamp → Not duplicates
@@ -105,6 +111,7 @@ Implemented bulletproof race condition handling for webhook processing with **ZE
 - ✅ HTTP 200 returned for duplicates (idempotency compliance)
 
 #### Metrics and History Tests
+
 - ✅ Webhook processing metrics tracked (total, processed, duplicates, avg time)
 - ✅ Webhook history endpoint returns complete timeline
 - ✅ Performance metrics calculated (p50/p95/p99)
@@ -113,26 +120,26 @@ Implemented bulletproof race condition handling for webhook processing with **ZE
 
 ## 🏆 QUALITY GATES ACHIEVED
 
-| Quality Gate | Status | Evidence |
-|--------------|--------|----------|
+| Quality Gate                      | Status  | Evidence                                      |
+| --------------------------------- | ------- | --------------------------------------------- |
 | Zero duplicate payment processing | ✅ PASS | Database unique constraint + atomic functions |
-| All race condition tests passing | ✅ PASS | 10 concurrent webhooks handled correctly |
-| Atomic database updates | ✅ PASS | SELECT FOR UPDATE + transactions |
-| Complete audit trail | ✅ PASS | webhook_events table logs everything |
-| Out-of-order detection | ✅ PASS | Timestamp + logical ordering |
-| Idempotency compliance | ✅ PASS | HTTP 200 for duplicates, no reprocessing |
+| All race condition tests passing  | ✅ PASS | 10 concurrent webhooks handled correctly      |
+| Atomic database updates           | ✅ PASS | SELECT FOR UPDATE + transactions              |
+| Complete audit trail              | ✅ PASS | webhook_events table logs everything          |
+| Out-of-order detection            | ✅ PASS | Timestamp + logical ordering                  |
+| Idempotency compliance            | ✅ PASS | HTTP 200 for duplicates, no reprocessing      |
 
 ---
 
 ## 📊 PERFORMANCE METRICS
 
-| Metric | Target | Achieved |
-|--------|--------|----------|
-| Webhook processing time (p95) | <500ms | **<50ms** |
-| Duplicate detection | O(log n) | **O(1)** (unique index) |
-| Concurrent webhook handling | 100/min | **100/min** (rate limited) |
-| Database lock timeout | <100ms | **Instant** (SKIP LOCKED) |
-| Race condition prevention | 100% | **100%** (database enforced) |
+| Metric                        | Target   | Achieved                     |
+| ----------------------------- | -------- | ---------------------------- |
+| Webhook processing time (p95) | <500ms   | **<50ms**                    |
+| Duplicate detection           | O(log n) | **O(1)** (unique index)      |
+| Concurrent webhook handling   | 100/min  | **100/min** (rate limited)   |
+| Database lock timeout         | <100ms   | **Instant** (SKIP LOCKED)    |
+| Race condition prevention     | 100%     | **100%** (database enforced) |
 
 ---
 
@@ -149,12 +156,14 @@ Implemented bulletproof race condition handling for webhook processing with **ZE
 ## 📁 FILES CREATED/MODIFIED
 
 ### Created
+
 1. `/supabase/migrations/20251024000000_add_webhook_event_log.sql` - Database migration (460 lines)
 2. `/packages/backend/src/routes/webhooks-race-condition-hardened.ts` - Enhanced webhook handler (750 lines)
 3. `/packages/backend/src/__tests__/routes/webhooks-race-conditions.test.ts` - Comprehensive tests (600 lines)
 4. `/packages/backend/PAY-002-COMPLETION-SUMMARY.md` - This document
 
 ### Modified
+
 1. `/packages/backend/CHANGELOG.md` - Added PAY-002 entry with complete documentation
 
 ---
@@ -192,18 +201,22 @@ Coverage: 100% (all critical paths)
 ## 🚀 DEPLOYMENT CHECKLIST
 
 ### Prerequisites
+
 - [ ] Run migration: `supabase migration up` (applies webhook_events table)
 - [ ] Verify database functions created successfully
 - [ ] Check webhook_events table exists with proper indexes
 
 ### Deployment Steps
+
 1. **Replace webhook handler**:
+
    ```bash
    mv src/routes/webhooks.ts src/routes/webhooks-legacy.ts
    mv src/routes/webhooks-race-condition-hardened.ts src/routes/webhooks.ts
    ```
 
 2. **Run database migration**:
+
    ```bash
    supabase migration up
    # OR
@@ -211,6 +224,7 @@ Coverage: 100% (all critical paths)
    ```
 
 3. **Verify migration**:
+
    ```sql
    -- Should return webhook_events table
    SELECT * FROM information_schema.tables WHERE table_name = 'webhook_events';
@@ -221,6 +235,7 @@ Coverage: 100% (all critical paths)
    ```
 
 4. **Test in staging**:
+
    ```bash
    # Send test webhook
    curl -X POST http://localhost:3001/api/webhooks/lightning \
@@ -239,6 +254,7 @@ Coverage: 100% (all critical paths)
    ```
 
 ### Rollback Plan
+
 ```bash
 # If issues arise, rollback to legacy webhook handler
 mv src/routes/webhooks.ts src/routes/webhooks-race-hardened-backup.ts
@@ -250,18 +266,21 @@ mv src/routes/webhooks-legacy.ts src/routes/webhooks.ts
 ## 📊 MONITORING RECOMMENDATIONS
 
 ### Key Metrics to Monitor
+
 1. **Duplicate Rate**: `SELECT COUNT(*) FROM webhook_events WHERE status = 'duplicate'`
 2. **Processing Time**: `SELECT AVG(processing_duration_ms) FROM webhook_events`
 3. **Out-of-Order Rate**: `SELECT COUNT(*) FROM webhook_events WHERE is_out_of_order = true`
 4. **Failed Webhooks**: `SELECT COUNT(*) FROM webhook_events WHERE status = 'failed'`
 
 ### Alerts to Configure
+
 - Duplicate rate > 20% (indicates potential webhook delivery issues)
 - Processing time p95 > 500ms (indicates performance degradation)
 - Failed webhook rate > 5% (indicates integration issues)
 - Out-of-order rate > 10% (indicates webhook timing issues)
 
 ### Dashboard Queries
+
 ```sql
 -- Webhook Processing Metrics (Last 24 Hours)
 SELECT * FROM get_webhook_processing_metrics(
@@ -286,16 +305,19 @@ LIMIT 10;
 ### Architecture Decisions
 
 **Why Database-Level Locking?**
+
 - Application-level locking (Redis, in-memory) can fail during network partitions
 - Database is source of truth, locking at DB level is most reliable
 - PostgreSQL's `SELECT FOR UPDATE` is battle-tested for high concurrency
 
 **Why Idempotency Keys?**
+
 - Lightning Network webhooks can be delivered multiple times (network retries)
 - HTTP 200 + idempotency = better than HTTP 409 Conflict
 - Audit trail more valuable than rejection
 
 **Why webhook_events Table?**
+
 - Debugging production webhook issues requires complete history
 - Metrics for monitoring webhook delivery reliability
 - Forensic analysis for payment disputes
@@ -304,11 +326,13 @@ LIMIT 10;
 ### Integration Points
 
 **Lightning Network Providers**:
+
 - Compatible with: LND, CLN, Eclair, BTCPay Server
 - Webhook ID extraction: `body.webhookId || body.webhook_id || body.id`
 - Fallback: Payload hash from `paymentHash + event + timestamp`
 
 **State Machine Integration**:
+
 - Webhooks trigger `PaymentStateMachine.transition()`
 - Out-of-order webhooks still processed (state machine validates)
 - Failed transitions logged in payment_events
@@ -318,10 +342,12 @@ LIMIT 10;
 ## 📚 REFERENCES
 
 ### Related Stories
+
 - PAY-001: Payment Verification (Dependency - Completed)
 - PAY-003: Webhook Signature Verification (Merged into this implementation)
 
 ### Documentation
+
 - Database migration: `supabase/migrations/20251024000000_add_webhook_event_log.sql`
 - Implementation: `src/routes/webhooks-race-condition-hardened.ts`
 - Tests: `src/__tests__/routes/webhooks-race-conditions.test.ts`
@@ -338,6 +364,7 @@ LIMIT 10;
 **Ready for Production**: ✅ **YES**
 
 **Next Steps**:
+
 1. Merge to main branch
 2. Run database migration in production
 3. Deploy webhook handler update

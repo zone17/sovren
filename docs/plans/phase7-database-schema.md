@@ -37,15 +37,15 @@ CREATE POLICY "Creators can manage own snapshots"
   WITH CHECK (creator_id = auth.uid()::TEXT);
 ```
 
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | UUID | No | Primary key |
-| `creator_id` | TEXT | No | NOSTR pubkey (hex) — the creator who owns this data |
-| `energy` | SMALLINT | No | 1-5 scale |
-| `motivation` | SMALLINT | No | 1-5 scale |
-| `stress` | SMALLINT | No | 1-5 scale (1=low stress, 5=high stress) |
-| `composite_score` | NUMERIC(3,2) | No | Computed: (energy + motivation + (6-stress)) / 3 |
-| `created_at` | TIMESTAMPTZ | No | Check-in timestamp |
+| Column            | Type         | Nullable | Description                                         |
+| ----------------- | ------------ | -------- | --------------------------------------------------- |
+| `id`              | UUID         | No       | Primary key                                         |
+| `creator_id`      | TEXT         | No       | NOSTR pubkey (hex) — the creator who owns this data |
+| `energy`          | SMALLINT     | No       | 1-5 scale                                           |
+| `motivation`      | SMALLINT     | No       | 1-5 scale                                           |
+| `stress`          | SMALLINT     | No       | 1-5 scale (1=low stress, 5=high stress)             |
+| `composite_score` | NUMERIC(3,2) | No       | Computed: (energy + motivation + (6-stress)) / 3    |
+| `created_at`      | TIMESTAMPTZ  | No       | Check-in timestamp                                  |
 
 ---
 
@@ -88,20 +88,20 @@ CREATE POLICY "Creators can manage own patterns"
   WITH CHECK (creator_id = auth.uid()::TEXT);
 ```
 
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | UUID | No | Primary key |
-| `creator_id` | TEXT | No | NOSTR pubkey (hex) |
-| `date` | DATE | No | Activity date |
-| `content_time_mins` | INTEGER | No | Minutes spent on content creation |
-| `engagement_time_mins` | INTEGER | No | Minutes spent on engagement (DMs, comments) |
-| `management_time_mins` | INTEGER | No | Minutes spent on management (analytics, settings) |
-| `total_hours` | NUMERIC(5,2) | No | Computed total hours |
-| `post_count` | INTEGER | No | Number of posts published this day |
-| `first_activity_at` | TIMESTAMPTZ | Yes | Earliest activity timestamp |
-| `last_activity_at` | TIMESTAMPTZ | Yes | Latest activity timestamp |
-| `created_at` | TIMESTAMPTZ | No | Row creation |
-| `updated_at` | TIMESTAMPTZ | No | Last update |
+| Column                 | Type         | Nullable | Description                                       |
+| ---------------------- | ------------ | -------- | ------------------------------------------------- |
+| `id`                   | UUID         | No       | Primary key                                       |
+| `creator_id`           | TEXT         | No       | NOSTR pubkey (hex)                                |
+| `date`                 | DATE         | No       | Activity date                                     |
+| `content_time_mins`    | INTEGER      | No       | Minutes spent on content creation                 |
+| `engagement_time_mins` | INTEGER      | No       | Minutes spent on engagement (DMs, comments)       |
+| `management_time_mins` | INTEGER      | No       | Minutes spent on management (analytics, settings) |
+| `total_hours`          | NUMERIC(5,2) | No       | Computed total hours                              |
+| `post_count`           | INTEGER      | No       | Number of posts published this day                |
+| `first_activity_at`    | TIMESTAMPTZ  | Yes      | Earliest activity timestamp                       |
+| `last_activity_at`     | TIMESTAMPTZ  | Yes      | Latest activity timestamp                         |
+| `created_at`           | TIMESTAMPTZ  | No       | Row creation                                      |
+| `updated_at`           | TIMESTAMPTZ  | No       | Last update                                       |
 
 The `UNIQUE (creator_id, date)` constraint ensures one row per creator per day. The auto-tracking middleware uses `INSERT ... ON CONFLICT` (upsert) to increment minutes.
 
@@ -228,17 +228,17 @@ CREATE POLICY "Creators can insert own provenance"
 -- This means no RLS policy exists for UPDATE or DELETE, so those operations are denied.
 ```
 
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | UUID | No | Primary key |
-| `content_id` | TEXT | No | Unique reference to the content piece |
-| `creator_id` | TEXT | No | NOSTR pubkey of the author |
-| `nostr_event_id` | TEXT | No | NOSTR event ID containing the signed content |
-| `signature` | TEXT | No | Schnorr signature from NOSTR event |
-| `content_hash` | TEXT | No | SHA-256 hash of the raw content |
-| `relay_confirmations` | JSONB | No | Array of `{relay, confirmed_at}` objects |
-| `verification_status` | TEXT | No | Current verification state |
-| `created_at` | TIMESTAMPTZ | No | Signing timestamp |
+| Column                | Type        | Nullable | Description                                  |
+| --------------------- | ----------- | -------- | -------------------------------------------- |
+| `id`                  | UUID        | No       | Primary key                                  |
+| `content_id`          | TEXT        | No       | Unique reference to the content piece        |
+| `creator_id`          | TEXT        | No       | NOSTR pubkey of the author                   |
+| `nostr_event_id`      | TEXT        | No       | NOSTR event ID containing the signed content |
+| `signature`           | TEXT        | No       | Schnorr signature from NOSTR event           |
+| `content_hash`        | TEXT        | No       | SHA-256 hash of the raw content              |
+| `relay_confirmations` | JSONB       | No       | Array of `{relay, confirmed_at}` objects     |
+| `verification_status` | TEXT        | No       | Current verification state                   |
+| `created_at`          | TIMESTAMPTZ | No       | Signing timestamp                            |
 
 ---
 
@@ -282,15 +282,15 @@ CREATE POLICY "Anyone can read fingerprint hashes"
   USING (TRUE);
 ```
 
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | UUID | No | Primary key |
-| `content_id` | TEXT | No | Content piece this fingerprint belongs to |
-| `creator_id` | TEXT | No | NOSTR pubkey of the content owner |
-| `hash_type` | TEXT | No | `simhash` for text, `phash` for images |
-| `hash_value` | TEXT | No | Hex-encoded perceptual hash |
-| `content_type` | TEXT | No | `text` or `image` |
-| `created_at` | TIMESTAMPTZ | No | Fingerprint creation timestamp |
+| Column         | Type        | Nullable | Description                               |
+| -------------- | ----------- | -------- | ----------------------------------------- |
+| `id`           | UUID        | No       | Primary key                               |
+| `content_id`   | TEXT        | No       | Content piece this fingerprint belongs to |
+| `creator_id`   | TEXT        | No       | NOSTR pubkey of the content owner         |
+| `hash_type`    | TEXT        | No       | `simhash` for text, `phash` for images    |
+| `hash_value`   | TEXT        | No       | Hex-encoded perceptual hash               |
+| `content_type` | TEXT        | No       | `text` or `image`                         |
+| `created_at`   | TIMESTAMPTZ | No       | Fingerprint creation timestamp            |
 
 ---
 
@@ -332,21 +332,21 @@ CREATE POLICY "Creators can manage own alerts"
   WITH CHECK (creator_id = auth.uid()::TEXT);
 ```
 
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | UUID | No | Primary key |
-| `creator_id` | TEXT | No | Alert owner (content author) |
-| `original_content_id` | TEXT | No | ID of the original content that was copied |
-| `detected_copy_url` | TEXT | No | NOSTR event URI or web URL of the copy |
-| `detected_author_pubkey` | TEXT | Yes | NOSTR pubkey of the suspected copier |
-| `detected_event_id` | TEXT | Yes | NOSTR event ID of the detected copy |
-| `similarity_score` | NUMERIC(4,3) | No | 0.000 to 1.000 similarity |
-| `match_level` | TEXT | No | `exact_copy`, `derivative`, or `coincidental` |
-| `hash_type` | TEXT | No | Hash algorithm used for comparison |
-| `status` | TEXT | No | Alert lifecycle state |
-| `relay` | TEXT | Yes | NOSTR relay where the copy was detected |
-| `detected_at` | TIMESTAMPTZ | No | When the copy was first detected |
-| `updated_at` | TIMESTAMPTZ | No | Last status change |
+| Column                   | Type         | Nullable | Description                                   |
+| ------------------------ | ------------ | -------- | --------------------------------------------- |
+| `id`                     | UUID         | No       | Primary key                                   |
+| `creator_id`             | TEXT         | No       | Alert owner (content author)                  |
+| `original_content_id`    | TEXT         | No       | ID of the original content that was copied    |
+| `detected_copy_url`      | TEXT         | No       | NOSTR event URI or web URL of the copy        |
+| `detected_author_pubkey` | TEXT         | Yes      | NOSTR pubkey of the suspected copier          |
+| `detected_event_id`      | TEXT         | Yes      | NOSTR event ID of the detected copy           |
+| `similarity_score`       | NUMERIC(4,3) | No       | 0.000 to 1.000 similarity                     |
+| `match_level`            | TEXT         | No       | `exact_copy`, `derivative`, or `coincidental` |
+| `hash_type`              | TEXT         | No       | Hash algorithm used for comparison            |
+| `status`                 | TEXT         | No       | Alert lifecycle state                         |
+| `relay`                  | TEXT         | Yes      | NOSTR relay where the copy was detected       |
+| `detected_at`            | TIMESTAMPTZ  | No       | When the copy was first detected              |
+| `updated_at`             | TIMESTAMPTZ  | No       | Last status change                            |
 
 ---
 
@@ -398,6 +398,7 @@ packages/backend/src/database/migrations/
 ```
 
 The migration is idempotent (`CREATE TABLE IF NOT EXISTS`) and includes:
+
 1. All 7 tables
 2. All indexes
 3. All RLS policies

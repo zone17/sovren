@@ -21,6 +21,7 @@ Tests use `await new Promise(resolve => setTimeout(resolve, ...))` with real del
 ## Proposed Solutions
 
 ### Option A: Use fake timers (Recommended)
+
 - Add `vi.useFakeTimers()` in beforeEach, `vi.useRealTimers()` in afterEach
 - Replace real waits with `vi.advanceTimersByTime()`
 - Pros: Tests run in <5s instead of 120s
@@ -39,9 +40,9 @@ Tests use `await new Promise(resolve => setTimeout(resolve, ...))` with real del
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
-| 2026-02-25 | Identified during manual PR #98 review | |
+| Date       | Action                                 | Learnings |
+| ---------- | -------------------------------------- | --------- |
+| 2026-02-25 | Identified during manual PR #98 review |           |
 
 ## Resources
 

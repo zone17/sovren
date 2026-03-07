@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p2
-issue_id: "484"
+issue_id: '484'
 tags:
   - code-review
   - msw
@@ -37,6 +37,7 @@ Use `configureStore`'s `preloadedState` parameter directly (it accepts `Partial<
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/test-utils/render-with-all.tsx`
 - `packages/frontend/src/store/index.ts` (add reducer map export)
 
@@ -48,6 +49,6 @@ Use `configureStore`'s `preloadedState` parameter directly (it accepts `Partial<
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                                                | Learnings                                                  |
+| ---------- | ----------------------------------------------------- | ---------------------------------------------------------- |
 | 2026-02-24 | Created from Phase 9 MSW review (4/7 agent consensus) | Test wrappers must import from real store to prevent drift |

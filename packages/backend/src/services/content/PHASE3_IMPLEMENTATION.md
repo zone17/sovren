@@ -1,12 +1,15 @@
 # Phase 3: Content Services Implementation Guide
 
 ## Overview
+
 7 Content Services to be implemented in parallel by specialized agents.
 
 ## Service Specifications
 
 ### 1. ContentCreationService (US-E5-011)
+
 **File**: `ContentCreationService.ts`
+
 - Draft management with auto-save
 - Media upload and optimization
 - Content validation
@@ -14,7 +17,9 @@
 - Integration: AuditLog, Cache, EventBus
 
 ### 2. ContentPublishingService (US-E5-012)
+
 **File**: `ContentPublishingService.ts`
+
 - Immediate and scheduled publishing
 - NOSTR event distribution
 - Cross-posting to social media
@@ -22,7 +27,9 @@
 - Integration: NostrService, EventBus, Notification
 
 ### 3. ContentModerationService (US-E5-013)
+
 **File**: `ContentModerationService.ts`
+
 - AI-powered content analysis
 - Rule-based filtering
 - Manual review queue
@@ -30,7 +37,9 @@
 - Integration: AI service, AuditLog, Notification
 
 ### 4. ContentSearchService (US-E5-014)
+
 **File**: `ContentSearchService.ts`
+
 - Elasticsearch integration
 - Full-text search with highlighting
 - Faceted search
@@ -38,7 +47,9 @@
 - Integration: Elasticsearch, Cache
 
 ### 5. ContentRecommendationService (US-E5-015)
+
 **File**: `ContentRecommendationService.ts`
+
 - Collaborative filtering
 - Content-based recommendations
 - Trending algorithms
@@ -46,7 +57,9 @@
 - Integration: ML pipeline, Cache
 
 ### 6. ContentAnalyticsService (US-E5-016)
+
 **File**: `ContentAnalyticsService.ts`
+
 - View tracking (unique/total)
 - Engagement metrics
 - Real-time analytics
@@ -54,7 +67,9 @@
 - Integration: Redis, EventBus
 
 ### 7. ContentVersioningService (US-E5-017)
+
 **File**: `ContentVersioningService.ts`
+
 - Version history with deltas
 - Rollback capability
 - Diff visualization
@@ -75,7 +90,7 @@ export class ServiceName implements IServiceInterface {
   constructor(
     @inject(TYPES.EventBus) private eventBus: IEventBusService,
     @inject(TYPES.AuditLog) private auditLog: IAuditLogService,
-    @inject(TYPES.Cache) private cache: ICacheService,
+    @inject(TYPES.Cache) private cache: ICacheService
     // ... other dependencies
   ) {}
 
@@ -113,7 +128,7 @@ export class ServiceName implements IServiceInterface {
       // Error handling with context
       throw new ServiceError('Operation failed', {
         cause: error,
-        context: { params }
+        context: { params },
       });
     }
   }
@@ -213,6 +228,7 @@ Each service MUST meet these criteria:
 ## Parallel Execution Instructions
 
 ### For Agent Assignment:
+
 1. Each agent takes 1-2 services
 2. Create service file in `/packages/backend/src/services/content/`
 3. Create test file in `/packages/backend/src/services/content/__tests__/`
@@ -221,6 +237,7 @@ Each service MUST meet these criteria:
 6. Commit with conventional format
 
 ### Coordination Points:
+
 - Shared interfaces in `/packages/backend/src/interfaces/content/`
 - Common types in `/packages/shared/src/types/content.ts`
 - Event definitions in `EventBusService.ts`
@@ -229,6 +246,7 @@ Each service MUST meet these criteria:
 ## Expected Output
 
 Each completed service should have:
+
 1. `ServiceName.ts` - Implementation (500-800 lines)
 2. `ServiceName.test.ts` - Tests (600-1000 lines)
 3. `IServiceName.ts` - Interface definition

@@ -31,13 +31,13 @@ export async function createInv(amt: any, desc: any): Promise<any> {
 
 ### Naming Conventions
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| **Classes** | PascalCase | `PaymentService` |
-| **Interfaces** | PascalCase + I prefix | `IPaymentService` |
-| **Functions** | camelCase | `createPayment` |
-| **Constants** | UPPER_SNAKE_CASE | `MAX_RETRIES` |
-| **Files** | kebab-case | `payment-service.ts` |
+| Type           | Convention            | Example              |
+| -------------- | --------------------- | -------------------- |
+| **Classes**    | PascalCase            | `PaymentService`     |
+| **Interfaces** | PascalCase + I prefix | `IPaymentService`    |
+| **Functions**  | camelCase             | `createPayment`      |
+| **Constants**  | UPPER_SNAKE_CASE      | `MAX_RETRIES`        |
+| **Files**      | kebab-case            | `payment-service.ts` |
 
 ---
 
@@ -74,15 +74,18 @@ Closes #123"
 
 ```markdown
 ## Description
+
 Brief summary of changes and motivation
 
 ## Type of Change
+
 - [ ] New feature
 - [ ] Bug fix
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Checklist
+
 - [ ] Tests added/updated (95%+ coverage)
 - [ ] Documentation updated
 - [ ] Mermaid diagrams included (if architectural change)
@@ -92,20 +95,24 @@ Brief summary of changes and motivation
 - [ ] Reviewed by at least 1 team member
 
 ## How to Test
+
 1. Run `npm test`
 2. Manually test feature X
 3. Verify Y works
 
 ## Screenshots (if UI changes)
+
 [Add screenshots]
 
 ## Related Issues
+
 Closes #123
 ```
 
 ### 4. Code Review Checklist
 
 **For Reviewers**:
+
 - [ ] Code follows style guidelines
 - [ ] Tests cover edge cases
 - [ ] No security vulnerabilities
@@ -170,7 +177,7 @@ describe('Refunds', () => {
 
 ### Mermaid Diagram Requirements
 
-```markdown
+````markdown
 # All diagrams must include:
 
 1. **GitHub Visual Link**:
@@ -184,7 +191,9 @@ describe('Refunds', () => {
    graph TD
      A[Start] --> B[Process]
    ```
-```
+````
+
+````
 
 ---
 
@@ -212,7 +221,7 @@ What actually happens
 
 **Logs/Screenshots**:
 [Paste relevant logs]
-```
+````
 
 ### Feature Request Template
 
@@ -239,6 +248,7 @@ Any other relevant information
 ### Review Standards
 
 **Approval Criteria**:
+
 - ✅ Code quality meets standards
 - ✅ Tests comprehensive (95%+ for critical paths)
 - ✅ Documentation complete
@@ -246,6 +256,7 @@ Any other relevant information
 - ✅ Performance acceptable
 
 **Rejection Criteria**:
+
 - ❌ Missing tests
 - ❌ Incomplete documentation
 - ❌ Code style violations
@@ -267,6 +278,7 @@ Any other relevant information
 ```
 
 **Types**:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only
@@ -330,16 +342,17 @@ npm run test:integration
 
 ### Contribution Levels
 
-| Level | Criteria |
-|-------|---------|
-| **Bronze** | 1-5 merged PRs |
-| **Silver** | 6-20 merged PRs |
-| **Gold** | 21-50 merged PRs |
-| **Platinum** | 50+ merged PRs |
+| Level        | Criteria         |
+| ------------ | ---------------- |
+| **Bronze**   | 1-5 merged PRs   |
+| **Silver**   | 6-20 merged PRs  |
+| **Gold**     | 21-50 merged PRs |
+| **Platinum** | 50+ merged PRs   |
 
 ### Hall of Fame
 
 Top contributors recognized in:
+
 - Project README.md
 - Monthly team meetings
 - Annual engineering awards

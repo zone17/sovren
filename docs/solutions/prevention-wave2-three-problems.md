@@ -880,7 +880,6 @@ Use this matrix to assign agents to non-overlapping files.
 ### Frontend Features (CAN WORK IN PARALLEL)
 
 - Agent A: **frontend-dashboard**
-
   - `src/features/dashboard/**`
   - `src/components/dashboard/**`
 

@@ -2,22 +2,26 @@ import type { VercelRequest, VercelResponse } from '../types/vercel';
 import { z } from 'zod';
 import { supabase } from '../../lib/database';
 import { rateLimiter } from '../../lib/middleware/rateLimit';
-import { emailSchema, nameSchema, passwordSchema, validateRequest } from '../../lib/middleware/validation';
+import {
+  emailSchema,
+  nameSchema,
+  passwordSchema,
+  validateRequest,
+} from '../../lib/middleware/validation';
 import { ApiSuccessResponse } from '../types/api-types';
 
 // 🔐 ELITE REGISTRATION VALIDATION SCHEMA
-const registerSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  name: nameSchema,
-  confirmPassword: z.string().min(1, 'Password confirmation is required'),
-}).refine(
-  (data) => data.password === data.confirmPassword,
-  {
+const registerSchema = z
+  .object({
+    email: emailSchema,
+    password: passwordSchema,
+    name: nameSchema,
+    confirmPassword: z.string().min(1, 'Password confirmation is required'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
-  }
-);
+  });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 🛡️ Security: Method validation
@@ -25,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({
       error: 'Method not allowed',
       message: 'Only POST requests are accepted',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -37,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Rate limit exceeded',
         message: 'Too many registration attempts. Please try again later.',
         retryAfter: rateLimitResult.retryAfter,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -53,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Validation failed',
         message: 'Invalid registration data',
         details: validation.errors,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -71,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'User already exists',
         message: 'An account with this email already exists',
         code: 'USER_EXISTS',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -84,8 +88,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           name,
           registration_ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
           registration_user_agent: req.headers['user-agent'],
-        }
-      }
+        },
+      },
     });
 
     if (error) {
@@ -97,7 +101,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           error: 'User already exists',
           message: 'An account with this email already exists',
           code: 'USER_EXISTS',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -106,7 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           error: 'Password validation failed',
           message: 'Password does not meet security requirements',
           code: 'WEAK_PASSWORD',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -114,21 +118,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Registration failed',
         message: 'Unable to create account at this time',
         code: 'REGISTRATION_ERROR',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
     // 👤 Create user profile in database
     if (data.user) {
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: data.user.id,
-          email: data.user.email!,
-          name: name,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+      const { error: profileError } = await supabase.from('users').insert({
+        id: data.user.id,
+        email: data.user.email!,
+        name: name,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
@@ -179,7 +181,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         registrationMethod: 'email',
         ipAddress: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
         userAgent: req.headers['user-agent'],
-      }
+      },
     };
 
     // 📧 Email verification required
@@ -199,7 +201,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(201).json(response);
-
   } catch (err) {
     const error = err as Error;
     console.error('Registration error:', error);
@@ -208,7 +209,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: 'Internal server error',
       message: 'An unexpected error occurred during registration',
       timestamp: new Date().toISOString(),
-      requestId: req.headers['x-vercel-id'] || 'unknown'
+      requestId: req.headers['x-vercel-id'] || 'unknown',
     });
   }
 }

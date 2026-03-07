@@ -4,7 +4,7 @@
  *
  * Coverage:
  * - follow: success, self-follow guard, duplicate (ConflictError), DB error
- * - unfollow: success (idempotent), DB error
+ * - unfollow: success, NotFoundError when not following, DatabaseError on DB error
  * - isFollowing: returns true/false, DB error
  * - getFollowers: success with pagination, DB error
  * - getFollowing: success with pagination, DB error
@@ -15,7 +15,12 @@
  */
 
 import { FollowService } from '../FollowService';
-import { ConflictError, ValidationError } from '../../../utils/errors';
+import {
+  ConflictError,
+  DatabaseError,
+  NotFoundError,
+  ValidationError,
+} from '../../../utils/errors';
 
 // Mock the shared getUserIdByPubkey utility so we control pubkey→UUID resolution
 const mockGetUserIdByPubkey = vi.fn();
@@ -138,7 +143,7 @@ describe('FollowService', () => {
       await expect(service.follow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(ConflictError);
     });
 
-    it('throws ValidationError on generic DB error', async () => {
+    it('throws DatabaseError on generic DB error', async () => {
       buildService();
       const insertChain = makeChain(null);
       (insertChain.single as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -147,7 +152,7 @@ describe('FollowService', () => {
       });
       mockDb.from.mockReturnValueOnce(insertChain);
 
-      await expect(service.follow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(ValidationError);
+      await expect(service.follow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(DatabaseError);
     });
 
     it('does not throw when emitDomainEvent is called (fire-and-forget)', async () => {
@@ -172,25 +177,24 @@ describe('FollowService', () => {
   describe('unfollow', () => {
     it('deletes the follow record without error', async () => {
       buildService();
-      mockDb.from.mockReturnValueOnce(makeChain({ error: null }));
+      // count=1 means the relationship existed and was deleted
+      mockDb.from.mockReturnValueOnce(makeChain({ error: null, count: 1 }));
 
       await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toBeUndefined();
     });
 
-    it('is idempotent — no error if relationship does not exist', async () => {
+    it('throws NotFoundError when follow relationship does not exist (count=0)', async () => {
       buildService();
       mockDb.from.mockReturnValueOnce(makeChain({ error: null, count: 0 }));
 
-      await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toBeUndefined();
+      await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(NotFoundError);
     });
 
-    it('throws ValidationError on DB error', async () => {
+    it('throws DatabaseError on DB error', async () => {
       buildService();
       mockDb.from.mockReturnValueOnce(makeChain({ error: { message: 'connection error' } }));
 
-      await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(
-        ValidationError
-      );
+      await expect(service.unfollow(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(DatabaseError);
     });
   });
 
@@ -222,7 +226,7 @@ describe('FollowService', () => {
       await expect(service.isFollowing(FOLLOWER_PUBKEY, FOLLOWING_ID)).resolves.toBe(false);
     });
 
-    it('throws ValidationError on DB error', async () => {
+    it('throws DatabaseError on DB error', async () => {
       buildService();
       const chain = makeChain(null);
       (chain.maybeSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -232,7 +236,7 @@ describe('FollowService', () => {
       mockDb.from.mockReturnValueOnce(chain);
 
       await expect(service.isFollowing(FOLLOWER_PUBKEY, FOLLOWING_ID)).rejects.toThrow(
-        ValidationError
+        DatabaseError
       );
     });
   });
@@ -284,7 +288,7 @@ describe('FollowService', () => {
       expect(result.total).toBe(50);
     });
 
-    it('throws ValidationError on DB error', async () => {
+    it('throws DatabaseError on DB error', async () => {
       buildService();
       mockGetUserIdByPubkey.mockResolvedValue(FOLLOWING_ID);
       mockDb.from.mockReturnValueOnce(
@@ -292,7 +296,7 @@ describe('FollowService', () => {
       );
 
       await expect(service.getFollowers(FOLLOWING_ID, { page: 1, limit: 20 })).rejects.toThrow(
-        ValidationError
+        DatabaseError
       );
     });
   });

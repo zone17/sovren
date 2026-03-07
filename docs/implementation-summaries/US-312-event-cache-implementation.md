@@ -131,6 +131,7 @@ flowchart TD
 ## Files Created
 
 ### Service Implementation
+
 - **`/packages/frontend/src/services/nostr/EventCacheService.ts`** (776 lines)
   - Two-tier cache implementation (memory + IndexedDB)
   - Filter query engine with indexed lookups
@@ -140,6 +141,7 @@ flowchart TD
   - Performance tracking
 
 ### Test Suite
+
 - **`/packages/frontend/src/services/nostr/__tests__/EventCacheService.test.ts`** (688 lines)
   - 44 comprehensive tests
   - 100% feature coverage
@@ -149,6 +151,7 @@ flowchart TD
   - Performance validation
 
 ### Updated Files
+
 - **`/packages/frontend/src/services/nostr/index.ts`**
   - Added EventCacheService exports
   - Type exports for external use
@@ -158,13 +161,16 @@ flowchart TD
 ## Features Implemented
 
 ### 1. Two-Tier Caching
+
 ✅ **Memory Cache (Hot Tier)**
+
 - Max 1000 events (configurable)
 - Instant access (<1ms)
 - LRU eviction when full
 - Indexed for fast lookups
 
 ✅ **IndexedDB Cache (Cold Tier)**
+
 - Max 10,000 events (configurable)
 - Persistent across sessions
 - Automatic promotion to memory on access
@@ -173,20 +179,23 @@ flowchart TD
 ### 2. Cache Operations
 
 ✅ **Storage Operations**
+
 ```typescript
-await cache.set(event);                    // Store single event
-await cache.setMany(events);               // Batch storage
-await cache.set(event, { ttl: 60000 });   // With TTL
+await cache.set(event); // Store single event
+await cache.setMany(events); // Batch storage
+await cache.set(event, { ttl: 60000 }); // With TTL
 ```
 
 ✅ **Retrieval Operations**
+
 ```typescript
-const event = await cache.get(eventId);              // Get by ID
-const events = await cache.getMany([id1, id2]);     // Batch get
-const metadata = await cache.getMetadata(eventId);  // Get metadata
+const event = await cache.get(eventId); // Get by ID
+const events = await cache.getMany([id1, id2]); // Batch get
+const metadata = await cache.getMetadata(eventId); // Get metadata
 ```
 
 ✅ **Query Operations**
+
 ```typescript
 // Query by author
 const events = await cache.query({ authors: [pubkey] });
@@ -198,18 +207,19 @@ const events = await cache.query({ kinds: [1] });
 const events = await cache.query({
   since: timestamp,
   until: timestamp,
-  limit: 50
+  limit: 50,
 });
 
 // Combined filters
 const events = await cache.query({
   authors: [pubkey],
   kinds: [1],
-  '#t': ['bitcoin']
+  '#t': ['bitcoin'],
 });
 ```
 
 ### 3. Deduplication
+
 ✅ Event IDs are unique across cache
 ✅ Duplicate events update existing entries
 ✅ Automatic deduplication in batch operations
@@ -218,18 +228,21 @@ const events = await cache.query({
 ### 4. Eviction Policies
 
 ✅ **LRU (Least Recently Used)**
+
 - Tracks access time for each event
 - Evicts oldest accessed events when memory full
 - Updates access time on retrieval
 - Configurable memory limits
 
 ✅ **TTL (Time To Live)**
+
 - Per-event expiration times
 - Automatic cleanup of expired events
 - Default TTL: 5 minutes (configurable)
 - Manual cleanup: `await cache.cleanup()`
 
 ✅ **Size-Based Eviction**
+
 - Memory limit: 1000 events (configurable)
 - IndexedDB limit: 10,000 events (configurable)
 - Automatic eviction when limits reached
@@ -237,20 +250,24 @@ const events = await cache.query({
 ### 5. Indexed Lookups
 
 ✅ **Pubkey Index**
+
 - Fast author-based queries
 - O(1) lookup by author
 
 ✅ **Kind Index**
+
 - Fast event kind queries
 - O(1) lookup by kind
 
 ✅ **Tag Index**
+
 - Fast tag-based queries
 - Supports all tag types (#e, #p, #t, etc.)
 
 ### 6. Performance Metrics
 
 ✅ **Cache Statistics**
+
 ```typescript
 const stats = await cache.getStats();
 // Returns:
@@ -345,18 +362,21 @@ const stats = await cache.getStats();
 ## Performance Benchmarks
 
 ### Cache Performance
+
 - **Memory retrieval:** < 1ms
 - **IndexedDB retrieval:** < 5ms
 - **Filter queries:** < 10ms
 - **Batch operations:** Linear scaling
 
 ### Cache Hit Rates (Expected)
+
 - **Common queries:** > 80%
 - **Author queries:** > 85%
 - **Kind queries:** > 85%
 - **Recent events:** > 90%
 
 ### Memory Efficiency
+
 - **Average event size:** ~2KB
 - **Memory footprint:** ~2MB (1000 events)
 - **IndexedDB storage:** ~20MB (10,000 events)
@@ -366,6 +386,7 @@ const stats = await cache.getStats();
 ## Integration Points
 
 ### RelayPoolManager Integration
+
 ```typescript
 import { EventCacheService } from '@/services/nostr';
 
@@ -388,6 +409,7 @@ async function getEvents(filter: NostrFilter) {
 ```
 
 ### Application Usage
+
 ```typescript
 import { getEventCache } from '@/services/nostr';
 
@@ -409,12 +431,12 @@ const events = await cache.query({ kinds: [1], limit: 20 });
 
 ```typescript
 interface EventCacheConfig {
-  maxMemoryEvents?: number;      // Default: 1000
-  maxIndexedDBEvents?: number;   // Default: 10000
-  defaultTTL?: number;           // Default: 300000 (5 min)
-  enableIndexedDB?: boolean;     // Default: true
-  dbName?: string;               // Default: 'nostr-event-cache'
-  dbVersion?: number;            // Default: 1
+  maxMemoryEvents?: number; // Default: 1000
+  maxIndexedDBEvents?: number; // Default: 10000
+  defaultTTL?: number; // Default: 300000 (5 min)
+  enableIndexedDB?: boolean; // Default: true
+  dbName?: string; // Default: 'nostr-event-cache'
+  dbVersion?: number; // Default: 1
 }
 ```
 
@@ -436,6 +458,7 @@ interface EventCacheConfig {
 ## Usage Examples
 
 ### Basic Usage
+
 ```typescript
 import { EventCacheService } from '@/services/nostr';
 
@@ -450,17 +473,18 @@ const event = await cache.get(eventId);
 // Query events
 const recentNotes = await cache.query({
   kinds: [NostrEventKind.TEXT_NOTE],
-  limit: 20
+  limit: 20,
 });
 ```
 
 ### Advanced Usage
+
 ```typescript
 // Custom TTL
 await cache.set(event, {
-  ttl: 60000,           // 1 minute
+  ttl: 60000, // 1 minute
   relay: 'wss://relay.example.com',
-  verified: true
+  verified: true,
 });
 
 // Complex queries
@@ -469,7 +493,7 @@ const results = await cache.query({
   kinds: [1, 6],
   since: Date.now() / 1000 - 86400, // Last 24 hours
   '#t': ['bitcoin', 'nostr'],
-  limit: 50
+  limit: 50,
 });
 
 // Get statistics
@@ -484,13 +508,14 @@ await cache.clear();
 ```
 
 ### Singleton Pattern
+
 ```typescript
 import { getEventCache } from '@/services/nostr';
 
 // Get global instance
 const cache = getEventCache({
   maxMemoryEvents: 2000,
-  defaultTTL: 600000
+  defaultTTL: 600000,
 });
 
 // Use anywhere in app
@@ -502,11 +527,13 @@ const events = await cache.query(filter);
 ## Dependencies
 
 ### Runtime Dependencies
+
 - `@shared/types/nostr` - NOSTR type definitions (US-308)
 - `zod` - Runtime validation
 - `IndexedDB` - Browser storage API (optional)
 
 ### Development Dependencies
+
 - `vitest` - Testing framework
 - `@types/node` - Node.js type definitions
 
@@ -523,6 +550,7 @@ const events = await cache.query(filter);
 ## Future Enhancements
 
 ### Potential Improvements
+
 1. **Compression** - LZ4 compression for IndexedDB storage
 2. **Bloom Filters** - Faster negative lookups
 3. **Cache Warmup** - Preload common queries on startup
@@ -556,6 +584,7 @@ const events = await cache.query(filter);
 The EventCacheService successfully implements a production-ready, two-tier caching system for NOSTR events. With 100% test pass rate, comprehensive feature coverage, and excellent performance characteristics, the cache will significantly improve application responsiveness and reduce network traffic.
 
 **Key Achievements:**
+
 - ✅ Two-tier caching (memory + IndexedDB)
 - ✅ 44/44 tests passing
 - ✅ Sub-10ms filter queries
@@ -566,6 +595,7 @@ The EventCacheService successfully implements a production-ready, two-tier cachi
 - ✅ Full type safety
 
 **Next Steps:**
+
 1. Integrate with RelayPoolManager (US-313)
 2. Add cache warming on app startup
 3. Implement cache metrics dashboard

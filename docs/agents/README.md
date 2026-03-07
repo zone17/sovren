@@ -99,6 +99,7 @@ open http://localhost:3001
 Full agent specification: [`dashboard-orchestrator-agent.md`](./dashboard-orchestrator-agent.md)
 
 ### Key Sections:
+
 - **Overview**: What the agent does
 - **Workflow**: Step-by-step execution phases
 - **Data Structure**: tasks.json schema
@@ -109,6 +110,7 @@ Full agent specification: [`dashboard-orchestrator-agent.md`](./dashboard-orches
 ## Templates
 
 Reference templates in [`templates/`](./templates/):
+
 - `generate-initial-tasks.js` - Extract tasks from PRD
 - Additional scripts as needed
 
@@ -116,13 +118,13 @@ Reference templates in [`templates/`](./templates/):
 
 The agent copies and adapts these Sovren files:
 
-| Source | Purpose |
-|--------|---------|
-| `monitoring/dashboard/server.js` | Express + Socket.IO server |
-| `monitoring/dashboard/public/index.html` | Dashboard UI |
-| `monitoring/dashboard/public/app.js` | Client-side logic (2700+ lines) |
-| `monitoring/dashboard/public/styles.css` | Responsive styling (3200+ lines) |
-| `monitoring/dashboard/public/epic-functions.js` | Epic operations |
+| Source                                          | Purpose                          |
+| ----------------------------------------------- | -------------------------------- |
+| `monitoring/dashboard/server.js`                | Express + Socket.IO server       |
+| `monitoring/dashboard/public/index.html`        | Dashboard UI                     |
+| `monitoring/dashboard/public/app.js`            | Client-side logic (2700+ lines)  |
+| `monitoring/dashboard/public/styles.css`        | Responsive styling (3200+ lines) |
+| `monitoring/dashboard/public/epic-functions.js` | Epic operations                  |
 
 ## Example Invocation
 
@@ -132,9 +134,10 @@ The agent copies and adapts these Sovren files:
 
 **Claude**: "I'll use the dashboard-orchestrator agent to create your monitoring infrastructure."
 
-*Agent runs autonomously for 15-20 minutes*
+_Agent runs autonomously for 15-20 minutes_
 
 **Result**:
+
 ```
 ✅ Dashboard Orchestration Complete
 
@@ -165,6 +168,7 @@ Next Steps:
 ## Customization
 
 The agent will prompt for:
+
 1. **Project Name** - For branding and logs
 2. **PRD Location** - Path to your requirements doc
 3. **Port Number** - Default 3001
@@ -183,6 +187,7 @@ The agent will prompt for:
 ### Agent Doesn't Find PRD
 
 Ensure your PRD file contains:
+
 ```markdown
 ## Epic 001: Your Epic Name
 
@@ -211,6 +216,7 @@ The agent auto-runs `npm install` during setup.
 ### Manual Task Updates
 
 Edit `data/tasks.json` directly:
+
 ```json
 {
   "story_id": "US-309",
@@ -224,6 +230,7 @@ Dashboard auto-refreshes via file watching.
 ### Adding Subtasks
 
 Use the generated script:
+
 ```bash
 node scripts/add-subtasks-to-stories.js
 ```

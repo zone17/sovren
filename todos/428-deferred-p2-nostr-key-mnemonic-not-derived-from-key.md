@@ -2,7 +2,7 @@
 id: 428
 severity: P2
 status: deferred
-title: "NostrKeyManagement: mnemonic backup cannot recover the private key"
+title: 'NostrKeyManagement: mnemonic backup cannot recover the private key'
 file: packages/shared/src/services/NostrKeyManagementService.ts
 found_in: PR #89
 reviewer: review-security
@@ -33,6 +33,7 @@ packages/shared/src/services/NostrKeyManagementService.ts  lines 737-775 (create
 **Option A (Recommended - Document clearly):** The current approach is intentional. Add user-facing documentation explaining that the mnemonic is a second authentication factor, NOT a full key backup. Update method name from `createBackup` to `createRecoveryFactor` or similar.
 
 **Option B (BIP-340 derivation):** Derive the NOSTR private key from the mnemonic using BIP-340/BIP-32, so the mnemonic CAN reconstruct the key. This is the standard in Bitcoin/NOSTR ecosystems. Would require:
+
 ```typescript
 import { mnemonicToSeedSync } from 'bip39';
 import { HDKey } from '@scure/bip32';

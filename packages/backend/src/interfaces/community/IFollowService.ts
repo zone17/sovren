@@ -41,12 +41,18 @@ export interface IFollowService {
   /**
    * List users who follow the given userId.
    */
-  getFollowers(userId: string, opts: PaginationParams): Promise<PaginatedResult<FollowRelationship>>;
+  getFollowers(
+    userId: string,
+    opts: PaginationParams
+  ): Promise<PaginatedResult<FollowRelationship>>;
 
   /**
    * List users that the given userId is following.
    */
-  getFollowing(userId: string, opts: PaginationParams): Promise<PaginatedResult<FollowRelationship>>;
+  getFollowing(
+    userId: string,
+    opts: PaginationParams
+  ): Promise<PaginatedResult<FollowRelationship>>;
 
   /**
    * Get follower/following counts for a user.

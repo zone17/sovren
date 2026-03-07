@@ -192,7 +192,6 @@ const CirclesBrowser: React.FC = () => {
           No circles yet. Create one to get started!
         </p>
       )}
-
     </div>
   );
 };
@@ -205,7 +204,13 @@ interface CircleListProps {
   leavingId?: string;
 }
 
-const CircleList: React.FC<CircleListProps> = ({ circles, onJoin, joiningId, onLeave, leavingId }) => (
+const CircleList: React.FC<CircleListProps> = ({
+  circles,
+  onJoin,
+  joiningId,
+  onLeave,
+  leavingId,
+}) => (
   <ul className="space-y-3" role="list">
     {circles.map((circle) => (
       <li

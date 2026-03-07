@@ -3,6 +3,7 @@
 ## Critical Security Requirements
 
 **NEVER commit real secrets to version control**. This includes:
+
 - API keys (Supabase, GitHub, LNBits, etc.)
 - Database credentials
 - JWT secrets
@@ -46,10 +47,12 @@ openssl rand -hex 32
 ### Pre-Commit Protection
 
 Our pre-commit hooks automatically scan for exposed secrets using:
+
 - **secretlint**: Detects common secret patterns
 - **Custom patterns**: Specific to our tech stack
 
 If the pre-commit hook detects secrets, it will:
+
 1. Block the commit
 2. Show which files contain secrets
 3. Provide instructions to fix
@@ -57,6 +60,7 @@ If the pre-commit hook detects secrets, it will:
 ### .gitignore Configuration
 
 The `.gitignore` file is configured to exclude:
+
 ```
 .env
 .env.*
@@ -69,12 +73,12 @@ The `.gitignore` file is configured to exclude:
 
 ### Secret Rotation Schedule
 
-| Secret Type | Rotation Frequency | Priority |
-|-------------|-------------------|----------|
-| Database passwords | 90 days | Critical |
-| JWT secrets | 180 days | High |
-| API keys | 365 days | Medium |
-| Webhook secrets | As needed | Low |
+| Secret Type        | Rotation Frequency | Priority |
+| ------------------ | ------------------ | -------- |
+| Database passwords | 90 days            | Critical |
+| JWT secrets        | 180 days           | High     |
+| API keys           | 365 days           | Medium   |
+| Webhook secrets    | As needed          | Low      |
 
 ## Production Secrets Management
 
@@ -131,6 +135,7 @@ git push origin --force --tags
 ## Verification Commands
 
 ### Check for exposed secrets
+
 ```bash
 # Run secretlint scan
 npx secretlint "**/*" --secretlintignore .gitignore
@@ -143,6 +148,7 @@ git ls-files | grep -E "\.env"
 ```
 
 ### Verify .gitignore
+
 ```bash
 # Test if file would be ignored
 git check-ignore packages/frontend/.env
@@ -167,6 +173,7 @@ git check-ignore packages/frontend/.env
 ## Monitoring & Alerts
 
 Set up monitoring for:
+
 - Failed authentication attempts
 - Unusual API usage patterns
 - Database connection anomalies

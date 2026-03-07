@@ -33,6 +33,7 @@ Stage 4: Production     → Minimal runtime image
 ```
 
 **Benefits**:
+
 - Final image size: ~120-140MB (target: <150MB)
 - No source code or dev dependencies in production
 - Cached layers for faster rebuilds
@@ -151,6 +152,7 @@ docker buildx build \
 ```
 
 This generates:
+
 - Vulnerability reports (SARIF, JSON)
 - SBOM in CycloneDX and SPDX formats
 - Secret detection results
@@ -196,12 +198,14 @@ cosign verify \
 ### Blue-Green Deployment
 
 1. **Deploy to Green Environment**:
+
    ```bash
    # Start green environment with new version
    docker-compose -f docker-compose.prod.yml --profile blue-green up -d backend-green
    ```
 
 2. **Health Check Validation**:
+
    ```bash
    # Verify green environment health
    docker-compose -f docker-compose.prod.yml exec backend-green \
@@ -216,6 +220,7 @@ cosign verify \
    Update load balancer (Nginx) configuration to route traffic to green.
 
 4. **Rollback if Needed**:
+
    ```bash
    # Switch back to blue
    # Update Nginx config to route to blue
@@ -280,11 +285,11 @@ DOCKER_PASSWORD=your-token
 
 ### Available Endpoints
 
-| Endpoint | Purpose | Status Codes |
-|----------|---------|--------------|
-| `/health` | General health status | 200: Healthy |
-| `/ready` | Readiness for traffic | 200: Ready, 503: Not ready |
-| `/live` | Liveness check | 200: Alive |
+| Endpoint  | Purpose               | Status Codes               |
+| --------- | --------------------- | -------------------------- |
+| `/health` | General health status | 200: Healthy               |
+| `/ready`  | Readiness for traffic | 200: Ready, 503: Not ready |
+| `/live`   | Liveness check        | 200: Alive                 |
 
 ### Testing Health Checks
 
@@ -326,6 +331,7 @@ readinessProbe:
 ### Build Issues
 
 **Error: Image size exceeds target**
+
 ```bash
 # Analyze layers
 docker history sovren-backend:latest --human
@@ -335,6 +341,7 @@ docker run --rm -it sovren-backend:latest du -sh /*
 ```
 
 **Error: Build fails on ARM64**
+
 ```bash
 # Ensure QEMU is set up
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
@@ -350,6 +357,7 @@ DOCKER_BUILDKIT=1 docker buildx build \
 ### Runtime Issues
 
 **Container fails health check**
+
 ```bash
 # Check logs
 docker logs sovren-backend-prod
@@ -362,6 +370,7 @@ docker exec sovren-backend-prod curl http://localhost:3001/health
 ```
 
 **Permission denied errors**
+
 ```bash
 # Verify non-root user
 docker exec sovren-backend-prod whoami
@@ -374,6 +383,7 @@ docker exec sovren-backend-prod ls -la /app
 ### Performance Issues
 
 **Slow builds**
+
 ```bash
 # Enable BuildKit cache
 export DOCKER_BUILDKIT=1
@@ -387,6 +397,7 @@ docker buildx build \
 ```
 
 **High memory usage**
+
 ```bash
 # Check container stats
 docker stats sovren-backend-prod
@@ -487,6 +498,7 @@ docker logs --tail 100 sovren-backend-prod | jq '.'
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: https://github.com/sovren/sovren/issues
 - Documentation: `/docs`
 - Team Contact: devops@sovren.app

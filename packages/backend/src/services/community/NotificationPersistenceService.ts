@@ -19,7 +19,7 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IEventBus, DomainEvent } from '../../interfaces/shared/IEventBus';
 import type { ServerNotification, NotificationListResponse } from '@shared/types/notifications';
-import { AuthorizationError, NotFoundError, ValidationError } from '../../utils/errors';
+import { AuthorizationError, DatabaseError, NotFoundError } from '../../utils/errors';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
 import { getUserIdByPubkey } from '../../utils/getUserIdByPubkey';
 
@@ -100,141 +100,239 @@ export class NotificationPersistenceService implements INotificationPersistenceS
     this.logger.info('NotificationPersistenceService: subscribed to community events');
   }
 
-  private async handleCommunityEvent(event: DomainEvent): Promise<void> {
-    const payload = event.payload as Record<string, unknown>;
+  // #736: Typed payload validators — replace unsafe double-cast with explicit field checks.
+  private static extractFollowPayload(
+    payload: unknown
+  ): { followerId: string; followingId: string } | null {
+    if (
+      typeof payload === 'object' &&
+      payload !== null &&
+      typeof (payload as Record<string, unknown>).followerId === 'string' &&
+      typeof (payload as Record<string, unknown>).followingId === 'string'
+    ) {
+      return payload as { followerId: string; followingId: string };
+    }
+    return null;
+  }
 
+  private static extractCommentPayload(payload: unknown): {
+    contentAuthorId: string;
+    commentAuthorId: string;
+    contentId: string;
+    commentId: string;
+  } | null {
+    if (
+      typeof payload === 'object' &&
+      payload !== null &&
+      typeof (payload as Record<string, unknown>).contentAuthorId === 'string' &&
+      typeof (payload as Record<string, unknown>).commentAuthorId === 'string' &&
+      typeof (payload as Record<string, unknown>).contentId === 'string' &&
+      typeof (payload as Record<string, unknown>).commentId === 'string'
+    ) {
+      return payload as {
+        contentAuthorId: string;
+        commentAuthorId: string;
+        contentId: string;
+        commentId: string;
+      };
+    }
+    return null;
+  }
+
+  private static extractMentorshipPayload(
+    payload: unknown
+  ): { mentorId: string; menteeId: string; mentorshipId: string } | null {
+    if (
+      typeof payload === 'object' &&
+      payload !== null &&
+      typeof (payload as Record<string, unknown>).mentorId === 'string' &&
+      typeof (payload as Record<string, unknown>).menteeId === 'string' &&
+      typeof (payload as Record<string, unknown>).mentorshipId === 'string'
+    ) {
+      return payload as { mentorId: string; menteeId: string; mentorshipId: string };
+    }
+    return null;
+  }
+
+  private static extractCircleJoinPayload(
+    payload: unknown
+  ): { circleAdminId: string; joinerId: string; circleId: string } | null {
+    if (
+      typeof payload === 'object' &&
+      payload !== null &&
+      typeof (payload as Record<string, unknown>).circleAdminId === 'string' &&
+      typeof (payload as Record<string, unknown>).joinerId === 'string' &&
+      typeof (payload as Record<string, unknown>).circleId === 'string'
+    ) {
+      return payload as { circleAdminId: string; joinerId: string; circleId: string };
+    }
+    return null;
+  }
+
+  private static extractCirclePostPayload(
+    payload: unknown
+  ): { authorId: string; circleId: string; postId: string; memberIds: string[] } | null {
+    const p = payload as Record<string, unknown>;
+    if (
+      typeof p === 'object' &&
+      p !== null &&
+      typeof p.authorId === 'string' &&
+      typeof p.circleId === 'string' &&
+      typeof p.postId === 'string' &&
+      Array.isArray(p.memberIds) &&
+      (p.memberIds as unknown[]).every((id) => typeof id === 'string')
+    ) {
+      return p as { authorId: string; circleId: string; postId: string; memberIds: string[] };
+    }
+    return null;
+  }
+
+  private async handleCommunityEvent(event: DomainEvent): Promise<void> {
     switch (event.type) {
       case DomainEventType.COMMUNITY_USER_FOLLOWED: {
-        const { followerId, followingId } = payload as {
-          followerId: string;
-          followingId: string;
-        };
+        const p = NotificationPersistenceService.extractFollowPayload(event.payload);
+        if (!p) {
+          this.logger.warn('handleCommunityEvent: invalid COMMUNITY_USER_FOLLOWED payload', {
+            payload: event.payload,
+          });
+          break;
+        }
         await this.create({
-          userId: followingId,
-          actorId: followerId,
+          userId: p.followingId,
+          actorId: p.followerId,
           type: 'new_follower',
           title: 'You have a new follower',
           entityType: 'follow',
           // aggregateId is the follow row UUID set by FollowService.follow()
           entityId: event.aggregateId,
-          data: { followerId },
+          data: { followerId: p.followerId },
         });
         break;
       }
 
       case DomainEventType.COMMUNITY_COMMENT_CREATED: {
-        const { contentAuthorId, commentAuthorId, contentId, commentId } = payload as {
-          contentAuthorId: string;
-          commentAuthorId: string;
-          contentId: string;
-          commentId: string;
-        };
+        const p = NotificationPersistenceService.extractCommentPayload(event.payload);
+        if (!p) {
+          this.logger.warn('handleCommunityEvent: invalid COMMUNITY_COMMENT_CREATED payload', {
+            payload: event.payload,
+          });
+          break;
+        }
         // Don't notify if author comments on their own content
-        if (contentAuthorId !== commentAuthorId) {
+        if (p.contentAuthorId !== p.commentAuthorId) {
           await this.create({
-            userId: contentAuthorId,
-            actorId: commentAuthorId,
+            userId: p.contentAuthorId,
+            actorId: p.commentAuthorId,
             type: 'new_comment',
             title: 'New comment on your content',
             entityType: 'comment',
-            entityId: commentId,
-            data: { contentId, commentId },
+            entityId: p.commentId,
+            data: { contentId: p.contentId, commentId: p.commentId },
           });
         }
         break;
       }
 
       case DomainEventType.COMMUNITY_MENTORSHIP_REQUESTED: {
-        const { mentorId, menteeId, mentorshipId } = payload as {
-          mentorId: string;
-          menteeId: string;
-          mentorshipId: string;
-        };
+        const p = NotificationPersistenceService.extractMentorshipPayload(event.payload);
+        if (!p) {
+          this.logger.warn('handleCommunityEvent: invalid COMMUNITY_MENTORSHIP_REQUESTED payload', {
+            payload: event.payload,
+          });
+          break;
+        }
         await this.create({
-          userId: mentorId,
-          actorId: menteeId,
+          userId: p.mentorId,
+          actorId: p.menteeId,
           type: 'mentorship_request',
           title: 'New mentorship request',
           entityType: 'mentorship',
-          entityId: mentorshipId,
-          data: { menteeId, mentorshipId },
+          entityId: p.mentorshipId,
+          data: { menteeId: p.menteeId, mentorshipId: p.mentorshipId },
         });
         break;
       }
 
       case DomainEventType.COMMUNITY_MENTORSHIP_ACCEPTED: {
-        const { menteeId, mentorId, mentorshipId } = payload as {
-          menteeId: string;
-          mentorId: string;
-          mentorshipId: string;
-        };
+        const p = NotificationPersistenceService.extractMentorshipPayload(event.payload);
+        if (!p) {
+          this.logger.warn('handleCommunityEvent: invalid COMMUNITY_MENTORSHIP_ACCEPTED payload', {
+            payload: event.payload,
+          });
+          break;
+        }
         await this.create({
-          userId: menteeId,
-          actorId: mentorId,
+          userId: p.menteeId,
+          actorId: p.mentorId,
           type: 'mentorship_accepted',
           title: 'Your mentorship request was accepted',
           entityType: 'mentorship',
-          entityId: mentorshipId,
-          data: { mentorId, mentorshipId },
+          entityId: p.mentorshipId,
+          data: { mentorId: p.mentorId, mentorshipId: p.mentorshipId },
         });
         break;
       }
 
       case DomainEventType.COMMUNITY_MENTORSHIP_DECLINED: {
-        const { menteeId, mentorId, mentorshipId } = payload as {
-          menteeId: string;
-          mentorId: string;
-          mentorshipId: string;
-        };
+        const p = NotificationPersistenceService.extractMentorshipPayload(event.payload);
+        if (!p) {
+          this.logger.warn('handleCommunityEvent: invalid COMMUNITY_MENTORSHIP_DECLINED payload', {
+            payload: event.payload,
+          });
+          break;
+        }
         await this.create({
-          userId: menteeId,
-          actorId: mentorId,
+          userId: p.menteeId,
+          actorId: p.mentorId,
           type: 'mentorship_declined',
           title: 'Your mentorship request was declined',
           entityType: 'mentorship',
-          entityId: mentorshipId,
-          data: { mentorId, mentorshipId },
+          entityId: p.mentorshipId,
+          data: { mentorId: p.mentorId, mentorshipId: p.mentorshipId },
         });
         break;
       }
 
       case DomainEventType.COMMUNITY_CIRCLE_JOINED: {
-        const { circleAdminId, joinerId, circleId } = payload as {
-          circleAdminId: string;
-          joinerId: string;
-          circleId: string;
-        };
+        const p = NotificationPersistenceService.extractCircleJoinPayload(event.payload);
+        if (!p) {
+          this.logger.warn('handleCommunityEvent: invalid COMMUNITY_CIRCLE_JOINED payload', {
+            payload: event.payload,
+          });
+          break;
+        }
         await this.create({
-          userId: circleAdminId,
-          actorId: joinerId,
+          userId: p.circleAdminId,
+          actorId: p.joinerId,
           type: 'circle_join',
           title: 'Someone joined your circle',
           entityType: 'circle',
-          entityId: circleId,
-          data: { joinerId, circleId },
+          entityId: p.circleId,
+          data: { joinerId: p.joinerId, circleId: p.circleId },
         });
         break;
       }
 
       case DomainEventType.COMMUNITY_CIRCLE_POST_CREATED: {
-        const { authorId, circleId, postId, memberIds } = payload as {
-          authorId: string;
-          circleId: string;
-          postId: string;
-          memberIds: string[];
-        };
+        const p = NotificationPersistenceService.extractCirclePostPayload(event.payload);
+        if (!p) {
+          this.logger.warn('handleCommunityEvent: invalid COMMUNITY_CIRCLE_POST_CREATED payload', {
+            payload: event.payload,
+          });
+          break;
+        }
         // Fan-out: notify all members except the post author
-        const recipients = memberIds.filter((id) => id !== authorId);
+        const recipients = p.memberIds.filter((id) => id !== p.authorId);
         if (recipients.length > 0) {
           await this.createBatch(
             recipients.map((memberId) => ({
               userId: memberId,
-              actorId: authorId,
+              actorId: p.authorId,
               type: 'circle_post' as const,
               title: 'New post in your circle',
               entityType: 'circle' as const,
-              entityId: postId,
-              data: { circleId, postId, authorId },
+              entityId: p.postId,
+              data: { circleId: p.circleId, postId: p.postId, authorId: p.authorId },
             }))
           );
         }
@@ -269,7 +367,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
 
     if (error || !data) {
       this.logger.error('NotificationPersistenceService.create: DB error', { error, payload });
-      throw new ValidationError('Failed to create notification');
+      throw new DatabaseError('Failed to create notification');
     }
 
     return rowToServerNotification(data);
@@ -302,7 +400,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
           chunkIndex: i / CHUNK_SIZE,
           count: chunk.length,
         });
-        throw new ValidationError('Failed to create notifications batch');
+        throw new DatabaseError('Failed to create notifications batch');
       }
     }
   }
@@ -331,7 +429,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
 
     if (error) {
       this.logger.error('NotificationPersistenceService.list: DB error', { error, userId });
-      throw new ValidationError('Failed to list notifications');
+      throw new DatabaseError('Failed to list notifications');
     }
 
     const notifications = (data ?? []).map(rowToServerNotification);
@@ -362,7 +460,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
         error,
         userId,
       });
-      throw new ValidationError('Failed to get unread count');
+      throw new DatabaseError('Failed to get unread count');
     }
 
     return count ?? 0;
@@ -397,19 +495,21 @@ export class NotificationPersistenceService implements INotificationPersistenceS
         error,
         notificationId,
       });
-      throw new ValidationError('Failed to mark notification as read');
+      throw new DatabaseError('Failed to mark notification as read');
     }
   }
 
   async markAllRead(pubkey: string, before: Date): Promise<void> {
     const userId = await getUserIdByPubkey(this.db, pubkey);
 
+    // #745: Limit the UPDATE to at most 1000 rows to prevent unbounded DB lock time.
     const { error } = await this.db
       .from<NotificationRow>('notifications')
       .update({ read: true, updated_at: new Date().toISOString() })
       .eq('user_id', userId)
       .eq('read', false)
-      .lte('created_at', before.toISOString());
+      .lte('created_at', before.toISOString())
+      .limit(1000);
 
     if (error) {
       this.logger.error('NotificationPersistenceService.markAllRead: DB error', {
@@ -417,7 +517,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
         userId,
         before,
       });
-      throw new ValidationError('Failed to mark all notifications as read');
+      throw new DatabaseError('Failed to mark all notifications as read');
     }
   }
 
@@ -450,7 +550,7 @@ export class NotificationPersistenceService implements INotificationPersistenceS
         error,
         notificationId,
       });
-      throw new ValidationError('Failed to delete notification');
+      throw new DatabaseError('Failed to delete notification');
     }
   }
 }

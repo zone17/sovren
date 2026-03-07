@@ -78,19 +78,16 @@ Asset Count: 46 assets
 #### Asset Categories
 
 1. **Images**: 1.34 MB (77% of total)
-
    - Largest: Sovren-icon-d0bd48d5.png (1.34 MB)
    - Optimization: PNG compression applied
    - Recommendation: Convert to WebP for better compression
 
 2. **JavaScript**: 24.52 KB (1.4% of total)
-
    - Largest: workbox-09c47557.js (21.57 KB)
    - Chunking: 14 separate chunks created
    - Optimization: Minification and tree shaking applied
 
 3. **CSS**: 126.24 KB (7.3% of total)
-
    - Main bundle: index-bca1542f.css (126.24 KB)
    - Compressed: 17.85 KB (85.8% reduction)
    - Optimization: CSS minification applied
@@ -127,7 +124,6 @@ Monitoring: 1 file, 1 Bytes
 #### Compression Algorithms
 
 1. **Gzip Compression**:
-
    - Algorithm: Deflate (level 9)
    - Threshold: 1KB minimum
    - Results: 86.7% size reduction

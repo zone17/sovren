@@ -11,6 +11,7 @@
 This document provides the complete specification for decomposing Epic 003 (NOSTR Service Consolidation) into granular 1-point user stories following the same pattern established in Epic 001 and Epic 002.
 
 **Epic Overview**:
+
 - **Objective**: Consolidate duplicated NOSTR protocol services into a single, well-tested shared implementation
 - **Estimated Stories**: 22-28 stories (1 point each)
 - **Estimated Effort**: 22-28 story points (3-4 weeks with 2 developers)
@@ -26,11 +27,13 @@ This document provides the complete specification for decomposing Epic 003 (NOST
 Based on the Epic 003 technical scope, the decomposition should create **5 parallel work streams**:
 
 #### Stream A: Core Service Foundation (6-8 stories)
+
 **Focus**: Extract and create shared NOSTR core logic
 **Developer Profile**: NOSTR protocol expert + strong TypeScript skills
 **Estimated Time**: 12-16 hours
 
 **Suggested Stories**:
+
 1. **Story 1**: Define core NOSTR type definitions and interfaces
    - Create comprehensive type definitions for events, relays, subscriptions
    - Implement NIP compliance types
@@ -67,16 +70,17 @@ Based on the Epic 003 technical scope, the decomposition should create **5 paral
    - 2 hours
 
 #### Stream B: Platform Adapters (4-6 stories)
+
 **Focus**: Create browser and Node.js adapters
 **Developer Profile**: Frontend + Backend experience
 **Estimated Time**: 8-12 hours
 
-**Suggested Stories**:
-7. **Story 7**: Design adapter interface pattern
-   - Define platform adapter interfaces
-   - Create adapter base classes
-   - Design dependency injection structure
-   - 2 hours
+**Suggested Stories**: 7. **Story 7**: Design adapter interface pattern
+
+- Define platform adapter interfaces
+- Create adapter base classes
+- Design dependency injection structure
+- 2 hours
 
 8. **Story 8**: Implement browser adapter
    - React hooks for NOSTR (useNostrEvents, useNostrPublish)
@@ -97,16 +101,12 @@ Based on the Epic 003 technical scope, the decomposition should create **5 paral
     - 2 hours
 
 #### Stream C: Frontend Migration (4-5 stories)
+
 **Focus**: Migrate frontend to shared service
 **Developer Profile**: Frontend React specialist
 **Estimated Time**: 8-10 hours
 
-**Suggested Stories**:
-11. **Story 11**: Replace frontend event publishing with shared service
-    - Migrate event creation to shared service
-    - Update all components using event publishing
-    - Integration tests
-    - 2-3 hours
+**Suggested Stories**: 11. **Story 11**: Replace frontend event publishing with shared service - Migrate event creation to shared service - Update all components using event publishing - Integration tests - 2-3 hours
 
 12. **Story 12**: Replace frontend relay management with shared service
     - Migrate relay connection logic
@@ -127,16 +127,12 @@ Based on the Epic 003 technical scope, the decomposition should create **5 paral
     - 1.5-2 hours
 
 #### Stream D: Backend Migration (4-5 stories)
+
 **Focus**: Migrate backend to shared service
 **Developer Profile**: Backend Node.js specialist
 **Estimated Time**: 8-10 hours
 
-**Suggested Stories**:
-15. **Story 15**: Replace backend event publishing with shared service
-    - Migrate API endpoints to shared service
-    - Update webhook handlers
-    - Integration tests
-    - 2-3 hours
+**Suggested Stories**: 15. **Story 15**: Replace backend event publishing with shared service - Migrate API endpoints to shared service - Update webhook handlers - Integration tests - 2-3 hours
 
 16. **Story 16**: Replace backend relay management with shared service
     - Migrate relay connection logic
@@ -157,16 +153,12 @@ Based on the Epic 003 technical scope, the decomposition should create **5 paral
     - 1.5-2 hours
 
 #### Stream E: Testing, Security & Cleanup (4-6 stories)
+
 **Focus**: Comprehensive testing, security, documentation
 **Developer Profile**: QA focus, documentation skills
 **Estimated Time**: 8-12 hours
 
-**Suggested Stories**:
-19. **Story 19**: Create comprehensive NOSTR integration test suite
-    - Test multi-relay publishing
-    - Test subscription filtering
-    - Test connection resilience
-    - 2-3 hours
+**Suggested Stories**: 19. **Story 19**: Create comprehensive NOSTR integration test suite - Test multi-relay publishing - Test subscription filtering - Test connection resilience - 2-3 hours
 
 20. **Story 20**: Add NOSTR security testing and NIP compliance
     - NIP compliance test suite
@@ -187,10 +179,7 @@ Based on the Epic 003 technical scope, the decomposition should create **5 paral
     - Final validation
     - 2 hours
 
-**Optional Stories** (if needed):
-23. **Story 23**: Add NIP-42 relay authentication support
-24. **Story 24**: Implement advanced relay selection strategy
-25. **Story 25**: Add NOSTR event caching layer
+**Optional Stories** (if needed): 23. **Story 23**: Add NIP-42 relay authentication support 24. **Story 24**: Implement advanced relay selection strategy 25. **Story 25**: Add NOSTR event caching layer
 
 ---
 
@@ -211,16 +200,20 @@ Story 19-22 (Testing & Cleanup)
 ### Parallel Work Opportunities
 
 **Phase 1: Core Foundation** (Week 1)
+
 - Stories 1-6 can run in sequence (same developer)
 - Story 10 (adapter testing) can run in parallel
 
 **Phase 2: Adapters** (Week 1-2)
+
 - Story 8 (browser) and Story 9 (node) can run in parallel
 
 **Phase 3: Migration** (Week 2-3)
+
 - Stream C (Frontend, Stories 11-14) and Stream D (Backend, Stories 15-18) are 100% parallel
 
 **Phase 4: Finalization** (Week 3-4)
+
 - Stories 19-22 should run sequentially
 
 ---
@@ -228,6 +221,7 @@ Story 19-22 (Testing & Cleanup)
 ## Story Sizing Guidelines
 
 Each story MUST be:
+
 - **1 point**: 2-4 hours of work
 - **Testable**: Has clear acceptance criteria
 - **Atomic**: Can be completed independently
@@ -236,6 +230,7 @@ Each story MUST be:
 ### Size Validation Checklist
 
 For each story, verify:
+
 - [ ] Can be completed in 2-4 hours by an experienced developer?
 - [ ] Has 3-5 clear acceptance criteria in Given-When-Then format?
 - [ ] Has specific file paths and code examples?
@@ -250,19 +245,24 @@ For each story, verify:
 Each Epic must include these 5 diagram types:
 
 ### 1. Sequence Diagram
+
 **Purpose**: Show NOSTR event publishing flow across services
 **Actors**: Frontend → Shared Service → Relay → Backend
 
 ### 2. Flowchart
+
 **Purpose**: Show decision tree for relay selection and fallback
 
 ### 3. State Diagram
+
 **Purpose**: Show relay connection state machine (connecting, connected, disconnected, error)
 
 ### 4. Entity Relationship Diagram (or Architecture Diagram)
+
 **Purpose**: Show NOSTR service architecture (Core → Adapters → Frontend/Backend)
 
 ### 5. Gantt Chart
+
 **Purpose**: Show sprint timeline and story dependencies
 
 ---
@@ -270,22 +270,26 @@ Each Epic must include these 5 diagram types:
 ## Testing Requirements
 
 ### Unit Tests (95%+ Coverage)
+
 - All core NOSTR services (events, relays, subscriptions, crypto)
 - All adapter implementations
 - All utility functions
 
 ### Integration Tests
+
 - Multi-relay publishing
 - Subscription event processing
 - Connection resilience and reconnection
 - Browser extension integration (NIP-07)
 
 ### E2E Tests
+
 - Frontend: User creates content and publishes to NOSTR
 - Backend: API endpoint publishes NOSTR event
 - Cross-platform: Frontend and backend communicate via NOSTR
 
 ### Performance Tests
+
 - Event publishing latency (< 100ms p95)
 - Relay connection time (< 2s p95)
 - Subscription throughput (> 1000 events/sec)
@@ -298,16 +302,19 @@ Each Epic must include these 5 diagram types:
 ### Security-Critical Stories
 
 **Story 5** (Cryptography Service):
+
 - **Risk**: Key management vulnerabilities
 - **Required Review**: 1 security specialist
 - **Tests**: Key rotation, signature validation, DM encryption
 
 **Story 8** (Browser Adapter):
+
 - **Risk**: Browser extension integration vulnerabilities
 - **Required Review**: 1 frontend security specialist
 - **Tests**: NIP-07 compliance, XSS prevention, localStorage security
 
 **Story 20** (Security Testing):
+
 - **Risk**: NOSTR protocol vulnerabilities
 - **Required Review**: 1 senior backend engineer
 - **Tests**: Signature forgery, event tampering, relay impersonation
@@ -402,6 +409,7 @@ Each Epic must include these 5 diagram types:
 ## Success Metrics
 
 ### Technical Metrics
+
 - Single shared NOSTR service implementation: ✅
 - Code reduction: ~1,000 lines eliminated (15% reduction)
 - Test coverage: 95%+ for core service
@@ -409,6 +417,7 @@ Each Epic must include these 5 diagram types:
 - Performance: No degradation in event publishing or relay connections
 
 ### Business Metrics
+
 - 30% reduction in NOSTR-related maintenance effort
 - Faster NOSTR feature development (estimated 20% faster)
 - Improved reliability (fewer NOSTR-related bugs)

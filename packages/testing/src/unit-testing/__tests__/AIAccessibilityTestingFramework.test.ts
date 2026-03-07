@@ -14,7 +14,6 @@
  * - Accessibility coverage verification
  */
 
-
 import { AIAccessibilityTestingFramework } from '../AIAccessibilityTestingFramework';
 import type {
   AIAccessibilityTestingConfig,

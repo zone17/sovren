@@ -35,6 +35,7 @@ This specification defines Sovren-specific NOSTR event kinds (30078-30082) that 
 ### Why Custom NIPs?
 
 Standard NIPs (1-57) don't cover:
+
 - Creator-specific monetization settings
 - Detailed analytics and engagement tracking
 - Subscription tier management
@@ -45,12 +46,13 @@ Standard NIPs (1-57) don't cover:
 
 ## Event Kind Ranges
 
-| Kind Range | Purpose | NIP Reference |
-|-----------|---------|---------------|
-| 30078-30082 | Sovren creator features | This spec |
-| 30000-39999 | Parameterized replaceable | NIP-33 |
+| Kind Range  | Purpose                   | NIP Reference |
+| ----------- | ------------------------- | ------------- |
+| 30078-30082 | Sovren creator features   | This spec     |
+| 30000-39999 | Parameterized replaceable | NIP-33        |
 
 **Reserved Kinds:**
+
 - **30078**: Creator Profile Extended
 - **30079**: Content Monetization Settings
 - **30080**: Analytics Event
@@ -62,6 +64,7 @@ Standard NIPs (1-57) don't cover:
 ## Kind 30078: Creator Profile Extended
 
 ### Purpose
+
 Extended creator metadata beyond NIP-01 kind 0 (basic metadata).
 
 ### Event Structure
@@ -140,7 +143,7 @@ enum CreatorCategory {
   FOOD = 'food',
   TRAVEL = 'travel',
   SCIENCE = 'science',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 ```
 
@@ -156,6 +159,7 @@ enum CreatorCategory {
 ## Kind 30079: Content Monetization
 
 ### Purpose
+
 Paywall configuration, pricing tiers, and Lightning payment settings for specific content.
 
 ### Event Structure
@@ -240,6 +244,7 @@ Paywall configuration, pricing tiers, and Lightning payment settings for specifi
 ## Kind 30080: Analytics Event
 
 ### Purpose
+
 Track views, engagement, revenue, and performance metrics for content.
 
 ### Event Structure
@@ -307,7 +312,7 @@ enum AnalyticsEventType {
   CONVERSION = 'conversion',
   REVENUE = 'revenue',
   SUBSCRIPTION = 'subscription',
-  INTERACTION = 'interaction'
+  INTERACTION = 'interaction',
 }
 ```
 
@@ -322,6 +327,7 @@ enum AnalyticsEventType {
 ## Kind 30081: Subscription Management
 
 ### Purpose
+
 Define subscription tiers, benefits, and manage subscriber counts.
 
 ### Event Structure
@@ -398,6 +404,7 @@ Define subscription tiers, benefits, and manage subscriber counts.
 ## Kind 30082: Content Recommendations
 
 ### Purpose
+
 AI-generated personalized content feeds for users.
 
 ### Event Structure
@@ -464,7 +471,7 @@ enum RecommendationSource {
   TRENDING = 'trending',
   FOLLOWING = 'following',
   SIMILAR_USERS = 'similar_users',
-  MANUAL = 'manual'
+  MANUAL = 'manual',
 }
 ```
 
@@ -492,15 +499,17 @@ const profile = {
   categories: [CreatorCategory.TECHNOLOGY],
   lightningAddress: 'alice@getalby.com',
   links: [],
-  paymentMethods: [{
-    type: 'lightning',
-    address: 'alice@getalby.com',
-    preferred: true,
-    enabled: true
-  }],
+  paymentMethods: [
+    {
+      type: 'lightning',
+      address: 'alice@getalby.com',
+      preferred: true,
+      enabled: true,
+    },
+  ],
   createdAt: Math.floor(Date.now() / 1000),
   updatedAt: Math.floor(Date.now() / 1000),
-  version: '1.0.0'
+  version: '1.0.0',
 };
 
 const result = await sovrenNIP.publishCreatorProfile(profile);
@@ -529,7 +538,7 @@ const analyticsData = {
   periodStart: Math.floor(Date.now() / 1000),
   periodEnd: Math.floor(Date.now() / 1000),
   granularity: 'hourly',
-  version: '1.0.0'
+  version: '1.0.0',
 };
 
 await sovrenNIP.trackAnalyticsEvent('analytics-123', analyticsData);
@@ -593,6 +602,7 @@ See [Migration Guide](./migration-guide.md) for detailed instructions.
 ### Event Validation
 
 All events must:
+
 - Have valid signatures (NIP-01)
 - Pass schema validation (Zod)
 - Include version metadata
@@ -602,9 +612,9 @@ All events must:
 
 ## Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0.0 | 2025-10-26 | Initial specification |
+| Version | Date       | Changes               |
+| ------- | ---------- | --------------------- |
+| 1.0.0   | 2025-10-26 | Initial specification |
 
 ---
 

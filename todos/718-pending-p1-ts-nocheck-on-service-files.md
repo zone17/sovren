@@ -1,6 +1,6 @@
 ---
 status: pending
-priority: p3
+priority: p1
 issue_id: '718'
 tags: [code-review, backend, types, slice-8]
 dependencies: []

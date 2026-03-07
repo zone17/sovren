@@ -23,13 +23,22 @@ export async function getUserIdByPubkey(db: ISupabaseClient, pubkey: string): Pr
   const cached = userIdCache.get(pubkey);
   if (cached) return cached;
 
-  const { data, error } = await db.from('users').select('id').eq('nostr_pubkey', pubkey).single();
+  interface UserIdRow {
+    id: string;
+  }
+
+  const { data, error } = await db
+    .from<UserIdRow>('users')
+    .select('id')
+    .eq('nostr_pubkey', pubkey)
+    .single();
 
   if (error || !data) {
     throw new UnauthorizedError('User profile not found');
   }
 
-  const userId = (data as { id: string }).id;
+  // #732: data is typed as UserIdRow via the generic — no unsafe cast needed.
+  const userId = data.id;
   userIdCache.set(pubkey, userId);
   return userId;
 }

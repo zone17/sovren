@@ -80,12 +80,12 @@ We evaluated three options:
 
 ### Queue Configuration
 
-| Queue | Concurrency | Max Retries | Backoff | Priority Levels |
-|-------|-------------|-------------|---------|-----------------|
-| `notifications` | 5 | 3 | Exponential (1s, 4s, 16s) | urgent, high, normal, low |
-| `relay-scan` | 3 | 5 | Exponential (2s, 8s, 32s) | high, normal |
-| `analytics` | 2 | 3 | Fixed (30s) | normal, low |
-| `content-fingerprint` | 3 | 3 | Exponential (5s, 20s, 80s) | normal |
+| Queue                 | Concurrency | Max Retries | Backoff                    | Priority Levels           |
+| --------------------- | ----------- | ----------- | -------------------------- | ------------------------- |
+| `notifications`       | 5           | 3           | Exponential (1s, 4s, 16s)  | urgent, high, normal, low |
+| `relay-scan`          | 3           | 5           | Exponential (2s, 8s, 32s)  | high, normal              |
+| `analytics`           | 2           | 3           | Fixed (30s)                | normal, low               |
+| `content-fingerprint` | 3           | 3           | Exponential (5s, 20s, 80s) | normal                    |
 
 ### Connection Reuse
 
@@ -122,6 +122,7 @@ const notificationWorker = new Worker('notifications', processor, {
 ## Consequences
 
 **Positive:**
+
 - Eliminates data loss on restart — jobs persist in Redis
 - Enables horizontal scaling — multiple backend instances can share queue work via Redis
 - Built-in retries with configurable backoff strategies (exponential, fixed, custom)
@@ -135,12 +136,14 @@ const notificationWorker = new Worker('notifications', processor, {
 - ~200 line reduction in NotificationService by removing manual queue logic
 
 **Negative:**
+
 - Redis becomes a harder dependency — queue data loss if Redis goes down without persistence (RDB/AOF)
 - BullMQ requires dedicated ioredis connections (cannot share the singleton for blocking commands)
 - Learning curve for BullMQ-specific patterns (sandboxed processors, flow producers, rate limiters)
 - Bull Board adds an admin surface that must be secured
 
 **Mitigation:**
+
 - Enable Redis persistence (RDB snapshots + AOF) in production Docker configuration — already planned in infrastructure setup
 - Connection count is manageable: ~2 connections per queue (1 producer, 1 worker) = ~8 total for 4 queues
 - Bull Board route protected by existing admin auth middleware (`requireAdmin`)
@@ -149,9 +152,11 @@ const notificationWorker = new Worker('notifications', processor, {
 ## Alternatives Rejected
 
 ### Inngest (Option B)
+
 - **Rejected because**: Cloud-hosted SaaS conflicts with Sovren's self-sovereign, decentralized architecture. Introduces vendor lock-in, requires internet connectivity for job processing, and adds ongoing SaaS costs. The event-driven model is powerful but over-engineered for Sovren's current job queue needs.
 
 ### Trigger.dev (Option C)
+
 - **Rejected because**: Younger project with smaller community and fewer production references. Self-hosting (v3+) is available but less battle-tested than BullMQ. Primarily designed for serverless and long-running task patterns that don't align with Sovren's Express-based backend. Adds complexity without clear benefit over BullMQ given existing Redis infrastructure.
 
 ## References

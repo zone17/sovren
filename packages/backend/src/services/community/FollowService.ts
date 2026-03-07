@@ -8,6 +8,10 @@
  * Patterns applied:
  *   - TTLCache for pubkey→UUID resolution (common-solutions.md #2)
  *   - Table name: `followers` (matches baseline_schema.sql:126 and follow_count_trigger)
+ *
+ * TODO #744: Consolidate with UserRelationshipService — dual follow systems exist
+ * (followers table + user_relationships table). Until consolidation, this service owns
+ * the creator-facing follow flow; UserRelationshipService handles general user graph queries.
  */
 
 import type {
@@ -19,7 +23,7 @@ import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import type { FollowRelationship, FollowCounts } from '@shared/types/community';
-import { ConflictError, ValidationError } from '../../utils/errors';
+import { ConflictError, DatabaseError, NotFoundError, ValidationError } from '../../utils/errors';
 import { DomainEventType } from '../../interfaces/shared/IEventBus';
 import { getUserIdByPubkey } from '../../utils/getUserIdByPubkey';
 import { emitDomainEvent } from '../../utils/emitDomainEvent';
@@ -65,7 +69,7 @@ export class FollowService implements IFollowService {
         throw new ConflictError('Already following this user');
       }
       this.logger.error('FollowService.follow: DB error', { error, followerId, followingId });
-      throw new ValidationError(`Failed to follow: ${error.message}`);
+      throw new DatabaseError('Failed to follow');
     }
 
     if (!data) {
@@ -91,15 +95,20 @@ export class FollowService implements IFollowService {
   async unfollow(followerPubkey: string, followingId: string): Promise<void> {
     const followerId = await getUserIdByPubkey(this.db, followerPubkey);
 
-    const { error } = await this.db
+    // #735: Check the returned count — a 0 means the follow relationship didn't exist.
+    const { error, count } = await this.db
       .from<FollowRow>('followers')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('follower_id', followerId)
       .eq('following_id', followingId);
 
     if (error) {
       this.logger.error('FollowService.unfollow: DB error', { error, followerId, followingId });
-      throw new ValidationError(`Failed to unfollow: ${error.message}`);
+      throw new DatabaseError('Failed to unfollow');
+    }
+
+    if (count === 0) {
+      throw new NotFoundError('Follow relationship');
     }
 
     this.logger.info('FollowService.unfollow: unfollowed', { followerId, followingId });
@@ -117,7 +126,7 @@ export class FollowService implements IFollowService {
 
     if (error) {
       this.logger.error('FollowService.isFollowing: DB error', { error, followerId, followingId });
-      throw new ValidationError(`Failed to check follow status: ${error.message}`);
+      throw new DatabaseError('Failed to check follow status');
     }
 
     return data !== null;
@@ -134,30 +143,7 @@ export class FollowService implements IFollowService {
       });
       return userIdOrPubkey;
     });
-    const { page, limit } = opts;
-    const offset = (page - 1) * limit;
-
-    const { data, error, count } = await this.db
-      .from<FollowRow>('followers')
-      .select('id, follower_id, following_id, created_at', { count: 'exact' })
-      .eq('following_id', userId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (error) {
-      this.logger.error('FollowService.getFollowers: DB error', { error, userId });
-      throw new ValidationError('Failed to get followers');
-    }
-
-    const items = (data ?? []).map((row) => ({
-      id: row.id,
-      followerId: row.follower_id,
-      followingId: row.following_id,
-      createdAt: row.created_at,
-    }));
-
-    const total = count ?? 0;
-    return { items, total, page, limit, hasNext: offset + items.length < total };
+    return this.getFollowList(userId, 'followers', opts);
   }
 
   async getFollowing(
@@ -171,19 +157,32 @@ export class FollowService implements IFollowService {
       });
       return userIdOrPubkey;
     });
+    return this.getFollowList(userId, 'following', opts);
+  }
+
+  // #734: Shared implementation for getFollowers / getFollowing.
+  // direction='followers' queries by following_id (who follows the user).
+  // direction='following' queries by follower_id (who the user follows).
+  private async getFollowList(
+    userId: string,
+    direction: 'followers' | 'following',
+    opts: PaginationParams
+  ): Promise<PaginatedResult<FollowRelationship>> {
     const { page, limit } = opts;
     const offset = (page - 1) * limit;
+    const filterColumn = direction === 'followers' ? 'following_id' : 'follower_id';
+    const logLabel = direction === 'followers' ? 'getFollowers' : 'getFollowing';
 
     const { data, error, count } = await this.db
       .from<FollowRow>('followers')
       .select('id, follower_id, following_id, created_at', { count: 'exact' })
-      .eq('follower_id', userId)
+      .eq(filterColumn, userId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
-      this.logger.error('FollowService.getFollowing: DB error', { error, userId });
-      throw new ValidationError('Failed to get following');
+      this.logger.error(`FollowService.${logLabel}: DB error`, { error, userId });
+      throw new DatabaseError(`Failed to get ${direction}`);
     }
 
     const items = (data ?? []).map((row) => ({
@@ -224,6 +223,19 @@ export class FollowService implements IFollowService {
         followers: creator.follower_count as number,
         following: creator.following_count as number,
       };
+    }
+
+    // #746: Log the fallback path so ops can see when trigger columns are stale/missing.
+    if (creatorError) {
+      this.logger.warn('getFollowCounts: creators table query failed, falling back to COUNT(*)', {
+        error: creatorError,
+        userId,
+      });
+    } else {
+      this.logger.warn(
+        'getFollowCounts: trigger columns null or creator row missing, falling back to COUNT(*)',
+        { userId }
+      );
     }
 
     // Fallback: COUNT queries if trigger columns are null or creator row missing

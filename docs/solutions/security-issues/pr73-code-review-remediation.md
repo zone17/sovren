@@ -1,5 +1,5 @@
 ---
-title: "PR #73 Code Review Remediation: 18 Security & Architecture Findings"
+title: 'PR #73 Code Review Remediation: 18 Security & Architecture Findings'
 date: 2026-02-12
 category:
   - security_issue
@@ -36,9 +36,9 @@ symptoms:
   - Broken Express middleware ordering
 status: resolved
 effort_breakdown:
-  planning: "~40%"
-  implementation: "~20%"
-  review: "~40%"
+  planning: '~40%'
+  implementation: '~20%'
+  review: '~40%'
 team_composition: architect + backend + frontend (team-builder standard)
 ---
 
@@ -61,6 +61,7 @@ Key discovery: the Infrastructure Sprint Phase 0 factory agents delivered correc
 ## Root Cause
 
 Multiple contributing factors:
+
 1. **Rapid iteration**: Vault-based rotation scripts were superseded by direct API scripts but never deleted
 2. **Copy-paste drift**: 5 ErrorBoundary implementations grew independently across features
 3. **Loose validation**: Middleware accepted untrusted headers without sanitization
@@ -107,7 +108,9 @@ execFileSync('supabase', ['db', 'password', 'update', '--password', newPassword]
 Made `rejectUnauthorized` environment-dependent: `false` in development, `true` in production.
 
 ```typescript
-tls: { rejectUnauthorized: process.env.NODE_ENV === 'production' }
+tls: {
+  rejectUnauthorized: process.env.NODE_ENV === 'production';
+}
 ```
 
 ### P1-023: Correlation ID Validation
@@ -125,10 +128,10 @@ Fixed prefix matching to require exact match OR prefix with trailing slash.
 
 ```typescript
 // Before: /metricsEvil matches /metrics
-opts.excludePaths.some((p) => requestPath.startsWith(p))
+opts.excludePaths.some((p) => requestPath.startsWith(p));
 
 // After: Exact or prefix+slash only
-opts.excludePaths.some((p) => requestPath === p || requestPath.startsWith(p + '/'))
+opts.excludePaths.some((p) => requestPath === p || requestPath.startsWith(p + '/'));
 ```
 
 ### P2 Architecture Fixes
@@ -156,11 +159,13 @@ opts.excludePaths.some((p) => requestPath === p || requestPath.startsWith(p + '/
 ## Prevention Strategies
 
 ### CI/CD Automation
+
 - Add `grep -r "default-backup-key\|root-token" --include="*.ts"` to pre-commit hooks
 - ESLint rule: ban `execSync` in favor of `execFileSync` for subprocess calls
 - CSP audit step in CI that fails on `unsafe-eval` in any config file
 
 ### Code Review Checklist
+
 - [ ] No hardcoded secrets (grep for common patterns)
 - [ ] CSP headers consistent across all deployment targets
 - [ ] Middleware ordering: correlation-id first, error-handler last
@@ -170,6 +175,7 @@ opts.excludePaths.some((p) => requestPath === p || requestPath.startsWith(p + '/
 - [ ] `execFileSync` used instead of `execSync` for all subprocess calls
 
 ### Testing
+
 - CSRF middleware needs dedicated test file (currently untested)
 - Correlation ID middleware needs injection attempt tests
 - Health check endpoints need integration tests

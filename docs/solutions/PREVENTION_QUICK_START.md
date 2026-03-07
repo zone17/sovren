@@ -280,31 +280,26 @@ docs/decisions/ADR-022-encryption-standards.md
 If time is limited, prioritize in this order:
 
 1. **P1-039 Redis Factory** (P0 - most impactful)
-
    - Add ESLint rule
    - Create RedisFactory
    - Migrate 5 client creations
 
 2. **P1-043 Type Safety** (P0 - prevents class of errors)
-
    - Update ESLint rules
    - Create Zod config validation
    - Remove type assertions
 
 3. **P1-042 Encryption** (P0 - security critical)
-
    - Create crypto.ts
    - Add ESLint rule banning Base64
    - Add CI/CD audit
 
 4. **P1-040 Credential Rotation** (P1 - high impact)
-
    - Add write-ahead logging
    - Add distributed lock
    - Integration tests
 
 5. **P1-038 Health Checks** (P1)
-
    - Add timeout wrapper
    - Migrate health endpoints
    - Integration tests

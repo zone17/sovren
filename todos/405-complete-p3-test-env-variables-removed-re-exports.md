@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "422"
+issue_id: '422'
 tags: [code-review, quality, testing, pr-87]
 dependencies: []
 ---
@@ -37,6 +37,7 @@ Accept as-is. Redundant re-exports cleaned up.
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/test-utils/test-environment-variables.ts:377-382`
 
 ## Acceptance Criteria

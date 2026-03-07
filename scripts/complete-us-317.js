@@ -22,7 +22,7 @@ async function completeUS317() {
 
   // Find US-317
   for (const phase of Object.values(tasksData.phases)) {
-    const story = phase.tasks.find(t => t.story_id === 'US-317');
+    const story = phase.tasks.find((t) => t.story_id === 'US-317');
 
     if (story) {
       console.log('📝 Completing US-317: Implement NOSTR Caching Layer\n');
@@ -40,14 +40,18 @@ async function completeUS317() {
         let fixedCount = 0;
         story.subtasks.forEach((subtask, index) => {
           if (subtask.status !== 'completed') {
-            console.log(`   ✓ Subtask ${index + 1}: "${subtask.description.substring(0, 60)}..." → completed`);
+            console.log(
+              `   ✓ Subtask ${index + 1}: "${subtask.description.substring(0, 60)}..." → completed`
+            );
             subtask.status = 'completed';
             fixedCount++;
           }
         });
 
         console.log(`\n   ✅ Completed ${fixedCount}/${story.subtasks.length} remaining subtasks`);
-        console.log(`   ✅ Story now shows ${story.subtasks.length}/${story.subtasks.length} subtasks complete (100%)\n`);
+        console.log(
+          `   ✅ Story now shows ${story.subtasks.length}/${story.subtasks.length} subtasks complete (100%)\n`
+        );
       }
 
       // Add implementation details
@@ -58,7 +62,7 @@ async function completeUS317() {
         'packages/frontend/src/services/nostr/__tests__/hooks/useEventCache.test.ts',
         'docs/architecture/diagrams/US-317-*.mmd',
         'US-317-COMPLETION-SUMMARY.md',
-        'CHANGELOG.md'
+        'CHANGELOG.md',
       ];
 
       console.log('   📦 Implementation Details:');
@@ -86,7 +90,7 @@ async function completeUS317() {
   console.log('   - EventCacheService.ts: Full two-tier caching with LRU + TTL');
 }
 
-completeUS317().catch(error => {
+completeUS317().catch((error) => {
   console.error('❌ Error:', error.message);
   process.exit(1);
 });

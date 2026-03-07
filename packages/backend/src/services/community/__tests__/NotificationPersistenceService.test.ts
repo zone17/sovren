@@ -16,7 +16,7 @@
  */
 
 import { NotificationPersistenceService } from '../NotificationPersistenceService';
-import { AuthorizationError, NotFoundError, ValidationError } from '../../../utils/errors';
+import { AuthorizationError, DatabaseError, NotFoundError } from '../../../utils/errors';
 
 // Mock the shared getUserIdByPubkey utility (#703)
 const mockGetUserIdByPubkey = vi.fn();
@@ -152,7 +152,7 @@ describe('NotificationPersistenceService', () => {
       expect(result.read).toBe(false);
     });
 
-    it('throws ValidationError on DB error', async () => {
+    it('throws DatabaseError on DB error', async () => {
       buildService();
       const chain = makeChain(null);
       (chain.single as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -163,7 +163,7 @@ describe('NotificationPersistenceService', () => {
 
       await expect(
         service.create({ userId: USER_ID, actorId: ACTOR_ID, type: 'new_follower', title: 'Test' })
-      ).rejects.toThrow(ValidationError);
+      ).rejects.toThrow(DatabaseError);
     });
   });
 
@@ -191,7 +191,7 @@ describe('NotificationPersistenceService', () => {
       expect(mockDb.from).toHaveBeenCalledOnce();
     });
 
-    it('throws ValidationError on DB error', async () => {
+    it('throws DatabaseError on DB error', async () => {
       buildService();
       mockDb.from.mockReturnValue(makeChain({ error: { message: 'bulk insert failed' } }));
 
@@ -199,7 +199,7 @@ describe('NotificationPersistenceService', () => {
         service.createBatch([
           { userId: 'u1', actorId: ACTOR_ID, type: 'circle_post', title: 'New post' },
         ])
-      ).rejects.toThrow(ValidationError);
+      ).rejects.toThrow(DatabaseError);
     });
   });
 
@@ -229,14 +229,14 @@ describe('NotificationPersistenceService', () => {
       expect(result.pagination.total).toBe(50);
     });
 
-    it('throws ValidationError on DB error', async () => {
+    it('throws DatabaseError on DB error', async () => {
       buildService();
       mockDb.from.mockReturnValueOnce(
         makeChain({ data: null, error: { message: 'error' }, count: 0 })
       );
 
       await expect(service.list(USER_PUBKEY, { page: 1, limit: 20 })).rejects.toThrow(
-        ValidationError
+        DatabaseError
       );
     });
   });
@@ -262,11 +262,11 @@ describe('NotificationPersistenceService', () => {
       expect(count).toBe(0);
     });
 
-    it('throws ValidationError on DB error', async () => {
+    it('throws DatabaseError on DB error', async () => {
       buildService();
       mockDb.from.mockReturnValueOnce(makeChain({ count: null, error: { message: 'DB error' } }));
 
-      await expect(service.getUnreadCount(USER_PUBKEY)).rejects.toThrow(ValidationError);
+      await expect(service.getUnreadCount(USER_PUBKEY)).rejects.toThrow(DatabaseError);
     });
   });
 
@@ -336,11 +336,11 @@ describe('NotificationPersistenceService', () => {
       expect(notifChain.lte).toHaveBeenCalledWith('created_at', cutoff.toISOString());
     });
 
-    it('throws ValidationError on DB error', async () => {
+    it('throws DatabaseError on DB error', async () => {
       buildService();
       mockDb.from.mockReturnValueOnce(makeChain({ error: { message: 'DB error' } }));
 
-      await expect(service.markAllRead(USER_PUBKEY, new Date())).rejects.toThrow(ValidationError);
+      await expect(service.markAllRead(USER_PUBKEY, new Date())).rejects.toThrow(DatabaseError);
     });
   });
 
@@ -391,7 +391,7 @@ describe('NotificationPersistenceService', () => {
       await expect(service.delete(NOTIF_ID, USER_PUBKEY)).rejects.toThrow(AuthorizationError);
     });
 
-    it('throws ValidationError on DB error during delete', async () => {
+    it('throws DatabaseError on DB error during delete', async () => {
       buildService();
       mockDb.from
         .mockReturnValueOnce(
@@ -406,7 +406,7 @@ describe('NotificationPersistenceService', () => {
         )
         .mockReturnValueOnce(makeChain({ error: { message: 'delete failed' } }));
 
-      await expect(service.delete(NOTIF_ID, USER_PUBKEY)).rejects.toThrow(ValidationError);
+      await expect(service.delete(NOTIF_ID, USER_PUBKEY)).rejects.toThrow(DatabaseError);
     });
   });
 

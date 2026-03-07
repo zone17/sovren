@@ -1,5 +1,5 @@
 ---
-title: "Quality Pipeline Remediation to 100% Effectiveness"
+title: 'Quality Pipeline Remediation to 100% Effectiveness'
 type: refactor
 date: 2026-02-20
 scope: sovren
@@ -16,6 +16,7 @@ The quality pipeline is running at ~20% effectiveness. 174/174 frontend test sui
 **Three phases. Fix the broken things. Nothing else.**
 
 **Audit reports:**
+
 1. Test Infrastructure Audit — 7 root causes, 15 remediation items
 2. Quality Workflow Audit (`docs/quality-workflow-audit-2026-02-20.md`) — 45+ gates at ~20% effectiveness
 
@@ -32,6 +33,7 @@ The quality pipeline is running at ~20% effectiveness. 174/174 frontend test sui
 ### Task 0.A: Spike Vitest migration (4-hour timebox)
 
 Before patching Jest, spend 4 hours testing if Vitest works:
+
 - Install vitest, configure with existing vite.config
 - Migrate 5-10 representative test files (mix of frontend services, components, nostr)
 - If 80%+ of suites work with mechanical changes → commit to Vitest migration
@@ -44,6 +46,7 @@ Before patching Jest, spend 4 hours testing if Vitest works:
 ### Task 0.B: Fix Jest ESM/CJS configuration (if Vitest rejected)
 
 All of these are the same root cause — fix together:
+
 - Add `node_modules/(?!(nostr-tools|@noble|@scure|@bitcoinerlab)/)` to `transformIgnorePatterns` in EACH project config (root pattern does NOT propagate to project configs that override `transform`)
 - Add `import.meta.env` transform: either `@babel/plugin-transform-import-meta` in Jest transform or abstract env access behind utility
 - Add `jest-transform-stub` for CSS/SVG/image imports if missing
@@ -55,6 +58,7 @@ All of these are the same root cause — fix together:
 ### Task 0.C: Fix individual test file issues
 
 These will surface when running the suite after config fixes. Known issues:
+
 - `analyticsService.test.ts` — JSX in `.ts` file (rename to `.tsx`)
 - `SovrenNIPService.test.ts:105` — `CreatorCategory.TECHNOLOGY` undefined (ESM re-export issue)
 - `SubscriptionManagerService.ts` — relay connection error in test imports (mock relay pool at module level)
@@ -83,6 +87,7 @@ These will surface when running the suite after config fixes. Known issues:
 ### Task 1.A: Fix pre-push hook
 
 The entire `.husky/pre-push` file is 53 lines with 5 instances of the broken `git diff --cached` pattern (lines 28, 31, 38, 41, 47). Fix the whole file at once:
+
 - Replace ALL `git diff --cached` with `git diff origin/main...HEAD`
 - Fix test command to work post-Phase 0
 - Exclude `*.test.ts`, `*.spec.ts`, `*.md` from console.log check
@@ -94,6 +99,7 @@ The entire `.husky/pre-push` file is 53 lines with 5 instances of the broken `gi
 Current pre-commit runs: antipatterns → lint-staged → (type-check DISABLED) → backend tests → npm audit → **FULL VITE BUILD** → **VERCEL CONFIG VALIDATION (60 lines)**
 
 Remove the build and Vercel validation. Pre-commit should be:
+
 1. Anti-pattern scanner
 2. lint-staged (ESLint + Prettier)
 3. Related unit tests only (`--findRelatedTests` for staged files, both frontend AND backend)
@@ -105,6 +111,7 @@ Target: <60s pre-commit.
 ### Task 1.C: Add 2 more anti-pattern checks
 
 The existing 4 grep-based patterns work well. Add only patterns that ARE greppable:
+
 1. **Unbounded queries** — `.findMany()` / `.find({` without `take` or `limit`
 2. **Auth bypass** — route definition without auth middleware (check route files)
 
@@ -124,6 +131,7 @@ Do NOT add TOCTOU, SSRF, payment persistence, status guards, or non-atomic write
 ### Task 2.A: Audit and fix broken steps in quality-gates.yml
 
 Before adding PR trigger, fix everything that will fail:
+
 - `npx madge --circular src/` → fix path for monorepo (`packages/*/src/`)
 - `npm run docs:build` → script doesn't exist (remove or add)
 - `npm run docs:check-links` → script doesn't exist (remove or add)
@@ -164,26 +172,26 @@ Configure GitHub branch protection: quality-gates must pass to merge. Admin over
 
 ## Circuit Breakers (Rollback Per Phase)
 
-| Phase | Circuit Breaker |
-|-------|----------------|
+| Phase   | Circuit Breaker                                                          |
+| ------- | ------------------------------------------------------------------------ |
 | Phase 0 | `git revert` jest config changes — backend workaround configs still work |
-| Phase 1 | `SKIP_HOOKS=1` env var or `git config core.hooksPath /dev/null` |
-| Phase 2 | Remove `pull_request` trigger from quality-gates.yml (1-line revert) |
+| Phase 1 | `SKIP_HOOKS=1` env var or `git config core.hooksPath /dev/null`          |
+| Phase 2 | Remove `pull_request` trigger from quality-gates.yml (1-line revert)     |
 
 ---
 
 ## What Was Cut (and Why)
 
-| Cut | Hours Saved | Reason |
-|-----|-------------|--------|
-| Phase 3: Production Observability | 3-5h | Different system, different effort — not a test pipeline concern |
-| Phase 4: CE Workflow Enforcement | 2-3h | Process enforcement for AI agents — not code quality |
-| Phase 5: Global Infrastructure | 4-6h | YAGNI — no second project exists. Extract template after pipeline proven |
-| Behavioral gate checks (2.3) | 2-3h | New system requiring integration tests, not grep scripts. Defer. |
-| 5 of 7 new anti-pattern checks | 1-2h | Semantic analysis not greppable — false positives worse than no scanner |
-| Type-check re-enablement | 1-2h | Blocked by hundreds of pre-existing TS errors — separate effort |
-| Coverage ramp system | 1h | Over-engineered — manually adjust one threshold |
-| SpecFlow section | 0h | 7/10 items duplicated phase tasks |
+| Cut                               | Hours Saved | Reason                                                                   |
+| --------------------------------- | ----------- | ------------------------------------------------------------------------ |
+| Phase 3: Production Observability | 3-5h        | Different system, different effort — not a test pipeline concern         |
+| Phase 4: CE Workflow Enforcement  | 2-3h        | Process enforcement for AI agents — not code quality                     |
+| Phase 5: Global Infrastructure    | 4-6h        | YAGNI — no second project exists. Extract template after pipeline proven |
+| Behavioral gate checks (2.3)      | 2-3h        | New system requiring integration tests, not grep scripts. Defer.         |
+| 5 of 7 new anti-pattern checks    | 1-2h        | Semantic analysis not greppable — false positives worse than no scanner  |
+| Type-check re-enablement          | 1-2h        | Blocked by hundreds of pre-existing TS errors — separate effort          |
+| Coverage ramp system              | 1h          | Over-engineered — manually adjust one threshold                          |
+| SpecFlow section                  | 0h          | 7/10 items duplicated phase tasks                                        |
 
 **Total saved: ~18-25 hours. Same outcome for the code that matters.**
 
@@ -197,20 +205,21 @@ Phase 0 (Fix tests) ──→ Phase 1 (Fix hooks) ──→ Done
 ```
 
 Phase 1 and Phase 2 can be partially parallelized:
+
 - **Immediately (no Phase 0 dependency):** Task 1.A (fix git diff), Task 1.B (strip pre-commit), Task 2.A (audit workflow), Task 2.D (add scanner to CI)
 - **After Phase 0:** Task 1.C (needs test suite), Task 2.B (needs tests to pass), Task 2.C (needs baseline), Task 2.E (needs CI green)
 
 ## Success Metrics
 
-| Metric | Before | Target |
-|--------|--------|--------|
-| Test suites passing | 265/439 (backend only) | All (frontend + backend + shared) |
-| Pre-push hook functional | No | Yes |
-| CI quality gates auto-triggered | No | Yes |
-| Pre-commit time | 30-90s (includes build) | <60s |
-| `--no-verify` needed | Always | Never |
-| Anti-pattern coverage | 4 patterns | 6 patterns |
-| Coverage enforcement | Disabled | Enabled at realistic threshold |
+| Metric                          | Before                  | Target                            |
+| ------------------------------- | ----------------------- | --------------------------------- |
+| Test suites passing             | 265/439 (backend only)  | All (frontend + backend + shared) |
+| Pre-push hook functional        | No                      | Yes                               |
+| CI quality gates auto-triggered | No                      | Yes                               |
+| Pre-commit time                 | 30-90s (includes build) | <60s                              |
+| `--no-verify` needed            | Always                  | Never                             |
+| Anti-pattern coverage           | 4 patterns              | 6 patterns                        |
+| Coverage enforcement            | Disabled                | Enabled at realistic threshold    |
 
 ## Effort Estimate
 

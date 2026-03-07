@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "697"
+issue_id: '697'
 tags: [code-review, quality, slice-8]
 dependencies: []
 ---

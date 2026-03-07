@@ -3,6 +3,7 @@
 **Reviewer**: Principal Software Architect
 **Date**: 2026-02-12
 **Documents Reviewed**:
+
 - `SOVREN_PRD_V2_CREATOR_EMPOWERMENT.md` (v2.0 PRD)
 - `docs/plans/PRD_V2_EPIC_DECOMPOSITION.md` (54 implementation stories)
 - `CLAUDE.md` (project context and standards)
@@ -20,12 +21,14 @@
 **Feasibility**: Straightforward CRUD + analytics on top of existing infrastructure.
 
 **Strengths**:
+
 - Data model is simple (two new tables: `wellness_snapshots`, `creator_work_patterns`)
 - Frontend integrates as a tab in existing `CreatorDashboard` -- clean extension point
 - Burnout risk scoring is deterministic (pattern analysis), not ML -- appropriate for MVP
 - Work pattern auto-tracking via middleware is a clean approach that leverages the existing Express middleware chain
 
 **Concerns**:
+
 - The auto-tracking middleware (US-E7-002) that logs "content publish, DM sends, analytics views as implicit work events" needs careful design to avoid becoming a performance bottleneck on hot paths. Recommend async event emission via existing `EventBusService` rather than synchronous middleware.
 - "Anonymous benchmarking" (US-E7-007) aggregating across creators requires careful privacy engineering. The decomposition says "aggregates only" but the implementation story should specify minimum cohort sizes (e.g., n >= 50) to prevent de-anonymization.
 
@@ -38,12 +41,14 @@
 **Feasibility**: Builds naturally on existing NOSTR event signing infrastructure. Cryptographic provenance is a well-understood pattern.
 
 **Strengths**:
+
 - Provenance signing hooks into existing content publish pipeline -- minimal disruption
 - NIP-compliant event tag extension is the right approach for NOSTR interoperability
 - Fingerprinting (SimHash for text, pHash for images) uses proven algorithms
 - Three-table design (`provenance_records`, `content_fingerprints`, `content_alerts`) is clean and normalized
 
 **Concerns**:
+
 - **Content fingerprint scanning** (US-E8-004) is the highest-complexity story in this epic. Scanning the NOSTR relay network for matching fingerprints is computationally expensive and architecturally complex. The decomposition allocates 4 hours -- this is underestimated. The scanner needs:
   - A relay subscription strategy (which relays? how many? subscription management)
   - A batch comparison engine (comparing incoming events against all of a creator's fingerprints)
@@ -61,12 +66,14 @@
 **Feasibility**: Achievable but carries the highest technical risk of all six domains due to external API dependencies and OAuth complexity.
 
 **Strengths**:
+
 - Correctly elevated to enterprise tier for Wave A (OAuth tokens are security-sensitive)
 - Two-wave approach (publishing first, inbox/analytics second) is good risk management
 - Platform adapter pattern already exists in `social-media-integration-service.ts` (types and interface defined for `SocialPlatformAdapter`)
 - ioredis is already installed -- BullMQ can be added as a dependency
 
 **Concerns**:
+
 - **BullMQ is not installed** and is not in `package.json`. This is a new infrastructure dependency that needs:
   - Redis configuration for BullMQ (separate DB or namespace from existing ioredis usage)
   - Worker process management (in-process or separate worker container?)
@@ -79,7 +86,7 @@
   - Bluesky AT Protocol is permissive but unstable (beta API)
   - Threads API has limited availability for third-party posting
   - **Recommendation**: Story US-E9-002 (OAuth Platform Connection Service) should include a discovery phase to validate actual API availability before implementing all 5 platform adapters. Start with Bluesky and Mastodon (free, open protocols) and X/YouTube as optional paid integrations.
-- **Unified Inbox polling** (US-E9-007) will hit API rate limits quickly across 5 platforms for thousands of creators. The decomposition mentions "polling frequency configuration" but does not address the aggregate rate limit problem. At 1,000 creators with 5 platforms polled every 5 minutes, that is 1,000 * 5 / 5 = 1,000 API calls/minute. This requires a centralized rate-limit-aware polling scheduler -- another infrastructure story not accounted for.
+- **Unified Inbox polling** (US-E9-007) will hit API rate limits quickly across 5 platforms for thousands of creators. The decomposition mentions "polling frequency configuration" but does not address the aggregate rate limit problem. At 1,000 creators with 5 platforms polled every 5 minutes, that is 1,000 \* 5 / 5 = 1,000 API calls/minute. This requires a centralized rate-limit-aware polling scheduler -- another infrastructure story not accounted for.
 - **Content Repurposing Engine** (US-E9-004) mentions "AI headline/hook suggestions" -- what AI model? This implies an LLM API integration (OpenAI, Anthropic, or local model). The decomposition does not specify this dependency or its cost.
 - The `repurposed_content` table in US-E9-001 is listed but not in PRD Section 8.3's table list -- inconsistency between PRD and decomposition.
 
@@ -92,11 +99,13 @@
 **Feasibility**: Achievable but underestimates the complexity of several features.
 
 **Strengths**:
+
 - Good dependency identification (needs EPIC-008 provenance for collaborative content attribution)
 - NOSTR encrypted group messaging for circles is the right approach for decentralization
 - Service marketplace with Lightning escrow leverages existing payment infrastructure
 
 **Concerns**:
+
 - **NOSTR encrypted group messages** (NIP-28 public channels or NIP-104 group DMs) are not fully standardized. The decomposition (US-E10-002) says "Circle discussion feed (NOSTR encrypted group messages)" but does not specify which NIP. NIP-28 is for public channels (not encrypted). Truly encrypted group messaging on NOSTR is still experimental. This is a significant underestimation. **Recommendation**: Start with a Supabase-backed group chat with NOSTR identity verification, then migrate to pure NOSTR messaging when the protocol matures.
 - **Lightning escrow** (US-E10-005, marketplace) is described as "creates Lightning escrow invoice" but Lightning payments are push-only and near-instant -- there is no native escrow mechanism. The escrow would need to be custodial (Sovren holds funds temporarily) or use hold invoices (HODL invoices). This contradicts the non-custodial philosophy in PRD Section 8.4. **This is a design conflict that needs resolution before implementation.**
 - **Revenue splitting** (US-E10-004, collaborative content) with "automated Lightning payment splitting based on configured ratios" implies the platform receives the payment and splits it. This is custodial behavior. If Sovren is not meant to hold funds, this needs a multi-party payment scheme (e.g., multiple Lightning invoices per payment) or a trusted intermediary. **This is another custodial design conflict.**
@@ -111,12 +120,14 @@
 **Feasibility**: Primarily CRUD operations with no external dependencies. Lowest risk domain.
 
 **Strengths**:
+
 - Minimal tier is appropriate for mostly form-based CRUD features
 - Contract templates with red flag analysis is a rules-based system, not ML
 - Invoice generation with embedded Lightning payment links integrates cleanly with existing infrastructure
 - Tax categorization leveraging existing transaction history is straightforward
 
 **Concerns**:
+
 - **Minimal tier lacks a frontend agent** -- the decomposition acknowledges this (US-E11-006 note) but does not resolve it. The UI story lists 7 components for 5 hours of work. Given that minimal tier has architect + backend + QA only, the frontend will need a follow-up run or tier promotion. **Recommendation**: Promote to `standard` tier. The UI is not trivial CRUD -- the Red Flag Report, Revenue Mix donut chart, and Expense Tracker require real frontend engineering.
 - **PDF export** (US-E11-002 for contracts, US-E11-003 for invoices) requires a PDF generation library. This is not mentioned in the tech stack. Options: `pdf-lib` (pure JS), `puppeteer` (Chrome-based). The Docker image size constraint (<150MB per CLAUDE.md) makes puppeteer impractical. Recommend `pdf-lib` but this needs a story for the shared utility.
 - **BTC-to-USD conversion** (US-E11-005) needs a currency API. The `CurrencyService` already exists in the DI container (`TYPES.CurrencyService`) -- but is it implemented or just a placeholder? If placeholder, this is a hidden dependency.
@@ -130,12 +141,14 @@
 **Feasibility**: Revenue forecasting is achievable with the stated "simple regression" approach, but several stories have hidden complexity.
 
 **Strengths**:
+
 - Standard tier is appropriate
 - Revenue forecasting with linear regression is a pragmatic MVP choice
 - Non-custodial emergency fund (tracking only) avoids custodial risk
 - Builds on existing `PerformancePredictionViewer` and `GrowthForecastingChart`
 
 **Concerns**:
+
 - **Subscriber health scoring** (US-E12-003) requires access to per-subscriber engagement data. The current schema tracks payments and invoices but not per-subscriber content engagement (views, comments, time-spent). **Where does engagement data per subscriber come from?** The `subscriber_health` table references `engagement_trend` but the data source is not identified. This may require new instrumentation or a new table (`subscriber_activity_log`). **Missing dependency on analytics instrumentation.**
 - **Emergency fund tracking** (US-E12-004) is described as non-custodial ("Sovren records allocations but never holds funds. Creator's wallet is the source of truth.") But the implementation includes `POST /api/v2/income/emergency-fund/withdraw` -- if Sovren never holds funds, what does "withdraw" mean? The balance is purely informational, and the creator moves funds in their own wallet. The API should only record that a withdrawal happened (bookkeeping), not trigger any actual payment. **The story description is ambiguous and could lead to custodial implementation by mistake.** Needs explicit clarification.
 - **Forecast accuracy tracking** (US-E12-002) -- "compare predictions to actuals, log accuracy score" -- requires a scheduled job to retroactively evaluate past predictions. This batch job infrastructure is the same BullMQ dependency as EPIC-009. If EPIC-012 runs after EPIC-009, BullMQ will already exist. But if the execution order changes, this becomes a hidden dependency.
@@ -150,6 +163,7 @@
 ### Dependency Graph Assessment
 
 The proposed dependency graph:
+
 ```
 EPIC-007 (Wellness) → EPIC-008 (Shield) → EPIC-010 (Network) → EPIC-011 (Business) → EPIC-012 (Income)
 EPIC-009 (Platform) runs parallel to EPIC-008 and EPIC-010
@@ -162,6 +176,7 @@ EPIC-009 (Platform) runs parallel to EPIC-008 and EPIC-010
 The decomposition states EPIC-008's dependency is "None (builds on existing NOSTR infrastructure)" which is correct. But the dependency diagram (lines 14-37 of decomposition) shows EPIC-007 → EPIC-008 with an arrow. Content Shield has zero dependency on Creator Wellness. **These two epics can run in parallel** from the start, which shortens the critical path by 1 week.
 
 **Corrected parallel lanes**:
+
 - Lane 1: EPIC-007 (Wellness) in parallel with EPIC-008 (Shield) -- both start immediately
 - Lane 2: EPIC-009 (Platform) starts after security prereqs (no dependency on 007 or 008)
 - Lane 3: EPIC-010 (Network) depends on EPIC-008 (provenance for collab content)
@@ -215,6 +230,7 @@ This allows 3 epics to start in parallel after security fixes, reducing the over
 ### Backend Package Structure -- APPROVED
 
 The proposed structure adds:
+
 - `backend/src/services/wellness/`
 - `backend/src/services/provenance/`
 - `backend/src/services/distribution/`
@@ -230,6 +246,7 @@ This follows the existing flat-service pattern. However, I note the current back
 ### Frontend Package Structure -- APPROVED
 
 The proposed structure adds 6 new feature modules:
+
 - `frontend/src/features/wellness/`
 - `frontend/src/features/content-shield/`
 - `frontend/src/features/multi-platform/`
@@ -244,6 +261,7 @@ This follows the existing feature-based architecture pattern exactly. Each modul
 ### Shared Types -- APPROVED WITH CHANGES
 
 New types proposed:
+
 - `shared/src/types/wellness.ts`
 - `shared/src/types/provenance.ts`
 - `shared/src/types/distribution.ts`
@@ -257,6 +275,7 @@ This follows the existing pattern. However, `finance.ts` is shared between EPIC-
 PRD Section 8.3 proposes 12 new tables. The decomposition expands this to ~20 tables total (including sub-tables like `creator_work_patterns`, `contract_templates`, `expenses`, `revenue_forecasts`, `subscriber_health`, `income_milestones`).
 
 **Concerns**:
+
 1. **No migration framework identified**: The existing codebase uses raw `.sql` files in `database/` rather than a migration tool (Knex, Prisma, TypeORM). Adding 20 tables via raw SQL is risky for ordering and rollback. Recommend adopting a migration runner or at minimum a numbered migration file convention.
 2. **Missing indexes on foreign keys**: The table definitions in the decomposition specify columns but not indexes. Every `creator_id` foreign key needs an index for RLS policy performance. This should be explicit in each data model story.
 3. **JSONB columns**: Several tables use `JSONB` for flexible data (`goals_json`, `line_items_json`, `metrics_json`, `portfolio_urls`). This is fine for MVP but should have documented JSON schemas for type safety. Each JSONB column should have a corresponding Zod schema in the shared types.
@@ -265,16 +284,16 @@ PRD Section 8.3 proposes 12 new tables. The decomposition expands this to ~20 ta
 
 ## 4. Tier Selection Review
 
-| Epic | Proposed Tier | Recommended Tier | Reasoning |
-|------|--------------|-----------------|-----------|
-| P1 Security Fixes | minimal | minimal | Correct -- focused backend work |
-| EPIC-007: Wellness | standard | standard | Correct -- new frontend domain + backend APIs |
-| EPIC-008: Shield | standard | standard | Correct -- crypto signing is sensitive but within team capability |
-| EPIC-009 Wave A: Platform Publishing | enterprise | enterprise | **Correct** -- OAuth tokens, external APIs, security audit needed |
-| EPIC-009 Wave B: Platform Inbox/Analytics | standard | standard | Correct -- builds on Wave A infrastructure |
-| EPIC-010: Creator Network | standard | **enterprise** | **Change** -- Lightning escrow is security-sensitive (custodial payment handling). Payment splitting also involves holding/routing funds. Needs security-audit agent. |
-| EPIC-011: Business Manager | minimal | **standard** | **Change** -- 7 UI components including charts (Revenue Mix donut, Red Flag Report) require real frontend work. Minimal tier has no frontend agent. |
-| EPIC-012: Income Stabilizer | standard | standard | Correct -- forecasting algorithms + dashboard UI |
+| Epic                                      | Proposed Tier | Recommended Tier | Reasoning                                                                                                                                                             |
+| ----------------------------------------- | ------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1 Security Fixes                         | minimal       | minimal          | Correct -- focused backend work                                                                                                                                       |
+| EPIC-007: Wellness                        | standard      | standard         | Correct -- new frontend domain + backend APIs                                                                                                                         |
+| EPIC-008: Shield                          | standard      | standard         | Correct -- crypto signing is sensitive but within team capability                                                                                                     |
+| EPIC-009 Wave A: Platform Publishing      | enterprise    | enterprise       | **Correct** -- OAuth tokens, external APIs, security audit needed                                                                                                     |
+| EPIC-009 Wave B: Platform Inbox/Analytics | standard      | standard         | Correct -- builds on Wave A infrastructure                                                                                                                            |
+| EPIC-010: Creator Network                 | standard      | **enterprise**   | **Change** -- Lightning escrow is security-sensitive (custodial payment handling). Payment splitting also involves holding/routing funds. Needs security-audit agent. |
+| EPIC-011: Business Manager                | minimal       | **standard**     | **Change** -- 7 UI components including charts (Revenue Mix donut, Red Flag Report) require real frontend work. Minimal tier has no frontend agent.                   |
+| EPIC-012: Income Stabilizer               | standard      | standard         | Correct -- forecasting algorithms + dashboard UI                                                                                                                      |
 
 **Net impact**: Two tier upgrades. EPIC-010 minimal → enterprise adds security-audit and code-review agents for the payment splitting logic. EPIC-011 minimal → standard adds frontend and security-audit agents.
 
@@ -288,6 +307,7 @@ PRD Section 8.3 proposes 12 new tables. The decomposition expands this to ~20 ta
 **Actual estimate**: 10-16 hours
 
 Scanning the NOSTR relay network for content matching creator fingerprints requires:
+
 - Relay connection management (connect to N relays, manage subscriptions)
 - Content ingestion pipeline (receive events, extract content, compute fingerprints)
 - Comparison engine (compare incoming fingerprints against all registered creator fingerprints)
@@ -296,6 +316,7 @@ Scanning the NOSTR relay network for content matching creator fingerprints requi
 - Rate limiting to avoid relay bans
 
 This is essentially building a lightweight NOSTR indexer. Recommend splitting into 3 sub-stories:
+
 1. Relay subscription manager
 2. Fingerprint comparison engine
 3. Alert generation and notification
@@ -306,6 +327,7 @@ This is essentially building a lightweight NOSTR indexer. Recommend splitting in
 **Actual estimate**: 8-12 hours
 
 Automated Lightning payment splitting for collaborative content involves:
+
 - Intercepting incoming payments (modifying the payment receipt flow)
 - Computing splits based on content-specific configuration
 - Generating outgoing payments to co-authors
@@ -321,6 +343,7 @@ This needs a thorough design phase (ADR) before any implementation.
 **Actual estimate**: 8-10 hours
 
 Each platform has a different OAuth flow:
+
 - X/Twitter: OAuth 2.0 with PKCE
 - YouTube: Google OAuth 2.0 with restricted scopes
 - Bluesky: AT Protocol authentication (not traditional OAuth)
@@ -342,6 +365,7 @@ Nine distinct components spanning four sub-features (circles, mentorship, collab
 **Actual estimate**: 6-8 hours
 
 The story mentions "Real-time updates via WebSocket for new messages" but the existing architecture uses Supabase Realtime (`supabase-realtime-service.ts`). The inbox aggregates messages from 5 external platforms. Real-time would require either:
+
 - Webhooks from each platform (only some support this)
 - Frequent polling + push via Supabase Realtime to the frontend
 - A custom WebSocket layer
@@ -373,6 +397,7 @@ Adding 4 top-level nav items breaks the existing navigation UX. No story address
 ### Missing Requirement 4: v2 API Route Registration
 
 The v1 routes are registered via `routes/v1/index.ts` and mounted in `app.ts`. New v2 routes need:
+
 - `routes/v2/index.ts` barrel export
 - Registration in `app.ts` under `/api/v2` prefix
 - v2-specific middleware (if any)
@@ -449,45 +474,45 @@ Tax Prep (US-E11-005) and Income Stabilizer (US-E12) need BTC/USD conversion rat
 
 ### Corrections to PRD v2.0
 
-| Section | Issue | Correction |
-|---------|-------|------------|
-| 8.2 | `routes/v2/` directory exists in architecture but route registration pattern not specified | Add note: "v2 routes registered via `routes/v2/index.ts` barrel and mounted at `/api/v2` prefix in `app.ts`" |
-| 8.3 | Missing tables that decomposition adds (`creator_work_patterns`, `contract_templates`, `expenses`, `revenue_forecasts`, `subscriber_health`, `income_milestones`, `repurposed_content`, `service_orders`) | Sync PRD Section 8.3 with full table list from decomposition |
-| 8.4 | "Emergency fund is non-custodial" but marketplace escrow and payment splitting require custodial holding | Add paragraph addressing custodial edge cases and the design approach for temporary fund holding |
-| 8.5 | Missing: BullMQ as new infrastructure dependency, Redis namespace strategy | Add subsection: "New infrastructure: BullMQ job queue (backed by existing ioredis), worker process management, Bull Board monitoring" |
-| 11 | Open question about emergency fund custody (Q4) does not address payment splitting custody | Expand Q4 to include collaborative content payment splitting and marketplace escrow custody |
+| Section | Issue                                                                                                                                                                                                     | Correction                                                                                                                            |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 8.2     | `routes/v2/` directory exists in architecture but route registration pattern not specified                                                                                                                | Add note: "v2 routes registered via `routes/v2/index.ts` barrel and mounted at `/api/v2` prefix in `app.ts`"                          |
+| 8.3     | Missing tables that decomposition adds (`creator_work_patterns`, `contract_templates`, `expenses`, `revenue_forecasts`, `subscriber_health`, `income_milestones`, `repurposed_content`, `service_orders`) | Sync PRD Section 8.3 with full table list from decomposition                                                                          |
+| 8.4     | "Emergency fund is non-custodial" but marketplace escrow and payment splitting require custodial holding                                                                                                  | Add paragraph addressing custodial edge cases and the design approach for temporary fund holding                                      |
+| 8.5     | Missing: BullMQ as new infrastructure dependency, Redis namespace strategy                                                                                                                                | Add subsection: "New infrastructure: BullMQ job queue (backed by existing ioredis), worker process management, Bull Board monitoring" |
+| 11      | Open question about emergency fund custody (Q4) does not address payment splitting custody                                                                                                                | Expand Q4 to include collaborative content payment splitting and marketplace escrow custody                                           |
 
 ### Corrections to Epic Decomposition
 
-| Epic | Issue | Correction |
-|------|-------|------------|
-| Dependency graph | EPIC-008 shown as dependent on EPIC-007 -- it is not | Remove arrow from EPIC-007 → EPIC-008. Both start in parallel. |
-| Dependency graph | EPIC-009 shown dependent on EPIC-007 -- it is not | Remove left-branch dependency. EPIC-009 starts after security prereqs only. |
-| EPIC-009 | Missing BullMQ infrastructure story | Add US-E9-000: BullMQ Infrastructure Setup (P0-CRITICAL, 3-4 hours) |
-| EPIC-009 | Missing AI/LLM dependency for content repurposing | Add note to US-E9-004: specify which AI service (OpenAI, local model, or rule-based) for content adaptation |
-| EPIC-010 | Tier is `standard` but involves Lightning escrow | Promote to `enterprise` for security audit of payment flows |
-| EPIC-010 | US-E10-006 (9 components, 5 hours) is underestimated | Split into US-E10-006a (Circles + Mentorship UI, 5h), US-E10-006b (Collaboration + Marketplace UI, 5h), US-E10-006c (Navigation integration, 2h) |
-| EPIC-011 | Tier is `minimal` but has 7 UI components | Promote to `standard` for frontend agent |
-| EPIC-011 | Missing PDF generation dependency | Add note to US-E11-002 and US-E11-003: "Requires pdf-lib or equivalent. Add to package.json." |
-| EPIC-012 | US-E12-003 subscriber health scoring requires per-subscriber engagement data not in current schema | Add subtask: "Validate or create subscriber_activity_log table for engagement tracking" |
-| EPIC-012 | US-E12-004 emergency fund "withdraw" endpoint is ambiguous re: custodial behavior | Reword: "Record withdrawal event (bookkeeping only -- no fund movement). Creator manages funds in their own wallet." |
-| All epics | Missing cross-cutting story for DI container v2 registration | Add US-E0-002 as prerequisite for all backend API stories |
-| All epics | Missing cross-cutting story for v2 route registration | Add US-E0-003 as prerequisite for first v2 route implementation |
-| Execution plan | Total duration 8 weeks | Revise to 10-12 weeks with corrected parallelism |
-| Story count | 54 stories | Revise to ~62 stories (adding infrastructure, navigation, DI, split UI stories) |
+| Epic             | Issue                                                                                              | Correction                                                                                                                                       |
+| ---------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Dependency graph | EPIC-008 shown as dependent on EPIC-007 -- it is not                                               | Remove arrow from EPIC-007 → EPIC-008. Both start in parallel.                                                                                   |
+| Dependency graph | EPIC-009 shown dependent on EPIC-007 -- it is not                                                  | Remove left-branch dependency. EPIC-009 starts after security prereqs only.                                                                      |
+| EPIC-009         | Missing BullMQ infrastructure story                                                                | Add US-E9-000: BullMQ Infrastructure Setup (P0-CRITICAL, 3-4 hours)                                                                              |
+| EPIC-009         | Missing AI/LLM dependency for content repurposing                                                  | Add note to US-E9-004: specify which AI service (OpenAI, local model, or rule-based) for content adaptation                                      |
+| EPIC-010         | Tier is `standard` but involves Lightning escrow                                                   | Promote to `enterprise` for security audit of payment flows                                                                                      |
+| EPIC-010         | US-E10-006 (9 components, 5 hours) is underestimated                                               | Split into US-E10-006a (Circles + Mentorship UI, 5h), US-E10-006b (Collaboration + Marketplace UI, 5h), US-E10-006c (Navigation integration, 2h) |
+| EPIC-011         | Tier is `minimal` but has 7 UI components                                                          | Promote to `standard` for frontend agent                                                                                                         |
+| EPIC-011         | Missing PDF generation dependency                                                                  | Add note to US-E11-002 and US-E11-003: "Requires pdf-lib or equivalent. Add to package.json."                                                    |
+| EPIC-012         | US-E12-003 subscriber health scoring requires per-subscriber engagement data not in current schema | Add subtask: "Validate or create subscriber_activity_log table for engagement tracking"                                                          |
+| EPIC-012         | US-E12-004 emergency fund "withdraw" endpoint is ambiguous re: custodial behavior                  | Reword: "Record withdrawal event (bookkeeping only -- no fund movement). Creator manages funds in their own wallet."                             |
+| All epics        | Missing cross-cutting story for DI container v2 registration                                       | Add US-E0-002 as prerequisite for all backend API stories                                                                                        |
+| All epics        | Missing cross-cutting story for v2 route registration                                              | Add US-E0-003 as prerequisite for first v2 route implementation                                                                                  |
+| Execution plan   | Total duration 8 weeks                                                                             | Revise to 10-12 weeks with corrected parallelism                                                                                                 |
+| Story count      | 54 stories                                                                                         | Revise to ~62 stories (adding infrastructure, navigation, DI, split UI stories)                                                                  |
 
 ### Updated Story Counts
 
-| Epic | Original | Added | Revised Total |
-|------|----------|-------|---------------|
-| Infrastructure (new) | 0 | 4 (BullMQ, DI, routes, navigation) | 4 |
-| EPIC-007 | 10 | 0 | 10 |
-| EPIC-008 | 9 | 1 (scanner split) | 10 |
-| EPIC-009 | 12 | 1 (BullMQ) | 13 |
-| EPIC-010 | 9 | 2 (UI split) | 11 |
-| EPIC-011 | 7 | 0 | 7 |
-| EPIC-012 | 7 | 1 (engagement data) | 8 |
-| **Total** | **54** | **9** | **63** |
+| Epic                 | Original | Added                              | Revised Total |
+| -------------------- | -------- | ---------------------------------- | ------------- |
+| Infrastructure (new) | 0        | 4 (BullMQ, DI, routes, navigation) | 4             |
+| EPIC-007             | 10       | 0                                  | 10            |
+| EPIC-008             | 9        | 1 (scanner split)                  | 10            |
+| EPIC-009             | 12       | 1 (BullMQ)                         | 13            |
+| EPIC-010             | 9        | 2 (UI split)                       | 11            |
+| EPIC-011             | 7        | 0                                  | 7             |
+| EPIC-012             | 7        | 1 (engagement data)                | 8             |
+| **Total**            | **54**   | **9**                              | **63**        |
 
 ---
 
@@ -496,12 +521,14 @@ Tax Prep (US-E11-005) and Income Stabilizer (US-E12) need BTC/USD conversion rat
 The PRD v2.0 and epic decomposition are **well-structured and generally sound**. The six feature domains directly address validated creator pain points, and the decomposition into 54 implementation stories (revised to ~63) provides actionable work items.
 
 **Key strengths**:
+
 - Feature-domain mapping to research-backed pain points is excellent
 - Architecture extensions follow existing monorepo patterns
 - Phased delivery with clear gates is well-designed
 - Privacy-first approach for wellness data is commendable
 
 **Key changes required before execution**:
+
 1. Fix dependency graph (EPIC-007/008/009 can all start in parallel)
 2. Add infrastructure prerequisite stories (BullMQ, DI container, v2 routes, navigation)
 3. Promote EPIC-010 to enterprise and EPIC-011 to standard tier

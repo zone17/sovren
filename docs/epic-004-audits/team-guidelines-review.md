@@ -1,4 +1,5 @@
 # Team Guidelines Review - Epic 004
+
 **Date**: 2025-10-26
 **Epic**: #004 - State Management Boundaries
 **Story**: US-004-005 - Team Guidelines Review Session
@@ -6,21 +7,25 @@
 ## Meeting Agenda
 
 ### 1. Current State Analysis (15 min)
+
 - Review Redux audit findings
 - Review React Query audit findings
 - Discuss pain points and developer friction
 
 ### 2. Proposed Architecture (30 min)
+
 - Present decision tree
 - Walk through architecture diagrams
 - Demonstrate migration examples
 
 ### 3. Guidelines Discussion (30 min)
+
 - Review proposed guidelines
 - Gather team feedback
 - Address concerns
 
 ### 4. Implementation Planning (15 min)
+
 - Agree on migration priority
 - Assign responsibilities
 - Set timeline
@@ -30,6 +35,7 @@
 ### Core Principles
 
 #### 1. Separation of Concerns
+
 ```
 Server State → React Query
 Client State → Redux
@@ -37,11 +43,13 @@ Component State → useState/useReducer
 ```
 
 #### 2. No Duplication
+
 - **NEVER** store the same data in both Redux and React Query
 - **NEVER** store loading/error states for API calls in Redux
 - **NEVER** manually cache API responses in Redux
 
 #### 3. Performance First
+
 - Use appropriate cache times for each data type
 - Implement optimistic updates for better UX
 - Prefetch predictable user navigation
@@ -49,6 +57,7 @@ Component State → useState/useReducer
 ### Approved Patterns
 
 #### Pattern A: Fetching Server Data
+
 ```typescript
 // ✅ APPROVED: React Query for all API calls
 export const usePosts = (filters?: PostFilters) => {
@@ -71,6 +80,7 @@ const PostList = () => {
 ```
 
 #### Pattern B: Managing UI State
+
 ```typescript
 // ✅ APPROVED: Redux for shared UI state
 const uiSlice = createSlice({
@@ -102,6 +112,7 @@ const ThemeToggle = () => {
 ```
 
 #### Pattern C: Handling Forms
+
 ```typescript
 // ✅ APPROVED: Simple forms use local state
 const ContactForm = () => {
@@ -143,32 +154,35 @@ const multiStepFormSlice = createSlice({
 ### Forbidden Patterns
 
 #### ❌ Anti-Pattern 1: Server Data in Redux
+
 ```typescript
 // ❌ FORBIDDEN: Never store API data in Redux
 const postsSlice = createSlice({
   name: 'posts',
   initialState: {
-    posts: [],        // ❌ API data
-    loading: false,   // ❌ API state
-    error: null       // ❌ API state
-  }
+    posts: [], // ❌ API data
+    loading: false, // ❌ API state
+    error: null, // ❌ API state
+  },
 });
 ```
 
 #### ❌ Anti-Pattern 2: UI State in React Query
+
 ```typescript
 // ❌ FORBIDDEN: Never store UI state in React Query cache
 queryClient.setQueryData(['ui', 'modal'], { open: true });
 ```
 
 #### ❌ Anti-Pattern 3: Manual API Caching
+
 ```typescript
 // ❌ FORBIDDEN: Never manually cache API responses
 useEffect(() => {
   fetch('/api/users')
-    .then(res => res.json())
-    .then(data => {
-      dispatch(setUsers(data));        // ❌ Wrong
+    .then((res) => res.json())
+    .then((data) => {
+      dispatch(setUsers(data)); // ❌ Wrong
       localStorage.setItem('users', JSON.stringify(data)); // ❌ Wrong
     });
 }, []);
@@ -179,6 +193,7 @@ useEffect(() => {
 When migrating existing code, follow this checklist:
 
 #### For Each Redux Slice:
+
 - [ ] Identify all server data properties
 - [ ] Create corresponding React Query hooks
 - [ ] Remove server data from slice
@@ -188,6 +203,7 @@ When migrating existing code, follow this checklist:
 - [ ] Update documentation
 
 #### For Each Component:
+
 - [ ] Replace Redux selectors for server data with React Query hooks
 - [ ] Replace dispatch calls for API operations with mutations
 - [ ] Keep Redux for UI state only
@@ -217,7 +233,7 @@ const queryKeys = {
     list: (filters: PostFilters) => ['posts', 'list', filters] as const,
     detail: (id: string) => ['posts', 'detail', id] as const,
     comments: (postId: string) => ['posts', postId, 'comments'] as const,
-  }
+  },
 };
 
 // Usage
@@ -226,24 +242,25 @@ queryClient.invalidateQueries({ queryKey: queryKeys.posts.all });
 
 ### Cache Strategy Guidelines
 
-| Data Type | Stale Time | Cache Time | Background Refetch |
-|-----------|------------|------------|-------------------|
-| User Profile | 15 min | 30 min | On focus |
-| Posts List | 1 min | 5 min | On focus |
-| Post Detail | 5 min | 10 min | Manual |
-| Payments | 10 min | 20 min | Manual |
-| Real-time | 0 | 5 min | Polling/WS |
-| Static | 1 hour | 24 hours | Never |
+| Data Type    | Stale Time | Cache Time | Background Refetch |
+| ------------ | ---------- | ---------- | ------------------ |
+| User Profile | 15 min     | 30 min     | On focus           |
+| Posts List   | 1 min      | 5 min      | On focus           |
+| Post Detail  | 5 min      | 10 min     | Manual             |
+| Payments     | 10 min     | 20 min     | Manual             |
+| Real-time    | 0          | 5 min      | Polling/WS         |
+| Static       | 1 hour     | 24 hours   | Never              |
 
 ### Testing Requirements
 
 #### Unit Tests
+
 ```typescript
 // Test React Query hooks
 describe('usePosts', () => {
   it('should fetch posts successfully', async () => {
     const { result } = renderHook(() => usePosts(), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -261,6 +278,7 @@ describe('uiSlice', () => {
 ```
 
 #### Integration Tests
+
 ```typescript
 // Test data flow from API to component
 it('should display posts from API', async () => {
@@ -299,26 +317,31 @@ Before approving any PR:
 ### Rollout Plan
 
 #### Phase 1: Foundation (Wave 1) ✅
+
 - Audits complete
 - Guidelines approved
 - Architecture defined
 
 #### Phase 2: Quick Wins (Wave 2)
+
 - Migrate `postSlice` to React Query
 - Migrate `paymentSlice` to React Query
 - Split `userSlice`
 
 #### Phase 3: Complex Migration (Wave 3)
+
 - Refactor `cmsSlice`
 - Consolidate UI state
 - Clean up mixed state
 
 #### Phase 4: Testing (Wave 4)
+
 - Integration tests
 - Performance validation
 - Bundle size check
 
 #### Phase 5: Documentation (Wave 5)
+
 - Update developer guide
 - Create training materials
 - Record workshop
@@ -326,11 +349,13 @@ Before approving any PR:
 ## Team Feedback Section
 
 ### Concerns Raised
+
 1. **Learning Curve**: Team needs React Query training
 2. **Migration Risk**: Need feature flags for gradual rollout
 3. **Testing Complexity**: Need more testing examples
 
 ### Agreements
+
 1. ✅ React Query for all server state
 2. ✅ Redux only for client state
 3. ✅ Follow query key convention
@@ -338,6 +363,7 @@ Before approving any PR:
 5. ✅ Comprehensive testing required
 
 ### Action Items
+
 1. Schedule React Query workshop
 2. Create migration tracking dashboard
 3. Set up feature flags
@@ -347,12 +373,14 @@ Before approving any PR:
 ## Sign-off
 
 By approving these guidelines, the team agrees to:
+
 - Follow the state management patterns
 - Complete migration by end of sprint
 - Maintain 95%+ test coverage
 - Document all exceptions
 
 ### Approvals
+
 - [ ] Frontend Lead
 - [ ] Backend Lead
 - [ ] QA Lead

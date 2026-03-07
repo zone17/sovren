@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p1
-issue_id: "681"
+issue_id: '681'
 tags: [code-review, backend, database, slice-8]
 dependencies: []
 ---
@@ -24,6 +24,7 @@ Every Supabase query in `FollowService` targets `.from('follows')` but the actua
 ## Proposed Solutions
 
 ### Solution A: Rename all callsites (Recommended)
+
 - Replace `.from<FollowRow>('follows')` with `.from<FollowRow>('followers')` at all 7 locations
 - **Effort:** Small (find-replace)
 - **Risk:** None — matches DDL exactly
@@ -31,6 +32,7 @@ Every Supabase query in `FollowService` targets `.from('follows')` but the actua
 ## Technical Details
 
 **Affected files:**
+
 - `packages/backend/src/services/community/FollowService.ts` (7 locations)
 
 ## Acceptance Criteria

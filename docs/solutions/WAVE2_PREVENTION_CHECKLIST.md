@@ -164,7 +164,6 @@ This checklist tracks implementation of three prevention strategies to prevent r
 ### Metrics Setup
 
 - [ ] **Step 10.1**: Create dashboard tracking:
-
   - Pre-commit bypass rate (goal: <5/sprint)
   - Mock drift issues (goal: <1/sprint)
   - Merge conflicts (goal: <1/sprint)
@@ -186,14 +185,12 @@ This checklist tracks implementation of three prevention strategies to prevent r
 ### Documentation
 
 - [ ] **Step 11.1**: Update `CLAUDE.md` with new sections:
-
   - Pre-commit hooks section
   - Mock validation section
   - File ownership section
   - Links to all documentation
 
 - [ ] **Step 11.2**: Add to team onboarding:
-
   - "Running pre-commit hooks"
   - "Validating mocks when changing services"
   - "Requesting shared file edits"

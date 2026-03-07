@@ -11,6 +11,7 @@
 This document provides the complete specification for decomposing Epic 004 (State Management Boundaries) into granular 1-point user stories following the same pattern established in Epic 001 and Epic 002.
 
 **Epic Overview**:
+
 - **Objective**: Define clear architectural boundaries between Redux Toolkit and React Query to eliminate confusion and improve developer experience
 - **Estimated Stories**: 24-30 stories (1 point each)
 - **Estimated Effort**: 24-30 story points (2-3 weeks with 2-3 developers)
@@ -26,11 +27,13 @@ This document provides the complete specification for decomposing Epic 004 (Stat
 Based on the Epic 004 technical scope, the decomposition should create **5 parallel work streams**:
 
 #### Stream A: Guidelines & Architecture (4-5 stories)
+
 **Focus**: Define state management patterns and decision trees
 **Developer Profile**: Tech lead or senior architect
 **Estimated Time**: 8-10 hours
 
 **Suggested Stories**:
+
 1. **Story 1**: Create state management decision tree and guidelines
    - Decision tree (When to use Redux vs React Query vs local state)
    - Developer guidelines document
@@ -65,17 +68,18 @@ Based on the Epic 004 technical scope, the decomposition should create **5 paral
    - 2 hours
 
 #### Stream B: Server State → React Query Migration (8-10 stories)
+
 **Focus**: Move server data from Redux to React Query
 **Developer Profile**: Frontend developer with API experience
 **Estimated Time**: 16-20 hours
 
-**Suggested Stories**:
-6. **Story 6**: Audit and categorize all current state (Redux + React Query)
-   - Inventory all Redux slices
-   - Inventory all React Query usage
-   - Categorize: client state vs server state
-   - Identify duplications
-   - 2-3 hours
+**Suggested Stories**: 6. **Story 6**: Audit and categorize all current state (Redux + React Query)
+
+- Inventory all Redux slices
+- Inventory all React Query usage
+- Categorize: client state vs server state
+- Identify duplications
+- 2-3 hours
 
 7. **Story 7**: Create React Query hooks for creator data
    - useCreators, useCreatorProfile, useCreatorAnalytics
@@ -132,17 +136,12 @@ Based on the Epic 004 technical scope, the decomposition should create **5 paral
     - 2 hours
 
 #### Stream C: Client State → Redux Consolidation (4-6 stories)
+
 **Focus**: Consolidate UI state in Redux
 **Developer Profile**: Frontend developer with Redux experience
 **Estimated Time**: 8-12 hours
 
-**Suggested Stories**:
-16. **Story 16**: Create unified UI slice for application state
-    - Modal state management
-    - Theme state
-    - Sidebar/drawer state
-    - Notification state
-    - 2-3 hours
+**Suggested Stories**: 16. **Story 16**: Create unified UI slice for application state - Modal state management - Theme state - Sidebar/drawer state - Notification state - 2-3 hours
 
 17. **Story 17**: Consolidate authentication and session state in Redux
     - authSlice enhancements
@@ -169,16 +168,12 @@ Based on the Epic 004 technical scope, the decomposition should create **5 paral
     - 2 hours
 
 #### Stream D: Testing & Validation (3-4 stories)
+
 **Focus**: Comprehensive testing of new state patterns
 **Developer Profile**: QA focus or senior frontend developer
 **Estimated Time**: 6-8 hours
 
-**Suggested Stories**:
-21. **Story 21**: Create state management integration test suite
-    - Test Redux state persistence
-    - Test React Query cache behavior
-    - Test data flow from API to components
-    - 2-3 hours
+**Suggested Stories**: 21. **Story 21**: Create state management integration test suite - Test Redux state persistence - Test React Query cache behavior - Test data flow from API to components - 2-3 hours
 
 22. **Story 22**: Add performance testing for state management
     - Benchmark query response times
@@ -194,17 +189,12 @@ Based on the Epic 004 technical scope, the decomposition should create **5 paral
     - 2-3 hours
 
 #### Stream E: Documentation & Training (3-4 stories)
+
 **Focus**: Documentation and team enablement
 **Developer Profile**: Technical writer or senior developer
 **Estimated Time**: 6-8 hours
 
-**Suggested Stories**:
-24. **Story 24**: Create developer guide with code examples
-    - Redux patterns section
-    - React Query patterns section
-    - Common patterns library
-    - Anti-patterns to avoid
-    - 2-3 hours
+**Suggested Stories**: 24. **Story 24**: Create developer guide with code examples - Redux patterns section - React Query patterns section - Common patterns library - Anti-patterns to avoid - 2-3 hours
 
 25. **Story 25**: Create troubleshooting and debugging guide
     - Redux DevTools usage
@@ -225,10 +215,7 @@ Based on the Epic 004 technical scope, the decomposition should create **5 paral
     - Create ADR for Redux vs React Query boundaries
     - 2 hours
 
-**Optional Stories** (if needed):
-28. **Story 28**: Add React Query DevTools integration
-29. **Story 29**: Implement advanced caching strategies (optimistic updates, prefetching)
-30. **Story 30**: Create state management linting rules
+**Optional Stories** (if needed): 28. **Story 28**: Add React Query DevTools integration 29. **Story 29**: Implement advanced caching strategies (optimistic updates, prefetching) 30. **Story 30**: Create state management linting rules
 
 ---
 
@@ -249,17 +236,21 @@ Stories 21-23 (Testing) → Stories 24-27 (Documentation)
 ### Parallel Work Opportunities
 
 **Phase 1: Foundation** (Week 1, Days 1-2)
+
 - Stories 1-5 (Guidelines) - Sequential by 1 developer
 - Story 6 (Audit) - Can run parallel with Stories 2-3
 
 **Phase 2: React Query Migration** (Week 1-2)
+
 - Stories 7-10 (Create hooks) - Can all run in parallel by 2-4 developers
 - Stories 11-13 (Migration) - Can run in parallel once hooks are ready
 
 **Phase 3: Dual Track** (Week 2)
+
 - Stream B (Stories 14-15) and Stream C (Stories 16-20) are 100% parallel
 
 **Phase 4: Finalization** (Week 3)
+
 - Stories 21-23 (Testing) - Can run in parallel
 - Stories 24-27 (Documentation) - Sequential or parallel
 
@@ -268,6 +259,7 @@ Stories 21-23 (Testing) → Stories 24-27 (Documentation)
 ## Story Sizing Guidelines
 
 Each story MUST be:
+
 - **1 point**: 2-4 hours of work
 - **Testable**: Has clear acceptance criteria
 - **Atomic**: Can be completed independently
@@ -276,6 +268,7 @@ Each story MUST be:
 ### Size Validation Checklist
 
 For each story, verify:
+
 - [ ] Can be completed in 2-4 hours by an experienced developer?
 - [ ] Has 3-5 clear acceptance criteria in Given-When-Then format?
 - [ ] Has specific file paths and code examples?
@@ -289,19 +282,24 @@ For each story, verify:
 Each Epic must include these 5 diagram types:
 
 ### 1. Sequence Diagram
+
 **Purpose**: Show data flow from API → React Query → Component
 **Actors**: API, React Query, Redux, Component
 
 ### 2. Flowchart
+
 **Purpose**: Show state management decision tree (When to use Redux vs React Query vs local state)
 
 ### 3. State Diagram
+
 **Purpose**: Show React Query cache states (fresh, stale, fetching, error)
 
 ### 4. Architecture Diagram
+
 **Purpose**: Show overall state management architecture (Redux store structure + React Query organization)
 
 ### 5. Gantt Chart
+
 **Purpose**: Show sprint timeline and story dependencies
 
 ---
@@ -309,22 +307,26 @@ Each Epic must include these 5 diagram types:
 ## Testing Requirements
 
 ### Unit Tests (95%+ Coverage)
+
 - All Redux reducers and selectors
 - All React Query hooks
 - All custom hook logic
 
 ### Integration Tests
+
 - Redux state persistence (localStorage)
 - React Query cache behavior
 - Data flow from API to components
 - Optimistic update scenarios
 
 ### E2E Tests
+
 - Critical user flows (login, content creation, payment)
 - State persistence across page refreshes
 - Cache invalidation on mutations
 
 ### Performance Tests
+
 - Query response times (baseline vs new)
 - Bundle size impact
 - Cache hit rates (target > 80%)
@@ -338,11 +340,13 @@ Each Epic must include these 5 diagram types:
 ### Security Considerations
 
 **Story 17** (Authentication State):
+
 - **Risk**: Session management vulnerabilities
 - **Required Review**: 1 security specialist
 - **Tests**: Token refresh, session expiry, XSS prevention
 
 **Story 18** (Preferences Slice):
+
 - **Risk**: localStorage security
 - **Required Review**: 1 frontend security specialist
 - **Tests**: Prevent localStorage poisoning, sanitize preferences
@@ -434,6 +438,7 @@ All other stories have low security risk.
 ## Success Metrics
 
 ### Technical Metrics
+
 - Clear state management guidelines documented: ✅
 - All server data in React Query: ✅
 - All UI state in Redux: ✅
@@ -443,6 +448,7 @@ All other stories have low security risk.
 - Bundle size impact: < 5KB increase
 
 ### Business Metrics
+
 - 20% faster feature development (measured by story velocity)
 - New developer onboarding: < 1 day to understand state management
 - Reduced state-related bugs (25% reduction)

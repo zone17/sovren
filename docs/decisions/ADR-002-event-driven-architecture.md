@@ -16,6 +16,7 @@ As Sovren evolved, services became increasingly coupled through direct method ca
 - **Poor Scalability**: Cannot independently scale services based on load
 
 **Example of problematic coupling**:
+
 ```typescript
 // Before: Tight coupling
 class PaymentService {
@@ -35,6 +36,7 @@ class PaymentService {
 ```
 
 We needed an architecture that:
+
 - Decouples services through asynchronous event communication
 - Allows services to react to events without direct dependencies
 - Enables independent scaling and deployment
@@ -46,6 +48,7 @@ We needed an architecture that:
 We will implement an **in-process Event-Driven Architecture** using an event bus pattern with typed events.
 
 **Implementation Approach**:
+
 ```typescript
 // Event definitions
 interface PaymentCompletedEvent {
@@ -74,9 +77,7 @@ class EventBus implements IEventBus {
     const handlers = this.handlers.get(event.type) || [];
 
     // Execute handlers asynchronously
-    await Promise.allSettled(
-      handlers.map(handler => handler(event))
-    );
+    await Promise.allSettled(handlers.map((handler) => handler(event)));
 
     // Log failures but don't block
     this.logger.info(`Published ${event.type} to ${handlers.length} handlers`);
@@ -96,8 +97,8 @@ class PaymentService {
         amount: invoice.amount,
         userId: invoice.userId,
         contentId: invoice.contentId,
-        timestamp: new Date()
-      }
+        timestamp: new Date(),
+      },
     });
   }
 }
@@ -115,6 +116,7 @@ class NotificationService {
 ```
 
 **Key Patterns Adopted**:
+
 1. **Typed Events**: TypeScript interfaces for all events with strict typing
 2. **Event Bus**: Singleton event dispatcher using pub/sub pattern
 3. **Async Handlers**: Non-blocking event handlers with error isolation
@@ -136,6 +138,7 @@ class NotificationService {
    - Better user experience with faster response times
 
 3. **Better Testability**: Test services in isolation
+
    ```typescript
    // Test publisher without subscribers
    it('should publish payment.completed event', async () => {
@@ -143,7 +146,7 @@ class NotificationService {
      await paymentService.processPayment(invoice);
      expect(eventBusSpy).toHaveBeenCalledWith({
        type: 'payment.completed',
-       payload: expect.objectContaining({ invoiceId: invoice.id })
+       payload: expect.objectContaining({ invoiceId: invoice.id }),
      });
    });
    ```
@@ -193,13 +196,16 @@ class NotificationService {
 ## Alternatives Considered
 
 ### 1. External Message Queue (RabbitMQ, Kafka)
+
 **Pros**:
+
 - Guaranteed message delivery
 - Persistent event storage
 - Better for distributed systems
 - Horizontal scaling
 
 **Cons**:
+
 - Operational complexity (another service to manage)
 - Network overhead for local events
 - Cost of infrastructure
@@ -208,12 +214,15 @@ class NotificationService {
 **Why Rejected**: Current scale doesn't justify external queue complexity. In-process events sufficient for 10,000+ users. Can migrate to external queue later if needed.
 
 ### 2. Database Event Store
+
 **Pros**:
+
 - Durable event storage
 - Can replay events from database
 - Simple implementation
 
 **Cons**:
+
 - Database writes for every event (performance)
 - Polling required to consume events
 - Higher latency than in-memory
@@ -222,12 +231,15 @@ class NotificationService {
 **Why Rejected**: Performance overhead not justified. Event logging provides sufficient audit trail without blocking event flow.
 
 ### 3. HTTP Webhooks Between Services
+
 **Pros**:
+
 - Standard HTTP protocol
 - Language-agnostic
 - Easy to understand
 
 **Cons**:
+
 - Network overhead for local communication
 - Requires retry logic
 - Synchronous coupling
@@ -236,12 +248,15 @@ class NotificationService {
 **Why Rejected**: Overkill for services in same process. HTTP webhooks used for external integrations, not internal events.
 
 ### 4. Direct Method Calls with Async Processing
+
 **Pros**:
+
 - Simple to implement
 - No framework needed
 - Direct code flow
 
 **Cons**:
+
 - Still coupled to service interfaces
 - Hard to add new handlers
 - Testing requires mocking all dependencies
@@ -252,45 +267,46 @@ class NotificationService {
 ## Implementation Notes
 
 **Event Naming Convention**:
+
 ```typescript
 // Format: <domain>.<action>
-'payment.completed'
-'payment.failed'
-'content.unlocked'
-'user.subscribed'
-'invoice.created'
+'payment.completed';
+'payment.failed';
+'content.unlocked';
+'user.subscribed';
+'invoice.created';
 ```
 
 **Event Structure**:
+
 ```typescript
 interface BaseEvent {
   type: string;
   payload: unknown;
   metadata: {
-    correlationId: string;  // Trace across services
+    correlationId: string; // Trace across services
     timestamp: Date;
-    source: string;         // Publishing service
-    version: number;        // Event schema version
+    source: string; // Publishing service
+    version: number; // Event schema version
   };
 }
 ```
 
 **Error Handling**:
+
 ```typescript
 class EventBus {
   async publish<T extends Event>(event: T): Promise<void> {
     const handlers = this.handlers.get(event.type) || [];
 
-    const results = await Promise.allSettled(
-      handlers.map(handler => handler(event))
-    );
+    const results = await Promise.allSettled(handlers.map((handler) => handler(event)));
 
     // Log failures but continue
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
         this.logger.error(`Handler ${index} failed for ${event.type}`, {
           error: result.reason,
-          event
+          event,
         });
 
         // Add to dead letter queue
@@ -303,6 +319,7 @@ class EventBus {
 
 **Migration Path to External Queue**:
 If we need to scale beyond in-process events:
+
 1. Implement adapter pattern for event bus interface
 2. Create RabbitMQ/Kafka implementation
 3. Swap implementation in DI container

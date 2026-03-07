@@ -9,7 +9,6 @@
  * @see Story #001: Define Payment State Machine Types and Enums
  */
 
-
 import {
   PaymentState,
   PaymentStateSchema,

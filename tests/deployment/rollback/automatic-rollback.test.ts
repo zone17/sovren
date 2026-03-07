@@ -48,7 +48,7 @@ describe('Automatic Rollback', () => {
       await simulator.simulateErrorRate(3);
 
       // Wait a bit
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const finalState = await simulator.getDeploymentState(deployment.id);
       expect(finalState.status).toBe('success');
@@ -102,7 +102,7 @@ describe('Automatic Rollback', () => {
   describe('Timeout Rollback Triggers', () => {
     it('should rollback on timeout', async () => {
       const deployment = await simulator.startDeployment('1.2.3', {
-        timeout: 5000 // 5 seconds
+        timeout: 5000, // 5 seconds
       });
 
       // Simulate slow deployment (10 seconds)
@@ -115,7 +115,7 @@ describe('Automatic Rollback', () => {
 
     it('should respect custom timeout values', async () => {
       const deployment = await simulator.startDeployment('1.2.3', {
-        timeout: 1000 // 1 second
+        timeout: 1000, // 1 second
       });
 
       await simulator.simulateSlowDeployment(2000); // 2 seconds
@@ -126,11 +126,11 @@ describe('Automatic Rollback', () => {
 
     it('should complete successfully if within timeout', async () => {
       const deployment = await simulator.startDeployment('1.2.3', {
-        timeout: 30000 // 30 seconds
+        timeout: 30000, // 30 seconds
       });
 
       // Deployment completes quickly (< 1 second)
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const finalState = await simulator.getDeploymentState(deployment.id);
       expect(finalState.status).toBe('success');
@@ -177,7 +177,7 @@ describe('Automatic Rollback', () => {
 
       await simulator.deployWithRollback({
         onAlert: mockAlertHandler,
-        shouldFail: true
+        shouldFail: true,
       });
 
       expect(alerts).toHaveLength(1);
@@ -191,7 +191,7 @@ describe('Automatic Rollback', () => {
 
       await simulator.deployWithRollback({
         onAlert: mockAlertHandler,
-        shouldFail: true
+        shouldFail: true,
       });
 
       const alert = alerts[0];
@@ -205,7 +205,7 @@ describe('Automatic Rollback', () => {
 
       await simulator.deployWithRollback({
         onAlert: mockAlertHandler,
-        shouldFail: false
+        shouldFail: false,
       });
 
       expect(alerts).toHaveLength(0);
@@ -217,7 +217,7 @@ describe('Automatic Rollback', () => {
 
       await simulator.deployWithRollback({
         onAlert: mockAlertHandler,
-        shouldFail: true
+        shouldFail: true,
       });
 
       expect(alerts[0].channel).toBe('slack');
@@ -262,7 +262,7 @@ describe('Automatic Rollback', () => {
 
       await Promise.all([
         simulator.waitForRollback(deployment1.id),
-        simulator.waitForRollback(deployment2.id)
+        simulator.waitForRollback(deployment2.id),
       ]);
 
       const state1 = await simulator.getDeploymentState(deployment1.id);

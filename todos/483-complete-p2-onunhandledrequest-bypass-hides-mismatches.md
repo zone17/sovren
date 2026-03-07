@@ -1,14 +1,14 @@
 ---
 status: pending
 priority: p2
-issue_id: "483"
+issue_id: '483'
 tags:
   - code-review
   - msw
   - test-infrastructure
   - phase-9
 dependencies:
-  - "479"
+  - '479'
 ---
 
 # onUnhandledRequest: 'bypass' hides handler mismatches
@@ -37,6 +37,6 @@ dependencies:
 
 ## Work Log
 
-| Date | Action | Learnings |
-|------|--------|-----------|
+| Date       | Action                          | Learnings                                                                    |
+| ---------- | ------------------------------- | ---------------------------------------------------------------------------- |
 | 2026-02-24 | Created from Phase 9 MSW review | 'bypass' is appropriate for stable suites; 'warn' is better during migration |

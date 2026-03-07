@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Creator Circle Service
  * EPIC-010: Creator Network — Circle management, membership, and posts
@@ -11,6 +10,7 @@ import type { IEventBus } from '../../interfaces/shared/IEventBus';
 import {
   AuthorizationError,
   ConflictError,
+  DatabaseError,
   NotFoundError,
   ValidationError,
 } from '../../utils/errors';
@@ -93,7 +93,7 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (error || !circleId) {
       this.logger.error('Failed to create circle', { error, creatorId });
-      throw new ValidationError(`Failed to create circle: ${error?.message}`);
+      throw new DatabaseError('Failed to create circle');
     }
 
     this.logger.info('Circle created', { circleId, creatorId });
@@ -126,7 +126,7 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (error) {
       this.logger.error('Failed to get circles', { error, creatorId });
-      throw new ValidationError(`Failed to get circles: ${error.message}`);
+      throw new DatabaseError('Failed to get circles');
     }
 
     return data ?? [];
@@ -169,7 +169,7 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (error) {
       this.logger.error('Failed to get suggested circles', { error, creatorId });
-      throw new ValidationError(`Failed to get suggested circles: ${error.message}`);
+      throw new DatabaseError('Failed to get suggested circles');
     }
 
     return data ?? [];
@@ -230,7 +230,7 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (error) {
       this.logger.error('Failed to leave circle', { error, circleId, creatorId });
-      throw new ValidationError(`Failed to leave circle: ${error.message}`);
+      throw new DatabaseError('Failed to leave circle');
     }
 
     this.logger.info('Creator left circle', { circleId, creatorId });
@@ -264,7 +264,7 @@ export class CreatorCircleService implements ICreatorCircleService {
         throw new ConflictError('Already a member of this circle');
       }
       this.logger.error('Failed to join circle', { error: insertError, circleId, creatorId });
-      throw new ValidationError(`Failed to join circle: ${insertError.message}`);
+      throw new DatabaseError('Failed to join circle');
     }
 
     // Step 2: Count members AFTER insert — if over capacity, rollback
@@ -288,7 +288,7 @@ export class CreatorCircleService implements ICreatorCircleService {
           originalError: countError,
         });
       }
-      throw new ValidationError(`Failed to count circle members: ${countError.message}`);
+      throw new DatabaseError('Failed to count circle members');
     }
 
     if ((currentCount ?? 0) > circle.max_members) {
@@ -345,13 +345,20 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (error) {
       this.logger.error('Failed to remove member', { error, circleId, memberId });
-      throw new ValidationError(`Failed to remove member: ${error.message}`);
+      throw new DatabaseError('Failed to remove member');
     }
 
     this.logger.info('Member removed from circle', { circleId, memberId, requesterId });
   }
 
-  async getCirclePosts(circleId: string, creatorId: string): Promise<CirclePostRow[]> {
+  async getCirclePosts(
+    circleId: string,
+    creatorId: string,
+    pagination?: { offset?: number; limit?: number }
+  ): Promise<CirclePostRow[]> {
+    const offset = pagination?.offset ?? 0;
+    const limit = Math.min(pagination?.limit ?? 50, 100); // #713: default 50, cap 100
+
     // #359: Verify requester is the circle creator OR a circle member before returning posts
     const { data: circle, error: circleError } = await this.db
       .from<CircleRow>('creator_circles')
@@ -382,17 +389,42 @@ export class CreatorCircleService implements ICreatorCircleService {
       .select('id, circle_id, author_id, content, created_at')
       .eq('circle_id', circleId)
       .order('created_at', { ascending: false })
-      .limit(50);
+      .range(offset, offset + limit - 1);
 
     if (error) {
       this.logger.error('Failed to get circle posts', { error, circleId, creatorId });
-      throw new ValidationError(`Failed to get circle posts: ${error.message}`);
+      throw new DatabaseError('Failed to get circle posts');
     }
 
     return data ?? [];
   }
 
   async createPost(circleId: string, authorId: string, content: string): Promise<{ id: string }> {
+    // #723: Verify the author is a member of the circle before allowing post creation.
+    // Circle creator is implicitly authorized; other users must have a membership row.
+    const { data: circle, error: circleError } = await this.db
+      .from<CircleRow>('creator_circles')
+      .select('created_by')
+      .eq('id', circleId)
+      .single();
+
+    if (circleError || !circle) {
+      throw new NotFoundError('Circle');
+    }
+
+    if (circle.created_by !== authorId) {
+      const { data: membership } = await this.db
+        .from<CircleMemberRow>('circle_members')
+        .select('id')
+        .eq('circle_id', circleId)
+        .eq('creator_id', authorId)
+        .maybeSingle();
+
+      if (!membership) {
+        throw new AuthorizationError('You must be a member of this circle to post');
+      }
+    }
+
     // Input validation (empty, length) handled by Zod at the route layer.
     // Strip control characters to prevent injection via non-printable chars.
     const sanitizedContent = stripControlChars(content.trim());
@@ -409,35 +441,54 @@ export class CreatorCircleService implements ICreatorCircleService {
 
     if (error || !rows) {
       this.logger.error('Failed to create circle post', { error, circleId, authorId });
-      throw new ValidationError(`Failed to create post: ${error?.message}`);
+      throw new DatabaseError('Failed to create post');
     }
 
     this.logger.info('Circle post created', { postId: rows.id, circleId, authorId });
 
-    // Fetch member IDs for fan-out notification (fire-and-forget)
-    void this.db
-      .from<CircleMemberRow>('circle_members')
-      .select('creator_id')
-      .eq('circle_id', circleId)
-      .then(({ data: members }) => {
-        const memberIds = (members ?? []).map((m) => m.creator_id);
+    // #731: Paginated fan-out — member SELECT uses PAGE_SIZE=500 to avoid unbounded queries.
+    // Fire-and-forget: notification failures must NOT block post creation.
+    void (async () => {
+      try {
+        const PAGE_SIZE = 500;
+        const memberIds: string[] = [];
+        let offset = 0;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data: members, error } = await this.db
+            .from<CircleMemberRow>('circle_members')
+            .select('creator_id')
+            .eq('circle_id', circleId)
+            .range(offset, offset + PAGE_SIZE - 1);
+
+          if (error) {
+            this.logger.error(
+              'CreatorCircleService: failed to fetch members for event (non-blocking)',
+              { error, circleId, postId: rows.id }
+            );
+            break;
+          }
+
+          const batch = members ?? [];
+          for (const m of batch) memberIds.push(m.creator_id);
+          hasMore = batch.length === PAGE_SIZE;
+          offset += PAGE_SIZE;
+        }
+
         this.emitEvent(DomainEventType.COMMUNITY_CIRCLE_POST_CREATED, rows.id, {
           authorId,
           circleId,
           postId: rows.id,
           memberIds,
         });
-      })
-      .catch((err) => {
+      } catch (err) {
         this.logger.error(
           'CreatorCircleService: failed to fetch members for event (non-blocking)',
-          {
-            err,
-            circleId,
-            postId: rows.id,
-          }
+          { err, circleId, postId: rows.id }
         );
-      });
+      }
+    })();
 
     return { id: rows.id };
   }

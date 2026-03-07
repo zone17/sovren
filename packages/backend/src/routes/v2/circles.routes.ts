@@ -17,6 +17,7 @@ import {
   UuidParamSchema,
 } from '../../validators/community';
 import { ValidationError } from '../../utils/errors';
+import { getUserIdByPubkey } from '../../utils/getUserIdByPubkey';
 import type { ICreatorCircleService } from '../../interfaces/community/ICreatorCircleService';
 
 const router = Router();
@@ -53,7 +54,9 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const data = await getCircleService().createCircle(getAuthUser(req).nostr_pubkey, result.data);
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const data = await getCircleService().createCircle(creatorId, result.data);
     res.status(201).json(createApiResponse(req, data));
   })
 );
@@ -68,7 +71,9 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const data = await getCircleService().getCircles(getAuthUser(req).nostr_pubkey);
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const data = await getCircleService().getCircles(creatorId);
     res.json(createApiResponse(req, data));
   })
 );
@@ -83,7 +88,9 @@ router.get(
   authenticate,
   requireCreator,
   asyncHandler(async (req, res) => {
-    const data = await getCircleService().getSuggestedCircles(getAuthUser(req).nostr_pubkey);
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const data = await getCircleService().getSuggestedCircles(creatorId);
     res.json(createApiResponse(req, data));
   })
 );
@@ -126,7 +133,9 @@ router.post(
       throw new ValidationError('Invalid circle ID format');
     }
 
-    await getCircleService().joinCircle(getAuthUser(req).nostr_pubkey, idResult.data);
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getCircleService().joinCircle(creatorId, idResult.data);
     res.json(createApiResponse(req, { joined: true }));
   })
 );
@@ -146,7 +155,9 @@ router.delete(
       throw new ValidationError('Invalid circle ID format');
     }
 
-    await getCircleService().leaveCircle(getAuthUser(req).nostr_pubkey, idResult.data);
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getCircleService().leaveCircle(creatorId, idResult.data);
     res.json(createApiResponse(req, { left: true }));
   })
 );
@@ -171,11 +182,9 @@ router.delete(
       throw new ValidationError('Invalid member ID format');
     }
 
-    await getCircleService().removeMember(
-      idResult.data,
-      memberIdResult.data,
-      getAuthUser(req).nostr_pubkey
-    );
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const requesterId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getCircleService().removeMember(idResult.data, memberIdResult.data, requesterId);
     res.json(createApiResponse(req, { removed: true }));
   })
 );
@@ -199,10 +208,14 @@ router.get(
       throw new ValidationError('Invalid circle ID format');
     }
 
-    const data = await getCircleService().getCirclePosts(
-      idResult.data,
-      getAuthUser(req).nostr_pubkey
-    );
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const creatorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const data = await getCircleService().getCirclePosts(idResult.data, creatorId, {
+      offset,
+      limit,
+    });
     res.json(createApiResponse(req, data));
   })
 );
@@ -228,11 +241,9 @@ router.post(
       throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const data = await getCircleService().createPost(
-      idResult.data,
-      getAuthUser(req).nostr_pubkey,
-      result.data.content
-    );
+    const db = container.resolve(TYPES.Database) as Parameters<typeof getUserIdByPubkey>[0];
+    const authorId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    const data = await getCircleService().createPost(idResult.data, authorId, result.data.content);
     res.status(201).json(createApiResponse(req, data));
   })
 );

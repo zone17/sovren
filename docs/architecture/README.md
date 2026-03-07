@@ -49,10 +49,12 @@ Complete system architecture showing all 29 services organized by domain:
 - **Payment Services** (7): PaymentProcessing, CurrencyService, SubscriptionService, RefundService, PaymentAnalytics, WebhookService
 
 **View Diagram:**
+
 - **GitHub Render:** ![System Architecture](https://github.com/YOUR_USERNAME/Sovren/blob/main/docs/architecture/diagrams/system-architecture-overview.mmd)
-- **Edit Online:** [Mermaid Live Editor](https://mermaid.live/edit#pako:eNpVjk...) *(Copy diagram content to editor)*
+- **Edit Online:** [Mermaid Live Editor](https://mermaid.live/edit#pako:eNpVjk...) _(Copy diagram content to editor)_
 
 **Key Characteristics:**
+
 - Event-driven architecture with EventBus as central hub
 - Repository pattern for data access abstraction
 - Service Container for dependency injection
@@ -70,6 +72,7 @@ Complete system architecture showing all 29 services organized by domain:
 Sequence diagram showing the complete content publishing workflow from user action to NOSTR publication and follower notification.
 
 **Flow Steps:**
+
 1. Creator submits content via Web Application
 2. API Gateway validates authentication
 3. Content Publishing Service coordinates workflow
@@ -81,6 +84,7 @@ Sequence diagram showing the complete content publishing workflow from user acti
 9. Cache invalidation ensures data consistency
 
 **Performance Metrics:**
+
 - End-to-End Latency: 200-500ms
 - NOSTR Publishing: 100-300ms
 - Database Write: 50-100ms
@@ -93,6 +97,7 @@ Sequence diagram showing the complete content publishing workflow from user acti
 Sequence diagram for Lightning Network payment processing from invoice creation to settlement.
 
 **Flow Steps:**
+
 1. User initiates payment request
 2. Payment Processing Service generates BOLT11 invoice
 3. Currency Service provides exchange rate conversion
@@ -105,6 +110,7 @@ Sequence diagram for Lightning Network payment processing from invoice creation 
 10. Creator receives payment notification
 
 **Performance Metrics:**
+
 - Invoice Generation: <100ms
 - Lightning Settlement: 1-5 seconds
 - Webhook Processing: <500ms
@@ -118,6 +124,7 @@ Sequence diagram for Lightning Network payment processing from invoice creation 
 Complete subscription lifecycle from creation through renewals to cancellation.
 
 **Lifecycle Phases:**
+
 1. **Creation:** User subscribes, initial payment processed
 2. **Activation:** Access granted, scheduler set for renewal
 3. **Renewal:** Automatic recurring payments on billing date
@@ -126,6 +133,7 @@ Complete subscription lifecycle from creation through renewals to cancellation.
 6. **Cancellation:** User-initiated or automatic after suspension
 
 **Performance Metrics:**
+
 - Subscription Creation: <1 second
 - Renewal Processing: 5-10 seconds
 - Retry Interval: 24 hours
@@ -138,6 +146,7 @@ Complete subscription lifecycle from creation through renewals to cancellation.
 Real-time user activity tracking and analytics workflow.
 
 **Tracking Capabilities:**
+
 - Content views and engagement actions
 - Session metrics and duration tracking
 - Activity history aggregation
@@ -145,6 +154,7 @@ Real-time user activity tracking and analytics workflow.
 - Recommendation engine updates
 
 **Performance Metrics:**
+
 - Activity Logging: <50ms (async)
 - Session Finalization: <200ms
 - Analytics Calculation: <500ms
@@ -161,6 +171,7 @@ Real-time user activity tracking and analytics workflow.
 Multi-layer caching strategy for read operations:
 
 **Cache Layers:**
+
 1. **Edge Cache** (Vercel/Cloudflare, TTL: 60s) - 40% hit rate, 1ms latency
 2. **Application Cache** (Redis L1, TTL: 300s) - 45% hit rate, 5ms latency
 3. **Service Cache** (In-Memory, TTL: 60s) - Hot data
@@ -177,6 +188,7 @@ Multi-layer caching strategy for read operations:
 Write path with transaction management and cache invalidation:
 
 **Write Flow:**
+
 1. Input validation and sanitization
 2. Transaction begin on primary database
 3. Write operation execution
@@ -186,6 +198,7 @@ Write path with transaction management and cache invalidation:
 7. Event subscribers notified (Analytics, Search, Notifications)
 
 **Performance Metrics:**
+
 - Write Latency: ~200ms
 - Transaction Success: 99.9%
 - Cache Invalidation: <10ms
@@ -197,18 +210,21 @@ Write path with transaction management and cache invalidation:
 Complete event-driven architecture with pub/sub pattern:
 
 **Event Types:**
+
 - **Content Events:** published, updated, deleted, moderated
 - **Payment Events:** created, confirmed, failed, refunded
 - **User Events:** registered, activity, preference_updated, relationship_changed
 - **Subscription Events:** created, renewed, cancelled, suspended
 
 **Event Processing:**
+
 - **Priority 1:** Cache invalidation (immediate)
 - **Priority 2:** Notifications (real-time)
 - **Priority 3:** Analytics (async)
 - **Priority 4:** Search indexing, recommendations (background)
 
 **Performance Metrics:**
+
 - Event Latency: <5ms
 - Processing Time: 10-500ms
 - Success Rate: 99.9%
@@ -221,12 +237,14 @@ Complete event-driven architecture with pub/sub pattern:
 Complete payment data flow from invoice creation to settlement:
 
 **Payment Phases:**
+
 1. **Creation:** Invoice generation with exchange rate conversion
 2. **Execution:** Lightning Network routing and HTLC settlement
 3. **Verification:** Payment hash and preimage validation
 4. **Post-Processing:** Analytics, notifications, subscription activation
 
 **Security Measures:**
+
 - Payment hash verification
 - HTLC preimage validation
 - Idempotency keys
@@ -242,6 +260,7 @@ Complete payment data flow from invoice creation to settlement:
 **Diagram:** [domains/content-domain.mmd](./diagrams/domains/content-domain.mmd)
 
 **Services (6):**
+
 - **ContentPublishingService:** NOSTR publishing, content creation/update
 - **ContentModerationService:** AI + manual moderation, flag management
 - **ContentSearchService:** Elasticsearch integration, full-text search
@@ -250,12 +269,14 @@ Complete payment data flow from invoice creation to settlement:
 - **ContentVersioningService:** Version control, S3 storage, rollback
 
 **External Integrations:**
+
 - NOSTR Relays (content distribution)
 - Elasticsearch (search indexing)
 - S3-Compatible Storage (media files, versions)
 - ML Model (content similarity)
 
 **Key Workflows:**
+
 - Content Publishing Flow (8 steps)
 - Content Discovery Flow (7 steps)
 - Content Recommendation Flow (7 steps)
@@ -265,6 +286,7 @@ Complete payment data flow from invoice creation to settlement:
 **Diagram:** [domains/user-domain.mmd](./diagrams/domains/user-domain.mmd)
 
 **Services (5):**
+
 - **UserProfileService:** Profile management, NIP-05 verification, NOSTR integration
 - **UserPreferencesService:** Settings management, preference categories
 - **UserActivityService:** Activity tracking, session metrics
@@ -272,10 +294,12 @@ Complete payment data flow from invoice creation to settlement:
 - **UserAnalyticsService:** Engagement scoring, churn prediction, insights
 
 **External Integrations:**
+
 - NOSTR Relays (profile events, contact lists)
 - NIP-05 Server (identity verification)
 
 **Key Workflows:**
+
 - User Registration Flow (7 steps)
 - User Activity Tracking (7 steps)
 - Relationship Management (7 steps)
@@ -286,6 +310,7 @@ Complete payment data flow from invoice creation to settlement:
 **Diagram:** [domains/payment-domain.mmd](./diagrams/domains/payment-domain.mmd)
 
 **Services (7):**
+
 - **PaymentProcessingService:** Invoice generation, payment verification
 - **CurrencyService:** Exchange rate management, multi-currency support
 - **SubscriptionService:** Recurring billing, lifecycle management
@@ -294,11 +319,13 @@ Complete payment data flow from invoice creation to settlement:
 - **WebhookService:** Event delivery, retry logic, circuit breaker
 
 **External Integrations:**
+
 - Lightning Node (LND/c-lightning)
 - Exchange Rate APIs (CoinGecko, Binance, Kraken)
 - External Webhook Endpoints
 
 **Key Workflows:**
+
 - Payment Flow (8 steps)
 - Subscription Flow (8 steps)
 - Refund Flow (8 steps)
@@ -313,6 +340,7 @@ Complete payment data flow from invoice creation to settlement:
 **Diagram:** [patterns/event-driven-architecture.mmd](./diagrams/patterns/event-driven-architecture.mmd)
 
 **Pattern Overview:**
+
 - Central EventBus for pub/sub messaging
 - Topic-based routing with pattern matching
 - Priority queue processing
@@ -320,6 +348,7 @@ Complete payment data flow from invoice creation to settlement:
 - Retry strategy with exponential backoff
 
 **Benefits:**
+
 - Loose coupling between services
 - Asynchronous processing
 - Horizontal scalability
@@ -327,6 +356,7 @@ Complete payment data flow from invoice creation to settlement:
 - Event replay capability
 
 **Implementation:**
+
 - In-memory event bus (high performance)
 - Priority queuing (1-4 levels)
 - Event versioning for backwards compatibility
@@ -337,18 +367,21 @@ Complete payment data flow from invoice creation to settlement:
 **Diagram:** [patterns/cache-aside-pattern.mmd](./diagrams/patterns/cache-aside-pattern.mmd)
 
 **Multi-Layer Caching:**
+
 - **L1 Cache:** In-Memory (60s TTL, 40% hit rate)
 - **L2 Cache:** Redis (300s TTL, 45% hit rate)
 - **L3 Cache:** Query Cache (600s TTL, 10% hit rate)
 - **Database:** PostgreSQL (5% query rate)
 
 **Strategy:**
+
 - Read-through with lazy population
 - Write-through with invalidation
 - TTL-based expiration
 - Pattern-based invalidation
 
 **Performance:**
+
 - Total Hit Rate: 95%
 - Average Latency: 1-10ms (cached), 50ms (DB)
 - Database Load Reduction: 95%
@@ -358,6 +391,7 @@ Complete payment data flow from invoice creation to settlement:
 **Diagram:** [patterns/repository-pattern.mmd](./diagrams/patterns/repository-pattern.mmd)
 
 **Pattern Components:**
+
 - Repository Factory (service creation)
 - Repository Interfaces (contracts)
 - Repository Implementations (PostgreSQL)
@@ -365,6 +399,7 @@ Complete payment data flow from invoice creation to settlement:
 - Query Builder (SQL generation)
 
 **Benefits:**
+
 - Data access abstraction
 - Testability (mocking)
 - Maintainability
@@ -374,21 +409,25 @@ Complete payment data flow from invoice creation to settlement:
 ### 5.4 Circuit Breaker Pattern
 
 **Diagrams:**
+
 - [patterns/circuit-breaker-pattern.mmd](./diagrams/patterns/circuit-breaker-pattern.mmd) (State machine)
 - [patterns/circuit-breaker-implementation.mmd](./diagrams/patterns/circuit-breaker-implementation.mmd) (Implementation)
 
 **States:**
+
 - **CLOSED:** All requests flow through, monitor failures
 - **OPEN:** Block requests, use fallback, wait for timeout
 - **HALF-OPEN:** Test requests, determine if service recovered
 
 **Configuration:**
+
 - Failure Threshold: 5 failures in 60s
 - Open Timeout: 30s
 - Half-Open Max Requests: 3
 - Success Threshold: 2 consecutive successes
 
 **Use Cases:**
+
 - Webhook delivery
 - External API calls
 - Payment processing
@@ -399,6 +438,7 @@ Complete payment data flow from invoice creation to settlement:
 **Diagram:** [patterns/retry-pattern.mmd](./diagrams/patterns/retry-pattern.mmd)
 
 **Exponential Backoff with Jitter:**
+
 - Initial Delay: 1000ms
 - Backoff Multiplier: 2x
 - Max Delay: 60000ms
@@ -406,6 +446,7 @@ Complete payment data flow from invoice creation to settlement:
 - Max Attempts: 5
 
 **Retry Schedule:**
+
 1. Attempt 1: 0ms
 2. Attempt 2: 1000ms
 3. Attempt 3: 2000ms + jitter
@@ -413,6 +454,7 @@ Complete payment data flow from invoice creation to settlement:
 5. Attempt 5: 8000ms + jitter
 
 **Error Classification:**
+
 - **Retryable:** Network timeout, 503, 504, temporary DB errors
 - **Non-Retryable:** 400, 401, 404, validation errors
 
@@ -425,36 +467,42 @@ Complete payment data flow from invoice creation to settlement:
 **Production Environment:**
 
 ### 6.1 Frontend Hosting (Vercel)
+
 - Global Edge Network
 - Automatic HTTPS
 - Edge Functions for SSR
 - Web Vitals monitoring
 
 ### 6.2 Backend Services (Docker Compose)
+
 - Multi-container deployment
 - Service Container orchestration
 - Auto-scaling based on load
 - Health checks + readiness probes
 
 ### 6.3 Data Layer
+
 - **PostgreSQL Primary** (Supabase)
 - **Read Replicas** (2 instances)
 - **Redis Cluster** (3 nodes, session + cache)
 - **S3-Compatible Storage** (media files, backups)
 
 ### 6.4 External Services
+
 - NOSTR Relay Network (distributed)
 - Lightning Node (self-hosted)
 - Email Provider (SendGrid/Postmark)
 - Exchange Rate APIs
 
 ### 6.5 Monitoring & Logging
+
 - Sentry (error tracking)
 - Datadog (APM + metrics)
 - Log Aggregator (Loki/CloudWatch)
 - Uptime Monitoring (UptimeRobot)
 
 ### 6.6 CI/CD Pipeline (GitHub Actions)
+
 - Automated testing
 - Vercel auto-deploy (frontend)
 - Docker build + push (backend)
@@ -469,24 +517,28 @@ Complete payment data flow from invoice creation to settlement:
 **Security Layers:**
 
 ### 7.1 Client Security
+
 - HTTPS only (TLS 1.3)
 - Content Security Policy (CSP)
 - CORS policy (origin validation)
 - Secure Context (PWA)
 
 ### 7.2 Edge Security (Cloudflare)
+
 - Web Application Firewall (WAF)
 - DDoS protection
 - Bot protection
 - Rate limiting
 
 ### 7.3 API Gateway Security
+
 - Request validation
 - Input sanitization
 - Rate limiting (per-IP/user)
 - Request logging
 
 ### 7.4 Authentication
+
 - NOSTR key-based auth
 - JWT token management
 - Session management (Redis)
@@ -494,12 +546,14 @@ Complete payment data flow from invoice creation to settlement:
 - Browser extension support
 
 ### 7.5 Authorization
+
 - Role-Based Access Control (RBAC)
 - Permission checking
 - Resource ownership validation
 - Subscription-based access
 
 ### 7.6 Data Protection
+
 - Encryption at rest (AES-256-GCM)
 - Encryption in transit (TLS 1.3)
 - Key management + rotation
@@ -507,24 +561,28 @@ Complete payment data flow from invoice creation to settlement:
 - Backup encryption
 
 ### 7.7 Payment Security
+
 - Lightning authentication (macaroon/TLS)
 - Payment verification (HTLC + preimage)
 - Webhook signatures (HMAC-SHA256)
 - Idempotency keys
 
 ### 7.8 Database Security
+
 - Connection encryption (SSL/TLS)
 - Prepared statements (SQL injection prevention)
 - Row-Level Security (PostgreSQL RLS)
 - Transparent Data Encryption
 
 ### 7.9 Monitoring & Incident Response
+
 - Real-time security monitoring
 - Intrusion detection
 - Automated incident response
 - Threat intelligence integration
 
 **Compliance:**
+
 - OWASP Top 10
 - PCI DSS Level 2
 - GDPR Data Protection
@@ -539,70 +597,75 @@ Complete payment data flow from invoice creation to settlement:
 ### 8.1 Service Performance
 
 | Service Category | Avg Response Time | P99 Latency | Throughput |
-|------------------|-------------------|-------------|------------|
-| Content Services | 50-200ms | 500ms | 1K req/s |
-| User Services | 30-150ms | 300ms | 2K req/s |
-| Payment Services | 100-500ms | 2s | 500 req/s |
-| Shared Services | 20-100ms | 200ms | 5K req/s |
+| ---------------- | ----------------- | ----------- | ---------- |
+| Content Services | 50-200ms          | 500ms       | 1K req/s   |
+| User Services    | 30-150ms          | 300ms       | 2K req/s   |
+| Payment Services | 100-500ms         | 2s          | 500 req/s  |
+| Shared Services  | 20-100ms          | 200ms       | 5K req/s   |
 
 ### 8.2 Cache Performance
 
-| Cache Layer | Hit Rate | Avg Latency | TTL |
-|-------------|----------|-------------|-----|
-| Edge Cache | 40% | 1ms | 60s |
-| App Cache (L1) | 45% | 5ms | 300s |
-| Query Cache (L2) | 10% | 10ms | 600s |
-| **Total** | **95%** | **5-10ms** | - |
+| Cache Layer      | Hit Rate | Avg Latency | TTL  |
+| ---------------- | -------- | ----------- | ---- |
+| Edge Cache       | 40%      | 1ms         | 60s  |
+| App Cache (L1)   | 45%      | 5ms         | 300s |
+| Query Cache (L2) | 10%      | 10ms        | 600s |
+| **Total**        | **95%**  | **5-10ms**  | -    |
 
 ### 8.3 Database Performance
 
-| Metric | Value |
-|--------|-------|
+| Metric                  | Value          |
+| ----------------------- | -------------- |
 | Query Rate (with cache) | 5% of requests |
-| Avg Query Time | 50ms |
-| Max Connections | 100 |
-| Connection Pool | 10-100 |
-| Replication Lag | <1s |
+| Avg Query Time          | 50ms           |
+| Max Connections         | 100            |
+| Connection Pool         | 10-100         |
+| Replication Lag         | <1s            |
 
 ### 8.4 Event Processing
 
-| Metric | Value |
-|--------|-------|
-| Event Latency | <5ms |
-| Processing Time | 10-500ms |
-| Success Rate | 99.9% |
-| Throughput | 10K events/sec |
-| Dead Letter Rate | <0.1% |
+| Metric           | Value          |
+| ---------------- | -------------- |
+| Event Latency    | <5ms           |
+| Processing Time  | 10-500ms       |
+| Success Rate     | 99.9%          |
+| Throughput       | 10K events/sec |
+| Dead Letter Rate | <0.1%          |
 
 ---
 
 ## 9. Architecture Decision Records (ADRs)
 
 ### ADR-001: Event-Driven Architecture
+
 **Status:** Accepted
 **Context:** Need for loose coupling and scalability
 **Decision:** Implement event-driven architecture with EventBus
 **Consequences:** Improved scalability, added complexity in event management
 
 ### ADR-002: Multi-Layer Caching Strategy
+
 **Status:** Accepted
 **Context:** Reduce database load and improve response times
 **Decision:** Implement 3-layer cache (Edge, App, Query)
 **Consequences:** 95% cache hit rate, reduced latency
 
 ### ADR-003: Repository Pattern for Data Access
+
 **Status:** Accepted
 **Context:** Need for testability and data access abstraction
 **Decision:** Implement repository pattern with factory
 **Consequences:** Improved testability, reusable data access layer
 
 ### ADR-004: Circuit Breaker for External Services
+
 **Status:** Accepted
 **Context:** Prevent cascade failures from external service outages
 **Decision:** Implement circuit breaker for webhooks and APIs
 **Consequences:** Improved fault tolerance, added complexity
 
 ### ADR-005: Exponential Backoff for Retries
+
 **Status:** Accepted
 **Context:** Handle transient failures gracefully
 **Decision:** Implement retry pattern with exponential backoff + jitter
@@ -623,12 +686,14 @@ GitHub natively renders Mermaid diagrams in Markdown files. To view:
 ### 10.2 Editing Diagrams
 
 **Mermaid Live Editor:**
+
 1. Go to [https://mermaid.live](https://mermaid.live)
 2. Paste diagram source code
 3. Edit and preview in real-time
 4. Copy updated code back to file
 
 **VS Code:**
+
 1. Install "Mermaid Preview" extension
 2. Open `.mmd` file
 3. Press `Ctrl+Shift+V` (preview)
@@ -637,12 +702,14 @@ GitHub natively renders Mermaid diagrams in Markdown files. To view:
 ### 10.3 Exporting Diagrams
 
 **To PNG/SVG:**
+
 1. Use Mermaid Live Editor
 2. Click "Actions" → "Export"
 3. Choose PNG or SVG format
 4. Download for presentations
 
 **To PDF:**
+
 1. Export as SVG first
 2. Use tool like Inkscape or online converter
 3. Convert SVG to PDF
@@ -656,6 +723,7 @@ GitHub natively renders Mermaid diagrams in Markdown files. To view:
 When implementing new features or services:
 
 1. **Create Diagram File:**
+
    ```bash
    touch docs/architecture/diagrams/your-diagram-name.mmd
    ```
@@ -665,6 +733,7 @@ When implementing new features or services:
    - Include US number: `us-e5-xxx-diagram-name.mmd`
 
 3. **Add Metadata Header:**
+
    ```
    %% Diagram Title
    %% Version: 1.0.0
@@ -712,6 +781,7 @@ When implementing new features or services:
 ## 13. Changelog
 
 ### Version 1.0.0 (2025-10-27)
+
 - ✅ Initial architecture documentation for Epic 005
 - ✅ Created 20+ comprehensive Mermaid diagrams
 - ✅ Documented all 29 services across 5 domains
@@ -728,16 +798,19 @@ When implementing new features or services:
 ## 14. Contact & Support
 
 **Architecture Questions:**
+
 - Review ADRs in `/docs/architecture/decisions/`
 - Check CLAUDE.md for project context
 - Consult Mermaid diagram guide
 
 **Implementation Questions:**
+
 - See user story documentation
 - Review implementation summaries
 - Check API documentation
 
 **Issues & Improvements:**
+
 - Submit GitHub issue with label: `documentation`
 - Tag with `architecture` for architecture-specific issues
 

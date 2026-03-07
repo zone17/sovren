@@ -40,11 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // 🔐 Verify webhook signature
-    event = stripe.webhooks.constructEvent(
-      JSON.stringify(req.body),
-      sig,
-      webhookSecret
-    );
+    event = stripe.webhooks.constructEvent(JSON.stringify(req.body), sig, webhookSecret);
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).json({
@@ -82,7 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       eventType: event.type,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Webhook processing error:', error);
     return res.status(500).json({
@@ -118,7 +113,6 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     if (userId) {
       await processSuccessfulPayment(userId, paymentIntent);
     }
-
   } catch (error) {
     console.error('Error handling payment success:', error);
   }
@@ -150,7 +144,6 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
     if (userId) {
       await sendPaymentFailureNotification(userId, paymentIntent);
     }
-
   } catch (error) {
     console.error('Error handling payment failure:', error);
   }
@@ -174,7 +167,6 @@ async function handlePaymentCancellation(paymentIntent: Stripe.PaymentIntent) {
     if (updateError) {
       console.error('Failed to update payment status:', updateError);
     }
-
   } catch (error) {
     console.error('Error handling payment cancellation:', error);
   }
@@ -198,7 +190,6 @@ async function handlePaymentRequiresAction(paymentIntent: Stripe.PaymentIntent) 
     if (updateError) {
       console.error('Failed to update payment status:', updateError);
     }
-
   } catch (error) {
     console.error('Error handling payment requires action:', error);
   }
@@ -211,30 +202,31 @@ async function processSuccessfulPayment(userId: string, paymentIntent: Stripe.Pa
 
     if (productId) {
       // 🎯 Grant product access
-      await supabase
-        .from('user_purchases')
-        .insert({
-          user_id: userId,
-          product_id: productId,
-          payment_intent_id: paymentIntent.id,
-          amount: paymentIntent.amount / 100, // Convert from cents
-          currency: paymentIntent.currency,
-          purchased_at: new Date().toISOString(),
-        });
+      await supabase.from('user_purchases').insert({
+        user_id: userId,
+        product_id: productId,
+        payment_intent_id: paymentIntent.id,
+        amount: paymentIntent.amount / 100, // Convert from cents
+        currency: paymentIntent.currency,
+        purchased_at: new Date().toISOString(),
+      });
 
       // 📧 Send purchase confirmation
       await sendPurchaseConfirmation(userId, productId, paymentIntent);
     }
 
     console.log(`Successfully processed payment for user ${userId}`);
-
   } catch (error) {
     console.error('Error in payment processing business logic:', error);
   }
 }
 
 // 📧 Send purchase confirmation (placeholder)
-async function sendPurchaseConfirmation(userId: string, productId: string, paymentIntent: Stripe.PaymentIntent) {
+async function sendPurchaseConfirmation(
+  userId: string,
+  productId: string,
+  paymentIntent: Stripe.PaymentIntent
+) {
   console.log(`Sending purchase confirmation to user ${userId} for product ${productId}`);
   // Implementation would depend on your email service
 }

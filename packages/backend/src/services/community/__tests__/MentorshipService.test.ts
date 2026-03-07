@@ -14,6 +14,7 @@
  */
 
 import { MentorshipService } from '../MentorshipService';
+import { DatabaseError } from '../../../utils/errors';
 
 // ---------------------------------------------------------------------------
 // Supabase mock-chain factory — see CreatorCircleService.test.ts for rationale
@@ -29,6 +30,7 @@ function makeChain(leafResolvedValue: any) {
     neq: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
+    range: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
     or: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue(leafResolvedValue),
@@ -181,14 +183,14 @@ describe('MentorshipService', () => {
       }
     });
 
-    it('throws and logs when the DB upsert fails', async () => {
+    it('throws DatabaseError and logs when the DB upsert fails', async () => {
       const dbError = { message: 'upsert conflict' };
       const upsertChain = makeChain({ data: null, error: dbError });
       mockDb.from.mockReturnValueOnce(upsertChain);
 
       await expect(
         service.registerMentor(MENTOR_ID, { niche: 'tech', audienceSizeRange: '0-1k' })
-      ).rejects.toThrow('Failed to register mentor: upsert conflict');
+      ).rejects.toThrow(DatabaseError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to register mentor',
@@ -248,12 +250,12 @@ describe('MentorshipService', () => {
       expect(result).toEqual([]);
     });
 
-    it('throws and logs when the DB query fails', async () => {
+    it('throws DatabaseError and logs when the DB query fails', async () => {
       const dbError = { message: 'query failed' };
       const chain = makeChain({ data: null, error: dbError });
       mockDb.from.mockReturnValueOnce(chain);
 
-      await expect(service.getMentors()).rejects.toThrow('Failed to get mentors: query failed');
+      await expect(service.getMentors()).rejects.toThrow(DatabaseError);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to get mentors',
         expect.objectContaining({ error: dbError })
@@ -366,9 +368,7 @@ describe('MentorshipService', () => {
         error: null,
       });
 
-      mockDb.from
-        .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(existingRequestChain);
+      mockDb.from.mockReturnValueOnce(mentorProfileChain).mockReturnValueOnce(existingRequestChain);
 
       await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
         'Mentorship request already pending'
@@ -385,16 +385,14 @@ describe('MentorshipService', () => {
         error: null,
       });
 
-      mockDb.from
-        .mockReturnValueOnce(mentorProfileChain)
-        .mockReturnValueOnce(existingRequestChain);
+      mockDb.from.mockReturnValueOnce(mentorProfileChain).mockReturnValueOnce(existingRequestChain);
 
       await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
         'Mentorship request already active'
       );
     });
 
-    it('throws and logs when the DB insert fails', async () => {
+    it('throws DatabaseError and logs when the DB insert fails', async () => {
       const mentorProfileChain = makeChain({
         data: { id: 'mp-1', max_mentees: 5, active: true },
         error: null,
@@ -409,7 +407,7 @@ describe('MentorshipService', () => {
         .mockReturnValueOnce(insertChain);
 
       await expect(service.requestMentorship(MENTEE_ID, MENTOR_ID, {})).rejects.toThrow(
-        'Failed to request mentorship: insert failed'
+        DatabaseError
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -604,7 +602,7 @@ describe('MentorshipService', () => {
       );
     });
 
-    it('throws and logs when the DB update fails', async () => {
+    it('throws DatabaseError and logs when the DB update fails', async () => {
       const findChain = makeChain({
         data: { id: MENTORSHIP_ID, mentor_id: MENTOR_ID, status: 'pending' },
         error: null,
@@ -615,7 +613,7 @@ describe('MentorshipService', () => {
       mockDb.from.mockReturnValueOnce(findChain).mockReturnValueOnce(updateChain);
 
       await expect(service.respondToRequest(MENTORSHIP_ID, MENTOR_ID, true)).rejects.toThrow(
-        'Failed to respond to mentorship: update failed'
+        DatabaseError
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -627,41 +625,54 @@ describe('MentorshipService', () => {
 
   // -------------------------------------------------------------------------
   // getMyMentorships
+  // #721: creatorId is now a UUID (resolved at route layer), and the service
+  // validates the format before use in .or() filter injection prevention (#260).
   // -------------------------------------------------------------------------
   describe('getMyMentorships', () => {
+    // Use a valid UUID-format ID (hex + hyphens only) to pass the #260 validation guard.
+    const CREATOR_UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
     it('returns all mentorships for a creator (as mentor or mentee)', async () => {
       const mentorships = [
-        { id: 'ms-1', mentor_id: MENTOR_ID, mentee_id: MENTEE_ID, status: 'active' },
-        { id: 'ms-2', mentor_id: 'other-mentor', mentee_id: MENTOR_ID, status: 'pending' },
+        { id: 'ms-1', mentor_id: CREATOR_UUID, mentee_id: MENTEE_ID, status: 'active' },
+        { id: 'ms-2', mentor_id: 'other-mentor', mentee_id: CREATOR_UUID, status: 'pending' },
       ];
       const chain = makeChain({ data: mentorships, error: null });
       mockDb.from.mockReturnValueOnce(chain);
 
-      const result = await service.getMyMentorships(MENTOR_ID);
+      const result = await service.getMyMentorships(CREATOR_UUID);
 
       expect(result).toEqual(mentorships);
-      expect(chain.or).toHaveBeenCalledWith(`mentor_id.eq.${MENTOR_ID},mentee_id.eq.${MENTOR_ID}`);
+      expect(chain.or).toHaveBeenCalledWith(
+        `mentor_id.eq.${CREATOR_UUID},mentee_id.eq.${CREATOR_UUID}`
+      );
     });
 
     it('returns empty array when no mentorships exist', async () => {
       const chain = makeChain({ data: null, error: null });
       mockDb.from.mockReturnValueOnce(chain);
 
-      const result = await service.getMyMentorships(MENTOR_ID);
+      const result = await service.getMyMentorships(CREATOR_UUID);
       expect(result).toEqual([]);
     });
 
-    it('throws and logs when the DB query fails', async () => {
+    it('throws ValidationError when creatorId is not UUID format (#260)', async () => {
+      // Non-UUID IDs (e.g. public keys) are rejected before hitting the DB
+      await expect(service.getMyMentorships('not-a-uuid-pubkey')).rejects.toThrow(
+        'Invalid creator ID format'
+      );
+      expect(mockDb.from).not.toHaveBeenCalled();
+    });
+
+    it('throws DatabaseError and logs when the DB query fails', async () => {
       const dbError = { message: 'query failed' };
       const chain = makeChain({ data: null, error: dbError });
       mockDb.from.mockReturnValueOnce(chain);
 
-      await expect(service.getMyMentorships(MENTOR_ID)).rejects.toThrow(
-        'Failed to get mentorships: query failed'
-      );
+      await expect(service.getMyMentorships(CREATOR_UUID)).rejects.toThrow(DatabaseError);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to get mentorships',
-        expect.objectContaining({ error: dbError, creatorId: MENTOR_ID })
+        expect.objectContaining({ error: dbError, creatorId: CREATOR_UUID })
       );
     });
   });

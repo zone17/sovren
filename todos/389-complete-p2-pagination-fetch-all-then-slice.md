@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p2
-issue_id: "406"
+issue_id: '406'
 tags: [code-review, performance, architecture, pr-87]
 dependencies: []
 ---
@@ -13,6 +13,7 @@ dependencies: []
 All 10 newly-paginated endpoints use a "fetch everything from DB, then `.slice(offset, offset + limit)`" pattern. This means even when the client requests `?limit=10&offset=0`, the server loads the entire dataset from Supabase into Node memory before discarding 99%+ of it.
 
 For small datasets (<100 rows) this is acceptable. As the platform scales, endpoints like `/circles`, `/mentorship/mentors`, `/business/invoices`, and `/business/tax/expenses` could grow to thousands of rows per creator. At that point this pattern causes:
+
 - Unnecessary DB-to-server data transfer
 - High memory pressure on Node process
 - Increased latency proportional to total dataset size, not page size
@@ -38,11 +39,13 @@ For small datasets (<100 rows) this is acceptable. As the platform scales, endpo
 **Approach:** Keep the current `.slice()` pagination. The API contract (limit/offset query params, `{items, total, limit, offset}` response shape) is correct and forward-compatible. When any endpoint's dataset grows beyond ~500 rows, push pagination into the service/repository layer.
 
 **Pros:**
+
 - Zero risk of breaking existing functionality
 - API contract is already correct — clients won't need to change
 - Matches the intent of the original P2 finding
 
 **Cons:**
+
 - Performance ceiling for large datasets
 - Technical debt that needs tracking
 
@@ -57,11 +60,13 @@ For small datasets (<100 rows) this is acceptable. As the platform scales, endpo
 **Approach:** Add `limit` and `offset` parameters to each service method (e.g., `getContracts(creatorId, { limit, offset })`), then use `.range(offset, offset + limit - 1)` in the Supabase query. Use `.count('exact')` for the total.
 
 **Pros:**
+
 - True server-side pagination
 - O(page_size) memory and transfer, not O(total)
 - Eliminates the performance ceiling
 
 **Cons:**
+
 - Requires changes to 10+ service methods and their interfaces
 - Need to verify Supabase `.range()` + `.count('exact')` behavior with each query
 - Larger scope than a P2 follow-up
@@ -77,6 +82,7 @@ Accept as-is for this PR. The API contract is correct and forward-compatible. Cr
 ## Technical Details
 
 **Affected files:**
+
 - `packages/backend/src/routes/v2/business-contracts.routes.ts:56,153`
 - `packages/backend/src/routes/v2/business-invoices.routes.ts:83`
 - `packages/backend/src/routes/v2/business-tax.routes.ts:83,132`
@@ -97,11 +103,13 @@ Accept as-is for this PR. The API contract is correct and forward-compatible. Cr
 **By:** Claude Code (PR #87 review)
 
 **Actions:**
+
 - Identified fetch-all-then-slice pattern across 10 endpoints
 - Verified services do not currently accept pagination params
 - Confirmed API response shape is forward-compatible
 
 **Learnings:**
+
 - Application-level pagination is acceptable for API contract establishment
 - The real risk is if this becomes permanent without a follow-up plan
 

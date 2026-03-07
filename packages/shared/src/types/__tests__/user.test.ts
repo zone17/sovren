@@ -1,29 +1,28 @@
-
 import {
-    BaseUserSchema,
-    CreateUserSchema,
-    CreatorStatsSchema,
-    CreatorUserSchema,
-    NostrAuthSchema,
-    NostrIdentitySchema,
-    NostrLoginSchema,
-    PrivacyLevel,
-    PrivacySettingsSchema,
-    ProfileImageSchema,
-    sanitizeBio,
-    sanitizeDisplayName,
-    SupporterStatsSchema,
-    SupporterUserSchema,
-    UpdateUserSchema,
-    UserActivitySchema,
-    UserAnalyticsSchema,
-    UserPreferencesSchema,
-    UserRole,
-    UserSearchSchema,
-    UserStatus,
-    validateNostrPubkey,
-    validateNostrSignature,
-    validateUsername,
+  BaseUserSchema,
+  CreateUserSchema,
+  CreatorStatsSchema,
+  CreatorUserSchema,
+  NostrAuthSchema,
+  NostrIdentitySchema,
+  NostrLoginSchema,
+  PrivacyLevel,
+  PrivacySettingsSchema,
+  ProfileImageSchema,
+  sanitizeBio,
+  sanitizeDisplayName,
+  SupporterStatsSchema,
+  SupporterUserSchema,
+  UpdateUserSchema,
+  UserActivitySchema,
+  UserAnalyticsSchema,
+  UserPreferencesSchema,
+  UserRole,
+  UserSearchSchema,
+  UserStatus,
+  validateNostrPubkey,
+  validateNostrSignature,
+  validateUsername,
 } from '../user';
 
 describe('User Type Schemas', () => {
@@ -285,7 +284,7 @@ describe('User Type Schemas', () => {
 
     it('should validate custom stats', () => {
       const stats = {
-        totalEarnings: 1500.50,
+        totalEarnings: 1500.5,
         totalSupports: 25,
         followerCount: 100,
         postCount: 15,
@@ -440,15 +439,17 @@ describe('User Type Schemas', () => {
       updatedAt: new Date(),
       lightningAddress: 'creator@getalby.com',
       contentCategories: ['tech', 'art'],
-      subscriptionTiers: [{
-        id: '456e7890-e89b-12d3-a456-426614174000',
-        name: 'Basic Tier',
-        description: 'Basic access',
-        price: 5.00,
-        currency: 'USD',
-        features: ['Access to posts', 'Discord access'],
-        active: true,
-      }],
+      subscriptionTiers: [
+        {
+          id: '456e7890-e89b-12d3-a456-426614174000',
+          name: 'Basic Tier',
+          description: 'Basic access',
+          price: 5.0,
+          currency: 'USD',
+          features: ['Access to posts', 'Discord access'],
+          active: true,
+        },
+      ],
       verificationBadges: ['verified'],
     };
 
@@ -498,20 +499,24 @@ describe('User Type Schemas', () => {
       },
       createdAt: new Date(),
       updatedAt: new Date(),
-      paymentMethods: [{
-        id: '456e7890-e89b-12d3-a456-426614174000',
-        type: 'lightning' as const,
-        isDefault: true,
-        lastUsed: new Date(),
-      }],
-      subscriptions: [{
-        id: '789e1234-e89b-12d3-a456-426614174000',
-        creatorId: '987e6543-e89b-12d3-a456-426614174000',
-        tierId: '654e3210-e89b-12d3-a456-426614174000',
-        status: 'active' as const,
-        startDate: new Date(),
-        nextBillingDate: new Date(),
-      }],
+      paymentMethods: [
+        {
+          id: '456e7890-e89b-12d3-a456-426614174000',
+          type: 'lightning' as const,
+          isDefault: true,
+          lastUsed: new Date(),
+        },
+      ],
+      subscriptions: [
+        {
+          id: '789e1234-e89b-12d3-a456-426614174000',
+          creatorId: '987e6543-e89b-12d3-a456-426614174000',
+          tierId: '654e3210-e89b-12d3-a456-426614174000',
+          status: 'active' as const,
+          startDate: new Date(),
+          nextBillingDate: new Date(),
+        },
+      ],
     };
 
     it('should validate correct supporter user data', () => {
@@ -671,7 +676,7 @@ describe('User Type Schemas', () => {
       metrics: {
         profileViews: 100,
         followersGained: 5,
-        supportReceived: 250.50,
+        supportReceived: 250.5,
         contentEngagement: 75,
         earningsGrowth: 15.5,
       },
@@ -764,13 +769,19 @@ describe('Validation Helper Functions', () => {
 
   describe('validateNostrPubkey', () => {
     it('should validate correct NOSTR public keys', () => {
-      expect(validateNostrPubkey('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')).toBe(true);
-      expect(validateNostrPubkey('ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890')).toBe(true);
+      expect(
+        validateNostrPubkey('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')
+      ).toBe(true);
+      expect(
+        validateNostrPubkey('ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890')
+      ).toBe(true);
     });
 
     it('should reject invalid NOSTR public keys', () => {
       expect(validateNostrPubkey('invalid')).toBe(false); // too short
-      expect(validateNostrPubkey('1234567890abcdefg234567890abcdef1234567890abcdef1234567890abcdef')).toBe(false); // invalid character
+      expect(
+        validateNostrPubkey('1234567890abcdefg234567890abcdef1234567890abcdef1234567890abcdef')
+      ).toBe(false); // invalid character
       expect(validateNostrPubkey('1234567890abcdef')).toBe(false); // too short
     });
   });
@@ -786,11 +797,7 @@ describe('Validation Helper Functions', () => {
     });
 
     it('should reject invalid public key', () => {
-      const result = validateNostrSignature(
-        'invalid-key',
-        'valid_signature',
-        'test_message'
-      );
+      const result = validateNostrSignature('invalid-key', 'valid_signature', 'test_message');
       expect(result).toBe(false);
     });
 

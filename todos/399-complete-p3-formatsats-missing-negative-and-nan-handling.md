@@ -1,7 +1,7 @@
 ---
 status: pending
 priority: p3
-issue_id: "416"
+issue_id: '416'
 tags: [code-review, quality, frontend, pr-87]
 dependencies: []
 ---
@@ -24,6 +24,7 @@ The new shared `formatSats()` utility handles positive numbers well but doesn't 
 ### Option 1: Add guards
 
 **Approach:**
+
 ```typescript
 if (!Number.isFinite(sats) || sats < 0) return '0 sats';
 ```
@@ -50,6 +51,7 @@ Low priority. Add a `Number.isFinite()` guard for defensive programming, or acce
 ## Technical Details
 
 **Affected files:**
+
 - `packages/frontend/src/shared/utils/formatSats.ts`
 
 ## Acceptance Criteria

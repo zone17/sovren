@@ -4,6 +4,15 @@ import type { MentorProfile, Mentorship } from '@shared/types/community';
 
 const BASE = '/api/v2/mentorship';
 
+// #751: Data shape for updating an existing mentor profile
+export interface UpdateMentorProfileData {
+  niche?: string;
+  audienceSizeRange?: '0-1k' | '1k-10k' | '10k-100k' | '100k+';
+  bio?: string;
+  maxMentees?: number;
+  active?: boolean;
+}
+
 export const mentorshipApi = {
   registerMentor(data: {
     niche: string;
@@ -37,5 +46,10 @@ export const mentorshipApi = {
 
   getMyMentorships(): Promise<ApiResponse<{ mentorships: Mentorship[] }>> {
     return apiClient.get(`${BASE}/my-mentorships`);
+  },
+
+  /** PATCH /api/v2/mentorship/profile — update the current user's mentor profile (#751) */
+  updateMentorProfile(data: UpdateMentorProfileData): Promise<ApiResponse<MentorProfile>> {
+    return apiClient.patch(`${BASE}/profile`, data);
   },
 };

@@ -34,6 +34,7 @@ All diagrams follow the Mermaid diagram standards defined in `/docs/development/
 [View .mmd file](/docs/architecture/diagrams/payment/payment-architecture-overview.mmd)
 
 **Components Visualized**:
+
 - Frontend Layer (UI, Wallet, WebSocket)
 - API Gateway Layer (Auth, Rate Limiting, Webhooks)
 - Payment Processing Services (LPS, PSM, PRS, IES, WHV)
@@ -61,6 +62,7 @@ All diagrams follow the Mermaid diagram standards defined in `/docs/development/
 [View .mmd file](/docs/architecture/diagrams/payment/invoice-creation-flow.mmd)
 
 **Key Steps**:
+
 1. User initiates payment request for content
 2. API validates authentication and request data
 3. Lightning Payment Service generates unique payment hash
@@ -90,6 +92,7 @@ All diagrams follow the Mermaid diagram standards defined in `/docs/development/
 [View .mmd file](/docs/architecture/diagrams/payment/payment-verification-flow.mmd)
 
 **Key Steps**:
+
 1. Retry scheduler triggers verification (scheduled retry, webhook timeout, or manual)
 2. PaymentRetryService queries payment record from database
 3. State validation (only PENDING/FAILED payments verified)
@@ -104,6 +107,7 @@ All diagrams follow the Mermaid diagram standards defined in `/docs/development/
 9. Real-time WebSocket notification to user
 
 **Security Features**:
+
 - Cryptographic proof validation (preimage verification)
 - Constant-time comparison prevents timing attacks
 - State validation prevents invalid transitions
@@ -131,6 +135,7 @@ All diagrams follow the Mermaid diagram standards defined in `/docs/development/
 **Key Steps**:
 
 **Security Layer (PAY-003)**:
+
 1. Rate limiting (100 requests/minute per IP)
 2. Signature verification (HMAC-SHA256)
    - Extract x-webhook-signature and x-webhook-timestamp headers
@@ -139,11 +144,12 @@ All diagrams follow the Mermaid diagram standards defined in `/docs/development/
    - Constant-time signature comparison
 3. IP logging for all failed attempts
 
-**Race Condition Prevention (PAY-002)**:
-4. Idempotency key check (webhook deduplication)
-   - Generate key from webhook_id or hash(payment_hash + event + timestamp)
-   - Database unique constraint enforcement
-   - Return 200 OK for duplicates (idempotency compliance)
+**Race Condition Prevention (PAY-002)**: 4. Idempotency key check (webhook deduplication)
+
+- Generate key from webhook_id or hash(payment_hash + event + timestamp)
+- Database unique constraint enforcement
+- Return 200 OK for duplicates (idempotency compliance)
+
 5. Database row locking (SELECT FOR UPDATE SKIP LOCKED)
    - Prevents concurrent webhook processing
    - Graceful handling of locked payments
@@ -152,11 +158,7 @@ All diagrams follow the Mermaid diagram standards defined in `/docs/development/
    - Logical ordering validation
    - Flag for monitoring but still process
 
-**Payment Processing**:
-7. Payment State Machine atomic transition
-8. Webhook event audit log (complete trail)
-9. Transaction commit (all-or-nothing)
-10. Real-time WebSocket notification
+**Payment Processing**: 7. Payment State Machine atomic transition 8. Webhook event audit log (complete trail) 9. Transaction commit (all-or-nothing) 10. Real-time WebSocket notification
 
 **Related Stories**: PAY-002 (Race Conditions), PAY-003 (Signature Verification)
 
@@ -180,6 +182,7 @@ All diagrams follow the Mermaid diagram standards defined in `/docs/development/
 **Algorithm**:
 
 **Exponential Backoff Calculation**:
+
 ```
 exponentialDelay = baseDelay * (2 ^ attemptNumber)
 cappedDelay = min(exponentialDelay, maxDelay)
@@ -187,6 +190,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 ```
 
 **Example Retry Schedule** (with full jitter):
+
 - Attempt 1: 0-1,000ms (avg 500ms)
 - Attempt 2: 0-2,000ms (avg 1,000ms)
 - Attempt 3: 0-4,000ms (avg 2,000ms)
@@ -194,11 +198,13 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
 - Attempt 5: 0-16,000ms (avg 8,000ms)
 
 **Circuit Breaker States**:
+
 - **CLOSED**: Normal operation, retries allowed
 - **OPEN**: Circuit tripped after 5 consecutive failures, all retries blocked
 - **HALF-OPEN**: After 60-second timeout, single test retry allowed
 
 **Benefits**:
+
 - **Full Jitter**: Prevents thundering herd by distributing retry attempts
 - **Circuit Breaker**: Protects against cascading failures during outages
 - **Configurable**: All parameters (maxAttempts, baseDelay, maxDelay, thresholds) customizable
@@ -259,6 +265,7 @@ jitteredDelay = floor(cappedDelay * random(0, 1))
    - Complete audit trail maintained
 
 **Key Features**:
+
 - **Atomic Transitions**: PostgreSQL stored procedure `transition_payment_state()`
 - **Event Sourcing**: Every transition logged in `payment_events` table
 - **Terminal State Protection**: EXPIRED and REFUNDED cannot transition (enforced by database and application)
@@ -280,6 +287,7 @@ payment-architecture-overview.mmd
 ```
 
 **Flow Integration**:
+
 1. User requests payment → **Invoice Creation Flow**
 2. Invoice created → **Payment State Machine** (PENDING state)
 3. User pays → Lightning Network delivers webhook
@@ -295,6 +303,7 @@ payment-architecture-overview.mmd
 ### For Developers
 
 **Understanding Payment Flow**:
+
 1. Start with **Architecture Overview** for system context
 2. Drill down into specific flows based on feature area:
    - Creating invoices: **Invoice Creation Flow**
@@ -304,6 +313,7 @@ payment-architecture-overview.mmd
    - Managing state: **Payment State Machine**
 
 **Integration Work**:
+
 - Consult **Architecture Overview** to identify integration points
 - Reference specific flow diagrams for API contracts and sequencing
 - Check **State Machine** for valid state transitions before implementing logic
@@ -311,6 +321,7 @@ payment-architecture-overview.mmd
 ### For Product/QA
 
 **Testing Scenarios**:
+
 - **Happy Path**: Follow **Invoice Creation** → **Webhook Processing** → **Payment Verification**
 - **Failure Scenarios**: Use **Retry Logic Flow** to understand retry behavior
 - **Race Conditions**: Verify **Webhook Processing** handles duplicate/concurrent webhooks
@@ -319,6 +330,7 @@ payment-architecture-overview.mmd
 ### For Documentation
 
 **Adding New Features**:
+
 1. Update relevant diagram(s) with new components/flows
 2. Add implementation-specific diagrams if needed (e.g., new service)
 3. Update this README with links to new diagrams
@@ -335,6 +347,7 @@ GitHub natively renders Mermaid diagrams in markdown files. Simply click the Git
 ### Mermaid Live Editor
 
 For interactive editing and exporting:
+
 1. Click the "Mermaid Live Editor" link for any diagram
 2. Modify the diagram in real-time
 3. Export to PNG, SVG, or other formats
@@ -342,6 +355,7 @@ For interactive editing and exporting:
 ### VS Code
 
 Install the **Markdown Preview Mermaid Support** extension:
+
 ```bash
 code --install-extension bierner.markdown-mermaid
 ```
@@ -351,6 +365,7 @@ Then open any `.mmd` file and preview with `Ctrl+Shift+V` (Windows/Linux) or `Cm
 ### Command Line
 
 Generate PNG images using Mermaid CLI:
+
 ```bash
 npm install -g @mermaid-js/mermaid-cli
 mmdc -i payment-architecture-overview.mmd -o payment-architecture-overview.png
@@ -361,6 +376,7 @@ mmdc -i payment-architecture-overview.mmd -o payment-architecture-overview.png
 ## Related Documentation
 
 **Implementation Documentation**:
+
 - PAY-001 Completion Summary: `/packages/backend/PAY-001-COMPLETION-SUMMARY.md`
 - PAY-002 Completion Summary: `/packages/backend/PAY-002-COMPLETION-SUMMARY.md`
 - PAY-003 Completion Summary: `/PAY-003-COMPLETION-SUMMARY.md`
@@ -368,11 +384,13 @@ mmdc -i payment-architecture-overview.mmd -o payment-architecture-overview.png
 - PAY-009 Completion Summary: `/packages/backend/PAY-009-COMPLETION-SUMMARY.md`
 
 **Architecture Documentation**:
+
 - Mermaid Diagram Guide: `/docs/development/mermaid-diagram-guide.md`
 - Elite Architecture: `/ELITE_ARCHITECTURE_DOCUMENTATION.md`
 - Feature Architecture Guide: `/FEATURE_ARCHITECTURE_GUIDE.md`
 
 **Code Locations**:
+
 - Payment State Machine: `/packages/backend/src/services/payment/PaymentStateMachine.ts`
 - Payment Retry Service: `/packages/backend/src/services/payment/PaymentRetryService.ts`
 - Lightning Payment Service: `/packages/backend/src/services/lightning-payment-service.ts`
@@ -406,6 +424,7 @@ All diagrams in this directory meet the following quality criteria:
 5. **Retry Logic Changes**: Update Retry Logic Flow
 
 **Update Process**:
+
 1. Modify `.mmd` source file
 2. Verify rendering in Mermaid Live Editor
 3. Update this README if new diagram added
@@ -417,6 +436,7 @@ All diagrams in this directory meet the following quality criteria:
 ## Changelog
 
 **2025-10-25** - PAY-018 Implementation Complete
+
 - Created 6 comprehensive payment flow diagrams
 - Established diagram index with navigation
 - Integrated all PAY-001 through PAY-017 documentation

@@ -22,6 +22,7 @@ The Sovren codebase had inconsistent type safety leading to runtime errors:
 We will enforce **TypeScript strict mode** with comprehensive type safety across the entire codebase.
 
 **tsconfig.json**:
+
 ```json
 {
   "compilerOptions": {
@@ -44,6 +45,7 @@ We will enforce **TypeScript strict mode** with comprehensive type safety across
 ```
 
 **Key Principles**:
+
 1. Eliminate all `any` types - use `unknown` when type unclear
 2. Explicit null handling with optional chaining and nullish coalescing
 3. Type guards for runtime type checking
@@ -51,17 +53,18 @@ We will enforce **TypeScript strict mode** with comprehensive type safety across
 5. Utility types for type transformations
 
 **Examples**:
+
 ```typescript
 // Before: Unsafe
 function getUser(id: any) {
-  return users.find(u => u.id === id);
+  return users.find((u) => u.id === id);
 }
 const user = getUser('123');
 user.email.toLowerCase(); // Runtime error if user undefined!
 
 // After: Type-safe
 function getUser(id: string): User | undefined {
-  return users.find(u => u.id === id);
+  return users.find((u) => u.id === id);
 }
 const user = getUser('123');
 if (user) {

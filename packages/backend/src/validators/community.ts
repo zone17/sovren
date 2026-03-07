@@ -40,11 +40,11 @@ export const RegisterMentorSchema = z.object({
   niche: z.string().min(1).max(100),
   audienceSizeRange: z.enum(['0-1k', '1k-10k', '10k-100k', '100k+']),
   bio: z.string().max(MAX_BIO).optional(),
-  maxMentees: z.number().int().positive().max(100).optional(),
+  maxMentees: z.number().int().positive().max(10).optional(), // #741: max 10 to match service cap
 });
 
 export const RequestMentorshipSchema = z.object({
-  mentorId: z.string().min(1).max(200),
+  mentorId: z.string().uuid('mentorId must be a valid UUID'), // #742: enforce UUID format
   niche: z.string().max(100).optional(),
   goals: z.array(z.string().max(500)).max(MAX_GOALS).optional(),
 });
@@ -58,7 +58,7 @@ export const UpdateMentorProfileSchema = z
     niche: z.string().min(1).max(100).optional(),
     audienceSizeRange: z.enum(['0-1k', '1k-10k', '10k-100k', '100k+']).optional(),
     bio: z.string().max(MAX_BIO).optional(),
-    maxMentees: z.number().int().positive().max(100).optional(),
+    maxMentees: z.number().int().positive().max(10).optional(), // #741: max 10 to match service cap
   })
   .refine((d) => Object.values(d).some((v) => v !== undefined), {
     message: 'At least one field must be provided',

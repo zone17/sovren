@@ -16,20 +16,17 @@ This document details the complete implementation of enhanced NIP-04 encrypted d
 **Security Architecture**:
 ![NIP04 Security Architecture](https://github.com/yourusername/sovren/blob/main/docs/architecture/diagrams/nip04-security-architecture.mmd)
 
-[View in Mermaid Live](https://mermaid.live/edit#pako:eNp1kE1qw0AMha9itEoXzQW8KIRCunGh0IWgRbBntYdMJP6Qxv...
-)
+[View in Mermaid Live](https://mermaid.live/edit#pako:eNp1kE1qw0AMha9itEoXzQW8KIRCunGh0IWgRbBntYdMJP6Qxv...)
 
 **Message Flow Sequence**:
 ![NIP04 Message Flow](https://github.com/yourusername/sovren/blob/main/docs/architecture/diagrams/nip04-message-flow.mmd)
 
-[View in Mermaid Live](https://mermaid.live/edit#pako:eNp1kE1qw0AMha9itEoXzQW8KIRCunGh0IWgRbBntYdMJP6Qxv...
-)
+[View in Mermaid Live](https://mermaid.live/edit#pako:eNp1kE1qw0AMha9itEoXzQW8KIRCunGh0IWgRbBntYdMJP6Qxv...)
 
 **Threat Model**:
 ![NIP04 Threat Model](https://github.com/yourusername/sovren/blob/main/docs/architecture/diagrams/nip04-threat-model.mmd)
 
-[View in Mermaid Live](https://mermaid.live/edit#pako:eNp1kE1qw0AMha9itEoXzQW8KIRCunGh0IWgRbBntYdMJP6Qxv...
-)
+[View in Mermaid Live](https://mermaid.live/edit#pako:eNp1kE1qw0AMha9itEoXzQW8KIRCunGh0IWgRbBntYdMJP6Qxv...)
 
 ## Features Implemented
 
@@ -38,6 +35,7 @@ This document details the complete implementation of enhanced NIP-04 encrypted d
 **Specification**: [NIP-04](https://github.com/nostr-protocol/nips/blob/master/04.md)
 
 **Implementation**:
+
 - ECDH shared secret derivation using secp256k1
 - AES-256-CBC encryption/decryption
 - Random IV generation for each message (no IV reuse)
@@ -45,6 +43,7 @@ This document details the complete implementation of enhanced NIP-04 encrypted d
 - Browser extension support (NIP-07) with fallback to native
 
 **Security Guarantees**:
+
 - End-to-end encryption
 - Forward secrecy via session key rotation
 - No private key storage on servers
@@ -55,10 +54,11 @@ This document details the complete implementation of enhanced NIP-04 encrypted d
 **Event Kind**: 1515 (Custom - follows NOSTR convention)
 
 **Format**:
+
 ```json
 {
   "kind": 1515,
-  "content": "1698765432000",  // Timestamp when read
+  "content": "1698765432000", // Timestamp when read
   "tags": [
     ["e", "message_event_id"],
     ["p", "sender_pubkey"]
@@ -67,12 +67,10 @@ This document details the complete implementation of enhanced NIP-04 encrypted d
 ```
 
 **API**:
+
 ```typescript
 // Create read receipt
-const receipt = await nip04Service.createReadReceipt(
-  messageEventId,
-  senderPubkey
-);
+const receipt = await nip04Service.createReadReceipt(messageEventId, senderPubkey);
 
 // Process received receipt
 await nip04Service.processReadReceipt(receipt);
@@ -83,6 +81,7 @@ const status = nip04Service.getReadReceiptStatus(messageId);
 ```
 
 **Use Cases**:
+
 - Show "Read" indicator in UI
 - Track message delivery and consumption
 - Improve user experience with delivery confirmation
@@ -92,6 +91,7 @@ const status = nip04Service.getReadReceiptStatus(messageId);
 **Event Kind**: 20004 (Custom - ephemeral)
 
 **Format**:
+
 ```json
 {
   "kind": 20004,
@@ -103,11 +103,12 @@ const status = nip04Service.getReadReceiptStatus(messageId);
 ```
 
 **API**:
+
 ```typescript
 // Send typing indicator
 const indicator = await nip04Service.sendTypingIndicator(
   recipientPubkey,
-  true  // isTyping
+  true // isTyping
 );
 
 // Process received indicator
@@ -119,6 +120,7 @@ const typingUsers = nip04Service.getTypingUsers(conversationPubkey);
 ```
 
 **Features**:
+
 - Auto-clear after 3 seconds of inactivity
 - Debounced to prevent spam
 - Ephemeral events (not stored permanently)
@@ -126,21 +128,19 @@ const typingUsers = nip04Service.getTypingUsers(conversationPubkey);
 ### 4. Message History & Pagination - NEW
 
 **API**:
+
 ```typescript
 // Get paginated history
 const messages = await nip04Service.getMessageHistory({
   conversationWith: 'pubkey',
   limit: 50,
   offset: 0,
-  before: timestamp,  // Optional time filter
-  after: timestamp    // Optional time filter
+  before: timestamp, // Optional time filter
+  after: timestamp, // Optional time filter
 });
 
 // Search messages
-const results = await nip04Service.searchMessages(
-  'pubkey',
-  'search query'
-);
+const results = await nip04Service.searchMessages('pubkey', 'search query');
 
 // Message cache
 nip04Service.cacheDecryptedMessage(messageId, message, decrypted);
@@ -149,6 +149,7 @@ nip04Service.clearMessageCache();
 ```
 
 **Features**:
+
 - Efficient pagination for large conversations
 - Time-based filtering
 - Full-text search in decrypted messages
@@ -156,6 +157,7 @@ nip04Service.clearMessageCache();
 - Cache includes read receipt status
 
 **Performance**:
+
 - Cache prevents redundant decryption
 - Pagination reduces memory footprint
 - Indexed access to messages
@@ -165,27 +167,26 @@ nip04Service.clearMessageCache();
 **Concept**: Even if current keys are compromised, past messages remain secure.
 
 **Implementation**:
+
 ```typescript
 // Generate session key for conversation
-const sessionKey = await nip04Service.generateSessionKey(
-  conversationPubkey
-);
+const sessionKey = await nip04Service.generateSessionKey(conversationPubkey);
 
 // Automatic rotation (checked on each message)
-const rotated = await nip04Service.maybeRotateSessionKey(
-  conversationPubkey
-);
+const rotated = await nip04Service.maybeRotateSessionKey(conversationPubkey);
 
 // Get current session key
 const current = nip04Service.getSessionKey(conversationPubkey);
 ```
 
 **Parameters**:
+
 - **Rotation Threshold**: 100 messages per session key
 - **Key Type**: Ephemeral, per-conversation
 - **Storage**: Temporary, not persisted long-term
 
 **Security Benefits**:
+
 - Past messages safe if current key compromised
 - Limits damage window to 100 messages
 - Automatic and transparent to users
@@ -196,26 +197,29 @@ const current = nip04Service.getSessionKey(conversationPubkey);
 **Multi-Layered Defense**:
 
 #### Rate Limiting
+
 ```typescript
 // Configure rate limits
 nip04Service.configureSpamProtection({
   rateLimit: {
     maxMessagesPerMinute: 20,
-    maxMessagesPerHour: 200
-  }
+    maxMessagesPerHour: 200,
+  },
 });
 ```
 
 #### Proof-of-Work (PoW)
+
 ```typescript
 // Require PoW for unknown senders
 nip04Service.configureSpamProtection({
   requirePoW: true,
-  powDifficulty: 16  // Leading zero bits required
+  powDifficulty: 16, // Leading zero bits required
 });
 ```
 
 #### Block/Allow Lists
+
 ```typescript
 // Block spammer
 nip04Service.blockPubkey(spammerPubkey);
@@ -229,12 +233,10 @@ const blockedList = nip04Service.getBlockedPubkeys();
 ```
 
 **Check Integration**:
+
 ```typescript
 // Automatic check on incoming messages
-const allowed = await nip04Service.checkSpamProtection(
-  senderPubkey,
-  event
-);
+const allowed = await nip04Service.checkSpamProtection(senderPubkey, event);
 
 if (!allowed) {
   // Message rejected
@@ -250,15 +252,15 @@ await processMessage(event);
 
 ### Threat Model
 
-| Threat | Mitigation | Implementation |
-|--------|-----------|----------------|
-| **Eavesdropping on Relays** | E2E Encryption | AES-256-CBC + ECDH |
-| **MITM Attacks** | Key Exchange | secp256k1 ECDH |
-| **Key Compromise** | Forward Secrecy | Session key rotation (100 msgs) |
-| **Spam/DoS** | Rate Limiting + PoW | Configurable limits + block lists |
-| **Replay Attacks** | Random IVs | Unique IV per message |
-| **Timing Attacks** | Constant-Time Ops | WebCrypto API (hardware-backed) |
-| **Metadata Leakage** | Minimal Tags | Only 'p' tag with recipient pubkey |
+| Threat                      | Mitigation          | Implementation                     |
+| --------------------------- | ------------------- | ---------------------------------- |
+| **Eavesdropping on Relays** | E2E Encryption      | AES-256-CBC + ECDH                 |
+| **MITM Attacks**            | Key Exchange        | secp256k1 ECDH                     |
+| **Key Compromise**          | Forward Secrecy     | Session key rotation (100 msgs)    |
+| **Spam/DoS**                | Rate Limiting + PoW | Configurable limits + block lists  |
+| **Replay Attacks**          | Random IVs          | Unique IV per message              |
+| **Timing Attacks**          | Constant-Time Ops   | WebCrypto API (hardware-backed)    |
+| **Metadata Leakage**        | Minimal Tags        | Only 'p' tag with recipient pubkey |
 
 ### Encryption Strength
 
@@ -270,6 +272,7 @@ await processMessage(event);
 ### Forward Secrecy Implementation
 
 **Key Rotation Strategy**:
+
 1. Generate ephemeral session key pair
 2. Use for next 100 messages
 3. Increment message counter
@@ -350,6 +353,7 @@ await nip04Service.clearThread(pubkey1, pubkey2);
 ### Key Test Scenarios
 
 #### Security Tests
+
 ```typescript
 describe('Security Edge Cases', () => {
   it('should prevent timing attacks on encryption');
@@ -361,6 +365,7 @@ describe('Security Edge Cases', () => {
 ```
 
 #### Spam Protection Tests
+
 ```typescript
 describe('Spam Protection', () => {
   it('should enforce rate limiting per minute');
@@ -372,6 +377,7 @@ describe('Spam Protection', () => {
 ```
 
 #### Forward Secrecy Tests
+
 ```typescript
 describe('Forward Secrecy & Key Rotation', () => {
   it('should generate session key for conversation');
@@ -383,13 +389,13 @@ describe('Forward Secrecy & Key Rotation', () => {
 
 ## Performance Characteristics
 
-| Operation | Target | Actual |
-|-----------|--------|--------|
-| Single Encryption | < 100ms | ~10-20ms |
-| Single Decryption | < 100ms | ~10-20ms |
+| Operation                  | Target  | Actual     |
+| -------------------------- | ------- | ---------- |
+| Single Encryption          | < 100ms | ~10-20ms   |
+| Single Decryption          | < 100ms | ~10-20ms   |
 | Batch (10 msgs) Encryption | < 500ms | ~100-200ms |
-| Message Cache Lookup | < 1ms | ~0.1ms |
-| Spam Check | < 10ms | ~1-5ms |
+| Message Cache Lookup       | < 1ms   | ~0.1ms     |
+| Spam Check                 | < 10ms  | ~1-5ms     |
 
 ## Best Practices
 
@@ -426,7 +432,7 @@ await nip04Service.generateSessionKey(pk);
 
 // Enable spam protection
 nip04Service.configureSpamProtection({
-  rateLimit: { maxMessagesPerMinute: 20, maxMessagesPerHour: 200 }
+  rateLimit: { maxMessagesPerMinute: 20, maxMessagesPerHour: 200 },
 });
 
 // Use read receipts

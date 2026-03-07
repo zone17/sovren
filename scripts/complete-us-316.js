@@ -20,7 +20,7 @@ async function completeUS316() {
 
   // Find US-316
   for (const phase of Object.values(tasksData.phases)) {
-    const story = phase.tasks.find(t => t.story_id === 'US-316');
+    const story = phase.tasks.find((t) => t.story_id === 'US-316');
 
     if (story) {
       console.log(`\n📝 Completing US-316: ${story.name}...`);
@@ -39,7 +39,9 @@ async function completeUS316() {
         let fixedCount = 0;
         story.subtasks.forEach((subtask, index) => {
           if (subtask.status !== 'completed') {
-            console.log(`   ✓ Subtask ${index + 1}: "${subtask.description.substring(0, 60)}..." → completed`);
+            console.log(
+              `   ✓ Subtask ${index + 1}: "${subtask.description.substring(0, 60)}..." → completed`
+            );
             subtask.status = 'completed';
             fixedCount++;
           }
@@ -60,7 +62,7 @@ async function completeUS316() {
         'docs/architecture/diagrams/US-316-data-flow.mmd',
         'docs/architecture/diagrams/US-316-metrics-collection.mmd',
         'US-316-QUICK-REFERENCE.md',
-        'CHANGELOG.md'
+        'CHANGELOG.md',
       ];
 
       // Add test coverage
@@ -78,7 +80,7 @@ async function completeUS316() {
   console.log(`\n🎉 Epic 003: NOSTR Consolidation is now 100% COMPLETE!`);
 }
 
-completeUS316().catch(error => {
+completeUS316().catch((error) => {
   console.error('❌ Error:', error.message);
   process.exit(1);
 });

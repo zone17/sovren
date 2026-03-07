@@ -76,35 +76,35 @@ graph TB
 
 ### Frontend Deployment
 
-| Environment | Platform | URL | Features |
-|-------------|----------|-----|----------|
-| **Development** | Vite dev server | localhost:3000 | Hot reload, debug tools |
-| **Staging** | Vercel Preview | staging.sovren.dev | Production build, preview URL per PR |
-| **Production** | Vercel Production | sovren.dev | CDN, edge functions, auto HTTPS |
+| Environment     | Platform          | URL                | Features                             |
+| --------------- | ----------------- | ------------------ | ------------------------------------ |
+| **Development** | Vite dev server   | localhost:3000     | Hot reload, debug tools              |
+| **Staging**     | Vercel Preview    | staging.sovren.dev | Production build, preview URL per PR |
+| **Production**  | Vercel Production | sovren.dev         | CDN, edge functions, auto HTTPS      |
 
 ### Backend Services
 
-| Environment | Platform | Replicas | Resources | Cost |
-|-------------|----------|----------|-----------|------|
-| **Development** | Docker Compose | 1 | 512MB RAM | $0 |
-| **Staging** | Railway.app | 1 | 512MB RAM, 0.5 CPU | $0 |
-| **Production** | Railway.app | 2 | 1024MB RAM, 1 CPU | $0 |
+| Environment     | Platform       | Replicas | Resources          | Cost |
+| --------------- | -------------- | -------- | ------------------ | ---- |
+| **Development** | Docker Compose | 1        | 512MB RAM          | $0   |
+| **Staging**     | Railway.app    | 1        | 512MB RAM, 0.5 CPU | $0   |
+| **Production**  | Railway.app    | 2        | 1024MB RAM, 1 CPU  | $0   |
 
 ### Database (PostgreSQL)
 
-| Environment | Platform | Storage | Connections | Backups | Cost |
-|-------------|----------|---------|-------------|---------|------|
-| **Development** | Local | Unlimited | Unlimited | Manual | $0 |
-| **Staging** | Supabase | 500MB | 50 | 7 days | $0 |
-| **Production** | Supabase | 500MB | 100 | 7 days | $0 |
+| Environment     | Platform | Storage   | Connections | Backups | Cost |
+| --------------- | -------- | --------- | ----------- | ------- | ---- |
+| **Development** | Local    | Unlimited | Unlimited   | Manual  | $0   |
+| **Staging**     | Supabase | 500MB     | 50          | 7 days  | $0   |
+| **Production**  | Supabase | 500MB     | 100         | 7 days  | $0   |
 
 ### Caching (Redis)
 
-| Environment | Platform | Memory | Commands/Day | Persistence | Cost |
-|-------------|----------|--------|--------------|-------------|------|
-| **Development** | Local | Unlimited | Unlimited | Optional | $0 |
-| **Staging** | Upstash | 256MB | 10,000 | Yes | $0 |
-| **Production** | Upstash | 256MB | 10,000 | Yes | $0 |
+| Environment     | Platform | Memory    | Commands/Day | Persistence | Cost |
+| --------------- | -------- | --------- | ------------ | ----------- | ---- |
+| **Development** | Local    | Unlimited | Unlimited    | Optional    | $0   |
+| **Staging**     | Upstash  | 256MB     | 10,000       | Yes         | $0   |
+| **Production**  | Upstash  | 256MB     | 10,000       | Yes         | $0   |
 
 ## Environment Configuration Profiles
 
@@ -310,6 +310,7 @@ module "database" {
 ```
 
 **Features**:
+
 - Automatic schema creation (app, auth, storage)
 - PostgreSQL extensions (uuid-ossp, pgcrypto, pg_stat_statements)
 - SSL/TLS enforced
@@ -334,6 +335,7 @@ module "redis" {
 ```
 
 **Features**:
+
 - Environment-specific cache profiles
 - Automatic eviction policies (LRU for staging, LFU for production)
 - Connection pooling
@@ -365,6 +367,7 @@ module "backend_services" {
 ```
 
 **Features**:
+
 - Environment-specific resource limits
 - Health check configuration
 - GHCR integration
@@ -393,31 +396,32 @@ graph LR
 
 ### Security Controls
 
-| Layer | Controls |
-|-------|----------|
-| **Transport** | TLS 1.3, HTTPS enforced, SSL for all DB connections |
-| **Application** | Helmet headers, CSRF protection, input validation |
-| **Session** | Secure cookies, httpOnly, sameSite=strict |
-| **API** | Rate limiting, request size limits, timeout enforcement |
-| **Database** | Connection pooling, prepared statements, least privilege |
-| **Secrets** | GitHub Secrets, environment variables, no hardcoded secrets |
+| Layer           | Controls                                                    |
+| --------------- | ----------------------------------------------------------- |
+| **Transport**   | TLS 1.3, HTTPS enforced, SSL for all DB connections         |
+| **Application** | Helmet headers, CSRF protection, input validation           |
+| **Session**     | Secure cookies, httpOnly, sameSite=strict                   |
+| **API**         | Rate limiting, request size limits, timeout enforcement     |
+| **Database**    | Connection pooling, prepared statements, least privilege    |
+| **Secrets**     | GitHub Secrets, environment variables, no hardcoded secrets |
 
 ## Monitoring and Observability
 
 ### Health Check Endpoints
 
 All backend services expose:
+
 - `/health` - Overall service health
 - `/ready` - Ready to receive traffic (DB connected, cache available)
 - `/live` - Process is alive (for orchestrator restart logic)
 
 ### Monitoring Stack
 
-| Environment | Error Tracking | Performance | Logs | Uptime |
-|-------------|----------------|-------------|------|---------|
-| **Development** | None | Local | Debug | N/A |
-| **Staging** | Sentry (100% sample) | Enabled | Debug | Optional |
-| **Production** | Sentry (10% sample) | Enabled | Error | Required |
+| Environment     | Error Tracking       | Performance | Logs  | Uptime   |
+| --------------- | -------------------- | ----------- | ----- | -------- |
+| **Development** | None                 | Local       | Debug | N/A      |
+| **Staging**     | Sentry (100% sample) | Enabled     | Debug | Optional |
+| **Production**  | Sentry (10% sample)  | Enabled     | Error | Required |
 
 ### Key Metrics
 
@@ -443,27 +447,30 @@ All backend services expose:
 
 ### Monthly Cost: $0
 
-| Service | Free Tier Limit | Usage Strategy | Cost |
-|---------|-----------------|----------------|------|
-| **Supabase** | 500MB DB, unlimited API | Optimize storage, use compression | $0 |
-| **Upstash** | 10K commands/day | Optimize cache, increase TTLs | $0 |
-| **Railway** | $5/month credit | 2 replicas × 512MB each | $0 |
-| **Vercel** | Unlimited deployments | Optimize bundle size | $0 |
-| **GitHub** | 2,000 CI minutes | Optimize workflows | $0 |
+| Service      | Free Tier Limit         | Usage Strategy                    | Cost |
+| ------------ | ----------------------- | --------------------------------- | ---- |
+| **Supabase** | 500MB DB, unlimited API | Optimize storage, use compression | $0   |
+| **Upstash**  | 10K commands/day        | Optimize cache, increase TTLs     | $0   |
+| **Railway**  | $5/month credit         | 2 replicas × 512MB each           | $0   |
+| **Vercel**   | Unlimited deployments   | Optimize bundle size              | $0   |
+| **GitHub**   | 2,000 CI minutes        | Optimize workflows                | $0   |
 
 ### Cost Monitoring
 
 **Database Storage**:
+
 - Monitor via Supabase dashboard
 - Set up alerts at 400MB (80%)
 - Archive old data periodically
 
 **Redis Commands**:
+
 - Monitor daily command count
 - Optimize cache strategy if approaching limit
 - Consider longer TTLs to reduce writes
 
 **Railway Credit**:
+
 - $5/month credit renews monthly
 - Track usage via Railway dashboard
 - Optimize container resource usage
@@ -472,28 +479,31 @@ All backend services expose:
 
 ### Backup Strategy
 
-| Component | Frequency | Retention | Recovery Time |
-|-----------|-----------|-----------|---------------|
-| **Database** | Daily | 7 days | < 1 hour |
-| **Infrastructure** | Git commits | Unlimited | < 30 minutes |
-| **Secrets** | Manual | GitHub Secrets | < 15 minutes |
-| **Application Code** | Git commits | Unlimited | < 5 minutes |
+| Component            | Frequency   | Retention      | Recovery Time |
+| -------------------- | ----------- | -------------- | ------------- |
+| **Database**         | Daily       | 7 days         | < 1 hour      |
+| **Infrastructure**   | Git commits | Unlimited      | < 30 minutes  |
+| **Secrets**          | Manual      | GitHub Secrets | < 15 minutes  |
+| **Application Code** | Git commits | Unlimited      | < 5 minutes   |
 
 ### Recovery Procedures
 
 **Database Failure**:
+
 1. Restore from Supabase automatic backup (7 days retention)
 2. Run database validation script
 3. Verify data integrity
 4. Resume normal operations
 
 **Application Failure**:
+
 1. Automatic rollback via GitHub Actions
 2. Revert to last known good deployment
 3. Investigate root cause
 4. Fix and redeploy
 
 **Complete Infrastructure Failure**:
+
 1. Re-run Terraform apply from version control
 2. Restore database from backup
 3. Redeploy application from GHCR
@@ -524,18 +534,21 @@ All backend services expose:
 ## Future Enhancements
 
 ### Phase 1 (Current)
+
 - ✅ Three environments (dev, staging, prod)
 - ✅ Infrastructure as Code (Terraform)
 - ✅ Environment promotion workflow
 - ✅ Automated validation tests
 
 ### Phase 2 (Next)
+
 - [ ] Ephemeral preview environments (per PR)
 - [ ] Advanced monitoring (distributed tracing)
 - [ ] Feature flags for gradual rollout
 - [ ] Load testing automation
 
 ### Phase 3 (Future)
+
 - [ ] Multi-region deployment (if scaling beyond free tier)
 - [ ] Advanced caching strategies
 - [ ] A/B testing infrastructure

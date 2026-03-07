@@ -9,12 +9,12 @@
 
 ## Summary
 
-| Severity | Count | Remediated |
-|----------|-------|------------|
-| Critical | 0 | 0 |
-| High | 0 | 0 |
-| Moderate | 2 | 0 (accepted risk) |
-| Low | 3 | 0 (accepted risk) |
+| Severity | Count | Remediated        |
+| -------- | ----- | ----------------- |
+| Critical | 0     | 0                 |
+| High     | 0     | 0                 |
+| Moderate | 2     | 0 (accepted risk) |
+| Low      | 3     | 0 (accepted risk) |
 
 **Overall Assessment: PASS (90/100)**
 
@@ -26,19 +26,20 @@ The Phase 7 implementation demonstrates strong security posture. All routes use 
 
 ### 1. Authentication & Authorization
 
-| Check | Status | Notes |
-|-------|--------|-------|
-| All v2 wellness routes use `authenticate` middleware | PASS | All 12 endpoints verified |
-| All v2 shield routes use `authenticate` middleware (except public provenance lookup) | PASS | `GET /provenance/:contentId` correctly uses `optionalAuth` |
-| `requireCreator` middleware on creator-only endpoints | PASS | Applied to all mutation and private-read endpoints |
-| Benchmark endpoint uses `optionalAuth` | PASS | `GET /wellness/benchmark` — correct per spec |
-| Pulse deletion scoped to own creator | PASS | Uses `req.user!.nostr_pubkey` passed to `deletePulseHistory()` |
-| Alert status transitions only by content owner | PASS | `updateAlertStatus()` filters by `creator_id` in query |
-| Fingerprint registry enforces self-access | PASS | Route-level check: `req.params.creatorId !== req.user!.nostr_pubkey` returns 403 |
-| Certificate endpoint verifies content ownership | PASS | `getCertificate()` checks `provenance.author_pubkey !== creatorId` |
-| DMCA report scoped to own alerts | PASS | `generateReport()` filters `eq('creator_id', creatorId)` |
+| Check                                                                                | Status | Notes                                                                            |
+| ------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------- |
+| All v2 wellness routes use `authenticate` middleware                                 | PASS   | All 12 endpoints verified                                                        |
+| All v2 shield routes use `authenticate` middleware (except public provenance lookup) | PASS   | `GET /provenance/:contentId` correctly uses `optionalAuth`                       |
+| `requireCreator` middleware on creator-only endpoints                                | PASS   | Applied to all mutation and private-read endpoints                               |
+| Benchmark endpoint uses `optionalAuth`                                               | PASS   | `GET /wellness/benchmark` — correct per spec                                     |
+| Pulse deletion scoped to own creator                                                 | PASS   | Uses `req.user!.nostr_pubkey` passed to `deletePulseHistory()`                   |
+| Alert status transitions only by content owner                                       | PASS   | `updateAlertStatus()` filters by `creator_id` in query                           |
+| Fingerprint registry enforces self-access                                            | PASS   | Route-level check: `req.params.creatorId !== req.user!.nostr_pubkey` returns 403 |
+| Certificate endpoint verifies content ownership                                      | PASS   | `getCertificate()` checks `provenance.author_pubkey !== creatorId`               |
+| DMCA report scoped to own alerts                                                     | PASS   | `generateReport()` filters `eq('creator_id', creatorId)`                         |
 
 **Routes Audited:**
+
 - `POST /wellness/patterns` — authenticate, requireCreator, validate
 - `GET /wellness/patterns` — authenticate, requireCreator, validate
 - `GET /wellness/patterns/heatmap` — authenticate, requireCreator, validate
@@ -65,54 +66,55 @@ The Phase 7 implementation demonstrates strong security posture. All routes use 
 
 ### 2. Input Validation
 
-| Check | Status | Notes |
-|-------|--------|-------|
-| All POST/PUT endpoints use Zod validators | PASS | Every mutation endpoint has `validate({body: ...})` |
-| String length limits on text inputs | PASS | `auto_response_template` max 500, `content_data` max 10MB |
-| Enum validation for status fields | PASS | All enums validated via `z.enum()` |
-| No SQL injection via input concatenation | PASS | All DB access uses Supabase query builder (parameterized) |
-| Pagination limits enforced (max 100) | PASS | `limit: z.coerce.number().int().min(1).max(100)` in shield validators |
-| Numeric ranges validated | PASS | `energy/motivation/stress` 1-5, `duration_mins` max 1440, scores 0-1 |
-| Hash format validated | PASS | `hash_value: z.string().regex(/^[0-9a-f]{16}$/)` |
-| Alert IDs validated as UUID | PASS | `z.string().uuid()` |
+| Check                                     | Status | Notes                                                                 |
+| ----------------------------------------- | ------ | --------------------------------------------------------------------- |
+| All POST/PUT endpoints use Zod validators | PASS   | Every mutation endpoint has `validate({body: ...})`                   |
+| String length limits on text inputs       | PASS   | `auto_response_template` max 500, `content_data` max 10MB             |
+| Enum validation for status fields         | PASS   | All enums validated via `z.enum()`                                    |
+| No SQL injection via input concatenation  | PASS   | All DB access uses Supabase query builder (parameterized)             |
+| Pagination limits enforced (max 100)      | PASS   | `limit: z.coerce.number().int().min(1).max(100)` in shield validators |
+| Numeric ranges validated                  | PASS   | `energy/motivation/stress` 1-5, `duration_mins` max 1440, scores 0-1  |
+| Hash format validated                     | PASS   | `hash_value: z.string().regex(/^[0-9a-f]{16}$/)`                      |
+| Alert IDs validated as UUID               | PASS   | `z.string().uuid()`                                                   |
 
 ### 3. Data Privacy (Wellness Data)
 
-| Check | Status | Notes |
-|-------|--------|-------|
-| RLS policies enforce `creator_id = auth.uid()` | PASS | All 4 wellness tables have RLS with this policy |
-| Benchmark uses aggregate-only data | PASS | Materialized view with k-anonymity (min 10 participants) |
-| Pulse data never exposed to other creators | PASS | All queries scoped by `creatorId` param from auth |
-| Wellness data deletion actually deletes | PASS | `deleteAllWellnessData` iterates 4 tables with `.delete()` |
-| Provenance records immutable (no UPDATE/DELETE policy) | PASS | Schema grants only SELECT and INSERT |
+| Check                                                  | Status | Notes                                                      |
+| ------------------------------------------------------ | ------ | ---------------------------------------------------------- |
+| RLS policies enforce `creator_id = auth.uid()`         | PASS   | All 4 wellness tables have RLS with this policy            |
+| Benchmark uses aggregate-only data                     | PASS   | Materialized view with k-anonymity (min 10 participants)   |
+| Pulse data never exposed to other creators             | PASS   | All queries scoped by `creatorId` param from auth          |
+| Wellness data deletion actually deletes                | PASS   | `deleteAllWellnessData` iterates 4 tables with `.delete()` |
+| Provenance records immutable (no UPDATE/DELETE policy) | PASS   | Schema grants only SELECT and INSERT                       |
 
 ### 4. Provenance/Shield Security
 
-| Check | Status | Notes |
-|-------|--------|-------|
-| NOSTR private keys never logged or exposed | PASS | No `nsec`, `private_key`, `secretKey` in any Phase 7 file |
-| Content signatures stored, not private keys | PASS | Only public signatures and event IDs stored |
-| DMCA reports don't leak other creators' data | PASS | Report scoped by `creator_id` — only own alerts accessible |
-| Alert data is creator-scoped | PASS | All alert queries filter by `eq('creator_id', creatorId)` |
-| Alert status transitions validated | PASS | `ALERT_STATUS_TRANSITIONS` enforced before update |
+| Check                                        | Status | Notes                                                      |
+| -------------------------------------------- | ------ | ---------------------------------------------------------- |
+| NOSTR private keys never logged or exposed   | PASS   | No `nsec`, `private_key`, `secretKey` in any Phase 7 file  |
+| Content signatures stored, not private keys  | PASS   | Only public signatures and event IDs stored                |
+| DMCA reports don't leak other creators' data | PASS   | Report scoped by `creator_id` — only own alerts accessible |
+| Alert data is creator-scoped                 | PASS   | All alert queries filter by `eq('creator_id', creatorId)`  |
+| Alert status transitions validated           | PASS   | `ALERT_STATUS_TRANSITIONS` enforced before update          |
 
 ### 5. SAST Patterns
 
-| Pattern | Found | Location |
-|---------|-------|----------|
-| `eval()` | No | - |
-| `new Function()` | No | - |
-| `dangerouslySetInnerHTML` | No | - |
-| `innerHTML =` | No | - |
-| Hardcoded passwords/secrets | No | - |
-| `exec()` / `spawn()` | No | - |
-| SQL string concatenation | No | - |
-| `console.log()` / `console.debug()` | No | - |
-| `any` type casts in route handlers | No | Service layer uses `any` for Supabase row mapping (acceptable) |
+| Pattern                             | Found | Location                                                       |
+| ----------------------------------- | ----- | -------------------------------------------------------------- |
+| `eval()`                            | No    | -                                                              |
+| `new Function()`                    | No    | -                                                              |
+| `dangerouslySetInnerHTML`           | No    | -                                                              |
+| `innerHTML =`                       | No    | -                                                              |
+| Hardcoded passwords/secrets         | No    | -                                                              |
+| `exec()` / `spawn()`                | No    | -                                                              |
+| SQL string concatenation            | No    | -                                                              |
+| `console.log()` / `console.debug()` | No    | -                                                              |
+| `any` type casts in route handlers  | No    | Service layer uses `any` for Supabase row mapping (acceptable) |
 
 ### 6. Dependency Check
 
 No new npm packages were added in Phase 7. All services use existing dependencies:
+
 - `zod` — Validation (already in project)
 - `@supabase/supabase-js` — Database (already in project)
 - `express` — HTTP framework (already in project)
@@ -164,6 +166,7 @@ No new attack surface from dependencies.
 **Risk Assessment**: LOW — The API endpoint `GET /wellness/boundaries` requires `authenticate + requireCreator`, so non-owners cannot access through the application API. The overly-broad SELECT policy only matters if another application or Supabase client accesses the table directly. However, it violates least-privilege at the database layer.
 
 **Recommendation**: Replace the broad SELECT policy with a column-restricted view or a policy that only exposes `availability_status` and `availability_public` to non-owners:
+
 ```sql
 CREATE POLICY "Anyone can read availability status"
   ON creator_boundaries
@@ -191,30 +194,30 @@ CREATE POLICY "Anyone can read availability status"
 
 ## OWASP Top 10 Compliance
 
-| OWASP Category | Status | Notes |
-|----------------|--------|-------|
-| A01: Broken Access Control | PASS | All endpoints authenticated, creator-scoped via pubkey + RLS |
-| A02: Cryptographic Failures | PASS | No custom crypto; NOSTR signatures stored, not generated server-side |
-| A03: Injection | PASS | Supabase query builder (parameterized), Zod validation on all inputs |
-| A04: Insecure Design | PASS | Defense-in-depth (auth middleware + RLS + service-level scoping) |
-| A05: Security Misconfiguration | PASS | No debug endpoints, no default credentials |
-| A06: Vulnerable Components | PASS | No new dependencies added |
-| A07: Auth Failures | PASS | JWT verification via nostrAuth, proper 401/403 responses |
-| A08: Software/Data Integrity | PASS | Provenance records immutable (no UPDATE/DELETE policies) |
-| A09: Security Logging | PASS | Structured logging on auth failures, data mutations, errors |
-| A10: SSRF | PASS | No server-side URL fetching in Phase 7 code |
+| OWASP Category                 | Status | Notes                                                                |
+| ------------------------------ | ------ | -------------------------------------------------------------------- |
+| A01: Broken Access Control     | PASS   | All endpoints authenticated, creator-scoped via pubkey + RLS         |
+| A02: Cryptographic Failures    | PASS   | No custom crypto; NOSTR signatures stored, not generated server-side |
+| A03: Injection                 | PASS   | Supabase query builder (parameterized), Zod validation on all inputs |
+| A04: Insecure Design           | PASS   | Defense-in-depth (auth middleware + RLS + service-level scoping)     |
+| A05: Security Misconfiguration | PASS   | No debug endpoints, no default credentials                           |
+| A06: Vulnerable Components     | PASS   | No new dependencies added                                            |
+| A07: Auth Failures             | PASS   | JWT verification via nostrAuth, proper 401/403 responses             |
+| A08: Software/Data Integrity   | PASS   | Provenance records immutable (no UPDATE/DELETE policies)             |
+| A09: Security Logging          | PASS   | Structured logging on auth failures, data mutations, errors          |
+| A10: SSRF                      | PASS   | No server-side URL fetching in Phase 7 code                          |
 
 ---
 
 ## Remediation Actions
 
-| ID | Severity | Action | Status |
-|----|----------|--------|--------|
-| F-001 | Moderate | Consider `requireCreatorOnly` middleware for wellness routes | Deferred (RLS protects) |
-| F-002 | Moderate | Persist sensitivity to database | Deferred (MVP acceptable) |
-| F-003 | Low | Move percentile calc to materialized view | Deferred |
-| F-004 | Low | Narrow `creator_boundaries` SELECT policy | Deferred |
-| F-005 | Low | Add `.max(255)` to `contentId` validator | Deferred |
+| ID    | Severity | Action                                                       | Status                    |
+| ----- | -------- | ------------------------------------------------------------ | ------------------------- |
+| F-001 | Moderate | Consider `requireCreatorOnly` middleware for wellness routes | Deferred (RLS protects)   |
+| F-002 | Moderate | Persist sensitivity to database                              | Deferred (MVP acceptable) |
+| F-003 | Low      | Move percentile calc to materialized view                    | Deferred                  |
+| F-004 | Low      | Narrow `creator_boundaries` SELECT policy                    | Deferred                  |
+| F-005 | Low      | Add `.max(255)` to `contentId` validator                     | Deferred                  |
 
 ---
 

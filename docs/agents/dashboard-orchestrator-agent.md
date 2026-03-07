@@ -26,12 +26,14 @@ This custom agent replicates the exact Sovren Agent Orchestration Dashboard func
 ## When to Invoke
 
 **Trigger this agent when**:
+
 - Starting a new multi-epic project after PRD creation
 - Need visibility into parallel agent execution
 - Managing backlogs through Kanban workflow
 - Stakeholders require real-time progress monitoring
 
 **Example Invocations**:
+
 ```
 "Set up the agent orchestration dashboard for this project"
 "Create a live Kanban board to track epic and story progress"
@@ -43,6 +45,7 @@ This custom agent replicates the exact Sovren Agent Orchestration Dashboard func
 ## Agent Workflow
 
 ### Phase 1: Discovery (2-3 minutes)
+
 1. Locate and analyze PRD/backlog files
 2. Extract all epics and user stories
 3. Identify epic ID ranges (e.g., US-301-326 = Epic 003)
@@ -50,6 +53,7 @@ This custom agent replicates the exact Sovren Agent Orchestration Dashboard func
 5. Generate initial task data structure
 
 ### Phase 2: Infrastructure Setup (3-5 minutes)
+
 1. Create `/monitoring/dashboard/` directory structure
 2. Generate `package.json` with dependencies
 3. Create Node.js server with Express + Socket.IO
@@ -57,6 +61,7 @@ This custom agent replicates the exact Sovren Agent Orchestration Dashboard func
 5. Set up Winston logging
 
 ### Phase 3: Frontend Implementation (5-10 minutes)
+
 1. Create HTML structure with modals and Kanban board
 2. Implement comprehensive CSS (3200+ lines)
 3. Build JavaScript application logic (2700+ lines)
@@ -64,6 +69,7 @@ This custom agent replicates the exact Sovren Agent Orchestration Dashboard func
 5. Implement subtask tracking and progress calculation
 
 ### Phase 4: Real-Time Features (2-3 minutes)
+
 1. Configure Socket.IO events
 2. Implement file watching triggers
 3. Add connection status indicators
@@ -71,6 +77,7 @@ This custom agent replicates the exact Sovren Agent Orchestration Dashboard func
 5. Build export functionality
 
 ### Phase 5: Documentation & Testing (3-5 minutes)
+
 1. Generate comprehensive README
 2. Create setup and troubleshooting guides
 3. Write maintenance documentation
@@ -179,11 +186,13 @@ monitoring/
 ### Field Definitions
 
 **Task Types**:
+
 - `epic`: High-level initiative (auto-generated parent)
 - `story`: User story with detailed requirements
 - `task`: Individual work item
 
 **Statuses**:
+
 - `pending`: Not started
 - `in_progress`: Currently being worked on
 - `testing`: Implementation complete, in QA
@@ -191,6 +200,7 @@ monitoring/
 - `blocked`: Waiting on dependency
 
 **Subtask Structure**:
+
 - `order`: Sequential number (1-N)
 - `description`: Clear, actionable task
 - `status`: `pending` | `in_progress` | `completed`
@@ -205,14 +215,14 @@ monitoring/
 function discoverEpics(tasks) {
   const epicMap = new Map();
 
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     if (task.epic_label) {
       const epicNum = task.epic_label.match(/\d+/)?.[0];
       if (!epicMap.has(epicNum)) {
         epicMap.set(epicNum, {
           label: task.epic_label,
           stories: [],
-          completed: 0
+          completed: 0,
         });
       }
 
@@ -235,7 +245,7 @@ function discoverEpics(tasks) {
       type: 'epic',
       name: `${data.label} - ${completed}/${total} complete`,
       status: completed === total ? 'completed' : 'in_progress',
-      progress_percent: progress
+      progress_percent: progress,
     });
   });
 
@@ -252,7 +262,7 @@ function calculateProgress(task) {
   }
 
   const total = task.subtasks.length;
-  const completed = task.subtasks.filter(st => st.status === 'completed').length;
+  const completed = task.subtasks.filter((st) => st.status === 'completed').length;
   const progress = Math.round((completed / total) * 100);
 
   // Update task status based on progress
@@ -292,27 +302,27 @@ function assignToSwimlane(task) {
 
 ```css
 /* Epic 001: Purple Gradient */
-[data-epic="001"] {
+[data-epic='001'] {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 /* Epic 002: Pink Gradient */
-[data-epic="002"] {
+[data-epic='002'] {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 /* Epic 003: Blue Gradient */
-[data-epic="003"] {
+[data-epic='003'] {
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
 /* Epic 004: Green Gradient */
-[data-epic="004"] {
+[data-epic='004'] {
   background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
 /* Epic 005: Orange Gradient */
-[data-epic="005"] {
+[data-epic='005'] {
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
 }
 ```
@@ -324,6 +334,7 @@ function assignToSwimlane(task) {
 When invoked, the agent must complete:
 
 **Discovery Phase**:
+
 - [ ] Locate PRD file (SOVREN_PRD.md, README.md, etc.)
 - [ ] Parse all epics and extract epic numbers
 - [ ] Parse all user stories (US-XXX format)
@@ -331,12 +342,14 @@ When invoked, the agent must complete:
 - [ ] Determine agent types for each story
 
 **Setup Phase**:
+
 - [ ] Create directory structure
 - [ ] Generate package.json with correct dependencies
 - [ ] Install npm packages (express, socket.io, chokidar, winston)
 - [ ] Create .gitignore file
 
 **Server Implementation**:
+
 - [ ] Create server.js with Express setup
 - [ ] Configure Socket.IO for real-time updates
 - [ ] Set up Chokidar file watching
@@ -344,6 +357,7 @@ When invoked, the agent must complete:
 - [ ] Add graceful shutdown handlers
 
 **Data Generation**:
+
 - [ ] Generate initial tasks.json from PRD
 - [ ] Create epic parent tasks
 - [ ] Add all user stories with metadata
@@ -351,6 +365,7 @@ When invoked, the agent must complete:
 - [ ] Calculate summary statistics
 
 **Frontend Implementation**:
+
 - [ ] Create index.html with complete structure
 - [ ] Implement app.js with all dashboard logic
 - [ ] Create styles.css with responsive design
@@ -358,18 +373,21 @@ When invoked, the agent must complete:
 - [ ] Include Socket.IO client library
 
 **Scripts**:
+
 - [ ] Create generate-initial-tasks.js
 - [ ] Create add-subtasks-to-stories.js
 - [ ] Create complete-story.js helper
 - [ ] Add README with script documentation
 
 **Documentation**:
+
 - [ ] Generate comprehensive README.md
 - [ ] Create SETUP.md with installation steps
 - [ ] Write MAINTENANCE.md for ongoing updates
 - [ ] Create TROUBLESHOOTING.md for common issues
 
 **Testing & Validation**:
+
 - [ ] Start server and verify no errors
 - [ ] Open dashboard in browser
 - [ ] Verify all epics display correctly
@@ -437,13 +455,13 @@ Dashboard deployment is successful when:
 
 The agent should copy and adapt these files from Sovren:
 
-| Source File | Destination | Modifications |
-|------------|-------------|---------------|
-| `/Users/fp/Desktop/Sovren/monitoring/dashboard/server.js` | `./monitoring/dashboard/server.js` | Update project name, port |
-| `/Users/fp/Desktop/Sovren/monitoring/dashboard/public/index.html` | `./monitoring/dashboard/public/index.html` | Update title, branding |
-| `/Users/fp/Desktop/Sovren/monitoring/dashboard/public/app.js` | `./monitoring/dashboard/public/app.js` | Use as-is |
-| `/Users/fp/Desktop/Sovren/monitoring/dashboard/public/styles.css` | `./monitoring/dashboard/public/styles.css` | Optional color customization |
-| `/Users/fp/Desktop/Sovren/monitoring/dashboard/public/epic-functions.js` | `./monitoring/dashboard/public/epic-functions.js` | Use as-is |
+| Source File                                                              | Destination                                       | Modifications                |
+| ------------------------------------------------------------------------ | ------------------------------------------------- | ---------------------------- |
+| `/Users/fp/Desktop/Sovren/monitoring/dashboard/server.js`                | `./monitoring/dashboard/server.js`                | Update project name, port    |
+| `/Users/fp/Desktop/Sovren/monitoring/dashboard/public/index.html`        | `./monitoring/dashboard/public/index.html`        | Update title, branding       |
+| `/Users/fp/Desktop/Sovren/monitoring/dashboard/public/app.js`            | `./monitoring/dashboard/public/app.js`            | Use as-is                    |
+| `/Users/fp/Desktop/Sovren/monitoring/dashboard/public/styles.css`        | `./monitoring/dashboard/public/styles.css`        | Optional color customization |
+| `/Users/fp/Desktop/Sovren/monitoring/dashboard/public/epic-functions.js` | `./monitoring/dashboard/public/epic-functions.js` | Use as-is                    |
 
 ---
 
@@ -472,6 +490,7 @@ open http://localhost:3001
 ```
 
 **Expected Terminal Output**:
+
 ```
 ╔═══════════════════════════════════════════════════════╗
 ║   Agent Orchestration Dashboard v1.0.0               ║
@@ -507,15 +526,15 @@ open http://localhost:3001
 
 ## 📁 Files Created
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `server.js` | 182 | Express + Socket.IO server |
-| `data/tasks.json` | 2500+ | Task tracking data |
-| `public/index.html` | 530 | Dashboard UI |
-| `public/app.js` | 2700+ | Client-side logic |
-| `public/styles.css` | 3200+ | Responsive styling |
-| `public/epic-functions.js` | 200+ | Epic operations |
-| `docs/README.md` | 400+ | Documentation |
+| File                       | Lines | Purpose                    |
+| -------------------------- | ----- | -------------------------- |
+| `server.js`                | 182   | Express + Socket.IO server |
+| `data/tasks.json`          | 2500+ | Task tracking data         |
+| `public/index.html`        | 530   | Dashboard UI               |
+| `public/app.js`            | 2700+ | Client-side logic          |
+| `public/styles.css`        | 3200+ | Responsive styling         |
+| `public/epic-functions.js` | 200+  | Epic operations            |
+| `docs/README.md`           | 400+  | Documentation              |
 
 ## ✅ Features Enabled
 
@@ -548,6 +567,7 @@ open http://localhost:3001
 ## 🆘 Support
 
 If you encounter issues:
+
 1. Check server logs in `logs/server.log`
 2. Verify `tasks.json` is valid JSON
 3. Ensure port 3001 is available
@@ -566,13 +586,13 @@ If you encounter issues:
 
 The agent must handle these scenarios:
 
-| Error | Detection | Resolution |
-|-------|-----------|------------|
-| Missing PRD | File not found at expected paths | Prompt user for PRD location |
-| Invalid JSON | JSON parse error | Auto-fix or ask user to correct |
-| Port in use | EADDRINUSE error | Suggest alternative port |
-| Permission denied | EACCES error | Provide sudo instructions |
-| Missing dependencies | Module not found | Auto-run `npm install` |
+| Error                | Detection                        | Resolution                      |
+| -------------------- | -------------------------------- | ------------------------------- |
+| Missing PRD          | File not found at expected paths | Prompt user for PRD location    |
+| Invalid JSON         | JSON parse error                 | Auto-fix or ask user to correct |
+| Port in use          | EADDRINUSE error                 | Suggest alternative port        |
+| Permission denied    | EACCES error                     | Provide sudo instructions       |
+| Missing dependencies | Module not found                 | Auto-run `npm install`          |
 
 ---
 
@@ -581,11 +601,13 @@ The agent must handle these scenarios:
 Include in `docs/MAINTENANCE.md`:
 
 ### Adding New Epics
+
 1. Open `data/tasks.json`
 2. Add stories with `epic_label` field
 3. Dashboard auto-discovers epic on refresh
 
 ### Adding New Stories
+
 ```javascript
 {
   "id": "story-us-XXX",
@@ -600,11 +622,13 @@ Include in `docs/MAINTENANCE.md`:
 ```
 
 ### Updating Story Status
+
 - Manual: Edit `data/tasks.json`
 - Automatic: Dashboard watches file and refreshes
 - Script: Use `scripts/complete-story.js US-XXX`
 
 ### Exporting Reports
+
 - Click "Export Epic Report" button in dashboard
 - Downloads JSON file with all epic/story data
 - Import into spreadsheet for stakeholder reporting

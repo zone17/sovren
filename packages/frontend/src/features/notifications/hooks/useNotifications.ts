@@ -69,18 +69,23 @@ export function useMarkAllNotificationsRead() {
   });
 }
 
+/** UUID v4 format check — prevents subscribing with malformed user IDs */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 /**
  * Subscribe to realtime notification inserts for the current user.
  *
  * RC-1 fix: uses supabase.removeChannel(channel) in cleanup — safe for StrictMode double-invoke.
  * RC-3 fix: on INSERT, invalidateQueries rather than incrementing count directly.
- * RECONNECTED fix: invalidateQueries to backfill missed notifications.
+ * #737 fix: invalidate on SUBSCRIBED (reconnect) not CLOSED (disconnect).
+ * #743 fix: validate userId is a non-empty string (UUID) before subscribing.
  */
 export function useNotificationRealtime(userId: string | null | undefined) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!userId) return;
+    // #743: Guard — must be a non-empty string with valid UUID format
+    if (!userId || typeof userId !== 'string' || !UUID_RE.test(userId)) return;
 
     let channel: RealtimeChannel | null = null;
 
@@ -100,9 +105,9 @@ export function useNotificationRealtime(userId: string | null | undefined) {
         }
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') return;
-        if (status === 'CLOSED') {
-          // RC-3: On reconnect, backfill any missed notifications
+        // #737: Backfill missed notifications when the channel reconnects (SUBSCRIBED),
+        // not when it closes (CLOSED). CLOSED fires on disconnect — no point fetching then.
+        if (status === 'SUBSCRIBED') {
           queryClient.invalidateQueries({ queryKey: notificationKeys.all });
         }
       });
@@ -114,4 +119,19 @@ export function useNotificationRealtime(userId: string | null | undefined) {
       }
     };
   }, [userId, queryClient]);
+}
+
+// #752: Delete a single notification
+export function useDeleteNotification() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (notificationId: string) => notificationsApi.delete(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    },
+    onError: () => {
+      toast.error('Failed to delete notification.');
+    },
+  });
 }

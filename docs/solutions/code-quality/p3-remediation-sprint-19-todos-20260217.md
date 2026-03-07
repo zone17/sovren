@@ -7,20 +7,32 @@ problem_type: code_review_remediation
 component: p3_todos
 severity: low
 symptoms:
-  - "~200 lines duplicate code across 4 platform adapters"
-  - "14 req.user! non-null assertions across route handlers"
-  - "ISupabaseClient from(table): any and rpc(): any defeating DI type safety"
-  - "Dead code: recoverStaleJobs(), pollMessages(), snapshotMetrics(), unused schemas"
-  - "Comments-only down migrations with no executable rollback SQL"
+  - '~200 lines duplicate code across 4 platform adapters'
+  - '14 req.user! non-null assertions across route handlers'
+  - 'ISupabaseClient from(table): any and rpc(): any defeating DI type safety'
+  - 'Dead code: recoverStaleJobs(), pollMessages(), snapshotMetrics(), unused schemas'
+  - 'Comments-only down migrations with no executable rollback SQL'
   - "Inconsistent platform enum — some tables include 'nostr', others don't"
-  - "Missing updated_at triggers on 11 new EPIC-007/008/009 tables"
-  - "Manual DLQ redundant with BullMQ built-in removeOnFail"
-  - "Metrics API not optimized for agent/programmatic consumption"
-  - "usePublishStatus polls forever without stop condition"
+  - 'Missing updated_at triggers on 11 new EPIC-007/008/009 tables'
+  - 'Manual DLQ redundant with BullMQ built-in removeOnFail'
+  - 'Metrics API not optimized for agent/programmatic consumption'
+  - 'usePublishStatus polls forever without stop condition'
 root_cause: accumulated_p3_technical_debt
 solving_agent: 'team-builder standard tier (8 parallel remediation agents)'
 stories: [EPIC-007, EPIC-008, EPIC-009]
-tags: [code-review, p3-remediation, dead-code, type-safety, migrations, platform-adapters, agent-native, bullmq, frontend-polling, adr]
+tags:
+  [
+    code-review,
+    p3-remediation,
+    dead-code,
+    type-safety,
+    migrations,
+    platform-adapters,
+    agent-native,
+    bullmq,
+    frontend-polling,
+    adr,
+  ]
 ---
 
 # P3 Remediation Sprint: 19 Nice-to-Have Findings Resolved
@@ -46,16 +58,16 @@ Before implementation, triaged all 19 items:
 
 ### Agent Allocation (File-Grouped)
 
-| Agent | Scope | Todos |
-|-------|-------|-------|
-| remediation-deadcode | Dead code removal | 210, 211, 218 |
-| remediation-typesafety | ISupabaseClient + req.user typing | 216, 217 |
-| remediation-database | Migrations, RLS, enum, triggers | 212, 213, 214, 215 |
-| remediation-bullmq | Queue rate limiter + DLQ | 181, 182 |
-| remediation-adapters | BasePlatformAdapter extraction | 209 |
-| remediation-agent-api | Agent-native metrics + content CRUD | 060, 087 |
-| remediation-frontend | usePublishStatus polling fix | 219 |
-| remediation-docs | ADR-021 migration strategy | 183 |
+| Agent                  | Scope                               | Todos              |
+| ---------------------- | ----------------------------------- | ------------------ |
+| remediation-deadcode   | Dead code removal                   | 210, 211, 218      |
+| remediation-typesafety | ISupabaseClient + req.user typing   | 216, 217           |
+| remediation-database   | Migrations, RLS, enum, triggers     | 212, 213, 214, 215 |
+| remediation-bullmq     | Queue rate limiter + DLQ            | 181, 182           |
+| remediation-adapters   | BasePlatformAdapter extraction      | 209                |
+| remediation-agent-api  | Agent-native metrics + content CRUD | 060, 087           |
+| remediation-frontend   | usePublishStatus polling fix        | 219                |
+| remediation-docs       | ADR-021 migration strategy          | 183                |
 
 All 8 agents ran in parallel with zero file conflicts.
 
@@ -109,6 +121,7 @@ export function requireAuthUser(req: Request): AuthenticatedRequest['user'] {
 ### Platform Adapter Refactor (Todo 209)
 
 Created `BasePlatformAdapter` abstract class extracting ~200 lines of identical code from 4 adapters (Mastodon, Bluesky, Twitter, YouTube):
+
 - Common constructor (name, config, db)
 - Shared `validateInstanceUrl()` (SSRF protection)
 - Shared `encryptToken()` / `decryptToken()`
@@ -127,15 +140,14 @@ Each adapter reduced by 40-52 lines while maintaining full functionality.
 Added stop condition to `usePublishStatus` hook — polling stops when all cross-posts reach terminal state (`published`, `failed`, `cancelled`). Previously polled indefinitely until component unmount.
 
 ```typescript
-const allTerminal = posts.every(p =>
-  ['published', 'failed', 'cancelled'].includes(p.status)
-);
+const allTerminal = posts.every((p) => ['published', 'failed', 'cancelled'].includes(p.status));
 if (allTerminal) clearInterval(intervalRef.current);
 ```
 
 ### Documentation (Todo 183)
 
 Added Migration Strategy section to ADR-021 (Custodial Design) covering:
+
 - Phase 1: Non-custodial Lightning (current)
 - Phase 2: HODL invoice custody with escrow
 - Phase 3: Full custodial with regulatory compliance
@@ -143,39 +155,39 @@ Added Migration Strategy section to ADR-021 (Custodial Design) covering:
 
 ## Results
 
-| Metric | Value |
-|--------|-------|
-| P3 todos resolved | 16/19 (84%) |
-| P3 todos wont_fix | 3/19 (16%) |
-| Files changed | 67 |
-| Lines changed | +709 / -583 |
-| Net code reduction | -126 lines (consolidation signal) |
-| New files | 12 (BasePlatformAdapter, metrics.routes, 2 migrations, 8 down migrations + README) |
-| Parallel agents | 8 |
-| File conflicts | 0 |
-| Commit | `d928918` |
-| New migrations | `20260217000000_unify_platform_enum.sql`, `20260217000100_add_updated_at_triggers.sql` |
+| Metric             | Value                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| P3 todos resolved  | 16/19 (84%)                                                                            |
+| P3 todos wont_fix  | 3/19 (16%)                                                                             |
+| Files changed      | 67                                                                                     |
+| Lines changed      | +709 / -583                                                                            |
+| Net code reduction | -126 lines (consolidation signal)                                                      |
+| New files          | 12 (BasePlatformAdapter, metrics.routes, 2 migrations, 8 down migrations + README)     |
+| Parallel agents    | 8                                                                                      |
+| File conflicts     | 0                                                                                      |
+| Commit             | `d928918`                                                                              |
+| New migrations     | `20260217000000_unify_platform_enum.sql`, `20260217000100_add_updated_at_triggers.sql` |
 
 ### Post-Implementation Review
 
 8-agent review (`/workflows:review`) found **14 new P2 findings, 0 P1 critical**:
 
-| ID | Finding | Severity |
-|----|---------|----------|
-| 220 | Metrics health leaks process PID | P2 |
-| 225 | Unbounded analytics ROI query | P2 |
-| 226 | Notification rate limiter concurrency documentation | P2 |
-| 230 | UserController req.user assertions remain | P2 |
-| 231 | PKCE verifier in-memory store (pre-existing) | P2 |
-| 232 | Down migration README incomplete | P2 |
-| 235 | PKCE store unbounded memory (pre-existing) | P2 |
-| 236 | MastodonAdapter.refreshTokens signature mismatch | P2 |
-| 237 | Any types remaining in analytics service | P2 |
-| 240 | Duplicate select on supabase filter builder | P2 |
-| 241 | Residual as any inbox routes | P2 |
-| 245 | ISupabaseClient hand-rolled types drift risk | P2 |
-| 250 | creator_id format check missing on 4 tables | P2 |
-| 251 | Down README missing enum and trigger rollbacks | P2 |
+| ID  | Finding                                             | Severity |
+| --- | --------------------------------------------------- | -------- |
+| 220 | Metrics health leaks process PID                    | P2       |
+| 225 | Unbounded analytics ROI query                       | P2       |
+| 226 | Notification rate limiter concurrency documentation | P2       |
+| 230 | UserController req.user assertions remain           | P2       |
+| 231 | PKCE verifier in-memory store (pre-existing)        | P2       |
+| 232 | Down migration README incomplete                    | P2       |
+| 235 | PKCE store unbounded memory (pre-existing)          | P2       |
+| 236 | MastodonAdapter.refreshTokens signature mismatch    | P2       |
+| 237 | Any types remaining in analytics service            | P2       |
+| 240 | Duplicate select on supabase filter builder         | P2       |
+| 241 | Residual as any inbox routes                        | P2       |
+| 245 | ISupabaseClient hand-rolled types drift risk        | P2       |
+| 250 | creator_id format check missing on 4 tables         | P2       |
+| 251 | Down README missing enum and trigger rollbacks      | P2       |
 
 Zero P1 findings confirms P3 remediation is low-risk by nature.
 

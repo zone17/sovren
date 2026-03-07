@@ -111,10 +111,10 @@ paths:
               article:
                 summary: Publish an article
                 value:
-                  title: "Getting Started with Bitcoin Lightning"
+                  title: 'Getting Started with Bitcoin Lightning'
                   content: "In this comprehensive guide, we'll explore..."
-                  contentType: "article"
-                  tags: ["bitcoin", "lightning", "tutorial"]
+                  contentType: 'article'
+                  tags: ['bitcoin', 'lightning', 'tutorial']
                   publishToNostr: true
                   monetization:
                     priceInSats: 1000
@@ -122,14 +122,14 @@ paths:
               video:
                 summary: Publish a video
                 value:
-                  title: "NOSTR Protocol Explained"
-                  content: "https://cdn.sovren.app/videos/nostr-explained.mp4"
-                  contentType: "video"
-                  tags: ["nostr", "protocol", "education"]
+                  title: 'NOSTR Protocol Explained'
+                  content: 'https://cdn.sovren.app/videos/nostr-explained.mp4'
+                  contentType: 'video'
+                  tags: ['nostr', 'protocol', 'education']
                   monetization:
                     priceInSats: 5000
                     allowTipping: true
-                    subscriptionTier: "premium"
+                    subscriptionTier: 'premium'
       responses:
         '201':
           description: Content published successfully
@@ -149,15 +149,15 @@ paths:
                   value:
                     success: true
                     data:
-                      contentId: "550e8400-e29b-41d4-a716-446655440000"
-                      status: "published"
-                      nostrEventId: "7f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0"
-                      publishedAt: "2025-10-27T10:30:00Z"
-                      url: "https://sovren.app/content/550e8400-e29b-41d4-a716-446655440000"
+                      contentId: '550e8400-e29b-41d4-a716-446655440000'
+                      status: 'published'
+                      nostrEventId: '7f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0'
+                      publishedAt: '2025-10-27T10:30:00Z'
+                      url: 'https://sovren.app/content/550e8400-e29b-41d4-a716-446655440000'
                       relayPublishResults:
-                        - relayUrl: "wss://relay.damus.io"
+                        - relayUrl: 'wss://relay.damus.io'
                           success: true
-                        - relayUrl: "wss://relay.nostr.band"
+                        - relayUrl: 'wss://relay.nostr.band'
                           success: true
         '400':
           $ref: '#/components/responses/ValidationError'
@@ -188,17 +188,17 @@ paths:
               approve:
                 summary: Approve content
                 value:
-                  contentId: "550e8400-e29b-41d4-a716-446655440000"
-                  action: "approve"
-                  moderatorId: "mod-123"
-                  notes: "Content meets community guidelines"
+                  contentId: '550e8400-e29b-41d4-a716-446655440000'
+                  action: 'approve'
+                  moderatorId: 'mod-123'
+                  notes: 'Content meets community guidelines'
               flag:
                 summary: Flag content for review
                 value:
-                  contentId: "550e8400-e29b-41d4-a716-446655440001"
-                  action: "flag"
-                  reason: "Potential copyright violation"
-                  moderatorId: "mod-456"
+                  contentId: '550e8400-e29b-41d4-a716-446655440001'
+                  action: 'flag'
+                  reason: 'Potential copyright violation'
+                  moderatorId: 'mod-456'
       responses:
         '200':
           description: Content moderated successfully
@@ -234,19 +234,19 @@ paths:
             type: string
             minLength: 1
             maxLength: 500
-          example: "bitcoin lightning network"
+          example: 'bitcoin lightning network'
         - name: contentType
           in: query
           description: Filter by content type (comma-separated)
           schema:
             type: string
-          example: "article,video"
+          example: 'article,video'
         - name: tags
           in: query
           description: Filter by tags (comma-separated)
           schema:
             type: string
-          example: "bitcoin,nostr"
+          example: 'bitcoin,nostr'
         - name: authorId
           in: query
           description: Filter by author user ID
@@ -391,7 +391,7 @@ paths:
           description: Specific metrics to retrieve (comma-separated)
           schema:
             type: string
-          example: "views,engagement,revenue"
+          example: 'views,engagement,revenue'
       responses:
         '200':
           description: Content analytics data
@@ -484,9 +484,9 @@ paths:
             examples:
               revert:
                 value:
-                  contentId: "550e8400-e29b-41d4-a716-446655440000"
-                  targetVersionId: "ver-789"
-                  reason: "Reverting to fix formatting issues introduced in latest version"
+                  contentId: '550e8400-e29b-41d4-a716-446655440000'
+                  targetVersionId: 'ver-789'
+                  reason: 'Reverting to fix formatting issues introduced in latest version'
       responses:
         '200':
           description: Content reverted successfully
@@ -574,15 +574,15 @@ paths:
             examples:
               basic:
                 value:
-                  userId: "user-123"
+                  userId: 'user-123'
                   profile:
-                    displayName: "Alice Creator"
-                    bio: "Bitcoin educator and content creator"
-                    avatarUrl: "https://cdn.sovren.app/avatars/alice.jpg"
-                    website: "https://alice.me"
+                    displayName: 'Alice Creator'
+                    bio: 'Bitcoin educator and content creator'
+                    avatarUrl: 'https://cdn.sovren.app/avatars/alice.jpg'
+                    website: 'https://alice.me'
                     socialLinks:
-                      twitter: "@alicecreator"
-                      nostr: "npub1..."
+                      twitter: '@alicecreator'
+                      nostr: 'npub1...'
       responses:
         '200':
           description: Profile updated successfully
@@ -698,7 +698,7 @@ paths:
           description: Filter by activity types (comma-separated)
           schema:
             type: string
-          example: "content,engagement,payment"
+          example: 'content,engagement,payment'
         - name: startDate
           in: query
           description: Start date for activity (ISO 8601)
@@ -759,8 +759,8 @@ paths:
             examples:
               follow:
                 value:
-                  followerId: "user-123"
-                  followingId: "user-456"
+                  followerId: 'user-123'
+                  followingId: 'user-456'
                   notifyFollowing: true
       responses:
         '201':
@@ -796,8 +796,8 @@ paths:
             examples:
               unfollow:
                 value:
-                  followerId: "user-123"
-                  followingId: "user-456"
+                  followerId: 'user-123'
+                  followingId: 'user-456'
       responses:
         '200':
           description: Unfollow successful
@@ -849,7 +849,7 @@ paths:
           description: Specific metrics to retrieve (comma-separated)
           schema:
             type: string
-          example: "audience,revenue,engagement"
+          example: 'audience,revenue,engagement'
       responses:
         '200':
           description: User analytics data
@@ -891,22 +891,22 @@ paths:
                 summary: Invoice in satoshis
                 value:
                   amount: 10000
-                  currency: "SAT"
-                  description: "Payment for premium article access"
+                  currency: 'SAT'
+                  description: 'Payment for premium article access'
                   metadata:
-                    contentId: "content-123"
+                    contentId: 'content-123'
                   expiresIn: 3600
               usd:
                 summary: Invoice in USD (auto-converted)
                 value:
                   amount: 5.00
-                  currency: "USD"
-                  description: "Monthly subscription"
+                  currency: 'USD'
+                  description: 'Monthly subscription'
                   payerInfo:
-                    userId: "user-456"
-                    email: "alice@example.com"
+                    userId: 'user-456'
+                    email: 'alice@example.com'
                   metadata:
-                    subscriptionId: "sub-789"
+                    subscriptionId: 'sub-789'
                   expiresIn: 1800
       responses:
         '201':
@@ -983,11 +983,11 @@ paths:
             examples:
               lightning:
                 value:
-                  invoiceId: "inv-123"
-                  paymentMethod: "lightning"
+                  invoiceId: 'inv-123'
+                  paymentMethod: 'lightning'
                   payerMetadata:
-                    userId: "user-456"
-                    note: "Thanks for the great content!"
+                    userId: 'user-456'
+                    note: 'Thanks for the great content!'
       responses:
         '200':
           description: Payment processed
@@ -1076,16 +1076,16 @@ paths:
             examples:
               monthly:
                 value:
-                  creatorId: "creator-123"
-                  subscriberId: "user-456"
+                  creatorId: 'creator-123'
+                  subscriberId: 'user-456'
                   plan:
-                    planId: "plan-789"
-                    tier: "premium"
+                    planId: 'plan-789'
+                    tier: 'premium'
                     price: 50000
-                    currency: "SAT"
-                    interval: "monthly"
+                    currency: 'SAT'
+                    interval: 'monthly'
                   paymentMethod:
-                    type: "lightning"
+                    type: 'lightning'
       responses:
         '201':
           description: Subscription created
@@ -1165,15 +1165,15 @@ paths:
               immediate:
                 summary: Cancel immediately
                 value:
-                  subscriptionId: "sub-123"
-                  reason: "No longer need access"
-                  cancelAt: "immediately"
+                  subscriptionId: 'sub-123'
+                  reason: 'No longer need access'
+                  cancelAt: 'immediately'
               period_end:
                 summary: Cancel at period end
                 value:
-                  subscriptionId: "sub-123"
-                  reason: "Switching to different tier"
-                  cancelAt: "period_end"
+                  subscriptionId: 'sub-123'
+                  reason: 'Switching to different tier'
+                  cancelAt: 'period_end'
       responses:
         '200':
           description: Subscription cancelled
@@ -1209,16 +1209,16 @@ paths:
               full:
                 summary: Full refund
                 value:
-                  paymentId: "pay-123"
-                  reason: "Content not as described"
-                  refundType: "full"
+                  paymentId: 'pay-123'
+                  reason: 'Content not as described'
+                  refundType: 'full'
               partial:
                 summary: Partial refund
                 value:
-                  paymentId: "pay-123"
+                  paymentId: 'pay-123'
                   amount: 5000
-                  reason: "Partial refund due to incomplete content"
-                  refundType: "partial"
+                  reason: 'Partial refund due to incomplete content'
+                  refundType: 'partial'
       responses:
         '201':
           description: Refund created
@@ -1276,7 +1276,7 @@ paths:
           description: Specific metrics to retrieve (comma-separated)
           schema:
             type: string
-          example: "revenue,transactions,subscriptions"
+          example: 'revenue,transactions,subscriptions'
       responses:
         '200':
           description: Payment analytics data
@@ -1308,15 +1308,15 @@ paths:
             examples:
               payment_events:
                 value:
-                  url: "https://api.example.com/webhooks/sovren"
+                  url: 'https://api.example.com/webhooks/sovren'
                   events:
-                    - "payment.completed"
-                    - "payment.failed"
-                    - "invoice.created"
-                    - "subscription.created"
-                    - "subscription.cancelled"
-                    - "refund.processed"
-                  description: "Production webhook endpoint"
+                    - 'payment.completed'
+                    - 'payment.failed'
+                    - 'invoice.created'
+                    - 'subscription.created'
+                    - 'subscription.cancelled'
+                    - 'refund.processed'
+                  description: 'Production webhook endpoint'
       responses:
         '201':
           description: Webhook registered
@@ -1385,18 +1385,18 @@ components:
           minLength: 1
           maxLength: 500
           description: Content title
-          example: "Getting Started with Bitcoin Lightning"
+          example: 'Getting Started with Bitcoin Lightning'
         content:
           type: string
           minLength: 1
           maxLength: 1000000
           description: Content body (text, markdown, or URL to media)
-          example: "In this comprehensive guide..."
+          example: 'In this comprehensive guide...'
         contentType:
           type: string
           enum: [article, video, audio, image, nostr-event]
           description: Type of content being published
-          example: "article"
+          example: 'article'
         tags:
           type: array
           items:
@@ -1405,7 +1405,7 @@ components:
             maxLength: 50
           maxItems: 20
           description: Content tags for categorization and search
-          example: ["bitcoin", "lightning", "tutorial"]
+          example: ['bitcoin', 'lightning', 'tutorial']
         metadata:
           type: object
           additionalProperties: true
@@ -1420,7 +1420,7 @@ components:
             type: string
             format: uri
           description: Specific NOSTR relay URLs (uses defaults if omitted)
-          example: ["wss://relay.damus.io", "wss://relay.nostr.band"]
+          example: ['wss://relay.damus.io', 'wss://relay.nostr.band']
         monetization:
           type: object
           properties:
@@ -1436,7 +1436,7 @@ components:
             subscriptionTier:
               type: string
               description: Required subscription tier (if applicable)
-              example: "premium"
+              example: 'premium'
 
     PublishContentResponse:
       type: object
@@ -1451,16 +1451,16 @@ components:
               type: string
               format: uuid
               description: Unique content identifier
-              example: "550e8400-e29b-41d4-a716-446655440000"
+              example: '550e8400-e29b-41d4-a716-446655440000'
             status:
               type: string
               enum: [published, pending, failed]
               description: Publication status
-              example: "published"
+              example: 'published'
             nostrEventId:
               type: string
               description: NOSTR event ID (if published to NOSTR)
-              example: "7f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0"
+              example: '7f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0'
             relayPublishResults:
               type: array
               items:
@@ -1477,12 +1477,12 @@ components:
             publishedAt:
               type: string
               format: date-time
-              example: "2025-10-27T10:30:00Z"
+              example: '2025-10-27T10:30:00Z'
             url:
               type: string
               format: uri
               description: Public URL for the content
-              example: "https://sovren.app/content/550e8400-e29b-41d4-a716-446655440000"
+              example: 'https://sovren.app/content/550e8400-e29b-41d4-a716-446655440000'
         metadata:
           $ref: '#/components/schemas/ResponseMetadata'
 
@@ -1501,7 +1501,7 @@ components:
           type: string
           enum: [approve, reject, flag, review]
           description: Moderation action to perform
-          example: "approve"
+          example: 'approve'
         reason:
           type: string
           maxLength: 1000
@@ -1671,7 +1671,7 @@ components:
             algorithm:
               type: string
               description: Recommendation algorithm used
-              example: "collaborative_filtering_v2"
+              example: 'collaborative_filtering_v2'
             generatedAt:
               type: string
               format: date-time
@@ -1706,7 +1706,7 @@ components:
         reason:
           type: string
           description: Explanation for recommendation
-          example: "Based on your interest in Bitcoin and recent views"
+          example: 'Based on your interest in Bitcoin and recent views'
         tags:
           type: array
           items:
@@ -2000,10 +2000,10 @@ components:
                   type: boolean
                 nip05Identifier:
                   type: string
-                  example: "alice@sovren.app"
+                  example: 'alice@sovren.app'
                 lightningAddress:
                   type: string
-                  example: "alice@getalby.com"
+                  example: 'alice@getalby.com'
                 relays:
                   type: array
                   items:
@@ -2470,13 +2470,13 @@ components:
           type: string
           enum: [SAT, BTC, USD, EUR, GBP]
           description: Currency code (auto-converts to SAT)
-          example: "SAT"
+          example: 'SAT'
         description:
           type: string
           minLength: 1
           maxLength: 500
           description: Invoice description
-          example: "Payment for premium article access"
+          example: 'Payment for premium article access'
         payerInfo:
           type: object
           properties:
@@ -2517,7 +2517,7 @@ components:
             paymentRequest:
               type: string
               description: BOLT11 Lightning invoice
-              example: "lnbc100n1..."
+              example: 'lnbc100n1...'
             amount:
               type: object
               properties:
@@ -2647,7 +2647,7 @@ components:
             source:
               type: string
               description: Exchange rate source
-              example: "CoinGecko"
+              example: 'CoinGecko'
             expiresAt:
               type: string
               format: date-time
@@ -2683,7 +2683,7 @@ components:
               format: uuid
             tier:
               type: string
-              example: "premium"
+              example: 'premium'
             price:
               type: integer
               minimum: 0
@@ -3131,11 +3131,11 @@ components:
             code:
               type: string
               description: Error code for programmatic handling
-              example: "E001"
+              example: 'E001'
             message:
               type: string
               description: Human-readable error message
-              example: "Invalid request parameters"
+              example: 'Invalid request parameters'
             details:
               type: object
               additionalProperties: true
@@ -3176,16 +3176,16 @@ components:
               value:
                 success: false
                 error:
-                  code: "E001"
-                  message: "Validation failed"
+                  code: 'E001'
+                  message: 'Validation failed'
                   validationErrors:
-                    - field: "title"
-                      message: "Title is required"
-                    - field: "amount"
-                      message: "Amount must be greater than 0"
+                    - field: 'title'
+                      message: 'Title is required'
+                    - field: 'amount'
+                      message: 'Amount must be greater than 0'
                 metadata:
-                  requestId: "req-123"
-                  timestamp: "2025-10-27T10:30:00Z"
+                  requestId: 'req-123'
+                  timestamp: '2025-10-27T10:30:00Z'
                   processingTime: 5.2
 
     Unauthorized:
@@ -3205,21 +3205,21 @@ components:
               value:
                 success: false
                 error:
-                  code: "E401"
-                  message: "Authentication required"
+                  code: 'E401'
+                  message: 'Authentication required'
                   details:
-                    reason: "No bearer token provided"
+                    reason: 'No bearer token provided'
                 metadata:
-                  requestId: "req-456"
-                  timestamp: "2025-10-27T10:30:00Z"
+                  requestId: 'req-456'
+                  timestamp: '2025-10-27T10:30:00Z'
             invalid_token:
               value:
                 success: false
                 error:
-                  code: "E402"
-                  message: "Invalid or expired token"
+                  code: 'E402'
+                  message: 'Invalid or expired token'
                   details:
-                    reason: "Token signature verification failed"
+                    reason: 'Token signature verification failed'
 
     Forbidden:
       description: Forbidden - Insufficient permissions
@@ -3232,11 +3232,11 @@ components:
               value:
                 success: false
                 error:
-                  code: "E403"
-                  message: "Insufficient permissions"
+                  code: 'E403'
+                  message: 'Insufficient permissions'
                   details:
-                    required: "creator"
-                    current: "supporter"
+                    required: 'creator'
+                    current: 'supporter'
 
     NotFound:
       description: Not Found - Resource doesn't exist
@@ -3249,11 +3249,11 @@ components:
               value:
                 success: false
                 error:
-                  code: "E404"
-                  message: "Resource not found"
+                  code: 'E404'
+                  message: 'Resource not found'
                   details:
-                    resourceType: "content"
-                    resourceId: "550e8400-e29b-41d4-a716-446655440000"
+                    resourceType: 'content'
+                    resourceId: '550e8400-e29b-41d4-a716-446655440000'
 
     RateLimitExceeded:
       description: Too Many Requests - Rate limit exceeded
@@ -3278,11 +3278,11 @@ components:
               value:
                 success: false
                 error:
-                  code: "E429"
-                  message: "Rate limit exceeded"
+                  code: 'E429'
+                  message: 'Rate limit exceeded'
                   details:
                     limit: 100
-                    window: "1 hour"
+                    window: '1 hour'
                     retryAfter: 3600
 
     InternalError:
@@ -3296,10 +3296,10 @@ components:
               value:
                 success: false
                 error:
-                  code: "E500"
-                  message: "Internal server error"
+                  code: 'E500'
+                  message: 'Internal server error'
                   details:
-                    message: "An unexpected error occurred. Our team has been notified."
+                    message: 'An unexpected error occurred. Our team has been notified.'
                 metadata:
-                  requestId: "req-789"
-                  timestamp: "2025-10-27T10:30:00Z"
+                  requestId: 'req-789'
+                  timestamp: '2025-10-27T10:30:00Z'

@@ -2,7 +2,7 @@
 id: 431
 severity: P2
 status: deferred
-title: "useRespondToCollaboration invalidates all collaborator queries (overbroad)"
+title: 'useRespondToCollaboration invalidates all collaborator queries (overbroad)'
 file: packages/frontend/src/features/creator-network/hooks/useCollaboration.ts
 found_in: PR #89
 reviewer: review-frontend

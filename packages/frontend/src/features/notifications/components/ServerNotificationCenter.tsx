@@ -14,6 +14,7 @@ import {
   useUnreadNotificationCount,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
+  useDeleteNotification,
 } from '../hooks/useNotifications';
 import NotificationItem from './NotificationItem';
 import type { ServerNotification } from '@shared/types/notifications';
@@ -22,9 +23,9 @@ function groupByDate(
   notifications: ServerNotification[]
 ): { label: string; items: ServerNotification[] }[] {
   const DAY = 86_400_000;
-  const todayStartDate = new Date();
-  todayStartDate.setHours(0, 0, 0, 0);
-  const todayStart = todayStartDate.getTime();
+  // #690: Use UTC midnight to avoid local timezone shifting group boundaries
+  const todayIso = new Date().toISOString().split('T')[0];
+  const todayStart = new Date(todayIso).getTime();
   const yesterdayStart = todayStart - DAY;
   const weekStart = Date.now() - 7 * DAY;
 
@@ -60,9 +61,17 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
+  const deleteNotification = useDeleteNotification();
 
+  // #738: Use the stable React Query data reference directly to avoid re-creating
+  // the grouped array when the notifications array reference changes but content doesn't.
+  // data?.notifications is stable across renders when the query data hasn't changed.
   const notifications = data?.notifications ?? [];
-  const grouped = useMemo(() => groupByDate(notifications), [notifications]);
+  const grouped = useMemo(
+    () => groupByDate(data?.notifications ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data?.notifications]
+  );
 
   return (
     <div className={['flex flex-col', className].filter(Boolean).join(' ')}>
@@ -144,6 +153,7 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
                       key={notification.id}
                       notification={notification}
                       onMarkRead={(id) => markRead.mutate(id)}
+                      onDelete={(id) => deleteNotification.mutate(id)}
                     />
                   ))}
                 </ul>

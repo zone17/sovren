@@ -20,6 +20,7 @@ Common issues and solutions for Sovren's NOSTR integration.
 ### Problem: "No connected relays available"
 
 **Symptoms**:
+
 - Publishing fails immediately
 - Subscriptions don't receive events
 - Error: `No connected relays available`
@@ -27,6 +28,7 @@ Common issues and solutions for Sovren's NOSTR integration.
 **Solutions**:
 
 1. **Check relay initialization**:
+
 ```typescript
 const relayPool = RelayPoolManager.getInstance();
 
@@ -39,6 +41,7 @@ await relayPool.publishEvent(event); // Will fail
 ```
 
 2. **Verify relay URLs**:
+
 ```typescript
 // Check connected relays
 const connected = relayPool.getConnectedRelays();
@@ -50,6 +53,7 @@ if (connected.length === 0) {
 ```
 
 3. **Check relay health**:
+
 ```typescript
 const healthInfo = relayPool.getHealthInfo();
 
@@ -66,6 +70,7 @@ healthInfo.forEach((relay) => {
 ### Problem: Relays keep disconnecting
 
 **Symptoms**:
+
 - Frequent `relay:disconnected` events
 - Events fail to publish intermittently
 - Poor performance
@@ -73,6 +78,7 @@ healthInfo.forEach((relay) => {
 **Solutions**:
 
 1. **Check network connection**:
+
 ```bash
 # Test relay connectivity
 curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
@@ -80,6 +86,7 @@ curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
 ```
 
 2. **Enable auto-reconnect**:
+
 ```typescript
 await relayPool.initialize({
   autoReconnect: true,
@@ -89,6 +96,7 @@ await relayPool.initialize({
 ```
 
 3. **Monitor relay health**:
+
 ```typescript
 relayPool.on('relay:error', (url, error) => {
   console.error(`Relay error ${url}:`, error);
@@ -101,6 +109,7 @@ relayPool.on('relay:error', (url, error) => {
 ```
 
 4. **Use multiple relays**:
+
 ```typescript
 // More relays = better redundancy
 await relayPool.initialize({
@@ -119,6 +128,7 @@ await relayPool.initialize({
 ### Problem: Slow relay connections
 
 **Symptoms**:
+
 - `initialize()` takes more than 5 seconds
 - High latency metrics
 - Timeouts
@@ -126,6 +136,7 @@ await relayPool.initialize({
 **Solutions**:
 
 1. **Increase connection timeout**:
+
 ```typescript
 await relayPool.initialize({
   connectionTimeout: 10000, // 10 seconds
@@ -133,6 +144,7 @@ await relayPool.initialize({
 ```
 
 2. **Use fastest relays**:
+
 ```typescript
 const fastestRelays = relayPool.getFastestRelays(3);
 console.log('Fastest relays:', fastestRelays);
@@ -141,6 +153,7 @@ await publisher.publishEvent(event, fastestRelays);
 ```
 
 3. **Check relay latency**:
+
 ```typescript
 const monitor = MonitoringService.getInstance();
 const health = monitor.getRelayHealth('wss://relay.damus.io');
@@ -155,6 +168,7 @@ console.log('Average latency:', health.metrics.averageLatency, 'ms');
 ### Problem: "Event validation failed"
 
 **Symptoms**:
+
 - Events fail to publish
 - Error: `Event validation failed`
 - Invalid event structure errors
@@ -162,6 +176,7 @@ console.log('Average latency:', health.metrics.averageLatency, 'ms');
 **Solutions**:
 
 1. **Validate event structure**:
+
 ```typescript
 import { NostrEventSchema } from '@shared/types/nostr';
 
@@ -174,20 +189,22 @@ try {
 ```
 
 2. **Check required fields**:
+
 ```typescript
 // Required fields for NostrEvent
 const event = {
-  kind: 1,              // ✓ Required
-  content: 'Hello',     // ✓ Required
-  tags: [],             // ✓ Required
+  kind: 1, // ✓ Required
+  content: 'Hello', // ✓ Required
+  tags: [], // ✓ Required
   created_at: Math.floor(Date.now() / 1000), // ✓ Required
-  pubkey: '...',        // ✓ Required
-  id: '...',            // ✓ Required (after signing)
-  sig: '...',           // ✓ Required (after signing)
+  pubkey: '...', // ✓ Required
+  id: '...', // ✓ Required (after signing)
+  sig: '...', // ✓ Required (after signing)
 };
 ```
 
 3. **Use `createAndPublish` for auto-validation**:
+
 ```typescript
 // ✓ CORRECT: Auto-validation
 await publisher.createAndPublish({
@@ -197,7 +214,9 @@ await publisher.createAndPublish({
 });
 
 // ✗ INCORRECT: Manual event creation (error-prone)
-const event = { /* manually created */ };
+const event = {
+  /* manually created */
+};
 await publisher.publishEvent(event); // May fail validation
 ```
 
@@ -206,6 +225,7 @@ await publisher.publishEvent(event); // May fail validation
 ### Problem: Events publish but don't appear
 
 **Symptoms**:
+
 - `publishEvent()` succeeds
 - Events not visible in other NOSTR clients
 - No errors reported
@@ -213,6 +233,7 @@ await publisher.publishEvent(event); // May fail validation
 **Solutions**:
 
 1. **Check relay confirmation**:
+
 ```typescript
 const result = await publisher.createAndPublish(event);
 
@@ -225,6 +246,7 @@ if (result.successfulRelays.length === 0) {
 ```
 
 2. **Verify event ID**:
+
 ```typescript
 // Get event ID and check on other clients
 console.log('Event ID:', result.eventId);
@@ -234,6 +256,7 @@ console.log('Event ID:', result.eventId);
 ```
 
 3. **Check relay write permissions**:
+
 ```typescript
 // Some relays may be read-only or require authentication
 const relayInfo = await relayPool.getRelayInfo('wss://relay.damus.io');
@@ -245,6 +268,7 @@ console.log('Relay info:', relayInfo);
 ### Problem: High publish failure rate
 
 **Symptoms**:
+
 - Only 1-2 out of 5 relays succeed
 - Inconsistent publish results
 - Timeout errors
@@ -252,6 +276,7 @@ console.log('Relay info:', relayInfo);
 **Solutions**:
 
 1. **Use retry logic**:
+
 ```typescript
 const result = await publisher.publishWithRetry(event, {
   maxRetries: 3,
@@ -262,11 +287,13 @@ console.log('Retry attempts:', result.retryAttempts);
 ```
 
 2. **Publish to fastest relays first**:
+
 ```typescript
 await publisher.publishEvent(event, { strategy: 'smart', relayCount: 3 });
 ```
 
 3. **Check relay health before publishing**:
+
 ```typescript
 const healthyRelays = relayPool
   .getHealthInfo()
@@ -283,6 +310,7 @@ await publisher.publishEvent(event, healthyRelays);
 ### Problem: Not receiving events
 
 **Symptoms**:
+
 - Subscription created but callback never fires
 - EOSE received but no events
 - Empty event feed
@@ -290,6 +318,7 @@ await publisher.publishEvent(event, healthyRelays);
 **Solutions**:
 
 1. **Check subscription filters**:
+
 ```typescript
 // Too restrictive filters may match no events
 const subId = subManager.subscribe(
@@ -306,6 +335,7 @@ const subId = subManager.subscribe(
 ```
 
 2. **Broaden filters**:
+
 ```typescript
 // More permissive filter
 const subId = subManager.subscribe(
@@ -320,6 +350,7 @@ const subId = subManager.subscribe(
 ```
 
 3. **Check relay connections**:
+
 ```typescript
 // Ensure relays are connected before subscribing
 const connected = relayPool.getConnectedRelays();
@@ -330,13 +361,11 @@ if (connected.length === 0) {
 ```
 
 4. **Verify callback is registered**:
+
 ```typescript
-subManager.subscribe(
-  filters,
-  (event) => {
-    console.log('Event received:', event); // Add logging
-  }
-);
+subManager.subscribe(filters, (event) => {
+  console.log('Event received:', event); // Add logging
+});
 ```
 
 ---
@@ -344,6 +373,7 @@ subManager.subscribe(
 ### Problem: Duplicate events in subscription
 
 **Symptoms**:
+
 - Same event received multiple times
 - Event callback fires repeatedly
 - Duplicate content in feed
@@ -351,6 +381,7 @@ subManager.subscribe(
 **Solutions**:
 
 1. **Enable deduplication (default)**:
+
 ```typescript
 // Deduplication is enabled by default
 const subId = subManager.subscribe(filters, callback);
@@ -362,6 +393,7 @@ const subId = subManager.subscribe(filters, callback, {
 ```
 
 2. **Manual deduplication in callback**:
+
 ```typescript
 const seenIds = new Set<string>();
 
@@ -376,6 +408,7 @@ subManager.subscribe(filters, (event) => {
 ```
 
 3. **Use React state with deduplication**:
+
 ```typescript
 const [events, setEvents] = useState<NostrEvent[]>([]);
 
@@ -394,6 +427,7 @@ subManager.subscribe(filters, (event) => {
 ### Problem: Subscription memory leak
 
 **Symptoms**:
+
 - Memory usage grows over time
 - App becomes slow
 - Browser tab crashes
@@ -401,6 +435,7 @@ subManager.subscribe(filters, (event) => {
 **Solutions**:
 
 1. **Always cleanup subscriptions**:
+
 ```typescript
 useEffect(() => {
   const subId = subManager.subscribe(filters, callback);
@@ -413,6 +448,7 @@ useEffect(() => {
 ```
 
 2. **Limit event retention**:
+
 ```typescript
 const [events, setEvents] = useState<NostrEvent[]>([]);
 
@@ -422,6 +458,7 @@ subManager.subscribe(filters, (event) => {
 ```
 
 3. **Pause subscriptions when not needed**:
+
 ```typescript
 // Pause when component is hidden
 useEffect(() => {
@@ -440,6 +477,7 @@ useEffect(() => {
 ### Problem: "No extension detected"
 
 **Symptoms**:
+
 - Browser extension not found
 - Falls back to local key generation
 - Signing fails
@@ -451,6 +489,7 @@ useEffect(() => {
    - Firefox: [nos2x](https://addons.mozilla.org/en-US/firefox/addon/nos2x/)
 
 2. **Check extension detection**:
+
 ```typescript
 const keyService = KeyManagementService.getInstance();
 const extension = await keyService.detectExtension();
@@ -462,6 +501,7 @@ if (!extension) {
 ```
 
 3. **Verify extension permissions**:
+
 ```typescript
 if (extension) {
   try {
@@ -478,6 +518,7 @@ if (extension) {
 ### Problem: "Failed to decrypt key"
 
 **Symptoms**:
+
 - Wrong password error
 - Cannot load stored keys
 - Error: `Failed to decrypt key`
@@ -485,6 +526,7 @@ if (extension) {
 **Solutions**:
 
 1. **Verify password**:
+
 ```typescript
 try {
   const keyPair = await keyService.loadKey(publicKey, password);
@@ -494,6 +536,7 @@ try {
 ```
 
 2. **Reset and reimport**:
+
 ```typescript
 // If password is lost, keys cannot be recovered!
 // User must import their nsec backup
@@ -503,6 +546,7 @@ const keyPair = await keyService.importKey(nsec, 'nsec');
 ```
 
 3. **Check browser storage**:
+
 ```typescript
 // Verify key exists in IndexedDB
 const db = await indexedDB.open('sovren_nostr_keys', 1);
@@ -514,6 +558,7 @@ const db = await indexedDB.open('sovren_nostr_keys', 1);
 ### Problem: Key import fails
 
 **Symptoms**:
+
 - Invalid key format error
 - Import throws exception
 - Key validation fails
@@ -521,6 +566,7 @@ const db = await indexedDB.open('sovren_nostr_keys', 1);
 **Solutions**:
 
 1. **Check key format**:
+
 ```typescript
 // Valid formats
 const nsec = 'nsec1...'; // Bech32-encoded private key
@@ -538,6 +584,7 @@ if (key.startsWith('nsec')) {
 ```
 
 2. **Validate before import**:
+
 ```typescript
 import { nip19 } from 'nostr-tools';
 
@@ -556,6 +603,7 @@ try {
 ### Problem: Slow event publishing
 
 **Symptoms**:
+
 - `publishEvent()` takes > 1 second
 - High latency metrics
 - UI freezes during publish
@@ -563,6 +611,7 @@ try {
 **Solutions**:
 
 1. **Use batch publishing**:
+
 ```typescript
 // ✓ CORRECT: Batch publish
 await publisher.publishBatch([event1, event2, event3]);
@@ -574,12 +623,14 @@ for (const event of events) {
 ```
 
 2. **Publish to fewer relays**:
+
 ```typescript
 // Only publish to 3 fastest relays
 await publisher.publishEventToFastest(event, 3);
 ```
 
 3. **Use smart publishing strategy**:
+
 ```typescript
 await publisher.publishEvent(event, {
   strategy: 'smart',
@@ -593,6 +644,7 @@ await publisher.publishEvent(event, {
 ### Problem: High memory usage
 
 **Symptoms**:
+
 - Browser uses > 500MB memory
 - App becomes sluggish
 - Cache size growing indefinitely
@@ -600,6 +652,7 @@ await publisher.publishEvent(event, {
 **Solutions**:
 
 1. **Clear event cache periodically**:
+
 ```typescript
 const cache = getEventCache();
 
@@ -610,6 +663,7 @@ await cache.invalidateCache({
 ```
 
 2. **Limit cache size**:
+
 ```typescript
 await cache.initialize({
   maxEvents: 5000, // Limit to 5000 events
@@ -618,6 +672,7 @@ await cache.initialize({
 ```
 
 3. **Monitor cache stats**:
+
 ```typescript
 const stats = cache.getCacheStats();
 
@@ -634,6 +689,7 @@ if (stats.memorySizeMB > 100) {
 ### Problem: Extension signing prompts are annoying
 
 **Symptoms**:
+
 - User must approve every event
 - Slow publishing workflow
 - Poor UX
@@ -641,6 +697,7 @@ if (stats.memorySizeMB > 100) {
 **Solutions**:
 
 1. **Batch events before signing**:
+
 ```typescript
 // Collect events, then publish batch
 const events = [event1, event2, event3];
@@ -649,6 +706,7 @@ await publisher.publishBatch(events);
 ```
 
 2. **Use local keys for high-frequency operations**:
+
 ```typescript
 // Extension for important events
 const importantEvent = await publisher.createAndPublish(event);
@@ -663,6 +721,7 @@ const localSigned = await keyService.signEvent(event, keyPair);
 ### Problem: Extension compatibility issues
 
 **Symptoms**:
+
 - Extension detected but signing fails
 - Inconsistent behavior across browsers
 - Type errors
@@ -670,6 +729,7 @@ const localSigned = await keyService.signEvent(event, keyPair);
 **Solutions**:
 
 1. **Check NIP-07 compliance**:
+
 ```typescript
 if (window.nostr) {
   console.log('Extension name:', window.nostr._metadata?.name);
@@ -682,6 +742,7 @@ if (window.nostr) {
 ```
 
 2. **Handle extension errors**:
+
 ```typescript
 try {
   const signed = await window.nostr.signEvent(event);

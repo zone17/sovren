@@ -9,6 +9,7 @@ This system provides fully automated credential rotation with **ZERO manual inte
 ## 🏆 Key Features
 
 ### Enterprise Security
+
 - 🔐 **Zero-Touch Automation**: Set once, runs forever
 - 🔄 **Zero-Downtime Rotation**: Connection pool management
 - 🔒 **Encrypted Backups**: AES-256-CBC encryption
@@ -64,6 +65,7 @@ npm run rotate:verify
 Choose ONE of these options:
 
 #### Option A: GitHub App (Enterprise Recommended)
+
 ```bash
 # 1. Create GitHub App at:
 # https://github.com/organizations/YOUR_ORG/settings/apps/new
@@ -90,6 +92,7 @@ gh secret set GITHUB_APP_PRIVATE_KEY < path/to/private-key.pem
 ```
 
 #### Option B: GitHub CLI (Simpler)
+
 ```bash
 # Just authenticate gh CLI (one time)
 gh auth login
@@ -107,6 +110,7 @@ gh auth status
 ### Step 3: Configure Supabase Rotation
 
 #### Option A: Supabase Management API (Recommended)
+
 ```bash
 # 1. Get access token from Supabase dashboard:
 # https://supabase.com/dashboard/account/tokens
@@ -119,6 +123,7 @@ gh secret set SUPABASE_PROJECT_REF --body "your-project-ref"
 ```
 
 #### Option B: Using DATABASE_URL
+
 ```bash
 # Set your database URL as a secret
 gh secret set DATABASE_URL --body "postgresql://user:pass@db.supabase.co:5432/postgres"
@@ -197,8 +202,8 @@ name: Automated Credential Rotation
 
 on:
   schedule:
-    - cron: '0 0 1 */3 *'  # Every 90 days at midnight
-  workflow_dispatch:  # Manual trigger
+    - cron: '0 0 1 */3 *' # Every 90 days at midnight
+  workflow_dispatch: # Manual trigger
 
 jobs:
   rotate-credentials:
@@ -336,6 +341,7 @@ jobs:
 ### Rollback Capability
 
 If rotation fails:
+
 1. Old credentials remain active
 2. Backup credentials stored in `.credentials-backup/`
 3. Automatic rollback if verification fails
@@ -461,22 +467,23 @@ aws iam get-user-policy --user-name your-user
 
 ## Comparison: Before vs After
 
-| Aspect | Manual Process | Automated System |
-|--------|---------------|------------------|
-| Time Required | 30-45 min | < 2 min |
-| Human Error Risk | High | None |
-| Downtime | 5-10 min | 0 seconds |
-| Audit Trail | Manual notes | Automated GitHub issues |
-| Compliance | Difficult | Built-in |
-| Frequency | Quarterly (manual burden) | Every 90 days (automatic) |
-| Verification | Manual testing | 17 automated tests |
-| Rollback | Manual | Automatic on failure |
+| Aspect           | Manual Process            | Automated System          |
+| ---------------- | ------------------------- | ------------------------- |
+| Time Required    | 30-45 min                 | < 2 min                   |
+| Human Error Risk | High                      | None                      |
+| Downtime         | 5-10 min                  | 0 seconds                 |
+| Audit Trail      | Manual notes              | Automated GitHub issues   |
+| Compliance       | Difficult                 | Built-in                  |
+| Frequency        | Quarterly (manual burden) | Every 90 days (automatic) |
+| Verification     | Manual testing            | 17 automated tests        |
+| Rollback         | Manual                    | Automatic on failure      |
 
 ---
 
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: https://github.com/zone17/sovren/issues
 - Security Team: security@yourcompany.com
 - Documentation: This file
