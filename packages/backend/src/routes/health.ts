@@ -8,7 +8,8 @@ import { TYPES } from '../container/types';
 
 const router = Router();
 
-// Module-level singleton to avoid creating new connections per health check probe
+// TODO #774: Move direct Supabase access to service/repository layer.
+// Health check should use a HealthService that receives Supabase via DI.
 let singletonSupabase: ReturnType<typeof createClient> | null = null;
 
 function getSupabaseClient(): ReturnType<typeof createClient> {

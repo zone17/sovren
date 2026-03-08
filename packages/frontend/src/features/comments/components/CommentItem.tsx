@@ -13,7 +13,7 @@
  * - commentText is always rendered as a plain text node via {comment.commentText}
  */
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CommentWithAuthor } from '@shared/types/comments';
 import { useDeleteComment, useReplies } from '../hooks/useComments';
 import { CommentForm } from './CommentForm';
@@ -55,11 +55,43 @@ export function CommentItem({
 
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
   const replyButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const { mutate: deleteComment, isPending: isDeleting } = useDeleteComment(contentId);
   const { data: repliesData, isLoading: repliesLoading } = useReplies(comment.id, {
     enabled: showReplies,
   });
+
+  // Focus trap for delete confirmation dialog (#634)
+  useEffect(() => {
+    if (!showDeleteDialog) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = dialog.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
+    const trap = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleDeleteCancel();
+      }
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    dialog.addEventListener('keydown', trap);
+    return () => dialog.removeEventListener('keydown', trap);
+  }, [showDeleteDialog]);
 
   const canDelete =
     (currentUserId && currentUserId === comment.userId) ||
@@ -232,7 +264,7 @@ export function CommentItem({
             if (e.target === e.currentTarget) handleDeleteCancel();
           }}
         >
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+          <div ref={dialogRef} className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
             <h3
               id={`delete-dialog-title-${comment.id}`}
               className="text-base font-semibold text-gray-900 mb-2"

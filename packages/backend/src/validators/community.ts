@@ -28,6 +28,17 @@ export const CreateCircleSchema = z.object({
   maxMembers: z.number().int().min(5).max(20).optional(),
 });
 
+export const UpdateCircleSchema = z
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().max(MAX_CONTENT).optional(),
+    niche: z.string().max(100).optional(),
+    maxMembers: z.number().int().min(5).max(20).optional(),
+  })
+  .refine((d) => Object.values(d).some((v) => v !== undefined), {
+    message: 'At least one field must be provided',
+  });
+
 export const CreateCirclePostSchema = z.object({
   content: z.string().min(1).max(MAX_CONTENT),
 });

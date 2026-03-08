@@ -45,7 +45,7 @@ import {
 
 // Mock interfaces for dependencies (these should exist in your codebase)
 interface IDatabase {
-  query(sql: string, params?: any[]): Promise<{ rows: any[] }>;
+  query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }>;
 }
 
 interface ICacheService {

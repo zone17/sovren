@@ -3,6 +3,8 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { authenticate } from '../middleware/auth';
 import { createNIP05VerificationService } from '../services/nip05-verification-service';
+import { asyncHandler } from '../utils/asyncHandler';
+import logger from '../lib/logger';
 
 const router = express.Router();
 const nip05Service = createNIP05VerificationService();
@@ -59,102 +61,87 @@ router.post(
   '/verify',
   verificationCreationRateLimit,
   authenticate,
-  async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED',
-        });
-      }
-
-      const validatedData = CreateVerificationSchema.parse(req.body);
-
-      // Parse NIP-05 identifier
-      const parseResult = nip05Service.parseNIP05Identifier(validatedData.nip05_identifier);
-      if (!parseResult.success) {
-        return res.status(400).json({
-          success: false,
-          error: parseResult.error,
-          code: 'INVALID_NIP05_FORMAT',
-        });
-      }
-
-      const { parsed } = parseResult;
-      if (!parsed) {
-        return res.status(400).json({
-          success: false,
-          error: 'Failed to parse NIP-05 identifier',
-          code: 'PARSE_ERROR',
-        });
-      }
-
-      // Get user ID from NOSTR pubkey
-      const userId = await getUserIdFromNostrPubkey(req.user.nostr_pubkey);
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          error: 'User not found',
-          code: 'USER_NOT_FOUND',
-        });
-      }
-
-      // Create verification request
-      const verificationRequest = {
-        user_id: userId,
-        nostr_pubkey: req.user.nostr_pubkey,
-        nip05_identifier: parsed.full,
-        domain: parsed.domain,
-        local_part: parsed.localPart,
-        verification_method: validatedData.verification_method,
-        metadata: validatedData.metadata,
-      };
-
-      const result = await nip05Service.createVerificationRequest(verificationRequest);
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: result.error,
-          code: 'VERIFICATION_CREATION_FAILED',
-        });
-      }
-
-      return res.status(201).json({
-        success: true,
-        data: {
-          verification: result.verification,
-          message: 'Verification request created successfully',
-        },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid request data',
-          code: 'VALIDATION_ERROR',
-          details: error.errors,
-        });
-      }
-
-      console.error('NIP-05 verification creation failed:', error);
-      return res.status(500).json({
+  asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED',
       });
     }
-  }
+
+    const validatedData = CreateVerificationSchema.parse(req.body);
+
+    // Parse NIP-05 identifier
+    const parseResult = nip05Service.parseNIP05Identifier(validatedData.nip05_identifier);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        success: false,
+        error: parseResult.error,
+        code: 'INVALID_NIP05_FORMAT',
+      });
+    }
+
+    const { parsed } = parseResult;
+    if (!parsed) {
+      return res.status(400).json({
+        success: false,
+        error: 'Failed to parse NIP-05 identifier',
+        code: 'PARSE_ERROR',
+      });
+    }
+
+    // Get user ID from NOSTR pubkey
+    const userId = await getUserIdFromNostrPubkey(req.user.nostr_pubkey);
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User not found',
+        code: 'USER_NOT_FOUND',
+      });
+    }
+
+    // Create verification request
+    const verificationRequest = {
+      user_id: userId,
+      nostr_pubkey: req.user.nostr_pubkey,
+      nip05_identifier: parsed.full,
+      domain: parsed.domain,
+      local_part: parsed.localPart,
+      verification_method: validatedData.verification_method,
+      metadata: validatedData.metadata,
+    };
+
+    const result = await nip05Service.createVerificationRequest(verificationRequest);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+        code: 'VERIFICATION_CREATION_FAILED',
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        verification: result.verification,
+        message: 'Verification request created successfully',
+      },
+      timestamp: new Date().toISOString(),
+    });
+  })
 );
 
 /**
  * 📋 GET /api/nip05/verifications
  * List all verification records for the authenticated user
  */
-router.get('/verifications', nip05RateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/verifications',
+  nip05RateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -210,22 +197,17 @@ router.get('/verifications', nip05RateLimit, authenticate, async (req: Request, 
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('NIP-05 verification listing failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * 🔍 GET /api/nip05/verify/:identifier
  * Verify a specific NIP-05 identifier (public endpoint)
  */
-router.get('/verify/:identifier', nip05RateLimit, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/verify/:identifier',
+  nip05RateLimit,
+  asyncHandler(async (req: Request, res: Response) => {
     const identifier = decodeURIComponent(req.params.identifier);
 
     // Parse identifier
@@ -271,22 +253,18 @@ router.get('/verify/:identifier', nip05RateLimit, async (req: Request, res: Resp
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('NIP-05 verification lookup failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * 🔄 POST /api/nip05/refresh
  * Refresh an existing verification
  */
-router.post('/refresh', nip05RateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/refresh',
+  nip05RateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -316,24 +294,8 @@ router.post('/refresh', nip05RateLimit, authenticate, async (req: Request, res: 
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid request data',
-        code: 'VALIDATION_ERROR',
-        details: error.errors,
-      });
-    }
-
-    console.error('NIP-05 verification refresh failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * 🚫 DELETE /api/nip05/verifications/:id
@@ -343,66 +305,57 @@ router.delete(
   '/verifications/:id',
   nip05RateLimit,
   authenticate,
-  async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED',
-        });
-      }
-
-      const verificationId = req.params.id;
-      const { reason } = req.body;
-
-      // Validate verification ID format
-      if (
-        !verificationId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid verification ID format',
-          code: 'INVALID_ID_FORMAT',
-        });
-      }
-
-      const result = await nip05Service.revokeVerification(verificationId, reason);
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: result.error,
-          code: 'VERIFICATION_REVOCATION_FAILED',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          verification_id: verificationId,
-          revoked_at: new Date().toISOString(),
-          reason: reason || 'User requested revocation',
-        },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('NIP-05 verification revocation failed:', error);
-      return res.status(500).json({
+  asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED',
       });
     }
-  }
+
+    const verificationId = req.params.id;
+    const { reason } = req.body;
+
+    // Validate verification ID format
+    if (!verificationId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid verification ID format',
+        code: 'INVALID_ID_FORMAT',
+      });
+    }
+
+    const result = await nip05Service.revokeVerification(verificationId, reason);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+        code: 'VERIFICATION_REVOCATION_FAILED',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        verification_id: verificationId,
+        revoked_at: new Date().toISOString(),
+        reason: reason || 'User requested revocation',
+      },
+      timestamp: new Date().toISOString(),
+    });
+  })
 );
 
 /**
  * 🔍 GET /api/nip05/domains/:domain/stats
  * Get domain verification statistics (public endpoint)
  */
-router.get('/domains/:domain/stats', nip05RateLimit, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/domains/:domain/stats',
+  nip05RateLimit,
+  asyncHandler(async (req: Request, res: Response) => {
     const domain = req.params.domain.toLowerCase();
 
     // Validate domain format
@@ -425,22 +378,16 @@ router.get('/domains/:domain/stats', nip05RateLimit, async (req: Request, res: R
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Domain stats retrieval failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * 🔍 GET /.well-known/nostr.json
  * Serve NIP-05 well-known endpoint for Sovren domain
  */
-router.get('/.well-known/nostr.json', async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/.well-known/nostr.json',
+  asyncHandler(async (req: Request, res: Response) => {
     // Get all verified NIP-05 identifiers for Sovren domain
     const sovrenVerifications = await getSovrenVerifications();
 
@@ -455,13 +402,8 @@ router.get('/.well-known/nostr.json', async (req: Request, res: Response) => {
     res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour cache
 
     return res.status(200).json(response);
-  } catch (error) {
-    console.error('Well-known nostr.json generation failed:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-    });
-  }
-});
+  })
+);
 
 // 🔧 Helper Functions
 
@@ -470,7 +412,7 @@ async function getUserIdFromNostrPubkey(nostrPubkey: string): Promise<string | n
     // Mock implementation - in production, query users table
     return `user_${nostrPubkey.substring(0, 8)}`;
   } catch (error) {
-    console.warn('Failed to get user ID:', error);
+    logger.warn('Failed to get user ID', { error });
     return null;
   }
 }
@@ -498,7 +440,7 @@ async function getDomainStats(domain: string): Promise<{
       last_verification: new Date().toISOString(),
     };
   } catch (error) {
-    console.warn('Failed to get domain stats:', error);
+    logger.warn('Failed to get domain stats', { error });
     return {
       total_verifications: 0,
       verified_count: 0,
@@ -529,7 +471,7 @@ async function getSovrenVerifications(): Promise<{
       },
     };
   } catch (error) {
-    console.warn('Failed to get Sovren verifications:', error);
+    logger.warn('Failed to get Sovren verifications', { error });
     return { names: {}, relays: {} };
   }
 }

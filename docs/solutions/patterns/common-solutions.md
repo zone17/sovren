@@ -4312,6 +4312,105 @@ Search for `subscribeToEvents`, `setInterval`, `connect()`, or `startListening()
 
 ---
 
+## 120. Redis KEYS Command Is Always Wrong in Production — Use SCAN
+
+**Recurrence:** 1 P2 in audit (#767). `CacheService.ts` used `this.client.keys(pattern)` — O(N) blocking command that freezes all Redis clients.
+
+```typescript
+// WRONG — blocks entire Redis server
+const keys = await redis.keys('cache:user:*');
+
+// CORRECT — non-blocking cursor iteration
+let cursor = '0';
+const keys: string[] = [];
+do {
+  const [nextCursor, batch] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+  cursor = nextCursor;
+  keys.push(...batch);
+} while (cursor !== '0');
+```
+
+**Detection:** `grep -rn "\.keys(" packages/backend/src/ | grep -v "__tests__"` — any match in production code is a violation.
+
+---
+
+## 121. asyncHandler Is Mandatory for All Express Route Handlers
+
+**Recurrence:** 1 P2 in audit (#773). Legacy try/catch + console.error pattern in 5 top routes bypassed global error handler, making errors invisible to Sentry and structured logging.
+
+```typescript
+// WRONG — bypasses global error handler
+router.post('/endpoint', async (req, res) => {
+  try {
+    const result = await service.doThing(req.body);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+// CORRECT — errors route to global handler → Sentry → structured logs
+router.post(
+  '/endpoint',
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
+    const result = await service.doThing(req.body);
+    res.json(createApiResponse(req, result));
+  })
+);
+```
+
+**Detection:** `grep -rn "^router\.\(get\|post\|put\|patch\|delete\)(" packages/backend/src/routes/ | grep -v "asyncHandler"` — any match is a violation.
+
+---
+
+## 122. Route Files Must Not Create DB Clients Directly
+
+**Recurrence:** 1 P2 in audit (#774). 3 route files created Supabase clients directly via `createClient()` bypassing the DI service layer.
+
+```typescript
+// WRONG — route creates its own DB client
+import { createClient } from '@supabase/supabase-js';
+const { data } = await supabase.from('sessions').select('*');
+
+// CORRECT — service injected via DI
+const sessionService = req.app.locals.container.get<ISessionService>(TYPES.SessionService);
+const sessions = await sessionService.getUserSessions(userId);
+```
+
+**Detection:** `grep -rn "createClient\|supabase\.from" packages/backend/src/routes/` — any hit is a violation.
+
+---
+
+## 123. Bootstrap Production Guards for Placeholder Services
+
+**Recurrence:** 1 P1 in audit (#769). 8 placeholder/mock service registrations (`InMemory*`, `JsonFile*`) would execute in production if resolved, silently swallowing operations.
+
+```typescript
+// Every placeholder registration must be guarded
+if (process.env.NODE_ENV === 'production') {
+  throw new Error('Placeholder services must not be registered in production');
+}
+container.register(TYPES.PaymentRepository, InMemoryPaymentRepository);
+```
+
+**Detection:** `grep -rn "InMemory\|Placeholder\|MockService\|JsonFile.*Repository" packages/backend/src/bootstrap.ts` — any match without a production guard is P1.
+
+---
+
+## 124. Stale Todo Triage Rates Confirm Triage-First Methodology
+
+**Recurrence:** 4th data point confirming common-solutions.md #25. Stale rates across sprints: 40%, 71%, 76%, **85%**. In this audit, 101 of 119 pre-existing todos were already fixed or no longer applicable. **Always triage before assigning to agents** — skipping triage wastes ~60% of remediation effort.
+
+---
+
+## 125. Domain-Grouped Agent Zero-Conflict Streak
+
+**Recurrence:** 10th consecutive sprint with 0 merge conflicts using non-overlapping domain agents. Both batches in this audit (5 agents each: security/db/backend/architecture/typescript and db-migration/community-services/backend-routes/frontend/testing-features) produced zero file ownership conflicts. **When scoping by domain, 5 agents is the validated sweet spot for 15-28 items.**
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -4468,3 +4567,11 @@ CONTEXT TO LOAD:
 | Same utility in 2+ files (refined threshold)     | 119       | common-solutions.md  |
 | RLS INSERT WITH CHECK (TRUE) too permissive      | 16        | critical-patterns.md |
 | Trigger COALESCE race + missing SECURITY DEFINER | 17        | critical-patterns.md |
+| New table migration missing RLS + policies       | 18        | critical-patterns.md |
+| HMAC/signature compared with === (timing attack) | 19        | critical-patterns.md |
+| Redis .keys() used in production code            | 120       | common-solutions.md  |
+| Route handler missing asyncHandler wrapper       | 121       | common-solutions.md  |
+| Route file creates DB client directly            | 122       | common-solutions.md  |
+| Placeholder mock service in production bootstrap | 123       | common-solutions.md  |
+| Stale todo rate (4th data point: 85%)            | 124       | common-solutions.md  |
+| Domain-grouped agents = zero merge conflicts     | 125       | common-solutions.md  |

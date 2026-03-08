@@ -1,5 +1,5 @@
 ---
-status: pending
+status: wont_fix
 priority: p3
 issue_id: '593'
 tags: [code-review, pr-108, frontend, cleanup]

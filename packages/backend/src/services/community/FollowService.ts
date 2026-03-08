@@ -73,7 +73,7 @@ export class FollowService implements IFollowService {
     }
 
     if (!data) {
-      throw new ValidationError('Failed to create follow relationship');
+      throw new DatabaseError('Failed to create follow relationship');
     }
 
     this.logger.info('FollowService.follow: followed', { followerId, followingId });
@@ -256,7 +256,7 @@ export class FollowService implements IFollowService {
         error: followersResult.error,
         userId,
       });
-      throw new ValidationError('Failed to get follow counts');
+      throw new DatabaseError('Failed to get follow counts');
     }
 
     if (followingResult.error) {
@@ -264,7 +264,7 @@ export class FollowService implements IFollowService {
         error: followingResult.error,
         userId,
       });
-      throw new ValidationError('Failed to get follow counts');
+      throw new DatabaseError('Failed to get follow counts');
     }
 
     return {

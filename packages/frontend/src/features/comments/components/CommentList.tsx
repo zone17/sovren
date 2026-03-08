@@ -22,7 +22,7 @@ interface CommentListProps {
 
 export function CommentList({ contentId, currentUserId, contentCreatorId }: CommentListProps) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useComments(contentId, { page });
+  const { data, isLoading, isFetching, isError, refetch } = useComments(contentId, { page });
 
   const items = data?.items ?? [];
   const pagination = data?.pagination;
@@ -111,15 +111,23 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
             ))}
           </ul>
 
+          {/* Background fetch indicator (#638) */}
+          {isFetching && !isLoading && (
+            <div role="status" className="mt-3 flex justify-center">
+              <span className="text-xs text-gray-400">Updating comments...</span>
+            </div>
+          )}
+
           {/* Load more pagination */}
           {pagination?.hasNext && (
             <div className="mt-4 flex justify-center">
               <button
                 type="button"
                 onClick={() => setPage((p) => p + 1)}
-                className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+                disabled={isFetching}
+                className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 disabled:opacity-50 transition-colors"
               >
-                Load more comments
+                {isFetching ? 'Loading...' : 'Load more comments'}
               </button>
             </div>
           )}

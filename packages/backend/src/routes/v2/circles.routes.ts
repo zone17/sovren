@@ -13,6 +13,7 @@ import { createApiResponse } from '../../utils/api-response';
 import { createUserRateLimiter, readOnlyRateLimiter } from '../../middleware/rate-limit-middleware';
 import {
   CreateCircleSchema,
+  UpdateCircleSchema,
   CreateCirclePostSchema,
   UuidParamSchema,
 } from '../../validators/community';
@@ -119,6 +120,55 @@ router.get(
   })
 );
 
+/**
+ * PATCH /api/v2/circles/:id
+ * Update circle details (owner only)
+ */
+router.patch(
+  '/:id',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
+    }
+
+    const result = UpdateCircleSchema.safeParse(req.body);
+    if (!result.success) {
+      throw new ValidationError(result.error.issues[0]?.message ?? 'Invalid input');
+    }
+
+    const db = resolveDb();
+    const requesterId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getCircleService().updateCircle(idResult.data, requesterId, result.data);
+    res.json(createApiResponse(req, { updated: true }));
+  })
+);
+
+/**
+ * DELETE /api/v2/circles/:id
+ * Delete a circle (owner only — cascades memberships and posts)
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  requireCreator,
+  mutationRateLimiter,
+  asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
+    }
+
+    const db = resolveDb();
+    const requesterId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
+    await getCircleService().deleteCircle(idResult.data, requesterId);
+    res.json(createApiResponse(req, { deleted: true }));
+  })
+);
+
 // ============================================================================
 // Circle Membership
 // ============================================================================
@@ -191,6 +241,27 @@ router.delete(
     const requesterId = await getUserIdByPubkey(db, getAuthUser(req).nostr_pubkey);
     await getCircleService().removeMember(idResult.data, memberIdResult.data, requesterId);
     res.json(createApiResponse(req, { removed: true }));
+  })
+);
+
+/**
+ * GET /api/v2/circles/:id/members
+ * List circle members (paginated)
+ */
+router.get(
+  '/:id/members',
+  authenticate,
+  requireCreator,
+  asyncHandler(async (req, res) => {
+    const idResult = UuidParamSchema.safeParse(req.params.id);
+    if (!idResult.success) {
+      throw new ValidationError('Invalid circle ID format');
+    }
+
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const data = await getCircleService().getCircleMembers(idResult.data, { offset, limit });
+    res.json(createApiResponse(req, data));
   })
 );
 

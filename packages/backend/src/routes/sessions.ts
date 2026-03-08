@@ -5,6 +5,8 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { authenticate } from '../middleware/auth';
 import { createSessionService } from '../services/session-service';
+import { asyncHandler } from '../utils/asyncHandler';
+import logger from '../lib/logger';
 
 const router = express.Router();
 const sessionService = createSessionService();
@@ -61,8 +63,11 @@ const RevokeSessionSchema = z.object({
  * 📋 GET /api/sessions
  * List all active sessions for the authenticated user
  */
-router.get('/', sessionRateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/',
+  sessionRateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -93,15 +98,8 @@ router.get('/', sessionRateLimit, authenticate, async (req: Request, res: Respon
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Session listing failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * 🔄 PUT /api/sessions/:sessionId/activity
@@ -111,58 +109,37 @@ router.put(
   '/:sessionId/activity',
   sessionRateLimit,
   authenticate,
-  async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED',
-        });
-      }
-
-      const sessionId = req.params.sessionId;
-      const validatedData = UpdateActivitySchema.parse(req.body);
-
-      const result = await sessionService.updateLastActivity(
-        sessionId,
-        validatedData.activity_type
-      );
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: result.error,
-          code: 'ACTIVITY_UPDATE_FAILED',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          session_id: sessionId,
-          updated_at: new Date().toISOString(),
-        },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid request data',
-          code: 'VALIDATION_ERROR',
-          details: error.errors,
-        });
-      }
-
-      console.error('Activity update failed:', error);
-      return res.status(500).json({
+  asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED',
       });
     }
-  }
+
+    const sessionId = req.params.sessionId;
+    const validatedData = UpdateActivitySchema.parse(req.body);
+
+    const result = await sessionService.updateLastActivity(sessionId, validatedData.activity_type);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+        code: 'ACTIVITY_UPDATE_FAILED',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        session_id: sessionId,
+        updated_at: new Date().toISOString(),
+      },
+      timestamp: new Date().toISOString(),
+    });
+  })
 );
 
 /**
@@ -173,55 +150,46 @@ router.delete(
   '/:sessionId',
   revocationRateLimit,
   authenticate,
-  async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED',
-        });
-      }
-
-      const sessionId = req.params.sessionId;
-      const userId = await getUserIdFromNostrPubkey(req.user.nostr_pubkey);
-
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          error: 'User not found',
-          code: 'USER_NOT_FOUND',
-        });
-      }
-
-      const result = await sessionService.revokeSession(sessionId, userId);
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: result.error,
-          code: 'SESSION_REVOCATION_FAILED',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          session_id: sessionId,
-          revoked_at: new Date().toISOString(),
-          message: 'Session successfully revoked',
-        },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Session revocation failed:', error);
-      return res.status(500).json({
+  asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED',
       });
     }
-  }
+
+    const sessionId = req.params.sessionId;
+    const userId = await getUserIdFromNostrPubkey(req.user.nostr_pubkey);
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User not found',
+        code: 'USER_NOT_FOUND',
+      });
+    }
+
+    const result = await sessionService.revokeSession(sessionId, userId);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+        code: 'SESSION_REVOCATION_FAILED',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        session_id: sessionId,
+        revoked_at: new Date().toISOString(),
+        message: 'Session successfully revoked',
+      },
+      timestamp: new Date().toISOString(),
+    });
+  })
 );
 
 /**
@@ -232,56 +200,47 @@ router.post(
   '/revoke-all',
   revocationRateLimit,
   authenticate,
-  async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED',
-        });
-      }
-
-      const userId = await getUserIdFromNostrPubkey(req.user.nostr_pubkey);
-      const currentSessionId = await getCurrentSessionId(req);
-
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          error: 'User not found',
-          code: 'USER_NOT_FOUND',
-        });
-      }
-
-      const result = await sessionService.revokeAllSessions(userId, currentSessionId);
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: result.error,
-          code: 'BULK_REVOCATION_FAILED',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          revoked_count: result.revokedCount,
-          current_session_preserved: !!currentSessionId,
-          revoked_at: new Date().toISOString(),
-          message: `Successfully revoked ${result.revokedCount} sessions`,
-        },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Bulk session revocation failed:', error);
-      return res.status(500).json({
+  asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED',
       });
     }
-  }
+
+    const userId = await getUserIdFromNostrPubkey(req.user.nostr_pubkey);
+    const currentSessionId = await getCurrentSessionId(req);
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User not found',
+        code: 'USER_NOT_FOUND',
+      });
+    }
+
+    const result = await sessionService.revokeAllSessions(userId, currentSessionId);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+        code: 'BULK_REVOCATION_FAILED',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        revoked_count: result.revokedCount,
+        current_session_preserved: !!currentSessionId,
+        revoked_at: new Date().toISOString(),
+        message: `Successfully revoked ${result.revokedCount} sessions`,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  })
 );
 
 /**
@@ -292,64 +251,58 @@ router.post(
   '/revoke-others',
   revocationRateLimit,
   authenticate,
-  async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED',
-        });
-      }
-
-      const userId = await getUserIdFromNostrPubkey(req.user.nostr_pubkey);
-      const currentSessionId = await getCurrentSessionId(req);
-
-      if (!userId || !currentSessionId) {
-        return res.status(400).json({
-          success: false,
-          error: 'Session context not found',
-          code: 'SESSION_CONTEXT_ERROR',
-        });
-      }
-
-      const result = await sessionService.revokeAllSessions(userId, currentSessionId);
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: result.error,
-          code: 'SELECTIVE_REVOCATION_FAILED',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          revoked_count: result.revokedCount,
-          current_session_id: currentSessionId,
-          revoked_at: new Date().toISOString(),
-          message: `Successfully revoked ${result.revokedCount} other sessions`,
-        },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Selective session revocation failed:', error);
-      return res.status(500).json({
+  asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED',
       });
     }
-  }
+
+    const userId = await getUserIdFromNostrPubkey(req.user.nostr_pubkey);
+    const currentSessionId = await getCurrentSessionId(req);
+
+    if (!userId || !currentSessionId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Session context not found',
+        code: 'SESSION_CONTEXT_ERROR',
+      });
+    }
+
+    const result = await sessionService.revokeAllSessions(userId, currentSessionId);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+        code: 'SELECTIVE_REVOCATION_FAILED',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        revoked_count: result.revokedCount,
+        current_session_id: currentSessionId,
+        revoked_at: new Date().toISOString(),
+        message: `Successfully revoked ${result.revokedCount} other sessions`,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  })
 );
 
 /**
  * 📊 GET /api/sessions/stats
  * Get session statistics for the authenticated user
  */
-router.get('/stats', sessionRateLimit, authenticate, async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/stats',
+  sessionRateLimit,
+  authenticate,
+  asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -410,15 +363,8 @@ router.get('/stats', sessionRateLimit, authenticate, async (req: Request, res: R
       data: stats,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Session stats retrieval failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
-  }
-});
+  })
+);
 
 // 🔧 Helper Functions
 
@@ -433,7 +379,7 @@ async function getCurrentSessionId(req: Request): Promise<string | null> {
     const result = await sessionService.getSessionByTokenHash(tokenHash);
     return result.session?.id || null;
   } catch (error) {
-    console.warn('Failed to get current session ID:', error);
+    logger.warn('Failed to get current session ID', { error });
     return null;
   }
 }
@@ -443,7 +389,7 @@ async function getUserIdFromNostrPubkey(nostrPubkey: string): Promise<string | n
     // Mock implementation - in production, query users table
     return `user_${nostrPubkey.substring(0, 8)}`;
   } catch (error) {
-    console.warn('Failed to get user ID:', error);
+    logger.warn('Failed to get user ID', { error });
     return null;
   }
 }

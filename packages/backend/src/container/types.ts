@@ -79,6 +79,9 @@ import type { IMentorshipService } from '../interfaces/community/IMentorshipServ
 import type { ICollaborativeContentService } from '../interfaces/community/ICollaborativeContentService';
 import type { IMarketplaceService } from '../interfaces/community/IMarketplaceService';
 
+// Discovery
+import type { IDiscoveryService } from '../interfaces/discovery/IDiscoveryService';
+
 // Slice 6: Comments CRUD
 import type { ICommentsService } from '../interfaces/community/ICommentsService';
 
@@ -416,6 +419,14 @@ export const TYPES = {
   ),
 
   // ======================
+  // Discovery
+  // ======================
+  DiscoveryService: new ServiceToken<IDiscoveryService>(
+    'DiscoveryService',
+    'Creator discovery and search'
+  ),
+
+  // ======================
   // Slice 6: Comments CRUD
   // ======================
   CommentsService: new ServiceToken<ICommentsService>(
@@ -536,6 +547,8 @@ export const SERVICE_LIFETIMES = {
     // Wave 2: EPIC-009B
     'InboxPollingService',
     'NostrReplyAdapter',
+    // Discovery
+    'DiscoveryService',
     // Slice 6: Comments
     'CommentsService',
     // Slice 8: Follow + Notifications
@@ -647,6 +660,9 @@ export const SERVICE_DEPENDENCIES = {
   InboxPollingService: ['PlatformConnectionService', 'QueueService', 'Database', 'Logger'],
   NostrReplyAdapter: ['Database', 'Logger'],
 
+  // Discovery
+  DiscoveryService: ['Database', 'Logger'],
+
   // Slice 6: Comments
   CommentsService: ['Database', 'EventBusService', 'Logger'],
 
@@ -725,6 +741,7 @@ export const SERVICE_TAGS = {
     'InboxPollingService',
     'NostrReplyAdapter',
   ],
+  discovery: ['DiscoveryService'],
   community: [
     'CommentsService',
     'FollowService',

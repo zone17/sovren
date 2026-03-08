@@ -13,10 +13,19 @@ import { authenticate, requireCreator, getAuthUser } from '../middleware/auth';
 import { validate } from '../middleware/validation-middleware';
 import { asyncHandler } from '../utils/asyncHandler';
 import { createApiResponse } from '../utils/api-response';
-import { ValidationError } from '../utils/errors';
+import { AuthorizationError, ValidationError } from '../utils/errors';
 import { lightningService } from '../services/lightning-service';
 
 const router = express.Router();
+
+const CreateInvoiceBodySchema = z.object({
+  amount: z
+    .number()
+    .int()
+    .positive()
+    .max(21_000_000 * 100_000_000), // max 21M BTC in sats
+  description: z.string().max(639).optional(), // BOLT11 max
+});
 
 const CreateSubscriptionBodySchema = z.object({
   creatorId: z.string().min(1),
@@ -39,6 +48,7 @@ router.get(
 router.post(
   '/invoice',
   authenticate,
+  validate({ body: CreateInvoiceBodySchema }),
   asyncHandler(async (req: Request, res: Response) => {
     const result = await lightningService.createInvoice(req.body);
     res.json(createApiResponse(req, result, { raw: true }));
@@ -94,7 +104,11 @@ router.put(
   authenticate,
   asyncHandler(async (req: Request, res: Response) => {
     const { subscriptionId } = req.params;
-    const subscription = await lightningService.cancelSubscription(subscriptionId);
+    const userId = getAuthUser(req).nostr_pubkey;
+    const subscription = await lightningService.cancelSubscription(subscriptionId, userId);
+    if (!subscription) {
+      throw new AuthorizationError('Not authorized to cancel this subscription');
+    }
     res.json(createApiResponse(req, subscription, { raw: true }));
   })
 );

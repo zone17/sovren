@@ -93,9 +93,10 @@ test.describe('View comments (anonymous)', () => {
 
 test.describe('ARIA structure (anonymous)', () => {
   test('loading state has role=status', async ({ page }) => {
-    // Intercept the comments API to keep it loading
+    // Exception to zero-mock convention (common-solutions.md #26):
+    // Loading/error ARIA states require controlled API timing.
+    // Move to Vitest+RTL component tests when comment components are refactored.
     await page.route('**/api/v2/comments/**', async (route) => {
-      // Delay response so we can observe loading state
       await new Promise((r) => setTimeout(r, 2000));
       await route.continue();
     });
@@ -107,7 +108,9 @@ test.describe('ARIA structure (anonymous)', () => {
   });
 
   test('error state has role=alert with retry button', async ({ page }) => {
-    // Make the API fail
+    // Exception to zero-mock convention (common-solutions.md #26):
+    // Loading/error ARIA states require controlled API timing.
+    // Move to Vitest+RTL component tests when comment components are refactored.
     await page.route('**/api/v2/comments/**', (route) =>
       route.fulfill({ status: 500, body: 'Internal Server Error' })
     );

@@ -17,6 +17,7 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+/** @deprecated Use PaginatedResult from @shared/types/pagination instead. */
 export interface PaginatedResponse<T> {
   items: T[];
   pagination: {

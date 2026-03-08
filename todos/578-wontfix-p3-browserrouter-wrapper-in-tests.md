@@ -1,5 +1,5 @@
 ---
-status: pending
+status: wont_fix
 priority: p3
 issue_id: '578'
 tags: [code-review, pr-108, testing, frontend]

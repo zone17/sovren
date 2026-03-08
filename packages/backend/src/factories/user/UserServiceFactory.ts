@@ -151,15 +151,15 @@ interface UserMetrics {
 }
 
 interface ILogger {
-  info(message: string, meta?: any): void;
+  info(message: string, meta?: Record<string, unknown>): void;
   error(message: string, error?: Error): void;
-  warn(message: string, meta?: any): void;
-  debug(message: string, meta?: any): void;
+  warn(message: string, meta?: Record<string, unknown>): void;
+  debug(message: string, meta?: Record<string, unknown>): void;
 }
 
 interface IDatabase {
-  query<T>(sql: string, params?: any[]): Promise<T[]>;
-  execute(sql: string, params?: any[]): Promise<void>;
+  query<T>(sql: string, params?: unknown[]): Promise<T[]>;
+  execute(sql: string, params?: unknown[]): Promise<void>;
   transaction<T>(fn: () => Promise<T>): Promise<T>;
 }
 

@@ -12,10 +12,15 @@ import express from 'express';
 import { z } from 'zod';
 import { authenticate, optionalAuth } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation-middleware';
+import { expensiveOperationRateLimiter } from '../middleware/rate-limit-middleware';
 import { ContentDiscoveryService } from '../services/content-discovery-service';
 import { RecommendationService } from '../services/recommendation-service';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = express.Router();
+
+// Apply rate limiting to all discovery endpoints
+router.use(expensiveOperationRateLimiter);
 
 // Lazy singletons — deferred to first request to avoid side effects at module load
 let _discoveryService: ContentDiscoveryService | null = null;
@@ -82,8 +87,11 @@ const FeedbackSchema = z.object({
  * Get personalized content feed for the authenticated user
  * US-006: Content Discovery - Personalized Feed
  */
-router.get('/feed', optionalAuth, validateRequest(FeedSchema, 'query'), async (req, res) => {
-  try {
+router.get(
+  '/feed',
+  optionalAuth,
+  validateRequest(FeedSchema, 'query'),
+  asyncHandler(async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { categories, exclude_categories, following_only, premium_only, page, limit } =
       req.query as z.infer<typeof FeedSchema>;
@@ -115,23 +123,18 @@ router.get('/feed', optionalAuth, validateRequest(FeedSchema, 'query'), async (r
         },
       },
     });
-  } catch (error) {
-    console.error('Failed to get personalized feed:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve content feed',
-      code: 'FEED_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/content/discovery/trending
  * Get trending content across the platform
  * US-006: Content Discovery - Trending Content
  */
-router.get('/trending', validateRequest(TrendingSchema, 'query'), async (req, res) => {
-  try {
+router.get(
+  '/trending',
+  validateRequest(TrendingSchema, 'query'),
+  asyncHandler(async (req, res) => {
     const { timeframe, category, limit } = req.query as unknown as z.infer<typeof TrendingSchema>;
 
     const trendingContent = await getDiscoveryService().getTrendingContent({
@@ -149,23 +152,17 @@ router.get('/trending', validateRequest(TrendingSchema, 'query'), async (req, re
         count: trendingContent.length,
       },
     });
-  } catch (error) {
-    console.error('Failed to get trending content:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve trending content',
-      code: 'TRENDING_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/content/discovery/categories
  * Get available content categories with content counts
  * US-006: Content Discovery - Category Browsing
  */
-router.get('/categories', async (req, res) => {
-  try {
+router.get(
+  '/categories',
+  asyncHandler(async (req, res) => {
     const categories = await getDiscoveryService().getCategories();
 
     res.json({
@@ -175,15 +172,8 @@ router.get('/categories', async (req, res) => {
         count: categories.length,
       },
     });
-  } catch (error) {
-    console.error('Failed to get categories:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve categories',
-      code: 'CATEGORIES_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/content/discovery/category/:category
@@ -194,40 +184,31 @@ router.get(
   '/category/:category',
   validateRequest(CategoryParamSchema, 'params'),
   validateRequest(CategoryQuerySchema, 'query'),
-  async (req, res) => {
-    try {
-      const { category } = req.params as unknown as z.infer<typeof CategoryParamSchema>;
-      const { sort, page, limit } = req.query as unknown as z.infer<typeof CategoryQuerySchema>;
+  asyncHandler(async (req, res) => {
+    const { category } = req.params as unknown as z.infer<typeof CategoryParamSchema>;
+    const { sort, page, limit } = req.query as unknown as z.infer<typeof CategoryQuerySchema>;
 
-      const content = await getDiscoveryService().getContentByCategory({
+    const content = await getDiscoveryService().getContentByCategory({
+      category,
+      sort,
+      page,
+      limit,
+    });
+
+    res.json({
+      success: true,
+      data: content.items,
+      meta: {
         category,
-        sort,
-        page,
-        limit,
-      });
-
-      res.json({
-        success: true,
-        data: content.items,
-        meta: {
-          category,
-          pagination: {
-            page,
-            limit,
-            total: content.total,
-            totalPages: Math.ceil(content.total / limit),
-          },
+        pagination: {
+          page,
+          limit,
+          total: content.total,
+          totalPages: Math.ceil(content.total / limit),
         },
-      });
-    } catch (error) {
-      console.error('Failed to get category content:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve category content',
-        code: 'CATEGORY_ERROR',
-      });
-    }
-  }
+      },
+    });
+  })
 );
 
 /**
@@ -235,8 +216,11 @@ router.get(
  * Search for content with advanced filters
  * US-006: Content Discovery - Search
  */
-router.post('/search', optionalAuth, validateRequest(SearchSchema), async (req, res) => {
-  try {
+router.post(
+  '/search',
+  optionalAuth,
+  validateRequest(SearchSchema),
+  asyncHandler(async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const searchParams = req.body as z.infer<typeof SearchSchema>;
 
@@ -268,23 +252,18 @@ router.post('/search', optionalAuth, validateRequest(SearchSchema), async (req, 
         },
       },
     });
-  } catch (error) {
-    console.error('Failed to search content:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to search content',
-      code: 'SEARCH_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/content/discovery/recommendations/creators
  * Get recommended creators based on user preferences
  * US-006: Content Discovery - Creator Recommendations
  */
-router.get('/recommendations/creators', authenticate, async (req, res) => {
-  try {
+router.get(
+  '/recommendations/creators',
+  authenticate,
+  asyncHandler(async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { limit = 10 } = req.query;
 
@@ -301,23 +280,18 @@ router.get('/recommendations/creators', authenticate, async (req, res) => {
         algorithm: 'collaborative_filtering_v2',
       },
     });
-  } catch (error) {
-    console.error('Failed to get creator recommendations:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve creator recommendations',
-      code: 'RECOMMENDATIONS_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/content/discovery/recommendations/content
  * Get recommended content based on user history
  * US-006: Content Discovery - Content Recommendations
  */
-router.get('/recommendations/content', authenticate, async (req, res) => {
-  try {
+router.get(
+  '/recommendations/content',
+  authenticate,
+  asyncHandler(async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { limit = 20, exclude_viewed = false } = req.query;
 
@@ -336,23 +310,17 @@ router.get('/recommendations/content', authenticate, async (req, res) => {
         personalization_score: recommendedContent.personalization_score || 0,
       },
     });
-  } catch (error) {
-    console.error('Failed to get content recommendations:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve content recommendations',
-      code: 'RECOMMENDATIONS_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/content/discovery/similar/:contentId
  * Get content similar to a specific piece of content
  * US-006: Content Discovery - Similar Content
  */
-router.get('/similar/:contentId', async (req, res) => {
-  try {
+router.get(
+  '/similar/:contentId',
+  asyncHandler(async (req, res) => {
     const { contentId } = req.params;
     const { limit = 10 } = req.query;
 
@@ -369,23 +337,19 @@ router.get('/similar/:contentId', async (req, res) => {
         count: similarContent.length,
       },
     });
-  } catch (error) {
-    console.error('Failed to get similar content:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve similar content',
-      code: 'SIMILAR_CONTENT_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * POST /api/content/discovery/feedback
  * Provide feedback on recommendations to improve personalization
  * US-006: Content Discovery - Feedback Loop
  */
-router.post('/feedback', authenticate, validateRequest(FeedbackSchema), async (req, res) => {
-  try {
+router.post(
+  '/feedback',
+  authenticate,
+  validateRequest(FeedbackSchema),
+  asyncHandler(async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { content_id, action, rating } = req.body as z.infer<typeof FeedbackSchema>;
 
@@ -400,23 +364,18 @@ router.post('/feedback', authenticate, validateRequest(FeedbackSchema), async (r
       success: true,
       message: 'Feedback recorded successfully',
     });
-  } catch (error) {
-    console.error('Failed to process feedback:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to process feedback',
-      code: 'FEEDBACK_ERROR',
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/content/discovery/explore
  * Explore new content outside user's usual preferences
  * US-006: Content Discovery - Exploration
  */
-router.get('/explore', optionalAuth, async (req, res) => {
-  try {
+router.get(
+  '/explore',
+  optionalAuth,
+  asyncHandler(async (req, res) => {
     const userId = req.user?.id || req.user?.nostr_pubkey;
     const { limit = 20 } = req.query;
 
@@ -433,14 +392,7 @@ router.get('/explore', optionalAuth, async (req, res) => {
         exploration_mode: 'serendipity',
       },
     });
-  } catch (error) {
-    console.error('Failed to get exploration content:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve exploration content',
-      code: 'EXPLORATION_ERROR',
-    });
-  }
-});
+  })
+);
 
 export default router;

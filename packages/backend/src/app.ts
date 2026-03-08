@@ -71,14 +71,16 @@ export function createApp(): Express {
       },
       crossOriginEmbedderPolicy: false, // Allow NOSTR relay connections
       frameguard: { action: 'deny' }, // Explicitly set X-Frame-Options to DENY
+      hsts: {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: true,
+      },
+      xXssProtection: false, // Deprecated header — removed per OWASP recommendation
     })
   );
 
-  // Add XSS protection manually since helmet v7 disabled it by default
-  app.use((req, res, next) => {
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    next();
-  });
+  // X-XSS-Protection removed — deprecated per OWASP, can cause XSS in older browsers
 
   //  CORS Configuration
   // WHY: Enable secure cross-origin requests for our frontend applications
