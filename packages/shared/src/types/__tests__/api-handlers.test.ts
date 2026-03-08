@@ -9,7 +9,6 @@ import {
   ApiResponse,
   PaginationQuerySchema,
   ApiErrorCode,
-  UserRole,
   AuthenticatedUser,
   RouteValidationSchemas,
   PaginatedResponse,
@@ -17,6 +16,7 @@ import {
   HealthCheckResponse,
   ValidationResult,
 } from '../api-handlers';
+import { UserRole } from '../user';
 
 describe('API Handler Types', () => {
   describe('PaginationQuerySchema', () => {
