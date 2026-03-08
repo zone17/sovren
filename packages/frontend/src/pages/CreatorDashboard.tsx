@@ -1,344 +1,501 @@
-// @ts-nocheck
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth';
-import { useAppDispatch, useAppSelector } from '../store';
-// TODO: Replace with React Query hooks - US-E4-010
-// import { useContent, useCreateContent, usePublishContent } from '../queries/content';
-import type { ContentFilter, ContentItem, ContentPublishOptions } from '../types/content';
+import { apiClient } from '../services/api/apiClient';
 
-// Import UI components from new structure
-import UniversalContentEditor from '../features/content/components/ContentEditor';
+/* ────────────────────────────────────────────────────────
+   CREATOR DASHBOARD — "Crystalline Depth" Design
+   Glass morphism panels, choreographed entrance,
+   progressive information density, purple glow accents.
+   ──────────────────────────────────────────────────────── */
 
-// Enhanced Analytics Dashboard Component
-const AnalyticsDashboard: React.FC<{
-  contentItems: ContentItem[];
-}> = ({ contentItems }) => {
-  const totalViews = useMemo(
-    () => contentItems.reduce((sum, item) => sum + item.view_count, 0),
-    [contentItems]
-  );
+interface ApiEnvelope<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
 
-  const totalEarnings = useMemo(
-    () => contentItems.reduce((sum, item) => sum + item.total_earned_sats, 0),
-    [contentItems]
-  );
+interface ContentItem {
+  id: string;
+  title: string;
+  description?: string;
+  content_type: string;
+  status: string;
+  tags: string[];
+  view_count: number;
+  like_count: number;
+  comment_count: number;
+  price_sats: number;
+  is_monetized: boolean;
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+}
 
-  const avgQualityScore = useMemo(() => {
-    const itemsWithScores = contentItems.filter(
-      (item) => item.ai_enhancement?.content_quality_score
-    );
-    if (itemsWithScores.length === 0) return 0;
-    return Math.round(
-      itemsWithScores.reduce(
-        (sum, item) => sum + (item.ai_enhancement?.content_quality_score || 0),
-        0
-      ) / itemsWithScores.length
-    );
-  }, [contentItems]);
+// Format large numbers compactly
+function formatCompact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString();
+}
 
-  const publishedCount = useMemo(
-    () => contentItems.filter((item) => item.status === 'published').length,
-    [contentItems]
-  );
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {/* Total Views */}
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-blue-100 text-sm font-medium">Total Views</p>
-            <p className="text-3xl font-bold">{totalViews.toLocaleString()}</p>
-          </div>
-          <div className="bg-blue-400 bg-opacity-30 rounded-lg p-3">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-              <path
-                fillRule="evenodd"
-                d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center text-blue-100 text-sm">
-          <span className="text-green-300">↗ +12.5%</span>
-          <span className="ml-2">vs last month</span>
-        </div>
-      </div>
-
-      {/* Total Earnings */}
-      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-green-100 text-sm font-medium">Earnings</p>
-            <p className="text-3xl font-bold">{totalEarnings.toLocaleString()}</p>
-            <p className="text-green-100 text-xs">sats</p>
-          </div>
-          <div className="bg-green-400 bg-opacity-30 rounded-lg p-3">
-            <span className="text-2xl">⚡</span>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center text-green-100 text-sm">
-          <span className="text-yellow-300">↗ +8.2%</span>
-          <span className="ml-2">vs last month</span>
-        </div>
-      </div>
-
-      {/* Content Quality */}
-      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-purple-100 text-sm font-medium">AI Quality Score</p>
-            <p className="text-3xl font-bold">{avgQualityScore}</p>
-            <p className="text-purple-100 text-xs">/100</p>
-          </div>
-          <div className="bg-purple-400 bg-opacity-30 rounded-lg p-3">
-            <span className="text-2xl">🤖</span>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center text-purple-100 text-sm">
-          <span className="text-green-300">↗ Quality improving</span>
-        </div>
-      </div>
-
-      {/* Published Content */}
-      <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-orange-100 text-sm font-medium">Published</p>
-            <p className="text-3xl font-bold">{publishedCount}</p>
-            <p className="text-orange-100 text-xs">pieces</p>
-          </div>
-          <div className="bg-orange-400 bg-opacity-30 rounded-lg p-3">
-            <span className="text-2xl">📝</span>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center text-orange-100 text-sm">
-          <span className="text-green-300">↗ Keep creating!</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const EnhancedContentList: React.FC<{
-  contentItems: ContentItem[];
-  onSelectContent: (content: ContentItem) => void;
-  selectedContent: ContentItem | null;
-  onDeleteContent: (id: string) => void;
-  onDuplicateContent: (id: string) => void;
-}> = ({ contentItems, onSelectContent, selectedContent, onDeleteContent, onDuplicateContent }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<ContentFilter>({
-    sort_by: 'updated_at',
-    sort_order: 'desc',
-  });
-
-  const filteredContent = useMemo(() => {
-    let filtered = [...contentItems];
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query) ||
-          item.description?.toLowerCase().includes(query) ||
-          item.tags.some((tag) => tag.toLowerCase().includes(query))
+// Content type icon (SVG, no emoji)
+function ContentTypeIcon({ type }: { type: string }) {
+  const cls = 'w-4 h-4 text-white/40';
+  switch (type) {
+    case 'article':
+      return (
+        <svg
+          className={cls}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+          />
+        </svg>
       );
-    }
+    case 'image':
+      return (
+        <svg
+          className={cls}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V5.25a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v14.25a1.5 1.5 0 001.5 1.5z"
+          />
+        </svg>
+      );
+    case 'video':
+      return (
+        <svg
+          className={cls}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z"
+          />
+        </svg>
+      );
+    case 'audio':
+      return (
+        <svg
+          className={cls}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"
+          />
+        </svg>
+      );
+    default:
+      return (
+        <svg
+          className={cls}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+          />
+        </svg>
+      );
+  }
+}
 
-    // Apply status filter
-    if (filter.status) {
-      filtered = filtered.filter((item) => item.status === filter.status);
-    }
+// Status badge
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    published: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    draft: 'bg-white/5 text-white/40 border-white/10',
+    scheduled: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    archived: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  };
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${styles[status] || styles.draft}`}
+    >
+      {status}
+    </span>
+  );
+}
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const aValue = a[filter.sort_by];
-      const bValue = b[filter.sort_by];
+const CreatorDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-      if (filter.sort_order === 'asc') {
-        return aValue > bValue ? 1 : -1;
+  const loadContent = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const result =
+        await apiClient.get<ApiEnvelope<{ items: ContentItem[]; total: number }>>(
+          '/api/v1/content'
+        );
+      if (result.success && result.data) {
+        setContentItems(result.data.items);
       } else {
-        return aValue < bValue ? 1 : -1;
+        setContentItems([]);
       }
-    });
+      setError(null);
+    } catch {
+      setContentItems([]);
+      setError(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-    return filtered;
-  }, [contentItems, filter, searchQuery]);
+  useEffect(() => {
+    void loadContent();
+  }, [loadContent]);
+
+  const handleDelete = async (id: string): Promise<void> => {
+    if (!confirm('Delete this content?')) return;
+    try {
+      await apiClient.delete<ApiEnvelope<null>>(`/api/v1/content/${id}`);
+      setContentItems((prev) => prev.filter((item) => item.id !== id));
+    } catch {
+      // ignore
+    }
+  };
+
+  // Computed stats
+  const totalViews = contentItems.reduce((sum, item) => sum + (item.view_count || 0), 0);
+  const totalLikes = contentItems.reduce((sum, item) => sum + (item.like_count || 0), 0);
+  const publishedCount = contentItems.filter((item) => item.status === 'published').length;
+  const totalEarnings = contentItems.reduce((sum, item) => sum + (item.price_sats || 0), 0);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+          <span className="text-sm text-white/30">Loading dashboard...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <h2 className="text-lg font-semibold text-gray-900">Your Content</h2>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1
+            className="text-2xl sm:text-3xl font-bold text-foreground"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Your creative empire at a glance</p>
+        </div>
+        <Link
+          to="/create"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:shadow-[0_8px_24px_rgba(139,92,246,0.4)] no-underline"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Create
+        </Link>
+      </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-            <input
-              type="text"
-              placeholder="Search content..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-
-            <select
-              value={filter.status || ''}
-              onChange={(e) =>
-                setFilter({
-                  ...filter,
-                  status: (e.target.value as ContentItem['status']) || undefined,
-                })
-              }
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="archived">Archived</option>
-            </select>
-
-            <select
-              value={`${filter.sort_by}-${filter.sort_order}`}
-              onChange={(e) => {
-                const [sort_by, sort_order] = e.target.value.split('-');
-                setFilter({
-                  ...filter,
-                  sort_by: sort_by as ContentFilter['sort_by'],
-                  sort_order: sort_order as ContentFilter['sort_order'],
-                });
-              }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="updated_at-desc">Recently Updated</option>
-              <option value="created_at-desc">Recently Created</option>
-              <option value="view_count-desc">Most Viewed</option>
-              <option value="total_earned_sats-desc">Highest Earnings</option>
-            </select>
+      {/* Stats Grid — choreographed entrance */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 reveal-stagger">
+        {/* Published */}
+        <div className="glass-hover rounded-2xl p-5 group">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Published
+            </p>
+            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+              <svg
+                className="w-4 h-4 text-purple-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"
+                />
+              </svg>
+            </div>
           </div>
+          <p
+            className="text-3xl font-bold text-foreground"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            {publishedCount}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">{contentItems.length} total pieces</p>
+        </div>
+
+        {/* Views */}
+        <div className="glass-hover rounded-2xl p-5 group">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Views
+            </p>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <svg
+                className="w-4 h-4 text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+          </div>
+          <p
+            className="text-3xl font-bold text-foreground"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            {formatCompact(totalViews)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">{totalLikes} likes</p>
+        </div>
+
+        {/* Earnings */}
+        <div className="glass-hover rounded-2xl p-5 group">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Earnings
+            </p>
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <svg
+                className="w-4 h-4 text-amber-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+                />
+              </svg>
+            </div>
+          </div>
+          <p
+            className="text-3xl font-bold text-foreground"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            {formatCompact(totalEarnings)}
+          </p>
+          <p className="text-xs text-amber-400/60 mt-1">sats</p>
+        </div>
+
+        {/* NOSTR Status */}
+        <div className="glass-hover rounded-2xl p-5 group">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Identity
+            </p>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <svg
+                className="w-4 h-4 text-emerald-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"
+                />
+              </svg>
+            </div>
+          </div>
+          <p
+            className="text-lg font-semibold text-emerald-400"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            {user?.nostr_pubkey ? 'Connected' : 'Not connected'}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1 font-mono truncate">
+            {user?.nostr_pubkey ? `${user.nostr_pubkey.slice(0, 12)}...` : 'Set up NOSTR'}
+          </p>
         </div>
       </div>
 
       {/* Content List */}
-      <div className="max-h-96 overflow-y-auto">
-        {filteredContent.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4">📝</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchQuery ? 'No matching content' : 'No content yet'}
+      <div className="glass rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+          <h2
+            className="text-base font-semibold text-foreground"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            Your Content
+          </h2>
+          <span className="text-xs text-muted-foreground">{contentItems.length} items</span>
+        </div>
+
+        {contentItems.length === 0 ? (
+          <div className="p-16 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-purple-400/60"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"
+                />
+              </svg>
+            </div>
+            <h3
+              className="text-lg font-medium text-foreground mb-2"
+              style={{ fontFamily: "'Sora', sans-serif" }}
+            >
+              No content yet
             </h3>
-            <p className="text-gray-600">
-              {searchQuery
-                ? 'Try adjusting your search or filters'
-                : 'Create your first piece of content to get started'}
+            <p className="text-muted-foreground text-sm mb-6">
+              Start creating to see your dashboard come alive.
             </p>
+            <Link
+              to="/create"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] no-underline"
+            >
+              Create Your First Content
+            </Link>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {filteredContent.map((item) => (
+          <div className="divide-y divide-white/5">
+            {contentItems.map((item) => (
               <div
                 key={item.id}
-                className={`p-6 hover:bg-gray-50 cursor-pointer transition-colors ${
-                  selectedContent?.id === item.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                }`}
-                onClick={() => onSelectContent(item)}
+                className="px-6 py-4 hover:bg-white/[0.02] transition-colors duration-150 cursor-pointer group"
+                onClick={() => navigate(`/post/${item.id}`)}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="text-lg font-medium text-gray-900 truncate">{item.title}</h3>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          item.status === 'published'
-                            ? 'bg-green-100 text-green-800'
-                            : item.status === 'draft'
-                              ? 'bg-gray-100 text-gray-800'
-                              : item.status === 'scheduled'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                      {item.ai_enhancement?.content_quality_score && (
-                        <span
-                          className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
-                            item.ai_enhancement.content_quality_score >= 80
-                              ? 'bg-green-100 text-green-700'
-                              : item.ai_enhancement.content_quality_score >= 60
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          🤖 {item.ai_enhancement.content_quality_score}/100
-                        </span>
-                      )}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <ContentTypeIcon type={item.content_type} />
+                      <h3 className="text-sm font-medium text-foreground truncate group-hover:text-purple-400 transition-colors">
+                        {item.title}
+                      </h3>
+                      <StatusBadge status={item.status} />
                     </div>
 
                     {item.description && (
-                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.description}</p>
+                      <p className="text-xs text-muted-foreground truncate mb-1.5 ml-6">
+                        {item.description}
+                      </p>
                     )}
 
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>Updated {new Date(item.updated_at).toLocaleDateString()}</span>
-                      <span>•</span>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground ml-6">
+                      <span>{new Date(item.created_at).toLocaleDateString()}</span>
                       <span>{item.view_count} views</span>
-                      <span>•</span>
-                      <span>{item.total_earned_sats} sats earned</span>
-                      {item.tags.length > 0 && (
-                        <>
-                          <span>•</span>
-                          <div className="flex space-x-1">
-                            {item.tags.slice(0, 3).map((tag, index) => (
-                              <span
-                                key={index}
-                                className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {item.tags.length > 3 && (
-                              <span className="text-gray-400 text-xs">+{item.tags.length - 3}</span>
-                            )}
-                          </div>
-                        </>
+                      <span>{item.like_count} likes</span>
+                      {item.is_monetized && (
+                        <span className="text-amber-400/60">{item.price_sats} sats</span>
+                      )}
+                      {item.tags?.length > 0 && (
+                        <div className="flex gap-1">
+                          {item.tags.slice(0, 2).map((tag) => (
+                            <span
+                              key={tag}
+                              className="bg-white/5 text-white/30 px-1.5 py-0.5 rounded text-[10px]"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {item.tags.length > 2 && (
+                            <span className="text-white/20 text-[10px]">
+                              +{item.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Content Actions */}
-                  <div className="flex items-center space-x-2 ml-4">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDuplicateContent(item.id);
+                        navigate(`/post/${item.id}`);
                       }}
-                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                      title="Duplicate content"
+                      className="px-3 py-1.5 text-xs text-purple-400 hover:text-purple-300 border border-purple-500/20 rounded-lg hover:bg-purple-500/10 transition-colors"
                     >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
-                        <path d="M3 5a2 2 0 012-2 3 3 0 003 3h6a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11.586l-3-3a1 1 0 00-1.414 1.414L11.586 11H9a1 1 0 100 2h2.586l-1 1a1 1 0 001.414 1.414l3-3z" />
-                      </svg>
+                      View
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDeleteContent(item.id);
+                        void handleDelete(item.id);
                       }}
-                      className="p-2 text-red-400 hover:text-red-600 transition-colors"
-                      title="Delete content"
+                      className="p-1.5 text-white/20 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                      title="Delete"
                     >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
                         <path
-                          fillRule="evenodd"
-                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                          clipRule="evenodd"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
                         />
                       </svg>
                     </button>
@@ -349,349 +506,10 @@ const EnhancedContentList: React.FC<{
           </div>
         )}
       </div>
-    </div>
-  );
-};
 
-const QuickActions: React.FC<{
-  onCreateContent: () => void;
-  onAIGenerate: () => void;
-  onImportContent: () => void;
-  onExportContent: () => void;
-}> = ({ onCreateContent, onAIGenerate, onImportContent, onExportContent }) => {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-      <div className="space-y-3">
-        <button
-          onClick={onCreateContent}
-          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>Create Content</span>
-        </button>
-
-        <button
-          onClick={onAIGenerate}
-          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-        >
-          <span className="text-lg">🤖</span>
-          <span>AI Generate</span>
-        </button>
-
-        <button
-          onClick={onImportContent}
-          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>Import</span>
-        </button>
-
-        <button
-          onClick={onExportContent}
-          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>Export</span>
-        </button>
-      </div>
-
-      {/* Stats Section */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Your Stats</h4>
-        <div className="space-y-2 text-sm text-gray-600">
-          <div className="flex justify-between">
-            <span>This Month</span>
-            <span className="font-medium text-green-600">+2.4k views</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Earnings</span>
-            <span className="font-medium text-green-600">+1,250 sats</span>
-          </div>
-          <div className="flex justify-between">
-            <span>AI Score</span>
-            <span className="font-medium text-purple-600">87/100</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const CreatorDashboard: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { user } = useAuth();
-  const { content_items, current_content, loading, error } = useAppSelector(
-    (state) => (state as any).cms
-  );
-
-  const [activeView, setActiveView] = useState<'overview' | 'editor'>('overview');
-  const [showAIGenerator, setShowAIGenerator] = useState(false);
-
-  useEffect(() => {
-    if (user?.nostr_pubkey) {
-      // Handle async dispatch with void operator for floating promise
-      void dispatch(
-        loadContentItems({
-          creator_pubkey: user.nostr_pubkey,
-          sort_by: 'updated_at',
-          sort_order: 'desc',
-        })
-      );
-    }
-  }, [dispatch, user?.nostr_pubkey]);
-
-  const handleCreateContent = async (): Promise<void> => {
-    try {
-      const result = await dispatch(
-        createContentItem({
-          title: 'New Content',
-          content_blocks: [],
-        })
-      );
-
-      if (result.type.endsWith('fulfilled')) {
-        setActiveView('editor');
-      }
-    } catch (error) {
-      console.error('Failed to create content:', error);
-    }
-  };
-
-  const handleSelectContent = (content: ContentItem): void => {
-    dispatch(setCurrentContent(content));
-    setActiveView('editor');
-  };
-
-  const handleAIGenerate = (): void => {
-    setShowAIGenerator(true);
-  };
-
-  const handleDeleteContent = (contentId: string): void => {
-    if (confirm('Are you sure you want to delete this content?')) {
-      // This would dispatch a delete action
-      console.log('Deleting content:', contentId);
-    }
-  };
-
-  const handleDuplicateContent = (contentId: string): void => {
-    const originalContent = content_items.find((item) => item.id === contentId);
-    if (originalContent) {
-      void dispatch(
-        createContentItem({
-          ...originalContent,
-          title: `${originalContent.title} (Copy)`,
-          status: 'draft',
-        })
-      );
-    }
-  };
-
-  const handlePublishContent = async (
-    contentId: string,
-    options: ContentPublishOptions
-  ): Promise<void> => {
-    try {
-      await dispatch(publishContentItem({ contentId, options }));
-    } catch (error) {
-      console.error('Failed to publish content:', error);
-    }
-  };
-
-  const handleImportContent = (): void => {
-    console.log('Import content');
-  };
-
-  const handleExportContent = (): void => {
-    console.log('Export content');
-  };
-
-  const handlePublishClick = (): void => {
-    if (current_content) {
-      void handlePublishContent(current_content.id, {
-        status: 'published',
-        visibility: 'public',
-        tags: current_content.tags,
-        publish_to_nostr: true,
-        store_on_ipfs: true,
-        store_on_arweave: true,
-      });
-    }
-  };
-
-  const handleCreateClick = (): void => {
-    void handleCreateContent();
-  };
-
-  const handleDuplicateClick = (contentId: string): void => {
-    handleDuplicateContent(contentId);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin text-4xl mb-4">⚡</div>
-          <p className="text-gray-600">Loading your creator dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Reload Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 flex h-full bg-gray-50">
-      {activeView === 'overview' ? (
-        <div className="flex-1 p-6">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Creator Dashboard</h1>
-                <p className="text-gray-600 mt-1">
-                  Manage your content with AI-powered tools and decentralized publishing
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                  🟢 Connected to NOSTR
-                </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                  ⚡ Lightning Ready
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Analytics Dashboard */}
-          <AnalyticsDashboard contentItems={content_items} />
-
-          {/* Main Content Area */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Content List */}
-            <div className="lg:col-span-3">
-              <EnhancedContentList
-                contentItems={content_items}
-                onSelectContent={handleSelectContent}
-                selectedContent={current_content}
-                onDeleteContent={handleDeleteContent}
-                onDuplicateContent={handleDuplicateClick}
-              />
-            </div>
-
-            {/* Quick Actions Sidebar */}
-            <div className="lg:col-span-1">
-              <QuickActions
-                onCreateContent={handleCreateClick}
-                onAIGenerate={handleAIGenerate}
-                onImportContent={handleImportContent}
-                onExportContent={handleExportContent}
-              />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex flex-col">
-          {/* Editor Header */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setActiveView('overview')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span>Back to Dashboard</span>
-              </button>
-
-              {current_content && (
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={handlePublishClick}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                  >
-                    Publish
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Universal Content Editor */}
-          <UniversalContentEditor />
-        </div>
-      )}
-
-      {/* AI Content Generator Modal */}
-      {showAIGenerator && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">🤖 AI Content Generator</h2>
-              <button
-                onClick={() => setShowAIGenerator(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="text-center">
-              <p className="text-gray-600 mb-4">AI content generation will be available here</p>
-              <button
-                onClick={() => setShowAIGenerator(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
+      {error && (
+        <div className="glass rounded-xl border border-red-500/20 px-4 py-3 text-red-400 text-sm">
+          {error}
         </div>
       )}
     </div>

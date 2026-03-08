@@ -9,7 +9,7 @@ interface CreatorCardProps {
 export const CreatorCard = ({ creator }: CreatorCardProps) => {
   return (
     <article
-      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
+      className="glass-hover rounded-xl overflow-hidden transition-all duration-150"
       aria-label={`Creator profile: ${creator.displayName || creator.username || 'Unknown'}`}
     >
       {/* Header with avatar and name */}
@@ -26,7 +26,7 @@ export const CreatorCard = ({ creator }: CreatorCardProps) => {
             />
           ) : (
             <div
-              className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0"
+              className="w-14 h-14 rounded-full bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0"
               aria-hidden="true"
             >
               {(creator.displayName || '?').charAt(0).toUpperCase()}
@@ -34,12 +34,12 @@ export const CreatorCard = ({ creator }: CreatorCardProps) => {
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
+              <h3 className="text-lg font-semibold text-foreground truncate">
                 {creator.displayName || creator.username || 'Anonymous'}
               </h3>
               {creator.nip05Verified && (
                 <span
-                  className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
+                  className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-300"
                   title="NIP-05 Verified"
                   aria-label="NIP-05 verified creator"
                 >
@@ -47,19 +47,19 @@ export const CreatorCard = ({ creator }: CreatorCardProps) => {
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-500">@{creator.username}</p>
+            <p className="text-sm text-muted-foreground">@{creator.username}</p>
           </div>
         </div>
 
         {/* Bio */}
-        <p className="mt-3 text-sm text-gray-600 line-clamp-2">{creator.bio}</p>
+        <p className="mt-3 text-sm text-muted-foreground line-clamp-2">{creator.bio}</p>
 
         {/* Categories + Tags */}
         <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Creator tags">
           {creator.categories.map((cat) => (
             <span
               key={cat}
-              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700"
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/10 text-purple-300"
             >
               {cat}
             </span>
@@ -67,7 +67,7 @@ export const CreatorCard = ({ creator }: CreatorCardProps) => {
           {creator.tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-card text-muted-foreground border border-border"
             >
               {tag}
             </span>
@@ -75,7 +75,7 @@ export const CreatorCard = ({ creator }: CreatorCardProps) => {
         </div>
 
         {/* Stats */}
-        <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
+        <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
           <span>{creator.followerCount.toLocaleString()} followers</span>
           <span aria-hidden="true">|</span>
           <span>{creator.contentCount} posts</span>
@@ -83,7 +83,7 @@ export const CreatorCard = ({ creator }: CreatorCardProps) => {
       </div>
 
       {/* Footer with action */}
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
+      <div className="px-6 py-4 border-t border-border flex items-center justify-end">
         <Link to={`/creator/${creator.id}`}>
           <Button
             variant="outline"

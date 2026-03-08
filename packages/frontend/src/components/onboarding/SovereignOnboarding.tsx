@@ -265,7 +265,7 @@ const SovereignOnboarding: React.FC = () => {
       createdAt: new Date().toISOString(),
       platform: 'Sovren',
       userType: userType,
-      warning: '🔒 CRITICAL: Keep your private key (nsec) absolutely secure! Never share it!',
+      warning: 'CRITICAL: Keep your private key (nsec) absolutely secure! Never share it!',
       instructions: 'Import these keys into any NOSTR client to access your sovereign identity.',
     };
 
@@ -309,7 +309,7 @@ const SovereignOnboarding: React.FC = () => {
           ['t', 'sovren-onboarding'],
           ['t', userType || 'supporter'],
         ],
-        content: `🎉 Just completed sovereign onboarding on Sovren! NOSTR identity verified and Lightning wallet ready. The future of digital freedom starts now! #Sovren #NOSTR #Lightning #Sovereignty`,
+        content: `Just completed sovereign onboarding on Sovren! NOSTR identity verified and Lightning wallet ready. The future of digital freedom starts now! #Sovren #NOSTR #Lightning #Sovereignty`,
       };
 
       // Convert hex string to Uint8Array for signing
@@ -399,7 +399,10 @@ const SovereignOnboarding: React.FC = () => {
 
               {/* Typography Hierarchy */}
               <div className="space-y-3">
-                <h1 className="pb-1 text-3xl font-black tracking-tight text-transparent sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-200 via-orange-300 to-amber-400 bg-clip-text leading-[1.1]">
+                <h1
+                  className="pb-1 text-3xl font-black tracking-tight text-transparent sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-200 via-orange-300 to-amber-400 bg-clip-text leading-[1.1]"
+                  style={{ fontFamily: "'Sora', sans-serif" }}
+                >
                   Welcome to True Digital Sovereignty
                 </h1>
                 <p className="max-w-xl mx-auto text-base font-light leading-relaxed text-center sm:text-lg text-slate-200">
@@ -485,7 +488,10 @@ const SovereignOnboarding: React.FC = () => {
                 </div>
               </div>
 
-              <h2 className="mb-8 text-4xl font-black leading-tight text-transparent md:text-6xl bg-gradient-to-r from-violet-200 via-purple-300 to-violet-400 bg-clip-text">
+              <h2
+                className="mb-8 text-4xl font-black leading-tight text-transparent md:text-6xl bg-gradient-to-r from-violet-200 via-purple-300 to-violet-400 bg-clip-text"
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
                 Choose Your
                 <br />
                 <span className="text-transparent bg-gradient-to-r from-purple-300 via-violet-400 to-purple-500 bg-clip-text">
@@ -648,7 +654,12 @@ const SovereignOnboarding: React.FC = () => {
                   <Key className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2 className="mb-4 text-3xl font-bold text-white">Create Your Sovereign Identity</h2>
+              <h2
+                className="mb-4 text-3xl font-bold text-white"
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
+                Create Your Sovereign Identity
+              </h2>
               <p className="max-w-2xl mx-auto text-lg text-slate-200">
                 Your NOSTR keys are your digital identity. Generated locally, owned by you, forever.
               </p>
@@ -705,7 +716,7 @@ const SovereignOnboarding: React.FC = () => {
                     {nostrKeys && (
                       <div className="text-center">
                         <p className="font-medium text-green-400">
-                          🎉 Your sovereign identity is ready! Let's secure it...
+                          Your sovereign identity is ready! Let's secure it...
                         </p>
                       </div>
                     )}
@@ -752,7 +763,12 @@ const SovereignOnboarding: React.FC = () => {
                   <Shield className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2 className="mb-4 text-3xl font-bold text-white">Secure Your Sovereign Identity</h2>
+              <h2
+                className="mb-4 text-3xl font-bold text-white"
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
+                Secure Your Sovereign Identity
+              </h2>
               <p className="max-w-2xl mx-auto text-lg text-slate-200">
                 Your keys, your identity. Let's make sure they're safely backed up.
               </p>
@@ -770,7 +786,7 @@ const SovereignOnboarding: React.FC = () => {
                       {/* Public Key */}
                       <div>
                         <Label className="text-lg font-medium text-white">
-                          🌐 Public Key (npub) - Your Username
+                          Public Key (npub) - Your Username
                         </Label>
                         <p className="mb-3 text-sm text-slate-200">
                           Share this freely - it's how others find and verify you
@@ -799,7 +815,7 @@ const SovereignOnboarding: React.FC = () => {
                       {/* Private Key */}
                       <div>
                         <Label className="text-lg font-medium text-white">
-                          🔒 Private Key (nsec) - Your Master Password
+                          Private Key (nsec) - Your Master Password
                         </Label>
                         <p className="mb-3 text-sm text-red-300">
                           NEVER share this! It's your digital identity's master key
@@ -868,7 +884,7 @@ const SovereignOnboarding: React.FC = () => {
                           className="mt-1 border-gray-300 rounded"
                         />
                         <Label htmlFor="backup" className="text-yellow-100 cursor-pointer">
-                          ✅ I have safely downloaded and stored my private key (nsec) backup
+                          I have safely downloaded and stored my private key (nsec) backup
                         </Label>
                       </div>
 
@@ -881,8 +897,8 @@ const SovereignOnboarding: React.FC = () => {
                           className="mt-1 border-gray-300 rounded"
                         />
                         <Label htmlFor="security" className="text-yellow-100 cursor-pointer">
-                          🔒 I understand that losing my private key means losing my sovereign
-                          identity forever
+                          I understand that losing my private key means losing my sovereign identity
+                          forever
                         </Label>
                       </div>
                     </div>
@@ -926,7 +942,12 @@ const SovereignOnboarding: React.FC = () => {
                   <Zap className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2 className="mb-4 text-3xl font-bold text-white">Setup Lightning Payments</h2>
+              <h2
+                className="mb-4 text-3xl font-bold text-white"
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
+                Setup Lightning Payments
+              </h2>
               <p className="max-w-2xl mx-auto text-lg text-slate-200">
                 Enable instant Bitcoin payments to{' '}
                 {userType === 'creator' ? 'monetize your content' : 'support creators'}.
@@ -969,7 +990,7 @@ const SovereignOnboarding: React.FC = () => {
                               wallet.type === 'custodial'
                                 ? 'bg-green-500/20'
                                 : wallet.type === 'self-custodial'
-                                  ? 'bg-blue-500/20'
+                                  ? 'bg-purple-500/20'
                                   : 'bg-purple-500/20'
                             }`}
                           >
@@ -1052,7 +1073,12 @@ const SovereignOnboarding: React.FC = () => {
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2 className="mb-4 text-3xl font-bold text-white">Verify Your Sovereign Setup</h2>
+              <h2
+                className="mb-4 text-3xl font-bold text-white"
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
+                Verify Your Sovereign Setup
+              </h2>
               <p className="max-w-2xl mx-auto text-lg text-slate-200">
                 Let's verify your NOSTR identity and celebrate your sovereignty!
               </p>
@@ -1132,7 +1158,7 @@ const SovereignOnboarding: React.FC = () => {
             {error && (
               <Alert className="max-w-2xl mx-auto shadow-lg border-red-500/50 bg-red-500/20">
                 <AlertDescription className="text-base font-medium text-red-100">
-                  <strong className="text-red-200">⚠️ Verification Error:</strong> {error}
+                  <strong className="text-red-200">Verification Error:</strong> {error}
                 </AlertDescription>
               </Alert>
             )}
@@ -1149,8 +1175,11 @@ const SovereignOnboarding: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              <h1 className="text-4xl font-black text-transparent md:text-5xl bg-gradient-to-r from-lightning-200 via-sovereign-200 to-premium-200 bg-clip-text">
-                🎉 Welcome to Sovereignty!
+              <h1
+                className="text-4xl font-black text-transparent md:text-5xl bg-gradient-to-r from-lightning-200 via-sovereign-200 to-premium-200 bg-clip-text"
+                style={{ fontFamily: "'Sora', sans-serif" }}
+              >
+                Welcome to Sovereignty!
               </h1>
               <p className="max-w-3xl mx-auto text-xl leading-relaxed text-slate-200">
                 Congratulations! You now have a sovereign digital identity and Lightning payments.

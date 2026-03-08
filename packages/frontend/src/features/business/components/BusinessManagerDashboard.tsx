@@ -64,10 +64,17 @@ export const BusinessManagerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-6 min-h-screen">
+    <div className="space-y-6 p-6 bg-background min-h-screen">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Business Manager</h1>
-        <p className="text-sm text-gray-500 mt-1">Contracts, invoices, revenue, and tax tools.</p>
+        <h1
+          className="text-2xl font-bold text-foreground"
+          style={{ fontFamily: "'Sora', sans-serif" }}
+        >
+          Business Manager
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Contracts, invoices, revenue, and tax tools.
+        </p>
       </div>
       <BusinessNav activeTab={activeTab} onTabChange={handleTabChange} />
       <div id={`panel-${activeTab}`} role="tabpanel" aria-labelledby={activeTab}>

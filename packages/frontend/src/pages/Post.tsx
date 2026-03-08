@@ -12,7 +12,12 @@ const Post: React.FC = () => {
     return (
       <Layout>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Post not found</h2>
+          <h2
+            className="text-2xl font-bold text-foreground"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            Post not found
+          </h2>
         </div>
       </Layout>
     );
@@ -22,15 +27,20 @@ const Post: React.FC = () => {
     <Layout>
       <article className="max-w-3xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">{post.title}</h1>
-          <div className="mt-4 flex items-center text-sm text-gray-500">
+          <h1
+            className="text-3xl font-bold text-foreground sm:text-4xl"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            {post.title}
+          </h1>
+          <div className="mt-4 flex items-center text-sm text-muted-foreground">
             <span>By {post.author_id}</span>
             <span className="mx-2">•</span>
             <time dateTime={post.created_at}>{new Date(post.created_at).toLocaleDateString()}</time>
           </div>
         </header>
 
-        <div className="prose prose-blue max-w-none">
+        <div className="prose prose-purple max-w-none">
           <p>{post.content}</p>
         </div>
 
@@ -38,6 +48,7 @@ const Post: React.FC = () => {
           <div className="mt-8 flex justify-end space-x-4">
             <Button
               variant="default"
+              className="bg-gradient-to-r from-violet-600 to-purple-600 shadow-[0_4px_16px_rgba(139,92,246,0.3)] text-white transition-all duration-150"
               onClick={() => {
                 // TODO: Implement payment
               }}
@@ -47,11 +58,16 @@ const Post: React.FC = () => {
           </div>
         )}
 
-        <div className="mt-12 border-t border-gray-200 pt-8">
-          <h2 className="text-2xl font-bold text-gray-900">Comments</h2>
+        <div className="mt-12 border-t border-border pt-8">
+          <h2
+            className="text-2xl font-bold text-foreground"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            Comments
+          </h2>
           <div className="mt-6 space-y-6">
             {/* TODO: Implement comments */}
-            <p className="text-gray-500">Comments coming soon...</p>
+            <p className="text-muted-foreground">Comments coming soon...</p>
           </div>
         </div>
       </article>

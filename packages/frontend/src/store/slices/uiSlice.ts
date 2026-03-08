@@ -60,7 +60,7 @@ export interface UIState {
 }
 
 const initialState: UIState = {
-  theme: 'system',
+  theme: 'dark',
   sidebarOpen: true,
   sidebarCollapsed: false,
   modal: {
@@ -222,8 +222,11 @@ const uiSlice = createSlice({
       if (typeof window === 'undefined') return;
 
       const theme = localStorage.getItem('theme') as Theme;
-      if (theme) {
+      if (theme === 'light' || theme === 'dark') {
         state.theme = theme;
+      } else {
+        // Clear stale 'system' value, default to dark
+        localStorage.setItem('theme', 'dark');
       }
 
       const preferences = localStorage.getItem('ui-preferences');

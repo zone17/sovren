@@ -1,6 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark" data-theme="dark">
   <head>
+    <script>
+      // Dark-first: only switch to light if explicitly stored
+      if (localStorage.getItem('theme') === 'light') {
+        document.documentElement.classList.replace('dark', 'light');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    </script>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

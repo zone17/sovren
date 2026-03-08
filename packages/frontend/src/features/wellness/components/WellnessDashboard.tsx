@@ -15,20 +15,30 @@ export const WellnessDashboard: React.FC = () => {
 
   return (
     <WellnessErrorBoundary>
-      <div className="space-y-6 p-6 bg-gradient-to-br from-green-50/50 via-white to-blue-50/50 min-h-screen">
+      <div className="space-y-6 p-6 bg-background min-h-screen">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Creator Wellness</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1
+              className="text-2xl font-bold text-foreground"
+              style={{ fontFamily: "'Sora', sans-serif" }}
+            >
+              Creator Wellness
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
               Monitor your work patterns and maintain sustainable habits.
             </p>
           </div>
-          <Button onClick={() => setPulseModalOpen(true)}>Pulse Check-In</Button>
+          <Button
+            onClick={() => setPulseModalOpen(true)}
+            className="bg-gradient-to-r from-violet-600 to-purple-600 shadow-[0_4px_16px_rgba(139,92,246,0.3)] text-white"
+          >
+            Pulse Check-In
+          </Button>
         </div>
 
         {/* Top row: Burnout gauge + Rest days */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 reveal-stagger">
           <BurnoutRiskGauge />
           <RestDayTracker />
           <SustainableScheduler />
