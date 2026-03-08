@@ -195,20 +195,58 @@ describe('CreatorCircleService', () => {
     it('returns all circles from the database', async () => {
       buildService();
 
-      const circles = [
-        { id: 'c1', name: 'Circle 1', niche: 'tech', max_members: 20 },
-        { id: 'c2', name: 'Circle 2', niche: null, max_members: 10 },
+      const dbRows = [
+        {
+          id: 'c1',
+          name: 'Circle 1',
+          description: null,
+          niche: 'tech',
+          max_members: 20,
+          created_by: CREATOR_ID,
+          created_at: '2025-01-01',
+          updated_at: '2025-01-01',
+        },
+        {
+          id: 'c2',
+          name: 'Circle 2',
+          description: null,
+          niche: null,
+          max_members: 10,
+          created_by: CREATOR_ID,
+          created_at: '2025-01-02',
+          updated_at: '2025-01-02',
+        },
       ];
       // First: circle_members query — no memberships (creator is not a member of any external circle)
       const membershipsChain = makeChain({ data: [], error: null });
       // Second: creator_circles — created circles
-      const createdCirclesChain = makeChain({ data: circles, error: null });
+      const createdCirclesChain = makeChain({ data: dbRows, error: null });
 
       mockDb.from.mockReturnValueOnce(membershipsChain).mockReturnValueOnce(createdCirclesChain);
 
       const result = await service.getCircles(CREATOR_ID);
 
-      expect(result).toEqual(circles);
+      // Service applies rowToCircle() which maps snake_case DB rows to camelCase domain objects
+      expect(result).toEqual([
+        {
+          id: 'c1',
+          name: 'Circle 1',
+          niche: 'tech',
+          maxMembers: 20,
+          createdBy: CREATOR_ID,
+          createdAt: '2025-01-01',
+          updatedAt: '2025-01-01',
+        },
+        {
+          id: 'c2',
+          name: 'Circle 2',
+          niche: undefined,
+          maxMembers: 10,
+          createdBy: CREATOR_ID,
+          createdAt: '2025-01-02',
+          updatedAt: '2025-01-02',
+        },
+      ]);
       expect(mockDb.from).toHaveBeenCalledWith('circle_members');
       expect(mockDb.from).toHaveBeenCalledWith('creator_circles');
     });
@@ -282,8 +320,19 @@ describe('CreatorCircleService', () => {
         data: null,
         error: null,
       });
-      const recentCircles = [{ id: 'r1', name: 'Recent Circle', niche: null }];
-      const recentChain = makeChain({ data: recentCircles, error: null });
+      const recentDbRows = [
+        {
+          id: 'r1',
+          name: 'Recent Circle',
+          description: null,
+          niche: null,
+          max_members: 20,
+          created_by: 'other-creator',
+          created_at: '2025-01-01',
+          updated_at: '2025-01-01',
+        },
+      ];
+      const recentChain = makeChain({ data: recentDbRows, error: null });
 
       mockDb.from
         .mockReturnValueOnce(membershipsChain)
@@ -292,7 +341,18 @@ describe('CreatorCircleService', () => {
 
       const result = await service.getSuggestedCircles(CREATOR_ID);
 
-      expect(result).toEqual(recentCircles);
+      // Service applies rowToCircle() — camelCase domain objects
+      expect(result).toEqual([
+        {
+          id: 'r1',
+          name: 'Recent Circle',
+          niche: undefined,
+          maxMembers: 20,
+          createdBy: 'other-creator',
+          createdAt: '2025-01-01',
+          updatedAt: '2025-01-01',
+        },
+      ]);
       expect(recentChain.order).toHaveBeenCalledWith('created_at', { ascending: false });
     });
 
@@ -617,7 +677,7 @@ describe('CreatorCircleService', () => {
         error: null,
       });
 
-      const posts = [
+      const postDbRows = [
         {
           id: 'p2',
           circle_id: CIRCLE_ID,
@@ -633,13 +693,23 @@ describe('CreatorCircleService', () => {
           created_at: '2025-02-01',
         },
       ];
-      const postsChain = makeChain({ data: posts, error: null });
+      const postsChain = makeChain({ data: postDbRows, error: null });
       mockDb.from
         .mockReturnValueOnce(circleChain) // circle lookup (creator matches — skip membership)
         .mockReturnValueOnce(postsChain); // posts query
 
       const result = await service.getCirclePosts(CIRCLE_ID, CREATOR_ID);
-      expect(result).toEqual(posts);
+      // Service applies rowToCirclePost() — camelCase domain objects
+      expect(result).toEqual([
+        {
+          id: 'p2',
+          circleId: CIRCLE_ID,
+          authorId: 'a',
+          content: 'Second',
+          createdAt: '2025-02-02',
+        },
+        { id: 'p1', circleId: CIRCLE_ID, authorId: 'b', content: 'First', createdAt: '2025-02-01' },
+      ]);
       expect(postsChain.order).toHaveBeenCalledWith('created_at', { ascending: false });
       // #713: service uses .range() for pagination instead of .limit()
       expect(postsChain.range).toHaveBeenCalledWith(0, 49);

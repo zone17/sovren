@@ -204,13 +204,35 @@ describe('MentorshipService', () => {
   // -------------------------------------------------------------------------
   describe('getMentors', () => {
     it('returns all active mentors with no filters', async () => {
-      const mentors = [{ id: 'm1', creator_id: MENTOR_ID, niche: 'tech', active: true }];
-      const chain = makeChain({ data: mentors, error: null });
+      const mentorDbRows = [
+        {
+          id: 'm1',
+          creator_id: MENTOR_ID,
+          niche: 'tech',
+          audience_size_range: '1k-10k',
+          bio: null,
+          max_mentees: 3,
+          active: true,
+          created_at: '2025-01-01',
+        },
+      ];
+      const chain = makeChain({ data: mentorDbRows, error: null });
       mockDb.from.mockReturnValueOnce(chain);
 
       const result = await service.getMentors();
 
-      expect(result).toEqual(mentors);
+      // Service applies rowToMentorProfile() — camelCase domain objects
+      expect(result).toEqual([
+        {
+          id: 'm1',
+          creatorId: MENTOR_ID,
+          niche: 'tech',
+          audienceSizeRange: '1k-10k',
+          maxMentees: 3,
+          active: true,
+          createdAt: '2025-01-01',
+        },
+      ]);
       expect(chain.eq).toHaveBeenCalledWith('active', true);
     });
 
@@ -633,16 +655,55 @@ describe('MentorshipService', () => {
     const CREATOR_UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
     it('returns all mentorships for a creator (as mentor or mentee)', async () => {
-      const mentorships = [
-        { id: 'ms-1', mentor_id: CREATOR_UUID, mentee_id: MENTEE_ID, status: 'active' },
-        { id: 'ms-2', mentor_id: 'other-mentor', mentee_id: CREATOR_UUID, status: 'pending' },
+      const mentorshipDbRows = [
+        {
+          id: 'ms-1',
+          mentor_id: CREATOR_UUID,
+          mentee_id: MENTEE_ID,
+          niche: null,
+          goals: [],
+          status: 'active',
+          started_at: '2025-01-01',
+          completed_at: null,
+          created_at: '2025-01-01',
+        },
+        {
+          id: 'ms-2',
+          mentor_id: 'other-mentor',
+          mentee_id: CREATOR_UUID,
+          niche: null,
+          goals: [],
+          status: 'pending',
+          started_at: null,
+          completed_at: null,
+          created_at: '2025-01-02',
+        },
       ];
-      const chain = makeChain({ data: mentorships, error: null });
+      const chain = makeChain({ data: mentorshipDbRows, error: null });
       mockDb.from.mockReturnValueOnce(chain);
 
       const result = await service.getMyMentorships(CREATOR_UUID);
 
-      expect(result).toEqual(mentorships);
+      // Service applies rowToMentorship() — camelCase domain objects
+      expect(result).toEqual([
+        {
+          id: 'ms-1',
+          mentorId: CREATOR_UUID,
+          menteeId: MENTEE_ID,
+          goals: [],
+          status: 'active',
+          startedAt: '2025-01-01',
+          createdAt: '2025-01-01',
+        },
+        {
+          id: 'ms-2',
+          mentorId: 'other-mentor',
+          menteeId: CREATOR_UUID,
+          goals: [],
+          status: 'pending',
+          createdAt: '2025-01-02',
+        },
+      ]);
       expect(chain.or).toHaveBeenCalledWith(
         `mentor_id.eq.${CREATOR_UUID},mentee_id.eq.${CREATOR_UUID}`
       );
