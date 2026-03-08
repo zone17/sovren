@@ -24,6 +24,12 @@ export const followKeys = {
   counts: (userId: string) => [...followKeys.all, 'counts', userId] as const,
 };
 
+export const discoveryKeys = {
+  all: ['discovery'] as const,
+  creators: (filters: Record<string, unknown>) =>
+    [...discoveryKeys.all, 'creators', filters] as const,
+};
+
 export const notificationKeys = {
   all: ['notifications'] as const,
   list: (page?: number) => [...notificationKeys.all, 'list', page] as const,

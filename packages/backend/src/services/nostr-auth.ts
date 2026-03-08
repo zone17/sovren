@@ -45,6 +45,7 @@ export class NostrAuthService {
   private readonly challenges: Map<string, NostrChallenge>;
   private cleanupInterval?: NodeJS.Timeout;
   private usedSignatures: Map<string, number>;
+  private revokedTokens: Map<string, number>; // token hash -> expiry timestamp
   private userRoleFetcher?: (pubkey: string) => Promise<string | undefined>;
 
   constructor(
@@ -73,6 +74,7 @@ export class NostrAuthService {
     this.CHALLENGE_TTL = challengeTTL;
     this.challenges = new Map();
     this.usedSignatures = new Map();
+    this.revokedTokens = new Map();
     this.userRoleFetcher = userRoleFetcher;
 
     // Clean up expired challenges and signatures every minute (only in production)
@@ -80,6 +82,7 @@ export class NostrAuthService {
       this.cleanupInterval = setInterval(() => {
         this.cleanupExpiredChallenges();
         this.cleanupExpiredSignatures();
+        this.cleanupExpiredRevokedTokens();
       }, 60000);
     }
   }
@@ -244,6 +247,38 @@ export class NostrAuthService {
   }
 
   /**
+   * Revoke a JWT token so it can no longer be used.
+   * The token is stored by hash with its expiry so cleanup is automatic.
+   */
+  revokeToken(token: string): void {
+    try {
+      const decoded = jwt.decode(token) as JWTPayload | null;
+      const tokenHash = createHash('sha256').update(token).digest('hex');
+      // Store until token's natural expiry (or 24h if we can't decode)
+      const expiresAt = decoded?.exp ? decoded.exp * 1000 : Date.now() + 24 * 60 * 60 * 1000;
+      this.revokedTokens.set(tokenHash, expiresAt);
+    } catch {
+      // If we can't decode, still revoke with a 24h TTL
+      const tokenHash = createHash('sha256').update(token).digest('hex');
+      this.revokedTokens.set(tokenHash, Date.now() + 24 * 60 * 60 * 1000);
+    }
+  }
+
+  /**
+   * Check if a token has been revoked.
+   */
+  isTokenRevoked(token: string): boolean {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const expiresAt = this.revokedTokens.get(tokenHash);
+    if (expiresAt === undefined) return false;
+    if (Date.now() > expiresAt) {
+      this.revokedTokens.delete(tokenHash);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * 🔓 Verify JWT token and extract NOSTR identity
    */
   async verifyJWT(token: string): Promise<{
@@ -252,6 +287,14 @@ export class NostrAuthService {
     error?: string;
   }> {
     try {
+      // Check if token has been revoked before verifying
+      if (this.isTokenRevoked(token)) {
+        return {
+          valid: false,
+          error: 'Token has been revoked',
+        };
+      }
+
       const decoded = jwt.verify(token, this.JWT_SECRET, {
         algorithms: ['HS256'],
       });
@@ -371,6 +414,18 @@ export class NostrAuthService {
   }
 
   /**
+   * 🧹 Clean up expired revoked tokens
+   */
+  private cleanupExpiredRevokedTokens(): void {
+    const now = Date.now();
+    for (const [tokenHash, expiresAt] of this.revokedTokens.entries()) {
+      if (now > expiresAt) {
+        this.revokedTokens.delete(tokenHash);
+      }
+    }
+  }
+
+  /**
    * 📝 Create signature message for verification
    * Delegates to shared package — single source of truth.
    */
@@ -461,6 +516,7 @@ export class NostrAuthService {
     }
     this.challenges.clear();
     this.usedSignatures.clear();
+    this.revokedTokens.clear();
   }
 }
 

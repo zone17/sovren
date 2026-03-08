@@ -422,7 +422,8 @@ export class DatabaseSessionManager {
       query = query.eq('pubkey', pubkey);
     }
 
-    const { data, error } = await query;
+    // Limit to prevent unbounded SELECT (#768)
+    const { data, error } = await query.limit(1000);
 
     if (error || !data) {
       return {

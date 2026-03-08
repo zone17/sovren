@@ -33,7 +33,8 @@ import {
 
 const router = express.Router();
 
-// Initialize Supabase client (only if credentials exist)
+// TODO #774: Move direct Supabase access to service/repository layer.
+// Webhooks need service-key client for admin operations — inject via DI container.
 const supabase =
   process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -41,6 +42,11 @@ const supabase =
 
 // Initialize Payment State Machine (only if Supabase available)
 const paymentStateMachine = supabase ? new PaymentStateMachine({ supabase }) : null;
+
+// Startup validation — empty secret in production is a critical misconfiguration
+if (process.env.NODE_ENV === 'production' && !process.env.WEBHOOK_SECRET) {
+  throw new Error('WEBHOOK_SECRET must be set in production');
+}
 
 // Webhook secrets for signature verification
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
@@ -95,27 +101,29 @@ function rateLimitWebhook(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
+ * Timing-safe HMAC comparison to prevent timing attacks.
+ * Returns true if the signature matches the expected HMAC.
+ */
+function timingSafeHmacCompare(signature: string, secret: string, payload: string): boolean {
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  const sigBuffer = Buffer.from(signature, 'hex');
+  const expectedBuffer = Buffer.from(expected, 'hex');
+  if (sigBuffer.length !== expectedBuffer.length) return false;
+  return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+}
+
+/**
  * Verify HMAC signature with support for secret rotation
  */
 function verifySignature(payload: string, signature: string): boolean {
   // Try primary secret
-  const primarySignature = crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
-
-  if (signature === primarySignature) {
+  if (timingSafeHmacCompare(signature, WEBHOOK_SECRET, payload)) {
     return true;
   }
 
   // Try rotation secret if configured
   if (WEBHOOK_SECRET_ROTATION) {
-    const rotationSignature = crypto
-      .createHmac('sha256', WEBHOOK_SECRET_ROTATION)
-      .update(payload)
-      .digest('hex');
-
-    if (signature === rotationSignature) {
+    if (timingSafeHmacCompare(signature, WEBHOOK_SECRET_ROTATION, payload)) {
       console.info('[WEBHOOK] Request verified with rotation secret');
       return true;
     }

@@ -50,6 +50,7 @@ export class EventBusService implements IEventBus {
   private retryDelay = 1000; // 1 second
   private maxEventStoreSize = 10000;
   private eventStats: Map<DomainEventType, number> = new Map();
+  private activeTimers = new Set<ReturnType<typeof setTimeout>>();
 
   constructor(private logger?: ILogger) {}
 
@@ -364,6 +365,12 @@ export class EventBusService implements IEventBus {
    * Dispose of event bus resources
    */
   async dispose(): Promise<void> {
+    // Clear all active handler timeouts to prevent leaks
+    for (const timer of this.activeTimers) {
+      clearTimeout(timer);
+    }
+    this.activeTimers.clear();
+
     this.unsubscribeAll();
     this.eventQueue = [];
     this.eventStore = [];
@@ -431,11 +438,18 @@ export class EventBusService implements IEventBus {
   private async executeHandler(handler: EventHandler, event: DomainEvent): Promise<void> {
     const timeoutMs = 30000; // 30 second timeout
 
+    let timer: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Handler timeout')), timeoutMs);
+      timer = setTimeout(() => reject(new Error('Handler timeout')), timeoutMs);
+      this.activeTimers.add(timer);
     });
 
-    await Promise.race([handler(event), timeoutPromise]);
+    try {
+      await Promise.race([handler(event), timeoutPromise]);
+    } finally {
+      clearTimeout(timer!);
+      this.activeTimers.delete(timer!);
+    }
   }
 
   /**
@@ -551,9 +565,10 @@ export class EventBusService implements IEventBus {
       retryCount: 0,
     });
 
-    // Trim store if too large
+    // Trim store if too large — splice in-place to avoid copying the entire array
     if (this.eventStore.length > this.maxEventStoreSize) {
-      this.eventStore = this.eventStore.slice(-this.maxEventStoreSize);
+      const excess = this.eventStore.length - this.maxEventStoreSize;
+      this.eventStore.splice(0, excess);
     }
   }
 
@@ -576,7 +591,13 @@ export class EventBusService implements IEventBus {
    * Delay helper
    */
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        this.activeTimers.delete(timer);
+        resolve();
+      }, ms);
+      this.activeTimers.add(timer);
+    });
   }
 
   /**
@@ -603,9 +624,9 @@ export class EventBusService implements IEventBus {
  * Logger interface for event bus
  */
 interface ILogger {
-  info(message: string, meta?: any): void;
+  info(message: string, meta?: Record<string, unknown>): void;
   error(message: string, error?: Error): void;
-  warn(message: string, meta?: any): void;
+  warn(message: string, meta?: Record<string, unknown>): void;
 }
 
 /**

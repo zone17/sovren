@@ -6,6 +6,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import { UserRole } from './user';
 
 // ========================================
 // Core Request/Response Types
@@ -47,15 +48,7 @@ export interface AuthenticatedUser {
   expiresAt: number;
 }
 
-/**
- * User Roles
- */
-export enum UserRole {
-  ADMIN = 'admin',
-  CREATOR = 'creator',
-  USER = 'user',
-  GUEST = 'guest',
-}
+// UserRole is imported from ./user (canonical location)
 
 // ========================================
 // API Response Types

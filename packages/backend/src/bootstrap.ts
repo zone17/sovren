@@ -23,6 +23,7 @@ import { registerControllers } from './container/bindings/controller.bindings';
 import { registerPhase7Services } from './container/bindings/phase7.bindings';
 import { registerPhase8Services } from './container/bindings/phase8.bindings';
 import { registerCommunityServices } from './container/bindings/community.bindings';
+import { registerDiscoveryServices } from './container/bindings/discovery.bindings';
 import { registerFinanceServices } from './container/bindings/finance.bindings';
 import { registerQueueServices } from './container/bindings/queue.bindings';
 
@@ -98,6 +99,7 @@ export async function bootstrapApplication(
   registerPhase7Services(registry);
   registerPhase8Services(registry);
   registerCommunityServices(registry);
+  registerDiscoveryServices(registry);
   registerFinanceServices(registry);
   registerQueueServices(registry);
   registerControllers(registry);
@@ -240,6 +242,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
 
   // Database (Supabase client - placeholder)
   registry.registerSingletonFactory(TYPES.Database, (_container) => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.Database: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       query: async (_sql: string, _params: any[]) => {
         throw new Error(
@@ -259,7 +266,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
 
   // Elasticsearch client (placeholder)
   registry.registerSingletonFactory(TYPES.ElasticsearchService, (_container) => {
-    // Return mock for now
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.ElasticsearchService: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       search: async () => ({ hits: { hits: [] } }),
       index: async () => ({ result: 'created' }),
@@ -268,7 +279,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
 
   // Lightning Service (placeholder)
   registry.registerSingletonFactory(TYPES.LightningService, (_container) => {
-    // Return mock for now — matches ILightningService interface
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.LightningService: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       createInvoice: async (_amountSats: number, _memo: string) => ({
         invoiceId: 'mock-invoice-id',
@@ -287,7 +302,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
 
   // NOSTR Service (placeholder)
   registry.registerSingletonFactory(TYPES.NostrService, (_container) => {
-    // Return mock for now
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.NostrService: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       publishEvent: async () => ({ success: true }),
       subscribeToEvents: async () => {},
@@ -296,6 +315,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
 
   // Validation Service (placeholder)
   registry.registerTransient(TYPES.ValidationService, () => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.ValidationService: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       validate: (_schema: any, _data: any) => ({ valid: true, errors: [] }),
     };
@@ -303,6 +327,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
 
   // Repositories (placeholders)
   registry.registerSingletonFactory(TYPES.ContentRepository, (_container) => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.ContentRepository: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       findById: async (_id: string) => null,
       save: async (entity: any) => entity,
@@ -310,6 +339,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   });
 
   registry.registerSingletonFactory(TYPES.UserRepository, (_container) => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.UserRepository: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       findById: async (_id: string) => null,
       save: async (entity: any) => entity,
@@ -317,6 +351,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   });
 
   registry.registerSingletonFactory(TYPES.PaymentRepository, (_container) => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.PaymentRepository: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       findById: async (_id: string) => null,
       save: async (entity: any) => entity,
@@ -324,6 +363,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   });
 
   registry.registerSingletonFactory(TYPES.SubscriptionRepository, (_container) => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.SubscriptionRepository: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       findById: async (_id: string) => null,
       save: async (entity: any) => entity,
@@ -331,6 +375,11 @@ function registerInfrastructureServices(registry: ServiceRegistry): void {
   });
 
   registry.registerSingletonFactory(TYPES.UserPreferencesRepository, (_container) => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'TYPES.UserPreferencesRepository: no real implementation registered. Placeholder mocks cannot be used in production.'
+      );
+    }
     return {
       findByUserId: async (_userId: string) => null,
       save: async (entity: any) => entity,

@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import apiClient from '@/services/api/apiClient';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { discoveryKeys } from '@/hooks/query-keys';
 import type { DiscoveryFilters, DiscoveryResponse } from '../types';
 import type { ApiResponse } from '@/services/api/types';
 
@@ -22,7 +23,7 @@ export function useDiscovery() {
   prevPageRef.current = page;
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
-    queryKey: ['discovery', 'creators', effectiveFilters],
+    queryKey: discoveryKeys.creators(effectiveFilters),
     queryFn: () =>
       apiClient.get<ApiResponse<DiscoveryResponse>>('/api/v2/discovery/creators', {
         q: effectiveFilters.query,

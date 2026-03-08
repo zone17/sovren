@@ -12,6 +12,7 @@ import { supabase } from '../config/supabase';
 import Redis from 'ioredis';
 import { getRedisClient } from '../lib/redis';
 import { Logger } from '../utils/logger';
+import { escapePostgrestFilter } from '../utils/escapePostgrestFilter';
 
 interface ContentItem {
   id: string;
@@ -92,7 +93,11 @@ export class ContentDiscoveryService {
       }
 
       if (params.exclude_categories?.length) {
-        query = query.not('category', 'in', `(${params.exclude_categories.join(',')})`);
+        const CATEGORY_REGEX = /^[a-zA-Z0-9_,-]+$/;
+        const safeCategories = params.exclude_categories.filter((c) => CATEGORY_REGEX.test(c));
+        if (safeCategories.length > 0) {
+          query = query.not('category', 'in', `(${safeCategories.join(',')})`);
+        }
       }
 
       if (params.premium_only) {
@@ -334,7 +339,9 @@ export class ContentDiscoveryService {
         .select('*, creators!inner(*)')
         .eq('status', 'published')
         .neq('id', params.content_id)
-        .or(`category.eq.${sourceContent.category},tags.cs.{${sourceContent.tags.join(',')}}`)
+        .or(
+          `category.eq.${escapePostgrestFilter(sourceContent.category)},tags.cs.{${sourceContent.tags.map(escapePostgrestFilter).join(',')}}`
+        )
         .order('engagement_score', { ascending: false })
         .limit(params.limit);
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Creator Circle Service Interface
  * EPIC-010: Creator Network — Circles
@@ -24,4 +23,14 @@ export interface ICreatorCircleService {
     pagination?: { offset?: number; limit?: number }
   ): Promise<CirclePost[]>;
   createPost(circleId: string, authorId: string, content: string): Promise<{ id: string }>;
+  updateCircle(
+    circleId: string,
+    requesterId: string,
+    data: { name?: string; description?: string; niche?: string; maxMembers?: number }
+  ): Promise<void>;
+  deleteCircle(circleId: string, requesterId: string): Promise<void>;
+  getCircleMembers(
+    circleId: string,
+    pagination?: { offset?: number; limit?: number }
+  ): Promise<{ id: string; creator_id: string; role: string; joined_at: string }[]>;
 }

@@ -367,7 +367,7 @@ describe('FollowService', () => {
       expect(result).toEqual({ followers: 10, following: 5 });
     });
 
-    it('throws ValidationError if followers count query fails', async () => {
+    it('throws DatabaseError if followers count query fails', async () => {
       buildService();
       mockGetUserIdByPubkey.mockResolvedValue(FOLLOWER_ID);
       // creators table fails — triggers fallback
@@ -381,10 +381,10 @@ describe('FollowService', () => {
         .mockReturnValueOnce(makeChain({ count: null, error: { message: 'DB error' } }))
         .mockReturnValueOnce(makeChain({ count: 0, error: null }));
 
-      await expect(service.getFollowCounts(FOLLOWER_PUBKEY)).rejects.toThrow(ValidationError);
+      await expect(service.getFollowCounts(FOLLOWER_PUBKEY)).rejects.toThrow(DatabaseError);
     });
 
-    it('throws ValidationError if following count query fails', async () => {
+    it('throws DatabaseError if following count query fails', async () => {
       buildService();
       mockGetUserIdByPubkey.mockResolvedValue(FOLLOWER_ID);
       const creatorsChain = makeChain(null);
@@ -397,7 +397,7 @@ describe('FollowService', () => {
         .mockReturnValueOnce(makeChain({ count: 5, error: null }))
         .mockReturnValueOnce(makeChain({ count: null, error: { message: 'DB error' } }));
 
-      await expect(service.getFollowCounts(FOLLOWER_PUBKEY)).rejects.toThrow(ValidationError);
+      await expect(service.getFollowCounts(FOLLOWER_PUBKEY)).rejects.toThrow(DatabaseError);
     });
   });
 });

@@ -137,6 +137,8 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 | 15  | Cross-content parent guard     | Threaded data parent lookup → scope to content context                  | 404  |
 | 16  | RLS INSERT service_role        | Service-inserted tables → `WITH CHECK (auth.role() = 'service_role')`   | —    |
 | 17  | Trigger atomic increments      | Counter triggers → `count + 1` not `COALESCE + 1`; add SECURITY DEFINER | —    |
+| 18  | RLS on every CREATE TABLE      | Every new table migration → RLS + policies in same file                 | —    |
+| 19  | crypto.timingSafeEqual         | All HMAC/signature comparisons → never `===`; no empty secret fallback  | 401  |
 
 ### Top Common Solutions (by recurrence)
 
@@ -172,6 +174,11 @@ Migrations: `supabase/migrations/` (baseline + incremental)
 | 117 | DI lazy singleton eager init for side-effects       | Backend    |
 | 118 | Remediation team sizing (2 agents for <20 findings) | Process    |
 | 119 | Utility extraction threshold (LOC x copies > 40)    | Backend    |
+| 120 | Redis KEYS → SCAN (never KEYS in production)        | Backend    |
+| 121 | asyncHandler mandatory for all route handlers       | Backend    |
+| 122 | Route files must not create DB clients directly     | Backend    |
+| 123 | Bootstrap production guards on placeholder services | Backend    |
+| 125 | Domain-grouped agents = zero merge conflicts        | Process    |
 
 ---
 

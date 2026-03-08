@@ -1,4 +1,3 @@
-// @ts-nocheck — MentorProfileRow/MentorshipRow (snake_case) vs shared types (camelCase) require mapping layer
 /**
  * Mentorship Service
  * EPIC-010: Creator Network — Mentor registration, matching, and relationship management
@@ -8,6 +7,7 @@ import type { IMentorshipService } from '../../interfaces/community/IMentorshipS
 import type { ILogger } from '../../interfaces/shared/ILogger';
 import type { ISupabaseClient } from '../../interfaces/shared/ISupabaseClient';
 import type { IEventBus } from '../../interfaces/shared/IEventBus';
+import type { MentorProfile, Mentorship } from '@shared/types/community';
 import {
   AuthorizationError,
   ConflictError,
@@ -40,6 +40,33 @@ interface MentorshipRow {
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
+}
+
+function rowToMentorProfile(row: MentorProfileRow): MentorProfile {
+  return {
+    id: row.id,
+    creatorId: row.creator_id,
+    niche: row.niche,
+    audienceSizeRange: row.audience_size_range as MentorProfile['audienceSizeRange'],
+    bio: row.bio ?? undefined,
+    maxMentees: row.max_mentees,
+    active: row.active,
+    createdAt: row.created_at,
+  };
+}
+
+function rowToMentorship(row: MentorshipRow): Mentorship {
+  return {
+    id: row.id,
+    mentorId: row.mentor_id,
+    menteeId: row.mentee_id,
+    niche: row.niche ?? undefined,
+    goals: row.goals,
+    status: row.status as Mentorship['status'],
+    startedAt: row.started_at ?? undefined,
+    completedAt: row.completed_at ?? undefined,
+    createdAt: row.created_at,
+  };
 }
 
 export class MentorshipService implements IMentorshipService {
@@ -109,7 +136,7 @@ export class MentorshipService implements IMentorshipService {
   async getMentors(filters?: {
     niche?: string;
     audienceSizeRange?: string;
-  }): Promise<MentorProfileRow[]> {
+  }): Promise<MentorProfile[]> {
     let query = this.db
       .from<MentorProfileRow>('mentor_profiles')
       .select('id, creator_id, niche, audience_size_range, bio, max_mentees, active, created_at')
@@ -130,7 +157,7 @@ export class MentorshipService implements IMentorshipService {
       throw new DatabaseError('Failed to get mentors');
     }
 
-    return data ?? [];
+    return (data ?? []).map(rowToMentorProfile);
   }
 
   async requestMentorship(
@@ -213,7 +240,7 @@ export class MentorshipService implements IMentorshipService {
           originalError: countError,
         });
       }
-      throw new ValidationError(`Failed to count active mentorships: ${countError.message}`);
+      throw new DatabaseError('Failed to count active mentorships');
     }
 
     if ((activeCount ?? 0) > mentorProfile.max_mentees) {
@@ -329,7 +356,7 @@ export class MentorshipService implements IMentorshipService {
             originalError: countError,
           });
         }
-        throw new ValidationError('Failed to verify mentor capacity');
+        throw new DatabaseError('Failed to verify mentor capacity');
       }
 
       if ((activeCount ?? 0) > mentorProfile.max_mentees) {
@@ -367,7 +394,7 @@ export class MentorshipService implements IMentorshipService {
   async getMyMentorships(
     creatorId: string,
     pagination?: { offset?: number; limit?: number }
-  ): Promise<MentorshipRow[]> {
+  ): Promise<Mentorship[]> {
     // #260: Validate creatorId format to prevent .or() filter injection.
     // creatorId is now always a UUID (resolved at route layer after #721 fix).
     if (!/^[0-9a-f-]+$/i.test(creatorId)) {
@@ -391,7 +418,7 @@ export class MentorshipService implements IMentorshipService {
       throw new DatabaseError('Failed to get mentorships');
     }
 
-    return data ?? [];
+    return (data ?? []).map(rowToMentorship);
   }
 
   async updateMentorProfile(

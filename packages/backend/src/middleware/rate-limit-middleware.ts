@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Rate Limiting Middleware
  *
@@ -39,7 +38,10 @@ function getStore(): RedisStore | undefined {
   try {
     const client = getSharedRedisClient();
     return new RedisStore({
-      sendCommand: (...args: string[]) => client.call(...(args as [string, ...string[]])),
+      sendCommand: (...args: string[]) =>
+        client.call(...(args as [string, ...string[]])) as Promise<
+          boolean | number | string | (boolean | number | string)[]
+        >,
     });
   } catch {
     return undefined;
@@ -178,7 +180,10 @@ export function createRedisRateLimiter(config: RateLimitConfig): RateLimitReques
     ...defaultOptions,
     ...config,
     store: new RedisStore({
-      sendCommand: (...args: string[]) => client.call(...(args as [string, ...string[]])),
+      sendCommand: (...args: string[]) =>
+        client.call(...(args as [string, ...string[]])) as Promise<
+          boolean | number | string | (boolean | number | string)[]
+        >,
     }),
     message: config.message || 'Too many requests, please try again later',
   });

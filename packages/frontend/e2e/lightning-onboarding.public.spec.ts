@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { LightningOnboardingPage } from './pages/lightning-onboarding.page';
 
+// TODO #691: Expand when onboarding wizard stabilizes. Current smoke coverage
+// (heading + button visible) is acceptable for first pass.
+// Consolidate 3 spec files into 1 with describe blocks when expanding.
 test.describe('Lightning Onboarding — Wallet Setup', () => {
   let lightning: LightningOnboardingPage;
 

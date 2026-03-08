@@ -198,6 +198,13 @@ export class LightningService extends EventEmitter {
       // Validate configuration
       this.config = LightningConfigSchema.parse(config);
 
+      // Guard: JsonFilePaymentStore must not be used in production
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error(
+          'JsonFilePaymentStore cannot be used in production. Configure a database-backed payment persistence layer.'
+        );
+      }
+
       // Initialize persistence layer
       this.persistence = new JsonFilePaymentStore();
 

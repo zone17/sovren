@@ -12,6 +12,7 @@ import { supabase } from '../config/supabase';
 import Redis from 'ioredis';
 import { getRedisClient } from '../lib/redis';
 import { Logger } from '../utils/logger';
+import { escapePostgrestFilter } from '../utils/escapePostgrestFilter';
 
 interface Creator {
   id: string;
@@ -211,7 +212,9 @@ export class RecommendationService {
         .from('content')
         .select('*, creators!inner(*)')
         .eq('status', 'published')
-        .or(`category.in.(${topCategories.join(',')}),tags.cs.{${topTags.join(',')}}`)
+        .or(
+          `category.in.(${topCategories.map(escapePostgrestFilter).join(',')}),tags.cs.{${topTags.map(escapePostgrestFilter).join(',')}}`
+        )
         .order('engagement_score', { ascending: false })
         .limit(params.limit * 2);
 

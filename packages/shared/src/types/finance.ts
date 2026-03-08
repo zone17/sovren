@@ -135,7 +135,10 @@ export interface QuarterlyTaxSummary {
   netUsd: number;
 }
 
-// Paginated response wrapper for list endpoints
+/**
+ * @deprecated Use PaginatedResult from @shared/types/pagination instead.
+ * This type uses offset-based pagination; PaginatedResult uses page-based.
+ */
 export interface PaginatedData<T> {
   items: T[];
   total: number;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Canonical AppError Base Class
  *
@@ -33,7 +32,7 @@ export class AppError extends Error {
   public readonly details?: Record<string, unknown> | string;
   public readonly isOperational: boolean;
   public readonly context?: Record<string, unknown>;
-  public override readonly cause?: Error | unknown;
+  public readonly cause?: Error | unknown;
   public readonly timestamp: Date;
 
   // Options object pattern (preferred)

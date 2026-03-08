@@ -7,19 +7,8 @@
  */
 
 import type { FollowRelationship, FollowCounts } from '@shared/types/community';
-
-export interface PaginationParams {
-  page: number;
-  limit: number;
-}
-
-export interface PaginatedResult<T> {
-  items: T[];
-  total: number;
-  page: number;
-  limit: number;
-  hasNext: boolean;
-}
+import type { PaginationParams, PaginatedResult } from '@shared/types/pagination';
+export type { PaginationParams, PaginatedResult } from '@shared/types/pagination';
 
 export interface IFollowService {
   /**

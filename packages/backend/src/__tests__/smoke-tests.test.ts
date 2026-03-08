@@ -143,7 +143,7 @@ describe('Smoke Tests - Post-Deployment Validation', () => {
       expect(response.headers['x-dns-prefetch-control']).toBe('off');
       expect(response.headers['x-frame-options']).toBe('DENY');
       expect(response.headers['x-content-type-options']).toBe('nosniff');
-      expect(response.headers['x-xss-protection']).toBe('1; mode=block');
+      // X-XSS-Protection intentionally removed — deprecated per OWASP
 
       // CORS headers (in development)
       if (process.env.NODE_ENV !== 'production') {

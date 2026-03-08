@@ -2,9 +2,11 @@ import { z } from 'zod';
 
 // 🏷️ USER ROLE ENUMS
 export enum UserRole {
+  ADMIN = 'admin',
   CREATOR = 'creator',
   SUPPORTER = 'supporter',
-  ADMIN = 'admin',
+  USER = 'user',
+  GUEST = 'guest',
 }
 
 export enum UserStatus {

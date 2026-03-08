@@ -151,20 +151,19 @@ describe('Lightning API Routes', () => {
     });
 
     it('should handle validation errors', async () => {
-      // Mock request with invalid data — route does not validate amount,
-      // so it passes through to the service which may accept or reject it.
+      // Route validates via CreateInvoiceBodySchema with z.number().positive()
       const requestData = {
-        amount: -100, // Negative amount
+        amount: -100, // Negative amount — rejected by Zod
         description: 'Test invoice',
       };
 
-      // Route forwards to service without validation — expect 200
       const response = await request(app)
         .post('/api/lightning/invoice')
         .send(requestData)
-        .expect(200);
+        .expect(400);
 
-      expect(lightningService.createInvoice).toHaveBeenCalledWith(requestData);
+      expect(response.body).toHaveProperty('error');
+      expect(lightningService.createInvoice).not.toHaveBeenCalled();
     });
   });
 
@@ -339,7 +338,8 @@ describe('Lightning API Routes', () => {
         .expect(200);
 
       expect(response.body).toEqual(mockSubscription);
-      expect(lightningService.cancelSubscription).toHaveBeenCalledWith(subscriptionId);
+      // Route now passes userId for IDOR ownership check (#627: getAuthUser pattern)
+      expect(lightningService.cancelSubscription).toHaveBeenCalledWith(subscriptionId, 'user123');
     });
   });
 

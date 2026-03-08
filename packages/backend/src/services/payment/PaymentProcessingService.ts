@@ -237,6 +237,16 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     this.cache = cache;
     this.repository = repository || new InMemoryPaymentRepository();
 
+    // Guard: InMemoryPaymentRepository must never be used in production
+    if (
+      process.env.NODE_ENV === 'production' &&
+      this.repository instanceof InMemoryPaymentRepository
+    ) {
+      throw new Error(
+        'InMemoryPaymentRepository cannot be used in production. Configure a persistent payment repository.'
+      );
+    }
+
     // Default retry configuration
     this.retryConfig = retryConfig || {
       maxRetries: 3,
@@ -751,14 +761,23 @@ export class PaymentProcessingService implements IPaymentProcessingService {
     startDate?: Date,
     endDate?: Date
   ): Promise<PaymentStatistics> {
-    const query: PaymentHistoryQuery = {
-      userId,
-      startDate,
-      endDate,
-      limit: Number.MAX_SAFE_INTEGER,
-    };
-
-    const transactions = await this.repository.queryTransactions(query);
+    // Paginated accumulation to avoid unbounded query (#768)
+    const PAGE_SIZE = 500;
+    const transactions: PaymentTransaction[] = [];
+    let offset = 0;
+    let batch: PaymentTransaction[];
+    do {
+      const query: PaymentHistoryQuery = {
+        userId,
+        startDate,
+        endDate,
+        limit: PAGE_SIZE,
+        offset,
+      };
+      batch = await this.repository.queryTransactions(query);
+      transactions.push(...batch);
+      offset += PAGE_SIZE;
+    } while (batch.length === PAGE_SIZE);
 
     const stats: PaymentStatistics = {
       totalTransactions: transactions.length,
