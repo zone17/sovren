@@ -76,7 +76,7 @@ export const QRCode: React.FC<QRCodeProps> = ({
         style={{ width: size, height: size }}
       >
         <div
-          className="animate-pulse bg-muted-foreground/20 rounded"
+          className="animate-pulse bg-muted rounded"
           style={{ width: size * 0.8, height: size * 0.8 }}
         />
       </div>

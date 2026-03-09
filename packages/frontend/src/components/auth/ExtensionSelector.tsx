@@ -443,7 +443,7 @@ export const ExtensionSelector: React.FC<ExtensionSelectorProps> = ({
                   ? 'border-blue-500 bg-blue-50'
                   : extension.connected
                     ? 'border-green-500 bg-green-50'
-                    : 'border-border bg-card hover:border-border'
+                    : 'border-border bg-card hover:border-accent'
               }`}
               onClick={() => !extension.connected && connectExtension(extension)}
             >

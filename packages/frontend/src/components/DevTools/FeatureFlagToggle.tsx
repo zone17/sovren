@@ -33,12 +33,12 @@ export const FeatureFlagToggle: React.FC<FeatureFlagToggleProps> = ({
   };
 
   return (
-    <div className="fixed bottom-4 right-4 bg-background text-foreground p-4 rounded-lg shadow-lg border border-border z-50">
+    <div className="fixed bottom-4 right-4 bg-card text-foreground p-4 rounded-lg shadow-lg border border-border z-50">
       <div className="text-sm font-bold mb-2 text-green-400">🚩 DEV: Feature Flags</div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-muted-foreground/40">Backend Integration</span>
+          <span className="text-xs text-muted-foreground/60">Backend Integration</span>
           <button
             onClick={() => handleToggle('enableBackendIntegration')}
             className={`
@@ -46,7 +46,7 @@ export const FeatureFlagToggle: React.FC<FeatureFlagToggleProps> = ({
               ${
                 flags.enableBackendIntegration
                   ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-muted text-muted-foreground/40 hover:bg-accent'
+                  : 'bg-muted text-muted-foreground/60 hover:bg-accent'
               }
             `}
           >

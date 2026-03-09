@@ -780,7 +780,7 @@ const CategoryCard: React.FC<{
       className={`category-card bg-card rounded-lg p-4 border-2 cursor-pointer transition-all ${
         isSelected
           ? 'border-blue-500 bg-blue-50'
-          : 'border-border hover:border-border hover:shadow-md'
+          : 'border-border hover:border-accent hover:shadow-md'
       } ${isFeatured ? 'bg-gradient-to-br from-blue-50 to-purple-50' : ''}`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -806,7 +806,7 @@ const CategoryCard: React.FC<{
 
 const SearchResultCard: React.FC<{ content: FeedContentItem }> = ({ content }) => {
   return (
-    <div className="search-result-card bg-card rounded-lg p-4 border border-border hover:border-border transition-colors">
+    <div className="search-result-card bg-card rounded-lg p-4 border border-border hover:border-accent transition-colors">
       <div className="flex space-x-4">
         {content.thumbnailUrl && (
           <div className="thumbnail w-24 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
