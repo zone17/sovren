@@ -125,6 +125,7 @@ const EarningsOverview: React.FC<{ earnings: CreatorEarnings; period: string }> 
   earnings,
   period,
 }) => {
+  // TODO: Replace with live rate from a price feed service
   const formatCurrency = (sats: number, rate = 30000) => {
     return `$${((sats / 100000000) * rate).toFixed(2)}`;
   };
@@ -329,10 +330,7 @@ const PerformanceMetrics: React.FC<{ metrics: CreatorPerformanceMetrics }> = ({ 
       <CardContent>
         {/* Overall Score */}
         <div className="text-center mb-6 p-4 glass rounded-lg">
-          <div
-            className="text-3xl font-bold text-foreground mb-2"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <div className="text-3xl font-bold text-foreground mb-2 font-display">
             {metrics.performance_score}/100
           </div>
           <div className="text-sm text-muted-foreground">Overall Performance Score</div>
@@ -676,10 +674,7 @@ export const CreatorDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1
-            className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-transparent"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-transparent font-display">
             Creator Analytics
           </h1>
           <p className="text-muted-foreground mt-1">

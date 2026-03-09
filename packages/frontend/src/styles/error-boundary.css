@@ -150,17 +150,15 @@
   }
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  .error-boundary-light-bg {
-    background: #1f2937;
-    color: #f9fafb;
-  }
+/* Dark Mode Support — class-based toggle (no prefers-color-scheme) */
+.dark .error-boundary-light-bg {
+  background: #1f2937;
+  color: #f9fafb;
+}
 
-  .error-reference-badge {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
+.dark .error-reference-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Accessibility: Reduced Motion */

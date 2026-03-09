@@ -9,12 +9,7 @@ export default function ContentDetail() {
   if (!id) {
     return (
       <div className="max-w-3xl mx-auto py-12 text-center">
-        <h1
-          className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
-          Content Not Found
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground font-display">Content Not Found</h1>
         <p className="text-muted-foreground mt-2">
           The content you are looking for does not exist.
         </p>

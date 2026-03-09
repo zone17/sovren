@@ -267,8 +267,7 @@ export function CommentItem({
           <div ref={dialogRef} className="glass rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
             <h3
               id={`delete-dialog-title-${comment.id}`}
-              className="text-base font-semibold text-foreground mb-2"
-              style={{ fontFamily: "'Sora', sans-serif" }}
+              className="text-base font-semibold text-foreground mb-2 font-display"
             >
               Delete comment?
             </h3>

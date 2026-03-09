@@ -13,8 +13,21 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark';
 export type ModalType = 'payment' | 'creator' | 'content' | 'settings' | 'confirmation' | null;
+
+/**
+ * Read initial theme from localStorage to match the inline script in index.html.
+ * Both use the same dark-first logic: only 'light' is an explicit opt-in.
+ * This prevents a flash where Redux defaults to 'dark' but the DOM is already 'light'.
+ */
+const getInitialTheme = (): Theme => {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'light') return 'light';
+  }
+  return 'dark';
+};
 
 export interface Toast {
   id: string;
@@ -60,7 +73,7 @@ export interface UIState {
 }
 
 const initialState: UIState = {
-  theme: 'dark',
+  theme: getInitialTheme(),
   sidebarOpen: true,
   sidebarCollapsed: false,
   modal: {
@@ -88,10 +101,13 @@ const uiSlice = createSlice({
   reducers: {
     // Theme actions
     setTheme: (state, action: PayloadAction<Theme>) => {
-      state.theme = action.payload;
+      const theme = action.payload;
+      // Runtime guard: only accept valid theme values
+      if (theme !== 'dark' && theme !== 'light') return;
+      state.theme = theme;
       // Persist to localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('theme', action.payload);
+        localStorage.setItem('theme', theme);
       }
     },
 
@@ -221,7 +237,7 @@ const uiSlice = createSlice({
     hydrateFromStorage: (state) => {
       if (typeof window === 'undefined') return;
 
-      const theme = localStorage.getItem('theme') as Theme;
+      const theme = localStorage.getItem('theme');
       if (theme === 'light' || theme === 'dark') {
         state.theme = theme;
       } else {

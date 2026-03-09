@@ -35,7 +35,7 @@ import uiReducer, {
 
 describe('uiSlice', () => {
   const getInitialState = (): UIState => ({
-    theme: 'system',
+    theme: 'dark',
     sidebarOpen: true,
     sidebarCollapsed: false,
     modal: {
@@ -64,11 +64,16 @@ describe('uiSlice', () => {
     });
 
     it('should handle all theme values', () => {
-      const themes: Theme[] = ['light', 'dark', 'system'];
+      const themes: Theme[] = ['light', 'dark'];
       themes.forEach((theme) => {
         const state = uiReducer(getInitialState(), setTheme(theme));
         expect(state.theme).toBe(theme);
       });
+    });
+
+    it('should reject invalid theme values via runtime guard', () => {
+      const state = uiReducer(getInitialState(), setTheme('invalid' as Theme));
+      expect(state.theme).toBe('dark'); // unchanged from initial
     });
   });
 

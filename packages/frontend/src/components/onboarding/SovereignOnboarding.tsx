@@ -399,10 +399,7 @@ const SovereignOnboarding: React.FC = () => {
 
               {/* Typography Hierarchy */}
               <div className="space-y-3">
-                <h1
-                  className="pb-1 text-3xl font-black tracking-tight text-transparent sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-200 via-orange-300 to-amber-400 bg-clip-text leading-[1.1]"
-                  style={{ fontFamily: "'Sora', sans-serif" }}
-                >
+                <h1 className="pb-1 text-3xl font-black tracking-tight text-transparent sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-200 via-orange-300 to-amber-400 bg-clip-text leading-[1.1] font-display">
                   Welcome to True Digital Sovereignty
                 </h1>
                 <p className="max-w-xl mx-auto text-base font-light leading-relaxed text-center sm:text-lg text-slate-200">
@@ -488,10 +485,7 @@ const SovereignOnboarding: React.FC = () => {
                 </div>
               </div>
 
-              <h2
-                className="mb-8 text-4xl font-black leading-tight text-transparent md:text-6xl bg-gradient-to-r from-violet-200 via-purple-300 to-violet-400 bg-clip-text"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="mb-8 text-4xl font-black leading-tight text-transparent md:text-6xl bg-gradient-to-r from-violet-200 via-purple-300 to-violet-400 bg-clip-text font-display">
                 Choose Your
                 <br />
                 <span className="text-transparent bg-gradient-to-r from-purple-300 via-violet-400 to-purple-500 bg-clip-text">
@@ -654,10 +648,7 @@ const SovereignOnboarding: React.FC = () => {
                   <Key className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2
-                className="mb-4 text-3xl font-bold text-white"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="mb-4 text-3xl font-bold text-white font-display">
                 Create Your Sovereign Identity
               </h2>
               <p className="max-w-2xl mx-auto text-lg text-slate-200">
@@ -763,10 +754,7 @@ const SovereignOnboarding: React.FC = () => {
                   <Shield className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2
-                className="mb-4 text-3xl font-bold text-white"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="mb-4 text-3xl font-bold text-white font-display">
                 Secure Your Sovereign Identity
               </h2>
               <p className="max-w-2xl mx-auto text-lg text-slate-200">
@@ -942,10 +930,7 @@ const SovereignOnboarding: React.FC = () => {
                   <Zap className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2
-                className="mb-4 text-3xl font-bold text-white"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="mb-4 text-3xl font-bold text-white font-display">
                 Setup Lightning Payments
               </h2>
               <p className="max-w-2xl mx-auto text-lg text-slate-200">
@@ -1073,10 +1058,7 @@ const SovereignOnboarding: React.FC = () => {
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <h2
-                className="mb-4 text-3xl font-bold text-white"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="mb-4 text-3xl font-bold text-white font-display">
                 Verify Your Sovereign Setup
               </h2>
               <p className="max-w-2xl mx-auto text-lg text-slate-200">
@@ -1175,10 +1157,7 @@ const SovereignOnboarding: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              <h1
-                className="text-4xl font-black text-transparent md:text-5xl bg-gradient-to-r from-lightning-200 via-sovereign-200 to-premium-200 bg-clip-text"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h1 className="text-4xl font-black text-transparent md:text-5xl bg-gradient-to-r from-lightning-200 via-sovereign-200 to-premium-200 bg-clip-text font-display">
                 Welcome to Sovereignty!
               </h1>
               <p className="max-w-3xl mx-auto text-xl leading-relaxed text-slate-200">

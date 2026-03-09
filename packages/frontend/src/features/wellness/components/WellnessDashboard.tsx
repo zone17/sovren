@@ -19,19 +19,14 @@ export const WellnessDashboard: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1
-              className="text-2xl font-bold text-foreground"
-              style={{ fontFamily: "'Sora', sans-serif" }}
-            >
-              Creator Wellness
-            </h1>
+            <h1 className="text-2xl font-bold text-foreground font-display">Creator Wellness</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Monitor your work patterns and maintain sustainable habits.
             </p>
           </div>
           <Button
             onClick={() => setPulseModalOpen(true)}
-            className="bg-gradient-to-r from-violet-600 to-purple-600 shadow-[0_4px_16px_rgba(139,92,246,0.3)] text-white"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 shadow-[0_4px_16px_rgba(139,92,246,0.3)] text-white"
           >
             Pulse Check-In
           </Button>

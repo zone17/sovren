@@ -228,11 +228,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Dark mode readable text */
-@media (prefers-color-scheme: dark) {
-  .text-readable {
-    color: rgb(243, 244, 246); /* gray-100 */
-  }
+/* Dark mode readable text — class-based toggle (no prefers-color-scheme) */
+.dark .text-readable {
+  color: rgb(243, 244, 246); /* gray-100 */
 }
 
 /* ==========================================

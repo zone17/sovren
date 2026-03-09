@@ -12,12 +12,7 @@ const Post: React.FC = () => {
     return (
       <Layout>
         <div className="text-center">
-          <h2
-            className="text-2xl font-bold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            Post not found
-          </h2>
+          <h2 className="text-2xl font-bold text-foreground font-display">Post not found</h2>
         </div>
       </Layout>
     );
@@ -27,10 +22,7 @@ const Post: React.FC = () => {
     <Layout>
       <article className="max-w-3xl mx-auto">
         <header className="mb-8">
-          <h1
-            className="text-3xl font-bold text-foreground sm:text-4xl"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <h1 className="text-3xl font-bold text-foreground sm:text-4xl font-display">
             {post.title}
           </h1>
           <div className="mt-4 flex items-center text-sm text-muted-foreground">
@@ -59,12 +51,7 @@ const Post: React.FC = () => {
         )}
 
         <div className="mt-12 border-t border-border pt-8">
-          <h2
-            className="text-2xl font-bold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            Comments
-          </h2>
+          <h2 className="text-2xl font-bold text-foreground font-display">Comments</h2>
           <div className="mt-6 space-y-6">
             {/* TODO: Implement comments */}
             <p className="text-muted-foreground">Comments coming soon...</p>

@@ -57,12 +57,7 @@ const ProfileDashboard: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-premium-900 via-premium-800 to-sovereign-900 flex items-center justify-center">
         <Card className="max-w-md mx-auto">
           <CardContent className="p-8 text-center">
-            <h2
-              className="text-xl font-bold text-white mb-4"
-              style={{ fontFamily: "'Sora', sans-serif" }}
-            >
-              No Profile Found
-            </h2>
+            <h2 className="text-xl font-bold text-white mb-4 font-display">No Profile Found</h2>
             <p className="text-muted-foreground mb-6">
               Complete the sovereign onboarding to create your profile.
             </p>
@@ -88,10 +83,7 @@ const ProfileDashboard: React.FC = () => {
               <User className="h-12 w-12 text-white" />
             </div>
           </div>
-          <h1
-            className="text-4xl font-black bg-gradient-to-r from-white via-lightning-200 to-sovereign-200 bg-clip-text text-transparent"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <h1 className="text-4xl font-black bg-gradient-to-r from-white via-lightning-200 to-sovereign-200 bg-clip-text text-transparent font-display">
             Your Sovereign Profile
           </h1>
           <p className="text-xl text-muted-foreground mt-4">

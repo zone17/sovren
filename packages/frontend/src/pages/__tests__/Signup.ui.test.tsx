@@ -158,9 +158,9 @@ describe('Signup UI/UX Quality Tests - Code of Craft', () => {
       const cardElement = container.querySelector('[class*="rounded-"]');
       expect(cardElement).toBeInTheDocument();
 
-      // New design uses inline fontFamily style on CardTitle
-      const styledElements = container.querySelectorAll('[style]');
-      expect(styledElements.length).toBeGreaterThanOrEqual(1);
+      // New design uses font-display class on CardTitle
+      const fontDisplayElements = container.querySelectorAll('.font-display');
+      expect(fontDisplayElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 });

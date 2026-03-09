@@ -81,12 +81,7 @@ const CreatorProfilePage: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" role="alert">
         <div className="text-center">
-          <h2
-            className="text-xl font-semibold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            Creator Not Found
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground font-display">Creator Not Found</h2>
           <p className="mt-2 text-muted-foreground">
             {error?.message || 'This creator profile does not exist.'}
           </p>
@@ -118,10 +113,7 @@ const CreatorProfilePage: React.FC = () => {
             {/* Info */}
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1
-                  className="text-2xl font-bold text-foreground"
-                  style={{ fontFamily: "'Sora', sans-serif" }}
-                >
+                <h1 className="text-2xl font-bold text-foreground font-display">
                   {profile.displayName}
                 </h1>
                 {profile.nip05Verified && (
@@ -196,10 +188,7 @@ const CreatorProfilePage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'tiers' && (
           <div>
-            <h2
-              className="text-lg font-semibold text-foreground mb-4"
-              style={{ fontFamily: "'Sora', sans-serif" }}
-            >
+            <h2 className="text-lg font-semibold text-foreground mb-4 font-display">
               Support {profile.displayName}
             </h2>
             <p className="text-muted-foreground mb-6">
@@ -224,12 +213,7 @@ const CreatorProfilePage: React.FC = () => {
 
         {activeTab === 'about' && (
           <div className="max-w-2xl">
-            <h2
-              className="text-lg font-semibold text-foreground mb-4"
-              style={{ fontFamily: "'Sora', sans-serif" }}
-            >
-              About
-            </h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4 font-display">About</h2>
             <p className="text-foreground/80 whitespace-pre-line">{profile.bio}</p>
             <div className="mt-6 space-y-3">
               {profile.lightningAddress && (

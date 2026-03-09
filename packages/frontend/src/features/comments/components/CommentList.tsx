@@ -29,11 +29,7 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
 
   return (
     <section aria-labelledby="comments-heading" className="mt-8">
-      <h2
-        id="comments-heading"
-        className="text-xl font-semibold text-foreground mb-4"
-        style={{ fontFamily: "'Sora', sans-serif" }}
-      >
+      <h2 id="comments-heading" className="text-xl font-semibold text-foreground mb-4 font-display">
         Comments
         {pagination && pagination.total > 0 && (
           <span className="ml-2 text-sm font-normal text-muted-foreground">

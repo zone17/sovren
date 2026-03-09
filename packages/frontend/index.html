@@ -2,12 +2,17 @@
 <html lang="en" class="dark" data-theme="dark">
   <head>
     <script>
-      // Dark-first: only switch to light if explicitly stored
+      // Dark-first: only switch to light if explicitly stored.
+      // Validation: exact match on 'light' means any other value (null, garbage,
+      // stale 'system') is safely ignored and the dark default applies.
       if (localStorage.getItem('theme') === 'light') {
         document.documentElement.classList.replace('dark', 'light');
         document.documentElement.setAttribute('data-theme', 'light');
       }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

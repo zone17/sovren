@@ -10,10 +10,7 @@ const Profile: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center">
           <div className="w-10 h-10 mx-auto mb-4 animate-spin rounded-full border-4 border-purple-500/30 border-t-purple-500" />
-          <h1
-            className="text-2xl font-bold text-foreground mb-2"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <h1 className="text-2xl font-bold text-foreground mb-2 font-display">
             Loading Profile...
           </h1>
         </div>
@@ -35,10 +32,7 @@ const Profile: React.FC = () => {
       <div className="glass rounded-lg p-6 mb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1
-              className="text-3xl font-bold text-foreground mb-2"
-              style={{ fontFamily: "'Sora', sans-serif" }}
-            >
+            <h1 className="text-3xl font-bold text-foreground mb-2 font-display">
               {user.name || user.email || 'User Profile'}
             </h1>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
@@ -59,10 +53,7 @@ const Profile: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Authentication Details */}
         <div className="glass rounded-lg p-6">
-          <h2
-            className="text-xl font-semibold text-foreground mb-4"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <h2 className="text-xl font-semibold text-foreground mb-4 font-display">
             Authentication
           </h2>
 
@@ -130,10 +121,7 @@ const Profile: React.FC = () => {
 
         {/* Role-Specific Features */}
         <div className="glass rounded-lg p-6">
-          <h2
-            className="text-xl font-semibold text-foreground mb-4"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <h2 className="text-xl font-semibold text-foreground mb-4 font-display">
             Features & Capabilities
           </h2>
 
@@ -219,10 +207,7 @@ const Profile: React.FC = () => {
 
       {/* Account Settings */}
       <div className="glass rounded-lg p-6 mt-6">
-        <h2
-          className="text-xl font-semibold text-foreground mb-4"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
+        <h2 className="text-xl font-semibold text-foreground mb-4 font-display">
           Account Settings
         </h2>
 

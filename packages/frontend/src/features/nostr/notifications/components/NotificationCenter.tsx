@@ -190,10 +190,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               {/* Header */}
               <div className="sticky top-0 bg-background/80 backdrop-blur-sm border-b border-border z-10">
                 <div className="flex items-center justify-between p-4">
-                  <h2
-                    className="text-lg font-semibold text-foreground"
-                    style={{ fontFamily: "'Sora', sans-serif" }}
-                  >
+                  <h2 className="text-lg font-semibold text-foreground font-display">
                     Notifications
                   </h2>
                   <div className="flex items-center gap-2">

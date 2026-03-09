@@ -212,17 +212,12 @@ const CreatorDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1
-            className="text-2xl sm:text-3xl font-bold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            Dashboard
-          </h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground font-display">Dashboard</h1>
           <p className="text-muted-foreground text-sm mt-1">Your creative empire at a glance</p>
         </div>
         <Link
           to="/create"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:shadow-[0_8px_24px_rgba(139,92,246,0.4)] no-underline"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all duration-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] hover:shadow-[0_8px_24px_rgba(139,92,246,0.4)] no-underline"
         >
           <svg
             className="w-4 h-4"
@@ -261,12 +256,7 @@ const CreatorDashboard: React.FC = () => {
               </svg>
             </div>
           </div>
-          <p
-            className="text-3xl font-bold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            {publishedCount}
-          </p>
+          <p className="text-3xl font-bold text-foreground font-display">{publishedCount}</p>
           <p className="text-xs text-muted-foreground mt-1">{contentItems.length} total pieces</p>
         </div>
 
@@ -297,10 +287,7 @@ const CreatorDashboard: React.FC = () => {
               </svg>
             </div>
           </div>
-          <p
-            className="text-3xl font-bold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <p className="text-3xl font-bold text-foreground font-display">
             {formatCompact(totalViews)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">{totalLikes} likes</p>
@@ -328,10 +315,7 @@ const CreatorDashboard: React.FC = () => {
               </svg>
             </div>
           </div>
-          <p
-            className="text-3xl font-bold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <p className="text-3xl font-bold text-foreground font-display">
             {formatCompact(totalEarnings)}
           </p>
           <p className="text-xs text-amber-400/60 mt-1">sats</p>
@@ -359,10 +343,7 @@ const CreatorDashboard: React.FC = () => {
               </svg>
             </div>
           </div>
-          <p
-            className="text-lg font-semibold text-emerald-400"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
+          <p className="text-lg font-semibold text-emerald-400 font-display">
             {user?.nostr_pubkey ? 'Connected' : 'Not connected'}
           </p>
           <p className="text-xs text-muted-foreground mt-1 font-mono truncate">
@@ -374,12 +355,7 @@ const CreatorDashboard: React.FC = () => {
       {/* Content List */}
       <div className="glass rounded-2xl overflow-hidden">
         <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-          <h2
-            className="text-base font-semibold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            Your Content
-          </h2>
+          <h2 className="text-base font-semibold text-foreground font-display">Your Content</h2>
           <span className="text-xs text-muted-foreground">{contentItems.length} items</span>
         </div>
 
@@ -400,10 +376,7 @@ const CreatorDashboard: React.FC = () => {
                 />
               </svg>
             </div>
-            <h3
-              className="text-lg font-medium text-foreground mb-2"
-              style={{ fontFamily: "'Sora', sans-serif" }}
-            >
+            <h3 className="text-lg font-medium text-foreground mb-2 font-display">
               No content yet
             </h3>
             <p className="text-muted-foreground text-sm mb-6">
@@ -411,7 +384,7 @@ const CreatorDashboard: React.FC = () => {
             </p>
             <Link
               to="/create"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] no-underline"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all duration-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] no-underline"
             >
               Create Your First Content
             </Link>

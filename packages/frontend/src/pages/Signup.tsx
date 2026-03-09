@@ -180,10 +180,7 @@ const Signup: React.FC = () => {
       <div className="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <CardHeader className="text-center pb-2">
-            <CardTitle
-              className="text-3xl font-extrabold text-foreground"
-              style={{ fontFamily: "'Sora', sans-serif" }}
-            >
+            <CardTitle className="text-3xl font-extrabold text-foreground font-display">
               Join Sovren
             </CardTitle>
             <CardDescription className="text-muted-foreground">

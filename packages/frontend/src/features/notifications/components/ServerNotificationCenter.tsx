@@ -73,12 +73,7 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
     <div className={['flex flex-col', className].filter(Boolean).join(' ')}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <span
-          className="text-sm font-semibold text-foreground"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
-          Activity
-        </span>
+        <span className="text-sm font-semibold text-foreground font-display">Activity</span>
         {unreadCount > 0 && (
           <button
             onClick={() => markAllRead.mutate()}

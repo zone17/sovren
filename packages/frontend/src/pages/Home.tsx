@@ -8,6 +8,37 @@ import SovrenIconPNG from '../assets/icons/Sovren-icon.png';
    glass panels floating, cinematic scroll-driven narrative.
    ──────────────────────────────────────────────────────── */
 
+// ─── Extracted SVG Icons ───────────────────────────────
+const OwnershipIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
+    />
+  </svg>
+);
+
+const LightningIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+    />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+    />
+  </svg>
+);
+
 // Intersection Observer hook for scroll-triggered reveals
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -28,9 +59,16 @@ function useInView(threshold = 0.15) {
 }
 
 // Animated counter for stats
-function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string }) {
+const AnimatedNumber = React.memo(function AnimatedNumber({
+  value,
+  suffix = '',
+}: {
+  value: number;
+  suffix?: string;
+}) {
   const [display, setDisplay] = useState(0);
   const { ref, inView } = useInView(0.3);
+  const rafRef = useRef<number>(0);
   useEffect(() => {
     if (!inView) return;
     const duration = 1200;
@@ -39,9 +77,12 @@ function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string
       const progress = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setDisplay(Math.round(eased * value));
-      if (progress < 1) requestAnimationFrame(step);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(step);
+      }
     };
-    requestAnimationFrame(step);
+    rafRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafRef.current);
   }, [inView, value]);
   return (
     <span ref={ref}>
@@ -49,7 +90,7 @@ function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string
       {suffix}
     </span>
   );
-}
+});
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -127,9 +168,9 @@ const Home: React.FC = () => {
         ref={heroSection.ref}
         className="min-h-screen flex flex-col items-center justify-center px-4 pt-32 pb-20 relative"
       >
-        {/* Floating purple orb accent */}
+        {/* Floating purple orb accent — reduced on mobile to save GPU memory */}
         <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-20 blur-[120px] pointer-events-none"
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] rounded-full opacity-20 blur-[60px] md:blur-[120px] pointer-events-none"
           style={{
             background: 'radial-gradient(circle, rgba(139,92,246,0.6) 0%, transparent 70%)',
           }}
@@ -267,63 +308,21 @@ const Home: React.FC = () => {
           >
             {[
               {
-                icon: (
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
-                    />
-                  </svg>
-                ),
+                icon: <OwnershipIcon />,
                 title: 'True Ownership',
                 description:
                   'Your content lives on NOSTR — a protocol no one controls. Your audience, your keys, your rules.',
                 gradient: 'from-purple-500/20 to-violet-500/5',
               },
               {
-                icon: (
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-                    />
-                  </svg>
-                ),
+                icon: <LightningIcon />,
                 title: 'Instant Bitcoin Payments',
                 description:
                   'Get paid via Lightning Network. No banks, no 30-day payouts, no 30% platform cuts. Just sats.',
                 gradient: 'from-amber-500/20 to-orange-500/5',
               },
               {
-                icon: (
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
-                    />
-                  </svg>
-                ),
+                icon: <ShieldIcon />,
                 title: 'Censorship Resistant',
                 description:
                   'No algorithms deciding who sees your work. No terms of service surprises. Publish freely, forever.',
@@ -449,8 +448,8 @@ const Home: React.FC = () => {
         <div
           className={`max-w-3xl mx-auto px-4 sm:px-6 text-center transition-all duration-700 ${ctaSection.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
-          {/* Purple glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-purple-500/10 blur-[100px] pointer-events-none" />
+          {/* Purple glow — reduced on mobile to save GPU memory */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] md:w-[400px] md:h-[400px] rounded-full bg-purple-500/10 blur-[50px] md:blur-[100px] pointer-events-none" />
 
           <h2
             className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 relative"

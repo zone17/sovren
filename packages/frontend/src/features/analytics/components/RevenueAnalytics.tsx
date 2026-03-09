@@ -225,12 +225,7 @@ export const RevenueAnalytics: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2
-            className="text-xl font-semibold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            Revenue Analytics
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground font-display">Revenue Analytics</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Track your earnings and subscriber metrics
           </p>

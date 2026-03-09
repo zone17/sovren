@@ -187,10 +187,7 @@ const LightningOnboarding: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <h2
-                className="text-3xl font-bold text-white"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="text-3xl font-bold text-white font-display">
                 Welcome to Lightning Network
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -244,10 +241,7 @@ const LightningOnboarding: React.FC = () => {
                   <Wallet className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2
-                className="text-2xl font-bold text-white mb-2"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
                 Choose Your Lightning Wallet
               </h2>
               <p className="text-muted-foreground">
@@ -332,10 +326,7 @@ const LightningOnboarding: React.FC = () => {
                   <Smartphone className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2
-                className="text-2xl font-bold text-white mb-2"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
                 Setup {selectedWallet?.name}
               </h2>
               <p className="text-muted-foreground">
@@ -459,10 +450,7 @@ const LightningOnboarding: React.FC = () => {
                   <Bitcoin className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2
-                className="text-2xl font-bold text-white mb-2"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
                 Test Your First Payment
               </h2>
               <p className="text-muted-foreground">
@@ -583,10 +571,7 @@ const LightningOnboarding: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <h2
-                className="text-3xl font-bold text-white"
-                style={{ fontFamily: "'Sora', sans-serif" }}
-              >
+              <h2 className="text-3xl font-bold text-white font-display">
                 Lightning Network Ready!
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">

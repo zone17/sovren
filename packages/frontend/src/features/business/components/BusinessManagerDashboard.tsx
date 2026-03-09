@@ -66,12 +66,7 @@ export const BusinessManagerDashboard: React.FC = () => {
   return (
     <div className="space-y-6 p-6 bg-background min-h-screen">
       <div>
-        <h1
-          className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
-          Business Manager
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground font-display">Business Manager</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Contracts, invoices, revenue, and tax tools.
         </p>

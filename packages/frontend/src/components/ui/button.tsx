@@ -9,40 +9,40 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // 🔥 Primary: Modern gradient with perfect contrast
+        // Primary: Uses design token --primary
         default:
-          'bg-[#0969da] text-white shadow-[0_1px_2px_rgba(9,105,218,0.12)] hover:bg-[#0860ca] hover:shadow-[0_2px_4px_rgba(9,105,218,0.16)] active:bg-[#0757ba] active:shadow-[0_1px_2px_rgba(9,105,218,0.12)] active:translate-y-[0.5px]',
+          'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:translate-y-[0.5px]',
 
-        // 🔥 Destructive: Modern red with sophistication
+        // Destructive: Uses design token --destructive
         destructive:
-          'bg-[#da3633] text-white shadow-[0_1px_2px_rgba(218,54,51,0.12)] hover:bg-[#cb2d2a] hover:shadow-[0_2px_4px_rgba(218,54,51,0.16)] active:bg-[#bc2a28] active:shadow-[0_1px_2px_rgba(218,54,51,0.12)] active:translate-y-[0.5px]',
+          'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80 active:translate-y-[0.5px]',
 
-        // 🔥 Outline: Minimal, clean, modern
+        // Outline: Uses design tokens --border, --background, --foreground
         outline:
-          'border border-[#d1d9e0] bg-white text-[#24292f] shadow-[0_1px_2px_rgba(31,35,40,0.04)] hover:border-[#8c959f] hover:shadow-[0_2px_4px_rgba(31,35,40,0.08)] active:border-[#656d76] active:shadow-[0_1px_2px_rgba(31,35,40,0.04)] active:translate-y-[0.5px]',
+          'border border-input bg-background text-foreground shadow-sm hover:border-muted-foreground/50 hover:shadow-md active:border-muted-foreground active:translate-y-[0.5px]',
 
-        // 🔥 Secondary: Subtle, refined
+        // Secondary: Uses design tokens --secondary
         secondary:
-          'bg-[#f6f8fa] text-[#24292f] border border-[#d1d9e0] shadow-[0_1px_2px_rgba(31,35,40,0.04)] hover:bg-[#f3f4f6] hover:border-[#8c959f] hover:shadow-[0_2px_4px_rgba(31,35,40,0.08)] active:bg-[#e5e7ea] active:translate-y-[0.5px]',
+          'bg-secondary text-secondary-foreground border border-input shadow-sm hover:bg-secondary/80 hover:border-muted-foreground/50 hover:shadow-md active:bg-secondary/60 active:translate-y-[0.5px]',
 
-        // 🔥 Ghost: Invisible until interaction
+        // Ghost: Uses design tokens
         ghost:
-          'text-[#656d76] hover:bg-[#f3f4f6] hover:text-[#24292f] active:bg-[#e5e7ea] active:translate-y-[0.5px]',
+          'text-muted-foreground hover:bg-secondary hover:text-foreground active:bg-secondary/80 active:translate-y-[0.5px]',
 
-        // 🔥 Link: Clean typography
-        link: 'text-[#0969da] underline-offset-4 hover:underline hover:text-[#0860ca] active:text-[#0757ba]',
+        // Link: Uses design token --primary
+        link: 'text-primary underline-offset-4 hover:underline hover:text-primary/90 active:text-primary/80',
 
-        // ⚡ **LIGHTNING NETWORK** - Bitcoin orange, sophisticated
+        // Lightning: Bitcoin orange
         lightning:
-          'bg-[#f7931a] text-white shadow-[0_1px_2px_rgba(247,147,26,0.12)] hover:bg-[#e8851a] hover:shadow-[0_2px_4px_rgba(247,147,26,0.16)] active:bg-[#d97919] active:shadow-[0_1px_2px_rgba(247,147,26,0.12)] active:translate-y-[0.5px]',
+          'bg-amber-500 text-white shadow-sm hover:bg-amber-600 hover:shadow-md active:bg-amber-700 active:translate-y-[0.5px]',
 
-        // 🔵 **SOVEREIGN** - NOSTR purple, modern
+        // Sovereign: NOSTR purple, uses --primary (indigo/purple)
         sovereign:
-          'bg-[#6366f1] text-white shadow-[0_1px_2px_rgba(99,102,241,0.12)] hover:bg-[#5b5fd1] hover:shadow-[0_2px_4px_rgba(99,102,241,0.16)] active:bg-[#5350c1] active:shadow-[0_1px_2px_rgba(99,102,241,0.12)] active:translate-y-[0.5px]',
+          'bg-indigo-500 text-white shadow-sm hover:bg-indigo-600 hover:shadow-md active:bg-indigo-700 active:translate-y-[0.5px]',
 
-        // ⚫ **PREMIUM** - Elite black, minimal
+        // Premium: Elite dark
         premium:
-          'bg-[#1f2937] text-white shadow-[0_1px_2px_rgba(31,41,55,0.12)] hover:bg-[#111827] hover:shadow-[0_2px_4px_rgba(31,41,55,0.16)] active:bg-[#0f172a] active:shadow-[0_1px_2px_rgba(31,41,55,0.12)] active:translate-y-[0.5px]',
+          'bg-gray-800 text-white shadow-sm hover:bg-gray-900 hover:shadow-md active:bg-gray-950 active:translate-y-[0.5px]',
       },
       size: {
         // Modern proportions: not too tall, perfect padding

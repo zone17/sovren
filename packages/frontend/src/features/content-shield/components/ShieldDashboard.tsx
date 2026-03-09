@@ -38,12 +38,7 @@ export const ShieldDashboard: React.FC = () => {
       <div className="space-y-6 p-6 bg-background min-h-screen">
         {/* Header */}
         <div>
-          <h1
-            className="text-2xl font-bold text-foreground"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            Content Shield
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground font-display">Content Shield</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Protect your content with cryptographic provenance and copy detection.
           </p>
