@@ -11,8 +11,14 @@ test.describe('Content Creation', () => {
   });
 
   test('create route loads successfully', async ({ page }) => {
-    // The /create route is protected — it either stays on /create or redirects to /login
-    await page.waitForURL(/\/(create|login)/);
+    // Wait for SPA to settle — either content renders or auth redirect fires
+    await Promise.race([
+      createContent.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      createContent.loadingIndicator.waitFor({ state: 'visible', timeout: 10_000 }),
+      createContent.errorHeading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
     const url = page.url();
     if (/\/create/.test(url)) {
       // Page loaded — verify no uncaught errors by checking for any visible content
@@ -27,7 +33,13 @@ test.describe('Content Creation', () => {
   });
 
   test('shows creator dashboard heading or loading state', async ({ page }) => {
-    await page.waitForURL(/\/(create|login)/);
+    // Wait for SPA to settle — either content renders or auth redirect fires
+    await Promise.race([
+      createContent.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      createContent.loadingIndicator.waitFor({ state: 'visible', timeout: 10_000 }),
+      createContent.errorHeading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
     if (/\/login/.test(page.url())) {
       test.skip();
       return;
@@ -138,6 +150,13 @@ test.describe('Content Creation', () => {
     // Start from a different route and use the nav "Create" link
     const layout = new LayoutPage(page);
     await layout.goto('/profile');
+
+    // Wait for SPA to settle — nav may not render on login page
+    await page.waitForLoadState('networkidle').catch(() => {});
+    if (page.url().includes('/login')) {
+      test.skip();
+      return;
+    }
 
     const createLink = layout.createLink;
     const linkVisible = await createLink

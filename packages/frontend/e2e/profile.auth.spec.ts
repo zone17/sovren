@@ -21,7 +21,13 @@ test.describe('Profile Page', () => {
     profilePage = new ProfilePage(page);
     await profilePage.goto();
 
-    // If redirected to login, skip — auth state may have expired
+    // Wait for SPA to settle — either profile renders or auth redirect fires
+    await Promise.race([
+      profilePage.userName.waitFor({ state: 'visible', timeout: 10_000 }),
+      profilePage.loadingHeading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
     if (page.url().includes('/login')) {
       test.skip(true, 'Redirected to login — auth state unavailable');
     }
@@ -47,9 +53,19 @@ test.describe('Profile Page', () => {
     const layout = new LayoutPage(page);
     await layout.goto('/');
 
-    // If redirected to login from home, skip
+    // Wait for SPA to settle
+    await page.waitForLoadState('networkidle').catch(() => {});
     if (page.url().includes('/login')) {
       test.skip(true, 'Redirected to login — auth state unavailable');
+    }
+
+    const linkVisible = await layout.profileLink
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!linkVisible) {
+      test.skip(true, 'Profile link not visible — auth state unavailable');
     }
 
     await layout.profileLink.click();

@@ -23,9 +23,14 @@ test.describe('Creator Journey — Golden Path', () => {
     const dashboard = new DashboardPage(page);
     const createContent = new CreateContentPage(page);
 
-    // Step 1: Navigate to dashboard
+    // Step 1: Navigate to dashboard and wait for SPA to settle
     await dashboard.goto();
-    await page.waitForURL(/\/(dashboard|login)/);
+    await Promise.race([
+      dashboard.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      dashboard.loadingText.waitFor({ state: 'visible', timeout: 10_000 }),
+      dashboard.errorHeading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
 
     if (/\/login/.test(page.url())) {
       test.skip();

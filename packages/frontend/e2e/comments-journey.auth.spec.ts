@@ -23,7 +23,19 @@ test.describe('Comments Journey — Cross-Page', () => {
     const postPage = new PostPage(page);
 
     await postPage.goto(TEST_POST_ID);
-    await page.waitForURL(/\/(post\/|login)/);
+
+    // Wait for SPA to settle — either post renders or auth redirect fires
+    await Promise.race([
+      page
+        .getByRole('heading', { name: 'Comments', level: 2 })
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 }),
+      page
+        .getByRole('heading', { name: 'Post not found' })
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
 
     if (/\/login/.test(page.url())) {
       test.skip();
@@ -54,7 +66,19 @@ test.describe('Comments Journey — Cross-Page', () => {
     const postPage = new PostPage(page);
 
     await postPage.goto(TEST_POST_ID);
-    await page.waitForURL(/\/(post\/|login)/);
+
+    // Wait for SPA to settle
+    await Promise.race([
+      page
+        .getByRole('heading', { name: 'Comments', level: 2 })
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 }),
+      page
+        .getByRole('heading', { name: 'Post not found' })
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
 
     if (/\/login/.test(page.url())) {
       test.skip();
@@ -82,9 +106,14 @@ test.describe('Comments Journey — Cross-Page', () => {
   test('navigate from dashboard to post via content item', async ({ page }) => {
     const dashboard = new DashboardPage(page);
 
-    // Step 1: Navigate to dashboard
+    // Step 1: Navigate to dashboard and wait for SPA to settle
     await dashboard.goto();
-    await page.waitForURL(/\/(dashboard|login)/);
+    await Promise.race([
+      dashboard.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      dashboard.loadingText.waitFor({ state: 'visible', timeout: 10_000 }),
+      dashboard.errorHeading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
 
     if (/\/login/.test(page.url())) {
       test.skip();
