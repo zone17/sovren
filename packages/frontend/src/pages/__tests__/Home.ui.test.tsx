@@ -1,13 +1,22 @@
 /**
  * HOME PAGE TESTS - CODE OF CRAFT STANDARDS
  *
- * Updated to match actual Home.tsx implementation.
+ * Updated to match actual Home.tsx implementation (design system overhaul).
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../../features/auth';
 import Home from '../Home';
+
+// Mock IntersectionObserver for scroll-triggered reveals
+const mockIntersectionObserver = vi.fn();
+mockIntersectionObserver.mockReturnValue({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+});
+window.IntersectionObserver = mockIntersectionObserver;
 
 const renderHome = () => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -24,85 +33,84 @@ const renderHome = () => {
 
 describe('Home Page - Sovren Creator Platform', () => {
   describe('Hero Section', () => {
-    test('SHOULD display main heading about creative sovereignty', () => {
+    test('SHOULD display main heading about creative empire', () => {
       renderHome();
       const mainHeading = screen.getByRole('heading', { level: 1 });
-      expect(mainHeading).toHaveTextContent('Unleash Your Creative Sovereignty');
+      expect(mainHeading).toHaveTextContent(/Own Your.*Creative Empire/);
     });
 
     test('SHOULD show platform description subtitle', () => {
       renderHome();
-      expect(screen.getByText(/Monetize your audience\. Own your platform/i)).toBeInTheDocument();
+      expect(screen.getByText(/Monetize your audience with Bitcoin/i)).toBeInTheDocument();
     });
 
-    test('SHOULD have NOSTR & Lightning badge in footer', () => {
+    test('SHOULD have NOSTR Protocol in footer', () => {
       renderHome();
-      expect(screen.getByText(/Powered by NOSTR & Lightning Network/i)).toBeInTheDocument();
+      expect(screen.getByText('NOSTR Protocol')).toBeInTheDocument();
     });
 
     test('SHOULD display no deplatforming message', () => {
       renderHome();
-      expect(screen.getByText(/No deplatforming. No middlemen./i)).toBeInTheDocument();
+      expect(screen.getByText(/No middlemen.*No deplatforming/i)).toBeInTheDocument();
     });
 
-    test('SHOULD display instant Bitcoin payouts bullet', () => {
+    test('SHOULD display Decentralized Creator Platform badge', () => {
       renderHome();
-      expect(screen.getByText(/Instant Bitcoin payouts/i)).toBeInTheDocument();
+      expect(screen.getByText('Decentralized Creator Platform')).toBeInTheDocument();
     });
   });
 
   describe('Call to Action Buttons', () => {
-    test('SHOULD have Start Your Sovren Journey primary button', () => {
+    test('SHOULD have Start Creating primary button', () => {
       renderHome();
-      const button = screen.getByRole('button', { name: /Start Your Sovren Journey/i });
+      const button = screen.getByRole('button', { name: /Start Creating/i });
       expect(button).toBeInTheDocument();
     });
 
-    test('SHOULD have See How Sovren Works secondary button', () => {
+    test('SHOULD have See How It Works secondary button', () => {
       renderHome();
-      const button = screen.getByRole('button', { name: /See How Sovren Works/i });
+      const button = screen.getByRole('button', { name: /See How It Works/i });
       expect(button).toBeInTheDocument();
     });
   });
 
-  describe('Benefits Section', () => {
-    test('SHOULD display Why Sovren heading', () => {
+  describe('Features Section', () => {
+    test('SHOULD display sovereign creators heading', () => {
       renderHome();
-      expect(screen.getByRole('heading', { level: 2, name: /Why Sovren\?/i })).toBeInTheDocument();
+      expect(screen.getByText(/sovereign creators/i)).toBeInTheDocument();
     });
 
-    test('SHOULD highlight True Ownership benefit', () => {
+    test('SHOULD highlight True Ownership feature', () => {
       renderHome();
       expect(screen.getByText('True Ownership')).toBeInTheDocument();
     });
 
-    test('SHOULD show Bitcoin Monetization benefit', () => {
+    test('SHOULD show Instant Bitcoin Payments feature', () => {
       renderHome();
-      expect(screen.getByText('Bitcoin Monetization')).toBeInTheDocument();
+      expect(screen.getByText('Instant Bitcoin Payments')).toBeInTheDocument();
     });
 
-    test('SHOULD display Elite Community benefit', () => {
+    test('SHOULD display Censorship Resistant feature', () => {
       renderHome();
-      expect(screen.getByText('Elite Community')).toBeInTheDocument();
+      expect(screen.getByText('Censorship Resistant')).toBeInTheDocument();
     });
 
     test('SHOULD show ownership description', () => {
       renderHome();
-      expect(
-        screen.getByText(/You control your audience, your content, and your revenue/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Your content lives on NOSTR/i)).toBeInTheDocument();
     });
 
     test('SHOULD show Bitcoin payment description', () => {
       renderHome();
-      expect(screen.getByText(/Get paid instantly, anywhere in the world/i)).toBeInTheDocument();
+      expect(screen.getByText(/Get paid via Lightning Network/i)).toBeInTheDocument();
     });
   });
 
   describe('Footer', () => {
     test('SHOULD show copyright info', () => {
       renderHome();
-      expect(screen.getByText(/Sovren.*All rights reserved/i)).toBeInTheDocument();
+      const currentYear = new Date().getFullYear().toString();
+      expect(screen.getByText(new RegExp(`Sovren.*${currentYear}`))).toBeInTheDocument();
     });
   });
 
@@ -119,7 +127,7 @@ describe('Home Page - Sovren Creator Platform', () => {
       });
     });
 
-    test('SHOULD have proper h3 headings for benefits', () => {
+    test('SHOULD have proper h3 headings for features', () => {
       renderHome();
       const h3Headings = screen.getAllByRole('heading', { level: 3 });
       expect(h3Headings.length).toBeGreaterThanOrEqual(3);
