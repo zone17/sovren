@@ -53,13 +53,13 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
 
   return (
     <div
-      className="rounded-lg border bg-white p-4 space-y-4"
+      className="rounded-lg border bg-card p-4 space-y-4"
       aria-label="Escrow status"
       role="region"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">Escrow Status</h4>
-        <span className="text-sm font-mono font-semibold text-gray-700">
+        <h4 className="text-sm font-semibold text-foreground">Escrow Status</h4>
+        <span className="text-sm font-mono font-semibold text-foreground">
           {amountSats.toLocaleString()} sats
         </span>
       </div>
@@ -68,7 +68,7 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
       {isNegativeTerminal && (
         <div
           className={`rounded-md px-3 py-2 text-sm font-medium ${
-            status === 'disputed' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'
+            status === 'disputed' ? 'bg-red-100 text-red-800' : 'bg-muted text-foreground'
           }`}
         >
           {status === 'disputed' && 'Order disputed — awaiting resolution'}
@@ -93,7 +93,7 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
                           ? 'bg-green-500 border-green-500 text-white'
                           : isCurrent
                             ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-400'
+                            : 'bg-card border-border text-muted-foreground/60'
                       }`}
                       aria-label={`${stage.label}${isDone ? ' (done)' : isCurrent ? ' (current)' : ''}`}
                     >
@@ -105,16 +105,14 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
                           ? 'text-indigo-700 font-semibold'
                           : isDone
                             ? 'text-green-600'
-                            : 'text-gray-400'
+                            : 'text-muted-foreground/60'
                       }`}
                     >
                       {stage.label}
                     </span>
                   </div>
                   {i < ESCROW_STAGES.length - 1 && (
-                    <div
-                      className={`h-0.5 flex-1 mx-1 ${isDone ? 'bg-green-400' : 'bg-gray-200'}`}
-                    />
+                    <div className={`h-0.5 flex-1 mx-1 ${isDone ? 'bg-green-400' : 'bg-muted'}`} />
                   )}
                 </React.Fragment>
               );
@@ -125,11 +123,11 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ status, expiresAt, amountSa
 
       {/* Time remaining for non-terminal orders — #289: live countdown */}
       {!isTerminal && expiresAt && (
-        <p className="text-xs text-gray-500">Auto-expires: {timeDisplay}</p>
+        <p className="text-xs text-muted-foreground">Auto-expires: {timeDisplay}</p>
       )}
 
       {/* Custodial notice */}
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-muted-foreground/60">
         Funds held in Sovren custodial escrow. Auto-refunded after 30 days if not completed.
       </p>
     </div>

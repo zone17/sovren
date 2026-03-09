@@ -59,14 +59,12 @@ export const FeedFilters = memo<FeedFiltersProps>(({ filters, onChange, classNam
     filters.until;
 
   return (
-    <div
-      className={`feed-filters border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 ${className}`}
-    >
+    <div className={`feed-filters border-b border-border bg-card ${className}`}>
       {/* Filter Toggle Button */}
       <div className="p-4 flex items-center justify-between">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-3 py-2"
+          className="flex items-center gap-2 text-foreground hover:text-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-3 py-2"
           aria-expanded={isExpanded}
           aria-label="Toggle filters"
         >
@@ -84,7 +82,7 @@ export const FeedFilters = memo<FeedFiltersProps>(({ filters, onChange, classNam
         {hasActiveFilters && (
           <button
             onClick={handleClearAll}
-            className="text-sm text-gray-500 hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-3 py-2"
+            className="text-sm text-muted-foreground hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-3 py-2"
           >
             Clear All
           </button>
@@ -93,13 +91,10 @@ export const FeedFilters = memo<FeedFiltersProps>(({ filters, onChange, classNam
 
       {/* Expanded Filters */}
       {isExpanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
           {/* Search */}
           <div>
-            <label
-              htmlFor="feed-search"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
+            <label htmlFor="feed-search" className="block text-sm font-medium text-foreground mb-2">
               Search
             </label>
             <form onSubmit={handleSearchSubmit} className="flex gap-2">
@@ -109,7 +104,7 @@ export const FeedFilters = memo<FeedFiltersProps>(({ filters, onChange, classNam
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search posts..."
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-foreground"
               />
               <button
                 type="submit"
@@ -124,7 +119,7 @@ export const FeedFilters = memo<FeedFiltersProps>(({ filters, onChange, classNam
           <div>
             <label
               htmlFor="feed-hashtag"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Filter by Hashtag
             </label>
@@ -135,7 +130,7 @@ export const FeedFilters = memo<FeedFiltersProps>(({ filters, onChange, classNam
                 value={hashtagInput}
                 onChange={(e) => setHashtagInput(e.target.value)}
                 placeholder="#bitcoin"
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-foreground"
               />
               <button
                 type="submit"

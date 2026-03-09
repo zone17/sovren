@@ -494,7 +494,7 @@ export default function IntelligentContentCache({
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Cache Hit Rate</p>
+                  <p className="text-sm font-medium text-muted-foreground">Cache Hit Rate</p>
                   <p className="text-2xl font-bold text-blue-600">
                     {analytics?.hitRatio.toFixed(1) || 0}%
                   </p>
@@ -506,7 +506,7 @@ export default function IntelligentContentCache({
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Bandwidth Saved</p>
+                  <p className="text-sm font-medium text-muted-foreground">Bandwidth Saved</p>
                   <p className="text-2xl font-bold text-green-600">
                     {analytics ? (analytics.bandwidthSaved / 1024 / 1024).toFixed(1) : 0}MB
                   </p>
@@ -518,7 +518,7 @@ export default function IntelligentContentCache({
             <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Storage Used</p>
+                  <p className="text-sm font-medium text-muted-foreground">Storage Used</p>
                   <p className="text-2xl font-bold text-purple-600">
                     {analytics ? (analytics.storageUsed / 1024 / 1024).toFixed(1) : 0}MB
                   </p>
@@ -548,24 +548,24 @@ export default function IntelligentContentCache({
                       {metric.hitRate.toFixed(1)}% Hit Rate
                     </Badge>
                   </div>
-                  <span className="text-sm text-gray-500">{metric.itemCount} items</span>
+                  <span className="text-sm text-muted-foreground">{metric.itemCount} items</span>
                 </div>
                 <Progress value={metric.hitRate} className="mb-2" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-600">Hit Rate</p>
+                    <p className="text-muted-foreground">Hit Rate</p>
                     <p className="font-semibold">{metric.hitRate.toFixed(1)}%</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Miss Rate</p>
+                    <p className="text-muted-foreground">Miss Rate</p>
                     <p className="font-semibold">{metric.missRate.toFixed(1)}%</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Size</p>
+                    <p className="text-muted-foreground">Size</p>
                     <p className="font-semibold">{(metric.totalSize / 1024).toFixed(1)}KB</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Avg Access Time</p>
+                    <p className="text-muted-foreground">Avg Access Time</p>
                     <p className="font-semibold">{metric.avgAccessTime.toFixed(0)}ms</p>
                   </div>
                 </div>
@@ -588,7 +588,9 @@ export default function IntelligentContentCache({
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h4 className="font-medium">Cache Warming</h4>
-                  <p className="text-sm text-gray-600">Preload frequently accessed content</p>
+                  <p className="text-sm text-muted-foreground">
+                    Preload frequently accessed content
+                  </p>
                 </div>
                 <Button
                   onClick={handleCacheWarming}
@@ -611,7 +613,7 @@ export default function IntelligentContentCache({
               {isWarming && (
                 <div className="space-y-2">
                   <Progress value={warmingProgress} />
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Warming cache... {warmingProgress.toFixed(0)}%
                   </p>
                 </div>
@@ -623,7 +625,9 @@ export default function IntelligentContentCache({
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium">Cache Invalidation</h4>
-                  <p className="text-sm text-gray-600">Clear outdated or invalid cache entries</p>
+                  <p className="text-sm text-muted-foreground">
+                    Clear outdated or invalid cache entries
+                  </p>
                 </div>
                 <div className="space-x-2">
                   <Button variant="outline" onClick={() => handleCacheInvalidation('/api/content')}>
@@ -655,7 +659,7 @@ export default function IntelligentContentCache({
             <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
               {cacheEffectivenessScore}
             </div>
-            <div className="text-lg text-gray-600">Cache Effectiveness Score</div>
+            <div className="text-lg text-muted-foreground">Cache Effectiveness Score</div>
             <Progress value={cacheEffectivenessScore} className="w-full" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="bg-blue-50 p-3 rounded">

@@ -50,25 +50,25 @@ export const BYOKSetup: React.FC = () => {
     };
 
   const inputClass =
-    'w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-400';
+    'w-full rounded-md border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-muted disabled:text-muted-foreground/60';
 
   if (statusLoading) {
     return (
-      <div className="rounded-lg border bg-white p-6">
+      <div className="rounded-lg border bg-card p-6">
         <div className="animate-pulse space-y-3">
-          <div className="h-5 w-48 rounded bg-gray-200" />
-          <div className="h-12 rounded bg-gray-100" />
+          <div className="h-5 w-48 rounded bg-muted" />
+          <div className="h-12 rounded bg-muted" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-white p-6">
+    <div className="rounded-lg border bg-card p-6">
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">X / Twitter API Access</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="text-lg font-semibold text-foreground">X / Twitter API Access</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             Add your own X/Twitter API keys to enable inbox reading and analytics. Without keys,
             Sovren operates in write-only mode.
           </p>
@@ -159,7 +159,7 @@ export const BYOKSetup: React.FC = () => {
             <div key={field}>
               <label
                 htmlFor={`byok-${field}`}
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="mb-1 block text-sm font-medium text-foreground"
               >
                 {FIELD_LABELS[field]}
               </label>
@@ -178,7 +178,7 @@ export const BYOKSetup: React.FC = () => {
             </div>
           ))}
 
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground/60">
             Keys are encrypted with AES-256-GCM and stored separately from your OAuth tokens. Sovren
             never uses your keys for any purpose other than reading your X/Twitter data.
           </p>
@@ -187,7 +187,7 @@ export const BYOKSetup: React.FC = () => {
             {showForm && (
               <button
                 type="button"
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent"
                 onClick={() => {
                   setShowForm(false);
                   setForm(emptyForm);

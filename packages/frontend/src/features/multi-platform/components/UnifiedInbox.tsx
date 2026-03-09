@@ -57,25 +57,25 @@ const UnifiedInbox: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-white p-6">
+      <div className="rounded-lg border bg-card p-6">
         <div className="animate-pulse space-y-3">
-          <div className="h-5 w-32 rounded bg-gray-200" />
-          <div className="h-16 rounded bg-gray-100" />
-          <div className="h-16 rounded bg-gray-100" />
-          <div className="h-16 rounded bg-gray-100" />
+          <div className="h-5 w-32 rounded bg-muted" />
+          <div className="h-16 rounded bg-muted" />
+          <div className="h-16 rounded bg-muted" />
+          <div className="h-16 rounded bg-muted" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-white p-6">
-      <h3 className="text-lg font-semibold text-gray-900">Unified Inbox</h3>
+    <div className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-semibold text-foreground">Unified Inbox</h3>
 
       {/* Filters */}
       <div className="mt-3 flex flex-wrap gap-2">
         <select
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+          className="rounded-md border border-border px-3 py-1.5 text-sm"
           value={platformFilter}
           onChange={(e) => {
             setPlatformFilter(e.target.value as InboxPlatformFilter);
@@ -91,7 +91,7 @@ const UnifiedInbox: React.FC = () => {
         </select>
 
         <select
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+          className="rounded-md border border-border px-3 py-1.5 text-sm"
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value as InboxStatusFilter);
@@ -106,13 +106,13 @@ const UnifiedInbox: React.FC = () => {
         {selectedIds.length > 0 && (
           <div className="flex gap-1">
             <button
-              className="rounded-md border px-2 py-1 text-xs hover:bg-gray-50"
+              className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
               onClick={() => handleBatchAction('mark_read')}
             >
               Mark Read
             </button>
             <button
-              className="rounded-md border px-2 py-1 text-xs hover:bg-gray-50"
+              className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
               onClick={() => handleBatchAction('archive')}
             >
               Archive
@@ -124,7 +124,7 @@ const UnifiedInbox: React.FC = () => {
       {/* Messages */}
       <div className="mt-4 space-y-2">
         {messages.length === 0 ? (
-          <p className="text-sm text-gray-500">No messages to display.</p>
+          <p className="text-sm text-muted-foreground">No messages to display.</p>
         ) : (
           messages.map((msg) => {
             const display = PLATFORM_DISPLAY[msg.platform];
@@ -146,14 +146,14 @@ const UnifiedInbox: React.FC = () => {
                         className="h-2 w-2 rounded-full"
                         style={{ backgroundColor: display?.color || '#6B7280' }}
                       />
-                      <span className="text-sm font-medium text-gray-900 truncate">
+                      <span className="text-sm font-medium text-foreground truncate">
                         {msg.author}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-muted-foreground/60">
                         {new Date(msg.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-700">{msg.content}</p>
+                    <p className="mt-1 text-sm text-foreground">{msg.content}</p>
 
                     {replyingTo === msg.id ? (
                       <div className="mt-2 flex gap-2">
@@ -174,7 +174,7 @@ const UnifiedInbox: React.FC = () => {
                           Send
                         </button>
                         <button
-                          className="rounded-md border px-3 py-1.5 text-sm text-gray-600"
+                          className="rounded-md border px-3 py-1.5 text-sm text-muted-foreground"
                           onClick={() => {
                             setReplyingTo(null);
                             setReplyTexts((prev) => {
@@ -206,7 +206,7 @@ const UnifiedInbox: React.FC = () => {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between text-sm">
-          <span className="text-gray-500">
+          <span className="text-muted-foreground">
             Page {pagination.page} of {pagination.totalPages} ({pagination.total} messages)
           </span>
           <div className="flex gap-2">

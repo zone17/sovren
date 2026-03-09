@@ -45,10 +45,10 @@ const TaxSummary: React.FC = () => {
     <div className="space-y-5">
       {/* Controls — always visible so users can interact during loading */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h4 className="text-sm font-semibold text-gray-900">Quarterly Tax Summary</h4>
+        <h4 className="text-sm font-semibold text-foreground">Quarterly Tax Summary</h4>
         <div className="flex items-center gap-3">
           <select
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
             aria-label="Select tax year"
@@ -61,7 +61,7 @@ const TaxSummary: React.FC = () => {
           </select>
           <button
             type="button"
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 transition-colors"
+            className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 transition-colors"
             onClick={() => void handleExport('csv')}
             disabled={exporting || isLoading}
             aria-label="Export tax data as CSV"
@@ -70,7 +70,7 @@ const TaxSummary: React.FC = () => {
           </button>
           <button
             type="button"
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 transition-colors"
+            className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 transition-colors"
             onClick={() => void handleExport('json')}
             disabled={exporting || isLoading}
             aria-label="Export tax data as JSON"
@@ -82,70 +82,72 @@ const TaxSummary: React.FC = () => {
 
       {isLoading ? (
         <div className="animate-pulse space-y-4">
-          <div className="h-48 rounded bg-gray-100" />
+          <div className="h-48 rounded bg-muted" />
         </div>
       ) : !summaries || summaries.length === 0 ? (
-        <p className="text-sm text-gray-500">No tax data available for {selectedYear}.</p>
+        <p className="text-sm text-muted-foreground">No tax data available for {selectedYear}.</p>
       ) : (
         <div className="overflow-x-auto">
           <table
-            className="min-w-full divide-y divide-gray-200 rounded-lg border border-gray-200 overflow-hidden"
+            className="min-w-full divide-y divide-border rounded-lg border border-border overflow-hidden"
             aria-label={`Tax summary for ${selectedYear}`}
           >
-            <thead className="bg-gray-50">
+            <thead className="bg-muted">
               <tr>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500"
+                  className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Quarter
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500"
+                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Income (sats)
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500"
+                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Income (USD)
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500"
+                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Expenses (sats)
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500"
+                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Expenses (USD)
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500"
+                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   Net (USD)
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y divide-border bg-card">
               {summaries.map((summary: QuarterlyTaxSummary) => (
-                <tr key={`${summary.year}-${summary.quarter}`} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{summary.quarter}</td>
-                  <td className="px-4 py-3 text-right text-sm text-gray-700">
+                <tr key={`${summary.year}-${summary.quarter}`} className="hover:bg-accent">
+                  <td className="px-4 py-3 text-sm font-medium text-foreground">
+                    {summary.quarter}
+                  </td>
+                  <td className="px-4 py-3 text-right text-sm text-foreground">
                     {formatSats(summary.totalIncomeSats, { abbreviate: true, suffix: false })}
                   </td>
-                  <td className="px-4 py-3 text-right text-sm text-gray-700">
+                  <td className="px-4 py-3 text-right text-sm text-foreground">
                     {formatUsd(summary.totalIncomeUsd)}
                   </td>
-                  <td className="px-4 py-3 text-right text-sm text-gray-700">
+                  <td className="px-4 py-3 text-right text-sm text-foreground">
                     {formatSats(summary.totalExpensesSats, { abbreviate: true, suffix: false })}
                   </td>
-                  <td className="px-4 py-3 text-right text-sm text-gray-700">
+                  <td className="px-4 py-3 text-right text-sm text-foreground">
                     {formatUsd(summary.totalExpensesUsd)}
                   </td>
                   <td

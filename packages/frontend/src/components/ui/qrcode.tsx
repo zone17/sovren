@@ -72,11 +72,11 @@ export const QRCode: React.FC<QRCodeProps> = ({
   if (!isMounted) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 ${className}`}
+        className={`flex items-center justify-center bg-muted ${className}`}
         style={{ width: size, height: size }}
       >
         <div
-          className="animate-pulse bg-gray-200 rounded"
+          className="animate-pulse bg-muted-foreground/20 rounded"
           style={{ width: size * 0.8, height: size * 0.8 }}
         />
       </div>

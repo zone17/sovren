@@ -16,7 +16,7 @@ const TABS: Array<{ id: CommunityTab; label: string }> = [
 
 const CommunityNav: React.FC<CommunityNavProps> = ({ activeTab, onTabChange }) => {
   return (
-    <nav aria-label="Community sections" className="border-b border-gray-200">
+    <nav aria-label="Community sections" className="border-b border-border">
       <div className="flex space-x-1">
         {TABS.map(({ id, label }) => (
           <button
@@ -29,7 +29,7 @@ const CommunityNav: React.FC<CommunityNavProps> = ({ activeTab, onTabChange }) =
               'px-4 py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
               activeTab === id
                 ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
             ].join(' ')}
           >
             {label}

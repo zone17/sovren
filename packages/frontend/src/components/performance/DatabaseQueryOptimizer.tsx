@@ -305,7 +305,7 @@ export default function DatabaseQueryOptimizerComponent({
             <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Avg Query Time</p>
+                  <p className="text-sm font-medium text-muted-foreground">Avg Query Time</p>
                   <p className="text-2xl font-bold text-purple-600">
                     {avgExecutionTime.toFixed(1)}ms
                   </p>
@@ -317,7 +317,7 @@ export default function DatabaseQueryOptimizerComponent({
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Cache Hit Rate</p>
+                  <p className="text-sm font-medium text-muted-foreground">Cache Hit Rate</p>
                   <p className="text-2xl font-bold text-green-600">
                     {queryMetrics.length > 0
                       ? (
@@ -335,7 +335,7 @@ export default function DatabaseQueryOptimizerComponent({
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Index Usage</p>
+                  <p className="text-sm font-medium text-muted-foreground">Index Usage</p>
                   <p className="text-2xl font-bold text-blue-600">
                     {queryMetrics.length > 0
                       ? (
@@ -353,7 +353,7 @@ export default function DatabaseQueryOptimizerComponent({
             <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Slow Queries</p>
+                  <p className="text-sm font-medium text-muted-foreground">Slow Queries</p>
                   <p className="text-2xl font-bold text-orange-600">{slowQueries.length}</p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-orange-500" />
@@ -378,7 +378,7 @@ export default function DatabaseQueryOptimizerComponent({
                 <h4 className="font-medium">Connection Utilization</h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Active Connections</span>
+                    <span className="text-sm text-muted-foreground">Active Connections</span>
                     <div className="flex items-center gap-2">
                       <Progress
                         value={
@@ -392,7 +392,7 @@ export default function DatabaseQueryOptimizerComponent({
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Idle Connections</span>
+                    <span className="text-sm text-muted-foreground">Idle Connections</span>
                     <div className="flex items-center gap-2">
                       <Progress
                         value={
@@ -478,7 +478,7 @@ export default function DatabaseQueryOptimizerComponent({
             {isOptimizing && (
               <div className="space-y-2">
                 <Progress value={optimizationProgress} />
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Optimizing database queries... {optimizationProgress.toFixed(0)}%
                 </p>
               </div>
@@ -565,7 +565,7 @@ export default function DatabaseQueryOptimizerComponent({
                       {query.executionTime.toFixed(1)}ms
                     </span>
                   </div>
-                  <p className="font-mono text-sm mb-2 bg-white p-2 rounded">{query.query}</p>
+                  <p className="font-mono text-sm mb-2 bg-card p-2 rounded">{query.query}</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                     <div>Rows: {query.rowsAffected}</div>
                     <div>Cache: {query.cacheHit ? '✓' : '✗'}</div>
@@ -577,7 +577,7 @@ export default function DatabaseQueryOptimizerComponent({
                       <p className="text-sm font-medium mb-1">Suggestions:</p>
                       <ul className="text-xs space-y-1">
                         {query.suggestions.map((suggestion, idx) => (
-                          <li key={idx} className="text-gray-600">
+                          <li key={idx} className="text-muted-foreground">
                             • {suggestion}
                           </li>
                         ))}
@@ -605,7 +605,7 @@ export default function DatabaseQueryOptimizerComponent({
             <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
               {optimizationScore}
             </div>
-            <div className="text-lg text-gray-600">Database Optimization Score</div>
+            <div className="text-lg text-muted-foreground">Database Optimization Score</div>
             <Progress value={optimizationScore} className="w-full" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="bg-purple-50 p-3 rounded">

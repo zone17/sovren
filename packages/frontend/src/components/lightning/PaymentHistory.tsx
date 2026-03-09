@@ -92,9 +92,9 @@ const getStatusColor = (status: string): string => {
     case 'failed':
       return 'bg-red-100 text-red-800 border-red-200';
     case 'expired':
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-muted text-foreground border-border';
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-muted text-foreground border-border';
   }
 };
 
@@ -220,7 +220,7 @@ export const PaymentHistory: React.FC = () => {
         role="main"
       >
         <Spinner size="lg" />
-        <p className="text-sm text-gray-500">Loading payment history...</p>
+        <p className="text-sm text-muted-foreground">Loading payment history...</p>
       </div>
     );
   }
@@ -254,8 +254,8 @@ export const PaymentHistory: React.FC = () => {
         className="flex flex-col items-center justify-center min-h-[400px] space-y-4"
         role="main"
       >
-        <div className="p-6 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 text-center">
+        <div className="p-6 bg-muted rounded-lg">
+          <p className="text-sm text-muted-foreground text-center">
             No payments yet. Make your first Lightning payment to see it here!
           </p>
         </div>
@@ -267,7 +267,7 @@ export const PaymentHistory: React.FC = () => {
     <div className="w-full space-y-6" role="main">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Payment History</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Payment History</h2>
         <Button onClick={() => refetch()} variant="outline" size="sm">
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
@@ -310,7 +310,7 @@ export const PaymentHistory: React.FC = () => {
 
       {/* Sort */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Showing {paginatedPayments.length} of {filteredPayments.length} payment
           {filteredPayments.length !== 1 ? 's' : ''}
         </p>
@@ -321,21 +321,21 @@ export const PaymentHistory: React.FC = () => {
 
       {/* Payment List */}
       {paginatedPayments.length === 0 ? (
-        <div className="p-6 bg-gray-50 rounded-lg text-center">
-          <p className="text-sm text-gray-600">No payments found for this filter.</p>
+        <div className="p-6 bg-muted rounded-lg text-center">
+          <p className="text-sm text-muted-foreground">No payments found for this filter.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {paginatedPayments.map((payment) => (
             <article
               key={payment.id}
-              className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              className="p-4 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 {/* Left side: Description and details */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">
+                    <h3 className="text-sm font-medium text-foreground truncate">
                       {payment.description || 'Lightning Payment'}
                     </h3>
                     <span
@@ -347,7 +347,7 @@ export const PaymentHistory: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-gray-600">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-muted-foreground">
                     <span>{formatDate(payment.createdAt)}</span>
                     <span className="hidden sm:inline">•</span>
                     <span className="font-mono">{truncateHash(payment.paymentHash)}</span>
@@ -357,11 +357,11 @@ export const PaymentHistory: React.FC = () => {
                 {/* Right side: Amount and actions */}
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-foreground">
                       {formatAmount(payment.amount)}
                     </p>
                     {payment.settledAt && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Settled {formatDate(payment.settledAt)}
                       </p>
                     )}
@@ -400,7 +400,7 @@ export const PaymentHistory: React.FC = () => {
       {/* Pagination */}
       {totalPages > 1 && (
         <nav
-          className="flex items-center justify-between border-t border-gray-200 pt-4"
+          className="flex items-center justify-between border-t border-border pt-4"
           aria-label="Pagination"
         >
           <div className="flex-1 flex justify-between sm:hidden">
@@ -412,7 +412,7 @@ export const PaymentHistory: React.FC = () => {
             >
               Previous
             </Button>
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages}
             </span>
             <Button
@@ -427,7 +427,7 @@ export const PaymentHistory: React.FC = () => {
 
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-muted-foreground">
                 Showing page <span className="font-medium">{currentPage}</span> of{' '}
                 <span className="font-medium">{totalPages}</span>
               </p>

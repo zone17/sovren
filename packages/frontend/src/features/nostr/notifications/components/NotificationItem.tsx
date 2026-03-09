@@ -148,7 +148,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       case NotificationType.ZAP:
         return 'text-orange-500';
       default:
-        return 'text-gray-500';
+        return 'text-muted-foreground';
     }
   };
 

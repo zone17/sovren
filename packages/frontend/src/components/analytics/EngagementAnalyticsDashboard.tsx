@@ -299,7 +299,7 @@ export const EngagementAnalyticsDashboard: React.FC = () => {
                 ? 'text-green-600'
                 : metric.change < 0
                   ? 'text-red-600'
-                  : 'text-gray-600'
+                  : 'text-muted-foreground'
             }
           >
             {metric.change > 0 ? '+' : ''}

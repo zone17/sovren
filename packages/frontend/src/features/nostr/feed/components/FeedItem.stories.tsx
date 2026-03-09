@@ -316,7 +316,7 @@ export const DarkMode: Story = {
   decorators: [
     (Story) => (
       <div className="dark">
-        <div className="bg-gray-900 p-4">
+        <div className="bg-background p-4">
           <Story />
         </div>
       </div>

@@ -113,14 +113,14 @@ export const DeploymentDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Header */}
-      <div className="bg-white shadow">
+      <div className="bg-card shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">CI/CD Deployment Dashboard</h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <h1 className="text-3xl font-bold text-foreground">CI/CD Deployment Dashboard</h1>
+              <p className="text-sm text-muted-foreground mt-1">
                 Real-time monitoring and management of deployment pipelines
               </p>
             </div>
@@ -133,7 +133,7 @@ export const DeploymentDashboard: React.FC = () => {
                     isConnected ? 'bg-green-500' : 'bg-red-500'
                   } animate-pulse`}
                 ></span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   {isConnected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
@@ -142,7 +142,7 @@ export const DeploymentDashboard: React.FC = () => {
               <select
                 value={selectedEnvironment}
                 onChange={(e) => setSelectedEnvironment(e.target.value as DeploymentEnvironment)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="staging">Staging</option>
                 <option value="production">Production</option>
@@ -190,8 +190,8 @@ export const DeploymentDashboard: React.FC = () => {
 
             {/* Action Buttons */}
             {currentDeployment && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+              <div className="bg-card rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Actions</h3>
                 <div className="flex space-x-4">
                   {currentDeployment.status === 'failed' && (
                     <button
@@ -225,7 +225,7 @@ export const DeploymentDashboard: React.FC = () => {
                     href={`https://github.com/zone17/sovren/actions/runs/${currentDeployment.workflowRunId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                    className="px-4 py-2 bg-card text-foreground rounded-lg text-sm font-medium hover:bg-accent transition-colors"
                   >
                     📊 View Full Logs
                   </a>
@@ -235,28 +235,28 @@ export const DeploymentDashboard: React.FC = () => {
 
             {/* Recent Deployments */}
             {recentDeployments.length > 0 && (
-              <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900">Recent Deployments</h3>
+              <div className="bg-card rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-border">
+                  <h3 className="text-lg font-semibold text-foreground">Recent Deployments</h3>
                 </div>
                 <div className="px-6 py-4">
                   <div className="space-y-2">
                     {recentDeployments.slice(0, 5).map((deployment) => (
                       <div
                         key={deployment.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-accent transition-colors cursor-pointer"
                       >
                         <div className="flex items-center space-x-3">
-                          <span className="text-sm font-mono text-gray-600">
+                          <span className="text-sm font-mono text-muted-foreground">
                             {deployment.commitSha.substring(0, 7)}
                           </span>
-                          <span className="text-sm text-gray-900">
+                          <span className="text-sm text-foreground">
                             {deployment.commitMessage.substring(0, 50)}
                             {deployment.commitMessage.length > 50 ? '...' : ''}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {new Date(deployment.startTime).toLocaleTimeString()}
                           </span>
                           <span
@@ -265,7 +265,7 @@ export const DeploymentDashboard: React.FC = () => {
                                 ? 'bg-green-100 text-green-800'
                                 : deployment.status === 'failed'
                                   ? 'bg-red-100 text-red-800'
-                                  : 'bg-gray-100 text-gray-800'
+                                  : 'bg-muted text-foreground'
                             }`}
                           >
                             {deployment.status}
@@ -284,17 +284,17 @@ export const DeploymentDashboard: React.FC = () => {
             <HealthCheckMonitor healthChecks={healthChecks} isLoading={healthLoading} />
 
             {/* Quick Stats */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
+            <div className="bg-card rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Total Deployments</span>
-                  <span className="text-lg font-bold text-gray-900">
+                  <span className="text-sm text-muted-foreground">Total Deployments</span>
+                  <span className="text-lg font-bold text-foreground">
                     {recentDeployments.length}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Success Rate</span>
+                  <span className="text-sm text-muted-foreground">Success Rate</span>
                   <span className="text-lg font-bold text-green-600">
                     {recentDeployments.length > 0
                       ? Math.round(
@@ -307,7 +307,7 @@ export const DeploymentDashboard: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Health Status</span>
+                  <span className="text-sm text-muted-foreground">Health Status</span>
                   <span
                     className={`text-lg font-bold ${
                       isHealthy
@@ -316,7 +316,7 @@ export const DeploymentDashboard: React.FC = () => {
                           ? 'text-yellow-600'
                           : isUnhealthy
                             ? 'text-red-600'
-                            : 'text-gray-600'
+                            : 'text-muted-foreground'
                     }`}
                   >
                     {isHealthy

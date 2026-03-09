@@ -463,7 +463,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
       <div className="flex items-center justify-center h-full p-8">
         <div className="text-center">
           <p className="text-red-600 font-semibold mb-2">No Active Key</p>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
     );
@@ -474,14 +474,14 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Messages</p>
+          <p className="text-muted-foreground">Loading Messages</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`flex h-full bg-gray-50 ${className}`} aria-label="Direct Messages" role="main">
+    <div className={`flex h-full bg-muted ${className}`} aria-label="Direct Messages" role="main">
       {/* Live region for announcements */}
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
@@ -489,16 +489,16 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
 
       {/* Thread List Panel */}
       <div
-        className="w-full md:w-1/3 bg-white border-r border-gray-200 flex flex-col"
+        className="w-full md:w-1/3 bg-card border-r border-border flex flex-col"
         data-testid="thread-list"
         aria-label="Thread list"
       >
         {/* Search */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border">
           <input
             type="search"
             placeholder="Search conversations..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search threads"
@@ -510,8 +510,8 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
           {filteredThreads.length === 0 ? (
             <div className="flex items-center justify-center h-full p-8 text-center">
               <div>
-                <p className="text-gray-500 mb-2">No messages yet</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-muted-foreground mb-2">No messages yet</p>
+                <p className="text-sm text-muted-foreground/60">
                   Your encrypted conversations will appear here
                 </p>
               </div>
@@ -521,7 +521,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
               <div
                 key={thread.threadId}
                 data-testid="thread-item"
-                className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                className={`p-4 border-b border-border cursor-pointer hover:bg-accent transition-colors ${
                   selectedThreadId === thread.threadId
                     ? 'bg-indigo-50 border-l-4 border-l-indigo-600'
                     : ''
@@ -538,15 +538,17 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
                 aria-label={`Conversation with ${formatPubkey(thread.recipientPubkey)}`}
               >
                 <div className="flex items-start justify-between mb-1">
-                  <div className="font-medium text-gray-900 truncate flex-1">
+                  <div className="font-medium text-foreground truncate flex-1">
                     {formatPubkey(thread.recipientPubkey)}
                   </div>
-                  <div className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                  <div className="text-xs text-muted-foreground ml-2 flex-shrink-0">
                     {formatTimestamp(thread.lastMessageTime)}
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600 truncate flex-1">{thread.lastMessage}</p>
+                  <p className="text-sm text-muted-foreground truncate flex-1">
+                    {thread.lastMessage}
+                  </p>
                   {thread.unreadCount > 0 && (
                     <span
                       className="ml-2 bg-indigo-600 text-white text-xs rounded-full px-2 py-1 flex-shrink-0"
@@ -564,7 +566,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
 
       {/* Conversation View Panel */}
       <div
-        className="flex-1 flex flex-col bg-white"
+        className="flex-1 flex flex-col bg-card"
         data-testid="conversation-view"
         data-active={selectedThread !== null}
         aria-label="Conversation"
@@ -572,12 +574,12 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
         {selectedThread ? (
           <>
             {/* Conversation Header */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="p-4 border-b border-border flex items-center justify-between">
               <div>
-                <h2 className="font-semibold text-gray-900">
+                <h2 className="font-semibold text-foreground">
                   {formatPubkey(selectedThread.recipientPubkey)}
                 </h2>
-                <p className="text-xs text-gray-500 flex items-center mt-1">
+                <p className="text-xs text-muted-foreground flex items-center mt-1">
                   <svg
                     className="w-3 h-3 mr-1"
                     fill="currentColor"
@@ -619,13 +621,13 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
                           ? 'bg-indigo-600 text-white'
                           : hasDecryptionError
                             ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-900'
+                            : 'bg-muted text-foreground'
                       }`}
                     >
                       <p className="break-words">{message.decrypted}</p>
                       <p
                         className={`text-xs mt-1 ${
-                          isFromUser ? 'text-indigo-200' : 'text-gray-500'
+                          isFromUser ? 'text-indigo-200' : 'text-muted-foreground'
                         }`}
                       >
                         {formatTimestamp(message.timestamp)}
@@ -638,7 +640,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
             </div>
 
             {/* Message Composer */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <div className="p-4 border-t border-border bg-muted">
               {error && (
                 <div className="mb-2 p-2 bg-red-100 text-red-700 text-sm rounded">
                   Failed to send message. Please try again.
@@ -656,20 +658,20 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
                       }
                     }}
                     placeholder="Type a message..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-border rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     rows={2}
                     aria-label="Message input"
                     disabled={sending}
                   />
                   <div className="flex items-center justify-between mt-1">
                     <span
-                      className="text-xs text-gray-500"
+                      className="text-xs text-muted-foreground"
                       data-testid="char-counter"
                       aria-live="polite"
                     >
                       {messageInput.length}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       Press Enter to send, Shift+Enter for new line
                     </span>
                   </div>
@@ -677,7 +679,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
                 <button
                   onClick={handleSendMessage}
                   disabled={!messageInput.trim() || sending}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-muted disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                   aria-label="Send message"
                 >
                   {sending ? 'Sending...' : 'Send'}
@@ -689,7 +691,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
           <div className="flex items-center justify-center h-full p-8 text-center">
             <div>
               <svg
-                className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -701,7 +703,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              <p className="text-gray-500">Select a conversation to start messaging</p>
+              <p className="text-muted-foreground">Select a conversation to start messaging</p>
             </div>
           </div>
         )}

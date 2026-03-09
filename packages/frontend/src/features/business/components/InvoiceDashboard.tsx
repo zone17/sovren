@@ -9,12 +9,12 @@ interface InvoiceDashboardProps {
 }
 
 const STATUS_STYLES: Record<InvoiceStatus, string> = {
-  draft: 'bg-gray-100 text-gray-700',
+  draft: 'bg-muted text-foreground',
   sent: 'bg-blue-100 text-blue-700',
   viewed: 'bg-indigo-100 text-indigo-700',
   paid: 'bg-green-100 text-green-700',
   overdue: 'bg-red-100 text-red-700',
-  cancelled: 'bg-gray-100 text-gray-500',
+  cancelled: 'bg-muted text-muted-foreground',
 };
 
 const STATUS_FILTERS: Array<InvoiceStatus | 'all'> = ['all', 'draft', 'sent', 'paid', 'overdue'];
@@ -63,7 +63,7 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 statusFilter === s
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
               onClick={() => setStatusFilter(s)}
               aria-pressed={statusFilter === s}
@@ -85,9 +85,9 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
       {/* Summary cards */}
       {!isLoading && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Total Invoices</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{invoices?.length ?? 0}</p>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Total Invoices</p>
+            <p className="mt-1 text-2xl font-bold text-foreground">{invoices?.length ?? 0}</p>
           </div>
           <div className="rounded-lg border border-green-200 bg-green-50 p-4">
             <p className="text-xs text-green-600">Paid</p>
@@ -103,13 +103,13 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
       {/* Invoice list */}
       {isLoading ? (
         <div className="animate-pulse space-y-4">
-          <div className="h-48 rounded-lg bg-gray-100" />
+          <div className="h-48 rounded-lg bg-muted" />
         </div>
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-gray-500">No invoices found.</p>
+        <p className="text-sm text-muted-foreground">No invoices found.</p>
       ) : (
         <ul
-          className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white"
+          className="divide-y divide-border rounded-lg border border-border bg-card"
           role="list"
           aria-label="Invoices"
         >
@@ -120,8 +120,8 @@ const InvoiceDashboard: React.FC<InvoiceDashboardProps> = ({ onCreateNew, onView
                 onClick={() => onViewInvoice?.(invoice.id)}
                 aria-label={`View invoice for ${invoice.clientName}`}
               >
-                <p className="text-sm font-medium text-gray-900 truncate">{invoice.clientName}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-sm font-medium text-foreground truncate">{invoice.clientName}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {formatSats(invoice.totalSats)}
                   {invoice.dueDate && ` · Due ${new Date(invoice.dueDate).toLocaleDateString()}`}
                 </p>

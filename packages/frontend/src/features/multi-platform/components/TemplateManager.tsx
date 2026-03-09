@@ -55,7 +55,7 @@ export const TemplateManager: React.FC = () => {
   };
 
   const inputClass =
-    'w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500';
+    'w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500';
 
   const isFormMode = isCreating || editingId !== null;
   const isPending =
@@ -63,20 +63,20 @@ export const TemplateManager: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-white p-6">
+      <div className="rounded-lg border bg-card p-6">
         <div className="animate-pulse space-y-3">
-          <div className="h-5 w-40 rounded bg-gray-200" />
-          <div className="h-12 rounded bg-gray-100" />
-          <div className="h-12 rounded bg-gray-100" />
+          <div className="h-5 w-40 rounded bg-muted" />
+          <div className="h-12 rounded bg-muted" />
+          <div className="h-12 rounded bg-muted" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-white p-6">
+    <div className="rounded-lg border bg-card p-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Reply Templates</h3>
+        <h3 className="text-lg font-semibold text-foreground">Reply Templates</h3>
         {!isFormMode && (
           <button
             type="button"
@@ -99,7 +99,10 @@ export const TemplateManager: React.FC = () => {
           aria-label={editingId ? 'Edit template' : 'Create template'}
         >
           <div>
-            <label htmlFor="template-name" className="mb-1 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="template-name"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
               Template name
             </label>
             <input
@@ -116,7 +119,7 @@ export const TemplateManager: React.FC = () => {
           <div>
             <label
               htmlFor="template-content"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-1 block text-sm font-medium text-foreground"
             >
               Template content
             </label>
@@ -134,7 +137,7 @@ export const TemplateManager: React.FC = () => {
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent"
               onClick={resetForm}
               disabled={isPending}
             >
@@ -153,16 +156,16 @@ export const TemplateManager: React.FC = () => {
 
       <div className="mt-4 space-y-2">
         {!templates || templates.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             No templates yet. Create one to speed up your replies.
           </p>
         ) : (
           templates.map((template) => (
-            <div key={template.id} className="rounded-md border border-gray-200 p-3">
+            <div key={template.id} className="rounded-md border border-border p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{template.name}</p>
-                  <p className="mt-0.5 text-sm text-gray-500 line-clamp-2">
+                  <p className="text-sm font-medium text-foreground truncate">{template.name}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground line-clamp-2">
                     {template.template_text}
                   </p>
                 </div>

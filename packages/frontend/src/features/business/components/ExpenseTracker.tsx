@@ -45,8 +45,8 @@ const ExpenseTracker: React.FC = () => {
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-3">
-        <div className="h-8 w-40 rounded bg-gray-200" />
-        <div className="h-48 rounded bg-gray-100" />
+        <div className="h-8 w-40 rounded bg-muted" />
+        <div className="h-48 rounded bg-muted" />
       </div>
     );
   }
@@ -55,12 +55,12 @@ const ExpenseTracker: React.FC = () => {
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h4 className="text-sm font-semibold text-gray-900">Expenses</h4>
-          <p className="text-xs text-gray-500 mt-0.5">Total: {formatSats(totalExpenses)}</p>
+          <h4 className="text-sm font-semibold text-foreground">Expenses</h4>
+          <p className="text-xs text-muted-foreground mt-0.5">Total: {formatSats(totalExpenses)}</p>
         </div>
         <div className="flex items-center gap-3">
           <select
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             aria-label="Filter expenses by category"
@@ -89,20 +89,20 @@ const ExpenseTracker: React.FC = () => {
           className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 space-y-3"
           aria-label="Add new expense"
         >
-          <h5 className="text-sm font-medium text-gray-900">New Expense</h5>
+          <h5 className="text-sm font-medium text-foreground">New Expense</h5>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label
                 htmlFor="expense-description"
-                className="block text-xs font-medium text-gray-700"
+                className="block text-xs font-medium text-foreground"
               >
                 Description
               </label>
               <input
                 id="expense-description"
                 type="text"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="What was purchased?"
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
@@ -110,12 +110,15 @@ const ExpenseTracker: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="expense-category" className="block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="expense-category"
+                className="block text-xs font-medium text-foreground"
+              >
                 Category
               </label>
               <select
                 id="expense-category"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={form.categoryId}
                 onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
               >
@@ -128,14 +131,14 @@ const ExpenseTracker: React.FC = () => {
               </select>
             </div>
             <div>
-              <label htmlFor="expense-amount" className="block text-xs font-medium text-gray-700">
+              <label htmlFor="expense-amount" className="block text-xs font-medium text-foreground">
                 Amount (sats)
               </label>
               <input
                 id="expense-amount"
                 type="number"
                 min="1"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={form.amountSats || ''}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, amountSats: Number(e.target.value) }))
@@ -144,13 +147,13 @@ const ExpenseTracker: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="expense-date" className="block text-xs font-medium text-gray-700">
+              <label htmlFor="expense-date" className="block text-xs font-medium text-foreground">
                 Date
               </label>
               <input
                 id="expense-date"
                 type="date"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={form.expenseDate}
                 onChange={(e) => setForm((prev) => ({ ...prev, expenseDate: e.target.value }))}
                 required
@@ -178,7 +181,7 @@ const ExpenseTracker: React.FC = () => {
       {/* Expense list */}
       {expenses && expenses.length > 0 ? (
         <ul
-          className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white"
+          className="divide-y divide-border rounded-lg border border-border bg-card"
           role="list"
           aria-label="Expense list"
         >
@@ -187,20 +190,20 @@ const ExpenseTracker: React.FC = () => {
             return (
               <li key={expense.id} className="flex items-center justify-between px-4 py-3 gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {expense.description}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(expense.expenseDate).toLocaleDateString()}
                     {category && ` · ${category.name}`}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-foreground">
                     {formatSats(expense.amountSats)}
                   </p>
                   {expense.usdAtTime != null && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {new Intl.NumberFormat('en-US', {
                         style: 'currency',
                         currency: 'USD',
@@ -213,7 +216,7 @@ const ExpenseTracker: React.FC = () => {
           })}
         </ul>
       ) : (
-        <p className="text-sm text-gray-500">No expenses recorded yet.</p>
+        <p className="text-sm text-muted-foreground">No expenses recorded yet.</p>
       )}
     </div>
   );

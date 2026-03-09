@@ -68,7 +68,7 @@ export const FeedItem = memo<FeedItemProps>(
 
     return (
       <article
-        className={`feed-item border-b border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${className}`}
+        className={`feed-item border-b border-border p-4 hover:bg-accent transition-colors cursor-pointer ${className}`}
         onClick={handleClick}
         data-event-id={event.id}
         role="article"
@@ -97,7 +97,7 @@ export const FeedItem = memo<FeedItemProps>(
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleProfileClick}
-                className="font-semibold text-gray-900 dark:text-gray-100 hover:underline focus:outline-none focus:underline"
+                className="font-semibold text-foreground hover:underline focus:outline-none focus:underline"
               >
                 {authorProfile?.display_name || authorProfile?.name || 'Unknown'}
               </button>
@@ -120,7 +120,7 @@ export const FeedItem = memo<FeedItemProps>(
                   </svg>
                 </span>
               )}
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-muted-foreground">
                 {formatRelativeTime(event.created_at)}
               </span>
             </div>
@@ -132,7 +132,7 @@ export const FeedItem = memo<FeedItemProps>(
           {/* Text Content */}
           {parsedContent && (
             <div
-              className={`text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words ${
+              className={`text-foreground whitespace-pre-wrap break-words ${
                 condensed ? 'text-sm' : 'text-base'
               }`}
             >
@@ -193,7 +193,7 @@ export const FeedItem = memo<FeedItemProps>(
           {/* Engagement Actions */}
           {!condensed && (
             <div
-              className="mt-4 flex items-center gap-6 text-gray-500 dark:text-gray-400"
+              className="mt-4 flex items-center gap-6 text-muted-foreground"
               role="group"
               aria-label="Post actions"
             >

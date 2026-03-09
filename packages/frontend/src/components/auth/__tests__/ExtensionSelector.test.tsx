@@ -606,7 +606,7 @@ describe('🌐 ExtensionSelector Component - US-215 Implementation', () => {
       });
 
       const extensionCard = screen.getByText('nos2x').closest('[class*="border"]');
-      expect(extensionCard).toHaveClass('border-gray-200'); // Default state
+      expect(extensionCard).toHaveClass('border-border'); // Default state
 
       // Find the Connect button inside the nos2x card specifically
       const nos2xCard = screen.getByText('nos2x').closest('[class*="border"]')!;

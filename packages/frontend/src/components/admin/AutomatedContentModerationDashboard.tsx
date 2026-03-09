@@ -115,7 +115,7 @@ const AIModerationToolsPanel: React.FC = () => {
       case 'escalated':
         return <AlertCircle className="w-4 h-4 text-orange-500" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -528,7 +528,7 @@ const UserReportingPanel: React.FC = () => {
       case 'hate_speech':
         return <AlertTriangle className="w-4 h-4 text-red-600" />;
       default:
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+        return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -609,7 +609,7 @@ const UserReportingPanel: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <XCircle className="w-5 h-5 text-gray-500" />
+              <XCircle className="w-5 h-5 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Dismissed</p>
                 <p className="text-2xl font-bold">
@@ -703,7 +703,7 @@ const ModerationAnalyticsPanel: React.FC = () => {
       ) : kpi.trend === 'declining' ? (
         <TrendingDown className="w-4 h-4 text-red-500" />
       ) : (
-        <Activity className="w-4 h-4 text-gray-500" />
+        <Activity className="w-4 h-4 text-muted-foreground" />
       );
 
     return (

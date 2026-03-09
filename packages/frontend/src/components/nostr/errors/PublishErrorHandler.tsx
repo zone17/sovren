@@ -79,7 +79,7 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
     totalRelays > 0 ? Math.round((error.successfulRelays.length / totalRelays) * 100) : 0;
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+    <div className="border border-border rounded-lg p-4 bg-card">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
@@ -93,17 +93,15 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-900 dark:text-gray-100 font-mono truncate">
+          <p className="text-sm text-foreground font-mono truncate">
             Event ID: {error.eventId.substring(0, 16)}...
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {formatTimestamp(error.timestamp)}
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{formatTimestamp(error.timestamp)}</p>
         </div>
 
         <button
           onClick={() => onClear(error.eventId)}
-          className="ml-4 p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          className="ml-4 p-1.5 text-muted-foreground hover:text-foreground rounded transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           aria-label="Clear error"
         >
           <svg
@@ -125,22 +123,22 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-3">
-        <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/50 rounded">
-          <p className="text-xs text-gray-600 dark:text-gray-400">Success Rate</p>
+        <div className="text-center p-2 bg-muted rounded">
+          <p className="text-xs text-muted-foreground">Success Rate</p>
           <p
             className={`text-lg font-bold ${successRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
           >
             {successRate}%
           </p>
         </div>
-        <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/50 rounded">
-          <p className="text-xs text-gray-600 dark:text-gray-400">Failed</p>
+        <div className="text-center p-2 bg-muted rounded">
+          <p className="text-xs text-muted-foreground">Failed</p>
           <p className="text-lg font-bold text-red-600 dark:text-red-400">
             {error.failedRelays.length}
           </p>
         </div>
-        <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/50 rounded">
-          <p className="text-xs text-gray-600 dark:text-gray-400">Retries</p>
+        <div className="text-center p-2 bg-muted rounded">
+          <p className="text-xs text-muted-foreground">Retries</p>
           <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{error.retryCount}</p>
         </div>
       </div>
@@ -160,7 +158,7 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
       {/* Relay Details Toggle */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="w-full flex items-center justify-between p-2 text-sm text-foreground hover:bg-accent rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         aria-expanded={isExpanded}
         aria-controls={`relay-details-${error.eventId}`}
       >
@@ -185,7 +183,7 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
               <h5 className="text-xs font-semibold text-red-600 dark:text-red-400 mb-1">
                 Failed Relays ({error.failedRelays.length})
               </h5>
-              <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+              <ul className="text-xs text-muted-foreground space-y-1">
                 {error.failedRelays.map((relay) => (
                   <li key={relay} className="flex items-center gap-1">
                     <span
@@ -205,7 +203,7 @@ const PublishErrorItem: React.FC<PublishErrorItemProps> = ({ error, onRetry, onC
               <h5 className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">
                 Successful Relays ({error.successfulRelays.length})
               </h5>
-              <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+              <ul className="text-xs text-muted-foreground space-y-1">
                 {error.successfulRelays.map((relay) => (
                   <li key={relay} className="flex items-center gap-1">
                     <span
@@ -259,10 +257,8 @@ export const PublishErrorHandler: React.FC<PublishErrorHandlerProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Publish Failures
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <h3 className="text-lg font-semibold text-foreground">Publish Failures</h3>
+          <p className="text-sm text-muted-foreground mt-1">
             {errors.length} event{errors.length !== 1 ? 's' : ''} failed to publish
             {hasMore && ` (showing first ${maxErrors})`}
           </p>
@@ -271,7 +267,7 @@ export const PublishErrorHandler: React.FC<PublishErrorHandlerProps> = ({
         {onClearAll && (
           <button
             onClick={onClearAll}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            className="px-4 py-2 text-sm font-medium text-foreground bg-muted hover:bg-accent rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             aria-label="Clear all errors"
           >
             Clear All
@@ -293,7 +289,7 @@ export const PublishErrorHandler: React.FC<PublishErrorHandlerProps> = ({
 
       {/* Show More */}
       {hasMore && (
-        <p className="text-sm text-center text-gray-500 dark:text-gray-400 mt-4">
+        <p className="text-sm text-center text-muted-foreground mt-4">
           {errors.length - maxErrors} more error{errors.length - maxErrors !== 1 ? 's' : ''} not
           shown
         </p>

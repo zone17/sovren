@@ -42,23 +42,25 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
         )}
 
         {error && (
-          <p className="text-sm text-gray-500 py-4 text-center">Failed to load provenance data.</p>
+          <p className="text-sm text-muted-foreground py-4 text-center">
+            Failed to load provenance data.
+          </p>
         )}
 
         {data && (
           <div className="space-y-4 py-2">
             {/* Signature Block */}
-            <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-              <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+            <div className="p-3 bg-muted rounded-lg space-y-2">
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Signature
               </h4>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Author</span>
+                  <span className="text-xs text-muted-foreground">Author</span>
                   <button
                     onClick={() => copyToClipboard(data.author_pubkey)}
-                    className="font-mono text-xs text-gray-700 hover:text-blue-600 transition-colors"
+                    className="font-mono text-xs text-foreground hover:text-blue-600 transition-colors"
                     title="Click to copy"
                     aria-label="Copy author public key"
                   >
@@ -67,10 +69,10 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Signature</span>
+                  <span className="text-xs text-muted-foreground">Signature</span>
                   <button
                     onClick={() => copyToClipboard(data.signature)}
-                    className="font-mono text-xs text-gray-700 hover:text-blue-600 transition-colors"
+                    className="font-mono text-xs text-foreground hover:text-blue-600 transition-colors"
                     title="Click to copy"
                     aria-label="Copy signature"
                   >
@@ -79,10 +81,10 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Content Hash</span>
+                  <span className="text-xs text-muted-foreground">Content Hash</span>
                   <button
                     onClick={() => copyToClipboard(data.content_hash)}
-                    className="font-mono text-xs text-gray-700 hover:text-blue-600 transition-colors"
+                    className="font-mono text-xs text-foreground hover:text-blue-600 transition-colors"
                     title="Click to copy"
                     aria-label="Copy content hash"
                   >
@@ -91,8 +93,8 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Timestamp</span>
-                  <span className="text-xs text-gray-700">
+                  <span className="text-xs text-muted-foreground">Timestamp</span>
+                  <span className="text-xs text-foreground">
                     {new Date(data.created_at).toLocaleString()}
                   </span>
                 </div>
@@ -100,13 +102,13 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
             </div>
 
             {/* Relay Confirmations */}
-            <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-              <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+            <div className="p-3 bg-muted rounded-lg space-y-2">
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Relay Confirmations ({data.relay_confirmations.length})
               </h4>
 
               {data.relay_confirmations.length === 0 ? (
-                <p className="text-xs text-gray-400">No relay confirmations yet.</p>
+                <p className="text-xs text-muted-foreground/60">No relay confirmations yet.</p>
               ) : (
                 <div className="space-y-1.5">
                   {data.relay_confirmations.map((conf) => (
@@ -116,9 +118,9 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
                           className="w-2 h-2 rounded-full bg-green-500 shrink-0"
                           aria-hidden="true"
                         />
-                        <span className="text-xs text-gray-700 font-mono">{conf.relay}</span>
+                        <span className="text-xs text-foreground font-mono">{conf.relay}</span>
                       </div>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-muted-foreground/60">
                         {new Date(conf.confirmed_at).toLocaleTimeString()}
                       </span>
                     </div>
@@ -128,11 +130,13 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
             </div>
 
             {/* NIP-05 */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-xs font-medium text-gray-600">NIP-05 Verification</span>
+            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+              <span className="text-xs font-medium text-muted-foreground">NIP-05 Verification</span>
               <Badge
                 className={
-                  data.nip05_verified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                  data.nip05_verified
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-muted text-muted-foreground'
                 }
               >
                 {data.nip05_verified ? 'Verified' : 'Not Verified'}
@@ -141,10 +145,10 @@ export const ProvenanceChainViewer: React.FC<ProvenanceChainViewerProps> = ({
 
             {/* Event ID */}
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500">NOSTR Event</span>
+              <span className="text-xs text-muted-foreground">NOSTR Event</span>
               <button
                 onClick={() => copyToClipboard(data.nostr_event_id)}
-                className="font-mono text-xs text-gray-700 hover:text-blue-600 transition-colors"
+                className="font-mono text-xs text-foreground hover:text-blue-600 transition-colors"
                 title="Click to copy"
                 aria-label="Copy NOSTR event ID"
               >

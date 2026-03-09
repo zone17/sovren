@@ -16,7 +16,7 @@ const TABS: { id: BusinessTab; label: string }[] = [
 const BusinessNav: React.FC<BusinessNavProps> = ({ activeTab, onTabChange }) => {
   return (
     <nav
-      className="flex border-b border-gray-200 bg-white"
+      className="flex border-b border-border bg-card"
       role="tablist"
       aria-label="Business Manager navigation"
     >
@@ -29,7 +29,7 @@ const BusinessNav: React.FC<BusinessNavProps> = ({ activeTab, onTabChange }) => 
           className={`px-6 py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-inset ${
             activeTab === tab.id
               ? 'border-b-2 border-indigo-600 text-indigo-600'
-              : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+              : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-border'
           }`}
           onClick={() => onTabChange(tab.id)}
         >

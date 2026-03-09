@@ -75,7 +75,7 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
   ];
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-md mx-auto bg-card rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-8 text-center">
         <div className="flex justify-center mb-4">
@@ -88,24 +88,24 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
       </div>
 
       {/* Content Preview */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900 mb-2">{content.title}</h3>
+      <div className="px-6 py-4 border-b border-border">
+        <h3 className="font-semibold text-foreground mb-2">{content.title}</h3>
         {content.description && (
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{content.description}</p>
+          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{content.description}</p>
         )}
 
         {/* What you get */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-900">What you'll get:</h4>
-          <div className="flex items-center text-sm text-gray-600">
+          <h4 className="text-sm font-medium text-foreground">What you'll get:</h4>
+          <div className="flex items-center text-sm text-muted-foreground">
             <CheckIcon />
             <span className="ml-2">Full access to premium content</span>
           </div>
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="flex items-center text-sm text-muted-foreground">
             <CheckIcon />
             <span className="ml-2">Support independent creator</span>
           </div>
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="flex items-center text-sm text-muted-foreground">
             <CheckIcon />
             <span className="ml-2">Instant Lightning Network payment</span>
           </div>
@@ -115,7 +115,7 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
       {/* Payment Section */}
       <div className="px-6 py-6">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Choose amount to support:
           </label>
           <div className="grid grid-cols-3 gap-2 mb-3">
@@ -126,7 +126,7 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
                 className={`px-3 py-2 text-sm font-medium rounded-md border transition-colors ${
                   selectedAmount === amount
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    : 'bg-card text-foreground border-border hover:bg-accent'
                 }`}
               >
                 {formatSats(amount, { abbreviate: true })}
@@ -141,10 +141,10 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
               value={selectedAmount}
               onChange={(e) => setSelectedAmount(Number(e.target.value))}
               min="1"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Custom amount"
             />
-            <span className="text-sm text-gray-500">sats</span>
+            <span className="text-sm text-muted-foreground">sats</span>
           </div>
         </div>
 
@@ -161,7 +161,7 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
           disabled={isProcessingPayment || selectedAmount < 1}
           className={`w-full flex items-center justify-center px-4 py-3 rounded-md font-medium text-white transition-colors ${
             isProcessingPayment || selectedAmount < 1
-              ? 'bg-gray-400 cursor-not-allowed'
+              ? 'bg-muted cursor-not-allowed'
               : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
           }`}
         >
@@ -181,7 +181,7 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
         </button>
 
         {/* Info */}
-        <p className="text-xs text-gray-500 text-center mt-3">
+        <p className="text-xs text-muted-foreground text-center mt-3">
           Secure instant payment via Bitcoin Lightning Network
         </p>
       </div>

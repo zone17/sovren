@@ -120,7 +120,7 @@ const ActiveSubscriptionsTab: React.FC<{
       case 'cancelled':
         return <XCircle className="h-4 w-4 text-red-500" />;
       case 'expired':
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
       default:
         return <Clock className="h-4 w-4 text-blue-500" />;
     }
@@ -135,7 +135,7 @@ const ActiveSubscriptionsTab: React.FC<{
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       case 'expired':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
       default:
         return 'bg-blue-100 text-blue-800';
     }
@@ -153,7 +153,7 @@ const ActiveSubscriptionsTab: React.FC<{
       {subscriptions.length === 0 ? (
         <Card className="text-center py-8">
           <CardContent>
-            <div className="text-gray-500 mb-4">
+            <div className="text-muted-foreground mb-4">
               <CreditCard className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>No active subscriptions</p>
               <p className="text-sm">Explore creators and find content you love!</p>
@@ -195,21 +195,21 @@ const ActiveSubscriptionsTab: React.FC<{
               {/* Subscription Details */}
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-600">Amount</p>
+                  <p className="text-muted-foreground">Amount</p>
                   <p className="font-semibold">
                     ⚡ {formatSats(subscription.amount_sats, { abbreviate: true, suffix: false })}{' '}
                     sats
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {/* TODO: Replace with live rate */}≈ $
                     {((subscription.amount_sats / 100000000) * 30000).toFixed(2)} USD
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-600">Billing</p>
+                  <p className="text-muted-foreground">Billing</p>
                   <p className="font-semibold capitalize">{subscription.billing_interval}</p>
                   {subscription.next_payment_date && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Next: {new Date(subscription.next_payment_date).toLocaleDateString()}
                     </p>
                   )}
@@ -219,7 +219,7 @@ const ActiveSubscriptionsTab: React.FC<{
               {/* Benefits */}
               {subscription.benefits.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Benefits:</p>
+                  <p className="text-sm font-medium text-foreground mb-2">Benefits:</p>
                   <div className="flex flex-wrap gap-1">
                     {subscription.benefits.slice(0, 3).map((benefit, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
@@ -237,15 +237,15 @@ const ActiveSubscriptionsTab: React.FC<{
 
               {/* Usage Stats */}
               {subscription.usage_stats && (
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Usage This Period:</p>
+                <div className="bg-muted rounded-lg p-3">
+                  <p className="text-sm font-medium text-foreground mb-2">Usage This Period:</p>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <p className="text-gray-600">Content Accessed</p>
+                      <p className="text-muted-foreground">Content Accessed</p>
                       <p className="font-semibold">{subscription.usage_stats.content_accessed}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Value Received</p>
+                      <p className="text-muted-foreground">Value Received</p>
                       <p className="font-semibold">
                         ⚡{' '}
                         {formatSats(subscription.usage_stats.total_value_received, {
@@ -262,7 +262,7 @@ const ActiveSubscriptionsTab: React.FC<{
               <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                 <div>
                   <p className="text-sm font-medium">Auto-Renewal</p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-muted-foreground">
                     {subscription.auto_renew ? 'Enabled' : 'Disabled'}
                   </p>
                 </div>
@@ -353,7 +353,9 @@ const RenewalSettingsTab: React.FC<{
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Auto-Renewal</p>
-                  <p className="text-sm text-gray-600">Automatically renew this subscription</p>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically renew this subscription
+                  </p>
                 </div>
                 <Switch
                   checked={subscription.auto_renew}
@@ -443,9 +445,9 @@ const PaymentMethodsTab: React.FC<{
       {paymentMethods.length === 0 ? (
         <Card className="text-center py-8">
           <CardContent>
-            <CreditCard className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-500 mb-2">No payment methods added</p>
-            <p className="text-sm text-gray-400 mb-4">
+            <CreditCard className="h-12 w-12 mx-auto mb-4 text-muted-foreground/60" />
+            <p className="text-muted-foreground mb-2">No payment methods added</p>
+            <p className="text-sm text-muted-foreground/60 mb-4">
               Add a payment method to subscribe to creators
             </p>
             <Button onClick={onAddPaymentMethod}>Add Payment Method</Button>
@@ -461,7 +463,7 @@ const PaymentMethodsTab: React.FC<{
                     {getMethodIcon(method.type)}
                     <div>
                       <p className="font-medium">{method.name}</p>
-                      <p className="text-sm text-gray-600">{method.identifier}</p>
+                      <p className="text-sm text-muted-foreground">{method.identifier}</p>
                       <div className="flex items-center gap-2 mt-1">
                         {method.is_default && (
                           <Badge variant="default" className="text-xs">
@@ -511,7 +513,7 @@ const PaymentMethodsTab: React.FC<{
                 </div>
 
                 {method.last_used && (
-                  <div className="mt-3 text-xs text-gray-500">
+                  <div className="mt-3 text-xs text-muted-foreground">
                     Last used: {new Date(method.last_used).toLocaleDateString()}
                   </div>
                 )}
@@ -555,7 +557,7 @@ const SubscriptionHistoryTab: React.FC<{
       case 'resumed':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -595,9 +597,11 @@ const SubscriptionHistoryTab: React.FC<{
       {sortedHistory.length === 0 ? (
         <Card className="text-center py-8">
           <CardContent>
-            <History className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-500">No subscription history found</p>
-            <p className="text-sm text-gray-400">Your subscription activities will appear here</p>
+            <History className="h-12 w-12 mx-auto mb-4 text-muted-foreground/60" />
+            <p className="text-muted-foreground">No subscription history found</p>
+            <p className="text-sm text-muted-foreground/60">
+              Your subscription activities will appear here
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -612,8 +616,8 @@ const SubscriptionHistoryTab: React.FC<{
                       <p className="font-medium">
                         {item.creator_name} - {item.tier_name}
                       </p>
-                      <p className="text-sm text-gray-600 capitalize">{item.action}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm text-muted-foreground capitalize">{item.action}</p>
+                      <p className="text-xs text-muted-foreground">
                         {new Date(item.date).toLocaleDateString()} at{' '}
                         {new Date(item.date).toLocaleTimeString()}
                       </p>
@@ -623,7 +627,7 @@ const SubscriptionHistoryTab: React.FC<{
                     <p className="font-semibold">
                       ⚡ {formatSats(item.amount_sats, { abbreviate: true, suffix: false })}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {/* TODO: Replace with live rate */}≈ $
                       {((item.amount_sats / 100000000) * 30000).toFixed(2)}
                     </p>
@@ -631,13 +635,15 @@ const SubscriptionHistoryTab: React.FC<{
                 </div>
 
                 {item.payment_hash && (
-                  <div className="mt-3 p-2 bg-gray-50 rounded text-xs">
-                    <p className="text-gray-600">Payment Hash:</p>
+                  <div className="mt-3 p-2 bg-muted rounded text-xs">
+                    <p className="text-muted-foreground">Payment Hash:</p>
                     <p className="font-mono break-all">{item.payment_hash}</p>
                   </div>
                 )}
 
-                {item.notes && <div className="mt-2 text-sm text-gray-600">{item.notes}</div>}
+                {item.notes && (
+                  <div className="mt-2 text-sm text-muted-foreground">{item.notes}</div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -683,9 +689,9 @@ export const UserSubscriptionManager: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="animate-pulse bg-gray-200 h-8 w-48 rounded" />
-        <div className="animate-pulse bg-gray-200 h-32 rounded" />
-        <div className="animate-pulse bg-gray-200 h-32 rounded" />
+        <div className="animate-pulse bg-muted h-8 w-48 rounded" />
+        <div className="animate-pulse bg-muted h-32 rounded" />
+        <div className="animate-pulse bg-muted h-32 rounded" />
       </div>
     );
   }
@@ -705,7 +711,7 @@ export const UserSubscriptionManager: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">My Subscriptions</h1>
-          <p className="text-gray-600">Manage your subscriptions and payment methods</p>
+          <p className="text-muted-foreground">Manage your subscriptions and payment methods</p>
         </div>
         <Button variant="outline" onClick={refreshSubscriptions}>
           <Calendar className="h-4 w-4 mr-2" />

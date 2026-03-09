@@ -7,11 +7,11 @@ const PlatformROI = lazy(() => import('./PlatformROI'));
 const AudienceOverlap = lazy(() => import('./AudienceOverlap'));
 
 const SectionSkeleton: React.FC<{ lines?: number }> = ({ lines = 3 }) => (
-  <div className="rounded-lg border bg-white p-6">
+  <div className="rounded-lg border bg-card p-6">
     <div className="animate-pulse space-y-3">
-      <div className="h-5 w-48 rounded bg-gray-200" />
+      <div className="h-5 w-48 rounded bg-muted" />
       {Array.from({ length: lines }).map((_, i) => (
-        <div key={i} className="h-10 rounded bg-gray-100" />
+        <div key={i} className="h-10 rounded bg-muted" />
       ))}
     </div>
   </div>
@@ -33,8 +33,8 @@ export const CrossPlatformDashboard: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Summary stats */}
-      <div className="rounded-lg border bg-white p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Cross-Platform Overview</h2>
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="text-lg font-semibold text-foreground">Cross-Platform Overview</h2>
 
         {overview && (
           <>
@@ -83,7 +83,7 @@ export const CrossPlatformDashboard: React.FC = () => {
                   return (
                     <div
                       key={p.platform}
-                      className="flex items-center justify-between rounded-md border border-gray-100 p-3"
+                      className="flex items-center justify-between rounded-md border border-border p-3"
                     >
                       <div className="flex items-center gap-2">
                         <div
@@ -91,22 +91,24 @@ export const CrossPlatformDashboard: React.FC = () => {
                           style={{ backgroundColor: display?.color || '#6B7280' }}
                           aria-hidden="true"
                         />
-                        <span className="text-sm font-medium text-gray-800">
+                        <span className="text-sm font-medium text-foreground">
                           {display?.name || p.platform}
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-sm">
-                        <span className="text-gray-600">
+                        <span className="text-muted-foreground">
                           {p.followers.toLocaleString()} followers
                         </span>
-                        <span className="text-gray-500">{p.engagement_rate.toFixed(1)}%</span>
+                        <span className="text-muted-foreground">
+                          {p.engagement_rate.toFixed(1)}%
+                        </span>
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                             p.growth_30d > 0
                               ? 'bg-green-100 text-green-700'
                               : p.growth_30d < 0
                                 ? 'bg-red-100 text-red-700'
-                                : 'bg-gray-100 text-gray-600'
+                                : 'bg-muted text-muted-foreground'
                           }`}
                           aria-label={`${p.growth_30d > 0 ? 'Up' : p.growth_30d < 0 ? 'Down' : 'Flat'} ${Math.abs(p.growth_30d)}% in 30 days`}
                         >

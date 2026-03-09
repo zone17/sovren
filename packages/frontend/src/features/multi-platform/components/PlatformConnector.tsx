@@ -24,20 +24,20 @@ const PlatformConnector: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-white p-6">
+      <div className="rounded-lg border bg-card p-6">
         <div className="animate-pulse space-y-3">
-          <div className="h-5 w-40 rounded bg-gray-200" />
-          <div className="h-12 rounded bg-gray-100" />
-          <div className="h-12 rounded bg-gray-100" />
+          <div className="h-5 w-40 rounded bg-muted" />
+          <div className="h-12 rounded bg-muted" />
+          <div className="h-12 rounded bg-muted" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-white p-6">
-      <h3 className="text-lg font-semibold text-gray-900">Platform Connections</h3>
-      <p className="mt-1 text-sm text-gray-500">
+    <div className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-semibold text-foreground">Platform Connections</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
         Connect your social media accounts to publish and manage content across platforms.
       </p>
 
@@ -56,9 +56,9 @@ const PlatformConnector: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div className="h-3 w-3 rounded-full" style={{ backgroundColor: display.color }} />
                 <div>
-                  <p className="font-medium text-gray-900">{display.name}</p>
+                  <p className="font-medium text-foreground">{display.name}</p>
                   {status.connected && status.username && (
-                    <p className="text-sm text-gray-500">{status.username}</p>
+                    <p className="text-sm text-muted-foreground">{status.username}</p>
                   )}
                 </div>
               </div>

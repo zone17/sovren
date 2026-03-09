@@ -142,13 +142,13 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
+      <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Restore NOSTR Backup</h2>
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-2xl font-bold text-foreground">Restore NOSTR Backup</h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-muted-foreground/60 hover:text-muted-foreground"
             aria-label="Close dialog"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,9 +167,9 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
           {/* Step 1: Upload */}
           {step === 'upload' && (
             <div className="space-y-6">
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-12 text-center">
+              <div className="border-2 border-dashed border-border rounded-lg p-12 text-center">
                 <svg
-                  className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                  className="mx-auto h-12 w-12 text-muted-foreground/60 mb-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -185,7 +185,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                   <span className="text-blue-600 dark:text-blue-400 hover:text-blue-500 font-medium">
                     Choose backup file
                   </span>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">or drag and drop</p>
+                  <p className="text-sm text-muted-foreground mt-1">or drag and drop</p>
                 </label>
                 <input
                   id="backup-file"
@@ -194,7 +194,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                <p className="text-xs text-gray-400 mt-2">JSON files only</p>
+                <p className="text-xs text-muted-foreground/60 mt-2">JSON files only</p>
               </div>
             </div>
           )}
@@ -226,8 +226,8 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                     />
                   </svg>
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Backup file loaded</p>
-                    <ul className="text-sm text-gray-700 dark:text-gray-300 mt-2 space-y-1">
+                    <p className="font-medium text-foreground">Backup file loaded</p>
+                    <ul className="text-sm text-foreground mt-2 space-y-1">
                       <li>Version: {verification.version}</li>
                       <li>Content: {verification.contentType.replace(/_/g, ' ')}</li>
                       {verification.metadata?.keyCount !== undefined && (
@@ -259,7 +259,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                 <div>
                   <label
                     htmlFor="restore-password"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-foreground mb-2"
                   >
                     Backup Password
                   </label>
@@ -270,12 +270,12 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter backup password"
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full px-3 py-2 pr-10 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 bg-background text-foreground"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
                     >
                       {showPassword ? 'Hide' : 'Show'}
                     </button>
@@ -297,9 +297,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
           {step === 'options' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                  Recovery Options
-                </h3>
+                <h3 className="text-lg font-medium text-foreground mb-4">Recovery Options</h3>
 
                 <div className="space-y-3">
                   <label className="flex items-center">
@@ -311,7 +309,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                       }
                       className="mr-3"
                     />
-                    <span className="text-gray-700 dark:text-gray-300">Recover keys</span>
+                    <span className="text-foreground">Recover keys</span>
                   </label>
 
                   <label className="flex items-center">
@@ -323,7 +321,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                       }
                       className="mr-3"
                     />
-                    <span className="text-gray-700 dark:text-gray-300">Recover events</span>
+                    <span className="text-foreground">Recover events</span>
                   </label>
 
                   <label className="flex items-center">
@@ -338,10 +336,10 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                       }
                       className="mr-3"
                     />
-                    <span className="text-gray-700 dark:text-gray-300">Recover configuration</span>
+                    <span className="text-foreground">Recover configuration</span>
                   </label>
 
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                  <div className="border-t border-border pt-3 mt-3">
                     <label className="flex items-start">
                       <input
                         type="checkbox"
@@ -355,10 +353,8 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                         className="mr-3 mt-1"
                       />
                       <div>
-                        <span className="text-gray-700 dark:text-gray-300 font-medium">
-                          Overwrite existing data
-                        </span>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <span className="text-foreground font-medium">Overwrite existing data</span>
+                        <p className="text-sm text-muted-foreground">
                           Replace existing keys and configuration (use with caution)
                         </p>
                       </div>
@@ -378,10 +374,8 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                       className="mr-3 mt-1"
                     />
                     <div>
-                      <span className="text-gray-700 dark:text-gray-300 font-medium">
-                        Verify after restore
-                      </span>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="text-foreground font-medium">Verify after restore</span>
+                      <p className="text-sm text-muted-foreground">
                         Test restored keys and validate signatures
                       </p>
                     </div>
@@ -392,7 +386,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
               <div className="flex space-x-3">
                 <button
                   onClick={() => setStep('verify')}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="flex-1 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-accent"
                 >
                   Back
                 </button>
@@ -410,10 +404,8 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
           {step === 'restoring' && (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-lg font-medium text-gray-900 dark:text-white">
-                Restoring backup...
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              <p className="text-lg font-medium text-foreground">Restoring backup...</p>
+              <p className="text-sm text-muted-foreground mt-2">
                 Please wait while we restore your data
               </p>
             </div>
@@ -438,33 +430,27 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                     />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-2xl font-bold text-foreground mb-2">
                   Backup Restored Successfully!
                 </h3>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 space-y-2">
+              <div className="bg-muted rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Keys recovered:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {result.keysRecovered}
-                  </span>
+                  <span className="text-muted-foreground">Keys recovered:</span>
+                  <span className="font-medium text-foreground">{result.keysRecovered}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Events recovered:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {result.eventsRecovered}
-                  </span>
+                  <span className="text-muted-foreground">Events recovered:</span>
+                  <span className="font-medium text-foreground">{result.eventsRecovered}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Relays recovered:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {result.relaysRecovered}
-                  </span>
+                  <span className="text-muted-foreground">Relays recovered:</span>
+                  <span className="font-medium text-foreground">{result.relaysRecovered}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Duration:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="text-muted-foreground">Duration:</span>
+                  <span className="font-medium text-foreground">
                     {(result.duration / 1000).toFixed(2)}s
                   </span>
                 </div>
@@ -515,9 +501,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                     />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  Restoration Failed
-                </h3>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Restoration Failed</h3>
                 <p className="text-red-600 dark:text-red-400 text-center max-w-md">{error}</p>
               </div>
 
@@ -530,7 +514,7 @@ export const RestoreDialog: React.FC<RestoreDialogProps> = ({ isOpen, onClose, o
                 </button>
                 <button
                   onClick={handleClose}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="flex-1 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-accent"
                 >
                   Cancel
                 </button>

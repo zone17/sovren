@@ -540,7 +540,7 @@ export const OfflineCapabilities: React.FC<OfflineCapabilitiesProps> = ({
       case 'excellent':
         return 'bg-green-500';
       default:
-        return 'bg-gray-500';
+        return 'bg-muted-foreground';
     }
   }, [getConnectionQuality]);
 

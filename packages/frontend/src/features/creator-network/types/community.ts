@@ -86,8 +86,8 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   in_progress: 'bg-indigo-100 text-indigo-800',
   completed: 'bg-green-100 text-green-800',
   disputed: 'bg-red-100 text-red-800',
-  refunded: 'bg-gray-100 text-gray-800',
-  expired: 'bg-gray-100 text-gray-500',
+  refunded: 'bg-muted text-foreground',
+  expired: 'bg-muted text-muted-foreground',
 };
 
 export const SERVICE_TYPE_LABELS: Record<string, string> = {

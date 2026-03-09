@@ -105,8 +105,8 @@ describe('SubscriptionCard', () => {
 
       const badgeText = screen.getByText(/expired/i);
       expect(badgeText).toBeInTheDocument();
-      const badge = badgeText.closest('[class*="bg-gray-100"]') ?? badgeText.parentElement;
-      expect(badge).toHaveClass('bg-gray-100');
+      const badge = badgeText.closest('[class*="bg-muted"]') ?? badgeText.parentElement;
+      expect(badge).toHaveClass('bg-muted');
     });
 
     it('renders pending status badge correctly', () => {
@@ -260,7 +260,7 @@ describe('SubscriptionCard', () => {
 
       // 100,000 sats / 100,000,000 * $30,000 = $30.00
       // The text may be split across child nodes, so check textContent of the paragraph
-      const usdParagraph = container.querySelector('p.text-xs.text-gray-500');
+      const usdParagraph = container.querySelector('p.text-xs.text-muted-foreground');
       expect(usdParagraph).toBeTruthy();
       expect(usdParagraph?.textContent).toMatch(/\$30\.00 USD/);
     });
@@ -516,7 +516,7 @@ describe('SubscriptionCard', () => {
       const subscription = createMockSubscription({ status: 'expired' });
       const { container } = render(<SubscriptionCard subscription={subscription} />);
 
-      const card = container.querySelector('.border-gray-200');
+      const card = container.querySelector('.border-border');
       expect(card).toBeInTheDocument();
     });
 

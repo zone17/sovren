@@ -84,12 +84,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
   return (
     <div className="p-4 border rounded-lg hover:shadow-sm transition-shadow">
       <div className="flex items-start justify-between mb-2">
-        <h4 className="text-sm font-medium text-gray-800 flex-1">{resource.title}</h4>
+        <h4 className="text-sm font-medium text-foreground flex-1">{resource.title}</h4>
         <Badge className={`${config.bg} ${config.color} text-[10px] ml-2 shrink-0`}>
           {config.label}
         </Badge>
       </div>
-      <p className="text-xs text-gray-500 mb-3">{resource.description}</p>
+      <p className="text-xs text-muted-foreground mb-3">{resource.description}</p>
       <a
         href={resource.url}
         target="_blank"
@@ -158,7 +158,7 @@ export const WellnessResources: React.FC<WellnessResourcesProps> = ({
         </div>
 
         {filtered.length === 0 && (
-          <p className="text-sm text-gray-500 text-center py-6">
+          <p className="text-sm text-muted-foreground text-center py-6">
             No resources found for this category.
           </p>
         )}
