@@ -134,7 +134,7 @@ export function CommentItem({
       ) : (
         <div
           aria-hidden="true"
-          className={`rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0 ${isReply ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm'}`}
+          className={`rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0 ${isReply ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm'}`}
         >
           {authorName.charAt(0).toUpperCase()}
         </div>
@@ -143,13 +143,13 @@ export function CommentItem({
       <div className="flex-1 min-w-0">
         {/* Author + timestamp header */}
         <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-900">{authorName}</span>
+          <span className="text-sm font-semibold text-foreground">{authorName}</span>
           {comment.author.username && comment.author.username !== authorName && (
-            <span className="text-xs text-gray-400">@{comment.author.username}</span>
+            <span className="text-xs text-muted-foreground">@{comment.author.username}</span>
           )}
           <time
             dateTime={comment.createdAt}
-            className="text-xs text-gray-400"
+            className="text-xs text-muted-foreground"
             title={new Date(comment.createdAt).toLocaleString()}
           >
             {formatRelativeTime(comment.createdAt)}
@@ -157,7 +157,7 @@ export function CommentItem({
         </div>
 
         {/* Comment text — NEVER dangerouslySetInnerHTML; React escapes this automatically */}
-        <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">
+        <p className="mt-1 text-sm text-foreground whitespace-pre-wrap break-words">
           {comment.commentText}
         </p>
 
@@ -170,7 +170,7 @@ export function CommentItem({
               type="button"
               aria-label={`Reply to ${authorName}`}
               onClick={() => setShowReplyForm((v) => !v)}
-              className="text-xs text-gray-500 hover:text-amber-700 font-medium transition-colors"
+              className="text-xs text-muted-foreground hover:text-purple-400 font-medium transition-colors duration-150"
             >
               Reply
             </button>
@@ -183,7 +183,7 @@ export function CommentItem({
               type="button"
               aria-label={`Delete comment by ${authorName}`}
               onClick={() => setShowDeleteDialog(true)}
-              className="text-xs text-gray-400 hover:text-red-600 font-medium transition-colors"
+              className="text-xs text-muted-foreground hover:text-red-500 font-medium transition-colors duration-150"
             >
               Delete
             </button>
@@ -194,7 +194,7 @@ export function CommentItem({
             <button
               type="button"
               onClick={() => setShowReplies((v) => !v)}
-              className="text-xs text-amber-700 hover:text-amber-900 font-medium transition-colors"
+              className="text-xs text-purple-400 hover:text-purple-300 font-medium transition-colors duration-150"
               aria-expanded={showReplies}
             >
               {showReplies ? 'Hide' : 'Show'} {comment.replyCount}{' '}
@@ -226,7 +226,7 @@ export function CommentItem({
               <div
                 role="status"
                 aria-label="Loading replies..."
-                className="text-xs text-gray-400 py-2"
+                className="text-xs text-muted-foreground py-2"
               >
                 Loading replies...
               </div>
@@ -247,7 +247,7 @@ export function CommentItem({
               </ul>
             )}
             {repliesData && repliesData.items.length === 0 && (
-              <p className="text-xs text-gray-400">No replies yet.</p>
+              <p className="text-xs text-muted-foreground">No replies yet.</p>
             )}
           </div>
         )}
@@ -264,21 +264,21 @@ export function CommentItem({
             if (e.target === e.currentTarget) handleDeleteCancel();
           }}
         >
-          <div ref={dialogRef} className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+          <div ref={dialogRef} className="glass rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
             <h3
               id={`delete-dialog-title-${comment.id}`}
-              className="text-base font-semibold text-gray-900 mb-2"
+              className="text-base font-semibold text-foreground mb-2 font-display"
             >
               Delete comment?
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               This action cannot be undone. The comment will be permanently removed.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 type="button"
                 onClick={handleDeleteCancel}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-foreground bg-card rounded-lg hover:bg-border transition-colors duration-150"
               >
                 Cancel
               </button>
@@ -287,7 +287,7 @@ export function CommentItem({
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
                 aria-busy={isDeleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors duration-150"
               >
                 {isDeleting ? 'Deleting...' : 'Confirm delete'}
               </button>

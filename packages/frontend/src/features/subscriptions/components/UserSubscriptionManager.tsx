@@ -201,7 +201,8 @@ const ActiveSubscriptionsTab: React.FC<{
                     sats
                   </p>
                   <p className="text-xs text-gray-500">
-                    ≈ ${((subscription.amount_sats / 100000000) * 30000).toFixed(2)} USD
+                    {/* TODO: Replace with live rate */}≈ $
+                    {((subscription.amount_sats / 100000000) * 30000).toFixed(2)} USD
                   </p>
                 </div>
                 <div>
@@ -623,7 +624,8 @@ const SubscriptionHistoryTab: React.FC<{
                       ⚡ {formatSats(item.amount_sats, { abbreviate: true, suffix: false })}
                     </p>
                     <p className="text-xs text-gray-500">
-                      ≈ ${((item.amount_sats / 100000000) * 30000).toFixed(2)}
+                      {/* TODO: Replace with live rate */}≈ $
+                      {((item.amount_sats / 100000000) * 30000).toFixed(2)}
                     </p>
                   </div>
                 </div>

@@ -102,7 +102,7 @@ const Globe = ({ className }: { className?: string }) => <span className={classN
 
 // 🌈 **CHART COLORS**
 const CHART_COLORS = {
-  primary: '#0066CC',
+  primary: '#8B5CF6',
   secondary: '#FF6600',
   success: '#00CC66',
   warning: '#FFCC00',
@@ -125,76 +125,77 @@ const EarningsOverview: React.FC<{ earnings: CreatorEarnings; period: string }> 
   earnings,
   period,
 }) => {
+  // TODO: Replace with live rate from a price feed service
   const formatCurrency = (sats: number, rate = 30000) => {
     return `$${((sats / 100000000) * rate).toFixed(2)}`;
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 reveal-stagger">
       {/* Total Earnings */}
-      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+      <Card className="glass glass-hover">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-blue-700">Total Earnings</CardTitle>
-          <DollarSign className="h-4 w-4 text-blue-600" />
+          <CardTitle className="text-sm font-medium text-purple-400">Total Earnings</CardTitle>
+          <DollarSign className="h-4 w-4 text-purple-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-900">
-            ⚡ {formatSats(earnings.lightning.total_sats, { abbreviate: true, suffix: false })}
+          <div className="text-2xl font-bold text-foreground">
+            {formatSats(earnings.lightning.total_sats, { abbreviate: true, suffix: false })}
           </div>
-          <div className="text-xs text-blue-600 mt-1">
+          <div className="text-xs text-muted-foreground mt-1">
             {formatCurrency(earnings.lightning.total_sats)}
           </div>
-          <p className="text-xs text-blue-700 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             {earnings.lightning.paid_invoices} payments ({period})
           </p>
         </CardContent>
       </Card>
 
       {/* Payment Success Rate */}
-      <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+      <Card className="glass glass-hover">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-green-700">Success Rate</CardTitle>
-          <CheckCircle className="h-4 w-4 text-green-600" />
+          <CardTitle className="text-sm font-medium text-green-400">Success Rate</CardTitle>
+          <CheckCircle className="h-4 w-4 text-green-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-green-900">
+          <div className="text-2xl font-bold text-foreground">
             {earnings.lightning.success_rate.toFixed(1)}%
           </div>
-          <p className="text-xs text-green-700 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             {earnings.lightning.paid_invoices}/{earnings.lightning.total_invoices} invoices
           </p>
         </CardContent>
       </Card>
 
       {/* Total Subscribers */}
-      <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+      <Card className="glass glass-hover">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-purple-700">Subscribers</CardTitle>
-          <Users className="h-4 w-4 text-purple-600" />
+          <CardTitle className="text-sm font-medium text-violet-400">Subscribers</CardTitle>
+          <Users className="h-4 w-4 text-violet-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-purple-900">
+          <div className="text-2xl font-bold text-foreground">
             {earnings.subscribers.total_count.toLocaleString()}
           </div>
           <div className="flex items-center text-xs mt-2">
             <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-            <span className="text-green-600">+{earnings.subscribers.new_subscribers}</span>
-            <span className="text-purple-600 ml-1">new ({period})</span>
+            <span className="text-green-400">+{earnings.subscribers.new_subscribers}</span>
+            <span className="text-muted-foreground ml-1">new ({period})</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Active Supporters */}
-      <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+      <Card className="glass glass-hover">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-orange-700">Active Now</CardTitle>
-          <Activity className="h-4 w-4 text-orange-600" />
+          <CardTitle className="text-sm font-medium text-amber-400">Active Now</CardTitle>
+          <Activity className="h-4 w-4 text-amber-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-orange-900">
+          <div className="text-2xl font-bold text-foreground">
             {earnings.realtime.active_supporters}
           </div>
-          <p className="text-xs text-orange-700 mt-2">Live supporters online</p>
+          <p className="text-xs text-muted-foreground mt-2">Live supporters online</p>
         </CardContent>
       </Card>
     </div>
@@ -266,7 +267,7 @@ const GeographicDistribution: React.FC<{ data: CreatorEarnings['geography'] }> =
         <div className="h-[300px] mb-4">
           <SimpleChart
             data={chartData}
-            className="h-full w-full border rounded-lg bg-gradient-to-br from-blue-50 to-purple-50 flex flex-col items-center justify-center"
+            className="h-full w-full border border-border rounded-lg glass flex flex-col items-center justify-center"
           />
         </div>
 
@@ -275,7 +276,7 @@ const GeographicDistribution: React.FC<{ data: CreatorEarnings['geography'] }> =
           {chartData.map((country, index) => (
             <div
               key={country.country}
-              className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50"
+              className="flex items-center justify-between p-2 rounded-md hover:bg-purple-500/10 transition-colors duration-150"
             >
               <div className="flex items-center gap-2">
                 <div
@@ -286,8 +287,8 @@ const GeographicDistribution: React.FC<{ data: CreatorEarnings['geography'] }> =
               </div>
               <div className="text-right">
                 <div className="text-sm font-medium">{country.subscribers} subscribers</div>
-                <div className="text-xs text-gray-500">
-                  ⚡ {(country.earnings / 1000).toFixed(1)}K sats
+                <div className="text-xs text-muted-foreground">
+                  {(country.earnings / 1000).toFixed(1)}K sats
                 </div>
               </div>
             </div>
@@ -328,11 +329,11 @@ const PerformanceMetrics: React.FC<{ metrics: CreatorPerformanceMetrics }> = ({ 
       </CardHeader>
       <CardContent>
         {/* Overall Score */}
-        <div className="text-center mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-          <div className="text-3xl font-bold text-blue-900 mb-2">
+        <div className="text-center mb-6 p-4 glass rounded-lg">
+          <div className="text-3xl font-bold text-foreground mb-2 font-display">
             {metrics.performance_score}/100
           </div>
-          <div className="text-sm text-blue-700">Overall Performance Score</div>
+          <div className="text-sm text-muted-foreground">Overall Performance Score</div>
           <Badge
             className="mt-2"
             variant={metrics.performance_score >= 85 ? 'default' : 'secondary'}
@@ -380,15 +381,15 @@ const PerformanceMetrics: React.FC<{ metrics: CreatorPerformanceMetrics }> = ({ 
             Trends
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="flex items-center gap-2 p-2 rounded-md bg-gray-50">
+            <div className="flex items-center gap-2 p-2 rounded-md glass">
               {getTrendIcon(metrics.earnings_trend)}
               <span className="text-sm">Earnings: {metrics.earnings_trend}</span>
             </div>
-            <div className="flex items-center gap-2 p-2 rounded-md bg-gray-50">
+            <div className="flex items-center gap-2 p-2 rounded-md glass">
               {getTrendIcon(metrics.subscriber_trend)}
               <span className="text-sm">Subscribers: {metrics.subscriber_trend}</span>
             </div>
-            <div className="flex items-center gap-2 p-2 rounded-md bg-gray-50">
+            <div className="flex items-center gap-2 p-2 rounded-md glass">
               {getTrendIcon(metrics.engagement_trend)}
               <span className="text-sm">Engagement: {metrics.engagement_trend}</span>
             </div>
@@ -403,7 +404,7 @@ const PerformanceMetrics: React.FC<{ metrics: CreatorPerformanceMetrics }> = ({ 
           </h4>
           <div className="space-y-2">
             {metrics.recommendations.map((rec, index) => (
-              <Alert key={index} className="border-l-4 border-l-blue-500">
+              <Alert key={index} className="border-l-4 border-l-purple-500">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle className="text-sm font-medium">
                   {rec.title}
@@ -430,7 +431,7 @@ const RealTimeEvents: React.FC<{ events: AnalyticsEvent[] }> = ({ events }) => {
       case 'new_subscriber':
         return <Users className="h-4 w-4 text-green-500" />;
       case 'content_viewed':
-        return <Eye className="h-4 w-4 text-blue-500" />;
+        return <Eye className="h-4 w-4 text-violet-500" />;
       case 'tip_received':
         return <DollarSign className="h-4 w-4 text-purple-500" />;
     }
@@ -469,7 +470,7 @@ const RealTimeEvents: React.FC<{ events: AnalyticsEvent[] }> = ({ events }) => {
       <CardContent>
         <div className="space-y-3 max-h-[300px] overflow-y-auto">
           {events.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No recent activity</p>
               <p className="text-sm">Events will appear here in real-time</p>
@@ -481,13 +482,13 @@ const RealTimeEvents: React.FC<{ events: AnalyticsEvent[] }> = ({ events }) => {
               .map((event, index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors"
+                  className="flex items-start gap-3 p-3 rounded-md hover:bg-purple-500/10 transition-colors duration-150"
                 >
                   {getEventIcon(event.type)}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">{formatEventMessage(event)}</p>
+                    <p className="text-sm text-foreground">{formatEventMessage(event)}</p>
                     {event.data.message && (
-                      <p className="text-xs text-gray-500 mt-1">"{event.data.message}"</p>
+                      <p className="text-xs text-muted-foreground mt-1">"{event.data.message}"</p>
                     )}
                   </div>
                 </div>
@@ -669,14 +670,14 @@ export const CreatorDashboard: React.FC = () => {
 
   // 🎨 **MAIN RENDER**
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 via-white to-blue-50 min-h-screen">
-      {/* 🏆 **HEADER SECTION** */}
+    <div className="space-y-6 p-6 bg-background min-h-screen">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-transparent font-display">
             Creator Analytics
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Last updated: {lastUpdated.toLocaleTimeString()}
             {enableRealTimeUpdates && (
               <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">

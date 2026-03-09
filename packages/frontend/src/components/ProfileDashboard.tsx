@@ -57,7 +57,7 @@ const ProfileDashboard: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-premium-900 via-premium-800 to-sovereign-900 flex items-center justify-center">
         <Card className="max-w-md mx-auto">
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-bold text-white mb-4">No Profile Found</h2>
+            <h2 className="text-xl font-bold text-white mb-4 font-display">No Profile Found</h2>
             <p className="text-muted-foreground mb-6">
               Complete the sovereign onboarding to create your profile.
             </p>
@@ -83,7 +83,7 @@ const ProfileDashboard: React.FC = () => {
               <User className="h-12 w-12 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-black bg-gradient-to-r from-white via-lightning-200 to-sovereign-200 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-black bg-gradient-to-r from-white via-lightning-200 to-sovereign-200 bg-clip-text text-transparent font-display">
             Your Sovereign Profile
           </h1>
           <p className="text-xl text-muted-foreground mt-4">
@@ -111,7 +111,7 @@ const ProfileDashboard: React.FC = () => {
                         : 'bg-sovereign-500 text-white'
                     }`}
                   >
-                    {profile.userType === 'creator' ? '🚀 Creator' : '❤️ Supporter'}
+                    {profile.userType === 'creator' ? 'Creator' : 'Supporter'}
                   </Badge>
                   <p className="text-muted-foreground mt-2">
                     {profile.userType === 'creator'
@@ -197,7 +197,7 @@ const ProfileDashboard: React.FC = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <Badge className="bg-green-500 text-white mb-1">✓ Connected</Badge>
+                        <Badge className="bg-green-500 text-white mb-1">Connected</Badge>
                         <p className="text-xs text-muted-foreground">
                           Since{' '}
                           {new Date(profile.lightningWallet.integratedAt).toLocaleDateString()}
@@ -214,8 +214,8 @@ const ProfileDashboard: React.FC = () => {
                         <div className="text-lightning-400 text-sm font-medium">Type</div>
                         <div className="text-white capitalize">{profile.lightningWallet.type}</div>
                       </div>
-                      <div className="bg-blue-500/10 p-3 rounded border border-blue-500/20">
-                        <div className="text-blue-400 text-sm font-medium">Difficulty</div>
+                      <div className="bg-purple-500/10 p-3 rounded border border-purple-500/20">
+                        <div className="text-purple-400 text-sm font-medium">Difficulty</div>
                         <div className="text-white">{profile.lightningWallet.difficulty}</div>
                       </div>
                     </div>
@@ -237,16 +237,16 @@ const ProfileDashboard: React.FC = () => {
                       <h4 className="text-white font-medium mb-2">Creator Features</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <Button variant="outline" size="sm">
-                          💰 Payment Links
+                          Payment Links
                         </Button>
                         <Button variant="outline" size="sm">
-                          📊 Revenue Analytics
+                          Revenue Analytics
                         </Button>
                         <Button variant="outline" size="sm">
-                          🎯 Fan Funding
+                          Fan Funding
                         </Button>
                         <Button variant="outline" size="sm">
-                          ⚡ Instant Tips
+                          Instant Tips
                         </Button>
                       </div>
                     </div>

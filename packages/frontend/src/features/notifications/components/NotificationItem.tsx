@@ -44,8 +44,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   return (
     <li
       className={[
-        'flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer group',
-        !notification.read ? 'bg-indigo-50 hover:bg-indigo-100' : '',
+        'flex items-start gap-3 px-4 py-3 hover:bg-purple-500/5 cursor-pointer group transition-colors duration-150',
+        !notification.read ? 'bg-purple-500/10 hover:bg-purple-500/15' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -59,15 +59,17 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     >
       {/* Unread indicator */}
       <div className="mt-1.5 shrink-0 w-2 h-2 rounded-full" aria-hidden="true">
-        {!notification.read && <div className="w-2 h-2 rounded-full bg-indigo-600" />}
+        {!notification.read && <div className="w-2 h-2 rounded-full bg-purple-500" />}
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-gray-900 truncate">{notification.title}</p>
+        <p className="text-sm font-medium text-foreground truncate">{notification.title}</p>
         {notification.body && (
-          <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{notification.body}</p>
+          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{notification.body}</p>
         )}
-        <p className="text-xs text-gray-400 mt-1">{formatRelativeTime(notification.createdAt)}</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {formatRelativeTime(notification.createdAt)}
+        </p>
       </div>
 
       {/* #752: Delete button — visible on hover */}
@@ -78,7 +80,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') handleDelete(e);
           }}
-          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 focus:opacity-100"
+          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1 rounded text-muted-foreground hover:text-red-500 hover:bg-red-500/10 focus:opacity-100"
           aria-label="Delete notification"
           tabIndex={0}
         >

@@ -1,9 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx,mdx}', './src/**/*.stories.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
-      // 🎨 **CSS VARIABLE BASED COLORS** - Match index.css variables
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Sora', 'Inter', 'system-ui', 'sans-serif'],
+      },
+
+      // CSS variable-based semantic colors (shadcn-compatible)
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
@@ -38,8 +44,33 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))',
+        },
 
-        // ⚡ **LIGHTNING NETWORK** (Bitcoin Orange) - YouTube-inspired
+        // Sovereign purple scale - Sovren's identity color, centered on #8B5CF6
+        sovereign: {
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#8B5CF6', // Primary - Sovren owns this purple
+          600: '#7c3aed', // Hover state
+          700: '#6d28d9', // Active state
+          800: '#5b21b6',
+          900: '#4c1d95',
+          950: '#2e1065',
+        },
+
+        // Lightning Network - Bitcoin orange, bolt accents
         lightning: {
           50: '#fffef7',
           100: '#fffceb',
@@ -53,21 +84,7 @@ export default {
           900: '#7d4a10',
         },
 
-        // 🔵 **SOVEREIGN** (NOSTR Purple) - Twitch-inspired
-        sovereign: {
-          50: '#f0f0ff',
-          100: '#e7e7ff',
-          200: '#d2d2ff',
-          300: '#b8b8ff',
-          400: '#9b9bff',
-          500: '#6366f1', // Primary NOSTR purple
-          600: '#5b5fd1', // Hover state
-          700: '#5350c1', // Active state
-          800: '#4338ca',
-          900: '#3730a3',
-        },
-
-        // ⚫ **PREMIUM** (Elite Black) - OnlyFans/Patreon-inspired
+        // Premium dark slate - elevation system
         premium: {
           50: '#f8fafc',
           100: '#f1f5f9',
@@ -82,7 +99,7 @@ export default {
           950: '#020617',
         },
 
-        // 💰 **SATS** (Bitcoin Gold) - Substack-inspired
+        // Sats gold - Bitcoin value display
         sats: {
           50: '#fffdf2',
           100: '#fffae0',
@@ -96,35 +113,35 @@ export default {
           900: '#7a5111',
         },
 
-        // 🎯 **SEMANTIC COLORS** - Industry best practices
+        // Semantic tokens
         success: {
-          DEFAULT: '#1a7f37',
+          DEFAULT: '#22c55e',
           foreground: '#ffffff',
         },
         warning: {
-          DEFAULT: '#bf8700',
+          DEFAULT: '#f59e0b',
           foreground: '#ffffff',
         },
         info: {
-          DEFAULT: '#0969da',
+          DEFAULT: '#38bdf8',
           foreground: '#ffffff',
         },
       },
 
-      // 📱 **MOBILE-FIRST BREAKPOINTS** - Industry Leading (375px → 4K)
+      // Mobile-first breakpoints (375px to 4K)
       screens: {
-        xs: '375px', // iPhone SE, small phones
-        sm: '640px', // Large phones, small tablets
-        md: '768px', // iPads, tablets
-        lg: '1024px', // Small laptops, iPad Pro
-        xl: '1280px', // Laptops, desktops
-        '2xl': '1536px', // Large desktops
-        '3xl': '1920px', // 1080p displays
-        '4xl': '2560px', // 1440p displays
-        '5xl': '3840px', // 4K displays
+        xs: '375px',
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+        '2xl': '1536px',
+        '3xl': '1920px',
+        '4xl': '2560px',
+        '5xl': '3840px',
       },
 
-      // 🎨 **TYPOGRAPHY SYSTEM** - Creator Platform Optimized
+      // Typography system - creator platform optimized
       fontSize: {
         xs: ['11px', { lineHeight: '1.3', letterSpacing: '-0.008em' }],
         sm: ['13px', { lineHeight: '1.4', letterSpacing: '-0.006em' }],
@@ -140,57 +157,68 @@ export default {
         '8xl': ['112px', { lineHeight: '0.9', letterSpacing: '-0.035em' }],
       },
 
-      // 🎨 **BORDER RADIUS** - Modern, consistent system
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
 
-      // 🏗️ **SPACING SYSTEM** - YouTube/Patreon/Creator-optimized
       spacing: {
-        18: '4.5rem', // 72px - Card spacing
-        22: '5.5rem', // 88px - Section spacing
-        26: '6.5rem', // 104px - Hero spacing
-        88: '22rem', // 352px - Large section
-        128: '32rem', // 512px - Container max-width
-        144: '36rem', // 576px - Content max-width
+        18: '4.5rem',
+        22: '5.5rem',
+        26: '6.5rem',
+        88: '22rem',
+        128: '32rem',
+        144: '36rem',
       },
 
-      // ✨ **PREMIUM SHADOW SYSTEM** - Industry-grade elevation
       boxShadow: {
-        // Brand-specific shadows
-        lightning: '0 4px 20px rgba(247, 147, 26, 0.15)',
-        sovereign: '0 4px 20px rgba(99, 102, 241, 0.15)',
-        premium: '0 4px 20px rgba(15, 23, 42, 0.15)',
-        sats: '0 4px 20px rgba(247, 192, 42, 0.15)',
+        // Glass morphism inner highlight
+        glass: 'inset 0 1px 1px 0 rgba(255,255,255,0.05)',
 
-        // Elevation system (Material Design 3 inspired)
-        xs: '0 1px 2px rgba(0, 0, 0, 0.04)',
-        sm: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
-        DEFAULT: '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        md: '0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04)',
-        lg: '0 10px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.05)',
-        xl: '0 20px 25px rgba(0, 0, 0, 0.10), 0 10px 10px rgba(0, 0, 0, 0.04)',
-        '2xl': '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 24px rgba(0, 0, 0, 0.08)',
+        // Brand-specific glows
+        lightning: '0 4px 20px rgba(247, 147, 26, 0.20)',
+        sovereign: '0 4px 20px rgba(139, 92, 246, 0.25)',
+        premium: '0 4px 20px rgba(15, 23, 42, 0.20)',
+        sats: '0 4px 20px rgba(247, 192, 42, 0.20)',
 
-        // Creator platform specific
-        card: '0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04)',
-        modal: '0 20px 25px rgba(0, 0, 0, 0.08), 0 10px 10px rgba(0, 0, 0, 0.04)',
-        hero: '0 25px 50px rgba(0, 0, 0, 0.12), 0 12px 24px rgba(0, 0, 0, 0.08)',
+        // Purple glow for primary actions
+        'sovereign-lg': '0 8px 40px rgba(139, 92, 246, 0.35)',
+
+        // Elevation system
+        xs: '0 1px 2px rgba(0, 0, 0, 0.12)',
+        sm: '0 1px 3px rgba(0, 0, 0, 0.16), 0 1px 2px rgba(0, 0, 0, 0.10)',
+        DEFAULT: '0 1px 3px rgba(0, 0, 0, 0.20), 0 1px 2px rgba(0, 0, 0, 0.12)',
+        md: '0 4px 6px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.10)',
+        lg: '0 10px 15px rgba(0, 0, 0, 0.20), 0 4px 6px rgba(0, 0, 0, 0.12)',
+        xl: '0 20px 25px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.10)',
+        '2xl': '0 25px 50px rgba(0, 0, 0, 0.35), 0 12px 24px rgba(0, 0, 0, 0.16)',
+
+        // Creator platform surfaces
+        card: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)',
+        'card-hover': '0 8px 16px rgba(0, 0, 0, 0.20), 0 2px 4px rgba(0, 0, 0, 0.10)',
+        modal: '0 20px 25px rgba(0, 0, 0, 0.40), 0 10px 10px rgba(0, 0, 0, 0.20)',
+        hero: '0 25px 50px rgba(0, 0, 0, 0.30), 0 12px 24px rgba(0, 0, 0, 0.16)',
       },
 
-      // 🎭 **ANIMATION SYSTEM** - Smooth, professional micro-interactions
+      // Snappy 150ms micro-interactions for in-app feel
+      transitionDuration: {
+        DEFAULT: '150ms',
+      },
+
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-out',
-        'fade-in-up': 'fadeInUp 0.4s ease-out',
-        'slide-in': 'slideIn 0.3s ease-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'scale-in': 'scaleIn 0.2s ease-out',
+        'fade-in': 'fadeIn 0.15s ease-out',
+        'fade-in-up': 'fadeInUp 0.2s ease-out',
+        'slide-in': 'slideIn 0.15s ease-out',
+        'slide-up': 'slideUp 0.15s ease-out',
+        'scale-in': 'scaleIn 0.15s ease-out',
         'bounce-subtle': 'bounceSubtle 0.6s ease-in-out',
         'pulse-slow': 'pulse 3s ease-in-out infinite',
         shimmer: 'shimmer 2s ease-in-out infinite',
+        'reveal-up': 'revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
+        float: 'float 6s ease-in-out infinite',
+        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+        'gradient-shift': 'gradientShift 8s ease infinite',
       },
 
       keyframes: {
@@ -222,13 +250,28 @@ export default {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+        revealUp: {
+          '0%': { opacity: '0', transform: 'translateY(32px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-12px)' },
+        },
+        pulseGlow: {
+          '0%, 100%': { opacity: '0.4' },
+          '50%': { opacity: '0.8' },
+        },
+        gradientShift: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
       },
 
-      // 🎨 **GRADIENT SYSTEM** - Modern, creator-focused
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        shimmer: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+        shimmer: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
       },
     },
   },

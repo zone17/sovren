@@ -13,11 +13,11 @@ const CreatorNetworkDashboard: React.FC = () => {
 
   return (
     <CreatorNetworkErrorBoundary featureName="Creator Network">
-      <div className="space-y-6 p-6 bg-gradient-to-br from-purple-50/50 via-white to-indigo-50/50 min-h-screen">
+      <div className="space-y-6 p-6 bg-background min-h-screen">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Community</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground font-display">Community</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Connect with creators, find mentors, collaborate, and discover services.
           </p>
         </div>
@@ -37,8 +37,8 @@ const CreatorNetworkDashboard: React.FC = () => {
           )}
 
           {activeTab === 'collaborations' && (
-            <div className="rounded-lg border bg-white p-6">
-              <p className="text-sm text-gray-500">
+            <div className="rounded-lg border border-border glass p-6">
+              <p className="text-sm text-muted-foreground">
                 Select a piece of content to manage collaborators and revenue splits.
               </p>
             </div>

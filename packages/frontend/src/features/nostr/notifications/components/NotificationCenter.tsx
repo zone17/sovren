@@ -154,7 +154,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       {/* Notification Bell Button */}
       <button
         onClick={togglePanel}
-        className="relative p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="relative p-2 text-muted-foreground hover:bg-purple-500/10 rounded-full transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500"
         aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
         aria-expanded={isOpen}
         type="button"
@@ -174,8 +174,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         <div
           className={`
             absolute top-full mt-2 w-96 max-w-screen
-            bg-white dark:bg-gray-900 rounded-lg shadow-2xl
-            border border-gray-200 dark:border-gray-700
+            glass rounded-lg shadow-2xl
+            border border-border
             z-50 overflow-hidden
             ${position === 'left' ? 'left-0' : 'right-0'}
           `}
@@ -188,16 +188,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           ) : (
             <>
               {/* Header */}
-              <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 z-10">
+              <div className="sticky top-0 bg-background/80 backdrop-blur-sm border-b border-border z-10">
                 <div className="flex items-center justify-between p-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-semibold text-foreground font-display">
                     Notifications
                   </h2>
                   <div className="flex items-center gap-2">
                     {showSettings && (
                       <button
                         onClick={() => setShowSettingsPanel(true)}
-                        className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                        className="p-1 text-muted-foreground hover:text-foreground transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
                         aria-label="Settings"
                         title="Settings"
                         type="button"
@@ -213,7 +213,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     )}
                     <button
                       onClick={togglePanel}
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
                       aria-label="Close"
                       type="button"
                     >
@@ -236,11 +236,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       onClick={() => setSelectedFilter(tab.type)}
                       className={`
                         flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap
-                        transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
+                        transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500
                         ${
                           selectedFilter === tab.type
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-[0_4px_16px_rgba(139,92,246,0.3)]'
+                            : 'bg-card text-muted-foreground hover:bg-purple-500/10'
                         }
                       `}
                       type="button"
@@ -253,15 +253,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
                 {/* Action Bar */}
                 {notifications.length > 0 && (
-                  <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800">
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center justify-between px-4 py-2 bg-card">
+                    <span className="text-xs text-muted-foreground">
                       {filteredNotifications.length} notification
                       {filteredNotifications.length !== 1 ? 's' : ''}
                     </span>
                     {unreadCount > 0 && (
                       <button
                         onClick={handleMarkAllAsRead}
-                        className="text-xs text-blue-500 hover:text-blue-600 font-medium focus:outline-none focus:underline"
+                        className="text-xs text-purple-400 hover:text-purple-300 font-medium focus:outline-none focus:underline transition-colors duration-150"
                         type="button"
                       >
                         Mark all as read
@@ -280,9 +280,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 ) : (
                   groupedNotifications.map((group) => (
                     <div key={group.label}>
-                      <div className="sticky top-0 px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                      <div className="sticky top-0 px-4 py-2 bg-card border-b border-border">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             {group.label}
                           </h3>
                           {group.unreadCount > 0 && (

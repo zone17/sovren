@@ -225,7 +225,9 @@ const NostrOnboarding: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white">Welcome to True Digital Sovereignty</h2>
+              <h2 className="text-3xl font-bold text-white font-display">
+                Welcome to True Digital Sovereignty
+              </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 NOSTR gives you complete control over your digital identity. No big tech, no
                 censorship, no deplatforming - just pure, sovereign communication.
@@ -277,7 +279,9 @@ const NostrOnboarding: React.FC = () => {
                   <Key className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Generate Your NOSTR Keys</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                Generate Your NOSTR Keys
+              </h2>
               <p className="text-muted-foreground">
                 Your keys are your identity. They're generated locally and never leave your device.
               </p>
@@ -330,7 +334,7 @@ const NostrOnboarding: React.FC = () => {
                   <Shield className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Secure Your Keys</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">Secure Your Keys</h2>
               <p className="text-muted-foreground">
                 Save your keys safely. Without them, you'll lose access to your identity.
               </p>
@@ -458,7 +462,9 @@ const NostrOnboarding: React.FC = () => {
                   <CheckCircle className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Verify Your Identity</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                Verify Your Identity
+              </h2>
               <p className="text-muted-foreground">
                 Sign your first NOSTR event to prove you control your keys.
               </p>
@@ -512,7 +518,7 @@ const NostrOnboarding: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white">🎉 Welcome to Sovren!</h2>
+              <h2 className="text-3xl font-bold text-white font-display">Welcome to Sovren!</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Congratulations! You now have a sovereign digital identity. You're ready to
                 experience true digital freedom.
@@ -605,7 +611,9 @@ const NostrOnboarding: React.FC = () => {
             {renderStep()}
             {currentStep === 1 && (
               <div className="space-y-6 text-center">
-                <h2 className="text-2xl font-bold text-white mb-2">Choose Your Sovren Username</h2>
+                <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                  Choose Your Sovren Username
+                </h2>
                 <p className="text-base text-slate-200 mb-4">
                   Pick a unique username for your Sovren/NOSTR identity. This helps others find and
                   connect with you. You can also add a display name, bio, and avatar.

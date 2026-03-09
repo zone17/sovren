@@ -26,6 +26,7 @@ import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/aler
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Progress } from '../../../components/ui/progress';
+import { Spinner } from '../../../components/ui/spinner';
 import {
   Tooltip,
   TooltipContent,
@@ -68,7 +69,7 @@ const X = ({ className }: { className?: string }) => <span className={className}
 // Loading component for Suspense
 const LoadingFallback: React.FC<{ title: string }> = ({ title }) => (
   <div className="flex flex-col items-center justify-center h-64 space-y-4">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+    <Spinner size="lg" />
     <p className="text-gray-600">Loading {title}...</p>
   </div>
 );
@@ -311,7 +312,7 @@ export const ContentManagementHub: React.FC<ContentManagementHubProps> = ({
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+          <Spinner size="lg" className="mx-auto" />
           <p className="text-gray-600">Initializing Content Management...</p>
           {syncProgress > 0 && (
             <div className="w-64 mx-auto">

@@ -1,5 +1,8 @@
 /**
  * Unified Content Library - Consolidated Browsing Interface
+ *
+ * TODO: Migrate to glass morphism design system (glass-dark, bg-background, text-foreground).
+ * Currently uses light-mode Tailwind classes (bg-white, text-gray-900, hover:bg-gray-50).
  */
 
 import { Edit, Eye, Grid, List, Plus, Search, Trash2 } from 'lucide-react';

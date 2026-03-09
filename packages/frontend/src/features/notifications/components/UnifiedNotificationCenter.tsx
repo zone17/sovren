@@ -50,7 +50,7 @@ const UnifiedNotificationCenter: React.FC = () => {
         type="button"
         aria-label={totalUnread > 0 ? `Notifications (${totalUnread} unread)` : 'Notifications'}
         aria-expanded={isOpen}
-        className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        className="relative p-2 text-muted-foreground hover:bg-purple-500/10 rounded-full transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
       >
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
           <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
@@ -65,28 +65,28 @@ const UnifiedNotificationCenter: React.FC = () => {
       {/* Panel */}
       {isOpen && (
         <div
-          className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 overflow-hidden flex flex-col"
+          className="absolute right-0 top-full mt-2 w-80 glass rounded-lg shadow-2xl border border-border z-50 overflow-hidden flex flex-col"
           style={{ maxHeight: '520px' }}
           role="dialog"
           aria-label="Notifications"
         >
           {/* Tabs */}
-          <div className="flex border-b border-gray-200" role="tablist">
+          <div className="flex border-b border-border" role="tablist">
             <button
               role="tab"
               aria-selected={activeTab === 'activity'}
               onClick={() => setActiveTab('activity')}
               className={[
-                'flex-1 py-2.5 text-sm font-medium transition-colors focus:outline-none',
+                'flex-1 py-2.5 text-sm font-medium transition-colors duration-150 focus:outline-none',
                 activeTab === 'activity'
-                  ? 'text-indigo-600 border-b-2 border-indigo-600'
-                  : 'text-gray-500 hover:text-gray-700',
+                  ? 'text-purple-400 border-b-2 border-purple-500'
+                  : 'text-muted-foreground hover:text-foreground',
               ].join(' ')}
               type="button"
             >
               Activity
               {(serverUnread ?? 0) > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold px-0.5">
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold px-0.5">
                   {serverUnread}
                 </span>
               )}
@@ -96,16 +96,16 @@ const UnifiedNotificationCenter: React.FC = () => {
               aria-selected={activeTab === 'nostr'}
               onClick={() => setActiveTab('nostr')}
               className={[
-                'flex-1 py-2.5 text-sm font-medium transition-colors focus:outline-none',
+                'flex-1 py-2.5 text-sm font-medium transition-colors duration-150 focus:outline-none',
                 activeTab === 'nostr'
-                  ? 'text-indigo-600 border-b-2 border-indigo-600'
-                  : 'text-gray-500 hover:text-gray-700',
+                  ? 'text-purple-400 border-b-2 border-purple-500'
+                  : 'text-muted-foreground hover:text-foreground',
               ].join(' ')}
               type="button"
             >
               Nostr
               {nostrUnread > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold px-0.5">
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold px-0.5">
                   {nostrUnread}
                 </span>
               )}

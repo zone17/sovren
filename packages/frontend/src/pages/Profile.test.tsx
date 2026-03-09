@@ -69,7 +69,6 @@ const mockEmailUser: TestUser = {
 // Mock logout function
 const mockLogout = vi.fn();
 
-// 🎯 **ELITE JEST MODULE MOCK** - Updated path
 // Current user for test context switching
 let currentTestUser: TestUser = mockCreatorUser;
 
@@ -130,16 +129,15 @@ describe('Profile Component', () => {
       expect(heading).toHaveTextContent('Test User');
     });
 
-    it('displays user role with appropriate icon', () => {
+    it('displays user role', () => {
       renderWithTestWrapper();
 
-      expect(screen.getByText('✨ Creator')).toBeInTheDocument();
+      expect(screen.getByText('Creator')).toBeInTheDocument();
     });
 
     it('shows member since date', () => {
       renderWithTestWrapper();
 
-      // Use regex to avoid timezone-sensitive date string comparison
       expect(screen.getByText(/Member since/i)).toBeInTheDocument();
     });
 
@@ -156,9 +154,7 @@ describe('Profile Component', () => {
       renderWithTestWrapper();
 
       expect(screen.getByText('NOSTR Identity')).toBeInTheDocument();
-      expect(
-        screen.getByText(/You're using decentralized NOSTR authentication/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/using decentralized NOSTR authentication/)).toBeInTheDocument();
     });
 
     it('displays the public key', () => {
@@ -180,12 +176,13 @@ describe('Profile Component', () => {
     it('shows Lightning Network setup for creators', () => {
       renderWithTestWrapper();
 
-      expect(screen.getByText('Lightning Network')).toBeInTheDocument();
+      // Lightning Network appears in both creator tools and platform info sections
+      expect(screen.getAllByText('Lightning Network').length).toBeGreaterThanOrEqual(1);
       expect(
         screen.getByText('Accept instant Bitcoin payments from your supporters.')
       ).toBeInTheDocument();
 
-      const setupButton = screen.getByRole('button', { name: '⚡ Setup Lightning Wallet' });
+      const setupButton = screen.getByRole('button', { name: 'Setup Lightning Wallet' });
       expect(setupButton).toBeInTheDocument();
     });
   });
@@ -195,9 +192,9 @@ describe('Profile Component', () => {
       renderWithTestWrapper();
 
       expect(screen.getByText('Creator Tools')).toBeInTheDocument();
-      expect(screen.getByText('• 📝 Create and publish content')).toBeInTheDocument();
-      expect(screen.getByText('• ⚡ Receive Lightning payments')).toBeInTheDocument();
-      expect(screen.getByText('• 📊 Analytics dashboard')).toBeInTheDocument();
+      expect(screen.getByText('Create and publish content')).toBeInTheDocument();
+      expect(screen.getByText('Receive Lightning payments')).toBeInTheDocument();
+      expect(screen.getByText('Analytics dashboard')).toBeInTheDocument();
     });
   });
 
@@ -211,9 +208,9 @@ describe('Profile Component', () => {
     it('shows settings action buttons', () => {
       renderWithTestWrapper();
 
-      expect(screen.getByRole('button', { name: '⚙️ Edit Profile' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '🔐 Security Settings' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '🌐 Export NOSTR Keys' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Edit Profile' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Security Settings' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Export NOSTR Keys' })).toBeInTheDocument();
     });
   });
 
@@ -232,20 +229,18 @@ describe('Profile Component', () => {
     it('handles Lightning wallet setup button click', () => {
       renderWithTestWrapper();
 
-      const setupButton = screen.getByRole('button', { name: '⚡ Setup Lightning Wallet' });
+      const setupButton = screen.getByRole('button', { name: 'Setup Lightning Wallet' });
       fireEvent.click(setupButton);
 
-      // Button should be clickable (implementation is in progress)
       expect(setupButton).toBeInTheDocument();
     });
 
     it('handles edit profile button click', () => {
       renderWithTestWrapper();
 
-      const editButton = screen.getByRole('button', { name: '⚙️ Edit Profile' });
+      const editButton = screen.getByRole('button', { name: 'Edit Profile' });
       fireEvent.click(editButton);
 
-      // Button should be clickable (implementation is in progress)
       expect(editButton).toBeInTheDocument();
     });
   });
@@ -265,9 +260,9 @@ describe('Profile Component', () => {
     it('shows platform technologies', () => {
       renderWithTestWrapper();
 
-      expect(screen.getByText('🌐 NOSTR Protocol')).toBeInTheDocument();
-      expect(screen.getByText('⚡ Lightning Network')).toBeInTheDocument();
-      expect(screen.getByText('🔐 Self-Sovereign Identity')).toBeInTheDocument();
+      expect(screen.getByText('NOSTR Protocol')).toBeInTheDocument();
+      expect(screen.getAllByText('Lightning Network').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText('Self-Sovereign Identity')).toBeInTheDocument();
     });
 
     it('displays Lightning address information', () => {
@@ -294,7 +289,7 @@ describe('Profile Component', () => {
   });
 });
 
-// Test different user roles using our elite test wrapper
+// Test different user roles
 describe('Profile Component - Different Roles', () => {
   beforeEach((): void => {
     vi.clearAllMocks();
@@ -303,15 +298,13 @@ describe('Profile Component - Different Roles', () => {
   it('shows supporter features for supporter role', () => {
     renderWithTestWrapper(mockSupporterUser);
 
-    // Role display
-    expect(screen.getByText('💚 Supporter')).toBeInTheDocument();
+    expect(screen.getByText('Supporter')).toBeInTheDocument();
   });
 
   it('shows admin features for admin role', () => {
     renderWithTestWrapper(mockAdminUser);
 
-    // Role display
-    expect(screen.getByText('🔑 Administrator')).toBeInTheDocument();
+    expect(screen.getByText('Administrator')).toBeInTheDocument();
   });
 });
 
@@ -325,7 +318,7 @@ describe('Profile Component - Email Authentication', () => {
     renderWithTestWrapper(mockEmailUser);
 
     expect(screen.getByText('Email Authentication')).toBeInTheDocument();
-    expect(screen.getByText("You're using traditional email authentication:")).toBeInTheDocument();
+    expect(screen.getByText(/using traditional email authentication/)).toBeInTheDocument();
     expect(screen.getByText('email@example.com')).toBeInTheDocument();
   });
 });

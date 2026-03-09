@@ -187,7 +187,9 @@ const LightningOnboarding: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white">Welcome to Lightning Network</h2>
+              <h2 className="text-3xl font-bold text-white font-display">
+                Welcome to Lightning Network
+              </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Experience instant, low-cost Bitcoin payments. Lightning Network makes Bitcoin
                 payments as fast as sending a text message.
@@ -239,7 +241,9 @@ const LightningOnboarding: React.FC = () => {
                   <Wallet className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Choose Your Lightning Wallet</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                Choose Your Lightning Wallet
+              </h2>
               <p className="text-muted-foreground">
                 Select the wallet that best fits your needs and experience level.
               </p>
@@ -263,7 +267,7 @@ const LightningOnboarding: React.FC = () => {
                           wallet.type === 'custodial'
                             ? 'bg-green-500/20'
                             : wallet.type === 'self-custodial'
-                              ? 'bg-blue-500/20'
+                              ? 'bg-purple-500/20'
                               : 'bg-purple-500/20'
                         }`}
                       >
@@ -322,7 +326,9 @@ const LightningOnboarding: React.FC = () => {
                   <Smartphone className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Setup {selectedWallet?.name}</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                Setup {selectedWallet?.name}
+              </h2>
               <p className="text-muted-foreground">
                 Follow these steps to get your Lightning wallet ready.
               </p>
@@ -444,7 +450,9 @@ const LightningOnboarding: React.FC = () => {
                   <Bitcoin className="h-8 w-8 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Test Your First Payment</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 font-display">
+                Test Your First Payment
+              </h2>
               <p className="text-muted-foreground">
                 Make a small test payment to verify everything works perfectly.
               </p>
@@ -563,7 +571,9 @@ const LightningOnboarding: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white">⚡ Lightning Network Ready!</h2>
+              <h2 className="text-3xl font-bold text-white font-display">
+                Lightning Network Ready!
+              </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Congratulations! You're now ready to send and receive instant Bitcoin payments.
                 Welcome to the future of money.

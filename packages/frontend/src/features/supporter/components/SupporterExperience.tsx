@@ -21,6 +21,7 @@ import {
   SearchResults,
   TrendingContent,
 } from '../types/supporterExperience';
+import { Spinner } from '../../../components/ui/spinner';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useSupporterExperienceService } from '../services/supporterExperienceService';
 
@@ -689,7 +690,7 @@ const SupporterExperience: React.FC<SupporterExperienceProps> = ({
       {isLoading && (
         <div className="loading-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <Spinner size="lg" className="mx-auto mb-4" />
             <div className="text-gray-600">Loading amazing content...</div>
           </div>
         </div>

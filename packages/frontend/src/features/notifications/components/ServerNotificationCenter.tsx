@@ -72,13 +72,13 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
   return (
     <div className={['flex flex-col', className].filter(Boolean).join(' ')}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <span className="text-sm font-semibold text-gray-700">Activity</span>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <span className="text-sm font-semibold text-foreground font-display">Activity</span>
         {unreadCount > 0 && (
           <button
             onClick={() => markAllRead.mutate()}
             disabled={markAllRead.isPending}
-            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50"
+            className="text-xs text-purple-400 hover:text-purple-300 font-medium disabled:opacity-50 transition-colors duration-150"
             type="button"
           >
             {markAllRead.isPending ? 'Marking...' : 'Mark all read'}
@@ -100,10 +100,10 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
           <div className="flex flex-col gap-3 p-4 animate-pulse">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex gap-3 items-start">
-                <div className="w-2 h-2 mt-1.5 rounded-full bg-gray-200 shrink-0" />
+                <div className="w-2 h-2 mt-1.5 rounded-full bg-purple-500/20 shrink-0" />
                 <div className="flex-1">
-                  <div className="h-3 w-40 bg-gray-200 rounded mb-1.5" />
-                  <div className="h-2 w-24 bg-gray-100 rounded" />
+                  <div className="h-3 w-40 bg-purple-500/10 rounded mb-1.5" />
+                  <div className="h-2 w-24 bg-purple-500/5 rounded" />
                 </div>
               </div>
             ))}
@@ -114,9 +114,9 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
           </p>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+            <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-3">
               <svg
-                className="w-5 h-5 text-gray-400"
+                className="w-5 h-5 text-purple-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -129,8 +129,8 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
                 />
               </svg>
             </div>
-            <p className="text-sm font-medium text-gray-900">No notifications yet</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-sm font-medium text-foreground">No notifications yet</p>
+            <p className="text-xs text-muted-foreground mt-1">
               When someone follows you or comments, you'll see it here.
             </p>
           </div>
@@ -138,8 +138,8 @@ const ServerNotificationCenter: React.FC<ServerNotificationCenterProps> = ({ cla
           <ul role="list">
             {grouped.map((group) => (
               <li key={group.label}>
-                <div className="px-4 py-1.5 bg-gray-50 border-b border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <div className="px-4 py-1.5 bg-card border-b border-border">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     {group.label}
                   </span>
                 </div>

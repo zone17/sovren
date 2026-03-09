@@ -35,7 +35,6 @@ describe('Signup Component', () => {
     it('renders the main heading', () => {
       renderWithProviders(<Signup />);
 
-      // CardTitle renders as h3 by default
       const heading = screen.getByRole('heading', { name: 'Join Sovren' });
       expect(heading).toBeInTheDocument();
       expect(heading).toHaveTextContent('Join Sovren');
@@ -44,24 +43,24 @@ describe('Signup Component', () => {
     it('renders all form elements', () => {
       renderWithProviders(<Signup />);
 
-      // Check for authentication mode selector
-      expect(screen.getByText('🌐 NOSTR Keys')).toBeInTheDocument();
-      expect(screen.getByText('📧 Email')).toBeInTheDocument();
+      // Check for authentication mode selector (no emojis in new design)
+      expect(screen.getByText('NOSTR Keys')).toBeInTheDocument();
+      expect(screen.getByText('Email')).toBeInTheDocument();
 
       // Check for NOSTR-specific elements (default mode)
-      expect(screen.getByText('🔐 Sovereign Identity')).toBeInTheDocument();
+      expect(screen.getByText('Sovereign Identity')).toBeInTheDocument();
       // Generate button shows in NOSTR mode
-      expect(screen.getByText('🔑 Generate New Keys')).toBeInTheDocument();
+      expect(screen.getByText('Generate New Keys')).toBeInTheDocument();
     });
 
     it('switches between authentication modes', () => {
       renderWithProviders(<Signup />);
 
       // Switch to email mode
-      const emailTab = screen.getByText('📧 Email');
+      const emailTab = screen.getByText('Email');
       fireEvent.click(emailTab);
 
-      // Check for email form elements - uses Label component which wraps text
+      // Check for email form elements
       expect(screen.getByLabelText('Full Name')).toBeInTheDocument();
       expect(screen.getByLabelText('Email address')).toBeInTheDocument();
       expect(screen.getByLabelText('Password')).toBeInTheDocument();
@@ -73,7 +72,7 @@ describe('Signup Component', () => {
     it('generates NOSTR keys when button is clicked', async (): Promise<void> => {
       renderWithProviders(<Signup />);
 
-      const generateButton = screen.getByText('🔑 Generate New Keys');
+      const generateButton = screen.getByText('Generate New Keys');
       fireEvent.click(generateButton);
 
       // Should show loading state (button becomes disabled)
