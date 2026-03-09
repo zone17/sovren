@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { Spinner } from '../components/ui/spinner';
 import { LightningPaymentButton } from '../components/lightning/LightningPaymentButton';
 import { useCreatorProfile } from '../queries/creators/useCreatorProfile';
 import type { CreatorProfileDetail } from '@shared/types/discovery';
@@ -71,7 +72,7 @@ const CreatorProfilePage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" role="status">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-purple-500/30 border-t-purple-500" />
+        <Spinner size="lg" />
         <span className="sr-only">Loading creator profile...</span>
       </div>
     );

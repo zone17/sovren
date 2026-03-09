@@ -157,7 +157,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAuthenticated, user } = useAuthStatus();
   const { logout } = useAuth();
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('sidebar-collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async (): Promise<void> => {
@@ -220,7 +226,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Collapse toggle */}
           <div className="p-2 border-t border-white/5">
             <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              onClick={() => {
+                setSidebarCollapsed((prev) => {
+                  const next = !prev;
+                  try {
+                    localStorage.setItem('sidebar-collapsed', String(next));
+                  } catch {
+                    /* localStorage unavailable */
+                  }
+                  return next;
+                });
+              }}
               className="w-full flex items-center justify-center p-2 rounded-lg text-white/20 hover:text-white/40 hover:bg-white/[0.03] transition-colors"
             >
               <CollapseIcon collapsed={sidebarCollapsed} />

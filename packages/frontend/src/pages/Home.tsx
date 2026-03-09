@@ -48,7 +48,10 @@ function useInView(threshold = 0.15) {
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) setInView(true);
+        if (entry.isIntersecting) {
+          setInView(true);
+          obs.unobserve(entry.target); // Once revealed, stop observing to prevent stale re-triggers on fast scroll
+        }
       },
       { threshold }
     );
@@ -474,7 +477,7 @@ const Home: React.FC = () => {
       <footer className="border-t border-white/5 py-8">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={SovrenIconPNG} alt="" className="w-5 h-5 rounded opacity-60" />
+            <img src={SovrenIconPNG} alt="" className="w-5 h-5 rounded opacity-60" loading="lazy" />
             <span className="text-sm text-white/50">Sovren &copy; {new Date().getFullYear()}</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-white/40">

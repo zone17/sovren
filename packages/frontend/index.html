@@ -10,6 +10,11 @@
         document.documentElement.setAttribute('data-theme', 'light');
       }
     </script>
+    <!-- Google Fonts: SRI integrity attributes are not possible here because the
+         fonts.googleapis.com CSS endpoint returns different content per user-agent
+         (browser-specific font formats). The hash would differ on every request.
+         Self-hosting fonts is the alternative but adds maintenance burden for
+         minimal security gain (fonts are non-executable resources). -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">

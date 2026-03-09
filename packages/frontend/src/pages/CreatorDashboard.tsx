@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth';
+import { Spinner } from '../components/ui/spinner';
 import { apiClient } from '../services/api/apiClient';
 
 /* ────────────────────────────────────────────────────────
@@ -200,7 +201,7 @@ const CreatorDashboard: React.FC = () => {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+          <Spinner size="lg" />
           <span className="text-sm text-white/30">Loading dashboard...</span>
         </div>
       </div>

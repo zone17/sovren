@@ -120,9 +120,11 @@ export interface SubscriptionCardProps {
 
 /**
  * Convert satoshis to approximate USD (assumes $30,000 per BTC)
+ * TODO: Replace with live rate from a price feed service
  */
+const HARDCODED_BTC_USD_RATE = 30000; // TODO: Replace with live rate
 const satsToUSD = (sats: number): string => {
-  return ((sats / 100000000) * 30000).toFixed(2);
+  return ((sats / 100000000) * HARDCODED_BTC_USD_RATE).toFixed(2);
 };
 
 /**

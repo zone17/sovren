@@ -31,10 +31,6 @@
     --ring: 263 70% 60%;
     --radius: 0.625rem;
 
-    --surface-base: 40 20% 97%;
-    --surface-raised: 0 0% 100%;
-    --surface-overlay: 0 0% 100%;
-
     --chart-1: 263 70% 55%;
     --chart-2: 192 70% 40%;
     --chart-3: 38 92% 45%;
@@ -76,10 +72,6 @@
     --border: 240 10% 18%;
     --input: 240 10% 18%;
     --ring: 263 70% 60%;
-
-    --surface-base: 240 20% 4%;
-    --surface-raised: 240 18% 7%;
-    --surface-overlay: 240 18% 10%;
 
     --chart-1: 263 70% 60%;
     --chart-2: 192 70% 50%;
@@ -241,6 +233,7 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, box-shadow;
   }
 
   .glass-hover:hover {
@@ -280,6 +273,7 @@
     opacity: 0;
     transform: translateY(32px);
     animation: revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
   }
 
   .reveal-stagger > *:nth-child(1) { animation-delay: 0.05s; }
@@ -318,6 +312,7 @@
 
   .glass-dark-hover {
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, box-shadow;
   }
 
   .glass-dark-hover:hover {
@@ -428,6 +423,7 @@
     transform: translateY(32px);
     transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
                 transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
   }
 
   .scroll-reveal.visible {

@@ -13,6 +13,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { Spinner } from '../../../components/ui/spinner';
 import { predictiveAnalytics } from '../../analytics/services/predictiveAnalytics';
 
 // 🛡️ **ELITE TYPE SAFETY - PROPER INTERFACES**
@@ -469,7 +470,7 @@ const AIDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <Spinner size="xl" />
       </div>
     );
   }

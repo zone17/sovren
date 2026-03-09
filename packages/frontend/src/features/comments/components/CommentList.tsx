@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import { Spinner } from '../../../components/ui/spinner';
 import { useComments } from '../hooks/useComments';
 import { CommentForm } from './CommentForm';
 import { CommentItem } from './CommentItem';
@@ -50,10 +51,7 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
           aria-label="Loading comments..."
           className="flex items-center justify-center py-8 text-muted-foreground"
         >
-          <div
-            className="animate-spin h-6 w-6 mr-2 rounded-full border-2 border-purple-500/30 border-t-purple-500"
-            aria-hidden="true"
-          />
+          <Spinner size="md" className="mr-2" />
           <span>Loading comments...</span>
         </div>
       )}

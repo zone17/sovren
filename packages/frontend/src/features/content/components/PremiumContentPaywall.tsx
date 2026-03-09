@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useAppSelector } from '../../../store';
 import type { ContentItem } from '../../../types/content';
+import { Spinner } from '../../../components/ui/spinner';
 import { formatSats } from '../../../shared/utils/formatSats';
 
 // Simple icons without external dependencies
@@ -166,7 +167,7 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
         >
           {isProcessingPayment ? (
             <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+              <Spinner size="sm" className="mr-2 border-white border-t-transparent" />
               Processing...
             </>
           ) : (

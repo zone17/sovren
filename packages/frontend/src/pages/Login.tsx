@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui';
+import { Spinner } from '../components/ui/spinner';
 import { useAuth } from '../features/auth';
 import { createSignatureMessage } from '@shared/types/nostr/auth';
 
@@ -273,7 +274,7 @@ const Login: React.FC = () => {
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">
-                      <span className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500/30 border-t-purple-500 mr-2" />
+                      <Spinner size="sm" className="mr-2" />
                       Authenticating...
                     </span>
                   ) : (
@@ -345,7 +346,7 @@ const Login: React.FC = () => {
                   >
                     {isGeneratingKeys ? (
                       <span className="flex items-center justify-center">
-                        <span className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500/30 border-t-purple-500 mr-2" />
+                        <Spinner size="sm" className="mr-2" />
                         Generating...
                       </span>
                     ) : (
@@ -361,7 +362,7 @@ const Login: React.FC = () => {
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">
-                      <span className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500/30 border-t-purple-500 mr-2" />
+                      <Spinner size="sm" className="mr-2" />
                       Authenticating...
                     </span>
                   ) : (

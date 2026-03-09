@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Spinner } from '../../../components/ui/spinner';
 import { getPerformanceReport } from '../../../monitoring/performance';
 
 interface MetricDisplayProps {
@@ -365,7 +366,7 @@ const MonitoringDashboard: React.FC = () => {
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <Spinner size="lg" className="mx-auto mb-2" />
                     <p className="text-gray-500">Loading performance data...</p>
                   </div>
                 </div>

@@ -182,7 +182,8 @@ const PricingTierCard: React.FC<{
             </span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            ≈ ${((tier.price_sats / 100000000) * 30000).toFixed(2)} USD
+            {/* TODO: Replace with live rate */}≈ $
+            {((tier.price_sats / 100000000) * 30000).toFixed(2)} USD
           </div>
         </div>
       </CardHeader>
@@ -224,7 +225,8 @@ const PricingTierCard: React.FC<{
             </span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            ${((tier.total_revenue_sats / 100000000) * 30000).toFixed(2)} USD
+            {/* TODO: Replace with live rate */}$
+            {((tier.total_revenue_sats / 100000000) * 30000).toFixed(2)} USD
           </div>
         </div>
       </CardContent>
@@ -573,7 +575,8 @@ const TierDialog: React.FC<{
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              ${(((formData.price_sats || 0) / 100000000) * 30000).toFixed(2)} USD
+              {/* TODO: Replace with live rate */}$
+              {(((formData.price_sats || 0) / 100000000) * 30000).toFixed(2)} USD
             </p>
           </div>
 

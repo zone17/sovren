@@ -1,3 +1,4 @@
+import { Spinner } from '../../../components/ui/spinner';
 import { useDiscovery } from '../hooks/useDiscovery';
 import { CreatorCard } from './CreatorCard';
 import { CATEGORIES } from '../types';
@@ -96,7 +97,7 @@ export const DiscoveryPage = () => {
             role="status"
             aria-label="Loading creators"
           >
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-purple-500/30 border-t-purple-500" />
+            <Spinner size="lg" />
             <span className="sr-only">Loading creators...</span>
           </div>
         )}
