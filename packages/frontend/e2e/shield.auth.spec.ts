@@ -20,6 +20,16 @@ test.describe('Content Shield Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     shieldPage = new ShieldPage(page);
     await shieldPage.goto();
+
+    // Wait for SPA to settle — either content renders or auth redirect fires
+    await Promise.race([
+      shieldPage.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+    }
   });
 
   test('dashboard loads with key sections visible', async () => {

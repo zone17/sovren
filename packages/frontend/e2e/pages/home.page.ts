@@ -12,15 +12,15 @@ export class HomePage {
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.getByRole('heading', { name: 'Unleash Your Creative Sovereignty' }).first();
-    this.subheading = page.getByText('Monetize your audience. Own your platform.');
-    this.ctaButton = page.getByRole('button', { name: 'Start Your Sovren Journey' });
-    this.learnMoreButton = page.getByRole('button', { name: 'See How Sovren Works' });
+    this.heading = page.getByRole('heading', { name: 'Own Your Creative Empire' }).first();
+    this.subheading = page.getByText('Monetize your audience with Bitcoin.').first();
+    this.ctaButton = page.getByRole('button', { name: 'Start Creating' });
+    this.learnMoreButton = page.getByRole('button', { name: 'See How It Works' });
     this.trueOwnershipCard = page.getByRole('heading', { name: 'True Ownership' }).first();
     this.bitcoinMonetizationCard = page
-      .getByRole('heading', { name: 'Bitcoin Monetization' })
+      .getByRole('heading', { name: 'Instant Bitcoin Payments' })
       .first();
-    this.eliteCommunityCard = page.getByRole('heading', { name: 'Elite Community' }).first();
+    this.eliteCommunityCard = page.getByRole('heading', { name: 'Censorship Resistant' }).first();
   }
 
   async goto() {
