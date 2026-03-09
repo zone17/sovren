@@ -371,7 +371,7 @@ const SimilarityBreakdown: React.FC<{ similarity: SimilarityScore }> = ({ simila
               <span>{component.name}</span>
               <span>{Math.round(component.score * 100)}%</span>
             </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className={cn('h-full transition-all duration-300', component.color)}
                 style={{ width: `${component.score * 100}%` }}
@@ -381,7 +381,7 @@ const SimilarityBreakdown: React.FC<{ similarity: SimilarityScore }> = ({ simila
         ))}
       </div>
 
-      <div className="text-xs text-gray-500 pt-2 border-t">
+      <div className="text-xs text-muted-foreground pt-2 border-t">
         Confidence: {Math.round(similarity.confidence * 100)}% • Computed:{' '}
         {similarity.computedAt.toLocaleTimeString()}
       </div>
@@ -401,7 +401,7 @@ const SimilarContentCard: React.FC<{
     if (score >= 0.9) return 'bg-green-100 text-green-700';
     if (score >= 0.8) return 'bg-blue-100 text-blue-700';
     if (score >= 0.7) return 'bg-yellow-100 text-yellow-700';
-    return 'bg-gray-100 text-gray-700';
+    return 'bg-muted text-muted-foreground';
   };
 
   return (
@@ -437,10 +437,10 @@ const SimilarContentCard: React.FC<{
             </CardTitle>
 
             {content.description && (
-              <p className="text-sm text-gray-600 line-clamp-2">{content.description}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2">{content.description}</p>
             )}
 
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Eye className="h-3 w-3" />
                 {content.metadata.viewCount.toLocaleString()}
@@ -525,7 +525,7 @@ const SimilarContentCard: React.FC<{
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Creator:</span>
+              <span className="text-xs text-muted-foreground">Creator:</span>
               <span className="text-xs font-medium">{content.creatorName}</span>
             </div>
           </div>
@@ -567,12 +567,12 @@ const ContentClusterCard: React.FC<{ cluster: ContentCluster }> = ({ cluster }) 
           </CardTitle>
           <Badge variant="outline">{cluster.size} items</Badge>
         </div>
-        <p className="text-sm text-gray-600">{cluster.description}</p>
+        <p className="text-sm text-muted-foreground">{cluster.description}</p>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-900">Dominant Topics</h4>
+          <h4 className="font-medium text-foreground">Dominant Topics</h4>
           <div className="flex flex-wrap gap-1">
             {cluster.characteristics.dominantTopics.map((topic, index) => (
               <Badge key={index} variant="secondary" className="text-xs">
@@ -583,7 +583,7 @@ const ContentClusterCard: React.FC<{ cluster: ContentCluster }> = ({ cluster }) 
         </div>
 
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-900">Cluster Quality</h4>
+          <h4 className="font-medium text-foreground">Cluster Quality</h4>
           <div className="space-y-2">
             <div className="flex justify-between items-center text-sm">
               <span>Cohesion</span>
@@ -613,13 +613,13 @@ const ContentClusterCard: React.FC<{ cluster: ContentCluster }> = ({ cluster }) 
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-500">Avg Engagement:</span>
+            <span className="text-muted-foreground">Avg Engagement:</span>
             <div className="font-medium">
               {Math.round(cluster.characteristics.avgEngagement * 100)}%
             </div>
           </div>
           <div>
-            <span className="text-gray-500">Avg Difficulty:</span>
+            <span className="text-muted-foreground">Avg Difficulty:</span>
             <div className="font-medium">
               {cluster.characteristics.avgDifficulty < 2
                 ? 'Beginner'
@@ -630,7 +630,7 @@ const ContentClusterCard: React.FC<{ cluster: ContentCluster }> = ({ cluster }) 
           </div>
         </div>
 
-        <div className="text-xs text-gray-500 pt-2 border-t">
+        <div className="text-xs text-muted-foreground pt-2 border-t">
           Created: {cluster.createdAt.toLocaleDateString()} • Updated:{' '}
           {cluster.lastUpdated.toLocaleDateString()}
         </div>
@@ -726,13 +726,13 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
       <div className={cn('space-y-6', className)}>
         <Card className="animate-pulse">
           <CardHeader>
-            <div className="h-6 bg-gray-200 rounded w-1/2" />
-            <div className="h-4 bg-gray-200 rounded w-3/4" />
+            <div className="h-6 bg-muted rounded w-1/2" />
+            <div className="h-4 bg-muted rounded w-3/4" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded" />
-              <div className="h-4 bg-gray-200 rounded w-2/3" />
+              <div className="h-4 bg-muted rounded" />
+              <div className="h-4 bg-muted rounded w-2/3" />
             </div>
           </CardContent>
         </Card>
@@ -749,7 +749,7 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
             <Network className="h-6 w-6 text-green-500" />
             Content Similarity Analysis
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Discover related content based on advanced similarity algorithms
           </p>
         </div>
@@ -799,7 +799,7 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Search Content</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                 <Input
                   placeholder="Search similar content..."
                   value={searchQuery}
@@ -842,12 +842,12 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
-                  <Network className="h-12 w-12 mx-auto text-gray-400" />
+                  <Network className="h-12 w-12 mx-auto text-muted-foreground/60" />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-600">
+                    <h3 className="text-lg font-semibold text-muted-foreground">
                       No Similar Content Found
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Try adjusting your similarity threshold or analysis type.
                     </p>
                   </div>
@@ -874,10 +874,12 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center space-y-4">
-                    <Layers className="h-12 w-12 mx-auto text-gray-400" />
+                    <Layers className="h-12 w-12 mx-auto text-muted-foreground/60" />
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-600">No Clusters Available</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="text-lg font-semibold text-muted-foreground">
+                        No Clusters Available
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
                         Content clustering analysis is in progress.
                       </p>
                     </div>
@@ -900,7 +902,7 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{similarContent.length}</div>
-                  <p className="text-sm text-gray-600">Similar Items Found</p>
+                  <p className="text-sm text-muted-foreground">Similar Items Found</p>
                 </div>
               </CardContent>
             </Card>
@@ -918,7 +920,7 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
                       : 0}
                     %
                   </div>
-                  <p className="text-sm text-gray-600">Avg Similarity</p>
+                  <p className="text-sm text-muted-foreground">Avg Similarity</p>
                 </div>
               </CardContent>
             </Card>
@@ -927,7 +929,7 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">{contentClusters.length}</div>
-                  <p className="text-sm text-gray-600">Content Clusters</p>
+                  <p className="text-sm text-muted-foreground">Content Clusters</p>
                 </div>
               </CardContent>
             </Card>
@@ -938,7 +940,7 @@ export const ContentSimilarity: React.FC<ContentSimilarityProps> = ({
                   <div className="text-2xl font-bold text-orange-600">
                     {contentClusters.reduce((sum, cluster) => sum + cluster.size, 0)}
                   </div>
-                  <p className="text-sm text-gray-600">Clustered Items</p>
+                  <p className="text-sm text-muted-foreground">Clustered Items</p>
                 </div>
               </CardContent>
             </Card>

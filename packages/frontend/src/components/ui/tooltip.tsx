@@ -47,17 +47,15 @@ const TooltipContent = React.forwardRef<
     sideOffset={sideOffset}
     className={cn(
       // Modern container with sophisticated styling
-      'z-50 overflow-hidden rounded-lg border border-gray-200 bg-white px-3 py-1.5',
+      'z-50 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground px-3 py-1.5',
       // Elite typography for perfect readability
-      'text-[12px] font-medium leading-relaxed text-gray-900',
+      'text-[12px] font-medium leading-relaxed',
       // Sophisticated shadow system for elegant depth
       'shadow-[0_4px_12px_rgba(0,0,0,0.15)] backdrop-blur-sm',
       // Smooth entrance and exit animations
       'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
       // Intelligent directional animations based on positioning
       'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-      // Dark mode support with sophisticated colors
-      'dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100',
       className
     )}
     {...props}

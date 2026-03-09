@@ -54,11 +54,11 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
           </svg>
         </div>
 
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+        <h2 className="text-lg font-semibold text-foreground mb-2">
           {isPageLevel ? 'Something went wrong' : 'Component Error'}
         </h2>
 
-        <p className="text-gray-600 mb-4">
+        <p className="text-muted-foreground mb-4">
           {isPageLevel
             ? 'We encountered an unexpected error. Our team has been notified.'
             : `There was an error loading the ${name || 'component'}.`}
@@ -87,7 +87,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
         {isPageLevel && (
           <button
             onClick={() => window.location.reload()}
-            className="ml-3 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
+            className="ml-3 bg-muted hover:bg-accent text-foreground px-4 py-2 rounded-md transition-colors duration-200"
           >
             Reload Page
           </button>

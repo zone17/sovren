@@ -49,7 +49,7 @@ const FollowButton: FC<FollowButtonProps> = ({ userId, className = '' }) => {
       className={[
         'rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50',
         isFollowing
-          ? 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+          ? 'border border-border bg-card text-foreground hover:bg-accent'
           : 'bg-indigo-600 text-white hover:bg-indigo-700',
         className,
       ]

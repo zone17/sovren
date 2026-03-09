@@ -20,19 +20,19 @@ const RepurposePreview: React.FC<RepurposePreviewProps> = ({ contentId }) => {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-white p-6">
+      <div className="rounded-lg border bg-card p-6">
         <div className="animate-pulse space-y-3">
-          <div className="h-5 w-40 rounded bg-gray-200" />
-          <div className="h-20 rounded bg-gray-100" />
+          <div className="h-5 w-40 rounded bg-muted" />
+          <div className="h-20 rounded bg-muted" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-white p-6">
+    <div className="rounded-lg border bg-card p-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Repurposed Versions</h3>
+        <h3 className="text-lg font-semibold text-foreground">Repurposed Versions</h3>
         <button
           className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
           onClick={handleGenerate}
@@ -43,7 +43,7 @@ const RepurposePreview: React.FC<RepurposePreviewProps> = ({ contentId }) => {
       </div>
 
       {!repurposed || repurposed.length === 0 ? (
-        <p className="mt-4 text-sm text-gray-500">
+        <p className="mt-4 text-sm text-muted-foreground">
           No repurposed versions yet. Click Generate to create platform-optimized versions.
         </p>
       ) : (
@@ -59,15 +59,15 @@ const RepurposePreview: React.FC<RepurposePreviewProps> = ({ contentId }) => {
                       className="h-2.5 w-2.5 rounded-full"
                       style={{ backgroundColor: display?.color || '#6B7280' }}
                     />
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-foreground">
                       {display?.name || version.platform}
                     </span>
-                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                    <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                       {version.format_type}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       {version.character_count}/{version.character_limit || '?'}
                     </span>
                     {version.approved ? (
@@ -85,7 +85,7 @@ const RepurposePreview: React.FC<RepurposePreviewProps> = ({ contentId }) => {
                     )}
                   </div>
                 </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{version.text}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">{version.text}</p>
               </div>
             );
           })}

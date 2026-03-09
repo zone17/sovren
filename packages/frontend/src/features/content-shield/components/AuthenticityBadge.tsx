@@ -7,7 +7,11 @@ import { ProvenanceChainViewer } from './ProvenanceChainViewer';
 
 const STATUS_CONFIG: Record<VerificationStatus, { icon: string; label: string; color: string }> = {
   verified: { icon: 'V', label: 'Verified', color: 'text-green-600 bg-green-50 border-green-200' },
-  unverified: { icon: '?', label: 'Unverified', color: 'text-gray-500 bg-gray-50 border-gray-200' },
+  unverified: {
+    icon: '?',
+    label: 'Unverified',
+    color: 'text-muted-foreground bg-muted border-border',
+  },
   disputed: { icon: '!', label: 'Disputed', color: 'text-red-600 bg-red-50 border-red-200' },
 };
 
@@ -24,13 +28,16 @@ export const AuthenticityBadge: React.FC<AuthenticityBadgeProps> = ({ contentId 
 
   if (isLoading) {
     return (
-      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 animate-pulse" />
+      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted animate-pulse" />
     );
   }
 
   if (isError) {
     return (
-      <span className="inline-flex items-center text-gray-400" title="Verification unavailable">
+      <span
+        className="inline-flex items-center text-muted-foreground/60"
+        title="Verification unavailable"
+      >
         <HelpCircle className="h-4 w-4" />
       </span>
     );

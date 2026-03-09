@@ -14,10 +14,10 @@ export const AudienceOverlap: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-white p-6">
+      <div className="rounded-lg border bg-card p-6">
         <div className="animate-pulse space-y-3">
-          <div className="h-5 w-40 rounded bg-gray-200" />
-          <div className="h-32 rounded bg-gray-100" />
+          <div className="h-5 w-40 rounded bg-muted" />
+          <div className="h-32 rounded bg-muted" />
         </div>
       </div>
     );
@@ -34,9 +34,9 @@ export const AudienceOverlap: React.FC = () => {
   const overlapPct = total > 0 ? ((estimatedOverlap / total) * 100).toFixed(0) : '0';
 
   return (
-    <div className="rounded-lg border bg-white p-6">
-      <h3 className="text-lg font-semibold text-gray-900">Audience Overlap Estimate</h3>
-      <p className="mt-1 text-sm text-gray-500">
+    <div className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-semibold text-foreground">Audience Overlap Estimate</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
         Estimated unique reach vs. cross-platform duplication based on follower distribution.
       </p>
 
@@ -49,9 +49,9 @@ export const AudienceOverlap: React.FC = () => {
           <p className="text-xl font-bold text-amber-700">{overlapPct}%</p>
           <p className="text-xs text-amber-600">Est. Overlap</p>
         </div>
-        <div className="rounded-md bg-gray-50 p-3">
-          <p className="text-xl font-bold text-gray-700">{total.toLocaleString()}</p>
-          <p className="text-xs text-gray-600">Combined Followers</p>
+        <div className="rounded-md bg-muted p-3">
+          <p className="text-xl font-bold text-foreground">{total.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground">Combined Followers</p>
         </div>
       </div>
 
@@ -69,12 +69,12 @@ export const AudienceOverlap: React.FC = () => {
                     style={{ backgroundColor: display?.color || '#6B7280' }}
                     aria-hidden="true"
                   />
-                  <span className="text-gray-600">{display?.name || p.platform}</span>
+                  <span className="text-muted-foreground">{display?.name || p.platform}</span>
                 </div>
-                <span className="text-gray-400">{pct.toFixed(1)}%</span>
+                <span className="text-muted-foreground/60">{pct.toFixed(1)}%</span>
               </div>
               <div
-                className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100"
+                className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
                 role="progressbar"
                 aria-valuenow={Math.round(pct)}
                 aria-valuemin={0}
@@ -91,7 +91,7 @@ export const AudienceOverlap: React.FC = () => {
         })}
       </div>
 
-      <p className="mt-3 text-xs text-gray-400">
+      <p className="mt-3 text-xs text-muted-foreground/60">
         Overlap is estimated. Actual unique reach requires cross-platform identity matching.
       </p>
     </div>

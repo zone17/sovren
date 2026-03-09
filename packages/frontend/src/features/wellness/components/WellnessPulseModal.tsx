@@ -58,7 +58,7 @@ export const WellnessPulseModal: React.FC<WellnessPulseModalProps> = ({ isOpen, 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">Energy</Label>
-              <span className="text-xs text-gray-500">{SCALE_LABELS[energy]}</span>
+              <span className="text-xs text-muted-foreground">{SCALE_LABELS[energy]}</span>
             </div>
             <Slider
               value={[energy]}
@@ -68,7 +68,7 @@ export const WellnessPulseModal: React.FC<WellnessPulseModalProps> = ({ isOpen, 
               step={1}
               aria-label="Energy level"
             />
-            <div className="flex justify-between text-[10px] text-gray-400">
+            <div className="flex justify-between text-[10px] text-muted-foreground/60">
               <span>Exhausted</span>
               <span>Energized</span>
             </div>
@@ -78,7 +78,7 @@ export const WellnessPulseModal: React.FC<WellnessPulseModalProps> = ({ isOpen, 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">Motivation</Label>
-              <span className="text-xs text-gray-500">{SCALE_LABELS[motivation]}</span>
+              <span className="text-xs text-muted-foreground">{SCALE_LABELS[motivation]}</span>
             </div>
             <Slider
               value={[motivation]}
@@ -88,7 +88,7 @@ export const WellnessPulseModal: React.FC<WellnessPulseModalProps> = ({ isOpen, 
               step={1}
               aria-label="Motivation level"
             />
-            <div className="flex justify-between text-[10px] text-gray-400">
+            <div className="flex justify-between text-[10px] text-muted-foreground/60">
               <span>Unmotivated</span>
               <span>Driven</span>
             </div>
@@ -98,7 +98,7 @@ export const WellnessPulseModal: React.FC<WellnessPulseModalProps> = ({ isOpen, 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">Stress</Label>
-              <span className="text-xs text-gray-500">{SCALE_LABELS[stress]}</span>
+              <span className="text-xs text-muted-foreground">{SCALE_LABELS[stress]}</span>
             </div>
             <Slider
               value={[stress]}
@@ -108,7 +108,7 @@ export const WellnessPulseModal: React.FC<WellnessPulseModalProps> = ({ isOpen, 
               step={1}
               aria-label="Stress level"
             />
-            <div className="flex justify-between text-[10px] text-gray-400">
+            <div className="flex justify-between text-[10px] text-muted-foreground/60">
               <span>Relaxed</span>
               <span>Overwhelmed</span>
             </div>

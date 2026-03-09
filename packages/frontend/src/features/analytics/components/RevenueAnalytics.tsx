@@ -121,7 +121,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
                   style={{ height: `${height}%` }}
                 />
                 {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-background text-foreground text-xs rounded px-2 py-1 whitespace-nowrap z-10">
                   {day.revenueSats.toLocaleString()} sats
                   <br />
                   {day.transactions} txns

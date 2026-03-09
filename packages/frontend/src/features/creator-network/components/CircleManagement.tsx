@@ -26,9 +26,9 @@ const CircleManagement: React.FC<CircleManagementProps> = ({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">{circleName} — Members</h2>
+      <h2 className="text-lg font-semibold text-foreground">{circleName} — Members</h2>
 
-      <ul className="divide-y divide-gray-100 rounded-lg border bg-white" role="list">
+      <ul className="divide-y divide-border rounded-lg border bg-card" role="list">
         {members.map((member) => (
           <li key={member.id} className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
@@ -36,7 +36,7 @@ const CircleManagement: React.FC<CircleManagementProps> = ({
                 {member.creatorId.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-foreground">
                   {member.creatorId === currentUserId
                     ? 'You'
                     : `Creator ${member.creatorId.slice(0, 8)}`}
@@ -45,7 +45,7 @@ const CircleManagement: React.FC<CircleManagementProps> = ({
                   className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
                     member.role === 'admin'
                       ? 'bg-indigo-100 text-indigo-700'
-                      : 'bg-gray-100 text-gray-600'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {member.role}
@@ -66,7 +66,7 @@ const CircleManagement: React.FC<CircleManagementProps> = ({
                     </button>
                     <button
                       onClick={() => setConfirmRemove(null)}
-                      className="rounded-md border px-3 py-1 text-xs text-gray-600"
+                      className="rounded-md border px-3 py-1 text-xs text-muted-foreground"
                     >
                       Cancel
                     </button>
@@ -87,7 +87,7 @@ const CircleManagement: React.FC<CircleManagementProps> = ({
       </ul>
 
       {members.length === 0 && (
-        <p className="text-sm text-gray-500 text-center py-4">No members yet.</p>
+        <p className="text-sm text-muted-foreground text-center py-4">No members yet.</p>
       )}
     </div>
   );

@@ -9,7 +9,7 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function intensityColor(intensity: number): string {
-  if (intensity === 0) return 'bg-gray-100';
+  if (intensity === 0) return 'bg-muted';
   if (intensity < 0.25) return 'bg-green-200';
   if (intensity < 0.5) return 'bg-green-400';
   if (intensity < 0.75) return 'bg-green-600';
@@ -50,7 +50,7 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base font-semibold">Work Activity</CardTitle>
         </CardHeader>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           Failed to load activity heatmap.
         </CardContent>
       </Card>
@@ -63,7 +63,7 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base font-semibold">Work Activity</CardTitle>
         </CardHeader>
-        <CardContent className="py-6 text-center text-sm text-gray-500">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
           No activity data yet. Start working to see your patterns.
         </CardContent>
       </Card>
@@ -90,7 +90,7 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
               className={`px-2 py-1 text-xs rounded ${
                 selectedPeriod === p
                   ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-500 hover:bg-gray-100'
+                  : 'text-muted-foreground hover:bg-accent'
               }`}
               aria-pressed={selectedPeriod === p}
             >
@@ -108,7 +108,7 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
                 {HOURS.filter((h) => h % 3 === 0).map((h) => (
                   <span
                     key={h}
-                    className="text-[10px] text-gray-400"
+                    className="text-[10px] text-muted-foreground/60"
                     style={{ width: `${100 / 8}%` }}
                   >
                     {formatHour(h)}
@@ -119,7 +119,7 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
               {/* Grid */}
               {DAYS.map((day, dayIndex) => (
                 <div key={day} className="flex items-center mb-[2px]">
-                  <span className="w-10 text-xs text-gray-500 text-right pr-2">{day}</span>
+                  <span className="w-10 text-xs text-muted-foreground text-right pr-2">{day}</span>
                   <div className="flex flex-1 gap-[2px]">
                     {HOURS.map((hour) => {
                       const cell = cellMap.get(`${dayIndex}-${hour}`);
@@ -149,18 +149,18 @@ export const WorkPatternHeatmap: React.FC<WorkPatternHeatmapProps> = ({ period =
 
               {/* Legend */}
               <div className="flex items-center justify-end mt-2 gap-1">
-                <span className="text-[10px] text-gray-400 mr-1">Less</span>
+                <span className="text-[10px] text-muted-foreground/60 mr-1">Less</span>
                 {[0, 0.15, 0.35, 0.6, 0.85].map((v) => (
                   <div key={v} className={`w-3 h-3 rounded-sm ${intensityColor(v)}`} />
                 ))}
-                <span className="text-[10px] text-gray-400 ml-1">More</span>
+                <span className="text-[10px] text-muted-foreground/60 ml-1">More</span>
               </div>
             </div>
           </div>
         </TooltipProvider>
 
         {data.peak_hours && data.peak_hours.length > 0 && (
-          <p className="text-xs text-gray-500 mt-3">
+          <p className="text-xs text-muted-foreground mt-3">
             Peak hours: {data.peak_hours.map(formatHour).join(', ')}
           </p>
         )}

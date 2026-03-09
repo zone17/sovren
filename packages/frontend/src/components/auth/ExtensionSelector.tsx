@@ -391,10 +391,10 @@ export const ExtensionSelector: React.FC<ExtensionSelectorProps> = ({
   return (
     <div className={`extension-selector ${className}`}>
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <h3 className="text-lg font-semibold text-foreground mb-2">
           Browser Extension Authentication
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Connect with your existing NOSTR browser extension for seamless authentication.
         </p>
       </div>
@@ -443,7 +443,7 @@ export const ExtensionSelector: React.FC<ExtensionSelectorProps> = ({
                   ? 'border-blue-500 bg-blue-50'
                   : extension.connected
                     ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    : 'border-border bg-card hover:border-accent'
               }`}
               onClick={() => !extension.connected && connectExtension(extension)}
             >
@@ -453,8 +453,8 @@ export const ExtensionSelector: React.FC<ExtensionSelectorProps> = ({
                     {extension.id === 'alby' ? '⚡' : extension.id === 'nos2x' ? '🔑' : '🌐'}
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">{extension.name}</h4>
-                    <p className="text-sm text-gray-600">
+                    <h4 className="font-medium text-foreground">{extension.name}</h4>
+                    <p className="text-sm text-muted-foreground">
                       Version: {extension.version} • Trust: {extension.trustLevel}
                     </p>
                     <div className="flex gap-2 mt-1">
@@ -504,7 +504,7 @@ export const ExtensionSelector: React.FC<ExtensionSelectorProps> = ({
         <div className="text-center py-8">
           <div className="mb-4">
             <svg
-              className="w-12 h-12 text-gray-400 mx-auto"
+              className="w-12 h-12 text-muted-foreground/60 mx-auto"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -517,8 +517,8 @@ export const ExtensionSelector: React.FC<ExtensionSelectorProps> = ({
               />
             </svg>
           </div>
-          <h4 className="text-gray-900 font-medium mb-2">No Extensions Found</h4>
-          <p className="text-gray-600 text-sm mb-4">
+          <h4 className="text-foreground font-medium mb-2">No Extensions Found</h4>
+          <p className="text-muted-foreground text-sm mb-4">
             No NOSTR browser extensions were detected. You can install nos2x or Alby to get started.
           </p>
           <div className="flex gap-3 justify-center">
@@ -541,7 +541,7 @@ export const ExtensionSelector: React.FC<ExtensionSelectorProps> = ({
           </div>
           <button
             onClick={refreshDetection}
-            className="mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors"
+            className="mt-4 bg-muted hover:bg-accent text-foreground px-4 py-2 rounded-lg text-sm transition-colors"
           >
             Refresh Detection
           </button>
@@ -550,15 +550,15 @@ export const ExtensionSelector: React.FC<ExtensionSelectorProps> = ({
 
       {/* Analytics Summary */}
       {analytics.length > 0 && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">Extension Analytics</h4>
+        <div className="mt-6 p-4 bg-muted rounded-lg">
+          <h4 className="text-sm font-medium text-foreground mb-2">Extension Analytics</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-600">Extensions Detected:</span>
+              <span className="text-muted-foreground">Extensions Detected:</span>
               <span className="ml-2 font-medium">{extensions.length}</span>
             </div>
             <div>
-              <span className="text-gray-600">Analytics Events:</span>
+              <span className="text-muted-foreground">Analytics Events:</span>
               <span className="ml-2 font-medium">{analytics.length}</span>
             </div>
           </div>

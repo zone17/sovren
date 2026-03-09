@@ -275,7 +275,7 @@ export const LightningPaymentButton: React.FC<LightningPaymentButtonProps> = ({
             {isLoading ? (
               <div className="flex flex-col items-center justify-center p-8">
                 <Spinner size="lg" />
-                <p className="mt-4 text-sm text-gray-500">Generating invoice...</p>
+                <p className="mt-4 text-sm text-muted-foreground">Generating invoice...</p>
               </div>
             ) : paymentRequest ? (
               <>

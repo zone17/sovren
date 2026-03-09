@@ -638,7 +638,7 @@ const LightningOnboarding: React.FC = () => {
                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
                     index <= currentStep
                       ? 'bg-amber-500 border-amber-500 text-white'
-                      : 'border-gray-600 text-gray-400'
+                      : 'border-border text-muted-foreground'
                   }`}
                 >
                   {index < currentStep ? (
@@ -650,7 +650,7 @@ const LightningOnboarding: React.FC = () => {
                 {index < steps.length - 1 && (
                   <div
                     className={`flex-1 h-0.5 mx-4 ${
-                      index < currentStep ? 'bg-amber-500' : 'bg-gray-600'
+                      index < currentStep ? 'bg-amber-500' : 'bg-border'
                     }`}
                   />
                 )}

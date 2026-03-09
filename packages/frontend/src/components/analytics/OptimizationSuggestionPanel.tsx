@@ -206,7 +206,7 @@ const getDifficultyColor = (difficulty: string) => {
     case 'high':
       return 'text-red-600';
     default:
-      return 'text-gray-600';
+      return 'text-muted-foreground';
   }
 };
 

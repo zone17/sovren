@@ -23,10 +23,10 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const entry = payload[0].payload;
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm text-sm">
-      <p className="font-medium capitalize text-gray-900">{entry.source}</p>
-      <p className="text-gray-600">{formatSats(entry.amountSats, { abbreviate: true })}</p>
-      <p className="text-gray-500">{entry.percentage.toFixed(1)}%</p>
+    <div className="rounded-lg border border-border bg-card p-3 shadow-sm text-sm">
+      <p className="font-medium capitalize text-foreground">{entry.source}</p>
+      <p className="text-muted-foreground">{formatSats(entry.amountSats, { abbreviate: true })}</p>
+      <p className="text-muted-foreground">{entry.percentage.toFixed(1)}%</p>
     </div>
   );
 };
@@ -38,17 +38,17 @@ const RevenueMix: React.FC = () => {
   if (breakdownLoading) {
     return (
       <div className="animate-pulse space-y-3">
-        <div className="h-5 w-32 rounded bg-gray-200" />
-        <div className="h-48 rounded-full bg-gray-100 mx-auto w-48" />
+        <div className="h-5 w-32 rounded bg-muted" />
+        <div className="h-48 rounded-full bg-muted mx-auto w-48" />
       </div>
     );
   }
 
   if (!breakdown || breakdown.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
-        <p className="text-sm text-gray-500">No revenue data yet.</p>
-        <p className="text-xs text-gray-400 mt-1">
+      <div className="rounded-lg border border-border bg-muted p-6 text-center">
+        <p className="text-sm text-muted-foreground">No revenue data yet.</p>
+        <p className="text-xs text-muted-foreground/60 mt-1">
           Revenue entries will appear here once recorded.
         </p>
       </div>
@@ -60,8 +60,8 @@ const RevenueMix: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">Revenue Mix</h4>
-        <span className="text-sm text-gray-500">
+        <h4 className="text-sm font-semibold text-foreground">Revenue Mix</h4>
+        <span className="text-sm text-muted-foreground">
           Total: {formatSats(totalSats, { abbreviate: true })}
         </span>
       </div>
@@ -110,7 +110,7 @@ const RevenueMix: React.FC = () => {
             <Tooltip content={<CustomTooltip />} />
             <Legend
               formatter={(value) => (
-                <span className="text-xs capitalize text-gray-700">{value}</span>
+                <span className="text-xs capitalize text-foreground">{value}</span>
               )}
             />
           </PieChart>
@@ -127,13 +127,13 @@ const RevenueMix: React.FC = () => {
                 style={{ backgroundColor: SOURCE_COLORS[entry.source] ?? SOURCE_COLORS.other }}
                 aria-hidden="true"
               />
-              <span className="text-sm capitalize text-gray-700">{entry.source}</span>
+              <span className="text-sm capitalize text-foreground">{entry.source}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">
+              <span className="text-muted-foreground">
                 {formatSats(entry.amountSats, { abbreviate: true })}
               </span>
-              <span className="font-medium text-gray-900 w-12 text-right">
+              <span className="font-medium text-foreground w-12 text-right">
                 {entry.percentage.toFixed(1)}%
               </span>
             </div>

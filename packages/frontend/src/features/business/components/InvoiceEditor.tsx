@@ -83,17 +83,17 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
 
   return (
     <div className="space-y-5">
-      <h3 className="text-base font-semibold text-gray-900">New Invoice</h3>
+      <h3 className="text-base font-semibold text-foreground">New Invoice</h3>
 
       {/* Client name */}
       <div>
-        <label htmlFor="client-name" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="client-name" className="block text-sm font-medium text-foreground">
           Client Name
         </label>
         <input
           id="client-name"
           type="text"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           placeholder="Client or company name"
           value={clientName}
           onChange={(e) => setClientName(e.target.value)}
@@ -102,13 +102,13 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
 
       {/* Line items */}
       <fieldset>
-        <legend className="text-sm font-medium text-gray-700">Line Items</legend>
+        <legend className="text-sm font-medium text-foreground">Line Items</legend>
         <div className="mt-2 space-y-2">
           {lineItems.map((item, index) => (
             <div key={index} className="flex gap-2 items-start">
               <input
                 type="text"
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="flex-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Description"
                 value={item.description}
                 onChange={(e) => updateLineItem(index, 'description', e.target.value)}
@@ -117,7 +117,7 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
               <input
                 type="number"
                 min="1"
-                className="w-20 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-20 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Qty"
                 value={item.quantity}
                 onChange={(e) => updateLineItem(index, 'quantity', Number(e.target.value))}
@@ -126,7 +126,7 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
               <input
                 type="number"
                 min="0"
-                className="w-32 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-32 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Price (sats)"
                 value={item.unitPriceSats || ''}
                 onChange={(e) => updateLineItem(index, 'unitPriceSats', Number(e.target.value))}
@@ -134,7 +134,7 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
               />
               <button
                 type="button"
-                className="mt-1 text-gray-400 hover:text-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
+                className="mt-1 text-muted-foreground/60 hover:text-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
                 onClick={() => removeLineItem(index)}
                 disabled={lineItems.length <= 1}
                 aria-label={`Remove line item ${index + 1}`}
@@ -154,9 +154,9 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
       </fieldset>
 
       {/* Total */}
-      <div className="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-700">Total</span>
-        <span className="text-lg font-bold text-gray-900" aria-live="polite">
+      <div className="rounded-lg bg-muted border border-border px-4 py-3 flex justify-between items-center">
+        <span className="text-sm font-medium text-foreground">Total</span>
+        <span className="text-lg font-bold text-foreground" aria-live="polite">
           {totalSats.toLocaleString()} sats
         </span>
       </div>
@@ -164,24 +164,24 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
       {/* Optional fields */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="due-date" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="due-date" className="block text-sm font-medium text-foreground">
             Due Date
           </label>
           <input
             id="due-date"
             type="date"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
           />
         </div>
         <div>
-          <label htmlFor="recurring" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="recurring" className="block text-sm font-medium text-foreground">
             Recurring
           </label>
           <select
             id="recurring"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={recurringInterval}
             onChange={(e) => setRecurringInterval(e.target.value as RecurringInterval | '')}
           >
@@ -221,7 +221,7 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
         {onCancel && (
           <button
             type="button"
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 transition-colors"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
             onClick={onCancel}
           >
             Cancel
@@ -238,7 +238,7 @@ const InvoiceEditor: React.FC<InvoiceEditorProps> = ({ onSaved, onCancel }) => {
               type="text"
               readOnly
               value={lnurlPay}
-              className="flex-1 rounded-md border border-green-300 bg-white px-3 py-1.5 text-xs font-mono text-gray-700 focus:outline-none"
+              className="flex-1 rounded-md border border-green-300 bg-card px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none"
               aria-label="LNURL payment link"
             />
             <button

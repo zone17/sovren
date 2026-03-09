@@ -25,7 +25,7 @@ const StatusBadge: React.FC<{ status: 'disconnected' | 'error' | 'timeout' | 're
   const getStatusClasses = (): string => {
     switch (status) {
       case 'disconnected':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        return 'bg-muted text-foreground';
       case 'error':
         return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
       case 'timeout':
@@ -105,18 +105,16 @@ const RelayErrorItem: React.FC<RelayErrorItemProps> = ({ error, onRetry, compact
 
   if (compact) {
     return (
-      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-md">
+      <div className="flex items-center justify-between py-2 px-3 bg-muted rounded-md">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" aria-hidden="true" />
-          <span className="text-sm text-gray-900 dark:text-gray-100 truncate">
-            {formatRelayUrl(error.url)}
-          </span>
+          <span className="text-sm text-foreground truncate">{formatRelayUrl(error.url)}</span>
           <StatusBadge status={error.isRetrying ? 'retrying' : error.status} />
         </div>
         <button
           onClick={handleRetry}
           disabled={isRetrying || error.isRetrying}
-          className="ml-2 p-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:text-gray-400 dark:disabled:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+          className="ml-2 p-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
           aria-label={`Retry connection to ${error.url}`}
         >
           <svg
@@ -139,30 +137,26 @@ const RelayErrorItem: React.FC<RelayErrorItemProps> = ({ error, onRetry, compact
   }
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+    <div className="border border-border rounded-lg p-4 bg-card">
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           {/* Relay URL */}
           <div className="flex items-center gap-2 mb-2">
             <div className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0" aria-hidden="true" />
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-              {error.url}
-            </h4>
+            <h4 className="text-sm font-semibold text-foreground truncate">{error.url}</h4>
           </div>
 
           {/* Status */}
           <div className="flex items-center gap-2 mb-2">
             <StatusBadge status={error.isRetrying ? 'retrying' : error.status} />
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-muted-foreground">
               Last attempt: {formatLastAttempt(error.lastAttempt)}
             </span>
           </div>
 
           {/* Retry count */}
           {error.retryCount > 0 && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-              Retry attempts: {error.retryCount}
-            </p>
+            <p className="text-xs text-muted-foreground mb-2">Retry attempts: {error.retryCount}</p>
           )}
 
           {/* Error Message */}
@@ -234,10 +228,8 @@ export const ConnectionErrorDisplay: React.FC<ConnectionErrorDisplayProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Connection Issues
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <h3 className="text-lg font-semibold text-foreground">Connection Issues</h3>
+          <p className="text-sm text-muted-foreground mt-1">
             {disconnectedCount > 0 && `${disconnectedCount} disconnected`}
             {disconnectedCount > 0 && (errorCount > 0 || timeoutCount > 0) && ', '}
             {errorCount > 0 && `${errorCount} errors`}
@@ -261,7 +253,7 @@ export const ConnectionErrorDisplay: React.FC<ConnectionErrorDisplayProps> = ({
           {onDismiss && (
             <button
               onClick={onDismiss}
-              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              className="p-2 text-muted-foreground hover:text-foreground rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               aria-label="Dismiss connection errors"
             >
               <svg

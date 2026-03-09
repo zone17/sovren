@@ -75,14 +75,14 @@ export const ReplyComposer: React.FC<ReplyComposerProps> = ({
           style={{ backgroundColor: platformInfo?.color || '#6B7280' }}
           aria-hidden="true"
         />
-        <span className="text-xs text-gray-500">
-          Replying to <span className="font-medium text-gray-700">{authorName}</span> via{' '}
+        <span className="text-xs text-muted-foreground">
+          Replying to <span className="font-medium text-foreground">{authorName}</span> via{' '}
           {platformInfo?.name || platform}
         </span>
       </div>
 
       <textarea
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+        className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
         rows={3}
         placeholder={`Reply via ${platformInfo?.name || platform}...`}
         value={content}
@@ -99,7 +99,7 @@ export const ReplyComposer: React.FC<ReplyComposerProps> = ({
           {charLimit !== undefined && (
             <span
               id="char-count"
-              className={`text-xs ${overLimit ? 'text-red-600 font-medium' : 'text-gray-400'}`}
+              className={`text-xs ${overLimit ? 'text-red-600 font-medium' : 'text-muted-foreground/60'}`}
               aria-live="polite"
             >
               {content.length}/{charLimit}
@@ -120,7 +120,7 @@ export const ReplyComposer: React.FC<ReplyComposerProps> = ({
                 <div
                   role="listbox"
                   aria-label="Reply templates"
-                  className="absolute left-0 top-6 z-10 w-56 rounded-md border border-gray-200 bg-white shadow-lg"
+                  className="absolute left-0 top-6 z-10 w-56 rounded-md border border-border bg-card shadow-lg"
                 >
                   {templates.map((t) => (
                     <button
@@ -128,7 +128,7 @@ export const ReplyComposer: React.FC<ReplyComposerProps> = ({
                       role="option"
                       aria-selected={false}
                       type="button"
-                      className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-accent focus:outline-none focus:bg-accent"
                       onClick={() => applyTemplate(t.template_text)}
                     >
                       {t.name}
@@ -143,7 +143,7 @@ export const ReplyComposer: React.FC<ReplyComposerProps> = ({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
+            className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={onCancel}
             disabled={isPending}
           >

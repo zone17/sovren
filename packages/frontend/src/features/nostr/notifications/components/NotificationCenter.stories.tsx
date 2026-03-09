@@ -21,7 +21,7 @@ const meta: Meta<typeof NotificationCenter> = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
+      <div className="min-h-screen bg-muted p-8">
         <div className="flex justify-end">
           <Story />
         </div>
@@ -102,7 +102,7 @@ export const DarkTheme: Story = {
   decorators: [
     (Story) => (
       <div className="dark">
-        <div className="min-h-screen bg-gray-900 p-8">
+        <div className="min-h-screen bg-background p-8">
           <div className="flex justify-end">
             <Story />
           </div>

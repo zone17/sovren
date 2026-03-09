@@ -23,8 +23,8 @@ export const FeedEmpty = memo<FeedEmptyProps>(
         role="status"
         aria-live="polite"
       >
-        <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" aria-hidden="true" />
-        <p className="text-gray-500 dark:text-gray-400 text-center mb-6">{message}</p>
+        <FileText className="w-16 h-16 text-muted-foreground/40 mb-4" aria-hidden="true" />
+        <p className="text-muted-foreground text-center mb-6">{message}</p>
         {showCreateButton && onCreateClick && (
           <button
             onClick={onCreateClick}

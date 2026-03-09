@@ -423,11 +423,11 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
 
   return (
     <div className={`nostr-signing-validator ${className}`}>
-      <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+      <div className="bg-card rounded-xl shadow-lg p-6 space-y-6">
         {/* Header */}
-        <div className="border-b pb-4">
-          <h2 className="text-2xl font-bold text-gray-900">NOSTR Signing Validator</h2>
-          <p className="text-gray-600 mt-1">
+        <div className="border-b border-border pb-4">
+          <h2 className="text-2xl font-bold text-foreground">NOSTR Signing Validator</h2>
+          <p className="text-muted-foreground mt-1">
             Validate NOSTR signatures and enforce cryptographic requirements
           </p>
         </div>
@@ -458,7 +458,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
 
         {/* Signing Requirements */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Signing Requirements</h3>
+          <h3 className="text-lg font-semibold text-foreground">Signing Requirements</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-3 rounded-lg">
               <div className="text-sm text-blue-700 font-medium">Max Signature Age</div>
@@ -489,7 +489,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
 
         {/* Challenge Generation */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Challenge Generation</h3>
+          <h3 className="text-lg font-semibold text-foreground">Challenge Generation</h3>
           <div className="flex items-center gap-4">
             <button
               onClick={() => generateChallenge(1)}
@@ -504,15 +504,15 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
               Hard Challenge
             </button>
             {pendingChallenge && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Challenge active ({Math.floor((Date.now() - challengeTimestamp) / 1000)}s ago)
               </div>
             )}
           </div>
 
           {pendingChallenge && (
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm font-medium text-gray-700 mb-1">Current Challenge:</div>
+            <div className="bg-muted p-3 rounded-lg">
+              <div className="text-sm font-medium text-foreground mb-1">Current Challenge:</div>
               <div className="font-mono text-sm break-all">{pendingChallenge}</div>
             </div>
           )}
@@ -520,18 +520,18 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
 
         {/* Event Testing */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Test Event Validation</h3>
+          <h3 className="text-lg font-semibold text-foreground">Test Event Validation</h3>
           <div className="space-y-3">
             <textarea
               value={testEvent}
               onChange={(e) => setTestEvent(e.target.value)}
               placeholder="Paste NOSTR event JSON here..."
-              className="w-full h-32 p-3 border border-gray-300 rounded-lg font-mono text-sm"
+              className="w-full h-32 p-3 border border-border rounded-lg font-mono text-sm"
             />
             <button
               onClick={testEventValidation}
               disabled={isValidating || !testEvent.trim()}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-green-600 hover:bg-green-700 disabled:bg-muted disabled:text-muted-foreground text-white px-4 py-2 rounded-lg transition-colors"
             >
               {isValidating ? 'Validating...' : 'Validate Event'}
             </button>
@@ -541,7 +541,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
         {/* Validation Results */}
         {validationResults && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Validation Results</h3>
+            <h3 className="text-lg font-semibold text-foreground">Validation Results</h3>
             <div className="space-y-3">
               <div
                 className={`p-3 rounded-lg ${validationResults.structure.valid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
@@ -574,7 +574,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
 
         {/* Recent Attempts */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Signature Attempts</h3>
+          <h3 className="text-lg font-semibold text-foreground">Recent Signature Attempts</h3>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {signatureAttempts
               .slice(-10)
@@ -590,14 +590,16 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
                       {attempt.success ? '✓' : '✗'}
                     </div>
                   </div>
-                  <div className="text-gray-600">
+                  <div className="text-muted-foreground">
                     {new Date(attempt.timestamp).toLocaleTimeString()}
                     {attempt.error && ` - ${attempt.error}`}
                   </div>
                 </div>
               ))}
             {signatureAttempts.length === 0 && (
-              <div className="text-gray-500 text-center py-4">No signature attempts yet</div>
+              <div className="text-muted-foreground text-center py-4">
+                No signature attempts yet
+              </div>
             )}
           </div>
         </div>
@@ -605,7 +607,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
         {/* Compromised Keys */}
         {compromisedKeys.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Compromised Keys Detected</h3>
+            <h3 className="text-lg font-semibold text-foreground">Compromised Keys Detected</h3>
             <div className="space-y-2">
               {compromisedKeys.map((key, index) => (
                 <div key={index} className="bg-red-50 border border-red-200 p-3 rounded-lg">
@@ -616,7 +618,7 @@ export const NOSTRSigningValidator: React.FC<SigningValidatorProps> = ({
                     </div>
                   </div>
                   <div className="text-red-700 text-sm">{key.reason}</div>
-                  <div className="text-gray-600 text-xs">
+                  <div className="text-muted-foreground text-xs">
                     Detected: {new Date(key.detected_at).toLocaleString()}
                   </div>
                 </div>

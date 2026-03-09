@@ -291,7 +291,7 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
         );
       case 'expired':
         return (
-          <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+          <Badge className="bg-muted text-foreground border-border">
             <Clock className="h-3 w-3 mr-1" />
             Expired
           </Badge>
@@ -304,7 +304,7 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
           </Badge>
         );
       default:
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{status}</Badge>;
+        return <Badge className="bg-muted text-foreground border-border">{status}</Badge>;
     }
   };
 
@@ -447,8 +447,8 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
           {/* Verifications List */}
           <div className="space-y-4">
             {verifications.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Shield className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <div className="text-center py-8 text-muted-foreground">
+                <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
                 <h3 className="text-lg font-medium mb-2">No NIP-05 Verifications</h3>
                 <p className="mb-4">
                   Create your first NIP-05 verification to establish your NOSTR identity.
@@ -484,19 +484,19 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Verifications</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Verifications</p>
                 <p className="text-2xl font-bold">{domainStats.total_verifications}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Verified</p>
+                <p className="text-sm font-medium text-muted-foreground">Verified</p>
                 <p className="text-2xl font-bold text-green-600">{domainStats.verified_count}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-sm font-medium text-muted-foreground">Pending</p>
                 <p className="text-2xl font-bold text-yellow-600">{domainStats.pending_count}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Failed</p>
+                <p className="text-sm font-medium text-muted-foreground">Failed</p>
                 <p className="text-2xl font-bold text-red-600">{domainStats.failed_count}</p>
               </div>
             </div>
@@ -522,7 +522,7 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
                 value={newIdentifier}
                 onChange={(e) => setNewIdentifier(e.target.value)}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Format: localpart@domain.com (e.g., alice@example.com)
               </p>
             </div>
@@ -576,9 +576,9 @@ export const NIP05Manager: React.FC<NIP05ManagerProps> = ({
           </DialogHeader>
           {selectedVerification && (
             <div className="space-y-2">
-              <div className="p-3 bg-gray-50 rounded-md">
+              <div className="p-3 bg-muted rounded-md">
                 <p className="font-medium">{selectedVerification.nip05_identifier}</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Status: {getStatusBadge(selectedVerification.verification_status)}
                 </p>
               </div>
@@ -676,7 +676,7 @@ const VerificationCard: React.FC<VerificationCardProps> = ({
         </div>
 
         {/* Verification Details */}
-        <div className="space-y-2 text-sm text-gray-600">
+        <div className="space-y-2 text-sm text-muted-foreground">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <span className="font-medium">Domain:</span> {verification.domain}
@@ -726,10 +726,10 @@ const VerificationCard: React.FC<VerificationCardProps> = ({
         {verification.verification_data &&
           Object.keys(verification.verification_data).length > 0 && (
             <details className="mt-3">
-              <summary className="cursor-pointer text-sm font-medium text-gray-700">
+              <summary className="cursor-pointer text-sm font-medium text-foreground">
                 Verification Details
               </summary>
-              <pre className="mt-2 p-2 bg-gray-50 rounded text-xs overflow-auto">
+              <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
                 {JSON.stringify(verification.verification_data, null, 2)}
               </pre>
             </details>
@@ -765,7 +765,7 @@ function getStatusBadge(status: string): JSX.Element {
       );
     case 'expired':
       return (
-        <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+        <Badge className="bg-muted text-foreground border-border">
           <Clock className="h-3 w-3 mr-1" />
           Expired
         </Badge>
@@ -778,7 +778,7 @@ function getStatusBadge(status: string): JSX.Element {
         </Badge>
       );
     default:
-      return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{status}</Badge>;
+      return <Badge className="bg-muted text-foreground border-border">{status}</Badge>;
   }
 }
 

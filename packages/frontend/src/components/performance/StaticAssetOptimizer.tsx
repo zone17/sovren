@@ -161,7 +161,7 @@ export default function StaticAssetOptimizerComponent({
             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Savings</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Savings</p>
                   <p className="text-2xl font-bold text-yellow-600">
                     {(totalSavings / 1024).toFixed(1)}KB
                   </p>
@@ -173,7 +173,7 @@ export default function StaticAssetOptimizerComponent({
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Compression Ratio</p>
+                  <p className="text-sm font-medium text-muted-foreground">Compression Ratio</p>
                   <p className="text-2xl font-bold text-green-600">
                     {metrics.length > 0
                       ? (
@@ -192,7 +192,7 @@ export default function StaticAssetOptimizerComponent({
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Optimized Assets</p>
+                  <p className="text-sm font-medium text-muted-foreground">Optimized Assets</p>
                   <p className="text-2xl font-bold text-blue-600">{metrics.length}</p>
                 </div>
                 <Image className="h-8 w-8 text-blue-500" />
@@ -214,7 +214,7 @@ export default function StaticAssetOptimizerComponent({
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-medium">Optimize Static Assets</h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Minify, compress, and optimize all static assets
                 </p>
               </div>
@@ -240,7 +240,7 @@ export default function StaticAssetOptimizerComponent({
             {isOptimizing && (
               <div className="space-y-2">
                 <Progress value={optimizationProgress} />
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Optimizing assets... {optimizationProgress.toFixed(0)}%
                 </p>
               </div>
@@ -269,27 +269,29 @@ export default function StaticAssetOptimizerComponent({
                         </Badge>
                       )}
                     </div>
-                    <span className="text-sm text-gray-500">{metric.loadTime}ms load time</span>
+                    <span className="text-sm text-muted-foreground">
+                      {metric.loadTime}ms load time
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-600">Original Size</p>
+                      <p className="text-muted-foreground">Original Size</p>
                       <p className="font-semibold">{(metric.originalSize / 1024).toFixed(1)}KB</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Optimized Size</p>
+                      <p className="text-muted-foreground">Optimized Size</p>
                       <p className="font-semibold text-green-600">
                         {(metric.optimizedSize / 1024).toFixed(1)}KB
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Compression</p>
+                      <p className="text-muted-foreground">Compression</p>
                       <p className="font-semibold text-blue-600">
                         {(metric.compressionRatio * 100).toFixed(1)}%
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Savings</p>
+                      <p className="text-muted-foreground">Savings</p>
                       <p className="font-semibold text-purple-600">
                         {((metric.originalSize - metric.optimizedSize) / 1024).toFixed(1)}KB
                       </p>
@@ -316,7 +318,7 @@ export default function StaticAssetOptimizerComponent({
             <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-orange-600">
               {overallScore}
             </div>
-            <div className="text-lg text-gray-600">Asset Optimization Score</div>
+            <div className="text-lg text-muted-foreground">Asset Optimization Score</div>
             <Progress value={overallScore} className="w-full" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="bg-yellow-50 p-3 rounded">

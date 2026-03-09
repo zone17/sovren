@@ -368,21 +368,21 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
   // Main render
   return (
-    <div className={`bg-white rounded-lg shadow-sm border ${className}`}>
+    <div className={`bg-card rounded-lg shadow-sm border ${className}`}>
       {/* Header */}
       <div className="border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Shield className="w-6 h-6 text-blue-600" />
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">NOSTR Key Management</h2>
-              <p className="text-sm text-gray-600">Secure management of your NOSTR keys</p>
+              <h2 className="text-xl font-semibold text-foreground">NOSTR Key Management</h2>
+              <p className="text-sm text-muted-foreground">Secure management of your NOSTR keys</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">{stats.totalKeys} Keys</div>
-              <div className="text-xs text-gray-500">{stats.backedUpKeys} backed up</div>
+              <div className="text-sm font-medium text-foreground">{stats.totalKeys} Keys</div>
+              <div className="text-xs text-muted-foreground">{stats.backedUpKeys} backed up</div>
             </div>
           </div>
         </div>
@@ -402,7 +402,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
               className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === id
                   ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -467,9 +467,9 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                 <div className="space-y-4">
                   {keys.length === 0 ? (
                     <div className="text-center py-12">
-                      <Key className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Keys Found</h3>
-                      <p className="text-gray-600 mb-4">
+                      <Key className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-foreground mb-2">No Keys Found</h3>
+                      <p className="text-muted-foreground mb-4">
                         Get started by generating or importing a NOSTR key.
                       </p>
                       <button
@@ -483,12 +483,12 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                     keys.map((keyPair) => (
                       <div
                         key={keyPair.keyId}
-                        className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                        className="border rounded-lg p-4 hover:bg-accent transition-colors"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="text-lg font-medium text-gray-900">
+                              <h3 className="text-lg font-medium text-foreground">
                                 {keyPair.name || 'Unnamed Key'}
                               </h3>
                               {renderKeyValidation(keyPair)}
@@ -498,20 +498,24 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                             </div>
 
                             {keyPair.description && (
-                              <p className="text-sm text-gray-600 mb-3">{keyPair.description}</p>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {keyPair.description}
+                              </p>
                             )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <label className="block text-gray-500 mb-1">Public Key</label>
+                                <label className="block text-muted-foreground mb-1">
+                                  Public Key
+                                </label>
                                 <div className="flex items-center space-x-2">
-                                  <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                                  <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
                                     {keyPair.publicKey.slice(0, 16)}...
                                     {keyPair.publicKey.slice(-16)}
                                   </code>
                                   <button
                                     onClick={() => copyToClipboard(keyPair.publicKey)}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-muted-foreground/60 hover:text-muted-foreground"
                                   >
                                     <Copy className="w-4 h-4" />
                                   </button>
@@ -519,16 +523,18 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                               </div>
 
                               <div>
-                                <label className="block text-gray-500 mb-1">Private Key</label>
+                                <label className="block text-muted-foreground mb-1">
+                                  Private Key
+                                </label>
                                 <div className="flex items-center space-x-2">
-                                  <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                                  <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
                                     {showPrivateKey[keyPair.keyId]
                                       ? keyPair.privateKey
                                       : '••••••••••••••••••••••••••••••••'}
                                   </code>
                                   <button
                                     onClick={() => togglePrivateKeyVisibility(keyPair.keyId)}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-muted-foreground/60 hover:text-muted-foreground"
                                   >
                                     {showPrivateKey[keyPair.keyId] ? (
                                       <EyeOff className="w-4 h-4" />
@@ -539,7 +545,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                                   {showPrivateKey[keyPair.keyId] && (
                                     <button
                                       onClick={() => copyToClipboard(keyPair.privateKey)}
-                                      className="text-gray-400 hover:text-gray-600"
+                                      className="text-muted-foreground/60 hover:text-muted-foreground"
                                     >
                                       <Copy className="w-4 h-4" />
                                     </button>
@@ -548,7 +554,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                               </div>
                             </div>
 
-                            <div className="mt-3 flex items-center space-x-4 text-xs text-gray-500">
+                            <div className="mt-3 flex items-center space-x-4 text-xs text-muted-foreground">
                               <span>Created: {new Date(keyPair.created).toLocaleDateString()}</span>
                               <span>Security: {keyPair.securityLevel}</span>
                               <span>Entropy: {keyPair.entropyBits} bits</span>
@@ -597,11 +603,11 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
               {activeTab === 'generate' && (
                 <div className="max-w-md mx-auto space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Generate New Key</h3>
+                    <h3 className="text-lg font-medium text-foreground mb-4">Generate New Key</h3>
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           Key Name
                         </label>
                         <input
@@ -609,12 +615,12 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                           value={keyName}
                           onChange={(e) => setKeyName(e.target.value)}
                           placeholder="Enter a name for this key"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           Description (Optional)
                         </label>
                         <textarea
@@ -622,12 +628,12 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                           onChange={(e) => setKeyDescription(e.target.value)}
                           placeholder="Enter a description for this key"
                           rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           Security Level
                         </label>
                         <select
@@ -635,7 +641,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                           onChange={(e) =>
                             setSecurityLevel(e.target.value as NostrKeySecurityLevel)
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value={NostrKeySecurityLevel.BASIC}>Basic</option>
                           <option value={NostrKeySecurityLevel.ENHANCED}>Enhanced</option>
@@ -644,13 +650,13 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           Entropy Source
                         </label>
                         <select
                           value={entropySource}
                           onChange={(e) => setEntropySource(e.target.value as NostrEntropySource)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value={NostrEntropySource.WEB_CRYPTO_API}>Web Crypto API</option>
                           <option value={NostrEntropySource.SECURE_RANDOM}>Secure Random</option>
@@ -673,11 +679,13 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
               {activeTab === 'import' && (
                 <div className="max-w-md mx-auto space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Import Existing Key</h3>
+                    <h3 className="text-lg font-medium text-foreground mb-4">
+                      Import Existing Key
+                    </h3>
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           Private Key (Hex)
                         </label>
                         <textarea
@@ -685,12 +693,12 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                           onChange={(e) => setPrivateKeyInput(e.target.value)}
                           placeholder="Enter your 64-character hex private key"
                           rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           Key Name
                         </label>
                         <input
@@ -698,7 +706,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                           value={importKeyName}
                           onChange={(e) => setImportKeyName(e.target.value)}
                           placeholder="Enter a name for this key"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
@@ -717,14 +725,16 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
               {/* Backup Tab */}
               {activeTab === 'backup' && (
                 <div className="max-w-2xl mx-auto">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Key Backups</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-4">Key Backups</h3>
 
                   <div className="space-y-4">
                     {keys.filter((key) => key.backedUp).length === 0 ? (
                       <div className="text-center py-8">
-                        <Download className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Backups Found</h3>
-                        <p className="text-gray-600">
+                        <Download className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">
+                          No Backups Found
+                        </h3>
+                        <p className="text-muted-foreground">
                           Create backups for your keys to ensure you can recover them.
                         </p>
                       </div>
@@ -738,10 +748,10 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
                           >
                             <div className="flex items-center justify-between">
                               <div>
-                                <h4 className="font-medium text-gray-900">
+                                <h4 className="font-medium text-foreground">
                                   {keyPair.name || 'Unnamed Key'}
                                 </h4>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                   Backup created: {new Date(keyPair.created).toLocaleDateString()}
                                 </p>
                               </div>
@@ -757,14 +767,14 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
               {/* Settings Tab */}
               {activeTab === 'settings' && (
                 <div className="max-w-2xl mx-auto">
-                  <h3 className="text-lg font-medium text-gray-900 mb-6">
+                  <h3 className="text-lg font-medium text-foreground mb-6">
                     Key Management Settings
                   </h3>
 
                   <div className="space-y-6">
                     {/* Statistics */}
                     <div>
-                      <h4 className="text-md font-medium text-gray-900 mb-4">Statistics</h4>
+                      <h4 className="text-md font-medium text-foreground mb-4">Statistics</h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <div className="text-2xl font-bold text-blue-600">{stats.totalKeys}</div>
@@ -793,7 +803,7 @@ export const NostrKeyManagement: React.FC<NostrKeyManagementProps> = ({
 
                     {/* Security Information */}
                     <div>
-                      <h4 className="text-md font-medium text-gray-900 mb-4">
+                      <h4 className="text-md font-medium text-foreground mb-4">
                         Security Information
                       </h4>
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

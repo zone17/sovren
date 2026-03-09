@@ -41,7 +41,7 @@ const RedFlagReport: React.FC<RedFlagReportProps> = ({ redFlags }) => {
   return (
     <section aria-labelledby="red-flags-heading" className="space-y-3">
       <div className="flex items-center gap-3">
-        <h4 id="red-flags-heading" className="text-sm font-semibold text-gray-900">
+        <h4 id="red-flags-heading" className="text-sm font-semibold text-foreground">
           Red Flag Analysis
         </h4>
         <div className="flex gap-2 text-xs">

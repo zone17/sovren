@@ -37,7 +37,7 @@ const STATUS_OPTIONS: Array<{ value: InboxStatusFilter; label: string }> = [
 ];
 
 const selectClass =
-  'rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500';
+  'rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring';
 
 export const InboxFilterBar: React.FC<InboxFilterBarProps> = ({ filters, onChange }) => {
   return (

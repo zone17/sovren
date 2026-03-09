@@ -32,7 +32,7 @@ export const NotificationEmpty: React.FC<NotificationEmptyProps> = ({
       {/* Icon */}
       <div className="mb-4">
         <svg
-          className="w-16 h-16 text-gray-400 dark:text-gray-600"
+          className="w-16 h-16 text-muted-foreground/60"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -48,9 +48,9 @@ export const NotificationEmpty: React.FC<NotificationEmptyProps> = ({
       </div>
 
       {/* Message */}
-      <p className="text-gray-600 dark:text-gray-400 text-lg font-medium mb-2">{message}</p>
+      <p className="text-muted-foreground text-lg font-medium mb-2">{message}</p>
 
-      <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">
+      <p className="text-muted-foreground text-sm mb-6">
         You'll see notifications here when you get mentions, replies, and more.
       </p>
 

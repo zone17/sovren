@@ -866,7 +866,7 @@ const SovereignOnboarding: React.FC = () => {
                           id="backup"
                           checked={backupConfirmed}
                           onChange={(e) => setBackupConfirmed(e.target.checked)}
-                          className="mt-1 border-gray-300 rounded"
+                          className="mt-1 border-border rounded"
                         />
                         <Label htmlFor="backup" className="text-yellow-100 cursor-pointer">
                           I have safely downloaded and stored my private key (nsec) backup
@@ -879,7 +879,7 @@ const SovereignOnboarding: React.FC = () => {
                           id="security"
                           checked={understandsSecurity}
                           onChange={(e) => setUnderstandsSecurity(e.target.checked)}
-                          className="mt-1 border-gray-300 rounded"
+                          className="mt-1 border-border rounded"
                         />
                         <Label htmlFor="security" className="text-yellow-100 cursor-pointer">
                           I understand that losing my private key means losing my sovereign identity

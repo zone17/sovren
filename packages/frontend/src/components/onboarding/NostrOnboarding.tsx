@@ -430,7 +430,7 @@ const NostrOnboarding: React.FC = () => {
                       id="backup"
                       checked={backupConfirmed}
                       onChange={(e) => setBackupConfirmed(e.target.checked)}
-                      className="rounded border-gray-300"
+                      className="rounded border-border"
                     />
                     <Label htmlFor="backup" className="text-sm text-muted-foreground">
                       I have safely backed up my private key (nsec)
@@ -443,7 +443,7 @@ const NostrOnboarding: React.FC = () => {
                       id="security"
                       checked={understandsSecurity}
                       onChange={(e) => setUnderstandsSecurity(e.target.checked)}
-                      className="rounded border-gray-300"
+                      className="rounded border-border"
                     />
                     <Label htmlFor="security" className="text-sm text-muted-foreground">
                       I understand that losing my private key means losing my identity
@@ -590,7 +590,7 @@ const NostrOnboarding: React.FC = () => {
                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
                     index <= currentStep
                       ? 'bg-primary border-primary text-white'
-                      : 'border-gray-600 text-gray-400'
+                      : 'border-border text-muted-foreground'
                   }`}
                 >
                   {index < currentStep ? (
@@ -602,7 +602,7 @@ const NostrOnboarding: React.FC = () => {
                 {index < steps.length - 1 && (
                   <div
                     className={`flex-1 h-0.5 mx-4 ${
-                      index < currentStep ? 'bg-primary' : 'bg-gray-600'
+                      index < currentStep ? 'bg-primary' : 'bg-border'
                     }`}
                   />
                 )}

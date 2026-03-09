@@ -73,19 +73,19 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 ${className}`}
+      className={`bg-card rounded-lg shadow-lg p-6 ${className}`}
       role="dialog"
       aria-labelledby="settings-title"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 id="settings-title" className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 id="settings-title" className="text-xl font-semibold text-foreground">
           Notification Settings
         </h2>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            className="p-1 text-muted-foreground/60 hover:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
             aria-label="Close settings"
             type="button"
           >
@@ -102,9 +102,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
 
       {/* Notification Types */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Notification Types
-        </h3>
+        <h3 className="text-sm font-medium text-foreground mb-3">Notification Types</h3>
         <div className="space-y-3">
           <ToggleSwitch
             label="Mentions"
@@ -153,9 +151,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
 
       {/* Sound Settings */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Sound & Alerts
-        </h3>
+        <h3 className="text-sm font-medium text-foreground mb-3">Sound & Alerts</h3>
         <div className="space-y-3">
           <ToggleSwitch
             label="Play Sound"
@@ -166,7 +162,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
           {preferences.playSound && (
             <div className="ml-6 mt-2">
               <label className="flex items-center gap-3">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Volume</span>
+                <span className="text-sm text-muted-foreground">Volume</span>
                 <input
                   type="range"
                   min="0"
@@ -174,9 +170,9 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                   step="0.1"
                   value={preferences.soundVolume}
                   onChange={(e) => handleChange('soundVolume', parseFloat(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                  className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                 />
-                <span className="text-sm text-gray-600 dark:text-gray-400 w-12 text-right">
+                <span className="text-sm text-muted-foreground w-12 text-right">
                   {Math.round(preferences.soundVolume * 100)}%
                 </span>
               </label>
@@ -187,9 +183,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
 
       {/* Desktop Notifications */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Desktop Notifications
-        </h3>
+        <h3 className="text-sm font-medium text-foreground mb-3">Desktop Notifications</h3>
         <div className="space-y-3">
           <ToggleSwitch
             label="Desktop Notifications"
@@ -213,7 +207,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
 
       {/* Display Settings */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Display</h3>
+        <h3 className="text-sm font-medium text-foreground mb-3">Display</h3>
         <div className="space-y-3">
           <ToggleSwitch
             label="Group by Date"
@@ -231,11 +225,11 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex justify-end gap-3 pt-4 border-t border-border">
         {onClose && (
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="px-4 py-2 text-foreground hover:bg-accent rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             type="button"
           >
             Cancel
@@ -268,10 +262,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ label, description, checked
   return (
     <div className="flex items-start justify-between">
       <div className="flex-1">
-        <label className="text-sm font-medium text-gray-900 dark:text-white">{label}</label>
-        {description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>
-        )}
+        <label className="text-sm font-medium text-foreground">{label}</label>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <button
         type="button"
@@ -281,7 +273,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ label, description, checked
         className={`
           relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
           transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-          ${checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}
+          ${checked ? 'bg-blue-600' : 'bg-muted'}
         `}
       >
         <span
