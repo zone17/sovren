@@ -48,6 +48,16 @@ test.beforeEach(async ({ page }) => {
   const signInVisible = await commentsPage.signInLink.isVisible().catch(() => false);
   if (signInVisible) {
     test.skip(true, 'User not authenticated — sign-in link visible instead of comment form');
+    return;
+  }
+
+  // If comments failed to load (no backend), skip — CRUD tests require a working API
+  const loadError = await page
+    .getByText(/failed to load comments/i)
+    .isVisible()
+    .catch(() => false);
+  if (loadError) {
+    test.skip(true, 'Comments API unavailable — backend required for CRUD tests');
   }
 });
 

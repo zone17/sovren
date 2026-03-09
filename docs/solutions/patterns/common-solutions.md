@@ -4411,6 +4411,47 @@ container.register(TYPES.PaymentRepository, InMemoryPaymentRepository);
 
 ---
 
+## 126. Promise.race Settle Pattern for SPA Auth E2E
+
+**Recurrence:** 89 failures across 17 spec files (PR #160). SPA client-side auth redirects fire AFTER `page.goto()` resolves — React hasn't evaluated auth state yet. Tests assert on elements from the protected page, but the DOM is actually the login page.
+
+### Standard Pattern: Promise.race in beforeEach
+
+```typescript
+test.beforeEach(async ({ page }) => {
+  const somePage = new SomePage(page);
+  await page.goto('/protected-route'); // Resolves on HTTP 200, not React ready
+
+  // Wait for EITHER content OR auth redirect — whichever first
+  await Promise.race([
+    somePage.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+    page.waitForURL(/\/login/, { timeout: 10_000 }),
+  ]).catch(() => {});
+
+  if (page.url().includes('/login')) {
+    test.skip(true, 'Redirected to login — auth state unavailable');
+  }
+});
+```
+
+### Three failure modes this pattern covers:
+
+1. **Auth redirect race** — `page.goto()` resolves before React redirects. Fix: Promise.race heading vs `/login` URL.
+2. **POM goto() blocking** — POM's `goto()` includes `waitFor()` that consumes full 30s timeout before Promise.race runs. Fix: use `page.goto()` directly, never POM `goto()` in auth spec beforeEach.
+3. **Partial visibility** — Page section visible without auth (e.g., comments heading), but auth-dependent children missing. Fix: secondary check for auth-specific UI (sign-in link) after section visibility passes.
+
+**Checklist:**
+
+- [ ] `beforeEach` uses `Promise.race` with explicit `timeout: 10_000` on both legs
+- [ ] `.catch(() => {})` after race to handle both-timeout edge case
+- [ ] `test.skip()` (not silent return) for visibility in CI reports
+- [ ] `page.goto()` directly, never POM `goto()` if it has blocking `waitFor()`
+- [ ] For partially-visible pages: secondary auth state detection after section check
+
+**Full doc:** `docs/solutions/testing/e2e-auth-redirect-resilience-pattern.md`
+
+---
+
 ## Agent Brief Template Addition
 
 Add this to every agent brief's CONTEXT TO LOAD section:
@@ -4575,3 +4616,4 @@ CONTEXT TO LOAD:
 | Placeholder mock service in production bootstrap | 123       | common-solutions.md  |
 | Stale todo rate (4th data point: 85%)            | 124       | common-solutions.md  |
 | Domain-grouped agents = zero merge conflicts     | 125       | common-solutions.md  |
+| Auth spec fails — redirected to /login           | 126       | common-solutions.md  |

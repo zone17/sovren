@@ -97,7 +97,10 @@ export default defineConfig({
             timeout: 15_000,
             reuseExistingServer: true,
             env: {
-              ...(process.env.USE_BACKEND ? { VITE_ENABLE_BACKEND: 'true' } : {}),
+              VITE_DEMO_MODE: 'true',
+              ...(process.env.USE_BACKEND
+                ? { VITE_ENABLE_BACKEND: 'true', VITE_DEMO_MODE: 'false' }
+                : {}),
             },
           },
         ],

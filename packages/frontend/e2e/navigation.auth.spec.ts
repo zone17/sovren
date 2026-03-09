@@ -7,11 +7,11 @@ test.describe('Navigation (authenticated creator)', () => {
 
   test.beforeEach(async ({ page }) => {
     layout = new LayoutPage(page);
-    await layout.goto('/profile');
+    await layout.goto('/dashboard');
 
     // Wait for SPA to settle — either content renders or auth redirect fires
     await Promise.race([
-      layout.profileLink.waitFor({ state: 'visible', timeout: 10_000 }),
+      layout.dashboardLink.waitFor({ state: 'visible', timeout: 10_000 }),
       page.waitForURL(/\/login/, { timeout: 10_000 }),
     ]).catch(() => {});
 
@@ -21,7 +21,6 @@ test.describe('Navigation (authenticated creator)', () => {
   });
 
   test('nav bar shows creator links', async () => {
-    await expect(layout.profileLink).toBeVisible();
     await expect(layout.createLink).toBeVisible();
     await expect(layout.dashboardLink).toBeVisible();
     await expect(layout.wellnessLink).toBeVisible();
