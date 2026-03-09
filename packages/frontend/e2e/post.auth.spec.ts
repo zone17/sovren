@@ -12,7 +12,13 @@ test.describe('Post — Single Post View', () => {
 
   test('post route loads or redirects to login', async ({ page }) => {
     await post.goto(NONEXISTENT_POST_ID);
-    await page.waitForURL(/\/(post\/|login)/);
+
+    // Wait for SPA to settle — either post heading loads or auth redirect fires
+    await Promise.race([
+      post.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
     const url = page.url();
     if (/\/post\//.test(url)) {
       await expect(post.heading).toBeVisible();

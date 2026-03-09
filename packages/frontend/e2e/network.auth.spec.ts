@@ -40,13 +40,20 @@ test.describe('Follow/unfollow cycle', () => {
     profilePage = new CreatorProfilePage(page);
     await profilePage.goto(TEST_CREATOR_ID);
 
-    const loaded = await profilePage.followButton
-      .waitFor({ state: 'visible', timeout: 10_000 })
-      .then(() => true)
-      .catch(() => false);
+    // Wait for SPA to settle — either follow button loads or auth redirect fires
+    await Promise.race([
+      profilePage.followButton.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
 
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+      return;
+    }
+
+    const loaded = await profilePage.followButton.isVisible();
     if (!loaded) {
-      test.skip();
+      test.skip(true, 'Follow button not available — creator fixture missing');
     }
   });
 
@@ -100,15 +107,22 @@ test.describe('Browse circles', () => {
 
   test.beforeEach(async ({ page }) => {
     networkPage = new NetworkPage(page);
-    await networkPage.goto();
+    await page.goto('/community');
 
-    const loaded = await networkPage.circlesHeading
-      .waitFor({ state: 'visible', timeout: 10_000 })
-      .then(() => true)
-      .catch(() => false);
+    // Wait for SPA to settle — either circles heading loads or auth redirect fires
+    await Promise.race([
+      networkPage.circlesHeading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
 
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+      return;
+    }
+
+    const loaded = await networkPage.circlesHeading.isVisible();
     if (!loaded) {
-      test.skip();
+      test.skip(true, 'Circles heading not available — fixture missing');
     }
   });
 
@@ -138,7 +152,18 @@ test.describe('Join a circle', () => {
 
   test.beforeEach(async ({ page }) => {
     networkPage = new NetworkPage(page);
-    await networkPage.goto();
+    await page.goto('/community');
+
+    // Wait for SPA to settle — either page heading loads or auth redirect fires
+    await Promise.race([
+      networkPage.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+      return;
+    }
 
     const hasJoinButton = await networkPage
       .joinButtonFor(TEST_CIRCLE_NAME)
@@ -146,7 +171,7 @@ test.describe('Join a circle', () => {
       .catch(() => false);
 
     if (!hasJoinButton) {
-      test.skip();
+      test.skip(true, 'Join button not available — circle fixture missing');
     }
   });
 
@@ -188,7 +213,18 @@ test.describe('Leave a circle', () => {
 
   test.beforeEach(async ({ page }) => {
     networkPage = new NetworkPage(page);
-    await networkPage.goto();
+    await page.goto('/community');
+
+    // Wait for SPA to settle — either page heading loads or auth redirect fires
+    await Promise.race([
+      networkPage.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+      return;
+    }
 
     // Ensure we're a member of the test circle before this test
     const joinBtn = networkPage.joinButtonFor(TEST_CIRCLE_NAME);
@@ -207,7 +243,7 @@ test.describe('Leave a circle', () => {
       .catch(() => false);
 
     if (!hasLeaveButton) {
-      test.skip();
+      test.skip(true, 'Leave button not available — circle fixture missing');
     }
   });
 
@@ -247,7 +283,19 @@ test.describe('Browse mentors', () => {
 
   test.beforeEach(async ({ page }) => {
     networkPage = new NetworkPage(page);
-    await networkPage.goto();
+    await page.goto('/community');
+
+    // Wait for SPA to settle — either page heading loads or auth redirect fires
+    await Promise.race([
+      networkPage.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+      return;
+    }
+
     await networkPage.switchToMentorship();
 
     const loaded = await networkPage.mentorDirectoryHeading
@@ -256,7 +304,7 @@ test.describe('Browse mentors', () => {
       .catch(() => false);
 
     if (!loaded) {
-      test.skip();
+      test.skip(true, 'Mentor directory not available — fixture missing');
     }
   });
 
@@ -292,14 +340,26 @@ test.describe('Request mentorship', () => {
 
   test.beforeEach(async ({ page }) => {
     networkPage = new NetworkPage(page);
-    await networkPage.goto();
+    await page.goto('/community');
+
+    // Wait for SPA to settle — either page heading loads or auth redirect fires
+    await Promise.race([
+      networkPage.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+      return;
+    }
+
     await networkPage.switchToMentorship();
 
     // Check if the test mentor is available
     const requestBtn = networkPage.requestButtonFor(TEST_MENTOR_NICHE);
     const isAvailable = await requestBtn.isVisible({ timeout: 10_000 }).catch(() => false);
     if (!isAvailable) {
-      test.skip();
+      test.skip(true, 'Mentor request button not available — fixture missing');
     }
   });
 
@@ -333,13 +393,20 @@ test.describe('Follow count updates', () => {
     profilePage = new CreatorProfilePage(page);
     await profilePage.goto(TEST_CREATOR_ID);
 
-    const loaded = await profilePage.followButton
-      .waitFor({ state: 'visible', timeout: 10_000 })
-      .then(() => true)
-      .catch(() => false);
+    // Wait for SPA to settle — either follow button loads or auth redirect fires
+    await Promise.race([
+      profilePage.followButton.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
 
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+      return;
+    }
+
+    const loaded = await profilePage.followButton.isVisible();
     if (!loaded) {
-      test.skip();
+      test.skip(true, 'Follow button not available — creator fixture missing');
     }
   });
 

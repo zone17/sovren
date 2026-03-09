@@ -55,6 +55,14 @@ export default defineConfig({
       testMatch: /\.public\.spec\.ts$/,
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'api',
+      testMatch: /\.api\.spec\.ts$/,
+      dependencies: ['setup'],
+      use: {
+        baseURL: process.env.E2E_API_URL || 'http://localhost:3001',
+      },
+    },
   ],
 
   // In CI, the preview server is started externally (vite preview on port 4173).

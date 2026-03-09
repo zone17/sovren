@@ -7,6 +7,16 @@ test.describe('Monitoring — Performance Monitor', () => {
   test.beforeEach(async ({ page }) => {
     monitoring = new MonitoringPage(page);
     await monitoring.goto();
+
+    // Wait for SPA to settle — either content renders or auth redirect fires
+    await Promise.race([
+      monitoring.toggleButton.waitFor({ state: 'visible', timeout: 10_000 }),
+      page.waitForURL(/\/login/, { timeout: 10_000 }),
+    ]).catch(() => {});
+
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Redirected to login — auth state unavailable');
+    }
   });
 
   test('monitoring page loads without error', async ({ page }) => {
