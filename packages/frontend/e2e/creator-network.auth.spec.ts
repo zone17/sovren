@@ -39,4 +39,16 @@ test.describe('Creator Network — Community Hub', () => {
     await community.nicheFilter.fill('music');
     await expect(community.nicheFilter).toHaveValue('music');
   });
+
+  test('circles tab shows create circle button and heading', async () => {
+    await expect(community.circlesHeading).toBeVisible();
+    await expect(community.createCircleButton).toBeVisible();
+    await expect(community.createCircleButton).toBeEnabled();
+  });
+
+  test('marketplace tab shows service type filter and heading', async () => {
+    await community.switchTab('marketplace');
+    await expect(community.marketplaceHeading).toBeVisible();
+    await expect(community.serviceTypeFilter).toBeVisible();
+  });
 });

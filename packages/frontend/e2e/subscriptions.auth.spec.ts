@@ -18,4 +18,27 @@ test.describe('Subscriptions — Subscription Management', () => {
       expect(/\/login/.test(url)).toBe(true);
     }
   });
+
+  test('subscriptions page shows heading after load', async ({ page }) => {
+    await page.waitForURL(/\/(dashboard\/subscriptions|login)/);
+    const url = page.url();
+    if (!/\/dashboard\/subscriptions/.test(url)) {
+      test.skip();
+      return;
+    }
+    await expect(subscriptions.heading).toBeVisible();
+    await expect(subscriptions.heading).toContainText(/subscription management/i);
+  });
+
+  test('subscriptions page has management UI', async ({ page }) => {
+    await page.waitForURL(/\/(dashboard\/subscriptions|login)/);
+    const url = page.url();
+    if (!/\/dashboard\/subscriptions/.test(url)) {
+      test.skip();
+      return;
+    }
+    await expect(subscriptions.createTierButton).toBeVisible();
+    await expect(subscriptions.totalSubscribersCard).toBeVisible();
+    await expect(subscriptions.tiersTab).toBeVisible();
+  });
 });

@@ -12,6 +12,10 @@ export class CreatorNetworkPage {
   readonly nicheFilter: Locator;
   readonly audienceFilter: Locator;
   readonly collaborationsPlaceholder: Locator;
+  readonly createCircleButton: Locator;
+  readonly circlesHeading: Locator;
+  readonly marketplaceHeading: Locator;
+  readonly serviceTypeFilter: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -25,6 +29,10 @@ export class CreatorNetworkPage {
     this.collaborationsPlaceholder = page.getByText(
       /select a piece of content to manage collaborators/i
     );
+    this.createCircleButton = page.getByRole('button', { name: /create circle/i });
+    this.circlesHeading = page.getByRole('heading', { name: /creator circles/i });
+    this.marketplaceHeading = page.getByRole('heading', { name: /creator marketplace/i });
+    this.serviceTypeFilter = page.getByLabel(/filter by service type/i);
   }
 
   async goto() {

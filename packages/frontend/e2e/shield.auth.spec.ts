@@ -4,11 +4,12 @@
  * Runs in chromium-authenticated project (uses stored creator auth state).
  * File convention: *.auth.spec.ts — auto-matched by Playwright config.
  *
- * 4 tests:
+ * 5 tests:
  *   1. Dashboard loads with heading visible and no error boundary
  *   2. Copy Detection Alerts section heading is visible (always rendered as CardTitle)
  *   3. Fingerprint Coverage section heading is visible (always rendered as CardTitle)
  *   4. Shield page navigates to /shield URL
+ *   5. Shield page reaches terminal state without stuck loading spinner
  */
 import { expect, test } from '@playwright/test';
 import { ShieldPage } from './pages/shield.page';
@@ -41,5 +42,17 @@ test.describe('Content Shield Dashboard', () => {
 
   test('navigates to the /shield route', async ({ page }) => {
     await expect(page).toHaveURL(/\/shield/);
+  });
+
+  test('page reaches terminal state with both sections and no loading spinner', async ({
+    page,
+  }) => {
+    // Verify the page finishes loading: heading visible, both sections present,
+    // no error boundary, and no lingering loading indicator.
+    await expect(shieldPage.heading).toBeVisible();
+    await expect(shieldPage.alertsHeading).toBeVisible();
+    await expect(shieldPage.fingerprintHeading).toBeVisible();
+    await expect(shieldPage.errorBoundary).not.toBeVisible();
+    await expect(page.getByRole('progressbar')).not.toBeVisible();
   });
 });
