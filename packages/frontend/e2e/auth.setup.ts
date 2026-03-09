@@ -102,8 +102,9 @@ setup('authenticate as creator via NOSTR', async ({ page, request }) => {
       localStorage.setItem('demo_user', JSON.stringify(demoUser));
       localStorage.setItem('auth_token', 'e2e-demo-token-' + Date.now());
     });
-    // Reload so AuthProvider picks up the injected state
-    await page.reload();
+    // Do NOT reload — realAuthService.verifyAuth() would call /api/auth/verify,
+    // fail (no backend), and clear auth_token from localStorage before storageState saves.
+    // The authenticated tests will trigger AuthProvider on their own navigation.
   }
 
   await page.context().storageState({ path: authFile });

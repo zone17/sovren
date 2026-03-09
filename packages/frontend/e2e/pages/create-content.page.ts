@@ -42,12 +42,12 @@ export class CreateContentPage {
   constructor(page: Page) {
     this.page = page;
 
-    // The component renders h1 "Creator Dashboard" in overview mode
-    this.heading = page.getByRole('heading', { name: /Creator Dashboard/i, level: 1 }).first();
-    this.subheading = page.getByText(/Manage your content with AI-powered tools/i).first();
+    // The component renders h1 "Dashboard" in overview mode
+    this.heading = page.getByRole('heading', { name: /^Dashboard$/i, level: 1 }).first();
+    this.subheading = page.getByText(/your creative empire at a glance/i).first();
 
-    // Quick Actions panel buttons
-    this.createContentButton = page.getByRole('button', { name: /Create Content/i }).first();
+    // Quick Actions / CTA buttons — match both "Create Content" and "Create Your First Content"
+    this.createContentButton = page.getByRole('button', { name: /create.*content/i }).first();
     this.aiGenerateButton = page.getByRole('button', { name: /AI Generate/i }).first();
     this.importButton = page.getByRole('button', { name: /^Import$/i }).first();
     this.exportButton = page.getByRole('button', { name: /^Export$/i }).first();

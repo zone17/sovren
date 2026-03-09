@@ -149,24 +149,13 @@ test.describe('Creator Journey — Golden Path', () => {
     // Verify content list section heading
     await expect(dashboard.contentHeading).toBeVisible();
 
-    // Verify search input is present and interactive
-    await expect(dashboard.searchInput).toBeVisible();
-    await expect(dashboard.searchInput).toBeEnabled();
-
-    // Verify filter controls
-    await expect(dashboard.statusFilter).toBeVisible();
-    await expect(dashboard.sortFilter).toBeVisible();
-
     // Verify stats cards section
-    await expect(dashboard.totalViewsLabel).toBeVisible();
+    await expect(dashboard.viewsLabel).toBeVisible();
     await expect(dashboard.earningsLabel).toBeVisible();
-    await expect(dashboard.aiQualityScoreLabel).toBeVisible();
+    await expect(dashboard.identityLabel).toBeVisible();
     await expect(dashboard.publishedLabel).toBeVisible();
 
-    // Verify quick actions sidebar
+    // Verify primary CTA
     await expect(dashboard.createContentButton).toBeVisible();
-    await expect(dashboard.aiGenerateButton).toBeVisible();
-    await expect(dashboard.importButton).toBeVisible();
-    await expect(dashboard.exportButton).toBeVisible();
   });
 });

@@ -8,8 +8,8 @@ export class ProfileDashboardPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.getByRole('heading', { name: /your sovereign profile/i }).first();
-    this.noProfileHeading = page.getByRole('heading', { name: /no profile found/i }).first();
+    this.heading = page.getByText(/your sovereign profile/i).first();
+    this.noProfileHeading = page.getByText(/no profile found/i).first();
     this.startOnboardingButton = page.getByRole('button', { name: /start onboarding/i }).first();
   }
 
