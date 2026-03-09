@@ -4415,16 +4415,18 @@ container.register(TYPES.PaymentRepository, InMemoryPaymentRepository);
 
 **Recurrence:** 89 failures across 17 spec files (PR #160). SPA client-side auth redirects fire AFTER `page.goto()` resolves — React hasn't evaluated auth state yet. Tests assert on elements from the protected page, but the DOM is actually the login page.
 
-### Standard Pattern: Promise.race in beforeEach
+### Standard Pattern: Promise.race in beforeEach (with error/loading states)
 
 ```typescript
 test.beforeEach(async ({ page }) => {
   const somePage = new SomePage(page);
   await page.goto('/protected-route'); // Resolves on HTTP 200, not React ready
 
-  // Wait for EITHER content OR auth redirect — whichever first
+  // Wait for EITHER content, error, OR auth redirect — whichever first
   await Promise.race([
     somePage.heading.waitFor({ state: 'visible', timeout: 10_000 }),
+    page.getByText(/error/i).first().waitFor({ state: 'visible', timeout: 10_000 }),
+    page.getByRole('button', { name: /try again/i }).waitFor({ state: 'visible', timeout: 10_000 }),
     page.waitForURL(/\/login/, { timeout: 10_000 }),
   ]).catch(() => {});
 
@@ -4434,21 +4436,85 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-### Three failure modes this pattern covers:
+### Four failure modes this pattern covers:
 
 1. **Auth redirect race** — `page.goto()` resolves before React redirects. Fix: Promise.race heading vs `/login` URL.
 2. **POM goto() blocking** — POM's `goto()` includes `waitFor()` that consumes full 30s timeout before Promise.race runs. Fix: use `page.goto()` directly, never POM `goto()` in auth spec beforeEach.
 3. **Partial visibility** — Page section visible without auth (e.g., comments heading), but auth-dependent children missing. Fix: secondary check for auth-specific UI (sign-in link) after section visibility passes.
+4. **Error state not detected** — Page shows error/retry instead of expected heading. Without error state in Promise.race, test hangs for full timeout then fails with wrong assertion. Fix: add error text and retry button to race legs (PR #161, 2 failures).
 
 **Checklist:**
 
-- [ ] `beforeEach` uses `Promise.race` with explicit `timeout: 10_000` on both legs
-- [ ] `.catch(() => {})` after race to handle both-timeout edge case
+- [ ] `beforeEach` uses `Promise.race` with explicit `timeout: 10_000` on all legs
+- [ ] Race includes: heading, error text, retry button, `/login` URL (all 4 states)
+- [ ] `.catch(() => {})` after race to handle all-timeout edge case
 - [ ] `test.skip()` (not silent return) for visibility in CI reports
 - [ ] `page.goto()` directly, never POM `goto()` if it has blocking `waitFor()`
 - [ ] For partially-visible pages: secondary auth state detection after section check
 
-**Full doc:** `docs/solutions/testing/e2e-auth-redirect-resilience-pattern.md`
+**Full doc:** `docs/solutions/testing/e2e-auth-redirect-resilience-pattern.md`, `docs/solutions/testing/e2e-auth-demo-mode-pom-remediation-20260309.md`
+
+---
+
+## 127. Never Reload Between Auth Setup and storageState()
+
+**Recurrence:** 1 P1 (PR #161). `page.reload()` in `auth.setup.ts` triggered `verifyAuth()` → backend 401 → `auth_token` cleared from localStorage before `storageState()` could persist it. 122 tests skipped.
+
+### Root Cause
+
+Vite's `demoAuthService` reads localStorage synchronously on mount. But `page.reload()` triggers a full React re-mount, and if `realAuthService` is active (VITE_DEMO_MODE not set), it calls the backend which returns 401 and wipes the token.
+
+Even with correct env vars, the race window exists: `storageState()` must run _before_ any code clears the token.
+
+### Standard Pattern
+
+```typescript
+// auth.setup.ts — correct order
+await page.evaluate(() => {
+  localStorage.setItem('demo_user', JSON.stringify(demoUser));
+  localStorage.setItem('auth_token', 'e2e-demo-token-' + Date.now());
+});
+// NO page.reload() — AuthProvider reads localStorage on next mount
+await page.context().storageState({ path: authFile });
+```
+
+### Checklist
+
+- [ ] No `page.reload()` between `localStorage.setItem()` and `storageState()`
+- [ ] `VITE_DEMO_MODE: 'true'` set in `playwright.config.ts` `webServer.env`
+- [ ] Auth setup flow: navigate → set tokens → storageState() → (only then reload if needed)
+
+**Full doc:** `docs/solutions/testing/e2e-auth-demo-mode-pom-remediation-20260309.md`
+
+---
+
+## 128. POM Locators Must Use Case-Insensitive Regex
+
+**Recurrence:** 1 P1 (PR #161, 12 failures). POMs written from design docs used exact strings ("Creator Dashboard", "Total Views") but rendered UI used different casing ("Dashboard", "VIEWS"). All 12 failures were case or text mismatches.
+
+### Root Cause
+
+POMs authored speculatively from specs/mockups, not from actual rendered UI. When the app renders differently (case, abbreviations, word changes), exact-string locators fail silently.
+
+### Standard Pattern
+
+```typescript
+// BEFORE (brittle — breaks on case or text changes)
+this.heading = page.getByRole('heading', { name: 'Creator Dashboard' });
+this.viewsLabel = page.getByText('Total Views');
+
+// AFTER (resilient — tolerates case and partial text changes)
+this.heading = page.getByRole('heading', { name: /dashboard/i }).first();
+this.viewsLabel = page.getByText(/views/i).first();
+```
+
+### Checklist
+
+- [ ] All POM `getByText()` and `getByRole({ name })` use regex with `/i` flag
+- [ ] All POM locators include `.first()` to prevent strict-mode multi-match errors
+- [ ] POM locators verified against actual rendered UI, not design docs
+
+**Full doc:** `docs/solutions/testing/e2e-auth-demo-mode-pom-remediation-20260309.md`
 
 ---
 
@@ -4617,3 +4683,5 @@ CONTEXT TO LOAD:
 | Stale todo rate (4th data point: 85%)            | 124       | common-solutions.md  |
 | Domain-grouped agents = zero merge conflicts     | 125       | common-solutions.md  |
 | Auth spec fails — redirected to /login           | 126       | common-solutions.md  |
+| page.reload() wipes auth token before persist    | 127       | common-solutions.md  |
+| POM exact-string locator fails on case mismatch  | 128       | common-solutions.md  |
