@@ -1,26 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
 import { Request, Response, Router } from 'express';
 import WebSocket from 'ws';
 import os from 'os';
 import { getRedisClient, isRedisAvailable } from '../lib/redis';
 import { container } from '../container';
 import { TYPES } from '../container/types';
+import { supabase } from '../config/supabase';
 
 const router = Router();
-
-// TODO #774: Move direct Supabase access to service/repository layer.
-// Health check should use a HealthService that receives Supabase via DI.
-let singletonSupabase: ReturnType<typeof createClient> | null = null;
-
-function getSupabaseClient(): ReturnType<typeof createClient> {
-  if (!singletonSupabase) {
-    singletonSupabase = createClient(
-      process.env.SUPABASE_URL || '',
-      process.env.SUPABASE_ANON_KEY || ''
-    );
-  }
-  return singletonSupabase;
-}
 
 interface HealthCheckResult {
   status: 'healthy' | 'unhealthy' | 'degraded';
@@ -244,8 +230,6 @@ async function checkDatabase(): Promise<ServiceHealth> {
   const TIMEOUT_MS = 5000;
 
   try {
-    const supabase = getSupabaseClient();
-
     const queryPromise = supabase.from('health_check').select('id').limit(1);
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Database health check timed out')), TIMEOUT_MS)
