@@ -20,7 +20,7 @@ const fetchSubscriptions = async (
   if (filters?.sortBy) params.append('sortBy', filters.sortBy);
   if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
 
-  const response = await fetch(`/api/payments/subscriptions?${params.toString()}`, {
+  const response = await fetch(`/api/v1/payments/subscriptions?${params.toString()}`, {
     headers: {
       'Content-Type': 'application/json',
     },

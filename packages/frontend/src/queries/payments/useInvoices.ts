@@ -22,7 +22,7 @@ const fetchInvoices = async (filters?: PaymentFilters): Promise<InvoicesResponse
   if (filters?.sortBy) params.append('sortBy', filters.sortBy);
   if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
 
-  const response = await fetch(`/api/payments/invoices?${params.toString()}`, {
+  const response = await fetch(`/api/v1/payments/invoices?${params.toString()}`, {
     headers: {
       'Content-Type': 'application/json',
     },
