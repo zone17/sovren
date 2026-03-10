@@ -349,7 +349,7 @@ jobs:
           NODE_ENV: production
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_DEMO_MODE: 'true'
+          VITE_DEMO_MODE: 'false'
 
       - name: Verify build output
         run: |
