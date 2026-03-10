@@ -6,7 +6,8 @@
  */
 
 import { Edit, Eye, Grid, List, Plus, Search, Trash2 } from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import apiClient from '@/services/api/apiClient';
 import { AuthenticityBadge } from '@/features/content-shield';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -156,34 +157,6 @@ const ContentItemCard = React.memo<ContentItemCardProps>(
   }
 );
 
-// Static mock data — moved to module scope to avoid per-render recreation
-const MOCK_CONTENT: ContentItem[] = [
-  {
-    id: '1',
-    title: 'Getting Started with Lightning Network',
-    type: 'article',
-    status: 'published',
-    description:
-      'A comprehensive guide to understanding and using the Lightning Network for fast Bitcoin payments.',
-    createdAt: '2024-12-01T10:00:00Z',
-    updatedAt: '2024-12-15T14:30:00Z',
-    author: 'John Doe',
-    tags: ['bitcoin', 'lightning', 'tutorial'],
-  },
-  {
-    id: '2',
-    title: 'NOSTR Protocol Deep Dive',
-    type: 'video',
-    status: 'draft',
-    description:
-      'Technical exploration of the NOSTR protocol and its implications for decentralized social media.',
-    createdAt: '2024-12-10T09:15:00Z',
-    updatedAt: '2024-12-20T16:45:00Z',
-    author: 'Jane Smith',
-    tags: ['nostr', 'protocol', 'decentralized'],
-  },
-];
-
 export const ContentLibrary: React.FC<ContentLibraryProps> = ({
   onCreateNew,
   onEditContent,
@@ -195,9 +168,23 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    apiClient
+      .get<ContentItem[]>('/api/v1/content')
+      .then((data) => setContent(data ?? []))
+      .catch((err) => {
+        console.error('Failed to load content library:', err);
+        setContent([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const filteredContent = useMemo(() => {
-    return MOCK_CONTENT.filter((item) => {
+    return content.filter((item) => {
       const matchesSearch =
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -306,7 +293,12 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
 
       {/* Content Grid/List */}
       <div className="flex-1 overflow-auto p-6">
-        {filteredContent.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="text-4xl mb-4 animate-spin">{'\u{1F504}'}</div>
+            <p className="text-muted-foreground">Loading your content...</p>
+          </div>
+        ) : filteredContent.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">{'\u{1F4DA}'}</div>
             <h3 className="text-xl font-semibold text-foreground mb-2">No Content Found</h3>
