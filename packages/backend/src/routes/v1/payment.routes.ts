@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment API Routes (v1)
  *
@@ -23,7 +22,7 @@ const router = Router();
 let _paymentController: PaymentController | null = null;
 function getController(): PaymentController {
   if (!_paymentController) {
-    _paymentController = container.get<PaymentController>(TYPES.PaymentController);
+    _paymentController = container.resolve<PaymentController>(TYPES.PaymentController);
   }
   return _paymentController;
 }

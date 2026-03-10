@@ -98,7 +98,7 @@ const mockController = {
 
 vi.mock('../../../container', () => ({
   container: {
-    get: vi.fn(() => mockController),
+    resolve: vi.fn(() => mockController),
   },
 }));
 
