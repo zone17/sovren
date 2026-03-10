@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import { z } from 'zod';
 import { TTLCache } from '../utils/ttl-cache';
-import { JsonFilePaymentStore, type PaymentPersistence } from './payment-persistence';
+import { createPaymentStore, type PaymentPersistence } from './payment-persistence';
 import { verifyWebhookHmac } from '../lib/webhook-security';
 
 // 🌩️ ELITE LIGHTNING NETWORK SERVICE
@@ -198,15 +198,8 @@ export class LightningService extends EventEmitter {
       // Validate configuration
       this.config = LightningConfigSchema.parse(config);
 
-      // Guard: JsonFilePaymentStore must not be used in production
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error(
-          'JsonFilePaymentStore cannot be used in production. Configure a database-backed payment persistence layer.'
-        );
-      }
-
-      // Initialize persistence layer
-      this.persistence = new JsonFilePaymentStore();
+      // Initialize persistence layer — SupabasePaymentStore in production, JsonFilePaymentStore in dev
+      this.persistence = createPaymentStore();
 
       // Hydrate caches from persistence and rebuild paymentHashIndex
       const persistedInvoices = await this.persistence.getAllInvoices();
