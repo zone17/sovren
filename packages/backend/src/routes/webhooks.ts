@@ -36,8 +36,8 @@ const router = express.Router();
 // TODO #774: Move direct Supabase access to service/repository layer.
 // Webhooks need service-key client for admin operations — inject via DI container.
 const supabase =
-  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY
-    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     : null;
 
 // Initialize Payment State Machine (only if Supabase available)

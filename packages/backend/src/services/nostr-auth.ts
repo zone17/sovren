@@ -1,15 +1,11 @@
-// @ts-nocheck
 import { createHash, randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
-import {
-  getEventHash,
-  verifyEvent,
-  type Event as NostrEvent,
-  type UnsignedEvent,
-} from 'nostr-tools/pure';
+import { getEventHash, verifyEvent } from 'nostr-tools/pure';
+import type { NostrEvent, UnsignedEvent } from 'nostr-tools/lib/types/core';
 import { z } from 'zod';
 import { createSignatureMessage as sharedCreateSignatureMessage } from '@shared/types/nostr/auth';
 import logger from '../lib/logger';
+import { getRedisClient, isRedisAvailable } from '../lib/redis';
 
 // 🌐 NOSTR Authentication Schemas (from shared package)
 export const NostrChallengeSchema = z.object({
@@ -248,27 +244,54 @@ export class NostrAuthService {
 
   /**
    * Revoke a JWT token so it can no longer be used.
-   * The token is stored by hash with its expiry so cleanup is automatic.
+   *
+   * Primary store: Redis with TTL matching the token's natural expiry.
+   * Fallback: in-memory Map (single instance only — loses revocations on restart).
    */
-  revokeToken(token: string): void {
-    try {
-      const decoded = jwt.decode(token) as JWTPayload | null;
-      const tokenHash = createHash('sha256').update(token).digest('hex');
-      // Store until token's natural expiry (or 24h if we can't decode)
-      const expiresAt = decoded?.exp ? decoded.exp * 1000 : Date.now() + 24 * 60 * 60 * 1000;
-      this.revokedTokens.set(tokenHash, expiresAt);
-    } catch {
-      // If we can't decode, still revoke with a 24h TTL
-      const tokenHash = createHash('sha256').update(token).digest('hex');
-      this.revokedTokens.set(tokenHash, Date.now() + 24 * 60 * 60 * 1000);
+  async revokeToken(token: string): Promise<void> {
+    const decoded = jwt.decode(token) as JWTPayload | null;
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const fallbackTtlMs = 24 * 60 * 60 * 1000;
+    const expiresAt = decoded?.exp ? decoded.exp * 1000 : Date.now() + fallbackTtlMs;
+    const ttlSeconds = Math.max(1, Math.ceil((expiresAt - Date.now()) / 1000));
+
+    if (isRedisAvailable()) {
+      try {
+        const redis = getRedisClient();
+        await redis.set(`revoked:${tokenHash}`, '1', 'EX', ttlSeconds);
+        return;
+      } catch (err) {
+        logger.warn('[NostrAuth] Redis revocation failed — falling back to in-memory', {
+          error: (err as Error).message,
+        });
+      }
     }
+
+    // Fallback: in-memory (not shared across instances)
+    this.revokedTokens.set(tokenHash, expiresAt);
   }
 
   /**
    * Check if a token has been revoked.
+   *
+   * Checks Redis first (shared across instances), falls back to in-memory Map.
    */
-  isTokenRevoked(token: string): boolean {
+  async isTokenRevoked(token: string): Promise<boolean> {
     const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    if (isRedisAvailable()) {
+      try {
+        const redis = getRedisClient();
+        const result = await redis.get(`revoked:${tokenHash}`);
+        return result !== null;
+      } catch (err) {
+        logger.warn('[NostrAuth] Redis revocation check failed — falling back to in-memory', {
+          error: (err as Error).message,
+        });
+      }
+    }
+
+    // Fallback: in-memory check
     const expiresAt = this.revokedTokens.get(tokenHash);
     if (expiresAt === undefined) return false;
     if (Date.now() > expiresAt) {
@@ -288,7 +311,7 @@ export class NostrAuthService {
   }> {
     try {
       // Check if token has been revoked before verifying
-      if (this.isTokenRevoked(token)) {
+      if (await this.isTokenRevoked(token)) {
         return {
           valid: false,
           error: 'Token has been revoked',
@@ -535,7 +558,7 @@ export const nostrAuth = new NostrAuthService(
         .eq('nostr_pubkey', pubkey)
         .single();
       const VALID_JWT_ROLES = new Set(['creator', 'supporter']);
-      return VALID_JWT_ROLES.has(data?.role) ? data.role : 'supporter';
+      return data && VALID_JWT_ROLES.has(data.role) ? data.role : 'supporter';
     } catch (err) {
       logger.error('Failed to fetch user role from DB, defaulting to supporter', { pubkey, err });
       return 'supporter';
