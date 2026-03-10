@@ -1,0 +1,58 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    env: production
+    service: sovren
+
+# Alerting — configure alertmanager URL if used
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Rule files
+# rule_files:
+#   - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Backend API — health, ready, metrics endpoints
+  - job_name: backend
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['backend:3001']
+        labels:
+          service: sovren-backend
+
+  # Backend health endpoints (via blackbox-style HTTP probe using relabel)
+  - job_name: backend-health
+    metrics_path: /probe
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - http://backend:3001/health
+          - http://backend:3001/ready
+          - http://backend:3001/live
+        labels:
+          service: sovren-backend
+
+  # Redis exporter — if redis_exporter sidecar is added later
+  # - job_name: redis
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: sovren-redis
+
+  # Nginx load balancer (nginx-prometheus-exporter sidecar, if added)
+  # - job_name: nginx-lb
+  #   static_configs:
+  #     - targets: ['nginx-exporter:9113']
+  #       labels:
+  #         service: sovren-nginx-lb
