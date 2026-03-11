@@ -57,12 +57,12 @@ export const PremiumContentPaywall: React.FC<PremiumContentPaywallProps> = ({
     setPaymentError(null);
 
     try {
-      // TODO: Implement real Lightning payment flow via React Query mutation
-      throw new Error(
-        'Payment processing is not yet available. Lightning integration coming soon.'
+      // TODO(payment-engineer): Implement real Lightning invoice generation and payment flow.
+      // Endpoint: POST /api/v1/payments/invoices { contentId, amountSats }
+      // On success: poll GET /api/v1/payments/invoices/:id until settled, then call onPaymentComplete().
+      setPaymentError(
+        'Lightning payments are coming soon. Check back shortly to unlock this content.'
       );
-    } catch (error) {
-      setPaymentError(error instanceof Error ? error.message : 'Payment failed. Please try again.');
     } finally {
       setIsProcessingPayment(false);
     }
