@@ -12,6 +12,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useUnreadCount } from '../hooks/useUnreadCount';
 import { NotificationType, NotificationGroup, Notification } from '../types';
 import { getNotificationService } from '../services/NotificationService';
+import { useToast } from '@/components/providers/NotificationProvider';
 
 export interface NotificationCenterProps {
   position?: 'left' | 'right';
@@ -45,6 +46,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const service = getNotificationService();
   const unreadCount = useUnreadCount();
   const { notifications, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const toast = useToast();
 
   // Filter notifications based on selected filter
   const filteredNotifications = useMemo(() => {
@@ -120,8 +122,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       await markAllAsRead();
     } catch (error) {
       console.error('Failed to mark all as read:', error);
+      toast.error('Failed to mark notifications as read. Please try again.');
     }
-  }, [markAllAsRead]);
+  }, [markAllAsRead, toast]);
 
   // Close panel when clicking outside
   useEffect(() => {

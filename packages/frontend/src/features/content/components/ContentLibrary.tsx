@@ -12,7 +12,9 @@ import { AuthenticityBadge } from '@/features/content-shield';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 import { Input } from '../../../components/ui/input';
+import { useToast } from '../../../components/providers/NotificationProvider';
 
 // Types
 interface ContentItem {
@@ -170,6 +172,8 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [content, setContent] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     setIsLoading(true);
@@ -178,9 +182,11 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
       .then((data) => setContent(data ?? []))
       .catch((err) => {
         console.error('Failed to load content library:', err);
+        toast.error('Failed to load content. Please refresh to try again.');
         setContent([]);
       })
       .finally(() => setIsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredContent = useMemo(() => {
@@ -213,12 +219,17 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
 
   const handleDelete = useCallback(
     (contentId: string) => {
-      if (window.confirm('Are you sure you want to delete this content?')) {
-        onDeleteContent?.(contentId);
-      }
+      setDeleteConfirmId(contentId);
     },
-    [onDeleteContent]
+    []
   );
+
+  const handleConfirmDelete = useCallback(() => {
+    if (deleteConfirmId) {
+      onDeleteContent?.(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  }, [deleteConfirmId, onDeleteContent]);
 
   return (
     <div className={`h-full flex flex-col ${className}`}>
@@ -335,6 +346,15 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}
+        title="Delete content"
+        description="Are you sure you want to delete this content? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };

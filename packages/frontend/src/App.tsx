@@ -48,6 +48,9 @@ const MonitoringDashboard = React.lazy(() =>
     default: module.default,
   }))
 );
+const NotFound = React.lazy(() =>
+  import('./pages/NotFound').then((module) => ({ default: module.default }))
+);
 
 // 🚀 **ONBOARDING COMPONENTS**
 const SovereignOnboarding = React.lazy(() =>
@@ -385,6 +388,9 @@ function App(): React.ReactElement {
                 </Layout>
               }
             />
+
+            {/* 404 catch-all */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </AuthProvider>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/components/providers/NotificationProvider';
 import {
   BarChart3,
   CheckCircle,
@@ -625,6 +626,7 @@ export default function APIResponseCache({
   const [isTestingPerformance, setIsTestingPerformance] = useState(false);
   const [performanceResults, setPerformanceResults] = useState<any>(null);
   const [purgePattern, setPurgePattern] = useState('');
+  const toast = useToast();
 
   // Analytics Monitoring
   useEffect(() => {
@@ -667,9 +669,9 @@ export default function APIResponseCache({
   // Cache Purging
   const handlePurge = useCallback(async () => {
     const purgedCount = await cacheManager.purge(purgePattern || undefined);
-    alert(`Purged ${purgedCount} cache entries`);
+    toast.success(`Purged ${purgedCount} cache entries`);
     setPurgePattern('');
-  }, [cacheManager, purgePattern]);
+  }, [cacheManager, purgePattern, toast]);
 
   // Cache Effectiveness Score
   const cacheEffectivenessScore = useMemo(() => {

@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### fix(ux): P1 UI/UX polish — replace window.confirm, add 404 route, fix silent error swallowing — 2026-03-10
+
+**Category**: Bug Fix — Production Readiness Phase 5 UI/UX
+**Status**: Complete — P1-UX-001, P1-UX-002, P1-UX-003
+
+Replaced all 7 `window.confirm()` calls with accessible `ConfirmDialog` component (Radix UI Dialog, ARIA-compliant). Created reusable `ConfirmDialog` at `components/ui/confirm-dialog.tsx`. Added `NotFound` page and `path="*"` catch-all route to `App.tsx`. Wired existing `useToast` hook into components that silently swallowed errors — `NotificationSettings`, `NotificationCenter`, `ContentLibrary`, `DeploymentDashboard`, `APIResponseCache`.
+
+**Files created**: `components/ui/confirm-dialog.tsx`, `pages/NotFound.tsx`
+**Files modified**: `App.tsx`, `TemplateManager.tsx`, `BYOKSetup.tsx`, `ContentLibrary.tsx`, `SubscriptionManager.tsx`, `DeploymentDashboard.tsx`, `DMInbox.tsx`, `NotificationSettings.tsx`, `NotificationCenter.tsx`, `APIResponseCache.tsx`
+
 ### feat(discovery): Wire Discovery MVP frontend to real backend — 2026-02-26
 
 **Category**: Feature — Discovery (Squad B, Sprint 0, Slice 2)

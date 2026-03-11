@@ -6,6 +6,7 @@ import {
   useDeleteTemplate,
 } from '../hooks/useInboxActions';
 import type { ReplyTemplate } from '../types/inbox';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export const TemplateManager: React.FC = () => {
   const { data: templates, isLoading } = useReplyTemplates();
@@ -17,6 +18,7 @@ export const TemplateManager: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [formName, setFormName] = useState('');
   const [formContent, setFormContent] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const resetForm = () => {
     setFormName('');
@@ -49,8 +51,13 @@ export const TemplateManager: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Delete this template?')) {
-      deleteMutation.mutate(id, { onSuccess: resetForm });
+    setDeleteConfirmId(id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteMutation.mutate(deleteConfirmId, { onSuccess: resetForm });
+      setDeleteConfirmId(null);
     }
   };
 
@@ -194,6 +201,15 @@ export const TemplateManager: React.FC = () => {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}
+        title="Delete template"
+        description="Are you sure you want to delete this template? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };

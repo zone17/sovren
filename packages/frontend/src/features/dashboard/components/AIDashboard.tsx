@@ -15,6 +15,7 @@
 import React, { useEffect, useState } from 'react';
 import { Spinner } from '../../../components/ui/spinner';
 import { predictiveAnalytics } from '../../analytics/services/predictiveAnalytics';
+import { useAuth } from '../../auth';
 
 // 🛡️ **ELITE TYPE SAFETY - PROPER INTERFACES**
 
@@ -392,6 +393,7 @@ const RecommendationsSection: React.FC<{ recommendations: RealtimeRecommendation
 
 // 🎛️ MAIN DASHBOARD COMPONENT
 const AIDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     userBehaviorPredictions: [],
     performanceForecasts: [],
@@ -430,7 +432,7 @@ const AIDashboard: React.FC = () => {
         recommendations,
       ] = await Promise.all([
         Promise.resolve([
-          await predictiveAnalytics.predictUserBehavior('user123', mockSessionData),
+          await predictiveAnalytics.predictUserBehavior(user?.id ?? '', mockSessionData),
         ]),
         Promise.resolve([
           await predictiveAnalytics.forecastPerformance('LCP', '24h'),
@@ -438,7 +440,7 @@ const AIDashboard: React.FC = () => {
         ]),
         predictiveAnalytics.analyzeFeatureUsage(),
         predictiveAnalytics.detectAnomalies(),
-        predictiveAnalytics.getRealtimeRecommendations('user123'),
+        predictiveAnalytics.getRealtimeRecommendations(user?.id ?? ''),
       ]);
 
       setMetrics({

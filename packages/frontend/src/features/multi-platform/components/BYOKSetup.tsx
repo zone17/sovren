@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useBYOK, useBYOKStatus } from '../hooks/useBYOK';
 import type { BYOKSubmitPayload } from '../types/inbox';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 const FIELD_DESCRIPTIONS: Record<keyof BYOKSubmitPayload, string> = {
   api_key: 'API Key (Consumer Key)',
@@ -29,6 +30,7 @@ export const BYOKSetup: React.FC = () => {
 
   const [form, setForm] = useState<BYOKSubmitPayload>(emptyForm);
   const [showForm, setShowForm] = useState(false);
+  const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
 
   const isAlreadyConnected = currentStatus?.valid || currentStatus?.write_only;
 
@@ -38,9 +40,7 @@ export const BYOKSetup: React.FC = () => {
   };
 
   const handleRevoke = () => {
-    if (window.confirm('Remove your X/Twitter API keys? You will lose read access.')) {
-      revoke();
-    }
+    setRevokeConfirmOpen(true);
   };
 
   const handleFieldChange =
@@ -224,6 +224,15 @@ export const BYOKSetup: React.FC = () => {
           </p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={revokeConfirmOpen}
+        onOpenChange={setRevokeConfirmOpen}
+        title="Remove API keys"
+        description="Remove your X/Twitter API keys? You will lose read access."
+        confirmLabel="Remove keys"
+        onConfirm={revoke}
+      />
     </div>
   );
 };
