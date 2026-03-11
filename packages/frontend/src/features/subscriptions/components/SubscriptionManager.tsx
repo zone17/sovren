@@ -14,6 +14,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import apiClient from '@/services/api/apiClient';
+import { useBtcPrice } from '@/hooks/useBtcPrice';
 import { Button } from '../../../components/ui';
 import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
 import { Badge } from '../../../components/ui/badge';
@@ -126,6 +127,7 @@ const PricingTierCard: React.FC<{
   onDelete: (tier: SubscriptionTier) => void;
   onToggleActive: (tier: SubscriptionTier) => void;
 }> = ({ tier, onEdit, onDelete, onToggleActive }) => {
+  const { priceUsd: btcPriceUsd } = useBtcPrice();
   const formatPrice = (sats: number) => {
     if (sats >= 1000000) return `${(sats / 1000000).toFixed(1)}M`;
     if (sats >= 1000) return `${(sats / 1000).toFixed(1)}K`;
@@ -184,8 +186,9 @@ const PricingTierCard: React.FC<{
             </span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            {/* TODO: Replace with live rate */}≈ $
-            {((tier.price_sats / 100000000) * 30000).toFixed(2)} USD
+            {btcPriceUsd != null
+              ? `≈ $${((tier.price_sats / 100000000) * btcPriceUsd).toFixed(2)} USD`
+              : ''}
           </div>
         </div>
       </CardHeader>
@@ -227,8 +230,9 @@ const PricingTierCard: React.FC<{
             </span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            {/* TODO: Replace with live rate */}$
-            {((tier.total_revenue_sats / 100000000) * 30000).toFixed(2)} USD
+            {btcPriceUsd != null
+              ? `$${((tier.total_revenue_sats / 100000000) * btcPriceUsd).toFixed(2)} USD`
+              : ''}
           </div>
         </div>
       </CardContent>
@@ -455,6 +459,7 @@ const TierDialog: React.FC<{
   onOpenChange: (open: boolean) => void;
   onSave: (tier: Partial<SubscriptionTier>) => void;
 }> = ({ tier, open, onOpenChange, onSave }) => {
+  const { priceUsd: btcPriceUsd } = useBtcPrice();
   const [formData, setFormData] = useState<Partial<SubscriptionTier>>({
     name: '',
     description: '',
@@ -577,8 +582,9 @@ const TierDialog: React.FC<{
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {/* TODO: Replace with live rate */}$
-              {(((formData.price_sats || 0) / 100000000) * 30000).toFixed(2)} USD
+              {btcPriceUsd != null
+                ? `$${(((formData.price_sats || 0) / 100000000) * btcPriceUsd).toFixed(2)} USD`
+                : ''}
             </p>
           </div>
 
