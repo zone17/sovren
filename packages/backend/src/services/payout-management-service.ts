@@ -860,7 +860,7 @@ export class PayoutManagementService extends EventEmitter {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // 2. Batch-fetch current-month transactions for all active creators
-    const txByCreator = new Map<string, any[]>();
+    const txByCreator = new Map<string, Record<string, unknown>[]>();
     page = 0;
     while (true) {
       const { data, error } = await supabase

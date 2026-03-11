@@ -13,6 +13,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import apiClient from '@/services/api/apiClient';
 import { Button } from '../../../components/ui';
 import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
 import { Badge } from '../../../components/ui/badge';
@@ -44,6 +45,7 @@ import { Skeleton } from '../../../components/ui/skeleton';
 import { Switch } from '../../../components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Textarea } from '../../../components/ui/textarea';
+import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 
 // 🎭 **ICONS**
 import {
@@ -651,6 +653,7 @@ export const SubscriptionManager: React.FC = () => {
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
   const [subscriberDetailsOpen, setSubscriberDetailsOpen] = useState(false);
+  const [deleteTierConfirm, setDeleteTierConfirm] = useState<SubscriptionTier | null>(null);
 
   // 🔄 **DATA LOADING**
   const loadSubscriptionData = useCallback(async () => {
@@ -658,108 +661,13 @@ export const SubscriptionManager: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      // Mock data for demonstration
-      const mockTiers: SubscriptionTier[] = [
-        {
-          id: 'tier_1',
-          name: 'Basic Support',
-          description: 'Support my content creation with basic perks',
-          price_sats: 10000,
-          billing_period: 'monthly',
-          features: [
-            'Access to subscriber-only posts',
-            'Monthly newsletter',
-            'Discord community access',
-          ],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          subscriber_count: 45,
-          total_revenue_sats: 450000,
-          conversion_rate: 12.5,
-        },
-        {
-          id: 'tier_2',
-          name: 'Premium Creator',
-          description: 'Premium support with exclusive content and perks',
-          price_sats: 25000,
-          billing_period: 'monthly',
-          features: [
-            'All Basic Support features',
-            'Exclusive video content',
-            'Monthly live Q&A sessions',
-            'Early access to new content',
-            'Direct messaging privileges',
-          ],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          subscriber_count: 18,
-          total_revenue_sats: 450000,
-          conversion_rate: 8.3,
-        },
-        {
-          id: 'tier_3',
-          name: 'Elite Supporter',
-          description: 'Maximum support with VIP treatment and exclusive access',
-          price_sats: 50000,
-          billing_period: 'monthly',
-          features: [
-            'All Premium Creator features',
-            '1-on-1 monthly video call',
-            'Custom content requests',
-            'Behind-the-scenes content',
-            'Priority support and feedback',
-            'Physical merchandise',
-          ],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          subscriber_count: 5,
-          total_revenue_sats: 250000,
-          conversion_rate: 15.0,
-        },
-      ];
+      const [tiersData, subscribersData] = await Promise.all([
+        apiClient.get<SubscriptionTier[]>('/api/subscriptions/tiers'),
+        apiClient.get<Subscriber[]>('/api/subscriptions/subscribers'),
+      ]);
 
-      const mockSubscribers: Subscriber[] = [
-        {
-          id: 'sub_1',
-          user_id: 'user_1',
-          tier_id: 'tier_1',
-          status: 'active',
-          started_at: '2024-01-15T00:00:00Z',
-          expires_at: '2024-02-15T00:00:00Z',
-          auto_renew: true,
-          payment_method: 'lightning',
-          total_payments: 30000,
-          last_payment_at: '2024-01-15T00:00:00Z',
-          supporter_info: {
-            name: 'Alice Johnson',
-            email: 'alice@example.com',
-            nostr_pubkey: 'npub1abc123def456ghi789jkl012mno345pqr678stu901vwx234yz567890',
-            total_tips: 5000,
-            join_date: '2024-01-15T00:00:00Z',
-          },
-        },
-        {
-          id: 'sub_2',
-          user_id: 'user_2',
-          tier_id: 'tier_2',
-          status: 'active',
-          started_at: '2024-01-10T00:00:00Z',
-          expires_at: '2024-02-10T00:00:00Z',
-          auto_renew: false,
-          payment_method: 'lightning',
-          total_payments: 75000,
-          last_payment_at: '2024-01-10T00:00:00Z',
-          supporter_info: {
-            name: 'Bob Smith',
-            email: 'bob@example.com',
-            total_tips: 12000,
-            join_date: '2024-01-10T00:00:00Z',
-          },
-        },
-      ];
-
-      setTiers(mockTiers);
-      setSubscribers(mockSubscribers);
+      setTiers(tiersData ?? []);
+      setSubscribers(subscribersData ?? []);
     } catch (err) {
       console.error('Failed to load subscription data:', err);
       setError('Failed to load subscription data. Please try again.');
@@ -808,8 +716,13 @@ export const SubscriptionManager: React.FC = () => {
   };
 
   const handleDeleteTier = (tier: SubscriptionTier) => {
-    if (window.confirm(`Are you sure you want to delete "${tier.name}"?`)) {
-      setTiers((prev) => prev.filter((t) => t.id !== tier.id));
+    setDeleteTierConfirm(tier);
+  };
+
+  const handleConfirmDeleteTier = () => {
+    if (deleteTierConfirm) {
+      setTiers((prev) => prev.filter((t) => t.id !== deleteTierConfirm.id));
+      setDeleteTierConfirm(null);
     }
   };
 
@@ -986,6 +899,15 @@ export const SubscriptionManager: React.FC = () => {
         open={tierDialogOpen}
         onOpenChange={setTierDialogOpen}
         onSave={handleSaveTier}
+      />
+
+      <ConfirmDialog
+        open={deleteTierConfirm !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTierConfirm(null); }}
+        title="Delete subscription tier"
+        description={`Are you sure you want to delete "${deleteTierConfirm?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleConfirmDeleteTier}
       />
     </div>
   );
