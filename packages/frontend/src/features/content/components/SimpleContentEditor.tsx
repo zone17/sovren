@@ -108,12 +108,10 @@ const MediaBlock: React.FC<MediaBlockProps> = ({ block, onUpdate, onDelete }) =>
     setUploading(true);
     setUploadError(null);
     try {
-      // TODO: Replace with real media upload API call (React Query mutation)
-      throw new Error(
-        'Media upload not yet implemented. Will be added during React Query migration.'
-      );
-    } catch (error) {
-      setUploadError(error instanceof Error ? error.message : 'Upload failed');
+      // TODO(media-engineer): Implement Supabase Storage upload.
+      // Pattern: upload to supabase.storage.from('media').upload(path, file),
+      // then store the public URL via POST /api/v1/content/media.
+      setUploadError('Media upload is coming soon. Please check back shortly.');
     } finally {
       setUploading(false);
     }
