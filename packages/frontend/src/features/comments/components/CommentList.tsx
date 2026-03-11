@@ -60,13 +60,15 @@ export function CommentList({ contentId, currentUserId, contentCreatorId }: Comm
       {isError && !isLoading && (
         <div
           role="alert"
-          className="rounded-lg bg-red-50 border border-red-200 p-4 flex items-center gap-3"
+          className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 flex items-center gap-3"
         >
-          <p className="text-sm text-red-700 flex-1">Failed to load comments. Please try again.</p>
+          <p className="text-sm text-red-700 dark:text-red-400 flex-1">
+            Failed to load comments. Please try again.
+          </p>
           <button
             type="button"
             onClick={() => void refetch()}
-            className="text-sm font-medium text-red-700 underline hover:no-underline"
+            className="text-sm font-medium text-red-700 dark:text-red-400 underline hover:no-underline"
           >
             Retry
           </button>

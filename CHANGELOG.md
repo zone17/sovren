@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### fix(ux): P2 dark mode — add dark: variants to color-coded status badges and alert boxes — 2026-03-10
+
+**Category**: Bug Fix — Production Readiness Phase 5 UI/UX (P2-UX-004)
+**Status**: Complete
+
+Added `dark:` Tailwind variants to `bg-red-50`, `bg-green-100`, `bg-amber-50`, `bg-yellow-100` and their corresponding text colors across 7 components. QR code containers kept white (intentional — required for QR contrast).
+
+**Files modified**: `CommentList.tsx`, `CrossPlatformDashboard.tsx`, `PlatformROI.tsx`, `DistributionPanel.tsx`, `RepurposePreview.tsx`, `SupporterExperience.tsx`, `BYOKSetup.tsx`
+
 ### fix(ux): P1 UI/UX polish — replace window.confirm, add 404 route, fix silent error swallowing — 2026-03-10
 
 **Category**: Bug Fix — Production Readiness Phase 5 UI/UX

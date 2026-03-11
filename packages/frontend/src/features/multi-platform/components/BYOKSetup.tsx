@@ -91,7 +91,7 @@ export const BYOKSetup: React.FC = () => {
                 </p>
               )}
               {currentStatus?.write_only && (
-                <p className="text-sm font-medium text-amber-700">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
                   Write-only mode — add API keys to enable reading
                 </p>
               )}
@@ -130,20 +130,26 @@ export const BYOKSetup: React.FC = () => {
       )}
 
       {status === 'write_only' && (
-        <div role="alert" className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
-          <p className="text-sm font-medium text-amber-800">
+        <div
+          role="alert"
+          className="mt-4 rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3"
+        >
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
             Keys saved in write-only mode. Read access requires the X/Twitter Basic API ($200/mo).
           </p>
         </div>
       )}
 
       {status === 'invalid' && (
-        <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3">
-          <p className="text-sm font-medium text-red-800">
+        <div
+          role="alert"
+          className="mt-4 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3"
+        >
+          <p className="text-sm font-medium text-red-800 dark:text-red-300">
             Validation failed. Check your keys and try again.
           </p>
           {validationResult?.error && (
-            <p className="mt-1 text-xs text-red-600">{validationResult.error}</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{validationResult.error}</p>
           )}
         </div>
       )}
@@ -217,8 +223,8 @@ export const BYOKSetup: React.FC = () => {
       )}
 
       {!isAlreadyConnected && status === 'idle' && (
-        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
-          <p className="text-sm text-amber-700">
+        <div className="mt-4 rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3">
+          <p className="text-sm text-amber-700 dark:text-amber-400">
             Without API keys, X/Twitter operates in write-only mode. You can still cross-post
             content but cannot read your inbox or view analytics from X/Twitter.
           </p>
