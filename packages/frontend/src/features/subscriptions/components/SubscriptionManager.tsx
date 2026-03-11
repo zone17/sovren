@@ -903,7 +903,9 @@ export const SubscriptionManager: React.FC = () => {
 
       <ConfirmDialog
         open={deleteTierConfirm !== null}
-        onOpenChange={(open) => { if (!open) setDeleteTierConfirm(null); }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTierConfirm(null);
+        }}
         title="Delete subscription tier"
         description={`Are you sure you want to delete "${deleteTierConfirm?.name}"? This action cannot be undone.`}
         confirmLabel="Delete"
