@@ -12,9 +12,9 @@ const NotFound: React.FC = () => {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button asChild>
-            <Link to="/">Go home</Link>
-          </Button>
+          <Link to="/">
+            <Button>Go home</Button>
+          </Link>
           <Button variant="outline" onClick={() => window.history.back()}>
             Go back
           </Button>

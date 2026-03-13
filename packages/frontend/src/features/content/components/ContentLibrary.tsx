@@ -186,8 +186,7 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
         setContent([]);
       })
       .finally(() => setIsLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // fetch once on mount
 
   const filteredContent = useMemo(() => {
     return content.filter((item) => {
@@ -217,12 +216,9 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
     [onEditContent]
   );
 
-  const handleDelete = useCallback(
-    (contentId: string) => {
-      setDeleteConfirmId(contentId);
-    },
-    []
-  );
+  const handleDelete = useCallback((contentId: string) => {
+    setDeleteConfirmId(contentId);
+  }, []);
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteConfirmId) {
@@ -349,7 +345,9 @@ export const ContentLibrary: React.FC<ContentLibraryProps> = ({
 
       <ConfirmDialog
         open={deleteConfirmId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmId(null);
+        }}
         title="Delete content"
         description="Are you sure you want to delete this content? This action cannot be undone."
         confirmLabel="Delete"
