@@ -257,6 +257,20 @@ jobs:
           fi
           echo "Migration filename ordering: OK"
 
+      - name: Bootstrap Supabase-compatible schemas
+        run: |
+          DB_URL="postgresql://postgres:postgres@localhost:5432/sovren_migrate_test"
+          # Supabase migrations reference auth.uid(), auth.role(), supabase_realtime etc.
+          # Bootstrap these on vanilla postgres so migrations can dry-run.
+          psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+          CREATE SCHEMA IF NOT EXISTS auth;
+          CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$ SELECT '00000000-0000-0000-0000-000000000000'::uuid; $$ LANGUAGE sql;
+          CREATE OR REPLACE FUNCTION auth.role() RETURNS text AS $$ SELECT 'anon'::text; $$ LANGUAGE sql;
+          CREATE PUBLICATION supabase_realtime;
+          SQL
+          echo "Supabase-compatible bootstrap complete"
+
       - name: Dry-run migrations against test database
         run: |
           DB_URL="postgresql://postgres:postgres@localhost:5432/sovren_migrate_test"

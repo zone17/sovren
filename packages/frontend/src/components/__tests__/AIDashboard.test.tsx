@@ -16,6 +16,15 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import * as predictiveAnalyticsModule from '../../features/analytics/services/predictiveAnalytics';
 import AIDashboard from '../../features/dashboard/components/AIDashboard';
 
+// Mock useAuth — AIDashboard uses authenticated user ID
+vi.mock('../../features/auth', () => ({
+  useAuth: () => ({
+    user: { id: 'user_123', email: 'test@example.com' },
+    isAuthenticated: true,
+    loading: false,
+  }),
+}));
+
 // Mock the predictive analytics module
 vi.mock('../../features/analytics/services/predictiveAnalytics', () => ({
   predictiveAnalytics: {

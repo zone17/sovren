@@ -41,14 +41,16 @@ CREATE POLICY notifications_delete_own ON notifications
 CREATE POLICY notifications_insert_service ON notifications
     FOR INSERT WITH CHECK (auth.role() = 'service_role');  -- Only backend service role can insert
 
--- Idempotent publication for Realtime
+-- Idempotent publication for Realtime (only if supabase_realtime publication exists)
 DO $$
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_publication_tables
-        WHERE pubname = 'supabase_realtime' AND tablename = 'notifications'
-    ) THEN
-        ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+    IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_publication_tables
+            WHERE pubname = 'supabase_realtime' AND tablename = 'notifications'
+        ) THEN
+            ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+        END IF;
     END IF;
 END $$;
 
