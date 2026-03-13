@@ -719,7 +719,9 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
 
       <ConfirmDialog
         open={deleteThreadConfirmId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteThreadConfirmId(null); }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteThreadConfirmId(null);
+        }}
         title="Delete conversation"
         description="Are you sure you want to delete this conversation? This action cannot be undone."
         confirmLabel="Delete"

@@ -204,7 +204,9 @@ export const TemplateManager: React.FC = () => {
 
       <ConfirmDialog
         open={deleteConfirmId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmId(null);
+        }}
         title="Delete template"
         description="Are you sure you want to delete this template? This action cannot be undone."
         confirmLabel="Delete"
