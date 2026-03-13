@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { SimplePool } from 'nostr-tools';
-import type { Event as NostrEvent } from 'nostr-tools';
+import type { Event as NostrEvent, Filter } from 'nostr-tools';
 import type { FeedFilters, FeedState, FeedEvent, UseFeedSubscriptionReturn } from '../types';
 import { parseContent } from '../utils/contentParser';
 
@@ -96,21 +96,19 @@ export const useFeedSubscription = (): UseFeedSubscriptionReturn => {
       const pool = getPool();
       const subId = `feed_${Date.now()}`;
 
-      // Build nostr-tools filter
-      const nostrFilter: Record<string, unknown> = {
+      // Build nostr-tools Filter
+      const nostrFilter: Filter = {
         kinds: filters.kinds ?? [1],
         limit: 50,
+        ...(filters.authors?.length && { authors: filters.authors }),
+        ...(filters.since && { since: filters.since }),
+        ...(filters.until && { until: filters.until }),
+        ...(filters.hashtags?.length && { '#t': filters.hashtags }),
       };
-      if (filters.authors?.length) nostrFilter['authors'] = filters.authors;
-      if (filters.since) nostrFilter['since'] = filters.since;
-      if (filters.until) nostrFilter['until'] = filters.until;
-      if (filters.hashtags?.length) {
-        nostrFilter['#t'] = filters.hashtags;
-      }
 
       const incoming: FeedEvent[] = [];
 
-      const sub = pool.subscribeMany(relays, [nostrFilter], {
+      const sub = pool.subscribeMany(relays, nostrFilter, {
         onevent(event: NostrEvent) {
           const feedEvent = transformToFeedEvent(event);
           incoming.push(feedEvent);

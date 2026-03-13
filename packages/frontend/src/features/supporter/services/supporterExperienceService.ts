@@ -75,6 +75,8 @@ const cache = new ServiceCache();
 
 // 🔧 **UTILITY FUNCTIONS**
 
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 const retryFetch = async <T>(
   fetchFn: () => Promise<T>,
   retries: number = MAX_RETRIES,
