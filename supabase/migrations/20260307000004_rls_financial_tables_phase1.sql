@@ -75,7 +75,7 @@ CREATE POLICY "lightning_payments_select_own" ON lightning_payments
 
 -- =============================================================================
 -- 7. business_invoices
---    creator_id is TEXT, not UUID FK
+--    creator_id is UUID NOT NULL
 -- =============================================================================
 ALTER TABLE business_invoices ENABLE ROW LEVEL SECURITY;
 
@@ -83,11 +83,11 @@ CREATE POLICY "business_invoices_service_role" ON business_invoices
   USING (auth.role() = 'service_role');
 
 CREATE POLICY "business_invoices_select_own" ON business_invoices
-  FOR SELECT USING (creator_id = auth.uid()::text);
+  FOR SELECT USING (creator_id = auth.uid());
 
 -- =============================================================================
 -- 8. expenses
---    creator_id is TEXT, not UUID FK
+--    creator_id is UUID NOT NULL
 -- =============================================================================
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
@@ -95,11 +95,11 @@ CREATE POLICY "expenses_service_role" ON expenses
   USING (auth.role() = 'service_role');
 
 CREATE POLICY "expenses_select_own" ON expenses
-  FOR SELECT USING (creator_id = auth.uid()::text);
+  FOR SELECT USING (creator_id = auth.uid());
 
 -- =============================================================================
 -- 9. revenue_entries
---    creator_id is TEXT, not UUID FK
+--    creator_id is UUID NOT NULL
 -- =============================================================================
 ALTER TABLE revenue_entries ENABLE ROW LEVEL SECURITY;
 
@@ -107,11 +107,11 @@ CREATE POLICY "revenue_entries_service_role" ON revenue_entries
   USING (auth.role() = 'service_role');
 
 CREATE POLICY "revenue_entries_select_own" ON revenue_entries
-  FOR SELECT USING (creator_id = auth.uid()::text);
+  FOR SELECT USING (creator_id = auth.uid());
 
 -- =============================================================================
 -- 10. contracts
---    creator_id is TEXT, not UUID FK
+--    creator_id is UUID NOT NULL
 -- =============================================================================
 ALTER TABLE contracts ENABLE ROW LEVEL SECURITY;
 
@@ -119,4 +119,4 @@ CREATE POLICY "contracts_service_role" ON contracts
   USING (auth.role() = 'service_role');
 
 CREATE POLICY "contracts_select_own" ON contracts
-  FOR SELECT USING (creator_id = auth.uid()::text);
+  FOR SELECT USING (creator_id = auth.uid());
