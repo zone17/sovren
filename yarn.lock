@@ -5808,12 +5808,12 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@>=13.7.0", "@types/node@^22.15.29":
-  version "22.19.13"
-  resolved "https://registry.npmjs.org/@types/node/-/node-22.19.13.tgz"
-  integrity sha512-akNQMv0wW5uyRpD2v2IEyRSZiR+BeGuoB6L310EgGObO44HSMNT8z1xzio28V8qOrgYaopIDNA18YgdXd+qTiw==
+"@types/node@*", "@types/node@>=13.7.0", "@types/node@^24.0.3":
+  version "24.11.0"
+  resolved "https://registry.npmjs.org/@types/node/-/node-24.11.0.tgz"
+  integrity sha512-fPxQqz4VTgPI/IQ+lj9r0h+fDR66bzoeMGHp8ASee+32OSGIkeASsoZuJixsQoVef1QJbeubcPBxKk22QVoWdw==
   dependencies:
-    undici-types "~6.21.0"
+    undici-types "~7.16.0"
 
 "@types/node@^18.11.18":
   version "18.19.130"
@@ -5822,19 +5822,12 @@
   dependencies:
     undici-types "~5.26.4"
 
-"@types/node@^20.10.4":
-  version "20.19.35"
-  resolved "https://registry.npmjs.org/@types/node/-/node-20.19.35.tgz"
-  integrity sha512-Uarfe6J91b9HAUXxjvSOdiO2UPOKLm07Q1oh0JHxoZ1y8HoqxDAu3gVrsrOHeiio0kSsoVBt4wFrKOm0dKxVPQ==
+"@types/node@^20.19.37":
+  version "20.19.37"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.19.37.tgz#b4fb4033408dd97becce63ec932c9ec57a9e2919"
+  integrity sha512-8kzdPJ3FsNsVIurqBs7oodNnCEVbni9yUEkaHbgptDACOPW04jimGagZ51E6+lXUwJjgnBw+hyko/lkFWCldqw==
   dependencies:
     undici-types "~6.21.0"
-
-"@types/node@^24.0.3":
-  version "24.11.0"
-  resolved "https://registry.npmjs.org/@types/node/-/node-24.11.0.tgz"
-  integrity sha512-fPxQqz4VTgPI/IQ+lj9r0h+fDR66bzoeMGHp8ASee+32OSGIkeASsoZuJixsQoVef1QJbeubcPBxKk22QVoWdw==
-  dependencies:
-    undici-types "~7.16.0"
 
 "@types/nodemailer@^6.4.14":
   version "6.4.23"
@@ -8814,10 +8807,10 @@ eslint-plugin-react@^7.37.5:
     string.prototype.matchall "^4.0.12"
     string.prototype.repeat "^1.0.0"
 
-eslint-plugin-storybook@^9.0.6:
-  version "9.1.19"
-  resolved "https://registry.npmjs.org/eslint-plugin-storybook/-/eslint-plugin-storybook-9.1.19.tgz"
-  integrity sha512-hwZu/EnkJWrpFZgs/9mOba8hP71aK++eKdZIV+gTSAZXBccldOR0aL6YHaxjRbUe4DgyS4PvvVtqzu13o8fW6Q==
+eslint-plugin-storybook@^9.1.20:
+  version "9.1.20"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-storybook/-/eslint-plugin-storybook-9.1.20.tgz#62b64bc43eb99922f28387458d53dc598286c53a"
+  integrity sha512-T7uqlzZABlOm0n36UQyyP0u7r+6/Bz5CTAvFK5n+FQPkAhba01mGovYVG61gcDeC06I0AlbZCZ0MP7MFxXAEVg==
   dependencies:
     "@typescript-eslint/utils" "^8.8.1"
 
