@@ -36,8 +36,8 @@ const router = express.Router();
 // TODO #774: Move direct Supabase access to service/repository layer.
 // Webhooks need service-key client for admin operations — inject via DI container.
 const supabase =
-  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY
-    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     : null;
 
 // Initialize Payment State Machine (only if Supabase available)
@@ -290,9 +290,93 @@ router.post(
           targetState = PaymentState.COMPLETED;
           metadata.preimage = preimage;
           metadata.amount = amount;
-          // Update payment record with preimage
-          await supabase.from('payments').update({ preimage }).eq('id', payment.id);
-          break;
+
+          // P1-PAY-003: Use atomic RPC to write preimage + transition state in one transaction.
+          // This prevents a crash between the two operations leaving payment proof lost.
+          {
+            const { data: rpcData, error: rpcError } = await supabase.rpc(
+              'complete_payment_atomically',
+              {
+                p_payment_id: payment.id,
+                p_from_state: payment.state,
+                p_preimage: preimage,
+                p_metadata: metadata,
+                p_user_id: null,
+              }
+            );
+
+            if (rpcError) {
+              console.error('[WEBHOOK] Atomic payment completion failed:', rpcError);
+              return res.status(500).json({
+                success: false,
+                error: 'Failed to complete payment atomically',
+              });
+            }
+
+            const result = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+            if (!result?.success) {
+              console.error('[WEBHOOK] Atomic completion rejected:', result?.error_message);
+              return res.status(409).json({
+                success: false,
+                error: result?.error_message || 'Payment state transition rejected',
+              });
+            }
+
+            // P1-PAY-005: Grant content access after successful payment.
+            // Uses insert-then-verify pattern (critical-patterns.md #1).
+            // If content_id is on the payment, grant access atomically.
+            // If this fails, payment is already confirmed — log for manual recovery.
+            if (payment.content_id && payment.user_id) {
+              const accessId = crypto.randomUUID();
+              const { error: accessError } = await supabase.from('premium_content_access').insert({
+                id: accessId,
+                content_id: payment.content_id,
+                user_id: payment.user_id,
+                access_type: 'purchase',
+                price_paid: payment.amount,
+                purchased_at: new Date().toISOString(),
+                is_active: true,
+              });
+
+              if (accessError) {
+                // Payment is confirmed but access grant failed — critical alert
+                console.error(
+                  '[WEBHOOK] CRITICAL: Payment completed but content access grant failed',
+                  {
+                    paymentId: payment.id,
+                    contentId: payment.content_id,
+                    userId: payment.user_id,
+                    error: accessError.message,
+                  }
+                );
+                // Do not return error — payment succeeded. Access grant failure is handled separately.
+              } else {
+                // Verify the grant was actually written (insert-then-verify)
+                const { data: verifyData } = await supabase
+                  .from('premium_content_access')
+                  .select('id')
+                  .eq('id', accessId)
+                  .single();
+
+                if (!verifyData) {
+                  console.error('[WEBHOOK] CRITICAL: Content access grant verification failed', {
+                    paymentId: payment.id,
+                    contentId: payment.content_id,
+                    userId: payment.user_id,
+                    accessId,
+                  });
+                }
+              }
+            }
+
+            // Atomic completion successful — skip the generic transition below.
+            return res.json({
+              success: true,
+              message: `Webhook processed: ${event}`,
+              paymentId: payment.id,
+              newState: targetState,
+            });
+          }
 
         case 'payment.failed':
           targetState = PaymentState.FAILED;
@@ -312,7 +396,7 @@ router.post(
           });
       }
 
-      // Transition payment state
+      // Transition payment state for non-completed events
       if (targetState) {
         await paymentStateMachine.transition(payment.id, targetState, metadata);
       }

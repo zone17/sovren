@@ -12,7 +12,7 @@ const updateSubscription = async ({
   subscriptionId: string;
   data: UpdateSubscriptionInput;
 }): Promise<Subscription> => {
-  const response = await fetch(`/api/payments/subscriptions/${subscriptionId}`, {
+  const response = await fetch(`/api/v1/payments/subscriptions/${subscriptionId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

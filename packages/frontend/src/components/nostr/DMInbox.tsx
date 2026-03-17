@@ -26,6 +26,7 @@ import { NIP04Service } from '@/services/nostr/NIP04Service';
 import { EventPublisherService } from '@/services/nostr/EventPublisherService';
 import { SubscriptionManagerService } from '@/services/nostr/SubscriptionManagerService';
 import { KeyManagementService } from '@/services/nostr/KeyManagementService';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 // ========================================
 // Types
@@ -66,6 +67,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
   const [sending, setSending] = useState(false);
   const [decryptionErrors, setDecryptionErrors] = useState<Set<string>>(new Set());
   const [announcement, setAnnouncement] = useState('');
+  const [deleteThreadConfirmId, setDeleteThreadConfirmId] = useState<string | null>(null);
 
   // Refs
   const subscriptionIdRef = useRef<string | null>(null);
@@ -387,26 +389,32 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
   );
 
   const handleDeleteThread = useCallback(
-    async (threadId: string) => {
+    (threadId: string) => {
       const thread = threads.get(threadId);
       if (!thread) return;
-
-      if (window.confirm('Are you sure you want to delete this conversation?')) {
-        await nip04Service.clearThread(userPubkey!, thread.recipientPubkey);
-
-        setThreads((prevThreads) => {
-          const updatedThreads = new Map(prevThreads);
-          updatedThreads.delete(threadId);
-          return updatedThreads;
-        });
-
-        if (selectedThreadId === threadId) {
-          setSelectedThreadId(null);
-        }
-      }
+      setDeleteThreadConfirmId(threadId);
     },
-    [threads, selectedThreadId, userPubkey, nip04Service]
+    [threads]
   );
+
+  const handleConfirmDeleteThread = useCallback(async () => {
+    if (!deleteThreadConfirmId) return;
+    const thread = threads.get(deleteThreadConfirmId);
+    if (!thread) return;
+
+    await nip04Service.clearThread(userPubkey!, thread.recipientPubkey);
+
+    setThreads((prevThreads) => {
+      const updatedThreads = new Map(prevThreads);
+      updatedThreads.delete(deleteThreadConfirmId);
+      return updatedThreads;
+    });
+
+    if (selectedThreadId === deleteThreadConfirmId) {
+      setSelectedThreadId(null);
+    }
+    setDeleteThreadConfirmId(null);
+  }, [deleteThreadConfirmId, threads, nip04Service, userPubkey, selectedThreadId]);
 
   // ========================================
   // Filtering & Sorting
@@ -708,6 +716,17 @@ export const DMInbox: React.FC<DMInboxProps> = ({ className = '', onError }) => 
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteThreadConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteThreadConfirmId(null);
+        }}
+        title="Delete conversation"
+        description="Are you sure you want to delete this conversation? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleConfirmDeleteThread}
+      />
     </div>
   );
 };

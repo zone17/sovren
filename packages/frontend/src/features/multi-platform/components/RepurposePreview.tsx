@@ -71,12 +71,12 @@ const RepurposePreview: React.FC<RepurposePreviewProps> = ({ contentId }) => {
                       {version.character_count}/{version.character_limit || '?'}
                     </span>
                     {version.approved ? (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                      <span className="rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs text-green-700 dark:text-green-400">
                         Approved
                       </span>
                     ) : (
                       <button
-                        className="rounded-md border border-green-300 px-2 py-0.5 text-xs text-green-700 hover:bg-green-50"
+                        className="rounded-md border border-green-300 dark:border-green-700 px-2 py-0.5 text-xs text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
                         onClick={() => approveMutation.mutate(version.id)}
                         disabled={approveMutation.isPending}
                       >

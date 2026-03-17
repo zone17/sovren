@@ -2,6 +2,30 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RevenueAnalytics } from '../RevenueAnalytics';
 
+// Mock apiClient — RevenueAnalytics now fetches from real API
+vi.mock('@/services/api/apiClient', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({
+      totalRevenueSats: 150000,
+      mrrSats: 45000,
+      subscriberCount: 47,
+      avgPaymentSats: 3250,
+      churnRate: 0.08,
+      avgLifetimeValueSats: 42000,
+      revenueByTier: [
+        { tierName: 'Basic', revenueSats: 52500, subscribers: 28 },
+        { tierName: 'Premium', revenueSats: 82500, subscribers: 15 },
+        { tierName: 'Tips', revenueSats: 15000, subscribers: 4 },
+      ],
+      revenueByDay: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
+        revenueSats: 5000 + Math.floor(Math.random() * 10000),
+        transactions: 3,
+      })),
+    }),
+  },
+}));
+
 describe('RevenueAnalytics', () => {
   describe('Rendering', () => {
     it('renders the component title', async () => {

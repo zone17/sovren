@@ -90,8 +90,9 @@ export function createApp(): Express {
         // Allow requests with no Origin header (non-browser clients, agents, curl)
         if (!origin) return callback(null, true);
 
-        const allowedOrigins =
-          process.env.NODE_ENV === 'production'
+        const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+          ? process.env.CORS_ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+          : process.env.NODE_ENV === 'production'
             ? ['https://sovren.app', 'https://www.sovren.app']
             : ['http://localhost:3000', 'http://localhost:5173'];
 
@@ -296,15 +297,15 @@ export const AppConfig = {
   isProduction: process.env.NODE_ENV === 'production',
 
   // Security
-  jwtSecret:
-    process.env.JWT_SECRET ||
-    (() => {
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error('JWT_SECRET environment variable is required in production');
-      }
-      logger.warn('Using default JWT_SECRET - not suitable for production');
-      return 'development-only-secret-key';
-    })(),
+  jwtSecret: (() => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error(
+        'JWT_SECRET environment variable is required. Set it in your .env file or environment.'
+      );
+    }
+    return secret;
+  })(),
 
   // API limits
   rateLimitWindow: 15 * 60 * 1000, // 15 minutes

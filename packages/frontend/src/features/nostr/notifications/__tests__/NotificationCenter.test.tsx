@@ -16,6 +16,16 @@ vi.mock('../services/NotificationService', () => ({
   getNotificationService: vi.fn(),
 }));
 
+// Mock useToast — NotificationCenter imports it from NotificationProvider which requires Redux
+vi.mock('@/components/providers/NotificationProvider', () => ({
+  useToast: () => ({
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+  }),
+}));
+
 const mockNotifications: Notification[] = [
   {
     id: '1',

@@ -27,7 +27,7 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../../store';
 
 // 🔧 **SERVICE LAYER**
-import { mockAnalyticsService as analyticsService } from '../services/mockAnalyticsService';
+import { analyticsService } from '../services/analyticsService';
 
 // 🎨 **UI COMPONENTS**
 import { Button } from '../../../components/ui';

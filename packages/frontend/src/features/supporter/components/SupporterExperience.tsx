@@ -527,7 +527,9 @@ const TrendingContentComponent: React.FC<{
                 <h4 className="font-medium text-foreground">{category.name}</h4>
                 <span
                   className={`text-sm px-2 py-1 rounded ${
-                    category.growth > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                    category.growth > 0
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}
                 >
                   {category.growth > 0 ? '+' : ''}
@@ -734,7 +736,7 @@ const ContentCard: React.FC<{
         <div className="flex items-start justify-between mb-2">
           <h3 className="font-semibold text-foreground line-clamp-2">{content.title}</h3>
           {content.isPremium && (
-            <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+            <span className="ml-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 text-xs px-2 py-1 rounded-full">
               Premium
             </span>
           )}

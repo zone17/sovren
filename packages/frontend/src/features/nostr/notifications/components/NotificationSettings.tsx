@@ -6,6 +6,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { NotificationPreferences } from '../types';
 import { getNotificationService } from '../services/NotificationService';
+import { useToast } from '@/components/providers/NotificationProvider';
 
 export interface NotificationSettingsProps {
   onClose?: () => void;
@@ -22,6 +23,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   const service = getNotificationService();
   const [preferences, setPreferences] = useState<NotificationPreferences>(service.getPreferences());
   const [saving, setSaving] = useState(false);
+  const toast = useToast();
 
   // Load preferences on mount
   useEffect(() => {
@@ -49,6 +51,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       }
     } catch (error) {
       console.error('Failed to save preferences:', error);
+      toast.error('Failed to save preferences. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -57,7 +60,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   // Request desktop notification permission
   const requestDesktopPermission = useCallback(async () => {
     if (!('Notification' in window)) {
-      alert('Desktop notifications are not supported in this browser');
+      toast.warning('Desktop notifications are not supported in this browser');
       return;
     }
 

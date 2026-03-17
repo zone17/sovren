@@ -179,7 +179,7 @@ router.post(
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      nostrAuth.revokeToken(token);
+      await nostrAuth.revokeToken(token);
     }
 
     res.status(200).json({

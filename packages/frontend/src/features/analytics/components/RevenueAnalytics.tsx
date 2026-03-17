@@ -7,6 +7,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import apiClient from '@/services/api/apiClient';
 import {
   Card,
   CardContent,
@@ -29,38 +30,6 @@ interface RevenueMetrics {
 }
 
 type Timeframe = '7d' | '30d' | '90d';
-
-// -- Mock Data --
-
-function generateMockMetrics(timeframe: Timeframe): RevenueMetrics {
-  const days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 90;
-  const revenueByDay = Array.from({ length: days }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (days - 1 - i));
-    return {
-      date: date.toISOString().split('T')[0],
-      revenueSats: Math.floor(5000 + Math.random() * 15000),
-      transactions: Math.floor(2 + Math.random() * 10),
-    };
-  });
-
-  const totalRevenueSats = revenueByDay.reduce((sum, d) => sum + d.revenueSats, 0);
-
-  return {
-    totalRevenueSats,
-    mrrSats: Math.floor(totalRevenueSats / (days / 30)),
-    subscriberCount: 47,
-    avgPaymentSats: 3250,
-    churnRate: 0.08,
-    avgLifetimeValueSats: 42000,
-    revenueByTier: [
-      { tierName: 'Basic', revenueSats: Math.floor(totalRevenueSats * 0.35), subscribers: 28 },
-      { tierName: 'Premium', revenueSats: Math.floor(totalRevenueSats * 0.55), subscribers: 15 },
-      { tierName: 'Tips', revenueSats: Math.floor(totalRevenueSats * 0.1), subscribers: 4 },
-    ],
-    revenueByDay,
-  };
-}
 
 // -- Components --
 
@@ -189,12 +158,22 @@ export const RevenueAnalytics: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setMetrics(generateMockMetrics(timeframe));
-      setIsLoading(false);
-    }, 400);
-    return () => clearTimeout(timer);
+    apiClient
+      .get<RevenueMetrics>(`/api/v1/payments/analytics?timeframe=${timeframe}`)
+      .then((data) => {
+        if (!cancelled) setMetrics(data);
+      })
+      .catch((err) => {
+        console.error('Failed to load revenue analytics:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [timeframe]);
 
   if (isLoading || !metrics) {

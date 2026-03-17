@@ -9,10 +9,15 @@ import React, { useState } from 'react';
 import { useDeploymentStatus, useHealthChecks, useRealtimeUpdates } from '../hooks';
 import { DeploymentStatusPanel } from './DeploymentStatusPanel';
 import { HealthCheckMonitor } from './HealthCheckMonitor';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useToast } from '@/components/providers/NotificationProvider';
 import type { DeploymentEnvironment } from '../types';
 
 export const DeploymentDashboard: React.FC = () => {
   const [selectedEnvironment, setSelectedEnvironment] = useState<DeploymentEnvironment>('staging');
+  const [rollbackConfirmOpen, setRollbackConfirmOpen] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const toast = useToast();
 
   // Deployment status with real-time updates
   const {
@@ -62,21 +67,19 @@ export const DeploymentDashboard: React.FC = () => {
   });
 
   // Handle rollback
-  const handleRollback = async () => {
+  const handleRollback = () => {
     if (!currentDeployment) return;
+    setRollbackConfirmOpen(true);
+  };
 
-    const confirmed = window.confirm(
-      `Are you sure you want to rollback deployment ${currentDeployment.commitSha.substring(0, 7)}?`
-    );
-
-    if (confirmed) {
-      try {
-        await triggerRollback(currentDeployment.id, 'Manual rollback initiated from dashboard');
-        alert('Rollback initiated successfully');
-      } catch (error) {
-        console.error('Rollback failed:', error);
-        alert('Rollback failed. Please try again.');
-      }
+  const handleConfirmRollback = async () => {
+    if (!currentDeployment) return;
+    try {
+      await triggerRollback(currentDeployment.id, 'Manual rollback initiated from dashboard');
+      toast.success('Rollback initiated successfully');
+    } catch (error) {
+      console.error('Rollback failed:', error);
+      toast.error('Rollback failed. Please try again.');
     }
   };
 
@@ -86,29 +89,27 @@ export const DeploymentDashboard: React.FC = () => {
 
     try {
       await retryDeployment(currentDeployment.id);
-      alert('Deployment retry initiated');
+      toast.success('Deployment retry initiated');
     } catch (error) {
       console.error('Retry failed:', error);
-      alert('Retry failed. Please try again.');
+      toast.error('Retry failed. Please try again.');
     }
   };
 
   // Handle cancel
-  const handleCancel = async () => {
+  const handleCancel = () => {
     if (!currentDeployment) return;
+    setCancelConfirmOpen(true);
+  };
 
-    const confirmed = window.confirm(
-      `Are you sure you want to cancel deployment ${currentDeployment.commitSha.substring(0, 7)}?`
-    );
-
-    if (confirmed) {
-      try {
-        await cancelDeployment(currentDeployment.id);
-        alert('Deployment cancelled successfully');
-      } catch (error) {
-        console.error('Cancel failed:', error);
-        alert('Cancel failed. Please try again.');
-      }
+  const handleConfirmCancel = async () => {
+    if (!currentDeployment) return;
+    try {
+      await cancelDeployment(currentDeployment.id);
+      toast.success('Deployment cancelled successfully');
+    } catch (error) {
+      console.error('Cancel failed:', error);
+      toast.error('Cancel failed. Please try again.');
     }
   };
 
@@ -333,6 +334,25 @@ export const DeploymentDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={rollbackConfirmOpen}
+        onOpenChange={setRollbackConfirmOpen}
+        title="Rollback deployment"
+        description={`Are you sure you want to rollback deployment ${currentDeployment?.commitSha.substring(0, 7)}?`}
+        confirmLabel="Rollback"
+        onConfirm={handleConfirmRollback}
+      />
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        onOpenChange={setCancelConfirmOpen}
+        title="Cancel deployment"
+        description={`Are you sure you want to cancel deployment ${currentDeployment?.commitSha.substring(0, 7)}?`}
+        confirmLabel="Cancel deployment"
+        cancelLabel="Keep running"
+        onConfirm={handleConfirmCancel}
+      />
     </div>
   );
 };

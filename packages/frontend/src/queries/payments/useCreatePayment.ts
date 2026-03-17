@@ -6,7 +6,7 @@ import { paymentKeys } from './useInvoices';
  * Create new payment/invoice
  */
 const createPayment = async (data: CreatePaymentInput): Promise<Invoice> => {
-  const response = await fetch('/api/payments/create', {
+  const response = await fetch('/api/v1/payments/invoices', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
